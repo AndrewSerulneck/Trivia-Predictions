@@ -9,6 +9,30 @@
       "category": "Science",
       "difficulty": "easy"
     },
+        {
+      "slug": "who-invented-the-light-bulb",
+      "question": "Who invented the light bulb?",
+      "answer": "Thomas Edison",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+       {
+      "slug": "who-developed-the-theory-of-relativity",
+      "question": "Who developed the theory of relativity?",
+      "answer": "Albert Einstein",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+        {
+      "slug": "what-gas-do-plants-absorb-from-the-atmosphere",
+      "question": "What gas do plants absorb from the atmosphere?",
+      "answer": "Carbon Dioxide",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
     {
       "slug": "closest-planet-to-sun",
       "question": "Which planet is closest to the Sun?",
@@ -508,6 +532,30 @@
       "category": "Science",
       "difficulty": "hard"
     },
+        {
+      "slug": "which-chemical-element-has-the-highest-melting-point",
+      "question": "Which chemical element has the highest melting point?",
+      "answer": "Tungsten",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+     {
+      "slug": "what-is-the-chemical-formula-for-table-salt",
+      "question": "What is the chemical formula for table salt?",
+      "answer": "NaCl",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+      {
+      "slug": "what-is-the-process-by-which-plants-make-their-own-food",
+      "question": "What is the process by which plants make their own food?",
+      "answer": "Photosynthesis",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
     {
       "slug": "photosynthesis-organelle",
       "question": "In which plant cell organelle does photosynthesis occur?",
@@ -656,7 +704,7 @@
       "question": "Which English naturalist formulated that it is not the strongest of the species that survives, but the one most adaptable to change?",
       "answer": "Charles Darwin",
       "answer_format": "write_in",
-      "category": "Famous Quotes",
+      "category": "Science",
       "difficulty": "medium"
     },
     {
@@ -1424,6 +1472,22 @@
         "Potassium",
         "K"
       ]
+    },
+        {
+      "slug": "which-gas-is-responsible-for-the-characteristic-smell-of-rotten-eggs",
+      "question": "Which gas is responsible for the characteristic smell of rotten eggs?",
+      "answer": "Hydrogen Sulfide",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+        {
+      "slug": "which-element-has-the-atomic-number-1",
+      "question": "Which element has the atomic number 1?",
+      "answer": "Hydrogen",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
     },
     {
       "slug": "bone-health-mineral",

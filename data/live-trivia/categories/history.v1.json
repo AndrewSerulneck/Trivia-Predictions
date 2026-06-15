@@ -255,6 +255,22 @@
       "category": "History",
       "difficulty": "medium"
     },
+       {
+      "slug": "who-developed-the-first-successful-polio-vaccine",
+      "question": "Who developed the first successful polio vaccine?",
+      "answer": "Jonas Salk",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+        {
+"slug": "quote-marilyn-monroe-imperfect",
+"question": "Which American actress and cultural icon famously said, 'Imperfection is beauty, madness is genius and it's better to be absolutely ridiculous than absolutely boring'?",
+"answer": "Marilyn Monroe",
+"answer_format": "write_in",
+"category": "History",
+"difficulty": "easy"
+},
     {
       "slug": "first-circumnavigation-leader",
       "question": "Who led the first expedition to circumnavigate the globe?",
@@ -2072,7 +2088,7 @@
 "question": "Which South African anti-apartheid revolutionary and president famously noted, 'It always seems impossible until it's done'?",
 "answer": "Nelson Mandela",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2080,7 +2096,7 @@
 "question": "Which American civil rights activist clarified her famous actions by stating, 'The only tired I was, was tired of giving in'?",
 "answer": "Rosa Parks",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2088,7 +2104,7 @@
 "question": "Which Nobel Prize-winning physicist and chemist famously said, 'Nothing in life is to be feared, it is only to be understood'?",
 "answer": "Marie Curie",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "hard"
 },
 {
@@ -2096,7 +2112,7 @@
 "question": "Which American First Lady famously asserted, 'No one can make you feel inferior without your consent'?",
 "answer": "Eleanor Roosevelt",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2104,7 +2120,7 @@
 "question": "Which acclaimed American poet and memoirist wrote, 'People will forget what you said, people will forget what you did, but people will never forget how you made them feel'?",
 "answer": "Maya Angelou",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2112,7 +2128,7 @@
 "question": "Which pioneering American aviator famously remarked, 'The most difficult thing is the decision to act, the rest is merely tenacity'?",
 "answer": "Amelia Earhart",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "medium"
 },
 {
@@ -2120,7 +2136,7 @@
 "question": "Which British royal famously noted in a 1995 interview, 'Well, there were three of us in this marriage, so it was a bit crowded'?",
 "answer": "Princess Diana",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2128,7 +2144,7 @@
 "question": "Which Catholic nun and saint famously instructed, 'Spread love everywhere you go. Let no one ever come to you without leaving happier'?",
 "answer": "Mother Teresa",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2136,7 +2152,7 @@
 "question": "Which British Prime Minister defiantly told her party conference in 1980, 'You turn if you want to. The lady's not for turning'?",
 "answer": "Margaret Thatcher",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "medium"
 },
 {
@@ -2144,7 +2160,7 @@
 "question": "Which American Founding Father wrote in a 1789 letter that 'in this world, nothing can be said to be certain, except death and taxes'?",
 "answer": "Benjamin Franklin",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2152,7 +2168,7 @@
 "question": "Which prolific American inventor famously defined genius as 'one percent inspiration, ninety-nine percent perspiration'?",
 "answer": "Thomas Edison",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2163,7 +2179,7 @@
     "Teddy Roosevelt"
   ],
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2176,7 +2192,7 @@
   "Franklin D. Roosevelt"
 ],
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2184,7 +2200,7 @@
 "question": "Which British Prime Minister offered his country 'nothing but blood, toil, tears, and sweat' in a famous 1940 wartime speech?",
 "answer": "Winston Churchill",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2192,7 +2208,7 @@
 "question": "Which ancient Greek philosopher asserted during his trial that 'the unexamined life is not worth living'?",
 "answer": "Socrates",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "medium"
 },
 {
@@ -2200,7 +2216,7 @@
 "question": "Which Indian independence leader is widely credited with the inspirational philosophy, 'Be the change that you wish to see in the world'?",
 "answer": "Mahatma Gandhi",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2208,7 +2224,7 @@
 "question": "Which US President delivered the 1863 Gettysburg Address, opening with the phrase, 'Four score and seven years ago'?",
 "answer": "Abraham Lincoln",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2220,7 +2236,7 @@
   "Martin Luther King Jr."
 ],
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2228,7 +2244,7 @@
 "question": "Which American astronaut famously said, 'That's one small step for man, one giant leap for mankind' in 1969?",
 "answer": "Neil Armstrong",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
 {
@@ -2241,15 +2257,56 @@
   "John F. Kennedy"
 ],
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "easy"
 },
+   {
+      "slug": "who-was-the-first-person-to-step-on-the-moon",
+      "question": "Who was the first person to step on the Moon?",
+      "answer": "Neil Armstrong",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "in-which-year-did-world-war-ii-officially-end",
+      "question": "In which year did World War II officially end?",
+      "answer": "1945",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+        {
+      "slug": "in-which-year-did-the-first-man-walk-on-the-moon",
+      "question": "In which year did the first man walk on the moon?",
+      "answer": "1969",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+       {
+      "slug": "who-was-the-last-queen-of-france-before-the-french-revolution",
+      "question": "Who was the last Queen of France before the French Revolution? Hint: 'Let them eat cake.'",
+      "answer": "Marie Antoinette",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+        {
+      "slug": "who-is-credited-with-inventing-the-world-wide-web",
+      "question": "Who is credited with inventing the World Wide Web?",
+      "answer": "Tim Berners-Lee",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+
 {
 "slug": "quote-rene-descartes-think",
 "question": "Which French philosopher coined the foundational Western philosophical statement, 'Cogito, ergo sum' (I think, therefore I am)?",
 "answer": "Rene Descartes",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "medium"
 },
 
@@ -2258,7 +2315,7 @@
 "question": "Which German philosopher and economic theorist famously described religion as 'the opium of the people'?",
 "answer": "Karl Marx",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "History",
 "difficulty": "medium"
 },
 

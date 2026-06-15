@@ -10,21 +10,21 @@
       "difficulty": "easy"
     },
     {
-"slug": "quote-john-lennon-life",
-"question": "Which British musicianfamously wrote the lyric, 'Life is what happens to you while you're busy making other plans'?",
-"answer": "John Lennon",
-"answer_format": "write_in",
-"category": "Famous Quotes",
-"difficulty": "easy"
-},
-{
-"slug": "quote-dolly-parton-rainbow",
-"question": "Which iconic American country music singer-songwriter famously observed, 'If you want the rainbow, you gotta put up with the rain'?",
-"answer": "Dolly Parton",
-"answer_format": "write_in",
-"category": "Famous Quotes",
-"difficulty": "easy"
-},
+      "slug": "quote-john-lennon-life",
+      "question": "Which British musicianfamously wrote the lyric, 'Life is what happens to you while you're busy making other plans'?",
+      "answer": "John Lennon",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-dolly-parton-rainbow",
+      "question": "Which iconic American country music singer-songwriter famously observed, 'If you want the rainbow, you gotta put up with the rain'?",
+      "answer": "Dolly Parton",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy"
+    },
     {
       "slug": "woodstock-festival-year",
       "question": "In which year did the original Woodstock festival take place?",
@@ -74,14 +74,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "rolling-stones-logo-designer",
-      "question": "Who designed the iconic 'Tongue and Lips' logo for the Rolling Stones?",
-      "answer": "John Pasche",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "hard"
-    },
-    {
       "slug": "highest-selling-album-worldwide",
       "question": "Which album holds the record for the highest worldwide sales of all time?",
       "answer": "Thriller",
@@ -126,14 +118,6 @@
       "acceptableAnswers": [
         "Dark Side of the Moon"
       ]
-    },
-    {
-      "slug": "mozart-first-name",
-      "question": "What was Wolfgang Amadeus Mozart's middle name at birth?",
-      "answer": "Theophilus",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "hard"
     },
     {
       "slug": "beyonce-girl-group",
@@ -694,7 +678,7 @@
       "question": "Hailing from Liverpool, England, this legendary 1960s rock band consisting of John, Paul, George, and Ringo became the best-selling musical act in history.",
       "answer": "The Beatles",
       "answer_format": "write_in",
-      "category": "Music History",
+      "category": "Music",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Beatles"
@@ -705,7 +689,7 @@
       "question": "Known worldwide as the 'King of Pop', this iconic American singer and dancer released 'Thriller', the best-selling album of all time.",
       "answer": "Michael Jackson",
       "answer_format": "write_in",
-      "category": "Pop Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -713,7 +697,7 @@
       "question": "Fronted by the legendary Freddie Mercury, this British rock band is world-famous for massive stadium anthems like 'Bohemian Rhapsody' and 'We Will Rock You'.",
       "answer": "Queen",
       "answer_format": "write_in",
-      "category": "Rock Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -721,7 +705,7 @@
       "question": "This global pop superstar shattered industry records with her massive career-spanning 'Eras Tour' and hit albums like '1989' and 'Midnights'.",
       "answer": "Taylor Swift",
       "answer_format": "write_in",
-      "category": "Pop Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -729,7 +713,7 @@
       "question": "Universally referred to as the 'King of Rock and Roll', this hip-swiveling 1950s icon culturalized music with hits like 'Hound Dog' and 'Jailhouse Rock'.",
       "answer": "Elvis Presley",
       "answer_format": "write_in",
-      "category": "Music History",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -737,7 +721,7 @@
       "question": "This legendary 18th-century Austrian child prodigy and classical composer wrote timeless masterpieces like 'The Marriage of Figaro' and 'Twinkle, Twinkle, Little Star'.",
       "answer": "Wolfgang Amadeus Mozart",
       "answer_format": "write_in",
-      "category": "Classical Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -745,7 +729,7 @@
       "question": "A standard modern acoustic piano features a total layout of how many black and white keys?",
       "answer": "88",
       "answer_format": "write_in",
-      "category": "Musical Instruments",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -753,7 +737,7 @@
       "question": "Originally rising to fame as the frontwoman of Destiny's Child, this cultural icon became a solo powerhouse known to fans worldwide as 'Queen Bey'.",
       "answer": "Beyoncé",
       "answer_format": "write_in",
-      "category": "Pop Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -761,7 +745,7 @@
       "question": "This legendary Jamaican singer-songwriter popularized reggae music globally with his band The Wailers and iconic songs like 'Three Little Birds'.",
       "answer": "Bob Marley",
       "answer_format": "write_in",
-      "category": "Music History",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -769,7 +753,7 @@
       "question": "How many strings are found on a standard, traditional acoustic or electric guitar?",
       "answer": "6",
       "answer_format": "write_in",
-      "category": "Musical Instruments",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -777,7 +761,7 @@
       "question": "This legendary British piano-playing singer-songwriter is famous for hit songs like 'Rocket Man' and his touching tribute 'Candle in the Wind'.",
       "answer": "Elton John",
       "answer_format": "write_in",
-      "category": "Pop Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -785,7 +769,7 @@
       "question": "Despite tragically losing his hearing later in life, this iconic German composer created masterpieces like his famous 'Fifth Symphony'.",
       "answer": "Ludwig van Beethoven",
       "answer_format": "write_in",
-      "category": "Classical Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -793,7 +777,7 @@
       "question": "Also known by his alter ego Slim Shady, this Detroit rapper dominated the 2000s with hits like 'Lose Yourself' and 'Without Me'.",
       "answer": "Eminem",
       "answer_format": "write_in",
-      "category": "Hip Hop",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -801,7 +785,7 @@
       "question": "Fronted by the energetic Mick Jagger, this legendary British rock band has been performing together for over 60 years and is famous for the hit '(I Can't Get No) Satisfaction'.",
       "answer": "The Rolling Stones",
       "answer_format": "write_in",
-      "category": "Rock Music",
+      "category": "Music",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Rolling Stones"
@@ -812,7 +796,7 @@
       "question": "An absolute icon of visual reinvention and pop culture, this singer is widely recognized as the 'Queen of Pop' with hits like 'Like a Virgin'.",
       "answer": "Madonna",
       "answer_format": "write_in",
-      "category": "Pop Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -820,7 +804,7 @@
       "question": "This Canadian rapper and singer, often called 'Champagne Papi', has dominated the modern streaming era with hits like 'God's Plan' and 'Hotline Bling'.",
       "answer": "Drake",
       "answer_format": "write_in",
-      "category": "Hip Hop",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -828,7 +812,7 @@
       "question": "Fronted by the late Kurt Cobain, this 1990s Seattle band brought grunge music into the mainstream with their anthem 'Smells Like Teen Spirit'.",
       "answer": "Nirvana",
       "answer_format": "write_in",
-      "category": "Rock Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -836,7 +820,7 @@
       "question": "This British powerhouse singer named her record-breaking studio albums '19', '21', '25', and '30' after the ages she was when she wrote them.",
       "answer": "Adele",
       "answer_format": "write_in",
-      "category": "Pop Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -844,7 +828,7 @@
       "question": "In August 1969, nearly half a million people gathered on a dairy farm in upstate New York for this legendary, defining rock festival of the counterculture era.",
       "answer": "Woodstock",
       "answer_format": "write_in",
-      "category": "Music History",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -852,7 +836,7 @@
       "question": "This Swedish pop group swept the world in the 1970s with infectious hits like 'Dancing Queen' and 'Mamma Mia'.",
       "answer": "ABBA",
       "answer_format": "write_in",
-      "category": "Pop Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -860,7 +844,7 @@
       "question": "This young alternative-pop sensation swept all four major categories at the 2020 Grammys with her debut album made alongside her brother, Finneas.",
       "answer": "Billie Eilish",
       "answer_format": "write_in",
-      "category": "Pop Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -868,7 +852,7 @@
       "question": "Known affectionately as 'The Man in Black', this deep-voiced country music icon famously performed live concerts for inmates at Folsom Prison.",
       "answer": "Johnny Cash",
       "answer_format": "write_in",
-      "category": "Music History",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -876,7 +860,7 @@
       "question": "This Barbadian singer and business mogul dominated the global charts with massive pop and R&B hits like 'Umbrella', 'Diamonds', and 'Work'.",
       "answer": "Rihanna",
       "answer_format": "write_in",
-      "category": "Pop Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
@@ -884,654 +868,1141 @@
       "question": "Featuring the iconic guitar work of Jimmy Page and vocals of Robert Plant, this legendary hard rock band recorded the heavy masterpiece 'Stairway to Heaven'.",
       "answer": "Led Zeppelin",
       "answer_format": "write_in",
-      "category": "Rock Music",
+      "category": "Music",
       "difficulty": "easy"
     },
     {
-    "slug": "outkast-members",
-    "question": "Name the rap duo that consists of André 3000 and Big Boi.",
-    "answer": "OutKast",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "run-dmc-members",
-    "question": "Name the rap group that consists of Joseph 'Run' Simmons, Darryl 'DMC' McDaniels, and Jason 'Jam Master Jay' Mizell.",
-    "answer": "Run-DMC",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "beastie-boys-members",
-    "question": "Name the rap group that consists of Michael 'Mike D' Diamond, Adam 'MCA' Yauch, and Adam 'Ad-Rock' Horovitz.",
-    "answer": "Beastie Boys",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "wu-tang-clan-members",
-    "question": "Name the rap group that consists of RZA, GZA, Method Man, Raekwon, Ghostface Killah, Inspectah Deck, U-God, Masta Killa, and Ol’ Dirty Bastard.",
-    "answer": "Wu-Tang Clan",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nwa-members",
-    "question": "Name the rap group that consists of Eazy-E, Dr. Dre, Ice Cube, MC Ren, and DJ Yella.",
-    "answer": "N.W.A",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-beatles-members",
-    "question": "Name the rock band that consists of John Lennon, Paul McCartney, George Harrison, and Ringo Starr.",
-    "answer": "The Beatles",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "led-zeppelin-members",
-    "question": "Name the rock band that consists of Robert Plant, Jimmy Page, John Paul Jones, and John Bonham.",
-    "answer": "Led Zeppelin",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "pink-floyd-members",
-    "question": "Name the rock band that consists of Syd Barrett, Roger Waters, David Gilmour, Nick Mason, and Richard Wright.",
-    "answer": "Pink Floyd",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-rolling-stones-members",
-    "question": "Name the rock band that consists of Mick Jagger, Keith Richards, Brian Jones, Bill Wyman, and Charlie Watts.",
-    "answer": "The Rolling Stones",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "queen-members",
-    "question": "Name the rock band that consists of Freddie Mercury, Brian May, Roger Taylor, and John Deacon.",
-    "answer": "Queen",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "aerosmith-members",
-    "question": "Name the rock band that consists of Steven Tyler, Joe Perry, Brad Whitford, Tom Hamilton, and Joey Kramer.",
-    "answer": "Aerosmith",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-who-members",
-    "question": "Name the rock band that consists of Roger Daltrey, Pete Townshend, John Entwistle, and Keith Moon.",
-    "answer": "The Who",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "fleetwood-mac-members",
-    "question": "Name the rock band that consists of Stevie Nicks, Lindsey Buckingham, Christine McVie, John McVie, and Mick Fleetwood.",
-    "answer": "Fleetwood Mac",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-eagles-members",
-    "question": "Name the rock band that consists of Don Henley, Glenn Frey, Joe Walsh, and Timothy B. Schmit.",
-    "answer": "The Eagles",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "backstreet-boys-members",
-    "question": "Name the boy band that consists of AJ McLean, Howie Dorough, Brian Littrell, Nick Carter, and Kevin Richardson.",
-    "answer": "Backstreet Boys",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nsync-members",
-    "question": "Name the boy band that consists of Justin Timberlake, JC Chasez, Joey Fatone, Lance Bass, and Chris Kirkpatrick.",
-    "answer": "NSYNC",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "one-direction-members",
-    "question": "Name the boy band that consists of Harry Styles, Niall Horan, Liam Payne, Louis Tomlinson, and Zayn Malik.",
-    "answer": "One Direction",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "jackson-5-members",
-    "question": "Name the pop group that consists of Jackie Jackson, Tito Jackson, Jermaine Jackson, Marlon Jackson, and Michael Jackson.",
-    "answer": "The Jackson 5",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "destinys-child-members",
-    "question": "Name the pop group that consists of Beyoncé Knowles, Kelly Rowland, and Michelle Williams.",
-    "answer": "Destiny's Child",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "spice-girls-members",
-    "question": "Name the pop group that consists of Mel B, Mel C, Emma Bunton, Geri Halliwell, and Victoria Beckham.",
-    "answer": "Spice Girls",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-supremes-members",
-    "question": "Name the pop group that consists of Diana Ross, Mary Wilson, and Florence Ballard.",
-    "answer": "The Supremes",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "abba-members",
-    "question": "Name the pop group that consists of Agnetha Fältskog, Björn Ulvaeus, Benny Andersson, and Anni-Frid Lyngstad.",
-    "answer": "ABBA",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-bee-gees-members",
-    "question": "Name the pop group that consists of Barry Gibb, Robin Gibb, and Maurice Gibb.",
-    "answer": "The Bee Gees",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "migos-members",
-    "question": "Name the rap group that consists of Quavo, Offset, and Takeoff.",
-    "answer": "Migos",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "public-enemy-members",
-    "question": "Name the rap group that consists of Chuck D, Flavor Flav, and DJ Lord.",
-    "answer": "Public Enemy",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "salt-n-pepa-members",
-    "question": "Name the rap duo that consists of Cheryl James and Sandra Denton.",
-    "answer": "Salt-N-Pepa",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-police-members",
-    "question": "Name the rock band that consists of Sting, Andy Summers, and Stewart Copeland.",
-    "answer": "The Police",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "red-hot-chili-peppers-members",
-    "question": "Name the rock band that consists of Anthony Kiedis, Flea, John Frusciante, and Chad Smith.",
-    "answer": "Red Hot Chili Peppers",
-    "category": "Music",
-    "difficulty": "easy"
-  }, 
-   {
-    "slug": "the-doors-members",
-    "question": "Name the rock band that consists of Jim Morrison, Robby Krieger, Ray Manzarek, and John Densmore.",
-    "answer": "The Doors",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "lynyrd-skynyrd-members",
-    "question": "Name the rock band that consists of Ronnie Van Zant, Gary Rossington, Allen Collins, Larry Junstrom, and Bob Burns.",
-    "answer": "Lynyrd Skynyrd",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-jimi-hendrix-experience-members",
-    "question": "Name the rock band that consists of Jimi Hendrix, Noel Redding, and Mitch Mitchell.",
-    "answer": "The Jimi Hendrix Experience",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "cream-members",
-    "question": "Name the rock band that consists of Eric Clapton, Jack Bruce, and Ginger Baker.",
-    "answer": "Cream",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-grateful-dead-members",
-    "question": "Name the rock band that consists of Jerry Garcia, Bob Weir, Phil Lesh, Bill Kreutzmann, and Mickey Hart.",
-    "answer": "The Grateful Dead",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-byrds-members",
-    "question": "Name the rock band that consists of Roger McGuinn, Gene Clark, David Crosby, Chris Hillman, and Michael Clarke.",
-    "answer": "The Byrds",
-    "category": "Music",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "the-temptations-members",
-    "question": "Name the R&B group that wrote 'My Girl,' and consists of Otis Williams, Melvin Franklin, Paul Williams, Eddie Kendricks, and David Ruffin.",
-    "answer": "The Temptations",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "earth-wind-and-fire-members",
-    "question": "Name the funk band that wrote 'September,' and consists of Maurice White, Verdine White, Ralph Johnson, and Al McKay.",
-    "answer": "Earth, Wind & Fire",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-commodores-members",
-    "question": "Name the funk band that consists of Lionel Richie, Thomas McClary, William King, and Ronald LaPread.",
-    "answer": "The Commodores",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "simon-and-garfunkel-members",
-    "question": "Name the folk duo that consists of Paul Simon and Art Garfunkel.",
-    "answer": "Simon & Garfunkel",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "hall-and-oates-members",
-    "question": "Name the pop duo that consists of Daryl Hall and John Oates.",
-    "answer": "Hall and Oates",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-everly-brothers-members",
-    "question": "Name the pop duo that consists of Don Everly and Phil Everly.",
-    "answer": "The Everly Brothers",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-carpenters-members",
-    "question": "Name the pop duo that consists of Karen Carpenter and Richard Carpenter.",
-    "answer": "The Carpenters",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-white-stripes-members",
-    "question": "Name the rock duo that consists of Jack White and Meg White.",
-    "answer": "The White Stripes",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-black-keys-members",
-    "question": "Name the blues rock duo that consists of Dan Auerbach and Patrick Carney.",
-    "answer": "The Black Keys",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "tenacious-d-members",
-    "question": "Name the rock duo that consists of Jack Black and Kyle Gass.",
-    "answer": "Tenacious D",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-   {
-    "slug": "linkin-park-members",
-    "question": "Name the rock band that consists of Chester Bennington, Mike Shinoda, Brad Delson, Dave Farrell, Joe Hahn, and Rob Bourdon.",
-    "answer": "Linkin Park",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "black-sabbath-members",
-    "question": "Name the rock band that consists of Ozzy Osbourne, Tony Iommi, Geezer Butler, and Bill Ward.",
-    "answer": "Black Sabbath",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "blink-182-members",
-    "question": "Name the pop-punk band that consists of Mark Hoppus, Tom DeLonge, and Travis Barker.",
-    "answer": "Blink-182",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "sum-41-members",
-    "question": "Name the pop-punk band that consists of Deryck Whibley, Dave Baksh, Jason McCaslin, and Steve Jocz.",
-    "answer": "Sum 41",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "limp-bizkit-members",
-    "question": "Name the rap-rock band that consists of Fred Durst, Wes Borland, Sam Rivers, John Otto, and DJ Lethal.",
-    "answer": "Limp Bizkit",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "green-day-members",
-    "question": "Name the punk rock band that consists of Billie Joe Armstrong, Mike Dirnt, and Tré Cool.",
-    "answer": "Green Day",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "foo-fighters-members",
-    "question": "Name the rock band that consists of Dave Grohl, Pat Smear, Nate Mendel, Taylor Hawkins, and Chris Shiflett.",
-    "answer": "Foo Fighters",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "system-of-a-down-members",
-    "question": "Name the metal band that consists of Serj Tankian, Daron Malakian, Shavo Odadjian, and John Dolmayan.",
-    "answer": "System of a Down",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "slipknot-members",
-    "question": "Name the metal band that consists of Corey Taylor, Mick Thomson, Shawn Crahan, Paul Gray, Joey Jordison, Jim Root, Craig Jones, Sid Wilson, and Alessandro Venturella.",
-    "answer": "Slipknot",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "metallica-members",
-    "question": "Name the metal band that consists of James Hetfield, Lars Ulrich, Kirk Hammett, and Robert Trujillo.",
-    "answer": "Metallica",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "megadeth-members",
-    "question": "Name the metal band that consists of Dave Mustaine, David Ellefson, Marty Friedman, and Nick Menza.",
-    "answer": "Megadeth",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "pantera-members",
-    "question": "Name the metal band that consists of Phil Anselmo, Dimebag Darrell, Rex Brown, and Vinnie Paul.",
-    "answer": "Pantera",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nirvana-members",
-    "question": "Name the grunge band that consists of Kurt Cobain, Krist Novoselic, and Dave Grohl.",
-    "answer": "Nirvana",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "pearl-jam-members",
-    "question": "Name the rock band that consists of Eddie Vedder, Jeff Ament, Stone Gossard, Mike McCready, and Matt Cameron.",
-    "answer": "Pearl Jam",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "alice-in-chains-members",
-    "question": "Name the rock band that consists of Layne Staley, Jerry Cantrell, Mike Starr, and Sean Kinney.",
-    "answer": "Alice in Chains",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "soundgarden-members",
-    "question": "Name the rock band that consists of Chris Cornell, Kim Thayil, Ben Shepherd, and Matt Cameron.",
-    "answer": "Soundgarden",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "stone-temple-pilots-members",
-    "question": "Name the rock band that consists of Scott Weiland, Dean DeLeo, Robert DeLeo, and Eric Kretz.",
-    "answer": "Stone Temple Pilots",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "rage-against-the-machine-members",
-    "question": "Name the rap-metal band that consists of Zack de la Rocha, Tom Morello, Tim Commerford, and Brad Wilk.",
-    "answer": "Rage Against the Machine",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "korn-members",
-    "question": "Name the metal band that consists of Jonathan Davis, James Shaffer, Reginald Arvizu, and Ray Luzier.",
-    "answer": "Korn",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "fall-out-boy-members",
-    "question": "Name the pop-punk band that consists of Patrick Stump, Pete Wentz, Joe Trohman, and Andy Hurley.",
-    "answer": "Fall Out Boy",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "my-chemical-romance-members",
-    "question": "Name the rock band that consists of Gerard Way, Mikey Way, Ray Toro, Frank Iero, and Bob Bryar.",
-    "answer": "My Chemical Romance",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-killers-members",
-    "question": "Name the rock band that consists of Brandon Flowers, Dave Keuning, Mark Stoermer, and Ronnie Vannucci Jr.",
-    "answer": "The Killers",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "coldplay-members",
-    "question": "Name the rock band that consists of Chris Martin, Jonny Buckland, Guy Berryman, and Will Champion.",
-    "answer": "Coldplay",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "maroon-5-members",
-    "question": "Name the pop band that consists of Adam Levine, Jesse Carmichael, Mickey Madden, James Valentine, and Matt Flynn.",
-    "answer": "Maroon 5",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-strokes-members",
-    "question": "Name the rock band that consists of Julian Casablancas, Nick Valensi, Albert Hammond Jr., Nikolai Fraiture, and Fabrizio Moretti.",
-    "answer": "The Strokes",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-1975-members",
-    "question": "Name the pop band that consists of Matty Healy, Adam Hann, Ross MacDonald, and George Daniel.",
-    "answer": "The 1975",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "imagine-dragons-members",
-    "question": "Name the pop band that consists of Dan Reynolds, Wayne Sermon, Ben McKee, and Daniel Platzman.",
-    "answer": "Imagine Dragons",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "twenty-one-pilots-members",
-    "question": "Name the pop duo that consists of Tyler Joseph and Josh Dun.",
-    "answer": "Twenty One Pilots",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-   {
-    "slug": "the-clash-members",
-    "question": "Name the punk rock band that consists of Joe Strummer, Mick Jones, Paul Simonon, and Topper Headon.",
-    "answer": "The Clash",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-smashing-pumpkins-members",
-    "question": "Name the rock band that consists of Billy Corgan, James Iha, D'arcy Wretzky, and Jimmy Chamberlin.",
-    "answer": "The Smashing Pumpkins",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "radiohead-members",
-    "question": "Name the rock band that consists of Thom Yorke, Jonny Greenwood, Colin Greenwood, Ed O'Brien, and Philip Selway.",
-    "answer": "Radiohead",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "oasis-members",
-    "question": "Name the rock band that consists of Liam Gallagher, Noel Gallagher, Bonehead, Guigsy, and Alan White.",
-    "answer": "Oasis",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-cure-members",
-    "question": "Name the rock band that consists of Robert Smith, Simon Gallup, Roger O'Donnell, Jason Cooper, and Reeves Gabrels.",
-    "answer": "The Cure",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "u2-members",
-    "question": "Name the rock band that consists of Bono, The Edge, Adam Clayton, and Larry Mullen Jr.",
-    "answer": "U2",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "rem-members",
-    "question": "Name the rock band that consists of Michael Stipe, Peter Buck, Mike Mills, and Bill Berry.",
-    "answer": "R.E.M.",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-offspring-members",
-    "question": "Name the punk rock band that consists of Dexter Holland, Noodles, Greg K., and Pete Parada.",
-    "answer": "The Offspring",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "no-doubt-members",
-    "question": "Name the ska-punk band that consists of Gwen Stefani, Tony Kanal, Tom Dumont, and Adrian Young.",
-    "answer": "No Doubt",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "sublime-members",
-    "question": "Name the ska-punk band that consists of Bradley Nowell, Eric Wilson, and Bud Gaugh.",
-    "answer": "Sublime",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "less-than-jake-members",
-    "question": "Name the ska-punk band that consists of Chris DeMakes, Roger Lima, Vinnie Fiorello, Buddy Schaub, and Peter Wasilewski.",
-    "answer": "Less Than Jake",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-used-members",
-    "question": "Name the rock band that consists of Bert McCracken, Quinn Allman, Jepha Howard, and Dan Whitesides.",
-    "answer": "The Used",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "my-chemical-romance-members-2",
-    "question": "Name the rock band that consists of Gerard Way, Mikey Way, Ray Toro, Frank Iero, and Bob Bryar.",
-    "answer": "My Chemical Romance",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "paramore-members",
-    "question": "Name the pop-punk band that consists of Hayley Williams, Taylor York, and Zac Farro.",
-    "answer": "Paramore",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "all-time-low-members",
-    "question": "Name the pop-punk band that consists of Alex Gaskarth, Jack Barakat, Zack Merrick, and Rian Dawson.",
-    "answer": "All Time Low",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "new-found-glory-members",
-    "question": "Name the pop-punk band that consists of Jordan Pundik, Chad Gilbert, Ian Grushka, and Cyrus Bolooki.",
-    "answer": "New Found Glory",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "yellowcard-members",
-    "question": "Name the pop-punk band that consists of Ryan Key, Sean Mackin, Ryan Mendez, and Josh Portman.",
-    "answer": "Yellowcard",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-all-american-rejects-members",
-    "question": "Name the pop-punk band that consists of Tyson Ritter, Nick Wheeler, Mike Kennerty, and Chris Gaylor.",
-    "answer": "The All-American Rejects",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "good-charlotte-members",
-    "question": "Name the pop-punk band that consists of Joel Madden, Benji Madden, Paul Thomas, Billy Martin, and Dean Butterworth.",
-    "answer": "Good Charlotte",
-    "category": "Music",
-    "difficulty": "easy"
-  },
+      "slug": "outkast-members",
+      "question": "Name the rap duo that consists of André 3000 and Big Boi.",
+      "answer": "OutKast",
+      "category": "Music",
+      "difficulty": "easy"
+    },
     {
-    "slug": "d12-members",
-    "question": "Name the rap group that consists of Eminem, Proof, Bizarre, Kuniva, Swifty McVay, and Fuzz Scoota.",
-    "answer": "D12",
-    "category": "Music",
-    "difficulty": "easy"
-  }
-
+      "slug": "run-dmc-members",
+      "question": "Name the rap group that consists of Joseph 'Run' Simmons, Darryl 'DMC' McDaniels, and Jason 'Jam Master Jay' Mizell.",
+      "answer": "Run-DMC",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "beastie-boys-members",
+      "question": "Name the rap group that consists of Michael 'Mike D' Diamond, Adam 'MCA' Yauch, and Adam 'Ad-Rock' Horovitz.",
+      "answer": "Beastie Boys",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "wu-tang-clan-members",
+      "question": "Name the rap group that consists of RZA, GZA, Method Man, Raekwon, Ghostface Killah, Inspectah Deck, U-God, Masta Killa, and Ol’ Dirty Bastard.",
+      "answer": "Wu-Tang Clan",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nwa-members",
+      "question": "Name the rap group that consists of Eazy-E, Dr. Dre, Ice Cube, MC Ren, and DJ Yella.",
+      "answer": "N.W.A",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-beatles-members",
+      "question": "Name the rock band that consists of John Lennon, Paul McCartney, George Harrison, and Ringo Starr.",
+      "answer": "The Beatles",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "led-zeppelin-members",
+      "question": "Name the rock band that consists of Robert Plant, Jimmy Page, John Paul Jones, and John Bonham.",
+      "answer": "Led Zeppelin",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "pink-floyd-members",
+      "question": "Name the rock band that consists of Syd Barrett, Roger Waters, David Gilmour, Nick Mason, and Richard Wright.",
+      "answer": "Pink Floyd",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-rolling-stones-members",
+      "question": "Name the rock band that consists of Mick Jagger, Keith Richards, Brian Jones, Bill Wyman, and Charlie Watts.",
+      "answer": "The Rolling Stones",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "queen-members",
+      "question": "Name the rock band that consists of Freddie Mercury, Brian May, Roger Taylor, and John Deacon.",
+      "answer": "Queen",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "aerosmith-members",
+      "question": "Name the rock band that consists of Steven Tyler, Joe Perry, Brad Whitford, Tom Hamilton, and Joey Kramer.",
+      "answer": "Aerosmith",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-who-members",
+      "question": "Name the rock band that consists of Roger Daltrey, Pete Townshend, John Entwistle, and Keith Moon.",
+      "answer": "The Who",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "fleetwood-mac-members",
+      "question": "Name the rock band that consists of Stevie Nicks, Lindsey Buckingham, Christine McVie, John McVie, and Mick Fleetwood.",
+      "answer": "Fleetwood Mac",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-eagles-members",
+      "question": "Name the rock band that consists of Don Henley, Glenn Frey, Joe Walsh, and Timothy B. Schmit.",
+      "answer": "The Eagles",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "backstreet-boys-members",
+      "question": "Name the boy band that consists of AJ McLean, Howie Dorough, Brian Littrell, Nick Carter, and Kevin Richardson.",
+      "answer": "Backstreet Boys",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nsync-members",
+      "question": "Name the boy band that consists of Justin Timberlake, JC Chasez, Joey Fatone, Lance Bass, and Chris Kirkpatrick.",
+      "answer": "NSYNC",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "one-direction-members",
+      "question": "Name the boy band that consists of Harry Styles, Niall Horan, Liam Payne, Louis Tomlinson, and Zayn Malik.",
+      "answer": "One Direction",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jackson-5-members",
+      "question": "Name the pop group that consists of Jackie Jackson, Tito Jackson, Jermaine Jackson, Marlon Jackson, and Michael Jackson.",
+      "answer": "The Jackson 5",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "destinys-child-members",
+      "question": "Name the pop group that consists of Beyoncé Knowles, Kelly Rowland, and Michelle Williams.",
+      "answer": "Destiny's Child",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "spice-girls-members",
+      "question": "Name the pop group that consists of Mel B, Mel C, Emma Bunton, Geri Halliwell, and Victoria Beckham.",
+      "answer": "Spice Girls",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-supremes-members",
+      "question": "Name the pop group that consists of Diana Ross, Mary Wilson, and Florence Ballard.",
+      "answer": "The Supremes",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "abba-members",
+      "question": "Name the pop group that consists of Agnetha Fältskog, Björn Ulvaeus, Benny Andersson, and Anni-Frid Lyngstad.",
+      "answer": "ABBA",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-bee-gees-members",
+      "question": "Name the pop group that consists of Barry Gibb, Robin Gibb, and Maurice Gibb.",
+      "answer": "The Bee Gees",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "migos-members",
+      "question": "Name the rap group that consists of Quavo, Offset, and Takeoff.",
+      "answer": "Migos",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "public-enemy-members",
+      "question": "Name the rap group that consists of Chuck D, Flavor Flav, and DJ Lord.",
+      "answer": "Public Enemy",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "salt-n-pepa-members",
+      "question": "Name the rap duo that consists of Cheryl James and Sandra Denton.",
+      "answer": "Salt-N-Pepa",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-police-members",
+      "question": "Name the rock band that consists of Sting, Andy Summers, and Stewart Copeland.",
+      "answer": "The Police",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "red-hot-chili-peppers-members",
+      "question": "Name the rock band that consists of Anthony Kiedis, Flea, John Frusciante, and Chad Smith.",
+      "answer": "Red Hot Chili Peppers",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-doors-members",
+      "question": "Name the rock band that consists of Jim Morrison, Robby Krieger, Ray Manzarek, and John Densmore.",
+      "answer": "The Doors",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "lynyrd-skynyrd-members",
+      "question": "Name the rock band that consists of Ronnie Van Zant, Gary Rossington, Allen Collins, Larry Junstrom, and Bob Burns.",
+      "answer": "Lynyrd Skynyrd",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-jimi-hendrix-experience-members",
+      "question": "Name the rock band that consists of Jimi Hendrix, Noel Redding, and Mitch Mitchell.",
+      "answer": "The Jimi Hendrix Experience",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "cream-members",
+      "question": "Name the rock band that consists of Eric Clapton, Jack Bruce, and Ginger Baker.",
+      "answer": "Cream",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-grateful-dead-members",
+      "question": "Name the rock band that consists of Jerry Garcia, Bob Weir, Phil Lesh, Bill Kreutzmann, and Mickey Hart.",
+      "answer": "The Grateful Dead",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-byrds-members",
+      "question": "Name the rock band that consists of Roger McGuinn, Gene Clark, David Crosby, Chris Hillman, and Michael Clarke.",
+      "answer": "The Byrds",
+      "category": "Music",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "the-temptations-members",
+      "question": "Name the R&B group that wrote 'My Girl,' and consists of Otis Williams, Melvin Franklin, Paul Williams, Eddie Kendricks, and David Ruffin.",
+      "answer": "The Temptations",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "earth-wind-and-fire-members",
+      "question": "Name the funk band that wrote 'September,' and consists of Maurice White, Verdine White, Ralph Johnson, and Al McKay.",
+      "answer": "Earth, Wind & Fire",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-commodores-members",
+      "question": "Name the funk band that consists of Lionel Richie, Thomas McClary, William King, and Ronald LaPread.",
+      "answer": "The Commodores",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "simon-and-garfunkel-members",
+      "question": "Name the folk duo that consists of Paul Simon and Art Garfunkel.",
+      "answer": "Simon & Garfunkel",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "hall-and-oates-members",
+      "question": "Name the pop duo that consists of Daryl Hall and John Oates.",
+      "answer": "Hall and Oates",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-everly-brothers-members",
+      "question": "Name the pop duo that consists of Don Everly and Phil Everly.",
+      "answer": "The Everly Brothers",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-carpenters-members",
+      "question": "Name the pop duo that consists of Karen Carpenter and Richard Carpenter.",
+      "answer": "The Carpenters",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-white-stripes-members",
+      "question": "Name the rock duo that consists of Jack White and Meg White.",
+      "answer": "The White Stripes",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-black-keys-members",
+      "question": "Name the blues rock duo that consists of Dan Auerbach and Patrick Carney.",
+      "answer": "The Black Keys",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "tenacious-d-members",
+      "question": "Name the rock duo that consists of Jack Black and Kyle Gass.",
+      "answer": "Tenacious D",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "linkin-park-members",
+      "question": "Name the rock band that consists of Chester Bennington, Mike Shinoda, Brad Delson, Dave Farrell, Joe Hahn, and Rob Bourdon.",
+      "answer": "Linkin Park",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "black-sabbath-members",
+      "question": "Name the rock band that consists of Ozzy Osbourne, Tony Iommi, Geezer Butler, and Bill Ward.",
+      "answer": "Black Sabbath",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "blink-182-members",
+      "question": "Name the pop-punk band that consists of Mark Hoppus, Tom DeLonge, and Travis Barker.",
+      "answer": "Blink-182",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "sum-41-members",
+      "question": "Name the pop-punk band that consists of Deryck Whibley, Dave Baksh, Jason McCaslin, and Steve Jocz.",
+      "answer": "Sum 41",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "limp-bizkit-members",
+      "question": "Name the rap-rock band that consists of Fred Durst, Wes Borland, Sam Rivers, John Otto, and DJ Lethal.",
+      "answer": "Limp Bizkit",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "green-day-members",
+      "question": "Name the punk rock band that consists of Billie Joe Armstrong, Mike Dirnt, and Tré Cool.",
+      "answer": "Green Day",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "foo-fighters-members",
+      "question": "Name the rock band that consists of Dave Grohl, Pat Smear, Nate Mendel, Taylor Hawkins, and Chris Shiflett.",
+      "answer": "Foo Fighters",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "system-of-a-down-members",
+      "question": "Name the metal band that consists of Serj Tankian, Daron Malakian, Shavo Odadjian, and John Dolmayan.",
+      "answer": "System of a Down",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "slipknot-members",
+      "question": "Name the metal band that consists of Corey Taylor, Mick Thomson, Shawn Crahan, Paul Gray, Joey Jordison, Jim Root, Craig Jones, Sid Wilson, and Alessandro Venturella.",
+      "answer": "Slipknot",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "metallica-members",
+      "question": "Name the metal band that consists of James Hetfield, Lars Ulrich, Kirk Hammett, and Robert Trujillo.",
+      "answer": "Metallica",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "megadeth-members",
+      "question": "Name the metal band that consists of Dave Mustaine, David Ellefson, Marty Friedman, and Nick Menza.",
+      "answer": "Megadeth",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "pantera-members",
+      "question": "Name the metal band that consists of Phil Anselmo, Dimebag Darrell, Rex Brown, and Vinnie Paul.",
+      "answer": "Pantera",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nirvana-members",
+      "question": "Name the grunge band that consists of Kurt Cobain, Krist Novoselic, and Dave Grohl.",
+      "answer": "Nirvana",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "pearl-jam-members",
+      "question": "Name the rock band that consists of Eddie Vedder, Jeff Ament, Stone Gossard, Mike McCready, and Matt Cameron.",
+      "answer": "Pearl Jam",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "alice-in-chains-members",
+      "question": "Name the rock band that consists of Layne Staley, Jerry Cantrell, Mike Starr, and Sean Kinney.",
+      "answer": "Alice in Chains",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "soundgarden-members",
+      "question": "Name the rock band that consists of Chris Cornell, Kim Thayil, Ben Shepherd, and Matt Cameron.",
+      "answer": "Soundgarden",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "stone-temple-pilots-members",
+      "question": "Name the rock band that consists of Scott Weiland, Dean DeLeo, Robert DeLeo, and Eric Kretz.",
+      "answer": "Stone Temple Pilots",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "rage-against-the-machine-members",
+      "question": "Name the rap-metal band that consists of Zack de la Rocha, Tom Morello, Tim Commerford, and Brad Wilk.",
+      "answer": "Rage Against the Machine",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "korn-members",
+      "question": "Name the metal band that consists of Jonathan Davis, James Shaffer, Reginald Arvizu, and Ray Luzier.",
+      "answer": "Korn",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "fall-out-boy-members",
+      "question": "Name the pop-punk band that consists of Patrick Stump, Pete Wentz, Joe Trohman, and Andy Hurley.",
+      "answer": "Fall Out Boy",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "my-chemical-romance-members",
+      "question": "Name the rock band that consists of Gerard Way, Mikey Way, Ray Toro, Frank Iero, and Bob Bryar.",
+      "answer": "My Chemical Romance",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-killers-members",
+      "question": "Name the rock band that consists of Brandon Flowers, Dave Keuning, Mark Stoermer, and Ronnie Vannucci Jr.",
+      "answer": "The Killers",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "coldplay-members",
+      "question": "Name the rock band that consists of Chris Martin, Jonny Buckland, Guy Berryman, and Will Champion.",
+      "answer": "Coldplay",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "maroon-5-members",
+      "question": "Name the pop band that consists of Adam Levine, Jesse Carmichael, Mickey Madden, James Valentine, and Matt Flynn.",
+      "answer": "Maroon 5",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-strokes-members",
+      "question": "Name the rock band that consists of Julian Casablancas, Nick Valensi, Albert Hammond Jr., Nikolai Fraiture, and Fabrizio Moretti.",
+      "answer": "The Strokes",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-1975-members",
+      "question": "Name the pop band that consists of Matty Healy, Adam Hann, Ross MacDonald, and George Daniel.",
+      "answer": "The 1975",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "imagine-dragons-members",
+      "question": "Name the pop band that consists of Dan Reynolds, Wayne Sermon, Ben McKee, and Daniel Platzman.",
+      "answer": "Imagine Dragons",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "twenty-one-pilots-members",
+      "question": "Name the pop duo that consists of Tyler Joseph and Josh Dun.",
+      "answer": "Twenty One Pilots",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-clash-members",
+      "question": "Name the punk rock band that consists of Joe Strummer, Mick Jones, Paul Simonon, and Topper Headon.",
+      "answer": "The Clash",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-smashing-pumpkins-members",
+      "question": "Name the rock band that consists of Billy Corgan, James Iha, D'arcy Wretzky, and Jimmy Chamberlin.",
+      "answer": "The Smashing Pumpkins",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "radiohead-members",
+      "question": "Name the rock band that consists of Thom Yorke, Jonny Greenwood, Colin Greenwood, Ed O'Brien, and Philip Selway.",
+      "answer": "Radiohead",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "oasis-members",
+      "question": "Name the rock band that consists of Liam Gallagher, Noel Gallagher, Bonehead, Guigsy, and Alan White.",
+      "answer": "Oasis",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-cure-members",
+      "question": "Name the rock band that consists of Robert Smith, Simon Gallup, Roger O'Donnell, Jason Cooper, and Reeves Gabrels.",
+      "answer": "The Cure",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "u2-members",
+      "question": "Name the rock band that consists of Bono, The Edge, Adam Clayton, and Larry Mullen Jr.",
+      "answer": "U2",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "rem-members",
+      "question": "Name the rock band that consists of Michael Stipe, Peter Buck, Mike Mills, and Bill Berry.",
+      "answer": "R.E.M.",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-offspring-members",
+      "question": "Name the punk rock band that consists of Dexter Holland, Noodles, Greg K., and Pete Parada.",
+      "answer": "The Offspring",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "no-doubt-members",
+      "question": "Name the ska-punk band that consists of Gwen Stefani, Tony Kanal, Tom Dumont, and Adrian Young.",
+      "answer": "No Doubt",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "sublime-members",
+      "question": "Name the ska-punk band that consists of Bradley Nowell, Eric Wilson, and Bud Gaugh.",
+      "answer": "Sublime",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "less-than-jake-members",
+      "question": "Name the ska-punk band that consists of Chris DeMakes, Roger Lima, Vinnie Fiorello, Buddy Schaub, and Peter Wasilewski.",
+      "answer": "Less Than Jake",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-used-members",
+      "question": "Name the rock band that consists of Bert McCracken, Quinn Allman, Jepha Howard, and Dan Whitesides.",
+      "answer": "The Used",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "my-chemical-romance-members-2",
+      "question": "Name the rock band that consists of Gerard Way, Mikey Way, Ray Toro, Frank Iero, and Bob Bryar.",
+      "answer": "My Chemical Romance",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "paramore-members",
+      "question": "Name the pop-punk band that consists of Hayley Williams, Taylor York, and Zac Farro.",
+      "answer": "Paramore",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "all-time-low-members",
+      "question": "Name the pop-punk band that consists of Alex Gaskarth, Jack Barakat, Zack Merrick, and Rian Dawson.",
+      "answer": "All Time Low",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "new-found-glory-members",
+      "question": "Name the pop-punk band that consists of Jordan Pundik, Chad Gilbert, Ian Grushka, and Cyrus Bolooki.",
+      "answer": "New Found Glory",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "yellowcard-members",
+      "question": "Name the pop-punk band that consists of Ryan Key, Sean Mackin, Ryan Mendez, and Josh Portman.",
+      "answer": "Yellowcard",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-all-american-rejects-members",
+      "question": "Name the pop-punk band that consists of Tyson Ritter, Nick Wheeler, Mike Kennerty, and Chris Gaylor.",
+      "answer": "The All-American Rejects",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "good-charlotte-members",
+      "question": "Name the pop-punk band that consists of Joel Madden, Benji Madden, Paul Thomas, Billy Martin, and Dean Butterworth.",
+      "answer": "Good Charlotte",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "d12-members",
+      "question": "Name the rap group that consists of Eminem, Proof, Bizarre, Kuniva, Swifty McVay, and Fuzz Scoota.",
+      "answer": "D12",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "bohemian-rhapsody-mama",
+      "question": "Complete this Queen lyric from 'Bohemian Rhapsody': '_____, just killed a man.'",
+      "answer": "Mama",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "imagine-john-lennon",
+      "question": "Complete this John Lennon lyric from 'Imagine': 'Imagine there's no heaven, it's easy if you _____.'",
+      "answer": "Try",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "sweet-child-o-mine-guns-n-roses",
+      "question": "Complete this Guns N' Roses lyric from 'Sweet Child O' Mine': 'She's got a smile that it seems to me, reminds me of childhood _____.'",
+      "answer": "Memories",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "billie-jean-michael-jackson",
+      "question": "Complete this Michael Jackson lyric from 'Billie Jean': 'But the kid is not my _____.'",
+      "answer": "Son",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "like-a-rolling-stone-bob-dylan",
+      "question": "Complete this Bob Dylan lyric from 'Like a Rolling Stone': 'How does it feel to be on your _____?'",
+      "answer": "Own",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "yesterday-the-beatles",
+      "question": "Complete this The Beatles lyric from 'Yesterday': 'Yesterday, all my troubles seemed so _____ away.'",
+      "answer": "Far",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "hotel-california-the-eagles",
+      "question": "Complete this The Eagles lyric from 'Hotel California': 'You can _________ any time you like, but you can never leave.'",
+      "answer": "check out",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "smells-like-teen-spirit-nirvana",
+      "question": "Complete this Nirvana lyric from 'Smells Like Teen Spirit': 'I feel stupid and contagious. Here we are now, _____ us.'",
+      "answer": "Entertain",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "wonderwall-oasis",
+      "question": "Complete this Oasis lyric from 'Wonderwall': '________ is gonna be the day that they're gonna throw it back to you.'",
+      "answer": "Today",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "sweet-caroline-neil-diamond",
+      "question": "Complete this Neil Diamond lyric from 'Sweet Caroline': 'Sweet Caroline, good times never seemed so _____.'",
+      "answer": "Good",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "living-on-a-prayer-bon-jovi",
+      "question": "Complete this Bon Jovi lyric from 'Livin' on a Prayer': 'Whoa, we're _________ there, whoa, livin' on a prayer.'",
+      "answer": "halfway",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "don't-stop-believin'-journey",
+      "question": "Complete this Journey lyric from 'Don't Stop Believin'': 'Don't stop believin', hold on to that _____.'",
+      "answer": "Feeling",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "all-star-smash-mouth",
+      "question": "Complete this Smash Mouth lyric from 'All Star': 'Somebody once told me the world is gonna roll me, I ain't the sharpest tool in the _____.'",
+      "answer": "Shed",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "hey-jude-the-beatles",
+      "question": "Complete this The Beatles lyric from 'Hey Jude': 'Hey Jude, don't make it _____. Take a sad song, and make it better.'",
+      "answer": "Bad",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "piano-man-billy-joel",
+      "question": "Complete this Billy Joel lyric from 'Piano Man': 'It's nine o'clock on a Saturday, the ________ crowd shuffles in, there's an old man sitting next to me, making love to his tonic and gin.'",
+      "answer": "regular",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "every-breath-you-take-the-police",
+      "question": "Complete this The Police lyric from 'Every Breath You Take': 'Every breath you take, every move you _____.'",
+      "answer": "Make",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "happy-pharrell-williams",
+      "question": "Complete this Pharrell Williams lyric from 'Happy': 'Clap along if you feel like a room without a ______ .'",
+      "answer": "roof",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "let-it-be-the-beatles",
+      "question": "Complete this The Beatles lyric from 'Let It Be': 'When I find myself in times of __________, Mother Mary comes to me.'",
+      "answer": "trouble",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "rolling-in-the-deep-adele",
+      "question": "Complete this Adele lyric from 'Rolling in the Deep': 'There's a fire starting in my heart, reaching a ____________ and it's bringing me out the dark.'",
+      "answer": "fever pitch",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "shape-of-you-ed-sheeran",
+      "question": "Complete this Ed Sheeran lyric: 'I'm in love with the _____ of you.'",
+      "answer": "Shape",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "purple-rain-prince",
+      "question": "Complete this Prince lyric from 'Purple Rain': 'I never meant to cause you any _____, I never meant to cause you any pain.'",
+      "answer": "Sorrow",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "stairway-to-heaven-led-zeppelin",
+      "question": "Complete this Led Zeppelin lyric: 'There's a lady who's sure all that glitters is gold, and she's buying a _____ to heaven.'",
+      "answer": "Stairway",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "thriller-michael-jackson",
+      "question": "Complete this Michael Jackson lyric from 'Thriller': ''Cause this is thriller, thriller night. And no one's gonna save you from the _________ about to strike.'",
+      "answer": "Thriller",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "born-to-run-bruce-springsteen",
+      "question": "Complete this Bruce Springsteen lyric from 'Born to Run': '_______ like us, baby we were baby to run.'",
+      "answer": "Tramps",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "smells-like-teen-spirit-nirvana-2",
+      "question": "Complete this Nirvana lyric from 'Smells Like Teen Spirit': 'A mulatto, an albino, a mosquito, my _____.'",
+      "answer": "Libido",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "bohemian-rhapsody-queen-2",
+      "question": "Complete this Queen lyric from 'Bohemian Rhapsody': 'Scaramouche, Scaramouche, will you do the _____?'",
+      "answer": "Fandango",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "like-a-prayer-madonna",
+      "question": "Complete this Madonna lyric from 'Like a Prayer': 'Life is a mystery, everyone must stand _____.'",
+      "answer": "Alone",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "sweet-dreams-eurythmics",
+      "question": "Complete this Eurythmics lyric: 'Sweet dreams are made of this, who am I to disagree? I travel the world and the __________ . Everybody's looking for something.'",
+      "answer": "seven seas",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "every-breath-you-take-the-police-2",
+      "question": "Complete this The Police lyric from 'Every Breath You Take': 'Every little thing she does is _____.'",
+      "answer": "Magic",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "wonderwall-oasis-2",
+      "question": "Complete this Oasis lyric from 'Wonderwall': 'I don't believe that anybody feels the way I do about you _____.'",
+      "answer": "Now",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "all-along-the-watchtower-bob-dylan",
+      "question": "Complete this Bob Dylan lyric from 'All Along the Watchtower': 'All along the watchtower, princes kept the _____.'",
+      "answer": "View",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "hurt-nine-inch-nails",
+      "question": "Complete this Nine Inch Nails lyric from 'Hurt': 'I hurt myself today, to see if I still _____.'",
+      "answer": "Feel",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "creep-radiohead",
+      "question": "Complete this Radiohead lyric from 'Creep': 'I wish I was special, you're so very _____.'",
+      "answer": "Special",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "losing-my-religion-rem",
+      "question": "Complete this R.E.M. lyric from 'Losing My Religion': 'That's me in the corner, that's me in the _____.'",
+      "answer": "Spotlight",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "black-hole-sun-soundgarden",
+      "question": "Complete this Soundgarden lyric from 'Black Hole Sun': 'Black hole sun, won't you come, and wash away the _____.'",
+      "answer": "Rain",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "zombie-the-cranberries",
+      "question": "Complete this The Cranberries lyric from 'Zombie': 'In your head, in your _____, they're fighting.'",
+      "answer": "Head",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "tears-in-heaven-eric-clapton",
+      "question": "Complete this Eric Clapton lyric from 'Tears in Heaven': 'Would you know my ______, if I saw you in Heaven?'",
+      "answer": "name",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nothing-else-matters-metallica",
+      "question": "Complete this Metallica lyric from 'Nothing Else Matters': 'So close, no matter how far, couldn't be much more from the _____.'",
+      "answer": "Heart",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "killing-me-softly-fugees",
+      "question": "Complete this Fugees lyric from 'Killing Me Softly': 'Strumming my pain with his fingers, singing my life with his _____.'",
+      "answer": "Words",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "waterfalls-tlc",
+      "question": "Complete this TLC lyric from 'Waterfalls': 'Don't go _______ waterfalls.'",
+      "answer": "Chasing",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "baba-o-riley-the-who",
+      "question": "Complete this The Who lyric from 'Baba O'Riley': 'It's only teenage _____.'",
+      "answer": "Wasteland",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "paint-it-black-the-rolling-stones",
+      "question": "Complete this The Rolling Stones lyric from 'Paint It Black': 'I see a red ______ and I want it painted black.'",
+      "answer": "Door",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "blank-space-taylor-swift",
+      "question": "Complete this Taylor Swift lyric from 'Blank Space': 'Got a long list of ex-lovers, they'll tell you I'm _____.'",
+      "answer": "Insane",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "umbrella-rihanna",
+      "question": "Complete this Rihanna lyric from 'Umbrella': 'You had my heart, and we'll never be ________ apart.'",
+      "answer": "worlds",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "firework-katy-perry",
+      "question": "Complete this Katy Perry lyric from 'Firework': 'Cause baby, you're a firework. Come on, show 'em what you're ________.'",
+      "answer": "worth",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "love-story-taylor-swift",
+      "question": "Complete this Taylor Swift lyric from 'Love Story': 'Romeo, take me somewhere we can be _____.'",
+      "answer": "Alone",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "poker-face-lady-gaga",
+      "question": "Complete this Lady Gaga lyric: 'Can't read my, can't read my, no, he can't read my _____ face.'",
+      "answer": "Poker",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "we-found-love-rihanna",
+      "question": "Complete this Rihanna lyric from 'We Found Love': 'We found love in a _____ place.'",
+      "answer": "Hopeless",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "call-me-maybe-carly-rae-jepsen",
+      "question": "Complete this Carly Rae Jepsen lyric from 'Call Me Maybe': 'Hey, I just met you, and this is crazy, but here's my _____, so call me, maybe.'",
+      "answer": "Number",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "roar-katy-perry",
+      "question": "Complete this Katy Perry lyric from 'Roar': 'I got the eye of the tiger, a fighter, dancing through the _____.'",
+      "answer": "Fire",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "shake-it-off-taylor-swift",
+      "question": "Complete this Taylor Swift lyric from 'Shake It Off': 'I'm dancing on my own, I make the moves up as I _____.'",
+      "answer": "Go",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "dynamite-bts",
+      "question": "Complete this BTS lyric from 'Dynamite': 'Shining through the city with a little _____.'",
+      "answer": "Funk",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "love-me-like-you-do-ellie-goulding",
+      "question": "Complete this Ellie Goulding lyric from 'Love Me Like You Do': 'I didn't know that I was _____ for somebody like you.'",
+      "answer": "Waiting",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "cheap-thrills-sia",
+      "question": "Complete this Sia lyric from 'Cheap Thrills': 'I don't need no _____, I just need a beat.'",
+      "answer": "Dollar",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "work-rihanna",
+      "question": "Complete this Rihanna lyric from 'Work': 'Work, work, work, work, work, _____.'",
+      "answer": "Work",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "closer-the-chainsmokers",
+      "question": "Complete this The Chainsmokers lyric from 'Closer': 'So baby pull me closer, in the backseat of your __________.'",
+      "answer": "Rover",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "shape-of-you-ed-sheeran-2",
+      "question": "Complete this Ed Sheeran lyric from 'Shape of You': 'I'm in love with the shape of you. We push and pull like a _______ do'",
+      "answer": "Magnet",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+       {
+      "slug": "kendrick-lamar-super-bowl-2025",
+      "question": "Which rapper headlined the 2025 Super Bowl Halftime Show in New Orleans?",
+      "answer": "Kendrick Lamar",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+        {
+      "slug": "harry-styles-marathon-viral",
+      "question": "In 2025, which pop star went viral for running and completing major marathons in Tokyo and Berlin?",
+      "answer": "Harry Styles",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+        {
+      "slug": "charli-xcx-brat-summer-year",
+      "question": "Fill in the blank: Thanks to the cultural dominance of a Charli XCX's album, summer of 2024 was unofficially dubbed __________ Summer.",
+      "answer": "Brat",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy"
+    },
+        {
+      "slug": "sabrina-carpenter-mans-best-friend-album",
+      "question": "Sabrina Carpenter followed up 'Short n' Sweet' with which 2025 album that sparked controversy over its cover art?",
+      "answer": "Man's Best Friend",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard"
+    },
+      {
+      "slug": "katy-perry-blue-origin-space",
+      "question": "In April 2025, which pop star made headlines by flying to space as part of an all-female crew on a Blue Origin rocket?",
+      "answer": "Katy Perry",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "bad-guy-billie-eilish-2",
+      "question": "Complete this Billie Eilish lyric from 'Bad Guy': 'I'm that bad type, make your mama sad type, make your _________ mad tight.'",
+      "answer": "girlfriend",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "old-town-road-lil-nas-x",
+      "question": "Complete this Lil Nas X lyric from 'Old Town Road': 'I got the _____ in the back, horse tack is attached.'",
+      "answer": "Horses",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "sunflower-post-malone",
+      "question": "Complete this Post Malone lyric from 'Sunflower': 'Callin' it quits now, baby, I'm a _______.'",
+      "answer": "wreck",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "seven-rings-ariana-grande",
+      "question": "Complete this Ariana Grande lyric from '7 Rings': 'Yeah, my receipts be lookin' like _____.'",
+      "answer": "Phone numbers",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "juicy-notorious-big",
+      "question": "Complete this Notorious B.I.G. lyric from 'Juicy': 'It was all a dream, I used to read _____ magazine.'",
+      "answer": "Word Up",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "california-love-2pac",
+      "question": "Complete this 2Pac lyric from 'California Love': 'We in that sunshine state, where the bomb-ass hemp be. The state where you never find a dance floor ________.'",
+      "answer": "empty",
+      "category": "Music",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "c.r.e.a.m.-wu-tang-clan",
+      "question": "In the song 'C.R.E.A.M' by the Wu-Tang Clan, the acronmym stands for '_______ Rules Everything Around Me.'",
+      "answer": "Cash",
+      "category": "Music",
+      "difficulty": "medium"
+    }
   ],
   "familiarity": "mainstream"
 }

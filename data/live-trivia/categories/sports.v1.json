@@ -271,6 +271,22 @@
       "category": "Sports",
       "difficulty": "easy"
     },
+      {
+      "slug": "how-many-players-are-on-a-standard-soccer-team-on-the-field",
+      "question": "How many players are on a standard soccer team on the field?",
+      "answer": "11",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+       {
+      "slug": "which-country-hosted-the-2016-summer-olympics",
+      "question": "Which country hosted the 2016 Summer Olympics?",
+      "answer": "Brazil",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
     {
       "slug": "soccer-ucl-most-titles-club",
       "question": "Which club has won the most UEFA Champions League titles?",
@@ -894,7 +910,7 @@
 "question": "Which legendary American heavyweight boxer described his fighting style as being able to 'float like a butterfly, sting like a bee'?",
 "answer": "Muhammad Ali",
 "answer_format": "write_in",
-"category": "Famous Quotes",
+"category": "Sports",
 "difficulty": "easy"
 },
   {
