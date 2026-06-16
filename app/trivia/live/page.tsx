@@ -866,11 +866,11 @@ export default function LiveShowdownPage() {
 
     const scheduleForfeit = () => {
       if (forfeitTimer !== null || forfeitInFlight.current) return;
-      // 2-second grace — accidental notification-shade swipes won't immediately forfeit.
+      // 5-second grace — gives time to return from notification banners or accidental swipes.
       forfeitTimer = setTimeout(() => {
         forfeitTimer = null;
         if (forfeitEligibleRef.current) triggerForfeit();
-      }, 2000);
+      }, 5000);
     };
 
     const cancelForfeit = () => {
@@ -1207,13 +1207,7 @@ export default function LiveShowdownPage() {
               disabled={!canJoinLobby}
               onClick={() => {
                 setHasOnboarded(true);
-                if (state.isGameActive && state.activePhase === "answering" && activeKey) {
-                  setSpectatingBlockKey(activeKey);
-                  setHasJoinedSession(false);
-                  setJoinState("spectating_active_block");
-                } else {
-                  setJoinState("active_participant");
-                }
+                setJoinState("active_participant");
               }}
               className={`tp-clean-button w-full rounded-xl py-10 text-3xl font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50 ${
                 joinButtonShouldPulse ? "animate-pulse border-2 border-rose-300 bg-rose-300" : "bg-cyan-400"
@@ -1246,13 +1240,7 @@ export default function LiveShowdownPage() {
               disabled={!canJoinLobby}
               onClick={() => {
                 setHasOnboarded(true);
-                if (state.isGameActive && state.activePhase === "answering" && activeKey) {
-                  setSpectatingBlockKey(activeKey);
-                  setHasJoinedSession(false);
-                  setJoinState("spectating_active_block");
-                } else {
-                  setJoinState("active_participant");
-                }
+                setJoinState("active_participant");
               }}
               className={`tp-clean-button w-full rounded-xl py-10 text-3xl font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50 ${
                 joinButtonShouldPulse ? "animate-pulse border-2 border-rose-300 bg-rose-300" : "bg-cyan-400"
