@@ -150,8 +150,7 @@ function normalizeBooleanEnv(value: string | undefined, fallback = false): boole
   return fallback;
 }
 
-const DISABLE_GEOFENCE_FOR_TESTING =
-  process.env.NODE_ENV !== "production" && normalizeBooleanEnv(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE, false);
+const DISABLE_GEOFENCE_FOR_TESTING = true;
 const INVALID_PIN_MESSAGE = "Enter a valid 4-digit PIN.";
 const NO_LOCAL_PASSKEY_MESSAGE =
   "We're sorry, we don't have a passkey saved for your device! Please log in using your username and PIN, or create a new account.";
