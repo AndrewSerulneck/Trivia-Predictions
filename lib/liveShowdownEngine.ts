@@ -13,7 +13,7 @@ const QUESTION_BLOCK_MS = 45_000;
 const ANSWERING_MS = 30_000;
 const REST_WARNING_MS = 15_000;
 const QUESTION_WINDOW_MS = QUESTIONS_PER_ROUND * QUESTION_BLOCK_MS; // 11 min 15 sec
-const ROUND_MS = 15 * 60_000; // 15 min
+const ROUND_MS = 20 * 60_000; // 20 min
 const MID_GAME_BREAK_MS = ROUND_MS - QUESTION_WINDOW_MS; // 3 min 45 sec
 const BLOCKED_LIVE_SHOWDOWN_CATEGORIES = new Set(["fantasy epics"]);
 const RECENT_CATEGORY_COOLDOWN_OCCURRENCES = 3;
@@ -2106,8 +2106,7 @@ export async function getLiveShowdownState(
 
   const isFinalResultsWindow =
     activePhase === "mid_game_break" &&
-    currentRound === totalRounds &&
-    secondsRemaining <= 60;
+    currentRound === totalRounds;
   const currentRoundCategory =
     activeQuestion?.category ??
     (await loadRoundCategory(active.id, currentRound, occurrenceDate).catch(() => null));

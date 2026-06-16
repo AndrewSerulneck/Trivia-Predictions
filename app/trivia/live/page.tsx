@@ -1271,12 +1271,13 @@ export default function LiveShowdownPage() {
                   <>
                     {/* Section 1 — Game Over banner (viewer's own stats) */}
                     <div className="flex items-center gap-3 rounded-2xl border border-amber-400/35 bg-gradient-to-br from-[#1c1400] to-[#2d1f00] px-4 py-4">
-                      <div
-                        className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-900 via-amber-700 to-amber-500 text-2xl"
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/brand/live_trivia_icon.png"
+                        alt=""
                         aria-hidden="true"
-                      >
-                        ⭐
-                      </div>
+                        className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">
                           {postGameLeaderboard.isChampion ? "Game Over · Champion" : "Game Over"}
@@ -1306,15 +1307,29 @@ export default function LiveShowdownPage() {
                         {[postGameLeaderboard.podium[1], postGameLeaderboard.podium[0], postGameLeaderboard.podium[2]].map(
                           (entry, slot) => {
                             if (!entry) return <div key={`empty-${slot}`} className="flex-1" />;
-                            const isFirst = entry.rank === 1;
+                            const ordinal = entry.rank === 1 ? "1ST" : entry.rank === 2 ? "2ND" : "3RD";
+                            const cardClass =
+                              entry.rank === 1
+                                ? "min-h-36 border-amber-400/60 bg-amber-500/10"
+                                : entry.rank === 2
+                                ? "min-h-28 border-slate-600 bg-slate-800/50"
+                                : "min-h-24 border-slate-700 bg-slate-800/30";
+                            const badgeClass =
+                              entry.rank === 1
+                                ? "bg-amber-400 text-slate-900"
+                                : entry.rank === 2
+                                ? "bg-slate-300 text-slate-900"
+                                : "bg-amber-700 text-amber-50";
                             return (
                               <div
                                 key={entry.userId}
-                                className={`flex flex-1 flex-col items-center rounded-xl border px-2 py-3 text-center ${
-                                  isFirst ? "border-amber-400/60 bg-amber-500/10 pb-6" : "border-slate-700 bg-slate-800/50"
-                                }`}
+                                className={`flex flex-1 flex-col items-center justify-end rounded-xl border px-2 pb-3 pt-3 text-center ${cardClass}`}
                               >
-                                <RankBadge rank={entry.rank} />
+                                <span
+                                  className={`inline-flex items-center justify-center rounded-md px-2 py-0.5 text-[10px] font-black tracking-wider ${badgeClass}`}
+                                >
+                                  {ordinal}
+                                </span>
                                 <p className="mt-2 w-full truncate text-xs font-bold text-slate-100">{entry.username}</p>
                                 <p className="mt-0.5 text-lg font-black tabular-nums text-white">{entry.totalPoints}</p>
                               </div>
@@ -1377,8 +1392,10 @@ export default function LiveShowdownPage() {
                         <span className="text-xl font-black tabular-nums text-emerald-300">
                           {postGameLeaderboard.rankGained != null
                             ? postGameLeaderboard.rankGained > 0
-                              ? `+${postGameLeaderboard.rankGained}`
-                              : `${postGameLeaderboard.rankGained}`
+                              ? `▲ ${postGameLeaderboard.rankGained}`
+                              : postGameLeaderboard.rankGained < 0
+                              ? `▼ ${Math.abs(postGameLeaderboard.rankGained)}`
+                              : "—"
                             : "—"}
                         </span>
                         <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Rank Gained</span>
@@ -1399,7 +1416,7 @@ export default function LiveShowdownPage() {
                       onClick={() => void goHome()}
                       className="w-full rounded-2xl bg-rose-500 px-4 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-white transition-colors hover:bg-rose-400"
                     >
-                      ← Back to Venue
+                      ← Back to venue
                     </button>
                   </>
                 ) : (

@@ -1,12 +1,12 @@
 {
-  "categoryName": "Art & Literature",
+  "categoryName": "Art, Literature and Comics",
   "questions": [
     {
       "slug": "quote-oscar-wilde-themselves",
       "question": "Which Irish playwright famously advised readers, 'Be yourself; everyone else is already taken'?",
       "answer": "Oscar Wilde",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
@@ -14,7 +14,7 @@
       "question": "Which English author coined the terrifying warning, 'Big Brother is watching you' in his dystopian novel 1984?",
       "answer": "George Orwell",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
@@ -22,7 +22,7 @@
       "question": "Which German philosopher warned, 'He who fights with monsters should look to it that he himself does not become a monster'?",
       "answer": "Friedrich Nietzsche",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "hard"
     },
     {
@@ -30,7 +30,7 @@
       "question": "Which English novelist opened his book A Tale of Two Cities with the line, 'It was the best of times, it was the worst of times'?",
       "answer": "Charles Dickens",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
@@ -38,7 +38,7 @@
       "question": "Which witty Irish playwright and author wrote the famous line, 'I can resist everything except temptation'?",
       "answer": "Oscar Wilde",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium"
     },
     {
@@ -46,7 +46,7 @@
       "question": "According to William Shakespeare's historical tragedy, which Roman dictator utters the dying words, 'Et tu, Brute?'",
       "answer": "Julius Caesar",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
@@ -54,7 +54,7 @@
       "question": "Which fictional detective created by Arthur Conan Doyle is famously associated with the phrase, 'Elementary, my dear Watson'?",
       "answer": "Sherlock Holmes",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
@@ -62,14 +62,14 @@
       "question": "Which fictional William Shakespeare character utters the famous line, 'To be, or not to be, that is the question'?",
       "answer": "Hamlet",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "language-homonyms",
       "question": "What is the name given to words that share the same spelling, the same pronunciation, or both, but have completely different meanings?",
       "answer": "Homonyms",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Homonyms",
@@ -81,7 +81,7 @@
       "slug": "language-oxymoron",
       "question": "What is the term for a figure of speech that pairs two seemingly contradictory terms, such as 'deafening silence' or 'jumbo shrimp'?",
       "answer": "Oxymoron",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Oxymoron"
@@ -91,7 +91,7 @@
       "slug": "language-palindrome",
       "question": "What name is given to a word, phrase, or sequence that reads the same backward as forward, such as 'racecar' or 'madam'?",
       "answer": "Palindrome",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Palindrome",
@@ -103,14 +103,14 @@
       "question": "Which author wrote 'Romeo and Juliet'?",
       "answer": "William Shakespeare",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium"
     },
     {
       "slug": "language-onomatopoeia",
       "question": "What is the linguistic term for a word that visually or phonetically imitates the sound it describes, such as 'buzz', 'hiss', or 'thud'?",
       "answer": "Onomatopoeia",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Onomatopoeia"
@@ -120,7 +120,7 @@
       "slug": "language-portmanteau",
       "question": "What term refers to a blend of two words that combines their sounds and meanings, such as 'smog' (smoke and fog) or 'brunch' (breakfast and lunch)?",
       "answer": "Portmanteau",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Portmanteau",
@@ -132,7 +132,7 @@
       "slug": "language-gerund",
       "question": "What grammatical term refers to a verb form ending in '-ing' that functions exactly like a noun in a sentence, as in 'Swimming is great exercise'?",
       "answer": "Gerund",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Gerund"
@@ -142,7 +142,7 @@
       "slug": "language-oxford-comma",
       "question": "What is the common name for the final comma placed right before the coordinating conjunction in a list of three or more items?",
       "answer": "Oxford Comma",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Oxford Comma",
@@ -154,7 +154,7 @@
       "slug": "language-alliteration",
       "question": "What literary and linguistic device involves the repetition of the same consonant sound at the beginning of closely connected words?",
       "answer": "Alliteration",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Alliteration"
@@ -164,7 +164,7 @@
       "slug": "language-anagram",
       "question": "What do you call a word or phrase formed by completely rearranging the letters of another word or phrase, using all the original letters exactly once?",
       "answer": "Anagram",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Anagram",
@@ -175,7 +175,7 @@
       "slug": "language-malapropism",
       "question": "What is the specific term for the mistaken use of an incorrect word in place of a similar-sounding one, often with an unintentionally amusing result?",
       "answer": "Malapropism",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Malapropism",
@@ -186,7 +186,7 @@
       "slug": "language-antonym",
       "question": "What basic linguistic term describes a word that expresses a meaning directly opposite to that of another word?",
       "answer": "Antonym",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Antonym",
@@ -197,7 +197,7 @@
       "slug": "language-conjunction",
       "question": "What part of speech is specifically used to connect words, phrases, or clauses together, with common examples being 'and', 'but', and 'or'?",
       "answer": "Conjunction",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Conjunction",
@@ -208,7 +208,7 @@
       "slug": "language-euphemism",
       "question": "What term describes a mild, indirect, or vague expression used in place of a harsh, blunt, or unpleasant one, such as using 'passed away' instead of 'died'?",
       "answer": "Euphemism",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Euphemism",
@@ -219,7 +219,7 @@
       "slug": "language-active-voice",
       "question": "What grammatical voice is being utilized when the subject of the sentence directly performs the action of the verb?",
       "answer": "Active Voice",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Active Voice",
@@ -230,7 +230,7 @@
       "slug": "language-acronym",
       "question": "What specific name is given to an abbreviation formed from the initial letters of other words and pronounced entirely as a single word, such as 'NASA' or 'LASER'?",
       "answer": "Acronym",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Acronym",
@@ -241,7 +241,7 @@
       "slug": "language-superlative",
       "question": "What grammatical form of an adjective expresses the highest degree of a quality, typically ending in '-est' or paired with the word 'most'?",
       "answer": "Superlative",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Superlative",
@@ -252,7 +252,7 @@
       "slug": "language-etymology",
       "question": "What is the scientific and linguistic name given to the study of the history of words and how their origins and meanings have changed over time?",
       "answer": "Etymology",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Etymology"
@@ -262,7 +262,7 @@
       "slug": "language-interjection",
       "question": "What part of speech consists of words or phrases used as sudden exclamations to express emotion, isolated from the rest of the sentence, such as 'Ouch!' or 'Wow!'?",
       "answer": "Interjection",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Interjection",
@@ -273,7 +273,7 @@
       "slug": "language-syntax",
       "question": "What specific linguistic term refers to the rules, principles, and processes that govern the structure and arrangement of words to form proper sentences?",
       "answer": "Syntax",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Syntax"
@@ -283,7 +283,7 @@
       "slug": "language-preposition",
       "question": "What part of speech sits before a noun or pronoun to show its spatial, temporal, or logical relationship to another word, with examples like 'under', 'through', or 'after'?",
       "answer": "Preposition",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Preposition",
@@ -294,7 +294,7 @@
       "slug": "language-simile",
       "question": "What figure of speech directly compares two different things using the words 'like' or 'as'?",
       "answer": "Simile",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Simile",
@@ -305,7 +305,7 @@
       "slug": "language-metaphor",
       "question": "What figure of speech compares two things by stating that one thing is another, without using 'like' or 'as'?",
       "answer": "Metaphor",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Metaphor",
@@ -316,7 +316,7 @@
       "slug": "language-noun",
       "question": "What basic part of speech is defined as a person, place, thing, or idea?",
       "answer": "Noun",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Noun",
@@ -327,7 +327,7 @@
       "slug": "language-verb",
       "question": "What basic part of speech represents an action, occurrence, or state of being in a sentence?",
       "answer": "Verb",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Verb",
@@ -338,7 +338,7 @@
       "slug": "language-adjective",
       "question": "What part of speech is used to describe, modify, or give more information about a noun?",
       "answer": "Adjective",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Adjective",
@@ -349,7 +349,7 @@
       "slug": "language-pronoun",
       "question": "What part of speech is used as a direct substitute for a noun to avoid repeating it, such as 'he', 'she', or 'it'?",
       "answer": "Pronoun",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Pronoun",
@@ -360,7 +360,7 @@
       "slug": "language-synonym",
       "question": "What do you call a word that has the same, or nearly the same, meaning as another word in the same language?",
       "answer": "Synonym",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Synonym",
@@ -371,7 +371,7 @@
       "slug": "language-adverb",
       "question": "What part of speech modifies a verb, an adjective, or another adverb, often ending in '-ly'?",
       "answer": "Adverb",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Adverb",
@@ -382,7 +382,7 @@
       "slug": "language-personification",
       "question": "What literary device gives human qualities, feelings, or actions to non-human things or animals?",
       "answer": "Personification",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Personification"
@@ -392,7 +392,7 @@
       "slug": "language-proper-noun",
       "question": "What specific type of noun names a specific person, place, or organization and always begins with a capital letter?",
       "answer": "Proper Noun",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Proper Noun",
@@ -403,7 +403,7 @@
       "slug": "language-vowels",
       "question": "What name is given to the core group of English letters consisting of A, E, I, O, U, and sometimes Y?",
       "answer": "Vowels",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Vowels",
@@ -414,7 +414,7 @@
       "slug": "language-consonants",
       "question": "What term refers to all the letters in the alphabet that are not vowels?",
       "answer": "Consonants",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Consonants",
@@ -425,7 +425,7 @@
       "slug": "language-prefix",
       "question": "What do you call a letter or group of letters added to the beginning of a word to alter its meaning, such as 'un-' or 're-'?",
       "answer": "Prefix",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Prefix",
@@ -436,7 +436,7 @@
       "slug": "language-suffix",
       "question": "What do you call a letter or group of letters added to the end of a word to alter its meaning or form, such as '-ful' or '-ly'?",
       "answer": "Suffix",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Suffix",
@@ -447,7 +447,7 @@
       "slug": "language-idiom",
       "question": "What is the term for a common phrase or expression whose meaning cannot be understood from the literal words, like 'bite the bullet'?",
       "answer": "Idiom",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Idiom",
@@ -459,7 +459,7 @@
       "slug": "language-contraction",
       "question": "What do you call a shortened word form made by combining two words and replacing missing letters with an apostrophe, like 'don't' or 'it's'?",
       "answer": "Contraction",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Contraction",
@@ -470,7 +470,7 @@
       "slug": "language-cliche",
       "question": "What term is used for an overused phrase or opinion that has lost its original impact and freshness, such as 'time heals all wounds'?",
       "answer": "Cliche",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cliche",
@@ -483,7 +483,7 @@
       "slug": "language-compound-word",
       "question": "What is the term for a single word made up of two complete independent words joined together, such as 'sunflower' or 'skateboard'?",
       "answer": "Compound Word",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Compound Word",
@@ -495,7 +495,7 @@
       "slug": "language-subject",
       "question": "In grammar, what term refers to the person, place, or thing that is performing the main action in a sentence? Hint: a sentence is composed of this and a predicate.",
       "answer": "Subject",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Subject"
@@ -505,7 +505,7 @@
       "slug": "language-rhyme",
       "question": "What do you call it when two or more words share the same ending sound as each other?",
       "answer": "Rhyme",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Rhyme",
@@ -516,7 +516,7 @@
       "slug": "language-interrogation-point",
       "question": "What punctuation mark is placed at the very end of a sentence to show that a direct question has been asked?",
       "answer": "Question Mark",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Question Mark",
@@ -527,7 +527,7 @@
       "slug": "language-plural",
       "question": "What grammatical term indicates that there is more than one of a particular noun? Hint: The opposite of singular is.... what?",
       "answer": "Plural",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Plural"
@@ -537,7 +537,7 @@
       "slug": "hero-batman",
       "question": "What billionaire superhero protects Gotham City dressed as a bat?",
       "answer": "Batman",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Batman",
@@ -549,21 +549,21 @@
       "slug": "batman-real-name",
       "question": "What is Batman's real name? Include first and last name.",
       "answer": "Bruce Wayne",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "bruce-wayne-batman-real-name",
       "question": "What is Bruce Wayne's superhero alter ego?",
       "answer": "Batman",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "batman-city",
       "question": "What city does Batman protect?",
       "answer": "Gotham City",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
         {
@@ -571,7 +571,7 @@
       "question": "The Met Gala is traditionally held on the first Monday of which month?",
       "answer": "May",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium"
     },
         {
@@ -579,14 +579,14 @@
 "question": "Which French fashion designer famously declared, 'In order to be irreplaceable one must always be different'?",
 "answer": "Coco Chanel",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy"
 },
     {
       "slug": "hero-green-lantern",
       "question": "Which superhero belongs to an intergalactic police force and uses a powerful green ring powered by willpower?",
       "answer": "Green Lantern",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Green Lantern",
@@ -598,14 +598,14 @@
       "slug": "hero-green-lantern-jewelry",
       "question": "What piece of jewelry gives the Green Lantern his power?",
       "answer": "A ring",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "hero-deadpool",
       "question": "Which wisecracking, red-suited Marvel anti-hero is famous for constantly breaking the fourth wall?",
       "answer": "Deadpool",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Deadpool",
@@ -616,7 +616,7 @@
       "slug": "hero-iron-man",
       "question": "What superhero alter ego does billionaire genius Tony Stark use when flying in his high-tech armor?",
       "answer": "Iron Man",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Iron Man",
@@ -627,14 +627,14 @@
       "slug": "iron-man-real-name",
       "question": "What is Iron Man's real name? Include first and last name.",
       "answer": "Tony Stark",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "hero-superman",
       "question": "Which DC superhero was sent to Earth from the planet Krypton and works as a reporter named Clark Kent?",
       "answer": "Superman",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Superman",
@@ -646,7 +646,7 @@
       "slug": "hero-the-flash",
       "question": "Which DC superhero is known as the Scarlet Speedster and possesses the power of super-speed?",
       "answer": "The Flash",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Flash",
@@ -659,7 +659,7 @@
       "slug": "hero-captain-america",
       "question": "Which patriotic Marvel hero carries an indestructible star-spangled shield?",
       "answer": "Captain America",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Captain America",
@@ -670,7 +670,7 @@
       "slug": "hero-spiderman",
       "question": "Which teenage hero got his powers from a radioactive spider bite and lives by the motto 'With great power comes great responsibility'?",
       "answer": "Spider-Man",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Spider-Man",
@@ -683,21 +683,21 @@
       "slug": "spiderman-real-name",
       "question": "What is Spider-Man's real name? Include first and last name.",
       "answer": "Peter Parker",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "spiderman-peter-parker-job",
       "question": "In the Spiderman universe, what is Peter Parker's primary occupation when he's not fighting crime?",
       "answer": "Photographer",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "hero-the-incredible-hulk",
       "question": "What giant green monster does scientist Bruce Banner transform into whenever he gets angry?",
       "answer": "The Incredible Hulk",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Incredible Hulk",
@@ -709,7 +709,7 @@
       "slug": "hero-wolverine",
       "question": "Which iconic X-Men member has an adamantium skeleton, sharp claws, and a powerful mutant healing factor?",
       "answer": "Wolverine",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Wolverine",
@@ -720,7 +720,7 @@
       "slug": "hero-storm",
       "question": "Which powerful X-Men member has the mutant ability to control the weather, summon lightning, and fly?",
       "answer": "Storm",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Storm",
@@ -731,7 +731,7 @@
       "slug": "hero-cyclops",
       "question": "Which field leader of the X-Men must wear a special ruby-quartz visor to control the powerful optic blasts from his eyes?",
       "answer": "Cyclops",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cyclops",
@@ -742,7 +742,7 @@
       "slug": "hero-rogue",
       "question": "Which southern X-Men mutant absorbs the powers and memories of anyone she touches skin-to-skin?",
       "answer": "Rogue",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Rogue",
@@ -753,21 +753,21 @@
       "slug": "hero-magneto",
       "question": "Which X-Men rival and periodic ally is the mutant Master of Magnetism, capable of controlling all types of metal?",
       "answer": "Magneto",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "hero-magneto-powers",
       "question": "X-Men rival (and occasional ally) Magneto has the abiltity to control what substance?",
       "answer": "Metal",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "hero-professor-x",
       "question": "Who is the wheelchair-bound, telepathic founder and mentor of the X-Men?",
       "answer": "Professor X",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Professor X",
@@ -780,7 +780,7 @@
       "slug": "hero-wonder-woman",
       "question": "Which Amazonian princess fights crime with her Lasso of Truth and bulletproof bracelets?",
       "answer": "Wonder Woman",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Wonder Woman",
@@ -791,7 +791,7 @@
       "slug": "hero-aquaman",
       "question": "Which half-human, half-Atlantean hero rules the seven seas and can communicate telepathically with marine life?",
       "answer": "Aquaman",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Aquaman",
@@ -802,7 +802,7 @@
       "slug": "hero-thor",
       "question": "Which Marvel superhero is based on the Norse God of Thunder and wields the enchanted hammer Mjolnir?",
       "answer": "Thor",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Thor",
@@ -813,14 +813,14 @@
       "slug": "hero-thor-hammer",
       "question": "What weapon does the Marvel superhero Thor wield?",
       "answer": "Hammer",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "hero-nightwing",
       "question": "What superhero identity did Dick Grayson adopt after growing up and moving on from his role as Batman's original sidekick, Robin?",
       "answer": "Nightwing",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Nightwing",
@@ -831,7 +831,7 @@
       "slug": "hero-black-panther",
       "question": "What superhero title is held by T'Challa, the king of the technologically advanced, fictional African nation of Wakanda?",
       "answer": "Black Panther",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Black Panther",
@@ -842,7 +842,7 @@
       "slug": "hero-green-arrow",
       "question": "What is the superhero name of Oliver Queen, a billionaire who fights crime using a high-tech bow and specialized trick arrows?",
       "answer": "Green Arrow",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Green Arrow",
@@ -853,7 +853,7 @@
       "slug": "hero-black-widow",
       "question": "What is the superhero codename of Natasha Romanoff, Marvel's elite super-spy and core Avenger?",
       "answer": "Black Widow",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Black Widow",
@@ -864,7 +864,7 @@
       "slug": "hero-hawkeye",
       "question": "Which expert archer and marksman fights alongside the Avengers using no actual superpowers, just perfect aim?",
       "answer": "Hawkeye",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Hawkeye",
@@ -875,7 +875,7 @@
       "slug": "hero-shazam",
       "question": "Which superhero is actually a young boy named Billy Batson who transforms into an adult demigod by shouting a single magic word?",
       "answer": "Shazam",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Shazam",
@@ -886,7 +886,7 @@
       "slug": "hero-human-torch",
       "question": "Which hot-headed member of the Fantastic Four can engulf his entire body in plasma, fly, and shoot fire while yelling 'Flame on!'?",
       "answer": "Human Torch",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Human Torch",
@@ -897,7 +897,7 @@
       "slug": "villain-joker",
       "question": "Which cackling, green-haired psychopath is known as Batman's ultimate arch-nemesis?",
       "answer": "The Joker",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Joker",
@@ -908,7 +908,7 @@
       "slug": "villain-lex-luthor",
       "question": "Which brilliant, bald billionaire businessman is the primary arch-nemesis of Superman?",
       "answer": "Lex Luthor",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Lex Luthor",
@@ -920,7 +920,7 @@
       "slug": "villain-thanos",
       "question": "Which cosmic Marvel villain seeks the Infinity Stones to wipe out half of all life in the universe?",
       "answer": "Thanos",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Thanos"
@@ -930,7 +930,7 @@
       "slug": "villain-green-goblin",
       "question": "Which glider-riding, pumpkin-bomb-throwing corporate villain is Spider-Man's bitterest enemy?",
       "answer": "Green Goblin",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Green Goblin",
@@ -941,7 +941,7 @@
       "slug": "villain-doctor-doom",
       "question": "Which metal-masked dictator of Latveria combines high technology and sorcery to fight the Fantastic Four?",
       "answer": "Doctor Doom",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Doctor Doom",
@@ -953,7 +953,7 @@
       "slug": "villain-loki",
       "question": "Which deceptive Norse God of Mischief is the adoptive brother and frequent enemy of Thor?",
       "answer": "Loki",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Loki",
@@ -964,7 +964,7 @@
       "slug": "villain-venom",
       "question": "Which terrifying Spider-Man villain is formed when journalist Eddie Brock bonds with an alien symbiote?",
       "answer": "Venom",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Venom",
@@ -975,7 +975,7 @@
       "slug": "villain-catwoman",
       "question": "Which whip-cracking Gotham City cat burglar walks the line between Batman's enemy and love interest?",
       "answer": "Catwoman",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Catwoman",
@@ -986,7 +986,7 @@
       "slug": "villain-riddler",
       "question": "Which green-suited Gotham villain is obsessed with leaving complex puzzles and clues for Batman to solve?",
       "answer": "The Riddler",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Riddler",
@@ -1000,7 +1000,7 @@
       "slug": "villain-doc-ock",
       "question": "Which brilliant Spider-Man scientist villain controls four mechanical, tentacle-like arms fused to his body?",
       "answer": "Doctor Octopus",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Doctor Octopus",
@@ -1013,7 +1013,7 @@
       "slug": "villain-harley-quinn",
       "question": "Which former Arkham Asylum psychiatrist fell in love with the Joker and became his sidekick in crime?",
       "answer": "Harley Quinn",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Harley Quinn",
@@ -1024,7 +1024,7 @@
       "slug": "villain-penguins",
       "question": "Which tuxedo-wearing Gotham crime boss wears a monocle, has fins for hands, and uses trick umbrellas?",
       "answer": "The Penguin",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Penguin",
@@ -1036,7 +1036,7 @@
       "slug": "villain-reverse-flash",
       "question": "Which yellow-suited, speed-ster villain traveled back in time to torment the Flash?",
       "answer": "Reverse-Flash",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Reverse-Flash",
@@ -1049,7 +1049,7 @@
       "slug": "villain-red-skull",
       "question": "Which terrifying Nazi commander with a crimson face serves as the ultimate arch-nemesis of Captain America?",
       "answer": "Red Skull",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Red Skull",
@@ -1061,7 +1061,7 @@
       "slug": "villain-two-face",
       "question": "Which former Gotham District Attorney turned Batman Nemesis flips a scarred silver coin to make his sinister decisions?",
       "answer": "Two-Face",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Two-Face",
@@ -1073,7 +1073,7 @@
       "slug": "villain-darkseid",
       "question": "Which ruthless alien tyrant rules the fiery planet Apokolips and searches for the Anti-Life Equation to conquer the DC universe?",
       "answer": "Darkseid",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Darkseid"
@@ -1083,7 +1083,7 @@
       "slug": "villain-bane",
       "question": "Which hulking, mask-wearing Batman villain uses a super-steroid called Venom and famously broke the Dark Knight's back?",
       "answer": "Bane",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Bane"
@@ -1093,7 +1093,7 @@
       "slug": "villain-poison-ivy",
       "question": "Which eco-terrorist Batman villain can control plant life and uses mind-controlling plant toxins?",
       "answer": "Poison Ivy",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Poison Ivy",
@@ -1104,7 +1104,7 @@
       "slug": "villain-scarecrow",
       "question": "Which fear-obsessed Gotham villain uses a special Fear Gas to subject his victims to their worst nightmares?",
       "answer": "Scarecrow",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Scarecrow",
@@ -1116,7 +1116,7 @@
       "slug": "villain-kingpin",
       "question": "Which massive, cane-wielding crime lord acts as the supreme boss of New York City's underworld, fighting both Spider-Man and Daredevil?",
       "answer": "Kingpin",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Kingpin",
@@ -1128,7 +1128,7 @@
       "slug": "hero-daredevil",
       "question": "Which blind Marvel superhero is a lawyer by day and uses his heightened radar senses to fight crime in Hell's Kitchen at night?",
       "answer": "Daredevil",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Daredevil",
@@ -1140,7 +1140,7 @@
       "slug": "hero-doctor-strange",
       "question": "Which brilliant former surgeon became Marvel's Sorcerer Supreme, protecting Earth using magic and the Cloak of Levitation?",
       "answer": "Doctor Strange",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Doctor Strange",
@@ -1152,7 +1152,7 @@
       "slug": "hero-ant-man",
       "question": "Which Marvel superhero uses Pym Particles to shrink down to the size of an insect or grow into a giant?",
       "answer": "Ant-Man",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Ant-Man",
@@ -1164,7 +1164,7 @@
       "slug": "hero-star-lord",
       "question": "What is the superhero alias of Peter Quill, the music-loving, blaster-wielding leader of the Guardians of the Galaxy?",
       "answer": "Star-Lord",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Star-Lord",
@@ -1176,7 +1176,7 @@
       "slug": "hero-groot",
       "question": "Which sentient, tree-like Marvel superhero is a member of the Guardians of the Galaxy and famously only says three specific words (including his name)?",
       "answer": "Groot",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Groot"
@@ -1186,7 +1186,7 @@
       "slug": "hero-captain-marvel",
       "question": "What superhero name does Carol Danvers use after gaining immense cosmic powers, energy projection abilities, and the power of flight?",
       "answer": "Captain Marvel",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Captain Marvel",
@@ -1197,7 +1197,7 @@
       "slug": "hero-supergirl",
       "question": "Which DC superhero is Superman's older cousin Kara Zor-El, who shares his exact powers under a yellow sun?",
       "answer": "Supergirl",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Supergirl",
@@ -1208,7 +1208,7 @@
       "slug": "hero-nightcrawler",
       "question": "Which blue-skinned, teleporting X-Men member leaves a cloud of purple smoke and a 'BAMF' sound behind when he moves?",
       "answer": "Nightcrawler",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Nightcrawler",
@@ -1219,7 +1219,7 @@
       "slug": "hero-beast",
       "question": "Which brilliant, blue-furred X-Men scientist possesses superhuman agility and strength despite his heavy build?",
       "answer": "Beast",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Beast",
@@ -1231,7 +1231,7 @@
       "slug": "hero-jean-grey",
       "question": "Which powerful founding member of the X-Men has telepathic and telekinetic powers and famously bonded with the cosmic Phoenix Force?",
       "answer": "Jean Grey",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Jean Grey",
@@ -1243,7 +1243,7 @@
       "slug": "hero-punisher",
       "question": "Which brutal Marvel anti-hero wears a giant white skull on his chest and wages a one-man war on crime to avenge his family?",
       "answer": "The Punisher",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Punisher",
@@ -1255,7 +1255,7 @@
       "slug": "hero-ghost-rider",
       "question": "Which fiery Marvel anti-hero has a flaming skull for a head, rides a motorcycle, and punishes evildoers with his Penance Stare?",
       "answer": "Ghost Rider",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Ghost Rider",
@@ -1266,7 +1266,7 @@
       "slug": "hero-robin",
       "question": "What is the classic superhero name given to Batman's sidekicks, who famously make up the younger half of the Dynamic Duo?",
       "answer": "Robin",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Robin",
@@ -1277,7 +1277,7 @@
       "slug": "hero-the-thing",
       "question": "Which rock-skinned, orange superhero is the powerhouse of the Fantastic Four and famously shouts 'It's clobberin' time!'?",
       "answer": "The Thing",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Thing",
@@ -1288,7 +1288,7 @@
       "slug": "hero-quicksilver",
       "question": "Which silver-haired Marvel superhero is capable of moving and thinking at extreme supersonic speeds?",
       "answer": "Quicksilver",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Quicksilver",
@@ -1299,14 +1299,14 @@
       "slug": "history-action-comics-1",
       "question": "Action Comics #1 was published in 1938 and featured the first-ever comic book superhero. Which superhero was it?",
       "answer": "Superman",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
     {
       "slug": "history-first-sidekick",
       "question": "Introduced in Detective Comics #38 in 1940, who was the first-ever kid sidekick in comic book history?",
       "answer": "Robin",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Robin",
@@ -1318,7 +1318,7 @@
       "slug": "history-captain-america-1",
       "question": "Which iconic superhero first appeared on a 1941 comic book cover famously punching Adolf Hitler in the face?",
       "answer": "Captain America",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Captain America",
@@ -1330,7 +1330,7 @@
       "slug": "history-first-female-led-comic",
       "question": "Which Amazonian princess became the first female superhero to star in her own standalone self-titled comic book series in 1942?",
       "answer": "Wonder Woman",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Wonder Woman",
@@ -1341,7 +1341,7 @@
       "slug": "history-marvel-age-start",
       "question": "The launch of which superhero team's comic book in 1961 officially kicked off the modern 'Marvel Age' of comics?",
       "answer": "Fantastic Four",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Fantastic Four",
@@ -1353,7 +1353,7 @@
       "slug": "history-watchmen",
       "question": "What landmark 1986 deconstructive comic series by Alan Moore and Dave Gibbons is the only graphic novel to make TIME's list of the 100 best novels?",
       "answer": "Watchmen",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Watchmen"
@@ -1364,7 +1364,7 @@
       "question": "Who wrote the classic novel \"Don Quixote\"?",
       "answer": "Miguel de Cervantes",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "hard"
     },
     
@@ -1373,7 +1373,7 @@
 "question": "What Philip K. Dick short story was adapted into a 2002 film starring Tom Cruise and directed by Steven Spielberg?",
 "answer": "Minority Report",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Minority Report", "The Minority Report"]
 },
@@ -1382,7 +1382,7 @@
 "question": "What Cormac McCarthy novel was adapted into a 2007 film starring Tommy Lee Jones and directed by Joel and Ethan Coen?",
 "answer": "No Country for Old Men",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["No Country for Old Men"]
 },
@@ -1391,7 +1391,7 @@
 "question": "What Stephen King novel was adapted into a 1980 film starring Jack Nicholson and directed by Stanley Kubrick?",
 "answer": "The Shining",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Shining"]
 },
@@ -1400,7 +1400,7 @@
 "question": "What Winston Groom novel was adapted into a 1994 film starring Tom Hanks and directed by Robert Zemeckis?",
 "answer": "Forrest Gump",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Forrest Gump"]
 },
@@ -1409,7 +1409,7 @@
 "question": "What Mario Puzo novel was adapted into a 1972 film starring Marlon Brando and directed by Francis Ford Coppola?",
 "answer": "The Godfather",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Godfather"]
 },
@@ -1418,7 +1418,7 @@
 "question": "What Michael Crichton novel was adapted into a 1993 film starring Sam Neill and directed by Steven Spielberg?",
 "answer": "Jurassic Park",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Jurassic Park"]
 },
@@ -1427,7 +1427,7 @@
 "question": "What Thomas Harris novel was adapted into a 1991 film starring Jodie Foster and directed by Jonathan Demme?",
 "answer": "The Silence of the Lambs",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Silence of the Lambs"]
 },
@@ -1436,7 +1436,7 @@
 "question": "What P.D. James novel was adapted into a 2006 film starring Clive Owen and directed by Alfonso Cuarón?",
 "answer": "Children of Men",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Children of Men", "The Children of Men"]
 },
@@ -1445,7 +1445,7 @@
 "question": "What Cormac McCarthy novel was adapted into a 2009 film starring Viggo Mortensen and directed by John Hillcoat?",
 "answer": "The Road",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Road"]
 },
@@ -1454,7 +1454,7 @@
 "question": "What Gillian Flynn novel was adapted into a 2014 film starring Ben Affleck and directed by David Fincher?",
 "answer": "Gone Girl",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Gone Girl"]
 },
@@ -1463,7 +1463,7 @@
 "question": "What Chuck Palahniuk novel was adapted into a 1999 film starring Brad Pitt and directed by David Fincher?",
 "answer": "Fight Club",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Fight Club"]
 },
@@ -1472,7 +1472,7 @@
 "question": "The novel 'Do Androids Dream of Electric Sheep?' by Philip K. Dick would eventually be adapted into what 1982 film starring Harrison Ford?",
 "answer": "Blade Runner",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Blade Runner"]
 },
@@ -1481,7 +1481,7 @@
 "question": "What Christopher Priest novel was adapted into a 2006 film starring Hugh Jackman and directed by Christopher Nolan?",
 "answer": "The Prestige",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Prestige"]
 },
@@ -1490,7 +1490,7 @@
 "question": "What Stephen King novel was adapted into a 1990 film starring James Caan and directed by Rob Reiner?",
 "answer": "Misery",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Misery"]
 },
@@ -1499,7 +1499,7 @@
 "question": "What Nicholas Pileggi non-fiction book was adapted into a 1990 film starring Ray Liotta and directed by Martin Scorsese?",
 "answer": "Wiseguy",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Wiseguy"]
 },
@@ -1508,7 +1508,7 @@
 "question": "What Peter Benchley novel was adapted into a 1975 film starring Roy Scheider and directed by Steven Spielberg?",
 "answer": "Jaws",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Jaws"]
 },
@@ -1517,7 +1517,7 @@
 "question": "What Stephen King novel was adapted into a 1999 film starring Tom Hanks and directed by Frank Darabont?",
 "answer": "The Green Mile",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Green Mile"]
 },
@@ -1526,7 +1526,7 @@
 "question": "What James Sallis novel was adapted into a 2011 film starring Ryan Gosling and directed by Nicolas Winding Refn?",
 "answer": "Drive",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Drive"]
 },
@@ -1535,7 +1535,7 @@
       "question": "Which classic novel begins with the line \"Call me Ishmael\"?",
       "answer": "Moby Dick",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "hard"
     },
         {
@@ -1543,7 +1543,7 @@
       "question": "Which fictional detective lives at 221B Baker Street?",
       "answer": "Sherlock Holmes",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
         {
@@ -1551,7 +1551,7 @@
       "question": "Which artist painted \"The Starry Night\"?",
       "answer": "Vincent van Gogh",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "hard"
     },
         {
@@ -1559,7 +1559,7 @@
       "question": "Who painted the Mona Lisa?",
       "answer": "Leonardo da Vinci",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "medium"
     },
         {
@@ -1567,21 +1567,21 @@
       "question": "Who wrote 'The Odyssey'?",
       "answer": "Homer",
       "answer_format": "write_in",
-      "category": "Art & Literature",
+      "category": "Art, Literature and Comics",
       "difficulty": "hard"
     },
   {
     "slug": "it-was-the-best-of-times",
     "question": "In what book does the opening line read: 'It was the best of times, it was the worst of times.'?",
     "answer": "A Tale of Two Cities",
-    "category": "Art & Literature",
+    "category": "Art, Literature and Comics",
     "difficulty": "easy"
   },
   {
     "slug": "all-children-grow-up",
     "question": "In what classic children's book does the opening line read: 'All children, except one, grow up.'?",
     "answer": "Peter Pan",
-    "category": "Art & Literature",
+    "category": "Art, Literature and Comics",
     "difficulty": "easy"
   },
 
@@ -1589,21 +1589,21 @@
     "slug": "mr-and-mrs-dursley",
     "question": "In what book does the opening line read: 'Mr. and Mrs. Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much.'?",
     "answer": "Harry Potter and the Sorcerer's Stone",
-    "category": "Art & Literature",
+    "category": "Art, Literature and Comics",
     "difficulty": "easy"
   },
   {
     "slug": "in-a-hole-in-the-ground",
     "question": "In what book does the opening line read: 'In a hole in the ground there lived a hobbit.'?",
     "answer": "The Hobbit",
-    "category": "Art & Literature",
+    "category": "Art, Literature and Comics",
     "difficulty": "easy"
   },
   {
     "slug": "it-was-a-bright-cold-day",
     "question": "In what book does the opening line read: 'It was a bright cold day in April, and the clocks were striking thirteen.'?",
     "answer": "1984",
-    "category": "Art & Literature",
+    "category": "Art, Literature and Comics",
     "difficulty": "easy"
   },
 {
@@ -1611,7 +1611,7 @@
 "question": "What Bret Easton Ellis novel was adapted into a 2000 film starring Christian Bale and directed by Mary Harron?",
 "answer": "American Psycho",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["American Psycho"]
 },
@@ -1620,7 +1620,7 @@
 "question": "What Michael Punke novel was adapted into a 2015 film starring Leonardo DiCaprio and directed by Alejandro G. Iñárritu?",
 "answer": "The Revenant",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Revenant"]
 },
@@ -1629,7 +1629,7 @@
 "question": "What William Goldman novel was adapted into a 1987 film starring Cary Elwes and directed by Rob Reiner?",
 "answer": "The Princess Bride",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Princess Bride"]
 },
@@ -1639,7 +1639,7 @@
 "question": "What 1951 novel by J.D. Salinger details the teenage disillusionment and alienation of Holden Caulfield following his expulsion from a prep school?",
 "answer": "The Catcher in the Rye",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Catcher in the Rye", "Catcher in the Rye"]
 },
@@ -1648,7 +1648,7 @@
 "question": "What 1960 novel by Harper Lee details racial injustice in the American South through the eyes of Scout Finch, whose father defends a Black man falsely accused of rape?",
 "answer": "To Kill a Mockingbird",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["To Kill a Mockingbird"]
 },
@@ -1657,7 +1657,7 @@
 "question": "What 1925 novel by F. Scott Fitzgerald details the tragic obsession of a mysterious millionaire seeking to reunite with his former love, Daisy Buchanan, during the Jazz Age?",
 "answer": "The Great Gatsby",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Great Gatsby", "Great Gatsby"]
 },
@@ -1666,7 +1666,7 @@
 "question": "What 1954 novel by William Golding details the savage descent into chaos of a group of British schoolboys stranded on a deserted tropical island?",
 "answer": "Lord of the Flies",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Lord of the Flies", "The Lord of the Flies"]
 },
@@ -1675,7 +1675,7 @@
 "question": "What 1937 novel by John Steinbeck details the tragic journey of migrant ranch workers George and Lennie as they chase the American Dream during the Great Depression?",
 "answer": "Of Mice and Men",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Of Mice and Men"]
 },
@@ -1684,7 +1684,7 @@
 "question": "What 1949 novel by George Orwell details Winston Smith's rebellion against the omnipresent surveillance state of Oceania and its totalitarian leader, Big Brother?",
 "answer": "1984",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["1984", "Nineteen Eighty-Four"]
 },
@@ -1693,7 +1693,7 @@
 "question": "What 1945 novel by George Orwell details a group of barnyard animals who overthrow their human farmer, only to slide back into tyranny under the pig Napoleon?",
 "answer": "Animal Farm",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Animal Farm"]
 },
@@ -1702,7 +1702,7 @@
 "question": "What 1953 novel by Ray Bradbury details the awakening of Guy Montag, a 'fireman' whose job is to burn outlawed books in a dystopian, tech-obsessed society?",
 "answer": "Fahrenheit 451",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Fahrenheit 451"]
 },
@@ -1711,7 +1711,7 @@
 "question": "What 1932 novel by Aldous Huxley details a futuristic World State where citizens are genetically engineered, conditioned, and pacified by a drug called soma?",
 "answer": "Brave New World",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Brave New World"]
 },
@@ -1720,7 +1720,7 @@
 "question": "What 1953 play by Arthur Miller details John Proctor's struggle with his conscience during the mass hysteria of the Salem witch trials?",
 "answer": "The Crucible",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Crucible"]
 },
@@ -1729,7 +1729,7 @@
 "question": "What 1850 novel by Nathaniel Hawthorne details the public shaming and resilience of Hester Prynne, who is forced to wear a symbol of sin in a strict Puritan community?",
 "answer": "The Scarlet Letter",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Scarlet Letter", "Scarlet Letter"]
 },
@@ -1738,7 +1738,7 @@
 "question": "What 1818 novel by Mary Shelley details Victor's Hubris as he constructs a living being from scavenged body parts, only to abandon his creation to a life of lonely vengeance?",
 "answer": "Frankenstein",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Frankenstein", "Frankenstein; or, The Modern Prometheus"]
 },
@@ -1747,7 +1747,7 @@
 "question": "What 1597 play by William Shakespeare details the secret romance and ultimate double-suicide of two teenagers from feuding Veronese families?",
 "answer": "Romeo and Juliet",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Romeo and Juliet"]
 },
@@ -1756,7 +1756,7 @@
 "question": "What 1623 play by William Shakespeare details a Scottish general's murderous descent into tyranny after three witches prophesy that he will become king?",
 "answer": "Macbeth",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Macbeth"]
 },
@@ -1765,7 +1765,7 @@
 "question": "What 1603 play by William Shakespeare details the agonizing indecision of a Danish prince seeking to avenge his father's murder by his uncle, King Claudius?",
 "answer": "Hamlet",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Hamlet"]
 },
@@ -1774,7 +1774,7 @@
 "question": "What 1813 novel by Jane Austen details the turbulent romance between the witty Elizabeth Bennet and the wealthy, reserved Mr. Darcy as they overcome initial misjudgments?",
 "answer": "Pride and Prejudice",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Pride and Prejudice"]
 },
@@ -1783,7 +1783,7 @@
 "question": "What 1939 novel by John Steinbeck details the arduous migration of the Joad family from the Oklahoma Dust Bowl to California in search of a better life?",
 "answer": "The Grapes of Wrath",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Grapes of Wrath", "Grapes of Wrath"]
 },
@@ -1792,7 +1792,7 @@
 "question": "What ancient epic poem by Homer details the ten-year voyage of the Greek hero Odysseus as he struggles to return home to Ithaca after the fall of Troy?",
 "answer": "The Odyssey",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Odyssey", "Odyssey"]
 },
@@ -1801,7 +1801,7 @@
 "question": "What 1967 novel by S.E. Hinton details the intense rivalry between two teenage social factions, the working-class Greasers and the wealthy Socs, through the eyes of Ponyboy Curtis?",
 "answer": "The Outsiders",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Outsiders"]
 },
@@ -1810,7 +1810,7 @@
 "question": "What 1949 play by Arthur Miller details the psychological collapse and tragic delusions of aging traveling salesman Willy Loman?",
 "answer": "Death of a Salesman",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Death of a Salesman"]
 },
@@ -1819,7 +1819,7 @@
 "question": "What 1902 novella by Joseph Conrad details Charles Marlow's journey up the Congo River to locate Kurtz, an ivory trader who has established a brutal fiefdom?",
 "answer": "Heart of Darkness",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Heart of Darkness"]
 },
@@ -1828,7 +1828,7 @@
 "question": "What 1952 novella by Ernest Hemingway details the grueling epic struggle between an aging Cuban fisherman named Santiago and a giant marlin out in the Gulf Stream?",
 "answer": "The Old Man and the Sea",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Old Man and the Sea", "Old Man and the Sea"]
 },
@@ -1837,7 +1837,7 @@
 "question": "What 1851 novel by Herman Melville details Captain Ahab's obsessive, self-destructive quest for vengeance against the giant white whale that severed his leg?",
 "answer": "Moby-Dick",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Moby-Dick", "Moby Dick"]
 },
@@ -1846,7 +1846,7 @@
 "question": "What 1847 novel by Charlotte Brontë details the personal growth and complex romance of an orphaned governess who discovers a dark secret hidden by her employer, Mr. Rochester?",
 "answer": "Jane Eyre",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Jane Eyre"]
 },
@@ -1855,7 +1855,7 @@
 "question": "What 1847 novel by Emily Brontë details the destructive, consuming passion between the intense Heathcliff and Catherine Earnshaw on the isolated Yorkshire moors?",
 "answer": "Wuthering Heights",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Wuthering Heights"]
 },
@@ -1864,7 +1864,7 @@
 "question": "What Lauren Weisberger novel was adapted into a 2006 film starring Meryl Streep and Anne Hathaway?",
 "answer": "The Devil Wears Prada",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Devil Wears Prada"]
 },
@@ -1873,7 +1873,7 @@
 "question": "What 1971 novel by Hunter S. Thompson details the drug-fueled, psychedelic journey of journalist Raoul Duke and his attorney, Dr. Gonzo, across Nevada in search of the American Dream?",
 "answer": "Fear and Loathing in Las Vegas",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Fear and Loathing in Las Vegas", "Fear and Loathing in Las Vegas: A Savage Journey to the Heart of the American Dream"]
 },
@@ -1882,7 +1882,7 @@
 "question": "What 1998 novel by Hunter S. Thompson details the experiences of an itinerant journalist named Paul Kemp working at a failing newspaper in San Juan, Puerto Rico during the late 1950s?",
 "answer": "The Rum Diary",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Rum Diary"]
 },
@@ -1891,7 +1891,7 @@
 "question": "What 1962 novel by Philip K. Dick details an alternate history where the Axis powers won World War II and divided the United States into occupied Japanese and Nazi territories? Hint: It was made into a television series by Amazon Studios.",
 "answer": "The Man in the High Castle",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Man in the High Castle"]
 },
@@ -1900,7 +1900,7 @@
 "question": "What 1996 novel by David Foster Wallace details a sprawling, near-future North America centered around an elite tennis academy, a drug rehabilitation halfway house, and a lethal film that kills anyone who watches it?",
 "answer": "Infinite Jest",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Infinite Jest"]
 },
@@ -1909,7 +1909,7 @@
 "question": "What posthumously published 2011 novel by David Foster Wallace details the grinding boredom, existential dread, and quiet nobility of IRS employees working at a regional processing center in Peoria, Illinois?",
 "answer": "The Pale King",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Pale King"]
 },
@@ -1918,7 +1918,7 @@
 "question": "What 1991 novel by Bret Easton Ellis details the superficial, consumerist life and sadistic, hyper-violent nighttime escapades of wealthy Wall Street investment banker Patrick Bateman?",
 "answer": "American Psycho",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["American Psycho"]
 },
@@ -1927,7 +1927,7 @@
 "question": "What 1985 debut novel by Bret Easton Ellis details the disaffected, drug-addled, and hedonistic winter break of a college student named Clay returning to his wealthy social circle in Los Angeles?",
 "answer": "Less Than Zero",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Less Than Zero"]
 },
@@ -1936,7 +1936,7 @@
 "question": "What 2003 novel by Lauren Weisberger details the agonizing professional trials of Andrea Sachs, a college graduate who lands a job as a co-assistant to the tyrannical fashion magazine editor Miranda Priestly?",
 "answer": "The Devil Wears Prada",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Devil Wears Prada"]
 },
@@ -1945,7 +1945,7 @@
 "question": "What 1993 novel by Irvine Welsh details the gritty, episodic lives and substance abuse struggles of a group of heroin users—including Mark Renton and Sick Boy—in Edinburgh, Scotland?",
 "answer": "Trainspotting",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Trainspotting"]
 },
@@ -1954,7 +1954,7 @@
 "question": "What 2008 dystopian novel by Suzanne Collins details Katniss Everdeen as she volunteers to take her younger sister's place in a televised, fight-to-the-death tournament run by the Capitol of Panem?",
 "answer": "The Hunger Games",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Hunger Games"]
 },
@@ -1963,7 +1963,7 @@
 "question": "What 2005 romance novel by Stephenie Meyer details the relationship between teenager Bella Swan and Edward Cullen, a vampire living in the rainy town of Forks, Washington?",
 "answer": "Twilight",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Twilight"]
 },
@@ -1972,7 +1972,7 @@
 "question": "What 1997 fantasy novel by J.K. Rowling details an orphaned boy who discovers on his eleventh birthday that he is a wizard and has been accepted into the Hogwarts School of Witchcraft and Wizardry?",
 "answer": "Harry Potter and the Sorcerer's Stone",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Harry Potter and the Sorcerer's Stone", "Harry Potter and the Philosopher's Stone", "Harry Potter and the Philosophers Stone", "Harry Potter and the Sorcerers Stone"]
 },
@@ -1981,7 +1981,7 @@
 "question": "What 1954 epic high-fantasy novel by J.R.R. Tolkien details the hobbit Frodo Baggins as he inherits a powerful artifact and sets out from the Shire on a quest to destroy it in Mount Doom?",
 "answer": "The Fellowship of the Ring",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Fellowship of the Ring", "The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings"]
 },
@@ -1990,7 +1990,7 @@
 "question": "What 2003 thriller novel by Dan Brown details symbologist Robert Langdon and cryptologist Sophie Neveu as they investigate a murder in the Louvre and uncover a secret society's historical conspiracy surrounding the Holy Grail?",
 "answer": "The Da Vinci Code",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Da Vinci Code"]
 },
@@ -1999,7 +1999,7 @@
 "question": "What 2012 psychological thriller novel by Gillian Flynn details the intense media circus and police investigation that erupts when writing instructor Nick Dunne becomes the prime suspect in the sudden disappearance of his wife, Amy?",
 "answer": "Gone Girl",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Gone Girl"]
 },
@@ -2008,7 +2008,7 @@
 "question": "What 2012 young adult novel by John Green details Hazel Grace Lancaster, a sixteen-year-old thyroid cancer patient who falls in love with Augustus Waters, a fellow amputee she meets at a support group?",
 "answer": "The Fault in Our Stars",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Fault in Our Stars"]
 },
@@ -2017,7 +2017,7 @@
 "question": "What 1965 science fiction epic by Frank Herbert details young Paul Atreides as his noble family accepts stewardship of Arrakis, a dangerous desert planet containing the universe's only source of the spice melange?",
 "answer": "Dune",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Dune"]
 },
@@ -2026,7 +2026,7 @@
 "question": "What 1996 romantic novel by Nicholas Sparks details the lifelong love story between Noah Calhoun and Allie Nelson, told through an old man reading from a journal to a fellow nursing home resident?",
 "answer": "The Notebook",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Notebook"]
 },
@@ -2035,7 +2035,7 @@
 "question": "What 1950 high-fantasy novel by C.S. Lewis details four siblings who step through a magical wardrobe into a mythical winter wonderland trapped under the rule of the cruel White Witch?",
 "answer": "The Lion, the Witch and the Wardrobe",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Lion, the Witch and the Wardrobe", "The Lion the Witch and the Wardrobe", "The Chronicles of Narnia: The Lion, the Witch and the Wardrobe", "The Chronicles of Narnia"]
 },
@@ -2044,7 +2044,7 @@
 "question": "What 2011 dystopian novel by Veronica Roth details Beatrice Prior as she selects a faction based on personality traits in a future Chicago, only to discover she fits into multiple categories and poses a threat to the social order?",
 "answer": "Divergent",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Divergent"]
 },
@@ -2053,7 +2053,7 @@
 "question": "What 2011 science fiction novel by Andy Weir details astronaut Mark Watney as he utilizes his botany and engineering skills to survive alone on Ares III base after being accidentally stranded on Mars during a dust storm?",
 "answer": "The Martian",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Martian"]
 },
@@ -2062,7 +2062,7 @@
 "question": "What 2013 satirical romantic comedy novel by Kevin Kwan details New York professor Rachel Chu as she travels to Singapore with her boyfriend Nick Young, only to discover his family belongs to the island's ultra-wealthy elite?",
 "answer": "Crazy Rich Asians",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Crazy Rich Asians"]
 },
@@ -2071,7 +2071,7 @@
 "question": "What 2009 historical fiction novel by Kathryn Stockett details aspiring journalist Eugenia 'Skeeter' Phelan as she gathers oral histories from African American maids working in Jackson, Mississippi during the 1960s Civil Rights Movement?",
 "answer": "The Help",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Help"]
 },
@@ -2080,7 +2080,7 @@
 "question": "What 2001 philosophical novel by Yann Martel details Piscine Molitor Patel, a teenage boy from India who survives 227 days stranded on a lifeboat in the Pacific Ocean with a royal Bengal tiger named Richard Parker?",
 "answer": "Life of Pi",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Life of Pi"]
 },
@@ -2089,7 +2089,7 @@
 "question": "What 1999 epistolary young adult novel by Stephen Chbosky details an introverted teenager named Charlie as he navigates high school, first love, and past trauma through letters written to an anonymous stranger?",
 "answer": "The Perks of Being a Wallflower",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["The Perks of Being a Wallflower"]
 },
@@ -2098,7 +2098,7 @@
 "question": "What 1986 epic horror novel by Stephen King details seven children in Derry, Maine, who combat a shape-shifting, predatory cosmic entity that primarily takes the form of Pennywise the Dancing Clown?",
 "answer": "It",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["It"]
 },
@@ -2107,7 +2107,7 @@
 "question": "What 1990 children's picture book by William Steig details a hideous, fire-breathing green monster who leaves his swamp home to see the world and ultimately wins the heart of an equally ugly princess?",
 "answer": "Shrek!",
 "answer_format": "write_in",
-"category": "Art & Literature",
+"category": "Art, Literature and Comics",
 "difficulty": "easy",
 "acceptableAnswers": ["Shrek!", "Shrek"]
 }
