@@ -39,6 +39,7 @@ type VenueFormState = {
   radius: string;
   latitude: string;
   longitude: string;
+  placeId: string;
 };
 
 const LOOKUP_INACTIVITY_MS = 5 * 60 * 1000;
@@ -59,6 +60,7 @@ const BLANK_FORM: VenueFormState = {
   radius: "100",
   latitude: "",
   longitude: "",
+  placeId: "",
 };
 
 function venueToForm(v: Venue): VenueFormState {
@@ -77,6 +79,7 @@ function venueToForm(v: Venue): VenueFormState {
     radius: String(v.radius),
     latitude: String(v.latitude),
     longitude: String(v.longitude),
+    placeId: v.placeId ?? "",
   };
 }
 
@@ -173,6 +176,7 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
       country: "",
       latitude: "",
       longitude: "",
+      placeId: "",
     });
     setLookupQuery("");
     setPredictions([]);
@@ -238,6 +242,7 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
         country: details.country,
         latitude: String(details.latitude),
         longitude: String(details.longitude),
+        placeId: details.placeId,
       });
       setLookupQuery(prediction.fullText || [prediction.mainText, prediction.secondaryText].filter(Boolean).join(", "));
       setPredictions([]);
@@ -418,19 +423,17 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
         <div>
           <label className={label}>Latitude *</label>
           <input
-            className={manualMode ? field : readOnlyField}
-            readOnly={!manualMode}
+            className={field}
             value={form.latitude}
-            onChange={(event) => onChange({ latitude: event.target.value })}
+            onChange={(event) => onChange({ latitude: event.target.value, placeId: "" })}
           />
         </div>
         <div>
           <label className={label}>Longitude *</label>
           <input
-            className={manualMode ? field : readOnlyField}
-            readOnly={!manualMode}
+            className={field}
             value={form.longitude}
-            onChange={(event) => onChange({ longitude: event.target.value })}
+            onChange={(event) => onChange({ longitude: event.target.value, placeId: "" })}
           />
         </div>
 
@@ -445,7 +448,24 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
 
         {hasValidCoordinates ? (
           <div className="md:col-span-2">
-            <label className={label}>Map Preview</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className={label}>Map Preview</label>
+              <a
+                href={`https://maps.google.com/?q=${latValue},${lngValue}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-indigo-600 hover:underline"
+              >
+                Open in Google Maps ↗
+              </a>
+            </div>
+            {form.placeId ? (
+              <p className="mb-1.5 text-xs text-slate-500">
+                Place ID: <span className="font-mono">{form.placeId}</span>
+              </p>
+            ) : (
+              <p className="mb-1.5 text-xs text-amber-700">Coordinates set manually — no Place ID on record.</p>
+            )}
             <div className="overflow-hidden rounded-lg border border-slate-200">
               <iframe
                 title="Venue Location Preview"
@@ -555,6 +575,7 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
       country: form.country.trim() || undefined,
       county: form.county.trim() || undefined,
       region: form.region.trim() || undefined,
+      placeId: form.placeId.trim() || undefined,
     };
   }
 

@@ -54,6 +54,7 @@ export interface Venue {
   latitude: number;
   longitude: number;
   radius: number;
+  placeId?: string;
 }
 
 export interface User {

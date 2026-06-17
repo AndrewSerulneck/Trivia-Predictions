@@ -397,6 +397,7 @@ export async function POST(request: Request) {
           country?: string;
           county?: string;
           region?: string;
+          placeId?: string;
         }
       | {
           resource: "ads-track";
@@ -683,6 +684,7 @@ export async function POST(request: Request) {
         country: body.country,
         county: body.county,
         region: body.region,
+        placeId: body.placeId,
       });
       return NextResponse.json({ ok: true, item });
     }
@@ -975,6 +977,7 @@ export async function PATCH(request: Request) {
           country?: string;
           county?: string;
           region?: string;
+          placeId?: string;
         }
       | {
           resource: "challenge-campaigns";
@@ -1179,6 +1182,7 @@ export async function PATCH(request: Request) {
         country: body.country,
         county: body.county,
         region: body.region,
+        placeId: body.placeId,
       });
       return NextResponse.json({ ok: true, item });
     }

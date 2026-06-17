@@ -106,6 +106,7 @@ type VenueRow = {
   latitude: number;
   longitude: number;
   radius: number;
+  place_id: string | null;
 };
 
 type PickEmPendingGameRow = {
@@ -278,6 +279,7 @@ function mapVenueRow(row: VenueRow): Venue {
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
     radius: Number(row.radius),
+    placeId: row.place_id ?? undefined,
   };
 }
 
@@ -1872,6 +1874,7 @@ export async function createAdminVenue(input: {
   country?: string;
   county?: string;
   region?: string;
+  placeId?: string;
 }): Promise<Venue> {
   assertAdminConfigured();
 
@@ -1955,8 +1958,9 @@ export async function createAdminVenue(input: {
       latitude: resolvedLatitude,
       longitude: resolvedLongitude,
       radius,
+      place_id: input.placeId?.trim() || null,
     })
-    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius")
+    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, place_id")
     .single<VenueRow>();
 
   if (error || !data) {
@@ -1983,6 +1987,7 @@ export async function updateAdminVenue(input: {
   country?: string;
   county?: string;
   region?: string;
+  placeId?: string;
 }): Promise<Venue> {
   assertAdminConfigured();
 
@@ -2050,9 +2055,10 @@ export async function updateAdminVenue(input: {
       latitude: resolvedLatitude,
       longitude: resolvedLongitude,
       radius,
+      place_id: input.placeId?.trim() || null,
     })
     .eq("id", id)
-    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius")
+    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, place_id")
     .single<VenueRow>();
 
   if (error || !data) {
