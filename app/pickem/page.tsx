@@ -13,8 +13,7 @@ export default async function PickEmPage({
   return (
     <GameLandingExperience
       gameKey="pickem"
-      playLabel="Play Pick 'Em"
-      initialPlaying
+      playLabel="Make your picks"
       autoResume={false}
       showPlayingBackButton={false}
       showShellUserStatus={false}

@@ -3,7 +3,7 @@ export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" |
 export type GameOnboardingStep = {
   stepLabel: string;
   heading: string;
-  body: string;
+  body: string | string[];
 };
 
 export type VenueGameCardConfig = {
@@ -90,19 +90,19 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     ],
     steps: [
       {
-        stepLabel: "What is it?",
-        heading: "Build your roster and earn points as they play.",
+        stepLabel: "Your lineup",
+        heading: "Build a roster. Earn points as they play.",
         body: "Draft real players from today's games and watch your score climb live.",
       },
       {
-        stepLabel: "How it works",
-        heading: "Choose players.",
-        body: "Points accumulate from real game stats in real time.",
+        stepLabel: "Draft your players",
+        heading: "Pick players before tip-off.",
+        body: "Only players in games that haven't started are eligible. Lock in your picks before game time.",
       },
       {
-        stepLabel: "How to win",
-        heading: "The better your players perform, the more you earn.",
-        body: "Only players in games that haven't started yet are eligible to draft.",
+        stepLabel: "Scoring",
+        heading: "Your total climbs with every stat.",
+        body: "Points accumulate from real game stats in real time. Stay at the venue — points pause the moment you leave.",
       },
     ],
   },
@@ -120,19 +120,23 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     ],
     steps: [
       {
-        stepLabel: "What is it?",
+        stepLabel: "How to Play",
         heading: "Think you know sports? Prove it.",
-        body: "Pick the winners of today's matchups and earn points.",
+        body: "This is a very simple game. Just pick who you think will win each of today's matchups. Tap a team to lock in your pick.",
       },
       {
-        stepLabel: "How it works",
-        heading: "Pick your winners.",
-        body: "Pick the winners of today's matchups and earn points.",
+        stepLabel: "The Rules",
+        heading: "Correct picks earn you points.",
+        body: "But choose wisely — you only get 10 picks per day. Predictions are graded minutes after the final whistle. ",
       },
       {
-        stepLabel: "How to win",
+        stepLabel: "Scoring",
         heading: "10 points per correct pick.",
-        body: "Hit 7 correct → 2× bonus. Go perfect (10/10) → 3× bonus. Max: 300 points.",
+        body: [
+          "Hit 7 correct → 2× bonus.",
+          "A perfect score (10/10) → 3× bonus.",
+          "Max: 300 points.",
+        ],
       },
     ],
   },
@@ -151,19 +155,19 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     ],
     steps: [
       {
-        stepLabel: "What is it?",
-        heading: "Real sports. Real stats. Real Bingo.",
-        body: "Squares auto-mark as live plays happen. This isn't your grandmother's Bingo.",
+        stepLabel: "Your board",
+        heading: "Real sports. Real stats.",
+        body: "Each square is a live player stat. Squares mark themselves as plays happen.",
       },
       {
-        stepLabel: "How it works",
-        heading: "Browse boards. Pick the ones you like.",
-        body: "Each square is a real player stat — a made shot, a strikeout, a goal. Generate new boards until you find one worth activating. Hold up to 4 at a time.",
+        stepLabel: "Pick your boards",
+        heading: "Browse boards. Find the ones you like.",
+        body: "Generate new boards until you spot a lineup worth activating. Hold up to 4 live at once.",
       },
       {
-        stepLabel: "How to win",
+        stepLabel: "Scoring",
         heading: "Five in a row hits Bingo.",
-        body: "Line, column, or diagonal. Tap \"Collect Points\" to claim 50 points. More active boards means more chances to win.",
+        body: "Line, column, or diagonal earns you 100 points.",
       },
     ],
   },

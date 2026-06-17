@@ -31,18 +31,8 @@ function onboardingStorageKey(gameKey: VenueGameKey, venueId: string): string {
   return `tp_onboarding_${gameKey}_${venueId}`;
 }
 
-function getOnboardingInitialStep(gameKey: VenueGameKey): number {
-  try {
-    const venueId = getVenueId()?.trim() ?? "";
-    if (!venueId) return 0;
-    const raw = localStorage.getItem(onboardingStorageKey(gameKey, venueId));
-    if (!raw) return 0;
-    const ts = parseInt(raw, 10);
-    if (isNaN(ts) || Date.now() - ts > ONBOARDING_STALE_MS) return 0;
-    return 2;
-  } catch {
-    return 0;
-  }
+function getOnboardingInitialStep(_gameKey: VenueGameKey): number {
+  return 0;
 }
 
 function markOnboardingComplete(gameKey: VenueGameKey): void {
@@ -174,6 +164,12 @@ export function GameLandingExperience({
     };
   }, [gameKey, isPlaying]);
 
+  useEffect(() => {
+    if (isPlaying) {
+      forceRecoverDocumentScroll();
+    }
+  }, [isPlaying]);
+
   const handlePlayClick = useCallback(() => {
     if (playDisabled) {
       return;
@@ -182,6 +178,7 @@ export function GameLandingExperience({
       router.push(playHref);
       return;
     }
+    forceRecoverDocumentScroll();
     markOnboardingComplete(gameKey);
     setRulesExiting(true);
     playTimerRef.current = setTimeout(() => {
@@ -252,8 +249,12 @@ export function GameLandingExperience({
             <div className={`mx-auto flex h-full min-h-0 w-full max-w-[28rem] flex-col px-1.5 pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1.5 sm:px-2 sm:pt-2 ${rulesExiting ? "animate-tp-surface-exit" : ""}`}>
               <div className="flex min-h-0 flex-1 items-center justify-center">
                 <div
-                  className="aspect-[3/4.9]"
-                  style={{ width: "min(95vw, 22.5rem, calc((100dvh - 5.75rem) * 0.6122449))" }}
+                  className={gameKey === "pickem" ? "aspect-[3/5.4]" : "aspect-[3/4.9]"}
+                  style={{
+                    width: gameKey === "pickem"
+                      ? "min(95vw, 22.5rem, calc((100dvh - 5.75rem) * 0.5556))"
+                      : "min(95vw, 22.5rem, calc((100dvh - 5.75rem) * 0.6122449))",
+                  }}
                 >
                   <GameOnboardingCard
                     gameKey={gameKey}
@@ -282,10 +283,10 @@ export function GameLandingExperience({
               <div className="grid shrink-0 grid-cols-2 gap-2 pt-3 sm:pt-4">
                 <button
                   type="button"
-                  onClick={backToVenue}
-                  className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-emerald-500 px-3 py-2 text-base font-black text-white"
+                  onClick={currentStep > 0 ? () => setCurrentStep((s) => s - 1) : backToVenue}
+                  className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-3 py-2 text-base font-black text-slate-900"
                 >
-                  Close
+                  Back
                 </button>
                 {isLastStep ? (
                   <button
