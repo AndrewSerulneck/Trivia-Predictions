@@ -821,7 +821,7 @@ export default function LiveShowdownPage() {
         setIsSubmitting(false);
       }
     },
-    [activeKey, resolvedVenueId, state, triggerAnimation]
+    [activeKey, resolvedVenueId, state]
   );
 
   // Keep refs in sync so the stable forfeit listener always reads the freshest
@@ -1019,7 +1019,7 @@ export default function LiveShowdownPage() {
         );
       }
     }
-  }, [commentEventKey, nextCommentEvent, triggerAnimation]);
+  }, [activeKey, commentEventKey, nextCommentEvent, triggerAnimation]);
 
   const correctWrongFiredForKeyRef = useRef<string | null>(null);
   const championAnimationFired = useRef(false);
@@ -1276,7 +1276,6 @@ export default function LiveShowdownPage() {
                   <>
                     {/* Section 1 — Game Over banner (viewer's own stats) */}
                     <div className="flex items-center gap-3 rounded-2xl border border-amber-400/35 bg-gradient-to-br from-[#1c1400] to-[#2d1f00] px-4 py-4">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src="/brand/live_trivia_icon.png"
                         alt=""

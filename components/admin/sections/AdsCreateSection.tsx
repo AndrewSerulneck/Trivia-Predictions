@@ -167,7 +167,7 @@ export function AdsCreateSection({ venues }: AdsCreateSectionProps) {
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-base font-semibold text-slate-900">Create Advertisement</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Configure ad targeting, delivery rules, and placement for Join, Venue, Live Trivia, Speed Trivia, Bingo, Pick 'Em, and Fantasy pages.
+          Configure ad targeting, delivery rules, and placement for Join, Venue, Live Trivia, Speed Trivia, Bingo, Pick &apos;Em, and Fantasy pages.
         </p>
       </div>
 

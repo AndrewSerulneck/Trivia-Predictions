@@ -16,7 +16,6 @@ export function HightopLogo({ size = "md", className = "" }: HightopLogoProps) {
       aria-label="Hightop Challenge"
       className={`relative max-w-full ${SIZE_CLASSES[size]} ${className}`.trim()}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/brand/hightop-logo.svg"
         alt="Hightop Challenge"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import type { GameplayAnimationProps } from "@/types/animation";
 
@@ -39,35 +39,36 @@ const FIREWORK_COUNT = 15;
 const CONFETTI_COUNT = 60;
 const TOTAL_DURATION_MS = 6000;
 
+function seededRandom(seed: number): number {
+  const value = Math.sin(seed) * 10000;
+  return value - Math.floor(value);
+}
+
+const FIREWORKS: FireworkData[] = Array.from({ length: FIREWORK_COUNT }, (_, i) => ({
+  id: i,
+  top: seededRandom(i + 11) * 70 + 5,
+  left: seededRandom(i + 23) * 80 + 10,
+  color: PARTICLE_COLORS[i % PARTICLE_COLORS.length],
+  delay: seededRandom(i + 37) * 1.2,
+  rays: Math.floor(seededRandom(i + 41) * 5) + 8,
+}));
+
+const CONFETTI: ConfettiData[] = Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
+  id: i,
+  left: seededRandom(i + 53) * 100,
+  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+  delay: seededRandom(i + 67) * 2.5,
+  duration: seededRandom(i + 71) * 1.5 + 2.5,
+  rotateEnd: seededRandom(i + 83) * 360 + 360,
+  isCircle: seededRandom(i + 97) > 0.5,
+  drift: (seededRandom(i + 101) - 0.5) * 120,
+}));
+
 export const LiveTriviaChampionAnimation: React.FC<GameplayAnimationProps> = ({ onComplete }) => {
   useEffect(() => {
     const timer = setTimeout(onComplete, TOTAL_DURATION_MS);
     return () => clearTimeout(timer);
   }, [onComplete]);
-
-  const fireworks = useMemo<FireworkData[]>(() => {
-    return Array.from({ length: FIREWORK_COUNT }, (_, i) => ({
-      id: i,
-      top: Math.random() * 70 + 5,
-      left: Math.random() * 80 + 10,
-      color: PARTICLE_COLORS[i % PARTICLE_COLORS.length],
-      delay: Math.random() * 1.2,
-      rays: Math.floor(Math.random() * 5) + 8,
-    }));
-  }, []);
-
-  const confetti = useMemo<ConfettiData[]>(() => {
-    return Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-      delay: Math.random() * 2.5,
-      duration: Math.random() * 1.5 + 2.5,
-      rotateEnd: Math.random() * 360 + 360,
-      isCircle: Math.random() > 0.5,
-      drift: (Math.random() - 0.5) * 120,
-    }));
-  }, []);
 
   return (
     <div className="fixed inset-0 z-[9999] overflow-hidden pointer-events-none">
@@ -80,7 +81,7 @@ export const LiveTriviaChampionAnimation: React.FC<GameplayAnimationProps> = ({ 
       />
 
       {/* Phase 3: confetti rain */}
-      {confetti.map((piece) => (
+      {CONFETTI.map((piece) => (
         <motion.div
           key={`confetti-${piece.id}`}
           className={`absolute top-0 ${piece.color} ${
@@ -104,7 +105,7 @@ export const LiveTriviaChampionAnimation: React.FC<GameplayAnimationProps> = ({ 
       ))}
 
       {/* Phase 2: fireworks */}
-      {fireworks.map((fw) => (
+      {FIREWORKS.map((fw) => (
         <motion.div
           key={`firework-${fw.id}`}
           className="absolute"

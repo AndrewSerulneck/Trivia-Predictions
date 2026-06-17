@@ -26,7 +26,6 @@ export function verifyBdlSignature(
 export function normalizePlayerName(value: string): string {
   return value
     .normalize("NFKD")
-    // eslint-disable-next-line no-misleading-character-class
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-zA-Z0-9\s]/g, " ")
     .toLowerCase()

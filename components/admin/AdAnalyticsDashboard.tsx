@@ -152,7 +152,7 @@ export function AdAnalyticsDashboard() {
     };
   }, [queryRange.endDate, queryRange.startDate]);
 
-  const trendSeries = snapshot?.interactionTrend ?? [];
+  const trendSeries = useMemo(() => snapshot?.interactionTrend ?? [], [snapshot?.interactionTrend]);
   const trendImpressions = useMemo(() => trendSeries.map((point) => point.impressions), [trendSeries]);
   const trendClicks = useMemo(() => trendSeries.map((point) => point.clicks), [trendSeries]);
   const trendMaxValue = useMemo(

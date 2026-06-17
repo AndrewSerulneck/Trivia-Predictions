@@ -5,6 +5,8 @@ export type GeofenceCoordinates = {
   timestamp?: number;
 };
 
+export const MIN_VENUE_GEOFENCE_RADIUS_METERS = 500;
+
 export function calculateDistanceMeters(a: GeofenceCoordinates, b: GeofenceCoordinates): number {
   const toRad = (value: number) => (value * Math.PI) / 180;
   const earthRadius = 6371000;
@@ -23,7 +25,7 @@ export function calculateDistanceMeters(a: GeofenceCoordinates, b: GeofenceCoord
 
 export function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
   const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
-  const baseRadius = Math.max(200, normalizedVenueRadius);
+  const baseRadius = Math.max(MIN_VENUE_GEOFENCE_RADIUS_METERS, normalizedVenueRadius);
   const accuracyBuffer = Number.isFinite(accuracy) ? Math.min(5000, Math.max(120, Math.round(Number(accuracy) * 1.5))) : 320;
   return baseRadius + accuracyBuffer;
 }

@@ -67,7 +67,6 @@ export const RoundPointsAddedAnimation = ({
 
     const diff = totalAfter - totalBefore;
     if (diff === 0) {
-      setDisplayTotal(totalAfter);
       return;
     }
 

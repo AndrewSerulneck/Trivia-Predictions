@@ -523,7 +523,7 @@ export function TriviaImageReviewSection() {
       if (q && !item.answer.toLowerCase().includes(q) && !item.slug.includes(q) && !item.question.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [allQuestions, selectedCategory, filterMode, search]);
+  }, [allQuestions, filterMode, search]);
 
   if (loadingSummary) {
     return (

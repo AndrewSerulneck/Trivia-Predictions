@@ -207,7 +207,7 @@ export function UsersSection({ venues }: UsersSectionProps) {
           />
           {selectedIds.size > 0 && (
             <p className="mb-2 text-xs text-slate-500">
-              "Delete" resets points to 0 for selected users.
+              &quot;Delete&quot; resets points to 0 for selected users.
             </p>
           )}
         </div>

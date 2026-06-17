@@ -194,7 +194,6 @@ export function GlobalTransitionOverlay() {
 
   if (!shouldRender) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src="/brand/hightop-logo.svg"
         alt=""

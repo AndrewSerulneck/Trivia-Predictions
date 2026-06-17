@@ -150,7 +150,9 @@ function normalizeBooleanEnv(value: string | undefined, fallback = false): boole
   return fallback;
 }
 
-const DISABLE_GEOFENCE_FOR_TESTING = true;
+const DISABLE_GEOFENCE_FOR_TESTING =
+  process.env.NODE_ENV !== "production" &&
+  normalizeBooleanEnv(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE, false);
 const INVALID_PIN_MESSAGE = "Enter a valid 4-digit PIN.";
 const NO_LOCAL_PASSKEY_MESSAGE =
   "We're sorry, we don't have a passkey saved for your device! Please log in using your username and PIN, or create a new account.";
@@ -1070,6 +1072,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       }
 
       setLocationLoading(true);
+      setLocationVerified(false);
+      setVerifiedLocation(null);
+      setLastLocationVerifiedAt(null);
+      setDistanceMeters(null);
       setLocationNotice("Verifying your location...");
       try {
         let current = await getCurrentLocation();
@@ -1651,6 +1657,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
 
   useEffect(() => {
+    // Read the latest timer on unmount; copying the initial ref value would miss later shake timers.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => { if (shakeTimerRef.current) window.clearTimeout(shakeTimerRef.current); };
   }, []);
 
@@ -2101,6 +2109,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     window.location.assign(passkeyEnrollmentStep.venueTarget);
   }, [passkeyEnrollmentStep]);
 
+  // createProfile intentionally stays local to capture the current join/auth state for one login attempt.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   async function createProfile(pinOverride?: string) {
     const effectivePin = normalizePin(String(pinOverride ?? getCurrentPinCandidate()));
     if (!venue) return;

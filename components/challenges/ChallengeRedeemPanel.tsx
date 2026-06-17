@@ -76,22 +76,33 @@ function GaugeBar({
   const didMountRef = useRef(false);
 
   useEffect(() => {
+    let frameId: number | null = null;
+    let nestedFrameId: number | null = null;
+    let durationTimeoutId: number | null = null;
+
     if (!didMountRef.current) {
       didMountRef.current = true;
       // Double-rAF: guarantee the browser has painted the bar at initialPct
       // before starting the fill animation so the delta is actually visible.
-      const id = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
+      frameId = window.requestAnimationFrame(() => {
+        nestedFrameId = window.requestAnimationFrame(() => {
           setDisplayPct(targetPct);
           // Once the 1.5 s entry animation finishes, switch to a snappier
           // duration for live poll updates (small increments feel sluggish at 1.5 s).
-          const timeout = window.setTimeout(() => setDuration(POLL_DURATION), 1600);
-          return () => window.clearTimeout(timeout);
+          durationTimeoutId = window.setTimeout(() => setDuration(POLL_DURATION), 1600);
         });
       });
-      return () => cancelAnimationFrame(id);
+    } else {
+      frameId = window.requestAnimationFrame(() => {
+        setDisplayPct(targetPct);
+      });
     }
-    setDisplayPct(targetPct);
+
+    return () => {
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      if (nestedFrameId !== null) window.cancelAnimationFrame(nestedFrameId);
+      if (durationTimeoutId !== null) window.clearTimeout(durationTimeoutId);
+    };
   }, [targetPct]);
 
   const isFull = displayPct >= 100;

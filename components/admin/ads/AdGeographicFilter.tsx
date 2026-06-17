@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import { useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import type { GeographicHierarchy } from "@/lib/geographicHierarchy";
 
 export type AdGeoSelectionLevel = "all" | "region" | "state" | "city" | "zip" | "venue";
@@ -100,28 +100,6 @@ export function AdGeographicFilter({
   const [openCities, setOpenCities] = useState<Set<string>>(new Set());
   const [openZips, setOpenZips] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!selectedRegion) return;
-    setOpenRegions((prev) => new Set(prev).add(selectedRegion));
-  }, [selectedRegion]);
-
-  useEffect(() => {
-    if (!selectedState) return;
-    setOpenStates((prev) => new Set(prev).add(selectedState));
-  }, [selectedState]);
-
-  useEffect(() => {
-    if (!selectedState || !selectedCity) return;
-    const key = `${selectedState}::${selectedCity}`;
-    setOpenCities((prev) => new Set(prev).add(key));
-  }, [selectedCity, selectedState]);
-
-  useEffect(() => {
-    if (!selectedState || !selectedCity || !selectedZipCode) return;
-    const key = `${selectedState}::${selectedCity}::${selectedZipCode}`;
-    setOpenZips((prev) => new Set(prev).add(key));
-  }, [selectedCity, selectedState, selectedZipCode]);
-
   const allCount = useMemo(() => counts[countKey("all", ["all"])] ?? 0, [counts]);
 
   const toggle = (setter: Dispatch<SetStateAction<Set<string>>>, key: string) => {
@@ -161,7 +139,7 @@ export function AdGeographicFilter({
           />
 
           {hierarchy.regions.map((region) => {
-            const regionOpen = openRegions.has(region.regionKey);
+            const regionOpen = openRegions.has(region.regionKey) || selectedRegion === region.regionKey;
             const regionSelected = selectedRegion === region.regionKey && !selectedState && !selectedCity && !selectedZipCode && !selectedVenue;
             const regionCount = counts[countKey("region", [region.regionKey])] ?? 0;
             return (
@@ -190,7 +168,7 @@ export function AdGeographicFilter({
 
                 {regionOpen
                   ? region.states.map((state) => {
-                      const stateOpen = openStates.has(state.stateCode);
+                      const stateOpen = openStates.has(state.stateCode) || selectedState === state.stateCode;
                       const stateSelected = selectedState === state.stateCode && !selectedCity && !selectedZipCode && !selectedVenue;
                       const stateCount = counts[countKey("state", [state.stateCode])] ?? 0;
                       return (
@@ -220,7 +198,9 @@ export function AdGeographicFilter({
                           {stateOpen
                             ? state.cities.map((city) => {
                                 const cityOpenKey = `${state.stateCode}::${city.city}`;
-                                const cityOpen = openCities.has(cityOpenKey);
+                                const cityOpen =
+                                  openCities.has(cityOpenKey) ||
+                                  (selectedState === state.stateCode && selectedCity === city.city);
                                 const citySelected = selectedState === state.stateCode && selectedCity === city.city && !selectedZipCode && !selectedVenue;
                                 const cityCount = counts[countKey("city", [state.stateCode, city.city])] ?? 0;
                                 return (
@@ -250,7 +230,11 @@ export function AdGeographicFilter({
                                     {cityOpen
                                       ? city.zipCodes.map((zip) => {
                                           const zipOpenKey = `${state.stateCode}::${city.city}::${zip.zipCode}`;
-                                          const zipOpen = openZips.has(zipOpenKey);
+                                          const zipOpen =
+                                            openZips.has(zipOpenKey) ||
+                                            (selectedState === state.stateCode &&
+                                              selectedCity === city.city &&
+                                              selectedZipCode === zip.zipCode);
                                           const zipSelected =
                                             selectedState === state.stateCode &&
                                             selectedCity === city.city &&

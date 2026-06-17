@@ -132,6 +132,48 @@ describe("POST /api/join/profile — account-first path", () => {
     expect(body.user?.accountId).toBe(ACCOUNT_ID);
   });
 
+  it("accepts account joins within the 500 meter minimum venue radius", async () => {
+    const existingProfile = {
+      id: "user-profile-nearby",
+      auth_id: null,
+      username: "nearby_user",
+      venue_id: VENUE_ID,
+      points: 7,
+      created_at: "2026-05-28T12:00:00Z",
+    };
+    const accountChain = buildSingleChain({
+      data: { id: ACCOUNT_ID, auth_id: null, username: "nearby_user", god_mode: false },
+      error: null,
+    });
+    const venueChain = buildSingleChain({ data: VENUE_ROW, error: null });
+    const profileChain = buildSingleChain({ data: existingProfile, error: null });
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === "accounts") return { select: vi.fn().mockReturnValue(accountChain) };
+      if (table === "venues") return { select: vi.fn().mockReturnValue(venueChain) };
+      if (table === "users") return { select: vi.fn().mockReturnValue(profileChain) };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/join/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accountId: ACCOUNT_ID,
+          venueId: VENUE_ID,
+          location: { latitude: 40.003, longitude: -74, accuracy: 25 },
+        }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; user?: { id: string; points: number } };
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.user?.id).toBe("user-profile-nearby");
+    expect(body.user?.points).toBe(7);
+  });
+
   it("returns 404 when accountId does not match any account", async () => {
     const accountChain = buildSingleChain({ data: null, error: null });
 

@@ -107,7 +107,6 @@ export function AdBanner({ ad, variant = "default" }: { ad: Advertisement; varia
         className="block"
         onClick={() => trackAdClick({ adId: ad.id, referrerPage: pathname ?? undefined }, true)}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={ad.imageUrl}
           alt={ad.altText}

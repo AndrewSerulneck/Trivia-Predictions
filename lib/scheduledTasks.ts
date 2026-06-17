@@ -3,7 +3,6 @@ import "server-only";
 import { regenerateAllAnswerVariants } from "@/lib/triviaAnswerVariants";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __hightopAnswerVariantsSchedulerStarted__: boolean | undefined;
 }
 

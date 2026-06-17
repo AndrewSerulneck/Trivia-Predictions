@@ -650,7 +650,6 @@ export function PopupAds() {
           onClick={() => trackAdClick({ adId: popup.ad.id, referrerPage: pathname ?? undefined }, true)}
         >
           <div className="mx-auto flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={popup.ad.imageUrl}
               alt={popup.ad.altText}

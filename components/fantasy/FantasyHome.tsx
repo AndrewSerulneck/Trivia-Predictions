@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { getGodMode, getUserId, getVenueId } from "@/lib/storage";
-import { calculateDistanceMeters, getCurrentLocation } from "@/lib/geolocation";
+import { calculateDistanceMeters, getCurrentLocation, getGeofenceThresholdMeters } from "@/lib/geolocation";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { supabase } from "@/lib/supabase";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
@@ -90,15 +90,6 @@ const DISABLE_GEOFENCE_FOR_TESTING =
   String(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE ?? "")
     .trim()
     .toLowerCase() === "true";
-const ACCESS_DISTANCE_METERS = 200;
-
-function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
-  const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
-  const baseRadius = Math.max(ACCESS_DISTANCE_METERS, normalizedVenueRadius);
-  const accuracyBuffer = Number.isFinite(accuracy) ? Math.min(5000, Math.max(120, Math.round(Number(accuracy) * 1.5))) : 320;
-  return baseRadius + accuracyBuffer;
-}
-
 type FantasySport = "nba" | "wnba" | "baseball" | "football";
 const FANTASY_SPORTS: Array<{ key: FantasySport; icon: string; label: string; available: boolean }> = [
   { key: "nba", icon: "🏀", label: "NBA", available: true },
@@ -989,11 +980,12 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
   }, []);
 
   useEffect(() => {
+    const statFlashTimers = statFlashTimersRef.current;
     return () => {
-      for (const timer of statFlashTimersRef.current.values()) {
+      for (const timer of statFlashTimers.values()) {
         window.clearTimeout(timer);
       }
-      statFlashTimersRef.current.clear();
+      statFlashTimers.clear();
     };
   }, []);
 
@@ -1770,7 +1762,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     return () => {
       window.clearInterval(interval);
     };
-  }, [loadEntries, loadGames, loadSelectedGameDetails, selectedDate, userId, supabase]);
+  }, [loadEntries, loadGames, loadSelectedGameDetails, selectedDate, userId]);
 
   useEffect(() => {
     if (!selectedGameId) {
@@ -1806,7 +1798,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         fantasyKickoffRefreshTimerRef.current = null;
       }
     };
-  }, [hasLiveEntry, loadEntries, loadGames, loadSelectedGameDetails, nextPendingEntryStartMs, userId]);
+  }, [hasLiveEntry, loadEntries, loadGames, loadSelectedGameDetails, nextPendingEntryStartMs, selectedDate, userId]);
 
   const togglePlayer = useCallback((player: FantasyPlayerPoolItem) => {
     const playerName = player.playerName;

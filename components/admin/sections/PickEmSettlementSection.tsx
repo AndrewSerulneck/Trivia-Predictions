@@ -214,7 +214,7 @@ export function PickEmSettlementSection() {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Pick 'Em Settlement</h2>
+        <h2 className="text-base font-semibold text-slate-900">Pick &apos;Em Settlement</h2>
         <p className="mt-1 text-sm text-slate-500">Choose a date, review all matchups, and settle unresolved games in-line.</p>
 
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">

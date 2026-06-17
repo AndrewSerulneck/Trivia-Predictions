@@ -1094,6 +1094,10 @@ export function SportsBingoHome({
   );
 
   useEffect(() => {
+    const glowSquareTimers = glowSquareTimersRef.current;
+    const glowCardTimers = glowCardTimersRef.current;
+    const boardPopTimers = boardPopTimersRef.current;
+
     return () => {
       if (clearSquarePopTimerRef.current) {
         window.clearTimeout(clearSquarePopTimerRef.current);
@@ -1108,18 +1112,18 @@ export function SportsBingoHome({
         window.clearTimeout(timer);
       }
       actionPopTimersRef.current = [];
-      for (const timer of glowSquareTimersRef.current.values()) {
+      for (const timer of glowSquareTimers.values()) {
         window.clearTimeout(timer);
       }
-      glowSquareTimersRef.current.clear();
-      for (const timer of glowCardTimersRef.current.values()) {
+      glowSquareTimers.clear();
+      for (const timer of glowCardTimers.values()) {
         window.clearTimeout(timer);
       }
-      glowCardTimersRef.current.clear();
-      for (const timer of boardPopTimersRef.current.values()) {
+      glowCardTimers.clear();
+      for (const timer of boardPopTimers.values()) {
         window.clearTimeout(timer);
       }
-      boardPopTimersRef.current.clear();
+      boardPopTimers.clear();
     };
   }, []);
 
@@ -1434,10 +1438,11 @@ export function SportsBingoHome({
       })
       .subscribe();
 
+    const liveStatsPrevByPlayer = liveStatsPrevByPlayerRef.current;
     return () => {
       active = false;
       void client.removeChannel(liveChannel);
-      liveStatsPrevByPlayerRef.current.clear();
+      liveStatsPrevByPlayer.clear();
     };
   }, [cards, findRelevantSquareForEvent, queueVisualEvents, subscribedGameIds, userId]);
 

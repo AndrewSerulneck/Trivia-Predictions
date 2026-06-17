@@ -433,8 +433,29 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
   }, [mobileSidebarOpen]);
 
   useEffect(() => {
-    void checkSession();
-  }, [checkSession]);
+    const controller = new AbortController();
+    let cancelled = false;
+
+    fetch("/api/admin/session", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (!cancelled) {
+          setAuthState(res.ok ? "authenticated" : "unauthenticated");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAuthState("unauthenticated");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, []);
 
   useEffect(() => {
     const onVisibility = () => {
