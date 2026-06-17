@@ -279,13 +279,24 @@ export function GameLandingExperience({
                 ))}
               </div>
               {landingStatus ? <div className="shrink-0 pt-3 sm:pt-4">{landingStatus}</div> : null}
-              <div className="grid shrink-0 grid-cols-2 gap-2 pt-3 sm:pt-4">
+              <div className="grid shrink-0 grid-cols-3 gap-2 pt-3 sm:pt-4">
                 <button
                   type="button"
                   onClick={backToVenue}
                   className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-emerald-500 px-3 py-2 text-base font-black text-white"
                 >
                   Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep((s) => Math.max(s - 1, 0))}
+                  disabled={currentStep === 0 || rulesExiting}
+                  aria-hidden={currentStep === 0}
+                  className={`tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full border-2 border-white/40 bg-white/5 px-3 py-2 text-base font-black text-white transition-opacity ${
+                    currentStep === 0 ? "pointer-events-none opacity-0" : "opacity-100"
+                  }`}
+                >
+                  Back
                 </button>
                 {isLastStep ? (
                   <button

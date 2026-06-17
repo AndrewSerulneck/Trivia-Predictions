@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { VENUE_GAME_CARD_BY_KEY, type VenueGameKey, type GameOnboardingStep } from "@/lib/venueGameCards";
 
 export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
@@ -315,6 +316,457 @@ function GameScoringArtwork({ gameKey, accentClass }: { gameKey: VenueGameKey; a
   );
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * Illustrated step mockups — simulate the actual game UI on each onboarding
+ * step so players know what they are walking into. One mockup per game/step
+ * for Bingo, Pick 'Em, and Fantasy.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/** A live-counting score that ticks upward to feel "live". */
+function LiveTicker({
+  start,
+  step = 0.4,
+  intervalMs = 900,
+  className = "",
+  suffix = "",
+  decimals = 1,
+}: {
+  start: number;
+  step?: number;
+  intervalMs?: number;
+  className?: string;
+  suffix?: string;
+  decimals?: number;
+}) {
+  const [value, setValue] = useState(start);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setValue((v) => v + step * (0.6 + Math.random()));
+    }, intervalMs);
+    return () => clearInterval(id);
+  }, [step, intervalMs]);
+  return (
+    <span className={className}>
+      {value.toFixed(decimals)}
+      {suffix}
+    </span>
+  );
+}
+
+function MockChrome({ children, label, accentClass }: { children: React.ReactNode; label: string; accentClass: string }) {
+  return (
+    <div className="flex w-full flex-col gap-2 rounded-2xl border border-white/25 bg-slate-950/45 p-3">
+      <div className="flex items-center justify-between">
+        <span className={`text-[0.62rem] font-black uppercase tracking-[0.16em] ${accentClass}`}>{label}</span>
+        <span className="inline-flex items-center gap-1 text-[0.55rem] font-bold uppercase tracking-[0.12em] text-rose-300">
+          <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />
+          Live
+        </span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/* ── BINGO ── */
+
+const BINGO_STAT_LABELS = [
+  "3PT", "DUNK", "AST", "BLK", "STL",
+  "REB", "FT", "TO", "AND1", "FB",
+  "2PT", "DEF", "FREE", "OREB", "POST",
+  "SWAT", "DIME", "BANK", "FADE", "RUN",
+  "TIP", "BUZZ", "ALLEY", "PUTBK", "CLOSE",
+];
+
+function BingoStep1({ accentClass }: { accentClass: string }) {
+  // Winning row = row index 2 (middle row). Some scattered lit squares too.
+  const litScattered = new Set([1, 4, 6, 9, 13, 18, 21]);
+  const winningRow = [10, 11, 12, 13, 14];
+  return (
+    <MockChrome label="Your Board" accentClass={accentClass}>
+      <div className="grid grid-cols-5 gap-1">
+        {Array.from({ length: 25 }).map((_, i) => {
+          const isWin = winningRow.includes(i);
+          const isLit = litScattered.has(i) || isWin;
+          return (
+            <div
+              key={i}
+              className={`flex aspect-square items-center justify-center rounded-[5px] text-[0.46rem] font-black uppercase leading-none ${
+                isWin
+                  ? "border border-orange-200 bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.85)]"
+                  : isLit
+                  ? "border border-orange-300/70 bg-orange-500/85 text-white"
+                  : "border border-white/15 bg-slate-900/70 text-white/45"
+              }`}
+            >
+              {BINGO_STAT_LABELS[i]}
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-[0.6rem] font-semibold text-white/70">Squares auto-mark as live plays happen.</p>
+    </MockChrome>
+  );
+}
+
+function BingoStep2({ accentClass }: { accentClass: string }) {
+  const previewLit = new Set([0, 3, 7, 8, 12, 16, 19, 22]);
+  return (
+    <MockChrome label="Browse Boards" accentClass={accentClass}>
+      <div className="grid grid-cols-5 gap-1">
+        {Array.from({ length: 25 }).map((_, i) => (
+          <div
+            key={i}
+            className={`h-3.5 rounded-[4px] transition-colors ${
+              previewLit.has(i)
+                ? "border border-orange-300/70 bg-orange-500/80"
+                : "border border-white/12 bg-slate-900/70"
+            }`}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
+        className="tp-clean-button inline-flex items-center justify-center gap-1 rounded-full bg-orange-500 px-3 py-1.5 text-[0.64rem] font-black uppercase tracking-[0.08em] text-white shadow-[0_0_12px_rgba(249,115,22,0.6)]"
+      >
+        ↻ Generate New Board
+      </button>
+      <div className="grid grid-cols-4 gap-1.5">
+        {Array.from({ length: 4 }).map((_, b) => (
+          <div
+            key={b}
+            className={`rounded-md border p-1 ${
+              b === 0 ? "border-orange-300/80 bg-orange-500/15" : "border-white/15 bg-slate-900/60"
+            }`}
+          >
+            <div className="grid grid-cols-3 gap-[2px]">
+              {Array.from({ length: 9 }).map((_, c) => (
+                <div
+                  key={c}
+                  className={`aspect-square rounded-[2px] ${
+                    (b + c) % 3 === 0 ? "bg-orange-400/80" : "bg-white/15"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="text-[0.58rem] font-semibold text-white/70">Hold up to 4 boards at a time.</p>
+    </MockChrome>
+  );
+}
+
+function BingoStep3({ accentClass }: { accentClass: string }) {
+  const diagonal = [0, 6, 12, 18, 24];
+  return (
+    <MockChrome label="Bingo!" accentClass={accentClass}>
+      <div className="grid grid-cols-5 gap-1">
+        {Array.from({ length: 25 }).map((_, i) => {
+          const onLine = diagonal.includes(i);
+          return (
+            <div
+              key={i}
+              className={`flex aspect-square items-center justify-center rounded-[5px] text-[0.5rem] font-black ${
+                onLine
+                  ? "border border-orange-200 bg-orange-500 text-white shadow-[0_0_12px_rgba(249,115,22,0.95)]"
+                  : "border border-white/15 bg-slate-900/70 text-white/40"
+              }`}
+            >
+              {onLine ? "★" : ""}
+            </div>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        className="tp-clean-button mt-0.5 flex items-center justify-between rounded-full bg-orange-500 px-3 py-2 text-white shadow-[0_0_14px_rgba(249,115,22,0.7)]"
+      >
+        <span className="text-[0.72rem] font-black uppercase tracking-[0.08em]">Collect Points</span>
+        <span className="rounded-full bg-white/25 px-2 py-0.5 text-[0.72rem] font-black">+50 pts</span>
+      </button>
+    </MockChrome>
+  );
+}
+
+/* ── PICK 'EM ── */
+
+function PickTeamRow({
+  abbr,
+  name,
+  selected,
+}: {
+  abbr: string;
+  name: string;
+  selected: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between rounded-lg border px-2 py-1.5 ${
+        selected
+          ? "border-cyan-300/80 bg-cyan-500/15 shadow-[0_0_10px_rgba(34,211,238,0.35)]"
+          : "border-white/15 bg-slate-900/60"
+      }`}
+    >
+      <span className="flex items-center gap-2">
+        <span
+          className={`inline-flex h-5 w-5 items-center justify-center rounded-md text-[0.55rem] font-black ${
+            selected ? "bg-cyan-300 text-slate-950" : "bg-white/15 text-white/80"
+          }`}
+        >
+          {abbr}
+        </span>
+        <span className={`text-[0.7rem] font-bold ${selected ? "text-cyan-100" : "text-white/80"}`}>{name}</span>
+      </span>
+      <span
+        className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ${
+          selected ? "border border-cyan-300 bg-cyan-300 text-slate-950" : "border border-white/30 text-transparent"
+        }`}
+      >
+        ✓
+      </span>
+    </div>
+  );
+}
+
+function PickEmStep1({ accentClass }: { accentClass: string }) {
+  return (
+    <MockChrome label="Tonight's Matchup" accentClass={accentClass}>
+      <div className="flex flex-col gap-1.5">
+        <PickTeamRow abbr="LAL" name="Lakers" selected />
+        <div className="text-center text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/40">vs</div>
+        <PickTeamRow abbr="BOS" name="Celtics" selected={false} />
+      </div>
+      <p className="text-[0.6rem] font-semibold text-white/70">Tap a team to lock in your pick.</p>
+    </MockChrome>
+  );
+}
+
+function PickEmStep2({ accentClass }: { accentClass: string }) {
+  const matchups = [
+    { a: "GSW", an: "Warriors", b: "DEN", bn: "Nuggets", pick: "a" as const },
+    { a: "MIA", an: "Heat", b: "NYK", bn: "Knicks", pick: "b" as const },
+    { a: "PHX", an: "Suns", b: "DAL", bn: "Mavs", pick: null },
+  ];
+  return (
+    <MockChrome label="Make Your Picks · 2/3" accentClass={accentClass}>
+      <div className="flex flex-col gap-1.5">
+        {matchups.map((m) => (
+          <div key={m.a} className="rounded-lg border border-white/12 bg-slate-900/55 p-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
+              {(["a", "b"] as const).map((side) => {
+                const sel = m.pick === side;
+                return (
+                  <div
+                    key={side}
+                    className={`flex items-center justify-between rounded-md border px-1.5 py-1 ${
+                      sel ? "border-cyan-300/80 bg-cyan-500/15" : "border-white/15 bg-slate-950/50"
+                    }`}
+                  >
+                    <span className={`text-[0.6rem] font-black ${sel ? "text-cyan-100" : "text-white/75"}`}>
+                      {side === "a" ? m.a : m.b}
+                    </span>
+                    <span
+                      className={`inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-[7px] font-black ${
+                        sel ? "bg-cyan-300 text-slate-950" : "border border-white/25 text-transparent"
+                      }`}
+                    >
+                      ✓
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="text-[0.6rem] font-semibold text-white/70">Pick a winner for each matchup.</p>
+    </MockChrome>
+  );
+}
+
+function PickEmStep3({ accentClass }: { accentClass: string }) {
+  const tiers = [
+    { value: "10", label: "per correct pick", active: true },
+    { value: "2×", label: "bonus at 7 / 10", active: true },
+    { value: "3×", label: "bonus at 10 / 10", active: false },
+  ];
+  return (
+    <MockChrome label="Scoring" accentClass={accentClass}>
+      <div className="flex flex-col gap-1.5">
+        {tiers.map((t) => (
+          <div
+            key={t.label}
+            className={`flex items-center gap-2.5 rounded-lg border px-2.5 py-1.5 ${
+              t.active ? "border-indigo-300/60 bg-indigo-500/15" : "border-white/15 bg-slate-900/55"
+            }`}
+          >
+            <span
+              className={`min-w-[2.2rem] text-center text-[1.25rem] font-black leading-none ${accentClass}`}
+              style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+            >
+              {t.value}
+            </span>
+            <span className="text-[0.68rem] font-semibold text-white/80">{t.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-center">
+        <span className={`rounded-full border border-white/30 bg-black/40 px-3 py-1 text-[0.66rem] font-black uppercase tracking-[0.12em] ${accentClass}`}>
+          Max 300 points
+        </span>
+      </div>
+    </MockChrome>
+  );
+}
+
+/* ── FANTASY ── */
+
+function FantasyPlayerRow({
+  pos,
+  name,
+  team,
+  live,
+  baseScore,
+}: {
+  pos: string;
+  name?: string;
+  team?: string;
+  live?: boolean;
+  baseScore?: number;
+}) {
+  const filled = Boolean(name);
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
+        filled ? "border-violet-300/55 bg-violet-500/12" : "border-dashed border-white/20 bg-slate-900/50"
+      }`}
+    >
+      <span
+        className={`inline-flex h-6 w-7 items-center justify-center rounded-md text-[0.55rem] font-black ${
+          filled ? "bg-violet-400 text-slate-950" : "bg-white/10 text-white/50"
+        }`}
+      >
+        {pos}
+      </span>
+      {filled ? (
+        <span className="flex min-w-0 flex-1 flex-col leading-tight">
+          <span className="truncate text-[0.7rem] font-bold text-white">{name}</span>
+          <span className="text-[0.52rem] font-semibold uppercase tracking-[0.1em] text-white/50">{team}</span>
+        </span>
+      ) : (
+        <span className="flex-1 text-[0.66rem] font-semibold italic text-white/40">Empty slot</span>
+      )}
+      {filled ? (
+        live ? (
+          <LiveTicker
+            start={baseScore ?? 0}
+            className="rounded-md bg-cyan-500/20 px-2 py-0.5 text-[0.72rem] font-black text-cyan-200"
+            suffix=" pts"
+          />
+        ) : (
+          <span className="rounded-md bg-white/10 px-2 py-0.5 text-[0.66rem] font-black text-white/60">— pts</span>
+        )
+      ) : (
+        <span className="text-[0.9rem] font-black leading-none text-white/30">+</span>
+      )}
+    </div>
+  );
+}
+
+function FantasyStep1({ accentClass }: { accentClass: string }) {
+  return (
+    <MockChrome label="Your Roster" accentClass={accentClass}>
+      <div className="flex flex-col gap-1.5">
+        <FantasyPlayerRow pos="PG" name="L. Dončić" team="DAL" live baseScore={18.4} />
+        <FantasyPlayerRow pos="SG" />
+        <FantasyPlayerRow pos="SF" />
+      </div>
+      <p className="text-[0.6rem] font-semibold text-white/70">Filled slots score live as games play.</p>
+    </MockChrome>
+  );
+}
+
+function FantasyStep2({ accentClass }: { accentClass: string }) {
+  const pool = [
+    { name: "J. Tatum", team: "BOS", adding: true },
+    { name: "N. Jokić", team: "DEN", adding: false },
+    { name: "S. Gilgeous", team: "OKC", adding: false },
+  ];
+  return (
+    <MockChrome label="Add Players" accentClass={accentClass}>
+      <div className="flex flex-col gap-1.5">
+        {pool.map((p) => (
+          <div
+            key={p.name}
+            className={`flex items-center justify-between rounded-lg border px-2 py-1.5 ${
+              p.adding ? "border-cyan-300/70 bg-cyan-500/15" : "border-white/15 bg-slate-900/55"
+            }`}
+          >
+            <span className="flex flex-col leading-tight">
+              <span className="text-[0.7rem] font-bold text-white">{p.name}</span>
+              <span className="text-[0.52rem] font-semibold uppercase tracking-[0.1em] text-white/50">{p.team}</span>
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6rem] font-black uppercase tracking-[0.06em] ${
+                p.adding ? "bg-cyan-300 text-slate-950" : "border border-white/30 text-white/70"
+              }`}
+            >
+              {p.adding ? "✓ Added" : "+ Add"}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-lg border border-violet-300/40 bg-violet-500/10 px-2 py-1 text-[0.6rem] font-semibold text-violet-100">
+        Roster: 2 / 3 slots filled
+      </div>
+    </MockChrome>
+  );
+}
+
+function FantasyStep3({ accentClass }: { accentClass: string }) {
+  return (
+    <MockChrome label="Lineup Locked" accentClass={accentClass}>
+      <div className="flex flex-col gap-1.5">
+        <FantasyPlayerRow pos="PG" name="L. Dončić" team="DAL" live baseScore={18.4} />
+        <FantasyPlayerRow pos="SG" name="J. Tatum" team="BOS" live baseScore={14.1} />
+        <FantasyPlayerRow pos="SF" name="N. Jokić" team="DEN" live baseScore={21.7} />
+      </div>
+      <div className="flex items-center justify-between rounded-lg border border-cyan-400/50 bg-cyan-500/15 px-2.5 py-1.5">
+        <span className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-cyan-200">Total · Live</span>
+        <LiveTicker
+          start={54.2}
+          step={0.9}
+          className="text-[1.05rem] font-black text-cyan-100"
+          suffix=" pts"
+        />
+      </div>
+      <p className="text-[0.58rem] font-semibold leading-snug text-amber-200/90">
+        Heads up: points stop accruing once you leave the venue.
+      </p>
+    </MockChrome>
+  );
+}
+
+function GameStepMockup({ gameKey, stepIndex, accentClass }: { gameKey: VenueGameKey; stepIndex: number; accentClass: string }) {
+  if (gameKey === "bingo") {
+    if (stepIndex === 0) return <BingoStep1 accentClass={accentClass} />;
+    if (stepIndex === 1) return <BingoStep2 accentClass={accentClass} />;
+    return <BingoStep3 accentClass={accentClass} />;
+  }
+  if (gameKey === "pickem") {
+    if (stepIndex === 0) return <PickEmStep1 accentClass={accentClass} />;
+    if (stepIndex === 1) return <PickEmStep2 accentClass={accentClass} />;
+    return <PickEmStep3 accentClass={accentClass} />;
+  }
+  if (gameKey === "fantasy") {
+    if (stepIndex === 0) return <FantasyStep1 accentClass={accentClass} />;
+    if (stepIndex === 1) return <FantasyStep2 accentClass={accentClass} />;
+    return <FantasyStep3 accentClass={accentClass} />;
+  }
+  return null;
+}
+
 const GAME_STEP_ACCENT: Record<VenueGameKey, string> = {
   "speed-trivia": "text-blue-300",
   live_trivia:    "text-cyan-300",
@@ -344,7 +796,8 @@ export function GameOnboardingCard({
 }) {
   const card = VENUE_GAME_CARD_BY_KEY[gameKey];
   const accentClass = GAME_STEP_ACCENT[gameKey];
-  const isHookStep = stepIndex === 0;
+  const hasStepMockups = gameKey === "bingo" || gameKey === "pickem" || gameKey === "fantasy";
+  const isHookStep = stepIndex === 0 && !hasStepMockups;
 
   return (
     <div
@@ -376,8 +829,10 @@ export function GameOnboardingCard({
             </div>
           ) : (
             <>
-              <div className="flex min-h-0 flex-1 items-center justify-center">
-                {stepIndex === 1 ? (
+              <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto py-1">
+                {hasStepMockups ? (
+                  <GameStepMockup gameKey={gameKey} stepIndex={stepIndex} accentClass={accentClass} />
+                ) : stepIndex === 1 ? (
                   <GameArtwork gameKey={gameKey} />
                 ) : (
                   <GameScoringArtwork gameKey={gameKey} accentClass={accentClass} />
