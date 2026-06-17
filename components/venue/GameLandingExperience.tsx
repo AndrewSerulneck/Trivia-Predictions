@@ -4,11 +4,11 @@ import { Children, cloneElement, isValidElement, useCallback, useEffect, useRef,
 import { useRouter } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
 import { endCurrentGameSession, startGameSession, type GameAnalyticsType } from "@/lib/analytics";
-import { type VenueGameKey } from "@/lib/venueGameCards";
+import { type VenueGameKey, VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import { hasResumableSession } from "@/lib/gameResume";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
-import { GameRuleCardPanel, GAME_CARD_BG_BY_KEY } from "@/components/venue/GameIdentityPanel";
+import { GameOnboardingCard, GAME_CARD_BG_BY_KEY, GAME_STEP_DOT_ACTIVE } from "@/components/venue/GameIdentityPanel";
 import { PageShell } from "@/components/ui/PageShell";
 
 function recoverGamePageScrollState() {
@@ -22,6 +22,36 @@ function recoverGamePageScrollState() {
     appRoot.style.height = "";
     appRoot.style.maxHeight = "";
     appRoot.style.overflow = "";
+  }
+}
+
+const ONBOARDING_STALE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function onboardingStorageKey(gameKey: VenueGameKey, venueId: string): string {
+  return `tp_onboarding_${gameKey}_${venueId}`;
+}
+
+function getOnboardingInitialStep(gameKey: VenueGameKey): number {
+  try {
+    const venueId = getVenueId()?.trim() ?? "";
+    if (!venueId) return 0;
+    const raw = localStorage.getItem(onboardingStorageKey(gameKey, venueId));
+    if (!raw) return 0;
+    const ts = parseInt(raw, 10);
+    if (isNaN(ts) || Date.now() - ts > ONBOARDING_STALE_MS) return 0;
+    return 2;
+  } catch {
+    return 0;
+  }
+}
+
+function markOnboardingComplete(gameKey: VenueGameKey): void {
+  try {
+    const venueId = getVenueId()?.trim() ?? "";
+    if (!venueId) return;
+    localStorage.setItem(onboardingStorageKey(gameKey, venueId), String(Date.now()));
+  } catch {
+    // localStorage unavailable — silently skip
   }
 }
 
@@ -68,6 +98,10 @@ export function GameLandingExperience({
   const [isPlaying, setIsPlaying] = useState(initialPlaying);
   const [rulesExiting, setRulesExiting] = useState(false);
   const [isResumeCheckPending, setIsResumeCheckPending] = useState(!initialPlaying && autoResume);
+  const [currentStep, setCurrentStep] = useState(() => getOnboardingInitialStep(gameKey));
+  const steps = VENUE_GAME_CARD_BY_KEY[gameKey].steps;
+  const totalSteps = steps.length;
+  const isLastStep = currentStep === totalSteps - 1;
   const playTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -148,13 +182,14 @@ export function GameLandingExperience({
       router.push(playHref);
       return;
     }
+    markOnboardingComplete(gameKey);
     setRulesExiting(true);
     playTimerRef.current = setTimeout(() => {
       playTimerRef.current = null;
       setRulesExiting(false);
       setIsPlaying(true);
     }, 300);
-  }, [playDisabled, playHref, router]);
+  }, [gameKey, playDisabled, playHref, router]);
 
   const backToVenue = useCallback(() => {
     endCurrentGameSession("abandoned");
@@ -220,8 +255,28 @@ export function GameLandingExperience({
                   className="aspect-[3/4.9]"
                   style={{ width: "min(95vw, 22.5rem, calc((100dvh - 5.75rem) * 0.6122449))" }}
                 >
-                  <GameRuleCardPanel gameKey={gameKey} layout="landing" className="h-full w-full" />
+                  <GameOnboardingCard
+                    gameKey={gameKey}
+                    step={steps[currentStep]}
+                    stepIndex={currentStep}
+                    className="h-full w-full"
+                  />
                 </div>
+              </div>
+              <div className="flex shrink-0 items-center justify-center gap-2 pt-3">
+                {steps.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setCurrentStep(index)}
+                    className={`tp-clean-button h-2 rounded-full transition-all duration-200 ${
+                      index === currentStep
+                        ? `w-6 ${GAME_STEP_DOT_ACTIVE[gameKey]}`
+                        : "w-2 bg-white/30"
+                    }`}
+                    aria-label={`Go to step ${index + 1}`}
+                  />
+                ))}
               </div>
               {landingStatus ? <div className="shrink-0 pt-3 sm:pt-4">{landingStatus}</div> : null}
               <div className="grid shrink-0 grid-cols-2 gap-2 pt-3 sm:pt-4">
@@ -232,14 +287,24 @@ export function GameLandingExperience({
                 >
                   Close
                 </button>
-                <button
-                  type="button"
-                  onClick={handlePlayClick}
-                  disabled={rulesExiting || playDisabled}
-                  className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white disabled:opacity-60"
-                >
-                  {playDisabled && playDisabledLabel ? playDisabledLabel : playLabel}
-                </button>
+                {isLastStep ? (
+                  <button
+                    type="button"
+                    onClick={handlePlayClick}
+                    disabled={rulesExiting || playDisabled}
+                    className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white disabled:opacity-60"
+                  >
+                    {playDisabled && playDisabledLabel ? playDisabledLabel : playLabel}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep((s) => Math.min(s + 1, totalSteps - 1))}
+                    className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white"
+                  >
+                    Next
+                  </button>
+                )}
               </div>
             </div>
           )}

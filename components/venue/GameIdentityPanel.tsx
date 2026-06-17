@@ -1,6 +1,6 @@
 "use client";
 
-import { VENUE_GAME_CARD_BY_KEY, type VenueGameKey } from "@/lib/venueGameCards";
+import { VENUE_GAME_CARD_BY_KEY, type VenueGameKey, type GameOnboardingStep } from "@/lib/venueGameCards";
 
 export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
   "speed-trivia":
@@ -229,8 +229,8 @@ function FantasyArtwork() {
   return (
     <div className="rounded-2xl border border-violet-100/60 bg-slate-950/35 p-2">
       <div className="grid grid-cols-3 gap-1.5">
-        {["QB", "RB", "WR", "WR", "DEF", "FLEX"].map((slot) => (
-          <div key={slot} className="rounded-md border border-violet-200/45 bg-violet-500/25 px-1 py-1 text-center">
+        {["QB", "RB", "WR", "WR", "DEF", "FLEX"].map((slot, i) => (
+          <div key={i} className="rounded-md border border-violet-200/45 bg-violet-500/25 px-1 py-1 text-center">
             <div className="text-[0.56rem] font-semibold tracking-[0.08em] text-violet-100">{slot}</div>
             <div className="mt-0.5 h-1.5 rounded-full bg-violet-100/60" />
           </div>
@@ -241,12 +241,166 @@ function FantasyArtwork() {
 }
 
 function GameArtwork({ gameKey }: { gameKey: VenueGameKey }) {
-  if (gameKey === "speed-trivia") return <TriviaArtwork />;
+  if (gameKey === "speed-trivia" || gameKey === "live_trivia") return <TriviaArtwork />;
   if (gameKey === "bingo") return <BingoArtwork />;
   if (gameKey === "pickem") return <PickEmArtwork />;
   if (gameKey === "fantasy") return <FantasyArtwork />;
   return <div className="h-[8.6rem] w-full rounded-2xl border border-slate-200/50 bg-slate-950/35" />;
 }
+
+type ScoringConfig =
+  | { kind: "stat"; big: string; label: string; foot?: string }
+  | { kind: "ladder"; rows: { value: string; label: string }[]; foot: string };
+
+const GAME_SCORING: Record<VenueGameKey, ScoringConfig> = {
+  "speed-trivia": { kind: "stat", big: "2", label: "points per correct answer", foot: "Up to 90 points per hour" },
+  live_trivia:    { kind: "stat", big: "2", label: "points per correct answer" },
+  bingo:          { kind: "stat", big: "50", label: "points per Bingo", foot: "Up to 4 boards live at once" },
+  fantasy:        { kind: "stat", big: "LIVE", label: "points climb as your players score" },
+  pickem: {
+    kind: "ladder",
+    rows: [
+      { value: "10", label: "points per correct pick" },
+      { value: "2×", label: "bonus at 7 correct" },
+      { value: "3×", label: "bonus at a perfect 10" },
+    ],
+    foot: "Max 300 points",
+  },
+};
+
+function GameScoringArtwork({ gameKey, accentClass }: { gameKey: VenueGameKey; accentClass: string }) {
+  const scoring = GAME_SCORING[gameKey];
+
+  if (scoring.kind === "ladder") {
+    return (
+      <div className="w-full space-y-2">
+        {scoring.rows.map((row) => (
+          <div
+            key={row.label}
+            className="flex items-center gap-3 rounded-xl border border-white/25 bg-slate-950/40 px-3 py-2"
+          >
+            <span
+              className={`min-w-[2.6rem] text-center text-[1.6rem] font-black leading-none ${accentClass}`}
+              style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+            >
+              {row.value}
+            </span>
+            <span className="text-[0.92rem] font-semibold leading-tight text-white/85">{row.label}</span>
+          </div>
+        ))}
+        <div className="flex justify-center pt-1">
+          <span className={`rounded-full border border-white/30 bg-black/30 px-3 py-1 text-[0.78rem] font-black uppercase tracking-[0.12em] ${accentClass}`}>
+            {scoring.foot}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-white/25 bg-slate-950/40 px-4 py-5">
+      <span
+        className={`text-[clamp(3rem,13vw,4.6rem)] font-black leading-none ${accentClass} [text-shadow:0_0_18px_rgba(255,255,255,0.3)]`}
+        style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+      >
+        {scoring.big}
+      </span>
+      <span className="text-center text-[0.95rem] font-bold uppercase tracking-[0.1em] text-white/85">
+        {scoring.label}
+      </span>
+      {scoring.foot ? (
+        <span className="text-center text-[0.82rem] font-semibold text-white/60">{scoring.foot}</span>
+      ) : null}
+    </div>
+  );
+}
+
+const GAME_STEP_ACCENT: Record<VenueGameKey, string> = {
+  "speed-trivia": "text-blue-300",
+  live_trivia:    "text-cyan-300",
+  bingo:          "text-orange-300",
+  pickem:         "text-indigo-300",
+  fantasy:        "text-violet-300",
+};
+
+const GAME_STEP_DOT_ACTIVE: Record<VenueGameKey, string> = {
+  "speed-trivia": "bg-blue-300",
+  live_trivia:    "bg-cyan-300",
+  bingo:          "bg-orange-300",
+  pickem:         "bg-indigo-300",
+  fantasy:        "bg-violet-300",
+};
+
+export function GameOnboardingCard({
+  gameKey,
+  step,
+  stepIndex,
+  className = "",
+}: {
+  gameKey: VenueGameKey;
+  step: GameOnboardingStep;
+  stepIndex: number;
+  className?: string;
+}) {
+  const card = VENUE_GAME_CARD_BY_KEY[gameKey];
+  const accentClass = GAME_STEP_ACCENT[gameKey];
+  const isHookStep = stepIndex === 0;
+
+  return (
+    <div
+      className={`relative flex min-h-0 overflow-hidden rounded-[2rem] border-[3px] border-white/60 text-white shadow-[0_12px_26px_rgba(15,23,42,0.5)] p-5 sm:p-6 ${GAME_CARD_BG_BY_KEY[gameKey]} ${className}`}
+    >
+      <div className="relative flex min-h-0 flex-1 flex-col gap-4">
+        <div
+          className="text-[clamp(2rem,6.2vw,3.35rem)] leading-[1.02] font-black uppercase tracking-[0.045em] text-white [text-shadow:0_1px_0_rgba(12,18,28,0.8),0_3px_0_rgba(12,18,28,0.58),0_0_12px_rgba(255,255,255,0.5)]"
+          style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+        >
+          {card.title}
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-white/40 bg-black/28 px-4 py-4 sm:px-5 sm:py-5 gap-3">
+          <div className={`shrink-0 text-[0.85rem] tracking-[0.16em] font-black uppercase ${accentClass}`}>
+            {step.stepLabel}
+          </div>
+          {isHookStep ? (
+            <div className="flex min-h-0 flex-1 flex-col justify-center gap-4">
+              <div
+                className="text-[clamp(1.85rem,5.4vw,2.85rem)] leading-[1.08] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)]"
+                style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+              >
+                {step.heading}
+              </div>
+              <div className={`h-1 w-16 rounded-full ${GAME_STEP_DOT_ACTIVE[gameKey]}`} />
+              <div className="text-[clamp(1.05rem,3vw,1.45rem)] leading-[1.35] text-white/85 font-medium">
+                {step.body}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex min-h-0 flex-1 items-center justify-center">
+                {stepIndex === 1 ? (
+                  <GameArtwork gameKey={gameKey} />
+                ) : (
+                  <GameScoringArtwork gameKey={gameKey} accentClass={accentClass} />
+                )}
+              </div>
+              <div
+                className="shrink-0 text-[clamp(1.2rem,3.4vw,1.75rem)] leading-[1.18] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.6)]"
+                style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+              >
+                {step.heading}
+              </div>
+              <div className="shrink-0 text-[clamp(1rem,2.8vw,1.3rem)] leading-[1.35] text-white/85 font-medium">
+                {step.body}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export { GAME_STEP_DOT_ACTIVE };
 
 export function GameIdentityPanel({
   gameKey,

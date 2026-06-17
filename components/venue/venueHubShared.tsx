@@ -57,7 +57,7 @@ export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
 };
 
 export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
-  live_trivia: "Synchronized bar trivia played against everyone else around you. Don't let them see your answers!",
+  live_trivia: "Classic bar trivia played against everyone else around you.",
   "speed-trivia": "It's just you versus the clock. 15 seconds per question, 15 questions per round, and 3 rounds per hour. Good luck! ",
   bingo: "Bingo boards align with the games on TV. Watch the game, track your squares in real time, and earn points as the live action unfolds!",
   pickem: "Predict the winners of today's top matchups before the games start. Every correct call gets you one step closer to prizes and discounts!",

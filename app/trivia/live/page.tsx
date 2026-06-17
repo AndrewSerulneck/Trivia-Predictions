@@ -1900,18 +1900,6 @@ export default function LiveShowdownPage() {
       </div>
 
 
-      {process.env.NODE_ENV === "development" ? (
-        <button
-          type="button"
-          onClick={() => triggerAnimation("LIVE_TRIVIA_NEXT_CATEGORY", {
-            categoryName: state.upcomingRoundCategory ?? "Test Category",
-            roundNumber: (state.currentRound ?? 0) + 1,
-          })}
-          className="fixed bottom-4 right-4 z-[1100] rounded-lg border border-dashed border-fuchsia-700/60 bg-fuchsia-950/80 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-fuchsia-400 backdrop-blur-sm hover:bg-fuchsia-950"
-        >
-          ▶ Test Category Anim
-        </button>
-      ) : null}
 
       {hasOnboarded && Boolean(forfeitKey) && Boolean(activeKey) && forfeitKey === activeKey ? (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/75 p-4">
