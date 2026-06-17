@@ -13,6 +13,7 @@ import { LiveTriviaRoundBreakAnimation } from "@/components/animations/LiveTrivi
 import { LiveTriviaCategoryAnnouncementAnimation } from "@/components/animations/LiveTriviaCategoryAnnouncementAnimation";
 import { FantasyScoreUpAnimation } from "@/components/animations/FantasyScoreUpAnimation";
 import { FantasyLiveCollectAnimation } from "@/components/animations/FantasyLiveCollectAnimation";
+import { LiveTriviaChampionAnimation } from "@/components/animations/LiveTriviaChampionAnimation";
 
 export type AnimationComponent = ComponentType<GameplayAnimationProps>;
 
@@ -34,4 +35,5 @@ export const ANIMATION_REGISTRY: Record<AnimationType, AnimationComponent> = {
   LIVE_TRIVIA_NEXT_CATEGORY: LiveTriviaCategoryAnnouncementAnimation,
   FANTASY_SCORE_UP: FantasyScoreUpAnimation,
   FANTASY_LIVE_COLLECT: FantasyLiveCollectAnimation,
+  LIVE_TRIVIA_CHAMPION: LiveTriviaChampionAnimation,
 };

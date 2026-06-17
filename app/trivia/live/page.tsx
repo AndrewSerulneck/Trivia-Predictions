@@ -1022,6 +1022,14 @@ export default function LiveShowdownPage() {
   }, [commentEventKey, nextCommentEvent, triggerAnimation]);
 
   const correctWrongFiredForKeyRef = useRef<string | null>(null);
+  const championAnimationFired = useRef(false);
+
+  useEffect(() => {
+    if (isPostGame && postGameLeaderboard?.isChampion && !championAnimationFired.current) {
+      championAnimationFired.current = true;
+      triggerAnimation("LIVE_TRIVIA_CHAMPION");
+    }
+  }, [isPostGame, postGameLeaderboard?.isChampion, triggerAnimation]);
 
   const prevPhaseRef = useRef<Phase | null>(null);
   useEffect(() => {
@@ -1175,6 +1183,15 @@ export default function LiveShowdownPage() {
               ←
             </button>
             <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Showdown</h1>
+            {process.env.NODE_ENV === "development" && (
+              <button
+                type="button"
+                onClick={() => triggerAnimation("LIVE_TRIVIA_CHAMPION")}
+                className="ml-auto shrink-0 rounded-lg bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-400 border border-amber-400/40"
+              >
+                🏆 Test
+              </button>
+            )}
           </div>
         </header>
 
