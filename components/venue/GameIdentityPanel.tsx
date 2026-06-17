@@ -467,7 +467,7 @@ function BingoStep3({ accentClass }: { accentClass: string }) {
           return (
             <div
               key={i}
-              className={`flex aspect-square items-center justify-center rounded-[5px] text-[0.5rem] font-black ${
+              className={`flex h-7 items-center justify-center rounded-[5px] text-[0.5rem] font-black ${
                 onLine
                   ? "border border-orange-200 bg-orange-500 text-white shadow-[0_0_12px_rgba(249,115,22,0.95)]"
                   : "border border-white/15 bg-slate-900/70 text-white/40"
@@ -480,7 +480,7 @@ function BingoStep3({ accentClass }: { accentClass: string }) {
       </div>
       <button
         type="button"
-        className="tp-clean-button mt-0.5 flex items-center justify-between rounded-full bg-orange-500 px-3 py-2 text-white shadow-[0_0_14px_rgba(249,115,22,0.7)]"
+        className="tp-clean-button flex items-center justify-between rounded-full bg-orange-500 px-3 py-2 text-white shadow-[0_0_14px_rgba(249,115,22,0.7)]"
       >
         <span className="text-[0.72rem] font-black uppercase tracking-[0.08em]">Collect Points</span>
         <span className="rounded-full bg-white/25 px-2 py-0.5 text-[0.72rem] font-black">+50 pts</span>
