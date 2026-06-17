@@ -1899,7 +1899,7 @@ export async function createAdminVenue(input: {
     throw new Error("Street address is required.");
   }
 
-  const radius = Number.isFinite(input.radius) ? Math.round(Number(input.radius)) : 100;
+  const radius = Number.isFinite(input.radius) ? Math.round(Number(input.radius)) : 150;
   if (radius < 25 || radius > 2000) {
     throw new Error("Radius must be between 25m and 2000m.");
   }

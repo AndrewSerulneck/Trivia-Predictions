@@ -57,7 +57,7 @@ const BLANK_FORM: VenueFormState = {
   country: "",
   county: "",
   region: "",
-  radius: "100",
+  radius: "150",
   latitude: "",
   longitude: "",
   placeId: "",
@@ -152,6 +152,12 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
   const latValue = Number.parseFloat(form.latitude);
   const lngValue = Number.parseFloat(form.longitude);
   const hasValidCoordinates = Number.isFinite(latValue) && Number.isFinite(lngValue);
+  const [mapError, setMapError] = useState(false);
+
+  const radiusValue = Number.parseInt(form.radius, 10) || 150;
+  const venueMapSrc = hasValidCoordinates
+    ? `/api/admin/venue-map?lat=${latValue}&lon=${lngValue}&radius=${radiusValue}`
+    : null;
 
   function ensureLookupSessionToken(): string {
     const now = Date.now();
@@ -281,6 +287,10 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
       lookupInputRef.current?.focus();
     }
   }, [mode]);
+
+  useEffect(() => {
+    setMapError(false);
+  }, [form.latitude, form.longitude, form.radius]);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
@@ -419,6 +429,7 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
             value={form.radius}
             onChange={(event) => onChange({ radius: event.target.value })}
           />
+          <p className="mt-1 text-xs text-slate-500">Distance from the venue pin a player must be within to join. 150m suits most bars; increase for large or multi-building venues.</p>
         </div>
         <div>
           <label className={label}>Latitude *</label>
@@ -446,10 +457,10 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
           <input className={field} value={form.region} onChange={(event) => onChange({ region: event.target.value })} />
         </div>
 
-        {hasValidCoordinates ? (
+        {hasValidCoordinates && venueMapSrc ? (
           <div className="md:col-span-2">
             <div className="mb-1 flex items-center justify-between">
-              <label className={label}>Map Preview</label>
+              <label className={label}>Geofence Preview</label>
               <a
                 href={`https://maps.google.com/?q=${latValue},${lngValue}`}
                 target="_blank"
@@ -466,14 +477,29 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
             ) : (
               <p className="mb-1.5 text-xs text-amber-700">Coordinates set manually — no Place ID on record.</p>
             )}
-            <div className="overflow-hidden rounded-lg border border-slate-200">
-              <iframe
-                title="Venue Location Preview"
-                className="h-56 w-full"
-                loading="lazy"
-                src={`https://www.google.com/maps?q=${encodeURIComponent(`${latValue},${lngValue}`)}&z=15&output=embed`}
-              />
-            </div>
+            {mapError ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                Map preview unavailable. Enable the <strong>Maps Static API</strong> in your Google Cloud Console for this feature, then reload.
+                <a
+                  href={`https://maps.google.com/?q=${latValue},${lngValue}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 font-semibold underline"
+                >
+                  Open in Google Maps ↗
+                </a>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-lg border border-slate-200">
+                <img
+                  key={venueMapSrc}
+                  src={venueMapSrc}
+                  alt="Geofence map preview"
+                  className="h-56 w-full object-cover"
+                  onError={() => setMapError(true)}
+                />
+              </div>
+            )}
           </div>
         ) : null}
       </div>
