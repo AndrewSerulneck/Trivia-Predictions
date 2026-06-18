@@ -78,6 +78,7 @@ export function VenueMapPicker({ latitude, longitude, radius, onChange }: VenueM
   const circleRef = useRef<GmapsCircle | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const dragInProgressRef = useRef(false);
 
   const [mapsReady, setMapsReady] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -144,6 +145,10 @@ export function VenueMapPicker({ latitude, longitude, radius, onChange }: VenueM
     });
     circleRef.current = circle;
 
+    marker.addListener("dragstart", () => {
+      dragInProgressRef.current = true;
+    });
+
     marker.addListener("dragend", () => {
       const pos = marker.getPosition();
       if (!pos) return;
@@ -151,12 +156,16 @@ export function VenueMapPicker({ latitude, longitude, radius, onChange }: VenueM
       const lng = pos.lng();
       circle.setCenter({ lat, lng });
       onChangeRef.current(lat, lng);
+      // Allow one render cycle for parent state to update before re-enabling sync
+      setTimeout(() => { dragInProgressRef.current = false; }, 100);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapsReady]);
 
-  // Sync marker and map center when coordinates change externally (address lookup)
+  // Sync marker and map center when coordinates change externally (address lookup).
+  // Skip when the change originated from a drag so the pin doesn't snap back.
   useEffect(() => {
+    if (dragInProgressRef.current) return;
     if (!markerRef.current || !circleRef.current || !mapRef.current) return;
     if (latitude === null || longitude === null) return;
     const pos = { lat: latitude, lng: longitude };
@@ -181,13 +190,13 @@ export function VenueMapPicker({ latitude, longitude, radius, onChange }: VenueM
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200">
       {!mapsReady && (
-        <div className="flex h-64 items-center justify-center bg-slate-50 text-xs text-slate-400">
+        <div className="flex h-80 items-center justify-center bg-slate-50 text-xs text-slate-400">
           Loading map...
         </div>
       )}
-      <div ref={mapDivRef} className={`h-64 w-full${mapsReady ? "" : " hidden"}`} />
+      <div ref={mapDivRef} className={`h-80 w-full${mapsReady ? "" : " hidden"}`} />
       <p className="border-t border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-        Drag the pin to the exact venue location. The blue circle shows the geofence boundary.
+        Drag the red pin to the exact venue entrance. The blue circle shows the geofence boundary and updates as you change the radius.
       </p>
     </div>
   );
