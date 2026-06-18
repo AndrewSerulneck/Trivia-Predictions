@@ -33,17 +33,19 @@ export async function POST(request: Request) {
       userId?: string;
       venueId?: string;
       challengeId?: string;
+      cycleStart?: string;
     } | null;
 
     const userId = String(body?.userId ?? "").trim();
     const venueId = String(body?.venueId ?? "").trim();
     const challengeId = String(body?.challengeId ?? "").trim();
+    const cycleStart = String(body?.cycleStart ?? "").trim() || undefined;
 
     if (!userId || !venueId || !challengeId) {
       return NextResponse.json({ ok: false, error: "userId, venueId, and challengeId are required." }, { status: 400 });
     }
 
-    const result = await claimChallengeCampaignPrize({ userId, venueId, challengeId });
+    const result = await claimChallengeCampaignPrize({ userId, venueId, challengeId, cycleStart });
     return NextResponse.json({ ok: true, result });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to claim challenge prize.";

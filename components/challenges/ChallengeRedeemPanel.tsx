@@ -13,6 +13,7 @@ type ChallengeWin = {
   challengeId: string;
   challengeName: string;
   challengeRules: string;
+  cycleStart?: string | null;
   claimedAt?: string | null;
 };
 
@@ -171,7 +172,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
   const [wins, setWins] = useState<ChallengeWin[]>([]);
   const [activeCampaigns, setActiveCampaigns] = useState<CampaignSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [claimingId, setClaimingId] = useState("");
+  const [claimingId, setClaimingId] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
 
@@ -246,7 +247,8 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
     return () => window.clearInterval(interval);
   }, [load]);
 
-  const latestWin = useMemo(() => wins[0] ?? null, [wins]);
+  const unclaimedWins = useMemo(() => wins.filter((w) => !w.claimedAt), [wins]);
+  const claimedWins = useMemo(() => wins.filter((w) => w.claimedAt), [wins]);
 
   const backToVenue = useCallback(() => {
     // Save progress before navigating away so the next visit gets the right initialPct.
@@ -266,17 +268,21 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
     });
   }, [router, venueId]);
 
+  const claimKey = (win: ChallengeWin) =>
+    win.cycleStart ? `${win.challengeId}:${win.cycleStart}` : win.challengeId;
+
   const claim = useCallback(
     async (win: ChallengeWin, sourceRect: DOMRect) => {
+      const key = claimKey(win);
       if (!userId || !venueId || !win.challengeId || claimingId || win.claimedAt) return;
-      setClaimingId(win.challengeId);
+      setClaimingId(key);
       setErrorMessage("");
       setStatusMessage("");
       try {
         const response = await fetch("/api/challenge-campaigns/redeem", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, venueId, challengeId: win.challengeId }),
+          body: JSON.stringify({ userId, venueId, challengeId: win.challengeId, cycleStart: win.cycleStart ?? undefined }),
         });
         const payload = (await response.json()) as {
           ok: boolean;
@@ -310,9 +316,10 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
         setStatusMessage("");
         setErrorMessage(error instanceof Error ? error.message : "Failed to redeem challenge prize.");
       } finally {
-        setClaimingId("");
+        setClaimingId((prev) => (prev === key ? "" : prev));
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [claimingId, load, userId, venueId]
   );
 
@@ -456,7 +463,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
       <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
         <h2 className="text-lg font-semibold text-ht-fg-primary">Redeem Prize</h2>
         <p className="mt-1 text-sm text-ht-fg-muted">
-          Claim your challenge win once. Redeemed prizes cannot be claimed again.
+          Claim your challenge wins. Each prize can only be redeemed once.
         </p>
 
         {loading ? (
@@ -464,33 +471,55 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
             <BouncingBallLoader size="sm" label="Loading redemption details..." />
           </div>
         ) : null}
-        {!loading && !latestWin ? (
+
+        {!loading && wins.length === 0 ? (
           <p className="mt-3 text-sm text-ht-fg-secondary">No redeemable challenge wins found for this venue.</p>
         ) : null}
 
-        {latestWin ? (
-          <div className="mt-3 rounded-ht-lg border border-amber-400/40 bg-amber-500/10 p-3">
-            <p className="text-sm font-semibold text-amber-300">{latestWin.challengeName}</p>
-            <p className="mt-1 text-xs text-amber-400/70">{latestWin.challengeRules}</p>
-            <p className="mt-2 text-xs font-semibold text-amber-300">
-              Prize: Venue champion recognition and winner redemption status.
-            </p>
-            <button
-              type="button"
-              disabled={Boolean(latestWin.claimedAt) || claimingId === latestWin.challengeId}
-              onClick={(event) => {
-                const rect = event.currentTarget.getBoundingClientRect();
-                void claim(latestWin, rect);
-              }}
-              className="mt-3 min-h-[44px] rounded-ht-lg border border-indigo-500/50 bg-indigo-500/15 px-3 py-2 text-sm font-semibold text-indigo-300 disabled:opacity-60"
-            >
-              {latestWin.claimedAt
-                ? "Already Redeemed"
-                : claimingId === latestWin.challengeId
-                  ? "Redeeming..."
-                  : "Redeem"}
-            </button>
-          </div>
+        {unclaimedWins.length > 0 ? (
+          <ul className="mt-3 space-y-3">
+            {unclaimedWins.map((win) => {
+              const key = claimKey(win);
+              return (
+                <li key={key} className="rounded-ht-lg border border-amber-400/40 bg-amber-500/10 p-3">
+                  <p className="text-sm font-semibold text-amber-300">{win.challengeName}</p>
+                  {win.cycleStart ? (
+                    <p className="mt-0.5 text-[11px] text-amber-400/60">
+                      Week of {new Date(win.cycleStart).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </p>
+                  ) : null}
+                  <p className="mt-1 text-xs text-amber-400/70">{win.challengeRules}</p>
+                  <button
+                    type="button"
+                    disabled={Boolean(claimingId)}
+                    onClick={(event) => {
+                      const rect = event.currentTarget.getBoundingClientRect();
+                      void claim(win, rect);
+                    }}
+                    className="mt-3 min-h-[44px] rounded-ht-lg border border-indigo-500/50 bg-indigo-500/15 px-3 py-2 text-sm font-semibold text-indigo-300 disabled:opacity-60"
+                  >
+                    {claimingId === key ? "Redeeming..." : "Redeem"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+
+        {!loading && unclaimedWins.length === 0 && claimedWins.length > 0 ? (
+          <ul className="mt-3 space-y-2">
+            {claimedWins.map((win) => (
+              <li key={claimKey(win)} className="rounded-ht-lg border border-slate-700/50 bg-slate-800/30 p-3 opacity-70">
+                <p className="text-sm font-semibold text-slate-400">{win.challengeName}</p>
+                {win.cycleStart ? (
+                  <p className="mt-0.5 text-[11px] text-slate-500">
+                    Week of {new Date(win.cycleStart).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </p>
+                ) : null}
+                <p className="mt-1 text-xs font-semibold text-slate-500">Already Redeemed</p>
+              </li>
+            ))}
+          </ul>
         ) : null}
 
         {statusMessage ? (

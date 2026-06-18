@@ -248,6 +248,7 @@ export interface ChallengeCampaignWin {
   challengeRules: string;
   winnerUserId: string;
   winnerUsername?: string | null;
+  cycleStart?: string | null;
   claimedAt?: string | null;
   prizeType?: PrizeType | null;
   prizeGiftCertificateAmount?: number | null;

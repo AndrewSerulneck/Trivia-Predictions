@@ -42,8 +42,10 @@ import { requireAdminAuth } from "@/lib/adminAuth";
 import {
   createChallengeCampaign,
   deleteChallengeCampaign,
+  getChallengeFinalizedPrize,
   listChallengeCampaignProgress,
   listChallengeCampaigns,
+  listChallengeCycleWinners,
   updateChallengeCampaign,
 } from "@/lib/challengeCampaigns";
 import { recordAdClick, recordAdImpression } from "@/lib/ads";
@@ -267,6 +269,24 @@ export async function GET(request: Request) {
       const userId = String(searchParams.get("userId") ?? "").trim() || undefined;
       const items = await listChallengeCampaignProgress({ challengeId, venueId, userId });
       return NextResponse.json({ ok: true, items });
+    }
+
+    if (resource === "challenge-cycle-winners") {
+      const challengeId = String(searchParams.get("challengeId") ?? "").trim();
+      if (!challengeId) {
+        return NextResponse.json({ ok: false, error: "challengeId is required." }, { status: 400 });
+      }
+      const items = await listChallengeCycleWinners(challengeId);
+      return NextResponse.json({ ok: true, items });
+    }
+
+    if (resource === "challenge-finalized-prize") {
+      const challengeId = String(searchParams.get("challengeId") ?? "").trim();
+      if (!challengeId) {
+        return NextResponse.json({ ok: false, error: "challengeId is required." }, { status: 400 });
+      }
+      const prize = await getChallengeFinalizedPrize(challengeId);
+      return NextResponse.json({ ok: true, prize });
     }
 
     if (resource === "session") {

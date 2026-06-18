@@ -315,10 +315,39 @@ export async function submitLiveShowdownAnswer(
     throw new Error("User venue does not match this Live Showdown venue.");
   }
 
+  const state = await getLiveShowdownState(Date.now(), venueId);
+  if (!state.isGameActive) {
+    throw new Error("No Live Showdown game is currently active.");
+  }
+  if (state.activePhase !== "answering") {
+    throw new Error("Submissions are only accepted during the answering phase.");
+  }
+  const authoritativeScheduleId = String(state.scheduleId ?? "").trim();
+  const authoritativeRoundNumber = Number(state.currentRound);
+  const authoritativeQuestionIndex = Number(state.currentQuestionIndex);
+  if (!authoritativeScheduleId || !Number.isFinite(authoritativeRoundNumber) || !Number.isFinite(authoritativeQuestionIndex)) {
+    throw new Error("Live Showdown answering slot is unavailable.");
+  }
+
+  if (
+    scheduleId !== authoritativeScheduleId ||
+    roundNumber !== authoritativeRoundNumber ||
+    questionIndex !== authoritativeQuestionIndex
+  ) {
+    console.warn(
+      `[live-trivia][submission] Client slot mismatch ignored for user ${userId}: ` +
+        `client=${scheduleId}/${roundNumber}/${questionIndex} server=${authoritativeScheduleId}/${authoritativeRoundNumber}/${authoritativeQuestionIndex}`
+    );
+  }
+
+  const effectiveScheduleId = authoritativeScheduleId;
+  const effectiveRoundNumber = authoritativeRoundNumber;
+  const effectiveQuestionIndex = authoritativeQuestionIndex;
+
   const { data: scheduleVenueData, error: scheduleVenueError } = await admin
     .from("trivia_schedules")
     .select("venue_id")
-    .eq("id", scheduleId)
+    .eq("id", effectiveScheduleId)
     .limit(1)
     .maybeSingle<ScheduleVenueRow>();
 
@@ -328,17 +357,6 @@ export async function submitLiveShowdownAnswer(
   const scheduleVenueId = String(scheduleVenueData?.venue_id ?? "").trim();
   if (!scheduleVenueId || scheduleVenueId !== venueId) {
     throw new Error("Schedule venue does not match this Live Showdown venue.");
-  }
-
-  const state = await getLiveShowdownState(Date.now(), venueId);
-  if (!state.isGameActive) {
-    throw new Error("No Live Showdown game is currently active.");
-  }
-  if (state.scheduleId !== scheduleId || state.currentRound !== roundNumber || state.currentQuestionIndex !== questionIndex) {
-    throw new Error("Submission does not match the currently active schedule slot.");
-  }
-  if (state.activePhase !== "answering") {
-    throw new Error("Submissions are only accepted during the answering phase.");
   }
 
   // Use the server-derived occurrence date from the active game state — never trust
@@ -354,7 +372,7 @@ export async function submitLiveShowdownAnswer(
     acceptableAnswerIndexes,
     closestGuessEligible,
   } =
-    await getCorrectAnswerForScheduleSlot(scheduleId, roundNumber, questionIndex, occurrenceDate);
+    await getCorrectAnswerForScheduleSlot(effectiveScheduleId, effectiveRoundNumber, effectiveQuestionIndex, occurrenceDate);
 
   const { data: existingRow, error: existingError } = await runOccurrenceCompatibleQuery(
     "submitLiveShowdownAnswer:existing_check",
@@ -363,10 +381,10 @@ export async function submitLiveShowdownAnswer(
         .from("live_showdown_answers")
         .select("id, is_correct, points_awarded")
         .eq("user_id", userId)
-        .eq("schedule_id", scheduleId)
+        .eq("schedule_id", effectiveScheduleId)
         .eq("occurrence_date", occurrenceDate)
-        .eq("round_number", roundNumber)
-        .eq("question_index", questionIndex)
+        .eq("round_number", effectiveRoundNumber)
+        .eq("question_index", effectiveQuestionIndex)
         .limit(1)
         .maybeSingle(),
     () =>
@@ -374,9 +392,9 @@ export async function submitLiveShowdownAnswer(
         .from("live_showdown_answers")
         .select("id, is_correct, points_awarded")
         .eq("user_id", userId)
-        .eq("schedule_id", scheduleId)
-        .eq("round_number", roundNumber)
-        .eq("question_index", questionIndex)
+        .eq("schedule_id", effectiveScheduleId)
+        .eq("round_number", effectiveRoundNumber)
+        .eq("question_index", effectiveQuestionIndex)
         .limit(1)
         .maybeSingle()
   );
@@ -412,11 +430,11 @@ export async function submitLiveShowdownAnswer(
 
   const insertRowWithOccurrence = {
     user_id: userId,
-    schedule_id: scheduleId,
+    schedule_id: effectiveScheduleId,
     occurrence_date: occurrenceDate,
     question_id: questionId,
-    round_number: roundNumber,
-    question_index: questionIndex,
+    round_number: effectiveRoundNumber,
+    question_index: effectiveQuestionIndex,
     submitted_answer: submittedAnswer,
     normalized_answer: normalizedAnswer,
     is_correct: isCorrect,
@@ -424,10 +442,10 @@ export async function submitLiveShowdownAnswer(
   };
   const insertRowLegacy = {
     user_id: userId,
-    schedule_id: scheduleId,
+    schedule_id: effectiveScheduleId,
     question_id: questionId,
-    round_number: roundNumber,
-    question_index: questionIndex,
+    round_number: effectiveRoundNumber,
+    question_index: effectiveQuestionIndex,
     submitted_answer: submittedAnswer,
     normalized_answer: normalizedAnswer,
     is_correct: isCorrect,
@@ -448,10 +466,10 @@ export async function submitLiveShowdownAnswer(
           .from("live_showdown_answers")
           .select("id, is_correct, points_awarded")
           .eq("user_id", userId)
-          .eq("schedule_id", scheduleId)
+          .eq("schedule_id", effectiveScheduleId)
           .eq("occurrence_date", occurrenceDate)
-          .eq("round_number", roundNumber)
-          .eq("question_index", questionIndex)
+          .eq("round_number", effectiveRoundNumber)
+          .eq("question_index", effectiveQuestionIndex)
           .limit(1)
           .maybeSingle(),
       () =>
@@ -459,9 +477,9 @@ export async function submitLiveShowdownAnswer(
           .from("live_showdown_answers")
           .select("id, is_correct, points_awarded")
           .eq("user_id", userId)
-          .eq("schedule_id", scheduleId)
-          .eq("round_number", roundNumber)
-          .eq("question_index", questionIndex)
+          .eq("schedule_id", effectiveScheduleId)
+          .eq("round_number", effectiveRoundNumber)
+          .eq("question_index", effectiveQuestionIndex)
           .limit(1)
           .maybeSingle()
     );
@@ -493,18 +511,18 @@ export async function submitLiveShowdownAnswer(
             .from("live_showdown_answers")
             .update({ points_awarded: pointsAwarded })
             .eq("user_id", userId)
-            .eq("schedule_id", scheduleId)
+            .eq("schedule_id", effectiveScheduleId)
             .eq("occurrence_date", occurrenceDate)
-            .eq("round_number", roundNumber)
-            .eq("question_index", questionIndex),
+            .eq("round_number", effectiveRoundNumber)
+            .eq("question_index", effectiveQuestionIndex),
         () =>
           admin
             .from("live_showdown_answers")
             .update({ points_awarded: pointsAwarded })
             .eq("user_id", userId)
-            .eq("schedule_id", scheduleId)
-            .eq("round_number", roundNumber)
-            .eq("question_index", questionIndex)
+            .eq("schedule_id", effectiveScheduleId)
+            .eq("round_number", effectiveRoundNumber)
+            .eq("question_index", effectiveQuestionIndex)
       );
 
       if (awardedUpdateError) {

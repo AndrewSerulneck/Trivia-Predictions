@@ -119,6 +119,8 @@ describe("admin trivia deletion behavior", () => {
     });
     const scheduleSelect = vi.fn().mockReturnValue({ in: scheduleIn });
 
+    mocks.readdirSync.mockReturnValue([]);
+
     mocks.from.mockImplementation((table: string) => {
       if (table === "trivia_questions") {
         return {

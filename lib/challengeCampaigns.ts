@@ -65,6 +65,7 @@ type ChallengeCampaignRedemptionRow = {
   claimed_at: string;
   prize_expires_at: string | null;
   prize_redeemed_at: string | null;
+  cycle_start: string;
 };
 
 type ChallengeLeaderboardProgressRow = {
@@ -305,14 +306,138 @@ function normalizeGameTypes(input: string[] | undefined): Array<Exclude<Challeng
   return normalized.size > 0 ? [...normalized] : [...VALID_GAME_TYPES];
 }
 
-function getWeekdayKey(date: Date): string {
-  return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][date.getDay()] ?? "sun";
+function toLocalParts(date: Date, timezone: string): { dow: number; hour: number; minute: number } {
+  const DOW_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "0";
+  const dowStr = get("weekday").toLowerCase().slice(0, 3);
+  const rawHour = parseInt(get("hour"), 10);
+  return {
+    dow: Math.max(0, DOW_KEYS.indexOf(dowStr)),
+    hour: rawHour === 24 ? 0 : rawHour,
+    minute: parseInt(get("minute"), 10),
+  };
 }
 
-function isMultiDayCampaignActive(campaign: ChallengeCampaign, now: Date): boolean {
+function getWeekdayKey(date: Date, timezone: string): string {
+  const { dow } = toLocalParts(date, timezone);
+  return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][dow] ?? "sun";
+}
+
+// Convert a local wall-clock date/time to its UTC equivalent using a probe+offset approach.
+// Accurate for all but the ambiguous DST hour (acceptable for cycle boundary math).
+function localDateTimeToUtc(year: number, month: number, day: number, hour: number, minute: number, timezone: string): Date {
+  const probe = new Date(Date.UTC(year, month, day, hour, minute, 0));
+  const { hour: localH, minute: localM } = toLocalParts(probe, timezone);
+  let offsetMinutes = (localH * 60 + localM) - (hour * 60 + minute);
+  if (offsetMinutes > 12 * 60) offsetMinutes -= 24 * 60;
+  if (offsetMinutes < -12 * 60) offsetMinutes += 24 * 60;
+  return new Date(probe.getTime() - offsetMinutes * 60 * 1000);
+}
+
+// Return the canonical UTC start timestamp of the recurrence cycle that `now` falls in.
+// For recurring challenges this is the most recent activeDays[0] at startTime in local time.
+// For one-time challenges it is always startDate + startTime.
+function computeCycleStart(campaign: ChallengeCampaign, now: Date, timezone: string): Date {
+  const isRecurring = campaign.recurringType && campaign.recurringType !== "none";
+  if (!isRecurring) {
+    if (campaign.startDate) {
+      const [h, m] = (campaign.startTime ?? "00:00").split(":").map(Number);
+      const [y, mo, d] = campaign.startDate.split("-").map(Number);
+      return localDateTimeToUtc(y, mo - 1, d, h, m, timezone);
+    }
+    return new Date(0);
+  }
+
+  const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const startDayKey = campaign.activeDays[0];
+  if (!startDayKey) return new Date(0);
+  const startDowIndex = DOW.indexOf(startDayKey);
+  if (startDowIndex < 0) return new Date(0);
+
+  const [startH, startM] = (campaign.startTime ?? "00:00").split(":").map(Number);
+  const { dow: nowDow, hour: nowH, minute: nowM } = toLocalParts(now, timezone);
+  const daysFromStart = ((nowDow - startDowIndex) + 7) % 7;
+  const minutesFromCycleStart = daysFromStart * 1440 + (nowH * 60 + nowM) - (startH * 60 + startM);
+
+  // If negative, we haven't reached this week's start yet — roll back to prior week
+  const daysBack = minutesFromCycleStart < 0 ? daysFromStart + 7 : daysFromStart;
+
+  // Derive local calendar date of `now`, then step back daysBack days
+  const localDateParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(now);
+  const getP = (type: string) => localDateParts.find((p) => p.type === type)?.value ?? "1";
+  const localNowMs = Date.UTC(parseInt(getP("year")), parseInt(getP("month")) - 1, parseInt(getP("day")));
+  const cycleDate = new Date(localNowMs - daysBack * 86400000);
+
+  return localDateTimeToUtc(cycleDate.getUTCFullYear(), cycleDate.getUTCMonth(), cycleDate.getUTCDate(), startH, startM, timezone);
+}
+
+// Returns the UTC timestamp when the cycle that started at cycleStart ends.
+function computeCycleEnd(campaign: ChallengeCampaign, cycleStart: Date, timezone: string): Date {
+  const isRecurring = campaign.recurringType && campaign.recurringType !== "none";
+  if (!isRecurring) {
+    if (campaign.endDate) {
+      const [h, m] = (campaign.endTime ?? "23:59").split(":").map(Number);
+      const [y, mo, d] = campaign.endDate.split("-").map(Number);
+      return localDateTimeToUtc(y, mo - 1, d, h, m, timezone);
+    }
+    return new Date(8640000000000000);
+  }
+
+  const [startH, startM] = (campaign.startTime ?? "00:00").split(":").map(Number);
+  const [endH, endM] = (campaign.endTime ?? "23:59").split(":").map(Number);
+
+  const isMultiDay = campaign.scheduleType === "multi_day" || campaign.scheduleType === "one_time";
+  if (isMultiDay && campaign.endDay) {
+    const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+    const startDowIndex = DOW.indexOf(campaign.activeDays[0] ?? "");
+    const endDowIndex = DOW.indexOf(campaign.endDay);
+    if (startDowIndex >= 0 && endDowIndex >= 0) {
+      const daySpan = ((endDowIndex - startDowIndex) + 7) % 7;
+      const durationMinutes = (daySpan === 0 ? 7 : daySpan) * 1440 + (endH * 60 + endM) - (startH * 60 + startM);
+      return new Date(cycleStart.getTime() + durationMinutes * 60 * 1000);
+    }
+  }
+
+  const durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+  const safeDuration = durationMinutes > 0 ? durationMinutes : durationMinutes + 24 * 60;
+  return new Date(cycleStart.getTime() + safeDuration * 60 * 1000);
+}
+
+async function getCycleWinnerForCampaign(params: {
+  campaignId: string;
+  cycleStart: Date;
+  tiebreaker: ChallengeLeaderboardTiebreaker;
+}): Promise<{ userId: string; venueId: string; pointsEarned: number } | null> {
+  assertConfigured();
+  const updatedAtAscending = params.tiebreaker !== "latest_activity";
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaign_progress")
+    .select("user_id, venue_id, points_earned")
+    .eq("challenge_id", params.campaignId)
+    .eq("cycle_start", params.cycleStart.toISOString())
+    .order("points_earned", { ascending: false })
+    .order("updated_at", { ascending: updatedAtAscending })
+    .order("user_id", { ascending: true })
+    .limit(1)
+    .maybeSingle<{ user_id: string; venue_id: string; points_earned: number }>();
+  if (error) throw new Error(error.message ?? "Failed to determine cycle winner.");
+  return data ? { userId: data.user_id, venueId: data.venue_id, pointsEarned: data.points_earned } : null;
+}
+
+function isMultiDayCampaignActive(campaign: ChallengeCampaign, now: Date, timezone: string): boolean {
   const isRecurring = campaign.recurringType && campaign.recurringType !== "none";
   if (isRecurring) {
-    return isMultiDayRecurringActive(campaign, now);
+    return isMultiDayRecurringActive(campaign, now, timezone);
   }
   // One-time: absolute start_date → end_date window
   if (!campaign.startDate || !campaign.endDate) return false;
@@ -322,7 +447,7 @@ function isMultiDayCampaignActive(campaign: ChallengeCampaign, now: Date): boole
   return now.getTime() >= startMs && now.getTime() <= endMs;
 }
 
-function isMultiDayRecurringActive(campaign: ChallengeCampaign, now: Date): boolean {
+function isMultiDayRecurringActive(campaign: ChallengeCampaign, now: Date, timezone: string): boolean {
   const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
   const startDayKey = campaign.activeDays[0];
   const endDayKey = campaign.endDay;
@@ -334,25 +459,27 @@ function isMultiDayRecurringActive(campaign: ChallengeCampaign, now: Date): bool
   const [startH, startM] = (campaign.startTime ?? "00:00").split(":").map(Number);
   const [endH, endM] = (campaign.endTime ?? "23:59").split(":").map(Number);
 
-  // Day span from start dow to end dow (0 = same day, 1–6 = days ahead)
+  // Day span from start dow to end dow in local time (0 = treat as full 7-day span)
   const daySpan = ((endDowIndex - startDowIndex) + 7) % 7;
 
-  // Find the most recent occurrence of the start dow
-  const nowDow = now.getDay();
-  const daysAgo = ((nowDow - startDowIndex) + 7) % 7;
+  const { dow: nowDow, hour: nowH, minute: nowM } = toLocalParts(now, timezone);
+  const daysFromStart = ((nowDow - startDowIndex) + 7) % 7;
 
-  const windowStart = new Date(now);
-  windowStart.setDate(windowStart.getDate() - daysAgo);
-  windowStart.setHours(startH, startM, 0, 0);
+  const nowMinOfDay = nowH * 60 + nowM;
+  const startMinOfDay = startH * 60 + startM;
+  const endMinOfDay = endH * 60 + endM;
+  const windowDurationMinutes = (daySpan === 0 ? 7 : daySpan) * 1440 + (endMinOfDay - startMinOfDay);
+  const minutesFromWindowStart = daysFromStart * 1440 + nowMinOfDay - startMinOfDay;
 
-  // If now is before this week's start, step back one recurrence period
-  if (now < windowStart) {
-    windowStart.setDate(windowStart.getDate() - 7);
+  let inWindow: boolean;
+  if (minutesFromWindowStart < 0) {
+    // May still be inside the previous week's window
+    const minutesFromPrevWindowStart = minutesFromWindowStart + 7 * 1440;
+    inWindow = minutesFromPrevWindowStart >= 0 && minutesFromPrevWindowStart <= windowDurationMinutes;
+  } else {
+    inWindow = minutesFromWindowStart <= windowDurationMinutes;
   }
-
-  const windowEnd = new Date(windowStart);
-  windowEnd.setDate(windowEnd.getDate() + (daySpan === 0 ? 7 : daySpan));
-  windowEnd.setHours(endH, endM, 59, 999);
+  if (!inWindow) return false;
 
   // Optional expiry: end_date as the last date this recurring challenge runs
   if (campaign.endDate) {
@@ -360,14 +487,15 @@ function isMultiDayRecurringActive(campaign: ChallengeCampaign, now: Date): bool
     if (Number.isFinite(expiryMs) && now.getTime() > expiryMs) return false;
   }
 
-  return now >= windowStart && now <= windowEnd;
+  return true;
 }
 
-function isTimeInWindow(now: Date, startTime?: string, endTime?: string): boolean {
+function isTimeInWindow(now: Date, startTime: string | undefined, endTime: string | undefined, timezone: string): boolean {
   if (!startTime || !endTime) {
     return true;
   }
-  const hhmm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const { hour, minute } = toLocalParts(now, timezone);
+  const hhmm = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
   const start = startTime.slice(0, 5);
   const end = endTime.slice(0, 5);
   if (start <= end) {
@@ -383,23 +511,23 @@ function campaignMatchesVenue(campaign: ChallengeCampaign, venueId: string): boo
   return campaign.venueIds.includes(venueId);
 }
 
-function isCampaignEligibleAtTime(campaign: ChallengeCampaign, now: Date, gameType: ChallengeGameType): boolean {
+function isCampaignEligibleAtTime(campaign: ChallengeCampaign, now: Date, gameType: ChallengeGameType, timezone: string): boolean {
   if (!campaign.isActive || campaign.winnerUserId) return false;
   if (!campaign.gameTypes.includes(gameType)) return false;
   if (campaign.scheduleType === "multi_day" || campaign.scheduleType === "one_time") {
-    return isMultiDayCampaignActive(campaign, now);
+    return isMultiDayCampaignActive(campaign, now, timezone);
   }
-  // Recurring path
+  // Recurring single-day path
   if (campaign.endDate) {
     const endDate = new Date(`${campaign.endDate}T23:59:59.999Z`);
     if (Number.isFinite(endDate.getTime()) && now.getTime() > endDate.getTime()) {
       return false;
     }
   }
-  if (campaign.activeDays.length > 0 && !campaign.activeDays.includes(getWeekdayKey(now))) {
+  if (campaign.activeDays.length > 0 && !campaign.activeDays.includes(getWeekdayKey(now, timezone))) {
     return false;
   }
-  if (!isTimeInWindow(now, campaign.startTime, campaign.endTime)) {
+  if (!isTimeInWindow(now, campaign.startTime, campaign.endTime, timezone)) {
     return false;
   }
   return true;
@@ -437,6 +565,7 @@ function isLeaderboardCampaignClosed(campaign: ChallengeCampaign, now: Date): bo
 async function listLeaderboardProgressRows(params: {
   challengeId: string;
   venueId?: string;
+  cycleStart?: Date;
 }): Promise<ChallengeLeaderboardProgressRow[]> {
   assertConfigured();
   let query = supabaseAdmin!
@@ -446,6 +575,9 @@ async function listLeaderboardProgressRows(params: {
     .limit(5000);
   if (params.venueId) {
     query = query.eq("venue_id", params.venueId);
+  }
+  if (params.cycleStart) {
+    query = query.eq("cycle_start", params.cycleStart.toISOString());
   }
 
   const { data, error } = await query.returns<Array<{ user_id: string; points_earned: number; updated_at: string }>>();
@@ -479,6 +611,7 @@ async function getLeaderboardSnapshotViaRpc(params: {
   viewerUserId?: string;
   displayLimit: number;
   tiebreaker: ChallengeLeaderboardTiebreaker;
+  cycleStart?: Date;
 }): Promise<{ topEntries: ChallengeLeaderboardEntry[]; viewer: ChallengeLeaderboardViewer | null } | null> {
   assertConfigured();
   const viewerUserId = String(params.viewerUserId ?? "").trim();
@@ -488,6 +621,7 @@ async function getLeaderboardSnapshotViaRpc(params: {
     p_viewer_user_id: viewerUserId || null,
     p_limit: normalizeLeaderboardDisplayLimit(params.displayLimit),
     p_tiebreaker: params.tiebreaker,
+    p_cycle_start: params.cycleStart ? params.cycleStart.toISOString() : null,
   });
 
   if (error || !Array.isArray(data)) {
@@ -553,19 +687,26 @@ async function getLeaderboardSnapshotForCampaign(params: {
   campaign: ChallengeCampaign;
   venueId: string;
   viewerUserId?: string;
+  now?: Date;
 }): Promise<{ topEntries: ChallengeLeaderboardEntry[]; viewer: ChallengeLeaderboardViewer | null }> {
+  const effectiveNow = params.now ?? new Date();
+  const venueTimezone = await getVenueTimezone(params.venueId);
+  const cycleStart = computeCycleStart(params.campaign, effectiveNow, venueTimezone);
+
   const viaRpc = await getLeaderboardSnapshotViaRpc({
     challengeId: params.campaign.id,
     venueId: params.venueId,
     viewerUserId: params.viewerUserId,
     displayLimit: params.campaign.leaderboardDisplayLimit,
     tiebreaker: params.campaign.leaderboardTiebreaker,
+    cycleStart,
   });
   if (viaRpc) return viaRpc;
 
   const rows = await listLeaderboardProgressRows({
     challengeId: params.campaign.id,
     venueId: params.venueId,
+    cycleStart,
   });
 
   const snapshot = buildChallengeLeaderboardSnapshot(rows, {
@@ -604,8 +745,8 @@ async function finalizeClosedLeaderboardCampaigns(
         await supabaseAdmin!
           .from("challenge_campaign_redemptions")
           .upsert(
-            { challenge_id: campaign.id, winner_user_id: winner.userId, venue_id: winner.venueId, prize_expires_at: prizeExpiresAt },
-            { onConflict: "challenge_id,winner_user_id", ignoreDuplicates: true }
+            { challenge_id: campaign.id, winner_user_id: winner.userId, venue_id: winner.venueId, cycle_start: new Date(0).toISOString(), prize_expires_at: prizeExpiresAt },
+            { onConflict: "challenge_id,winner_user_id,cycle_start", ignoreDuplicates: true }
           );
         await createNotification({
           userId: winner.userId,
@@ -617,6 +758,103 @@ async function finalizeClosedLeaderboardCampaigns(
     }
   }
   return finalizedWinnerByCampaignId;
+}
+
+// For each closed cycle of recurring leaderboard campaigns, record the winner in
+// challenge_cycle_winners and create a redemption row — but leave the campaign
+// active so it recurs next week.
+async function finalizeClosedRecurringCycles(campaigns: ChallengeCampaign[], now: Date): Promise<void> {
+  assertConfigured();
+  const candidates = campaigns.filter(
+    (c) =>
+      c.challengeMode === "leaderboard" &&
+      c.recurringType &&
+      c.recurringType !== "none" &&
+      c.isActive &&
+      !c.winnerUserId
+  );
+  if (candidates.length === 0) return;
+
+  const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+  for (const campaign of candidates) {
+    const venueIds = campaign.venueIds ?? [];
+    if (venueIds.length === 0) continue;
+    const venueId = venueIds[0];
+
+    const timezone = await getVenueTimezone(venueId);
+    const currentCycleStart = computeCycleStart(campaign, now, timezone);
+    const createdAt = new Date(campaign.createdAt ?? 0);
+
+    let probe = currentCycleStart;
+    for (let i = 0; i < 8; i++) {
+      if (probe.getTime() < createdAt.getTime()) break;
+      const cycleEnd = computeCycleEnd(campaign, probe, timezone);
+
+      if (now.getTime() <= cycleEnd.getTime()) {
+        // Cycle still open — step back one week
+        probe = new Date(probe.getTime() - ONE_WEEK_MS);
+        continue;
+      }
+
+      const cycleStartIso = probe.toISOString();
+
+      const { data: existingWinner } = await supabaseAdmin!
+        .from("challenge_cycle_winners")
+        .select("id")
+        .eq("challenge_id", campaign.id)
+        .eq("cycle_start", cycleStartIso)
+        .maybeSingle<{ id: string }>();
+
+      if (existingWinner) break; // All earlier cycles already handled
+
+      const winner = await getCycleWinnerForCampaign({
+        campaignId: campaign.id,
+        cycleStart: probe,
+        tiebreaker: campaign.leaderboardTiebreaker,
+      });
+
+      if (winner) {
+        await supabaseAdmin!
+          .from("challenge_cycle_winners")
+          .insert({
+            challenge_id: campaign.id,
+            cycle_start: cycleStartIso,
+            winner_user_id: winner.userId,
+            venue_id: winner.venueId,
+            points_earned: winner.pointsEarned,
+            prize_type: campaign.prizeType ?? null,
+            prize_gift_certificate_amount: campaign.prizeGiftCertificateAmount ?? null,
+          })
+          .select()
+          .maybeSingle();
+
+        if (campaign.prizeType) {
+          const prizeExpiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          await supabaseAdmin!
+            .from("challenge_campaign_redemptions")
+            .upsert(
+              {
+                challenge_id: campaign.id,
+                winner_user_id: winner.userId,
+                venue_id: winner.venueId,
+                cycle_start: cycleStartIso,
+                prize_expires_at: prizeExpiresAt,
+              },
+              { onConflict: "challenge_id,winner_user_id,cycle_start", ignoreDuplicates: true }
+            );
+          await createNotification({
+            userId: winner.userId,
+            message: `You won a prize in "${campaign.name}"! Tap here to view your coupon before it expires.`,
+            type: "success",
+            linkUrl: "/redeem-prizes",
+          });
+        }
+      }
+
+      probe = new Date(probe.getTime() - ONE_WEEK_MS);
+    }
+  }
 }
 
 function assertConfigured() {
@@ -657,7 +895,10 @@ export async function listChallengeCampaigns(params: {
 
   const now = new Date();
   const parsedCampaigns = data.map((row) => mapCampaignRow(row));
-  const finalizedWinnerByCampaignId = await finalizeClosedLeaderboardCampaigns(parsedCampaigns, now);
+  const [finalizedWinnerByCampaignId] = await Promise.all([
+    finalizeClosedLeaderboardCampaigns(parsedCampaigns, now),
+    finalizeClosedRecurringCycles(parsedCampaigns, now),
+  ]);
   if (finalizedWinnerByCampaignId.size > 0) {
     for (const row of data) {
       const winnerUserId = finalizedWinnerByCampaignId.get(row.id);
@@ -759,7 +1000,11 @@ export async function createChallengeCampaign(input: {
     image_fit: VALID_IMAGE_FITS.includes((input.imageFit ?? "cover") as ChallengeImageFitMode) ? (input.imageFit ?? "cover") : "cover",
     rules,
     venue_ids: Array.from(new Set((input.venueIds ?? []).map((value) => String(value).trim()).filter(Boolean))),
-    schedule_type: (input.scheduleType === "one_time" ? "one_time" : "recurring") as ChallengeScheduleType,
+    schedule_type: (() => {
+      const isMulti = input.scheduleType === "multi_day" || input.scheduleType === "one_time";
+      if (!isMulti) return "recurring";
+      return (input.recurringType && input.recurringType !== "none") ? "multi_day" : "one_time";
+    })() as ChallengeScheduleType,
     active_days: normalizeDays(input.activeDays),
     start_date: String(input.startDate ?? "").trim() || null,
     start_time: String(input.startTime ?? "").trim() || null,
@@ -840,7 +1085,15 @@ export async function updateChallengeCampaign(input: {
   if (typeof input.imageFit === "string" && VALID_IMAGE_FITS.includes(input.imageFit)) update.image_fit = input.imageFit;
   if (typeof input.rules === "string") update.rules = input.rules.trim();
   if (Array.isArray(input.venueIds)) update.venue_ids = Array.from(new Set(input.venueIds.map((v) => String(v).trim()).filter(Boolean)));
-  if (typeof input.scheduleType === "string") update.schedule_type = input.scheduleType === "one_time" ? "one_time" : "recurring";
+  if (typeof input.scheduleType === "string") {
+    const isMulti = input.scheduleType === "multi_day" || input.scheduleType === "one_time";
+    if (!isMulti) {
+      update.schedule_type = "recurring";
+    } else {
+      const isRecurring = typeof input.recurringType === "string" && input.recurringType !== "none";
+      update.schedule_type = isRecurring ? "multi_day" : "one_time";
+    }
+  }
   if (Array.isArray(input.activeDays)) update.active_days = normalizeDays(input.activeDays);
   if (typeof input.startDate === "string") update.start_date = input.startDate.trim() || null;
   if (typeof input.startTime === "string") update.start_time = input.startTime.trim() || null;
@@ -901,6 +1154,129 @@ export async function deleteChallengeCampaign(id: string): Promise<void> {
   if (error) throw new Error(error.message ?? "Failed to delete challenge campaign.");
 }
 
+export type ChallengeCycleWinnerRecord = {
+  id: string;
+  challengeId: string;
+  cycleStart: string;
+  winnerUserId: string;
+  winnerUsername: string | null;
+  venueId: string;
+  pointsEarned: number;
+  finalizedAt: string;
+  prizeType: string | null;
+  prizeRedeemedAt: string | null;
+};
+
+export async function listChallengeCycleWinners(challengeId: string): Promise<ChallengeCycleWinnerRecord[]> {
+  assertConfigured();
+  const cid = String(challengeId ?? "").trim();
+  if (!cid) throw new Error("challengeId is required.");
+
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_cycle_winners")
+    .select("id, challenge_id, cycle_start, winner_user_id, venue_id, points_earned, finalized_at, prize_type")
+    .eq("challenge_id", cid)
+    .order("cycle_start", { ascending: false })
+    .returns<Array<{
+      id: string; challenge_id: string; cycle_start: string; winner_user_id: string;
+      venue_id: string; points_earned: number; finalized_at: string; prize_type: string | null;
+    }>>();
+  if (error) throw new Error(error.message ?? "Failed to load cycle winners.");
+  if (!data || data.length === 0) return [];
+
+  const userIds = [...new Set(data.map((r) => r.winner_user_id))];
+  const { data: users } = await supabaseAdmin!
+    .from("users")
+    .select("id, username")
+    .in("id", userIds)
+    .returns<Array<{ id: string; username: string }>>();
+  const usernameById = new Map((users ?? []).map((u) => [u.id, u.username]));
+
+  const { data: redemptions } = await supabaseAdmin!
+    .from("challenge_campaign_redemptions")
+    .select("winner_user_id, cycle_start, prize_redeemed_at")
+    .eq("challenge_id", cid)
+    .returns<Array<{ winner_user_id: string; cycle_start: string; prize_redeemed_at: string | null }>>();
+  const redemptionMap = new Map(
+    (redemptions ?? []).map((r) => [`${r.winner_user_id}:${r.cycle_start}`, r.prize_redeemed_at])
+  );
+
+  return data.map((r) => ({
+    id: r.id,
+    challengeId: r.challenge_id,
+    cycleStart: r.cycle_start,
+    winnerUserId: r.winner_user_id,
+    winnerUsername: usernameById.get(r.winner_user_id) ?? null,
+    venueId: r.venue_id,
+    pointsEarned: r.points_earned,
+    finalizedAt: r.finalized_at,
+    prizeType: r.prize_type,
+    prizeRedeemedAt: redemptionMap.get(`${r.winner_user_id}:${r.cycle_start}`) ?? null,
+  }));
+}
+
+export type ChallengeFinalizedPrize = {
+  winnerUserId: string;
+  winnerUsername: string | null;
+  prizeType: string | null;
+  prizeGiftCertificateAmount: number | null;
+  prizeExpiresAt: string | null;
+  prizeRedeemedAt: string | null;
+  claimedAt: string | null;
+};
+
+export async function getChallengeFinalizedPrize(challengeId: string): Promise<ChallengeFinalizedPrize | null> {
+  assertConfigured();
+  const cid = String(challengeId ?? "").trim();
+  if (!cid) throw new Error("challengeId is required.");
+
+  const epochIso = new Date(0).toISOString();
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaign_redemptions")
+    .select("winner_user_id, prize_type, prize_gift_certificate_amount, prize_expires_at, prize_redeemed_at, claimed_at, cycle_start")
+    .eq("challenge_id", cid)
+    .eq("cycle_start", epochIso)
+    .order("claimed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<{
+      winner_user_id: string; prize_type: string | null; prize_gift_certificate_amount: number | null;
+      prize_expires_at: string | null; prize_redeemed_at: string | null; claimed_at: string | null; cycle_start: string;
+    }>();
+  if (error) throw new Error(error.message ?? "Failed to load prize status.");
+  if (!data) return null;
+
+  const { data: user } = await supabaseAdmin!
+    .from("users")
+    .select("username")
+    .eq("id", data.winner_user_id)
+    .maybeSingle<{ username: string }>();
+
+  return {
+    winnerUserId: data.winner_user_id,
+    winnerUsername: user?.username ?? null,
+    prizeType: data.prize_type,
+    prizeGiftCertificateAmount: data.prize_gift_certificate_amount,
+    prizeExpiresAt: data.prize_expires_at,
+    prizeRedeemedAt: data.prize_redeemed_at,
+    claimedAt: data.claimed_at,
+  };
+}
+
+const venueTimezoneCache = new Map<string, string>();
+
+async function getVenueTimezone(venueId: string): Promise<string> {
+  const cached = venueTimezoneCache.get(venueId);
+  if (cached) return cached;
+  const { data } = await supabaseAdmin!
+    .from("venues")
+    .select("timezone")
+    .eq("id", venueId)
+    .maybeSingle<{ timezone: string }>();
+  const tz = data?.timezone ?? "America/New_York";
+  venueTimezoneCache.set(venueId, tz);
+  return tz;
+}
+
 export async function getActiveChallengeMultiplier(
   venueId: string,
   gameType: ChallengeGameType,
@@ -911,13 +1287,17 @@ export async function getActiveChallengeMultiplier(
 
   const effectiveNow = now ?? new Date();
   let campaigns: ChallengeCampaign[];
+  let venueTimezone: string;
   try {
-    campaigns = await listChallengeCampaigns({ venueId: vid, includeInactive: false, includeResolved: false });
+    [campaigns, venueTimezone] = await Promise.all([
+      listChallengeCampaigns({ venueId: vid, includeInactive: false, includeResolved: false }),
+      getVenueTimezone(vid),
+    ]);
   } catch {
     return { multiplier: 1, campaign: null };
   }
 
-  const eligible = campaigns.filter((c) => isCampaignEligibleAtTime(c, effectiveNow, gameType));
+  const eligible = campaigns.filter((c) => isCampaignEligibleAtTime(c, effectiveNow, gameType, venueTimezone));
   if (eligible.length === 0) return { multiplier: 1, campaign: null };
 
   const best = eligible.reduce((a, b) => (b.pointMultiplier > a.pointMultiplier ? b : a));
@@ -941,13 +1321,12 @@ export async function applyChallengeCampaignPoints(params: {
   }
 
   const now = params.occurredAt ?? new Date();
-  const campaigns = await listChallengeCampaigns({
-    venueId,
-    includeInactive: false,
-    includeResolved: false,
-  });
+  const [campaigns, venueTimezone] = await Promise.all([
+    listChallengeCampaigns({ venueId, includeInactive: false, includeResolved: false }),
+    getVenueTimezone(venueId),
+  ]);
 
-  const eligible = campaigns.filter((campaign) => isCampaignEligibleAtTime(campaign, now, gameType));
+  const eligible = campaigns.filter((campaign) => isCampaignEligibleAtTime(campaign, now, gameType, venueTimezone));
   if (eligible.length === 0) {
     return { finalPoints: basePoints, multiplierApplied: 1, campaignUpdates: [] };
   }
@@ -959,12 +1338,16 @@ export async function applyChallengeCampaignPoints(params: {
 
   for (const campaign of eligible) {
     const increment = Math.max(1, Math.round(basePoints * campaign.pointMultiplier));
+    const cycleStart = computeCycleStart(campaign, now, venueTimezone);
+    const cycleStartIso = cycleStart.toISOString();
+
     const { data: existing } = await supabaseAdmin!
       .from("challenge_campaign_progress")
       .select("id, points_earned")
       .eq("challenge_id", campaign.id)
       .eq("user_id", userId)
       .eq("venue_id", venueId)
+      .eq("cycle_start", cycleStartIso)
       .maybeSingle<{ id: string; points_earned: number }>();
 
     const nextProgress = Math.max(0, Number(existing?.points_earned ?? 0)) + increment;
@@ -979,34 +1362,71 @@ export async function applyChallengeCampaignPoints(params: {
         challenge_id: campaign.id,
         user_id: userId,
         venue_id: venueId,
+        cycle_start: cycleStartIso,
         points_earned: nextProgress,
       });
     }
 
     let won = false;
     if (campaign.challengeMode === "progress" && nextProgress >= campaign.pointsRequiredToWin && !campaign.winnerUserId) {
-      const { data: updatedWinner } = await supabaseAdmin!
-        .from("challenge_campaigns")
-        .update({ winner_user_id: userId, is_active: false })
-        .eq("id", campaign.id)
-        .is("winner_user_id", null)
-        .select("id")
-        .maybeSingle<{ id: string }>();
-      won = Boolean(updatedWinner?.id);
-      if (won && campaign.prizeType) {
-        const prizeExpiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-        await supabaseAdmin!
-          .from("challenge_campaign_redemptions")
-          .upsert(
-            { challenge_id: campaign.id, winner_user_id: userId, venue_id: venueId, prize_expires_at: prizeExpiresAt },
-            { onConflict: "challenge_id,winner_user_id", ignoreDuplicates: true }
-          );
-        await createNotification({
-          userId,
-          message: `You won a prize in "${campaign.name}"! Tap here to view your coupon before it expires.`,
-          type: "success",
-          linkUrl: "/redeem-prizes",
-        });
+      const isRecurring = campaign.recurringType && campaign.recurringType !== "none";
+      if (!isRecurring) {
+        // One-time: terminate the campaign permanently.
+        const { data: updatedWinner } = await supabaseAdmin!
+          .from("challenge_campaigns")
+          .update({ winner_user_id: userId, is_active: false })
+          .eq("id", campaign.id)
+          .is("winner_user_id", null)
+          .select("id")
+          .maybeSingle<{ id: string }>();
+        won = Boolean(updatedWinner?.id);
+        if (won && campaign.prizeType) {
+          const prizeExpiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          await supabaseAdmin!
+            .from("challenge_campaign_redemptions")
+            .upsert(
+              { challenge_id: campaign.id, winner_user_id: userId, venue_id: venueId, cycle_start: new Date(0).toISOString(), prize_expires_at: prizeExpiresAt },
+              { onConflict: "challenge_id,winner_user_id,cycle_start", ignoreDuplicates: true }
+            );
+          await createNotification({
+            userId,
+            message: `You won a prize in "${campaign.name}"! Tap here to view your coupon before it expires.`,
+            type: "success",
+            linkUrl: "/redeem-prizes",
+          });
+        }
+      } else {
+        // Recurring: record per-cycle winner, keep campaign alive for next cycle.
+        // ON CONFLICT DO NOTHING ensures only the first player to hit the target wins.
+        const { data: cycleWinnerRow } = await supabaseAdmin!
+          .from("challenge_cycle_winners")
+          .insert({
+            challenge_id: campaign.id,
+            cycle_start: cycleStartIso,
+            winner_user_id: userId,
+            venue_id: venueId,
+            points_earned: nextProgress,
+            prize_type: campaign.prizeType ?? null,
+            prize_gift_certificate_amount: campaign.prizeGiftCertificateAmount ?? null,
+          })
+          .select("id")
+          .maybeSingle<{ id: string }>();
+        won = Boolean(cycleWinnerRow?.id);
+        if (won && campaign.prizeType) {
+          const prizeExpiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          await supabaseAdmin!
+            .from("challenge_campaign_redemptions")
+            .upsert(
+              { challenge_id: campaign.id, winner_user_id: userId, venue_id: venueId, cycle_start: cycleStartIso, prize_expires_at: prizeExpiresAt },
+              { onConflict: "challenge_id,winner_user_id,cycle_start", ignoreDuplicates: true }
+            );
+          await createNotification({
+            userId,
+            message: `You won a prize in "${campaign.name}"! Tap here to view your coupon before it expires.`,
+            type: "success",
+            linkUrl: "/redeem-prizes",
+          });
+        }
       }
     }
 
@@ -1108,50 +1528,45 @@ export async function listChallengeCampaignWinsForUser(params: {
   assertConfigured();
   const userId = String(params.userId ?? "").trim();
   const venueId = String(params.venueId ?? "").trim();
-  if (!userId || !venueId) {
-    return [];
-  }
+  if (!userId || !venueId) return [];
 
-  const campaigns = await listChallengeCampaigns({
-    venueId,
-    includeInactive: true,
-    includeResolved: true,
-  });
-  const wins = campaigns.filter((campaign) => campaign.winnerUserId === userId);
-  if (wins.length === 0) {
-    return [];
-  }
-
-  const { data: redemptionRows } = await supabaseAdmin!
+  // Read directly from redemptions — covers both one-time and per-cycle recurring prizes.
+  const { data: redemptionRows, error: redemptionError } = await supabaseAdmin!
     .from("challenge_campaign_redemptions")
-    .select("challenge_id, winner_user_id, venue_id, claimed_at, prize_expires_at, prize_redeemed_at")
+    .select("challenge_id, winner_user_id, venue_id, claimed_at, prize_expires_at, prize_redeemed_at, cycle_start")
     .eq("winner_user_id", userId)
     .eq("venue_id", venueId)
-    .in(
-      "challenge_id",
-      wins.map((campaign) => campaign.id)
-    )
+    .order("cycle_start", { ascending: false })
     .returns<ChallengeCampaignRedemptionRow[]>();
 
-  const redemptionByChallenge = new Map<string, ChallengeCampaignRedemptionRow>();
-  for (const row of redemptionRows ?? []) {
-    redemptionByChallenge.set(row.challenge_id, row);
-  }
+  if (redemptionError) throw new Error(redemptionError.message ?? "Failed to load challenge wins.");
+  if (!redemptionRows || redemptionRows.length === 0) return [];
 
-  return wins.map((campaign) => {
-    const redemption = redemptionByChallenge.get(campaign.id);
+  const challengeIds = Array.from(new Set(redemptionRows.map((r) => r.challenge_id)));
+  const { data: campaignRows } = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select("id, name, rules, prize_type, prize_gift_certificate_amount, winner_user_id")
+    .in("id", challengeIds)
+    .returns<Array<{ id: string; name: string; rules: string; prize_type: string | null; prize_gift_certificate_amount: number | null; winner_user_id: string | null }>>();
+
+  const campaignById = new Map((campaignRows ?? []).map((c) => [c.id, c]));
+  const epochIso = new Date(0).toISOString();
+
+  return redemptionRows.map((row) => {
+    const campaign = campaignById.get(row.challenge_id);
+    const cycleStart = row.cycle_start === epochIso || !row.cycle_start ? null : row.cycle_start;
     return {
-      challengeId: campaign.id,
-      venueId,
-      challengeName: campaign.name,
-      challengeRules: campaign.rules,
+      challengeId: row.challenge_id,
+      venueId: row.venue_id,
+      challengeName: campaign?.name ?? "Challenge",
+      challengeRules: campaign?.rules ?? "",
       winnerUserId: userId,
-      winnerUsername: campaign.winnerUsername ?? null,
-      claimedAt: redemption?.claimed_at ?? null,
-      prizeType: campaign.prizeType ?? null,
-      prizeGiftCertificateAmount: campaign.prizeGiftCertificateAmount ?? null,
-      prizeExpiresAt: redemption?.prize_expires_at ?? null,
-      prizeRedeemedAt: redemption?.prize_redeemed_at ?? null,
+      cycleStart,
+      claimedAt: row.claimed_at ?? null,
+      prizeType: VALID_PRIZE_TYPES.includes(campaign?.prize_type as PrizeType) ? (campaign?.prize_type as PrizeType) : null,
+      prizeGiftCertificateAmount: campaign?.prize_gift_certificate_amount ?? null,
+      prizeExpiresAt: row.prize_expires_at ?? null,
+      prizeRedeemedAt: row.prize_redeemed_at ?? null,
     };
   });
 }
@@ -1177,15 +1592,19 @@ export async function redeemChallengePrize(params: {
 
   if (!campaign?.id) throw new Error("Challenge not found.");
   if (!campaign.prize_type) throw new Error("This challenge does not have a prize coupon.");
-  if (campaign.winner_user_id !== userId) throw new Error("Only the winner can redeem this prize.");
 
-  const { data: row } = await supabaseAdmin!
+  // Find the oldest unredeemed prize row for this user/challenge (or the most recent if all redeemed).
+  const { data: rows } = await supabaseAdmin!
     .from("challenge_campaign_redemptions")
-    .select("prize_expires_at, prize_redeemed_at")
+    .select("cycle_start, prize_expires_at, prize_redeemed_at")
     .eq("challenge_id", challengeId)
     .eq("winner_user_id", userId)
-    .maybeSingle<{ prize_expires_at: string | null; prize_redeemed_at: string | null }>();
+    .is("prize_redeemed_at", null)
+    .order("cycle_start", { ascending: true })
+    .limit(1)
+    .returns<Array<{ cycle_start: string; prize_expires_at: string | null; prize_redeemed_at: string | null }>>();
 
+  const row = rows?.[0] ?? null;
   if (!row) throw new Error("No redemption record found for this prize.");
   if (row.prize_expires_at && new Date(row.prize_expires_at) < new Date()) {
     throw new Error("This prize has expired.");
@@ -1199,7 +1618,8 @@ export async function redeemChallengePrize(params: {
     .from("challenge_campaign_redemptions")
     .update({ prize_redeemed_at: nowIso })
     .eq("challenge_id", challengeId)
-    .eq("winner_user_id", userId);
+    .eq("winner_user_id", userId)
+    .eq("cycle_start", row.cycle_start);
 
   return { redeemed: true, redeemedAt: nowIso };
 }
@@ -1208,6 +1628,7 @@ export async function claimChallengeCampaignPrize(params: {
   userId: string;
   venueId: string;
   challengeId: string;
+  cycleStart?: string;
 }): Promise<{ claimed: boolean; claimedAt?: string | null; challengeName: string }> {
   assertConfigured();
   const userId = String(params.userId ?? "").trim();
@@ -1219,74 +1640,49 @@ export async function claimChallengeCampaignPrize(params: {
 
   const { data: campaign, error: campaignError } = await supabaseAdmin!
     .from("challenge_campaigns")
-    .select("id, name, winner_user_id")
+    .select("id, name")
     .eq("id", challengeId)
-    .maybeSingle<{ id: string; name: string; winner_user_id: string | null }>();
-  if (campaignError) {
-    throw new Error(campaignError.message ?? "Failed to verify challenge winner.");
-  }
-  if (!campaign?.id) {
-    throw new Error("Challenge not found.");
-  }
-  if (!campaign.winner_user_id || campaign.winner_user_id !== userId) {
-    throw new Error("Only the winner can claim this challenge prize.");
-  }
+    .maybeSingle<{ id: string; name: string }>();
+  if (campaignError) throw new Error(campaignError.message ?? "Failed to verify challenge.");
+  if (!campaign?.id) throw new Error("Challenge not found.");
 
-  const { data: existingClaim, error: existingClaimError } = await supabaseAdmin!
+  // Authorization: a redemption row pre-created at win time is the proof of winning.
+  const epochIso = new Date(0).toISOString();
+  const effectiveCycleStart = params.cycleStart && params.cycleStart !== epochIso ? params.cycleStart : null;
+
+  let lookupQuery = supabaseAdmin!
     .from("challenge_campaign_redemptions")
-    .select("claimed_at")
+    .select("claimed_at, cycle_start")
     .eq("challenge_id", challengeId)
     .eq("winner_user_id", userId)
-    .maybeSingle<{ claimed_at: string | null }>();
-  if (existingClaimError) {
-    throw new Error(existingClaimError.message ?? "Failed to verify challenge claim status.");
+    .eq("venue_id", venueId);
+
+  if (effectiveCycleStart) {
+    lookupQuery = lookupQuery.eq("cycle_start", effectiveCycleStart);
+  } else {
+    // Claim the oldest unclaimed row — handles both epoch (one-time) and legacy rows.
+    lookupQuery = lookupQuery.order("cycle_start", { ascending: true }).limit(1);
   }
-  if (existingClaim?.claimed_at) {
+
+  const { data: existingClaim, error: existingClaimError } = await lookupQuery
+    .maybeSingle<{ claimed_at: string | null; cycle_start: string }>();
+  if (existingClaimError) throw new Error(existingClaimError.message ?? "Failed to verify challenge claim status.");
+  if (!existingClaim) throw new Error("Only the winner can claim this challenge prize.");
+  if (existingClaim.claimed_at) {
     return { claimed: false, claimedAt: existingClaim.claimed_at, challengeName: campaign.name };
   }
 
   const nowIso = new Date().toISOString();
-
-  if (existingClaim) {
-    // Row was pre-inserted at win time — update it to record the claim.
-    const { data: updatedRow, error: updateError } = await supabaseAdmin!
-      .from("challenge_campaign_redemptions")
-      .update({ claimed_at: nowIso })
-      .eq("challenge_id", challengeId)
-      .eq("winner_user_id", userId)
-      .select("claimed_at")
-      .maybeSingle<{ claimed_at: string }>();
-    if (updateError) throw new Error(updateError.message ?? "Failed to claim challenge prize.");
-    return { claimed: true, claimedAt: updatedRow?.claimed_at ?? nowIso, challengeName: campaign.name };
-  }
-
-  const { data: claimedRow, error: claimError } = await supabaseAdmin!
+  const { data: updatedRow, error: updateError } = await supabaseAdmin!
     .from("challenge_campaign_redemptions")
-    .insert({
-      challenge_id: challengeId,
-      winner_user_id: userId,
-      venue_id: venueId,
-      claimed_at: nowIso,
-    })
+    .update({ claimed_at: nowIso })
+    .eq("challenge_id", challengeId)
+    .eq("winner_user_id", userId)
+    .eq("venue_id", venueId)
+    .eq("cycle_start", existingClaim.cycle_start)
     .select("claimed_at")
     .maybeSingle<{ claimed_at: string }>();
+  if (updateError) throw new Error(updateError.message ?? "Failed to claim challenge prize.");
 
-  if (claimError) {
-    if (claimError.code === "23505") {
-      const { data: duplicateClaim } = await supabaseAdmin!
-        .from("challenge_campaign_redemptions")
-        .select("claimed_at")
-        .eq("challenge_id", challengeId)
-        .eq("winner_user_id", userId)
-        .maybeSingle<{ claimed_at: string }>();
-      return { claimed: false, claimedAt: duplicateClaim?.claimed_at ?? nowIso, challengeName: campaign.name };
-    }
-    throw new Error(claimError.message ?? "Failed to claim challenge prize.");
-  }
-
-  return {
-    claimed: true,
-    claimedAt: claimedRow?.claimed_at ?? nowIso,
-    challengeName: campaign.name,
-  };
+  return { claimed: true, claimedAt: updatedRow?.claimed_at ?? nowIso, challengeName: campaign.name };
 }

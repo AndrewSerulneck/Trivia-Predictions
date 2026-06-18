@@ -13,7 +13,8 @@ function isAuthorized(request: Request): boolean {
     return headerSecret === secret;
   }
 
-  return false;
+  // No secret configured: allow Vercel's automatic cron header
+  return Boolean(request.headers.get("x-vercel-cron"));
 }
 
 export async function POST(request: Request) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import type { Venue } from "@/types";
 import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/AdminShell";
 
@@ -10,6 +10,29 @@ type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
 type ChallengeMode = "progress" | "leaderboard";
 type ChallengeLeaderboardTiebreaker = "first_to_score" | "latest_activity";
 type PrizeType = "wine_bottle" | "free_appetizer" | "gift_certificate";
+
+type CycleWinnerRecord = {
+  id: string;
+  challengeId: string;
+  cycleStart: string;
+  winnerUserId: string;
+  winnerUsername: string | null;
+  venueId: string;
+  pointsEarned: number;
+  finalizedAt: string;
+  prizeType: string | null;
+  prizeRedeemedAt: string | null;
+};
+
+type FinalizedPrize = {
+  winnerUserId: string;
+  winnerUsername: string | null;
+  prizeType: string | null;
+  prizeGiftCertificateAmount: number | null;
+  prizeExpiresAt: string | null;
+  prizeRedeemedAt: string | null;
+  claimedAt: string | null;
+};
 
 type AdminChallengeCampaign = {
   id: string;
@@ -121,6 +144,50 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   const [error, setError] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [expandedWinnersId, setExpandedWinnersId] = useState<string | null>(null);
+  const [cycleWinnersCache, setCycleWinnersCache] = useState<Record<string, CycleWinnerRecord[]>>({});
+  const [winnersLoading, setWinnersLoading] = useState(false);
+  const [expandedPrizeId, setExpandedPrizeId] = useState<string | null>(null);
+  const [finalizedPrizeCache, setFinalizedPrizeCache] = useState<Record<string, FinalizedPrize | null>>({});
+  const [prizeLoading, setPrizeLoading] = useState(false);
+
+  async function toggleWinnersPanel(campaignId: string) {
+    if (expandedWinnersId === campaignId) {
+      setExpandedWinnersId(null);
+      return;
+    }
+    setExpandedWinnersId(campaignId);
+    if (cycleWinnersCache[campaignId]) return;
+    setWinnersLoading(true);
+    try {
+      const res = await fetch(`/api/admin?resource=challenge-cycle-winners&challengeId=${campaignId}`, { cache: "no-store" });
+      const payload = (await res.json()) as { ok: boolean; items?: CycleWinnerRecord[]; error?: string };
+      if (payload.ok) {
+        setCycleWinnersCache((prev) => ({ ...prev, [campaignId]: payload.items ?? [] }));
+      }
+    } finally {
+      setWinnersLoading(false);
+    }
+  }
+
+  async function togglePrizePanel(campaignId: string) {
+    if (expandedPrizeId === campaignId) {
+      setExpandedPrizeId(null);
+      return;
+    }
+    setExpandedPrizeId(campaignId);
+    if (campaignId in finalizedPrizeCache) return;
+    setPrizeLoading(true);
+    try {
+      const res = await fetch(`/api/admin?resource=challenge-finalized-prize&challengeId=${campaignId}`, { cache: "no-store" });
+      const payload = (await res.json()) as { ok: boolean; prize?: FinalizedPrize | null; error?: string };
+      if (payload.ok) {
+        setFinalizedPrizeCache((prev) => ({ ...prev, [campaignId]: payload.prize ?? null }));
+      }
+    } finally {
+      setPrizeLoading(false);
+    }
+  }
 
   // Create form state
   const [formName, setFormName] = useState("");
@@ -973,27 +1040,29 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                 <th className={TH}>Recurring</th>
                 <th className={TH}>Venues</th>
                 <th className={TH}>Winner</th>
+                <th className={TH}>History</th>
                 <th className={`${TH} text-right`}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={11} className="py-12 text-center text-sm text-slate-400">
                     Loading…
                   </td>
                 </tr>
               )}
               {!loading && campaigns.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={11} className="py-12 text-center text-sm text-slate-400">
                     No campaigns yet.
                   </td>
                 </tr>
               )}
               {!loading &&
                 campaigns.map((c) => (
-                  <tr key={c.id} className={TR}>
+                  <React.Fragment key={c.id}>
+                  <tr className={TR}>
                     <td className={`${TD} w-10`}>
                       <input
                         type="checkbox"
@@ -1046,6 +1115,33 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                     <td className={`${TD} text-slate-500`}>
                       {c.winnerUsername ?? "—"}
                     </td>
+                    <td className={TD}>
+                      {c.recurringType !== "none" ? (
+                        <button
+                          onClick={() => toggleWinnersPanel(c.id)}
+                          className={`rounded border px-2 py-1 text-xs font-medium transition-colors ${
+                            expandedWinnersId === c.id
+                              ? "border-indigo-400 bg-indigo-50 text-indigo-700"
+                              : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                          }`}
+                        >
+                          {expandedWinnersId === c.id ? "Hide" : "History"}
+                        </button>
+                      ) : c.winnerUserId ? (
+                        <button
+                          onClick={() => togglePrizePanel(c.id)}
+                          className={`rounded border px-2 py-1 text-xs font-medium transition-colors ${
+                            expandedPrizeId === c.id
+                              ? "border-emerald-400 bg-emerald-50 text-emerald-700"
+                              : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                          }`}
+                        >
+                          {expandedPrizeId === c.id ? "Hide" : "Prize"}
+                        </button>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
                     <td className={`${TD} text-right`}>
                       <div className="flex items-center justify-end gap-2">
                         <button
@@ -1069,6 +1165,106 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                       </div>
                     </td>
                   </tr>
+                  {expandedPrizeId === c.id && (
+                    <tr key={`${c.id}-prize`}>
+                      <td colSpan={11} className="border-t border-emerald-100 bg-emerald-50 px-8 py-4">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">Prize Status</p>
+                        {prizeLoading && !(c.id in finalizedPrizeCache) ? (
+                          <p className="text-xs text-slate-400">Loading…</p>
+                        ) : !finalizedPrizeCache[c.id] ? (
+                          <p className="text-xs text-slate-400">No prize record found.</p>
+                        ) : (() => {
+                          const p = finalizedPrizeCache[c.id]!;
+                          const prizeLabel = p.prizeType ? p.prizeType.replace(/_/g, " ") : "No prize";
+                          return (
+                            <div className="flex flex-wrap gap-8 text-xs">
+                              <div>
+                                <p className="font-semibold text-slate-600">Winner</p>
+                                <p className="text-slate-900">{p.winnerUsername ?? p.winnerUserId}</p>
+                              </div>
+                              <div>
+                                <p className="font-semibold text-slate-600">Prize</p>
+                                <p className="capitalize text-slate-900">
+                                  {prizeLabel}
+                                  {p.prizeGiftCertificateAmount != null ? ` · $${p.prizeGiftCertificateAmount.toFixed(2)}` : ""}
+                                </p>
+                              </div>
+                              {p.prizeExpiresAt && (
+                                <div>
+                                  <p className="font-semibold text-slate-600">Expires</p>
+                                  <p className="text-slate-900">
+                                    {new Date(p.prizeExpiresAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                                  </p>
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-semibold text-slate-600">Redeemed</p>
+                                {p.prizeRedeemedAt ? (
+                                  <p className="text-emerald-700">
+                                    {new Date(p.prizeRedeemedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                                  </p>
+                                ) : p.prizeType ? (
+                                  <p className="text-amber-600">Pending</p>
+                                ) : (
+                                  <p className="text-slate-400">n/a</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  )}
+                  {expandedWinnersId === c.id && (
+                    <tr key={`${c.id}-winners`}>
+                      <td colSpan={11} className="border-t border-indigo-100 bg-indigo-50 px-8 py-4">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-700">Past Cycle Winners</p>
+                        {winnersLoading && !cycleWinnersCache[c.id] ? (
+                          <p className="text-xs text-slate-400">Loading…</p>
+                        ) : (cycleWinnersCache[c.id] ?? []).length === 0 ? (
+                          <p className="text-xs text-slate-400">No cycle winners recorded yet.</p>
+                        ) : (
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-left text-slate-500">
+                                <th className="pb-1 pr-6 font-semibold">Week of</th>
+                                <th className="pb-1 pr-6 font-semibold">Winner</th>
+                                <th className="pb-1 pr-6 font-semibold">Points</th>
+                                <th className="pb-1 pr-6 font-semibold">Prize</th>
+                                <th className="pb-1 font-semibold">Redeemed</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(cycleWinnersCache[c.id] ?? []).map((w) => (
+                                <tr key={w.id} className="border-t border-indigo-100">
+                                  <td className="py-1 pr-6 text-slate-700">
+                                    {new Date(w.cycleStart).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}
+                                  </td>
+                                  <td className="py-1 pr-6 font-medium text-slate-900">{w.winnerUsername ?? w.winnerUserId}</td>
+                                  <td className="py-1 pr-6 text-slate-700">{w.pointsEarned}</td>
+                                  <td className="py-1 pr-6 capitalize text-slate-700">
+                                    {w.prizeType ? w.prizeType.replace(/_/g, " ") : "—"}
+                                  </td>
+                                  <td className="py-1">
+                                    {w.prizeType == null ? (
+                                      <span className="text-slate-400">n/a</span>
+                                    ) : w.prizeRedeemedAt ? (
+                                      <span className="text-emerald-700">
+                                        {new Date(w.prizeRedeemedAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                                      </span>
+                                    ) : (
+                                      <span className="text-amber-600">Pending</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 ))}
             </tbody>
           </table>
