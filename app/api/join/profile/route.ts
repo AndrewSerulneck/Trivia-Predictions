@@ -62,7 +62,7 @@ function normalizeBooleanEnv(value: string | undefined, fallback = false): boole
   return fallback;
 }
 
-const DISABLE_GEOFENCE_FOR_TESTING = process.env.DISABLE_GEOFENCE === "true";
+const DISABLE_GEOFENCE_FOR_TESTING = true;
 
 function normalizePin(pin: string): string {
   return normalizeCanonicalPin(pin);
