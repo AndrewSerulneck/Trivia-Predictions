@@ -166,6 +166,55 @@ describe("/api/join/profile", () => {
     expect(mocks.from).not.toHaveBeenCalled();
   });
 
+  it("rejects when no location is provided for username+PIN join", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/join/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: "alice",
+          venueId: "venue-qa",
+          selectedVenueId: "venue-qa",
+          pin: "1234",
+        }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error?: string };
+
+    expect(response.status).toBe(403);
+    expect(body.ok).toBe(false);
+    expect(body.error).toContain("Location verification is required");
+    expect(mocks.from).not.toHaveBeenCalled();
+  });
+
+  it("rejects when location is outside the venue geofence for username+PIN join", async () => {
+    mocks.from.mockImplementation((table: string) => {
+      if (table === "venues") {
+        return { select: vi.fn().mockReturnValue(buildSelectChain({ data: VENUE_ROW, error: null })) };
+      }
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/join/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: "alice",
+          venueId: "venue-qa",
+          selectedVenueId: "venue-qa",
+          pin: "1234",
+          location: { latitude: 41, longitude: -74, accuracy: 25 },
+        }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error?: string };
+
+    expect(response.status).toBe(403);
+    expect(body.ok).toBe(false);
+    expect(body.error).toContain("Required range");
+  });
+
   it("GET reports returning user only when exact username row has PIN", async () => {
     const usersSelect = buildSelectChain({
       data: [{ id: "u-4", username: "Exact_User", pin_salt: "salt", pin_hash: "hash" }],

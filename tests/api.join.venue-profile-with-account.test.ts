@@ -132,7 +132,7 @@ describe("POST /api/join/profile — account-first path", () => {
     expect(body.user?.accountId).toBe(ACCOUNT_ID);
   });
 
-  it("accepts account joins within the 500 meter minimum venue radius", async () => {
+  it("accepts account joins within the 300 meter minimum venue radius", async () => {
     const existingProfile = {
       id: "user-profile-nearby",
       auth_id: null,
@@ -225,6 +225,95 @@ describe("POST /api/join/profile — account-first path", () => {
     expect(response.status).toBe(403);
     expect(body.ok).toBe(false);
     expect(body.error).toContain("Required range");
+  });
+
+  it("rejects when no location is provided", async () => {
+    const accountChain = buildSingleChain({
+      data: { id: ACCOUNT_ID, auth_id: null, username: "alice", god_mode: false },
+      error: null,
+    });
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === "accounts") return { select: vi.fn().mockReturnValue(accountChain) };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/join/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_ID }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error?: string };
+
+    expect(response.status).toBe(403);
+    expect(body.ok).toBe(false);
+    expect(body.error).toContain("Location verification is required");
+  });
+
+  it("rejects when location coordinates are invalid", async () => {
+    const accountChain = buildSingleChain({
+      data: { id: ACCOUNT_ID, auth_id: null, username: "alice", god_mode: false },
+      error: null,
+    });
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === "accounts") return { select: vi.fn().mockReturnValue(accountChain) };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/join/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accountId: ACCOUNT_ID,
+          venueId: VENUE_ID,
+          location: { latitude: 999, longitude: -74, accuracy: 25 },
+        }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error?: string };
+
+    expect(response.status).toBe(403);
+    expect(body.ok).toBe(false);
+    expect(body.error).toContain("Location verification is required");
+  });
+
+  it("allows god mode accounts to join without providing location", async () => {
+    const existingProfile = {
+      id: "user-profile-god",
+      auth_id: null,
+      username: "goduser",
+      venue_id: VENUE_ID,
+      points: 0,
+      created_at: "2026-06-19T00:00:00Z",
+    };
+    const accountChain = buildSingleChain({
+      data: { id: ACCOUNT_ID, auth_id: null, username: "goduser", god_mode: true },
+      error: null,
+    });
+    const profileChain = buildSingleChain({ data: existingProfile, error: null });
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === "accounts") return { select: vi.fn().mockReturnValue(accountChain) };
+      if (table === "users") return { select: vi.fn().mockReturnValue(profileChain) };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/join/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_ID }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; user?: { id: string } };
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.user?.id).toBe("user-profile-god");
   });
 
   it("requires venueId in the account-first path", async () => {
