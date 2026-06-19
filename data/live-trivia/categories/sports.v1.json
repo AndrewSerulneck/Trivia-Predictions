@@ -1262,6 +1262,240 @@
 "category": "sports",
 "difficulty": "easy",
 "acceptableAnswers": ["Baltimore"]
+},
+{
+"slug": "washington-nationals-former-city",
+"question": "Before relocating to Washington, D.C. ahead of the 2005 MLB season, the Nationals franchise played its home games in what Canadian city?",
+"answer": "Montreal",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Montreal", "Montréal"]
+},
+{
+"slug": "los-angeles-rams-midwest-city",
+"question": "Prior to returning to southern California in 2016, the Rams NFL franchise spent twenty seasons playing home games in what Missouri city?",
+"answer": "St. Louis",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["St. Louis", "St Louis"]
+},
+{
+"slug": "brooklyn-nets-former-state",
+"question": "Before moving to Barclays Center in Brooklyn in 2012, the Nets NBA franchise spent thirty-five seasons representing what neighboring US state?",
+"answer": "New Jersey",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["New Jersey"]
+},
+{
+"slug": "winnipeg-jets-original-city",
+"question": "The current Winnipeg Jets NHL franchise originally entered the league as an expansion team in 1999 based in what major southern US city?",
+"answer": "Atlanta",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Atlanta"]
+},
+{
+"slug": "golden-state-warriors-original-city",
+"question": "Before moving to the San Francisco Bay Area in 1962, the Warriors NBA franchise was founded in 1946 in what East Coast city?",
+"answer": "Philadelphia",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Philadelphia"]
+},
+{
+"slug": "kansas-city-chiefs-original-name",
+"question": "A charter member of the AFL, the franchise now known as the Kansas City Chiefs won the 1962 league championship under what original name?",
+"answer": "Dallas Texans",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Dallas Texans", "Texans"]
+},
+{
+"slug": "oakland-athletics-2025-city",
+"question": "Following their final season playing at the Oakland Coliseum in 2024, the Athletics MLB franchise temporarily relocated to what California city for the 2025 season?",
+"answer": "Sacramento",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Sacramento"]
+},
+{
+"slug": "toronto-blue-jays-original-name-rumor",
+"question": "What is the primary corporate brand name of the Canadian brewery that originally owned a massive stake in the Toronto MLB franchise, which heavily influenced the team's choice of 'Blue' in their name 'Blue Jays'?",
+"answer": "Labatt",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "medium",
+"acceptableAnswers": ["Labatt", "Labatt's", "Labatt Brewing Company"]
+},
+{
+"slug": "milwaukee-brewers-original-city",
+"question": "The Milwaukee Brewers baseball franchise spent their inaugural 1969 expansion season playing as the Pilots in what major Pacific Northwest city?",
+"answer": "Seattle",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Seattle"]
+},
+{
+"slug": "philadelphia-76ers-original-city",
+"question": "Before rebranding as the 76ers upon moving to Philadelphia in 1963, this NBA franchise won the 1955 championship playing in what upstate New York city?",
+"answer": "Syracuse",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Syracuse"]
+},
+{
+"slug": "las-vegas-raiders-original-city",
+"question": "Prior to their high-profile moves to Los Angeles and finally to Las Vegas, the Raiders NFL franchise was founded in 1960 in what California city?",
+"answer": "Oakland",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Oakland"]
+},
+{
+"slug": "new-orleans-pelicans-former-name",
+"question": "What official team nickname did the New Orleans NBA franchise drop in 2013, allowing it to be adopted by a newly formed franchise in Charlotte, North Carolina?",
+"answer": "Hornets",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Hornets", "New Orleans Hornets"]
+},
+{
+"slug": "edmonton-oilers-original-league-name",
+"question": "When founded in 1972 as a charter member of the World Hockey Association (WHA), the Edmonton Oilers initially used the name of what larger Canadian province instead of a city?",
+"answer": "Alberta",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "medium",
+"acceptableAnswers": ["Alberta"]
+},
+{
+"slug": "washington-commanders-former-name",
+"question": "What name did the Washington NFL franchise use as their temporary placeholder team name during the 2020 and 2021 seasons?",
+"answer": "Washington Football Team",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Washington Football Team", "WFT"]
+},
+{
+"slug": "los-angeles-chargers-original-city",
+"question": "The San Diego Chargers NFL franchise originally spent its inaugural 1960 season playing in what major California city before returning there decades later in 2017?",
+"answer": "Los Angeles",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Los Angeles", "LA"]
+},
+{
+"slug": "oklahoma-city-thunder-former-mascot",
+"question": "What is the name of the iconic, disgruntled wheedling pilot mascot that the Seattle SuperSonics left behind when the franchise converted into the Oklahoma City Thunder?",
+"answer": "Squatch",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "hard",
+"acceptableAnswers": ["Squatch"]
+},
+{
+"slug": "cincinnati-reds-1950s-rebrand",
+"question": "To avoid any political associations with communism during the height of the Red Scare, the Cincinnati MLB franchise officially altered their name from 'the Reds' to what alternative plural noun from 1953 to 1958? Hint: The Red_____s .",
+"answer": "Redlegs",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "medium",
+"acceptableAnswers": ["Redlegs", "Cincinnati Redlegs"]
+},
+{
+"slug": "detroit-lions-original-city",
+"question": "The Detroit Lions NFL franchise was originally established in 1930 with what as their team name?",
+"answer": "Spartans",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "medium",
+"acceptableAnswers": ["Spartans"]
+},
+{
+"slug": "houston-rockets-original-city",
+"question": "The Houston Rockets NBA franchise kept its space-age moniker despite being founded in 1967 in what major Southern California coastal city famous for its aerospace industry?",
+"answer": "San Diego",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["San Diego"]
+},
+{
+"slug": "dallas-mavericks-expansion-year",
+"question": "What year were the Dallas Mavericks officially introduced into the NBA as an expansion team during a league meeting at the All-Star Game? Remember: If no one gets it exactly right, the closest guess wins.",
+"answer": "1980",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "medium",
+"acceptableAnswers": ["1980"]
+},
+{
+"slug": "pittsburgh-pirates-original-name",
+"question": "Founded in 1881 as the Alleghenys, the Pittsburgh MLB franchise officially adopted their current buccaneer-themed nickname after rival teams accused them of stealing a player. What team name did they adopt?",
+"answer": "Pirates",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "medium",
+"acceptableAnswers": ["Pirates"]
+},
+{
+"slug": "utah-hockey-club-former-city",
+"question": "The NHL franchise that debuted as the Utah Hockey Club for the 2024–2025 season was formed by acquiring the entire active player roster of what dissolved desert franchise?",
+"answer": "Arizona Coyotes",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Arizona Coyotes", "Coyotes", "Phoenix Coyotes"]
+},
+{
+"slug": "san-jose-sharks-original-bay-arena",
+"question": "While waiting for construction to finish on their permanent arena in San Jose, the Sharks NHL expansion franchise spent their first two seasons playing home games in what neighboring California city?",
+"answer": "Daly City",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "hard",
+"acceptableAnswers": ["Daly City"]
+},
+{
+"slug": "boston-red-sox-original-informal-name",
+"question": "Before adopting the Red Sox moniker in 1908, the American League baseball franchise in Boston was widely known by sports writers by what team name.",
+"answer": "Boston Americans",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "hard",
+"acceptableAnswers": ["Boston Americans", "Americans"]
+},
+{
+"slug": "chicago-white-sox-original-city",
+"question": "Before moving to the South Side of Chicago in 1900, the historic baseball charter franchise now known as the White Sox won a minor league title based in what Minnesota city?",
+"answer": "St. Paul",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "medium",
+"acceptableAnswers": ["St. Paul", "St Paul", "Saint Paul"]
+},
+{
+"slug": "sacramento-kings-original-rochester-name",
+"question": "When the Sacramento Kings franchise won their lone NBA title in 1951 while located in Rochester, New York, they competed under what distinct royal moniker?",
+"answer": "Rochester Royals",
+"answer_format": "write_in",
+"category": "sports",
+"difficulty": "easy",
+"acceptableAnswers": ["Rochester Royals", "Royals"]
 }
 
   ],
