@@ -66,6 +66,7 @@ import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel =
+  | "location-permission"
   | "auth-method-selection"
   | "account-creation"
   | "account-sign-in"
@@ -300,6 +301,16 @@ type VenueAccessResult = {
   allowed: boolean;
   location?: Coordinates;
 };
+
+async function checkPermissionState(): Promise<PermissionState> {
+  if (typeof navigator === "undefined" || !navigator.permissions) return "granted";
+  try {
+    const result = await navigator.permissions.query({ name: "geolocation" });
+    return result.state;
+  } catch {
+    return "granted";
+  }
+}
 
 async function getInitialLocation(): Promise<LocationResult> {
   try {
@@ -664,6 +675,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [locationVerified, setLocationVerified] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
+  const [locationPermissionState, setLocationPermissionState] = useState<PermissionState | null>(null);
   const [verifiedLocation, setVerifiedLocation] = useState<Coordinates | null>(null);
   const [lastLocationVerifiedAt, setLastLocationVerifiedAt] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -814,14 +826,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       try {
         if (!venueParam) {
-          let locationPromise: Promise<LocationResult> | null = null;
-          if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode)) {
-            setLocationLoading(true);
-            locationPromise = getInitialLocation();
-          } else {
-            setLocationLoading(false);
-          }
-
           const venues = await listVenues();
           // Skip auth selection if the user already has either an account-level
           // identity or a legacy venue session we can continue from.
@@ -845,41 +849,51 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             return;
           }
 
-          if (locationPromise) {
-            const { coords, permissionDenied } = await locationPromise;
-            if (coords) {
-              const distanceByVenue = venues.map((item) => ({
+          const permState = await checkPermissionState();
+          setLocationPermissionState(permState);
+          if (permState === "prompt") {
+            setActivePanel("location-permission");
+            setVenueList(venues);
+            setLocationLoading(false);
+            setVenue(null);
+            return;
+          }
+
+          setLocationLoading(true);
+          const { coords, permissionDenied } = await getInitialLocation();
+          if (permissionDenied) {
+            setLocationPermissionState("denied");
+            setActivePanel("location-permission");
+            setVenueList(venues);
+            setLocationLoading(false);
+            setVenue(null);
+            return;
+          }
+          if (coords) {
+            const nearbyVenues = venues
+              .map((item) => ({
                 venue: item,
                 distance: calculateDistanceMeters(coords, {
                   latitude: item.latitude,
                   longitude: item.longitude,
                 }),
-              }));
-              const sortedByDistance = [...distanceByVenue]
-                .sort((a, b) => a.distance - b.distance)
-                .map((item) => item.venue);
-              const nearbyVenues = distanceByVenue
-                .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
-                .sort((a, b) => a.distance - b.distance)
-                .map((item) => item.venue);
-              setVenueList(nearbyVenues);
-              setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
-              setLocationNotice(
-                nearbyVenues.length > 0
-                  ? `Found ${nearbyVenues.length} nearby venue(s).`
-                  : "No venue is currently in range from your location."
-              );
-            } else {
-              setVenueList([]);
-              setVerifiedLocation(null);
-              setLocationNotice(
-                permissionDenied
-                  ? "Location permission is off. Turn it on to see nearby venues."
-                  : "Location check unavailable right now. Retry to see nearby venues."
-              );
-            }
-            setLocationLoading(false);
+              }))
+              .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
+              .sort((a, b) => a.distance - b.distance)
+              .map((item) => item.venue);
+            setVenueList(nearbyVenues);
+            setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
+            setLocationNotice(
+              nearbyVenues.length > 0
+                ? `Found ${nearbyVenues.length} nearby venue(s).`
+                : "No venue is currently in range from your location."
+            );
+          } else {
+            setVenueList([]);
+            setVerifiedLocation(null);
+            setLocationNotice("Location check unavailable right now. Retry to see nearby venues.");
           }
+          setLocationLoading(false);
           setVenue(null);
           return;
         }
@@ -907,6 +921,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
 
         if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode)) {
+          const permState = await checkPermissionState();
+          setLocationPermissionState(permState);
+          if (permState === "prompt") {
+            setActivePanel("location-permission");
+            setLocationLoading(false);
+            return;
+          }
           setLocationLoading(true);
           try {
             let current = await getCurrentLocation();
@@ -941,7 +962,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             setLastLocationVerifiedAt(null);
             setLocationNotice("");
             if (isLocationPermissionDenied(error)) {
-              setErrorMessage("Sorry, you must share your location in order to play!");
+              setLocationPermissionState("denied");
+              setActivePanel("location-permission");
             } else {
               setErrorMessage(getErrorMessage(error, "Unable to verify location."));
             }
@@ -1113,7 +1135,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setLastLocationVerifiedAt(null);
         setLocationNotice("");
         if (isLocationPermissionDenied(error)) {
-          setErrorMessage("Sorry, you must share your location in order to play!");
+          setLocationPermissionState("denied");
+          setActivePanel("location-permission");
         } else {
           setErrorMessage(getErrorMessage(error, "Unable to verify location."));
         }
@@ -1124,6 +1147,88 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     },
     [godMode]
   );
+
+  const handleGrantLocation = useCallback(async () => {
+    setLocationLoading(true);
+    setLocationPermissionState(null);
+    const { coords, permissionDenied } = await getInitialLocation();
+    if (permissionDenied) {
+      setLocationPermissionState("denied");
+      setLocationLoading(false);
+      return;
+    }
+    setLocationPermissionState("granted");
+
+    if (venue) {
+      // venueParam case: verify distance to the specific venue
+      if (coords) {
+        const distance = calculateDistanceMeters(coords, {
+          latitude: venue.latitude,
+          longitude: venue.longitude,
+        });
+        const allowedDistance = getGeofenceThresholdMeters(venue.radius, coords.accuracy);
+        setDistanceMeters(distance);
+        if (distance <= allowedDistance) {
+          setLocationVerified(true);
+          setVerifiedLocation(coords);
+          setLastLocationVerifiedAt(Date.now());
+          setLocationNotice("");
+          setErrorMessage("");
+        } else {
+          setLocationVerified(false);
+          setVerifiedLocation(null);
+          setErrorMessage(`You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`);
+        }
+      } else {
+        setLocationVerified(false);
+        setLocationNotice("Location check unavailable. Try again.");
+      }
+      setLocationLoading(false);
+      setPanelDirection(1);
+      setActivePanel("auth-method-selection");
+      return;
+    }
+
+    // No venueParam: filter stored venues by proximity
+    if (coords) {
+      const nearbyVenues = venueList
+        .map((item) => ({
+          venue: item,
+          distance: calculateDistanceMeters(coords, {
+            latitude: item.latitude,
+            longitude: item.longitude,
+          }),
+        }))
+        .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
+        .sort((a, b) => a.distance - b.distance)
+        .map((item) => item.venue);
+      setVenueList(nearbyVenues);
+      setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
+      setLocationNotice(
+        nearbyVenues.length > 0
+          ? `Found ${nearbyVenues.length} nearby venue(s).`
+          : "No venue is currently in range from your location."
+      );
+    } else {
+      setVenueList([]);
+      setVerifiedLocation(null);
+      setLocationNotice("Location check unavailable right now. Retry to see nearby venues.");
+    }
+    setLocationLoading(false);
+    setVenue(null);
+    const storedAccountId = (getAccountId() ?? "").trim();
+    const storedUserId = (getUserId() ?? "").trim();
+    const storedUsername = (getUsername() ?? "").trim();
+    const hasStoredIdentity = Boolean(storedAccountId || (storedUserId && storedUsername));
+    setPanelDirection(1);
+    if (hasStoredIdentity) {
+      setAccountIdState(storedAccountId || null);
+      setAccountUsername(storedUsername);
+      setActivePanel("venue-list");
+    } else {
+      setActivePanel("auth-method-selection");
+    }
+  }, [venue, venueList]);
 
   const navigateToResolvedVenue = useCallback(
     async (selectedVenue: Venue, user: User) => {
@@ -2375,6 +2480,62 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           <div className="mx-auto w-full max-w-md rounded-3xl border border-cyan-400/40 bg-slate-900 p-5">
             <div className="relative [overflow-x:clip]">
               <AnimatePresence initial={animateInitialPanel} custom={panelDirection} mode="wait">
+
+                {/* ── Location permission panel ── */}
+                {activePanel === "location-permission" && (
+                  <motion.div
+                    key="location-permission"
+                    custom={panelDirection}
+                    variants={ONBOARDING_PANEL_VARIANTS}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={SWIPE_SPRING_TRANSITION}
+                    className="flex flex-col gap-6"
+                  >
+                    <div className="space-y-3 text-center">
+                      <div className="select-none text-5xl" aria-hidden>📍</div>
+                      <h1 className="text-2xl font-black text-white">
+                        {locationPermissionState === "denied" ? "Location access is off" : "This game is location-based"}
+                      </h1>
+                      <p className="text-base leading-relaxed text-ht-fg-muted">
+                        {locationPermissionState === "denied"
+                          ? "Hightop Challenge needs your location to show nearby venues and verify you're there to play."
+                          : "We only show you venues that are nearby, and verify you're physically there to play. Your location is never stored or shared."}
+                      </p>
+                    </div>
+
+                    {locationPermissionState === "denied" ? (
+                      <div className="space-y-4">
+                        <div className="space-y-2 rounded-xl border border-rose-400/40 bg-rose-950/30 p-4 text-left">
+                          <p className="text-sm font-semibold text-rose-200">How to re-enable location:</p>
+                          <ol className="list-inside list-decimal space-y-1 text-sm leading-relaxed text-rose-300/80">
+                            <li>Tap the <strong className="text-rose-200">lock icon</strong> in your browser&apos;s address bar</li>
+                            <li>Find <strong className="text-rose-200">Location</strong> and set it to <strong className="text-rose-200">Allow</strong></li>
+                            <li>Reload the page, then tap <strong className="text-rose-200">Try Again</strong></li>
+                          </ol>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void handleGrantLocation()}
+                          disabled={locationLoading}
+                          className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                        >
+                          {locationLoading ? "Checking location..." : "Try Again"}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void handleGrantLocation()}
+                        disabled={locationLoading}
+                        className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                      >
+                        {locationLoading ? "Checking your location..." : "Share My Location →"}
+                      </button>
+                    )}
+                  </motion.div>
+                )}
 
                 {/* ── Login Page panel (account entry chooser) ── */}
                 {activePanel === "auth-method-selection" && (

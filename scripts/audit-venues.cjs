@@ -11,7 +11,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const MIN_RADIUS = 500;
+const MIN_RADIUS = 300;
 
 function haversineMeters(lat1, lon1, lat2, lon2) {
   const R = 6371000;

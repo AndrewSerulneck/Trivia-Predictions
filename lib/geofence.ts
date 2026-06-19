@@ -5,7 +5,7 @@ export type GeofenceCoordinates = {
   timestamp?: number;
 };
 
-export const MIN_VENUE_GEOFENCE_RADIUS_METERS = 500;
+export const MIN_VENUE_GEOFENCE_RADIUS_METERS = 300;
 
 export function calculateDistanceMeters(a: GeofenceCoordinates, b: GeofenceCoordinates): number {
   const toRad = (value: number) => (value * Math.PI) / 180;
