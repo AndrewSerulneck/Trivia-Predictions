@@ -19,6 +19,7 @@ const FULLSCREEN_PATHS = [
   "/venue/",
   "/active-games",
   "/pending-challenges",
+  "/info",
 ];
 
 // Subset of fullscreen routes that are pure game screens — these need a dark
