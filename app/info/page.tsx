@@ -4,20 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+
 const GAMES = [
-  { name: "Live Trivia", icon: "/brand/live_trivia_icon.png", description: "Host-run synchronized trivia nights your whole bar plays together in real time." },
-  { name: "Speed Trivia", icon: "/brand/speed_trivia_icon.png", description: "Solo multiple-choice trivia available any time — no host required." },
-  { name: "Sports Bingo", icon: "/brand/bingo_icon.png", description: "Bingo cards that resolve live against real NBA, WNBA, and MLB stats as games happen." },
-  { name: "Pick'Em", icon: "/brand/pickem_icon.png", description: "Players pick winners from that day's games. Settle automatically when final scores come in." },
-  { name: "Fantasy Sports", icon: "/brand/fantasy_icon.png", description: "Daily fantasy drafts fresh every morning — one roster per sport, per day." },
+  { name: "Live Trivia", icon: "/brand/live_trivia_icon.png", description: "Host a bar-wide trivia night on your schedule. Every guest competes together in real time — the shared energy drives rounds of drinks, keeps people seated longer, and builds the kind of weekly ritual that fills seats on your slowest nights." },
+  { name: "Speed Trivia", icon: "/brand/speed_trivia_icon.png", description: "Solo multiple-choice trivia your guests can pick up any time they walk in. It's a built-in reason to stay one more drink — and a steady engagement layer that works even when there's no event on the calendar." },
+  { name: "Prop Bingo", icon: "/brand/bingo_icon.png", description: "Every game already on your TVs becomes a promotional tool. Guests get personal bingo cards that resolve live against real NFL, NBA, WNBA, and MLB stats — giving them a personal stake in every play, every quarter, every inning. The game on screen sells the next round." },
+  { name: "Pick'Em", icon: "/brand/pickem_icon.png", description: "Let guests make fresh picks on the day's matchups — then run house challenges around whatever's on your screens. Launch a 'Pick the most World Cup winners' campaign, offer a prize, and watch passive viewers turn into active competitors with a reason to stay, order another round, and see who wins." },
+  { name: "Fantasy Sports", icon: "/brand/fantasy_icon.png", description: "Guests choose a daily fantasy roster tied to the games you're already showing. When your patrons have skin in the game, they're not just watching — they're invested. Stack that with bar-run prizes and you've turned even low stakes NBA games into a reason for guests to stay longer and earn points and prizes." },
 ];
 
 const FEATURES = [
-  { icon: "📍", title: "Drives repeat visits", body: "Every game is scoped to your venue — players compete with the people actually in your bar. That shared competition keeps them coming back." },
-  { icon: "🍺", title: "Longer stays, higher tabs", body: "Short-session game loops keep guests engaged longer, encouraging additional food and beverage purchases with every round." },
+  { icon: "📍", title: "Drives repeat visits", body: "Every game is geofenced to your venue — it only works in your bar! Players compete with the people actually in your bar. That shared competition keeps them coming back." },
+  { icon: "🍺", title: "Longer stays, higher tabs", body: "Games keep guests engaged longer, encouraging additional food and beverage purchases with every round." },
   { icon: "📱", title: "No hardware required", body: "Players use their own phones. No tablets, no installs, no devices to buy, replace, charge, or update. No app download required." },
   { icon: "📅", title: "Schedule around your business", body: "Launch live trivia, speed trivia, or other challenges whenever you need a boost. Target slow periods and turn them into your busiest nights." },
-  { icon: "💰", title: "Affordable monthly licensing", body: "Flat-rate pricing with no hidden fees. Just $35 per week — less than what most venues spend on a single slow night's bar tab." },
+  { icon: "💰", title: "Affordable monthly licensing", body: "Flat-rate pricing with no hidden fees. Just $35 per week." },
   { icon: "🎯", title: "Custom promotions & sponsorships", body: "Offer prizes to boost engagement, run sponsor integrations, or create custom challenges. Hightop gives you the tools — you set the stakes." },
 ];
 
@@ -148,15 +149,15 @@ export default function InfoPage() {
 
         {/* ── HERO ── */}
         <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-16">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-cyan-500/10 blur-3xl" />
-            <div className="absolute top-1/3 left-1/4 w-80 h-80 rounded-full bg-violet-500/8 blur-3xl" />
-            <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-indigo-500/8 blur-3xl" />
-          </div>
-          <div
-            className="pointer-events-none absolute inset-0 opacity-10"
-            style={{ backgroundImage: "url('/brand/stadium-lights-overlay-processed.png')", backgroundSize: "cover", backgroundPosition: "center" }}
+          <video
+            className="pointer-events-none absolute inset-0 w-full h-full object-cover"
+            src="/brand/hero-video-2-compressed.mp4"
+            autoPlay
+            muted
+            playsInline
+            loop
           />
+          <div className="pointer-events-none absolute inset-0 bg-slate-950/70" />
 
           <div className="relative mx-auto max-w-4xl px-5 py-24 text-center">
             <div className="mb-6 inline-block rounded-full border border-cyan-400/30 bg-cyan-400/8 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-cyan-300">
@@ -164,7 +165,7 @@ export default function InfoPage() {
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight mb-6">
               Turn Slow Nights Into{" "}
-              <span className="htm-grad">Interactive Nights</span>
+              <span className="htm-grad"> Game Nights</span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
               Real-time competition that keeps guests engaged and coming back for more.
@@ -203,19 +204,19 @@ export default function InfoPage() {
               The Game Library
             </div>
             <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>
-              Five games. One platform.
+              Turn the games you show on TV into a promotional tool for your bar.
             </h2>
-            <p className="htm-reveal text-slate-400 text-lg mb-14 max-w-xl" data-reveal>
-              Every game is scoped to your venue — players compete with the people actually sitting in your bar.
+            <p className="htm-reveal text-slate-400 text-lg mb-14" data-reveal>
+              Guests compete with each other for bragging rights and prizes. If users want to play, they have to come to your establishment.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {GAMES.map((game) => (
                 <div
                   key={game.name}
-                  className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/4 p-6 flex flex-col gap-4"
+                  className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/4 p-6 flex flex-row gap-5 items-start"
                   data-reveal
                 >
-                  <Image src={game.icon} alt={game.name} width={48} height={48} className="rounded-xl" />
+                  <Image src={game.icon} alt={game.name} width={96} height={96} className="rounded-xl flex-shrink-0" />
                   <div>
                     <h3 className="text-lg font-black text-white mb-1">{game.name}</h3>
                     <p className="text-sm text-slate-400 leading-relaxed">{game.description}</p>
@@ -243,7 +244,7 @@ export default function InfoPage() {
         <section id="features" className="py-24 px-5 bg-slate-900/40">
           <div className="mx-auto max-w-6xl">
             <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
-              Why Venues Love Hightop Challenge
+              Why Bars Love Hightop Challenge
             </div>
             <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-16 max-w-2xl" data-reveal>
               Everything you need to <span className="htm-grad">grow your venue.</span>
@@ -271,7 +272,7 @@ export default function InfoPage() {
               How It Works
             </div>
             <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-16" data-reveal>
-              Up and running in minutes.
+              Up and running instantly.
             </h2>
             <div className="flex flex-col gap-6">
               {HOW_IT_WORKS.map((item) => (
@@ -297,8 +298,8 @@ export default function InfoPage() {
         <section className="py-16 px-5 bg-slate-900/40">
           <div className="mx-auto max-w-3xl text-center">
             <blockquote className="htm-reveal text-2xl sm:text-3xl font-black leading-snug text-white" data-reveal>
-              &ldquo;Turn slow nights into{" "}
-              <span className="htm-grad">interactive nights</span>{" "}
+              &ldquo;Turn slow nights into{" "} 
+              <span className="htm-grad">game nights</span>{" "}
               with Hightop Challenge.&rdquo;
             </blockquote>
           </div>
