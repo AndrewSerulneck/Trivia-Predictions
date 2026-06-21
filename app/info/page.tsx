@@ -65,6 +65,19 @@ export default function InfoPage() {
     if (!v) return;
     v.muted = true;
     v.play().catch(() => {});
+
+    const onInteraction = () => {
+      v.muted = true;
+      v.play().catch(() => {});
+      document.removeEventListener("touchstart", onInteraction);
+      document.removeEventListener("click", onInteraction);
+    };
+    document.addEventListener("touchstart", onInteraction, { passive: true });
+    document.addEventListener("click", onInteraction, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", onInteraction);
+      document.removeEventListener("click", onInteraction);
+    };
   }, []);
 
   return (
@@ -103,6 +116,12 @@ export default function InfoPage() {
         .htm-nav-blur {
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
+        }
+        video::-webkit-media-controls,
+        video::-webkit-media-controls-start-playback-button,
+        video::-webkit-media-controls-play-button {
+          display: none !important;
+          -webkit-appearance: none;
         }
       `}</style>
 
@@ -165,6 +184,7 @@ export default function InfoPage() {
             muted
             playsInline
             loop
+            preload="auto"
           />
           <div className="pointer-events-none absolute inset-0 bg-slate-950/70" />
 
