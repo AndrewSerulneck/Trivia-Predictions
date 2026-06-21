@@ -31,6 +31,7 @@ const HOW_IT_WORKS = [
 
 export default function InfoPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -57,6 +58,13 @@ export default function InfoPage() {
     els.forEach((el) => observerRef.current?.observe(el));
 
     return () => observerRef.current?.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.play().catch(() => {});
   }, []);
 
   return (
@@ -150,6 +158,7 @@ export default function InfoPage() {
         {/* ── HERO ── */}
         <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-16">
           <video
+            ref={videoRef}
             className="pointer-events-none absolute inset-0 w-full h-full object-cover"
             src="/brand/hero-video-2-compressed.mp4"
             autoPlay
