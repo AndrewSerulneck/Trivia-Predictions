@@ -665,14 +665,16 @@ type FantasyHomeProps = {
 
 export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEntryId = "", onBack }: FantasyHomeProps) {
   const { triggerAnimation } = useAnimationTrigger();
-  const [userId, setUserId] = useState("");
-  const [venueId, setVenueId] = useState("");
+  const [userId, setUserId] = useState(() => getUserId() ?? "");
+  const [venueId, setVenueId] = useState(() => getVenueId() ?? "");
   const [games, setGames] = useState<FantasyGame[]>([]);
   const [entries, setEntries] = useState<FantasyEntry[]>([]);
   const [selectedSport, setSelectedSport] = useState<FantasySport>(defaultSport);
   const [selectedDate, setSelectedDate] = useState(() => (isValidDateInput(initialDate) ? initialDate : getTodayDateInput()));
   const [serverTodayDate, setServerTodayDate] = useState(() => getTodayDateInput());
-  const [selectedGameId, setSelectedGameId] = useState("");
+  const [selectedGameId, setSelectedGameId] = useState(() =>
+    getGameIdForSportDate(defaultSport, isValidDateInput(initialDate) ? initialDate : getTodayDateInput())
+  );
   const [playerPool, setPlayerPool] = useState<FantasyPlayerPoolItem[]>([]);
   const [playerPoolEmptyReason, setPlayerPoolEmptyReason] = useState<FantasyPlayerPoolEmptyReason | null>(null);
   const [leaderboard, setLeaderboard] = useState<FantasyLeaderboardEntry[]>([]);
@@ -704,6 +706,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
   const [filterTeam, setFilterTeam] = useState<string>("all");
   const [visibleCount, setVisibleCount] = useState(25);
   const hasRestoredDraftRef = useRef(false);
+  const hasAppliedInitialEntryRef = useRef(false);
   const [isGeofencePaused, setIsGeofencePaused] = useState(false);
   const [geofencePauseReason, setGeofencePauseReason] = useState("");
   const [statFlashes, setStatFlashes] = useState<Array<{ id: string; label: string; pointsDelta: number }>>([]);
@@ -753,11 +756,6 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       setSelectedDate(initialDate);
     }
   }, [initialDate]);
-
-  useEffect(() => {
-    setUserId(getUserId() ?? "");
-    setVenueId(getVenueId() ?? "");
-  }, []);
 
   useEffect(() => {
     const fromBell = sessionStorage.getItem("tp:celebrate") === "fantasy";
@@ -1012,7 +1010,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     });
   }, []);
 
-  const loadSelectedGameDetails = useCallback(async () => {
+  const loadSelectedGameDetails = useCallback(async (isBackgroundRefresh = false) => {
     if (!selectedGameId) {
       setPlayerPool([]);
       setPlayerPoolEmptyReason(null);
@@ -1029,7 +1027,9 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       return;
     }
 
-    setIsLoadingPool(true);
+    if (!isBackgroundRefresh) {
+      setIsLoadingPool(true);
+    }
     try {
       const requestNonce = ++gameDetailsRequestNonceRef.current;
       const gameDate = parseDailyGameDateFromId(selectedGameId) ?? selectedDate;
@@ -1083,7 +1083,6 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     setHasLocalLineupDraft(false);
     setDraftSubmissionAttempted(false);
     setJustSubmittedRoster(false);
-    setIsLoadingPool(true);
     hasRestoredDraftRef.current = false;
   }, [selectedGameId]);
 
@@ -1110,13 +1109,14 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
 
   useEffect(() => {
     const targetEntryId = initialEntryId.trim();
-    if (!targetEntryId || entries.length === 0) {
+    if (!targetEntryId || entries.length === 0 || hasAppliedInitialEntryRef.current) {
       return;
     }
     const targetEntry = entries.find((entry) => entry.id === targetEntryId);
     if (!targetEntry) {
       return;
     }
+    hasAppliedInitialEntryRef.current = true;
     const targetDate = parseDailyGameDateFromId(targetEntry.gameId) ?? toLocalDateInput(new Date(targetEntry.startsAt));
     if (isValidDateInput(targetDate)) {
       setSelectedDate(targetDate);
@@ -1739,16 +1739,17 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     return () => {
       active = false;
       void client.removeChannel(channel);
+      prevStatsSnapshotRef.current.clear();
     };
   }, [markPlayersAsHot, pushStatFlash, triggerAnimation, triggerPlayerScorePop, triggerTotalScorePop, trackedEntryId, trackedEntrySportKey]);
 
   useEffect(() => {
-    if (!userId || supabase) {
+    if (!userId || !supabase) {
       return;
     }
     const interval = window.setInterval(() => {
       void loadEntries(true, false);
-      void loadSelectedGameDetails();
+      void loadSelectedGameDetails(true);
       void loadGames(selectedDate);
     }, 5000);
     return () => {
@@ -1761,7 +1762,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       return;
     }
     const interval = window.setInterval(() => {
-      void loadSelectedGameDetails();
+      void loadSelectedGameDetails(true);
     }, 15000);
     return () => {
       window.clearInterval(interval);
@@ -1781,7 +1782,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     fantasyKickoffRefreshTimerRef.current = window.setTimeout(() => {
       fantasyKickoffRefreshTimerRef.current = null;
       void loadEntries(true, false);
-      void loadSelectedGameDetails();
+      void loadSelectedGameDetails(true);
       void loadGames(selectedDate);
     }, delayMs);
     return () => {
@@ -1881,7 +1882,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
           setHasLocalLineupDraft(false);
           setIsEditingRoster(false);
           const refreshedEntries = await loadEntries(true);
-          await loadSelectedGameDetails();
+          await loadSelectedGameDetails(true);
           const matchedEntry = refreshedEntries.find((entry) => {
             if (!selectedEntrySportKey) {
               return false;
@@ -1917,7 +1918,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       setJustSubmittedRoster(true);
       clearDraftStorage();
       setSelectedPlayers(lineup);
-      await Promise.all([loadEntries(true), loadSelectedGameDetails()]);
+      await Promise.all([loadEntries(true), loadSelectedGameDetails(true)]);
       return true;
     } catch (error) {
       setDraftSubmissionAttempted(false);
@@ -2212,10 +2213,20 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       emptyPlayerPoolMessage = `No ${selectedSportLabel} players are available to draft for this slate right now.`;
     }
   }
+  const showPoolLoader =
+    isFantasyLineupSport &&
+    Boolean(selectedGameId) &&
+    hasResolvedEntries &&
+    isLoadingPool &&
+    !isPastSelectedDate &&
+    !hasActiveDraftedEntry &&
+    !existingEntryForSelectedGame &&
+    !hasStartedGame;
   const showGameStart =
     isFantasyLineupSport &&
     selectedGameId &&
     hasResolvedEntries &&
+    !isLoadingPool &&
     !isPastSelectedDate &&
     !hasActiveDraftedEntry &&
     !existingEntryForSelectedGame &&
@@ -2422,10 +2433,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
               ◀
             </button>
             <div className="min-w-0 flex-1 text-center">
-              <span className="text-[12.5px] font-black text-[#fef3c7]">{formatDateLabel(selectedDate, serverTodayDate)}</span>
-              {isFantasyLineupSport && sportGames.length > 0 ? (
-                <span className="text-[11px] font-bold text-slate-400"> · {sportGames.length}-game slate</span>
-              ) : null}
+              <span className="text-[25px] font-black text-[#fef3c7]">{formatDateLabel(selectedDate, serverTodayDate)}</span>
             </div>
             <button
               type="button"
@@ -2745,31 +2753,44 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
               </div>
             ) : null}
 
-            {/* Game start prompt */}
-            {showGameStart ? (
+            {/* Pool loading state — shown while player pool is being fetched */}
+            {showPoolLoader ? (
               <div className="relative overflow-hidden rounded-2xl border border-[#fef3c7]/30 bg-[#0a3128] p-4">
                 <ChalkGrid fine />
+                <div className="relative z-[2] flex items-center gap-3">
+                  <BasketballLoader label="Loading today's player pool…" />
+                </div>
+              </div>
+            ) : null}
+
+            {/* Game start prompt */}
+            {showGameStart ? (
+              <div
+                className={`relative overflow-hidden rounded-2xl border border-[#fef3c7]/30 bg-[#0a3128] ${
+                  sportGames.length === 0 ? "p-8" : "p-4"
+                }`}
+              >
+                <ChalkGrid fine />
                 <div className="relative z-[2]">
-                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#fde68a]">
-                    {sportGames.length === 0
-                      ? `No ${selectedSportLabel} games today`
-                      : `${selectedSportLabel} · Tipoff ${sportGames[0] ? formatLocalDateTime(sportGames[0].startsAt) : ""}`}
-                  </p>
+                  {sportGames.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 py-2 text-center">
+                      <p className="text-2xl">{FANTASY_SPORTS.find((s) => s.key === selectedSport)?.icon ?? "🏆"}</p>
+                      <p className="text-base font-bold text-[#fde68a]">No {selectedSportLabel} games scheduled</p>
+                      <p className="text-xs text-[#fef3c7]/50">Check back on a game day or browse another sport</p>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#fde68a]">
+                      {`${selectedSportLabel} · ${nextUnlockedGame ? "Next game" : "First game"} ${formatLocalDateTime((nextUnlockedGame ?? sportGames[0])!.startsAt)}`}
+                    </p>
+                  )}
                   {sportGames.length > 0 ? (
-                    isLoadingPool ? (
-                      <div className="mt-3 flex h-11 animate-pulse items-center justify-center gap-2 rounded-xl bg-black/30">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#fde68a]/60" />
-                        <span className="h-1.5 w-20 rounded-full bg-[#fde68a]/60" />
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setHasStartedGame(true)}
-                        className="mt-3 w-full rounded-xl bg-[#8b5cf6] py-3 text-sm font-black uppercase tracking-[0.04em] text-white shadow-[0_8px_24px_rgba(139,92,246,0.35)] active:scale-[0.98]"
-                      >
-                        {draftCtaLabel}
-                      </button>
-                    )
+                    <button
+                      type="button"
+                      onClick={() => setHasStartedGame(true)}
+                      className="mt-3 w-full rounded-xl bg-[#8b5cf6] py-3 text-sm font-black uppercase tracking-[0.04em] text-white shadow-[0_8px_24px_rgba(139,92,246,0.35)] active:scale-[0.98]"
+                    >
+                      {draftCtaLabel}
+                    </button>
                   ) : null}
                 </div>
               </div>
@@ -2976,11 +2997,31 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
 
                     {/* Player rows */}
                     {availablePlayerPool.length === 0 ? (
-                      <div className="py-6 text-center">
+                      <div
+                        className={`text-center ${
+                          playerPoolEmptyReason === "no-games"
+                            ? "py-14"
+                            : "py-6"
+                        }`}
+                      >
                         {isLoadingPool ? (
                           <BasketballLoader label="Loading players…" />
                         ) : (
-                          <p className="mx-auto max-w-[24rem] text-sm leading-6 text-slate-400">{emptyPlayerPoolMessage}</p>
+                          <p
+                            className={`mx-auto max-w-[28rem] ${
+                              playerPoolEmptyReason === "no-games"
+                                ? "text-xl font-bold leading-8 text-slate-200"
+                                : "text-sm leading-6 text-slate-400"
+                            }`}
+                          >
+                            {playerPoolEmptyReason === "no-games" ? (
+                              <span className="mr-3 inline-block align-middle" style={{ marginTop: "-0.15em" }}>🏀</span>
+                            ) : null}
+                            {emptyPlayerPoolMessage}
+                            {playerPoolEmptyReason === "no-games" ? (
+                              <span className="ml-3 inline-block align-middle" style={{ marginTop: "-0.15em" }}>🏀</span>
+                            ) : null}
+                          </p>
                         )}
                       </div>
                     ) : sortedFilteredPool.length === 0 ? (
