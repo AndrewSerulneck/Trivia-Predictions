@@ -41,6 +41,10 @@ const FANTASY_MLB_SPORT_KEY = "baseball_mlb";
 const FANTASY_MLB_DAILY_GAME_ID_PREFIX = "mlb-daily-";
 const FANTASY_DAILY_TEAM_LABEL = "All Teams";
 
+// Cache the result of the fantasy tables health check so it only runs once per process lifetime.
+// This eliminates ~300K unnecessary DB queries per month from the cron hot path.
+let fantasyTablesVerified = false;
+
 type FantasyEntryStatus = "pending" | "live" | "final" | "canceled";
 type FantasyGameStatus = "scheduled" | "live" | "final";
 
@@ -2083,12 +2087,18 @@ export async function getFantasyPlayerPoolForGame(params: {
 }
 
 async function ensureFantasyTables(): Promise<void> {
+  // Skip the health check if we've already verified tables exist in this process lifetime.
+  if (fantasyTablesVerified) {
+    return;
+  }
+
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
   }
 
   const { error } = await supabaseAdmin.from("fantasy_entries").select("id").limit(1);
   if (!error) {
+    fantasyTablesVerified = true;
     return;
   }
 
