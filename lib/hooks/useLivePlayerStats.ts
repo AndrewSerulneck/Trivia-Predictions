@@ -113,27 +113,21 @@ export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePla
 
     void loadInitial();
 
+    const sportKey =
+      leagueName === "WNBA" ? "basketball_wnba" :
+      leagueName === "MLB"  ? "baseball_mlb"    :
+                              "basketball_nba";
+
     const channel = client
-      .channel(
-        `live-player-stats:${gameId || "all"}:${rosterPlayerIds.length > 0 ? rosterPlayerIds.join("-") : "all"}`
-      )
+      .channel(`live-stats:${sportKey}`)
       .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "live_player_stats",
-          filter: gameId
-            ? `game_id=eq.${gameId}`
-            : rosterPlayerIds.length > 0
-            ? `player_id=in.(${rosterPlayerIds.join(",")})`
-            : undefined,
-        },
+        "broadcast",
+        { event: "stat_update" },
         (payload) => {
           if (!active) return;
-          const nextRow = (payload.new ?? payload.old ?? null) as LivePlayerStatRow | null;
+          const nextRow = (payload.payload ?? null) as LivePlayerStatRow | null;
           if (!nextRow) return;
-          if (leagueName && String(nextRow.league_name ?? "").trim() !== leagueName) {
+          if (gameId && String(nextRow.game_id ?? "").trim() !== gameId) {
             return;
           }
           if (Number.isFinite(sinceTs)) {
@@ -149,10 +143,6 @@ export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePla
           setRows((previous) => {
             const next = [...previous];
             const index = next.findIndex((row) => row.game_id === nextRow.game_id && row.player_id === nextRow.player_id);
-            if (payload.eventType === "DELETE") {
-              if (index >= 0) next.splice(index, 1);
-              return next.sort(byPlayerThenGame);
-            }
             if (index >= 0) {
               next[index] = { ...next[index], ...nextRow };
             } else {

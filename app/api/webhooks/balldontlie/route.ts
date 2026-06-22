@@ -248,6 +248,28 @@ async function handleNbaPlayerEvent(
     throw new Error(`live_player_stats upsert failed: ${upsertError.message}`);
   }
 
+  // Broadcast directly to subscribed clients. Fire-and-forget — the 60s cron
+  // provides eventual consistency if broadcast delivery fails.
+  void supabaseAdmin!.channel(`live-stats:${sportKey}`).send({
+    type: "broadcast",
+    event: "stat_update",
+    payload: {
+      game_id: event.gameId,
+      player_id: event.playerId,
+      player_name: event.playerName,
+      team_name: event.teamName,
+      sport_key: sportKey,
+      game_status: event.gameStatus,
+      pts: event.stats.pts,
+      ast: event.stats.ast,
+      reb: event.stats.reb,
+      stl: event.stats.stl,
+      blk: event.stats.blk,
+      turnovers: event.stats.tov,
+      total_fantasy_points: totalFantasyPoints,
+    },
+  });
+
   const { hit, miss } = await resolveBingoSquares(event);
   await refreshSportsBingoProgress({
     sportKey,
@@ -293,6 +315,26 @@ async function handleMlbPlayerEvent(
   if (upsertError) {
     throw new Error(`live_player_stats upsert failed (MLB): ${upsertError.message}`);
   }
+
+  void supabaseAdmin!.channel("live-stats:baseball_mlb").send({
+    type: "broadcast",
+    event: "stat_update",
+    payload: {
+      game_id: event.gameId,
+      player_id: event.playerId,
+      player_name: event.playerName,
+      team_name: event.teamName,
+      sport_key: "baseball_mlb",
+      game_status: event.gameStatus,
+      pts: null,
+      ast: null,
+      reb: null,
+      stl: null,
+      blk: null,
+      turnovers: null,
+      total_fantasy_points: totalFantasyPoints,
+    },
+  });
 
   return { statsUpserted: true };
 }

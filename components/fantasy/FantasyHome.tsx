@@ -1673,35 +1673,24 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     trackedEntryPlayerIdsRef.current = new Set(ids);
   }, [trackedEntry]);
 
-  // Stable entry ID — only changes when the user switches sport/entry, not on score updates.
+  // Stable primitives — only change when the user switches sport/entry, not on score updates.
   const trackedEntryId = trackedEntry?.id ?? null;
-
-  // Server-side filter string for the live_player_stats subscription. Keyed on trackedEntryId
-  // so it recomputes only when the roster changes, not on every score update. This moves
-  // filtering from client-side (all users receive all stat events) to Supabase's side.
-  const trackedRosterFilterStr = useMemo(() => {
-    const ids = (trackedEntry?.lineupPlayers ?? [])
-      .filter((p) => p.playerId > 0)
-      .map((p) => p.playerId)
-      .sort((a, b) => a - b);
-    return ids.length > 0 ? `player_id=in.(${ids.join(",")})` : "";
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trackedEntryId]);
+  const trackedEntrySportKey = trackedEntry?.sportKey ?? null;
 
   useEffect(() => {
-    if (!supabase || !trackedRosterFilterStr) return;
+    if (!supabase || !trackedEntrySportKey) return;
     const client = supabase;
     let active = true;
 
     const channel = client
-      .channel(`live-player-stats-feed:${trackedEntryId ?? "none"}`)
+      .channel(`live-stats:${trackedEntrySportKey}`)
       .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "live_player_stats", filter: trackedRosterFilterStr },
+        "broadcast",
+        { event: "stat_update" },
         (payload) => {
           if (!active) return;
           if (geofencePauseRef.current) return;
-          const row = (payload.new ?? null) as LiveStatsRealtimeRow | null;
+          const row = (payload.payload ?? null) as LiveStatsRealtimeRow | null;
           if (!row) return;
 
           const gameId = String(row.game_id ?? "").trim();
@@ -1760,7 +1749,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       active = false;
       void client.removeChannel(channel);
     };
-  }, [markPlayersAsHot, pushStatFlash, triggerAnimation, triggerPlayerScorePop, triggerTotalScorePop, trackedEntryId, trackedRosterFilterStr]);
+  }, [markPlayersAsHot, pushStatFlash, triggerAnimation, triggerPlayerScorePop, triggerTotalScorePop, trackedEntryId, trackedEntrySportKey]);
 
   useEffect(() => {
     if (!userId || supabase) {
