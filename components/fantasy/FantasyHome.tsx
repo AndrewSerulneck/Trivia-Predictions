@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
+import { SlimTopBar, ViewTabs, FoldLine } from "@/components/venue/GameChrome";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
 import type { FantasyLineupPlayer } from "@/lib/fantasy";
 import type { FantasyPlayerPoolEmptyReason } from "@/lib/fantasy";
@@ -710,7 +711,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
   const [isMounted, setIsMounted] = useState(false);
   const [lastCollectedPoints, setLastCollectedPoints] = useState(0);
   const [isCollectingLive, setIsCollectingLive] = useState(false);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [activeFantasyTab, setActiveFantasyTab] = useState<"sweat" | "leaderboard">("sweat");
   const syncedLastCollectedRef = useRef<string | false>(false);
   const autoCollectLiveTimerRef = useRef<number | null>(null);
   const gameDetailsRequestNonceRef = useRef(0);
@@ -1672,16 +1673,31 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     trackedEntryPlayerIdsRef.current = new Set(ids);
   }, [trackedEntry]);
 
+  // Stable entry ID — only changes when the user switches sport/entry, not on score updates.
+  const trackedEntryId = trackedEntry?.id ?? null;
+
+  // Server-side filter string for the live_player_stats subscription. Keyed on trackedEntryId
+  // so it recomputes only when the roster changes, not on every score update. This moves
+  // filtering from client-side (all users receive all stat events) to Supabase's side.
+  const trackedRosterFilterStr = useMemo(() => {
+    const ids = (trackedEntry?.lineupPlayers ?? [])
+      .filter((p) => p.playerId > 0)
+      .map((p) => p.playerId)
+      .sort((a, b) => a - b);
+    return ids.length > 0 ? `player_id=in.(${ids.join(",")})` : "";
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trackedEntryId]);
+
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase || !trackedRosterFilterStr) return;
     const client = supabase;
     let active = true;
 
     const channel = client
-      .channel("live-player-stats-feed")
+      .channel(`live-player-stats-feed:${trackedEntryId ?? "none"}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "live_player_stats" },
+        { event: "*", schema: "public", table: "live_player_stats", filter: trackedRosterFilterStr },
         (payload) => {
           if (!active) return;
           if (geofencePauseRef.current) return;
@@ -1744,7 +1760,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       active = false;
       void client.removeChannel(channel);
     };
-  }, [markPlayersAsHot, pushStatFlash, triggerAnimation, triggerPlayerScorePop, triggerTotalScorePop]);
+  }, [markPlayersAsHot, pushStatFlash, triggerAnimation, triggerPlayerScorePop, triggerTotalScorePop, trackedEntryId, trackedRosterFilterStr]);
 
   useEffect(() => {
     if (!userId || supabase) {
@@ -2186,6 +2202,22 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
 
   const isToday = selectedDate === serverTodayDate;
   const isPastSelectedDate = selectedDate < serverTodayDate;
+  // Per-sport roster status for the multi-sport toggle dots (live > set > final).
+  const entryStatusBySport: Partial<Record<FantasySport, "live" | "set" | "final">> = {};
+  const entryStatusRank = (status: "live" | "set" | "final" | undefined): number =>
+    status === "live" ? 3 : status === "set" ? 2 : status === "final" ? 1 : 0;
+  for (const entry of entries) {
+    const entrySport = getFantasySportFromEntrySportKey(entry.sportKey);
+    const next: "live" | "set" | "final" | undefined =
+      entry.status === "live" ? "live" : entry.status === "pending" ? "set" : entry.status === "final" ? "final" : undefined;
+    if (next && entryStatusRank(next) > entryStatusRank(entryStatusBySport[entrySport])) {
+      entryStatusBySport[entrySport] = next;
+    }
+  }
+  const totalEntryCount = Object.values(entryStatusBySport).filter(Boolean).length;
+  const crossSportLiveSport = FANTASY_SPORTS.find(
+    (sport) => sport.key !== selectedSport && entryStatusBySport[sport.key] === "live"
+  );
   const draftCtaLabel = existingEntryForSelectedGame ? "Edit your roster" : "Draft your roster";
   const isFantasyLineupSport = selectedSport === "nba" || selectedSport === "wnba" || selectedSport === "baseball";
   const selectedSportLabel =
@@ -2344,92 +2376,116 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
           )
         : null}
 
-      {/* ── Header ── */}
-      <div className="flex items-center border-b border-white/5 px-4 py-2">
-        {onBack ? (
-          <button
-            type="button"
-            onClick={onBack}
-            className="tp-clean-button inline-flex min-h-[44px] w-11 shrink-0 items-center justify-center rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
-            aria-label="Back to Venue"
-          >
-            ←
-          </button>
-        ) : (
-          <div className="w-11 shrink-0" />
-        )}
-        <div className="flex-1 text-center">
-          <h1 className="font-black text-[44px] uppercase leading-none tracking-[0.05em] text-[#fef3c7] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
-            Hightop Fantasy
-          </h1>
-        </div>
-        {/* Right spacer to keep title centered */}
-        <div className="w-11 shrink-0" />
-      </div>
+      {/* ── Slim identity bar (replaces the 44px title) ── */}
+      <SlimTopBar game="fantasy" onExit={onBack} />
 
+      <div className="mx-auto w-full max-w-[30rem] space-y-3 px-4 pt-3">
 
-      <div className="space-y-3 px-4">
+        {/* ── Consolidated control band: multi-sport roster toggle + browse-past-days stepper ── */}
+        <div className="overflow-hidden rounded-xl border border-amber-200/[0.18] bg-amber-200/[0.04]">
+          {/* Sport-entry toggle — switch between your rosters, each with its own status dot */}
+          <div className="flex items-center gap-2 px-2 py-1.5">
+            <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {FANTASY_SPORTS.map((sport) => {
+                const on = selectedSport === sport.key;
+                const status = entryStatusBySport[sport.key];
+                const dotClass =
+                  status === "live"
+                    ? "animate-pulse bg-emerald-400"
+                    : status === "set"
+                    ? "bg-amber-200"
+                    : status === "final"
+                    ? "bg-slate-400"
+                    : "";
+                return (
+                  <button
+                    key={sport.key}
+                    type="button"
+                    disabled={!sport.available}
+                    onClick={() => sport.available && setSelectedSport(sport.key)}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-black tracking-[0.03em] transition-colors disabled:cursor-not-allowed ${
+                      on
+                        ? "border-amber-200 bg-amber-200 text-[#0a3128]"
+                        : sport.available
+                        ? status
+                          ? "border-amber-200/30 bg-white/[0.03] text-amber-200"
+                          : "border-white/[0.12] bg-white/[0.03] text-slate-400"
+                        : "border-white/[0.12] bg-white/[0.03] text-slate-600 opacity-55"
+                    }`}
+                  >
+                    {status && !on ? <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}`} /> : null}
+                    {sport.label}
+                    {!sport.available ? (
+                      <span className={`text-[8px] font-extrabold uppercase tracking-[0.1em] ${on ? "text-[#0a3128]/70" : "text-slate-500"}`}>
+                        Soon
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+            <span className="shrink-0 pr-1 text-[9px] font-black uppercase tracking-[0.08em] text-amber-200/55">
+              {totalEntryCount} {totalEntryCount === 1 ? "entry" : "entries"}
+            </span>
+          </div>
 
-        {/* ── Date stepper + sport chips (single row) ── */}
-        <div className="flex items-center gap-2">
-          {/* Compact date stepper */}
-          <div className="flex shrink-0 items-center gap-0.5 rounded-xl border border-[#fef3c7]/30 bg-[#0a3128] px-1 py-1">
+          <div className="h-px bg-white/[0.07]" />
+
+          {/* Date stepper — walk back through previous days + day status */}
+          <div className="flex items-center gap-2 px-2 py-1.5">
             <button
               type="button"
               onClick={navigateToPrevDay}
-              className="relative flex h-7 w-7 items-center justify-center rounded-lg border border-[#fef3c7]/25 bg-black/30 text-[10px] font-black text-[#fde68a] active:scale-90"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-black/25 text-[10px] font-black text-amber-200 active:scale-90"
               aria-label="Previous day"
             >
               ◀
             </button>
-            <span className="min-w-[52px] text-center text-[11px] font-extrabold text-[#fef3c7]">{formatDateLabel(selectedDate, serverTodayDate)}</span>
+            <div className="min-w-0 flex-1 text-center">
+              <span className="text-[12.5px] font-black text-[#fef3c7]">{formatDateLabel(selectedDate, serverTodayDate)}</span>
+              {isFantasyLineupSport && sportGames.length > 0 ? (
+                <span className="text-[11px] font-bold text-slate-400"> · {sportGames.length}-game slate</span>
+              ) : null}
+            </div>
             <button
               type="button"
               onClick={navigateToNextDay}
               disabled={isToday}
-              className="relative flex h-7 w-7 items-center justify-center rounded-lg border border-[#fef3c7]/25 bg-black/30 text-[10px] font-black text-[#fde68a] active:scale-90 disabled:opacity-30"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-black/25 text-[10px] font-black text-amber-200 active:scale-90 disabled:opacity-30"
               aria-label="Next day"
             >
               ▶
             </button>
-          </div>
-
-          {/* Sport chips — scrollable */}
-          <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-            {FANTASY_SPORTS.map((sport) => (
-              <button
-                key={sport.key}
-                type="button"
-                disabled={!sport.available}
-                onClick={() => sport.available && setSelectedSport(sport.key)}
-                className={`flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-black tracking-[0.03em] transition-all disabled:cursor-not-allowed ${
-                  selectedSport === sport.key
-                    ? "border-[#fde68a] bg-[#fde68a] text-[#0a3128]"
-                    : sport.available
-                    ? "border-white/[0.12] bg-white/[0.03] text-slate-400"
-                    : "border-white/[0.12] bg-white/[0.03] text-slate-600 opacity-55"
-                }`}
-              >
-                <span className="text-[13px]">{sport.icon}</span>
-                {sport.label}
-                {!sport.available ? (
-                  <span className="text-[8px] font-extrabold uppercase tracking-[0.1em] text-slate-500">Soon</span>
-                ) : null}
-              </button>
-            ))}
+            <span
+              className={`shrink-0 whitespace-nowrap pr-1 text-[9px] font-black uppercase tracking-[0.06em] ${
+                isPastSelectedDate ? "text-slate-400" : "text-amber-200"
+              }`}
+            >
+              {isPastSelectedDate
+                ? "Final"
+                : isFantasyLineupSport && sportGames.length > 0
+                ? selectedSport === "baseball"
+                  ? "Locks at pitch"
+                  : "Locks at tip"
+                : isToday
+                ? "Today"
+                : ""}
+            </span>
           </div>
         </div>
 
-        {/* Slate banner */}
-        {isFantasyLineupSport && sportGames.length > 0 ? (
-          <div className="flex items-center justify-between rounded-[10px] border border-[#fef3c7]/20 bg-[#fef3c7]/5 px-3 py-2">
-            <span className="text-[10.5px] font-extrabold text-slate-300">
-              Tonight&apos;s {selectedSportLabel} slate · {sportGames.length} game{sportGames.length === 1 ? "" : "s"}
+        {/* Cross-sport nudge — you already have a roster live elsewhere */}
+        {crossSportLiveSport ? (
+          <button
+            type="button"
+            onClick={() => setSelectedSport(crossSportLiveSport.key)}
+            className="flex w-full items-center gap-2 rounded-[10px] border border-emerald-300/30 bg-emerald-500/[0.07] px-3 py-2 text-left"
+          >
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-400" />
+            <span className="text-[10.5px] font-bold leading-snug text-emerald-200">
+              Your <b className="text-[#6ee7b7]">{crossSportLiveSport.label}</b> roster is live right now — tap to sweat it.
             </span>
-            <span className="text-[9.5px] font-extrabold uppercase tracking-[0.06em] text-[#fde68a]">
-              {selectedSport === "baseball" ? "Locks at first pitch" : "Locks at first tip"}
-            </span>
-          </div>
+          </button>
         ) : null}
 
         <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
@@ -2455,6 +2511,19 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         {/* ── LIVE SCORING (shown whenever a tracked entry exists) ── */}
         {isFantasyLineupSport && trackedEntry ? (
           <>
+            {/* My Sweat / Leaderboard tabs (replaces the leaderboard show/hide toggle) */}
+            <ViewTabs
+              game="fantasy"
+              active={activeFantasyTab}
+              onPick={(id) => setActiveFantasyTab(id === "leaderboard" ? "leaderboard" : "sweat")}
+              tabs={[
+                { id: "sweat", label: "My Sweat", live: hasLiveEntry },
+                { id: "leaderboard", label: "Leaderboard", count: leaderboard.length > 0 ? leaderboard.length : undefined },
+              ]}
+            />
+
+            {activeFantasyTab === "sweat" ? (
+              <>
             {/* Total FP scoreboard */}
             <div className="relative overflow-hidden rounded-[18px] border-2 border-[#fef3c7]/55 bg-[#0a3128] px-3.5 pb-4 pt-3.5">
               <ChalkGrid />
@@ -2549,11 +2618,8 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
               </div>
             ) : null}
 
-            {/* Live roster cards + leaderboard — two-column on sm+ */}
-            <div className="sm:grid sm:grid-cols-[1fr_260px] sm:items-start sm:gap-5">
-
-              {/* Roster column */}
-              <div>
+            {/* Your roster */}
+            <div>
                 <p className="mb-2.5 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
                   {canEditExistingEntryLineup ? "Your roster" : "Your roster · locked"}
                 </p>
@@ -2648,62 +2714,51 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                 ) : null}
               </div>
 
-              {/* Leaderboard column */}
-              {leaderboard.length > 0 ? (
-                <div>
-                  {/* Mobile toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setShowLeaderboard((v) => !v)}
-                    className="mt-4 flex w-full items-center justify-between rounded-[12px] border border-[#fef3c7]/[0.18] bg-[#0f172a] px-3.5 py-2.5 sm:hidden"
-                  >
-                    <span className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
-                      Venue leaderboard · {leaderboard.length}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400">{showLeaderboard ? "Hide ▲" : "Show ▼"}</span>
-                  </button>
-                  <div className={`sm:block ${showLeaderboard ? "block" : "hidden"}`}>
-                    <p className="mb-2 mt-4 hidden text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a] sm:block">Venue leaderboard</p>
-                    <div className="overflow-hidden rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a]">
-                      {leaderboard.map((row, i) => {
-                        const isMe = row.userId === userId;
-                        return (
-                          <div
-                            key={row.entryId}
-                            className={`flex items-center justify-between px-3 py-2.5 ${i ? "border-t border-white/5" : ""} ${isMe ? "bg-[#fef3c7]/[0.06]" : ""}`}
-                          >
-                            <div className="flex min-w-0 items-center gap-2.5">
-                              <span className={`w-4 font-mono text-[12px] font-[900] tabular-nums ${row.rank <= 3 ? "text-[#fde68a]" : "text-slate-500"}`}>
-                                {row.rank}
-                              </span>
-                              <span className={`truncate text-[12px] ${isMe ? "font-black text-[#fef3c7]" : "font-bold text-slate-300"}`}>
-                                {isMe ? "You" : row.username}
-                              </span>
-                            </div>
-                            <span className={`font-mono text-[13px] font-[900] tabular-nums ${isMe ? "text-[#6ee7b7]" : "text-slate-200"}`}>
-                              {Number(row.points ?? 0).toFixed(1)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
             {hasLiveEntry ? (
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
                 <p className="text-[11px] font-semibold text-[#6ee7b7]">Live · Streaming updates</p>
               </div>
             ) : null}
-
+              </>
+            ) : (
+              /* Leaderboard tab — full venue board */
+              leaderboard.length > 0 ? (
+                <div className="overflow-hidden rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a]">
+                  {leaderboard.map((row, i) => {
+                    const isMe = row.userId === userId;
+                    return (
+                      <div
+                        key={row.entryId}
+                        className={`flex items-center justify-between px-3.5 py-3 ${i ? "border-t border-white/5" : ""} ${isMe ? "bg-[#fef3c7]/[0.06]" : ""}`}
+                      >
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <span className={`w-5 font-mono text-[13px] font-[900] tabular-nums ${row.rank <= 3 ? "text-[#fde68a]" : "text-slate-500"}`}>
+                            {row.rank}
+                          </span>
+                          <span className={`truncate text-[13px] ${isMe ? "font-black text-[#fef3c7]" : "font-bold text-slate-300"}`}>
+                            {isMe ? "You" : row.username}
+                          </span>
+                        </div>
+                        <span className={`font-mono text-[14px] font-[900] tabular-nums ${isMe ? "text-[#6ee7b7]" : "text-slate-200"}`}>
+                          {Number(row.points ?? 0).toFixed(1)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a] p-5 text-center text-[12px] font-bold text-slate-400">
+                  No venue entries yet.
+                </div>
+              )
+            )}
           </>
         ) : null}
 
-        {/* ── DRAFT (shown when no locked entry yet, or roster is editable) ── */}
-        <>
+        {/* ── DRAFT / player pool (conditional primary zone; hidden on the Leaderboard tab) ── */}
+        {activeFantasyTab === "sweat" ? (
+          <>
             {selectedSport === "football" ? (
               <div className="rounded-2xl border border-[#fef3c7]/20 bg-[#0a3128] p-4 text-center">
                 <p className="text-sm font-extrabold text-[#fef3c7]">🏈 Football fantasy is coming soon!</p>
@@ -3034,7 +3089,10 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
               </>
             ) : null}
           </>
+        ) : null}
 
+        {/* ── Ad below the fold ── */}
+        <FoldLine />
         <InlineSlotAdClient
           slot="inline-content"
           venueId={venueId}
@@ -3043,7 +3101,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
           displayTrigger="on-load"
           placementKey="fantasy-inline"
         />
-      </div>{/* end px-4 space-y-3 */}
+      </div>{/* end content container */}
 
       {/* ── Submission toast ── */}
       <AnimatePresence initial={false}>

@@ -119,7 +119,16 @@ export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePla
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "live_player_stats", filter: gameId ? `game_id=eq.${gameId}` : undefined },
+        {
+          event: "*",
+          schema: "public",
+          table: "live_player_stats",
+          filter: gameId
+            ? `game_id=eq.${gameId}`
+            : rosterPlayerIds.length > 0
+            ? `player_id=in.(${rosterPlayerIds.join(",")})`
+            : undefined,
+        },
         (payload) => {
           if (!active) return;
           const nextRow = (payload.new ?? payload.old ?? null) as LivePlayerStatRow | null;
