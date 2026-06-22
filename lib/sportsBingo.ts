@@ -320,6 +320,8 @@ type SportsBingoCardRow = {
   won_line: unknown;
   settled_at: string | null;
   created_at: string;
+  updated_at: string | null;
+  last_cron_processed_at: string | null;
 };
 
 type SportsBingoSquareRow = {
@@ -5248,15 +5250,19 @@ async function listCardRows(params: {
   limit?: number;
   sportKey?: string;
   gameId?: string;
+  stalestFirst?: boolean;
 }): Promise<Array<{ card: SportsBingoCardRow; squares: SportsBingoSquareRow[] }>> {
   assertSupabaseConfigured();
 
   let query = supabaseAdmin!
     .from("sports_bingo_cards")
     .select(
-      "id, user_id, venue_id, game_id, game_label, sport_key, home_team, away_team, starts_at, status, board_probability, reward_points, reward_claimed_at, near_win_notified_at, won_notified_at, won_line, settled_at, created_at"
+      "id, user_id, venue_id, game_id, game_label, sport_key, home_team, away_team, starts_at, status, board_probability, reward_points, reward_claimed_at, near_win_notified_at, won_notified_at, won_line, settled_at, created_at, updated_at, last_cron_processed_at"
     )
-    .order("created_at", { ascending: false })
+    .order(params.stalestFirst ? "last_cron_processed_at" : "created_at", {
+      ascending: Boolean(params.stalestFirst),
+      nullsFirst: Boolean(params.stalestFirst),
+    })
     .limit(Math.max(1, Math.min(params.limit ?? 100, 500)));
 
   if (params.userId) {
@@ -6564,6 +6570,7 @@ export async function refreshSportsBingoProgress(params: {
     sportKey: params.sportKey,
     gameId: params.gameId,
     limit: params.limit ?? 200,
+    stalestFirst: true,
   });
 
   if (activeCardRows.length === 0) {
@@ -6651,6 +6658,7 @@ export async function refreshSportsBingoProgress(params: {
       toMLBLiveScoreSnapshot(cardRow, mlbStatsSnapshot)
     );
     if (!score && !isPastForceFinalizeWindow) {
+      await supabaseAdmin!.from("sports_bingo_cards").update({ last_cron_processed_at: new Date().toISOString() }).eq("id", cardRow.id);
       continue;
     }
 
@@ -6826,6 +6834,8 @@ export async function refreshSportsBingoProgress(params: {
         settledLosses += 1;
       }
     }
+
+    await supabaseAdmin!.from("sports_bingo_cards").update({ last_cron_processed_at: new Date().toISOString() }).eq("id", cardRow.id);
   }
 
   const response = {

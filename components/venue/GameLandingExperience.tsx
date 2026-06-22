@@ -1,6 +1,17 @@
 "use client";
 
-import { Children, cloneElement, isValidElement, useCallback, useEffect, useRef, useState, type ReactElement } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+  type TouchEvent,
+} from "react";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
 import { endCurrentGameSession, startGameSession, type GameAnalyticsType } from "@/lib/analytics";
@@ -26,6 +37,29 @@ function recoverGamePageScrollState() {
 }
 
 const ONBOARDING_STALE_MS = 7 * 24 * 60 * 60 * 1000;
+const SWIPE_MIN_DISTANCE_PX = 48;
+const SWIPE_MAX_VERTICAL_DRIFT_PX = 40;
+const ONBOARDING_CARD_TRANSITION = {
+  duration: 0.28,
+  ease: [0.22, 1, 0.36, 1] as const,
+};
+const ONBOARDING_CARD_VARIANTS: Variants = {
+  enter: (direction: 1 | -1) => ({
+    x: direction > 0 ? "104%" : "-104%",
+    opacity: 0.72,
+    scale: 0.985,
+  }),
+  center: {
+    x: "0%",
+    opacity: 1,
+    scale: 1,
+  },
+  exit: (direction: 1 | -1) => ({
+    x: direction > 0 ? "-104%" : "104%",
+    opacity: 0.72,
+    scale: 0.985,
+  }),
+};
 
 function onboardingStorageKey(gameKey: VenueGameKey, venueId: string): string {
   return `tp_onboarding_${gameKey}_${venueId}`;
@@ -62,6 +96,7 @@ export function GameLandingExperience({
   showPlayingBackButton = true,
   showShellUserStatus = true,
   showShellAlerts = true,
+  playingHidesShellNav = false,
   playingBackgroundClassName,
   playingContainerClassName,
   landingStatus,
@@ -77,6 +112,7 @@ export function GameLandingExperience({
   showPlayingBackButton?: boolean;
   showShellUserStatus?: boolean;
   showShellAlerts?: boolean;
+  playingHidesShellNav?: boolean;
   playingBackgroundClassName?: string;
   playingContainerClassName?: string;
   landingStatus?: React.ReactNode;
@@ -89,10 +125,12 @@ export function GameLandingExperience({
   const [rulesExiting, setRulesExiting] = useState(false);
   const [isResumeCheckPending, setIsResumeCheckPending] = useState(!initialPlaying && autoResume);
   const [currentStep, setCurrentStep] = useState(() => getOnboardingInitialStep(gameKey));
+  const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
   const steps = VENUE_GAME_CARD_BY_KEY[gameKey].steps;
   const totalSteps = steps.length;
   const isLastStep = currentStep === totalSteps - 1;
   const playTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (initialPlaying || !autoResume) {
@@ -188,6 +226,56 @@ export function GameLandingExperience({
     }, 300);
   }, [gameKey, playDisabled, playHref, router]);
 
+  const transitionToStep = useCallback((targetStep: number) => {
+    if (targetStep === currentStep) {
+      return;
+    }
+    setSlideDirection(targetStep > currentStep ? 1 : -1);
+    setCurrentStep(targetStep);
+  }, [currentStep]);
+
+  const goToNextStep = useCallback(() => {
+    transitionToStep(Math.min(currentStep + 1, totalSteps - 1));
+  }, [currentStep, totalSteps, transitionToStep]);
+
+  const goToPreviousStep = useCallback(() => {
+    transitionToStep(Math.max(currentStep - 1, 0));
+  }, [currentStep, transitionToStep]);
+
+  const handleTutorialTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    if (!touch) {
+      touchStartRef.current = null;
+      return;
+    }
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+
+  const handleTutorialTouchEnd = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    const touch = event.changedTouches[0];
+    if (!start || !touch) {
+      return;
+    }
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+
+    if (absDeltaX < SWIPE_MIN_DISTANCE_PX || absDeltaY > SWIPE_MAX_VERTICAL_DRIFT_PX || absDeltaY >= absDeltaX) {
+      return;
+    }
+
+    if (deltaX < 0) {
+      goToNextStep();
+      return;
+    }
+
+    goToPreviousStep();
+  }, [goToNextStep, goToPreviousStep]);
+
   const backToVenue = useCallback(() => {
     endCurrentGameSession("abandoned");
     const venueId = getVenueId()?.trim() ?? "";
@@ -221,8 +309,8 @@ export function GameLandingExperience({
         <PageShell
           title=""
           showPageTitle={false}
-          showUserStatus={showShellUserStatus}
-          showAlerts={showShellAlerts}
+          showUserStatus={isPlaying && playingHidesShellNav ? false : showShellUserStatus}
+          showAlerts={isPlaying && playingHidesShellNav ? false : showShellAlerts}
           noContainer
           shellClassName={isPlaying ? "!gap-0" : undefined}
           mainClassName={isPlaying ? "pt-0!" : undefined}
@@ -233,11 +321,17 @@ export function GameLandingExperience({
               className={`animate-tp-surface-enter relative z-10 flex min-h-[100dvh] flex-col overflow-y-auto touch-pan-y ${playingContainerClassName ?? "px-2 py-2 sm:px-3 sm:py-3"}`}
               style={{ WebkitOverflowScrolling: "touch" }}
             >
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
+            {playingHidesShellNav ? (
+              showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
                 ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
-                : children}
-            </div>
+                : children
+            ) : (
+              <div className="min-h-0 flex-1 overflow-hidden">
+                {showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
+                  ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
+                  : children}
+              </div>
+            )}
             </div>
           ) : isResumeCheckPending ? (
             <div className="flex h-full min-h-[60dvh] items-center justify-center px-4">
@@ -249,19 +343,35 @@ export function GameLandingExperience({
             <div className={`mx-auto flex h-full min-h-0 w-full max-w-[28rem] flex-col px-1.5 pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1.5 sm:px-2 sm:pt-2 ${rulesExiting ? "animate-tp-surface-exit" : ""}`}>
               <div className="flex min-h-0 flex-1 items-center justify-center">
                 <div
-                  className={gameKey === "pickem" ? "aspect-[3/5.4]" : "aspect-[3/4.9]"}
+                  className={`relative overflow-hidden ${gameKey === "pickem" ? "aspect-[3/5.4]" : "aspect-[3/4.9]"}`}
                   style={{
                     width: gameKey === "pickem"
                       ? "min(95vw, 22.5rem, calc((100dvh - 5.75rem) * 0.5556))"
                       : "min(95vw, 22.5rem, calc((100dvh - 5.75rem) * 0.6122449))",
+                    touchAction: "pan-y",
                   }}
+                  onTouchStart={handleTutorialTouchStart}
+                  onTouchEnd={handleTutorialTouchEnd}
                 >
-                  <GameOnboardingCard
-                    gameKey={gameKey}
-                    step={steps[currentStep]}
-                    stepIndex={currentStep}
-                    className="h-full w-full"
-                  />
+                  <AnimatePresence initial={false} custom={slideDirection}>
+                    <motion.div
+                      key={`${gameKey}-${currentStep}`}
+                      custom={slideDirection}
+                      variants={ONBOARDING_CARD_VARIANTS}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={ONBOARDING_CARD_TRANSITION}
+                      className="absolute inset-0 h-full w-full"
+                    >
+                      <GameOnboardingCard
+                        gameKey={gameKey}
+                        step={steps[currentStep]}
+                        stepIndex={currentStep}
+                        className="h-full w-full"
+                      />
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
               </div>
               <div className="flex shrink-0 items-center justify-center gap-2 pt-3">
@@ -269,7 +379,7 @@ export function GameLandingExperience({
                   <button
                     key={index}
                     type="button"
-                    onClick={() => setCurrentStep(index)}
+                    onClick={() => transitionToStep(index)}
                     className={`tp-clean-button h-2 rounded-full transition-all duration-200 ${
                       index === currentStep
                         ? `w-6 ${GAME_STEP_DOT_ACTIVE[gameKey]}`
@@ -283,7 +393,7 @@ export function GameLandingExperience({
               <div className="grid shrink-0 grid-cols-2 gap-2 pt-3 sm:pt-4">
                 <button
                   type="button"
-                  onClick={currentStep > 0 ? () => setCurrentStep((s) => s - 1) : backToVenue}
+                  onClick={currentStep > 0 ? goToPreviousStep : backToVenue}
                   className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-3 py-2 text-base font-black text-slate-900"
                 >
                   Back
@@ -300,7 +410,7 @@ export function GameLandingExperience({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setCurrentStep((s) => Math.min(s + 1, totalSteps - 1))}
+                    onClick={goToNextStep}
                     className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white"
                   >
                     Next

@@ -271,7 +271,7 @@
       "category": "Sports",
       "difficulty": "easy"
     },
-      {
+    {
       "slug": "how-many-players-are-on-a-standard-soccer-team-on-the-field",
       "question": "How many players are on a standard soccer team on the field?",
       "answer": "11",
@@ -279,7 +279,7 @@
       "category": "Sports",
       "difficulty": "medium"
     },
-       {
+    {
       "slug": "which-country-hosted-the-2016-summer-olympics",
       "question": "Which country hosted the 2016 Summer Olympics?",
       "answer": "Brazil",
@@ -579,925 +579,1522 @@
       "difficulty": "medium"
     },
     {
-    "slug": "nba-boston",
-    "question": "Name the professional basketball team from Boston.",
-    "answer": "Celtics",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-green-bay",
-    "question": "Name the professional football team from Green Bay.",
-    "answer": "Packers",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-new-york",
-    "question": "Name the professional baseball team from New York that plays in the American League.",
-    "answer": "Yankees",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-detroit",
-    "question": "Name the professional hockey team from Detroit.",
-    "answer": "Red Wings",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-chicago",
-    "question": "Name the professional basketball team from Chicago.",
-    "answer": "Bulls",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-dallas",
-    "question": "Name the professional football team from Dallas.",
-    "answer": "Cowboys",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-los-angeles",
-    "question": "Name the professional baseball team from Los Angeles that plays in the National League.",
-    "answer": "Dodgers",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-boston",
-    "question": "Name the professional hockey team from Boston.",
-    "answer": "Bruins",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-los-angeles",
-    "question": "Name the professional basketball team from Los Angeles that is not named the 'Lakers.'",
-    "answer": "Clippers",
-    "category": "Sports",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "nfl-pittsburgh",
-    "question": "Name the professional football team from Pittsburgh.",
-    "answer": "Steelers",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-st-louis",
-    "question": "Name the professional baseball team from St. Louis.",
-    "answer": "Cardinals",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-chicago",
-    "question": "Name the professional hockey team from Chicago.",
-    "answer": "Blackhawks",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-golden-state",
-    "question": "Name the professional basketball team from the San Francisco Bay Area.",
-    "answer": "Golden State Warriors",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-kansas-city",
-    "question": "Name the professional football team from Kansas City.",
-    "answer": "Chiefs",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-san-francisco",
-    "question": "Name the professional baseball team from San Francisco.",
-    "answer": "Giants",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-montreal",
-    "question": "Name the professional hockey team from Montreal.",
-    "answer": "Canadiens",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-philadelphia",
-    "question": "Name the professional basketball team from Philadelphia.",
-    "answer": "76ers",
+      "slug": "nba-boston",
+      "question": "Name the professional basketball team from Boston.",
+      "answer": "Celtics",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-green-bay",
+      "question": "Name the professional football team from Green Bay.",
+      "answer": "Packers",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-new-york",
+      "question": "Name the professional baseball team from New York that plays in the American League.",
+      "answer": "Yankees",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-detroit",
+      "question": "Name the professional hockey team from Detroit.",
+      "answer": "Red Wings",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-chicago",
+      "question": "Name the professional basketball team from Chicago.",
+      "answer": "Bulls",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-dallas",
+      "question": "Name the professional football team from Dallas.",
+      "answer": "Cowboys",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-los-angeles",
+      "question": "Name the professional baseball team from Los Angeles that plays in the National League.",
+      "answer": "Dodgers",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-boston",
+      "question": "Name the professional hockey team from Boston.",
+      "answer": "Bruins",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-los-angeles",
+      "question": "Name the professional basketball team from Los Angeles that is not named the 'Lakers.'",
+      "answer": "Clippers",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nfl-pittsburgh",
+      "question": "Name the professional football team from Pittsburgh.",
+      "answer": "Steelers",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-st-louis",
+      "question": "Name the professional baseball team from St. Louis.",
+      "answer": "Cardinals",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-chicago",
+      "question": "Name the professional hockey team from Chicago.",
+      "answer": "Blackhawks",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-golden-state",
+      "question": "Name the professional basketball team from the San Francisco Bay Area.",
+      "answer": "Golden State Warriors",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-kansas-city",
+      "question": "Name the professional football team from Kansas City.",
+      "answer": "Chiefs",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-san-francisco",
+      "question": "Name the professional baseball team from San Francisco.",
+      "answer": "Giants",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-montreal",
+      "question": "Name the professional hockey team from Montreal.",
+      "answer": "Canadiens",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-philadelphia",
+      "question": "Name the professional basketball team from Philadelphia.",
+      "answer": "76ers",
       "acceptableAnswers": [
-    "Seventy-Sixers" ],
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-seattle",
-    "question": "Name the professional football team from Seattle.",
-    "answer": "Seahawks",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-atlanta",
-    "question": "Name the professional baseball team from Atlanta.",
-    "answer": "Braves",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-toronto",
-    "question": "Name the professional hockey team from Toronto.",
-    "answer": "Maple Leafs",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-miami",
-    "question": "Name the professional basketball team from Miami.",
-    "answer": "Heat",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-denver",
-    "question": "Name the professional football team from Denver.",
-    "answer": "Broncos",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-baltimore",
-    "question": "Name the professional baseball team from Baltimore.",
-    "answer": "Orioles",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-edmonton",
-    "question": "Name the professional hockey team from Edmonton.",
-    "answer": "Oilers",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-houston",
-    "question": "Name the professional basketball team from Houston.",
-    "answer": "Rockets",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-new-orleans",
-    "question": "Name the professional football team from New Orleans.",
-    "answer": "Saints",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-cleveland",
-    "question": "Name the professional baseball team from Cleveland.",
-    "answer": "Guardians",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-vancouver",
-    "question": "Name the professional hockey team from Vancouver.",
-    "answer": "Canucks",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-san-antonio",
-    "question": "Name the professional basketball team from San Antonio.",
-    "answer": "Spurs",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-las-vegas",
-    "question": "Name the professional football team from Las Vegas.",
-    "answer": "Raiders",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-milwaukee",
-    "question": "Name the professional basketball team from Milwaukee.",
-    "answer": "Bucks",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-buffalo",
-    "question": "Name the professional football team from Buffalo.",
-    "answer": "Bills",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-chicago-nl",
-    "question": "Name the professional baseball team from Chicago that plays in the National League.",
-    "answer": "Cubs",
-    "category": "Sports",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "nhl-colorado",
-    "question": "Name the professional hockey team from Colorado.",
-    "answer": "Avalanche",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-phoenix",
-    "question": "Name the professional basketball team from Phoenix.",
-    "answer": "Suns",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-cincinnati",
-    "question": "Name the professional football team from Cincinnati.",
-    "answer": "Bengals",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-new-york-nl",
-    "question": "Name the professional baseball team from New York (NL).",
-    "answer": "Mets",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-tampa-bay",
-    "question": "Name the professional hockey team from Tampa Bay.",
-    "answer": "Lightning",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-indiana",
-    "question": "Name the professional basketball team from Indiana.",
-    "answer": "Pacers",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-tennessee",
-    "question": "Name the professional football team from Tennessee.",
-    "answer": "Titans",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-washington-dc",
-    "question": "Name the professional baseball team from Washington, D.C.",
-    "answer": "Nationals",
+        "Seventy-Sixers"
+      ],
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-seattle",
+      "question": "Name the professional football team from Seattle.",
+      "answer": "Seahawks",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-atlanta",
+      "question": "Name the professional baseball team from Atlanta.",
+      "answer": "Braves",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-toronto",
+      "question": "Name the professional hockey team from Toronto.",
+      "answer": "Maple Leafs",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-miami",
+      "question": "Name the professional basketball team from Miami.",
+      "answer": "Heat",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-denver",
+      "question": "Name the professional football team from Denver.",
+      "answer": "Broncos",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-baltimore",
+      "question": "Name the professional baseball team from Baltimore.",
+      "answer": "Orioles",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-edmonton",
+      "question": "Name the professional hockey team from Edmonton.",
+      "answer": "Oilers",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-houston",
+      "question": "Name the professional basketball team from Houston.",
+      "answer": "Rockets",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-new-orleans",
+      "question": "Name the professional football team from New Orleans.",
+      "answer": "Saints",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-cleveland",
+      "question": "Name the professional baseball team from Cleveland.",
+      "answer": "Guardians",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-vancouver",
+      "question": "Name the professional hockey team from Vancouver.",
+      "answer": "Canucks",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-san-antonio",
+      "question": "Name the professional basketball team from San Antonio.",
+      "answer": "Spurs",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-las-vegas",
+      "question": "Name the professional football team from Las Vegas.",
+      "answer": "Raiders",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-milwaukee",
+      "question": "Name the professional basketball team from Milwaukee.",
+      "answer": "Bucks",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-buffalo",
+      "question": "Name the professional football team from Buffalo.",
+      "answer": "Bills",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-chicago-nl",
+      "question": "Name the professional baseball team from Chicago that plays in the National League.",
+      "answer": "Cubs",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nhl-colorado",
+      "question": "Name the professional hockey team from Colorado.",
+      "answer": "Avalanche",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-phoenix",
+      "question": "Name the professional basketball team from Phoenix.",
+      "answer": "Suns",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-cincinnati",
+      "question": "Name the professional football team from Cincinnati.",
+      "answer": "Bengals",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-new-york-nl",
+      "question": "Name the professional baseball team from New York (NL).",
+      "answer": "Mets",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-tampa-bay",
+      "question": "Name the professional hockey team from Tampa Bay.",
+      "answer": "Lightning",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-indiana",
+      "question": "Name the professional basketball team from Indiana.",
+      "answer": "Pacers",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-tennessee",
+      "question": "Name the professional football team from Tennessee.",
+      "answer": "Titans",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-washington-dc",
+      "question": "Name the professional baseball team from Washington, D.C.",
+      "answer": "Nationals",
       "acceptableAnswers": [
-    "Nats" 
-  ],
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-nashville",
-    "question": "Name the professional hockey team from Nashville.",
-    "answer": "Predators",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-utah",
-    "question": "Name the professional basketball team from Utah.",
-    "answer": "Jazz",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-jacksonville",
-    "question": "Name the professional football team from Jacksonville.",
-    "answer": "Jaguars",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-houston",
-    "question": "Name the professional baseball team from Houston.",
-    "answer": "Astros",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-washington",
-    "question": "Name the professional hockey team from Washington, D.C.",
-    "answer": "Capitals",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-"slug": "quote-muhammad-ali-butterfly",
-"question": "Which legendary American heavyweight boxer described his fighting style as being able to 'float like a butterfly, sting like a bee'?",
-"answer": "Muhammad Ali",
-"answer_format": "write_in",
-"category": "Sports",
-"difficulty": "easy"
-},
-  {
-    "slug": "nba-denver",
-    "question": "Name the professional basketball team from Denver.",
-    "answer": "Nuggets",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-carolina",
-    "question": "Name the professional football team from Carolina.",
-    "answer": "Panthers",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-oakland",
-    "question": "Name the professional baseball team from Oakland.",
-    "answer": "Athletics",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-florida",
-    "question": "Name the professional hockey team from Florida (plays in Sunrise, FL).",
-    "answer": "Panthers",
-    "category": "Sports",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "nba-orlando",
-    "question": "Name the professional basketball team from Orlando.",
-    "answer": "Magic",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-atlanta",
-    "question": "Name the professional football team from Atlanta.",
-    "answer": "Falcons",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-toronto",
-    "question": "Name the professional baseball team from Toronto.",
-    "answer": "Blue Jays",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-ottawa",
-    "question": "Name the professional hockey team from Ottawa.",
-    "answer": "Senators",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nba-minnesota",
-    "question": "Name the professional basketball team from Minnesota.",
-    "answer": "Timberwolves",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-arizona",
-    "question": "Name the professional football team from Arizona.",
-    "answer": "Cardinals",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mlb-philadelphia",
-    "question": "Name the professional baseball team from Philadelphia.",
-    "answer": "Phillies",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nhl-calgary",
-    "question": "Name the professional hockey team from Calgary.",
-    "answer": "Flames",
-    "category": "Sports",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "nba-portland",
-    "question": "Name the professional basketball team from Portland.",
-    "answer": "Trail Blazers",
-    "category": "Sports",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nfl-tampa-bay",
-    "question": "Name the professional football team from Tampa Bay.",
-    "answer": "Buccaneers",
-    "category": "Sports",
-    "difficulty": "easy"
-  }, 
-  {
-"slug": "oklahoma-city-thunder-original-city",
-"question": "Prior to relocating to Oklahoma City in 2008, the Thunder NBA franchise spent its first 41 seasons in what American city?",
-"answer": "Seattle",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Seattle"]
-},
-{
-"slug": "los-angeles-lakers-original-state",
-"question": "The Los Angeles Lakers originally earned their nickname due to the abundance of lakes in what Midwestern US state where the franchise was founded?",
-"answer": "Minnesota",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Minnesota"]
-},
-{
-"slug": "washington-commanders-original-city",
-"question": "Before spending decades in Washington, D.C., the NFL franchise now known as the Commanders was founded in 1932 in what northeastern city?",
-"answer": "Boston",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Boston"]
-},
-{
-"slug": "baltimore-ravens-original-city",
-"question": "The modern Baltimore Ravens NFL franchise was established in 1996 after owner Art Modell controversially relocated his football team from what Ohio city?",
-"answer": "Cleveland",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Cleveland"]
-},
-{
-"slug": "tennessee-titans-original-name",
-"question": "Before moving to Tennessee and eventually becoming the Titans, this NFL franchise was founded in 1960 under what Texas-themed name?",
-"answer": "Houston Oilers",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Houston Oilers", "Oilers"]
-},
-{
-"slug": "san-francisco-giants-original-city",
-"question": "Along with the Dodgers, the San Francisco Giants franchise famously relocated to California prior to the 1958 season from what East Coast city?",
-"answer": "New York City",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["New York City", "New York", "NYC"]
-},
-{
-"slug": "los-angeles-dodgers-original-borough",
-"question": "Before moving to Los Angeles, the Dodgers baseball franchise was famously beloved in what specific New York City borough?",
-"answer": "Brooklyn",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Brooklyn"]
-},
-{
-"slug": "atlanta-braves-original-city",
-"question": "Before moving to Atlanta in 1966, the Braves baseball franchise spent a brief 13-year stint playing home games in what midwestern city?",
-"answer": "Milwaukee",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Milwaukee"]
-},
-{
-"slug": "oakland-athletics-original-city",
-"question": "Before historical stints in Kansas City and Oakland, the Athletics MLB franchise was originally founded in 1901 in what East Coast metropolis?",
-"answer": "Philadelphia",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Philadelphia"]
-},
-{
-"slug": "minnesota-twins-original-city",
-"question": "The Minnesota Twins baseball franchise played from 1901 to 1960 as the Senators in what American city?",
-"answer": "Washington",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Washington", "Washington D.C.", "Washington DC"]
-},
-{
-"slug": "baltimore-orioles-original-city",
-"question": "The modern Baltimore Orioles MLB franchise spent over five decades operating as the Browns in what major Missouri city before relocating in 1954?",
-"answer": "St. Louis",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["St. Louis", "St Louis"]
-},
-{
-"slug": "carolina-hurricanes-original-name",
-"question": "When the NHL's Hartford Whalers relocated to North Carolina in 1997, they immediately rebranded the franchise using what weather-related name?",
-"answer": "Carolina Hurricanes",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Carolina Hurricanes", "Hurricanes"]
-},
-{
-"slug": "colorado-avalanche-original-city",
-"question": "Before relocating to Denver in 1995 and winning the Stanley Cup, the Colorado Avalanche franchise played in what Canadian city as the Nordiques?",
-"answer": "Quebec City",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Quebec City", "Quebec"]
-},
-{
-"slug": "phoenix-coyotes-original-country",
-"question": "The NHL franchise formerly known as the Arizona Coyotes was originally founded in 1972 as the Jets in what North American country?",
-"answer": "Canada",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Canada"]
-},
-{
-"slug": "dallas-stars-original-state",
-"question": "The Dallas Stars NHL franchise retained the 'Stars' part of its moniker from its original home in what cold Midwestern state?",
-"answer": "Minnesota",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Minnesota"]
-},
-{
-"slug": "calgary-flames-original-city",
-"question": "The Calgary Flames NHL franchise originally kept its fiery nickname because it was founded in 1972 in what major southern US city?",
-"answer": "Atlanta",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Atlanta"]
-},
-{
-"slug": "new-jersey-devils-original-state",
-"question": "Before moving to New Jersey in 1982, the Devils NHL franchise spent two seasons as the Rockies in what mountainous western state?",
-"answer": "Colorado",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Colorado"]
-},
-{
-"slug": "memphis-grizzlies-original-city",
-"question": "What NBA's 'Grizzlies' franchise spent its first six seasons playing home games in what major Canadian coastal city before moving to Tennessee in 2001?",
-"answer": "Vancouver",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Vancouver"]
-},
-{
-"slug": "detroit-pistons-original-state",
-"question": "The Detroit Pistons franchise was originally founded as the Fort Wayne Zollner Pistons in what US state before moving to Michigan in 1957?",
-"answer": "Indiana",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Indiana"]
-},
-{
-"slug": "utah-jazz-original-city",
-"question": "The Utah Jazz NBA franchise chose to keep its music-themed nickname despite moving away from what culturally rich, musical southern city in 1979?",
-"answer": "New Orleans",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["New Orleans"]
-},
-{
-"slug": "los-angeles-clippers-original-city",
-"question": "Before relocating to San Diego and ultimately Los Angeles, the Clippers NBA franchise spent its first eight seasons playing as the Braves in what upstate New York city?",
-"answer": "Buffalo",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Buffalo"]
-},
-{
-"slug": "cleveland-guardians-former-name",
-"question": "What was the official baseball team moniker used by the Cleveland MLB franchise from 1915 until their rebrand to the Guardians in 2021?",
-"answer": "Cleveland Indians",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Cleveland Indians", "Indians"]
-},
-{
-"slug": "houston-astros-original-name",
-"question": "When founded as an MLB expansion team in 1962, the Houston Astros franchise spent their first three seasons operating under what original name?",
-"answer": "Houston Colt .45s",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Houston Colt .45s", "Colt .45s", "Houston Colts", "Colts"]
-},
-{
-"slug": "anaheim-ducks-original-prefix",
-"question": "In 2006, the NHL franchise located in Anaheim shortened its team name by officially dropping what Disney-owned word from its moniker?",
-"answer": "Mighty",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Mighty", "Mighty Ducks"]
-},
-{
-"slug": "tampa-bay-rays-former-prefix",
-"question": "Prior to an organizational rebrand ahead of the 2008 MLB season, the Tampa Bay Rays used what longer name?",
-"answer": "Tampa Bay Devil Rays",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Tampa Bay Devil Rays", "Devil Rays"]
-},
-{
-"slug": "chicago-bears-original-city",
-"question": "A charter member of the NFL, the franchise now known as the Chicago Bears was originally founded in 1919 in what other Illinois city?",
-"answer": "Decatur",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Decatur"]
-},
-{
-"slug": "arizona-cardinals-original-city",
-"question": "Before relocations took them to St. Louis and later Arizona, the Cardinals NFL franchise was established in 1898 in what major Midwestern city?",
-"answer": "Chicago",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Chicago"]
-},
-{
-"slug": "indianapolis-colts-original-city",
-"question": "In one of the most famous midnight relocations in sports history, the Colts NFL franchise secretly packed up moving trucks in 1984 to leave what East Coast city?",
-"answer": "Baltimore",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Baltimore"]
-},
-{
-"slug": "washington-nationals-former-city",
-"question": "Before relocating to Washington, D.C. ahead of the 2005 MLB season, the Nationals franchise played its home games in what Canadian city?",
-"answer": "Montreal",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Montreal", "Montréal"]
-},
-{
-"slug": "los-angeles-rams-midwest-city",
-"question": "Prior to returning to southern California in 2016, the Rams NFL franchise spent twenty seasons playing home games in what Missouri city?",
-"answer": "St. Louis",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["St. Louis", "St Louis"]
-},
-{
-"slug": "brooklyn-nets-former-state",
-"question": "Before moving to Barclays Center in Brooklyn in 2012, the Nets NBA franchise spent thirty-five seasons representing what neighboring US state?",
-"answer": "New Jersey",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["New Jersey"]
-},
-{
-"slug": "winnipeg-jets-original-city",
-"question": "The current Winnipeg Jets NHL franchise originally entered the league as an expansion team in 1999 based in what major southern US city?",
-"answer": "Atlanta",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Atlanta"]
-},
-{
-"slug": "golden-state-warriors-original-city",
-"question": "Before moving to the San Francisco Bay Area in 1962, the Warriors NBA franchise was founded in 1946 in what East Coast city?",
-"answer": "Philadelphia",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Philadelphia"]
-},
-{
-"slug": "kansas-city-chiefs-original-name",
-"question": "A charter member of the AFL, the franchise now known as the Kansas City Chiefs won the 1962 league championship under what original name?",
-"answer": "Dallas Texans",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Dallas Texans", "Texans"]
-},
-{
-"slug": "oakland-athletics-2025-city",
-"question": "Following their final season playing at the Oakland Coliseum in 2024, the Athletics MLB franchise temporarily relocated to what California city for the 2025 season?",
-"answer": "Sacramento",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Sacramento"]
-},
-{
-"slug": "toronto-blue-jays-original-name-rumor",
-"question": "What is the primary corporate brand name of the Canadian brewery that originally owned a massive stake in the Toronto MLB franchise, which heavily influenced the team's choice of 'Blue' in their name 'Blue Jays'?",
-"answer": "Labatt",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "medium",
-"acceptableAnswers": ["Labatt", "Labatt's", "Labatt Brewing Company"]
-},
-{
-"slug": "milwaukee-brewers-original-city",
-"question": "The Milwaukee Brewers baseball franchise spent their inaugural 1969 expansion season playing as the Pilots in what major Pacific Northwest city?",
-"answer": "Seattle",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Seattle"]
-},
-{
-"slug": "philadelphia-76ers-original-city",
-"question": "Before rebranding as the 76ers upon moving to Philadelphia in 1963, this NBA franchise won the 1955 championship playing in what upstate New York city?",
-"answer": "Syracuse",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Syracuse"]
-},
-{
-"slug": "las-vegas-raiders-original-city",
-"question": "Prior to their high-profile moves to Los Angeles and finally to Las Vegas, the Raiders NFL franchise was founded in 1960 in what California city?",
-"answer": "Oakland",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Oakland"]
-},
-{
-"slug": "new-orleans-pelicans-former-name",
-"question": "What official team nickname did the New Orleans NBA franchise drop in 2013, allowing it to be adopted by a newly formed franchise in Charlotte, North Carolina?",
-"answer": "Hornets",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Hornets", "New Orleans Hornets"]
-},
-{
-"slug": "edmonton-oilers-original-league-name",
-"question": "When founded in 1972 as a charter member of the World Hockey Association (WHA), the Edmonton Oilers initially used the name of what larger Canadian province instead of a city?",
-"answer": "Alberta",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "medium",
-"acceptableAnswers": ["Alberta"]
-},
-{
-"slug": "washington-commanders-former-name",
-"question": "What name did the Washington NFL franchise use as their temporary placeholder team name during the 2020 and 2021 seasons?",
-"answer": "Washington Football Team",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Washington Football Team", "WFT"]
-},
-{
-"slug": "los-angeles-chargers-original-city",
-"question": "The San Diego Chargers NFL franchise originally spent its inaugural 1960 season playing in what major California city before returning there decades later in 2017?",
-"answer": "Los Angeles",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Los Angeles", "LA"]
-},
-{
-"slug": "oklahoma-city-thunder-former-mascot",
-"question": "What is the name of the iconic, disgruntled wheedling pilot mascot that the Seattle SuperSonics left behind when the franchise converted into the Oklahoma City Thunder?",
-"answer": "Squatch",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "hard",
-"acceptableAnswers": ["Squatch"]
-},
-{
-"slug": "cincinnati-reds-1950s-rebrand",
-"question": "To avoid any political associations with communism during the height of the Red Scare, the Cincinnati MLB franchise officially altered their name from 'the Reds' to what alternative plural noun from 1953 to 1958? Hint: The Red_____s .",
-"answer": "Redlegs",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "medium",
-"acceptableAnswers": ["Redlegs", "Cincinnati Redlegs"]
-},
-{
-"slug": "detroit-lions-original-city",
-"question": "The Detroit Lions NFL franchise was originally established in 1930 with what as their team name?",
-"answer": "Spartans",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "medium",
-"acceptableAnswers": ["Spartans"]
-},
-{
-"slug": "houston-rockets-original-city",
-"question": "The Houston Rockets NBA franchise kept its space-age moniker despite being founded in 1967 in what major Southern California coastal city famous for its aerospace industry?",
-"answer": "San Diego",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["San Diego"]
-},
-{
-"slug": "dallas-mavericks-expansion-year",
-"question": "What year were the Dallas Mavericks officially introduced into the NBA as an expansion team during a league meeting at the All-Star Game? Remember: If no one gets it exactly right, the closest guess wins.",
-"answer": "1980",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "medium",
-"acceptableAnswers": ["1980"]
-},
-{
-"slug": "pittsburgh-pirates-original-name",
-"question": "Founded in 1881 as the Alleghenys, the Pittsburgh MLB franchise officially adopted their current buccaneer-themed nickname after rival teams accused them of stealing a player. What team name did they adopt?",
-"answer": "Pirates",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "medium",
-"acceptableAnswers": ["Pirates"]
-},
-{
-"slug": "utah-hockey-club-former-city",
-"question": "The NHL franchise that debuted as the Utah Hockey Club for the 2024–2025 season was formed by acquiring the entire active player roster of what dissolved desert franchise?",
-"answer": "Arizona Coyotes",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Arizona Coyotes", "Coyotes", "Phoenix Coyotes"]
-},
-{
-"slug": "san-jose-sharks-original-bay-arena",
-"question": "While waiting for construction to finish on their permanent arena in San Jose, the Sharks NHL expansion franchise spent their first two seasons playing home games in what neighboring California city?",
-"answer": "Daly City",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "hard",
-"acceptableAnswers": ["Daly City"]
-},
-{
-"slug": "boston-red-sox-original-informal-name",
-"question": "Before adopting the Red Sox moniker in 1908, the American League baseball franchise in Boston was widely known by sports writers by what team name.",
-"answer": "Boston Americans",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "hard",
-"acceptableAnswers": ["Boston Americans", "Americans"]
-},
-{
-"slug": "chicago-white-sox-original-city",
-"question": "Before moving to the South Side of Chicago in 1900, the historic baseball charter franchise now known as the White Sox won a minor league title based in what Minnesota city?",
-"answer": "St. Paul",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "medium",
-"acceptableAnswers": ["St. Paul", "St Paul", "Saint Paul"]
-},
-{
-"slug": "sacramento-kings-original-rochester-name",
-"question": "When the Sacramento Kings franchise won their lone NBA title in 1951 while located in Rochester, New York, they competed under what distinct royal moniker?",
-"answer": "Rochester Royals",
-"answer_format": "write_in",
-"category": "sports",
-"difficulty": "easy",
-"acceptableAnswers": ["Rochester Royals", "Royals"]
-}
-
+        "Nats"
+      ],
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-nashville",
+      "question": "Name the professional hockey team from Nashville.",
+      "answer": "Predators",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-utah",
+      "question": "Name the professional basketball team from Utah.",
+      "answer": "Jazz",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-jacksonville",
+      "question": "Name the professional football team from Jacksonville.",
+      "answer": "Jaguars",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-houston",
+      "question": "Name the professional baseball team from Houston.",
+      "answer": "Astros",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-washington",
+      "question": "Name the professional hockey team from Washington, D.C.",
+      "answer": "Capitals",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-muhammad-ali-butterfly",
+      "question": "Which legendary American heavyweight boxer described his fighting style as being able to 'float like a butterfly, sting like a bee'?",
+      "answer": "Muhammad Ali",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-denver",
+      "question": "Name the professional basketball team from Denver.",
+      "answer": "Nuggets",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-carolina",
+      "question": "Name the professional football team from Carolina.",
+      "answer": "Panthers",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-oakland",
+      "question": "Name the professional baseball team from Oakland.",
+      "answer": "Athletics",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-florida",
+      "question": "Name the professional hockey team from Florida (plays in Sunrise, FL).",
+      "answer": "Panthers",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-orlando",
+      "question": "Name the professional basketball team from Orlando.",
+      "answer": "Magic",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-atlanta",
+      "question": "Name the professional football team from Atlanta.",
+      "answer": "Falcons",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-toronto",
+      "question": "Name the professional baseball team from Toronto.",
+      "answer": "Blue Jays",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-ottawa",
+      "question": "Name the professional hockey team from Ottawa.",
+      "answer": "Senators",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-minnesota",
+      "question": "Name the professional basketball team from Minnesota.",
+      "answer": "Timberwolves",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-arizona",
+      "question": "Name the professional football team from Arizona.",
+      "answer": "Cardinals",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-philadelphia",
+      "question": "Name the professional baseball team from Philadelphia.",
+      "answer": "Phillies",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-calgary",
+      "question": "Name the professional hockey team from Calgary.",
+      "answer": "Flames",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-portland",
+      "question": "Name the professional basketball team from Portland.",
+      "answer": "Trail Blazers",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-tampa-bay",
+      "question": "Name the professional football team from Tampa Bay.",
+      "answer": "Buccaneers",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "oklahoma-city-thunder-original-city",
+      "question": "Prior to relocating to Oklahoma City in 2008, the Thunder NBA franchise spent its first 41 seasons in what American city?",
+      "answer": "Seattle",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Seattle"
+      ]
+    },
+    {
+      "slug": "los-angeles-lakers-original-state",
+      "question": "The Los Angeles Lakers originally earned their nickname due to the abundance of lakes in what Midwestern US state where the franchise was founded?",
+      "answer": "Minnesota",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Minnesota"
+      ]
+    },
+    {
+      "slug": "washington-commanders-original-city",
+      "question": "Before spending decades in Washington, D.C., the NFL franchise now known as the Commanders was founded in 1932 in what northeastern city?",
+      "answer": "Boston",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Boston"
+      ]
+    },
+    {
+      "slug": "baltimore-ravens-original-city",
+      "question": "The modern Baltimore Ravens NFL franchise was established in 1996 after owner Art Modell controversially relocated his football team from what Ohio city?",
+      "answer": "Cleveland",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Cleveland"
+      ]
+    },
+    {
+      "slug": "tennessee-titans-original-name",
+      "question": "Before moving to Tennessee and eventually becoming the Titans, this NFL franchise was founded in 1960 under what Texas-themed name?",
+      "answer": "Houston Oilers",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Houston Oilers",
+        "Oilers"
+      ]
+    },
+    {
+      "slug": "san-francisco-giants-original-city",
+      "question": "Along with the Dodgers, the San Francisco Giants franchise famously relocated to California prior to the 1958 season from what East Coast city?",
+      "answer": "New York City",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "New York City",
+        "New York",
+        "NYC"
+      ]
+    },
+    {
+      "slug": "los-angeles-dodgers-original-borough",
+      "question": "Before moving to Los Angeles, the Dodgers baseball franchise was famously beloved in what specific New York City borough?",
+      "answer": "Brooklyn",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Brooklyn"
+      ]
+    },
+    {
+      "slug": "atlanta-braves-original-city",
+      "question": "Before moving to Atlanta in 1966, the Braves baseball franchise spent a brief 13-year stint playing home games in what midwestern city?",
+      "answer": "Milwaukee",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Milwaukee"
+      ]
+    },
+    {
+      "slug": "oakland-athletics-original-city",
+      "question": "Before historical stints in Kansas City and Oakland, the Athletics MLB franchise was originally founded in 1901 in what East Coast metropolis?",
+      "answer": "Philadelphia",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Philadelphia"
+      ]
+    },
+    {
+      "slug": "minnesota-twins-original-city",
+      "question": "The Minnesota Twins baseball franchise played from 1901 to 1960 as the Senators in what American city?",
+      "answer": "Washington",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Washington",
+        "Washington D.C.",
+        "Washington DC"
+      ]
+    },
+    {
+      "slug": "baltimore-orioles-original-city",
+      "question": "The modern Baltimore Orioles MLB franchise spent over five decades operating as the Browns in what major Missouri city before relocating in 1954?",
+      "answer": "St. Louis",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "St. Louis",
+        "St Louis"
+      ]
+    },
+    {
+      "slug": "carolina-hurricanes-original-name",
+      "question": "When the NHL's Hartford Whalers relocated to North Carolina in 1997, they immediately rebranded the franchise using what weather-related name?",
+      "answer": "Carolina Hurricanes",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Carolina Hurricanes",
+        "Hurricanes"
+      ]
+    },
+    {
+      "slug": "colorado-avalanche-original-city",
+      "question": "Before relocating to Denver in 1995 and winning the Stanley Cup, the Colorado Avalanche franchise played in what Canadian city as the Nordiques?",
+      "answer": "Quebec City",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Quebec City",
+        "Quebec"
+      ]
+    },
+    {
+      "slug": "phoenix-coyotes-original-country",
+      "question": "The NHL franchise formerly known as the Arizona Coyotes was originally founded in 1972 as the Jets in what North American country?",
+      "answer": "Canada",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Canada"
+      ]
+    },
+    {
+      "slug": "dallas-stars-original-state",
+      "question": "The Dallas Stars NHL franchise retained the 'Stars' part of its moniker from its original home in what cold Midwestern state?",
+      "answer": "Minnesota",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Minnesota"
+      ]
+    },
+    {
+      "slug": "calgary-flames-original-city",
+      "question": "The Calgary Flames NHL franchise originally kept its fiery nickname because it was founded in 1972 in what major southern US city?",
+      "answer": "Atlanta",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Atlanta"
+      ]
+    },
+    {
+      "slug": "new-jersey-devils-original-state",
+      "question": "Before moving to New Jersey in 1982, the Devils NHL franchise spent two seasons as the Rockies in what mountainous western state?",
+      "answer": "Colorado",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Colorado"
+      ]
+    },
+    {
+      "slug": "memphis-grizzlies-original-city",
+      "question": "What NBA's 'Grizzlies' franchise spent its first six seasons playing home games in what major Canadian coastal city before moving to Tennessee in 2001?",
+      "answer": "Vancouver",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Vancouver"
+      ]
+    },
+    {
+      "slug": "detroit-pistons-original-state",
+      "question": "The Detroit Pistons franchise was originally founded as the Fort Wayne Zollner Pistons in what US state before moving to Michigan in 1957?",
+      "answer": "Indiana",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Indiana"
+      ]
+    },
+    {
+      "slug": "utah-jazz-original-city",
+      "question": "The Utah Jazz NBA franchise chose to keep its music-themed nickname despite moving away from what culturally rich, musical southern city in 1979?",
+      "answer": "New Orleans",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "New Orleans"
+      ]
+    },
+    {
+      "slug": "los-angeles-clippers-original-city",
+      "question": "Before relocating to San Diego and ultimately Los Angeles, the Clippers NBA franchise spent its first eight seasons playing as the Braves in what upstate New York city?",
+      "answer": "Buffalo",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Buffalo"
+      ]
+    },
+    {
+      "slug": "cleveland-guardians-former-name",
+      "question": "What was the official baseball team moniker used by the Cleveland MLB franchise from 1915 until their rebrand to the Guardians in 2021?",
+      "answer": "Cleveland Indians",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Cleveland Indians",
+        "Indians"
+      ]
+    },
+    {
+      "slug": "houston-astros-original-name",
+      "question": "When founded as an MLB expansion team in 1962, the Houston Astros franchise spent their first three seasons operating under what original name?",
+      "answer": "Houston Colt .45s",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Houston Colt .45s",
+        "Colt .45s",
+        "Houston Colts",
+        "Colts"
+      ]
+    },
+    {
+      "slug": "anaheim-ducks-original-prefix",
+      "question": "In 2006, the NHL franchise located in Anaheim shortened its team name by officially dropping what Disney-owned word from its moniker?",
+      "answer": "Mighty",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Mighty",
+        "Mighty Ducks"
+      ]
+    },
+    {
+      "slug": "tampa-bay-rays-former-prefix",
+      "question": "Prior to an organizational rebrand ahead of the 2008 MLB season, the Tampa Bay Rays used what longer name?",
+      "answer": "Tampa Bay Devil Rays",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Tampa Bay Devil Rays",
+        "Devil Rays"
+      ]
+    },
+    {
+      "slug": "chicago-bears-original-city",
+      "question": "A charter member of the NFL, the franchise now known as the Chicago Bears was originally founded in 1919 in what other Illinois city?",
+      "answer": "Decatur",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Decatur"
+      ]
+    },
+    {
+      "slug": "arizona-cardinals-original-city",
+      "question": "Before relocations took them to St. Louis and later Arizona, the Cardinals NFL franchise was established in 1898 in what major Midwestern city?",
+      "answer": "Chicago",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Chicago"
+      ]
+    },
+    {
+      "slug": "indianapolis-colts-original-city",
+      "question": "In one of the most famous midnight relocations in sports history, the Colts NFL franchise secretly packed up moving trucks in 1984 to leave what East Coast city?",
+      "answer": "Baltimore",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Baltimore"
+      ]
+    },
+    {
+      "slug": "washington-nationals-former-city",
+      "question": "Before relocating to Washington, D.C. ahead of the 2005 MLB season, the Nationals franchise played its home games in what Canadian city?",
+      "answer": "Montreal",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Montreal",
+        "Montréal"
+      ]
+    },
+    {
+      "slug": "los-angeles-rams-midwest-city",
+      "question": "Prior to returning to southern California in 2016, the Rams NFL franchise spent twenty seasons playing home games in what Missouri city?",
+      "answer": "St. Louis",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "St. Louis",
+        "St Louis"
+      ]
+    },
+    {
+      "slug": "brooklyn-nets-former-state",
+      "question": "Before moving to Barclays Center in Brooklyn in 2012, the Nets NBA franchise spent thirty-five seasons representing what neighboring US state?",
+      "answer": "New Jersey",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "New Jersey"
+      ]
+    },
+    {
+      "slug": "winnipeg-jets-original-city",
+      "question": "The current Winnipeg Jets NHL franchise originally entered the league as an expansion team in 1999 based in what major southern US city?",
+      "answer": "Atlanta",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Atlanta"
+      ]
+    },
+    {
+      "slug": "golden-state-warriors-original-city",
+      "question": "Before moving to the San Francisco Bay Area in 1962, the Warriors NBA franchise was founded in 1946 in what East Coast city?",
+      "answer": "Philadelphia",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Philadelphia"
+      ]
+    },
+    {
+      "slug": "kansas-city-chiefs-original-name",
+      "question": "A charter member of the AFL, the franchise now known as the Kansas City Chiefs won the 1962 league championship under what original name?",
+      "answer": "Dallas Texans",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Dallas Texans",
+        "Texans"
+      ]
+    },
+    {
+      "slug": "oakland-athletics-2025-city",
+      "question": "Following their final season playing at the Oakland Coliseum in 2024, the Athletics MLB franchise temporarily relocated to what California city for the 2025 season?",
+      "answer": "Sacramento",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Sacramento"
+      ]
+    },
+    {
+      "slug": "toronto-blue-jays-original-name-rumor",
+      "question": "What is the primary corporate brand name of the Canadian brewery that originally owned a massive stake in the Toronto MLB franchise, which heavily influenced the team's choice of 'Blue' in their name 'Blue Jays'?",
+      "answer": "Labatt",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Labatt",
+        "Labatt's",
+        "Labatt Brewing Company"
+      ]
+    },
+    {
+      "slug": "milwaukee-brewers-original-city",
+      "question": "The Milwaukee Brewers baseball franchise spent their inaugural 1969 expansion season playing as the Pilots in what major Pacific Northwest city?",
+      "answer": "Seattle",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Seattle"
+      ]
+    },
+    {
+      "slug": "philadelphia-76ers-original-city",
+      "question": "Before rebranding as the 76ers upon moving to Philadelphia in 1963, this NBA franchise won the 1955 championship playing in what upstate New York city?",
+      "answer": "Syracuse",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Syracuse"
+      ]
+    },
+    {
+      "slug": "las-vegas-raiders-original-city",
+      "question": "Prior to their high-profile moves to Los Angeles and finally to Las Vegas, the Raiders NFL franchise was founded in 1960 in what California city?",
+      "answer": "Oakland",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Oakland"
+      ]
+    },
+    {
+      "slug": "new-orleans-pelicans-former-name",
+      "question": "What official team nickname did the New Orleans NBA franchise drop in 2013, allowing it to be adopted by a newly formed franchise in Charlotte, North Carolina?",
+      "answer": "Hornets",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Hornets",
+        "New Orleans Hornets"
+      ]
+    },
+    {
+      "slug": "edmonton-oilers-original-league-name",
+      "question": "When founded in 1972 as a charter member of the World Hockey Association (WHA), the Edmonton Oilers initially used the name of what larger Canadian province instead of a city?",
+      "answer": "Alberta",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Alberta"
+      ]
+    },
+    {
+      "slug": "washington-commanders-former-name",
+      "question": "What name did the Washington NFL franchise use as their temporary placeholder team name during the 2020 and 2021 seasons?",
+      "answer": "Washington Football Team",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Washington Football Team",
+        "WFT"
+      ]
+    },
+    {
+      "slug": "los-angeles-chargers-original-city",
+      "question": "The San Diego Chargers NFL franchise originally spent its inaugural 1960 season playing in what major California city before returning there decades later in 2017?",
+      "answer": "Los Angeles",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Los Angeles",
+        "LA"
+      ]
+    },
+    {
+      "slug": "oklahoma-city-thunder-former-mascot",
+      "question": "What is the name of the iconic, disgruntled wheedling pilot mascot that the Seattle SuperSonics left behind when the franchise converted into the Oklahoma City Thunder?",
+      "answer": "Squatch",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Squatch"
+      ]
+    },
+    {
+      "slug": "cincinnati-reds-1950s-rebrand",
+      "question": "To avoid any political associations with communism during the height of the Red Scare, the Cincinnati MLB franchise officially altered their name from 'the Reds' to what alternative plural noun from 1953 to 1958? Hint: The Red_____s .",
+      "answer": "Redlegs",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Redlegs",
+        "Cincinnati Redlegs"
+      ]
+    },
+    {
+      "slug": "detroit-lions-original-city",
+      "question": "The Detroit Lions NFL franchise was originally established in 1930 with what as their team name?",
+      "answer": "Spartans",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Spartans"
+      ]
+    },
+    {
+      "slug": "houston-rockets-original-city",
+      "question": "The Houston Rockets NBA franchise kept its space-age moniker despite being founded in 1967 in what major Southern California coastal city famous for its aerospace industry?",
+      "answer": "San Diego",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "San Diego"
+      ]
+    },
+    {
+      "slug": "dallas-mavericks-expansion-year",
+      "question": "What year were the Dallas Mavericks officially introduced into the NBA as an expansion team during a league meeting at the All-Star Game? Remember: If no one gets it exactly right, the closest guess wins.",
+      "answer": "1980",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "1980"
+      ]
+    },
+    {
+      "slug": "pittsburgh-pirates-original-name",
+      "question": "Founded in 1881 as the Alleghenys, the Pittsburgh MLB franchise officially adopted their current buccaneer-themed nickname after rival teams accused them of stealing a player. What team name did they adopt?",
+      "answer": "Pirates",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Pirates"
+      ]
+    },
+    {
+      "slug": "utah-hockey-club-former-city",
+      "question": "The NHL franchise that debuted as the Utah Hockey Club for the 2024–2025 season was formed by acquiring the entire active player roster of what dissolved desert franchise?",
+      "answer": "Arizona Coyotes",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Arizona Coyotes",
+        "Coyotes",
+        "Phoenix Coyotes"
+      ]
+    },
+    {
+      "slug": "san-jose-sharks-original-bay-arena",
+      "question": "While waiting for construction to finish on their permanent arena in San Jose, the Sharks NHL expansion franchise spent their first two seasons playing home games in what neighboring California city?",
+      "answer": "Daly City",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Daly City"
+      ]
+    },
+    {
+      "slug": "boston-red-sox-original-informal-name",
+      "question": "Before adopting the Red Sox moniker in 1908, the American League baseball franchise in Boston was widely known by sports writers by what team name.",
+      "answer": "Boston Americans",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Boston Americans",
+        "Americans"
+      ]
+    },
+    {
+      "slug": "chicago-white-sox-original-city",
+      "question": "Before moving to the South Side of Chicago in 1900, the historic baseball charter franchise now known as the White Sox won a minor league title based in what Minnesota city?",
+      "answer": "St. Paul",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "St. Paul",
+        "St Paul",
+        "Saint Paul"
+      ]
+    },
+    {
+      "slug": "sacramento-kings-original-rochester-name",
+      "question": "When the Sacramento Kings franchise won their lone NBA title in 1951 while located in Rochester, New York, they competed under what distinct royal moniker?",
+      "answer": "Rochester Royals",
+      "answer_format": "write_in",
+      "category": "sports",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Rochester Royals",
+        "Royals"
+      ]
+    },
+    {
+      "slug": "points-for-a-touchdown-american-football",
+      "question": "How many points is a touchdown worth in American football, before any extra point attempt?",
+      "answer": "6",
+      "acceptableAnswers": [
+        "six"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "how-many-strikes-in-a-row-are-needed-to-achieve-a-perfect-game-in-ten-pin-bowling",
+      "question": "How many strikes in a row are needed to achieve a perfect game in ten-pin bowling?",
+      "answer": "12",
+      "acceptableAnswers": [
+        "twelve"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-boxing-what-is-it-called-when-a-fight-is-stopped-because-one-fighter-is-unable-to-continue-due-to-injury-or-referee-decision-but-is-not-knocked-out",
+      "question": "In boxing, what is the term for a fight stopped because a fighter is unable to continue due to injury or referee decision, but is not knocked out?",
+      "answer": "Technical Knockout",
+      "acceptableAnswers": [
+        "TKO"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-professional-tennis-how-many-grand-slam-tournaments-are-held-each-year",
+      "question": "In professional tennis, how many Grand Slam tournaments are held each year?",
+      "answer": "4",
+      "acceptableAnswers": [
+        "four"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-tennis-what-score-is-represented-by-the-term-love",
+      "question": "In tennis, what score is represented by the term 'love'?",
+      "answer": "0",
+      "acceptableAnswers": [
+        "zero"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-name-of-the-traditional-japanese-martial-art-that-focuses-on-throws-joint-locks-and-pins",
+      "question": "Name the traditional Japanese martial art that emphasizes throws, joint locks, and pins.?",
+      "answer": "Judo",
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-only-nfl-team-to-complete-a-perfect-undefeated-season-including-the-super-bowl",
+      "question": "What is the only NFL team to complete a perfect undefeated season, including the Super Bowl?",
+      "answer": "1972 Miami Dolphins",
+      "acceptableAnswers": [
+        "Miami Dolphins",
+        "Dolphins"
+      ],
+      "category": "Sports",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-which-sport-is-a-shuttlecock-used",
+      "question": "What sport uses a shuttlecock?",
+      "answer": "Badminton",
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-individual-sport-involves-disciplines-such-as-dressage-eventing-and-show-jumping",
+      "question": "Which individual sport involves disciplines such as dressage, eventing, and show jumping?",
+      "answer": "Equestrianism",
+      "acceptableAnswers": [
+        "Horse riding",
+        "Horseback riding",
+        "Equestrian"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "before-becoming-a-successful-actor-dwayne-the-rock-johnson-was-a-prominent-figure-in-what-professional-sport",
+      "question": "Before becoming a successful actor, Dwayne \"The Rock\" Johnson was a prominent figure in what professional sport?",
+      "answer": "Professional Wrestling",
+      "acceptableAnswers": [
+        "Wrestling",
+        "WWE",
+        "WWF"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-golf-what-is-the-term-for-a-score-of-three-strokes-under-par-on-a-single-hole",
+      "question": "In golf, what is the term for a score of three strokes under par on a single hole?",
+      "answer": "Albatross",
+      "acceptableAnswers": [
+        "Double Eagle"
+      ],
+      "category": "Sports",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-which-sport-would-you-find-positions-like-setter-and-libero",
+      "question": "In what sport are 'setter' and 'libero' key positions?",
+      "answer": "Volleyball",
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-which-olympic-sport-do-athletes-compete-using-a-foil-pe-or-sabre",
+      "question": "In which Olympic sport do athletes compete using a foil, épée, or sabre?",
+      "answer": "Fencing",
+      "category": "Sports",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-country-is-widely-recognized-as-the-birthplace-of-basketball",
+      "question": "What country is widely recognized as the birthplace of basketball?",
+      "answer": "United States",
+      "acceptableAnswers": [
+        "USA",
+        "America"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-major-grand-slam-tennis-tournament-is-exclusively-played-on-red-clay-courts",
+      "question": "What Grand Slam tennis tournament is exclusively played on red clay courts?",
+      "answer": "French Open",
+      "acceptableAnswers": [
+        "Roland Garros"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-maximum-number-of-rounds-in-a-professional-boxing-championship-match",
+      "question": "What is the maximum number of rounds in a professional boxing championship match?",
+      "answer": "12",
+      "acceptableAnswers": [
+        "Twelve"
+      ],
+      "category": "Sports",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-maximum-score-for-a-single-dart-in-a-game-of-darts",
+      "question": "What is the maximum score for a single dart in a game of darts?",
+      "answer": "60",
+      "acceptableAnswers": [
+        "sixty"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-name-of-the-international-governing-body-for-association-football-soccer",
+      "question": "What is the name of the international governing body for association football (soccer)?",
+      "answer": "FIFA",
+      "acceptableAnswers": [
+        "Fédération Internationale de Football Association",
+        "International Federation of Association Football"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-official-name-of-the-championship-trophy-awarded-in-the-nhl",
+      "question": "What is the official name of the championship trophy awarded in the NHL?",
+      "answer": "Stanley Cup",
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-of-these-combat-sports-is-often-referred-to-as-the-sweet-science",
+      "question": "Which combat sport is often referred to as 'the sweet science'?",
+      "answer": "Boxing",
+      "acceptableAnswers": [
+        "Pugilism"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-famous-golf-tournament-is-played-annually-at-augusta-national-golf-club",
+      "question": "Which famous golf tournament is played annually at Augusta National Golf Club?",
+      "answer": "The Masters",
+      "acceptableAnswers": [
+        "Masters Tournament",
+        "Masters",
+        "The Masters Tournament"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-international-organization-is-the-governing-body-of-association-football-soccer",
+      "question": "Which international organization governs association football (soccer)?",
+      "answer": "FIFA",
+      "acceptableAnswers": [
+        "F.I.F.A.",
+        "International Federation of Association Football",
+        "Fédération Internationale de Football Association"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-nba-player-is-famously-known-by-the-nickname-air-jordan",
+      "question": "Which NBA player is famously known by the nickname 'Air Jordan'?",
+      "answer": "Michael Jordan",
+      "acceptableAnswers": [
+        "Jordan",
+        "MJ"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-nfl-team-holds-the-record-for-the-most-super-bowl-victories",
+      "question": "Which NFL team holds the record for the most Super Bowl victories?",
+      "answer": "New England Patriots",
+      "acceptableAnswers": [
+        "Patriots"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-south-american-city-hosted-the-summer-olympic-games-in-2016",
+      "question": "Which South American city hosted the Summer Olympic Games in 2016?",
+      "answer": "Rio de Janeiro",
+      "acceptableAnswers": [
+        "Rio"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-swimming-stroke-is-named-after-an-insect",
+      "question": "Which swimming stroke is named after an insect?",
+      "answer": "Butterfly",
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-swimming-stroke-is-performed-lying-on-your-back",
+      "question": "Which swimming stroke is performed lying on your back?",
+      "answer": "Backstroke",
+      "acceptableAnswers": [
+        "Back Stroke",
+        "Back"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-was-the-first-boxer-to-win-the-world-heavyweight-championship-three-times",
+      "question": "Who was the first boxer to win the world heavyweight championship three times?",
+      "answer": "Muhammad Ali",
+      "acceptableAnswers": [
+        "Ali",
+        "Cassius Clay"
+      ],
+      "category": "Sports",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "indy-500-laps",
+      "question": "How many laps are typically raced in the Indianapolis 500?",
+      "answer": "200",
+      "acceptableAnswers": [
+        "Two hundred"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "how-many-yards-must-an-american-football-team-advance-to-earn-a-first-down",
+      "question": "In American football, how many yards must a team advance to earn a first down?",
+      "answer": "10",
+      "acceptableAnswers": [
+        "ten",
+        "10 yards",
+        "ten yards"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-tennis-what-is-it-called-when-a-player-wins-a-game-without-their-opponent-scoring-any-points",
+      "question": "In tennis, what is it called when a player wins a game without their opponent scoring any points?",
+      "answer": "Love Game",
+      "acceptableAnswers": [
+        "Love"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-which-sport-would-you-typically-find-a-slapshot",
+      "question": "In which sport would you typically find a 'slapshot'?",
+      "answer": "Ice Hockey",
+      "acceptableAnswers": [
+        "Hockey"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-maximum-number-of-rounds-in-a-professional-boxing-match-for-a-world-title",
+      "question": "What is the maximum number of rounds in a professional boxing match for a world title?",
+      "answer": "12",
+      "acceptableAnswers": [
+        "twelve"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "sport-birdie-eagle-bogey",
+      "question": "What sport uses terms like 'birdie,' 'eagle,' and 'bogey'?",
+      "answer": "Golf",
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-country-has-won-the-most-fifa-world-cup-titles-in-mens-football",
+      "question": "Which country has won the most FIFA World Cup titles in men's football?",
+      "answer": "Brazil",
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-of-the-four-grand-slam-tennis-tournaments-is-famously-played-on-clay-courts",
+      "question": "Which Grand Slam tennis tournament is famously played on clay courts?",
+      "answer": "French Open",
+      "acceptableAnswers": [
+        "Roland Garros"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-martial-art-originated-in-korea-and-emphasizes-kicks",
+      "question": "Which martial art originated in Korea and emphasizes kicks?",
+      "answer": "Taekwondo",
+      "acceptableAnswers": [
+        "Tae Kwon Do",
+        "TKD"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-nba-legend-is-famously-associated-with-the-skyhook-shot",
+      "question": "Which NBA legend is famously associated with the 'Skyhook' shot?",
+      "answer": "Kareem Abdul-Jabbar",
+      "acceptableAnswers": [
+        "Kareem",
+        "Abdul-Jabbar",
+        "Lew Alcindor"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-nfl-team-completed-the-only-perfect-undefeated-season-in-history-including-the-super-bowl",
+      "question": "Which NFL team completed the only perfect undefeated season in history, including the Super Bowl?",
+      "answer": "Miami Dolphins",
+      "acceptableAnswers": [
+        "Dolphins",
+        "The Dolphins"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-nfl-team-holds-the-record-for-the-most-super-bowl-appearances",
+      "question": "Which NFL team holds the record for the most Super Bowl appearances?",
+      "answer": "New England Patriots",
+      "acceptableAnswers": [
+        "Patriots",
+        "NE Patriots"
+      ],
+      "category": "Sports",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-former-professional-baseball-player-is-famously-known-for-breaking-the-color-barrier-in-major-league-baseball",
+      "question": "Who famously broke the color barrier in Major League Baseball?",
+      "answer": "Jackie Robinson",
+      "acceptableAnswers": [
+        "Jackie",
+        "Robinson"
+      ],
+      "category": "Sports",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-was-the-first-boxer-to-defeat-mike-tyson-professionally",
+      "question": "Who was the first boxer to defeat Mike Tyson professionally?",
+      "answer": "Buster Douglas",
+      "acceptableAnswers": [
+        "James Douglas"
+      ],
+      "category": "Sports",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    }
   ],
   "familiarity": "mainstream"
 }

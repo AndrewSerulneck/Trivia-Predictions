@@ -14,7 +14,8 @@ export default async function SportsBingoHomePage({
     <GameLandingExperience
       gameKey="bingo"
       initialPlaying
-      playingContainerClassName="px-2 pb-2 sm:px-3 sm:pb-3 -mt-[1.35rem]"
+      playingHidesShellNav
+      playingContainerClassName="p-0"
     >
       <SportsBingoHome initialDate={initialDate} initialCardId={initialCardId} />
     </GameLandingExperience>

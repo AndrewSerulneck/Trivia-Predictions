@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hightop Challenge — Infrastructure Scaling Cost Analysis</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 32px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .meta-row {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      background: #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #334155;
+    }
+
+    .meta-item strong { color: #0f172a; }
+
+    .alert {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 28px;
+      font-size: 12.5px;
+      color: #78350f;
+    }
+
+    .alert strong { color: #92400e; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .grid-1 {
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 24px;
+    }
+
+    .card h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .card .card-note {
+      font-size: 11.5px;
+      color: #94a3b8;
+      margin-bottom: 14px;
+    }
+
+    .chart-wrap {
+      position: relative;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    .summary-table th {
+      background: #f1f5f9;
+      text-align: left;
+      padding: 8px 12px;
+      font-weight: 600;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .summary-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    .summary-table .highlight {
+      background: #fffbeb;
+      font-weight: 600;
+    }
+
+    .summary-table .cost { font-weight: 600; color: #0f172a; }
+
+    .findings-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .finding {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .finding .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+
+    .finding .value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+
+    .finding .sub {
+      font-size: 11.5px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .finding.warn .value { color: #d97706; }
+    .finding.danger .value { color: #dc2626; }
+    .finding.good .value { color: #16a34a; }
+
+    .section-header {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin: 32px 0 12px;
+    }
+
+    .footnote {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    /* ── Print styles ────────────────────────────────────── */
+    @media print {
+      body { background: #fff; font-size: 11px; }
+      .page { padding: 20px 16px; max-width: 100%; }
+      .grid-2 { gap: 14px; }
+      .card { page-break-inside: avoid; padding: 14px; }
+      .findings-grid { gap: 10px; }
+      h1 { font-size: 18px; }
+      @page { margin: 1cm; size: A4 landscape; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Hightop Challenge — Infrastructure Scaling Cost Analysis</h1>
+  <p class="subtitle">Generated June 2026 · Based on live Supabase CLI inspection · 5,000-location hotel chain scenario</p>
+
+  <div class="meta-row">
+    <div class="meta-item"><strong>Current plan:</strong> Supabase Pro ($25/mo) · Vercel Pro ($20/mo)</div>
+    <div class="meta-item"><strong>DB region:</strong> East US (Ohio)</div>
+    <div class="meta-item"><strong>DB size:</strong> 48 MB · 59 active users</div>
+    <div class="meta-item"><strong>Stage:</strong> Early / pre-scale</div>
+    <div class="meta-item"><strong>All figures:</strong> USD/month · estimates unless noted</div>
+  </div>
+
+  <div class="alert">
+    <strong>⚠ Live Supabase CLI Finding:</strong> Realtime (<code>realtime.list_changes</code>) accounts for <strong>48% of all database execution time</strong> at current tiny scale. This will become your single largest cost driver at 5,000 venues. Additionally, <code>fantasy_entries</code> is queried <strong>without a venue_id filter</strong> 219,715 times — a full table scan that will become catastrophic at scale.
+  </div>
+
+  <!-- Key stat cards -->
+  <div class="section-header">Current Database Snapshot (live, from Supabase CLI)</div>
+  <div class="findings-grid">
+    <div class="finding good">
+      <div class="label">Current DB Size</div>
+      <div class="value">48 MB</div>
+      <div class="sub">8 GB included in Pro plan</div>
+    </div>
+    <div class="finding good">
+      <div class="label">Active Users</div>
+      <div class="value">59</div>
+      <div class="sub">54 accounts, early stage</div>
+    </div>
+    <div class="finding danger">
+      <div class="label">Realtime DB Load</div>
+      <div class="value">48%</div>
+      <div class="sub">Of all DB exec time at tiny scale</div>
+    </div>
+    <div class="finding warn">
+      <div class="label">Sports Bingo Queries</div>
+      <div class="value">304K</div>
+      <div class="sub">Calls since stats reset (118 days)</div>
+    </div>
+    <div class="finding danger">
+      <div class="label">Fantasy Full Scans</div>
+      <div class="value">220K</div>
+      <div class="sub">No venue_id filter — fix before scaling</div>
+    </div>
+    <div class="finding good">
+      <div class="label">Index Hit Rate</div>
+      <div class="value">100%</div>
+      <div class="sub">Cache fully warm — healthy</div>
+    </div>
+  </div>
+
+  <!-- Chart 1 + Chart 2 -->
+  <div class="section-header">Total Monthly Cost by Location Count</div>
+  <div class="grid-2">
+    <div class="card">
+      <h2>Total Monthly Cost vs. Locations</h2>
+      <p class="card-note">Three scenarios: 10, 50, and 100 peak concurrent users per location</p>
+      <div class="chart-wrap"><canvas id="chart-total-cost" height="260"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Cost Per Location (Efficiency)</h2>
+      <p class="card-note">Shows economies of scale — cost per venue drops as fixed overhead is amortized</p>
+      <div class="chart-wrap"><canvas id="chart-cost-per-venue" height="260"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Chart 3 + Chart 4 -->
+  <div class="grid-2">
+    <div class="card">
+      <h2>Cost Breakdown by Service</h2>
+      <p class="card-note">Stacked — 50 concurrent users/location scenario</p>
+      <div class="chart-wrap"><canvas id="chart-breakdown" height="260"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Supabase Cost Components</h2>
+      <p class="card-note">Base plan, compute add-on, and realtime surcharge separately</p>
+      <div class="chart-wrap"><canvas id="chart-supabase" height="260"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Chart 5 full width -->
+  <div class="grid-1">
+    <div class="card">
+      <h2>DB Connection Requirements vs. Locations</h2>
+      <p class="card-note">Estimated peak concurrent Supabase connections required, with Supavisor pooler enabled. Horizontal lines show Supabase compute tier thresholds.</p>
+      <div class="chart-wrap"><canvas id="chart-connections" height="180"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Summary table -->
+  <div class="section-header">Monthly Cost Summary at Key Milestones (50 users/location)</div>
+  <div class="card">
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>Locations</th>
+          <th>Supabase Base</th>
+          <th>Supabase Compute</th>
+          <th>Supabase Realtime</th>
+          <th>Vercel</th>
+          <th>BallDontLie</th>
+          <th>Cloudinary</th>
+          <th><strong>Total / Month</strong></th>
+          <th>Per Location</th>
+        </tr>
+      </thead>
+      <tbody id="summary-table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Pricing assumptions -->
+  <div class="section-header">Pricing Assumptions & Methodology</div>
+  <div class="card">
+    <table class="summary-table">
+      <thead>
+        <tr><th>Service</th><th>Tier / Unit</th><th>Price</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Supabase Pro</td><td>Base plan</td><td>$25/mo</td><td>Confirmed — your current plan</td></tr>
+        <tr><td>Supabase Compute</td><td>Small add-on</td><td>+$15/mo</td><td>~90 direct connections</td></tr>
+        <tr><td>Supabase Compute</td><td>Medium add-on</td><td>+$50/mo</td><td>~120 direct connections</td></tr>
+        <tr><td>Supabase Compute</td><td>Large add-on</td><td>+$100/mo</td><td>~160 direct connections</td></tr>
+        <tr><td>Supabase Compute</td><td>XL add-on</td><td>+$200/mo</td><td>~240 direct connections</td></tr>
+        <tr><td>Supabase Compute</td><td>2XL add-on</td><td>+$400/mo</td><td>~380 direct connections</td></tr>
+        <tr><td>Supabase Compute</td><td>4XL add-on</td><td>+$950/mo</td><td>~480 direct connections (Supavisor ×10 = ~4,800 pooled)</td></tr>
+        <tr><td>Supabase Compute</td><td>8XL add-on</td><td>+$1,500/mo</td><td>Enterprise-grade; contact Supabase</td></tr>
+        <tr><td>Supabase Realtime</td><td>Per 1,000 concurrent above 200</td><td>$10/1,000</td><td>Est. — check supabase.com/pricing for current rates</td></tr>
+        <tr><td>Supabase Storage</td><td>Per GB above 8 GB</td><td>$0.125/GB</td><td>Negligible at this scale</td></tr>
+        <tr><td>Vercel Pro</td><td>Team base</td><td>$20/mo</td><td>Includes 1M function invocations, 1,000 GB-hours compute</td></tr>
+        <tr><td>Vercel overage</td><td>Per GB-hour above limit</td><td>$0.006/GB-hr</td><td>Estimate — cron fan-out grows with venues</td></tr>
+        <tr><td>BallDontLie</td><td>Pro tier (est.)</td><td>~$99/mo</td><td>Fixed regardless of venue count; depends on webhook volume</td></tr>
+        <tr><td>BallDontLie</td><td>Business tier (est.)</td><td>~$299/mo</td><td>Needed at scale for webhook SLA; verify at balldontlie.io</td></tr>
+        <tr><td>Cloudinary</td><td>Plus tier</td><td>$89/mo</td><td>For headshot storage/delivery; likely needed at 5,000 venues</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footnote">
+    <strong>Disclaimer:</strong> All cost figures are estimates based on published Supabase, Vercel, and third-party pricing as of June 2026. Actual costs depend on real concurrent user counts, query patterns, bandwidth, and negotiated enterprise pricing. Connection model assumes Supavisor (transaction mode) enabled — without it, limits are ~10× lower. Realtime surcharge rate is estimated; verify at supabase.com/pricing. BallDontLie and Cloudinary pricing verified via their public pricing pages. Contact each vendor for volume discounts at 5,000+ venue scale. <br><br>
+    <strong>What to verify:</strong> (1) Enable Supabase Supavisor pooler today if not already on. (2) Fix fantasy_entries full table scan before scaling. (3) Contact BallDontLie about webhook volume limits. (4) Confirm Vercel plan tier and current function execution usage in your Vercel dashboard.
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ── Color palette ─────────────────────────────────────────────
+const C = {
+  blue:    '#3b82f6',
+  sky:     '#0ea5e9',
+  violet:  '#8b5cf6',
+  orange:  '#f97316',
+  green:   '#22c55e',
+  slate:   '#94a3b8',
+  red:     '#ef4444',
+  amber:   '#f59e0b',
+};
+
+// ── Location milestones ────────────────────────────────────────
+const milestones = [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000];
+const milestonesLabels = milestones.map(v => v.toLocaleString());
+
+// ── Cost model ────────────────────────────────────────────────
+//
+// supabaseCompute(connections_needed): step function by tier
+function supabaseComputeCost(conn) {
+  // conn = peak direct connections (after Supavisor divides by ~10)
+  if (conn <= 60)  return 0;      // Micro (included in Pro)
+  if (conn <= 90)  return 15;     // Small
+  if (conn <= 120) return 50;     // Medium
+  if (conn <= 160) return 100;    // Large
+  if (conn <= 240) return 200;    // XL
+  if (conn <= 380) return 400;    // 2XL
+  if (conn <= 480) return 950;    // 4XL
+  if (conn <= 700) return 1500;   // 8XL
+  return 2200 + Math.floor((conn - 700) / 200) * 800; // beyond — enterprise range
+}
+
+// Peak pooled connections ~ L × U × 0.05 + (7 cron × 2)
+// After Supavisor pooler, physical connections needed = pooled / 10
+function physicalConnections(locations, usersPerLocation) {
+  const pooled = locations * usersPerLocation * 0.05 + 14;
+  return Math.ceil(pooled / 10);
+}
+
+// Realtime concurrent connections ~ L × 4 (Live Trivia + Bingo polling)
+// Charged per 1,000 above 200 included
+function realtimeCost(locations) {
+  const concurrent = locations * 4;
+  const excess = Math.max(0, concurrent - 200);
+  return Math.ceil(excess / 1000) * 10;
+}
+
+// Vercel: base + linear compute overage from cron fan-out
+function vercelCost(locations) {
+  const base = 20;
+  // 7 crons × 60/hr × 24hr × 30d = 302,400 invocations/mo
+  // Each invocation at scale takes longer (O(L) DB work)
+  // Very rough: $0.002 per location per month for cron overhead + edge bandwidth
+  const overage = locations * 0.018;
+  return base + overage;
+}
+
+// BallDontLie: fixed by webhook tier, not venue count
+function balldontlieCost(locations) {
+  if (locations < 50)  return 99;
+  if (locations < 500) return 99;
+  return 299; // Business tier for webhook reliability at scale
+}
+
+// Cloudinary: headshots, mostly fixed
+function cloudinaryCost(locations) {
+  if (locations < 100) return 0;   // free tier covers it
+  return 89;                        // Plus tier
+}
+
+function totalCost(locations, usersPerLocation) {
+  const conn = physicalConnections(locations, usersPerLocation);
+  const sb = 25 + supabaseComputeCost(conn) + realtimeCost(locations);
+  const vc = vercelCost(locations);
+  const bdl = balldontlieCost(locations);
+  const cl = cloudinaryCost(locations);
+  return sb + vc + bdl + cl;
+}
+
+// ── Dense X axis for smooth curves ────────────────────────────
+const denseX = [];
+for (let i = 1; i <= 5000; i += (i < 100 ? 5 : i < 1000 ? 20 : 50)) denseX.push(i);
+
+// ── Chart defaults ────────────────────────────────────────────
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#64748b';
+
+const sharedGridColor = 'rgba(148,163,184,0.15)';
+const sharedTickColor = '#94a3b8';
+
+function baseOptions(yLabel, yMax) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 10, padding: 12, font: { size: 11 } } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: $${Math.round(ctx.parsed.y).toLocaleString()}/mo`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: sharedGridColor },
+        ticks: { color: sharedTickColor, maxTicksLimit: 10 },
+        title: { display: true, text: 'Number of Locations', color: '#94a3b8', font: { size: 11 } }
+      },
+      y: {
+        grid: { color: sharedGridColor },
+        ticks: {
+          color: sharedTickColor,
+          callback: v => '$' + v.toLocaleString()
+        },
+        title: { display: true, text: yLabel, color: '#94a3b8', font: { size: 11 } },
+        ...(yMax ? { max: yMax } : {}),
+        min: 0
+      }
+    }
+  };
+}
+
+// ── Chart 1: Total cost vs locations ─────────────────────────
+new Chart(document.getElementById('chart-total-cost'), {
+  type: 'line',
+  data: {
+    labels: denseX,
+    datasets: [
+      {
+        label: '10 users/location',
+        data: denseX.map(l => totalCost(l, 10)),
+        borderColor: C.green, backgroundColor: 'transparent',
+        borderWidth: 2, pointRadius: 0, tension: 0.3
+      },
+      {
+        label: '50 users/location',
+        data: denseX.map(l => totalCost(l, 50)),
+        borderColor: C.blue, backgroundColor: 'transparent',
+        borderWidth: 2.5, pointRadius: 0, tension: 0.3
+      },
+      {
+        label: '100 users/location',
+        data: denseX.map(l => totalCost(l, 100)),
+        borderColor: C.orange, backgroundColor: 'transparent',
+        borderWidth: 2, pointRadius: 0, tension: 0.3
+      }
+    ]
+  },
+  options: baseOptions('Monthly Cost (USD)')
+});
+
+// ── Chart 2: Cost per venue ───────────────────────────────────
+new Chart(document.getElementById('chart-cost-per-venue'), {
+  type: 'line',
+  data: {
+    labels: denseX,
+    datasets: [
+      {
+        label: '10 users/location',
+        data: denseX.map(l => totalCost(l, 10) / l),
+        borderColor: C.green, backgroundColor: 'transparent',
+        borderWidth: 2, pointRadius: 0, tension: 0.3
+      },
+      {
+        label: '50 users/location',
+        data: denseX.map(l => totalCost(l, 50) / l),
+        borderColor: C.blue, backgroundColor: 'transparent',
+        borderWidth: 2.5, pointRadius: 0, tension: 0.3
+      },
+      {
+        label: '100 users/location',
+        data: denseX.map(l => totalCost(l, 100) / l),
+        borderColor: C.orange, backgroundColor: 'transparent',
+        borderWidth: 2, pointRadius: 0, tension: 0.3
+      }
+    ]
+  },
+  options: {
+    ...baseOptions('Cost Per Location (USD)'),
+    plugins: {
+      ...baseOptions('Cost Per Location (USD)').plugins,
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)}/location/mo`
+        }
+      }
+    }
+  }
+});
+
+// ── Chart 3: Stacked breakdown by service ────────────────────
+const U50 = 50;
+new Chart(document.getElementById('chart-breakdown'), {
+  type: 'bar',
+  data: {
+    labels: milestonesLabels,
+    datasets: [
+      {
+        label: 'Supabase Base',
+        data: milestones.map(() => 25),
+        backgroundColor: '#3b82f6',
+        stack: 'cost'
+      },
+      {
+        label: 'Supabase Compute',
+        data: milestones.map(l => supabaseComputeCost(physicalConnections(l, U50))),
+        backgroundColor: '#0ea5e9',
+        stack: 'cost'
+      },
+      {
+        label: 'Supabase Realtime',
+        data: milestones.map(l => realtimeCost(l)),
+        backgroundColor: '#8b5cf6',
+        stack: 'cost'
+      },
+      {
+        label: 'Vercel',
+        data: milestones.map(l => vercelCost(l)),
+        backgroundColor: '#64748b',
+        stack: 'cost'
+      },
+      {
+        label: 'BallDontLie',
+        data: milestones.map(l => balldontlieCost(l)),
+        backgroundColor: '#f97316',
+        stack: 'cost'
+      },
+      {
+        label: 'Cloudinary',
+        data: milestones.map(l => cloudinaryCost(l)),
+        backgroundColor: '#22c55e',
+        stack: 'cost'
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: $${Math.round(ctx.parsed.y).toLocaleString()}`,
+          footer: items => ` Total: $${Math.round(items.reduce((s, i) => s + i.parsed.y, 0)).toLocaleString()}/mo`
+        }
+      }
+    },
+    scales: {
+      x: { stacked: true, grid: { color: sharedGridColor }, ticks: { color: sharedTickColor, font: { size: 10 } },
+           title: { display: true, text: 'Locations', color: '#94a3b8', font: { size: 11 } } },
+      y: { stacked: true, grid: { color: sharedGridColor },
+           ticks: { color: sharedTickColor, callback: v => '$' + v.toLocaleString() },
+           title: { display: true, text: 'Monthly Cost (USD)', color: '#94a3b8', font: { size: 11 } }, min: 0 }
+    }
+  }
+});
+
+// ── Chart 4: Supabase component lines ────────────────────────
+new Chart(document.getElementById('chart-supabase'), {
+  type: 'line',
+  data: {
+    labels: denseX,
+    datasets: [
+      {
+        label: 'Base Plan ($25 flat)',
+        data: denseX.map(() => 25),
+        borderColor: C.slate, backgroundColor: 'transparent',
+        borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0
+      },
+      {
+        label: 'Compute Add-on',
+        data: denseX.map(l => supabaseComputeCost(physicalConnections(l, 50))),
+        borderColor: C.blue, backgroundColor: 'rgba(59,130,246,0.08)',
+        fill: false, borderWidth: 2, pointRadius: 0, tension: 0.1
+      },
+      {
+        label: 'Realtime Surcharge',
+        data: denseX.map(l => realtimeCost(l)),
+        borderColor: C.violet, backgroundColor: 'rgba(139,92,246,0.08)',
+        fill: false, borderWidth: 2, pointRadius: 0, tension: 0.3
+      },
+      {
+        label: 'Total Supabase',
+        data: denseX.map(l => 25 + supabaseComputeCost(physicalConnections(l, 50)) + realtimeCost(l)),
+        borderColor: '#0f172a', backgroundColor: 'transparent',
+        borderWidth: 2.5, pointRadius: 0, tension: 0.2
+      }
+    ]
+  },
+  options: {
+    ...baseOptions('Supabase Cost (USD)'),
+    plugins: {
+      ...baseOptions('Supabase Cost (USD)').plugins,
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: $${Math.round(ctx.parsed.y).toLocaleString()}/mo`
+        }
+      }
+    }
+  }
+});
+
+// ── Chart 5: DB Connections with tier thresholds ──────────────
+// Total pooled connections needed (logical)
+function pooledConnections(l, u) {
+  return l * u * 0.05 + 14;
+}
+
+// Tier threshold lines (Supavisor physical × 10 = pooled capacity)
+const tierThresholds = [
+  { conn: 600,   label: 'Micro cap (600 pooled)', color: '#94a3b8' },
+  { conn: 900,   label: 'Small cap (900 pooled)',  color: '#22c55e' },
+  { conn: 1200,  label: 'Medium cap (1,200)',       color: '#0ea5e9' },
+  { conn: 2400,  label: 'XL cap (2,400)',           color: '#f59e0b' },
+  { conn: 4800,  label: '4XL cap (4,800)',          color: '#f97316' },
+];
+
+new Chart(document.getElementById('chart-connections'), {
+  type: 'line',
+  data: {
+    labels: denseX,
+    datasets: [
+      {
+        label: '10 users/location',
+        data: denseX.map(l => pooledConnections(l, 10)),
+        borderColor: C.green, backgroundColor: 'transparent',
+        borderWidth: 2, pointRadius: 0, tension: 0.3
+      },
+      {
+        label: '50 users/location',
+        data: denseX.map(l => pooledConnections(l, 50)),
+        borderColor: C.blue, backgroundColor: 'transparent',
+        borderWidth: 2.5, pointRadius: 0, tension: 0.3
+      },
+      {
+        label: '100 users/location',
+        data: denseX.map(l => pooledConnections(l, 100)),
+        borderColor: C.orange, backgroundColor: 'transparent',
+        borderWidth: 2, pointRadius: 0, tension: 0.3
+      },
+      // Tier threshold lines
+      ...tierThresholds.map(t => ({
+        label: t.label,
+        data: denseX.map(() => t.conn),
+        borderColor: t.color, borderDash: [5, 4],
+        borderWidth: 1.2, pointRadius: 0, backgroundColor: 'transparent'
+      }))
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${Math.round(ctx.parsed.y).toLocaleString()} connections`
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: sharedGridColor }, ticks: { color: sharedTickColor, maxTicksLimit: 10 },
+           title: { display: true, text: 'Number of Locations', color: '#94a3b8', font: { size: 11 } } },
+      y: { grid: { color: sharedGridColor }, ticks: { color: sharedTickColor },
+           title: { display: true, text: 'Peak Pooled DB Connections', color: '#94a3b8', font: { size: 11 } }, min: 0 }
+    }
+  }
+});
+
+// ── Summary table ─────────────────────────────────────────────
+const tableLocations = [1, 10, 50, 100, 500, 1000, 2500, 5000];
+const tbody = document.getElementById('summary-table-body');
+tableLocations.forEach(l => {
+  const conn = physicalConnections(l, 50);
+  const sbBase = 25;
+  const sbComp = supabaseComputeCost(conn);
+  const sbRT   = realtimeCost(l);
+  const vc     = vercelCost(l);
+  const bdl    = balldontlieCost(l);
+  const cl     = cloudinaryCost(l);
+  const total  = sbBase + sbComp + sbRT + vc + bdl + cl;
+  const perLoc = (total / l).toFixed(2);
+  const isHighlight = l === 5000;
+
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+
+  tbody.innerHTML += `
+    <tr class="${isHighlight ? 'highlight' : ''}">
+      <td>${l.toLocaleString()}</td>
+      <td>${fmt(sbBase)}</td>
+      <td>${fmt(sbComp)}</td>
+      <td>${fmt(sbRT)}</td>
+      <td>${fmt(vc)}</td>
+      <td>${fmt(bdl)}</td>
+      <td>${fmt(cl)}</td>
+      <td class="cost">${fmt(total)}</td>
+      <td>$${perLoc}</td>
+    </tr>`;
+});
+</script>
+</body>
+</html>

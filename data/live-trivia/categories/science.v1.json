@@ -1,12 +1,12 @@
 {
-  "categoryName": "Science",
+  "categoryName": "Science & Tech",
   "questions": [
     {
       "slug": "water-chemical-formula",
       "question": "What is the chemical formula for water?",
       "answer": "H2O",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -14,7 +14,7 @@
       "question": "Who invented the light bulb?",
       "answer": "Thomas Edison",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -22,7 +22,7 @@
       "question": "Who developed the theory of relativity?",
       "answer": "Albert Einstein",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -30,7 +30,7 @@
       "question": "What gas do plants absorb from the atmosphere?",
       "answer": "Carbon Dioxide",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -38,7 +38,7 @@
       "question": "Which planet is closest to the Sun?",
       "answer": "Mercury",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -46,7 +46,7 @@
       "question": "Which gas do plants primarily absorb from the atmosphere for photosynthesis?",
       "answer": "Carbon Dioxide",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -54,7 +54,7 @@
       "question": "Which element is represented by the symbol 'He'?",
       "answer": "Helium",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -62,7 +62,7 @@
       "question": "Which organelle is known as the powerhouse of the cell?",
       "answer": "Mitochondria",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -70,7 +70,7 @@
       "question": "What is the shape of a DNA molecule?",
       "answer": "Double Helix",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -78,7 +78,7 @@
       "question": "Which scientist is famously associated with the law of universal gravitation?",
       "answer": "Isaac Newton",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -86,7 +86,7 @@
       "question": "Which blood type is considered the universal donor?",
       "answer": "O negative",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -94,7 +94,7 @@
       "question": "What is the most abundant gas in Earth's atmosphere?",
       "answer": "Nitrogen",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -102,7 +102,7 @@
       "question": "Which subatomic particle carries a negative electric charge?",
       "answer": "Electron",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -110,7 +110,7 @@
       "question": "Which planet is known as the Red Planet?",
       "answer": "Mars",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -118,7 +118,7 @@
       "question": "Which planet in our solar system has two moons named Phobos and Deimos?",
       "answer": "Mars",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -126,7 +126,7 @@
       "question": "What number value on the pH scale represents a neutral pH?",
       "answer": "7",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -134,7 +134,7 @@
       "question": "What temperature is considered absolute zero in Kelvin?",
       "answer": "0 K",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -142,7 +142,7 @@
       "question": "What is the hardest known natural substance on Earth?",
       "answer": "Diamond",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -150,7 +150,7 @@
       "question": "What is the name of the galaxy that contains our Solar System?",
       "answer": "Milky Way",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -158,7 +158,7 @@
       "question": "What is the first element on the periodic table?",
       "answer": "Hydrogen",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -166,7 +166,7 @@
       "question": "Which chemical element is a diamond made of?",
       "answer": "Carbon",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -174,7 +174,7 @@
       "question": "Which planet in our solar system has the largest number of moons?",
       "answer": "Saturn",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -182,7 +182,7 @@
       "question": "What was the first antibiotic to be discovered?",
       "answer": "Penicillin",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -190,7 +190,7 @@
       "question": "By what process does the Sun produce energy?",
       "answer": "Nuclear Fusion",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -198,7 +198,7 @@
       "question": "How many bones are in the adult human body?",
       "answer": "206",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -206,7 +206,7 @@
       "question": "What is the bending of light as it passes from one medium to another called?",
       "answer": "Refraction",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -214,7 +214,7 @@
       "question": "What is the chemical symbol for the element Lithium?",
       "answer": "Li",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -222,7 +222,7 @@
       "question": "What primary gas do plants release as a byproduct of photosynthesis?",
       "answer": "Oxygen",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -230,7 +230,7 @@
       "question": "What is the chemical symbol for Neon?",
       "answer": "Ne",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -238,7 +238,7 @@
       "question": "Which acid is primarily found in the human stomach?",
       "answer": "Hydrochloric Acid",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -246,7 +246,7 @@
       "question": "Which planet is famous for its large and visible ring system?",
       "answer": "Saturn",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -254,7 +254,7 @@
       "question": "What is the center of an atom called?",
       "answer": "Nucleus",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -262,7 +262,7 @@
       "question": "What is the process called when a solid turns directly into a gas?",
       "answer": "Sublimation",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -270,7 +270,7 @@
       "question": "What is the boiling point of water in Celsius?",
       "answer": "100",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -278,7 +278,7 @@
       "question": "What is the lowest layer of Earth's atmosphere?",
       "answer": "Troposphere",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -286,7 +286,7 @@
       "question": "In the equation E=mc^2, what does the 'E' represent?",
       "answer": "Energy",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -294,7 +294,7 @@
       "question": "What is the name of the colored part of the human eye?",
       "answer": "Iris",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -302,7 +302,7 @@
       "question": "What is the chemical symbol for Gold?",
       "answer": "Au",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -310,7 +310,7 @@
       "question": "What is the chemical name for Vitamin C?",
       "answer": "Ascorbic Acid",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -318,7 +318,7 @@
       "question": "Which is the most abundant metal in the Earth's crust?",
       "answer": "Aluminum",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -326,7 +326,7 @@
       "question": "What instrument is used to detect and record earthquakes?",
       "answer": "Seismograph",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -334,7 +334,7 @@
       "question": "In DNA, which nitrogenous base always pairs with Cytosine?",
       "answer": "Guanine",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -342,7 +342,7 @@
       "question": "Which metal is the only one that is liquid at room temperature?",
       "answer": "Mercury",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -350,7 +350,7 @@
       "question": "Newton's Second Law states that Force equals mass times what?",
       "answer": "Acceleration",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -358,7 +358,7 @@
       "question": "Which celestial body's gravity is primarily responsible for Earth's tides?",
       "answer": "The Moon",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Moon"
@@ -369,7 +369,7 @@
       "question": "What is the chemical symbol for Argon?",
       "answer": "Ar",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -377,7 +377,7 @@
       "question": "Which component of blood is responsible for clotting?",
       "answer": "Platelets",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -385,7 +385,7 @@
       "question": "Which is the largest planet in our solar system?",
       "answer": "Jupiter",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -393,7 +393,7 @@
       "question": "How many pairs of chromosomes do humans typically have?",
       "answer": "23",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -401,7 +401,7 @@
       "question": "Which element is represented by the symbol 'Na'?",
       "answer": "Sodium",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -409,7 +409,7 @@
       "question": "What is the primary material that makes up plant cell walls?",
       "answer": "Cellulose",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -417,7 +417,7 @@
       "question": "In the visible spectrum, which color has the highest frequency?",
       "answer": "Violet",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -425,7 +425,7 @@
       "question": "What is the most abundant element in the Sun?",
       "answer": "Hydrogen",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -433,7 +433,7 @@
       "question": "What is the chemical symbol for Silver?",
       "answer": "Ag",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -441,7 +441,7 @@
       "question": "Which organ in the human body produces insulin?",
       "answer": "Pancreas",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -449,7 +449,7 @@
       "question": "What is the chemical symbol for Potassium?",
       "answer": "K",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -457,7 +457,7 @@
       "question": "In which moon phase is the moon positioned between the Earth and the Sun?",
       "answer": "New Moon",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -465,7 +465,7 @@
       "question": "Which is the rarest blood type in the human population?",
       "answer": "AB Negative",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -473,7 +473,7 @@
       "question": "Which gas makes up approximately 78% of Earth's atmosphere?",
       "answer": "Nitrogen",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -481,7 +481,7 @@
       "question": "What is the chemical symbol for Iron?",
       "answer": "Fe",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -489,7 +489,7 @@
       "question": "What is the scientific study of fungi called?",
       "answer": "Mycology",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -497,7 +497,7 @@
       "question": "Dry ice is the solid form of which substance?",
       "answer": "Carbon Dioxide",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -505,7 +505,7 @@
       "question": "Which planet in our solar system is known for having almost no atmosphere?",
       "answer": "Mercury",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -513,7 +513,7 @@
       "question": "What is the chemical symbol for Magnesium?",
       "answer": "Mg",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -521,7 +521,7 @@
       "question": "Which planet in our solar system rotates on its side, with its axis tilted at about 98 degrees?",
       "answer": "Uranus",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -529,7 +529,7 @@
       "question": "What is the chemical symbol for Tin?",
       "answer": "Sn",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -537,7 +537,7 @@
       "question": "Which chemical element has the highest melting point?",
       "answer": "Tungsten",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -545,7 +545,7 @@
       "question": "What is the chemical formula for table salt?",
       "answer": "NaCl",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -553,7 +553,7 @@
       "question": "What is the process by which plants make their own food?",
       "answer": "Photosynthesis",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -561,7 +561,7 @@
       "question": "In which plant cell organelle does photosynthesis occur?",
       "answer": "Chloroplast",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -569,7 +569,7 @@
       "question": "What is the chemical symbol for Tungsten?",
       "answer": "W",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -577,7 +577,7 @@
       "question": "What is the name of the protein in red blood cells that carries oxygen?",
       "answer": "Hemoglobin",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -585,7 +585,7 @@
       "question": "What is the closest star to planet Earth?",
       "answer": "The Sun",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Saturn",
@@ -597,7 +597,7 @@
       "question": "What is the hottest planet in our solar system?",
       "answer": "Venus",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Venus"
@@ -608,7 +608,7 @@
       "question": "What is the name of Earth's only permanent natural satellite?",
       "answer": "The Moon",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Moon",
@@ -620,7 +620,7 @@
       "question": "Who was the first human to walk on the Moon?",
       "answer": "Neil Armstrong",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Neil Armstrong",
@@ -632,7 +632,7 @@
       "question": "Which celestial body was reclassified from a planet to a dwarf planet in 2006?",
       "answer": "Pluto",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Pluto"
@@ -643,7 +643,7 @@
       "question": "How many planets are there in our solar system?",
       "answer": "8",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "8",
@@ -655,7 +655,7 @@
       "question": "What famous space telescope was launched into low Earth orbit in 1990?",
       "answer": "Hubble Space Telescope",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Hubble",
@@ -668,7 +668,7 @@
       "question": "What force keeps the planets in orbit around the Sun?",
       "answer": "Gravity",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Gravity",
@@ -680,7 +680,7 @@
       "question": "Which famous comet is visible from Earth approximately every 75 to 76 years?",
       "answer": "Halley's Comet",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Halley's Comet",
@@ -693,7 +693,7 @@
       "question": "Which English naturalist formulated that it is not the strongest of the species that survives, but the one most adaptable to change?",
       "answer": "Charles Darwin",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -701,7 +701,7 @@
       "question": "Which government agency managed the Apollo moon landing missions?",
       "answer": "NASA",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "NASA",
@@ -713,7 +713,7 @@
       "question": "What is the name of the giant shield volcano on Mars that is the tallest mountain in the solar system?",
       "answer": "Olympus Mons",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Olympus Mons"
@@ -724,7 +724,7 @@
       "question": "What technical term refers to a group of stars forming a recognized pattern in the night sky?",
       "answer": "Constellation",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Constellation"
@@ -735,7 +735,7 @@
       "question": "What is the proper noun name of the star commonly known as the North Star?",
       "answer": "Polaris",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Polaris"
@@ -746,7 +746,7 @@
       "question": "What scientific term describes the rapid expansion model that marks the beginning of the universe?",
       "answer": "The Big Bang",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Big Bang",
@@ -758,7 +758,7 @@
       "question": "What cosmic entity has a gravitational pull so strong that not even light can escape from it?",
       "answer": "Black hole",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Black hole"
@@ -769,7 +769,7 @@
       "question": "What is the name of the closest large spiral galaxy to the Milky Way?",
       "answer": "Andromeda",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Andromeda",
@@ -782,7 +782,7 @@
       "question": "What is the eighth and farthest planet from the Sun in our solar system?",
       "answer": "Neptune",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Neptune"
@@ -793,7 +793,7 @@
       "question": "Which gas giant rotates on its side with an axial tilt of nearly 98 degrees?",
       "answer": "Uranus",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Uranus"
@@ -804,7 +804,7 @@
       "question": "What is the correct scientific term for a space rock that enters Earth's atmosphere and burns up as a streak of light?",
       "answer": "Meteor",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Meteor"
@@ -815,7 +815,7 @@
       "question": "Known as the 'Great Red Spot', this massive storm has been raging for centuries on what planet in our solar system?",
       "answer": "Jupiter",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Great Red Spot",
@@ -827,7 +827,7 @@
       "question": "What region of the solar system located between the orbits of Mars and Jupiter contains most of our system's rocky debris?",
       "answer": "Asteroid belt",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Asteroid belt",
@@ -840,7 +840,7 @@
       "question": "In physics equations, (think 'E-mc squared') what does the 'c' represent?",
       "answer": "Speed of light",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Speed of light"
@@ -851,7 +851,7 @@
       "question": "What was the name of the first artificial satellite, launched into orbit by the Soviet Union in 1957?",
       "answer": "Sputnik 1",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Sputnik 1",
@@ -864,7 +864,7 @@
       "question": "What technical term refers to the outermost layer of the Sun's atmosphere, visible during a total solar eclipse? Hint: It's also the name of a popular beer.",
       "answer": "Corona",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Corona"
@@ -875,7 +875,7 @@
       "question": "What is the proper noun name of the brightest star in Earth's night sky, also known as the Dog Star?",
       "answer": "Sirius",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Sirius",
@@ -887,7 +887,7 @@
       "question": "How many moons does the planet Mars have orbiting it?",
       "answer": "2",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "2",
@@ -899,7 +899,7 @@
       "question": "What is the proper scientific name for the northern lights display in the Northern Hemisphere?",
       "answer": "Aurora borealis",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Aurora borealis"
@@ -910,7 +910,7 @@
       "question": "What technical term describes the colossal explosion of a dying star at the end of its life cycle?",
       "answer": "Supernova",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Supernova"
@@ -921,7 +921,7 @@
       "question": "What scientific term describes the extremely dense remnant of a collapsed giant star composed almost entirely of subatomic particles with no charge?",
       "answer": "Neutron star",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Neutron star"
@@ -932,7 +932,7 @@
       "question": "What is the scientific term for the branch of science that studies celestial objects, space, and the physical universe?",
       "answer": "Astronomy",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Astronomy"
@@ -943,7 +943,7 @@
       "question": "What astronomical unit of measurement equals the distance that light travels in one Earth year?",
       "answer": "Light-year",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Light-year",
@@ -955,7 +955,7 @@
       "question": "What chemical element is produced when hydrogen atoms undergo nuclear fusion in the Sun's core?",
       "answer": "Helium",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Helium",
@@ -967,7 +967,7 @@
       "question": "What is the name of the vast, ring-shaped region of icy bodies situated beyond the orbit of Neptune?",
       "answer": "Kuiper belt",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Kuiper belt",
@@ -979,7 +979,7 @@
       "question": "What technical term refers to the temporary, dark patches on the Sun's photosphere caused by intense magnetic activity?",
       "answer": "Sunspots",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Sunspots",
@@ -991,7 +991,7 @@
       "question": "The moon Europa is famous for having a smooth icy crust that scientists believe conceals a liquid water ocean. What planet does Europa orbit?",
       "answer": "Jupiter",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Jupiter"
@@ -1002,7 +1002,7 @@
       "question": "What technical term is used to describe the boundary surrounding a black hole past which nothing can escape?",
       "answer": "Event horizon",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Event horizon"
@@ -1013,7 +1013,7 @@
       "question": "What is the proper name of the tabular display that organizes all known chemical elements by their atomic number?",
       "answer": "Periodic table",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Periodic table",
@@ -1026,7 +1026,7 @@
       "question": "What is the lightest and most abundant chemical element on the periodic table?",
       "answer": "Hydrogen",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Hydrogen",
@@ -1038,7 +1038,7 @@
       "question": "What scientific term describes the phase transition in which a liquid turns into a gas below its boiling point?",
       "answer": "Evaporation",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Evaporation"
@@ -1049,7 +1049,7 @@
       "question": "What is the standard scientific unit of frequency which measures how often a repeating event occurs per second?",
       "answer": "Hertz",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Hertz",
@@ -1061,7 +1061,7 @@
       "question": "What triatomic gas molecule shields the Earth from harmful solar ultraviolet radiation in the stratosphere?",
       "answer": "Ozone",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Ozone",
@@ -1073,7 +1073,7 @@
       "question": "What specific geological term refers to molten or semi-molten rock while it is still located beneath the Earth's surface?",
       "answer": "Magma",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Magma"
@@ -1084,7 +1084,7 @@
       "question": "What specific geological term refers to molten rock once it breaks through the Earth's surface during a volcanic eruption?",
       "answer": "Lava",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Lava"
@@ -1095,7 +1095,7 @@
       "question": "What is the primary muscular organ responsible for pumping blood through the circulatory system of the human body?",
       "answer": "The heart",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Heart"
@@ -1106,7 +1106,7 @@
       "question": "What is the proper noun name of the naturalist who authored On the Origin of Species and pioneered the theory of evolution by natural selection?",
       "answer": "Charles Darwin",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Charles Darwin",
@@ -1118,7 +1118,7 @@
       "question": "What extremely light, non-reactive noble gas is commonly used to inflate birthday balloons and make them float?",
       "answer": "Helium",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Helium",
@@ -1130,7 +1130,7 @@
       "question": "What proper scientific term refers specifically to the branch of biology that deals with the study of plant life?",
       "answer": "Botany",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Botany"
@@ -1141,7 +1141,7 @@
       "question": "What internal organ of the human body is responsible for producing the hormone insulin?",
       "answer": "The pancreas",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Pancreas"
@@ -1152,7 +1152,7 @@
       "question": "What is the lightest alkali metal on the periodic table, represented by the atomic number 3?",
       "answer": "Lithium",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Lithium",
@@ -1164,7 +1164,7 @@
       "question": "What is the proper scientific term for the branch of zoology that studies insects?",
       "answer": "Entomology",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Entomology"
@@ -1175,7 +1175,7 @@
       "question": "What fundamental physical force produced by the motion of electric charges results in attractive and repulsive fields between objects?",
       "answer": "Magnetism",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Magnetics",
@@ -1187,7 +1187,7 @@
       "question": "What element forms the structural basis of all organic chemistry and known terrestrial life?",
       "answer": "Carbon",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Carbon",
@@ -1199,7 +1199,7 @@
       "question": "What standard scientific unit is used to measure electrical resistance, symbolized by the Greek letter omega?",
       "answer": "Ohm",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Ohm",
@@ -1208,10 +1208,10 @@
     },
     {
       "slug": "coin-electric-unit",
-      "question": "What standard scientific unit is used to measure electrical current, named after physicist Andr\u00e9-Marie Amp\u00e8re?",
+      "question": "What standard scientific unit is used to measure electrical current, named after physicist André-Marie Ampère?",
       "answer": "Ampere",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Ampere",
@@ -1225,7 +1225,7 @@
       "question": "What technical term describes the dense, towering vertical clouds associated with thunderstorms and heavy precipitation?",
       "answer": "Cumulonimbus",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cumulonimbus",
@@ -1237,7 +1237,7 @@
       "question": "What highly reactive gas molecule is required for the chemical process of iron corrosion, or rusting, to occur?",
       "answer": "Oxygen",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Oxygen",
@@ -1249,7 +1249,7 @@
       "question": "What proper scientific term refers to the study of prehistoric life through the examination of plant and animal fossils?",
       "answer": "Paleontology",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Paleontology"
@@ -1260,7 +1260,7 @@
       "question": "What geological term describes the opening or rupture in the Earth's crust that allows hot magma, ash, and gases to escape from below?",
       "answer": "Volcano",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Volcano"
@@ -1271,7 +1271,7 @@
       "question": "What is the proper chemical noun for ordinary table salt?",
       "answer": "Sodium chloride",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Sodium chloride",
@@ -1283,7 +1283,7 @@
       "question": "What proper scientific term refers to the atmospheric science branch that deals specifically with weather and forecasting?",
       "answer": "Meteorology",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Meteorology"
@@ -1294,7 +1294,7 @@
       "question": "What geological proper noun refers to the thin, rocky, outermost solid layer of the Earth upon which we live?",
       "answer": "The crust",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Crust"
@@ -1305,7 +1305,7 @@
       "question": "What technical term refers to the subatomic particle with a positive electrical charge located within the nucleus of an atom?",
       "answer": "Proton",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Proton"
@@ -1316,7 +1316,7 @@
       "question": "What standard scientific term describes a push or pull upon an object resulting from its interaction with another object, calculated as mass times acceleration?",
       "answer": "Force",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Force"
@@ -1327,7 +1327,7 @@
       "question": "What is the standard SI unit of force, named after the physicist who formulated the laws of motion?",
       "answer": "Newton",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Newton",
@@ -1340,7 +1340,7 @@
       "question": "What scientific term describes the speed of an object in a given, specific direction?",
       "answer": "Velocity",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Velocity"
@@ -1351,7 +1351,7 @@
       "question": "What scientific term describes the rate at which an object changes its velocity over time?",
       "answer": "Acceleration",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Acceleration"
@@ -1362,7 +1362,7 @@
       "question": "What physical term describes the property of matter by which it continues in its existing state of rest or uniform motion unless changed by an external force?",
       "answer": "Inertia",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Inertia"
@@ -1373,7 +1373,7 @@
       "question": "What scientific term describes the type of energy that a body possesses by virtue of being in motion?",
       "answer": "Kinetic energy",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Kinetic energy"
@@ -1384,7 +1384,7 @@
       "question": "What is the standard SI unit of power, equivalent to one joule per second, named after a Scottish inventor?",
       "answer": "Watt",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Watt",
@@ -1397,7 +1397,7 @@
       "question": "What scientific instrument is used to measure atmospheric pressure, commonly utilized in weather forecasting?",
       "answer": "Barometer",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Barometer"
@@ -1408,7 +1408,7 @@
       "question": "What scientific term describes the physical process where a liquid turns into a solid when its temperature is lowered below its freezing point?",
       "answer": "Freezing",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Freezing",
@@ -1420,7 +1420,7 @@
       "question": "What scientific term describes the physical process that results in the phase transition of a substance from a solid to a liquid?",
       "answer": "Melting",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Melting",
@@ -1432,7 +1432,7 @@
       "question": "What scientific term describes the physical change of the state of matter from a gas phase into a liquid phase?",
       "answer": "Condensation",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Condensation"
@@ -1443,7 +1443,7 @@
       "question": "What greenish-yellow halogen gas has the atomic number 17 and is widely used for water purification and bleaching?",
       "answer": "Chlorine",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Chlorine",
@@ -1455,7 +1455,7 @@
       "question": "What soft, silvery-white alkali metal has the atomic number 19 and is found in abundance within bananas?",
       "answer": "Potassium",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Potassium",
@@ -1467,7 +1467,7 @@
       "question": "Which gas is responsible for the characteristic smell of rotten eggs?",
       "answer": "Hydrogen Sulfide",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -1475,7 +1475,7 @@
       "question": "Which element has the atomic number 1?",
       "answer": "Hydrogen",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -1483,7 +1483,7 @@
       "question": "What alkaline earth metal has the atomic number 20 and is essential for maintaining strong human bones and teeth?",
       "answer": "Calcium",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Calcium",
@@ -1495,7 +1495,7 @@
       "question": "What common transition metal has the atomic number 26 and oxidizes to form a reddish-brown flakey rust?",
       "answer": "Iron",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Iron",
@@ -1507,7 +1507,7 @@
       "question": "What reddish-gold transition metal has the atomic number 29 and is highly prized for its electrical conductivity in household wiring?",
       "answer": "Copper",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Copper"
@@ -1518,7 +1518,7 @@
       "question": "What bluish-white transition metal has the atomic number 30 and is heavily utilized to galvanize iron and steel to prevent corrosion?",
       "answer": "Zinc",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Zinc",
@@ -1530,7 +1530,7 @@
       "question": "What dense, bright yellow transition metal is represented on the periodic table by the chemical symbol Au?",
       "answer": "Gold",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Gold"
@@ -1541,7 +1541,7 @@
       "question": "What shiny transition metal is represented on the periodic table by the chemical symbol Ag?",
       "answer": "Silver",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Silver"
@@ -1552,7 +1552,7 @@
       "question": "What is the proper scientific term for the branch of zoology that concerns the study of birds?",
       "answer": "Ornithology",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Ornithology"
@@ -1563,7 +1563,7 @@
       "question": "What proper anatomical term refers to the outermost, non-vascular protective layer of the skin in vertebrates?",
       "answer": "Epidermis",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Epidermis"
@@ -1574,7 +1574,7 @@
       "question": "What proper anatomical term refers to the thick layer of living tissue below the epidermis that contains blood capillaries, nerve endings, and sweat glands?",
       "answer": "Dermis",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Dermis"
@@ -1585,7 +1585,7 @@
       "question": "What proper anatomical term refers to the hollow muscular organ forming an air passage to the lungs and holding the vocal cords?",
       "answer": "Larynx",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Larynx"
@@ -1596,7 +1596,7 @@
       "question": "What is the largest organ of the human body?",
       "answer": "The skin",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Skin"
@@ -1607,7 +1607,7 @@
       "question": "Which blood type is known as the \"universal donor\"?",
       "answer": "O-negative",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "O-",
@@ -1621,7 +1621,7 @@
       "question": "How many ribs does the average adult human have?",
       "answer": "24",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "12 pairs",
@@ -1633,7 +1633,7 @@
       "question": "What is the common name for the patella?",
       "answer": "Kneecap",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -1641,7 +1641,7 @@
       "question": "What substance gives skin and hair its pigment or color?",
       "answer": "Melanin",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -1649,15 +1649,15 @@
       "question": "Which organ produces the hormone insulin?",
       "answer": "Pancreas",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
       "slug": "average-body-temperature-fahrenheit",
       "question": "What is the standard, average human body temperature in Fahrenheit rounded to the nearest tenth of a degree?",
-      "answer": "98.6\u00b0F",
+      "answer": "98.6°F",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "98.6",
@@ -1670,7 +1670,7 @@
       "question": "What acid is primarily found in the human stomach to aid digestion?",
       "answer": "Hydrochloric acid",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "HCl"
@@ -1681,7 +1681,7 @@
       "question": "What color is human blood inside the body before it hits oxygen?",
       "answer": "Red",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -1689,7 +1689,7 @@
       "question": "What is the name of the fluid-filled structure in the inner ear that looks like a snail shell and is essential for hearing?",
       "answer": "Cochlea",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1697,7 +1697,7 @@
       "question": "Which type of blood vessels carry oxygenated blood away from the heart?",
       "answer": "Arteries",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -1705,7 +1705,7 @@
       "question": "What is the medical term for the \"voice box\"?",
       "answer": "Larynx",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -1713,7 +1713,7 @@
       "question": "Which human organ is capable of completely regenerating itself from just a small fraction of its original size?",
       "answer": "The liver",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Liver"
@@ -1724,7 +1724,7 @@
       "question": "What is the common name for the clavicle?",
       "answer": "Collarbone",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Collar bone"
@@ -1735,7 +1735,7 @@
       "question": "Which vitamin is naturally produced by the human body when exposed to sunlight?",
       "answer": "Vitamin D",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -1743,7 +1743,7 @@
       "question": "An adult human skeleton has 206 bones. How many are in the hands and wrists?",
       "answer": "54",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -1751,15 +1751,15 @@
       "question": "What is the medical term for a professional who specializes in the study and treatment of the feet?",
       "answer": "Podiatrist",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
       "slug": "stethoscope-invention",
-      "question": "What classic medical tool was invented in 1816 by French physician Ren\u00e9 Laennec because he felt uncomfortable placing his ear directly on women's chests?",
+      "question": "What classic medical tool was invented in 1816 by French physician René Laennec because he felt uncomfortable placing his ear directly on women's chests?",
       "answer": "The stethoscope",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Stethoscope"
@@ -1770,7 +1770,7 @@
       "question": "Which organ is responsible for filtering waste from the blood and producing urine?",
       "answer": "Kidney",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Kidneys"
@@ -1781,7 +1781,7 @@
       "question": "What is the strongest and longest bone in the human body?",
       "answer": "Femur",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Thigh bone"
@@ -1792,7 +1792,7 @@
       "question": "In the human eye, what is the name of the clear front surface that covers the iris and pupil, acting like a window?",
       "answer": "Cornea",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1800,7 +1800,7 @@
       "question": "Alexander Fleming famously discovered the first modern antibiotic in 1928. What was it?",
       "answer": "Penicillin",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1808,7 +1808,7 @@
       "question": "What muscle, separating the chest cavity from the abdomen, is the primary muscle used in inhalation?",
       "answer": "Diaphragm",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1816,7 +1816,7 @@
       "question": "Jonas Salk famously refused to patent his 1955 medical breakthrough so that it could be distributed as widely and cheaply as possible. What disease did his vaccine target?",
       "answer": "Polio",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Poliomyelitis"
@@ -1827,7 +1827,7 @@
       "question": "How many chambers are there in a human heart?",
       "answer": "Four",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "4"
@@ -1838,7 +1838,7 @@
       "question": "What type of tissue connects bones to other bones?",
       "answer": "Ligaments",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Ligament"
@@ -1849,7 +1849,7 @@
       "question": "What type of tissue connects bones to muscle?",
       "answer": "Tendons",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Tendon"
@@ -1860,7 +1860,7 @@
       "question": "In what appendage is the stapes bone (the smallest bone in the human body) located?",
       "answer": "Ear",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "The ear",
@@ -1872,7 +1872,7 @@
       "question": "Edward Jenner famously developed the world's first successful vaccine in 1796. Which disease did it target?",
       "answer": "Smallpox",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1880,7 +1880,7 @@
       "question": "What is the only bone in the human body that is completely floating and not attached to any other bone?",
       "answer": "Hyoid bone",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Hyoid"
@@ -1891,7 +1891,7 @@
       "question": "What is the medical term for the \"white of the eye\"?",
       "answer": "Sclera",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -1899,7 +1899,7 @@
       "question": "What element, with the chemical symbol Fe, is essential for forming hemoglobin in red blood cells?",
       "answer": "Iron",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1907,7 +1907,7 @@
       "question": "What is the name of the medical condition characterized by a severe, sudden drop in bone density, making them fragile and brittle?",
       "answer": "Osteoporosis",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1915,7 +1915,7 @@
       "question": "What is the medical term for high blood pressure?",
       "answer": "Hypertension",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1923,7 +1923,7 @@
       "question": "True or False: Humans are born with more bones than they have as adults.",
       "answer": "True",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1931,7 +1931,7 @@
       "question": "What does the acronym \"MRI\" stand for in medical imaging?",
       "answer": "Magnetic Resonance Imaging",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -1939,7 +1939,7 @@
       "question": "True or False: Your ears and your nose never stop growing throughout your entire life.",
       "answer": "True",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -1947,7 +1947,7 @@
       "question": "Which major organ is protected by the cranium?",
       "answer": "The brain",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Brain"
@@ -1958,7 +1958,7 @@
       "question": "What are the four front teeth on both the top and bottom jaw used for cutting food called?",
       "answer": "Incisors",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Incisor"
@@ -1969,7 +1969,7 @@
       "question": "What is the name of the colored part of the human eye that controls the size of the pupil?",
       "answer": "Iris",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -1977,7 +1977,7 @@
       "question": "In 1922, a 14-year-old boy in Toronto became the first human being to receive a successful injection of what life-saving hormone to treat diabetes?",
       "answer": "Insulin",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -1985,7 +1985,7 @@
       "question": "What highly contagious disease, wiped out globally in 1980, remains the only human infectious disease to be completely eradicated through vaccination?",
       "answer": "Smallpox",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -1993,7 +1993,7 @@
       "question": "What is the specific name of the pigment found in red blood cells that uses iron to transport oxygen throughout the body?",
       "answer": "Hemoglobin",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2001,7 +2001,7 @@
       "question": "What part of the eye, named after the Latin word for \"net,\" contains the rods and cones that convert light into neural signals?",
       "answer": "Retina",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2009,7 +2009,7 @@
       "question": "Humans have three types of blood cells: red, white, and a third type responsible for clotting blood to stop bleeding. What is this third type called?",
       "answer": "Platelets",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Thrombocytes"
@@ -2020,7 +2020,7 @@
       "question": "Which organ filters all the blood leaving the stomach and intestines, breaking down nutrients and detoxifying chemicals?",
       "answer": "The liver",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Liver"
@@ -2031,7 +2031,7 @@
       "question": "What is the chemical name for the main sugar found in the blood, which serves as the body's primary source of energy?",
       "answer": "Glucose",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2039,7 +2039,7 @@
       "question": "Which organ in the human body consumes the largest share of our resting energy, burning roughly 20% of our daily calories?",
       "answer": "The brain",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Brain"
@@ -2050,7 +2050,7 @@
       "question": "What double-helix molecule, famously modeled by Watson, Crick, and Franklin in 1953, carries the genetic instructions for all living organisms?",
       "answer": "DNA",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Deoxyribonucleic acid"
@@ -2061,7 +2061,7 @@
       "question": "Known as the powerhouse of the cell, what organelle is responsible for generating the chemical energy (ATP) our cells need to function?",
       "answer": "Mitochondria",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -2069,7 +2069,7 @@
       "question": "How many pairs of chromosomes does a typical, healthy human cell contain?",
       "answer": "23 pairs",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "23",
@@ -2083,7 +2083,7 @@
       "question": "In genetics, a trait that only expresses itself when an organism inherits two copies of the gene is known by what term?",
       "answer": "Recessive",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2091,7 +2091,7 @@
       "question": "Which muscle, located at the back of the upper arm, is primarily responsible for extending the elbow joint?",
       "answer": "Triceps",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2099,7 +2099,7 @@
       "question": "Viagra is famous for being a happy accident. What medical condition was Pfizer actually trying to treat when they discovered the drug's lucrative side effect?",
       "answer": "High blood pressure",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Hypertension",
@@ -2112,7 +2112,7 @@
       "question": "What brand-name medication, introduced in 1987, became the first major FDA-approved Selective Serotonin Reuptake Inhibitor (SSRI) used to treat depression?",
       "answer": "Prozac",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Fluoxetine"
@@ -2123,7 +2123,7 @@
       "question": "If you are taking a medication that acts as a statin (like Lipitor or Crestor), what specific substance in your blood is your doctor trying to lower?",
       "answer": "Cholesterol",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2131,7 +2131,7 @@
       "question": "What is the brand name of the portable, automated device used to deliver a life-saving dose of epinephrine during a severe allergic reaction?",
       "answer": "EpiPen",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2139,7 +2139,7 @@
       "question": "What painkiller derives its name from the Greek god of dreams?",
       "answer": "Morphine",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -2147,15 +2147,15 @@
       "question": "What class of life-saving medications derives its name from Greek words meaning \"against life\"?",
       "answer": "Antibiotics",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
       "slug": "mercury-syphilis-treatment",
-      "question": "What heavy metal, historically nicknamed \"quicksilver,\" was used for centuries as a standard\u2014and toxic\u2014treatment for syphilis before antibiotics were discovered?",
+      "question": "What heavy metal, historically nicknamed \"quicksilver,\" was used for centuries as a standard—and toxic—treatment for syphilis before antibiotics were discovered?",
       "answer": "Mercury",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -2163,7 +2163,7 @@
       "question": "What do the letters \"ICU\" stand for in a hospital setting?",
       "answer": "Intensive Care Unit",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -2171,7 +2171,7 @@
       "question": "In pharmacy shorthand, what does the abbreviation \"Rx\" stand for?",
       "answer": "Prescription",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2179,7 +2179,7 @@
       "question": "What is the medical term for a condition where a patient has an abnormally low count of red blood cells, often causing fatigue and paleness?",
       "answer": "Anemia",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Anaemia"
@@ -2190,7 +2190,7 @@
       "question": "If a doctor tells you a medication must be administered sublingually, where are you supposed to place it?",
       "answer": "Under the tongue",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Beneath the tongue"
@@ -2201,7 +2201,7 @@
       "question": "What does the abbreviation \"OTC\" mean when tracking down medications at a pharmacy?",
       "answer": "Over the counter",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -2209,7 +2209,7 @@
       "question": "What suffix is added to a medical term to indicate inflammation of an organ or tissue?",
       "answer": "-itis",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "itis"
@@ -2220,7 +2220,7 @@
       "question": "If someone is suffering an acute myocardial infarction, what common medical emergency is happening to them?",
       "answer": "Heart attack",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2228,7 +2228,7 @@
       "question": "Which chronic metabolic disease is characterized by the body's inability to produce or properly use insulin, leading to elevated blood sugar levels?",
       "answer": "Diabetes",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "easy"
     },
     {
@@ -2236,7 +2236,7 @@
       "question": "What infectious disease, caused by a bacterium and historically known as \"Consumption,\" famously ravaged Victorian society and typically targets the lungs?",
       "answer": "Tuberculosis",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "TB"
@@ -2247,7 +2247,7 @@
       "question": "What type of organism causes common conditions like athlete's foot, ringworm, and thrush?",
       "answer": "Fungus",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Fungi"
@@ -2258,7 +2258,7 @@
       "question": "What specific name is given to the medical field that studies the patterns, causes, and effects of health and disease?",
       "answer": "Epidemiology",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard"
     },
     {
@@ -2266,7 +2266,7 @@
       "question": "What specific name is given to the medical oath of ethics historically taken by physicians, named after an ancient Greek doctor?",
       "answer": "The Hippocratic Oath",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Hippocratic Oath"
@@ -2277,7 +2277,7 @@
       "question": "What English scientist is famously credited with discovering the three laws of motion, but also made significant contributions to early optics by sliding a blunt needle around the back of his own eye to study color perception?",
       "answer": "Sir Isaac Newton",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Isaac Newton",
@@ -2289,7 +2289,7 @@
       "question": "What psychological condition describes a scenario where hostages develop a psychological bond or sympathy with their captors?",
       "answer": "Stockholm Syndrome",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2297,7 +2297,7 @@
       "question": "What medical term describes the process of sorting injured patients into categories based on the urgency of their need for care?",
       "answer": "Triage",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2305,7 +2305,7 @@
       "question": "What Latin word, meaning \"poison,\" gives us the modern word for sub-microscopic infectious agents that cannot replicate outside a host cell?",
       "answer": "Virus",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2313,7 +2313,7 @@
       "question": "What is the medical term for a physician who specializes in diagnosing and treating cancers?",
       "answer": "Oncologist",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2321,7 +2321,7 @@
       "question": "In hospital slang, what color code is universally used to broadcast an emergency announcement that a patient's heart has stopped or they have stopped breathing? Hint: \"We have a code _______!\"",
       "answer": "Blue",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Code Blue"
@@ -2329,10 +2329,10 @@
     },
     {
       "slug": "scurvy-vitamin-c-deficiency",
-      "question": "What historical, terrifyingly named disease\u2014caused by a vitamin C deficiency\u2014led to bleeding gums, opening wounds, and loss of teeth for sailors on long voyages?",
+      "question": "What historical, terrifyingly named disease—caused by a vitamin C deficiency—led to bleeding gums, opening wounds, and loss of teeth for sailors on long voyages?",
       "answer": "Scurvy",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium"
     },
     {
@@ -2340,7 +2340,7 @@
       "question": "Which organ in the human body is the only one that lacks pain receptors, meaning it cannot actually feel pain directly?",
       "answer": "The brain",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Brain"
@@ -2351,11 +2351,213 @@
       "question": "What major gland, shaped like a butterfly and located in the front of the neck, controls your body's overall metabolism?",
       "answer": "Thyroid",
       "answer_format": "write_in",
-      "category": "Science",
+      "category": "Science & Tech",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Thyroid gland"
       ]
+    },
+    {
+      "slug": "what-is-a-group-of-lions-typically-called",
+      "question": "What is a group of lions typically called?",
+      "answer": "Pride",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-land-animal-is-recognized-as-the-fastest-runner",
+      "question": "What is the fastest land animal?",
+      "answer": "Cheetah",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-does-html-stand-for-in-web-development",
+      "question": "What does HTML stand for in web development?",
+      "answer": "Hyper Text Markup Language",
+      "acceptableAnswers": [
+        "Hypertext Markup Language"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-invention-is-widely-credited-to-johannes-gutenberg-around-1440",
+      "question": "What invention is widely credited to Johannes Gutenberg around 1440?",
+      "answer": "Printing press",
+      "acceptableAnswers": [
+        "Gutenberg press",
+        "Gutenberg Printing Press"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-celestial-body-is-at-the-center-of-our-solar-system",
+      "question": "What celestial body is at the center of our solar system?",
+      "answer": "Sun",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-name-of-the-galaxy-our-solar-system-resides-in",
+      "question": "What is the name of the galaxy our solar system resides in?",
+      "answer": "Milky Way Galaxy",
+      "acceptableAnswers": [
+        "Milky Way"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "how-many-neck-vertebrae-does-a-giraffe-have-the-same-number-as-humans",
+      "question": "How many neck vertebrae does a giraffe have, the same number as humans?",
+      "answer": "7",
+      "acceptableAnswers": [
+        "seven"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-do-you-call-a-group-of-wolves",
+      "question": "What do you call a group of wolves?",
+      "answer": "Pack",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "how-many-days-are-in-a-standard-non-leap-year",
+      "question": "How many days are in a standard non-leap year?",
+      "answer": "365",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-chemical-symbol-for-the-element-sodium",
+      "question": "What is the chemical symbol for the element sodium?",
+      "answer": "Na",
+      "category": "Science & Tech",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-of-these-natural-phenomena-is-measured-by-the-richter-scale",
+      "question": "What natural phenomenon is measured by the Richter scale?",
+      "answer": "Earthquakes",
+      "acceptableAnswers": [
+        "Earthquake",
+        "Quake"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-roman-numeral-represents-the-number-100",
+      "question": "Which Roman numeral represents the number 100?",
+      "answer": "C",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "how-many-planets-are-there-in-our-solar-system",
+      "question": "How many planets are there in our solar system?",
+      "answer": "8",
+      "acceptableAnswers": [
+        "Eight"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-type-of-celestial-body-is-characterized-by-a-long-glowing-tail-when-it-approaches-the-sun",
+      "question": "What celestial body is characterized by a long, glowing tail when it approaches the sun?",
+      "answer": "Comet",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-does-the-ph-scale-measure",
+      "question": "What does the pH scale measure?",
+      "answer": "Acid-base balance",
+      "acceptableAnswers": [
+        "Acidity",
+        "Alkalinity",
+        "Acidity or alkalinity",
+        "Acid level",
+        "Alkaline level"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-process-called-when-a-liquid-turns-into-a-gas",
+      "question": "What is the scientific term for a liquid changing into a gas?",
+      "answer": "Evaporation",
+      "acceptableAnswers": [
+        "Vaporization",
+        "Vaporisation"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-scientific-unit-measures-the-frequency-of-a-wave",
+      "question": "What scientific unit measures the frequency of a wave?",
+      "answer": "Hertz",
+      "acceptableAnswers": [
+        "Hz"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-theory-describes-the-origin-and-expansion-of-the-universe",
+      "question": "What theory describes the origin and expansion of the universe?",
+      "answer": "Big Bang Theory",
+      "acceptableAnswers": [
+        "Big Bang"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-celestial-body-is-at-the-center-of-the-milky-way-galaxy",
+      "question": "What type of object is found at the center of the Milky Way galaxy?",
+      "answer": "Black hole",
+      "acceptableAnswers": [
+        "Supermassive black hole",
+        "Sagittarius A*",
+        "Sgr A*"
+      ],
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-element-is-most-abundant-by-mass-in-the-human-body",
+      "question": "Which element is most abundant by mass in the human body?",
+      "answer": "Oxygen",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "answer_format": "write_in"
     }
   ],
   "familiarity": "moderate"

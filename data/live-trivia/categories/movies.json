@@ -1178,7 +1178,7 @@
     },
     {
       "slug": "titanic-cal-hockley-actor",
-      "question": "Who played the arrogant, wealthy antagonist Cal Hockley, serving as Rose's controlling fianc\u00e9 aboard the ill-fated liner in Titanic?",
+      "question": "Who played the arrogant, wealthy antagonist Cal Hockley, serving as Rose's controlling fiancé aboard the ill-fated liner in Titanic?",
       "answer": "Billy Zane",
       "answer_format": "write_in",
       "category": "Movies",
@@ -1210,7 +1210,7 @@
       "acceptableAnswers": [
         "Gollum",
         "Smeagol",
-        "Sm\u00e9agol"
+        "Sméagol"
       ]
     },
     {
@@ -1393,7 +1393,7 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Timothee Chalamet",
-        "Timoth\u00e9e Chalamet",
+        "Timothée Chalamet",
         "Chalamet"
       ]
     },
@@ -1630,7 +1630,7 @@
     {
       "slug": "joker-2-subtitle",
       "question": "What is the official subtitle of the 2024 Joker sequel starring Joaquin Phoenix and Lady Gaga?",
-      "answer": "Folie \u00e0 Deux",
+      "answer": "Folie à Deux",
       "answer_format": "write_in",
       "category": "Movies",
       "difficulty": "easy"
@@ -1749,7 +1749,7 @@
     },
     {
       "slug": "schindlers-list-amon-goth-actor",
-      "question": "Who received critical acclaim for his deeply unsettling performance as the sadistic Nazi concentration camp commandant Amon G\u00f6th in Schindler's List?",
+      "question": "Who received critical acclaim for his deeply unsettling performance as the sadistic Nazi concentration camp commandant Amon Göth in Schindler's List?",
       "answer": "Ralph Fiennes",
       "answer_format": "write_in",
       "category": "Movies",
@@ -1927,9 +1927,9 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Alfonso Cuaron",
-        "Alfonso Cuar\u00f3n",
+        "Alfonso Cuarón",
         "Cuaron",
-        "Cuar\u00f3n"
+        "Cuarón"
       ]
     },
     {
@@ -2103,13 +2103,13 @@
     {
       "slug": "nomadland-director",
       "question": "Which acclaimed female filmmaker won the Academy Award for Best Director for helming the 2020 neo-western drama Nomadland?",
-      "answer": "Chlo\u00e9 Zhao",
+      "answer": "Chloé Zhao",
       "answer_format": "write_in",
       "category": "Movies",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Chloe Zhao",
-        "Chlo\u00e9 Zhao",
+        "Chloé Zhao",
         "Zhao"
       ]
     },
@@ -2187,8 +2187,8 @@
       ]
     },
     {
-      "slug": "t\u00e1r-lydia-tar-actress-2",
-      "question": "Who earned widespread critical acclaim for portraying Lydia T\u00e1r, an elite, complex orchestral conductor facing a public downfall in the 2022 film T\u00e1r?",
+      "slug": "tár-lydia-tar-actress-2",
+      "question": "Who earned widespread critical acclaim for portraying Lydia Tár, an elite, complex orchestral conductor facing a public downfall in the 2022 film Tár?",
       "answer": "Cate Blanchett",
       "answer_format": "write_in",
       "category": "Movies",
@@ -2462,7 +2462,7 @@
     {
       "slug": "la-vie-en-rose-marion-cotillard",
       "question": "Which singer was played by Marion Cotillard in the 2007 film La Vie en Rose?",
-      "answer": "\u00c9dith Piaf",
+      "answer": "Édith Piaf",
       "category": "Movies",
       "difficulty": "easy"
     },
@@ -2864,7 +2864,7 @@
     },
     {
       "slug": "quote-bruce-lee-water",
-      "question": "Which iconic martial artist and actor famously advised philosophers to 'Empty your mind, be formless, shapeless \u2014 like water'?",
+      "question": "Which iconic martial artist and actor famously advised philosophers to 'Empty your mind, be formless, shapeless — like water'?",
       "answer": "Bruce Lee",
       "answer_format": "write_in",
       "category": "Movies",
@@ -3864,7 +3864,7 @@
     },
     {
       "slug": "raging-bull-opening",
-      "question": "What movie starts with this monologue by Robert de Niro: 'I remember those cheers. They still ring in my ears. After years, they remain in my thoughts. Go to one night, I took off my robe, and what\u2019d I do? I forgot to wear shorts?'",
+      "question": "What movie starts with this monologue by Robert de Niro: 'I remember those cheers. They still ring in my ears. After years, they remain in my thoughts. Go to one night, I took off my robe, and what’d I do? I forgot to wear shorts?'",
       "answer": "Raging Bull",
       "category": "Movies",
       "difficulty": "easy"
@@ -3906,7 +3906,7 @@
     },
     {
       "slug": "fight-club-opening",
-      "question": "In what movie does the opening line read: 'People are always asking me if I know Tyler Durden\u2026?'",
+      "question": "In what movie does the opening line read: 'People are always asking me if I know Tyler Durden…?'",
       "answer": "Fight Club",
       "category": "Movies",
       "difficulty": "easy"
@@ -4067,6 +4067,67 @@
       "answer": "Gone Girl",
       "category": "Movies",
       "difficulty": "easy"
+    },
+    {
+      "slug": "which-film-won-the-academy-award-for-best-picture-in-2020-becoming-the-first-non-english-language-film-to-do-so",
+      "question": "Which film won the Academy Award for Best Picture in 2020, becoming the first non-English language film to do so?",
+      "answer": "Parasite",
+      "category": "Movies",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-directed-the-2010-sci-fi-blockbuster-inception",
+      "question": "Who directed the 2010 sci-fi blockbuster \"Inception\"?",
+      "answer": "Christopher Nolan",
+      "acceptableAnswers": [
+        "Nolan"
+      ],
+      "category": "Movies",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-actress-is-widely-recognized-for-her-role-as-hermione-granger-in-the-harry-potter-film-series",
+      "question": "Who played Hermione Granger in the 'Harry Potter' film series?",
+      "answer": "Emma Watson",
+      "acceptableAnswers": [
+        "Watson"
+      ],
+      "category": "Movies",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-animated-film-features-a-lion-cub-named-simba",
+      "question": "Which animated film features a lion cub named Simba?",
+      "answer": "The Lion King",
+      "acceptableAnswers": [
+        "Lion King"
+      ],
+      "category": "Movies",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-young-adult-novel-series-later-adapted-into-a-film-franchise-tells-the-story-of-vampires-werewolves-and-a-human-girl-named-bella-swan",
+      "question": "What young adult novel series, adapted into a film franchise, features vampires, werewolves, and a human girl named Bella Swan?",
+      "answer": "Twilight",
+      "acceptableAnswers": [
+        "The Twilight Saga",
+        "Twilight Saga"
+      ],
+      "category": "Movies",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-animated-pixar-film-features-a-forgetful-blue-tang-named-dory",
+      "question": "Which animated Pixar film features a forgetful blue tang named Dory?",
+      "answer": "Finding Nemo",
+      "category": "Movies",
+      "difficulty": "easy",
+      "answer_format": "write_in"
     }
   ]
 }

@@ -5,9 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 
 
-const GAMES = [
+const TRIVIA_GAMES = [
   { name: "Live Trivia", icon: "/brand/live_trivia_icon.png", description: "Host a bar-wide trivia night on your schedule. Every guest competes together in real time — the shared energy drives rounds of drinks, keeps people seated longer, and builds the kind of weekly ritual that fills seats on your slowest nights." },
   { name: "Speed Trivia", icon: "/brand/speed_trivia_icon.png", description: "Solo multiple-choice trivia your guests can pick up any time they walk in. It's a built-in reason to stay one more drink — and a steady engagement layer that works even when there's no event on the calendar." },
+];
+
+const SPORTS_GAMES = [
   { name: "Prop Bingo", icon: "/brand/bingo_icon.png", description: "Every game already on your TVs becomes a promotional tool. Guests get personal bingo cards that resolve live against real NFL, NBA, WNBA, and MLB stats — giving them a personal stake in every play, every quarter, every inning. The game on screen sells the next round." },
   { name: "Pick'Em", icon: "/brand/pickem_icon.png", description: "Let guests make fresh picks on the day's matchups — then run house challenges around whatever's on your screens. Launch a 'Pick the most World Cup winners' campaign, offer a prize, and watch passive viewers turn into active competitors with a reason to stay, order another round, and see who wins." },
   { name: "Fantasy Sports", icon: "/brand/fantasy_icon.png", description: "Guests choose a daily fantasy roster tied to the games you're already showing. When your patrons have skin in the game, they're not just watching — they're invested. Stack that with bar-run prizes and you've turned even low stakes NBA games into a reason for guests to stay longer and earn points and prizes." },
@@ -31,6 +34,7 @@ const HOW_IT_WORKS = [
 
 export default function InfoPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -176,15 +180,21 @@ export default function InfoPage() {
 
         {/* ── HERO ── */}
         <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-16">
+          <div
+            className="pointer-events-none absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('/brand/hero-poster.jpg')" }}
+          />
           <video
             ref={videoRef}
-            className="pointer-events-none absolute inset-0 w-full h-full object-cover"
+            className={`pointer-events-none absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoPlaying ? "opacity-100" : "opacity-0"}`}
             src="/brand/hero-video-2-compressed.mp4"
             autoPlay
             muted
             playsInline
             loop
             preload="auto"
+            poster="/brand/hero-poster.jpg"
+            onPlay={() => setVideoPlaying(true)}
           />
           <div className="pointer-events-none absolute inset-0 bg-slate-950/70" />
 
@@ -228,44 +238,74 @@ export default function InfoPage() {
 
         {/* ── GAMES ── */}
         <section id="games" className="py-24 px-5">
-          <div className="mx-auto max-w-6xl">
-            <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
-              The Game Library
-            </div>
-            <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>
-              Turn the games you show on TV into a promotional tool for your bar.
-            </h2>
-            <p className="htm-reveal text-slate-400 text-lg mb-14" data-reveal>
-              Guests compete with each other for bragging rights and prizes. If users want to play, they have to come to your establishment.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {GAMES.map((game) => (
-                <div
-                  key={game.name}
-                  className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/4 p-6 flex flex-row gap-5 items-start"
-                  data-reveal
-                >
-                  <Image src={game.icon} alt={game.name} width={96} height={96} className="rounded-xl flex-shrink-0" />
-                  <div>
-                    <h3 className="text-lg font-black text-white mb-1">{game.name}</h3>
-                    <p className="text-sm text-slate-400 leading-relaxed">{game.description}</p>
+          <div className="mx-auto max-w-6xl flex flex-col gap-20">
+
+            {/* Trivia sub-section */}
+            <div>
+              <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
+                Trivia
+              </div>
+              <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>
+                Hosting a trivia night doesn&apos;t have to be hard or expensive. Hightop Challenge does all the work for you.
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-10">
+                {TRIVIA_GAMES.map((game) => (
+                  <div
+                    key={game.name}
+                    className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/4 p-6 flex flex-row gap-5 items-start"
+                    data-reveal
+                  >
+                    <Image src={game.icon} alt={game.name} width={96} height={96} className="rounded-xl flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-black text-white mb-1">{game.name}</h3>
+                      <p className="text-sm text-slate-400 leading-relaxed">{game.description}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-              <div
-                className="htm-reveal htm-card-hover rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-6 flex flex-col justify-between gap-4"
-                data-reveal
-              >
-                <div>
-                  <div className="text-4xl mb-4">🎮</div>
-                  <h3 className="text-lg font-black text-white mb-1">More coming soon</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">New game formats are added regularly. Get in touch to learn what&apos;s next.</p>
-                </div>
-                <a href="mailto:partnerships@hightopchallenge.com" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
-                  Contact us →
-                </a>
+                ))}
               </div>
             </div>
+
+            {/* Sports sub-section */}
+            <div>
+              <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
+                Sports
+              </div>
+              <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>
+                Turn the games you show on TV into a promotional tool for your bar.
+              </h2>
+              <p className="htm-reveal text-slate-400 text-lg" data-reveal>
+                Guests compete with each other for bragging rights and prizes. If users want to play, they have to come to your establishment.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10">
+                {SPORTS_GAMES.map((game) => (
+                  <div
+                    key={game.name}
+                    className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/4 p-6 flex flex-row gap-5 items-start"
+                    data-reveal
+                  >
+                    <Image src={game.icon} alt={game.name} width={96} height={96} className="rounded-xl flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-black text-white mb-1">{game.name}</h3>
+                      <p className="text-sm text-slate-400 leading-relaxed">{game.description}</p>
+                    </div>
+                  </div>
+                ))}
+                <div
+                  className="htm-reveal htm-card-hover rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-6 flex flex-col justify-between gap-4"
+                  data-reveal
+                >
+                  <div>
+                    <div className="text-4xl mb-4">🎮</div>
+                    <h3 className="text-lg font-black text-white mb-1">More coming soon</h3>
+                    <p className="text-sm text-slate-400 leading-relaxed">New game formats are added regularly. Get in touch to learn what&apos;s next.</p>
+                  </div>
+                  <a href="mailto:partnerships@hightopchallenge.com" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
+                    Contact us →
+                  </a>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
 

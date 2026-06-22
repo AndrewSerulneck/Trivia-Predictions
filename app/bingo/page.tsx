@@ -12,7 +12,7 @@ export default async function SportsBingoPage({
   const initialCardId = String(params.cardId ?? "").trim();
 
   return (
-    <GameLandingExperience gameKey="bingo" playLabel="Play Bingo" playHref="/bingo/home">
+    <GameLandingExperience gameKey="bingo" playLabel="Play Bingo" playHref="/bingo/home" playingHidesShellNav playingContainerClassName="p-0">
       <Suspense fallback={null}>
         <SportsBingoHome initialDate={initialDate} initialCardId={initialCardId} />
       </Suspense>

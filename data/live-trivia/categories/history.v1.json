@@ -255,7 +255,7 @@
       "category": "History",
       "difficulty": "medium"
     },
-       {
+    {
       "slug": "who-developed-the-first-successful-polio-vaccine",
       "question": "Who developed the first successful polio vaccine?",
       "answer": "Jonas Salk",
@@ -263,14 +263,14 @@
       "category": "History",
       "difficulty": "hard"
     },
-        {
-"slug": "quote-marilyn-monroe-imperfect",
-"question": "Which American actress and cultural icon famously said, 'Imperfection is beauty, madness is genius and it's better to be absolutely ridiculous than absolutely boring'?",
-"answer": "Marilyn Monroe",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
+    {
+      "slug": "quote-marilyn-monroe-imperfect",
+      "question": "Which American actress and cultural icon famously said, 'Imperfection is beauty, madness is genius and it's better to be absolutely ridiculous than absolutely boring'?",
+      "answer": "Marilyn Monroe",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
     {
       "slug": "first-circumnavigation-leader",
       "question": "Who led the first expedition to circumnavigate the globe?",
@@ -2084,183 +2084,183 @@
       ]
     },
     {
-"slug": "quote-nelson-mandela-impossible",
-"question": "Which South African anti-apartheid revolutionary and president famously noted, 'It always seems impossible until it's done'?",
-"answer": "Nelson Mandela",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-rosa-parks-tired",
-"question": "Which American civil rights activist clarified her famous actions by stating, 'The only tired I was, was tired of giving in'?",
-"answer": "Rosa Parks",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-marie-curie-fear",
-"question": "Which Nobel Prize-winning physicist and chemist famously said, 'Nothing in life is to be feared, it is only to be understood'?",
-"answer": "Marie Curie",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "hard"
-},
-{
-"slug": "quote-eleanor-roosevelt-consent",
-"question": "Which American First Lady famously asserted, 'No one can make you feel inferior without your consent'?",
-"answer": "Eleanor Roosevelt",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-maya-angelou-people",
-"question": "Which acclaimed American poet and memoirist wrote, 'People will forget what you said, people will forget what you did, but people will never forget how you made them feel'?",
-"answer": "Maya Angelou",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-amelia-earhart-decision",
-"question": "Which pioneering American aviator famously remarked, 'The most difficult thing is the decision to act, the rest is merely tenacity'?",
-"answer": "Amelia Earhart",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "medium"
-},
-{
-"slug": "quote-princess-diana-marriage",
-"question": "Which British royal famously noted in a 1995 interview, 'Well, there were three of us in this marriage, so it was a bit crowded'?",
-"answer": "Princess Diana",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-mother-teresa-love",
-"question": "Which Catholic nun and saint famously instructed, 'Spread love everywhere you go. Let no one ever come to you without leaving happier'?",
-"answer": "Mother Teresa",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-margaret-thatcher-turning",
-"question": "Which British Prime Minister defiantly told her party conference in 1980, 'You turn if you want to. The lady's not for turning'?",
-"answer": "Margaret Thatcher",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "medium"
-},
-{
-"slug": "quote-benjamin-franklin-taxes",
-"question": "Which American Founding Father wrote in a 1789 letter that 'in this world, nothing can be said to be certain, except death and taxes'?",
-"answer": "Benjamin Franklin",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-thomas-edison-genius",
-"question": "Which prolific American inventor famously defined genius as 'one percent inspiration, ninety-nine percent perspiration'?",
-"answer": "Thomas Edison",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-theodore-roosevelt-stick",
-"question": "Which US President advocated for a foreign policy philosophy of speaking softly and carrying a big stick?",
-"answer": "Theodore Roosevelt",
-  "acceptableAnswers": [
-    "Teddy Roosevelt"
-  ],
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-franklin-roosevelt-fear",
-"question": "Which US President proclaimed during his 1933 inaugural address that 'the only thing we have to fear is fear itself'?",
-"answer": "FDR",
-"acceptableAnswers": [
-  "Roosevelt",
-  "Franklin Roosevelt",
-  "Franklin D. Roosevelt"
-],
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-winston-churchill-blood",
-"question": "Which British Prime Minister offered his country 'nothing but blood, toil, tears, and sweat' in a famous 1940 wartime speech?",
-"answer": "Winston Churchill",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-socrates-unexamined-life",
-"question": "Which ancient Greek philosopher asserted during his trial that 'the unexamined life is not worth living'?",
-"answer": "Socrates",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "medium"
-},
-{
-"slug": "quote-gandhi-change",
-"question": "Which Indian independence leader is widely credited with the inspirational philosophy, 'Be the change that you wish to see in the world'?",
-"answer": "Mahatma Gandhi",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-lincoln-gettysburg",
-"question": "Which US President delivered the 1863 Gettysburg Address, opening with the phrase, 'Four score and seven years ago'?",
-"answer": "Abraham Lincoln",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-mlk-dream",
-"question": "Which American civil rights leader delivered the famous 1963 speech declaring, 'I have a dream'?",
-"answer": "MLK",
-"acceptableAnswers": [
-  "Martin Luther King",
-  "Martin Luther King Jr."
-],
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-neil-armstrong-step",
-"question": "Which American astronaut famously said, 'That's one small step for man, one giant leap for mankind' in 1969?",
-"answer": "Neil Armstrong",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-{
-"slug": "quote-jfk-ask-not",
-"question": "Which US President declared during his 1961 inaugural address, 'Ask not what your country can do for you—ask what you can do for your country'?",
-"answer": "JFK",
-"acceptableAnswers": [
-  "Kennedy",
-  "John Kennedy",
-  "John F. Kennedy"
-],
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "easy"
-},
-   {
+      "slug": "quote-nelson-mandela-impossible",
+      "question": "Which South African anti-apartheid revolutionary and president famously noted, 'It always seems impossible until it's done'?",
+      "answer": "Nelson Mandela",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-rosa-parks-tired",
+      "question": "Which American civil rights activist clarified her famous actions by stating, 'The only tired I was, was tired of giving in'?",
+      "answer": "Rosa Parks",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-marie-curie-fear",
+      "question": "Which Nobel Prize-winning physicist and chemist famously said, 'Nothing in life is to be feared, it is only to be understood'?",
+      "answer": "Marie Curie",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "quote-eleanor-roosevelt-consent",
+      "question": "Which American First Lady famously asserted, 'No one can make you feel inferior without your consent'?",
+      "answer": "Eleanor Roosevelt",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-maya-angelou-people",
+      "question": "Which acclaimed American poet and memoirist wrote, 'People will forget what you said, people will forget what you did, but people will never forget how you made them feel'?",
+      "answer": "Maya Angelou",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-amelia-earhart-decision",
+      "question": "Which pioneering American aviator famously remarked, 'The most difficult thing is the decision to act, the rest is merely tenacity'?",
+      "answer": "Amelia Earhart",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "quote-princess-diana-marriage",
+      "question": "Which British royal famously noted in a 1995 interview, 'Well, there were three of us in this marriage, so it was a bit crowded'?",
+      "answer": "Princess Diana",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-mother-teresa-love",
+      "question": "Which Catholic nun and saint famously instructed, 'Spread love everywhere you go. Let no one ever come to you without leaving happier'?",
+      "answer": "Mother Teresa",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-margaret-thatcher-turning",
+      "question": "Which British Prime Minister defiantly told her party conference in 1980, 'You turn if you want to. The lady's not for turning'?",
+      "answer": "Margaret Thatcher",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "quote-benjamin-franklin-taxes",
+      "question": "Which American Founding Father wrote in a 1789 letter that 'in this world, nothing can be said to be certain, except death and taxes'?",
+      "answer": "Benjamin Franklin",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-thomas-edison-genius",
+      "question": "Which prolific American inventor famously defined genius as 'one percent inspiration, ninety-nine percent perspiration'?",
+      "answer": "Thomas Edison",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-theodore-roosevelt-stick",
+      "question": "Which US President advocated for a foreign policy philosophy of speaking softly and carrying a big stick?",
+      "answer": "Theodore Roosevelt",
+      "acceptableAnswers": [
+        "Teddy Roosevelt"
+      ],
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-franklin-roosevelt-fear",
+      "question": "Which US President proclaimed during his 1933 inaugural address that 'the only thing we have to fear is fear itself'?",
+      "answer": "FDR",
+      "acceptableAnswers": [
+        "Roosevelt",
+        "Franklin Roosevelt",
+        "Franklin D. Roosevelt"
+      ],
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-winston-churchill-blood",
+      "question": "Which British Prime Minister offered his country 'nothing but blood, toil, tears, and sweat' in a famous 1940 wartime speech?",
+      "answer": "Winston Churchill",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-socrates-unexamined-life",
+      "question": "Which ancient Greek philosopher asserted during his trial that 'the unexamined life is not worth living'?",
+      "answer": "Socrates",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "quote-gandhi-change",
+      "question": "Which Indian independence leader is widely credited with the inspirational philosophy, 'Be the change that you wish to see in the world'?",
+      "answer": "Mahatma Gandhi",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-lincoln-gettysburg",
+      "question": "Which US President delivered the 1863 Gettysburg Address, opening with the phrase, 'Four score and seven years ago'?",
+      "answer": "Abraham Lincoln",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-mlk-dream",
+      "question": "Which American civil rights leader delivered the famous 1963 speech declaring, 'I have a dream'?",
+      "answer": "MLK",
+      "acceptableAnswers": [
+        "Martin Luther King",
+        "Martin Luther King Jr."
+      ],
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-neil-armstrong-step",
+      "question": "Which American astronaut famously said, 'That's one small step for man, one giant leap for mankind' in 1969?",
+      "answer": "Neil Armstrong",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-jfk-ask-not",
+      "question": "Which US President declared during his 1961 inaugural address, 'Ask not what your country can do for you—ask what you can do for your country'?",
+      "answer": "JFK",
+      "acceptableAnswers": [
+        "Kennedy",
+        "John Kennedy",
+        "John F. Kennedy"
+      ],
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
       "slug": "who-was-the-first-person-to-step-on-the-moon",
       "question": "Who was the first person to step on the Moon?",
       "answer": "Neil Armstrong",
@@ -2276,7 +2276,7 @@
       "category": "History",
       "difficulty": "hard"
     },
-        {
+    {
       "slug": "in-which-year-did-the-first-man-walk-on-the-moon",
       "question": "In which year did the first man walk on the moon?",
       "answer": "1969",
@@ -2284,7 +2284,7 @@
       "category": "History",
       "difficulty": "medium"
     },
-       {
+    {
       "slug": "who-was-the-last-queen-of-france-before-the-french-revolution",
       "question": "Who was the last Queen of France before the French Revolution? Hint: 'Let them eat cake.'",
       "answer": "Marie Antoinette",
@@ -2292,7 +2292,7 @@
       "category": "History",
       "difficulty": "hard"
     },
-        {
+    {
       "slug": "who-is-credited-with-inventing-the-world-wide-web",
       "question": "Who is credited with inventing the World Wide Web?",
       "answer": "Tim Berners-Lee",
@@ -2300,26 +2300,22 @@
       "category": "History",
       "difficulty": "hard"
     },
-
-{
-"slug": "quote-rene-descartes-think",
-"question": "Which French philosopher coined the foundational Western philosophical statement, 'Cogito, ergo sum' (I think, therefore I am)?",
-"answer": "Rene Descartes",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "medium"
-},
-
-{
-"slug": "quote-karl-marx-religion",
-"question": "Which German philosopher and economic theorist famously described religion as 'the opium of the people'?",
-"answer": "Karl Marx",
-"answer_format": "write_in",
-"category": "History",
-"difficulty": "medium"
-},
-
-
+    {
+      "slug": "quote-rene-descartes-think",
+      "question": "Which French philosopher coined the foundational Western philosophical statement, 'Cogito, ergo sum' (I think, therefore I am)?",
+      "answer": "Rene Descartes",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "quote-karl-marx-religion",
+      "question": "Which German philosopher and economic theorist famously described religion as 'the opium of the people'?",
+      "answer": "Karl Marx",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
     {
       "slug": "vietnam-war-protests",
       "question": "What Southeast Asian war sparked massive domestic protests and divided America throughout the 1960s and 70s?",
@@ -2719,111 +2715,494 @@
       "difficulty": "medium"
     },
     {
-    "slug": "history-oxford-aztec",
-    "question": "Which is older: the Aztec Empire or Oxford University?",
-    "answer": "Oxford University",
-    "category": "History",
-    "difficulty": "medium",
-    "acceptableAnswers": [
-      "Oxford University",
-      "Oxford",
-      "University of Oxford"
-    ]
-  },
-  {
-    "slug": "history-cleopatra-pyramids-iphone",
-    "question": "Chronologically, did Egyptian Queen Cleopatra live closer to the construction of the Great Pyramid of Giza or closer to the release of the first Apple iPhone?",
-    "answer": "The iPhone",
-    "category": "History",
-    "difficulty": "medium",
-    "acceptableAnswers": [
-      "iPhone",
-      "The iPhone",
-      "The release of the iPhone",
-      "First iPhone"
-    ]
-  },
-  {
-    "slug": "history-anne-frank-martin-luther-king",
-    "question": "Diarist Anne Frank and civil rights leader Martin Luther King Jr. were both born in what exact same calendar year?",
-    "answer": "1929",
-    "category": "History",
-    "difficulty": "medium",
-    "acceptableAnswers": [
-      "1929"
-    ]
-  },
-  {
-    "slug": "history-harvard-calculus",
-    "question": "Which is older, calculus or Harvard University?",
-    "answer": "Harvard University",
-    "category": "History",
-    "difficulty": "medium",
-    "acceptableAnswers": [
-      "No",
-      "Calculus had not been invented",
-      "False"
-    ]
-  },
-  {
-    "slug": "history-picasso-chicago-bulls",
-    "question": "True or False: Pablo Picasso lived to see the Moon Landing.",
-    "answer": "True",
-    "category": "History",
-    "difficulty": "hard",
-    "acceptableAnswers": [
-      "1970s",
-      "1973",
-      "Seventies",
-      "The 1970s"
-    ]
-  },
-  {
-    "slug": "history-chicago-city-machu-picchu",
-    "question": "Which human creation is older: the Incas building the citadel of Machu Picchu in Peru, or the official founding of the city of Chicago?",
-    "answer": "Machu Picchu",
-    "category": "History",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Machu Picchu"
-    ]
-  },
-  
-  {
-    "slug": "history-sharks-saturn-rings",
-    "question": "Which came first: Sharks or Saturn's rings?",
-    "answer": "Sharks",
-    "category": "History",
-    "difficulty": "medium",
-    "acceptableAnswers": [
-      "Sharks",
-      "Earth's sharks"
-    ]
-  },
-  {
-    "slug": "history-match-lighter",
-    "question": "Which was invented first, matches or lighters?",
-    "answer": "Lighters",
-    "category": "History",
-    "difficulty": "hard",
-    "acceptableAnswers": [
-      "The lighter",
-      "Cigarette lighter",
-      "Lighter",
-      "The cigarette lighter"
-    ]
-  },
-  {
-    "slug": "history-stonehenge-great-wall",
-    "question": "Which structure was started first: Stonehenge or the Great Wall of China?",
-    "answer": "Stonehenge",
-    "category": "History",
-    "difficulty": "medium",
-    "acceptableAnswers": [
-      "Stonehenge"
-    ]
-  }
-  
+      "slug": "history-oxford-aztec",
+      "question": "Which is older: the Aztec Empire or Oxford University?",
+      "answer": "Oxford University",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Oxford University",
+        "Oxford",
+        "University of Oxford"
+      ]
+    },
+    {
+      "slug": "history-cleopatra-pyramids-iphone",
+      "question": "Chronologically, did Egyptian Queen Cleopatra live closer to the construction of the Great Pyramid of Giza or closer to the release of the first Apple iPhone?",
+      "answer": "The iPhone",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "iPhone",
+        "The iPhone",
+        "The release of the iPhone",
+        "First iPhone"
+      ]
+    },
+    {
+      "slug": "history-anne-frank-martin-luther-king",
+      "question": "Diarist Anne Frank and civil rights leader Martin Luther King Jr. were both born in what exact same calendar year?",
+      "answer": "1929",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "1929"
+      ]
+    },
+    {
+      "slug": "history-harvard-calculus",
+      "question": "Which is older, calculus or Harvard University?",
+      "answer": "Harvard University",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "No",
+        "Calculus had not been invented",
+        "False"
+      ]
+    },
+    {
+      "slug": "history-picasso-chicago-bulls",
+      "question": "True or False: Pablo Picasso lived to see the Moon Landing.",
+      "answer": "True",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "1970s",
+        "1973",
+        "Seventies",
+        "The 1970s"
+      ]
+    },
+    {
+      "slug": "history-chicago-city-machu-picchu",
+      "question": "Which human creation is older: the Incas building the citadel of Machu Picchu in Peru, or the official founding of the city of Chicago?",
+      "answer": "Machu Picchu",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Machu Picchu"
+      ]
+    },
+    {
+      "slug": "history-sharks-saturn-rings",
+      "question": "Which came first: Sharks or Saturn's rings?",
+      "answer": "Sharks",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Sharks",
+        "Earth's sharks"
+      ]
+    },
+    {
+      "slug": "history-match-lighter",
+      "question": "Which was invented first, matches or lighters?",
+      "answer": "Lighters",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "The lighter",
+        "Cigarette lighter",
+        "Lighter",
+        "The cigarette lighter"
+      ]
+    },
+    {
+      "slug": "history-stonehenge-great-wall",
+      "question": "Which structure was started first: Stonehenge or the Great Wall of China?",
+      "answer": "Stonehenge",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Stonehenge"
+      ]
+    },
+    {
+      "slug": "in-roman-mythology-who-is-the-god-of-war",
+      "question": "In Roman mythology, who is the god of war?",
+      "answer": "Mars",
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-french-general-rose-to-prominence-during-the-french-revolution-and-later-crowned-himself-emperor-of-the-french",
+      "question": "What French general, prominent during the French Revolution, later crowned himself Emperor of the French?",
+      "answer": "Napoleon Bonaparte",
+      "acceptableAnswers": [
+        "Napoleon",
+        "Bonaparte"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-european-country-was-the-first-to-establish-a-direct-sea-route-to-india",
+      "question": "Which European country was the first to establish a direct sea route to India?",
+      "answer": "Portugal",
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-was-the-greek-philosopher-who-taught-plato-and-was-sentenced-to-death-by-drinking-hemlock",
+      "question": "Who was the Greek philosopher who taught Plato and was sentenced to death by drinking hemlock?",
+      "answer": "Socrates",
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-was-the-leader-of-the-soviet-union-when-the-berlin-wall-was-constructed-in-1961",
+      "question": "Who was the leader of the Soviet Union when the Berlin Wall was constructed in 1961?",
+      "answer": "Nikita Khrushchev",
+      "acceptableAnswers": [
+        "Khrushchev",
+        "Khruschev"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-declaration-of-independence-was-primarily-authored-by-whom",
+      "question": "Who was the primary author of the Declaration of Independence?",
+      "answer": "Thomas Jefferson",
+      "acceptableAnswers": [
+        "Jefferson"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-what-city-was-the-declaration-of-independence-signed",
+      "question": "In what city was the Declaration of Independence signed?",
+      "answer": "Philadelphia",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-year-did-world-war-ii-officially-end-with-the-surrender-of-japan",
+      "question": "In what year did World War II officially conclude with Japan's surrender?",
+      "answer": "1945",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "napoleon-bonaparte-was-finally-defeated-at-which-famous-battle-in-1815",
+      "question": "Napoleon Bonaparte was finally defeated at which famous battle in 1815?",
+      "answer": "Battle of Waterloo",
+      "acceptableAnswers": [
+        "Waterloo",
+        "The Battle of Waterloo"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "on-d-day-june-6-1944-allied-forces-launched-a-massive-amphibious-invasion-of-which-region-of-france",
+      "question": "On D-Day, June 6, 1944, Allied forces launched a massive amphibious invasion of which region of France?",
+      "answer": "Normandy",
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-magna-carta-signed-in-1215-limited-the-power-of-the-monarch-in-which-country",
+      "question": "The Magna Carta, signed in 1215, limited the power of the monarch in which country?",
+      "answer": "England",
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-term-meiji-restoration-refers-to-a-period-of-rapid-modernization-and-industrialization-in-which-country",
+      "question": "The term \"Meiji Restoration\" refers to a period of rapid modernization and industrialization in which country?",
+      "answer": "Japan",
+      "category": "History",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-significant-event-occurred-on-july-4-1776-in-the-united-states",
+      "question": "What historic document was adopted on July 4, 1776?",
+      "answer": "Declaration of Independence",
+      "acceptableAnswers": [
+        "The Declaration of Independence"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-major-historical-event-occurred-on-december-7-1941-leading-to-the-united-states-entry-into-world-war-ii",
+      "question": "What major historical event on December 7, 1941, led to the United States' entry into World War II?",
+      "answer": "Attack on Pearl Harbor",
+      "acceptableAnswers": [
+        "Pearl Harbor",
+        "Bombing of Pearl Harbor",
+        "Japanese Attack on Pearl Harbor"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-ancient-empire-was-known-for-its-extensive-road-network-and-the-invention-of-concrete",
+      "question": "Which ancient empire was known for its extensive road network and the invention of concrete?",
+      "answer": "Roman Empire",
+      "acceptableAnswers": [
+        "Rome",
+        "Ancient Rome",
+        "The Roman Empire"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "sputnik-1-first-country",
+      "question": "Which country was the first to successfully launch a satellite into orbit, Sputnik 1, in 1957?",
+      "answer": "Soviet Union",
+      "acceptableAnswers": [
+        "USSR"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-egyptian-queen-was-known-for-her-relationships-with-julius-caesar-and-mark-antony",
+      "question": "Which Egyptian queen was known for her relationships with Julius Caesar and Mark Antony?",
+      "answer": "Cleopatra VII",
+      "acceptableAnswers": [
+        "Cleopatra",
+        "Cleopatra 7"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-famous-general-crossed-the-alps-with-elephants-to-attack-rome",
+      "question": "Which general famously crossed the Alps with elephants to attack Rome?",
+      "answer": "Hannibal Barca",
+      "acceptableAnswers": [
+        "Hannibal"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-german-monk-is-widely-credited-with-initiating-the-protestant-reformation-by-posting-his-ninety-five-theses",
+      "question": "Which German monk is widely credited with initiating the Protestant Reformation by posting his Ninety-five Theses?",
+      "answer": "Martin Luther",
+      "acceptableAnswers": [
+        "Luther"
+      ],
+      "category": "History",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-treaty-of-versailles-officially-ended-which-major-conflict",
+      "question": "Which major conflict did the Treaty of Versailles officially end?",
+      "answer": "World War I",
+      "acceptableAnswers": [
+        "WWI",
+        "The Great War",
+        "First World War"
+      ],
+      "category": "History",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "assassination-franz-ferdinand-war",
+      "question": "Whose assassination sparked World War I?",
+      "answer": "Franz Ferdinand",
+      "acceptableAnswers": [
+        "Archduke Franz Ferdinand"
+      ],
+      "category": "History",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-major-empire-was-founded-by-osman-i-in-anatolia",
+      "question": "Which major empire was founded by Osman I in Anatolia?",
+      "answer": "Ottoman Empire",
+      "acceptableAnswers": [
+        "Ottoman"
+      ],
+      "category": "History",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-treaty-officially-ended-the-american-revolutionary-war-in-1783",
+      "question": "Which treaty officially ended the American Revolutionary War in 1783?",
+      "answer": "Treaty of Paris",
+      "acceptableAnswers": [
+        "Paris Treaty",
+        "Peace of Paris",
+        "Treaty of Paris of 1783"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-delivered-the-i-have-a-dream-speech-during-the-civil-rights-movement-in-the-united-states",
+      "question": "Who delivered the iconic \"I Have a Dream\" speech?",
+      "answer": "Martin Luther King Jr.",
+      "acceptableAnswers": [
+        "MLK",
+        "Martin Luther King",
+        "Dr. King",
+        "King"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-founded-the-mongol-empire-becoming-its-first-great-khan",
+      "question": "Who founded the Mongol Empire, becoming its first Great Khan?",
+      "answer": "Genghis Khan",
+      "acceptableAnswers": [
+        "Chinggis Khan",
+        "Temüjin"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-was-the-first-human-to-walk-on-the-moon",
+      "question": "Who was the first human to walk on the Moon?",
+      "answer": "Neil Armstrong",
+      "acceptableAnswers": [
+        "Armstrong"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-is-credited-with-inventing-the-printing-press-with-movable-type-around-1440",
+      "question": "Who is credited with inventing the printing press with movable type around 1440?",
+      "answer": "Johannes Gutenberg",
+      "acceptableAnswers": [
+        "Gutenberg",
+        "Johann Gutenberg"
+      ],
+      "category": "History",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-american-civil-war-began-in-what-year",
+      "question": "In what year did the American Civil War begin?",
+      "answer": "1861",
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-portuguese-explorer-was-the-first-european-to-reach-india-by-sea-sailing-around-africa",
+      "question": "Name the Portuguese explorer who was the first European to reach India by sea, sailing around Africa.?",
+      "answer": "Vasco da Gama",
+      "acceptableAnswers": [
+        "Da Gama"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-great-leap-forward-was-an-economic-and-social-campaign-led-by-which-country-from-1958-to-1962",
+      "question": "The 'Great Leap Forward' was an economic and social campaign led by which country from 1958 to 1962?",
+      "answer": "China",
+      "acceptableAnswers": [
+        "People's Republic of China",
+        "PRC"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-french-revolution-began-with-the-storming-of-which-prison-fortress",
+      "question": "The French Revolution began with the storming of which prison fortress?",
+      "answer": "The Bastille",
+      "acceptableAnswers": [
+        "Bastille"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-major-empire-collapsed-at-the-end-of-world-war-i-leading-to-the-creation-of-modern-turkey",
+      "question": "Which major empire collapsed at the end of World War I, leading to the creation of modern Turkey?",
+      "answer": "Ottoman Empire",
+      "acceptableAnswers": [
+        "Ottoman"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-region-was-the-target-of-the-d-day-landings-in-june-1944",
+      "question": "Which region was the target of the D-Day landings in June 1944?",
+      "answer": "Normandy",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-roman-emperor-declared-christianity-the-state-religion-of-the-roman-empire",
+      "question": "Which Roman emperor declared Christianity the state religion of the Roman Empire?",
+      "answer": "Constantine the Great",
+      "acceptableAnswers": [
+        "Constantine",
+        "Constantine I"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-was-the-first-holy-roman-emperor-crowned-in-800-ad",
+      "question": "Who was the first Holy Roman Emperor, crowned in 800 AD?",
+      "answer": "Charlemagne",
+      "acceptableAnswers": [
+        "Charles the Great"
+      ],
+      "category": "History",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-was-the-third-president-of-the-united-states",
+      "question": "Who was the third President of the United States?",
+      "answer": "Thomas Jefferson",
+      "acceptableAnswers": [
+        "Jefferson"
+      ],
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    }
   ],
   "familiarity": "moderate"
 }

@@ -98,7 +98,7 @@
         "Palindromes"
       ]
     },
-        {
+    {
       "slug": "which-author-wrote-romeo-and-juliet",
       "question": "Which author wrote 'Romeo and Juliet'?",
       "answer": "William Shakespeare",
@@ -566,7 +566,7 @@
       "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "met-gala-annual-date",
       "question": "The Met Gala is traditionally held on the first Monday of which month?",
       "answer": "May",
@@ -574,14 +574,14 @@
       "category": "Art, Literature and Comics",
       "difficulty": "medium"
     },
-        {
-"slug": "quote-coco-chanel-irreplaceable",
-"question": "Which French fashion designer famously declared, 'In order to be irreplaceable one must always be different'?",
-"answer": "Coco Chanel",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy"
-},
+    {
+      "slug": "quote-coco-chanel-irreplaceable",
+      "question": "Which French fashion designer famously declared, 'In order to be irreplaceable one must always be different'?",
+      "answer": "Coco Chanel",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
     {
       "slug": "hero-green-lantern",
       "question": "Which superhero belongs to an intergalactic police force and uses a powerful green ring powered by willpower?",
@@ -1359,7 +1359,7 @@
         "Watchmen"
       ]
     },
-        {
+    {
       "slug": "who-wrote-the-classic-novel-don-quixote",
       "question": "Who wrote the classic novel \"Don Quixote\"?",
       "answer": "Miguel de Cervantes",
@@ -1367,170 +1367,207 @@
       "category": "Art, Literature and Comics",
       "difficulty": "hard"
     },
-    
-{
-"slug": "minority-report-adaptation",
-"question": "What Philip K. Dick short story was adapted into a 2002 film starring Tom Cruise and directed by Steven Spielberg?",
-"answer": "Minority Report",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Minority Report", "The Minority Report"]
-},
-{
-"slug": "no-country-for-old-men-adaptation",
-"question": "What Cormac McCarthy novel was adapted into a 2007 film starring Tommy Lee Jones and directed by Joel and Ethan Coen?",
-"answer": "No Country for Old Men",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["No Country for Old Men"]
-},
-{
-"slug": "the-shining-adaptation",
-"question": "What Stephen King novel was adapted into a 1980 film starring Jack Nicholson and directed by Stanley Kubrick?",
-"answer": "The Shining",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Shining"]
-},
-{
-"slug": "forrest-gump-adaptation",
-"question": "What Winston Groom novel was adapted into a 1994 film starring Tom Hanks and directed by Robert Zemeckis?",
-"answer": "Forrest Gump",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Forrest Gump"]
-},
-{
-"slug": "the-godfather-adaptation",
-"question": "What Mario Puzo novel was adapted into a 1972 film starring Marlon Brando and directed by Francis Ford Coppola?",
-"answer": "The Godfather",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Godfather"]
-},
-{
-"slug": "jurassic-park-adaptation",
-"question": "What Michael Crichton novel was adapted into a 1993 film starring Sam Neill and directed by Steven Spielberg?",
-"answer": "Jurassic Park",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Jurassic Park"]
-},
-{
-"slug": "the-silence-of-the-lambs-adaptation",
-"question": "What Thomas Harris novel was adapted into a 1991 film starring Jodie Foster and directed by Jonathan Demme?",
-"answer": "The Silence of the Lambs",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Silence of the Lambs"]
-},
-{
-"slug": "children-of-men-adaptation",
-"question": "What P.D. James novel was adapted into a 2006 film starring Clive Owen and directed by Alfonso Cuarón?",
-"answer": "Children of Men",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Children of Men", "The Children of Men"]
-},
-{
-"slug": "the-road-adaptation",
-"question": "What Cormac McCarthy novel was adapted into a 2009 film starring Viggo Mortensen and directed by John Hillcoat?",
-"answer": "The Road",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Road"]
-},
-{
-"slug": "gone-girl-adaptation",
-"question": "What Gillian Flynn novel was adapted into a 2014 film starring Ben Affleck and directed by David Fincher?",
-"answer": "Gone Girl",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Gone Girl"]
-},
-{
-"slug": "fight-club-adaptation",
-"question": "What Chuck Palahniuk novel was adapted into a 1999 film starring Brad Pitt and directed by David Fincher?",
-"answer": "Fight Club",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Fight Club"]
-},
-{
-"slug": "blade-runner-adaptation",
-"question": "The novel 'Do Androids Dream of Electric Sheep?' by Philip K. Dick would eventually be adapted into what 1982 film starring Harrison Ford?",
-"answer": "Blade Runner",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Blade Runner"]
-},
-{
-"slug": "the-prestige-adaptation",
-"question": "What Christopher Priest novel was adapted into a 2006 film starring Hugh Jackman and directed by Christopher Nolan?",
-"answer": "The Prestige",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Prestige"]
-},
-{
-"slug": "misery-adaptation",
-"question": "What Stephen King novel was adapted into a 1990 film starring James Caan and directed by Rob Reiner?",
-"answer": "Misery",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Misery"]
-},
-{
-"slug": "goodfellas-adaptation",
-"question": "What Nicholas Pileggi non-fiction book was adapted into a 1990 film starring Ray Liotta and directed by Martin Scorsese?",
-"answer": "Wiseguy",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Wiseguy"]
-},
-{
-"slug": "jaws-adaptation",
-"question": "What Peter Benchley novel was adapted into a 1975 film starring Roy Scheider and directed by Steven Spielberg?",
-"answer": "Jaws",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Jaws"]
-},
-{
-"slug": "the-green-mile-adaptation",
-"question": "What Stephen King novel was adapted into a 1999 film starring Tom Hanks and directed by Frank Darabont?",
-"answer": "The Green Mile",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Green Mile"]
-},
-{
-"slug": "drive-adaptation",
-"question": "What James Sallis novel was adapted into a 2011 film starring Ryan Gosling and directed by Nicolas Winding Refn?",
-"answer": "Drive",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Drive"]
-},
-   {
+    {
+      "slug": "minority-report-adaptation",
+      "question": "What Philip K. Dick short story was adapted into a 2002 film starring Tom Cruise and directed by Steven Spielberg?",
+      "answer": "Minority Report",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Minority Report",
+        "The Minority Report"
+      ]
+    },
+    {
+      "slug": "no-country-for-old-men-adaptation",
+      "question": "What Cormac McCarthy novel was adapted into a 2007 film starring Tommy Lee Jones and directed by Joel and Ethan Coen?",
+      "answer": "No Country for Old Men",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "No Country for Old Men"
+      ]
+    },
+    {
+      "slug": "the-shining-adaptation",
+      "question": "What Stephen King novel was adapted into a 1980 film starring Jack Nicholson and directed by Stanley Kubrick?",
+      "answer": "The Shining",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Shining"
+      ]
+    },
+    {
+      "slug": "forrest-gump-adaptation",
+      "question": "What Winston Groom novel was adapted into a 1994 film starring Tom Hanks and directed by Robert Zemeckis?",
+      "answer": "Forrest Gump",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Forrest Gump"
+      ]
+    },
+    {
+      "slug": "the-godfather-adaptation",
+      "question": "What Mario Puzo novel was adapted into a 1972 film starring Marlon Brando and directed by Francis Ford Coppola?",
+      "answer": "The Godfather",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Godfather"
+      ]
+    },
+    {
+      "slug": "jurassic-park-adaptation",
+      "question": "What Michael Crichton novel was adapted into a 1993 film starring Sam Neill and directed by Steven Spielberg?",
+      "answer": "Jurassic Park",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Jurassic Park"
+      ]
+    },
+    {
+      "slug": "the-silence-of-the-lambs-adaptation",
+      "question": "What Thomas Harris novel was adapted into a 1991 film starring Jodie Foster and directed by Jonathan Demme?",
+      "answer": "The Silence of the Lambs",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Silence of the Lambs"
+      ]
+    },
+    {
+      "slug": "children-of-men-adaptation",
+      "question": "What P.D. James novel was adapted into a 2006 film starring Clive Owen and directed by Alfonso Cuarón?",
+      "answer": "Children of Men",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Children of Men",
+        "The Children of Men"
+      ]
+    },
+    {
+      "slug": "the-road-adaptation",
+      "question": "What Cormac McCarthy novel was adapted into a 2009 film starring Viggo Mortensen and directed by John Hillcoat?",
+      "answer": "The Road",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Road"
+      ]
+    },
+    {
+      "slug": "gone-girl-adaptation",
+      "question": "What Gillian Flynn novel was adapted into a 2014 film starring Ben Affleck and directed by David Fincher?",
+      "answer": "Gone Girl",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Gone Girl"
+      ]
+    },
+    {
+      "slug": "fight-club-adaptation",
+      "question": "What Chuck Palahniuk novel was adapted into a 1999 film starring Brad Pitt and directed by David Fincher?",
+      "answer": "Fight Club",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Fight Club"
+      ]
+    },
+    {
+      "slug": "blade-runner-adaptation",
+      "question": "The novel 'Do Androids Dream of Electric Sheep?' by Philip K. Dick would eventually be adapted into what 1982 film starring Harrison Ford?",
+      "answer": "Blade Runner",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Blade Runner"
+      ]
+    },
+    {
+      "slug": "the-prestige-adaptation",
+      "question": "What Christopher Priest novel was adapted into a 2006 film starring Hugh Jackman and directed by Christopher Nolan?",
+      "answer": "The Prestige",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Prestige"
+      ]
+    },
+    {
+      "slug": "misery-adaptation",
+      "question": "What Stephen King novel was adapted into a 1990 film starring James Caan and directed by Rob Reiner?",
+      "answer": "Misery",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Misery"
+      ]
+    },
+    {
+      "slug": "goodfellas-adaptation",
+      "question": "What Nicholas Pileggi non-fiction book was adapted into a 1990 film starring Ray Liotta and directed by Martin Scorsese?",
+      "answer": "Wiseguy",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Wiseguy"
+      ]
+    },
+    {
+      "slug": "jaws-adaptation",
+      "question": "What Peter Benchley novel was adapted into a 1975 film starring Roy Scheider and directed by Steven Spielberg?",
+      "answer": "Jaws",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Jaws"
+      ]
+    },
+    {
+      "slug": "the-green-mile-adaptation",
+      "question": "What Stephen King novel was adapted into a 1999 film starring Tom Hanks and directed by Frank Darabont?",
+      "answer": "The Green Mile",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Green Mile"
+      ]
+    },
+    {
+      "slug": "drive-adaptation",
+      "question": "What James Sallis novel was adapted into a 2011 film starring Ryan Gosling and directed by Nicolas Winding Refn?",
+      "answer": "Drive",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Drive"
+      ]
+    },
+    {
       "slug": "which-classic-novel-begins-with-the-line-call-me-ishmael",
       "question": "Which classic novel begins with the line \"Call me Ishmael\"?",
       "answer": "Moby Dick",
@@ -1538,7 +1575,7 @@
       "category": "Art, Literature and Comics",
       "difficulty": "hard"
     },
-        {
+    {
       "slug": "which-fictional-detective-lives-at-221b-baker-street",
       "question": "Which fictional detective lives at 221B Baker Street?",
       "answer": "Sherlock Holmes",
@@ -1546,7 +1583,7 @@
       "category": "Art, Literature and Comics",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "which-artist-painted-the-starry-night",
       "question": "Which artist painted \"The Starry Night\"?",
       "answer": "Vincent van Gogh",
@@ -1554,7 +1591,7 @@
       "category": "Art, Literature and Comics",
       "difficulty": "hard"
     },
-        {
+    {
       "slug": "who-painted-the-mona-lisa",
       "question": "Who painted the Mona Lisa?",
       "answer": "Leonardo da Vinci",
@@ -1562,7 +1599,7 @@
       "category": "Art, Literature and Comics",
       "difficulty": "medium"
     },
-        {
+    {
       "slug": "who-wrote-the-odyssey",
       "question": "Who wrote 'The Odyssey'?",
       "answer": "Homer",
@@ -1570,550 +1607,738 @@
       "category": "Art, Literature and Comics",
       "difficulty": "hard"
     },
-  {
-    "slug": "it-was-the-best-of-times",
-    "question": "In what book does the opening line read: 'It was the best of times, it was the worst of times.'?",
-    "answer": "A Tale of Two Cities",
-    "category": "Art, Literature and Comics",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "all-children-grow-up",
-    "question": "In what classic children's book does the opening line read: 'All children, except one, grow up.'?",
-    "answer": "Peter Pan",
-    "category": "Art, Literature and Comics",
-    "difficulty": "easy"
-  },
-
-  {
-    "slug": "mr-and-mrs-dursley",
-    "question": "In what book does the opening line read: 'Mr. and Mrs. Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much.'?",
-    "answer": "Harry Potter and the Sorcerer's Stone",
-    "category": "Art, Literature and Comics",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "in-a-hole-in-the-ground",
-    "question": "In what book does the opening line read: 'In a hole in the ground there lived a hobbit.'?",
-    "answer": "The Hobbit",
-    "category": "Art, Literature and Comics",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "it-was-a-bright-cold-day",
-    "question": "In what book does the opening line read: 'It was a bright cold day in April, and the clocks were striking thirteen.'?",
-    "answer": "1984",
-    "category": "Art, Literature and Comics",
-    "difficulty": "easy"
-  },
-{
-"slug": "american-psycho-adaptation",
-"question": "What Bret Easton Ellis novel was adapted into a 2000 film starring Christian Bale and directed by Mary Harron?",
-"answer": "American Psycho",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["American Psycho"]
-},
-{
-"slug": "the-revenant-adaptation",
-"question": "What Michael Punke novel was adapted into a 2015 film starring Leonardo DiCaprio and directed by Alejandro G. Iñárritu?",
-"answer": "The Revenant",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Revenant"]
-},
-{
-"slug": "the-princess-bride-adaptation",
-"question": "What William Goldman novel was adapted into a 1987 film starring Cary Elwes and directed by Rob Reiner?",
-"answer": "The Princess Bride",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Princess Bride"]
-},
-
-{
-"slug": "the-catcher-in-the-rye-classic",
-"question": "What 1951 novel by J.D. Salinger details the teenage disillusionment and alienation of Holden Caulfield following his expulsion from a prep school?",
-"answer": "The Catcher in the Rye",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Catcher in the Rye", "Catcher in the Rye"]
-},
-{
-"slug": "to-kill-a-mockingbird-classic",
-"question": "What 1960 novel by Harper Lee details racial injustice in the American South through the eyes of Scout Finch, whose father defends a Black man falsely accused of rape?",
-"answer": "To Kill a Mockingbird",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["To Kill a Mockingbird"]
-},
-{
-"slug": "the-great-gatsby-classic",
-"question": "What 1925 novel by F. Scott Fitzgerald details the tragic obsession of a mysterious millionaire seeking to reunite with his former love, Daisy Buchanan, during the Jazz Age?",
-"answer": "The Great Gatsby",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Great Gatsby", "Great Gatsby"]
-},
-{
-"slug": "lord-of-the-flies-classic",
-"question": "What 1954 novel by William Golding details the savage descent into chaos of a group of British schoolboys stranded on a deserted tropical island?",
-"answer": "Lord of the Flies",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Lord of the Flies", "The Lord of the Flies"]
-},
-{
-"slug": "of-mice-and-men-classic",
-"question": "What 1937 novel by John Steinbeck details the tragic journey of migrant ranch workers George and Lennie as they chase the American Dream during the Great Depression?",
-"answer": "Of Mice and Men",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Of Mice and Men"]
-},
-{
-"slug": "1984-classic",
-"question": "What 1949 novel by George Orwell details Winston Smith's rebellion against the omnipresent surveillance state of Oceania and its totalitarian leader, Big Brother?",
-"answer": "1984",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["1984", "Nineteen Eighty-Four"]
-},
-{
-"slug": "animal-farm-classic",
-"question": "What 1945 novel by George Orwell details a group of barnyard animals who overthrow their human farmer, only to slide back into tyranny under the pig Napoleon?",
-"answer": "Animal Farm",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Animal Farm"]
-},
-{
-"slug": "fahrenheit-451-classic",
-"question": "What 1953 novel by Ray Bradbury details the awakening of Guy Montag, a 'fireman' whose job is to burn outlawed books in a dystopian, tech-obsessed society?",
-"answer": "Fahrenheit 451",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Fahrenheit 451"]
-},
-{
-"slug": "brave-new-world-classic",
-"question": "What 1932 novel by Aldous Huxley details a futuristic World State where citizens are genetically engineered, conditioned, and pacified by a drug called soma?",
-"answer": "Brave New World",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Brave New World"]
-},
-{
-"slug": "the-crucible-classic",
-"question": "What 1953 play by Arthur Miller details John Proctor's struggle with his conscience during the mass hysteria of the Salem witch trials?",
-"answer": "The Crucible",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Crucible"]
-},
-{
-"slug": "the-scarlet-letter-classic",
-"question": "What 1850 novel by Nathaniel Hawthorne details the public shaming and resilience of Hester Prynne, who is forced to wear a symbol of sin in a strict Puritan community?",
-"answer": "The Scarlet Letter",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Scarlet Letter", "Scarlet Letter"]
-},
-{
-"slug": "frankenstein-classic",
-"question": "What 1818 novel by Mary Shelley details Victor's Hubris as he constructs a living being from scavenged body parts, only to abandon his creation to a life of lonely vengeance?",
-"answer": "Frankenstein",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Frankenstein", "Frankenstein; or, The Modern Prometheus"]
-},
-{
-"slug": "romeo-and-juliet-classic",
-"question": "What 1597 play by William Shakespeare details the secret romance and ultimate double-suicide of two teenagers from feuding Veronese families?",
-"answer": "Romeo and Juliet",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Romeo and Juliet"]
-},
-{
-"slug": "macbeth-classic",
-"question": "What 1623 play by William Shakespeare details a Scottish general's murderous descent into tyranny after three witches prophesy that he will become king?",
-"answer": "Macbeth",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Macbeth"]
-},
-{
-"slug": "hamlet-classic",
-"question": "What 1603 play by William Shakespeare details the agonizing indecision of a Danish prince seeking to avenge his father's murder by his uncle, King Claudius?",
-"answer": "Hamlet",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Hamlet"]
-},
-{
-"slug": "pride-and-prejudice-classic",
-"question": "What 1813 novel by Jane Austen details the turbulent romance between the witty Elizabeth Bennet and the wealthy, reserved Mr. Darcy as they overcome initial misjudgments?",
-"answer": "Pride and Prejudice",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Pride and Prejudice"]
-},
-{
-"slug": "the-grapes-of-wrath-classic",
-"question": "What 1939 novel by John Steinbeck details the arduous migration of the Joad family from the Oklahoma Dust Bowl to California in search of a better life?",
-"answer": "The Grapes of Wrath",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Grapes of Wrath", "Grapes of Wrath"]
-},
-{
-"slug": "the-odyssey-classic",
-"question": "What ancient epic poem by Homer details the ten-year voyage of the Greek hero Odysseus as he struggles to return home to Ithaca after the fall of Troy?",
-"answer": "The Odyssey",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Odyssey", "Odyssey"]
-},
-{
-"slug": "the-outsiders-classic",
-"question": "What 1967 novel by S.E. Hinton details the intense rivalry between two teenage social factions, the working-class Greasers and the wealthy Socs, through the eyes of Ponyboy Curtis?",
-"answer": "The Outsiders",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Outsiders"]
-},
-{
-"slug": "death-of-a-salesman-classic",
-"question": "What 1949 play by Arthur Miller details the psychological collapse and tragic delusions of aging traveling salesman Willy Loman?",
-"answer": "Death of a Salesman",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Death of a Salesman"]
-},
-{
-"slug": "heart-of-darkness-classic",
-"question": "What 1902 novella by Joseph Conrad details Charles Marlow's journey up the Congo River to locate Kurtz, an ivory trader who has established a brutal fiefdom?",
-"answer": "Heart of Darkness",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Heart of Darkness"]
-},
-{
-"slug": "the-old-man-and-the-sea-classic",
-"question": "What 1952 novella by Ernest Hemingway details the grueling epic struggle between an aging Cuban fisherman named Santiago and a giant marlin out in the Gulf Stream?",
-"answer": "The Old Man and the Sea",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Old Man and the Sea", "Old Man and the Sea"]
-},
-{
-"slug": "moby-dick-classic",
-"question": "What 1851 novel by Herman Melville details Captain Ahab's obsessive, self-destructive quest for vengeance against the giant white whale that severed his leg?",
-"answer": "Moby-Dick",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Moby-Dick", "Moby Dick"]
-},
-{
-"slug": "jane-eyre-classic",
-"question": "What 1847 novel by Charlotte Brontë details the personal growth and complex romance of an orphaned governess who discovers a dark secret hidden by her employer, Mr. Rochester?",
-"answer": "Jane Eyre",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Jane Eyre"]
-},
-{
-"slug": "wuthering-heights-classic",
-"question": "What 1847 novel by Emily Brontë details the destructive, consuming passion between the intense Heathcliff and Catherine Earnshaw on the isolated Yorkshire moors?",
-"answer": "Wuthering Heights",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Wuthering Heights"]
-},
-{
-"slug": "the-devil-wears-prada-adaptation",
-"question": "What Lauren Weisberger novel was adapted into a 2006 film starring Meryl Streep and Anne Hathaway?",
-"answer": "The Devil Wears Prada",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Devil Wears Prada"]
-},
-{
-"slug": "fear-and-loathing-in-las-vegas-novel",
-"question": "What 1971 novel by Hunter S. Thompson details the drug-fueled, psychedelic journey of journalist Raoul Duke and his attorney, Dr. Gonzo, across Nevada in search of the American Dream?",
-"answer": "Fear and Loathing in Las Vegas",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Fear and Loathing in Las Vegas", "Fear and Loathing in Las Vegas: A Savage Journey to the Heart of the American Dream"]
-},
-{
-"slug": "the-rum-diary-novel",
-"question": "What 1998 novel by Hunter S. Thompson details the experiences of an itinerant journalist named Paul Kemp working at a failing newspaper in San Juan, Puerto Rico during the late 1950s?",
-"answer": "The Rum Diary",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Rum Diary"]
-},
-{
-"slug": "the-man-in-the-high-castle-novel",
-"question": "What 1962 novel by Philip K. Dick details an alternate history where the Axis powers won World War II and divided the United States into occupied Japanese and Nazi territories? Hint: It was made into a television series by Amazon Studios.",
-"answer": "The Man in the High Castle",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Man in the High Castle"]
-},
-{
-"slug": "infinite-jest-novel",
-"question": "What 1996 novel by David Foster Wallace details a sprawling, near-future North America centered around an elite tennis academy, a drug rehabilitation halfway house, and a lethal film that kills anyone who watches it?",
-"answer": "Infinite Jest",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Infinite Jest"]
-},
-{
-"slug": "the-pale-king-novel",
-"question": "What posthumously published 2011 novel by David Foster Wallace details the grinding boredom, existential dread, and quiet nobility of IRS employees working at a regional processing center in Peoria, Illinois?",
-"answer": "The Pale King",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Pale King"]
-},
-{
-"slug": "american-psycho-novel",
-"question": "What 1991 novel by Bret Easton Ellis details the superficial, consumerist life and sadistic, hyper-violent nighttime escapades of wealthy Wall Street investment banker Patrick Bateman?",
-"answer": "American Psycho",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["American Psycho"]
-},
-{
-"slug": "less-than-zero-novel",
-"question": "What 1985 debut novel by Bret Easton Ellis details the disaffected, drug-addled, and hedonistic winter break of a college student named Clay returning to his wealthy social circle in Los Angeles?",
-"answer": "Less Than Zero",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Less Than Zero"]
-},
-{
-"slug": "the-devil-wears-prada-novel",
-"question": "What 2003 novel by Lauren Weisberger details the agonizing professional trials of Andrea Sachs, a college graduate who lands a job as a co-assistant to the tyrannical fashion magazine editor Miranda Priestly?",
-"answer": "The Devil Wears Prada",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Devil Wears Prada"]
-},
-{
-"slug": "trainspotting-novel",
-"question": "What 1993 novel by Irvine Welsh details the gritty, episodic lives and substance abuse struggles of a group of heroin users—including Mark Renton and Sick Boy—in Edinburgh, Scotland?",
-"answer": "Trainspotting",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Trainspotting"]
-},
-{
-"slug": "the-hunger-games-novel",
-"question": "What 2008 dystopian novel by Suzanne Collins details Katniss Everdeen as she volunteers to take her younger sister's place in a televised, fight-to-the-death tournament run by the Capitol of Panem?",
-"answer": "The Hunger Games",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Hunger Games"]
-},
-{
-"slug": "twilight-novel",
-"question": "What 2005 romance novel by Stephenie Meyer details the relationship between teenager Bella Swan and Edward Cullen, a vampire living in the rainy town of Forks, Washington?",
-"answer": "Twilight",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Twilight"]
-},
-{
-"slug": "harry-potter-and-the-sorcerers-stone-novel",
-"question": "What 1997 fantasy novel by J.K. Rowling details an orphaned boy who discovers on his eleventh birthday that he is a wizard and has been accepted into the Hogwarts School of Witchcraft and Wizardry?",
-"answer": "Harry Potter and the Sorcerer's Stone",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Harry Potter and the Sorcerer's Stone", "Harry Potter and the Philosopher's Stone", "Harry Potter and the Philosophers Stone", "Harry Potter and the Sorcerers Stone"]
-},
-{
-"slug": "the-fellowship-of-the-ring-novel",
-"question": "What 1954 epic high-fantasy novel by J.R.R. Tolkien details the hobbit Frodo Baggins as he inherits a powerful artifact and sets out from the Shire on a quest to destroy it in Mount Doom?",
-"answer": "The Fellowship of the Ring",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Fellowship of the Ring", "The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings"]
-},
-{
-"slug": "the-da-vinci-code-novel",
-"question": "What 2003 thriller novel by Dan Brown details symbologist Robert Langdon and cryptologist Sophie Neveu as they investigate a murder in the Louvre and uncover a secret society's historical conspiracy surrounding the Holy Grail?",
-"answer": "The Da Vinci Code",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Da Vinci Code"]
-},
-{
-"slug": "gone-girl-novel",
-"question": "What 2012 psychological thriller novel by Gillian Flynn details the intense media circus and police investigation that erupts when writing instructor Nick Dunne becomes the prime suspect in the sudden disappearance of his wife, Amy?",
-"answer": "Gone Girl",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Gone Girl"]
-},
-{
-"slug": "the-fault-in-our-stars-novel",
-"question": "What 2012 young adult novel by John Green details Hazel Grace Lancaster, a sixteen-year-old thyroid cancer patient who falls in love with Augustus Waters, a fellow amputee she meets at a support group?",
-"answer": "The Fault in Our Stars",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Fault in Our Stars"]
-},
-{
-"slug": "dune-novel",
-"question": "What 1965 science fiction epic by Frank Herbert details young Paul Atreides as his noble family accepts stewardship of Arrakis, a dangerous desert planet containing the universe's only source of the spice melange?",
-"answer": "Dune",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Dune"]
-},
-{
-"slug": "the-notebook-novel",
-"question": "What 1996 romantic novel by Nicholas Sparks details the lifelong love story between Noah Calhoun and Allie Nelson, told through an old man reading from a journal to a fellow nursing home resident?",
-"answer": "The Notebook",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Notebook"]
-},
-{
-"slug": "the-chronicles-of-narnia-lion-witch-wardrobe-novel",
-"question": "What 1950 high-fantasy novel by C.S. Lewis details four siblings who step through a magical wardrobe into a mythical winter wonderland trapped under the rule of the cruel White Witch?",
-"answer": "The Lion, the Witch and the Wardrobe",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Lion, the Witch and the Wardrobe", "The Lion the Witch and the Wardrobe", "The Chronicles of Narnia: The Lion, the Witch and the Wardrobe", "The Chronicles of Narnia"]
-},
-{
-"slug": "divergent-novel",
-"question": "What 2011 dystopian novel by Veronica Roth details Beatrice Prior as she selects a faction based on personality traits in a future Chicago, only to discover she fits into multiple categories and poses a threat to the social order?",
-"answer": "Divergent",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Divergent"]
-},
-{
-"slug": "the-martian-novel",
-"question": "What 2011 science fiction novel by Andy Weir details astronaut Mark Watney as he utilizes his botany and engineering skills to survive alone on Ares III base after being accidentally stranded on Mars during a dust storm?",
-"answer": "The Martian",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Martian"]
-},
-{
-"slug": "crazy-rich-asians-novel",
-"question": "What 2013 satirical romantic comedy novel by Kevin Kwan details New York professor Rachel Chu as she travels to Singapore with her boyfriend Nick Young, only to discover his family belongs to the island's ultra-wealthy elite?",
-"answer": "Crazy Rich Asians",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Crazy Rich Asians"]
-},
-{
-"slug": "the-help-novel",
-"question": "What 2009 historical fiction novel by Kathryn Stockett details aspiring journalist Eugenia 'Skeeter' Phelan as she gathers oral histories from African American maids working in Jackson, Mississippi during the 1960s Civil Rights Movement?",
-"answer": "The Help",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Help"]
-},
-{
-"slug": "life-of-pi-novel",
-"question": "What 2001 philosophical novel by Yann Martel details Piscine Molitor Patel, a teenage boy from India who survives 227 days stranded on a lifeboat in the Pacific Ocean with a royal Bengal tiger named Richard Parker?",
-"answer": "Life of Pi",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Life of Pi"]
-},
-{
-"slug": "the-perks-of-being-a-wallflower-novel",
-"question": "What 1999 epistolary young adult novel by Stephen Chbosky details an introverted teenager named Charlie as he navigates high school, first love, and past trauma through letters written to an anonymous stranger?",
-"answer": "The Perks of Being a Wallflower",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["The Perks of Being a Wallflower"]
-},
-{
-"slug": "it-novel",
-"question": "What 1986 epic horror novel by Stephen King details seven children in Derry, Maine, who combat a shape-shifting, predatory cosmic entity that primarily takes the form of Pennywise the Dancing Clown?",
-"answer": "It",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["It"]
-},
-{
-"slug": "shrek-novel",
-"question": "What 1990 children's picture book by William Steig details a hideous, fire-breathing green monster who leaves his swamp home to see the world and ultimately wins the heart of an equally ugly princess?",
-"answer": "Shrek!",
-"answer_format": "write_in",
-"category": "Art, Literature and Comics",
-"difficulty": "easy",
-"acceptableAnswers": ["Shrek!", "Shrek"]
-}
-
-
-
-
+    {
+      "slug": "it-was-the-best-of-times",
+      "question": "In what book does the opening line read: 'It was the best of times, it was the worst of times.'?",
+      "answer": "A Tale of Two Cities",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "all-children-grow-up",
+      "question": "In what classic children's book does the opening line read: 'All children, except one, grow up.'?",
+      "answer": "Peter Pan",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mr-and-mrs-dursley",
+      "question": "In what book does the opening line read: 'Mr. and Mrs. Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much.'?",
+      "answer": "Harry Potter and the Sorcerer's Stone",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "in-a-hole-in-the-ground",
+      "question": "In what book does the opening line read: 'In a hole in the ground there lived a hobbit.'?",
+      "answer": "The Hobbit",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "it-was-a-bright-cold-day",
+      "question": "In what book does the opening line read: 'It was a bright cold day in April, and the clocks were striking thirteen.'?",
+      "answer": "1984",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "american-psycho-adaptation",
+      "question": "What Bret Easton Ellis novel was adapted into a 2000 film starring Christian Bale and directed by Mary Harron?",
+      "answer": "American Psycho",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "American Psycho"
+      ]
+    },
+    {
+      "slug": "the-revenant-adaptation",
+      "question": "What Michael Punke novel was adapted into a 2015 film starring Leonardo DiCaprio and directed by Alejandro G. Iñárritu?",
+      "answer": "The Revenant",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Revenant"
+      ]
+    },
+    {
+      "slug": "the-princess-bride-adaptation",
+      "question": "What William Goldman novel was adapted into a 1987 film starring Cary Elwes and directed by Rob Reiner?",
+      "answer": "The Princess Bride",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Princess Bride"
+      ]
+    },
+    {
+      "slug": "the-catcher-in-the-rye-classic",
+      "question": "What 1951 novel by J.D. Salinger details the teenage disillusionment and alienation of Holden Caulfield following his expulsion from a prep school?",
+      "answer": "The Catcher in the Rye",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Catcher in the Rye",
+        "Catcher in the Rye"
+      ]
+    },
+    {
+      "slug": "to-kill-a-mockingbird-classic",
+      "question": "What 1960 novel by Harper Lee details racial injustice in the American South through the eyes of Scout Finch, whose father defends a Black man falsely accused of rape?",
+      "answer": "To Kill a Mockingbird",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "To Kill a Mockingbird"
+      ]
+    },
+    {
+      "slug": "the-great-gatsby-classic",
+      "question": "What 1925 novel by F. Scott Fitzgerald details the tragic obsession of a mysterious millionaire seeking to reunite with his former love, Daisy Buchanan, during the Jazz Age?",
+      "answer": "The Great Gatsby",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Great Gatsby",
+        "Great Gatsby"
+      ]
+    },
+    {
+      "slug": "lord-of-the-flies-classic",
+      "question": "What 1954 novel by William Golding details the savage descent into chaos of a group of British schoolboys stranded on a deserted tropical island?",
+      "answer": "Lord of the Flies",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Lord of the Flies",
+        "The Lord of the Flies"
+      ]
+    },
+    {
+      "slug": "of-mice-and-men-classic",
+      "question": "What 1937 novel by John Steinbeck details the tragic journey of migrant ranch workers George and Lennie as they chase the American Dream during the Great Depression?",
+      "answer": "Of Mice and Men",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Of Mice and Men"
+      ]
+    },
+    {
+      "slug": "1984-classic",
+      "question": "What 1949 novel by George Orwell details Winston Smith's rebellion against the omnipresent surveillance state of Oceania and its totalitarian leader, Big Brother?",
+      "answer": "1984",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "1984",
+        "Nineteen Eighty-Four"
+      ]
+    },
+    {
+      "slug": "animal-farm-classic",
+      "question": "What 1945 novel by George Orwell details a group of barnyard animals who overthrow their human farmer, only to slide back into tyranny under the pig Napoleon?",
+      "answer": "Animal Farm",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Animal Farm"
+      ]
+    },
+    {
+      "slug": "fahrenheit-451-classic",
+      "question": "What 1953 novel by Ray Bradbury details the awakening of Guy Montag, a 'fireman' whose job is to burn outlawed books in a dystopian, tech-obsessed society?",
+      "answer": "Fahrenheit 451",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Fahrenheit 451"
+      ]
+    },
+    {
+      "slug": "brave-new-world-classic",
+      "question": "What 1932 novel by Aldous Huxley details a futuristic World State where citizens are genetically engineered, conditioned, and pacified by a drug called soma?",
+      "answer": "Brave New World",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Brave New World"
+      ]
+    },
+    {
+      "slug": "the-crucible-classic",
+      "question": "What 1953 play by Arthur Miller details John Proctor's struggle with his conscience during the mass hysteria of the Salem witch trials?",
+      "answer": "The Crucible",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Crucible"
+      ]
+    },
+    {
+      "slug": "the-scarlet-letter-classic",
+      "question": "What 1850 novel by Nathaniel Hawthorne details the public shaming and resilience of Hester Prynne, who is forced to wear a symbol of sin in a strict Puritan community?",
+      "answer": "The Scarlet Letter",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Scarlet Letter",
+        "Scarlet Letter"
+      ]
+    },
+    {
+      "slug": "frankenstein-classic",
+      "question": "What 1818 novel by Mary Shelley details Victor's Hubris as he constructs a living being from scavenged body parts, only to abandon his creation to a life of lonely vengeance?",
+      "answer": "Frankenstein",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Frankenstein",
+        "Frankenstein; or, The Modern Prometheus"
+      ]
+    },
+    {
+      "slug": "romeo-and-juliet-classic",
+      "question": "What 1597 play by William Shakespeare details the secret romance and ultimate double-suicide of two teenagers from feuding Veronese families?",
+      "answer": "Romeo and Juliet",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Romeo and Juliet"
+      ]
+    },
+    {
+      "slug": "macbeth-classic",
+      "question": "What 1623 play by William Shakespeare details a Scottish general's murderous descent into tyranny after three witches prophesy that he will become king?",
+      "answer": "Macbeth",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Macbeth"
+      ]
+    },
+    {
+      "slug": "hamlet-classic",
+      "question": "What 1603 play by William Shakespeare details the agonizing indecision of a Danish prince seeking to avenge his father's murder by his uncle, King Claudius?",
+      "answer": "Hamlet",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Hamlet"
+      ]
+    },
+    {
+      "slug": "pride-and-prejudice-classic",
+      "question": "What 1813 novel by Jane Austen details the turbulent romance between the witty Elizabeth Bennet and the wealthy, reserved Mr. Darcy as they overcome initial misjudgments?",
+      "answer": "Pride and Prejudice",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Pride and Prejudice"
+      ]
+    },
+    {
+      "slug": "the-grapes-of-wrath-classic",
+      "question": "What 1939 novel by John Steinbeck details the arduous migration of the Joad family from the Oklahoma Dust Bowl to California in search of a better life?",
+      "answer": "The Grapes of Wrath",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Grapes of Wrath",
+        "Grapes of Wrath"
+      ]
+    },
+    {
+      "slug": "the-odyssey-classic",
+      "question": "What ancient epic poem by Homer details the ten-year voyage of the Greek hero Odysseus as he struggles to return home to Ithaca after the fall of Troy?",
+      "answer": "The Odyssey",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Odyssey",
+        "Odyssey"
+      ]
+    },
+    {
+      "slug": "the-outsiders-classic",
+      "question": "What 1967 novel by S.E. Hinton details the intense rivalry between two teenage social factions, the working-class Greasers and the wealthy Socs, through the eyes of Ponyboy Curtis?",
+      "answer": "The Outsiders",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Outsiders"
+      ]
+    },
+    {
+      "slug": "death-of-a-salesman-classic",
+      "question": "What 1949 play by Arthur Miller details the psychological collapse and tragic delusions of aging traveling salesman Willy Loman?",
+      "answer": "Death of a Salesman",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Death of a Salesman"
+      ]
+    },
+    {
+      "slug": "heart-of-darkness-classic",
+      "question": "What 1902 novella by Joseph Conrad details Charles Marlow's journey up the Congo River to locate Kurtz, an ivory trader who has established a brutal fiefdom?",
+      "answer": "Heart of Darkness",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Heart of Darkness"
+      ]
+    },
+    {
+      "slug": "the-old-man-and-the-sea-classic",
+      "question": "What 1952 novella by Ernest Hemingway details the grueling epic struggle between an aging Cuban fisherman named Santiago and a giant marlin out in the Gulf Stream?",
+      "answer": "The Old Man and the Sea",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Old Man and the Sea",
+        "Old Man and the Sea"
+      ]
+    },
+    {
+      "slug": "moby-dick-classic",
+      "question": "What 1851 novel by Herman Melville details Captain Ahab's obsessive, self-destructive quest for vengeance against the giant white whale that severed his leg?",
+      "answer": "Moby-Dick",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Moby-Dick",
+        "Moby Dick"
+      ]
+    },
+    {
+      "slug": "jane-eyre-classic",
+      "question": "What 1847 novel by Charlotte Brontë details the personal growth and complex romance of an orphaned governess who discovers a dark secret hidden by her employer, Mr. Rochester?",
+      "answer": "Jane Eyre",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Jane Eyre"
+      ]
+    },
+    {
+      "slug": "wuthering-heights-classic",
+      "question": "What 1847 novel by Emily Brontë details the destructive, consuming passion between the intense Heathcliff and Catherine Earnshaw on the isolated Yorkshire moors?",
+      "answer": "Wuthering Heights",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Wuthering Heights"
+      ]
+    },
+    {
+      "slug": "the-devil-wears-prada-adaptation",
+      "question": "What Lauren Weisberger novel was adapted into a 2006 film starring Meryl Streep and Anne Hathaway?",
+      "answer": "The Devil Wears Prada",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Devil Wears Prada"
+      ]
+    },
+    {
+      "slug": "fear-and-loathing-in-las-vegas-novel",
+      "question": "What 1971 novel by Hunter S. Thompson details the drug-fueled, psychedelic journey of journalist Raoul Duke and his attorney, Dr. Gonzo, across Nevada in search of the American Dream?",
+      "answer": "Fear and Loathing in Las Vegas",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Fear and Loathing in Las Vegas",
+        "Fear and Loathing in Las Vegas: A Savage Journey to the Heart of the American Dream"
+      ]
+    },
+    {
+      "slug": "the-rum-diary-novel",
+      "question": "What 1998 novel by Hunter S. Thompson details the experiences of an itinerant journalist named Paul Kemp working at a failing newspaper in San Juan, Puerto Rico during the late 1950s?",
+      "answer": "The Rum Diary",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Rum Diary"
+      ]
+    },
+    {
+      "slug": "the-man-in-the-high-castle-novel",
+      "question": "What 1962 novel by Philip K. Dick details an alternate history where the Axis powers won World War II and divided the United States into occupied Japanese and Nazi territories? Hint: It was made into a television series by Amazon Studios.",
+      "answer": "The Man in the High Castle",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Man in the High Castle"
+      ]
+    },
+    {
+      "slug": "infinite-jest-novel",
+      "question": "What 1996 novel by David Foster Wallace details a sprawling, near-future North America centered around an elite tennis academy, a drug rehabilitation halfway house, and a lethal film that kills anyone who watches it?",
+      "answer": "Infinite Jest",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Infinite Jest"
+      ]
+    },
+    {
+      "slug": "the-pale-king-novel",
+      "question": "What posthumously published 2011 novel by David Foster Wallace details the grinding boredom, existential dread, and quiet nobility of IRS employees working at a regional processing center in Peoria, Illinois?",
+      "answer": "The Pale King",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Pale King"
+      ]
+    },
+    {
+      "slug": "american-psycho-novel",
+      "question": "What 1991 novel by Bret Easton Ellis details the superficial, consumerist life and sadistic, hyper-violent nighttime escapades of wealthy Wall Street investment banker Patrick Bateman?",
+      "answer": "American Psycho",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "American Psycho"
+      ]
+    },
+    {
+      "slug": "less-than-zero-novel",
+      "question": "What 1985 debut novel by Bret Easton Ellis details the disaffected, drug-addled, and hedonistic winter break of a college student named Clay returning to his wealthy social circle in Los Angeles?",
+      "answer": "Less Than Zero",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Less Than Zero"
+      ]
+    },
+    {
+      "slug": "the-devil-wears-prada-novel",
+      "question": "What 2003 novel by Lauren Weisberger details the agonizing professional trials of Andrea Sachs, a college graduate who lands a job as a co-assistant to the tyrannical fashion magazine editor Miranda Priestly?",
+      "answer": "The Devil Wears Prada",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Devil Wears Prada"
+      ]
+    },
+    {
+      "slug": "trainspotting-novel",
+      "question": "What 1993 novel by Irvine Welsh details the gritty, episodic lives and substance abuse struggles of a group of heroin users—including Mark Renton and Sick Boy—in Edinburgh, Scotland?",
+      "answer": "Trainspotting",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Trainspotting"
+      ]
+    },
+    {
+      "slug": "the-hunger-games-novel",
+      "question": "What 2008 dystopian novel by Suzanne Collins details Katniss Everdeen as she volunteers to take her younger sister's place in a televised, fight-to-the-death tournament run by the Capitol of Panem?",
+      "answer": "The Hunger Games",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Hunger Games"
+      ]
+    },
+    {
+      "slug": "twilight-novel",
+      "question": "What 2005 romance novel by Stephenie Meyer details the relationship between teenager Bella Swan and Edward Cullen, a vampire living in the rainy town of Forks, Washington?",
+      "answer": "Twilight",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Twilight"
+      ]
+    },
+    {
+      "slug": "harry-potter-and-the-sorcerers-stone-novel",
+      "question": "What 1997 fantasy novel by J.K. Rowling details an orphaned boy who discovers on his eleventh birthday that he is a wizard and has been accepted into the Hogwarts School of Witchcraft and Wizardry?",
+      "answer": "Harry Potter and the Sorcerer's Stone",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Harry Potter and the Sorcerer's Stone",
+        "Harry Potter and the Philosopher's Stone",
+        "Harry Potter and the Philosophers Stone",
+        "Harry Potter and the Sorcerers Stone"
+      ]
+    },
+    {
+      "slug": "the-fellowship-of-the-ring-novel",
+      "question": "What 1954 epic high-fantasy novel by J.R.R. Tolkien details the hobbit Frodo Baggins as he inherits a powerful artifact and sets out from the Shire on a quest to destroy it in Mount Doom?",
+      "answer": "The Fellowship of the Ring",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Fellowship of the Ring",
+        "The Lord of the Rings: The Fellowship of the Ring",
+        "The Lord of the Rings"
+      ]
+    },
+    {
+      "slug": "the-da-vinci-code-novel",
+      "question": "What 2003 thriller novel by Dan Brown details symbologist Robert Langdon and cryptologist Sophie Neveu as they investigate a murder in the Louvre and uncover a secret society's historical conspiracy surrounding the Holy Grail?",
+      "answer": "The Da Vinci Code",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Da Vinci Code"
+      ]
+    },
+    {
+      "slug": "gone-girl-novel",
+      "question": "What 2012 psychological thriller novel by Gillian Flynn details the intense media circus and police investigation that erupts when writing instructor Nick Dunne becomes the prime suspect in the sudden disappearance of his wife, Amy?",
+      "answer": "Gone Girl",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Gone Girl"
+      ]
+    },
+    {
+      "slug": "the-fault-in-our-stars-novel",
+      "question": "What 2012 young adult novel by John Green details Hazel Grace Lancaster, a sixteen-year-old thyroid cancer patient who falls in love with Augustus Waters, a fellow amputee she meets at a support group?",
+      "answer": "The Fault in Our Stars",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Fault in Our Stars"
+      ]
+    },
+    {
+      "slug": "dune-novel",
+      "question": "What 1965 science fiction epic by Frank Herbert details young Paul Atreides as his noble family accepts stewardship of Arrakis, a dangerous desert planet containing the universe's only source of the spice melange?",
+      "answer": "Dune",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Dune"
+      ]
+    },
+    {
+      "slug": "the-notebook-novel",
+      "question": "What 1996 romantic novel by Nicholas Sparks details the lifelong love story between Noah Calhoun and Allie Nelson, told through an old man reading from a journal to a fellow nursing home resident?",
+      "answer": "The Notebook",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Notebook"
+      ]
+    },
+    {
+      "slug": "the-chronicles-of-narnia-lion-witch-wardrobe-novel",
+      "question": "What 1950 high-fantasy novel by C.S. Lewis details four siblings who step through a magical wardrobe into a mythical winter wonderland trapped under the rule of the cruel White Witch?",
+      "answer": "The Lion, the Witch and the Wardrobe",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Lion, the Witch and the Wardrobe",
+        "The Lion the Witch and the Wardrobe",
+        "The Chronicles of Narnia: The Lion, the Witch and the Wardrobe",
+        "The Chronicles of Narnia"
+      ]
+    },
+    {
+      "slug": "divergent-novel",
+      "question": "What 2011 dystopian novel by Veronica Roth details Beatrice Prior as she selects a faction based on personality traits in a future Chicago, only to discover she fits into multiple categories and poses a threat to the social order?",
+      "answer": "Divergent",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Divergent"
+      ]
+    },
+    {
+      "slug": "the-martian-novel",
+      "question": "What 2011 science fiction novel by Andy Weir details astronaut Mark Watney as he utilizes his botany and engineering skills to survive alone on Ares III base after being accidentally stranded on Mars during a dust storm?",
+      "answer": "The Martian",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Martian"
+      ]
+    },
+    {
+      "slug": "crazy-rich-asians-novel",
+      "question": "What 2013 satirical romantic comedy novel by Kevin Kwan details New York professor Rachel Chu as she travels to Singapore with her boyfriend Nick Young, only to discover his family belongs to the island's ultra-wealthy elite?",
+      "answer": "Crazy Rich Asians",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Crazy Rich Asians"
+      ]
+    },
+    {
+      "slug": "the-help-novel",
+      "question": "What 2009 historical fiction novel by Kathryn Stockett details aspiring journalist Eugenia 'Skeeter' Phelan as she gathers oral histories from African American maids working in Jackson, Mississippi during the 1960s Civil Rights Movement?",
+      "answer": "The Help",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Help"
+      ]
+    },
+    {
+      "slug": "life-of-pi-novel",
+      "question": "What 2001 philosophical novel by Yann Martel details Piscine Molitor Patel, a teenage boy from India who survives 227 days stranded on a lifeboat in the Pacific Ocean with a royal Bengal tiger named Richard Parker?",
+      "answer": "Life of Pi",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Life of Pi"
+      ]
+    },
+    {
+      "slug": "the-perks-of-being-a-wallflower-novel",
+      "question": "What 1999 epistolary young adult novel by Stephen Chbosky details an introverted teenager named Charlie as he navigates high school, first love, and past trauma through letters written to an anonymous stranger?",
+      "answer": "The Perks of Being a Wallflower",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Perks of Being a Wallflower"
+      ]
+    },
+    {
+      "slug": "it-novel",
+      "question": "What 1986 epic horror novel by Stephen King details seven children in Derry, Maine, who combat a shape-shifting, predatory cosmic entity that primarily takes the form of Pennywise the Dancing Clown?",
+      "answer": "It",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "It"
+      ]
+    },
+    {
+      "slug": "shrek-novel",
+      "question": "What 1990 children's picture book by William Steig details a hideous, fire-breathing green monster who leaves his swamp home to see the world and ultimately wins the heart of an equally ugly princess?",
+      "answer": "Shrek!",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Shrek!",
+        "Shrek"
+      ]
+    },
+    {
+      "slug": "who-famously-painted-the-starry-night",
+      "question": "Who famously painted 'The Starry Night'?",
+      "answer": "Vincent van Gogh",
+      "acceptableAnswers": [
+        "Van Gogh",
+        "Gogh"
+      ],
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-greek-mythological-figure-famously-flew-too-close-to-the-sun",
+      "question": "Which Greek mythological figure famously flew too close to the sun?",
+      "answer": "Icarus",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-greek-mythological-hero-slew-the-medusa",
+      "question": "Which Greek mythological hero slew the Medusa?",
+      "answer": "Perseus",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-wrote-the-classic-novel-pride-and-prejudice",
+      "question": "Who wrote the classic novel \"Pride and Prejudice\"?",
+      "answer": "Jane Austen",
+      "acceptableAnswers": [
+        "Austen"
+      ],
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-wrote-the-famous-novel-to-kill-a-mockingbird",
+      "question": "Who wrote the famous novel 'To Kill a Mockingbird'?",
+      "answer": "Harper Lee",
+      "acceptableAnswers": [
+        "Nelle Harper Lee"
+      ],
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "before-becoming-a-major-film-franchise-harry-potter-was-a-series-of-books-written-by-which-author",
+      "question": "Who wrote the 'Harry Potter' book series?",
+      "answer": "J.K. Rowling",
+      "acceptableAnswers": [
+        "JK Rowling",
+        "Joanne Rowling"
+      ],
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    }
   ]
 }

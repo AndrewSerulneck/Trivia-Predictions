@@ -77,7 +77,7 @@ export const SlimTopBar = ({
 }) => {
   const accentText = game === "bingo" ? "text-sky-300" : "text-amber-200";
   return (
-    <div className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-2.5 border-b border-white/[0.08] bg-slate-950/[0.86] px-[13px] py-2 backdrop-blur-md">
+    <div className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-2.5 border-b border-white/[0.08] bg-slate-950/[0.86] px-[13px] pb-2 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur-md">
       <button
         type="button"
         onClick={onExit}

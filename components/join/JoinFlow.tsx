@@ -662,7 +662,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const { refresh: refreshAuthSession, state: authState } = useAuthSession();
-  const godMode = authState.godMode;
+  const godMode = authState.phase === "authenticated" ? authState.godMode : false;
   const venueParam = initialVenueId.trim();
 
   const [status, setStatus] = useState<Status>("loading");

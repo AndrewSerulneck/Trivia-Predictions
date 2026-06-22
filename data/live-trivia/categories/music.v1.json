@@ -1914,7 +1914,7 @@
       "category": "Music",
       "difficulty": "medium"
     },
-       {
+    {
       "slug": "kendrick-lamar-super-bowl-2025",
       "question": "Which rapper headlined the 2025 Super Bowl Halftime Show in New Orleans?",
       "answer": "Kendrick Lamar",
@@ -1922,7 +1922,7 @@
       "category": "Music",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "harry-styles-marathon-viral",
       "question": "In 2025, which pop star went viral for running and completing major marathons in Tokyo and Berlin?",
       "answer": "Harry Styles",
@@ -1930,7 +1930,7 @@
       "category": "Music",
       "difficulty": "medium"
     },
-        {
+    {
       "slug": "charli-xcx-brat-summer-year",
       "question": "Fill in the blank: Thanks to the cultural dominance of a Charli XCX's album, summer of 2024 was unofficially dubbed __________ Summer.",
       "answer": "Brat",
@@ -1938,7 +1938,7 @@
       "category": "Music",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "sabrina-carpenter-mans-best-friend-album",
       "question": "Sabrina Carpenter followed up 'Short n' Sweet' with which 2025 album that sparked controversy over its cover art?",
       "answer": "Man's Best Friend",
@@ -1946,7 +1946,7 @@
       "category": "Music",
       "difficulty": "hard"
     },
-      {
+    {
       "slug": "katy-perry-blue-origin-space",
       "question": "In April 2025, which pop star made headlines by flying to space as part of an all-female crew on a Blue Origin rocket?",
       "answer": "Katy Perry",
@@ -2002,6 +2002,533 @@
       "answer": "Cash",
       "category": "Music",
       "difficulty": "medium"
+    },
+    {
+      "slug": "which-french-electronic-music-duo-is-known-for-wearing-elaborate-robot-helmets-and-hits-like-get-lucky",
+      "question": "Which French electronic music duo, known for wearing elaborate robot helmets, released hits like 'Get Lucky'?",
+      "answer": "Daft Punk",
+      "acceptableAnswers": [
+        "Daftpunk"
+      ],
+      "category": "Music",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-which-city-did-the-motown-sound-primarily-originate",
+      "question": "In which city did the \"Motown Sound\" primarily originate?",
+      "answer": "Detroit",
+      "acceptableAnswers": [
+        "Motor City"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "jazz-trumpet-gravelly-voice-what-a-wonderful-world",
+      "question": "Name the iconic jazz musician, famous for his trumpet playing and gravelly voice, who had a hit with \"What a Wonderful World\".?",
+      "answer": "Louis Armstrong",
+      "acceptableAnswers": [
+        "Satchmo",
+        "Louie Armstrong",
+        "Satch"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-iconic-rock-band-is-known-for-the-hit-song-bohemian-rhapsody",
+      "question": "Name the iconic rock band known for the hit song \"Paint It Black\"?",
+      "answer": "Rolling Stones",
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-beatles-made-their-famous-us-television-debut-on-which-show",
+      "question": "The Beatles made their famous US television debut on which show?",
+      "answer": "The Ed Sullivan Show",
+      "acceptableAnswers": [
+        "Ed Sullivan Show",
+        "Ed Sullivan",
+        "Sullivan Show"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-american-city-is-considered-the-birthplace-of-jazz-music",
+      "question": "What American city is considered the birthplace of jazz music?",
+      "answer": "New Orleans",
+      "acceptableAnswers": [
+        "NOLA"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-artist-broke-multiple-records-with-her-eras-tour-in-2023-2024",
+      "question": "What artist broke multiple records with her \"Eras Tour\" in 2023-2024?",
+      "answer": "Taylor Swift",
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-common-name-for-a-musical-piece-performed-by-a-single-musician",
+      "question": "What is the common name for a musical piece performed by a single musician?",
+      "answer": "Solo",
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-musical-genre-originated-in-the-late-19th-century-in-african-american-communities-of-new-orleans",
+      "question": "What musical genre originated in late 19th-century African American communities of New Orleans?",
+      "answer": "Jazz",
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "saturday-night-fever-soundtrack-band",
+      "question": "What musical group performed the iconic soundtrack for the 1977 film *Saturday Night Fever*?",
+      "answer": "The Bee Gees",
+      "acceptableAnswers": [
+        "Bee Gees"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-musical-term-describes-the-speed-at-which-a-piece-of-music-is-played",
+      "question": "What musical term describes the speed at which a piece of music is played?",
+      "answer": "Tempo",
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-name-of-the-prestigious-music-awards-presented-by-the-recording-academy-in-the-united-states",
+      "question": "What prestigious music awards are presented by the Recording Academy?",
+      "answer": "Grammy Awards",
+      "acceptableAnswers": [
+        "Grammys",
+        "Grammy"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "sgt-peppers-band",
+      "question": "Which band released the album \"Sgt. Pepper's Lonely Hearts Club Band\"?",
+      "answer": "The Beatles",
+      "acceptableAnswers": [
+        "Beatles"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-classical-composer-wrote-the-famous-moonlight-sonata",
+      "question": "Which classical composer wrote the famous \"Moonlight Sonata\"?",
+      "answer": "Ludwig van Beethoven",
+      "acceptableAnswers": [
+        "Beethoven",
+        "Ludwig Beethoven"
+      ],
+      "category": "Music",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-composer-wrote-the-famous-fifth-symphony",
+      "question": "Which composer wrote the famous 'Fifth Symphony'?",
+      "answer": "Ludwig van Beethoven",
+      "acceptableAnswers": [
+        "Beethoven",
+        "L. van Beethoven"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-artist-is-known-as-the-queen-of-pop",
+      "question": "Which iconic artist is widely known as the 'Queen of Pop'?",
+      "answer": "Madonna",
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-legendary-band-released-the-album-the-dark-side-of-the-moon",
+      "question": "Which legendary band released the album \"The Dark Side of the Moon\"?",
+      "answer": "Pink Floyd",
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-pop-icon-is-known-for-her-songs-like-a-virgin-and-vogue",
+      "question": "Which pop icon is known for hits like 'Like a Virgin' and 'Vogue'?",
+      "answer": "Madonna",
+      "acceptableAnswers": [
+        "Madge",
+        "The Queen of Pop"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-pop-singer-is-known-for-hits-like-roar-and-firework",
+      "question": "Which pop singer is known for hits like \"Roar\" and \"Firework\"?",
+      "answer": "Katy Perry",
+      "acceptableAnswers": [
+        "Katy"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-pop-star-released-the-hit-song-single-ladies-put-a-ring-on-it",
+      "question": "Which pop star released the hit song \"Single Ladies (Put a Ring on It)\"?",
+      "answer": "Beyoncé",
+      "acceptableAnswers": [
+        "Beyonce",
+        "Bey",
+        "Beyonce Knowles"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-singer-is-known-as-the-queen-of-soul",
+      "question": "Which singer is known as the \"Queen of Soul\"?",
+      "answer": "Aretha Franklin",
+      "acceptableAnswers": [
+        "Aretha"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-artist-released-the-groundbreaking-album-purple-rain-in-1984",
+      "question": "Who released the groundbreaking album \"Purple Rain\" in 1984?",
+      "answer": "Prince",
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-reggae-icon-sang-no-woman-no-cry",
+      "question": "Who sang the iconic reggae song \"No Woman, No Cry\"?",
+      "answer": "Bob Marley",
+      "acceptableAnswers": [
+        "Marley"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-sang-the-original-version-of-i-will-always-love-you-later-a-massive-hit-for-whitney-houston",
+      "question": "Who sang the original version of \"I Will Always Love You,\" later a massive hit for Whitney Houston?",
+      "answer": "Dolly Parton",
+      "acceptableAnswers": [
+        "Dolly"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-band-rose-to-fame-in-the-1990s-with-grunge-anthems-like-smells-like-teen-spirit",
+      "question": "What 90s grunge band is famous for the anthem \"Smells Like Teen Spirit\"?",
+      "answer": "Nirvana",
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-pop-superstar-is-known-for-her-album-21-and-hits-like-rolling-in-the-deep",
+      "question": "Which pop superstar is known for her album \"21\" and hits like \"Rolling in the Deep\"?",
+      "answer": "Adele",
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-artist-released-the-groundbreaking-album-lemonade-in-2016",
+      "question": "Who released the groundbreaking album \"Lemonade\" in 2016?",
+      "answer": "Beyoncé",
+      "acceptableAnswers": [
+        "Beyonce"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-famous-classical-composer-wrote-the-moonlight-sonata",
+      "question": "Who composed the \"Moonlight Sonata\"?",
+      "answer": "Ludwig van Beethoven",
+      "acceptableAnswers": [
+        "Beethoven",
+        "Ludwig Beethoven"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "who-composed-the-famous-classical-piece-fr-elise",
+      "question": "Who composed the famous classical piano piece \"Für Elise\"?",
+      "answer": "Ludwig van Beethoven",
+      "acceptableAnswers": [
+        "Beethoven",
+        "L. van Beethoven",
+        "Ludwig Beethoven"
+      ],
+      "category": "Music",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "in-what-city-did-the-beatles-famously-form",
+      "question": "In what city did The Beatles famously form?",
+      "answer": "Liverpool",
+      "acceptableAnswers": [
+        "L'pool"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-influential-jazz-trumpeter-composed-the-groundbreaking-album-kind-of-blue",
+      "question": "Name the influential jazz trumpeter who composed the groundbreaking album 'Kind of Blue'.?",
+      "answer": "Miles Davis",
+      "acceptableAnswers": [
+        "Davis"
+      ],
+      "category": "Music",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-band-is-often-credited-with-pioneering-the-heavy-metal-genre-with-albums-like-paranoid",
+      "question": "Often credited with pioneering the heavy metal genre, what band released the album 'Paranoid'?",
+      "answer": "Black Sabbath",
+      "acceptableAnswers": [
+        "Sabbath"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-classical-composer-was-deaf-for-a-significant-portion-of-his-career-but-continued-to-compose",
+      "question": "What famous classical composer continued to compose despite being deaf for a significant portion of his career?",
+      "answer": "Beethoven",
+      "acceptableAnswers": [
+        "Ludwig van Beethoven",
+        "Ludwig"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-common-time-signature-for-a-waltz",
+      "question": "What is the common time signature for a waltz?",
+      "answer": "3/4",
+      "acceptableAnswers": [
+        "three-four",
+        "three-four time"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-highest-natural-male-vocal-range",
+      "question": "What is the highest natural male vocal range?",
+      "answer": "Tenor",
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-smallest-interval-in-western-tonal-music-equivalent-to-a-half-step",
+      "question": "What is the smallest interval in Western tonal music, equivalent to a half step?",
+      "answer": "Semitone",
+      "acceptableAnswers": [
+        "Half step"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-swedish-pop-group-is-famous-for-dancing-queen-and-mamma-mia",
+      "question": "What Swedish pop group is famous for hits like 'Dancing Queen' and 'Mamma Mia'?",
+      "answer": "ABBA",
+      "acceptableAnswers": [
+        "A.B.B.A."
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-band-is-famous-for-the-song-bohemian-rhapsody",
+      "question": "Which band is famous for the song \"Bohemian Rhapsody\"?",
+      "answer": "Queen",
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-genre-of-music-originated-in-new-orleans-in-the-early-20th-century",
+      "question": "Which genre of music originated in New Orleans in the early 20th century?",
+      "answer": "Jazz",
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-instrument-is-commonly-associated-with-traditional-scottish-folk-music",
+      "question": "Which instrument is commonly associated with traditional Scottish folk music?",
+      "answer": "Bagpipes",
+      "acceptableAnswers": [
+        "Pipes",
+        "Bagpipe"
+      ],
+      "category": "Music",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-legendary-reggae-musician-sang-no-woman-no-cry",
+      "question": "Which legendary reggae musician sang 'No Woman, No Cry'?",
+      "answer": "Bob Marley",
+      "acceptableAnswers": [
+        "Marley",
+        "Robert Nesta Marley"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-pop-superstar-is-known-for-hits-like-rolling-in-the-deep-and-someone-like-you",
+      "question": "Which pop superstar is known for hits like \"Rolling in the Deep\" and \"Someone Like You\"?",
+      "answer": "Adele",
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-artist-released-the-hit-song-single-ladies-put-a-ring-on-it",
+      "question": "Who sang the hit song 'Single Ladies (Put a Ring on It)'?",
+      "answer": "Beyoncé",
+      "acceptableAnswers": [
+        "Bey",
+        "Beyonce Knowles"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-singer-is-known-for-her-elaborate-stage-performances-and-hit-songs-like-poker-face-and-bad-romance",
+      "question": "Known for elaborate stage performances and hit songs like \"Poker Face\" and \"Bad Romance,\" which pop superstar are we looking for?",
+      "answer": "Lady Gaga",
+      "acceptableAnswers": [
+        "Gaga"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-iconic-music-festival-took-place-in-upstate-new-york-in-august-1969-known-for-its-counterculture-significance",
+      "question": "Name the iconic music festival that took place in upstate New York in August 1969, known for its counterculture significance.?",
+      "answer": "Woodstock",
+      "acceptableAnswers": [
+        "Woodstock Festival"
+      ],
+      "category": "Music",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-artists-hit-song-old-town-road-famously-broke-billboard-records-and-featured-a-remix-with-billy-ray-cyrus",
+      "question": "Which artist had a massive hit with 'Old Town Road,' featuring a remix with Billy Ray Cyrus?",
+      "answer": "Lil Nas X",
+      "acceptableAnswers": [
+        "Lil Nas"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-k-pop-group-broke-records-in-2020-with-their-english-language-hit-single-dynamite",
+      "question": "Which K-Pop group broke records in 2020 with their English-language hit single \"Dynamite\"?",
+      "answer": "BTS",
+      "acceptableAnswers": [
+        "Bangtan Boys"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-pop-star-famously-broke-a-vevo-record-with-her-music-video-hello-in-2015",
+      "question": "Which pop star broke a Vevo record with her 2015 music video 'Hello'?",
+      "answer": "Adele",
+      "acceptableAnswers": [
+        "Adele Adkins"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-singer-is-known-for-her-lemonade-album-and-hits-like-single-ladies-put-a-ring-on-it",
+      "question": "Which singer is known for her 'Lemonade' album and hits like \"Single Ladies (Put a Ring on It)\"?",
+      "answer": "Beyoncé",
+      "acceptableAnswers": [
+        "Beyonce",
+        "Queen Bey"
+      ],
+      "category": "Music",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-pop-artist-released-the-hit-song-bad-guy-and-album-when-we-all-fall-asleep-where-do-we-go",
+      "question": "Who released the hit song \"Bad Guy\" and the album \"When We All Fall Asleep, Where Do We Go?\"?",
+      "answer": "Billie Eilish",
+      "acceptableAnswers": [
+        "Billie"
+      ],
+      "category": "Music",
+      "difficulty": "easy",
+      "answer_format": "write_in"
     }
   ],
   "familiarity": "mainstream"

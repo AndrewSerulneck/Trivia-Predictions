@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { GitPullRequest } from "lucide-react";
+import { Download, GitPullRequest, Sparkles, Trash2 } from "lucide-react";
+import { PaginationBar } from "@/components/admin/AdminShell";
 import { getErrorMessage } from "@/lib/errors";
 
 type QuestionPool = "live_showdown" | "anytime_blitz";
@@ -13,12 +14,24 @@ type PendingQuestion = {
   options: string[];
   correctAnswer: number;
   answer: string;
+  acceptableAnswers?: string[];
   category: string | null;
   difficulty: string | null;
   pool: QuestionPool;
   status: string;
   answerFormat: string | null;
   createdAt: string;
+};
+
+type LiveExportQuestion = {
+  sourceId: string;
+  slug: string;
+  question: string;
+  answer: string;
+  acceptableAnswers?: string[];
+  answer_format: "write_in";
+  category: string;
+  difficulty: string;
 };
 
 type EditDraft = {
@@ -44,6 +57,8 @@ export function TriviaPendingReviewSection() {
   const [activeTab, setActiveTab] = useState<QuestionPool>("live_showdown");
   const [items, setItems] = useState<PendingQuestion[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -53,12 +68,14 @@ export function TriviaPendingReviewSection() {
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
   const [bulkBusy, setBulkBusy] = useState(false);
   const [exportingJson, setExportingJson] = useState(false);
+  const [convertingLiveExport, setConvertingLiveExport] = useState(false);
+  const [liveExportItems, setLiveExportItems] = useState<LiveExportQuestion[]>([]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const fetchPending = useCallback(async (pool: QuestionPool) => {
+  const fetchPending = useCallback(async (pool: QuestionPool, targetPage: number) => {
     setLoading(true);
     setError("");
     setSuccess("");
@@ -70,24 +87,31 @@ export function TriviaPendingReviewSection() {
         status: "pending_review",
         pool,
         limit: String(PAGE_LIMIT),
-        offset: "0",
+        offset: String((targetPage - 1) * PAGE_LIMIT),
       });
       const response = await fetch(`/api/admin/trivia/questions?${params.toString()}`, { cache: "no-store" });
       const payload = (await response.json()) as {
         ok: boolean;
         items?: PendingQuestion[];
         total?: number;
+        limit?: number;
+        offset?: number;
         error?: string;
       };
       if (!response.ok || !payload.ok) {
         throw new Error(payload.error ?? "Failed to load pending questions.");
       }
       setItems(payload.items ?? []);
-      setTotal(payload.total ?? 0);
+      const nextTotal = payload.total ?? 0;
+      const nextLimit = payload.limit ?? PAGE_LIMIT;
+      setTotal(nextTotal);
+      setTotalPages(Math.max(1, Math.ceil(nextTotal / Math.max(1, nextLimit))));
+      setPage(targetPage);
     } catch (err) {
       setError(getErrorMessage(err, "Failed to load pending questions."));
       setItems([]);
       setTotal(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -95,7 +119,8 @@ export function TriviaPendingReviewSection() {
 
   useEffect(() => {
     setCategoryFilter("all");
-    void fetchPending(activeTab);
+    setPage(1);
+    void fetchPending(activeTab, 1);
   }, [activeTab, fetchPending]);
 
   const categoryOptions = useMemo(() => {
@@ -215,6 +240,82 @@ export function TriviaPendingReviewSection() {
       setExportingJson(false);
     }
   }, [activeTab]);
+
+  const convertSelectedToLiveExport = useCallback(async () => {
+    if (activeTab !== "anytime_blitz") {
+      setError("Live export conversion is only available from Speed Trivia pending questions.");
+      return;
+    }
+
+    const ids = filteredItems.filter((item) => selectedIds[item.id]).map((item) => item.id);
+    if (ids.length === 0) {
+      setError("Select at least one question first.");
+      return;
+    }
+
+    setConvertingLiveExport(true);
+    setError("");
+    setSuccess("");
+    try {
+      const response = await fetch("/api/admin/trivia/questions/convert-live-export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      const payload = (await response.json()) as {
+        ok: boolean;
+        items?: LiveExportQuestion[];
+        error?: string;
+      };
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error ?? "Failed to convert selected questions.");
+      }
+
+      const incoming = payload.items ?? [];
+      setLiveExportItems((prev) => {
+        const merged = new Map<string, LiveExportQuestion>();
+        for (const item of prev) merged.set(item.sourceId, item);
+        for (const item of incoming) merged.set(item.sourceId, item);
+        return Array.from(merged.values()).sort((a, b) => {
+          const category = a.category.localeCompare(b.category);
+          return category !== 0 ? category : a.question.localeCompare(b.question);
+        });
+      });
+      setSuccess(`Added ${incoming.length} question(s) to the Live Trivia export list.`);
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to convert selected questions."));
+    } finally {
+      setConvertingLiveExport(false);
+    }
+  }, [activeTab, filteredItems, selectedIds]);
+
+  const removeLiveExportItem = useCallback((sourceId: string) => {
+    setLiveExportItems((prev) => prev.filter((item) => item.sourceId !== sourceId));
+  }, []);
+
+  const clearLiveExportItems = useCallback(() => {
+    setLiveExportItems([]);
+  }, []);
+
+  const downloadLiveExportJson = useCallback(() => {
+    if (liveExportItems.length === 0) {
+      setError("Add at least one converted question before exporting.");
+      return;
+    }
+
+    const payload = liveExportItems.map(({ sourceId: _sourceId, ...item }) => item);
+    const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `live-trivia-export-${stamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setSuccess(`Downloaded ${liveExportItems.length} Live Trivia question(s) as JSON.`);
+  }, [liveExportItems]);
 
   const startEdit = useCallback((item: PendingQuestion) => {
     setEditingId(item.id);
@@ -368,17 +469,98 @@ export function TriviaPendingReviewSection() {
           Delete Selected{selectedCount > 0 ? ` (${selectedCount})` : ""}
         </button>
         {activeTab === "anytime_blitz" ? (
-          <button
-            type="button"
-            onClick={() => void exportApprovedSpeedJson()}
-            disabled={exportingJson}
-            className="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-900 disabled:opacity-50"
-          >
-            <GitPullRequest className="h-4 w-4" aria-hidden="true" />
-            {exportingJson ? "Creating PR..." : "Create JSON Export PR"}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => void convertSelectedToLiveExport()}
+              disabled={convertingLiveExport || selectedCount === 0}
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              {convertingLiveExport ? "Converting..." : `Add To Live Export List${selectedCount > 0 ? ` (${selectedCount})` : ""}`}
+            </button>
+            <button
+              type="button"
+              onClick={() => void exportApprovedSpeedJson()}
+              disabled={exportingJson}
+              className="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-900 disabled:opacity-50"
+            >
+              <GitPullRequest className="h-4 w-4" aria-hidden="true" />
+              {exportingJson ? "Creating PR..." : "Create JSON Export PR"}
+            </button>
+          </>
         ) : null}
       </div>
+
+      {activeTab === "anytime_blitz" ? (
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50/40 p-6 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">Live Trivia Export List</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Converted questions stay here until you download them. This does not write to your local Live Trivia JSON files.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={downloadLiveExportJson}
+                disabled={liveExportItems.length === 0}
+                className="inline-flex items-center gap-2 rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-50"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                Download JSON{liveExportItems.length > 0 ? ` (${liveExportItems.length})` : ""}
+              </button>
+              <button
+                type="button"
+                onClick={clearLiveExportItems}
+                disabled={liveExportItems.length === 0}
+                className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                Clear List
+              </button>
+            </div>
+          </div>
+
+          {liveExportItems.length === 0 ? (
+            <div className="mt-4 rounded-lg border border-dashed border-indigo-300 bg-white/70 px-4 py-6 text-sm text-slate-500">
+              Select Speed Trivia pending questions, then use <span className="font-semibold text-slate-700">Add To Live Export List</span>.
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {liveExportItems.map((item) => (
+                <div key={item.sourceId} className="rounded-lg border border-indigo-200 bg-white p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-indigo-700">
+                        {item.category} • {item.difficulty}
+                      </div>
+                      <div className="font-semibold text-slate-900">{item.question}</div>
+                      <div className="text-sm text-slate-700">
+                        <span className="font-semibold">Answer:</span> {item.answer}
+                      </div>
+                      {item.acceptableAnswers && item.acceptableAnswers.length > 0 ? (
+                        <div className="text-sm text-slate-600">
+                          <span className="font-semibold">Also accept:</span> {item.acceptableAnswers.join(", ")}
+                        </div>
+                      ) : null}
+                      <div className="text-xs text-slate-500">Slug: {item.slug}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeLiveExportItem(item.sourceId)}
+                      className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -533,6 +715,17 @@ export function TriviaPendingReviewSection() {
             </tbody>
           </table>
         </div>
+        {totalPages > 1 ? (
+          <PaginationBar
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={PAGE_LIMIT}
+            onPageChange={(nextPage) => {
+              void fetchPending(activeTab, nextPage);
+            }}
+          />
+        ) : null}
       </div>
     </div>
   );

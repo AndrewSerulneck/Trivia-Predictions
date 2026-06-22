@@ -95,6 +95,7 @@ type FantasyEntryRow = {
   settled_at: string | null;
   created_at: string;
   updated_at: string;
+  last_cron_processed_at: string | null;
 };
 
 type LivePlayerStatRow = {
@@ -3557,10 +3558,10 @@ export async function refreshFantasyProgress(params?: {
   let query = supabaseAdmin
     .from("fantasy_entries")
     .select(
-      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, live_collected_points, stats_last_source_updated_at, settled_at, created_at, updated_at"
+      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, live_collected_points, stats_last_source_updated_at, settled_at, created_at, updated_at, last_cron_processed_at"
     )
     .in("status", ["pending", "live"])
-    .order("starts_at", { ascending: true })
+    .order("last_cron_processed_at", { ascending: true, nullsFirst: true })
     .limit(limit);
 
   const userId = String(params?.userId ?? "").trim();
@@ -3608,6 +3609,7 @@ export async function refreshFantasyProgress(params?: {
             reward_points: 0,
             stats_last_source_updated_at: null,
             settled_at: null,
+            last_cron_processed_at: new Date().toISOString(),
           })
           .eq("id", entry.id);
         if (!preTipoffResetError) {
@@ -3616,11 +3618,13 @@ export async function refreshFantasyProgress(params?: {
             type: "broadcast",
             event: "entry_updated",
             payload: {
-              id: entry.id, user_id: entry.user_id, venue_id: entry.venue_id,
-              sport_key: entry.sport_key, game_id: entry.game_id, game_label: entry.game_label,
-              starts_at: entry.starts_at, lineup: entry.lineup,
-              status: "pending", points: 0, score_breakdown: zeroBreakdown,
-              reward_points: 0, stats_last_source_updated_at: null, settled_at: null,
+              ...entry,
+              status: "pending",
+              points: 0,
+              score_breakdown: zeroBreakdown,
+              reward_points: 0,
+              stats_last_source_updated_at: null,
+              settled_at: null,
             },
           });
         }
@@ -3694,6 +3698,7 @@ export async function refreshFantasyProgress(params?: {
     const rewardPointsChanged = nextRewardPoints !== Math.max(0, Number(entry.reward_points ?? 0));
 
     if (!statusChanged && !pointsChanged && !breakdownChanged && !rewardPointsChanged) {
+      await supabaseAdmin.from("fantasy_entries").update({ last_cron_processed_at: new Date().toISOString() }).eq("id", entry.id);
       continue;
     }
 
@@ -3703,6 +3708,7 @@ export async function refreshFantasyProgress(params?: {
       score_breakdown: next.breakdown,
       reward_points: nextRewardPoints,
       stats_last_source_updated_at: next.latestSourceUpdatedAt ?? entry.stats_last_source_updated_at,
+      last_cron_processed_at: new Date().toISOString(),
     };
 
     if (next.status === "final") {
@@ -3723,10 +3729,10 @@ export async function refreshFantasyProgress(params?: {
       type: "broadcast",
       event: "entry_updated",
       payload: {
-        id: entry.id, user_id: entry.user_id, venue_id: entry.venue_id,
-        sport_key: entry.sport_key, game_id: entry.game_id, game_label: entry.game_label,
-        starts_at: entry.starts_at, lineup: entry.lineup,
-        status: next.status, points: next.totalPoints, score_breakdown: next.breakdown,
+        ...entry,
+        status: next.status,
+        points: next.totalPoints,
+        score_breakdown: next.breakdown,
         reward_points: nextRewardPoints,
         stats_last_source_updated_at: next.latestSourceUpdatedAt ?? entry.stats_last_source_updated_at,
         settled_at: next.status === "final" ? String(payload.settled_at ?? "") : entry.settled_at,

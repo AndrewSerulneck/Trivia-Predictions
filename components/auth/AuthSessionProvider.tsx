@@ -81,7 +81,7 @@ function readAuthStateFromStorage(): AuthSessionState {
     venueId,
     username,
     tokenVerified,
-    godMode: getGodMode(),
+    godMode: tokenVerified ? getGodMode() : false,
     lastSyncedAt: Date.now(),
   };
 }

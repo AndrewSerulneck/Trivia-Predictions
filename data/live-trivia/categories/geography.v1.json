@@ -470,7 +470,7 @@
       "category": "Geography",
       "difficulty": "easy"
     },
-       {
+    {
       "slug": "which-major-river-flows-through-the-city-of-cairo-egypt",
       "question": "Which major river flows through the city of Cairo, Egypt?",
       "answer": "Nile River",
@@ -478,7 +478,7 @@
       "category": "Geography",
       "difficulty": "medium"
     },
-        {
+    {
       "slug": "which-ocean-is-the-smallest-and-shallowest-of-the-worlds-five-major-oceans",
       "question": "Which ocean is the smallest and shallowest of the world's five major oceans?",
       "answer": "Arctic Ocean",
@@ -486,7 +486,7 @@
       "category": "Geography",
       "difficulty": "hard"
     },
-        {
+    {
       "slug": "what-is-the-capital-of-france",
       "question": "What is the capital of France?",
       "answer": "Paris",
@@ -494,7 +494,7 @@
       "category": "Geography",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "what-is-the-name-of-the-largest-ocean-on-earth",
       "question": "What is the name of the largest ocean on Earth?",
       "answer": "Pacific",
@@ -502,7 +502,7 @@
       "category": "Geography",
       "difficulty": "easy"
     },
-      {
+    {
       "slug": "what-is-the-currency-of-the-united-kingdom",
       "question": "What is the currency of the United Kingdom?",
       "answer": "Pound Sterling",
@@ -510,7 +510,7 @@
       "category": "Geography",
       "difficulty": "easy"
     },
-       {
+    {
       "slug": "which-continent-is-home-to-the-amazon-rainforest",
       "question": "Which continent is home to the Amazon Rainforest?",
       "answer": "South America",
@@ -518,7 +518,7 @@
       "category": "Geography",
       "difficulty": "medium"
     },
-        {
+    {
       "slug": "what-is-the-capital-of-new-zealand",
       "question": "What is the capital of New Zealand?",
       "answer": "Wellington",
@@ -652,7 +652,7 @@
       "category": "Geography",
       "difficulty": "hard"
     },
-       {
+    {
       "slug": "what-is-the-name-of-the-longest-river-in-the-world",
       "question": "What is the name of the longest river in the world?",
       "answer": "Nile River",
@@ -3543,7 +3543,7 @@
       "imageUrl": "https://images.unsplash.com/photo-1617835594990-7cd5a9b5d153?w=800&fit=crop",
       "imageCredit": "Photo by Daria Gordova on Unsplash"
     },
-        {
+    {
       "slug": "what-is-the-only-letter-in-the-english-alphabet-that-is-not-in-the-name-of-any-us-state",
       "question": "What is the only letter in the English alphabet that is not in the name of any U.S. state?",
       "answer": "Q",
@@ -3551,7 +3551,7 @@
       "category": "Geography",
       "difficulty": "hard"
     },
-        {
+    {
       "slug": "which-continent-is-the-largest-by-land-area",
       "question": "Which continent is the largest by land area?",
       "answer": "Asia",
@@ -3559,7 +3559,7 @@
       "category": "Geography",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "which-desert-is-the-largest-hot-desert-in-the-world",
       "question": "Which desert is the largest hot desert in the world?",
       "answer": "Sahara Desert",
@@ -3567,7 +3567,7 @@
       "category": "Geography",
       "difficulty": "hard"
     },
-      {
+    {
       "slug": "what-is-the-capital-city-of-japan",
       "question": "What is the capital city of Japan?",
       "answer": "Tokyo",
@@ -3575,7 +3575,7 @@
       "category": "Geography",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "which-city-is-famous-for-its-leaning-tower",
       "question": "Which city is famous for its leaning tower?",
       "answer": "Pisa",
@@ -3583,7 +3583,7 @@
       "category": "Geography",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "which-continent-is-home-to-the-sahara-desert",
       "question": "Which continent is home to the Sahara Desert?",
       "answer": "Africa",
@@ -3591,7 +3591,7 @@
       "category": "Geography",
       "difficulty": "easy"
     },
-     {
+    {
       "slug": "what-is-the-primary-language-spoken-in-brazil",
       "question": "What is the primary language spoken in Brazil?",
       "answer": "Portuguese",
@@ -3607,7 +3607,7 @@
       "category": "Geography",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "what-is-the-capital-city-of-france",
       "question": "What is the capital city of France?",
       "answer": "Paris",
@@ -4496,6 +4496,195 @@
       "answer": "Idaho",
       "category": "Geography",
       "difficulty": "easy"
+    },
+    {
+      "slug": "the-grand-canyon-is-located-in-which-us-state",
+      "question": "The Grand Canyon is located in which U.S. state?",
+      "answer": "Arizona",
+      "acceptableAnswers": [
+        "AZ"
+      ],
+      "category": "Geography",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-great-lake-is-entirely-within-the-united-states",
+      "question": "Which of the five Great Lakes is entirely within the United States?",
+      "answer": "Lake Michigan",
+      "acceptableAnswers": [
+        "Michigan"
+      ],
+      "category": "Geography",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-atacama-desert-one-of-the-driest-places-on-earth-is-located-on-which-continent",
+      "question": "The Atacama Desert, one of the driest places on Earth, is located on what continent?",
+      "answer": "South America",
+      "acceptableAnswers": [
+        "S. America"
+      ],
+      "category": "Geography",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "through-which-country-does-the-prime-meridian-0-longitude-primarily-pass",
+      "question": "Through which country does the Prime Meridian (0° longitude) primarily pass?",
+      "answer": "United Kingdom",
+      "acceptableAnswers": [
+        "UK",
+        "England"
+      ],
+      "category": "Geography",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-driest-continent-on-earth",
+      "question": "What is the driest continent on Earth?",
+      "answer": "Antarctica",
+      "category": "Geography",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-of-the-following-rivers-flows-through-baghdad",
+      "question": "What river flows through Baghdad?",
+      "answer": "Tigris",
+      "category": "Geography",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-sea-is-bordered-by-russia-to-the-north-iran-to-the-south-and-azerbaijan-kazakhstan-and-turkmenistan-to-the-west-and-east",
+      "question": "Which sea is bordered by Russia to the north, Iran to the south, and Azerbaijan, Kazakhstan, and Turkmenistan to the west and east?",
+      "answer": "Caspian Sea",
+      "acceptableAnswers": [
+        "Caspian"
+      ],
+      "category": "Geography",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-city-is-famously-known-as-the-big-apple",
+      "question": "What city is famously known as the \"Big Apple\"?",
+      "answer": "New York City",
+      "acceptableAnswers": [
+        "NYC",
+        "New York"
+      ],
+      "category": "Geography",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "what-is-the-currency-used-in-japan",
+      "question": "What is the currency used in Japan?",
+      "answer": "Yen",
+      "category": "Geography",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "great-barrier-reef-continent",
+      "question": "The Great Barrier Reef is off the coast of which continent?",
+      "answer": "Australia",
+      "category": "Geography",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-country-is-an-archipelago-consisting-of-over-17000-islands",
+      "question": "What country is an archipelago consisting of over 17,000 islands?",
+      "answer": "Indonesia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-european-capital-city-is-famously-built-on-seven-hills",
+      "question": "What European capital city is famously built on seven hills?",
+      "answer": "Rome",
+      "category": "Geography",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-continent-is-entirely-in-the-northern-and-eastern-hemispheres",
+      "question": "Which continent is entirely in the Northern and Eastern Hemispheres?",
+      "answer": "Europe",
+      "category": "Geography",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-country-is-famous-for-its-boot-shape",
+      "question": "Which country is famous for its 'boot' shape?",
+      "answer": "Italy",
+      "acceptableAnswers": [
+        "Italia"
+      ],
+      "category": "Geography",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-is-the-only-continent-to-have-land-in-all-four-hemispheres",
+      "question": "Which is the only continent to have land in all four hemispheres?",
+      "answer": "Africa",
+      "category": "Geography",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-large-body-of-water-separates-africa-from-the-arabian-peninsula",
+      "question": "Which large body of water separates Africa from the Arabian Peninsula?",
+      "answer": "Red Sea",
+      "category": "Geography",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-mountain-range-is-the-highest-in-the-world-and-home-to-mount-everest",
+      "question": "Which mountain range is the highest in the world and home to Mount Everest?",
+      "answer": "Himalayas",
+      "acceptableAnswers": [
+        "The Himalayas"
+      ],
+      "category": "Geography",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-sea-is-bordered-by-europe-to-the-north-africa-to-the-west-and-asia-to-the-east",
+      "question": "Which sea is bordered by Europe to the north, Africa to the west, and Asia to the east?",
+      "answer": "Mediterranean Sea",
+      "acceptableAnswers": [
+        "Med Sea"
+      ],
+      "category": "Geography",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "the-amazon-river-primarily-flows-through-which-country-in-south-america",
+      "question": "Which South American country is primarily traversed by the Amazon River?",
+      "answer": "Brazil",
+      "category": "Geography",
+      "difficulty": "medium",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "which-south-american-country-is-the-longest-in-the-world-from-north-to-south",
+      "question": "Which South American country is the longest in the world from north to south?",
+      "answer": "Chile",
+      "category": "Geography",
+      "difficulty": "medium",
+      "answer_format": "write_in"
     }
   ]
 }

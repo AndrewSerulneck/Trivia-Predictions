@@ -957,7 +957,7 @@ export function SportsBingoHome({
       const lastName = playerTokens[playerTokens.length - 1] ?? "";
       const textKey = normalizeKey(text);
 
-      for (const card of cards) {
+      for (const card of currentCardsRef.current) {
         for (const square of card.squares) {
           if (square.status === "hit" || square.status === "miss" || square.status === "void") {
             continue;
@@ -978,7 +978,9 @@ export function SportsBingoHome({
       }
       return {};
     },
-    [cards]
+    // currentCardsRef is a stable ref — no dep needed; reads .current inside callback
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   const findActionAnchor = useCallback((event: VisualEngagementEvent): { x: number; y: number } => {
@@ -1283,6 +1285,13 @@ export function SportsBingoHome({
     liveSubscriptionGameIdsRef.current = new Set(subscribedGameIds);
   }, [subscribedGameIds]);
 
+  // Keep cards current via ref so live-stats subscription callback reads fresh card state
+  // without needing to rebuild the channel on every card update.
+  const currentCardsRef = useRef<BingoCard[]>(cards);
+  useEffect(() => {
+    currentCardsRef.current = cards;
+  }, [cards]);
+
   // Channels 1 & 2 (cards + squares): one broadcast channel per active game.
   // Server broadcasts to bingo-game:{gameId} after resolving squares or settling cards.
   useEffect(() => {
@@ -1350,7 +1359,7 @@ export function SportsBingoHome({
             events.push({
               ...base,
               squareKey: relevance.squareKey,
-              cardId: relevance.cardId ?? cards[0]?.id,
+              cardId: relevance.cardId ?? currentCardsRef.current[0]?.id,
             });
           }
           queueVisualEvents(events);
@@ -1358,14 +1367,13 @@ export function SportsBingoHome({
         .subscribe()
     );
 
-    const liveStatsPrevByPlayer = liveStatsPrevByPlayerRef.current;
     return () => {
       active = false;
+      liveStatsPrevByPlayerRef.current.clear();
       channels.forEach((ch) => void client.removeChannel(ch));
-      liveStatsPrevByPlayer.clear();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [findRelevantSquareForEvent, queueVisualEvents, subscribedSportKeysKey]);
+  }, [queueVisualEvents, subscribedSportKeysKey]);
 
   const onSwipeTouchStart = useCallback((event: ReactTouchEvent<HTMLDivElement>) => {
     const touch = event.touches[0];
