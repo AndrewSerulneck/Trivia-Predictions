@@ -3612,6 +3612,17 @@ export async function refreshFantasyProgress(params?: {
           .eq("id", entry.id);
         if (!preTipoffResetError) {
           updated += 1;
+          void supabaseAdmin.channel(`fantasy-entries:${entry.user_id}`).send({
+            type: "broadcast",
+            event: "entry_updated",
+            payload: {
+              id: entry.id, user_id: entry.user_id, venue_id: entry.venue_id,
+              sport_key: entry.sport_key, game_id: entry.game_id, game_label: entry.game_label,
+              starts_at: entry.starts_at, lineup: entry.lineup,
+              status: "pending", points: 0, score_breakdown: zeroBreakdown,
+              reward_points: 0, stats_last_source_updated_at: null, settled_at: null,
+            },
+          });
         }
       }
       continue;
@@ -3707,6 +3718,20 @@ export async function refreshFantasyProgress(params?: {
     if (next.status === "final") {
       finalized += 1;
     }
+
+    void supabaseAdmin.channel(`fantasy-entries:${entry.user_id}`).send({
+      type: "broadcast",
+      event: "entry_updated",
+      payload: {
+        id: entry.id, user_id: entry.user_id, venue_id: entry.venue_id,
+        sport_key: entry.sport_key, game_id: entry.game_id, game_label: entry.game_label,
+        starts_at: entry.starts_at, lineup: entry.lineup,
+        status: next.status, points: next.totalPoints, score_breakdown: next.breakdown,
+        reward_points: nextRewardPoints,
+        stats_last_source_updated_at: next.latestSourceUpdatedAt ?? entry.stats_last_source_updated_at,
+        settled_at: next.status === "final" ? String(payload.settled_at ?? "") : entry.settled_at,
+      },
+    });
   }
 
   return {

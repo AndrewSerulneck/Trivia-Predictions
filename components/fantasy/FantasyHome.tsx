@@ -1566,25 +1566,16 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     const channel = client
       .channel(`fantasy-entries:${userId}`)
       .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "fantasy_entries", filter: `user_id=eq.${userId}` },
+        "broadcast",
+        { event: "entry_updated" },
         (payload) => {
-          console.log("[FantasyRealtime] fantasy_entries payload", payload);
+          console.log("[FantasyRealtime] entry_updated broadcast", payload);
           if (!active) {
             return;
           }
           setLastRealtimeMessageAt(Date.now());
 
-          if (payload.eventType === "DELETE") {
-            const deletedId = String((payload.old as { id?: string } | null)?.id ?? "").trim();
-            if (!deletedId) {
-              return;
-            }
-            setEntries((previous) => previous.filter((entry) => entry.id !== deletedId));
-            return;
-          }
-
-          const nextEntry = mapRealtimeEntry((payload.new ?? null) as FantasyEntryRealtimeRow);
+          const nextEntry = mapRealtimeEntry((payload.payload ?? null) as FantasyEntryRealtimeRow);
           if (!nextEntry) {
             return;
           }

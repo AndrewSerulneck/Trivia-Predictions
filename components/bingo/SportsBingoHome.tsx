@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, ListChecks, Plus, Trophy } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ListChecks, Plus, Trophy } from "lucide-react";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import type { TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
@@ -13,10 +13,9 @@ import { supabase } from "@/lib/supabase";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
-import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { ActionPop, type ActionPopTone } from "@/components/bingo/ActionPop";
-import { BackButton } from "@/components/navigation/BackButton";
+import { SlimTopBar, ViewTabs, FoldLine, LiveDot } from "@/components/venue/GameChrome";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 
 type BingoCardSquare = {
@@ -115,36 +114,6 @@ const LINE_PATTERNS: number[][] = [
 ];
 const BINGO_GAME_BUFFER_MS = 6 * 60 * 60 * 1000;
 const FINAL_SCORES_RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
-
-function toLocalDateInput(date: Date): string {
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 10);
-}
-
-function isValidDateInput(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-  const parsed = new Date(`${value}T00:00:00`);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-}
-
-function getDateLabel(value: string, today: string): string {
-  if (!value) return "";
-  if (value === today) return "Today";
-  const d = new Date(`${value}T00:00:00`);
-  const t = new Date(`${today}T00:00:00`);
-  const diff = Math.round((d.getTime() - t.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff === -1) return "Yesterday";
-  if (diff === 1) return "Tomorrow";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function toLocalDateKey(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return toLocalDateInput(date);
-}
 
 function formatLocalDateTime(iso: string): string {
   const date = new Date(iso);
@@ -663,12 +632,7 @@ function renderExpandedGrid(
   );
 }
 
-type BingoScreenIndex = 0 | 1;
 type LandscapeBoardMode = "active" | "scored";
-
-function clampScreen(value: number): BingoScreenIndex {
-  return Math.min(1, Math.max(0, value)) as BingoScreenIndex;
-}
 
 function wrapIndex(index: number, length: number): number {
   if (length <= 0) {
@@ -769,7 +733,6 @@ function LoadingState({ label }: { label: string }) {
 }
 
 export function SportsBingoHome({
-  initialDate = "",
   initialCardId = "",
   onBack,
 }: {
@@ -802,9 +765,6 @@ export function SportsBingoHome({
   const [glowSquareKeys, setGlowSquareKeys] = useState<Set<string>>(new Set());
   const [recentlyAddedCardIds, setRecentlyAddedCardIds] = useState<Set<string>>(new Set());
   const [isScreenShaking, setIsScreenShaking] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(() =>
-    isValidDateInput(initialDate) ? initialDate : toLocalDateInput(new Date())
-  );
   const [isLandscapeGameView, setIsLandscapeGameView] = useState(false);
   const [landscapeBoardMode, setLandscapeBoardMode] = useState<LandscapeBoardMode>("active");
   const [landscapeActiveBoardIndex, setLandscapeActiveBoardIndex] = useState(0);
@@ -823,22 +783,15 @@ export function SportsBingoHome({
   const actionPopCounterRef = useRef(0);
   const limitPopIdRef = useRef(0);
   const boardPopTimersRef = useRef<Map<string, number>>(new Map());
-  const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
-  const [activeScreen, setActiveScreen] = useState<BingoScreenIndex>(0);
-  const todayDate = useMemo(() => toLocalDateInput(new Date()), []);
+  const [activeTab, setActiveTab] = useState<"active" | "scored">("active");
+  const [selectedActiveBoardId, setSelectedActiveBoardId] = useState("");
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
     setVenueId(getVenueId() ?? "");
   }, []);
-
-  useEffect(() => {
-    if (isValidDateInput(initialDate)) {
-      setSelectedDate(initialDate);
-    }
-  }, [initialDate]);
 
   useEffect(() => {
     const targetCardId = initialCardId.trim();
@@ -849,14 +802,12 @@ export function SportsBingoHome({
     if (!targetCard) {
       return;
     }
-    const targetDate = toLocalDateKey(targetCard.startsAt);
-    if (isValidDateInput(targetDate)) {
-      setSelectedDate(targetDate);
-    }
     if (targetCard.status === "active") {
+      setActiveTab("active");
       setExpandedActiveCardId(targetCard.id);
       setExpandedFinalCardId("");
     } else {
+      setActiveTab("scored");
       setExpandedFinalCardId(targetCard.id);
       setExpandedActiveCardId("");
     }
@@ -1315,221 +1266,112 @@ export function SportsBingoHome({
     return () => window.clearInterval(interval);
   }, [lastRealtimeMessageAt]);
 
-  const subscribedCardIds = useMemo(() => Array.from(new Set(cards.map((card) => card.id).filter(Boolean))), [cards]);
   const subscribedGameIds = useMemo(() => Array.from(new Set(cards.map((card) => card.gameId).filter(Boolean))), [cards]);
-  const subscribedCardFilter = useMemo(() => {
-    if (subscribedCardIds.length === 0) {
-      return "";
-    }
-    return `card_id=in.(${subscribedCardIds.join(",")})`;
-  }, [subscribedCardIds]);
+  // Stable string key so subscription deps only change when game composition changes.
+  const subscribedGameIdsKey = [...subscribedGameIds].sort().join(",");
 
+  // Sport keys for the live stats broadcast subscription.
+  const subscribedSportKeys = useMemo(
+    () => Array.from(new Set(cards.map((card) => card.sportKey).filter(Boolean))),
+    [cards]
+  );
+  const subscribedSportKeysKey = [...subscribedSportKeys].sort().join(",");
+
+  // Keep gameIdSet current via ref so the live subscription doesn't need to re-run on every card update.
+  const liveSubscriptionGameIdsRef = useRef<Set<string>>(new Set(subscribedGameIds));
   useEffect(() => {
-    if (!userId) {
-      console.log("[BingoRealtime] waiting for userId before subscribing");
-      return;
-    }
-    if (!supabase) {
-      console.log("[BingoRealtime] supabase client not configured");
-      return;
-    }
+    liveSubscriptionGameIdsRef.current = new Set(subscribedGameIds);
+  }, [subscribedGameIds]);
 
-    console.log("[BingoRealtime] subscribing", { userId });
+  // Channels 1 & 2 (cards + squares): one broadcast channel per active game.
+  // Server broadcasts to bingo-game:{gameId} after resolving squares or settling cards.
+  useEffect(() => {
+    if (!userId || !supabase || subscribedGameIds.length === 0) {
+      return;
+    }
     const client = supabase;
     let active = true;
-    const cardsChannel = client
-      .channel(`bingo-cards:${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "sports_bingo_cards", filter: `user_id=eq.${userId}` },
-        (payload) => {
-          console.log("[BingoRealtime] sports_bingo_cards payload", payload);
-          if (!active) {
-            return;
-          }
+    const gameIds = subscribedGameIdsKey ? subscribedGameIdsKey.split(",") : [];
+
+    const channels = gameIds.map((gameId) =>
+      client
+        .channel(`bingo-game:${gameId}`)
+        .on("broadcast", { event: "card_updated" }, () => {
+          if (!active) return;
           setLastRealtimeMessageAt(Date.now());
           void loadCards({ background: true, refreshProgress: false });
-        }
-      )
-      .subscribe((status) => {
-        console.log("[BingoRealtime] cards channel status", status, { userId });
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-          setIsRealtimeFresh(false);
-        }
-      });
-
-    let squaresChannel: ReturnType<typeof client.channel> | null = null;
-    if (subscribedCardFilter) {
-      squaresChannel = client
-        .channel(`bingo-squares:${userId}:${subscribedCardIds.length}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "sports_bingo_squares", filter: subscribedCardFilter },
-          (payload) => {
-            console.log("[BingoRealtime] sports_bingo_squares payload", payload);
-            if (!active) {
-              return;
-            }
-            setLastRealtimeMessageAt(Date.now());
-            void loadCards({ background: true, refreshProgress: false });
-          }
-        )
+        })
         .subscribe((status) => {
-          console.log("[BingoRealtime] squares channel status", status, { userId, subscribedCardFilter });
           if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
             setIsRealtimeFresh(false);
           }
-        });
-    }
+        })
+    );
 
     return () => {
       active = false;
-      void client.removeChannel(cardsChannel);
-      if (squaresChannel) {
-        void client.removeChannel(squaresChannel);
-      }
+      channels.forEach((ch) => void client.removeChannel(ch));
     };
-  }, [loadCards, subscribedCardFilter, subscribedCardIds.length, userId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadCards, subscribedGameIdsKey, userId]);
 
+  // Channel 3 (live stats): subscribe to sport-keyed broadcast channels from Phase 3.
+  // gameIdSet is kept current via ref so we don't re-subscribe on every card state update.
   useEffect(() => {
-    if (!supabase || subscribedGameIds.length === 0) {
+    if (!supabase || subscribedSportKeys.length === 0) {
       return;
     }
     const client = supabase;
     let active = true;
-    const gameIdSet = new Set(subscribedGameIds);
 
-    const liveChannel = client
-      .channel(`bingo-live-events:${userId || "anon"}:${subscribedGameIds.length}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "live_player_stats" }, (payload) => {
-        if (!active) return;
-        const next = (payload.new ?? null) as LivePlayerStatRealtimeRow | null;
-        if (!next) return;
-        const gameId = String(next.game_id ?? "").trim();
-        if (!gameIdSet.has(gameId)) {
-          return;
-        }
-        const playerId = Number(next.player_id ?? 0);
-        if (!Number.isFinite(playerId) || playerId <= 0) {
-          return;
-        }
-        const mapKey = `${gameId}:${playerId}`;
-        const previous = liveStatsPrevByPlayerRef.current.get(mapKey);
-        liveStatsPrevByPlayerRef.current.set(mapKey, next);
-        if (!previous) {
-          return;
-        }
+    const channels = subscribedSportKeys.map((sportKey) =>
+      client
+        .channel(`live-stats:${sportKey}`)
+        .on("broadcast", { event: "stat_update" }, (payload) => {
+          if (!active) return;
+          const next = (payload.payload ?? null) as LivePlayerStatRealtimeRow | null;
+          if (!next) return;
+          const gameId = String(next.game_id ?? "").trim();
+          if (!liveSubscriptionGameIdsRef.current.has(gameId)) return;
+          const playerId = Number(next.player_id ?? 0);
+          if (!Number.isFinite(playerId) || playerId <= 0) return;
 
-        const baseEvents = classifyLiveDeltaEvent(previous, next);
-        if (baseEvents.length === 0) {
-          return;
-        }
+          const mapKey = `${gameId}:${playerId}`;
+          const previous = liveStatsPrevByPlayerRef.current.get(mapKey);
+          liveStatsPrevByPlayerRef.current.set(mapKey, next);
+          if (!previous) return;
 
-        const events: VisualEngagementEvent[] = [];
-        for (const base of baseEvents) {
-          const relevance = findRelevantSquareForEvent(next.player_name, base.text);
-          events.push({
-            ...base,
-            squareKey: relevance.squareKey,
-            cardId: relevance.cardId ?? cards[0]?.id,
-          });
-        }
-        queueVisualEvents(events);
-      })
-      .subscribe();
+          const baseEvents = classifyLiveDeltaEvent(previous, next);
+          if (baseEvents.length === 0) return;
+
+          const events: VisualEngagementEvent[] = [];
+          for (const base of baseEvents) {
+            const relevance = findRelevantSquareForEvent(next.player_name, base.text);
+            events.push({
+              ...base,
+              squareKey: relevance.squareKey,
+              cardId: relevance.cardId ?? cards[0]?.id,
+            });
+          }
+          queueVisualEvents(events);
+        })
+        .subscribe()
+    );
 
     const liveStatsPrevByPlayer = liveStatsPrevByPlayerRef.current;
     return () => {
       active = false;
-      void client.removeChannel(liveChannel);
+      channels.forEach((ch) => void client.removeChannel(ch));
       liveStatsPrevByPlayer.clear();
     };
-  }, [cards, findRelevantSquareForEvent, queueVisualEvents, subscribedGameIds, userId]);
-
-  const goToScreen = useCallback((screen: BingoScreenIndex) => {
-    const viewport = swipeViewportRef.current;
-    if (!viewport) {
-      return;
-    }
-    viewport.scrollTo({
-      left: viewport.clientWidth * screen,
-      behavior: "smooth",
-    });
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [findRelevantSquareForEvent, queueVisualEvents, subscribedSportKeysKey]);
 
   const onSwipeTouchStart = useCallback((event: ReactTouchEvent<HTMLDivElement>) => {
     const touch = event.touches[0];
     touchStartXRef.current = touch?.clientX ?? null;
     touchStartYRef.current = touch?.clientY ?? null;
   }, []);
-
-  const onSwipeTouchEnd = useCallback(
-    (event: ReactTouchEvent<HTMLDivElement>) => {
-      const startX = touchStartXRef.current;
-      const startY = touchStartYRef.current;
-      touchStartXRef.current = null;
-      touchStartYRef.current = null;
-      if (startX === null || startY === null) {
-        return;
-      }
-
-      const touch = event.changedTouches[0];
-      if (!touch) {
-        return;
-      }
-      const dx = touch.clientX - startX;
-      const dy = touch.clientY - startY;
-      if (Math.abs(dx) < 18 || Math.abs(dx) < Math.abs(dy) * 0.5) {
-        return;
-      }
-      if (dx < 0 && activeScreen === 0) {
-        goToScreen(1);
-      } else if (dx > 0 && activeScreen === 1) {
-        goToScreen(0);
-      }
-    },
-    [activeScreen, goToScreen]
-  );
-
-  useEffect(() => {
-    const viewport = swipeViewportRef.current;
-    if (!viewport || typeof window === "undefined") {
-      return;
-    }
-
-    let rafId: number | null = null;
-    const updateScreen = () => {
-      const width = Math.max(1, viewport.clientWidth);
-      const next = clampScreen(Math.round(viewport.scrollLeft / width));
-      setActiveScreen(next);
-    };
-    const onScroll = () => {
-      if (rafId !== null) {
-        return;
-      }
-      rafId = window.requestAnimationFrame(() => {
-        rafId = null;
-        updateScreen();
-      });
-    };
-    const onResize = () => {
-      viewport.scrollTo({ left: viewport.clientWidth * activeScreen });
-      updateScreen();
-    };
-
-    updateScreen();
-    viewport.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
-    return () => {
-      if (rafId !== null) {
-        window.cancelAnimationFrame(rafId);
-      }
-      viewport.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-    };
-  }, [activeScreen]);
 
   const { activeCards, finalizedCards } = useMemo(() => {
     const now = Date.now();
@@ -1562,70 +1404,22 @@ export function SportsBingoHome({
       finalizedCards: finalized,
     };
   }, [cards]);
-  const selectedDayCards = useMemo(
-    () => cards.filter((card) => toLocalDateKey(card.startsAt) === selectedDate),
-    [cards, selectedDate]
+  const selectedActiveCard = useMemo(
+    () => activeCards.find((card) => card.id === selectedActiveBoardId) ?? activeCards[0] ?? null,
+    [activeCards, selectedActiveBoardId]
   );
-  const selectedActiveCards = useMemo(
-    () =>
-      selectedDayCards
-        .filter((card) => activeCards.some((activeCard) => activeCard.id === card.id))
-        .sort(compareCardsEarliestToLatest),
-    [activeCards, selectedDayCards]
-  );
-  const selectedSettledCards = useMemo(
-    () =>
-      selectedDayCards
-        .filter((card) => finalizedCards.some((finalizedCard) => finalizedCard.id === card.id))
-        .sort(compareCardsLatestToEarliest),
-    [finalizedCards, selectedDayCards]
-  );
-  const selectedDayHasUnclaimed = useMemo(
-    () =>
-      selectedSettledCards.some((card) => card.status === "won" && !card.rewardClaimedAt && card.rewardPoints > 0),
-    [selectedSettledCards]
-  );
-  const hasPreviousUnclaimed = useMemo(
-    () =>
-      !selectedDayHasUnclaimed &&
-      finalizedCards.some((card) => {
-        if (card.status !== "won" || card.rewardClaimedAt || card.rewardPoints <= 0) return false;
-        const day = toLocalDateKey(card.startsAt);
-        return Boolean(day) && day < selectedDate;
-      }),
-    [finalizedCards, selectedDate, selectedDayHasUnclaimed]
-  );
-  const hasFutureUnclaimed = useMemo(
-    () =>
-      !selectedDayHasUnclaimed &&
-      finalizedCards.some((card) => {
-        if (card.status !== "won" || card.rewardClaimedAt || card.rewardPoints <= 0) return false;
-        const day = toLocalDateKey(card.startsAt);
-        return Boolean(day) && day > selectedDate;
-      }),
-    [finalizedCards, selectedDate, selectedDayHasUnclaimed]
-  );
-  const isSelectedDateToday = selectedDate === todayDate;
-  const navigateToPrevDay = useCallback(() => {
-    setSelectedDate((prev) => {
-      const d = new Date(`${prev}T00:00:00`);
-      d.setDate(d.getDate() - 1);
-      return toLocalDateInput(d);
-    });
-  }, []);
-  const navigateToNextDay = useCallback(() => {
-    setSelectedDate((prev) => {
-      if (prev >= todayDate) return prev;
-      const d = new Date(`${prev}T00:00:00`);
-      d.setDate(d.getDate() + 1);
-      return toLocalDateInput(d);
-    });
-  }, [todayDate]);
+  // Keep the selected active board valid as the active list changes; default to the first.
   useEffect(() => {
-    if (!isSelectedDateToday) {
-      setActiveScreen(1);
+    if (activeCards.length === 0) {
+      if (selectedActiveBoardId) {
+        setSelectedActiveBoardId("");
+      }
+      return;
     }
-  }, [isSelectedDateToday]);
+    if (!activeCards.some((card) => card.id === selectedActiveBoardId)) {
+      setSelectedActiveBoardId(activeCards[0].id);
+    }
+  }, [activeCards, selectedActiveBoardId]);
   const hasStartedActiveCard = useMemo(() => {
     const now = Date.now();
     return activeCards.some((card) => {
@@ -2184,308 +1978,402 @@ export function SportsBingoHome({
       : landscapeContent;
   }
 
+  const isFirstRun = !loadingCards && activeCards.length === 0 && settledCards.length === 0;
+  const selectedBoardProgress = selectedActiveCard ? getBoardProgress(selectedActiveCard.squares) : null;
+  const selectedBoardIsLive = selectedActiveCard ? Date.parse(selectedActiveCard.startsAt) <= Date.now() : false;
+  const scoredWonCount = settledCards.filter((card) => card.status === "won").length;
+  const scoredPointsWon = settledCards.reduce(
+    (sum, card) => (card.status === "won" ? sum + card.rewardPoints : sum),
+    0
+  );
+
   return (
-    <div ref={rootRef} className={`tp-bingo-theme space-y-3 ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
-      {/* Back navigation pill */}
-      <div className="flex items-center justify-start">
-        <BackButton href="/" label="Back" venueHomeFallback />
-      </div>
+    <div ref={rootRef} className={`tp-bingo-theme ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
+      <SlimTopBar game="bingo" onExit={onBack} />
 
-      <VenueEntryRulesPanel
-        gameKey="bingo"
-        shouldDisplay={Boolean(userId) && !loadingCards && activeCards.length === 0}
-      />
+      <div className="mx-auto w-full max-w-[30rem] px-3 pb-6">
+        {errorMessage ? (
+          <div className="mt-3 rounded-xl border border-rose-500/50 bg-rose-950/80 p-3 text-sm text-rose-300">{errorMessage}</div>
+        ) : null}
 
-      {errorMessage ? (
-        <div className="rounded-xl border border-rose-500/50 bg-rose-950/80 p-3 text-sm text-rose-300">{errorMessage}</div>
-      ) : null}
-
-      {unclaimedWonBingoCards.length > 0 ? (
-        <div className="rounded-2xl border border-sky-300/40 bg-slate-900 px-3 py-3 shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-sky-300">🎉 Bingo Points Ready</p>
-          <div className="mt-1 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-lg font-black leading-none text-slate-100">
-                {unclaimedWonBingoCards.length} winning board{unclaimedWonBingoCards.length !== 1 ? "s" : ""}
-              </p>
-              <p className="mt-0.5 text-[11px] font-semibold text-sky-300">
-                +{totalUnclaimedBingoPoints} pts waiting to collect
-              </p>
-            </div>
+        {loadingCards && cards.length === 0 ? (
+          <div className="pt-8">
+            <LoadingState label="Loading your boards..." />
           </div>
-        </div>
-      ) : null}
-
-      {/* Header — BINGO rainbow title + controls */}
-      <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
-        <p className="text-center text-[44px] font-black uppercase tracking-[0.16em] text-amber-300 leading-none">Hightop</p>
-        <div className="mb-1 grid grid-cols-5 gap-1">
-          {[
-            { letter: "B", cls: "text-rose-400" },
-            { letter: "I", cls: "text-amber-400" },
-            { letter: "N", cls: "text-emerald-400" },
-            { letter: "G", cls: "text-sky-400" },
-            { letter: "O", cls: "text-violet-400" },
-          ].map((item) => (
-            <div
-              key={item.letter}
-              className={`text-center text-3xl font-black tracking-[0.1em] drop-shadow-[0_0_8px_currentColor] [font-family:'Bree_Serif','Nunito',serif] ${item.cls}`}
-            >
-              {item.letter}
+        ) : isFirstRun ? (
+          /* ════════ FIRST RUN — no boards yet ════════ */
+          <>
+            <div className="pt-4">
+              <div className="relative overflow-hidden rounded-[18px] border-2 border-sky-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.12),transparent_60%),#0c3a2e] p-4 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.35),0_12px_26px_rgba(0,0,0,0.5)]">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · live right now</p>
+                <p className="mt-1.5 text-[26px] leading-[1.08] text-amber-100 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
+                  Your squares fill themselves.
+                </p>
+                <p className="mt-1.5 text-[12px] font-bold leading-relaxed text-amber-100/60">
+                  We turn tonight&apos;s games into a 5×5 board of player props and box-score calls. Plays happen, squares
+                  light up automatically. Five in a row wins the venue prize.
+                </p>
+                <div className="mt-3.5 grid grid-cols-5 gap-1 opacity-90">
+                  {Array.from({ length: 25 }).map((_, i) => {
+                    const hit = [2, 6, 8, 16, 20].includes(i);
+                    const free = i === 12;
+                    return (
+                      <div
+                        key={i}
+                        className={`aspect-square rounded ${
+                          free
+                            ? "border border-amber-200 bg-[linear-gradient(135deg,#c89b3a,#f59e0b)]"
+                            : hit
+                            ? "border border-amber-200 bg-[linear-gradient(135deg,#f97316,#fbbf24)]"
+                            : "border border-[#fff7ea]/20 bg-[#fff7ea]/[0.16]"
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+                <Link
+                  href="/bingo/select-sport"
+                  className="tp-clean-button mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[13px] bg-sky-300 px-4 py-3.5 text-[14.5px] font-black uppercase tracking-[0.03em] text-[#08233a] shadow-[0_0_0_1px_rgba(125,211,252,0.4),0_10px_26px_rgba(125,211,252,0.28)] transition-transform active:scale-95"
+                >
+                  Get your first board
+                  <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                </Link>
+                <p className="mt-2.5 text-center text-[10px] font-black tracking-[0.04em] text-sky-300">
+                  Free to play · no entry needed
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-          {hasReachedBoardLimit ? (
-            <button
-              type="button"
-              aria-disabled="true"
-              onClick={triggerLimitReachedFeedback}
-              className={`tp-clean-button inline-flex min-h-[44px] items-center rounded-full border border-sky-300/40 bg-sky-300/[0.07] px-5 py-2 text-sm font-bold text-sky-300 ${
-                limitPulse ? "pickem-limit-pulse" : ""
-              }`}
-            >
-              {showBoardLimitMessage ? "Max 4 active boards reached!" : "Tap here to play!"}
-            </button>
-          ) : (
-            <Link
-              href="/bingo/select-sport"
-              className="tp-clean-button inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-sky-300/50 bg-sky-300/10 px-5 py-2 text-sm font-bold text-sky-200 shadow-[0_0_16px_rgba(125,211,252,0.2)] transition-all active:scale-95"
-            >
-              Tap here to play!
-            </Link>
-          )}
-        </div>
 
-        <div className="mt-3 flex w-full items-center justify-between rounded-xl border border-sky-300/25 bg-slate-800/50 px-2 py-1.5">
-          <button
-            type="button"
-            onClick={navigateToPrevDay}
-            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-sky-300/30 bg-slate-900/70 text-sky-300 transition-all hover:bg-sky-900/30 active:scale-90"
-            aria-label="Previous day"
-          >
-            ◀
-            {hasPreviousUnclaimed ? (
-              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">!</span>
-            ) : null}
-          </button>
-          <span className="text-sm font-bold text-slate-200">{getDateLabel(selectedDate, todayDate)}</span>
-          <button
-            type="button"
-            onClick={navigateToNextDay}
-            disabled={selectedDate >= todayDate}
-            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-sky-300/30 bg-slate-900/70 text-sky-300 transition-all hover:bg-sky-900/30 active:scale-90 disabled:opacity-30"
-            aria-label="Next day"
-          >
-            ▶
-            {hasFutureUnclaimed ? (
-              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">!</span>
-            ) : null}
-          </button>
-        </div>
+            <div className="mt-3 flex gap-2">
+              {[
+                { n: "1", t: "Pick a game", d: "From tonight's slate" },
+                { n: "2", t: "We build it", d: "25 live squares" },
+                { n: "3", t: "Match 5", d: "Row, column or diagonal" },
+              ].map((step) => (
+                <div key={step.n} className="flex-1 rounded-xl border border-white/[0.07] bg-slate-900 p-2.5">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-[7px] border border-sky-300/40 bg-sky-300/[0.14] text-[10px] font-black text-sky-300 [font-family:ui-monospace,monospace]">
+                    {step.n}
+                  </span>
+                  <div className="mt-1.5 text-[11.5px] font-black text-slate-50">{step.t}</div>
+                  <div className="mt-0.5 text-[9.5px] font-bold leading-tight text-slate-400">{step.d}</div>
+                </div>
+              ))}
+            </div>
 
-      </div>
+            <div className="mt-3 rounded-[10px] border border-sky-300/25 bg-sky-300/[0.06] px-3 py-2.5 text-[10px] font-bold leading-snug text-sky-300">
+              Hold up to 4 boards at once across tonight&apos;s games. Squares auto-mark as plays happen — you just watch them
+              fill.
+            </div>
 
-      {/* Boards section */}
-      <div className="rounded-2xl border border-sky-300/25 bg-slate-900 p-3">
-        <div className="mb-3 flex items-center justify-center gap-2">
-          {isSelectedDateToday ? (
-            <button
-            type="button"
-            onClick={() => goToScreen(0)}
-            className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
-              activeScreen === 0
-                ? "bg-sky-300/10 border border-sky-300/50 text-sky-300 shadow-[0_2px_10px_rgba(125,211,252,0.2)]"
-                : "bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700"
-            }`}
-          >
-            Active Boards
-          </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => goToScreen(isSelectedDateToday ? 1 : 0)}
-            className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
-              (isSelectedDateToday ? activeScreen === 1 : true)
-                ? "bg-sky-300/10 border border-sky-300/50 text-sky-300 shadow-[0_2px_10px_rgba(125,211,252,0.2)]"
-                : "bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700"
-            }`}
-          >
-            Scored Boards
-          </button>
-        </div>
-
-        <div
-          ref={swipeViewportRef}
-          onTouchStart={onSwipeTouchStart}
-          onTouchEnd={onSwipeTouchEnd}
-          className="flex w-full touch-pan-y snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {/* Active boards panel */}
-          <section className="w-full shrink-0 snap-start">
-            <h2 className="text-base font-black text-sky-300">Active Boards</h2>
-            {loadingCards ? (
-              <LoadingState label="Loading your cards..." />
-            ) : selectedActiveCards.length === 0 ? (
-              <p className="mt-3 rounded-xl border border-sky-300/20 bg-slate-800/50 p-3 text-sm text-slate-300">
-                No active boards.
-              </p>
-            ) : (
-              <ul className="mt-3 space-y-3">
-                {selectedActiveCards.map((card, cardIndex) => {
-                  const isLive = Date.parse(card.startsAt) <= Date.now();
-                  return (
-                  <li
-                    key={card.id}
-                    data-bingo-card-id={card.id}
-                    onClick={() => {
-                      selectLandscapeCard("active", card.id);
-                      setExpandedActiveCardId(card.id);
-                    }}
-                    className={`relative cursor-pointer rounded-2xl border border-sky-300/40 bg-slate-900/80 p-3 transition-all hover:border-sky-300/70 hover:bg-slate-900 ${
-                      recentlyAddedCardIds.has(card.id) ? "bingo-board-pop" : ""
-                    }`}
-                    style={{ touchAction: "pan-y", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
-                  >
-                    <span
-                      className={`pointer-events-none absolute inset-0 rounded-2xl bg-cyan-300/20 transition duration-200 ${
-                        glowCardIds.has(card.id) ? "scale-105 opacity-100" : "scale-95 opacity-0"
-                      }`}
-                      style={{ willChange: "transform, opacity" }}
-                    />
-                    <div className="relative flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">
-                          Sports Bingo · Board {cardIndex + 1} of {selectedActiveCards.length}
-                        </p>
-                        <p className="mt-0.5 truncate text-base font-black text-slate-100 [font-family:'Bree_Serif','Nunito',serif]">
-                          {card.gameLabel}
-                        </p>
-                      </div>
-                      {isLive ? (
-                        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-sky-300">
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-300" />
-                          Live
-                        </span>
-                      ) : (
-                        <span className="inline-flex shrink-0 items-center rounded-full border border-sky-300/35 bg-sky-300/[0.08] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-sky-300">
-                          Starts {formatLocalDateTime(card.startsAt)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="relative mt-2.5">
-                      {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
-                    </div>
-                    <div className="relative mt-3 rounded-xl border border-sky-300/25 bg-slate-900/70 px-3 py-2.5">
-                      <BingoProgressRing squares={card.squares} size="sm" />
-                    </div>
-                  </li>
-                  );
-                })}
-              </ul>
-            )}
-            <div className="mt-3">
+            <div className="pt-3">
+              <FoldLine />
+            </div>
+            <div className="pt-2.5">
               <InlineSlotAdClient
                 slot="inline-content"
                 venueId={venueId}
                 pageKey="sports-bingo"
                 adType="inline"
                 displayTrigger="on-load"
-                placementKey="bingo-home-active-inline"
+                placementKey="bingo-home-firstrun-inline"
               />
             </div>
-          </section>
+          </>
+        ) : (
+          /* ════════ ACTIVE / SCORED ════════ */
+          <>
+            {unclaimedWonBingoCards.length > 0 ? (
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/40 bg-[linear-gradient(180deg,rgba(251,191,36,0.10),#0f172a)] px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-amber-300">🎉 Points ready</p>
+                  <p className="mt-0.5 text-[12px] font-bold text-slate-200">
+                    {unclaimedWonBingoCards.length} winning board{unclaimedWonBingoCards.length !== 1 ? "s" : ""} · +
+                    {totalUnclaimedBingoPoints} pts
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  data-bingo-collect-all
+                  onClick={() => void collectAllBingoPoints()}
+                  disabled={isCollectingAllBingo}
+                  className="tp-clean-button inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-300/60 bg-emerald-500/[0.16] px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.04em] text-emerald-300 disabled:opacity-60"
+                >
+                  {isCollectingAllBingo ? "Collecting…" : `Collect +${totalUnclaimedBingoPoints}`}
+                </button>
+              </div>
+            ) : null}
 
-          {/* Final scores panel */}
-          <section className="w-full shrink-0 snap-start pl-3">
-            <h2 className="text-base font-black text-sky-300">Scored Boards</h2>
-            {loadingCards ? (
-              <LoadingState label="Loading scored boards..." />
-            ) : selectedSettledCards.length === 0 ? (
-              <p className="mt-3 rounded-xl border border-sky-300/20 bg-slate-800/50 p-3 text-sm text-slate-300">No scored boards yet.</p>
-            ) : (
-              <ul className="mt-3 space-y-3">
-                {selectedSettledCards.slice(0, 8).map((card) => {
-                  const summary = summarizeCardState(card);
-                  const showClaimOverlay = card.status === "won" && !card.rewardClaimedAt;
-                  return (
-                    <li
-                      key={card.id}
-                      data-bingo-card-id={card.id}
-                      className={`rounded-xl border p-3 shadow-sm transition-all ${
-                        showClaimOverlay
-                          ? "cursor-pointer border-sky-300/50 bg-sky-300/[0.07] ring-2 ring-sky-300/30 animate-pulse"
-                          : "border-sky-300/15 bg-slate-900"
-                      }`}
-                      onClick={
-                        showClaimOverlay
-                          ? (event) => {
-                              selectLandscapeCard("scored", card.id);
-                              void claimPoints(card, event.currentTarget);
-                            }
-                          : () => selectLandscapeCard("scored", card.id)
-                      }
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-slate-200">{card.gameLabel}</p>
+            <div className="pt-3">
+              <ViewTabs
+                game="bingo"
+                active={activeTab}
+                onPick={(id) => setActiveTab(id === "scored" ? "scored" : "active")}
+                tabs={[
+                  { id: "active", label: "Active", count: activeCards.length, live: activeCards.length > 0 },
+                  { id: "scored", label: "Scored", count: settledCards.length },
+                ]}
+              />
+            </div>
+
+            {activeTab === "active" ? (
+              activeCards.length === 0 ? (
+                <div className="mt-4 rounded-2xl border border-sky-300/25 bg-slate-900 p-5 text-center">
+                  <p className="text-[13px] font-bold text-slate-300">No active boards right now.</p>
+                  <Link
+                    href="/bingo/select-sport"
+                    className="tp-clean-button mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-sky-300 px-5 py-2.5 text-[12.5px] font-black uppercase tracking-[0.03em] text-[#08233a]"
+                  >
+                    Get a board <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  {/* Up-to-4 active board switcher */}
+                  <div className="mt-3 flex items-stretch gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {activeCards.map((card) => {
+                      const on = selectedActiveCard?.id === card.id;
+                      const live = Date.parse(card.startsAt) <= Date.now();
+                      const remaining = getClosestLineRemaining(card.squares);
+                      return (
+                        <button
+                          key={card.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedActiveBoardId(card.id);
+                            selectLandscapeCard("active", card.id);
+                          }}
+                          className={`tp-clean-button flex shrink-0 flex-col items-start gap-0.5 rounded-[11px] px-2.5 py-1.5 ${
+                            on ? "border border-sky-300/55 bg-sky-300/[0.12]" : "border border-white/[0.08] bg-white/[0.025]"
+                          } ${recentlyAddedCardIds.has(card.id) ? "bingo-board-pop" : ""}`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                card.status === "won" ? "bg-amber-400" : live ? "animate-pulse bg-emerald-400" : "bg-slate-500"
+                              }`}
+                            />
+                            <span className={`text-[11px] font-black tracking-[0.02em] ${on ? "text-sky-300" : "text-slate-300"}`}>
+                              {card.gameLabel}
+                            </span>
+                          </span>
+                          <span
+                            className={`text-[9px] font-bold [font-family:ui-monospace,monospace] ${
+                              on ? "text-sky-300" : "text-slate-500"
+                            }`}
+                          >
+                            {remaining === null ? "blocked" : remaining === 0 ? "bingo!" : `${remaining} to go`}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {hasReachedBoardLimit ? (
+                      <button
+                        type="button"
+                        onClick={triggerLimitReachedFeedback}
+                        className={`tp-clean-button flex min-w-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-[11px] border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-2 text-sky-300 ${
+                          limitPulse ? "pickem-limit-pulse" : ""
+                        }`}
+                      >
+                        <Plus aria-hidden="true" className="h-4 w-4" />
+                        <span className="text-[7.5px] font-black uppercase tracking-[0.08em]">
+                          {showBoardLimitMessage ? "Max 4" : "Add"}
+                        </span>
+                      </button>
+                    ) : (
+                      <Link
+                        href="/bingo/select-sport"
+                        className="tp-clean-button flex min-w-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-[11px] border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-2 text-sky-300"
+                      >
+                        <Plus aria-hidden="true" className="h-4 w-4" />
+                        <span className="text-[7.5px] font-black uppercase tracking-[0.08em]">Add</span>
+                      </Link>
+                    )}
+                  </div>
+
+                  {selectedActiveCard ? (
+                    <>
+                      {/* Live + freshness status for the selected board */}
+                      <div className="mt-2.5 flex items-center gap-2">
+                        {selectedBoardIsLive ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-500/[0.14] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-300">
+                            <LiveDot />
+                            Live
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full border border-sky-300/35 bg-sky-300/[0.08] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-sky-300">
+                            Starts {formatLocalDateTime(selectedActiveCard.startsAt)}
+                          </span>
+                        )}
+                        <span className="inline-flex items-center rounded-full border border-sky-300/30 bg-sky-300/10 px-2.5 py-1 text-[9.5px] font-bold text-sky-300 [font-family:ui-monospace,monospace]">
+                          {selectedBoardProgress?.hitCount ?? 0}/25 marked
+                        </span>
+                        <span className="ml-auto text-[9px] font-bold tracking-[0.04em] text-slate-500">
+                          {isRealtimeFresh ? "live updates" : "synced"}
+                        </span>
+                      </div>
+
+                      {/* PRIMARY ZONE — the selected board */}
+                      <div
+                        data-bingo-card-id={selectedActiveCard.id}
+                        onClick={() => {
+                          selectLandscapeCard("active", selectedActiveCard.id);
+                          setExpandedActiveCardId(selectedActiveCard.id);
+                        }}
+                        className={`relative mt-2.5 cursor-pointer ${
+                          recentlyAddedCardIds.has(selectedActiveCard.id) ? "bingo-board-pop" : ""
+                        }`}
+                      >
                         <span
-                          className={`rounded-full px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] ${
-                            card.status === "won"
-                              ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
-                              : card.status === "lost"
-                              ? "border border-rose-500/40 bg-rose-500/15 text-rose-400"
-                              : "border border-sky-300/35 bg-sky-300/10 text-sky-300"
+                          className={`pointer-events-none absolute inset-0 z-[3] rounded-[18px] bg-cyan-300/20 transition duration-200 [will-change:transform,opacity] ${
+                            glowCardIds.has(selectedActiveCard.id) ? "scale-105 opacity-100" : "scale-95 opacity-0"
+                          }`}
+                        />
+                        {renderCompactGrid(
+                          selectedActiveCard.id,
+                          selectedActiveCard.squares,
+                          recentlyUpdatedSquareKeys,
+                          recentlySucceededSquareKeys,
+                          glowSquareKeys
+                        )}
+                      </div>
+
+                      {/* Closest line + expand */}
+                      <div className="mt-2.5 flex items-stretch gap-2">
+                        <div className="flex-1 rounded-xl border border-sky-300/35 bg-slate-900 px-3 py-2">
+                          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-sky-300">Closest line</p>
+                          <p className="mt-0.5 text-[13px] font-black text-amber-400 [font-family:ui-monospace,monospace]">
+                            {selectedBoardProgress?.toBingo === null
+                              ? "Every line blocked"
+                              : selectedBoardProgress?.toBingo === 0
+                              ? "Bingo!"
+                              : `${selectedBoardProgress?.toBingo} to go`}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            selectLandscapeCard("active", selectedActiveCard.id);
+                            setExpandedActiveCardId(selectedActiveCard.id);
+                          }}
+                          className="tp-clean-button inline-flex shrink-0 items-center rounded-xl border border-sky-300/45 bg-sky-300/10 px-4 text-[11px] font-black uppercase tracking-[0.04em] text-sky-300"
+                        >
+                          Expand
+                        </button>
+                      </div>
+                    </>
+                  ) : null}
+                </>
+              )
+            ) : settledCards.length === 0 ? (
+              <div className="mt-4 rounded-2xl border border-sky-300/20 bg-slate-900 p-5 text-center text-[13px] font-bold text-slate-300">
+                No scored boards yet.
+              </div>
+            ) : (
+              <>
+                {/* Summary */}
+                <div className="mt-3 flex gap-2">
+                  <div className="flex-1 rounded-xl border border-white/[0.08] bg-slate-900 px-3 py-2">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-emerald-300">Boards won</p>
+                    <p className="mt-0.5 text-[16px] font-black text-slate-50 [font-family:ui-monospace,monospace]">
+                      {scoredWonCount} / {settledCards.length}
+                    </p>
+                  </div>
+                  <div className="flex-1 rounded-xl border border-white/[0.08] bg-slate-900 px-3 py-2">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Points won</p>
+                    <p className="mt-0.5 text-[16px] font-black text-amber-400 [font-family:ui-monospace,monospace]">
+                      {scoredPointsWon}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mb-1.5 mt-3 flex items-baseline justify-between">
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">All boards</p>
+                  <span className="text-[9.5px] font-bold tracking-[0.04em] text-slate-500">
+                    Recent · {settledCards.length} board{settledCards.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+
+                {/* Flat list — every recent board, newest first, no week grouping */}
+                <ul className="flex flex-col gap-1.5">
+                  {settledCards.slice(0, 12).map((card) => {
+                    const summary = summarizeCardState(card);
+                    const won = card.status === "won";
+                    const showClaim = won && !card.rewardClaimedAt;
+                    return (
+                      <li
+                        key={card.id}
+                        data-bingo-card-id={card.id}
+                        onClick={
+                          showClaim
+                            ? (event) => {
+                                selectLandscapeCard("scored", card.id);
+                                void claimPoints(card, event.currentTarget);
+                              }
+                            : () => {
+                                selectLandscapeCard("scored", card.id);
+                                setExpandedFinalCardId(card.id);
+                              }
+                        }
+                        className={`grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2.5 rounded-xl px-3 py-2.5 ${
+                          won
+                            ? "border border-emerald-400/40 bg-[linear-gradient(180deg,rgba(16,185,129,0.10),#0f172a)]"
+                            : "border border-white/[0.07] bg-slate-900"
+                        } ${showClaim ? "animate-pulse ring-2 ring-amber-300/40" : ""}`}
+                      >
+                        <span
+                          className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-[13px] font-black ${
+                            won
+                              ? "border border-emerald-300/45 bg-emerald-500/[0.16] text-emerald-300"
+                              : "border border-white/[0.08] bg-white/[0.04] text-slate-500"
                           }`}
                         >
-                          {card.status}
+                          {won ? "✓" : "—"}
                         </span>
-                        {showClaimOverlay ? (
-                          <span className="rounded-full border border-sky-300/40 bg-sky-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-sky-300">
-                            Tap to Claim
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {formatLocalDateTime(card.startsAt)} · Hits {summary.hitCount}/25
-                        {card.status === "won" ? ` · +${card.rewardPoints} pts` : ""}
-                        {card.status === "won" && card.rewardClaimedAt ? " · Claimed" : ""}
-                      </p>
-                      {card.status === "won" ? (
-                        <div className="relative mt-2">
-                          {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
+                        <div className="min-w-0">
+                          <div className="truncate text-[12.5px] font-black text-slate-50">{card.gameLabel}</div>
+                          <div className="mt-0.5 text-[10px] font-bold text-slate-400">
+                            {formatLocalDateTime(card.startsAt)} · {summary.hitCount}/25 hits
+                          </div>
                         </div>
-                      ) : (
-                        <div className="mt-2">
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              selectLandscapeCard("scored", card.id);
-                              setExpandedFinalCardId(card.id);
-                            }}
-                            className="tp-clean-button inline-flex min-h-[36px] items-center rounded-full border border-sky-300/35 bg-sky-300/[0.07] px-3 py-1.5 text-xs font-semibold text-sky-300 transition-all active:scale-95 hover:border-sky-300/60"
+                        <div className="shrink-0 text-right">
+                          <div
+                            className={`text-[15px] font-black [font-family:ui-monospace,monospace] ${
+                              won ? "text-emerald-300" : "text-slate-600"
+                            }`}
                           >
-                            View Final Board
-                          </button>
+                            {won ? `+${card.rewardPoints}` : "0"}
+                          </div>
+                          <div
+                            className={`mt-0.5 text-[8.5px] font-black uppercase tracking-[0.06em] ${
+                              showClaim ? "text-amber-300" : won ? "text-slate-500" : "text-slate-600"
+                            }`}
+                          >
+                            {showClaim ? "Tap to claim" : won && card.rewardClaimedAt ? "Claimed" : won ? "Won" : card.status}
+                          </div>
                         </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
             )}
-            <div className="mt-3">
+
+            <div className="pt-3">
+              <FoldLine />
+            </div>
+            <div className="pt-2.5">
               <InlineSlotAdClient
                 slot="inline-content"
                 venueId={venueId}
                 pageKey="sports-bingo"
                 adType="inline"
                 displayTrigger="on-load"
-                placementKey="bingo-home-final-inline"
+                placementKey={activeTab === "active" ? "bingo-home-active-inline" : "bingo-home-final-inline"}
               />
             </div>
-          </section>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Expanded active board modal — landscape becomes the enhanced two-pane view */}

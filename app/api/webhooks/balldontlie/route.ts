@@ -133,6 +133,13 @@ export async function POST(request: Request) {
         bypassCache: true,
         invalidationMode: "throttled",
       });
+      if (gameId) {
+        void supabaseAdmin!.channel(`bingo-game:${gameId}`).send({
+          type: "broadcast",
+          event: "card_updated",
+          payload: {},
+        });
+      }
       result.mlbPlayerEvent = {
         gameId,
         propUpdates,
@@ -277,6 +284,11 @@ async function handleNbaPlayerEvent(
     limit: 500,
     bypassCache: true,
     invalidationMode: "throttled",
+  });
+  void supabaseAdmin!.channel(`bingo-game:${event.gameId}`).send({
+    type: "broadcast",
+    event: "card_updated",
+    payload: {},
   });
   return { statsUpserted: true, hit, miss };
 }
