@@ -1407,17 +1407,6 @@
       ]
     },
     {
-      "slug": "pokemon-ash-ketchum-first-partner",
-      "question": "What electric-type, rodent-like creature is given to Ash Ketchum as his very first starter partner in the Pokemon animated series?",
-      "answer": "Pikachu",
-      "answer_format": "write_in",
-      "category": "television",
-      "difficulty": "easy",
-      "acceptableAnswers": [
-        "Pikachu"
-      ]
-    },
-    {
       "slug": "flintstones-fictional-prehistoric-town",
       "question": "On The Flintstones, Fred Flintstone and his family reside in what fictional, prehistoric stone-age American town?",
       "answer": "Bedrock",
@@ -1783,19 +1772,6 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cousins"
-      ]
-    },
-    {
-      "slug": "arrested-development-gob-bluth-segway",
-      "question": "On Arrested Development, what specific brand of two-wheeled, self-balancing motorized vehicle does G.O.B. use as his primary mode of transportation?",
-      "answer": "Segway",
-      "answer_format": "write_in",
-      "category": "television",
-      "difficulty": "easy",
-      "acceptableAnswers": [
-        "Segway",
-        "A Segway",
-        "Segway PT"
       ]
     },
     {
