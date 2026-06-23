@@ -2347,8 +2347,7 @@
       "acceptableAnswers": ["Salvador Dalí", "Dalí"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d5/The_Persistence_of_Memory.jpg"
+      "difficulty": "easy"
     },
     {
       "slug": "artist-the-scream-munch",
@@ -2377,8 +2376,7 @@
       "acceptableAnswers": ["Pablo Picasso", "Picasso"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/74/PicassoGuernica.jpg"
+      "difficulty": "easy"
     },
     {
       "slug": "artist-water-lilies-monet",
@@ -2388,7 +2386,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Claude_Monet_-_Water_Lilies_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/14/Claude_Monet_-_Water_Lilies_-_Google_Art_Project.jpg"
     },
     {
       "slug": "artist-campbells-soup-warhol",
@@ -2397,8 +2395,7 @@
       "acceptableAnswers": ["Andy Warhol", "Warhol"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Andy_Warhol_-_Campbell%27s_Soup_Cans_-_1962_-_MOMA.jpg"
+      "difficulty": "easy"
     },
     {
       "slug": "artist-the-night-watch-rembrandt",
@@ -2408,7 +2405,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5a/The_Night_Watch_-_Rembrandt.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/94/The_Nightwatch_by_Rembrandt_-_Rijksmuseum.jpg"
     },
     {
       "slug": "artist-school-of-athens-raphael",
@@ -2438,7 +2435,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/73/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg"
     },
     {
       "slug": "title-fountain-duchamp",
@@ -2448,7 +2445,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Duchamp_Fountain.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Marcel_Duchamp%2C_1917%2C_Fountain%2C_photograph_by_Alfred_Stieglitz.jpg"
     },
     {
       "slug": "title-impression-sunrise",
@@ -2458,7 +2455,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Claude_Monet_-_Impression%2C_Sunrise_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Monet_-_Impression%2C_Sunrise.jpg"
     },
     {
       "slug": "title-the-last-supper",
@@ -2468,7 +2465,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
     },
     {
       "slug": "title-david-michelangelo",
@@ -2478,7 +2475,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Michelangelo%27s_David_-_right_view.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Michelangelo%27s_David_-_right_view.jpg"
     },
     {
       "slug": "movement-surrealism",
@@ -2487,8 +2484,7 @@
       "acceptableAnswers": ["Surrealism"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d5/The_Persistence_of_Memory.jpg"
+      "difficulty": "medium"
     },
     {
       "slug": "movement-impressionism",
@@ -2498,17 +2494,37 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Claude_Monet_-_Impression%2C_Sunrise_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Monet_-_Impression%2C_Sunrise.jpg"
     },
     {
       "slug": "movement-cubism",
-      "question": "What early 20th-century art movement, co-founded by Pablo Picasso and Georges Braque, depicts subjects from multiple angles at once, breaking them down into geometric shapes?",
+      "question": "What early 20th-century art movement, co-founded by Pablo Picasso and Georges Braque, depicts subjects from multiple angles at once, breaking them down into geometric shapes — as foreshadowed in the pictured 1907 Picasso work 'Les Demoiselles d'Avignon'?",
       "answer": "Cubism",
       "acceptableAnswers": ["Cubism"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Pablo_Picasso%2C_1907%2C_Les_Demoiselles_d%27Avignon%2C_oil_on_canvas%2C_243.9_x_233.7_cm%2C_Museum_of_Modern_Art_New_York.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/4/4c/Les_Demoiselles_d%27Avignon.jpg"
+    },
+    {
+      "slug": "artist-old-guitarist-picasso",
+      "question": "Which Spanish artist painted this melancholy Blue Period work, 'The Old Guitarist' (1903–04), depicting a blind, hunched street musician?",
+      "answer": "Pablo Picasso",
+      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/b/bc/Old_guitarist_chicago.jpg"
+    },
+    {
+      "slug": "artist-three-musicians-picasso",
+      "question": "Which artist painted this 1921 Synthetic Cubist work, 'Three Musicians,' featuring flat, brightly colored figures that resemble cut-and-pasted paper?",
+      "answer": "Pablo Picasso",
+      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/6/6a/Pablo_Picasso%2C_1921%2C_Nous_autres_musiciens_%28Three_Musicians%29%2C_oil_on_canvas%2C_204.5_x_188.3_cm%2C_Philadelphia_Museum_of_Art.jpg"
     },
     {
       "slug": "movement-pop-art",
@@ -2517,8 +2533,7 @@
       "acceptableAnswers": ["Pop Art", "Pop art"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Andy_Warhol_-_Campbell%27s_Soup_Cans_-_1962_-_MOMA.jpg"
+      "difficulty": "hard"
     },
     {
       "slug": "movement-abstract-expressionism",
@@ -2527,8 +2542,7 @@
       "acceptableAnswers": ["Abstract Expressionism"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/7/7b/Jackson_Pollock%2C_No._5_1948.jpg"
+      "difficulty": "hard"
     },
     {
       "slug": "movement-romanticism",
@@ -2578,17 +2592,16 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
     },
     {
       "slug": "title-guernica",
-      "question": "What is the title of this famous 1937 painting by Pablo Picasso?",
+      "question": "What is the title of Pablo Picasso's famous 1937 anti-war mural depicting the bombing of a Basque town during the Spanish Civil War?",
       "answer": "Guernica",
       "acceptableAnswers": ["Guernica", "The Guernica"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/74/PicassoGuernica.jpg"
+      "difficulty": "easy"
     },
     {
       "slug": "title-birth-of-venus-2",
@@ -2608,7 +2621,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Michelangelo%27s_Pieta_545_crop.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Michelangelo%27s_Piet%C3%A0_Saint_Peter%27s_Basilica_Vatican_City.jpg"
     },
     {
       "slug": "title-american-gothic-2",
@@ -2618,7 +2631,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg"
     },
     {
       "slug": "title-self-portrait-van-gogh",
@@ -2628,17 +2641,16 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Vincent_Willem_van_Gogh_-_Self-portrait_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg"
     },
     {
       "slug": "title-campbells-soup-cans-2",
-      "question": "What is the title of this famous 1962 silkscreen series by Andy Warhol?",
+      "question": "What is the title of Andy Warhol's famous 1962 silkscreen series depicting 32 varieties of canned soup?",
       "answer": "Campbell's Soup Cans",
       "acceptableAnswers": ["Campbell's Soup Cans", "Campbells Soup Cans"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Andy_Warhol_-_Campbell%27s_Soup_Cans_-_1962_-_MOMA.jpg"
+      "difficulty": "easy"
     },
     {
       "slug": "artist-mona-lisa",
@@ -2668,17 +2680,16 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
     },
     {
       "slug": "artist-guernica-2",
-      "question": "Which famous artist painted this stark anti-war mural titled Guernica?",
+      "question": "Which famous artist painted the stark 1937 anti-war mural titled Guernica?",
       "answer": "Pablo Picasso",
       "acceptableAnswers": ["Pablo Picasso", "Picasso"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/74/PicassoGuernica.jpg"
+      "difficulty": "easy"
     },
     {
       "slug": "artist-birth-of-venus-2",
@@ -2698,7 +2709,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Michelangelo%27s_Pieta_545_crop.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Michelangelo%27s_Piet%C3%A0_Saint_Peter%27s_Basilica_Vatican_City.jpg"
     },
     {
       "slug": "artist-american-gothic-3",
@@ -2708,7 +2719,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg"
     },
     {
       "slug": "artist-self-portrait-van-gogh",
@@ -2718,7 +2729,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Vincent_Willem_van_Gogh_-_Self-portrait_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg"
     },
     {
       "slug": "artist-campbells-soup-cans-3",
@@ -2727,8 +2738,7 @@
       "acceptableAnswers": ["Andy Warhol", "Warhol"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Andy_Warhol_-_Campbell%27s_Soup_Cans_-_1962_-_MOMA.jpg"
+      "difficulty": "easy"
     },
     {
       "slug": "historical-figure-napoleon",
@@ -2738,57 +2748,75 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/55/Jacques-Louis_David_-_Bonaparte_franchissant_le_Grand_Saint-Bernard.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Napoleon_at_the_Great_St._Bernard_-_Jacques-Louis_David_-_Google_Cultural_Institute.jpg"
     },
     {
       "slug": "historical-figure-george-washington",
-      "question": "What historical figure is depicted in this 1796 portrait by Gilbert Stuart?",
+      "question": "What historical figure is depicted in this portrait by Gilbert Stuart?",
       "answer": "George Washington",
       "acceptableAnswers": ["George Washington", "Washington"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg"
+      "imageUrl": "https://images.metmuseum.org/CRDImages/ad/web-large/DT62.jpg"
     },
     {
       "slug": "artist-norman-rockwell-freedom-from-want",
-      "question": "Which iconic American artist painted this 1943 scene of a family gathered around a Thanksgiving dinner table?",
+      "question": "Which iconic American artist painted this 1920 Saturday Evening Post cover, 'Hey Fellers, Come On In!,' showing a boy waving his friends toward a swimming hole?",
       "answer": "Norman Rockwell",
       "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Norman_Rockwell_-_Freedom_from_Want.jpg"
+      "difficulty": "medium",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/73/Norman_Rockwell_-_Hey_Fellers%2C_Come_On_In%21_-_Google_Art_Project.jpg"
     },
     {
       "slug": "artist-norman-rockwell-rosie",
-      "question": "Which iconic American artist created this 1943 portrait of a muscular woman in a denim work uniform, representing the women who worked in factories during World War II?",
+      "question": "Which iconic American artist painted this 1918 Saturday Evening Post cover depicting Cousin Reginald in a schoolroom spelling bee?",
+      "answer": "Norman Rockwell",
+      "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/Norman_Rockwell_-_Cousin_Reginald_Spells_Peloponnesus_%28Spelling_Bee%29_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "artist-norman-rockwell-boy-baby-carriage",
+      "question": "Which iconic American artist painted this 1916 work, 'Boy with Baby Carriage,' which became his very first cover for The Saturday Evening Post?",
+      "answer": "Norman Rockwell",
+      "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/Norman_Rockwell_-_Boy_with_Baby_Carriage_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "artist-norman-rockwell-no-swimming",
+      "question": "Which iconic American artist painted this 1921 Saturday Evening Post cover, 'No Swimming,' showing three boys fleeing a swimming hole while pulling on their clothes?",
       "answer": "Norman Rockwell",
       "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Norman_Rockwell_-_Rosie_the_Riveter_-_1961.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/11/Norman_Rockwell_-_No_Swimming_-_Google_Art_Project.jpg"
     },
     {
       "slug": "artist-banksy-balloon",
-      "question": "Which anonymous British street artist created this stencil of a young girl letting go of a red heart-shaped balloon?",
+      "question": "Which anonymous British street artist created 'Girl with Balloon', the famous stencil of a young girl reaching toward a red heart-shaped balloon?",
       "answer": "Banksy",
       "acceptableAnswers": ["Banksy"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/23/Banksy_Girl_with_Balloon.jpg"
+      "difficulty": "easy"
     },
     {
       "slug": "artist-banksy-flower-thrower",
-      "question": "Which anonymous British street artist created this stencil of a protester throwing a bouquet of flowers instead of a Molotov cocktail?",
+      "question": "Which anonymous British street artist created 'Love Is in the Air' (also known as the 'Flower Thrower'), a stencil of a masked protester hurling a bouquet of flowers instead of a Molotov cocktail?",
       "answer": "Banksy",
       "acceptableAnswers": ["Banksy"],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Banksy_-_Flower_Thrower.jpg"
+      "difficulty": "easy"
     },
     {
       "slug": "portrait-mark-twain",
@@ -2798,7 +2826,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/25/Mark_Twain%2C_Brady-Handy_photo_portrait%2C_1871.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/25/Mark_Twain%2C_Brady-Handy_photo_portrait%2C_Feb_7%2C_1871%2C_cropped.jpg"
     },
     {
       "slug": "portrait-shakespeare",
@@ -2818,7 +2846,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/99/Pablo_picasso_1.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/98/Pablo_picasso_1.jpg"
     },
     {
       "slug": "portrait-andy-warhol",
@@ -2828,7 +2856,7 @@
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Andy_Warhol_by_Jack_Mitchell.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Andy_Warhol_by_Jack_Mitchell.jpg"
     },
     {
       "slug": "novel-robinson-crusoe",
