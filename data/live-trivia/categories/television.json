@@ -93,7 +93,7 @@
     },
     {
       "slug": "vanderpump-rules-scandoval-partner",
-      "question": "The 2023 'Scandoval' involved Tom Sandoval having an affair with which other cast member?",
+      "question": "On Vanderpump Rules, the 2023 'Scandoval' involved Tom Sandoval having an affair with which other cast member?",
       "answer": "Rachel 'Raquel' Leviss",
       "answer_format": "write_in",
       "category": "Television",
@@ -108,7 +108,7 @@
     },
     {
       "slug": "himym-robin-pop-star-alias",
-      "question": "Before moving to New York, Robin Scherbatsky was a teenage Canadian pop star. What was her stage name?",
+      "question": "In How I Met Your Mother, before moving to New York, Robin Scherbatsky was a teenage Canadian pop star. What was her stage name?",
       "answer": "Robin Sparkles",
       "category": "Television",
       "difficulty": "medium"
@@ -122,7 +122,7 @@
     },
     {
       "slug": "himym-marshall-lily-college",
-      "question": "Ted, Marshall, and Lily all met and became best friends while attending which specific Connecticut higher education institution?",
+      "question": "In How I Met Your Mother, Ted, Marshall, and Lily all met and became best friends while attending which specific Connecticut higher education institution?",
       "answer": "Wesleyan University",
       "category": "Television",
       "difficulty": "medium"
@@ -136,14 +136,14 @@
     },
     {
       "slug": "the-office-pretzel-day-character",
-      "question": "Which Dunder Mifflin employee is famously willing to wait in a massive lobby line for \"Pretzel Day\" because it is the only day of the year he truly enjoys?",
+      "question": "On The Office, which Dunder Mifflin employee is famously willing to wait in a massive lobby line for \"Pretzel Day\" because it is the only day of the year he truly enjoys?",
       "answer": "Stanley Hudson",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "seinfeld-festivus-holiday-date",
-      "question": "On what specific calendar date in December does Frank Costanza's alternative holiday \"Festivus\" officially take place?",
+      "question": "On Seinfeld, on what specific calendar date in December does Frank Costanza's alternative holiday \"Festivus\" officially take place?",
       "answer": "December 23",
       "category": "Television",
       "difficulty": "medium"
@@ -157,14 +157,14 @@
     },
     {
       "slug": "big-bang-theory-penny-hometown-state",
-      "question": "Before moving to Los Angeles to pursue an acting career, Penny grew up on a rural farm in which Midwestern U.S. state?",
+      "question": "On The Big Bang Theory, before moving to Los Angeles to pursue an acting career, Penny grew up on a rural farm in which Midwestern U.S. state?",
       "answer": "Nebraska",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "himym-slap-bet-total-count",
-      "question": "As a result of losing the \"Slap Bet\" over Robin's past, how many total times is Marshall legally allowed to slap Barney across the face throughout the series?",
+      "question": "In How I Met Your Mother, as a result of losing the \"Slap Bet\" over Robin's past, how many total times is Marshall legally allowed to slap Barney across the face throughout the series?",
       "answer": "8",
       "category": "Television",
       "difficulty": "hard"
@@ -232,21 +232,21 @@
     },
     {
       "slug": "brooklyn-nine-nine-jake-peralta-die-hard",
-      "question": "Detective Jake Peralta's entire law enforcement career and personal philosophy are inspired by which specific 1980s action movie?",
+      "question": "On Brooklyn Nine-Nine, Detective Jake Peralta's entire law enforcement career and personal philosophy are inspired by which specific 1980s action movie?",
       "answer": "Die Hard",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "friends-joey-tribbiani-soap-opera-character",
-      "question": "Joey Tribbiani scores his big acting break on Days of Our Lives playing a fictional neurosurgeon. What is the character's name?",
+      "question": "On Friends, Joey Tribbiani scores his big acting break on Days of Our Lives playing a fictional neurosurgeon. What is the character's name?",
       "answer": "Dr. Drake Ramoray",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "seinfeld-puddy-favorite-nj-sports-team",
-      "question": "Elaine's on-again, off-again boyfriend David Puddy is an incredibly intense sports fan who famously paints his face to support which NHL hockey team?",
+      "question": "On Seinfeld, Elaine's on-again, off-again boyfriend David Puddy is an incredibly intense sports fan who famously paints his face to support which NHL hockey team?",
       "answer": "New Jersey Devils",
       "category": "Television",
       "difficulty": "medium"
@@ -274,28 +274,28 @@
     },
     {
       "slug": "friends-monica-geller-middle-name",
-      "question": "While Chandler's middle name is Muriel, what is Monica Geller's middle name, which is briefly revealed during the show?",
+      "question": "On Friends, while Chandler's middle name is Muriel, what is Monica Geller's middle name, which is briefly revealed during the show?",
       "answer": "E.M.",
       "category": "Television",
       "difficulty": "hard"
     },
     {
       "slug": "seinfeld-newman-usps-profession",
-      "question": "Jerry's sinister apartment building nemesis, Newman, works for which United States federal government agency?",
+      "question": "On Seinfeld, Jerry's sinister apartment building nemesis, Newman, works for which United States federal government agency?",
       "answer": "United States Postal Service",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "himym-maclarens-pub-basement-laser-tag",
-      "question": "What is the name of the fictional neighborhood Irish pub located directly underneath Ted and Marshall's apartment where the gang hangs out?",
+      "question": "In How I Met Your Mother, what is the name of the fictional neighborhood Irish pub located directly underneath Ted and Marshall's apartment where the gang hangs out?",
       "answer": "MacLaren's Pub",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "parks-and-rec-tom-haverford-entertainment-company",
-      "question": "Tom Haverford and Jean-Ralphio Saperstein launch a short-lived, wildly extravagant multimedia entertainment company in Pawnee called what?",
+      "question": "On Parks and Recreation, Tom Haverford and Jean-Ralphio Saperstein launch a short-lived, wildly extravagant multimedia entertainment company in Pawnee called what?",
       "answer": "Entertainment 720",
       "category": "Television",
       "difficulty": "medium"
@@ -309,7 +309,7 @@
     },
     {
       "slug": "community-greendale-mascot",
-      "question": "What is the name of the deeply unsettling, featureless, gray mascot designed to represent Greendale Community College?",
+      "question": "In Community, what is the name of the deeply unsettling, featureless, gray mascot designed to represent Greendale Community College?",
       "answer": "The Greendale Human Being",
       "category": "Television",
       "difficulty": "medium",
@@ -319,7 +319,7 @@
     },
     {
       "slug": "that-70s-show-basement-circle",
-      "question": "What is the first name of Eric Forman's formidable, hyper-strict, war-veteran father who constantly threatens to kick Eric's butt?",
+      "question": "On That '70s Show, what is the first name of Eric Forman's formidable, hyper-strict, war-veteran father who constantly threatens to kick Eric's butt?",
       "answer": "Red",
       "category": "Television",
       "difficulty": "easy"
@@ -333,7 +333,7 @@
     },
     {
       "slug": "frasier-kacl-radio-station-city",
-      "question": "Dr. Frasier Crane hosts his daily, call-in psychological therapeutic talk show on KACL 780 AM talk radio in which major U.S. city?",
+      "question": "On Frasier, Dr. Frasier Crane hosts his daily, call-in psychological therapeutic talk show on KACL 780 AM talk radio in which major U.S. city?",
       "answer": "Seattle",
       "category": "Television",
       "difficulty": "easy"
@@ -348,7 +348,7 @@
     },
     {
       "slug": "vanderpump-rules-hiatus",
-      "question": "Following the aftermath of 'Scandoval,' which reality show announced a filming hiatus in mid-2024?",
+      "question": "Following the aftermath of 'Scandoval' on Vanderpump Rules, which reality show announced a filming hiatus in mid-2024?",
       "answer": "Vanderpump Rules",
       "answer_format": "write_in",
       "category": "Television",
@@ -405,7 +405,7 @@
     },
     {
       "slug": "unbreakable-kimmy-schmidt-bunker-state",
-      "question": "Before escaping to New York City, Kimmy Schmidt spent 15 years trapped inside a doomsday cult's underground bunker located in which U.S. state?",
+      "question": "On Unbreakable Kimmy Schmidt, before escaping to New York City, Kimmy Schmidt spent 15 years trapped inside a doomsday cult's underground bunker located in which U.S. state?",
       "answer": "Indiana",
       "category": "Television",
       "difficulty": "medium"
@@ -489,7 +489,7 @@
     },
     {
       "slug": "3rd-rock-sun-harry-transmission-boss",
-      "question": "Harry Solomon routinely acts as the crew's communication receiver, experiencing erratic physical fits whenever he receives a transmission from their supreme cosmic boss. What is the boss's name?",
+      "question": "On 3rd Rock from the Sun, Harry Solomon routinely acts as the crew's communication receiver, experiencing erratic physical fits whenever he receives a transmission from their supreme cosmic boss. What is the boss's name?",
       "answer": "The Big Giant Head",
       "category": "Television",
       "difficulty": "medium",
@@ -499,56 +499,56 @@
     },
     {
       "slug": "3rd-rock-sun-dick-love-interest-office",
-      "question": "Dick Solomon shares an office at Pendelton State University with an anthropology professor who becomes his main romantic interest. What is her name?",
+      "question": "On 3rd Rock from the Sun, Dick Solomon shares an office at Pendelton State University with an anthropology professor who becomes his main romantic interest. What is her name?",
       "answer": "Dr. Mary Albright",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "two-and-a-half-men-sharp-tongued-housekeeper",
-      "question": "What is the first name of Charlie's highly cynical, sharp-tongued, and fiercely independent housekeeper?",
+      "question": "On Two and a Half Men, what is the first name of Charlie's highly cynical, sharp-tongued, and fiercely independent housekeeper?",
       "answer": "Berta",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "modern-family-phil-dunphy-real-estate-rival",
-      "question": "Phil Dunphy is a fiercely competitive real estate agent who is constantly annoyed by his smug professional rival. What is this rival's name?",
+      "question": "On Modern Family, Phil Dunphy is a fiercely competitive real estate agent who is constantly annoyed by his smug professional rival. What is this rival's name?",
       "answer": "Gil Thorpe",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "modern-family-jay-pritchett-closet-company",
-      "question": "What is the name of the long-standing manufacturing company founded and managed by family patriarch Jay Pritchett?",
+      "question": "On Modern Family, what is the name of the long-standing manufacturing company founded and managed by family patriarch Jay Pritchett?",
       "answer": "Pritchett's Closets & Blinds",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "modern-family-manny-delgado-biological-father",
-      "question": "Manny Delgado's biological father is a charming, unreliable, and smooth-talking Colombian man who occasionally drops in to disrupt the family. What is his first name?",
+      "question": "On Modern Family, Manny Delgado's biological father is a charming, unreliable, and smooth-talking Colombian man who occasionally drops in to disrupt the family. What is his first name?",
       "answer": "Javier",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "modern-family-claire-dunphy-college-boyfriend",
-      "question": "Before marrying Phil, Claire Dunphy had a serious, wild college relationship with a man who later becomes a wealthy professor and returns in multiple episodes. What is his name?",
+      "question": "On Modern Family, before marrying Phil, Claire Dunphy had a serious, wild college relationship with a man who later becomes a wealthy professor and returns in multiple episodes. What is his name?",
       "answer": "Professor Ronnie LaFontaine",
       "category": "Television",
       "difficulty": "hard"
     },
     {
       "slug": "the-simpsons-homer-bar-hangout",
-      "question": "What is the name of the dingy Springfield tavern where Homer Simpson routinely drinks Duff Beer with his friends?",
+      "question": "On The Simpsons, what is the name of the dingy Springfield tavern where Homer Simpson routinely drinks Duff Beer with his friends?",
       "answer": "Moe's Tavern",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "the-simpsons-ned-flanders-left-handed-store",
-      "question": "Ned Flanders quits his regular corporate job to open a specialized retail store in the Springfield Mall. What is the name of the store?",
+      "question": "On The Simpsons, Ned Flanders quits his regular corporate job to open a specialized retail store in the Springfield Mall. What is the name of the store?",
       "answer": "The Leftorium",
       "category": "Television",
       "difficulty": "medium",
@@ -558,84 +558,84 @@
     },
     {
       "slug": "the-simpsons-comic-book-guy-real-name",
-      "question": "The cynical, sarcastic proprietor of The Android's Dungeon & Baseball Card Shop is universally known as Comic Book Guy, but what is his actual canonical first and last name?",
+      "question": "On The Simpsons, the cynical, sarcastic proprietor of The Android's Dungeon & Baseball Card Shop is universally known as Comic Book Guy, but what is his actual canonical first and last name?",
       "answer": "Jeff Albertson",
       "category": "Television",
       "difficulty": "hard"
     },
     {
       "slug": "the-simpsons-springfield-founder-statue",
-      "question": "The center of Springfield features a prominent bronze statue dedicated to the town's legendary, pirate-turned-pioneer founder. What was his name?",
+      "question": "On The Simpsons, the center of Springfield features a prominent bronze statue dedicated to the town's legendary, pirate-turned-pioneer founder. What was his name?",
       "answer": "Jebediah Springfield",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "family-guy-peter-griffin-quahog-brewery",
-      "question": "After losing his job at the toy factory, Peter Griffin spends much of his adult professional life working at which local Quahog beverage company?",
+      "question": "On Family Guy, after losing his job at the toy factory, Peter Griffin spends much of his adult professional life working at which local Quahog beverage company?",
       "answer": "Pawtucket Brewery",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "family-guy-brian-griffin-prized-possession-car",
-      "question": "The highly intellectual family dog Brian Griffin drives a specific, eco-friendly vehicle throughout the series. What make and model is it?",
+      "question": "On Family Guy, the highly intellectual family dog Brian Griffin drives a specific, eco-friendly vehicle throughout the series. What make and model is it?",
       "answer": "Toyota Prius",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "family-guy-news-anchors-tom-tricia",
-      "question": "The local Quahog Channel 5 news broadcasts are anchored by a slick, condescending man named Tom Tucker and his intense investigative co-anchor. What is her name?",
+      "question": "On Family Guy, the local Quahog Channel 5 news broadcasts are anchored by a slick, condescending man named Tom Tucker and his intense investigative co-anchor. What is her name?",
       "answer": "Tricia Takanawa",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "arrested-development-gob-bluth-segway",
-      "question": "George Oscar \"Gob\" Bluth routinely fails at his career as a professional magician and prefers to travel around town using what specific motorized vehicle?",
+      "question": "On Arrested Development, George Oscar \"Gob\" Bluth routinely fails at his career as a professional magician and prefers to travel around town using what specific motorized vehicle?",
       "answer": "Segway",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "arrested-development-tobias-funke-hybrid-profession",
-      "question": "Tobias Fünke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
+      "question": "On Arrested Development, Tobias Fünke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
       "answer": "Analrapist",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "arrested-development-lucille-bluth-private-investigator",
-      "question": "Lucille Bluth hires a slick, smooth-talking private investigator played by Martin Short to spy on her family, though he operates entirely from a small motorized wheelchair. What is his name?",
+      "question": "On Arrested Development, Lucille Bluth hires a slick, smooth-talking private investigator played by Martin Short to spy on her family, though he operates entirely from a small motorized wheelchair. What is his name?",
       "answer": "Uncle Jack",
       "category": "Television",
       "difficulty": "hard"
     },
     {
       "slug": "arrested-development-george-michael-fake-girlfriend",
-      "question": "To prove his maturity, George Michael fabricates a completely fictional girlfriend supposedly living in Canada. What is the hilarious name he invents for her?",
+      "question": "On Arrested Development, to prove his maturity, George Michael fabricates a completely fictional girlfriend supposedly living in Canada. What is the hilarious name he invents for her?",
       "answer": "Ann Hog",
       "category": "Television",
       "difficulty": "hard"
     },
     {
       "slug": "always-sunny-charlie-kelly-favorite-food",
-      "question": "Charlie Kelly frequently mentions his absolute favorite food, which he insists on eating raw or boiling with jellybeans. What is this food item?",
+      "question": "On It's Always Sunny in Philadelphia, Charlie Kelly frequently mentions his absolute favorite food, which he insists on eating raw or boiling with jellybeans. What is this food item?",
       "answer": "Milk steak",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "always-sunny-mac-real-first-name",
-      "question": "While universally known simply as \"Mac,\" the character's deeply embarrassing full legal first name is finally revealed in Season 7. What is it?",
+      "question": "On It's Always Sunny in Philadelphia, while universally known simply as \"Mac,\" the character's deeply embarrassing full legal first name is finally revealed in Season 7. What is it?",
       "answer": "Ronald",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "always-sunny-dee-reynolds-college-mascot",
-      "question": "Before dropping out to pursue acting, Sweet Dee attended the University of Pennsylvania where her severe stage fright caused her to violently vomit while performing as what school mascot?",
+      "question": "On It's Always Sunny in Philadelphia, before dropping out to pursue acting, Sweet Dee attended the University of Pennsylvania where her severe stage fright caused her to violently vomit while performing as what school mascot?",
       "answer": "The Quaker",
       "category": "Television",
       "difficulty": "hard",
@@ -645,42 +645,42 @@
     },
     {
       "slug": "always-sunny-lethal-weapon-sequel-number",
-      "question": "The gang independently produces, directs, and stars in their own highly offensive, unauthorized cinematic sequels to which classic action movie franchise?",
+      "question": "On It's Always Sunny in Philadelphia, the gang independently produces, directs, and stars in their own highly offensive, unauthorized cinematic sequels to which classic action movie franchise?",
       "answer": "Lethal Weapon",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "i-love-lucy-ricky-ricardo-nightclub",
-      "question": "Ricky Ricardo works as a prominent orchestra leader and entertainer at which famous fictional New York City nightclub?",
+      "question": "On I Love Lucy, Ricky Ricardo works as a prominent orchestra leader and entertainer at which famous fictional New York City nightclub?",
       "answer": "Tropicana",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "i-love-lucy-ethel-mertz-middle-name",
-      "question": "While Fred Mertz's middle name is Hobart, what is his wife Ethel's middle name, which is used to mock her in a few episodes?",
+      "question": "On I Love Lucy, while Fred Mertz's middle name is Hobart, what is his wife Ethel's middle name, which is used to mock her in a few episodes?",
       "answer": "Roberta",
       "category": "Television",
       "difficulty": "hard"
     },
     {
       "slug": "new-girl-winston-bishop-beloved-cat",
-      "question": "Winston Bishop forms an incredibly intense, borderline-unhealthy emotional bond with a pet cat he takes custody of. What is the cat's name?",
+      "question": "On New Girl, Winston Bishop forms an incredibly intense, borderline-unhealthy emotional bond with a pet cat he takes custody of. What is the cat's name?",
       "answer": "Ferguson",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "new-girl-schmidt-first-name-reveal",
-      "question": "For the vast majority of the series, Schmidt is referred to solely by his last name. In Season 6, his actual first name is revealed to be the exact same first name as which other main loft roommate?",
+      "question": "On New Girl, for the vast majority of the series, Schmidt is referred to solely by his last name. In Season 6, his actual first name is revealed to be the exact same first name as which other main loft roommate?",
       "answer": "Winston",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "new-girl-nick-miller-zombie-novel",
-      "question": "Nick Miller spends years struggling to write a terribly incoherent, semi-autobiographical chronicle about a zombie zoo. What is the title of his novel?",
+      "question": "On New Girl, Nick Miller spends years struggling to write a terribly incoherent, semi-autobiographical chronicle about a zombie zoo. What is the title of his novel?",
       "answer": "The Pepperwood Chronicles",
       "category": "Television",
       "difficulty": "medium",
@@ -690,42 +690,42 @@
     },
     {
       "slug": "new-girl-coach-real-name-ernie",
-      "question": "The athlete and personal trainer roommate universally known as \"Coach\" returns to the loft in later seasons. What is his actual canonical first name?",
+      "question": "On New Girl, the athlete and personal trainer roommate universally known as \"Coach\" returns to the loft in later seasons. What is his actual canonical first name?",
       "answer": "Ernie",
       "category": "Television",
       "difficulty": "hard"
     },
     {
       "slug": "happy-endings-max-blum-college-fraternity",
-      "question": "Max Blum breaks typical TV tropes by being a messy, sports-loving, un-stereotypical gay man. At which major university did he and Dave row crew and join a fraternity?",
+      "question": "On Happy Endings, Max Blum breaks typical TV tropes by being a messy, sports-loving, un-stereotypical gay man. At which major university did he and Dave row crew and join a fraternity?",
       "answer": "University of Illinois",
       "category": "Television",
       "difficulty": "hard"
     },
     {
       "slug": "happy-endings-jane-williams-extreme-perfectionism",
-      "question": "Jane Kerkovich-Williams is a fiercely organized, hyper-competitive corporate executive who is married to which laid-back, sweet member of the friend group?",
+      "question": "On Happy Endings, Jane Kerkovich-Williams is a fiercely organized, hyper-competitive corporate executive who is married to which laid-back, sweet member of the friend group?",
       "answer": "Brad Williams",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "happy-endings-alex-kerkovich-boutique-shop",
-      "question": "Alex Kerkovich, who famously leaves Dave at the altar in the pilot episode, operates a quirky, under-patronized retail clothing boutique named what?",
+      "question": "On Happy Endings, Alex Kerkovich, who famously leaves Dave at the altar in the pilot episode, operates a quirky, under-patronized retail clothing boutique named what?",
       "answer": "Xanadu",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "i-love-lucy-fred-mertz-former-vaudeville",
-      "question": "Before becoming the Ricardos' landlord, Fred Mertz spent his early professional life touring the country in what specific entertainment field?",
+      "question": "On I Love Lucy, before becoming the Ricardos' landlord, Fred Mertz spent his early professional life touring the country in what specific entertainment field?",
       "answer": "Vaudeville",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "new-girl-the-douchebag-jar-fine",
-      "question": "The roommates force Schmidt to physical insert paper currency into a specialized glass container whenever he makes an arrogant or pretentious remark. What is this container called?",
+      "question": "On New Girl, the roommates force Schmidt to physical insert paper currency into a specialized glass container whenever he makes an arrogant or pretentious remark. What is this container called?",
       "answer": "The Douchebag Jar",
       "category": "Television",
       "difficulty": "easy",
@@ -763,21 +763,21 @@
     },
     {
       "slug": "looney-tunes-wile-e-coyote-company-acronym",
-      "question": "Wile E. Coyote orders all of his explosive gadgets, traps, and complex machinery from which fictional mail-order corporation?",
+      "question": "In Looney Tunes, Wile E. Coyote orders all of his explosive gadgets, traps, and complex machinery from which fictional mail-order corporation?",
       "answer": "ACME",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "hey-arnold-helga-pataki-secret-shrine",
-      "question": "Helga Pataki keeps a massive, hidden love shrine dedicated to Arnold in the back of her bedroom closet. What is it made of?",
+      "question": "In Hey Arnold, Helga Pataki keeps a massive, hidden love shrine dedicated to Arnold in the back of her bedroom closet. What is it made of?",
       "answer": "Chewed bubblegum",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "rugrats-tommy-pickles-signature-tool",
-      "question": "Tommy Pickles frequently escapes his playpen and breaks into restricted areas by hiding what specific household tool inside his diaper?",
+      "question": "In Rugrats, Tommy Pickles frequently escapes his playpen and breaks into restricted areas by hiding what specific household tool inside his diaper?",
       "answer": "Screwdriver",
       "category": "Television",
       "difficulty": "easy"
@@ -805,7 +805,7 @@
     },
     {
       "slug": "fairly-oddparents-crimson-chin-city-protection",
-      "question": "Timmy Turner's absolute favorite comic book superhero, The Crimson Chin, spends his nights leaping across buildings to protect which fictional U.S. metropolis?",
+      "question": "In The Fairly OddParents, Timmy Turner's absolute favorite comic book superhero, The Crimson Chin, spends his nights leaping across buildings to protect which fictional U.S. metropolis?",
       "answer": "Chincinnati",
       "category": "Television",
       "difficulty": "easy"
@@ -826,14 +826,14 @@
     },
     {
       "slug": "simpsons-homer-favorite-snack",
-      "question": "What pink-frosted, sprinkled bakery item is Homer Simpson's absolute favorite food?",
+      "question": "On The Simpsons, what pink-frosted, sprinkled bakery item is Homer Simpson's absolute favorite food?",
       "answer": "Donuts",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "pokemon-ash-ketchum-first-partner",
-      "question": "What electric-type mouse creature is Ash Ketchum's primary partner and global mascot of the franchise?",
+      "question": "In Pok\u00e9mon, what electric-type mouse creature is Ash Ketchum's primary partner and global mascot of the franchise?",
       "answer": "Pikachu",
       "category": "Television",
       "difficulty": "easy"
@@ -854,35 +854,35 @@
     },
     {
       "slug": "rick-and-morty-dimension-designation",
-      "question": "Rick Sanchez frequently brags that he originates from what alphanumeric baseline dimension?",
+      "question": "On Rick and Morty, Rick Sanchez frequently brags that he originates from what alphanumeric baseline dimension?",
       "answer": "C-137",
       "category": "Television",
       "difficulty": "medium"
     },
     {
       "slug": "bobs-burgers-louise-hat-animal",
-      "question": "Louise Belcher is never seen without her signature pink headgear, which features the ears of what animal?",
+      "question": "On Bob's Burgers, Louise Belcher is never seen without her signature pink headgear, which features the ears of what animal?",
       "answer": "Rabbit",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "looney-tunes-bugs-bunny-vegetable",
-      "question": "What crunchy orange vegetable does Bugs Bunny constantly chomp on while asking \"What's up, doc?\"",
+      "question": "In Looney Tunes, what crunchy orange vegetable does Bugs Bunny constantly chomp on while asking \"What's up, doc?\"",
       "answer": "Carrot",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "fairly-oddparents-timmy-fairy-godparents",
-      "question": "Timmy Turner's two primary floating fairy godparents are named Wanda and what?",
+      "question": "In The Fairly OddParents, Timmy Turner's two primary floating fairy godparents are named Wanda and what?",
       "answer": "Cosmo",
       "category": "Television",
       "difficulty": "easy"
     },
     {
       "slug": "tmnt-michelangelo-signature-weapon",
-      "question": "Which specific martial arts weapon consisting of two sticks connected by a short chain is wielded by Michelangelo?",
+      "question": "In Teenage Mutant Ninja Turtles, which specific martial arts weapon consisting of two sticks connected by a short chain is wielded by Michelangelo?",
       "answer": "Nunchucks",
       "category": "Television",
       "difficulty": "easy"
@@ -896,7 +896,7 @@
     },
     {
       "slug": "garfield-owner-first-name",
-      "question": "What is the first name of the socially awkward cartoonist who owns Garfield the cat and Odie the dog?",
+      "question": "In Garfield and Friends, what is the first name of the socially awkward cartoonist who owns Garfield the cat and Odie the dog?",
       "answer": "Jon",
       "category": "Television",
       "difficulty": "easy"
@@ -910,7 +910,7 @@
     },
     {
       "slug": "flintstones-fred-pet-dinosaur",
-      "question": "What is the name of Fred and Wilma Flintstone's energetic, barking purple pet prosauropod dinosaur?",
+      "question": "On The Flintstones, what is the name of Fred and Wilma Flintstone's energetic, barking purple pet prosauropod dinosaur?",
       "answer": "Dino",
       "category": "Television",
       "difficulty": "easy"
@@ -924,7 +924,7 @@
     },
     {
       "slug": "kardashian-youngest-sister",
-      "question": "Who is the youngest of the Kardashian-Jenner sisters?",
+      "question": "On Keeping Up with the Kardashians, who is the youngest of the Kardashian-Jenner sisters?",
       "answer": "Kylie Jenner",
       "answer_format": "write_in",
       "category": "Television",
@@ -967,7 +967,7 @@
     },
     {
       "slug": "winnie-the-pooh-donkey-name",
-      "question": "What is the name of Christopher Robin's gloomy, thistle-eating stuffed donkey friend who constantly loses his tail?",
+      "question": "In Winnie the Pooh, what is the name of Christopher Robin's gloomy, thistle-eating stuffed donkey friend who constantly loses his tail?",
       "answer": "Eeyore",
       "category": "Television",
       "difficulty": "easy"
@@ -1034,7 +1034,7 @@
     },
     {
       "slug": "parks-and-rec-fictional-town",
-      "question": "Leslie Knope works tirelessly to improve the parks and recreation department of what fictional Indiana city?",
+      "question": "On Parks and Recreation, Leslie Knope works tirelessly to improve the parks and recreation department of what fictional Indiana city?",
       "answer": "Pawnee",
       "answer_format": "write_in",
       "category": "television",
@@ -1167,7 +1167,7 @@
     },
     {
       "slug": "the-west-wing-president-hometown",
-      "question": "Played by Martin Sheen, brilliant President Josiah Bartlet frequently touts his deep family roots and political history in which northeastern US state?",
+      "question": "On The West Wing, played by Martin Sheen, brilliant President Josiah Bartlet frequently touts his deep family roots and political history in which northeastern US state?",
       "answer": "New Hampshire",
       "answer_format": "write_in",
       "category": "television",
@@ -1178,7 +1178,7 @@
     },
     {
       "slug": "buffy-vampire-slayer-hometown",
-      "question": "Buffy Summers fights vampires, demons, and the forces of darkness above a literal Hellmouth in what fictional California town?",
+      "question": "On Buffy the Vampire Slayer, Buffy Summers fights vampires, demons, and the forces of darkness above a literal Hellmouth in what fictional California town?",
       "answer": "Sunnydale",
       "answer_format": "write_in",
       "category": "television",
@@ -1309,7 +1309,7 @@
     },
     {
       "slug": "seinfeld-art-vandelay-profession",
-      "question": "George Costanza frequently uses the fake alias 'Art Vandelay' when lying to employers or women, famously claiming Vandelay works as what type of professional?",
+      "question": "On Seinfeld, George Costanza frequently uses the fake alias 'Art Vandelay' when lying to employers or women, famously claiming Vandelay works as what type of professional?",
       "answer": "Architect",
       "answer_format": "write_in",
       "category": "television",
@@ -1323,7 +1323,7 @@
     },
     {
       "slug": "seinfeld-festivus-holiday-creator",
-      "question": "Invented by Frank Costanza as a direct protest against the commercialism of Christmas, what is the name of the secular December holiday that features an aluminum pole?",
+      "question": "On Seinfeld, invented by Frank Costanza as a direct protest against the commercialism of Christmas, what is the name of the secular December holiday that features an aluminum pole?",
       "answer": "Festivus",
       "answer_format": "write_in",
       "category": "television",
@@ -1335,7 +1335,7 @@
     },
     {
       "slug": "american-dad-cochrane-political-party",
-      "question": "Hayley Smith frequently clashes with her father due to her staunch, progressive activism and her card-carrying membership in what minor US political party?",
+      "question": "On American Dad, Hayley Smith frequently clashes with her father due to her staunch, progressive activism and her card-carrying membership in what minor US political party?",
       "answer": "Green Party",
       "answer_format": "write_in",
       "category": "television",
@@ -1348,7 +1348,7 @@
     },
     {
       "slug": "seinfeld-puddy-nj-devils",
-      "question": "Elaine's on-again, off-again boyfriend David Puddy horrifies her during a hockey playoff game by painting his face to support what NHL team?",
+      "question": "On Seinfeld, Elaine's on-again, off-again boyfriend David Puddy horrifies her during a hockey playoff game by painting his face to support what NHL team?",
       "answer": "New Jersey Devils",
       "answer_format": "write_in",
       "category": "television",
@@ -1372,7 +1372,7 @@
     },
     {
       "slug": "simpsons-homers-favorite-beer",
-      "question": "What is the brand name of the cheap, fictional beer that Homer Simpson constantly orders at Moe's Tavern?",
+      "question": "On The Simpsons, what is the brand name of the cheap, fictional beer that Homer Simpson constantly orders at Moe's Tavern?",
       "answer": "Duff Beer",
       "answer_format": "write_in",
       "category": "television",
@@ -1419,7 +1419,7 @@
     },
     {
       "slug": "flintstones-fictional-prehistoric-town",
-      "question": "Fred Flintstone and his family reside in what fictional, prehistoric stone-age American town?",
+      "question": "On The Flintstones, Fred Flintstone and his family reside in what fictional, prehistoric stone-age American town?",
       "answer": "Bedrock",
       "answer_format": "write_in",
       "category": "television",
@@ -1465,7 +1465,7 @@
     },
     {
       "slug": "invader-zim-robot-disguise",
-      "question": "To blend into human society, the short Irken alien Zim forces his malfunctioning robot helper GIR to wear what animal costume disguise?",
+      "question": "In Invader Zim, to blend into human society, the short Irken alien Zim forces his malfunctioning robot helper GIR to wear what animal costume disguise?",
       "answer": "Dog",
       "answer_format": "write_in",
       "category": "television",
@@ -1478,7 +1478,7 @@
     },
     {
       "slug": "spongebob-pet-snail-creature",
-      "question": "Spongebob's pet Gary is what type of creature?",
+      "question": "On SpongeBob SquarePants, Spongebob's pet Gary is what type of creature?",
       "answer": "Snail",
       "answer_format": "write_in",
       "category": "television",
@@ -2448,7 +2448,7 @@
     },
     {
       "slug": "late-night-jay-leno-tonight-show-garage-hobby",
-      "question": "Aside from his decades on late-night television, Jay Leno is world-famous for his massive collection of what?",
+      "question": "Aside from his decades hosting The Tonight Show, Jay Leno is world-famous for his massive collection of what?",
       "answer": "Cars",
       "answer_format": "write_in",
       "category": "television",
@@ -2510,7 +2510,7 @@
     },
     {
       "slug": "late-night-jimmy-kimmel-matt-damon-running-feud",
-      "question": "Since his earliest network seasons, Jimmy Kimmel has maintained a hilarious, faux-bitter running feud by constantly claiming he ran out of time to interview what Oscar-winning actor?",
+      "question": "Since his earliest network seasons of Jimmy Kimmel Live!, Jimmy Kimmel has maintained a hilarious, faux-bitter running feud by constantly claiming he ran out of time to interview what Oscar-winning actor?",
       "answer": "Matt Damon",
       "answer_format": "write_in",
       "category": "television",
@@ -2546,7 +2546,7 @@
     },
     {
       "slug": "late-night-david-letterman-paul-shaffer-orchestra",
-      "question": "David Letterman's entire late-night run across two networks was musically anchored by his iconic, bald, sunglasses-wearing bandleader and foil named what?",
+      "question": "On the Late Show with David Letterman, David Letterman's entire late-night run across two networks was musically anchored by his iconic, bald, sunglasses-wearing bandleader and foil named what?",
       "answer": "Paul Shaffer",
       "answer_format": "write_in",
       "category": "television",
@@ -2809,7 +2809,7 @@
     },
     {
       "slug": "game-of-thrones-daenerys-bonded-dragon-drogon",
-      "question": "What is the name of Daenerys Targaryen's bonded dragon?",
+      "question": "On Game of Thrones, what is the name of Daenerys Targaryen's bonded dragon?",
       "answer": "Drogon",
       "answer_format": "write_in",
       "category": "television",
@@ -2985,7 +2985,7 @@
     },
     {
       "slug": "peaky-blinders-shelby-family-city-birmingham",
-      "question": "The notorious Shelby crime family operates their illegal betting empire and consolidates political power in what industrial English city during the aftermath of World War I?",
+      "question": "In Peaky Blinders, the notorious Shelby crime family operates their illegal betting empire and consolidates political power in what industrial English city during the aftermath of World War I?",
       "answer": "Birmingham",
       "answer_format": "write_in",
       "category": "television",
@@ -2996,7 +2996,7 @@
     },
     {
       "slug": "the-mandalorian-din-djarin-bounty-hunter-guild",
-      "question": "In the Disney+ Star Wars spin-off series, the title character Din Djarin belongs to an ancient, orthodox warrior creed of bounty hunters who follow a code known as 'The _________'.",
+      "question": "In the Disney+ Star Wars spin-off series The Mandalorian, the title character Din Djarin belongs to an ancient, orthodox warrior creed of bounty hunters who follow a code known as 'The _________'.",
       "answer": "Way",
       "answer_format": "write_in",
       "category": "television",
