@@ -286,6 +286,7 @@ export function GameLandingExperience({
         navigate: () =>
           navigateBackToVenue({
             venuePath: targetPath,
+            gameKey,
             fallbackNavigate: () => {
               router.push(targetPath);
             },

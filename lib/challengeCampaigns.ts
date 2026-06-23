@@ -688,10 +688,22 @@ async function getLeaderboardSnapshotForCampaign(params: {
   venueId: string;
   viewerUserId?: string;
   now?: Date;
-}): Promise<{ topEntries: ChallengeLeaderboardEntry[]; viewer: ChallengeLeaderboardViewer | null }> {
+}): Promise<{ topEntries: ChallengeLeaderboardEntry[]; viewer: ChallengeLeaderboardViewer | null; isBetweenCycles?: boolean; nextCycleStart?: string }> {
   const effectiveNow = params.now ?? new Date();
   const venueTimezone = await getVenueTimezone(params.venueId);
   const cycleStart = computeCycleStart(params.campaign, effectiveNow, venueTimezone);
+
+  const isRecurring = params.campaign.recurringType && params.campaign.recurringType !== "none";
+  if (isRecurring) {
+    const cycleEnd = computeCycleEnd(params.campaign, cycleStart, venueTimezone);
+    if (effectiveNow.getTime() > cycleEnd.getTime()) {
+      const periodMs = params.campaign.recurringType === "daily" ? 86400000
+        : params.campaign.recurringType === "monthly" ? 30 * 86400000
+        : 7 * 86400000;
+      const nextCycleStart = new Date(cycleStart.getTime() + periodMs);
+      return { topEntries: [], viewer: null, isBetweenCycles: true, nextCycleStart: nextCycleStart.toISOString() };
+    }
+  }
 
   const viaRpc = await getLeaderboardSnapshotViaRpc({
     challengeId: params.campaign.id,

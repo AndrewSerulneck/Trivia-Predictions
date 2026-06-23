@@ -1,14 +1,11 @@
 "use client";
-import { cachedFetch } from "@/lib/fetchCache";
-
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
-import { NotificationBell } from "@/components/ui/NotificationBell";
+import { GameAppBar } from "@/components/venue/AppBar";
 import { getUserId, getVenueId } from "@/lib/storage";
-import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
 import { PickEmCollectAnimation } from "@/components/animations/PickEmCollectAnimation";
@@ -98,15 +95,6 @@ type PickEmPickHistoryItem = {
   rewardClaimedAt?: string | null;
 };
 
-type SummaryPayload = {
-  ok: boolean;
-  profile?: {
-    username: string;
-    points: number;
-    venueId: string;
-  } | null;
-};
-
 async function readJsonResponse<T>(response: Response, label: string): Promise<T> {
   const raw = await response.text();
   try {
@@ -136,32 +124,6 @@ const PICKEM_INLINE_SLOTS: Record<number, AdSlot> = {
   6: "pickem-inline-cards-26-30",
 };
 
-function GoldCoinIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={`${className} drop-shadow-[0_2px_2px_rgba(106,64,0,0.45)]`}>
-      <defs>
-        <linearGradient id="tp-pickem-coin-rim-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fff5bf" />
-          <stop offset="28%" stopColor="#ffd769" />
-          <stop offset="62%" stopColor="#f2b437" />
-          <stop offset="100%" stopColor="#b67612" />
-        </linearGradient>
-        <linearGradient id="tp-pickem-coin-core-gradient" x1="10%" y1="8%" x2="82%" y2="92%">
-          <stop offset="0%" stopColor="#fff9d8" />
-          <stop offset="44%" stopColor="#ffdc73" />
-          <stop offset="100%" stopColor="#d98b12" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="32" cy="54" rx="17" ry="4.8" fill="rgba(74,40,0,0.24)" />
-      <circle cx="32" cy="32" r="24.5" fill="url(#tp-pickem-coin-rim-gradient)" stroke="#774600" strokeWidth="2.4" />
-      <circle cx="32" cy="32" r="17.5" fill="url(#tp-pickem-coin-core-gradient)" stroke="#8a5200" strokeWidth="1.9" />
-      <ellipse cx="26.5" cy="22.5" rx="9.6" ry="5.5" fill="rgba(255,255,255,0.46)" />
-      <path d="M23 35h18" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
-      <path d="M27 28h10" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
-      <path d="M27 42h10" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function getSportIcon(slug: string): string {
   return SPORT_ICONS[slug] ?? "🏟️";
@@ -235,7 +197,7 @@ function getDisplayedScoreCell(game: PickEmGame, teamName: string, score: number
   return game.winnerTeam === teamName ? "Won" : "";
 }
 
-export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { initialSportSlug?: string; initialDate?: string }) {
+export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack }: { initialSportSlug?: string; initialDate?: string; onBack?: () => void }) {
   const normalizedInitialSportSlug = String(initialSportSlug ?? "").trim().toLowerCase();
   const todayDateKey = getLocalDateKey();
   const router = useRouter();
@@ -287,11 +249,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
   const [isMounted, setIsMounted] = useState(false);
   const [pickHistory, setPickHistory] = useState<PickEmPickHistoryItem[]>([]);
   const [loadingPickHistory, setLoadingPickHistory] = useState(false);
-  const [headerPoints, setHeaderPoints] = useState(0);
-  const [headerPointsGain, setHeaderPointsGain] = useState<number | null>(null);
-  const [headerPointsPulse, setHeaderPointsPulse] = useState(false);
-  const headerPointsGainTimerRef = useRef<number | null>(null);
-  const headerPointsPulseTimerRef = useRef<number | null>(null);
   const popIdRef = useRef(0);
   const animatedWinDatesRef = useRef<Set<string>>(new Set());
 
@@ -349,12 +306,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
     return () => {
       if (refreshTimerRef.current !== null) {
         window.clearTimeout(refreshTimerRef.current);
-      }
-      if (headerPointsGainTimerRef.current !== null) {
-        window.clearTimeout(headerPointsGainTimerRef.current);
-      }
-      if (headerPointsPulseTimerRef.current !== null) {
-        window.clearTimeout(headerPointsPulseTimerRef.current);
       }
     };
   }, []);
@@ -511,82 +462,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
     };
   }, []);
 
-  const loadHeaderPoints = useCallback(async () => {
-    if (!userId) {
-      setHeaderPoints(0);
-      return;
-    }
-    try {
-      const cacheKey = `summary:${userId}:${venueId}`;
-      const payload = await cachedFetch<SummaryPayload>(
-        cacheKey,
-        async () => {
-          const response = await fetch(
-            `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
-            { cache: "no-store" }
-          );
-          return readJsonResponse<SummaryPayload>(response, "/api/users/summary");
-        },
-        4_000
-      );
-      if (!payload.ok || !payload.profile) {
-        return;
-      }
-      setHeaderPoints(Math.max(0, Number(payload.profile.points ?? 0)));
-    } catch {
-      // no-op: we keep previous value on transient network errors
-    }
-  }, [userId, venueId]);
-
-  useEffect(() => {
-    if (!userId) {
-      return;
-    }
-    const initial = window.setTimeout(() => {
-      void loadHeaderPoints();
-    }, 0);
-    const interval = window.setInterval(() => {
-      void loadHeaderPoints();
-    }, 20_000);
-    return () => {
-      window.clearTimeout(initial);
-      window.clearInterval(interval);
-    };
-  }, [loadHeaderPoints, userId]);
-
-  useEffect(() => {
-    const onPointsUpdated = (event: Event) => {
-      const custom = event as CustomEvent<{ delta?: number }>;
-      const delta = Number(custom.detail?.delta ?? 0);
-      if (!Number.isFinite(delta) || delta <= 0) {
-        return;
-      }
-      setHeaderPoints((current) => current + delta);
-      setHeaderPointsGain((current) => (current ?? 0) + delta);
-      setHeaderPointsPulse(true);
-
-      if (headerPointsGainTimerRef.current !== null) {
-        window.clearTimeout(headerPointsGainTimerRef.current);
-      }
-      headerPointsGainTimerRef.current = window.setTimeout(() => {
-        setHeaderPointsGain(null);
-      }, 1300);
-
-      if (headerPointsPulseTimerRef.current !== null) {
-        window.clearTimeout(headerPointsPulseTimerRef.current);
-      }
-      headerPointsPulseTimerRef.current = window.setTimeout(() => {
-        setHeaderPointsPulse(false);
-      }, 550);
-
-      void loadHeaderPoints();
-    };
-
-    window.addEventListener("tp:points-updated", onPointsUpdated as EventListener);
-    return () => {
-      window.removeEventListener("tp:points-updated", onPointsUpdated as EventListener);
-    };
-  }, [loadHeaderPoints]);
 
 
   const grouped = useMemo(() => {
@@ -1022,52 +897,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
         .pickem-limit-pulse { animation: pickem-limit-pulse 420ms ease-in-out; }
       `}</style>
 
-      <div className="sticky top-0 z-30 border-b border-white/10 bg-[#020617]/95 px-2 pb-2 pt-[max(env(safe-area-inset-top),6px)] backdrop-blur">
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (!venueId) return;
-              navigateBackToVenue({
-                venuePath: `/venue/${encodeURIComponent(venueId)}`,
-                fallbackNavigate: () => {
-                  window.location.href = `/venue/${encodeURIComponent(venueId)}`;
-                },
-              });
-            }}
-            disabled={!venueId}
-            className="tp-clean-button tp-exit-pill inline-flex h-9 w-10 items-center justify-center rounded-full p-0 text-sm font-black disabled:cursor-not-allowed disabled:opacity-60"
-            aria-label="Back to venue"
-          >
-            <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-[12px]">←</span>
-          </button>
-          <div
-            className="text-[15px] uppercase tracking-[0.04em] text-[#fde68a] [text-shadow:0_1px_0_rgba(0,0,0,.45)]"
-            style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
-          >
-            Pick &apos;Em
-          </div>
-          <div className="relative flex items-center gap-1.5">
-            <div
-              id="tp-points-pill"
-              className={`relative inline-flex h-9 min-w-[6.3rem] items-center justify-center gap-1.5 rounded-[10px] border px-2 text-sm font-black tabular-nums transition-all duration-300 ${
-                headerPointsPulse
-                  ? "border-amber-300/60 bg-amber-300/20 text-amber-200 scale-105"
-                  : "border-amber-300/40 bg-amber-300/10 text-amber-300"
-              }`}
-            >
-              {headerPointsGain ? (
-                <span className="pointer-events-none absolute -top-3 right-0 rounded-full border border-emerald-700 bg-emerald-300 px-1.5 py-0.5 text-[10px] font-black leading-none text-emerald-900 shadow">
-                  +{headerPointsGain}
-                </span>
-              ) : null}
-              <GoldCoinIcon className="h-4 w-4" />
-              <span>{headerPoints.toLocaleString()}</span>
-            </div>
-            <NotificationBell />
-          </div>
-        </div>
-      </div>
+      <GameAppBar game="pickem" onExit={onBack} />
 
       <div className="space-y-3 px-2 pt-2">
         <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-3 py-3">

@@ -25,6 +25,7 @@ import {
 } from "@/lib/geolocation";
 import {
   getAccountId,
+  getGodMode,
   getUserId,
   getUsername,
   saveAccountId,
@@ -662,7 +663,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const { refresh: refreshAuthSession, state: authState } = useAuthSession();
-  const godMode = authState.phase === "authenticated" ? authState.godMode : false;
+  const godMode = (authState.phase === "authenticated" ? authState.godMode : false) || getGodMode();
   const venueParam = initialVenueId.trim();
 
   const [status, setStatus] = useState<Status>("loading");

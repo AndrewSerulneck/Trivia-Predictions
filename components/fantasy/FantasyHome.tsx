@@ -10,7 +10,8 @@ import { supabase } from "@/lib/supabase";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
-import { SlimTopBar, ViewTabs, FoldLine } from "@/components/venue/GameChrome";
+import { ViewTabs, FoldLine } from "@/components/venue/GameChrome";
+import { GameAppBar } from "@/components/venue/AppBar";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
 import type { FantasyLineupPlayer } from "@/lib/fantasy";
 import type { FantasyPlayerPoolEmptyReason } from "@/lib/fantasy";
@@ -2367,8 +2368,8 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
           )
         : null}
 
-      {/* ── Slim identity bar (replaces the 44px title) ── */}
-      <SlimTopBar game="fantasy" onExit={onBack} />
+      {/* ── Unified app bar (Venue back · hamburger · identity · points · alerts) ── */}
+      <GameAppBar game="fantasy" onExit={onBack} />
 
       <div className="mx-auto w-full max-w-[30rem] space-y-3 px-4 pt-3">
 

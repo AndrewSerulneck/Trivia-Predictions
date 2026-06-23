@@ -1,7 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronLeft } from "lucide-react";
-import { NotificationBell } from "@/components/ui/NotificationBell";
+import { ChevronDown } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GameChrome — shared redesign primitives for the Bingo & Fantasy landing pages.
@@ -13,12 +12,7 @@ import { NotificationBell } from "@/components/ui/NotificationBell";
 //   fantasy → amber-200 (#fde68a)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type GameChromeKey = "bingo" | "fantasy";
-
-const GAME_LABEL: Record<GameChromeKey, string> = {
-  bingo: "Sports Bingo",
-  fantasy: "Fantasy",
-};
+export type GameChromeKey = "bingo" | "fantasy" | "pickem";
 
 // Small animated "live" dot — mirrors the design's pulsing status indicator.
 export const LiveDot = ({ className = "bg-emerald-400" }: { className?: string }) => (
@@ -27,6 +21,16 @@ export const LiveDot = ({ className = "bg-emerald-400" }: { className?: string }
 
 // GameMark — the compact game-identity tile that stands in for the dead 44px title.
 export const GameMark = ({ game }: { game: GameChromeKey }) => {
+  if (game === "pickem") {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex h-[26px] w-[26px] shrink-0 -rotate-[7deg] items-center justify-center rounded-[6px] border border-[#fde68a] bg-[#fde68a] text-[14px] font-black leading-none text-[#1a2f72]"
+      >
+        ✓
+      </span>
+    );
+  }
   if (game === "bingo") {
     return (
       <span
@@ -62,36 +66,6 @@ export const GameMark = ({ game }: { game: GameChromeKey }) => {
         O
       </span>
     </span>
-  );
-};
-
-// SlimTopBar — the header replacement. Exit pill + game identity + alerts bell.
-export const SlimTopBar = ({
-  game,
-  onExit,
-  exitLabel = "Venue",
-}: {
-  game: GameChromeKey;
-  onExit?: () => void;
-  exitLabel?: string;
-}) => {
-  const accentText = game === "bingo" ? "text-sky-300" : "text-amber-200";
-  return (
-    <div className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-2.5 border-b border-white/[0.08] bg-slate-950/[0.86] px-[13px] pb-2 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur-md">
-      <button
-        type="button"
-        onClick={onExit}
-        className="tp-clean-button inline-flex min-h-[34px] items-center gap-1 rounded-full border border-white/10 bg-slate-900 px-2.5 py-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-slate-300 transition-colors hover:text-white"
-      >
-        <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5" />
-        {exitLabel}
-      </button>
-      <div className="inline-flex items-center gap-2">
-        <GameMark game={game} />
-        <span className={`text-[14px] font-black uppercase tracking-[0.11em] ${accentText}`}>{GAME_LABEL[game]}</span>
-      </div>
-      <NotificationBell />
-    </div>
   );
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type CoinFlightDetail = {
   sourceElementId?: string;
@@ -120,6 +121,14 @@ function drawCoin(ctx: CanvasRenderingContext2D, x: number, y: number, radius: n
 
 export function CoinFXCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Render into document.body so the full-viewport canvas escapes any
+  // transformed / backdrop-blur ancestor (e.g. the AppBar), which would
+  // otherwise become its containing block and clip the coin flight.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
   const particlesRef = useRef<CoinParticle[]>([]);
   const rafRef = useRef<number | null>(null);
   const idRef = useRef(0);
@@ -253,5 +262,9 @@ export function CoinFXCanvas() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-[1150]" aria-hidden="true" />;
+  const canvas = <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-[1150]" aria-hidden="true" />;
+  if (!mounted) {
+    return null;
+  }
+  return createPortal(canvas, document.body);
 }

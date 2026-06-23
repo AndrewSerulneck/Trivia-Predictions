@@ -31,6 +31,8 @@ export type ChallengeCampaignCard = {
   leaderboard?: {
     topEntries: Array<{ rank: number; userId: string; username: string; points: number }>;
     viewer: { rank: number | null; userId: string; username?: string | null; points: number; inTop: boolean } | null;
+    isBetweenCycles?: boolean;
+    nextCycleStart?: string;
   };
   pointsRequiredToWin: number;
   progressPoints: number;

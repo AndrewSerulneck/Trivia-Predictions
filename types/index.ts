@@ -228,6 +228,8 @@ export interface ChallengeCampaign {
   leaderboard?: {
     topEntries: ChallengeLeaderboardEntry[];
     viewer: ChallengeLeaderboardViewer | null;
+    isBetweenCycles?: boolean;
+    nextCycleStart?: string;
   };
   pointMultiplier: number;
   pointsRequiredToWin: number;

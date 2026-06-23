@@ -1,96 +1,16 @@
 "use client";
-import { cachedFetch } from "@/lib/fetchCache";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
-import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
+import { useSyncExternalStore } from "react";
+import { AccountMenu } from "@/components/ui/AccountMenu";
 import { NotificationBell } from "@/components/ui/NotificationBell";
-import { getUserId, getUsername, getVenueId, saveUsername } from "@/lib/storage";
-import { setScrollLock } from "@/lib/scrollLock";
-
-type SummaryPayload = {
-  ok: boolean;
-  profile?: {
-    username: string;
-    points: number;
-    venueId: string;
-  } | null;
-};
-
-type UsernameUpdatePayload = {
-  ok?: boolean;
-  error?: string;
-  retryAfterSeconds?: number;
-  user?: {
-    id: string;
-    username: string;
-    venueId: string;
-    points: number;
-    createdAt?: string;
-  };
-};
+import { PointsPill } from "@/components/ui/PointsPill";
+import { usePointsSummary } from "@/components/ui/usePointsSummary";
+import { getVenueId } from "@/lib/storage";
 
 type LeftHamburgerMenuProps = {
-  variant?: "default" | "trivia";
   showAlerts?: boolean;
 };
-
-function TreasureChestIcon({ className = "h-8 w-8" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={`${className} drop-shadow-[0_1px_0_rgba(0,0,0,0.35)]`}>
-      <path d="M9 27h46l-6-13H15z" fill="#8b4513" stroke="#111827" strokeWidth="3" />
-      <rect x="10" y="28" width="44" height="8" rx="3" fill="#7c3f00" stroke="#111827" strokeWidth="3" />
-      <rect x="6" y="34" width="52" height="24" rx="5" fill="#a85500" stroke="#111827" strokeWidth="3" />
-      <rect x="29" y="28" width="6" height="30" fill="#f4b400" stroke="#111827" strokeWidth="2" />
-      <circle cx="32" cy="45" r="4.5" fill="#ffe26a" stroke="#111827" strokeWidth="2" />
-      <ellipse cx="32" cy="32" rx="15" ry="3.8" fill="#2d1400" opacity="0.52" />
-    </svg>
-  );
-}
-
-function GoldCoinIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={`${className} tp-coin-idle drop-shadow-[0_2px_2px_rgba(106,64,0,0.45)]`}>
-      <defs>
-        <linearGradient id="tp-coin-rim-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fff5bf" />
-          <stop offset="28%" stopColor="#ffd769" />
-          <stop offset="62%" stopColor="#f2b437" />
-          <stop offset="100%" stopColor="#b67612" />
-        </linearGradient>
-        <linearGradient id="tp-coin-core-gradient" x1="10%" y1="8%" x2="82%" y2="92%">
-          <stop offset="0%" stopColor="#fff9d8" />
-          <stop offset="44%" stopColor="#ffdc73" />
-          <stop offset="100%" stopColor="#d98b12" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="32" cy="54" rx="17" ry="4.8" fill="rgba(74,40,0,0.24)" />
-      <circle cx="32" cy="32" r="24.5" fill="url(#tp-coin-rim-gradient)" stroke="#774600" strokeWidth="2.4" />
-      <circle cx="32" cy="32" r="17.5" fill="url(#tp-coin-core-gradient)" stroke="#8a5200" strokeWidth="1.9" />
-      <ellipse
-        cx="26.5"
-        cy="22.5"
-        rx="9.6"
-        ry="5.5"
-        className="tp-coin-idle-shimmer"
-        fill="rgba(255,255,255,0.46)"
-      />
-      <path d="M23 35h18" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
-      <path d="M27 28h10" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
-      <path d="M27 42h10" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function isActiveMenuPath(pathname: string, href: string): boolean {
-  if (href === "/") {
-    return pathname === href;
-  }
-  if (href.startsWith("/venue/")) {
-    return pathname.startsWith("/venue/");
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
 
 function getVenueIdFromPathname(pathname: string): string {
   const match = pathname.match(/^\/venue\/([^/?#]+)/i);
@@ -104,628 +24,69 @@ function getVenueIdFromPathname(pathname: string): string {
   }
 }
 
-export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: LeftHamburgerMenuProps) {
+// Home / standard-page top bar. Composes the shared AppBar primitives
+// (AccountMenu drawer + PointsPill score + alerts) so the menu, score, and
+// coin-flight target stay identical to the in-game AppBar. A single
+// usePointsSummary instance drives both the pill and the menu's prize dot.
+export function LeftHamburgerMenu({ showAlerts = true }: LeftHamburgerMenuProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isJoinRoute = pathname === "/" || pathname === "/join";
   const isVenueRoute = pathname.startsWith("/venue/");
-  const compact = variant === "trivia";
-  const venueIdFromPath = getVenueIdFromPathname(pathname);
 
-  const [username, setUsername] = useState("");
-  const [points, setPoints] = useState<number | null>(null);
-  const [displayedPoints, setDisplayedPoints] = useState(0);
-  const [pointsPop, setPointsPop] = useState(false);
-  const [pointsFlash, setPointsFlash] = useState(false);
-  const [pointsGain, setPointsGain] = useState<number | null>(null);
-  const [pointsBurstAmount, setPointsBurstAmount] = useState<number | null>(null);
-  const [pointsBurstVisible, setPointsBurstVisible] = useState(false);
-  const [pointsBurstToken, setPointsBurstToken] = useState(0);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [hasUnclaimedPrize, setHasUnclaimedPrize] = useState(false);
-  const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
-  const [usernameDraft, setUsernameDraft] = useState("");
-  const [currentPinDraft, setCurrentPinDraft] = useState("");
-  const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
-  const [usernameUpdateMessage, setUsernameUpdateMessage] = useState("");
-  const [usernameUpdateError, setUsernameUpdateError] = useState("");
-  const scrollLockOwnerId = useId();
+  const summary = usePointsSummary();
+
   const storedVenueId = useSyncExternalStore(
     () => () => {},
     () => (getVenueId() ?? "").trim(),
     () => ""
   );
-
-  const priorPointsRef = useRef<number | null>(null);
-  const displayedPointsRef = useRef(0);
-  const pointsTickerRef = useRef<number | null>(null);
-  const pointsRef = useRef(points);
-  const gainHideTimerRef = useRef<number | null>(null);
-  const popHideTimerRef = useRef<number | null>(null);
-  const flashHideTimerRef = useRef<number | null>(null);
-  const burstHideTimerRef = useRef<number | null>(null);
-
-  const joinedVenueId = venueIdFromPath || storedVenueId;
+  const joinedVenueId = getVenueIdFromPathname(pathname) || storedVenueId;
   const venueHomeHref = joinedVenueId ? `/venue/${encodeURIComponent(joinedVenueId)}` : "/";
-
-  const menuItems = [
-    {
-      label: "Career Stats",
-      description: "Track your lifetime performance across every game.",
-      href: "/active-games",
-    },
-    {
-      label: "FAQs",
-      description: "Get quick answers about gameplay and prizes.",
-      href: "/faqs",
-    },
-    {
-      label: "Advertise With Us",
-      description: "Submit the advertiser intake form.",
-      href: "/advertise",
-    },
-    {
-      label: "Redeem Prizes",
-      description: "See earned rewards and prize redemptions.",
-      href: "/redeem-prizes",
-    },
-  ];
-
-  const animatePointsTo = useCallback((targetPoints: number) => {
-    const safeTarget = Math.max(0, Math.round(targetPoints));
-    const startPoints = displayedPointsRef.current;
-
-    if (safeTarget <= startPoints) {
-      setDisplayedPoints(safeTarget);
-      displayedPointsRef.current = safeTarget;
-      return;
-    }
-
-    if (pointsTickerRef.current) {
-      window.clearInterval(pointsTickerRef.current);
-    }
-
-    const delta = safeTarget - startPoints;
-    const frameCount = 18;
-    const step = Math.max(1, Math.ceil(delta / frameCount));
-    let running = startPoints;
-
-    pointsTickerRef.current = window.setInterval(() => {
-      running = Math.min(safeTarget, running + step);
-      setDisplayedPoints(running);
-      displayedPointsRef.current = running;
-
-      if (running >= safeTarget) {
-        if (pointsTickerRef.current) {
-          window.clearInterval(pointsTickerRef.current);
-          pointsTickerRef.current = null;
-        }
-      }
-    }, 28);
-  }, []);
-
-  const setPointsAndAnimate = useCallback(
-    (nextPoints: number) => {
-      const rounded = Math.max(0, Math.round(nextPoints));
-      setPoints(rounded);
-      animatePointsTo(rounded);
-      priorPointsRef.current = rounded;
-    },
-    [animatePointsTo]
-  );
-
-  const animateGain = useCallback((delta: number) => {
-    if (delta <= 0) {
-      return;
-    }
-
-    setPointsGain((current) => (current ?? 0) + delta);
-    setPointsPop(true);
-    setPointsFlash(true);
-    setPointsBurstAmount(delta);
-    setPointsBurstVisible(true);
-    setPointsBurstToken((value) => value + 1);
-
-    if (gainHideTimerRef.current) {
-      window.clearTimeout(gainHideTimerRef.current);
-    }
-    gainHideTimerRef.current = window.setTimeout(() => {
-      setPointsGain(null);
-    }, 1400);
-
-    if (popHideTimerRef.current) {
-      window.clearTimeout(popHideTimerRef.current);
-    }
-    popHideTimerRef.current = window.setTimeout(() => {
-      setPointsPop(false);
-    }, 280);
-
-    if (flashHideTimerRef.current) {
-      window.clearTimeout(flashHideTimerRef.current);
-    }
-    flashHideTimerRef.current = window.setTimeout(() => {
-      setPointsFlash(false);
-    }, 900);
-
-    if (burstHideTimerRef.current) {
-      window.clearTimeout(burstHideTimerRef.current);
-    }
-    burstHideTimerRef.current = window.setTimeout(() => {
-      setPointsBurstVisible(false);
-    }, 920);
-  }, []);
-
-  const loadSummary = useCallback(async () => {
-    const userId = getUserId() ?? "";
-    const venueId = getVenueId() ?? "";
-
-    if (!userId) {
-      setUsername("");
-      setPoints(null);
-      priorPointsRef.current = null;
-      displayedPointsRef.current = 0;
-      setDisplayedPoints(0);
-      return;
-    }
-
-    const fallbackUsername = getUsername() ?? "";
-    if (fallbackUsername) {
-      setUsername(fallbackUsername);
-    }
-
-    const cacheKey = `summary:${userId}:${venueId}`;
-    const payload = await cachedFetch<SummaryPayload>(
-      cacheKey,
-      async () => {
-        const response = await fetch(
-          `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
-          { cache: "no-store" }
-        );
-        return response.json() as Promise<SummaryPayload>;
-      },
-      4_000
-    );
-    if (!payload.ok || !payload.profile) {
-      return;
-    }
-
-    setUsername(payload.profile.username);
-    setPointsAndAnimate(payload.profile.points);
-
-    if (priorPointsRef.current !== null && payload.profile.points > priorPointsRef.current) {
-      animateGain(payload.profile.points - priorPointsRef.current);
-    }
-    priorPointsRef.current = payload.profile.points;
-
-    // Fire-and-forget: check for unclaimed prizes to drive the pulse dot
-    if (userId && venueId) {
-      fetch(
-        `/api/prizes/has-unclaimed?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
-        { cache: "no-store" }
-      )
-        .then((r) => r.json() as Promise<{ ok: boolean; hasUnclaimed: boolean }>)
-        .then((p) => { if (p.ok) setHasUnclaimedPrize(p.hasUnclaimed); })
-        .catch(() => {});
-    }
-  }, [animateGain, setPointsAndAnimate]);
-
-  const openUsernameModal = useCallback(() => {
-    setUsernameDraft((username || "").trim());
-    setCurrentPinDraft("");
-    setUsernameUpdateError("");
-    setUsernameUpdateMessage("");
-    setIsUsernameModalOpen(true);
-  }, [username]);
-
-  const handleUsernameUpdate = useCallback(async () => {
-    const userId = (getUserId() ?? "").trim();
-    const venueId = (getVenueId() ?? "").trim();
-    const nextUsername = usernameDraft.trim();
-    if (!userId || !venueId) {
-      setUsernameUpdateError("You must be logged in to change your username.");
-      return;
-    }
-    if (!nextUsername) {
-      setUsernameUpdateError("Please enter a new username.");
-      return;
-    }
-
-    setIsUpdatingUsername(true);
-    setUsernameUpdateError("");
-    setUsernameUpdateMessage("");
-    try {
-      const response = await fetch("/api/auth/username/update", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          venueId,
-          newUsername: nextUsername,
-          currentPin: currentPinDraft.trim() || undefined,
-          reason: "self-service",
-        }),
-      });
-      const payload = (await response.json().catch(() => null)) as UsernameUpdatePayload | null;
-      if (!response.ok || !payload?.ok || !payload.user) {
-        setUsernameUpdateError(payload?.error || "Unable to update username.");
-        return;
-      }
-
-      setUsername(payload.user.username);
-      saveUsername(payload.user.username);
-      setUsernameDraft(payload.user.username);
-      setCurrentPinDraft("");
-      setUsernameUpdateMessage("Username updated successfully.");
-      window.dispatchEvent(new CustomEvent("tp:auth-state-changed"));
-    } catch {
-      setUsernameUpdateError("Unable to update username right now.");
-    } finally {
-      setIsUpdatingUsername(false);
-    }
-  }, [currentPinDraft, usernameDraft]);
-
-  // Keep a ref in sync with the points state so the onPointsUpdated closure
-  // always reads the latest value without needing `points` in the effect deps.
-  useEffect(() => {
-    pointsRef.current = points;
-  }, [points]);
-
-  useEffect(() => {
-    if (isJoinRoute) return;
-
-    const initialTimer = window.setTimeout(() => {
-      void loadSummary();
-    }, 0);
-
-    const interval = window.setInterval(() => {
-      void loadSummary();
-    }, 20000);
-
-    const onPointsUpdated = (event: Event) => {
-      const custom = event as CustomEvent<{ delta?: number; source?: string }>;
-      const delta = Number(custom.detail?.delta ?? 0);
-      if (Number.isFinite(delta) && delta > 0) {
-        const next = (pointsRef.current ?? 0) + delta;
-        setPointsAndAnimate(next);
-        animateGain(delta);
-        if (
-          custom.detail?.source !== "speed-trivia" &&
-          custom.detail?.source !== "notifications" &&
-          custom.detail?.source !== "bingo-claim" &&
-          custom.detail?.source !== "fantasy-claim" &&
-          custom.detail?.source !== "pickem-claim"
-        ) {
-          window.dispatchEvent(
-            new CustomEvent("tp:coin-flight", {
-              detail: { delta, coins: Math.min(28, Math.max(10, Math.round(delta / 2) + 8)) },
-            })
-          );
-        }
-      }
-      void loadSummary();
-    };
-
-    window.addEventListener("tp:points-updated", onPointsUpdated);
-
-    return () => {
-      window.clearTimeout(initialTimer);
-      window.clearInterval(interval);
-      window.removeEventListener("tp:points-updated", onPointsUpdated);
-      if (pointsTickerRef.current) {
-        window.clearInterval(pointsTickerRef.current);
-      }
-      if (gainHideTimerRef.current) {
-        window.clearTimeout(gainHideTimerRef.current);
-      }
-      if (popHideTimerRef.current) {
-        window.clearTimeout(popHideTimerRef.current);
-      }
-      if (flashHideTimerRef.current) {
-        window.clearTimeout(flashHideTimerRef.current);
-      }
-      if (burstHideTimerRef.current) {
-        window.clearTimeout(burstHideTimerRef.current);
-      }
-    };
-  }, [animateGain, isJoinRoute, loadSummary, setPointsAndAnimate]);
-
-  useEffect(() => {
-    if (compact || isJoinRoute) {
-      setScrollLock(`user-status-menu:${scrollLockOwnerId}`, false);
-      return;
-    }
-    setScrollLock(`user-status-menu:${scrollLockOwnerId}`, isMenuOpen, "modal");
-    return () => {
-      setScrollLock(`user-status-menu:${scrollLockOwnerId}`, false);
-    };
-  }, [compact, isJoinRoute, isMenuOpen, scrollLockOwnerId]);
 
   if (isJoinRoute || isVenueRoute) {
     return null;
   }
 
-  if (compact) {
-    return (
-      <div className="relative flex w-full items-center justify-between gap-1.5">
-        <CoinFXCanvas />
-        <div className="flex h-10 min-w-0 flex-1 items-center gap-1 rounded-xl border border-ht-border-soft bg-ht-elevated px-2 py-1 text-[13px] font-medium text-ht-fg-primary">
-          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-ht-border-strong bg-ht-elevated-2 text-sm text-ht-fg-primary">
-            {((username || "G").trim()[0] ?? "G").toUpperCase()}
-          </span>
-          <span className="truncate">{username || "Guest"}</span>
-        </div>
-
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => router.push(venueHomeHref)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              router.push(venueHomeHref);
-            }
-          }}
-          id="tp-points-pill"
-          className={`relative flex h-10 min-w-0 flex-1 items-center gap-1 rounded-xl border px-2 py-1 text-[13px] font-medium transition-all duration-300 ${
-            pointsFlash ? "bg-amber-400/25 border-amber-400/50 text-amber-200" : "bg-amber-500/15 border-amber-400/30 text-amber-300"
-          } ${pointsPop ? "scale-105" : "scale-100"} cursor-pointer`}
-          aria-label="Open venue leaderboard"
-        >
-          {pointsBurstVisible && pointsBurstAmount ? (
-            <div className="pointer-events-none absolute left-1/2 top-1 z-[1400] -translate-x-1/2">
-              <span
-                key={`points-burst-${pointsBurstToken}`}
-                className="inline-flex animate-tp-points-burst rounded-full border-2 border-emerald-800 bg-emerald-300/95 px-2 py-0.5 text-sm font-black text-emerald-900 shadow-[2px_2px_0_#065f46]"
-              >
-                +{pointsBurstAmount}
-              </span>
-            </div>
-          ) : null}
-          <span id="tp-treasure-chest" className="relative inline-flex shrink-0 items-center justify-center">
-            <TreasureChestIcon className="h-6 w-6" />
-            <span
-              id="tp-treasure-chest-target"
-              aria-hidden="true"
-              className="absolute left-1/2 top-[44%] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0"
-            />
-          </span>
-          <span className="inline-flex items-center gap-1 text-sm font-black">
-            <span id="tp-coin-icon-target" className="inline-flex items-center justify-center">
-              <GoldCoinIcon className="h-5 w-5" />
-            </span>
-            <span className="truncate text-right">{(points ?? displayedPoints).toLocaleString()}</span>
-          </span>
-        </div>
-        {showAlerts ? <NotificationBell /> : null}
-      </div>
-    );
-  }
+  const username = summary.username || "Guest";
+  const goToVenue = () => router.push(venueHomeHref);
 
   return (
-    <div className="relative w-full">
-      <CoinFXCanvas />
+    <div className="relative z-[220] w-full">
+      <div className="relative flex w-full items-center gap-2 rounded-none border-b border-ht-border-hairline bg-ht-surface px-2 py-1.5 shadow-[0_1px_0_rgba(255,255,255,0.04)]">
+        <AccountMenu hasUnclaimedPrize={summary.hasUnclaimedPrize} />
 
-      <div className="relative z-[220]">
-        <div className="relative flex w-full items-center gap-2 rounded-none border-b border-ht-border-hairline bg-ht-surface px-2 py-1.5 shadow-[0_1px_0_rgba(255,255,255,0.04)]">
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen(true)}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-ht-border-soft bg-ht-elevated text-lg font-bold text-ht-fg-primary"
-            aria-label="Open navigation menu"
-            aria-expanded={isMenuOpen}
+        <div className="ml-auto flex min-w-0 items-center gap-1.5">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={goToVenue}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                goToVenue();
+              }
+            }}
+            className="inline-flex min-h-9 min-w-0 max-w-[13.5rem] cursor-pointer items-center gap-1.5 rounded-lg border border-ht-border-soft bg-ht-elevated px-2 py-1 text-sm font-semibold text-ht-fg-primary sm:max-w-[16rem]"
+            aria-label="Open venue home"
           >
-            ☰
-          </button>
-
-          <div className="ml-auto flex min-w-0 items-center gap-1.5">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => router.push(venueHomeHref)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  router.push(venueHomeHref);
-                }
-              }}
-              className="inline-flex min-h-9 min-w-0 max-w-[13.5rem] cursor-pointer items-center gap-1.5 rounded-lg border border-ht-border-soft bg-ht-elevated px-2 py-1 text-sm font-semibold text-ht-fg-primary sm:max-w-[16rem]"
-              aria-label="Open venue home"
-            >
-              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ht-border-strong bg-ht-elevated-2 text-[11px] font-black text-ht-fg-primary">
-                {((username || "G").trim()[0] ?? "G").toUpperCase()}
-              </span>
-              <span className="break-all text-[13px] leading-tight">{username || "Guest"}</span>
-            </div>
-
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => router.push(venueHomeHref)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  router.push(venueHomeHref);
-                }
-              }}
-              id="tp-points-pill"
-              className={`relative inline-flex h-9 min-w-[6.25rem] items-center justify-center gap-1.5 rounded-lg border px-2 text-sm font-black transition-all duration-300 ${
-                pointsFlash ? "bg-amber-400/25 border-amber-400/50 text-amber-200" : "bg-amber-500/15 border-amber-400/30 text-amber-300"
-              } ${pointsPop ? "scale-105" : "scale-100"} cursor-pointer`}
-              aria-label="Open venue leaderboard"
-            >
-              {pointsBurstVisible && pointsBurstAmount ? (
-                <div className="pointer-events-none absolute left-1/2 top-1 z-[1400] -translate-x-1/2">
-                  <span
-                    key={`points-burst-${pointsBurstToken}`}
-                    className="inline-flex animate-tp-points-burst rounded-full border-2 border-emerald-800 bg-emerald-300/95 px-2 py-0.5 text-xs font-black text-emerald-900 shadow-[2px_2px_0_#065f46]"
-                  >
-                    +{pointsBurstAmount}
-                  </span>
-                </div>
-              ) : null}
-              <span id="tp-treasure-chest" className="relative inline-flex shrink-0 items-center justify-center">
-                <TreasureChestIcon className="h-5 w-5" />
-                <span
-                  id="tp-treasure-chest-target"
-                  aria-hidden="true"
-                  className="absolute left-1/2 top-[44%] h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0"
-                />
-              </span>
-              <span id="tp-coin-icon-target" className="inline-flex items-center justify-center">
-                <GoldCoinIcon className="h-4 w-4" />
-              </span>
-              <span>{(points ?? displayedPoints).toLocaleString()}</span>
-            </div>
-            {showAlerts ? <NotificationBell /> : null}
+            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ht-border-strong bg-ht-elevated-2 text-[11px] font-black text-ht-fg-primary">
+              {(username.trim()[0] ?? "G").toUpperCase()}
+            </span>
+            <span className="break-all text-[13px] leading-tight">{username}</span>
           </div>
+
+          <PointsPill summary={summary} size="md" />
+
+          {showAlerts ? <NotificationBell /> : null}
         </div>
       </div>
 
-      {pointsGain ? (
+      {summary.pointsGain ? (
         <div className="pointer-events-none absolute right-2 top-[3.15rem] z-[1400] rounded-full border-2 border-emerald-900 bg-emerald-300/95 px-2 py-0.5 text-xs font-black text-emerald-900 shadow-[2px_2px_0_#065f46] animate-tp-points-fall">
-          +{pointsGain}
+          +{summary.pointsGain}
         </div>
       ) : null}
-
-      <div
-        data-tp-scroll-lock={isMenuOpen ? "active" : undefined}
-        className={`fixed inset-0 z-[1200] ${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
-        aria-hidden={!isMenuOpen}
-      >
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen(false)}
-          className={`absolute inset-0 h-full w-full bg-black/40 transition-opacity duration-200 ${
-            isMenuOpen ? "opacity-100" : "opacity-0"
-          }`}
-          aria-label="Close navigation menu"
-        />
-
-        <aside
-          className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] border-r border-ht-border-soft bg-ht-surface px-5 py-5 shadow-ht-modal transition-transform duration-200 ${
-            isMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-xl font-black tracking-wide text-ht-fg-primary">Menu</h3>
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(false)}
-              className="rounded-ht-sm border border-ht-border-soft bg-ht-elevated px-3 py-1.5 text-base font-semibold text-ht-fg-muted"
-            >
-              Close
-            </button>
-          </div>
-
-          <div className="mb-4 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated/50 p-3">
-            <div className="text-sm font-black text-ht-fg-primary">Profile</div>
-            <p className="mt-1 text-xs text-ht-fg-muted">
-              Username is case-insensitive for login. Change display casing or pick a new one.
-            </p>
-            <button
-              type="button"
-              onClick={openUsernameModal}
-              className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200"
-            >
-              Change Username
-            </button>
-          </div>
-
-          <nav aria-label="Primary navigation">
-            <ul className="space-y-3">
-              {menuItems.map((item) => {
-                const active = isActiveMenuPath(pathname, item.href);
-                return (
-                  <li key={`${item.label}:${item.href}`}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        router.push(item.href);
-                      }}
-                      className={`w-full rounded-ht-lg border px-4 py-3.5 text-left ${
-                        active
-                          ? "border-ht-border-strong bg-ht-elevated text-ht-fg-primary"
-                          : "border-ht-border-hairline bg-ht-elevated/50 text-ht-fg-secondary hover:border-ht-border-soft hover:bg-ht-elevated"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 text-lg font-black leading-tight">
-                        {item.label}
-                        {item.href === "/redeem-prizes" && hasUnclaimedPrize && (
-                          <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400" aria-label="Unclaimed prize" />
-                        )}
-                      </div>
-                      <div className={`mt-1 text-sm leading-snug ${active ? "text-ht-fg-secondary" : "text-ht-fg-muted"}`}>
-                        {item.description}
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </aside>
-
-        {isUsernameModalOpen ? (
-          <div className="absolute inset-0 z-[1300] flex items-center justify-center bg-black/55 px-4">
-            <div className="w-full max-w-sm rounded-2xl border border-ht-border-soft bg-ht-surface p-4 shadow-ht-modal">
-              <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-lg font-black text-ht-fg-primary">Change Username</h4>
-                <button
-                  type="button"
-                  onClick={() => setIsUsernameModalOpen(false)}
-                  className="rounded-md border border-ht-border-soft bg-ht-elevated px-2 py-1 text-xs font-semibold text-ht-fg-muted"
-                >
-                  Close
-                </button>
-              </div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">
-                New Username
-              </label>
-              <input
-                type="text"
-                value={usernameDraft}
-                onChange={(event) => setUsernameDraft(event.target.value)}
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                className="mb-3 w-full rounded-lg border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-primary outline-none focus:border-cyan-400/50"
-              />
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">
-                Current PIN (for security)
-              </label>
-              <input
-                type="password"
-                inputMode="numeric"
-                maxLength={4}
-                value={currentPinDraft}
-                onChange={(event) => setCurrentPinDraft(event.target.value.replace(/\D/g, "").slice(0, 4))}
-                className="mb-3 w-full rounded-lg border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-primary outline-none focus:border-cyan-400/50"
-              />
-              {usernameUpdateError ? (
-                <p className="mb-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200">
-                  {usernameUpdateError}
-                </p>
-              ) : null}
-              {usernameUpdateMessage ? (
-                <p className="mb-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200">
-                  {usernameUpdateMessage}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => void handleUsernameUpdate()}
-                disabled={isUpdatingUsername}
-                className="inline-flex min-h-[42px] w-full items-center justify-center rounded-xl bg-cyan-400 px-3 py-2 text-sm font-black text-slate-950 disabled:opacity-50"
-              >
-                {isUpdatingUsername ? "Updating..." : "Save Username"}
-              </button>
-            </div>
-          </div>
-        ) : null}
-      </div>
     </div>
   );
 }

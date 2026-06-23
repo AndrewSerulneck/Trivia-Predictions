@@ -15,7 +15,8 @@ import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { ActionPop, type ActionPopTone } from "@/components/bingo/ActionPop";
-import { SlimTopBar, ViewTabs, FoldLine, LiveDot } from "@/components/venue/GameChrome";
+import { ViewTabs, FoldLine, LiveDot } from "@/components/venue/GameChrome";
+import { GameAppBar } from "@/components/venue/AppBar";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 
 type BingoCardSquare = {
@@ -1997,7 +1998,7 @@ export function SportsBingoHome({
 
   return (
     <div ref={rootRef} className={`tp-bingo-theme ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
-      <SlimTopBar game="bingo" onExit={onBack} />
+      <GameAppBar game="bingo" onExit={onBack} />
 
       <div className="mx-auto w-full max-w-[30rem] px-3 pb-6">
         {errorMessage ? (

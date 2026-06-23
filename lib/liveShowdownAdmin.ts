@@ -863,6 +863,39 @@ export async function forceAdvanceLiveShowdownToNextQuestion(scheduleIdRaw: stri
   return { updatedStartTime: newStartTimeIso };
 }
 
+type AdminClient = ReturnType<typeof getAdminClient>;
+
+// Returns the occurrence_date the admin tooling should read from and write to:
+// the next upcoming game (earliest occurrence_date that is today or later), or the
+// most recent past occurrence if none are upcoming, or null when a schedule only has
+// NULL-occurrence template rows. All admin mutations must target this same occurrence
+// so edits land on the rows the live game engine actually serves — the engine reads
+// the dated occurrence rows for the running game and only falls back to NULL templates.
+function pickAdminOccurrenceDate(occurrenceDates: Array<string | null>): string | null {
+  const dates = Array.from(
+    new Set(occurrenceDates.filter((d): d is string => typeof d === "string" && d.length > 0))
+  ).sort();
+  if (dates.length === 0) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  return dates.find((d) => d >= today) ?? dates[dates.length - 1];
+}
+
+async function resolveAdminOccurrenceDate(
+  admin: AdminClient,
+  scheduleId: string
+): Promise<string | null> {
+  const { data, error } = await admin
+    .from("trivia_session_questions")
+    .select("occurrence_date")
+    .eq("schedule_id", scheduleId);
+  if (error) {
+    throw new Error(error.message || "Failed to resolve schedule occurrence.");
+  }
+  return pickAdminOccurrenceDate(
+    ((data ?? []) as Array<{ occurrence_date: string | null }>).map((r) => r.occurrence_date)
+  );
+}
+
 export async function getAdminLiveShowdownSessionQuestions(
   scheduleIdRaw: string
 ): Promise<AdminLiveShowdownScheduleQuestion[]> {
@@ -872,10 +905,15 @@ export async function getAdminLiveShowdownSessionQuestions(
     throw new Error("scheduleId is required.");
   }
 
-  // Fetch all session questions for this schedule
+  // Fetch every session-question row for this schedule, across all occurrences.
+  // A recurring schedule accumulates ONE full set of rows per occurrence (each game
+  // night is seeded independently, plus optional NULL-occurrence template rows from
+  // admin edits). Returning all of them merges multiple games into each round, which
+  // is why the UI showed "30 questions / 2 categories". We must surface exactly ONE
+  // occurrence so every round is always 15 questions / 1 category.
   const { data: sessionRows, error: sessionError } = await admin
     .from("trivia_session_questions")
-    .select("id, schedule_id, question_id, round_number, question_index")
+    .select("id, schedule_id, question_id, round_number, question_index, occurrence_date")
     .eq("schedule_id", scheduleId)
     .order("round_number", { ascending: true })
     .order("question_index", { ascending: true });
@@ -884,13 +922,23 @@ export async function getAdminLiveShowdownSessionQuestions(
     throw new Error(sessionError.message || "Failed to load session questions.");
   }
 
-  const rows = (sessionRows ?? []) as Array<{
+  const allRows = (sessionRows ?? []) as Array<{
     id: string;
     schedule_id: string;
     question_id: string | null;
     round_number: number;
     question_index: number;
+    occurrence_date: string | null;
   }>;
+
+  // Surface exactly the occurrence the operator is about to run. Past occurrences
+  // (e.g. last week's game) are real history and are intentionally excluded here
+  // rather than deleted.
+  const chosenOccurrence = pickAdminOccurrenceDate(allRows.map((r) => r.occurrence_date));
+
+  const rows = chosenOccurrence
+    ? allRows.filter((r) => r.occurrence_date === chosenOccurrence)
+    : allRows.filter((r) => r.occurrence_date == null);
 
   if (rows.length === 0) return [];
 
@@ -1025,12 +1073,18 @@ export async function replaceSingleSessionQuestion(
   const targetCategory = String(category ?? "").trim();
   if (!targetCategory) throw new Error("category is required.");
 
+  // Operate on the occurrence the live game serves, not on NULL templates it ignores.
+  const occurrenceDate = await resolveAdminOccurrenceDate(admin, scheduleId);
+
   // 1. Slugs already used in this schedule + round (so we don't repeat).
-  const { data: usedData, error: usedError } = await admin
+  const usedQuery = admin
     .from("trivia_session_questions")
     .select("question_id")
     .eq("schedule_id", scheduleId)
     .eq("round_number", roundNumber);
+  const { data: usedData, error: usedError } = await (occurrenceDate === null
+    ? usedQuery.is("occurrence_date", null)
+    : usedQuery.eq("occurrence_date", occurrenceDate));
   if (usedError) {
     throw new Error(usedError.message || "Failed to load round question usage.");
   }
@@ -1082,12 +1136,15 @@ export async function replaceSingleSessionQuestion(
   }
 
   // 4. Update the session-question row in place (preserves id / round / index).
-  const { error: updateError } = await admin
+  const replaceUpdate = admin
     .from("trivia_session_questions")
     .update({ question_id: replacementSlug })
     .eq("schedule_id", scheduleId)
     .eq("round_number", roundNumber)
     .eq("question_index", questionIndex);
+  const { error: updateError } = await (occurrenceDate === null
+    ? replaceUpdate.is("occurrence_date", null)
+    : replaceUpdate.eq("occurrence_date", occurrenceDate));
 
   if (updateError) {
     throw new Error(updateError.message || "Failed to replace session question.");
@@ -1144,11 +1201,17 @@ export async function swapSessionQuestion(
   const targetCategory = String(category ?? "").trim();
   if (!targetCategory) throw new Error("category is required.");
 
-  const { data: usedData, error: usedError } = await admin
+  // Operate on the occurrence the live game serves, not on NULL templates it ignores.
+  const occurrenceDate = await resolveAdminOccurrenceDate(admin, scheduleId);
+
+  const usedQuery = admin
     .from("trivia_session_questions")
     .select("question_id")
     .eq("schedule_id", scheduleId)
     .eq("round_number", roundNumber);
+  const { data: usedData, error: usedError } = await (occurrenceDate === null
+    ? usedQuery.is("occurrence_date", null)
+    : usedQuery.eq("occurrence_date", occurrenceDate));
   if (usedError) {
     throw new Error(usedError.message || "Failed to load round question usage.");
   }
@@ -1195,12 +1258,15 @@ export async function swapSessionQuestion(
     throw new Error("Replacement question has an empty slug – cannot update session row.");
   }
 
-  const { error: updateError } = await admin
+  const swapUpdate = admin
     .from("trivia_session_questions")
     .update({ question_id: replacementSlug })
     .eq("schedule_id", scheduleId)
     .eq("round_number", roundNumber)
     .eq("question_index", questionIndex);
+  const { error: updateError } = await (occurrenceDate === null
+    ? swapUpdate.is("occurrence_date", null)
+    : swapUpdate.eq("occurrence_date", occurrenceDate));
 
   if (updateError) {
     throw new Error(updateError.message || "Failed to swap session question.");
@@ -1295,6 +1361,10 @@ export async function replaceRoundQuestionsWithCategory(
   }
   const targetCategory = String(category ?? "").trim();
   if (!targetCategory) throw new Error("category is required.");
+
+  // Replace the round in the occurrence the live game serves (NULL template only when
+  // the schedule has no seeded occurrences). Past occurrences are left untouched.
+  const occurrenceDate = await resolveAdminOccurrenceDate(admin, scheduleId);
 
   // ---- Check if this category comes from a file-based bank ----
   type FileBasedQuestion = {
@@ -1445,24 +1515,27 @@ export async function replaceRoundQuestionsWithCategory(
         .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }) as EligibleRow)
     ).slice(0, QUESTIONS_PER_ROUND);
 
-    // Delete only template rows (occurrence_date IS NULL) — never touch seeded occurrence rows.
-    const { error: deleteError } = await admin
+    // Clear the existing round rows for the served occurrence.
+    const roundDelete = admin
       .from("trivia_session_questions")
       .delete()
       .eq("schedule_id", scheduleId)
-      .eq("round_number", roundNumber)
-      .is("occurrence_date", null);
+      .eq("round_number", roundNumber);
+    const { error: deleteError } = await (occurrenceDate === null
+      ? roundDelete.is("occurrence_date", null)
+      : roundDelete.eq("occurrence_date", occurrenceDate));
 
     if (deleteError) {
       throw new Error(deleteError.message || "Failed to delete existing round questions.");
     }
 
-    // Insert new questions
+    // Insert new questions into the same occurrence.
     const inserts = picked.map((row, idx) => ({
       schedule_id: scheduleId,
       question_id: row.slug,
       round_number: roundNumber,
       question_index: idx + 1,
+      occurrence_date: occurrenceDate,
     }));
 
     const { error: insertError } = await admin
@@ -1522,24 +1595,27 @@ export async function replaceRoundQuestionsWithCategory(
   const shuffled = shuffleInPlace([...catRows]);
   const picked = shuffled.slice(0, QUESTIONS_PER_ROUND);
 
-  // Delete only template rows (occurrence_date IS NULL) — never touch seeded occurrence rows.
-  const { error: deleteError } = await admin
+  // Clear the existing round rows for the served occurrence.
+  const roundDelete = admin
     .from("trivia_session_questions")
     .delete()
     .eq("schedule_id", scheduleId)
-    .eq("round_number", roundNumber)
-    .is("occurrence_date", null);
+    .eq("round_number", roundNumber);
+  const { error: deleteError } = await (occurrenceDate === null
+    ? roundDelete.is("occurrence_date", null)
+    : roundDelete.eq("occurrence_date", occurrenceDate));
 
   if (deleteError) {
     throw new Error(deleteError.message || "Failed to delete existing round questions.");
   }
 
-  // Insert new questions
+  // Insert new questions into the same occurrence.
   const inserts = picked.map((row, idx) => ({
     schedule_id: scheduleId,
     question_id: row.slug,
     round_number: roundNumber,
     question_index: idx + 1,
+    occurrence_date: occurrenceDate,
   }));
 
   const { error: insertError } = await admin

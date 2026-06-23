@@ -400,10 +400,12 @@ async function animateVenueCardSettle(gameKey: VenueGameKey): Promise<void> {
 export async function navigateBackToVenue({
   venuePath,
   fallbackNavigate,
+  gameKey,
   timeoutMs = 260,
 }: {
   venuePath: string;
   fallbackNavigate: () => void | Promise<void>;
+  gameKey?: VenueGameKey;
   timeoutMs?: number;
 }): Promise<void> {
   if (typeof window === "undefined") {
@@ -416,7 +418,14 @@ export async function navigateBackToVenue({
     return;
   }
 
-  if (window.history.length > 1) {
+  // Only use history.back() if we have a fresh entry snapshot confirming the
+  // previous page was actually the venue. Without this check, deep-links cause
+  // history.back() to navigate to an unrelated page before the fallback fires.
+  const canUseHistoryBack =
+    window.history.length > 1 &&
+    (gameKey ? hasFreshVenueEntrySnapshot(gameKey) : true);
+
+  if (canUseHistoryBack) {
     window.history.back();
     const landedOnVenue = await waitForPath(targetPath, timeoutMs);
     if (landedOnVenue) {

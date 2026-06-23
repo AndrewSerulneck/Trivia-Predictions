@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { Bell } from "lucide-react";
 import { getUserId } from "@/lib/storage";
 import type { Notification } from "@/types";
 
@@ -91,6 +93,7 @@ export function NotificationBell() {
   const [hasUser, setHasUser] = useState(false);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const [renderNowMs, setRenderNowMs] = useState(0);
   const userIdRef = useRef("");
@@ -188,8 +191,13 @@ export function NotificationBell() {
 
     const onPointerDown = (event: MouseEvent) => {
       const root = rootRef.current;
+      const dropdown = dropdownRef.current;
       const target = event.target as Node | null;
-      if (root && target && !root.contains(target)) {
+      // The dropdown is portaled to <body>, so it is outside rootRef — check it
+      // explicitly, otherwise clicking inside the menu would close it.
+      const insideAnchor = Boolean(root && target && root.contains(target));
+      const insideDropdown = Boolean(dropdown && target && dropdown.contains(target));
+      if (target && !insideAnchor && !insideDropdown) {
         setOpen(false);
       }
     };
@@ -268,7 +276,7 @@ export function NotificationBell() {
         aria-expanded={open}
         aria-label={unreadCount > 0 ? `${unreadCount} unread alerts` : "Open alerts"}
       >
-        <span aria-hidden="true">🔔</span>
+        <Bell aria-hidden="true" className="h-4 w-4" />
         {unreadCount > 0 ? (
           <span className="absolute -right-1 -top-1 inline-flex min-h-[1.05rem] min-w-[1.05rem] items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white shadow">
             {unreadBadgeLabel}
@@ -276,9 +284,11 @@ export function NotificationBell() {
         ) : null}
       </button>
 
-      {open ? (
+      {open && typeof document !== "undefined"
+        ? createPortal(
         <div
-          className="fixed z-30 overflow-hidden rounded-ht-lg border border-ht-border-soft bg-[#111827] shadow-ht-modal"
+          ref={dropdownRef}
+          className="fixed z-[1200] overflow-hidden rounded-ht-lg border border-ht-border-soft bg-[#111827] shadow-ht-modal"
           style={
             menuPosition
               ? { top: `${menuPosition.top}px`, left: `${menuPosition.left}px`, width: `${menuPosition.width}px` }
@@ -368,8 +378,10 @@ export function NotificationBell() {
               Mark all read
             </button>
           </div>
-        </div>
-      ) : null}
+        </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

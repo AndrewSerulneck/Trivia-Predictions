@@ -149,7 +149,13 @@ function VenueChallengesPanelInner({
                       </p>
                     ) : challenge.challengeMode === "leaderboard" ? (
                       <div className="mt-3">
-                        {topEntries.length === 0 ? (
+                        {challenge.leaderboard?.isBetweenCycles ? (
+                          <p className="text-base text-slate-500">
+                            {challenge.leaderboard.nextCycleStart
+                              ? `Next challenge starts ${new Date(challenge.leaderboard.nextCycleStart).toLocaleDateString([], { weekday: "long" })} at ${new Date(challenge.leaderboard.nextCycleStart).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                              : "Next challenge coming soon"}
+                          </p>
+                        ) : topEntries.length === 0 ? (
                           <p className="text-base text-slate-500">No scores yet — be the first to play!</p>
                         ) : (
                           <div role="list" aria-label="Challenge leaderboard">
