@@ -100,7 +100,7 @@
     },
     {
       "slug": "which-author-wrote-romeo-and-juliet",
-      "question": "Which author wrote 'Romeo and Juliet'?",
+      "question": "Which author wrote 'Romeo and Juliet', about two star-crossed lovers from Verona?",
       "answer": "William Shakespeare",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1361,7 +1361,7 @@
     },
     {
       "slug": "who-wrote-the-classic-novel-don-quixote",
-      "question": "Who wrote the classic novel \"Don Quixote\"?",
+      "question": "Who wrote the classic novel \"Don Quixote\", about a delusional knight tilting at windmills?",
       "answer": "Miguel de Cervantes",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1369,7 +1369,7 @@
     },
     {
       "slug": "minority-report-adaptation",
-      "question": "What Philip K. Dick short story was adapted into a 2002 film starring Tom Cruise and directed by Steven Spielberg?",
+      "question": "What Philip K. Dick short story about a \"precrime\" police department was adapted into a 2002 film starring Tom Cruise and directed by Steven Spielberg?",
       "answer": "Minority Report",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1381,7 +1381,7 @@
     },
     {
       "slug": "no-country-for-old-men-adaptation",
-      "question": "What Cormac McCarthy novel was adapted into a 2007 film starring Tommy Lee Jones and directed by Joel and Ethan Coen?",
+      "question": "What Cormac McCarthy novel about a Vietnam War veteran who stumbles upon a large sum of money in the desert was adapted into a 2007 film starring Tommy Lee Jones and directed by the Coen brothers?",
       "answer": "No Country for Old Men",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1392,7 +1392,7 @@
     },
     {
       "slug": "the-shining-adaptation",
-      "question": "What Stephen King novel was adapted into a 1980 film starring Jack Nicholson and directed by Stanley Kubrick?",
+      "question": "What Stephen King novel about a haunted hotel was adapted into a 1980 film starring Jack Nicholson and directed by Stanley Kubrick?",
       "answer": "The Shining",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1403,7 +1403,7 @@
     },
     {
       "slug": "forrest-gump-adaptation",
-      "question": "What Winston Groom novel was adapted into a 1994 film starring Tom Hanks and directed by Robert Zemeckis?",
+      "question": "What Winston Groom novel was adapted into a 1994 film starring Tom Hanks about a kind hearted man with a low IQ who stumbles through major historical events?",
       "answer": "Forrest Gump",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1414,7 +1414,7 @@
     },
     {
       "slug": "the-godfather-adaptation",
-      "question": "What Mario Puzo novel was adapted into a 1972 film starring Marlon Brando and directed by Francis Ford Coppola?",
+      "question": "What Mario Puzo novel about an American crime family was adapted into a 1972 film starring Marlon Brando and directed by Francis Ford Coppola?",
       "answer": "The Godfather",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1425,7 +1425,7 @@
     },
     {
       "slug": "jurassic-park-adaptation",
-      "question": "What Michael Crichton novel was adapted into a 1993 film starring Sam Neill and directed by Steven Spielberg?",
+      "question": "What Michael Crichton novel about a dinosaur theme park was adapted into a 1993 film starring Sam Neill and directed by Steven Spielberg?",
       "answer": "Jurassic Park",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1601,7 +1601,7 @@
     },
     {
       "slug": "who-wrote-the-odyssey",
-      "question": "Who wrote 'The Odyssey'?",
+      "question": "Who wrote 'The Odyssey', about a Greek hero's long journey home?",
       "answer": "Homer",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1655,7 +1655,7 @@
     },
     {
       "slug": "the-revenant-adaptation",
-      "question": "What Michael Punke novel was adapted into a 2015 film starring Leonardo DiCaprio and directed by Alejandro G. Iñárritu?",
+      "question": "What Michael Punke novel about fur trappers in the Dakota wilderness was adapted into a 2015 film starring Leonardo DiCaprio and directed by Alejandro G. Iñárritu?",
       "answer": "The Revenant",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -2144,7 +2144,7 @@
     },
     {
       "slug": "the-fault-in-our-stars-novel",
-      "question": "What 2012 young adult novel by John Green details Hazel Grace Lancaster, a sixteen-year-old thyroid cancer patient who falls in love with Augustus Waters, a fellow amputee she meets at a support group?",
+      "question": "What 2012 young adult novel by John Green tells the story of a sixteen-year-old thyroid cancer patient who falls in love with a fellow amputee she meets at a support group?",
       "answer": "The Fault in Our Stars",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -2213,7 +2213,7 @@
     },
     {
       "slug": "crazy-rich-asians-novel",
-      "question": "What 2013 satirical romantic comedy novel by Kevin Kwan details New York professor Rachel Chu as she travels to Singapore with her boyfriend Nick Young, only to discover his family belongs to the island's ultra-wealthy elite?",
+      "question": "What 2013 satirical romantic comedy novel by Kevin Kwan details a New York professor as she travels to Singapore with her boyfriend only to discover his family belongs to the island's ultra-wealthy elite?",
       "answer": "Crazy Rich Asians",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -2280,7 +2280,7 @@
     },
     {
       "slug": "who-famously-painted-the-starry-night",
-      "question": "Who famously painted 'The Starry Night'?",
+      "question": "Who famously painted 'The Starry Night', the iconic post-impressionist night sky scene?",
       "answer": "Vincent van Gogh",
       "acceptableAnswers": [
         "Van Gogh",
@@ -2339,6 +2339,775 @@
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "answer_format": "write_in"
+    },
+    {
+      "slug": "artist-persistence-of-memory-dali",
+      "question": "Which Spanish surrealist artist painted 'The Persistence of Memory,' the famous 1931 oil painting featuring melting clocks draped over a barren landscape?",
+      "answer": "Salvador Dalí",
+      "acceptableAnswers": ["Salvador Dalí", "Dalí"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d5/The_Persistence_of_Memory.jpg"
+    },
+    {
+      "slug": "artist-the-scream-munch",
+      "question": "What is the name of this famous painting by Edvard Munch?",
+      "answer": "The Scream",
+      "acceptableAnswers": ["The Scream", "Scream"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/The_Scream.jpg"
+    },
+    {
+      "slug": "artist-birth-of-venus-botticelli",
+      "question": "Which Italian Renaissance painter created 'The Birth of Venus?'",
+      "answer": "Sandro Botticelli",
+      "acceptableAnswers": ["Sandro Botticelli", "Botticelli"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Sandro_Botticelli_-_La_nascita_di_Venere_-_Google_Art_Project_-_edited.jpg"
+    },
+    {
+      "slug": "artist-guernica-picasso",
+      "question": "Which Spanish painter created 'Guernica,' the massive 1937 anti-war mural depicting the horrors of the bombing of a Basque town during the Spanish Civil War?",
+      "answer": "Pablo Picasso",
+      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/74/PicassoGuernica.jpg"
+    },
+    {
+      "slug": "artist-water-lilies-monet",
+      "question": "Which French Impressionist painter created the 'Water Lilies' series, hundreds of paintings of his flower garden and lily pond in Giverny?",
+      "answer": "Claude Monet",
+      "acceptableAnswers": ["Claude Monet", "Monet"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Claude_Monet_-_Water_Lilies_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "artist-campbells-soup-warhol",
+      "question": "Which American Pop artist created 'Campbell's Soup Cans,' the 1962 series of 32 silkscreened canvases each depicting a different variety of canned soup?",
+      "answer": "Andy Warhol",
+      "acceptableAnswers": ["Andy Warhol", "Warhol"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Andy_Warhol_-_Campbell%27s_Soup_Cans_-_1962_-_MOMA.jpg"
+    },
+    {
+      "slug": "artist-the-night-watch-rembrandt",
+      "question": "Which Dutch painter created 'The Night Watch,' the 1642 massive group portrait of a militia company, famous for its dramatic use of light and shadow?",
+      "answer": "Rembrandt van Rijn",
+      "acceptableAnswers": ["Rembrandt van Rijn", "Rembrandt"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5a/The_Night_Watch_-_Rembrandt.jpg"
+    },
+    {
+      "slug": "artist-school-of-athens-raphael",
+      "question": "Which Italian High Renaissance painter created 'The School of Athens,' the Vatican fresco depicting Plato, Aristotle, and other ancient philosophers?",
+      "answer": "Raphael",
+      "acceptableAnswers": ["Raphael", "Raffaello Sanzio"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg"
+    },
+    {
+      "slug": "artist-liberty-leading-delacroix",
+      "question": "Eugene Delacroix's most famous work is called 'Liberty Leading the People.' What revolution is being depicted here?",
+      "answer": "The July Revolution",
+      "acceptableAnswers": ["The July Revolution", "July Revolution"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Eug%C3%A8ne_Delacroix_-_La_libert%C3%A9_guidant_le_peuple.jpg"
+    },
+    {
+      "slug": "title-creation-of-adam",
+      "question": "What is the title of Michelangelo's famous 1512 fresco on the ceiling of the Sistine Chapel, depicting God reaching out with his finger to give life to Adam?",
+      "answer": "The Creation of Adam",
+      "acceptableAnswers": ["The Creation of Adam", "Creation of Adam"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/73/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg"
+    },
+    {
+      "slug": "title-fountain-duchamp",
+      "question": "What is the title of Marcel Duchamp's 1917 'ready-made' sculpture, which consisted of a porcelain urinal signed with the pseudonym 'R. Mutt'?",
+      "answer": "Fountain",
+      "acceptableAnswers": ["Fountain"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Duchamp_Fountain.jpg"
+    },
+    {
+      "slug": "title-impression-sunrise",
+      "question": "What artistic movement is French painter Claude Monet most closely associated with?",
+      "answer": "Impressionism",
+      "acceptableAnswers": ["Impressionism", "Impression, Sunrise", "Impression Sunrise"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Claude_Monet_-_Impression%2C_Sunrise_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "title-the-last-supper",
+      "question": "What is the title of Leonardo da Vinci's 1498 mural painting depicting Jesus and his twelve apostles seated at a long table during the Passover meal?",
+      "answer": "The Last Supper",
+      "acceptableAnswers": ["The Last Supper", "Last Supper", "Il Cenacolo"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
+    },
+    {
+      "slug": "title-david-michelangelo",
+      "question": "What is the title of Michelangelo's 17-foot-tall marble statue of the biblical hero who defeated Goliath, carved from a single block of stone and displayed in Florence?",
+      "answer": "David",
+      "acceptableAnswers": ["David", "Michelangelo's David"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Michelangelo%27s_David_-_right_view.jpg"
+    },
+    {
+      "slug": "movement-surrealism",
+      "question": "What early 20th-century avant-garde art movement, led by André Breton and Salvador Dalí, is characterized by dreamlike imagery, unexpected juxtapositions, and exploration of the unconscious mind?",
+      "answer": "Surrealism",
+      "acceptableAnswers": ["Surrealism"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d5/The_Persistence_of_Memory.jpg"
+    },
+    {
+      "slug": "movement-impressionism",
+      "question": "What 19th-century French art movement, pioneered by Claude Monet and Pierre-Auguste Renoir, captures fleeting light and color using loose, visible brushstrokes and outdoor scenes?",
+      "answer": "Impressionism",
+      "acceptableAnswers": ["Impressionism"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Claude_Monet_-_Impression%2C_Sunrise_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "movement-cubism",
+      "question": "What early 20th-century art movement, co-founded by Pablo Picasso and Georges Braque, depicts subjects from multiple angles at once, breaking them down into geometric shapes?",
+      "answer": "Cubism",
+      "acceptableAnswers": ["Cubism"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Pablo_Picasso%2C_1907%2C_Les_Demoiselles_d%27Avignon%2C_oil_on_canvas%2C_243.9_x_233.7_cm%2C_Museum_of_Modern_Art_New_York.jpg"
+    },
+    {
+      "slug": "movement-pop-art",
+      "question": "What mid-20th-century art movement, associated with Andy Warhol and Roy Lichtenstein, borrows images from advertising, comic books, and consumer products?",
+      "answer": "Pop Art",
+      "acceptableAnswers": ["Pop Art", "Pop art"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Andy_Warhol_-_Campbell%27s_Soup_Cans_-_1962_-_MOMA.jpg"
+    },
+    {
+      "slug": "movement-abstract-expressionism",
+      "question": "What post-World War II American art movement, led by Jackson Pollock and Willem de Kooning, emphasizes spontaneous, automatic, or subconscious creation with energetic brushwork?",
+      "answer": "Abstract Expressionism",
+      "acceptableAnswers": ["Abstract Expressionism"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/7/7b/Jackson_Pollock%2C_No._5_1948.jpg"
+    },
+    {
+      "slug": "movement-romanticism",
+      "question": "What late 18th-to-19th century artistic movement emphasized intense emotion, individual experience, the sublime power of nature, and dramatic subjects, as seen in the works of Delacroix and Turner?",
+      "answer": "Romanticism",
+      "acceptableAnswers": ["Romanticism"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Eug%C3%A8ne_Delacroix_-_La_libert%C3%A9_guidant_le_peuple.jpg"
+    },
+    {
+      "slug": "movement-renaissance",
+      "question": "What cultural movement spanning the 14th to 17th centuries, centered in Italy with masters like Leonardo da Vinci, Michelangelo, and Raphael, marked a rebirth of classical Greek and Roman ideals in art?",
+      "answer": "Renaissance",
+      "acceptableAnswers": ["Renaissance", "Italian Renaissance"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg"
+    },
+    {
+      "slug": "title-mona-lisa",
+      "question": "What is the title of this famous 1503 painting by Leonardo da Vinci?",
+      "answer": "Mona Lisa",
+      "acceptableAnswers": ["Mona Lisa", "La Gioconda", "Monna Lisa"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg"
+    },
+    {
+      "slug": "title-starry-night",
+      "question": "What is the title of this famous 1889 painting by Vincent van Gogh?",
+      "answer": "The Starry Night",
+      "acceptableAnswers": ["The Starry Night", "Starry Night"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "title-last-supper-2",
+      "question": "What is the title of this famous 1498 mural painting by Leonardo da Vinci?",
+      "answer": "The Last Supper",
+      "acceptableAnswers": ["The Last Supper", "Last Supper", "Il Cenacolo"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
+    },
+    {
+      "slug": "title-guernica",
+      "question": "What is the title of this famous 1937 painting by Pablo Picasso?",
+      "answer": "Guernica",
+      "acceptableAnswers": ["Guernica", "The Guernica"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/74/PicassoGuernica.jpg"
+    },
+    {
+      "slug": "title-birth-of-venus-2",
+      "question": "What is the title of this famous 1486 painting by Sandro Botticelli?",
+      "answer": "The Birth of Venus",
+      "acceptableAnswers": ["The Birth of Venus", "Birth of Venus"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Sandro_Botticelli_-_La_nascita_di_Venere_-_Google_Art_Project_-_edited.jpg"
+    },
+    {
+      "slug": "title-pieta",
+      "question": "What is the title of this famous 1499 marble sculpture by Michelangelo?",
+      "answer": "Pietà",
+      "acceptableAnswers": ["Pietà", "Pieta", "The Pietà"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Michelangelo%27s_Pieta_545_crop.jpg"
+    },
+    {
+      "slug": "title-american-gothic-2",
+      "question": "What is the title of this famous 1930 painting by Grant Wood?",
+      "answer": "American Gothic",
+      "acceptableAnswers": ["American Gothic"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "title-self-portrait-van-gogh",
+      "question": "What is the title of this famous 1889 painting by Vincent van Gogh?",
+      "answer": "Self-Portrait",
+      "acceptableAnswers": ["Self-Portrait", "Self Portrait"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Vincent_Willem_van_Gogh_-_Self-portrait_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "title-campbells-soup-cans-2",
+      "question": "What is the title of this famous 1962 silkscreen series by Andy Warhol?",
+      "answer": "Campbell's Soup Cans",
+      "acceptableAnswers": ["Campbell's Soup Cans", "Campbells Soup Cans"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Andy_Warhol_-_Campbell%27s_Soup_Cans_-_1962_-_MOMA.jpg"
+    },
+    {
+      "slug": "artist-mona-lisa",
+      "question": "Which artist painted the Mona Lisa, the world's most famous portrait?",
+      "answer": "Leonardo da Vinci",
+      "acceptableAnswers": ["Leonardo da Vinci", "da Vinci"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg"
+    },
+    {
+      "slug": "artist-starry-night",
+      "question": "Which artist painted The Starry Night, the iconic swirling night sky masterpiece?",
+      "answer": "Vincent van Gogh",
+      "acceptableAnswers": ["Vincent van Gogh", "Van Gogh", "van Gogh"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "artist-last-supper",
+      "question": "Which artist painted The Last Supper, the famous mural of Jesus with his disciples?",
+      "answer": "Leonardo da Vinci",
+      "acceptableAnswers": ["Leonardo da Vinci", "da Vinci"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
+    },
+    {
+      "slug": "artist-guernica-2",
+      "question": "Which famous artist painted this stark anti-war mural titled Guernica?",
+      "answer": "Pablo Picasso",
+      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/74/PicassoGuernica.jpg"
+    },
+    {
+      "slug": "artist-birth-of-venus-2",
+      "question": "Which artist painted The Birth of Venus, the famous goddess rising from the sea foam?",
+      "answer": "Sandro Botticelli",
+      "acceptableAnswers": ["Sandro Botticelli", "Botticelli"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Sandro_Botticelli_-_La_nascita_di_Venere_-_Google_Art_Project_-_edited.jpg"
+    },
+    {
+      "slug": "artist-pieta",
+      "question": "Which artist sculpted the Pietà, the moving marble statue of Mary mourning Jesus?",
+      "answer": "Michelangelo",
+      "acceptableAnswers": ["Michelangelo", "Michelangelo Buonarroti"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Michelangelo%27s_Pieta_545_crop.jpg"
+    },
+    {
+      "slug": "artist-american-gothic-3",
+      "question": "Which artist painted American Gothic, the iconic painting of a stern farmer couple?",
+      "answer": "Grant Wood",
+      "acceptableAnswers": ["Grant Wood"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "artist-self-portrait-van-gogh",
+      "question": "Which artist painted this famous Self-Portrait from 1889?",
+      "answer": "Vincent van Gogh",
+      "acceptableAnswers": ["Vincent van Gogh", "Van Gogh", "van Gogh"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Vincent_Willem_van_Gogh_-_Self-portrait_-_Google_Art_Project.jpg"
+    },
+    {
+      "slug": "artist-campbells-soup-cans-3",
+      "question": "Which artist created Campbell's Soup Cans?",
+      "answer": "Andy Warhol",
+      "acceptableAnswers": ["Andy Warhol", "Warhol"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Andy_Warhol_-_Campbell%27s_Soup_Cans_-_1962_-_MOMA.jpg"
+    },
+    {
+      "slug": "historical-figure-napoleon",
+      "question": "What historical figure is depicted in this 1801 painting by Jacques-Louis David?",
+      "answer": "Napoleon Bonaparte",
+      "acceptableAnswers": ["Napoleon Bonaparte", "Napoleon"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/55/Jacques-Louis_David_-_Bonaparte_franchissant_le_Grand_Saint-Bernard.jpg"
+    },
+    {
+      "slug": "historical-figure-george-washington",
+      "question": "What historical figure is depicted in this 1796 portrait by Gilbert Stuart?",
+      "answer": "George Washington",
+      "acceptableAnswers": ["George Washington", "Washington"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg"
+    },
+    {
+      "slug": "artist-norman-rockwell-freedom-from-want",
+      "question": "Which iconic American artist painted this 1943 scene of a family gathered around a Thanksgiving dinner table?",
+      "answer": "Norman Rockwell",
+      "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Norman_Rockwell_-_Freedom_from_Want.jpg"
+    },
+    {
+      "slug": "artist-norman-rockwell-rosie",
+      "question": "Which iconic American artist created this 1943 portrait of a muscular woman in a denim work uniform, representing the women who worked in factories during World War II?",
+      "answer": "Norman Rockwell",
+      "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Norman_Rockwell_-_Rosie_the_Riveter_-_1961.jpg"
+    },
+    {
+      "slug": "artist-banksy-balloon",
+      "question": "Which anonymous British street artist created this stencil of a young girl letting go of a red heart-shaped balloon?",
+      "answer": "Banksy",
+      "acceptableAnswers": ["Banksy"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/23/Banksy_Girl_with_Balloon.jpg"
+    },
+    {
+      "slug": "artist-banksy-flower-thrower",
+      "question": "Which anonymous British street artist created this stencil of a protester throwing a bouquet of flowers instead of a Molotov cocktail?",
+      "answer": "Banksy",
+      "acceptableAnswers": ["Banksy"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Banksy_-_Flower_Thrower.jpg"
+    },
+    {
+      "slug": "portrait-mark-twain",
+      "question": "Which American author, famous for writing 'The Adventures of Tom Sawyer' and 'Adventures of Huckleberry Finn,' is depicted in this portrait?",
+      "answer": "Mark Twain",
+      "acceptableAnswers": ["Mark Twain", "Samuel Clemens", "Samuel Langhorne Clemens"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/25/Mark_Twain%2C_Brady-Handy_photo_portrait%2C_1871.jpg"
+    },
+    {
+      "slug": "portrait-shakespeare",
+      "question": "Which English playwright, author of 'Romeo and Juliet' and 'Hamlet,' is depicted in this portrait?",
+      "answer": "William Shakespeare",
+      "acceptableAnswers": ["William Shakespeare", "Shakespeare"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Shakespeare.jpg"
+    },
+    {
+      "slug": "portrait-pablo-picasso",
+      "question": "Which Spanish artist, known for pioneering Cubism and co-founding it with Georges Braque, is depicted in this portrait?",
+      "answer": "Pablo Picasso",
+      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/99/Pablo_picasso_1.jpg"
+    },
+    {
+      "slug": "portrait-andy-warhol",
+      "question": "Which American Pop artist, famous for 'Campbell's Soup Cans' and his silkscreen portraits of Marilyn Monroe, is depicted in this photograph?",
+      "answer": "Andy Warhol",
+      "acceptableAnswers": ["Andy Warhol", "Warhol"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Andy_Warhol_by_Jack_Mitchell.jpg"
+    },
+    {
+      "slug": "novel-robinson-crusoe",
+      "question": "What 1719 novel by Daniel Defoe details the survival story of a shipwrecked Englishman who spends 28 years on a remote tropical island before being rescued?",
+      "answer": "Robinson Crusoe",
+      "acceptableAnswers": ["Robinson Crusoe", "The Life and Strange Surprizing Adventures of Robinson Crusoe"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-time-machine",
+      "question": "What 1895 novel by H.G. Wells follows an unnamed Victorian scientist who builds a machine that allows him to travel far into the future?",
+      "answer": "The Time Machine",
+      "acceptableAnswers": ["The Time Machine", "Time Machine"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-series-of-unfortunate-events",
+      "question": "What children's book series by Lemony Snicket follows the tragic misadventures of the three orphaned Baudelaire children as they try to escape the villainous Count Olaf?",
+      "answer": "A Series of Unfortunate Events",
+      "acceptableAnswers": ["A Series of Unfortunate Events", "Series of Unfortunate Events"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-goosebumps",
+      "question": "What is the bestselling children's horror book series by R.L. Stine, with titles like 'Welcome to Dead House' and 'The Haunted Mask?'",
+      "answer": "Goosebumps",
+      "acceptableAnswers": ["Goosebumps"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-nancy-drew",
+      "question": "What long-running mystery book series follows a teenage sleuth who drives a blue convertible and solves crimes with her friends Bess and George?",
+      "answer": "Nancy Drew",
+      "acceptableAnswers": ["Nancy Drew", "Nancy Drew Mystery Stories"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-siddhartha",
+      "question": "What 1922 novel by Hermann Hesse tells the spiritual journey of a man in ancient India who seeks enlightenment?",
+      "answer": "Siddhartha",
+      "acceptableAnswers": ["Siddhartha"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-clockwork-orange",
+      "question": "What 1962 dystopian novel by Anthony Burgess, written in an invented slang called Nadsat, follows the violent teenage delinquent Alex and his controversial aversion therapy in a futuristic Britain?",
+      "answer": "A Clockwork Orange",
+      "acceptableAnswers": ["A Clockwork Orange", "Clockwork Orange"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-crime-and-punishment",
+      "question": "What 1866 novel by Fyodor Dostoevsky follows the impoverished ex-student Raskolnikov as he commits a murder and grapples with guilt, paranoia, and moral redemption in St. Petersburg?",
+      "answer": "Crime and Punishment",
+      "acceptableAnswers": ["Crime and Punishment"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-les-miserables",
+      "question": "What 1862 novel by Victor Hugo follows the ex-convict Jean Valjean as he seeks redemption while being relentlessly pursued by Inspector Javert, set against the backdrop of the 1832 Paris Uprising?",
+      "answer": "Les Misérables",
+      "acceptableAnswers": ["Les Misérables", "Les Miserables"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-dracula",
+      "question": "What 1897 Gothic horror novel by Bram Stoker tells the story of a vampire's attempt to move from Transylvania to England as Professor Van Helsing tries to stop him?",
+      "answer": "Dracula",
+      "acceptableAnswers": ["Dracula"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-war-and-peace",
+      "question": "What epic 1869 novel by Leo Tolstoy weaves together the lives of aristocratic families during the Napoleonic Wars and the French invasion of Russia?",
+      "answer": "War and Peace",
+      "acceptableAnswers": ["War and Peace"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-count-of-monte-cristo",
+      "question": "What 1844 adventure novel by Alexandre Dumas follows Edmond Dantès, a man wrongfully imprisoned who escapes and discovers a hidden treasure?",
+      "answer": "The Count of Monte Cristo",
+      "acceptableAnswers": ["The Count of Monte Cristo", "Count of Monte Cristo"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-three-musketeers",
+      "question": "What 1844 novel by Alexandre Dumas follows the young d'Artagnan as he joins Athos, Porthos, and Aramis in adventures under the motto 'All for one, and one for all'?",
+      "answer": "The Three Musketeers",
+      "acceptableAnswers": ["The Three Musketeers", "Three Musketeers"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-charlottes-web",
+      "question": "What 1952 children's novel by E.B. White tells the story of a pig named Wilbur who is saved from slaughter by a clever spider named Charlotte who weaves words into her web?",
+      "answer": "Charlotte's Web",
+      "acceptableAnswers": ["Charlotte's Web", "Charlottes Web"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-stuart-little",
+      "question": "What 1945 children's novel by E.B. White follows the adventures of an anthropomorphic mouse born into a human family in New York City?",
+      "answer": "Stuart Little",
+      "acceptableAnswers": ["Stuart Little"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-charlie-chocolate-factory",
+      "question": "What 1964 children's novel by Roald Dahl follows a poor boy named Charlie Bucket who wins a golden ticket to tour the magical chocolate factory of the eccentric Willy Wonka?",
+      "answer": "Charlie and the Chocolate Factory",
+      "acceptableAnswers": ["Charlie and the Chocolate Factory"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-holes",
+      "question": "What 1998 novel by Louis Sachar follows Stanley Yelnats, a boy wrongly sent to a juvenile detention camp in the Texas desert where the boys are forced to dig holes to build character?",
+      "answer": "Holes",
+      "acceptableAnswers": ["Holes"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-bridge-to-terabithia",
+      "question": "What 1977 children's novel by Katherine Paterson tells the story of two lonely fifth-graders, Jess Aarons and Leslie Burke, who create a magical fantasy kingdom in the woods called Terabithia?",
+      "answer": "Bridge to Terabithia",
+      "acceptableAnswers": ["Bridge to Terabithia"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-matilda",
+      "question": "What 1988 children's novel by Roald Dahl follows a brilliant, telekinetic little girl with neglectful parents and the terrifying headmistress Miss Trunchbull?",
+      "answer": "Matilda",
+      "acceptableAnswers": ["Matilda"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-hatchet",
+      "question": "What 1987 young adult novel by Gary Paulsen follows 13-year-old Brian Robeson, who survives a plane crash in the Canadian wilderness with nothing but a hatchet gifted by his mother?",
+      "answer": "Hatchet",
+      "acceptableAnswers": ["Hatchet"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-wrinkle-in-time",
+      "question": "What 1962 children's science fantasy novel by Madeleine L'Engle follows Meg Murry, her brother Charles Wallace, and their friend Calvin as they travel through space and time to rescue her father from the evil IT?",
+      "answer": "A Wrinkle in Time",
+      "acceptableAnswers": ["A Wrinkle in Time", "Wrinkle in Time"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-speak-anderson",
+      "question": "What 1999 young adult novel by Laurie Halse Anderson follows a high school freshman named Melinda who becomes an outcast after calling the police at a party, and gradually finds her voice through art class?",
+      "answer": "Speak",
+      "acceptableAnswers": ["Speak"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-lorax",
+      "question": "What 1971 children's book by Dr. Seuss tells the environmental tale of the Once-ler who destroys a forest of Truffula trees despite the protests of a small, mustachioed creature who 'speaks for the trees'?",
+      "answer": "The Lorax",
+      "acceptableAnswers": ["The Lorax", "Lorax"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-cat-in-the-hat",
+      "question": "What 1957 children's book by Dr. Seuss features a tall, mischievous cat in a striped hat who shows up at the house of two bored children on a rainy day and creates chaos with Thing One and Thing Two?",
+      "answer": "The Cat in the Hat",
+      "acceptableAnswers": ["The Cat in the Hat", "Cat in the Hat"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-beowulf",
+      "question": "What ancient Old English epic poem, set in Scandinavia, tells the story of a Geatish hero who battles the monster Grendel?",
+      "answer": "Beowulf",
+      "acceptableAnswers": ["Beowulf"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "novel-jekyll-and-hyde",
+      "question": "What 1886 Gothic novella by Robert Louis Stevenson follows a London lawyer who investigates the strange connection between the respectable Dr. Henry Jekyll and the violent, monstrous Edward Hyde?",
+      "answer": "Strange Case of Dr Jekyll and Mr Hyde",
+      "acceptableAnswers": ["Strange Case of Dr Jekyll and Mr Hyde", "Dr Jekyll and Mr Hyde", "The Strange Case of Dr Jekyll and Mr Hyde", "Jekyll and Hyde"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "play-wicked",
+      "question": "What hit Broadway musical by Stephen Schwartz and Winnie Holzman reimagines the world of Oz from the perspective of the Wicked Witch of the West?",
+      "answer": "Wicked",
+      "acceptableAnswers": ["Wicked"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "play-sweeney-todd",
+      "question": "What 1979 Stephen Sondheim musical thriller follows a wrongfully exiled barber who returns to London seeking bloody revenge?",
+      "answer": "Sweeney Todd",
+      "acceptableAnswers": ["Sweeney Todd", "Sweeney Todd: The Demon Barber of Fleet Street"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "play-hamilton",
+      "question": "What 2015 Broadway musical by Lin-Manuel Miranda uses hip-hop, R&B, and pop to tell the story of an orphaned immigrant who became one of America's Founding Fathers and the first U.S. Treasury Secretary?",
+      "answer": "Hamilton",
+      "acceptableAnswers": ["Hamilton", "Hamilton: An American Musical"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "play-rent",
+      "question": "What 1996 Pulitzer Prize-winning rock musical by Jonathan Larson follows a group of struggling artists, musicians, and HIV-positive friends living in New York City's East Village during the AIDS crisis?",
+      "answer": "Rent",
+      "acceptableAnswers": ["Rent"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "play-book-of-mormon",
+      "question": "What 2011 Tony Award-winning musical by South Park creators Trey Parker, Robert Lopez, and Matt Stone follows two Mormon missionaries sent to a village in Uganda to spread their faith?",
+      "answer": "The Book of Mormon",
+      "acceptableAnswers": ["The Book of Mormon", "Book of Mormon"],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy"
     }
   ]
 }
