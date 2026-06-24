@@ -53,4 +53,33 @@ describe("import-trivia-questions", () => {
       )
     ).toThrow("Speed Trivia rows must use question_pool=anytime_blitz and answer_format=multiple_choice.");
   });
+
+  it("stamps source metadata on Live Trivia import rows", () => {
+    const rows = normalizeAndValidate(
+      [
+        {
+          slug: "quote-oscar-wilde",
+          question: "Which writer was known for sharp epigrams?",
+          answer: "Oscar Wilde",
+          category: "Art",
+          difficulty: "easy",
+          __sourceFile: "art-literature.json",
+          __sourceOrder: 7,
+        },
+      ],
+      {
+        questionPool: "live_showdown",
+        answerFormat: "write_in",
+        status: "active",
+        liveMode: true,
+      }
+    );
+
+    expect(rows[0]).toMatchObject({
+      slug: "quote-oscar-wilde",
+      question_pool: "live_showdown",
+      source_file: "art-literature.json",
+      source_order: 7,
+    });
+  });
 });

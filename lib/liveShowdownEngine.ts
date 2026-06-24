@@ -1,11 +1,28 @@
 import "server-only";
 
+import fs from "node:fs";
+import path from "node:path";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import {
   buildClosestGuessAnnouncement,
   computeClosestGuessWinners,
   parseLargePureNumberAnswer,
 } from "@/lib/liveShowdownClosestGuess";
+import {
+  buildBandTargets,
+  buildQuestionProfile,
+  createEmptyBandCounts,
+  getSourceBand,
+  getSourcePercentile,
+  normalizeDiversityText,
+  RECENT_TOPIC_WINDOW,
+  scoreCandidate,
+  violatesHardSpacing,
+  violatesSlugFamilySpacing,
+  violatesTemplateSpacing,
+  type LiveTriviaQuestionProfile,
+  type LiveTriviaSourceBand,
+} from "@/lib/liveTriviaSeeding";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const QUESTIONS_PER_ROUND = 15;
@@ -61,6 +78,8 @@ export type LiveTriviaSeedQuestion = {
   options: unknown;
   correct_answer: number;
   question_pool: "anytime_blitz" | "live_showdown";
+  source_order?: number | null;
+  source_file?: string | null;
 };
 
 export type LiveTriviaSeedSlot = {
@@ -236,16 +255,31 @@ function isMissingRecurringColumnsError(message: string | undefined): boolean {
 
 let supportsOccurrenceDateColumn: boolean | null = null;
 let hasLoggedOccurrenceDateFallback = false;
+let supportsLiveTriviaSourceColumns: boolean | null = null;
+let hasLoggedLiveTriviaSourceColumnFallback = false;
+let cachedLiveTriviaSourceMetadata: Map<string, { sourceFile: string; sourceOrder: number }> | null = null;
 
 function isMissingOccurrenceDateColumnError(message: string | undefined): boolean {
   const normalized = String(message ?? "").toLowerCase();
   return normalized.includes("occurrence_date") && normalized.includes("does not exist");
 }
 
+function isMissingLiveTriviaSourceColumnsError(message: string | undefined): boolean {
+  const normalized = String(message ?? "").toLowerCase();
+  const mentionsSourceColumn = normalized.includes("source_order") || normalized.includes("source_file");
+  return mentionsSourceColumn && (normalized.includes("does not exist") || normalized.includes("schema cache"));
+}
+
 function logOccurrenceDateFallbackOnce(scope: string): void {
   if (hasLoggedOccurrenceDateFallback) return;
   hasLoggedOccurrenceDateFallback = true;
   console.warn(`[live-trivia][occurrence-compat] Falling back to legacy schema in ${scope} (missing occurrence_date column).`);
+}
+
+function logLiveTriviaSourceColumnFallbackOnce(): void {
+  if (hasLoggedLiveTriviaSourceColumnFallback) return;
+  hasLoggedLiveTriviaSourceColumnFallback = true;
+  console.warn("[live-trivia][source-metadata] Falling back to canonical JSON source metadata (missing source_order/source_file columns).");
 }
 
 async function runOccurrenceCompatibleQuery(
@@ -266,6 +300,27 @@ async function runOccurrenceCompatibleQuery(
 
   if (!withResult.error) {
     supportsOccurrenceDateColumn = true;
+  }
+  return withResult;
+}
+
+async function runLiveTriviaSourceCompatibleQuery(
+  withSourceColumns: () => PromiseLike<any>,
+  withoutSourceColumns: () => PromiseLike<any>
+): Promise<any> {
+  if (supportsLiveTriviaSourceColumns === false) {
+    return withoutSourceColumns();
+  }
+
+  const withResult = await withSourceColumns();
+  if (withResult.error && isMissingLiveTriviaSourceColumnsError(withResult.error.message ?? undefined)) {
+    supportsLiveTriviaSourceColumns = false;
+    logLiveTriviaSourceColumnFallbackOnce();
+    return withoutSourceColumns();
+  }
+
+  if (!withResult.error) {
+    supportsLiveTriviaSourceColumns = true;
   }
   return withResult;
 }
@@ -375,234 +430,243 @@ type NormalizedLiveTriviaSeedQuestion = LiveTriviaSeedQuestion & {
   slug: string;
   category: string;
   question: string;
+  sourceOrder: number;
+  sourcePercentile: number;
+  sourceBand: LiveTriviaSourceBand;
 };
 
 function buildSeedKey(parts: readonly string[]): number {
   return djb2(parts.join(":"));
 }
 
-type LiveTriviaQuestionDiversityProfile = {
-  cluster: string;
-  tags: Set<string>;
-  stem: string;
+function getFiniteSourceOrder(value: unknown): number | null {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? Math.floor(number) : null;
+}
+
+function getLiveTriviaSourceFile(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function readLiveTriviaSourceMetadata(): Map<string, { sourceFile: string; sourceOrder: number }> {
+  if (cachedLiveTriviaSourceMetadata) return cachedLiveTriviaSourceMetadata;
+
+  const metadata = new Map<string, { sourceFile: string; sourceOrder: number }>();
+  const directory = path.join(process.cwd(), "data", "live-trivia", "categories");
+  try {
+    if (!fs.existsSync(directory)) {
+      cachedLiveTriviaSourceMetadata = metadata;
+      return metadata;
+    }
+
+    const files = fs.readdirSync(directory).filter((file) => file.endsWith(".json")).sort((a, b) => a.localeCompare(b));
+    for (const file of files) {
+      const filePath = path.join(directory, file);
+      const raw = fs.readFileSync(filePath, "utf8");
+      const parsed = JSON.parse(raw) as unknown;
+      const questions = Array.isArray(parsed)
+        ? parsed
+        : parsed && typeof parsed === "object" && Array.isArray((parsed as { questions?: unknown }).questions)
+          ? (parsed as { questions: unknown[] }).questions
+          : [];
+
+      questions.forEach((item, index) => {
+        if (!item || typeof item !== "object") return;
+        const slug = String((item as { slug?: unknown }).slug ?? "").trim();
+        if (!slug) return;
+        metadata.set(slug, { sourceFile: file, sourceOrder: index });
+      });
+    }
+  } catch (error) {
+    console.warn(
+      `[live-trivia][source-metadata] Unable to load canonical JSON source metadata: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+
+  cachedLiveTriviaSourceMetadata = metadata;
+  return metadata;
+}
+
+function mergeLiveTriviaSourceMetadata(rows: readonly LiveTriviaSeedQuestion[]): LiveTriviaSeedQuestion[] {
+  const metadata = readLiveTriviaSourceMetadata();
+  if (metadata.size === 0) return rows.slice();
+
+  return rows.map((row) => {
+    const slug = String(row.slug ?? "").trim();
+    const fallback = metadata.get(slug);
+    if (!fallback) return row;
+
+    return {
+      ...row,
+      source_order: getFiniteSourceOrder(row.source_order) ?? fallback.sourceOrder,
+      source_file: getLiveTriviaSourceFile(row.source_file) || fallback.sourceFile,
+    };
+  });
+}
+
+export async function loadActiveLiveTriviaSeedQuestionPool(
+  admin: NonNullable<typeof supabaseAdmin>
+): Promise<LiveTriviaSeedQuestion[]> {
+  const { data, error } = await runLiveTriviaSourceCompatibleQuery(
+    () =>
+      admin
+        .from("trivia_questions")
+        .select("slug, question, category, options, correct_answer, question_pool, source_order, source_file")
+        .eq("status", "active")
+        .eq("question_pool", "live_showdown")
+        .not("slug", "is", null)
+        .order("slug", { ascending: true })
+        .limit(5000),
+    () =>
+      admin
+        .from("trivia_questions")
+        .select("slug, question, category, options, correct_answer, question_pool")
+        .eq("status", "active")
+        .eq("question_pool", "live_showdown")
+        .not("slug", "is", null)
+        .order("slug", { ascending: true })
+        .limit(5000)
+  );
+
+  if (error) {
+    throw new Error(error.message || "Failed to load active Live Trivia question pool.");
+  }
+
+  return mergeLiveTriviaSourceMetadata((data ?? []) as LiveTriviaSeedQuestion[]);
+}
+
+type LiveTriviaCandidatePick = {
+  row: NormalizedLiveTriviaSeedQuestion;
+  wasSeen: boolean;
+  profile: LiveTriviaQuestionProfile;
 };
 
-type LiveTriviaQuestionTopicRule = {
-  id: string;
-  patterns: RegExp[];
-};
-
-const LIVE_TRIVIA_TOPIC_RULES: LiveTriviaQuestionTopicRule[] = [
-  {
-    id: "adaptation",
-    patterns: [
-      /\bbased on\b/,
-      /\badapted from\b/,
-      /\bnovel\b/,
-      /\bbook\b/,
-      /\bshort story\b/,
-      /\bplay by\b/,
-    ],
-  },
-  {
-    id: "landmark",
-    patterns: [
-      /\blandmark\b/,
-      /\bmonument\b/,
-      /\bstatue\b/,
-      /\btower\b/,
-      /\bpalace\b/,
-      /\bcathedral\b/,
-      /\btemple\b/,
-      /\bbridge\b/,
-      /\bskyscraper\b/,
-      /\bworld heritage\b/,
-      /\bunesco\b/,
-    ],
-  },
-  {
-    id: "capital",
-    patterns: [/\bcapital\b/],
-  },
-  {
-    id: "river",
-    patterns: [/\briver\b/, /\bflows through\b/],
-  },
-  {
-    id: "mountain",
-    patterns: [/\bmountain\b/, /\bmount\b/, /\bpeak\b/, /\bvolcano\b/],
-  },
-  {
-    id: "island",
-    patterns: [/\bisland\b/, /\barchipelago\b/],
-  },
-  {
-    id: "ocean-sea",
-    patterns: [/\bocean\b/, /\bsea\b/, /\bbay\b/, /\bstrait\b/, /\bcanal\b/],
-  },
-  {
-    id: "border",
-    patterns: [/\bborder\b/, /\bbordered\b/, /\bseparates\b/, /\bconnects\b/],
-  },
-  {
-    id: "map",
-    patterns: [/\bshown highlighted on this map\b/, /\bhighlighted on this map\b/],
-  },
-  {
-    id: "award",
-    patterns: [/\baward\b/, /\boscar\b/, /\bacademy award\b/, /\bgrammy\b/, /\bemmy\b/, /\bnobel\b/],
-  },
-  {
-    id: "creator",
-    patterns: [/\bdirected\b/, /\bdirector\b/, /\bcreated\b/, /\bwritten by\b/, /\bauthor\b/, /\bcomposer\b/],
-  },
-  {
-    id: "performer",
-    patterns: [/\bplayed by\b/, /\bstarred\b/, /\bactor\b/, /\bactress\b/, /\bsinger\b/, /\bband\b/],
-  },
-  {
-    id: "character",
-    patterns: [/\bcharacter\b/, /\bprotagonist\b/, /\bvillain\b/, /\bplayed the role\b/],
-  },
-  {
-    id: "team",
-    patterns: [/\bteam\b/, /\bfranchise\b/, /\bclub\b/],
-  },
-  {
-    id: "championship",
-    patterns: [/\bchampionship\b/, /\bchampion\b/, /\bworld series\b/, /\bsuper bowl\b/, /\bfinals\b/],
-  },
-];
-
-const QUESTION_STEM_STOP_WORDS = new Set([
-  "a",
-  "an",
-  "and",
-  "are",
-  "by",
-  "did",
-  "does",
-  "for",
-  "from",
-  "in",
-  "is",
-  "of",
-  "on",
-  "the",
-  "to",
-  "was",
-  "were",
-]);
-
-function normalizeDiversityText(value: unknown): string {
-  return String(value ?? "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+function isBelowBandTarget(profile: LiveTriviaQuestionProfile, bandCounts: Record<LiveTriviaSourceBand, number>, targetBandCounts: Record<LiveTriviaSourceBand, number>): boolean {
+  return bandCounts[profile.sourceBand] < targetBandCounts[profile.sourceBand];
 }
 
-function inferQuestionStem(question: string): string {
-  const tokens = normalizeDiversityText(question)
-    .split(" ")
-    .filter((token) => token && !QUESTION_STEM_STOP_WORDS.has(token));
-  return tokens.slice(0, 4).join("-");
+function pickLowestPenaltyCandidate(
+  candidates: readonly LiveTriviaCandidatePick[],
+  state: {
+    recentProfiles: readonly LiveTriviaQuestionProfile[];
+    bandCounts: Record<LiveTriviaSourceBand, number>;
+    targetBandCounts: Record<LiveTriviaSourceBand, number>;
+  }
+): LiveTriviaCandidatePick | null {
+  let best: LiveTriviaCandidatePick | null = null;
+  let bestPenalty = Number.POSITIVE_INFINITY;
+
+  for (const candidate of candidates) {
+    const penalty = scoreCandidate(candidate.profile, state, candidate.wasSeen);
+    if (penalty < bestPenalty) {
+      bestPenalty = penalty;
+      best = candidate;
+    }
+  }
+
+  return best;
 }
 
-function buildLiveTriviaDiversityProfile(row: NormalizedLiveTriviaSeedQuestion): LiveTriviaQuestionDiversityProfile {
-  const categoryKey = normalizeDiversityText(row.category) || "general";
-  const questionText = String(row.question ?? "").trim();
-  const haystack = normalizeDiversityText(`${row.category} ${questionText}`);
-  const matchedTags = LIVE_TRIVIA_TOPIC_RULES
-    .filter((rule) => rule.patterns.some((pattern) => pattern.test(haystack)))
-    .map((rule) => rule.id);
-  const stem = inferQuestionStem(questionText);
-  const primary = matchedTags[0] ?? (stem ? `stem:${stem}` : `slug:${row.slug}`);
-  const scopedTags = new Set(matchedTags.map((tag) => `${categoryKey}:${tag}`));
-
-  return {
-    cluster: `${categoryKey}:${primary}`,
-    tags: scopedTags,
-    stem: stem ? `${categoryKey}:${stem}` : "",
-  };
-}
-
-function countTagOverlap(left: Set<string>, right: Set<string>): number {
+function countTopicTokenOverlap(left: Set<string>, right: Set<string>, ignoredTokens: ReadonlySet<string> = new Set()): number {
   let overlap = 0;
-  for (const tag of left) {
-    if (right.has(tag)) overlap += 1;
+  for (const token of left) {
+    if (ignoredTokens.has(token)) continue;
+    if (right.has(token)) overlap += 1;
   }
   return overlap;
 }
 
-function scoreLiveTriviaDiversityCandidate(params: {
-  profile: LiveTriviaQuestionDiversityProfile;
-  recentProfiles: readonly LiveTriviaQuestionDiversityProfile[];
-  wasSeen: boolean;
-}): number {
-  const recentProfiles = params.recentProfiles.slice(-3);
-  const immediate = recentProfiles[recentProfiles.length - 1] ?? null;
-  let penalty = params.wasSeen ? 12 : 0;
-
-  if (immediate) {
-    if (immediate.cluster === params.profile.cluster) penalty += 100;
-    penalty += countTagOverlap(immediate.tags, params.profile.tags) * 18;
-    if (params.profile.stem && immediate.stem === params.profile.stem) penalty += 12;
-  }
-
-  for (const profile of recentProfiles.slice(0, -1)) {
-    if (profile.cluster === params.profile.cluster) penalty += 28;
-    penalty += countTagOverlap(profile.tags, params.profile.tags) * 8;
-    if (params.profile.stem && profile.stem === params.profile.stem) penalty += 4;
-  }
-
-  return penalty;
+function getCategoryTokens(...categories: readonly string[]): Set<string> {
+  return new Set(
+    categories.flatMap((category) => normalizeDiversityText(category).split(" ").filter(Boolean))
+  );
 }
 
-function pickDiverseLiveTriviaRows(params: {
+function hasRecentTopicOverlap(
+  profile: LiveTriviaQuestionProfile,
+  recentProfiles: readonly LiveTriviaQuestionProfile[]
+): boolean {
+  return recentProfiles.slice(-RECENT_TOPIC_WINDOW).some((recent) => {
+    const ignoredTokens = getCategoryTokens(profile.category, recent.category);
+    return recent.cluster === profile.cluster || countTopicTokenOverlap(recent.topicTokens, profile.topicTokens, ignoredTokens) > 0;
+  });
+}
+
+function pickBalancedRoundQuestions(params: {
   rows: readonly NormalizedLiveTriviaSeedQuestion[];
   seenSlugs: ReadonlySet<string>;
   usedInOccurrence: Set<string>;
-  recentProfiles: LiveTriviaQuestionDiversityProfile[];
+  recentProfiles: LiveTriviaQuestionProfile[];
+  scheduleSeed: number;
   count: number;
-  unseenSeed: number;
-  seenSeed: number;
-}): Array<{ row: NormalizedLiveTriviaSeedQuestion; wasSeen: boolean; profile: LiveTriviaQuestionDiversityProfile }> {
-  const unseenRows = params.rows.filter((row) => !params.seenSlugs.has(row.slug));
-  const seenRows = params.rows.filter((row) => params.seenSlugs.has(row.slug));
-  const candidates = [
-    ...seededShuffle(unseenRows, params.unseenSeed).map((row) => ({ row, wasSeen: false })),
-    ...seededShuffle(seenRows, params.seenSeed).map((row) => ({ row, wasSeen: true })),
-  ].filter((candidate) => !params.usedInOccurrence.has(candidate.row.slug));
-  const picked: Array<{ row: NormalizedLiveTriviaSeedQuestion; wasSeen: boolean; profile: LiveTriviaQuestionDiversityProfile }> = [];
+}): LiveTriviaCandidatePick[] {
+  const candidates = seededShuffle(params.rows, params.scheduleSeed)
+    .map((row) => ({ row, wasSeen: params.seenSlugs.has(row.slug), profile: buildQuestionProfile(row) }))
+    .filter((candidate) => !params.usedInOccurrence.has(candidate.row.slug));
+  const picked: LiveTriviaCandidatePick[] = [];
+  const bandCounts = createEmptyBandCounts();
+  const targetBandCounts = buildBandTargets(params.count);
 
   while (picked.length < params.count && candidates.length > 0) {
-    let bestIndex = 0;
-    let bestPenalty = Number.POSITIVE_INFINITY;
-
-    for (let index = 0; index < candidates.length; index += 1) {
-      const candidate = candidates[index]!;
-      const profile = buildLiveTriviaDiversityProfile(candidate.row);
-      const penalty = scoreLiveTriviaDiversityCandidate({
-        profile,
-        recentProfiles: params.recentProfiles,
-        wasSeen: candidate.wasSeen,
-      });
-      if (penalty < bestPenalty) {
-        bestPenalty = penalty;
-        bestIndex = index;
-      }
-    }
-
+    const state = { recentProfiles: params.recentProfiles, bandCounts, targetBandCounts };
+    const hardSpacing = candidates.filter((candidate) => !violatesHardSpacing(candidate.profile, params.recentProfiles));
+    const hardSpacingWithoutTopicOverlap = hardSpacing.filter(
+      (candidate) => !hasRecentTopicOverlap(candidate.profile, params.recentProfiles)
+    );
+    const templateRelaxed = candidates.filter(
+      (candidate) =>
+        !violatesSlugFamilySpacing(candidate.profile, params.recentProfiles) &&
+        violatesTemplateSpacing(candidate.profile, params.recentProfiles)
+    );
+    const slugRelaxed = candidates.filter((candidate) => violatesSlugFamilySpacing(candidate.profile, params.recentProfiles));
+    const tiers = [
+      hardSpacingWithoutTopicOverlap.filter((candidate) => !candidate.wasSeen && isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
+      hardSpacingWithoutTopicOverlap.filter((candidate) => !candidate.wasSeen),
+      hardSpacing.filter((candidate) => !candidate.wasSeen && isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
+      hardSpacing.filter((candidate) => !candidate.wasSeen),
+      hardSpacingWithoutTopicOverlap.filter((candidate) => candidate.wasSeen && isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
+      hardSpacingWithoutTopicOverlap.filter((candidate) => candidate.wasSeen),
+      hardSpacing.filter((candidate) => candidate.wasSeen && isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
+      hardSpacing.filter((candidate) => candidate.wasSeen),
+      templateRelaxed.filter((candidate) => !candidate.wasSeen),
+      templateRelaxed.filter((candidate) => candidate.wasSeen),
+      slugRelaxed.filter((candidate) => !candidate.wasSeen),
+      slugRelaxed.filter((candidate) => candidate.wasSeen),
+      candidates,
+    ];
+    const activeTier = tiers.find((tier) => tier.length > 0) ?? [];
+    const selected = pickLowestPenaltyCandidate(activeTier, state);
+    if (!selected) break;
+    const bestIndex = candidates.indexOf(selected);
     const [candidate] = candidates.splice(bestIndex, 1);
     if (!candidate) break;
-    const profile = buildLiveTriviaDiversityProfile(candidate.row);
     params.usedInOccurrence.add(candidate.row.slug);
-    params.recentProfiles.push(profile);
-    picked.push({ ...candidate, profile });
+    params.recentProfiles.push(candidate.profile);
+    bandCounts[candidate.profile.sourceBand] += 1;
+    picked.push(candidate);
   }
 
   return picked;
+}
+
+function applySourceMetadata(
+  row: Omit<NormalizedLiveTriviaSeedQuestion, "sourceOrder" | "sourcePercentile" | "sourceBand">,
+  index: number,
+  total: number,
+  explicitSourceTotal?: number
+): NormalizedLiveTriviaSeedQuestion {
+  const explicitSourceOrder = getFiniteSourceOrder(row.source_order);
+  const sourceOrder = explicitSourceOrder ?? index;
+  const sourceTotal = explicitSourceOrder === null ? total : Math.max(total, explicitSourceTotal ?? total);
+  const sourcePercentile = getSourcePercentile(sourceOrder, sourceTotal);
+  return {
+    ...row,
+    sourceOrder,
+    sourcePercentile,
+    sourceBand: getSourceBand(sourcePercentile),
+  };
 }
 
 export function buildLiveTriviaOccurrenceSeedSlots(params: {
@@ -636,14 +700,28 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
     const category = normalizeLiveTriviaCategory(row.category);
     const question = String(row.question ?? "").trim();
     const list = byCategory.get(category) ?? [];
-    list.push({ ...row, slug, category, question });
+    list.push({ ...row, slug, category, question, sourceOrder: list.length, sourcePercentile: 0, sourceBand: "middle" });
     byCategory.set(category, list);
   }
 
   for (const [category, list] of byCategory.entries()) {
+    const sorted = list.slice().sort((a, b) => {
+      const leftOrder = getFiniteSourceOrder(a.source_order);
+      const rightOrder = getFiniteSourceOrder(b.source_order);
+      if (leftOrder !== null && rightOrder !== null) {
+        const fileCompare = getLiveTriviaSourceFile(a.source_file).localeCompare(getLiveTriviaSourceFile(b.source_file));
+        if (fileCompare !== 0) return fileCompare;
+        if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      }
+      if (leftOrder !== null) return -1;
+      if (rightOrder !== null) return 1;
+      return a.slug.localeCompare(b.slug);
+    });
+    const explicitSourceOrders = sorted.map((row) => getFiniteSourceOrder(row.source_order)).filter((value): value is number => value !== null);
+    const explicitSourceTotal = explicitSourceOrders.length > 0 ? Math.max(...explicitSourceOrders) + 1 : sorted.length;
     byCategory.set(
       category,
-      list.slice().sort((a, b) => a.slug.localeCompare(b.slug))
+      sorted.map((row, index) => applySourceMetadata(row, index, sorted.length, explicitSourceTotal))
     );
   }
 
@@ -698,7 +776,7 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
 
   const slots: LiveTriviaSeedSlot[] = [];
   const usedInOccurrence = new Set<string>();
-  const recentProfiles: LiveTriviaQuestionDiversityProfile[] = [];
+  const recentProfiles: LiveTriviaQuestionProfile[] = [];
   let usedSeen = false;
   let repeatedQuestions = false;
   let usedRecentCategory = false;
@@ -707,7 +785,7 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
     const category = selectedCategories[roundIndex] ?? eligibleCategories[0]!;
     if (recentCategorySet.has(category)) usedRecentCategory = true;
     const categoryRows = byCategory.get(category) ?? [];
-    const unseenSeed = buildSeedKey([
+    const roundQuestionSeed = buildSeedKey([
       "live-trivia",
       "questions",
       safeVenueId,
@@ -716,34 +794,24 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
       category,
       String(roundIndex + 1),
     ]);
-    const seenSeed = buildSeedKey([
-      "live-trivia",
-      "seen",
-      safeVenueId,
-      params.occurrenceDate,
-      params.scheduleId,
-      category,
-      String(roundIndex + 1),
-    ]);
 
-    const picked = pickDiverseLiveTriviaRows({
+    const picked = pickBalancedRoundQuestions({
       rows: categoryRows,
       seenSlugs: params.seenSlugs,
       usedInOccurrence,
       recentProfiles,
       count: questionsPerRound,
-      unseenSeed,
-      seenSeed,
+      scheduleSeed: roundQuestionSeed,
     });
     if (picked.some((candidate) => candidate.wasSeen)) usedSeen = true;
 
     if (picked.length < questionsPerRound) {
-      const repeatPool = seededShuffle(categoryRows, unseenSeed ^ 0x9e3779b9);
+      const repeatPool = seededShuffle(categoryRows, roundQuestionSeed ^ 0x9e3779b9);
       let repeatIndex = 0;
       while (picked.length < questionsPerRound && repeatPool.length > 0) {
         const repeatRow = repeatPool[repeatIndex % repeatPool.length]!;
         const repeatSlug = repeatRow.slug;
-        const profile = buildLiveTriviaDiversityProfile(repeatRow);
+        const profile = buildQuestionProfile(repeatRow);
         const wasSeen = params.seenSlugs.has(repeatSlug);
         picked.push({ row: repeatRow, wasSeen, profile });
         recentProfiles.push(profile);
@@ -1638,22 +1706,13 @@ export async function seedOccurrenceQuestions(
       .filter(Boolean)
   );
 
-  // Active question pool in a deterministic base order.
-  const { data: poolData, error: poolError } = await admin
-    .from("trivia_questions")
-    .select("slug, question, category, options, correct_answer, question_pool")
-    .eq("status", "active")
-    .eq("question_pool", "live_showdown")
-    .not("slug", "is", null)
-    .order("slug", { ascending: true })
-    .limit(5000);
-  if (poolError) {
-    throw new Error(poolError.message || "Failed to load active question pool.");
-  }
+  // Active question pool in a deterministic base order, with source metadata
+  // from DB columns or canonical JSON fallback.
+  const poolData = await loadActiveLiveTriviaSeedQuestionPool(admin);
 
   const recentCategories = await loadRecentVenueLiveTriviaCategories(safeVenueId, occurrenceDate);
   const seedResult = buildLiveTriviaOccurrenceSeedSlots({
-    questions: (poolData ?? []) as LiveTriviaSeedQuestion[],
+    questions: poolData,
     seenSlugs,
     recentCategories,
     scheduleId,

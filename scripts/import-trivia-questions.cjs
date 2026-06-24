@@ -243,7 +243,7 @@ function readQuestionDir(dirPath) {
     const raw = fs.readFileSync(filePath, "utf8");
     const parsed = JSON.parse(raw);
     const questions = extractQuestions(parsed, filePath);
-    merged.push(...questions.map((item) => ({ ...item, __sourceFile: file })));
+    merged.push(...questions.map((item, index) => ({ ...item, __sourceFile: file, __sourceOrder: index })));
   }
 
   return { absoluteDirPath, files, questions: merged };
@@ -358,6 +358,13 @@ function normalizeAndValidate(questions, options = {}) {
       answer_format: answerFormat,
       image_url: imageUrl || null,
     };
+    if (questionPool === "live_showdown") {
+      const sourceFile = String(item.sourceFile ?? item.source_file ?? item.__sourceFile ?? "").trim();
+      const sourceOrderRaw = item.sourceOrder ?? item.source_order ?? item.__sourceOrder;
+      const sourceOrder = Number(sourceOrderRaw);
+      row.source_file = sourceFile || null;
+      row.source_order = Number.isInteger(sourceOrder) && sourceOrder >= 0 ? sourceOrder : null;
+    }
     if (status) {
       row.status = status;
     }

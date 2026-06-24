@@ -27,6 +27,7 @@
     "live-trivia:generate:nightly": "node --env-file=.env.local scripts/generate-live-trivia-nightly.cjs --total 50",
     "live-trivia:check": "node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories --check",
     "live-trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories",
+    "live-trivia:randomness:audit": "node --conditions react-server --import tsx scripts/audit-live-trivia-randomness.cjs",
     "headshots:sync": "node scripts/sync-headshots.js",
     "apisports:probe:nba": "node --env-file=.env.local scripts/probe-apisports-nba.cjs",
     "live-showdown:seed": "node --env-file=.env.local --import tsx scripts/seedLiveShowdownPool.ts",

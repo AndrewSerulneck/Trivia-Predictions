@@ -1,5 +1,13 @@
 # Live Trivia Randomness Phase 1
 
+## Status Note
+
+This document is an older phase-1 design note and contains assumptions that are now partially stale relative to the current codebase.
+
+Use [live-trivia-randomness-execution-plan.md](/Users/andrewserulneck/Documents/Trivia-Predictions/docs/live-trivia-randomness-execution-plan.md:1) as the primary implementation handoff and execution reference for all future work on Live Trivia randomness.
+
+The frozen V1 thresholds, similarity signals, source-band rules, and fallback order now live in that document's `Phase 1 Frozen Rules` section.
+
 ## Goal
 
 Increase the randomness of Live Trivia question order within categories so players are less likely to see the same category presented with the same or similar question sequence at another venue.

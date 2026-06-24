@@ -7,7 +7,7 @@ import {
   buildLiveTriviaOccurrenceSeedSlots,
   djb2,
   getLiveShowdownState,
-  type LiveTriviaSeedQuestion,
+  loadActiveLiveTriviaSeedQuestionPool,
 } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -391,18 +391,10 @@ async function buildLiveShowdownQuestionMatrix(params: {
   const admin = getAdminClient();
   const numRounds = clampRounds(Number(params.numRounds));
   const totalNeeded = numRounds * QUESTIONS_PER_ROUND;
-  const { data, error } = await admin
-    .from("trivia_questions")
-    .select("slug, question, category, options, correct_answer, question_pool")
-    .eq("question_pool", "live_showdown")
-    .eq("status", "active");
-
-  if (error) {
-    throw new Error(error.message || "Failed to load trivia questions for Live Showdown seeding.");
-  }
+  const questions = await loadActiveLiveTriviaSeedQuestionPool(admin);
 
   const seedResult = buildLiveTriviaOccurrenceSeedSlots({
-    questions: (data ?? []) as LiveTriviaSeedQuestion[],
+    questions,
     seenSlugs: new Set(),
     scheduleId: params.scheduleSeed,
     occurrenceDate: params.occurrenceDate,

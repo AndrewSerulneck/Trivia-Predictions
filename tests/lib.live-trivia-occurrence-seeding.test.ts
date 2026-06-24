@@ -17,6 +17,7 @@ import {
   seedOccurrenceQuestions,
   type LiveTriviaSeedQuestion,
 } from "@/lib/liveShowdownEngine";
+import { inferSlugFamily, inferTemplateKey } from "@/lib/liveTriviaSeeding";
 
 function makeQuestion(category: string, index: number, overrides: Partial<LiveTriviaSeedQuestion> = {}): LiveTriviaSeedQuestion {
   return {
@@ -32,6 +33,14 @@ function makeQuestion(category: string, index: number, overrides: Partial<LiveTr
 
 function makeCategory(category: string, count: number): LiveTriviaSeedQuestion[] {
   return Array.from({ length: count }, (_, index) => makeQuestion(category, index + 1));
+}
+
+function withSourceOrder(questions: LiveTriviaSeedQuestion[], sourceFile = "test-category.json"): LiveTriviaSeedQuestion[] {
+  return questions.map((question, index) => ({
+    ...question,
+    source_file: sourceFile,
+    source_order: index,
+  }));
 }
 
 function makeAwaitableQuery<T extends Record<string, unknown>>(result: T) {
@@ -290,6 +299,125 @@ describe("Live Trivia occurrence seeding", () => {
     }
   });
 
+  it("keeps same slug families at least 5 positions apart when inventory allows", () => {
+    const questions = withSourceOrder([
+      makeQuestion("History", 1, {
+        slug: "history-president-washington-01",
+        question: "Who was the first U.S. president?",
+      }),
+      makeQuestion("History", 2, {
+        slug: "history-president-washington-02",
+        question: "Name the president who led the Continental Army.",
+      }),
+      makeQuestion("History", 3, {
+        slug: "history-president-washington-03",
+        question: "Which leader appears on the U.S. one-dollar bill?",
+      }),
+      ...Array.from({ length: 12 }, (_, index) =>
+        makeQuestion("History", index + 4, {
+          slug: `history-distinct-topic-${String(index + 1).padStart(2, "0")}-era`,
+          question: `Who was the historical figure connected to distinct topic ${index + 1}?`,
+        })
+      ),
+    ]);
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 15 });
+    const familyPositions = result.slots
+      .map((slot, index) => ({ family: inferSlugFamily(slot.slug), index }))
+      .filter((entry) => entry.family === "history-president-washington")
+      .map((entry) => entry.index);
+
+    expect(familyPositions).toHaveLength(3);
+    for (let index = 1; index < familyPositions.length; index += 1) {
+      expect(familyPositions[index]! - familyPositions[index - 1]!).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it("avoids adjacent template duplicates when alternatives exist", () => {
+    const questions = withSourceOrder([
+      ...Array.from({ length: 2 }, (_, index) =>
+        makeQuestion("Pop Culture", index + 1, {
+          slug: `pop-what-is-${index + 1}-artifact`,
+          question: `What is the title of pop culture artifact ${index + 1}?`,
+          options: [`Answer ${index + 1}`],
+        })
+      ),
+      ...Array.from({ length: 2 }, (_, index) =>
+        makeQuestion("Pop Culture", index + 3, {
+          slug: `pop-who-is-${index + 1}-performer`,
+          question: `Who is the performer associated with pop culture artifact ${index + 1}?`,
+          options: [`Answer ${index + 3}`],
+        })
+      ),
+      ...Array.from({ length: 2 }, (_, index) =>
+        makeQuestion("Pop Culture", index + 5, {
+          slug: `pop-name-this-${index + 1}-clue`,
+          question: `Name this pop culture artifact from clue ${index + 1}.`,
+          options: [`Answer ${index + 5}`],
+        })
+      ),
+    ]);
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 6 });
+    const templateKeys = result.slots.map((slot) => {
+      const row = questions.find((question) => question.slug === slot.slug)!;
+      return inferTemplateKey(String(row.question ?? ""));
+    });
+
+    expect(templateKeys).toHaveLength(6);
+    for (let index = 1; index < templateKeys.length; index += 1) {
+      expect(templateKeys[index]).not.toBe(templateKeys[index - 1]);
+    }
+  });
+
+  it("spreads repeated topic clusters outside the rolling window when alternatives exist", () => {
+    const oscarWildeSlugs = new Set(["literature-oscar-wilde-quote", "literature-wilde-dorian-gray", "literature-irish-playwright"]);
+    const questions = withSourceOrder([
+      makeQuestion("Literature", 1, {
+        slug: "literature-oscar-wilde-quote",
+        question: "Who wrote the Oscar Wilde quote about resisting everything except temptation?",
+      }),
+      makeQuestion("Literature", 2, {
+        slug: "literature-wilde-dorian-gray",
+        question: "Which author Oscar Wilde wrote The Picture of Dorian Gray?",
+      }),
+      makeQuestion("Literature", 3, {
+        slug: "literature-irish-playwright",
+        question: "Name this Irish playwright Oscar Wilde from a clue about epigrams.",
+      }),
+      ...Array.from({ length: 12 }, (_, index) =>
+        makeQuestion("Literature", index + 4, {
+          slug: `literature-distinct-author-${String(index + 1).padStart(2, "0")}-work`,
+          question: [
+            "Who wrote the seafaring novel about a whale?",
+            "Which poet composed verses about a raven?",
+            "Name the novelist behind a magical realism family saga.",
+            "What is the surname of the detective created by Arthur Conan Doyle?",
+            "Who wrote the dystopian farm allegory?",
+            "Which author created a hobbit named Bilbo?",
+            "Name the poet associated with Leaves of Grass.",
+            "Who wrote the courtroom novel set in Maycomb?",
+            "Which playwright created Blanche DuBois?",
+            "Name the novelist behind Pride and Prejudice.",
+            "Who wrote the epic poem Paradise Lost?",
+            "Which author created Hercule Poirot?",
+          ][index]!,
+        })
+      ),
+    ]);
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 15 });
+    const positions = result.slots
+      .map((slot, index) => ({ slug: slot.slug, index }))
+      .filter((entry) => oscarWildeSlugs.has(entry.slug))
+      .map((entry) => entry.index);
+
+    expect(positions).toHaveLength(3);
+    for (let index = 1; index < positions.length; index += 1) {
+      expect(positions[index]! - positions[index - 1]!).toBeGreaterThanOrEqual(4);
+    }
+  });
+
   it("still fills a round when every available question has the same subtopic", () => {
     const questions: LiveTriviaSeedQuestion[] = [
       makeQuestion("Geography", 1, {
@@ -307,6 +435,125 @@ describe("Live Trivia occurrence seeding", () => {
 
     expect(result.slots).toHaveLength(3);
     expect(new Set(result.slots.map((slot) => slot.slug)).size).toBe(3);
+  });
+
+  it("spreads round picks across derived source bands when inventory allows", () => {
+    const questions = Array.from({ length: 15 }, (_, index) =>
+      makeQuestion("Music", index + 1, { slug: `music-${String(index + 1).padStart(2, "0")}` })
+    );
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 9 });
+    const selectedNumbers = result.slots.map((slot) => Number(slot.slug.split("-").at(-1)));
+    const bandCounts = selectedNumbers.reduce(
+      (counts, number) => {
+        if (number <= 5) counts.start += 1;
+        else if (number <= 10) counts.middle += 1;
+        else counts.end += 1;
+        return counts;
+      },
+      { start: 0, middle: 0, end: 0 }
+    );
+
+    expect(result.slots).toHaveLength(9);
+    expect(bandCounts).toEqual({ start: 3, middle: 3, end: 3 });
+  });
+
+  it("targets a 5 / 5 / 5 source-band distribution for 15-question rounds", () => {
+    const questions = withSourceOrder(
+      Array.from({ length: 15 }, (_, index) =>
+        makeQuestion("Science", index + 1, {
+          slug: `science-source-band-${String(index + 1).padStart(2, "0")}`,
+          question: `Who discovered science topic ${index + 1}?`,
+        })
+      ),
+      "science.v1.json"
+    );
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 15 });
+    const selectedIndexes = result.slots.map((slot) => Number(slot.slug.split("-").at(-1)));
+    const bandCounts = selectedIndexes.reduce(
+      (counts, number) => {
+        if (number <= 5) counts.start += 1;
+        else if (number <= 10) counts.middle += 1;
+        else counts.end += 1;
+        return counts;
+      },
+      { start: 0, middle: 0, end: 0 }
+    );
+
+    expect(result.slots).toHaveLength(15);
+    expect(bandCounts).toEqual({ start: 5, middle: 5, end: 5 });
+  });
+
+  it("uses explicit source_order for source-band balancing before falling back to slug order", () => {
+    const questions = Array.from({ length: 9 }, (_, index) =>
+      makeQuestion("Music", index + 1, {
+        slug: `music-${String(9 - index).padStart(2, "0")}`,
+        source_file: "music.v1.json",
+        source_order: index,
+      })
+    );
+    const sourceOrderBySlug = new Map(questions.map((question) => [question.slug, question.source_order ?? -1]));
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 6 });
+    const bandCounts = result.slots.reduce(
+      (counts, slot) => {
+        const sourceOrder = sourceOrderBySlug.get(slot.slug) ?? -1;
+        if (sourceOrder <= 2) counts.start += 1;
+        else if (sourceOrder <= 5) counts.middle += 1;
+        else counts.end += 1;
+        return counts;
+      },
+      { start: 0, middle: 0, end: 0 }
+    );
+
+    expect(result.slots).toHaveLength(6);
+    expect(bandCounts).toEqual({ start: 2, middle: 2, end: 2 });
+  });
+
+  it("fills rounds from overrepresented source bands when a target band is thin", () => {
+    const startBandQuestions = Array.from({ length: 13 }, (_, index) =>
+      makeQuestion("Music", index + 1, {
+        slug: `music-start-heavy-${String(index + 1).padStart(2, "0")}`,
+        question: `Who recorded start-heavy music clue ${index + 1}?`,
+        source_file: "music.v1.json",
+        source_order: index,
+      })
+    );
+    const middleBandQuestion = makeQuestion("Music", 14, {
+      slug: "music-middle-thin",
+      question: "Who recorded the only middle-band music clue?",
+      source_file: "music.v1.json",
+      source_order: 50,
+    });
+    const endBandQuestion = makeQuestion("Music", 15, {
+      slug: "music-end-thin",
+      question: "Who recorded the only end-band music clue?",
+      source_file: "music.v1.json",
+      source_order: 98,
+    });
+
+    const result = seedSlots({
+      questions: [...startBandQuestions, middleBandQuestion, endBandQuestion],
+      numRounds: 1,
+      questionsPerRound: 9,
+    });
+    const selected = new Set(result.slots.map((slot) => slot.slug));
+
+    expect(result.slots).toHaveLength(9);
+    expect(result.repeatedQuestions).toBe(false);
+    expect(selected.has("music-middle-thin")).toBe(true);
+    expect(selected.has("music-end-thin")).toBe(true);
+  });
+
+  it("repeats questions only when category inventory cannot fill the requested slots", () => {
+    const questions = makeCategory("Music", 2);
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
+
+    expect(result.slots).toHaveLength(3);
+    expect(result.repeatedQuestions).toBe(true);
+    expect(new Set(result.slots.map((slot) => slot.slug)).size).toBe(2);
   });
 
   it("avoids recently used categories when fresh categories can fill the game", () => {
