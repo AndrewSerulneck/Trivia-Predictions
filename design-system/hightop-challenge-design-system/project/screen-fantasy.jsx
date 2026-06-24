@@ -88,7 +88,7 @@ function FantasyScreen() {
       <MiniTopBar accent="#fef3c7" title="Fantasy" showHam={false}/>
       <div style={{ padding: "8px 14px 10px" }}>
         <div style={{ display: "flex", background: "rgba(254,243,199,0.05)", border: "1px solid rgba(254,243,199,0.18)", borderRadius: 9999, padding: 4, gap: 2 }}>
-          {[{ id: "draft", l: "Draft" }, { id: "live", l: "Live Sweat" }].map(t => {
+          {[{ id: "draft", l: "Draft" }, { id: "live", l: "Live Game" }].map(t => {
             const active = view === t.id;
             return (
               <button key={t.id} onClick={() => setView(t.id)} style={{
@@ -256,7 +256,7 @@ function FantasyScreen() {
           <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(254,243,199,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(254,243,199,0.06) 1px, transparent 1px)", backgroundSize: "20px 20px" }}/>
           <div style={{ position: "relative", zIndex: 2 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Eyebrow color="#fde68a">Live Sweat · vs The Local Tavern</Eyebrow>
+              <Eyebrow color="#fde68a">Live Game · vs The Local Tavern</Eyebrow>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 9px", borderRadius: 9999, background: "rgba(16,185,129,0.16)", border: "1px solid rgba(110,231,183,0.45)", color: "#6ee7b7", fontWeight: 900, fontSize: 9.5, letterSpacing: "0.16em", textTransform: "uppercase" }}>
                 <span className="ht-live-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399" }}/>Live
               </span>

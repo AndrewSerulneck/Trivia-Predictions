@@ -732,7 +732,7 @@
     },
     {
       "slug": "north-star-name",
-      "question": "What is the proper noun name of the star commonly known as the North Star?",
+      "question": "What is the name of the star commonly known as the North Star?",
       "answer": "Polaris",
       "answer_format": "write_in",
       "category": "Science & Tech",
@@ -872,7 +872,7 @@
     },
     {
       "slug": "brightest-star-night-sky",
-      "question": "What is the proper noun name of the brightest star in Earth's night sky, also known as the Dog Star?",
+      "question": "What is the name of the brightest star in Earth's night sky, also known as the Dog Star?",
       "answer": "Sirius",
       "answer_format": "write_in",
       "category": "Science & Tech",
@@ -1103,7 +1103,7 @@
     },
     {
       "slug": "evolution-theory-pioneer",
-      "question": "What is the proper noun name of the naturalist who authored On the Origin of Species and pioneered the theory of evolution by natural selection?",
+      "question": "What is the name of the naturalist who authored On the Origin of Species and pioneered the theory of evolution by natural selection?",
       "answer": "Charles Darwin",
       "answer_format": "write_in",
       "category": "Science & Tech",

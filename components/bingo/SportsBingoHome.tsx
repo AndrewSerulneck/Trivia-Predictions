@@ -2014,13 +2014,13 @@ export function SportsBingoHome({
           <>
             <div className="pt-4">
               <div className="relative overflow-hidden rounded-[18px] border-2 border-sky-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.12),transparent_60%),#0c3a2e] p-4 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.35),0_12px_26px_rgba(0,0,0,0.5)]">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · live right now</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · </p>
                 <p className="mt-1.5 text-[26px] leading-[1.08] text-amber-100 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
-                  Your squares fill themselves.
+                  You don't have an active board yet.
                 </p>
                 <p className="mt-1.5 text-[12px] font-bold leading-relaxed text-amber-100/60">
-                  We turn tonight&apos;s games into a 5×5 board of player props and box-score calls. Plays happen, squares
-                  light up automatically. Five in a row wins the venue prize.
+                  Click the button below to create a 5×5 board of player props and box-score calls. Plays happen, squares
+                  light up automatically. Five in a row wins 100 points.
                 </p>
                 <div className="mt-3.5 grid grid-cols-5 gap-1 opacity-90">
                   {Array.from({ length: 25 }).map((_, i) => {
@@ -2048,7 +2048,7 @@ export function SportsBingoHome({
                   <ArrowRight aria-hidden="true" className="h-4 w-4" />
                 </Link>
                 <p className="mt-2.5 text-center text-[10px] font-black tracking-[0.04em] text-sky-300">
-                  Free to play · no entry needed
+                  Turn your phone sideways for a better view of your boards.
                 </p>
               </div>
             </div>

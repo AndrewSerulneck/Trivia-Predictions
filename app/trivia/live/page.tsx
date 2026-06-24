@@ -1183,15 +1183,6 @@ export default function LiveShowdownPage() {
               ←
             </button>
             <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Trivia Showdown</h1>
-            {process.env.NODE_ENV === "development" && (
-              <button
-                type="button"
-                onClick={() => triggerAnimation("LIVE_TRIVIA_CHAMPION")}
-                className="ml-auto shrink-0 rounded-lg bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-400 border border-amber-400/40"
-              >
-                🏆 Test
-              </button>
-            )}
           </div>
         </header>
 

@@ -4,17 +4,128 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ContactForm } from "@/components/info/ContactForm";
+import { GameShowcaseBlock, type GameShowcase } from "@/components/info/AnnotatedScreenshot";
 
-
-const TRIVIA_GAMES = [
-  { name: "Live Trivia", icon: "/brand/live_trivia_icon.png", description: "Host a bar-wide trivia night on your schedule. Every guest competes together in real time — the shared energy drives rounds of drinks, keeps people seated longer, and builds the kind of weekly ritual that fills seats on your slowest nights." },
-  { name: "Speed Trivia", icon: "/brand/speed_trivia_icon.png", description: "Solo multiple-choice trivia your guests can pick up any time they walk in. It's a built-in reason to stay one more drink — and a steady engagement layer that works even when there's no event on the calendar." },
+const TRIVIA_SHOWCASES: GameShowcase[] = [
+  {
+    name: "Live Trivia",
+    description:
+      "A trivia night that runs itself. Every guest competes together in real time — the shared energy drives rounds of drinks, keeps people seated longer, and builds the kind of weekly ritual that fills seats on your slowest nights.",
+    shots: [
+      {
+        src: "/info/live-trivia-question.png",
+        alt: "Live Trivia question screen",
+        width: 750,
+        height: 1484,
+        callouts: [
+          { x: 50, y: 25, label: "Massive question database", description: "You get access to our huge library of trivia questions across dozens of categories — fresh rounds every time." },
+          { x: 22, y: 31, label: "Timed rounds", description: "Every question is on the clock, so the pace stays fast and the room stays loud." },
+          { x: 50, y: 40, label: "Everyone answers at once", description: "Every guest at the bar answers in real time from their own phone — no buzzers, no paper." },
+        ],
+      },
+      {
+        src: "/info/live-trivia-leaderboard.png",
+        alt: "Live Trivia intermission and leaderboard",
+        width: 750,
+        height: 1484,
+        callouts: [
+          { x: 80, y: 13, label: "Built-in intermissions", description: "Scheduled breaks between rounds are the perfect window for guests to flag down a bartender for another round." },
+          { x: 50, y: 42, label: "Venue-only leaderboard", description: "Standings update live and rank only the players in your bar — bragging rights stay local." },
+          { x: 86, y: 30, label: "Round-by-round scoring", description: "Per-round point swings keep latecomers in the hunt and the whole room invested to the final question." },
+        ],
+      },
+    ],
+  },
+  {
+    name: "Speed Trivia",
+    description:
+      "Solo multiple-choice trivia your guests can pick up any time they walk in. It's a built-in reason to stay one more drink — and a steady engagement layer that works even when there's no event on the calendar.",
+    shots: [
+      {
+        src: "/info/speed-trivia.png",
+        alt: "Speed Trivia multiple-choice question",
+        width: 750,
+        height: 1484,
+        callouts: [
+          { x: 27, y: 32, label: "Tap-to-answer multiple choice", description: "Simple A/B/C/D format anyone can start the moment they sit down — no host or event required." },
+          { x: 17, y: 19, label: "Beat the clock", description: "A per-question countdown rewards quick thinking and pulls players back to beat their best." },
+          { x: 27, y: 47, label: "Instant scoring & accuracy", description: "Immediate feedback after every answer keeps the streak — and the engagement — going." },
+        ],
+      },
+    ],
+  },
 ];
 
-const SPORTS_GAMES = [
-  { name: "Prop Bingo", icon: "/brand/bingo_icon.png", description: "Every game already on your TVs becomes a promotional tool. Guests get personal bingo cards that resolve live against real NFL, NBA, WNBA, and MLB stats — giving them a personal stake in every play, every quarter, every inning. The game on screen sells the next round." },
-  { name: "Pick'Em", icon: "/brand/pickem_icon.png", description: "Let guests make fresh picks on the day's matchups — then run house challenges around whatever's on your screens. Launch a 'Pick the most World Cup winners' campaign, offer a prize, and watch passive viewers turn into active competitors with a reason to stay, order another round, and see who wins." },
-  { name: "Fantasy Sports", icon: "/brand/fantasy_icon.png", description: "Guests choose a daily fantasy roster tied to the games you're already showing. When your patrons have skin in the game, they're not just watching — they're invested. Stack that with bar-run prizes and you've turned even low stakes NBA games into a reason for guests to stay longer and earn points and prizes." },
+const SPORTS_SHOWCASES: GameShowcase[] = [
+  {
+    name: "Prop Bingo",
+    description:
+      "Every game already on your TVs becomes a promotional tool. Guests get personal bingo cards that resolve live against real NFL, NBA, WNBA, and MLB stats — giving them a personal stake in every play, every quarter, every inning. The game on screen sells the next round.",
+    shots: [
+      {
+        src: "/info/bingo-vertical.png",
+        alt: "Prop Bingo card during a live NBA game",
+        width: 395,
+        height: 826,
+        callouts: [
+          { x: 19, y: 27, label: "Auto-resolves against live stats", description: "Squares light up automatically as real game stats come in — no host, no manual tracking." },
+          { x: 50, y: 34, label: "Every card is unique", description: "No two guests get the same board, so everyone is chasing a different bingo all night." },
+          { x: 50, y: 54, label: "Real-time near-miss tension", description: "Live alerts like “1 away” keep eyes glued to the TV for the next stat to drop." },
+        ],
+      },
+      {
+        src: "/info/bingo-horizontal.png",
+        alt: "Prop Bingo landscape view",
+        width: 856,
+        height: 402,
+        wide: true,
+        heading: "Turn your phone for the full board",
+        blurb:
+          "Rotate to landscape and Prop Bingo opens up into a big-screen view — the entire card, your path to bingo, and the live venue leaderboard, all in one glance.",
+        callouts: [
+          { x: 27, y: 52, label: "Every square at once", description: "All 25 prop squares stay on screen with no scrolling, so guests never miss a hit." },
+          { x: 62, y: 38, label: "Track your path to bingo", description: "A live tracker shows how many squares you need and which line is closest." },
+          { x: 80, y: 62, label: "Venue leaderboard", description: "See how you rank against everyone else in the bar, updated play by play." },
+        ],
+      },
+    ],
+  },
+  {
+    name: "Pick'Em",
+    description:
+      "Let guests make fresh picks on the day's matchups — then run house challenges around whatever's on your screens. Launch a 'Pick the most World Cup winners' campaign, offer a prize, and watch passive viewers turn into active competitors with a reason to stay, order another round, and see who wins.",
+    shots: [
+      {
+        src: "/info/pick-em.png",
+        alt: "Pick'Em matchup selection screen",
+        width: 750,
+        height: 1484,
+        callouts: [
+          { x: 30, y: 42, label: "Pick the day's winners", description: "Guests check a team to lock a pick — fast, simple, and tied to the games on your screens." },
+          { x: 72, y: 17, label: "Daily pick allowance", description: "A set number of daily picks keeps guests coming back day after day to use them up." },
+          { x: 50, y: 29, label: "Every league you show", description: "NFL, NBA, MLB, soccer and more — run house challenges around whatever's on TV." },
+        ],
+      },
+    ],
+  },
+  {
+    name: "Fantasy Sports",
+    description:
+      "Guests choose a daily fantasy roster tied to the games you're already showing. When your patrons have skin in the game, they're not just watching — they're invested. Stack that with bar-run prizes and you've turned even low stakes NBA games into a reason for guests to stay longer and earn points and prizes.",
+    shots: [
+      {
+        src: "/info/fantasy.png",
+        alt: "Fantasy Sports roster and scoring screen",
+        width: 339,
+        height: 711,
+        callouts: [
+          { x: 50, y: 57, label: "Draft a daily roster", description: "Guests pick a lineup from the games you're already showing — then sweat every stat line." },
+          { x: 50, y: 30, label: "Compete against the house", description: "Players go head-to-head with the venue average, turning any slow game into a personal contest." },
+          { x: 74, y: 39, label: "Bar-run prizes", description: "Tie a real reward like a bar tab to the win and watch casual viewers turn into regulars." },
+        ],
+      },
+    ],
+  },
 ];
 
 const FEATURES = [
@@ -145,6 +256,33 @@ export default function InfoPage() {
               <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
               <a href="#contact" className="hover:text-white transition-colors">Contact</a>
             </nav>
+            <div className="hidden md:flex items-center gap-3 border-l border-white/10 pl-4">
+              <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">Follow us</span>
+              <a
+                href="https://www.instagram.com/thehightopchallenge"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
+                </svg>
+              </a>
+              <a
+                href="https://www.facebook.com/share/19Asg9bacc/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                </svg>
+              </a>
+            </div>
             <a
               href="#contact"
               className="hidden md:inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 htm-btn-glow"
@@ -205,8 +343,9 @@ export default function InfoPage() {
               Venue Entertainment Platform
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight mb-6">
-              Turn Slow Nights Into{" "}
-              <span className="htm-grad"> Game Nights</span>
+              Turn Slow Nights Into
+              <br />
+              <span className="htm-grad">Game Nights</span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
               Real-time competition that keeps guests engaged and coming back for more.
@@ -250,19 +389,15 @@ export default function InfoPage() {
               <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>
                 Hosting a trivia night doesn&apos;t have to be hard or expensive. Hightop Challenge does all the work for you.
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-10">
-                {TRIVIA_GAMES.map((game) => (
-                  <div
+              {/* Trivia screenshots */}
+              <div className="mt-16 flex flex-col gap-24">
+                {TRIVIA_SHOWCASES.map((game) => (
+                  <GameShowcaseBlock
                     key={game.name}
-                    className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/4 p-6 flex flex-row gap-5 items-start"
-                    data-reveal
-                  >
-                    <Image src={game.icon} alt={game.name} width={96} height={96} className="rounded-xl flex-shrink-0" />
-                    <div>
-                      <h3 className="text-lg font-black text-white mb-1">{game.name}</h3>
-                      <p className="text-sm text-slate-400 leading-relaxed">{game.description}</p>
-                    </div>
-                  </div>
+                    game={game}
+                    descriptionSide="left"
+                    id={game.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
+                  />
                 ))}
               </div>
             </div>
@@ -278,33 +413,31 @@ export default function InfoPage() {
               <p className="htm-reveal text-slate-400 text-lg" data-reveal>
                 Guests compete with each other for bragging rights and prizes. If users want to play, they have to come to your establishment.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10">
-                {SPORTS_GAMES.map((game) => (
-                  <div
+              {/* Sports screenshots */}
+              <div className="mt-16 flex flex-col gap-24">
+                {SPORTS_SHOWCASES.map((game) => (
+                  <GameShowcaseBlock
                     key={game.name}
-                    className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/4 p-6 flex flex-row gap-5 items-start"
-                    data-reveal
-                  >
-                    <Image src={game.icon} alt={game.name} width={96} height={96} className="rounded-xl flex-shrink-0" />
-                    <div>
-                      <h3 className="text-lg font-black text-white mb-1">{game.name}</h3>
-                      <p className="text-sm text-slate-400 leading-relaxed">{game.description}</p>
-                    </div>
-                  </div>
+                    game={game}
+                    descriptionSide="left"
+                    id={game.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
+                  />
                 ))}
-                <div
-                  className="htm-reveal htm-card-hover rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-6 flex flex-col justify-between gap-4"
-                  data-reveal
-                >
-                  <div>
-                    <div className="text-4xl mb-4">🎮</div>
-                    <h3 className="text-lg font-black text-white mb-1">More coming soon</h3>
-                    <p className="text-sm text-slate-400 leading-relaxed">New game formats are added regularly. Get in touch to learn what&apos;s next.</p>
-                  </div>
-                  <a href="#contact" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
-                    Contact us →
-                  </a>
+              </div>
+
+              {/* More coming soon */}
+              <div
+                className="htm-reveal htm-card-hover mt-16 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                data-reveal
+              >
+                <div>
+                  <div className="text-4xl mb-4">🎮</div>
+                  <h3 className="text-lg font-black text-white mb-1">More coming soon</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">New game formats are added regularly. Get in touch to learn what&apos;s next.</p>
                 </div>
+                <a href="#contact" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors flex-shrink-0">
+                  Contact us →
+                </a>
               </div>
             </div>
 
@@ -480,15 +613,48 @@ export default function InfoPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
               <div className="col-span-2 md:col-span-1">
                 <Image src="/brand/htc_logo_glow.svg" alt="Hightop Challenge" width={120} height={30} className="mb-4" />
-                <p className="text-sm text-slate-500 leading-relaxed">
+                <p className="text-sm text-slate-500 leading-relaxed mb-6">
                   Venue-based social gaming for bars and restaurants.
                 </p>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Follow us on social!</p>
+                <div className="flex items-center gap-5">
+                  <a
+                    href="https://www.instagram.com/thehightopchallenge"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Hightop Challenge on Instagram"
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <circle cx="12" cy="12" r="4" />
+                      <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
+                    </svg>
+                  </a>
+                  <a
+                    href="https://www.facebook.com/share/19Asg9bacc/?mibextid=wwXIfr"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Hightop Challenge on Facebook"
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                    </svg>
+                  </a>
+                </div>
               </div>
               <div>
                 <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Games</h4>
                 <ul className="flex flex-col gap-2 text-sm text-slate-500">
-                  {["Live Trivia", "Speed Trivia", "Sports Bingo", "Pick'Em", "Fantasy Sports"].map((g) => (
-                    <li key={g}><a href="#games" className="hover:text-white transition-colors">{g}</a></li>
+                  {[
+                    ["Live Trivia", "#live-trivia"],
+                    ["Speed Trivia", "#speed-trivia"],
+                    ["Prop Bingo", "#prop-bingo"],
+                    ["Pick'Em", "#pick-em"],
+                    ["Fantasy Sports", "#fantasy-sports"],
+                  ].map(([label, href]) => (
+                    <li key={label}><a href={href} className="hover:text-white transition-colors">{label}</a></li>
                   ))}
                 </ul>
               </div>

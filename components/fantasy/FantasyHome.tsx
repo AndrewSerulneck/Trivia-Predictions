@@ -601,6 +601,14 @@ function BasketballLoader({ label = "Loading Fantasy..." }: { label?: string }) 
   return <BouncingBallLoader size="md" label={label} />;
 }
 
+function splitPlayerNameForLineup(name: string): { first: string; rest: string } {
+  const parts = String(name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) {
+    return { first: parts[0] ?? "", rest: "" };
+  }
+  return { first: parts[0]!, rest: parts.slice(1).join(" ") };
+}
+
 // Player avatar framed for the chalkboard theme — chalk-cream ring by default,
 // emerald ring while the player is actively scoring. Falls back to silhouette.
 function PlayerHeadshot({
@@ -2518,7 +2526,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
               <ChalkGrid />
               <div className="relative z-[2]">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Live Sweat</p>
+                  <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Live Game</p>
                   {hasLiveEntry ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-[#6ee7b7]/45 bg-emerald-500/15 px-2 py-1 text-[9.5px] font-black uppercase tracking-[0.16em] text-[#6ee7b7]">
                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
@@ -2886,6 +2894,11 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                     ) : (
                                       <span className="text-base font-black text-[#fef3c7]/55">+</span>
                                     )}
+                                    {filled ? (
+                                      <span className="w-full truncate px-1 text-[9px] font-black leading-tight text-[#fef3c7]">
+                                        {name}
+                                      </span>
+                                    ) : null}
                                     <span className={`text-[8.5px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
                                       {item?.position ?? (section.title === "Pitchers" ? "P" : "BAT")}
                                     </span>
@@ -2897,13 +2910,14 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         ))}
                       </div>
                     ) : (
-                      <div className="flex gap-1.5">
+                      <div className="grid grid-cols-5 gap-1">
                         {Array.from({ length: requiredLineupSize }).map((_, i) => {
                           const name = selectedPlayers[i];
                           const poolItem = name
                             ? playerPool.find((item) => normalizePlayerKey(item.playerName) === normalizePlayerKey(name))
                             : undefined;
                           const filled = Boolean(name);
+                          const lineupName = splitPlayerNameForLineup(name ?? "");
                           return (
                             <button
                               key={`slot-${i}`}
@@ -2911,18 +2925,24 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                               disabled={!filled || !canModifyRosterSelections}
                               onClick={() => name && removeSelectedPlayer(name)}
                               aria-label={filled ? `Remove ${name}` : "Empty roster slot"}
-                              className={`flex flex-1 flex-col items-center justify-center gap-1.5 rounded-[11px] py-3.5 text-center transition-transform active:scale-95 disabled:cursor-default ${
+                              className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-[10px] px-0.5 py-2.5 text-center transition-transform active:scale-95 disabled:cursor-default ${
                                 filled
                                   ? "border border-[#fef3c7]/40 bg-[#fef3c7]/10"
                                   : "border border-dashed border-[#fef3c7]/25 bg-black/25"
                               }`}
                             >
                               {filled ? (
-                                <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} sizeClass="h-[42px] w-[42px]" />
+                                <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} sizeClass="h-[34px] w-[34px]" />
                               ) : (
                                 <span className="text-base font-black text-[#fef3c7]/55">+</span>
                               )}
-                              <span className={`text-[8.5px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
+                              {filled ? (
+                                <span className="grid w-full min-w-0 px-0.5 text-center text-[8.5px] font-black leading-[0.95] text-[#fef3c7]">
+                                  <span className="truncate">{lineupName.first}</span>
+                                  {lineupName.rest ? <span className="truncate">{lineupName.rest}</span> : null}
+                                </span>
+                              ) : null}
+                              <span className={`text-[8px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
                                 {poolItem?.position ?? "—"}
                               </span>
                             </button>

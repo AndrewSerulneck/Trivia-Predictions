@@ -399,7 +399,7 @@
     },
     {
       "slug": "dark-knight-joker-actor",
-      "question": "What is the proper noun name of the Australian actor who posthumously won an Oscar for playing the Joker in The Dark Knight?",
+      "question": "What is the name of the Australian actor who posthumously won an Oscar for playing the Joker in The Dark Knight?",
       "answer": "Heath Ledger",
       "answer_format": "write_in",
       "category": "Movies",
@@ -411,7 +411,7 @@
     },
     {
       "slug": "star-wars-wookiee-copilot",
-      "question": "What is the proper noun name of Han Solo's loyal Wookiee co-pilot in the Star Wars franchise?",
+      "question": "What is the name of Han Solo's loyal Wookiee co-pilot in the Star Wars franchise?",
       "answer": "Chewbacca",
       "answer_format": "write_in",
       "category": "Movies",
