@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ContactForm } from "@/components/info/ContactForm";
 
 
 const TRIVIA_GAMES = [
@@ -17,7 +18,7 @@ const SPORTS_GAMES = [
 ];
 
 const FEATURES = [
-  { icon: "📍", title: "Drives repeat visits", body: "Every game is geofenced to your venue — it only works in your bar! Players compete with the people actually in your bar. That shared competition keeps them coming back." },
+  { icon: "📍", title: "Drives repeat visits", body: "Every game is geofenced to your venue — it only works in your bar! Players compete with the people around them. That shared competition creates a community and keeps them coming back." },
   { icon: "🍺", title: "Longer stays, higher tabs", body: "Games keep guests engaged longer, encouraging additional food and beverage purchases with every round." },
   { icon: "📱", title: "No hardware required", body: "Players use their own phones. No tablets, no installs, no devices to buy, replace, charge, or update. No app download required." },
   { icon: "📅", title: "Schedule around your business", body: "Launch live trivia, speed trivia, or other challenges whenever you need a boost. Target slow periods and turn them into your busiest nights." },
@@ -142,10 +143,10 @@ export default function InfoPage() {
               <a href="#features" className="hover:text-white transition-colors">Features</a>
               <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
               <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-              <a href="mailto:partnerships@hightopchallenge.com" className="hover:text-white transition-colors">Contact</a>
+              <a href="#contact" className="hover:text-white transition-colors">Contact</a>
             </nav>
             <a
-              href="mailto:partnerships@hightopchallenge.com"
+              href="#contact"
               className="hidden md:inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 htm-btn-glow"
             >
               Get in touch
@@ -167,9 +168,10 @@ export default function InfoPage() {
               <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Features</a>
               <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">How It Works</a>
               <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Pricing</a>
-              <a href="mailto:partnerships@hightopchallenge.com" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Contact</a>
+              <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Contact</a>
               <a
-                href="mailto:partnerships@hightopchallenge.com"
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
                 className="mt-2 inline-flex justify-center rounded-xl bg-cyan-400 px-4 py-3 text-sm font-black text-slate-950"
               >
                 Get in touch
@@ -214,7 +216,7 @@ export default function InfoPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:partnerships@hightopchallenge.com"
+                href="#contact"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-8 py-4 text-base font-black text-slate-950 htm-btn-glow"
               >
                 Request a Demo
@@ -299,7 +301,7 @@ export default function InfoPage() {
                     <h3 className="text-lg font-black text-white mb-1">More coming soon</h3>
                     <p className="text-sm text-slate-400 leading-relaxed">New game formats are added regularly. Get in touch to learn what&apos;s next.</p>
                   </div>
-                  <a href="mailto:partnerships@hightopchallenge.com" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
+                  <a href="#contact" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
                     Contact us →
                   </a>
                 </div>
@@ -410,7 +412,7 @@ export default function InfoPage() {
                 ))}
               </ul>
               <a
-                href="mailto:partnerships@hightopchallenge.com"
+                href="#contact"
                 className="rounded-xl bg-cyan-400 px-6 py-4 text-center text-base font-black text-slate-950 htm-btn-glow"
               >
                 Get Started
@@ -437,7 +439,7 @@ export default function InfoPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <a
-                    href="mailto:partnerships@hightopchallenge.com"
+                    href="#contact"
                     className="inline-flex items-center justify-center rounded-xl bg-cyan-400 px-8 py-4 text-base font-black text-slate-950 htm-btn-glow"
                   >
                     Request a Demo
@@ -450,6 +452,24 @@ export default function InfoPage() {
                   </a>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── CONTACT ── */}
+        <section id="contact" className="py-24 px-5">
+          <div className="mx-auto max-w-3xl">
+            <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
+              Get in Touch
+            </div>
+            <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>
+              Interested in Hightop Challenge for your venue?
+            </h2>
+            <p className="htm-reveal text-slate-400 text-lg mb-10" data-reveal>
+              Fill out the form below and we&apos;ll reach out to walk you through everything.
+            </p>
+            <div className="htm-reveal rounded-3xl border border-white/8 bg-white/3 p-8 md:p-10" data-reveal>
+              <ContactForm />
             </div>
           </div>
         </section>
@@ -483,6 +503,7 @@ export default function InfoPage() {
               <div>
                 <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Contact</h4>
                 <ul className="flex flex-col gap-2 text-sm text-slate-500">
+                  <li><a href="#contact" className="hover:text-white transition-colors">Contact Us</a></li>
                   <li><a href="mailto:partnerships@hightopchallenge.com" className="hover:text-white transition-colors">partnerships@hightopchallenge.com</a></li>
                 </ul>
               </div>
