@@ -380,7 +380,7 @@ function HightopNeonLogo() {
   return (
     <div className="w-full select-none" aria-label="Hightop Challenge">
       <img
-        src="/brand/htc_logo_glow.svg"
+        src="/brand/HTC_Logo_Final_Transparent copy.png"
         alt="Hightop Challenge"
         className="block h-auto w-full"
         loading="eager"

@@ -72,7 +72,7 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
           ? "bg-slate-950"
           : isFullscreen
           ? ""
-          : "mx-auto flex flex-col max-w-[720px] box-border overflow-x-hidden overflow-y-visible pb-24"
+          : "mx-auto flex flex-col max-w-[720px] box-border overflow-x-hidden overflow-y-visible"
       }`}
       style={isAdmin || isFullscreen ? undefined : { minHeight: "100lvh" }}
     >
@@ -84,7 +84,7 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
       ) : null}
 
       <Suspense fallback={null}>
-        <main className={isAdmin ? "h-full min-h-0" : "flex-1"}>{children}</main>
+        <main className={isAdmin ? "h-full min-h-0" : "flex-1 pb-24"}>{children}</main>
       </Suspense>
       {!isAdmin && !isFullscreen ? (
         <footer className="relative z-10 border-t border-ht-border-hairline bg-ht-surface px-3 py-2 text-center text-xs leading-relaxed text-ht-fg-muted break-words">
