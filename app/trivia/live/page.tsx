@@ -1055,7 +1055,7 @@ export default function LiveShowdownPage() {
         className="flex flex-col bg-slate-950 p-4 text-white overflow-hidden"
         style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
       >
-        {hasOnboarded ? "Loading Lobby..." : "Syncing Live Showdown..."}
+        {hasOnboarded ? "Loading Lobby..." : "Syncing Live Trivia Showdown..."}
       </main>
     );
   }
@@ -1182,7 +1182,7 @@ export default function LiveShowdownPage() {
             >
               ←
             </button>
-            <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Showdown</h1>
+            <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Trivia Showdown</h1>
             {process.env.NODE_ENV === "development" && (
               <button
                 type="button"
@@ -1288,7 +1288,7 @@ export default function LiveShowdownPage() {
                         </p>
                         <p className="truncate text-xl font-black leading-tight text-white">{viewerUsername}</p>
                         <p className="truncate text-[11px] text-slate-500">
-                          {state.venueName ?? state.scheduleTitle ?? "Live Showdown"}
+                          {state.venueName ?? state.scheduleTitle ?? "Live Trivia Showdown"}
                           {state.totalRounds
                             ? ` · ${state.totalRounds * QUESTIONS_PER_ROUND} questions · ${state.totalRounds} round${
                                 state.totalRounds !== 1 ? "s" : ""
@@ -1442,7 +1442,7 @@ export default function LiveShowdownPage() {
                         <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
                         <p className="truncate text-xl font-black leading-tight text-white">{viewerUsername}</p>
                         <p className="truncate text-[11px] text-slate-500">
-                          {state.venueName ?? state.scheduleTitle ?? "Live Showdown"}
+                          {state.venueName ?? state.scheduleTitle ?? "Live Trivia Showdown"}
                           {state.totalRounds
                             ? ` · ${state.totalRounds * QUESTIONS_PER_ROUND} questions · ${state.totalRounds} round${
                                 state.totalRounds !== 1 ? "s" : ""
