@@ -12,7 +12,9 @@ import { TriviaPendingReviewSection } from "@/components/admin/sections/TriviaPe
 import { TriviaAnswerGraderSection } from "@/components/admin/sections/TriviaAnswerGraderSection";
 import { TriviaImageReviewSection } from "@/components/admin/sections/TriviaImageReviewSection";
 import { TriviaListSection } from "@/components/admin/sections/TriviaListSection";
+import { LiveTriviaInventorySection } from "@/components/admin/sections/LiveTriviaInventorySection";
 import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsSection";
+import { UsernameModerationSection } from "@/components/admin/sections/UsernameModerationSection";
 import { UsersSection } from "@/components/admin/sections/UsersSection";
 import { VenuesSection } from "@/components/admin/sections/VenuesSection";
 import LegacySectionPlaceholder from "@/components/admin/sections/LegacySectionPlaceholder";
@@ -34,7 +36,9 @@ export type AdminSection =
   | "ads-create"
   | "ads-list"
   | "challenge-campaigns"
-  | "live-trivia";
+  | "live-trivia"
+  | "live-trivia-inventory"
+  | "username-moderation";
 
 export type AdminSectionOption = {
   id: AdminSection;
@@ -80,6 +84,7 @@ function PlacementBuilderSection({ venues = [] }: { venues?: Venue[] }) {
 
 export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "accounts",              label: "Accounts",              slug: "accounts",              status: { label: "Ready", tone: "live" }, component: AccountsSection },
+  { id: "username-moderation",   label: "Username Moderation",   slug: "username-moderation",   status: { label: "Ready", tone: "live" }, component: UsernameModerationSection },
   { id: "venue-users",           label: "Venue Users",           slug: "venue-users",           component: VenueUsersSection },
   { id: "user-analytics",        label: "User Analytics",        slug: "user-analytics",        status: { label: "Planned", tone: "planned" }, component: UserAnalyticsSection },
   { id: "venue-manage",          label: "Venue Profiles",        slug: "venue-manage",          component: VenueProfilesSection },
@@ -94,13 +99,14 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "ad-debug",              label: "Ad Analytics",          slug: "ad-debug",              component: AdAnalyticsDashboard },
   { id: "challenge-campaigns",   label: "Challenge Manager",     slug: "challenge-campaigns",   component: ChallengeManagerSection },
   { id: "live-trivia",           label: "Live Trivia Schedules", slug: "live-trivia",           component: LiveTriviaSchedulesSection },
+  { id: "live-trivia-inventory", label: "Question Inventory",    slug: "live-trivia-inventory", status: { label: "Ready", tone: "live" }, component: LiveTriviaInventorySection },
   { id: "pickem-settlement",     label: "Pick 'Em Settlement",   slug: "pickem-settlement",     status: { label: "Ready", tone: "live" }, component: PickEmSettlementSection },
 ];
 
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     label: "Users & Venues",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["accounts", "venue-users", "user-analytics", "venue-manage"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["accounts", "username-moderation", "venue-users", "user-analytics", "venue-manage"].includes(opt.id)),
   },
   {
     label: "Content",
@@ -112,7 +118,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Challenges & Events",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["challenge-campaigns", "live-trivia"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["challenge-campaigns", "live-trivia", "live-trivia-inventory"].includes(opt.id)),
   },
   {
     label: "Operations",
@@ -122,6 +128,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
 
 export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "accounts",
+  "username-moderation",
   "venue-users",
   "venue-manage",
   "trivia-list",
@@ -131,6 +138,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "trivia-image-review",
   "challenge-campaigns",
   "live-trivia",
+  "live-trivia-inventory",
   "ad-placement",
   "ad-debug",
   "ads-list",

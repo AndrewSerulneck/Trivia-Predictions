@@ -26,12 +26,12 @@ import {
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const QUESTIONS_PER_ROUND = 15;
-const QUESTION_BLOCK_MS = 45_000;
-const ANSWERING_MS = 30_000;
+const ANSWERING_MS = 60_000;
 const REST_WARNING_MS = 15_000;
-const QUESTION_WINDOW_MS = QUESTIONS_PER_ROUND * QUESTION_BLOCK_MS; // 11 min 15 sec
-const ROUND_MS = 20 * 60_000; // 20 min
-const MID_GAME_BREAK_MS = ROUND_MS - QUESTION_WINDOW_MS; // 3 min 45 sec
+const QUESTION_BLOCK_MS = ANSWERING_MS + REST_WARNING_MS; // 75 sec
+const QUESTION_WINDOW_MS = QUESTIONS_PER_ROUND * QUESTION_BLOCK_MS; // 18 min 45 sec
+const MID_GAME_BREAK_MS = 525_000; // 8 min 45 sec
+const ROUND_MS = QUESTION_WINDOW_MS + MID_GAME_BREAK_MS; // 27 min 30 sec
 const BLOCKED_LIVE_SHOWDOWN_CATEGORIES = new Set(["fantasy epics"]);
 const RECENT_CATEGORY_COOLDOWN_OCCURRENCES = 3;
 const RECENT_CATEGORY_SLOT_LOOKBACK_LIMIT = 360;
@@ -75,6 +75,7 @@ export type LiveTriviaSeedQuestion = {
   slug: string | null;
   question?: string | null;
   category: string | null;
+  subcategory?: string | null;
   options: unknown;
   correct_answer: number;
   question_pool: "anytime_blitz" | "live_showdown";
@@ -513,7 +514,7 @@ export async function loadActiveLiveTriviaSeedQuestionPool(
     () =>
       admin
         .from("trivia_questions")
-        .select("slug, question, category, options, correct_answer, question_pool, source_order, source_file")
+        .select("slug, question, category, subcategory, options, correct_answer, question_pool, source_order, source_file")
         .eq("status", "active")
         .eq("question_pool", "live_showdown")
         .not("slug", "is", null)
@@ -522,7 +523,7 @@ export async function loadActiveLiveTriviaSeedQuestionPool(
     () =>
       admin
         .from("trivia_questions")
-        .select("slug, question, category, options, correct_answer, question_pool")
+        .select("slug, question, category, subcategory, options, correct_answer, question_pool")
         .eq("status", "active")
         .eq("question_pool", "live_showdown")
         .not("slug", "is", null)
@@ -621,20 +622,25 @@ function pickBalancedRoundQuestions(params: {
         violatesTemplateSpacing(candidate.profile, params.recentProfiles)
     );
     const slugRelaxed = candidates.filter((candidate) => violatesSlugFamilySpacing(candidate.profile, params.recentProfiles));
-    const tiers = [
-      hardSpacingWithoutTopicOverlap.filter((candidate) => !candidate.wasSeen && isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
-      hardSpacingWithoutTopicOverlap.filter((candidate) => !candidate.wasSeen),
-      hardSpacing.filter((candidate) => !candidate.wasSeen && isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
-      hardSpacing.filter((candidate) => !candidate.wasSeen),
-      hardSpacingWithoutTopicOverlap.filter((candidate) => candidate.wasSeen && isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
-      hardSpacingWithoutTopicOverlap.filter((candidate) => candidate.wasSeen),
-      hardSpacing.filter((candidate) => candidate.wasSeen && isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
-      hardSpacing.filter((candidate) => candidate.wasSeen),
-      templateRelaxed.filter((candidate) => !candidate.wasSeen),
-      templateRelaxed.filter((candidate) => candidate.wasSeen),
-      slugRelaxed.filter((candidate) => !candidate.wasSeen),
-      slugRelaxed.filter((candidate) => candidate.wasSeen),
+    // Phase 3 — strict per-category exhaustion: every UNSEEN candidate must be
+    // preferred over any SEEN candidate, regardless of how far spacing has to be
+    // relaxed. Spacing/topic/band quality only breaks ties *within* the unseen set
+    // (and within the seen set). This guarantees a question never repeats at a venue
+    // until that category's entire unseen pool is consumed.
+    const orderedBySpacing = [
+      hardSpacingWithoutTopicOverlap.filter((candidate) => isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
+      hardSpacingWithoutTopicOverlap,
+      hardSpacing.filter((candidate) => isBelowBandTarget(candidate.profile, bandCounts, targetBandCounts)),
+      hardSpacing,
+      templateRelaxed,
+      slugRelaxed,
       candidates,
+    ];
+    const unseenOf = (tier: LiveTriviaCandidatePick[]) => tier.filter((candidate) => !candidate.wasSeen);
+    const seenOf = (tier: LiveTriviaCandidatePick[]) => tier.filter((candidate) => candidate.wasSeen);
+    const tiers = [
+      ...orderedBySpacing.map(unseenOf),
+      ...orderedBySpacing.map(seenOf),
     ];
     const activeTier = tiers.find((tier) => tier.length > 0) ?? [];
     const selected = pickLowestPenaltyCandidate(activeTier, state);
@@ -678,7 +684,7 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
   venueId: string;
   numRounds: number;
   questionsPerRound?: number;
-}): { slots: LiveTriviaSeedSlot[]; usedSeen: boolean; repeatedQuestions: boolean; usedRecentCategory: boolean } {
+}): { slots: LiveTriviaSeedSlot[]; usedSeen: boolean; repeatedQuestions: boolean; usedRecentCategory: boolean; usedOverflow: boolean } {
   const safeVenueId = toSafeVenueId(params.venueId);
   const rounds = clampRounds(params.numRounds);
   const questionsPerRound = Math.max(1, Math.min(100, Math.floor(Number(params.questionsPerRound ?? QUESTIONS_PER_ROUND))));
@@ -739,10 +745,11 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
   const eligibleCategories = [...freshCategories, ...cooledCategories];
 
   if (eligibleCategories.length === 0) {
-    return { slots: [], usedSeen: false, repeatedQuestions: false, usedRecentCategory: false };
+    return { slots: [], usedSeen: false, repeatedQuestions: false, usedRecentCategory: false, usedOverflow: false };
   }
 
   const selectedCategories: string[] = [];
+  const selectedSet = new Set<string>();
   let cycleIndex = 0;
   while (selectedCategories.length < rounds) {
     const freshSeed = buildSeedKey([
@@ -767,10 +774,17 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
       ...seededShuffle(freshCategories, freshSeed),
       ...seededShuffle(cooledCategories, cooledSeed),
     ];
+    let addedThisCycle = 0;
     for (const category of cycle) {
       if (selectedCategories.length >= rounds) break;
+      // Allow repeats only after all eligible categories have been used once
+      if (selectedSet.has(category) && selectedSet.size < eligibleCategories.length) continue;
       selectedCategories.push(category);
+      selectedSet.add(category);
+      addedThisCycle += 1;
     }
+    // Safety valve: if a full cycle added nothing (e.g. eligibleCategories is empty), stop
+    if (addedThisCycle === 0) break;
     cycleIndex += 1;
   }
 
@@ -780,6 +794,7 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
   let usedSeen = false;
   let repeatedQuestions = false;
   let usedRecentCategory = false;
+  let usedOverflow = false;
 
   for (let roundIndex = 0; roundIndex < rounds; roundIndex += 1) {
     const category = selectedCategories[roundIndex] ?? eligibleCategories[0]!;
@@ -806,6 +821,40 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
     if (picked.some((candidate) => candidate.wasSeen)) usedSeen = true;
 
     if (picked.length < questionsPerRound) {
+      // Phase 2: before repeating, draw unseen questions from other categories.
+      const overflowRows = Array.from(byCategory.entries())
+        .filter(([cat]) => cat !== category)
+        .flatMap(([, rows]) => rows)
+        .filter((row) => !params.seenSlugs.has(row.slug));
+
+      if (overflowRows.length > 0) {
+        const overflowSeed = buildSeedKey([
+          "live-trivia",
+          "questions",
+          "overflow",
+          safeVenueId,
+          params.occurrenceDate,
+          params.scheduleId,
+          category,
+          String(roundIndex + 1),
+        ]);
+        const overflowPicked = pickBalancedRoundQuestions({
+          rows: overflowRows,
+          seenSlugs: params.seenSlugs,
+          usedInOccurrence,
+          recentProfiles,
+          count: questionsPerRound - picked.length,
+          scheduleSeed: overflowSeed,
+        });
+        if (overflowPicked.length > 0) usedOverflow = true;
+        for (const p of overflowPicked) {
+          picked.push(p);
+        }
+      }
+    }
+
+    if (picked.length < questionsPerRound) {
+      // Last resort: repeat from the primary category (seen questions allowed).
       const repeatPool = seededShuffle(categoryRows, roundQuestionSeed ^ 0x9e3779b9);
       let repeatIndex = 0;
       while (picked.length < questionsPerRound && repeatPool.length > 0) {
@@ -825,7 +874,7 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
       const candidate = picked[questionIndex]!;
       slots.push({
         slug: candidate.row.slug,
-        category,
+        category: candidate.profile.category,
         roundNumber: roundIndex + 1,
         questionIndex: questionIndex + 1,
         wasSeen: candidate.wasSeen,
@@ -835,7 +884,7 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
     if (slots.length >= totalSlots) break;
   }
 
-  return { slots: slots.slice(0, totalSlots), usedSeen, repeatedQuestions, usedRecentCategory };
+  return { slots: slots.slice(0, totalSlots), usedSeen, repeatedQuestions, usedRecentCategory, usedOverflow };
 }
 
 function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
@@ -1653,6 +1702,91 @@ async function loadRecentVenueLiveTriviaCategories(
   }
 }
 
+// How many full rounds' worth of recently-seen questions to carry forward (hold
+// back) when a category's epoch resets, so a question never reappears back-to-back
+// across the reset seam.
+const CATEGORY_RESET_CARRY_FORWARD_ROUNDS = 2;
+
+// Phase 3 — per-category epoch reset. For each category whose entire active pool
+// has been seen at this venue, free the oldest-seen questions (making them eligible
+// again) while keeping the most-recent `carryForward` as still-seen. Returns the set
+// of freed slugs so the caller can drop them from the in-memory seen set. Best-effort:
+// a failure to reset one category never blocks seeding.
+async function resetExhaustedVenueCategories(
+  admin: NonNullable<typeof supabaseAdmin>,
+  venueId: string,
+  pool: readonly LiveTriviaSeedQuestion[],
+  seenAtBySlug: ReadonlyMap<string, string>
+): Promise<Set<string>> {
+  const slugsByCategory = new Map<string, string[]>();
+  for (const row of pool) {
+    const slug = String(row.slug ?? "").trim();
+    if (!slug) continue;
+    if (row.question_pool !== "live_showdown") continue;
+    if (isBlockedLiveTriviaCategory(row.category)) continue;
+    if (!isLiveTriviaSeedAnswerAllowed(getLiveTriviaCorrectAnswer(row))) continue;
+    const category = normalizeLiveTriviaCategory(row.category);
+    const list = slugsByCategory.get(category) ?? [];
+    list.push(slug);
+    slugsByCategory.set(category, list);
+  }
+
+  const freed = new Set<string>();
+  for (const [category, slugs] of slugsByCategory) {
+    const seenInCategory = slugs.filter((slug) => seenAtBySlug.has(slug));
+    // Only reset once a category is fully exhausted. A 1-question category can't be
+    // meaningfully rotated, so leave it alone (its repeats are unavoidable).
+    if (seenInCategory.length < slugs.length || slugs.length < 2) continue;
+
+    const carryForward = Math.min(
+      QUESTIONS_PER_ROUND * CATEGORY_RESET_CARRY_FORWARD_ROUNDS,
+      Math.floor(slugs.length / 2)
+    );
+    // Free the oldest-seen questions; keep the most-recent `carryForward` as seen.
+    const oldestFirst = seenInCategory
+      .slice()
+      .sort((a, b) => (seenAtBySlug.get(a) ?? "").localeCompare(seenAtBySlug.get(b) ?? ""));
+    const toFree = oldestFirst.slice(0, Math.max(0, seenInCategory.length - carryForward));
+    if (toFree.length === 0) continue;
+
+    let deleteFailed = false;
+    for (let start = 0; start < toFree.length; start += 100) {
+      const batch = toFree.slice(start, start + 100);
+      const { error: deleteError } = await admin
+        .from("venue_seen_questions")
+        .delete()
+        .eq("venue_id", venueId)
+        .in("question_id", batch);
+      if (deleteError) {
+        console.error(
+          `[seedOccurrenceQuestions] Failed to reset category "${category}" for venue ${venueId}: ${deleteError.message}`
+        );
+        deleteFailed = true;
+        break;
+      }
+      for (const slug of batch) freed.add(slug);
+    }
+    if (deleteFailed) continue;
+
+    // Best-effort audit row — never blocks seeding.
+    void admin
+      .from("venue_category_resets")
+      .insert({
+        venue_id: venueId,
+        category,
+        category_total: slugs.length,
+        freed_count: toFree.length,
+        carried_forward_count: seenInCategory.length - toFree.length,
+      })
+      .then(({ error }) => {
+        if (error) {
+          console.error("[seedOccurrenceQuestions] Failed to record category reset:", error.message);
+        }
+      });
+  }
+  return freed;
+}
+
 // Seeds trivia_session_questions for one occurrence. Idempotent: if rows already
 // exist for (schedule_id, occurrence_date) it returns without re-seeding.
 // Questions are selected category-first, deduplicated against venue_seen_questions
@@ -1692,23 +1826,30 @@ export async function seedOccurrenceQuestions(
     return { seeded: 0, skipped: totalSlots };
   }
 
-  // Slugs already used at this venue.
+  // Slugs already used at this venue, with recency for per-category epoch resets.
   const { data: seenData, error: seenError } = await admin
     .from("venue_seen_questions")
-    .select("question_id")
+    .select("question_id, seen_at")
     .eq("venue_id", safeVenueId);
   if (seenError) {
     throw new Error(seenError.message || "Failed to load venue seen questions.");
   }
-  const seenSlugs = new Set(
-    ((seenData ?? []) as Array<{ question_id: string | null }>)
-      .map((r) => String(r.question_id ?? "").trim())
-      .filter(Boolean)
-  );
+  const seenAtBySlug = new Map<string, string>();
+  for (const r of (seenData ?? []) as Array<{ question_id: string | null; seen_at?: string | null }>) {
+    const slug = String(r.question_id ?? "").trim();
+    if (slug) seenAtBySlug.set(slug, String(r.seen_at ?? ""));
+  }
 
   // Active question pool in a deterministic base order, with source metadata
   // from DB columns or canonical JSON fallback.
   const poolData = await loadActiveLiveTriviaSeedQuestionPool(admin);
+
+  // Phase 3 — recycle fully-exhausted categories (per-category epoch reset) before
+  // seeding, holding back the most-recent questions to avoid back-to-back repeats.
+  const freedSlugs = await resetExhaustedVenueCategories(admin, safeVenueId, poolData, seenAtBySlug);
+  const seenSlugs = new Set(
+    Array.from(seenAtBySlug.keys()).filter((slug) => !freedSlugs.has(slug))
+  );
 
   const recentCategories = await loadRecentVenueLiveTriviaCategories(safeVenueId, occurrenceDate);
   const seedResult = buildLiveTriviaOccurrenceSeedSlots({
@@ -1731,17 +1872,34 @@ export async function seedOccurrenceQuestions(
     seedResult.usedSeen ||
     seedResult.repeatedQuestions ||
     seedResult.usedRecentCategory ||
+    seedResult.usedOverflow ||
     seedResult.slots.length < totalSlots
   ) {
-    // TODO(Prompt 10): persist a venue_question_warnings row / fire a notification
-    // when a venue runs low on unseen questions. The table/notifier does not exist
-    // yet, so we only log for now.
     console.warn(
       `[seedOccurrenceQuestions] venue ${safeVenueId} ran low on unseen questions for ${occurrenceDate} ` +
         `(seeded=${seedResult.slots.length}, needed=${totalSlots}, usedSeen=${seedResult.usedSeen}, ` +
-        `repeatedQuestions=${seedResult.repeatedQuestions}, usedRecentCategory=${seedResult.usedRecentCategory}, ` +
-        `recentCategoryCount=${recentCategories.size}).`
+        `repeatedQuestions=${seedResult.repeatedQuestions}, usedOverflow=${seedResult.usedOverflow}, ` +
+        `usedRecentCategory=${seedResult.usedRecentCategory}, recentCategoryCount=${recentCategories.size}).`
     );
+    // Persist warning row — best-effort, never blocks seeding.
+    void admin
+      .from("venue_question_warnings")
+      .insert({
+        venue_id: safeVenueId,
+        schedule_id: scheduleId,
+        occurrence_date: occurrenceDate,
+        used_seen: seedResult.usedSeen,
+        repeated_questions: seedResult.repeatedQuestions,
+        used_recent_category: seedResult.usedRecentCategory,
+        used_overflow: seedResult.usedOverflow,
+        seeded_count: seedResult.slots.length,
+        needed_count: totalSlots,
+      })
+      .then(({ error }) => {
+        if (error) {
+          console.error("[seedOccurrenceQuestions] Failed to persist question warning:", error.message);
+        }
+      });
   }
 
   const sessionRowsWithOccurrence = seedResult.slots.map((slot) => ({

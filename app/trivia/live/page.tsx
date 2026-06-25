@@ -118,7 +118,7 @@ type FeedbackState =
   | "unsubmitted_inactive";
 
 const RULE_LINES = [
-  "30 seconds to type your answer.",
+  "60 seconds to type your answer.",
   "15 seconds between questions.",
   "Correct answers award +10 points.",
   "If the answer is a number, and no one gets it right, the closest guess wins 10 points.",
@@ -490,13 +490,15 @@ export default function LiveShowdownPage() {
   // When the game is inactive (idle / upcoming), poll infrequently — the
   // countdown is kept smooth by a local ticker below, not by server fetches.
   // When a game is active, poll every 1 second for live game state.
+  // Slow to 15s on the final results screen since state no longer changes.
   const isGameActive = Boolean(state?.isGameActive);
+  const isFinalResultsWindow = Boolean(state?.isFinalResultsWindow);
   useEffect(() => {
     void fetchState();
-    const intervalMs = isGameActive ? 1000 : 15_000;
+    const intervalMs = !isGameActive || isFinalResultsWindow ? 15_000 : 1000;
     const timer = window.setInterval(() => void fetchState(), intervalMs);
     return () => window.clearInterval(timer);
-  }, [fetchState, isGameActive]);
+  }, [fetchState, isGameActive, isFinalResultsWindow]);
 
   // Local countdown state: derives secondsRemaining from the known
   // nextSchedule.startTime so the countdown stays smooth between server fetches.
@@ -1114,7 +1116,7 @@ export default function LiveShowdownPage() {
   const canJoinLobby = state.isGameActive || Boolean(state.nextSchedule);
   const joinButtonShouldPulse = state.isGameActive || pregameJoinWindowActive;
   const locked = forfeitKey === activeKey || submittedKey === activeKey || !answering;
-  const progressPct = answering ? Math.max(0, Math.min(100, (state.secondsRemaining / 30) * 100)) : 0;
+  const progressPct = answering ? Math.max(0, Math.min(100, (state.secondsRemaining / 60) * 100)) : 0;
   const currentResult = isSpectatingActiveBlock ? undefined : activeKey ? resultByKey[activeKey] : undefined;
   const unsubmittedIsInactive = Boolean(activeKey && participatingQuestionKeys[activeKey]);
   const feedbackState: FeedbackState = !currentResult
@@ -1576,7 +1578,7 @@ export default function LiveShowdownPage() {
                   <ul className="mt-3 space-y-2">
                     <li className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3">
                       <span className="mt-0.5 text-xl">⏱</span>
-                      <span className="text-base font-semibold text-slate-100">30 seconds to type your answer for each question. Don&apos;t close or switch tabs during live play.</span>
+                      <span className="text-base font-semibold text-slate-100">60 seconds to type your answer for each question. Don&apos;t close or switch tabs during live play.</span>
                     </li>
                     <li className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3">
                       <span className="mt-0.5 text-xl">🏆</span>

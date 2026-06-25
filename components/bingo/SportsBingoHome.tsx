@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, ListChecks, Plus, Trophy } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ListChecks, Maximize2, Minimize2, Plus, Trophy } from "lucide-react";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
-import type { TouchEvent as ReactTouchEvent } from "react";
+import type { CSSProperties, TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
@@ -99,6 +99,16 @@ type VisualEngagementEvent = {
   majorGlow?: boolean;
 };
 
+type FullscreenCapableElement = HTMLElement & {
+  webkitRequestFullscreen?: () => Promise<void> | void;
+};
+
+type FullscreenCapableDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitFullscreenEnabled?: boolean;
+  webkitExitFullscreen?: () => Promise<void> | void;
+};
+
 const LINE_PATTERNS: number[][] = [
   [0, 1, 2, 3, 4],
   [5, 6, 7, 8, 9],
@@ -115,6 +125,51 @@ const LINE_PATTERNS: number[][] = [
 ];
 const BINGO_GAME_BUFFER_MS = 6 * 60 * 60 * 1000;
 const FINAL_SCORES_RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
+const DEFAULT_LANDSCAPE_VIEWPORT_STYLE = {
+  "--bingo-landscape-vw": "100vw",
+  "--bingo-landscape-vh": "100svh",
+  "--bingo-landscape-left": "0px",
+  "--bingo-landscape-top": "0px",
+} as CSSProperties;
+const FULLSCREEN_HINT_STORAGE_KEY = "hightop-bingo-fullscreen-hint-seen";
+
+function getFullscreenElement(): Element | null {
+  const fullscreenDocument = document as FullscreenCapableDocument;
+  return document.fullscreenElement ?? fullscreenDocument.webkitFullscreenElement ?? null;
+}
+
+function isFullscreenAvailable(element: HTMLElement = document.documentElement): boolean {
+  const fullscreenDocument = document as FullscreenCapableDocument;
+  const fullscreenElement = element as FullscreenCapableElement;
+  return Boolean(
+    document.fullscreenEnabled ||
+      fullscreenDocument.webkitFullscreenEnabled ||
+      fullscreenElement.requestFullscreen ||
+      fullscreenElement.webkitRequestFullscreen
+  );
+}
+
+async function requestElementFullscreen(element: HTMLElement): Promise<void> {
+  const fullscreenElement = element as FullscreenCapableElement;
+  if (fullscreenElement.requestFullscreen) {
+    await fullscreenElement.requestFullscreen();
+    return;
+  }
+  if (fullscreenElement.webkitRequestFullscreen) {
+    await fullscreenElement.webkitRequestFullscreen();
+  }
+}
+
+async function exitDocumentFullscreen(): Promise<void> {
+  const fullscreenDocument = document as FullscreenCapableDocument;
+  if (document.exitFullscreen) {
+    await document.exitFullscreen();
+    return;
+  }
+  if (fullscreenDocument.webkitExitFullscreen) {
+    await fullscreenDocument.webkitExitFullscreen();
+  }
+}
 
 function formatLocalDateTime(iso: string): string {
   const date = new Date(iso);
@@ -767,6 +822,12 @@ export function SportsBingoHome({
   const [recentlyAddedCardIds, setRecentlyAddedCardIds] = useState<Set<string>>(new Set());
   const [isScreenShaking, setIsScreenShaking] = useState(false);
   const [isLandscapeGameView, setIsLandscapeGameView] = useState(false);
+  const [landscapeViewportStyle, setLandscapeViewportStyle] = useState<CSSProperties>(DEFAULT_LANDSCAPE_VIEWPORT_STYLE);
+  const [isFullscreenSupported, setIsFullscreenSupported] = useState(false);
+  const [hasCheckedFullscreenSupport, setHasCheckedFullscreenSupport] = useState(false);
+  const [isLandscapeFullscreen, setIsLandscapeFullscreen] = useState(false);
+  const [fullscreenFeedback, setFullscreenFeedback] = useState("");
+  const [showFullscreenHint, setShowFullscreenHint] = useState(false);
   const [landscapeBoardMode, setLandscapeBoardMode] = useState<LandscapeBoardMode>("active");
   const [landscapeActiveBoardIndex, setLandscapeActiveBoardIndex] = useState(0);
   const [landscapeScoredBoardIndex, setLandscapeScoredBoardIndex] = useState(0);
@@ -895,6 +956,100 @@ export function SportsBingoHome({
       window.removeEventListener("orientationchange", updateLandscapeMode);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isLandscapeGameView) {
+      setLandscapeViewportStyle(DEFAULT_LANDSCAPE_VIEWPORT_STYLE);
+      return;
+    }
+
+    let rafId = 0;
+    const updateViewportStyle = () => {
+      window.cancelAnimationFrame(rafId);
+      rafId = window.requestAnimationFrame(() => {
+        const viewport = window.visualViewport;
+        const width = Math.round(viewport?.width ?? window.innerWidth);
+        const height = Math.round(viewport?.height ?? window.innerHeight);
+        const left = Math.round(viewport?.offsetLeft ?? 0);
+        const top = Math.round(viewport?.offsetTop ?? 0);
+
+        setLandscapeViewportStyle({
+          "--bingo-landscape-vw": `${width}px`,
+          "--bingo-landscape-vh": `${height}px`,
+          "--bingo-landscape-left": `${left}px`,
+          "--bingo-landscape-top": `${top}px`,
+        } as CSSProperties);
+      });
+    };
+
+    updateViewportStyle();
+    window.visualViewport?.addEventListener("resize", updateViewportStyle);
+    window.visualViewport?.addEventListener("scroll", updateViewportStyle);
+    window.addEventListener("resize", updateViewportStyle);
+    window.addEventListener("orientationchange", updateViewportStyle);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.visualViewport?.removeEventListener("resize", updateViewportStyle);
+      window.visualViewport?.removeEventListener("scroll", updateViewportStyle);
+      window.removeEventListener("resize", updateViewportStyle);
+      window.removeEventListener("orientationchange", updateViewportStyle);
+    };
+  }, [isLandscapeGameView]);
+
+  useEffect(() => {
+    const updateFullscreenState = () => {
+      setIsFullscreenSupported(isFullscreenAvailable(rootRef.current ?? document.documentElement));
+      setHasCheckedFullscreenSupport(true);
+      setIsLandscapeFullscreen(Boolean(getFullscreenElement()));
+      if (!getFullscreenElement()) {
+        setFullscreenFeedback("");
+      }
+    };
+
+    updateFullscreenState();
+    document.addEventListener("fullscreenchange", updateFullscreenState);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenState);
+    return () => {
+      document.removeEventListener("fullscreenchange", updateFullscreenState);
+      document.removeEventListener("webkitfullscreenchange", updateFullscreenState);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isLandscapeGameView || !isFullscreenSupported || isLandscapeFullscreen) {
+      setShowFullscreenHint(false);
+      return;
+    }
+
+    try {
+      if (window.localStorage.getItem(FULLSCREEN_HINT_STORAGE_KEY) === "true") {
+        return;
+      }
+      window.localStorage.setItem(FULLSCREEN_HINT_STORAGE_KEY, "true");
+    } catch {
+      // Storage can be unavailable in private browsing; the hint still works for this session.
+    }
+
+    setShowFullscreenHint(true);
+    const timeoutId = window.setTimeout(() => {
+      setShowFullscreenHint(false);
+    }, 7000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [isFullscreenSupported, isLandscapeFullscreen, isLandscapeGameView]);
+
+  useEffect(() => {
+    if (isLandscapeGameView || !isLandscapeFullscreen) {
+      return;
+    }
+
+    void exitDocumentFullscreen().catch(() => {
+      setIsLandscapeFullscreen(false);
+    });
+  }, [isLandscapeGameView, isLandscapeFullscreen]);
 
   const triggerScreenShake = useCallback(() => {
     setIsScreenShaking(true);
@@ -1589,6 +1744,30 @@ export function SportsBingoHome({
     };
   }, [goToLandscapeBoard, isLandscapeGameView, landscapeCards.length]);
 
+  const toggleLandscapeFullscreen = useCallback(async () => {
+    if (!isLandscapeGameView) {
+      return;
+    }
+
+    try {
+      if (getFullscreenElement()) {
+        await exitDocumentFullscreen();
+        setFullscreenFeedback("");
+        setShowFullscreenHint(false);
+        return;
+      }
+
+      await requestElementFullscreen(rootRef.current ?? document.documentElement);
+      setFullscreenFeedback("");
+      setShowFullscreenHint(false);
+    } catch {
+      setIsFullscreenSupported(isFullscreenAvailable(rootRef.current ?? document.documentElement));
+      setHasCheckedFullscreenSupport(true);
+      setFullscreenFeedback("Fullscreen unavailable in this browser.");
+      setShowFullscreenHint(false);
+    }
+  }, [isLandscapeGameView]);
+
   const collectAllBingoPoints = useCallback(async () => {
     if (!userId || isCollectingAllBingo || unclaimedWonBingoCards.length === 0) return;
     setIsCollectingAllBingo(true);
@@ -1814,13 +1993,16 @@ export function SportsBingoHome({
       landscapeCurrentCard?.status === "won" &&
       !landscapeCurrentCard.rewardClaimedAt &&
       landscapeCurrentCard.rewardPoints > 0;
+    const fullscreenUnavailableMessage =
+      hasCheckedFullscreenSupport && !isFullscreenSupported ? "Fullscreen unavailable in this browser." : fullscreenFeedback;
 
     const landscapeContent = (
       <div
         ref={rootRef}
         onTouchStart={onSwipeTouchStart}
         onTouchEnd={onLandscapeTouchEnd}
-        className={`tp-bingo-theme tp-bingo-landscape-shell fixed inset-0 z-[1300] flex h-[100svh] w-screen overflow-hidden bg-[#020617] text-slate-100 ${
+        style={landscapeViewportStyle}
+        className={`tp-bingo-theme tp-bingo-landscape-shell fixed z-[1300] flex overflow-hidden bg-[#020617] text-slate-100 ${
           isScreenShaking ? "tp-bingo-screen-shake" : ""
         }`}
       >
@@ -1866,6 +2048,32 @@ export function SportsBingoHome({
                   {isActiveLandscapeMode ? (currentCardIsLive ? "Live" : "Upcoming") : landscapeCurrentCard.status}
                 </span>
               ) : null}
+              {isFullscreenSupported ? (
+                <div className="relative">
+                  {showFullscreenHint ? (
+                    <div className="pointer-events-none absolute right-0 top-[calc(100%+0.45rem)] z-10 w-max max-w-[15rem] rounded-full border border-sky-300/45 bg-slate-950/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-sky-100 shadow-[0_0_18px_rgba(125,211,252,0.18)]">
+                      Tap for full-screen board
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => void toggleLandscapeFullscreen()}
+                    className="tp-clean-button tp-bingo-landscape-fullscreen flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-200/90 bg-sky-300 text-slate-950 shadow-[0_0_0_2px_rgba(14,165,233,0.22),0_0_24px_rgba(125,211,252,0.38)] transition hover:bg-sky-200 active:scale-95"
+                    aria-label={isLandscapeFullscreen ? "Exit fullscreen Bingo board" : "Enter fullscreen Bingo board"}
+                    title={isLandscapeFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                  >
+                    {isLandscapeFullscreen ? <Minimize2 aria-hidden="true" className="h-5 w-5" /> : <Maximize2 aria-hidden="true" className="h-5 w-5" />}
+                  </button>
+                </div>
+              ) : null}
+              {fullscreenUnavailableMessage ? (
+                <span
+                  className="tp-bingo-landscape-fullscreen-unavailable inline-flex h-8 max-w-[11rem] items-center rounded-full border border-white/10 bg-white/[0.05] px-2.5 text-[9px] font-black uppercase leading-tight tracking-[0.06em] text-slate-300"
+                  role="status"
+                >
+                  {fullscreenUnavailableMessage}
+                </span>
+              ) : null}
             </div>
           </header>
 
@@ -1882,7 +2090,7 @@ export function SportsBingoHome({
 
             <div className="flex h-full min-h-0 items-center justify-center">
               {landscapeCurrentCard ? (
-                <div className="tp-bingo-landscape-board-stage aspect-square h-full max-h-[calc(100svh-5.7rem)] w-full max-w-[calc(100vw-21rem)]">
+                <div className="tp-bingo-landscape-board-stage aspect-square h-full w-full">
                   {renderLandscapeGrid(
                     landscapeCurrentCard.id,
                     landscapeCurrentCard.squares,
@@ -2016,7 +2224,7 @@ export function SportsBingoHome({
               <div className="relative overflow-hidden rounded-[18px] border-2 border-sky-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.12),transparent_60%),#0c3a2e] p-4 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.35),0_12px_26px_rgba(0,0,0,0.5)]">
                 <p className="text-[11px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · </p>
                 <p className="mt-1.5 text-[26px] leading-[1.08] text-amber-100 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
-                  You don't have an active board yet.
+                  You don&apos;t have an active board yet.
                 </p>
                 <p className="mt-1.5 text-[12px] font-bold leading-relaxed text-amber-100/60">
                   Click the button below to create a 5×5 board of player props and box-score calls. Plays happen, squares

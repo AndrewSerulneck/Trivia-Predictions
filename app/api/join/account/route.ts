@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { normalizePin } from "@/lib/pin";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { normalizeUsername, normalizeUsernameForLookup } from "@/lib/webauthn";
+import { checkUsername } from "@/lib/usernameModerator";
 
 type AccountBody = {
   username?: string;
@@ -128,6 +129,11 @@ export async function POST(request: Request) {
       { ok: false, error: "We do not recognize that username/PIN combination, please go back and create an account with us." },
       { status: 401 }
     );
+  }
+
+  const moderationResult = await checkUsername(username);
+  if (!moderationResult.allowed) {
+    return NextResponse.json({ ok: false, error: moderationResult.reason }, { status: 422 });
   }
 
   const salt = randomBytes(16).toString("hex");

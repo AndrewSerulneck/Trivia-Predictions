@@ -7,7 +7,8 @@
       "answer": "Augustus",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "magna-carta-signing-year",
@@ -15,7 +16,8 @@
       "answer": "1215",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "french-revolution-start",
@@ -23,7 +25,8 @@
       "answer": "Bastille",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "last-egyptian-pharaoh",
@@ -31,7 +34,8 @@
       "answer": "Cleopatra VII",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "cold-war-berlin-wall-fall",
@@ -39,7 +43,8 @@
       "answer": "1989",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "american-civil-war-start",
@@ -47,7 +52,8 @@
       "answer": "Fort Sumter",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "industrial-revolution-origin",
@@ -61,7 +67,8 @@
         "U.K.",
         "United Kingdom",
         "Britain"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "discovery-of-penicillin",
@@ -69,7 +76,8 @@
       "answer": "Alexander Fleming",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "apartheid-end-south-africa",
@@ -77,7 +85,8 @@
       "answer": "Nelson Mandela",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "battle-of-hastings-date",
@@ -85,7 +94,8 @@
       "answer": "Normans",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "ancient-greek-philosopher-plato-teacher",
@@ -93,15 +103,17 @@
       "answer": "Socrates",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "aztec-empire-conqueror",
       "question": "Which Spanish conquistador led the expedition that caused the fall of the Aztec Empire?",
-      "answer": "Hernán Cortés",
+      "answer": "Hern\u00e1n Cort\u00e9s",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "world-war-one-trigger",
@@ -109,7 +121,8 @@
       "answer": "Franz Ferdinand",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "women-suffrage-us-amendment",
@@ -117,7 +130,8 @@
       "answer": "19th",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "mali-empire-richest-man",
@@ -125,7 +139,8 @@
       "answer": "Mansa Musa",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "ottoman-empire-fall-of-constantinople",
@@ -133,7 +148,8 @@
       "answer": "1453",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "voyage-of-beagle-scientist",
@@ -141,7 +157,8 @@
       "answer": "Charles Darwin",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "invention-of-printing-press",
@@ -149,7 +166,8 @@
       "answer": "Johannes Gutenberg",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "soviet-union-first-leader",
@@ -157,7 +175,8 @@
       "answer": "Vladimir Lenin",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "american-revolution-tea-party-city",
@@ -165,7 +184,8 @@
       "answer": "Boston",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "battle-of-waterloo-loser",
@@ -173,7 +193,8 @@
       "answer": "Napoleon Bonaparte",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "renaissance-birthplace",
@@ -181,7 +202,8 @@
       "answer": "Florence",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "civil-rights-act-year",
@@ -189,7 +211,8 @@
       "answer": "1964",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "great-fire-of-london-year",
@@ -197,7 +220,8 @@
       "answer": "1666",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "mongol-empire-founder",
@@ -205,7 +229,8 @@
       "answer": "Genghis Khan",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "us-independence-day",
@@ -213,7 +238,8 @@
       "answer": "1776",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "first-man-in-space",
@@ -221,7 +247,8 @@
       "answer": "Yuri Gagarin",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "spanish-armada-defeat",
@@ -229,7 +256,8 @@
       "answer": "Elizabeth I",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "inca-empire-capital",
@@ -237,7 +265,8 @@
       "answer": "Cusco",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "fall-of-berlin-wall-leader",
@@ -245,7 +274,8 @@
       "answer": "Mikhail Gorbachev",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "vietnam-war-end-year",
@@ -253,7 +283,8 @@
       "answer": "1975",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "who-developed-the-first-successful-polio-vaccine",
@@ -261,7 +292,8 @@
       "answer": "Jonas Salk",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-marilyn-monroe-imperfect",
@@ -269,7 +301,8 @@
       "answer": "Marilyn Monroe",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-circumnavigation-leader",
@@ -277,7 +310,8 @@
       "answer": "Ferdinand Magellan",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "rossetta-stone-discovery",
@@ -285,7 +319,8 @@
       "answer": "Hieroglyphics",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "wwii-d-day-date",
@@ -293,7 +328,8 @@
       "answer": "June 1944",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "emancipation-proclamation-president",
@@ -301,7 +337,8 @@
       "answer": "Abraham Lincoln",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "meiji-restoration-country",
@@ -309,7 +346,8 @@
       "answer": "Japan",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "boxing-rebellion-location",
@@ -321,7 +359,8 @@
       "acceptableAnswers": [
         "PRC",
         "People's Republic of China"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "first-woman-nobel-prize",
@@ -329,7 +368,8 @@
       "answer": "Marie Curie",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "louisiana-purchase-seller",
@@ -337,7 +377,8 @@
       "answer": "France",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "punic-wars-rivals",
@@ -345,7 +386,8 @@
       "answer": "Carthage",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "titanic-sinking-year",
@@ -353,7 +395,8 @@
       "answer": "1912",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "mohandas-gandhi-title",
@@ -361,7 +404,8 @@
       "answer": "Mahatma",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "un-founding-year",
@@ -369,7 +413,8 @@
       "answer": "1945",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "viking-explorer-america",
@@ -377,7 +422,8 @@
       "answer": "Leif Erikson",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "trail-of-tears-president",
@@ -385,7 +431,8 @@
       "answer": "Andrew Jackson",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "code-of-hammurabi-origin",
@@ -393,7 +440,8 @@
       "answer": "Babylonian",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "hiroshima-bombing-date",
@@ -401,7 +449,8 @@
       "answer": "August 1945",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "battle-of-thermopylae-king",
@@ -409,7 +458,8 @@
       "answer": "Leonidas",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "six-day-war-year",
@@ -417,7 +467,8 @@
       "answer": "1967",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "magellan-strait-discovery",
@@ -425,7 +476,8 @@
       "answer": "Pacific",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "abolition-of-slavery-uk-year",
@@ -433,7 +485,8 @@
       "answer": "1833",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "manhattan-project-leader",
@@ -441,7 +494,8 @@
       "answer": "J. Robert Oppenheimer",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "ancient-library-of-alexandria-location",
@@ -449,7 +503,8 @@
       "answer": "Egypt",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "fall-of-the-bastille-date",
@@ -457,7 +512,8 @@
       "answer": "July 14",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "glorious-revolution-country",
@@ -465,7 +521,8 @@
       "answer": "England",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "crusades-target-city",
@@ -473,7 +530,8 @@
       "answer": "Jerusalem",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "apartheid-country",
@@ -481,7 +539,8 @@
       "answer": "South Africa",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "invention-of-the-telephone",
@@ -489,7 +548,8 @@
       "answer": "Alexander Graham Bell",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-man-on-moon-year",
@@ -497,7 +557,8 @@
       "answer": "1969",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "pearl-harbor-attack-year",
@@ -505,7 +566,8 @@
       "answer": "1941",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "great-depression-start-year",
@@ -513,7 +575,8 @@
       "answer": "1929",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "tiananmen-square-protest-year",
@@ -521,7 +584,8 @@
       "answer": "1989",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "conquest-of-england-duke",
@@ -529,7 +593,8 @@
       "answer": "William the Conqueror",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "bolshevik-revolution-leader",
@@ -537,7 +602,8 @@
       "answer": "Vladimir Lenin",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "reign-of-terror-leader",
@@ -545,7 +611,8 @@
       "answer": "Maximilien Robespierre",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "boston-massacre-year",
@@ -553,7 +620,8 @@
       "answer": "1770",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "berlin-wall-construction-year",
@@ -561,7 +629,8 @@
       "answer": "1961",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "mona-lisa-artist",
@@ -569,7 +638,8 @@
       "answer": "Leonardo da Vinci",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "war-of-1812-belligerents",
@@ -583,7 +653,8 @@
         "U.K.",
         "United Kingdom",
         "Britain"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "protestant-reformation-starter",
@@ -591,7 +662,8 @@
       "answer": "Martin Luther",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "panama-canal-completion-year",
@@ -599,7 +671,8 @@
       "answer": "1914",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "cuban-missile-crisis-year",
@@ -607,7 +680,8 @@
       "answer": "1962",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "suez-crisis-year",
@@ -615,7 +689,8 @@
       "answer": "1956",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "battle-of-gettysburg-year",
@@ -623,7 +698,8 @@
       "answer": "1863",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "spanish-civil-war-start-year",
@@ -631,7 +707,8 @@
       "answer": "1936",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "byzantine-empire-capital",
@@ -639,7 +716,8 @@
       "answer": "Constantinople",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "viet-minh-leader",
@@ -647,7 +725,8 @@
       "answer": "Ho Chi Minh",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "tokugawa-shogunate-end-year",
@@ -655,7 +734,8 @@
       "answer": "1868",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "fall-of-the-incas-conquistador",
@@ -663,7 +743,8 @@
       "answer": "Francisco Pizarro",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "golden-age-of-pericles-city",
@@ -671,7 +752,8 @@
       "answer": "Athens",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "founding-of-rome-traditional-year",
@@ -679,7 +761,8 @@
       "answer": "753 BC",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "gulf-war-operation-name",
@@ -687,7 +770,8 @@
       "answer": "Desert Storm",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "invention-of-the-airplane",
@@ -695,7 +779,8 @@
       "answer": "1903",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "signing-of-treaty-of-versailles",
@@ -703,7 +788,8 @@
       "answer": "1919",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "first-us-president",
@@ -711,7 +797,8 @@
       "answer": "George Washington",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "hindenburg-disaster-year",
@@ -719,7 +806,8 @@
       "answer": "1937",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "reunification-of-germany-year",
@@ -727,7 +815,8 @@
       "answer": "1990",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "war-of-independence-mexico-start",
@@ -735,7 +824,8 @@
       "answer": "1810",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "french-revolution-leader",
@@ -743,7 +833,8 @@
       "answer": "Napoleon Bonaparte",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "civil-war-president",
@@ -751,7 +842,8 @@
       "answer": "Abraham Lincoln",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "emancipation-proclamation-issuer",
@@ -759,7 +851,8 @@
       "answer": "Abraham Lincoln",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "russian-revolution-leader",
@@ -767,7 +860,8 @@
       "answer": "Vladimir Lenin",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "watergate-president",
@@ -775,7 +869,8 @@
       "answer": "Richard Nixon",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "indian-independence-leader",
@@ -783,7 +878,8 @@
       "answer": "Mahatma Gandhi",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "south-africa-apartheid-leader",
@@ -791,7 +887,8 @@
       "answer": "Nelson Mandela",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "chinese-revolution-leader",
@@ -799,7 +896,8 @@
       "answer": "Mao Zedong",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "womens-suffrage-leader",
@@ -807,7 +905,8 @@
       "answer": "Susan B. Anthony",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "first-us-president-white-house",
@@ -815,7 +914,8 @@
       "answer": "John Adams",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "shortest-us-presidency",
@@ -823,7 +923,8 @@
       "answer": "William Henry Harrison",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "tallest-us-president",
@@ -831,7 +932,8 @@
       "answer": "Abraham Lincoln",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "youngest-us-president",
@@ -839,7 +941,8 @@
       "answer": "Theodore Roosevelt",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "only-us-president-bachelor",
@@ -847,7 +950,8 @@
       "answer": "James Buchanan",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-woman-to-win-nobel-prize",
@@ -855,7 +959,8 @@
       "answer": "Marie Curie",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-man-on-moon",
@@ -863,7 +968,8 @@
       "answer": "Neil Armstrong",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-woman-in-space",
@@ -871,7 +977,8 @@
       "answer": "Valentina Tereshkova",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "longest-reigning-british-monarch",
@@ -879,7 +986,8 @@
       "answer": "Queen Elizabeth II",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-emperor-of-roman-empire",
@@ -887,7 +995,8 @@
       "answer": "Augustus",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-person-to-circumnavigate-globe",
@@ -896,9 +1005,10 @@
       "category": "History & Government",
       "difficulty": "easy",
       "acceptableAnswers": [
-        "Juan Sebastián Elcano"
+        "Juan Sebasti\u00e1n Elcano"
       ],
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-us-vice-president",
@@ -906,7 +1016,8 @@
       "answer": "John Adams",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "first-african-american-us-president",
@@ -914,7 +1025,8 @@
       "answer": "Barack Obama",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "first-woman-us-supreme-court-justice",
@@ -922,7 +1034,8 @@
       "answer": "Sandra Day O'Connor",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "first-person-to-win-two-nobel-prizes",
@@ -930,7 +1043,8 @@
       "answer": "Marie Curie",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-us-president-impeached",
@@ -938,7 +1052,8 @@
       "answer": "Andrew Johnson",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-man-to-fly-across-atlantic",
@@ -946,7 +1061,8 @@
       "answer": "Charles Lindbergh",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-us-president-assassinated",
@@ -954,7 +1070,8 @@
       "answer": "Abraham Lincoln",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-country-to-grant-women-vote",
@@ -962,7 +1079,8 @@
       "answer": "New Zealand",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-person-to-climb-mt-everest",
@@ -973,7 +1091,8 @@
       "acceptableAnswers": [
         "Tenzing Norgay"
       ],
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-us-president-resign",
@@ -981,7 +1100,8 @@
       "answer": "Richard Nixon",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-european-to-reach-china",
@@ -989,7 +1109,8 @@
       "answer": "Marco Polo",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-us-secretary-of-state",
@@ -997,7 +1118,8 @@
       "answer": "Thomas Jefferson",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-person-to-win-oscars-for-acting-and-directing",
@@ -1005,7 +1127,8 @@
       "answer": "Orson Welles",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-us-president-born-outside-continental-us",
@@ -1013,7 +1136,8 @@
       "answer": "Barack Obama",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-person-to-invent-printing-press",
@@ -1021,7 +1145,8 @@
       "answer": "Johannes Gutenberg",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-us-president-to-serve-non-consecutive-terms",
@@ -1029,7 +1154,8 @@
       "answer": "Grover Cleveland",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-person-to-discover-penicillin",
@@ -1037,7 +1163,8 @@
       "answer": "Alexander Fleming",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-us-president-to-appear-on-television",
@@ -1045,7 +1172,8 @@
       "answer": "Franklin D. Roosevelt",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "first-us-president-to-email",
@@ -1053,7 +1181,8 @@
       "answer": "Bill Clinton",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "betty-crocker",
@@ -1061,7 +1190,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "aunt-jemima",
@@ -1069,7 +1199,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "uncle-sam",
@@ -1077,7 +1208,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "colonel-sanders",
@@ -1085,7 +1217,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "ronald-mcdonald",
@@ -1093,7 +1226,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "johnny-appleseed",
@@ -1101,7 +1235,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "davy-crockett",
@@ -1109,7 +1244,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "daniel-boone",
@@ -1117,7 +1253,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "paul-bunyan",
@@ -1125,7 +1262,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "buffalo-bill",
@@ -1133,7 +1271,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "annie-oakley",
@@ -1141,7 +1280,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "robin-hood",
@@ -1149,7 +1289,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "king-arthur",
@@ -1157,7 +1298,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "captain-nemo",
@@ -1165,7 +1307,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "doc-holliday",
@@ -1173,7 +1316,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "rasputin",
@@ -1181,7 +1325,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "chef-boyardee",
@@ -1189,15 +1334,17 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "jose-cuervo",
-      "question": "Was José Cuervo a real person? Answer yes or no.",
+      "question": "Was Jos\u00e9 Cuervo a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "jack-daniels",
@@ -1205,7 +1352,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "jim-beam",
@@ -1213,7 +1361,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "johnnie-walker",
@@ -1221,7 +1370,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "mrs-buttersworth",
@@ -1229,7 +1379,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "papa-john",
@@ -1237,7 +1388,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "hollister",
@@ -1245,7 +1397,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "juan-valdez",
@@ -1253,7 +1406,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "dr-pepper",
@@ -1261,7 +1415,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "jack-the-ripper",
@@ -1269,7 +1424,8 @@
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "alan-smithee",
@@ -1277,7 +1433,8 @@
       "answer": "no",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "first-artificial-satellite",
@@ -1285,7 +1442,8 @@
       "answer": "Sputnik",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "first-moon-landing-mission",
@@ -1293,7 +1451,8 @@
       "answer": "11",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "first-person-on-moon",
@@ -1301,7 +1460,8 @@
       "answer": "Neil Armstrong",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "second-person-on-moon",
@@ -1309,7 +1469,8 @@
       "answer": "Buzz Aldrin",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "columbus-voyage-year",
@@ -1317,7 +1478,8 @@
       "answer": "1492",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "first-woman-vice-president",
@@ -1325,7 +1487,8 @@
       "answer": "Kamala Harris",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "mesoppotamian-agriculture",
@@ -1333,7 +1496,8 @@
       "answer": "Rivers",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "hammurabi-legal-code",
@@ -1341,7 +1505,8 @@
       "answer": "Hammurabi",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "first-democracy-city-state",
@@ -1349,7 +1514,8 @@
       "answer": "Athens",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "silk-road-trade-network",
@@ -1357,7 +1523,8 @@
       "answer": "Silk Road",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "feudalism-medieval-europe",
@@ -1365,7 +1532,8 @@
       "answer": "Feudalism",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "black-death-pandemic",
@@ -1378,7 +1546,8 @@
         "Bubonic Plague",
         "The Plague",
         "Plague"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "peloponnesian-war-rival",
@@ -1386,7 +1555,8 @@
       "answer": "Sparta",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "title-of-egyptian-rulers",
@@ -1394,7 +1564,8 @@
       "answer": "Pharaoh",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "roman-amphitheater-gladiators",
@@ -1405,7 +1576,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Coliseum"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "great-wall-of-china-dynasty",
@@ -1416,7 +1588,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Great Wall of China"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "columbian-exchange",
@@ -1424,7 +1597,8 @@
       "answer": "Columbian Exchange",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "mercantilism-economic-theory",
@@ -1432,7 +1606,8 @@
       "answer": "Mercantilism",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "john-locke-natural-rights",
@@ -1440,7 +1615,8 @@
       "answer": "John Locke",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "portugal-spice-trade",
@@ -1448,7 +1624,8 @@
       "answer": "Portugal",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "enlightenment-period",
@@ -1460,7 +1637,8 @@
       "acceptableAnswers": [
         "Age of Enlightenment",
         "Age of Reason"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "haitian-revolution-leader",
@@ -1472,7 +1650,8 @@
       "acceptableAnswers": [
         "Toussaint L'Ouverture",
         "Louverture"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "berlin-conference-africa",
@@ -1480,7 +1659,8 @@
       "answer": "Berlin Conference",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "treaty-ended-wwi",
@@ -1492,7 +1672,8 @@
       "acceptableAnswers": [
         "Versailles Treaty",
         "Versailles"
-      ]
+      ],
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "fascism-definition",
@@ -1500,7 +1681,8 @@
       "answer": "Fascism",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "united-nations-founding",
@@ -1511,7 +1693,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "UN"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "nato-founding",
@@ -1522,7 +1705,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "North Atlantic Treaty Organization"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "berlin-wall-cold-war-symbol",
@@ -1530,7 +1714,8 @@
       "answer": "Berlin Wall",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "jamestown-first-settlement",
@@ -1538,7 +1723,8 @@
       "answer": "Jamestown",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "salutary-neglect",
@@ -1549,7 +1735,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Salutary neglect"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "common-sense-pamphlet-author",
@@ -1557,7 +1744,8 @@
       "answer": "Thomas Paine",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "us-constitution-supreme-law",
@@ -1570,7 +1758,8 @@
         "Constitution",
         "The Constitution",
         "United States Constitution"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "washington-farewell-warning",
@@ -1583,7 +1772,8 @@
         "Factions",
         "Political factions",
         "Parties"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "monroe-doctrine",
@@ -1591,7 +1781,8 @@
       "answer": "Monroe Doctrine",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "manifest-destiny",
@@ -1599,15 +1790,17 @@
       "answer": "Manifest Destiny",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "missouri-compromise",
-      "question": "What 1820 compromise banned slavery north of the 36°30' parallel in the Louisiana Territory?",
+      "question": "What 1820 compromise banned slavery north of the 36\u00b030' parallel in the Louisiana Territory?",
       "answer": "Missouri Compromise",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "lincoln-elected-1860",
@@ -1615,7 +1808,8 @@
       "answer": "Abraham Lincoln",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "emancipation-proclamation-document",
@@ -1623,7 +1817,8 @@
       "answer": "Emancipation Proclamation",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "thirteenth-amendment-slavery",
@@ -1636,7 +1831,8 @@
         "13th Amendment",
         "Amendment XIII",
         "13th"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "gilded-age",
@@ -1644,7 +1840,8 @@
       "answer": "Gilded Age",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "web-du-bois-naacp",
@@ -1658,7 +1855,8 @@
         "W.E.B. DuBois",
         "Du Bois",
         "DuBois"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "spanish-american-war-1898",
@@ -1669,7 +1867,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Spanish American War"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "great-migration",
@@ -1677,7 +1876,8 @@
       "answer": "Great Migration",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "stock-market-crash-1929",
@@ -1691,7 +1891,8 @@
         "Black Tuesday",
         "Market crash",
         "The Crash"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "new-deal-fdr",
@@ -1699,7 +1900,8 @@
       "answer": "New Deal",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "pearl-harbor-attack",
@@ -1707,7 +1909,8 @@
       "answer": "Pearl Harbor",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "manhattan-project-atomic-bomb",
@@ -1715,7 +1918,8 @@
       "answer": "Manhattan Project",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "brown-v-board",
@@ -1728,7 +1932,8 @@
         "Brown v. Board",
         "Brown vs Board",
         "Brown v Board"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "watergate-scandal",
@@ -1739,7 +1944,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Watergate scandal"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "sumerian-writing-system",
@@ -1747,7 +1953,8 @@
       "answer": "Cuneiform",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "feudal-japan-warrior-class",
@@ -1755,7 +1962,8 @@
       "answer": "Samurai",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "aztec-capital-tenochtitlan",
@@ -1767,7 +1975,8 @@
       "acceptableAnswers": [
         "Aztec",
         "Aztec Empire"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "alexander-the-great-persian-empire",
@@ -1779,7 +1988,8 @@
       "acceptableAnswers": [
         "Alexander",
         "Alexander III"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "punic-wars-conflict",
@@ -1787,7 +1997,8 @@
       "answer": "Punic Wars",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "confucianism-philosophy",
@@ -1795,7 +2006,8 @@
       "answer": "Confucianism",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "buddhism-founder",
@@ -1803,7 +2015,8 @@
       "answer": "Buddhism",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "ottoman-empire-constantinople",
@@ -1815,7 +2028,8 @@
       "acceptableAnswers": [
         "Ottomans",
         "Ottoman Turks"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "east-india-company",
@@ -1826,7 +2040,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "British East India Company"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "russian-imperial-title-czar",
@@ -1841,7 +2056,8 @@
         "Tsars",
         "Tsar",
         "Caesar"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "guillotine-reign-of-terror",
@@ -1849,7 +2065,8 @@
       "answer": "Guillotine",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "opium-wars-china",
@@ -1857,7 +2074,8 @@
       "answer": "Opium",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "capitalism-marx-critique",
@@ -1865,7 +2083,8 @@
       "answer": "Capitalism",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "trench-warfare-wwi",
@@ -1877,7 +2096,8 @@
       "acceptableAnswers": [
         "Trench war",
         "Trenches"
-      ]
+      ],
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "league-of-nations",
@@ -1885,7 +2105,8 @@
       "answer": "League of Nations",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "weimar-republic",
@@ -1893,7 +2114,8 @@
       "answer": "Weimar Republic",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "hiroshima-atomic-bomb-city",
@@ -1901,7 +2123,8 @@
       "answer": "Hiroshima",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "warsaw-pact",
@@ -1909,18 +2132,20 @@
       "answer": "Warsaw Pact",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "detente-cold-war",
       "question": "What term describes the easing of Cold War tensions between the U.S. and USSR during the 1970s?",
-      "answer": "Détente",
+      "answer": "D\u00e9tente",
       "answer_format": "write_in",
       "category": "History & Government",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Detente"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "whiskey-rebellion",
@@ -1928,7 +2153,8 @@
       "answer": "Whiskey Rebellion",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "louisiana-purchase-territory",
@@ -1936,7 +2162,8 @@
       "answer": "Louisiana Purchase",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "war-of-1812-cause",
@@ -1944,7 +2171,8 @@
       "answer": "War of 1812",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "underground-railroad",
@@ -1952,7 +2180,8 @@
       "answer": "Underground Railroad",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "john-brown-harpers-ferry",
@@ -1960,7 +2189,8 @@
       "answer": "John Brown",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "battle-of-gettysburg-turning-point",
@@ -1971,7 +2201,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Battle of Gettysburg"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "fourteenth-amendment",
@@ -1984,7 +2215,8 @@
         "14th Amendment",
         "Amendment XIV",
         "14th"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "transcontinental-railroad",
@@ -1995,7 +2227,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Transcontinental railroad"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "ellis-island",
@@ -2003,7 +2236,8 @@
       "answer": "Ellis Island",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "jim-crow-laws",
@@ -2014,7 +2248,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Jim Crow laws"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "muckrakers",
@@ -2022,7 +2257,8 @@
       "answer": "Muckrakers",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "dust-bowl",
@@ -2030,7 +2266,8 @@
       "answer": "Dust Bowl",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "d-day-normandy",
@@ -2043,7 +2280,8 @@
         "Operation Overlord",
         "Normandy invasion",
         "Normandy landings"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "marshall-plan",
@@ -2051,7 +2289,8 @@
       "answer": "Marshall Plan",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "korean-war",
@@ -2059,7 +2298,8 @@
       "answer": "Korean War",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "cuban-missile-crisis-event",
@@ -2067,7 +2307,8 @@
       "answer": "Cuban Missile Crisis",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "mlk-i-have-a-dream",
@@ -2081,7 +2322,8 @@
         "MLK",
         "Dr. King",
         "Dr. Martin Luther King Jr."
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "quote-nelson-mandela-impossible",
@@ -2089,7 +2331,8 @@
       "answer": "Nelson Mandela",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-rosa-parks-tired",
@@ -2097,7 +2340,8 @@
       "answer": "Rosa Parks",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "quote-marie-curie-fear",
@@ -2105,7 +2349,8 @@
       "answer": "Marie Curie",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-eleanor-roosevelt-consent",
@@ -2113,7 +2358,8 @@
       "answer": "Eleanor Roosevelt",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-maya-angelou-people",
@@ -2121,7 +2367,8 @@
       "answer": "Maya Angelou",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-amelia-earhart-decision",
@@ -2129,7 +2376,8 @@
       "answer": "Amelia Earhart",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-princess-diana-marriage",
@@ -2137,7 +2385,8 @@
       "answer": "Princess Diana",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-mother-teresa-love",
@@ -2145,7 +2394,8 @@
       "answer": "Mother Teresa",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-margaret-thatcher-turning",
@@ -2153,7 +2403,8 @@
       "answer": "Margaret Thatcher",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "quote-benjamin-franklin-taxes",
@@ -2161,7 +2412,8 @@
       "answer": "Benjamin Franklin",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-thomas-edison-genius",
@@ -2169,7 +2421,8 @@
       "answer": "Thomas Edison",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-theodore-roosevelt-stick",
@@ -2180,7 +2433,8 @@
       ],
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "quote-franklin-roosevelt-fear",
@@ -2193,7 +2447,8 @@
       ],
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "quote-winston-churchill-blood",
@@ -2201,7 +2456,8 @@
       "answer": "Winston Churchill",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "quote-socrates-unexamined-life",
@@ -2209,7 +2465,8 @@
       "answer": "Socrates",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "quote-gandhi-change",
@@ -2217,7 +2474,8 @@
       "answer": "Mahatma Gandhi",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "quote-lincoln-gettysburg",
@@ -2225,7 +2483,8 @@
       "answer": "Abraham Lincoln",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "quote-mlk-dream",
@@ -2237,7 +2496,8 @@
       ],
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "quote-neil-armstrong-step",
@@ -2245,11 +2505,12 @@
       "answer": "Neil Armstrong",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-jfk-ask-not",
-      "question": "Which US President declared during his 1961 inaugural address, 'Ask not what your country can do for you—ask what you can do for your country'?",
+      "question": "Which US President declared during his 1961 inaugural address, 'Ask not what your country can do for you\u2014ask what you can do for your country'?",
       "answer": "JFK",
       "acceptableAnswers": [
         "Kennedy",
@@ -2258,7 +2519,8 @@
       ],
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "who-was-the-first-person-to-step-on-the-moon",
@@ -2266,7 +2528,8 @@
       "answer": "Neil Armstrong",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "in-which-year-did-world-war-ii-officially-end",
@@ -2274,7 +2537,8 @@
       "answer": "1945",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "in-which-year-did-the-first-man-walk-on-the-moon",
@@ -2282,7 +2546,8 @@
       "answer": "1969",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "who-was-the-last-queen-of-france-before-the-french-revolution",
@@ -2290,7 +2555,8 @@
       "answer": "Marie Antoinette",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "who-is-credited-with-inventing-the-world-wide-web",
@@ -2298,7 +2564,8 @@
       "answer": "Tim Berners-Lee",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-rene-descartes-think",
@@ -2306,7 +2573,8 @@
       "answer": "Rene Descartes",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "quote-karl-marx-religion",
@@ -2314,7 +2582,8 @@
       "answer": "Karl Marx",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "vietnam-war-protests",
@@ -2322,7 +2591,8 @@
       "answer": "Vietnam War",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "civil-rights-act-1964",
@@ -2333,7 +2603,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Civil Rights Act of 1964"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "stagflation-1970s",
@@ -2341,7 +2612,8 @@
       "answer": "Stagflation",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "rosetta-stone-artifact",
@@ -2349,7 +2621,8 @@
       "answer": "Rosetta Stone",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "roman-aqueducts",
@@ -2360,7 +2633,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Aqueduct"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "judaism-founding",
@@ -2368,7 +2642,8 @@
       "answer": "Judaism",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "chinese-silk-trade-secret",
@@ -2376,7 +2651,8 @@
       "answer": "Silk",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "quran-islam-scripture",
@@ -2388,7 +2664,8 @@
       "acceptableAnswers": [
         "Koran",
         "Qur'an"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "mongol-conquests",
@@ -2400,7 +2677,8 @@
       "acceptableAnswers": [
         "Mongol Empire",
         "Mongol warriors"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "humanism-renaissance",
@@ -2408,7 +2686,8 @@
       "answer": "Humanism",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "sugar-plantation-slave-trade",
@@ -2416,7 +2695,8 @@
       "answer": "Sugar",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "peter-the-great-russia",
@@ -2428,7 +2708,8 @@
       "acceptableAnswers": [
         "Peter",
         "Peter I"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "jacobins-reign-of-terror",
@@ -2440,7 +2721,8 @@
       "acceptableAnswers": [
         "Jacobin Club",
         "Jacobin"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "battle-of-waterloo",
@@ -2451,7 +2733,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Battle of Waterloo"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "steam-engine-industrial-revolution",
@@ -2459,7 +2742,8 @@
       "answer": "Steam engine",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "ottoman-empire-sick-man-of-europe",
@@ -2471,7 +2755,8 @@
       "acceptableAnswers": [
         "Ottomans",
         "Ottoman"
-      ]
+      ],
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "great-depression",
@@ -2479,7 +2764,8 @@
       "answer": "Great Depression",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "iron-curtain",
@@ -2487,7 +2773,8 @@
       "answer": "Iron Curtain",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "imf-bretton-woods",
@@ -2498,7 +2785,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "International Monetary Fund"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "space-race",
@@ -2506,7 +2794,8 @@
       "answer": "Space Race",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "velvet-revolution",
@@ -2514,7 +2803,8 @@
       "answer": "Velvet Revolution",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "seven-years-war",
@@ -2526,7 +2816,8 @@
       "acceptableAnswers": [
         "Seven Years War",
         "French and Indian War"
-      ]
+      ],
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "sons-of-liberty",
@@ -2534,7 +2825,8 @@
       "answer": "Sons of Liberty",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "continental-congress",
@@ -2542,7 +2834,8 @@
       "answer": "Continental Congress",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "articles-of-confederation",
@@ -2550,7 +2843,8 @@
       "answer": "Articles of Confederation",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "bill-of-rights",
@@ -2558,7 +2852,8 @@
       "answer": "Bill of Rights",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "republican-party-founding",
@@ -2570,7 +2865,8 @@
       "acceptableAnswers": [
         "Republicans",
         "GOP"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "confederacy-civil-war",
@@ -2583,7 +2879,8 @@
         "Confederate States",
         "Confederate States of America",
         "CSA"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "chicago-meatpacking-gilded-age",
@@ -2591,7 +2888,8 @@
       "answer": "Chicago",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "homestead-act",
@@ -2599,7 +2897,8 @@
       "answer": "Homestead Act",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "carpetbaggers",
@@ -2610,7 +2909,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Carpetbagger"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "homestead-strike",
@@ -2618,7 +2918,8 @@
       "answer": "Homestead Strike",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "yellow-journalism",
@@ -2629,7 +2930,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Yellow Journalism"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "zimmermann-telegram",
@@ -2640,7 +2942,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Zimmermann Note"
-      ]
+      ],
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "harlem-renaissance",
@@ -2648,7 +2951,8 @@
       "answer": "Harlem Renaissance",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "social-security-act",
@@ -2659,7 +2963,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Social Security Act"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "joseph-mccarthy-red-scare",
@@ -2671,7 +2976,8 @@
       "acceptableAnswers": [
         "McCarthy",
         "Senator McCarthy"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "freedom-rides",
@@ -2682,7 +2988,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Freedom Ride"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "national-organization-for-women",
@@ -2693,7 +3000,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "National Organization for Women"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "nafta",
@@ -2704,7 +3012,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "North American Free Trade Agreement"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "red-scare",
@@ -2712,7 +3021,8 @@
       "answer": "Red Scare",
       "answer_format": "write_in",
       "category": "History & Government",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "history-oxford-aztec",
@@ -2724,7 +3034,8 @@
         "Oxford University",
         "Oxford",
         "University of Oxford"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "history-cleopatra-pyramids-iphone",
@@ -2737,7 +3048,8 @@
         "The iPhone",
         "The release of the iPhone",
         "First iPhone"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "history-anne-frank-martin-luther-king",
@@ -2747,7 +3059,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "1929"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "history-harvard-calculus",
@@ -2759,7 +3072,8 @@
         "No",
         "Calculus had not been invented",
         "False"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "history-picasso-chicago-bulls",
@@ -2772,7 +3086,8 @@
         "1973",
         "Seventies",
         "The 1970s"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "history-chicago-city-machu-picchu",
@@ -2782,7 +3097,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Machu Picchu"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "history-sharks-saturn-rings",
@@ -2793,7 +3109,8 @@
       "acceptableAnswers": [
         "Sharks",
         "Earth's sharks"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "history-match-lighter",
@@ -2806,7 +3123,8 @@
         "Cigarette lighter",
         "Lighter",
         "The cigarette lighter"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "history-stonehenge-great-wall",
@@ -2816,7 +3134,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Stonehenge"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "in-roman-mythology-who-is-the-god-of-war",
@@ -2824,7 +3143,8 @@
       "answer": "Mars",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "which-french-general-rose-to-prominence-during-the-french-revolution-and-later-crowned-himself-emperor-of-the-french",
@@ -2836,7 +3156,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "which-european-country-was-the-first-to-establish-a-direct-sea-route-to-india",
@@ -2844,7 +3165,8 @@
       "answer": "Portugal",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "who-was-the-greek-philosopher-who-taught-plato-and-was-sentenced-to-death-by-drinking-hemlock",
@@ -2852,7 +3174,8 @@
       "answer": "Socrates",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "who-was-the-leader-of-the-soviet-union-when-the-berlin-wall-was-constructed-in-1961",
@@ -2864,7 +3187,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "the-declaration-of-independence-was-primarily-authored-by-whom",
@@ -2875,7 +3199,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "in-what-city-was-the-declaration-of-independence-signed",
@@ -2883,7 +3208,8 @@
       "answer": "Philadelphia",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "what-year-did-world-war-ii-officially-end-with-the-surrender-of-japan",
@@ -2891,7 +3217,8 @@
       "answer": "1945",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "napoleon-bonaparte-was-finally-defeated-at-which-famous-battle-in-1815",
@@ -2903,7 +3230,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "on-d-day-june-6-1944-allied-forces-launched-a-massive-amphibious-invasion-of-which-region-of-france",
@@ -2911,7 +3239,8 @@
       "answer": "Normandy",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "the-magna-carta-signed-in-1215-limited-the-power-of-the-monarch-in-which-country",
@@ -2919,7 +3248,8 @@
       "answer": "England",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "the-term-meiji-restoration-refers-to-a-period-of-rapid-modernization-and-industrialization-in-which-country",
@@ -2927,7 +3257,8 @@
       "answer": "Japan",
       "category": "History & Government",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "what-significant-event-occurred-on-july-4-1776-in-the-united-states",
@@ -2938,7 +3269,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "which-major-historical-event-occurred-on-december-7-1941-leading-to-the-united-states-entry-into-world-war-ii",
@@ -2951,7 +3283,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "which-ancient-empire-was-known-for-its-extensive-road-network-and-the-invention-of-concrete",
@@ -2964,7 +3297,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "sputnik-1-first-country",
@@ -2975,7 +3309,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "which-egyptian-queen-was-known-for-her-relationships-with-julius-caesar-and-mark-antony",
@@ -2987,7 +3322,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "which-famous-general-crossed-the-alps-with-elephants-to-attack-rome",
@@ -2998,7 +3334,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "which-german-monk-is-widely-credited-with-initiating-the-protestant-reformation-by-posting-his-ninety-five-theses",
@@ -3009,7 +3346,8 @@
       ],
       "category": "History & Government",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "the-treaty-of-versailles-officially-ended-which-major-conflict",
@@ -3022,7 +3360,8 @@
       ],
       "category": "History & Government",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "assassination-franz-ferdinand-war",
@@ -3033,7 +3372,8 @@
       ],
       "category": "History & Government",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "which-major-empire-was-founded-by-osman-i-in-anatolia",
@@ -3044,7 +3384,8 @@
       ],
       "category": "History & Government",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "which-treaty-officially-ended-the-american-revolutionary-war-in-1783",
@@ -3057,7 +3398,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "who-delivered-the-i-have-a-dream-speech-during-the-civil-rights-movement-in-the-united-states",
@@ -3071,7 +3413,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "who-founded-the-mongol-empire-becoming-its-first-great-khan",
@@ -3079,11 +3422,12 @@
       "answer": "Genghis Khan",
       "acceptableAnswers": [
         "Chinggis Khan",
-        "Temüjin"
+        "Tem\u00fcjin"
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "who-was-the-first-human-to-walk-on-the-moon",
@@ -3094,7 +3438,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "who-is-credited-with-inventing-the-printing-press-with-movable-type-around-1440",
@@ -3106,7 +3451,8 @@
       ],
       "category": "History & Government",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "the-american-civil-war-began-in-what-year",
@@ -3114,7 +3460,8 @@
       "answer": "1861",
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "which-portuguese-explorer-was-the-first-european-to-reach-india-by-sea-sailing-around-africa",
@@ -3125,7 +3472,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "the-great-leap-forward-was-an-economic-and-social-campaign-led-by-which-country-from-1958-to-1962",
@@ -3137,7 +3485,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "the-french-revolution-began-with-the-storming-of-which-prison-fortress",
@@ -3148,7 +3497,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "which-major-empire-collapsed-at-the-end-of-world-war-i-leading-to-the-creation-of-modern-turkey",
@@ -3159,7 +3509,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "which-region-was-the-target-of-the-d-day-landings-in-june-1944",
@@ -3167,7 +3518,8 @@
       "answer": "Normandy",
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "which-roman-emperor-declared-christianity-the-state-religion-of-the-roman-empire",
@@ -3179,7 +3531,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "who-was-the-first-holy-roman-emperor-crowned-in-800-ad",
@@ -3190,7 +3543,8 @@
       ],
       "category": "History & Government",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "who-was-the-third-president-of-the-united-states",
@@ -3201,7 +3555,8 @@
       ],
       "category": "History & Government",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "us-history-government"
     },
     {
       "slug": "mount-vesuvius-pompeii",
@@ -3213,7 +3568,8 @@
       "acceptableAnswers": [
         "Vesuvius",
         "Mt. Vesuvius"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "julius-caesar-assassination",
@@ -3225,7 +3581,8 @@
       "acceptableAnswers": [
         "Julius Caesar",
         "Caesar"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "winston-churchill-wwii-pm",
@@ -3237,18 +3594,20 @@
       "acceptableAnswers": [
         "Winston Churchill",
         "Churchill"
-      ]
+      ],
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "joan-of-arc-orleans",
-      "question": "Which French teenaged peasant girl led the French army to a pivotal victory at Orléans during the Hundred Years' War?",
+      "question": "Which French teenaged peasant girl led the French army to a pivotal victory at Orl\u00e9ans during the Hundred Years' War?",
       "answer": "Joan of Arc",
       "answer_format": "write_in",
       "category": "History & Government",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Joan of Arc"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "queen-victoria-empire",
@@ -3260,7 +3619,8 @@
       "acceptableAnswers": [
         "Victoria",
         "Queen Victoria"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "catherine-the-great-russia",
@@ -3272,7 +3632,8 @@
       "acceptableAnswers": [
         "Catherine the Great",
         "Catherine II"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "tutankhamun-tomb-discovery",
@@ -3284,7 +3645,8 @@
       "acceptableAnswers": [
         "King Tut",
         "Tutankhamen"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "machu-picchu-inca-citadel",
@@ -3295,19 +3657,21 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Machu Picchu"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "chichen-itza-pyramid",
-      "question": "Which Maya city on Mexico's Yucatán Peninsula contains the famous step pyramid known as El Castillo?",
+      "question": "Which Maya city on Mexico's Yucat\u00e1n Peninsula contains the famous step pyramid known as El Castillo?",
       "answer": "Chichen Itza",
       "answer_format": "write_in",
       "category": "History & Government",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Chichen Itza",
-        "Chichén Itzá"
-      ]
+        "Chich\u00e9n Itz\u00e1"
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "california-gold-rush",
@@ -3319,7 +3683,8 @@
       "acceptableAnswers": [
         "Gold Rush",
         "California Gold Rush"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "prohibition-united-states",
@@ -3330,7 +3695,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Prohibition"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "prohibition-united-states-amendment",
@@ -3344,7 +3710,8 @@
         "Eighteenth Amendment",
         "Eighteenth",
         "18th"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "ancient-olympia-games",
@@ -3355,7 +3722,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Olympia"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "rubicon-river-caesar",
@@ -3366,7 +3734,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Rubicon"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "captain-james-cook-australia",
@@ -3378,7 +3747,8 @@
       "acceptableAnswers": [
         "James Cook",
         "Captain Cook"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "pony-express-mail",
@@ -3389,7 +3759,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Pony Express"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "oregon-trail-westward",
@@ -3400,7 +3771,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Oregon Trail"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "donner-party-tragedy",
@@ -3411,7 +3783,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Donner Party"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "saladin-crusades-jerusalem",
@@ -3422,7 +3795,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Saladin"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "sun-tzu-art-of-war",
@@ -3434,7 +3808,8 @@
       "acceptableAnswers": [
         "Sun Tzu",
         "Sunzi"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "mary-i-bloody-mary",
@@ -3447,7 +3822,8 @@
         "Mary I",
         "Mary Tudor",
         "Bloody Mary"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "hundred-years-war-conflict",
@@ -3460,7 +3836,8 @@
         "Hundred Years' War",
         "Hundred Years War",
         "100"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "wars-of-the-roses",
@@ -3472,7 +3849,8 @@
       "acceptableAnswers": [
         "Wars of the Roses",
         "War of the Roses"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "isaac-newton-gravity",
@@ -3485,7 +3863,8 @@
         "Isaac Newton",
         "Sir Isaac Newton",
         "Newton"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "galileo-galilei-telescope",
@@ -3497,7 +3876,8 @@
       "acceptableAnswers": [
         "Galileo",
         "Galileo Galilei"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "suez-canal-waterway",
@@ -3508,7 +3888,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Suez Canal"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "viking-scandinavian-seafarers",
@@ -3520,7 +3901,8 @@
       "acceptableAnswers": [
         "Vikings",
         "Vikings"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "irish-potato-famine",
@@ -3533,7 +3915,8 @@
         "Irish Potato Famine",
         "Great Famine",
         "Irish Famine"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "irish-potato-famine-crop",
@@ -3545,7 +3928,8 @@
       "acceptableAnswers": [
         "Potato",
         "Potatoes"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "battle-of-little-bighorn",
@@ -3558,7 +3942,8 @@
         "Battle of Little Bighorn",
         "Little Bighorn",
         "Custer's Last Stand"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "thomas-edison-light-bulb",
@@ -3570,7 +3955,8 @@
       "acceptableAnswers": [
         "Thomas Edison",
         "Edison"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "lewis-and-clark-expedition",
@@ -3582,7 +3968,8 @@
       "acceptableAnswers": [
         "Lewis and Clark",
         "Corps of Discovery"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "francis-scott-key-anthem",
@@ -3593,7 +3980,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Francis Scott Key"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "liberty-bell-philadelphia",
@@ -3604,7 +3992,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Liberty Bell"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "statue-of-liberty-gift",
@@ -3615,7 +4004,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Statue of Liberty"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "mount-rushmore-sculpture",
@@ -3626,7 +4016,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Mount Rushmore"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "valley-forge-encampment",
@@ -3637,7 +4028,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Valley Forge"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "battle-of-yorktown-1781",
@@ -3649,7 +4041,8 @@
       "acceptableAnswers": [
         "Battle of Yorktown",
         "Yorktown"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "mexican-american-war-1846",
@@ -3661,7 +4054,8 @@
       "acceptableAnswers": [
         "Mexican-American War",
         "Mexican War"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "alexander-hamilton-treasury",
@@ -3673,7 +4067,8 @@
       "acceptableAnswers": [
         "Alexander Hamilton",
         "Hamilton"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "federalist-papers-essays",
@@ -3685,7 +4080,8 @@
       "acceptableAnswers": [
         "Federalist Papers",
         "The Federalist Papers"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "battle-of-new-orleans-1815",
@@ -3697,7 +4093,8 @@
       "acceptableAnswers": [
         "Battle of New Orleans",
         "New Orleans"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "erie-canal-waterway",
@@ -3708,7 +4105,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Erie Canal"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "wright-brothers-flight",
@@ -3720,7 +4118,8 @@
       "acceptableAnswers": [
         "Wright Brothers",
         "Orville and Wilbur Wright"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "paul-revere-midnight-ride",
@@ -3731,7 +4130,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Paul Revere"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "betsy-ross-flag",
@@ -3742,7 +4142,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Betsy Ross"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "mayflower-pilgrim-ship",
@@ -3753,7 +4154,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Mayflower"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "christopher-columbus-ship",
@@ -3764,7 +4166,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Santa Maria"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "salem-witch-trials",
@@ -3776,7 +4179,8 @@
       "acceptableAnswers": [
         "Salem Witch Trials",
         "Salem witch trials"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "lexington-first-shots",
@@ -3787,7 +4191,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Lexington"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "cotton-gin-invention",
@@ -3799,7 +4204,8 @@
       "acceptableAnswers": [
         "Cotton gin",
         "Cotton engine"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "first-amendment-rights",
@@ -3811,7 +4217,8 @@
       "acceptableAnswers": [
         "First Amendment",
         "1st Amendment"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "second-amendment-rights",
@@ -3823,7 +4230,8 @@
       "acceptableAnswers": [
         "Second Amendment",
         "2nd Amendment"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "march-on-washington-1963",
@@ -3834,7 +4242,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "March on Washington"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "little-rock-nine-1957",
@@ -3845,7 +4254,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Little Rock"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "challenger-disaster-1986",
@@ -3857,7 +4267,8 @@
       "acceptableAnswers": [
         "Challenger",
         "Space Shuttle Challenger"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "apollo-program-moon",
@@ -3869,7 +4280,8 @@
       "acceptableAnswers": [
         "Apollo",
         "Apollo program"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "selma-marches-voting-rights",
@@ -3880,7 +4292,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Selma"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "plymouth-rock-landing",
@@ -3891,7 +4304,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Plymouth Rock"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "john-hancock-signature",
@@ -3902,7 +4316,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "John Hancock"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "patrick-henry-speech",
@@ -3913,7 +4328,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Patrick Henry"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "harriet-tubman-railroad",
@@ -3924,7 +4340,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Harriet Tubman"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "sojourner-truth-speech",
@@ -3935,7 +4352,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Sojourner Truth"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "dred-scott-decision",
@@ -3947,7 +4365,8 @@
       "acceptableAnswers": [
         "Dred Scott",
         "Dred Scott v. Sandford"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "roaring-twenties-decade",
@@ -3959,7 +4378,8 @@
       "acceptableAnswers": [
         "Roaring Twenties",
         "Roaring 20s"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "benjamin-franklin-electricity",
@@ -3971,7 +4391,8 @@
       "acceptableAnswers": [
         "Benjamin Franklin",
         "Ben Franklin"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "pentagon-headquarters",
@@ -3983,7 +4404,8 @@
       "acceptableAnswers": [
         "Pentagon",
         "The Pentagon"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "george-washington-carver-peanut",
@@ -3994,7 +4416,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "George Washington Carver"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "henry-ford-assembly-line",
@@ -4005,7 +4428,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Henry Ford"
-      ]
+      ],
+      "subcategory": "ancient-medieval"
     },
     {
       "slug": "senators-per-state",
@@ -4017,7 +4441,8 @@
       "acceptableAnswers": [
         "Two",
         "2"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "total-us-senators",
@@ -4029,7 +4454,8 @@
       "acceptableAnswers": [
         "100",
         "One hundred"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "total-house-representatives",
@@ -4041,7 +4467,8 @@
       "acceptableAnswers": [
         "435",
         "Four hundred thirty-five"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "electoral-votes-to-win",
@@ -4053,7 +4480,8 @@
       "acceptableAnswers": [
         "270",
         "Two hundred seventy"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "presidential-term-length",
@@ -4065,7 +4493,8 @@
       "acceptableAnswers": [
         "Four",
         "4"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "senator-term-length",
@@ -4077,7 +4506,8 @@
       "acceptableAnswers": [
         "Six",
         "6"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "representative-term-length",
@@ -4089,7 +4519,8 @@
       "acceptableAnswers": [
         "Two",
         "2"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "supreme-court-justices-number",
@@ -4101,7 +4532,8 @@
       "acceptableAnswers": [
         "Nine",
         "9"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "supreme-court-tenure-length",
@@ -4114,7 +4546,8 @@
         "Life",
         "Lifetime",
         "For life"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "president-minimum-age",
@@ -4126,7 +4559,8 @@
       "acceptableAnswers": [
         "35",
         "Thirty-five"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "senator-minimum-age",
@@ -4138,7 +4572,8 @@
       "acceptableAnswers": [
         "30",
         "Thirty"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "representative-minimum-age",
@@ -4150,7 +4585,8 @@
       "acceptableAnswers": [
         "25",
         "Twenty-five"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "president-term-limit",
@@ -4162,7 +4598,8 @@
       "acceptableAnswers": [
         "Two",
         "2"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "congress-lawmaking-body",
@@ -4175,7 +4612,8 @@
         "Congress",
         "United States Congress",
         "US Congress"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "senate-upper-chamber",
@@ -4188,7 +4626,8 @@
         "Senate",
         "US Senate",
         "United States Senate"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "house-of-representatives-lower-chamber",
@@ -4201,7 +4640,8 @@
         "House of Representatives",
         "US House",
         "House"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "vice-president-senate-president",
@@ -4213,7 +4653,8 @@
       "acceptableAnswers": [
         "Vice President",
         "VP"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "speaker-of-the-house-succession",
@@ -4225,7 +4666,8 @@
       "acceptableAnswers": [
         "Speaker of the House",
         "House Speaker"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "us-capitol-building",
@@ -4239,7 +4681,8 @@
         "Capitol Building",
         "US Capitol",
         "United States Capitol"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "white-house-residence",
@@ -4250,7 +4693,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "White House"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "camp-david-retreat",
@@ -4261,7 +4705,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Camp David"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "national-archives-documents",
@@ -4273,7 +4718,8 @@
       "acceptableAnswers": [
         "National Archives",
         "National Archives Building"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "twenty-first-amendment-prohibition",
@@ -4286,7 +4732,8 @@
         "21st Amendment",
         "Twenty-first Amendment",
         "Amendment XXI"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "twenty-second-amendment-term-limit",
@@ -4299,7 +4746,8 @@
         "22nd Amendment",
         "Twenty-second Amendment",
         "Amendment XXII"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "twenty-sixth-amendment-voting-age",
@@ -4312,7 +4760,8 @@
         "26th Amendment",
         "Twenty-sixth Amendment",
         "Amendment XXVI"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "article-one-legislative",
@@ -4325,7 +4774,8 @@
         "Article I",
         "Article 1",
         "Article One"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "article-two-executive",
@@ -4338,7 +4788,8 @@
         "Article II",
         "Article 2",
         "Article Two"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "article-three-judicial",
@@ -4351,7 +4802,8 @@
         "Article III",
         "Article 3",
         "Article Three"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "star-spangled-banner-anthem",
@@ -4363,7 +4815,8 @@
       "acceptableAnswers": [
         "Star-Spangled Banner",
         "The Star-Spangled Banner"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "bald-eagle-national-symbol",
@@ -4375,7 +4828,8 @@
       "acceptableAnswers": [
         "Bald eagle",
         "American bald eagle"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "federalism-government-system",
@@ -4386,7 +4840,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Federalism"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "separation-of-powers",
@@ -4397,7 +4852,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Separation of powers"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "checks-and-balances",
@@ -4408,7 +4864,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Checks and balances"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "in-god-we-trust-motto",
@@ -4419,7 +4876,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "1864"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "e-pluribus-unum-great-seal",
@@ -4431,7 +4889,8 @@
       "acceptableAnswers": [
         "Out of many, one",
         "From many, one"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "thirteen-stripes-colonies",
@@ -4443,7 +4902,8 @@
       "acceptableAnswers": [
         "Thirteen",
         "13"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "fifty-stars-states",
@@ -4455,7 +4915,8 @@
       "acceptableAnswers": [
         "Fifty",
         "50"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "constitution-signing-year",
@@ -4466,7 +4927,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "1787"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "eisenhower-interstate-highway",
@@ -4479,7 +4941,8 @@
         "Dwight D. Eisenhower",
         "Eisenhower",
         "Dwight Eisenhower"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "kennedy-peace-corps",
@@ -4492,7 +4955,8 @@
         "John F. Kennedy",
         "JFK",
         "Kennedy"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "johnson-civil-rights-act",
@@ -4505,7 +4969,8 @@
         "Lyndon B. Johnson",
         "LBJ",
         "Lyndon Johnson"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "truman-atomic-bomb",
@@ -4518,7 +4983,8 @@
         "Harry S. Truman",
         "Harry Truman",
         "Truman"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "nixon-environmental-protection-agency",
@@ -4530,7 +4996,8 @@
       "acceptableAnswers": [
         "Richard Nixon",
         "Nixon"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "wilson-national-park-service",
@@ -4542,7 +5009,8 @@
       "acceptableAnswers": [
         "Woodrow Wilson",
         "Wilson"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "electoral-college-system",
@@ -4553,7 +5021,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Electoral College"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "impeachment-removal-process",
@@ -4564,7 +5033,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Impeachment"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "presidential-veto-power",
@@ -4576,7 +5046,8 @@
       "acceptableAnswers": [
         "Veto",
         "Presidential veto"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "supreme-law-of-the-land",
@@ -4590,7 +5061,8 @@
         "US Constitution",
         "United States Constitution",
         "Constitution"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "we-the-people",
@@ -4601,7 +5073,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "We the People"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "bill-of-rights-first-ten",
@@ -4612,7 +5085,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Bill of Rights"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "total-constitutional-amendments",
@@ -4624,7 +5098,8 @@
       "acceptableAnswers": [
         "Twenty-seven",
         "27"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "declaration-independence-purpose",
@@ -4639,7 +5114,8 @@
         "United Kingdom",
         "UK",
         "England"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "declaration-rights-life-liberty",
@@ -4651,7 +5127,8 @@
       "acceptableAnswers": [
         "the pursuit of happiness",
         "pursuit of happiness"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "economic-system-capitalism",
@@ -4664,7 +5141,8 @@
         "Capitalism",
         "Market economy",
         "Free market"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "congress-makes-federal-laws",
@@ -4677,7 +5155,8 @@
         "Congress",
         "Legislative branch",
         "US Congress"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "president-commander-in-chief",
@@ -4690,7 +5169,8 @@
         "The President",
         "President",
         "President of the United States"
-      ]
+      ],
+      "subcategory": "famous-figures-quotes"
     },
     {
       "slug": "president-signs-bills",
@@ -4703,7 +5183,8 @@
         "The President",
         "President",
         "President of the United States"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "supreme-court-highest-court",
@@ -4716,7 +5197,8 @@
         "Supreme Court",
         "US Supreme Court",
         "SCOTUS"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "two-major-political-parties",
@@ -4728,7 +5210,8 @@
       "acceptableAnswers": [
         "Democratic and Republican",
         "Democrats and Republicans"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "thirteen-original-states",
@@ -4740,7 +5223,8 @@
       "acceptableAnswers": [
         "Thirteen",
         "13"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "first-president-united-states",
@@ -4752,7 +5236,8 @@
       "acceptableAnswers": [
         "George Washington",
         "Washington"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "louisiana-purchase-france",
@@ -4765,7 +5250,8 @@
         "Louisiana Territory",
         "Louisiana Purchase",
         "Louisiana"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "war-north-and-south-name",
@@ -4777,7 +5263,8 @@
       "acceptableAnswers": [
         "Civil War",
         "The Civil War"
-      ]
+      ],
+      "subcategory": "wars-battles-conflicts"
     },
     {
       "slug": "civil-war-causes-slavery",
@@ -4788,7 +5275,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Slavery"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "president-world-war-i",
@@ -4800,7 +5288,8 @@
       "acceptableAnswers": [
         "Woodrow Wilson",
         "Wilson"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "fdr-great-depression-wwii",
@@ -4813,7 +5302,8 @@
         "Franklin D. Roosevelt",
         "FDR",
         "Roosevelt"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "wwii-axis-powers-japan-attack-pearl-harbor",
@@ -4825,7 +5315,8 @@
       "acceptableAnswers": [
         "Japan",
         "Imperial Japan"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "cold-war-communism-concern",
@@ -4838,7 +5329,8 @@
         "Communism",
         "Spread of communism",
         "Soviet expansion"
-      ]
+      ],
+      "subcategory": "us-history-government"
     },
     {
       "slug": "us-capital-washington-dc",
@@ -4851,7 +5343,8 @@
         "Washington, D.C.",
         "Washington DC",
         "DC"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
     },
     {
       "slug": "independence-day-july-4",
@@ -4864,7 +5357,99 @@
         "July 4",
         "July 4th",
         "Fourth of July"
-      ]
+      ],
+      "subcategory": "cultural-social-history"
+    },
+    {
+      "slug": "mussolini-invades-abyssinia-1935",
+      "question": "Which country did Mussolini invade in 1935?",
+      "answer": "Abyssinia",
+      "acceptableAnswers": [
+        "Ethiopia"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
+    },
+    {
+      "slug": "punic-wars-rome-vs-carthage",
+      "question": "Who fought against Carthage in the Punic Wars?",
+      "answer": "The Romans",
+      "acceptableAnswers": [
+        "Rome",
+        "Roman Republic"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "ancient-medieval"
+    },
+    {
+      "slug": "declaration-of-independence-signed-july-3",
+      "question": "Americans celebrate Independence Day on July 4th, but the Declaration of Independence was actually signed on which date?",
+      "answer": "July 3",
+      "acceptableAnswers": [
+        "July 3rd"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
+    },
+    {
+      "slug": "english-kings-never-married",
+      "question": "Each of these men was King of England: William II, Edward V and Edward VI. What notable thing did these men never do?",
+      "answer": "Get Married",
+      "acceptableAnswers": [
+        "Marry",
+        "Marriage"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
+    },
+    {
+      "slug": "katherine-of-aragon-married-henry-viii",
+      "question": "Which English monarch did Katherine of Aragon marry in 1509?",
+      "answer": "Henry VIII",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
+    },
+    {
+      "slug": "captain-cook-died-hawaii-1779",
+      "question": "In what modern day U.S. state was British cartographer and explorer Captain James Cook stabbed and beaten to death by the native people in 1779?",
+      "answer": "Hawaii",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
+    },
+    {
+      "slug": "thomas-blood-crown-jewels-theft-attempt",
+      "question": "Thomas Allen Blood was an Anglo-Irish army officer best remembered for his attempt to steal what?",
+      "answer": "The Crown Jewels of England",
+      "acceptableAnswers": [
+        "Crown Jewels",
+        "British Crown Jewels",
+        "Crown Jewels of England"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
+    },
+    {
+      "slug": "erik-the-red-discovered-greenland",
+      "question": "Popular history credits Erik the Red with discovering WHICH country?",
+      "answer": "Greenland",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
     }
   ],
   "familiarity": "moderate"

@@ -6,266 +6,304 @@
       "question": "What is the name of the fictional Los Angeles skyscraper where NYPD detective John McClane fights terrorists on Christmas Eve in the 1988 film 'Die Hard'?",
       "answer": "Nakatomi Plaza",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-terminator-schwarzenegger",
       "question": "What is the specific alphanumeric model number of the original cybernetic assassin played by Arnold Schwarzenegger in the 1984 sci-fi action film 'The Terminator'?",
       "answer": "T-800",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-matrix-neo",
       "question": "What is the civilian birth name of the hacker protagonist played by Keanu Reeves before he adopts the alias 'Neo' in the 1999 action film 'The Matrix'?",
       "answer": "Thomas Anderson",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-john-wick-dog",
       "question": "What specific breed of dog is the puppy named Daisy, whose tragic death sets off John Wick's violent quest for vengeance in the 2014 action film?",
       "answer": "Beagle",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-indiana-jones-ark",
       "question": "In the 1981 adventure film 'Raiders of the Lost Ark', Indiana Jones races against the Nazis to locate which legendary, gold-plated biblical artifact?",
       "answer": "Ark of the Covenant",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-top-gun-cruise",
       "question": "What is the fictional military call sign of Pete Mitchell, the elite naval aviator played by Tom Cruise in the 1986 action drama 'Top Gun'?",
       "answer": "Maverick",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-james-bond-casino",
       "question": "What is the name of the international terrorist organization traditionally led by the villain Ernst Stavro Blofeld in the classic James Bond film franchise?",
       "answer": "Spectre",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-gladiator-crowe",
       "question": "What is the first name of the betrayed Roman general played by Russell Crowe who becomes a vengeful arena fighter in the 2000 epic 'Gladiator'?",
       "answer": "Maximus",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-speed-reeves",
       "question": "In the 1994 high-concept action thriller 'Speed', a city transit bus is rigged with a bomb that will detonate if the vehicle's speed drops below how many miles per hour?",
       "answer": "50",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-rambo-first-blood",
       "question": "What is the full name of the troubled Vietnam War veteran and elite Green Beret soldier played by Sylvester Stallone in 'First Blood'?",
       "answer": "John Rambo",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-kill-bill-tarantino",
       "question": "What is the iconic color of the matching, striped motorcycle jumpsuit worn by Uma Thurman's character during her sword fights in 'Kill Bill: Volume 1'?",
       "answer": "Yellow",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-taken-neeson",
       "question": "Liam Neeson says he has a 'very particular set of __________' in 'Taken.",
       "answer": "Skills",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-avengers-thanos",
       "question": "What is the specific name of the six powerful, color-coded cosmic gems that the warlord Thanos seeks to collect in the Marvel Studios film 'Avengers: Infinity War'?",
       "answer": "Infinity Stones",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-bourne-identity",
       "question": "What is the first name of the amnesiac black-ops assassin played by Matt Damon in the Bourne film franchise based on novels by Robert Ludlum?",
       "answer": "Jason",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-rush-hour-chan",
       "question": "In the 1998 buddy-cop action comedy 'Rush Hour', Inspector Lee travels to Los Angeles from which major Asian city to investigate a high-profile kidnapping?",
       "answer": "Hong Kong",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-lethal-weapon-gibson",
       "question": "What is the last name of the volatile, grief-stricken LAPD narcotics detective played by Mel Gibson in the 1987 buddy-cop classic 'Lethal Weapon'?",
       "answer": "Riggs",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-robocop-detroit",
       "question": "The 1987 sci-fi action film 'RoboCop' takes place in a crime-ridden, dystopian version of which major Midwestern United States city?",
       "answer": "Detroit",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-bad-boys-smith",
       "question": "The high-octane action franchise 'Bad Boys', starring Will Smith and Martin Lawrence as narcotics detectives, is set in which major city?",
       "answer": "Miami",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-avatar-pandora",
       "question": "In James Cameron's 2009 sci-fi action film 'Avatar', human military forces invade a lush, habitable moon known by what name?",
       "answer": "Pandora",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-face-off-cage",
       "question": "In the 1997 John Woo action film 'Face/Off', John Travolta plays an FBI agent who undergoes an experimental surgery to swap faces with a terrorist played by which actor?",
       "answer": "Nicolas Cage",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-mission-impossible-cruise",
       "question": "What is the first name of the elite secret agent played by Tom Cruise in the 'Mission: Impossible' film franchise?",
       "answer": "Ethan",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-matrix-pill",
       "question": "What color is the pill that Morpheus offers Neo to reveal the true reality of the world in 'The Matrix'?",
       "answer": "Red",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-avengers-thor",
       "question": "What is the name of the Norse god of thunder played by Chris Hemsworth in the Marvel Studios action films?",
       "answer": "Thor",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-die-hard-gruber",
       "question": "What is the name of the cold, calculating German terrorist villain played by Alan Rickman in the original 'Die Hard'?",
       "answer": "Hans Gruber",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-terminator-judgment",
       "question": "In the 1991 action sequel 'Terminator 2', Arnold Schwarzenegger's character returns to protect a young boy named John with what last name?",
       "answer": "Connor",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-skyfall-craig",
       "question": "What secret agent code number is assigned to James Bond?",
       "answer": "007",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-indiana-jones-weapon",
       "question": "What specific type of flexible, leather weapon is famously used by Indiana Jones to swing across gaps and disarm enemies?",
       "answer": "Whip",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-mad-max-theron",
       "question": "What is the name of the fierce, one-armed rebel warrior captain played by Charlize Theron in 'Mad Max: Fury Road'?",
       "answer": "Imperator Furiosa",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-gladiator-phoenix",
       "question": "What is the name of the corrupt, patricidal Roman emperor played by Joaquin Phoenix in the 2000 historical action epic 'Gladiator'?",
       "answer": "Commodus",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-taken-kidnap",
       "question": "In the 2008 action thriller 'Taken', Liam Neeson's daughter is kidnapped while on vacation in which major European capital city?",
       "answer": "Paris",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-rush-hour-tucker",
       "question": "What is the last name of the fast-talking LAPD detective James, played by comedian Chris Tucker in the 'Rush Hour' franchise?",
       "answer": "Carter",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-top-gun-iceman",
       "question": "What is the fictional military call sign of Tom Kazansky, Maverick's elite rival pilot played by Val Kilmer in 'Top Gun'?",
       "answer": "Iceman",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-dark-knight-ledger",
       "question": "Which actor won a posthumous Academy Award for his legendary portrayal of the Joker in the 2008 action film 'The Dark Knight'?",
       "answer": "Heath Ledger",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "action-movie-bournesupremacy-berlin",
       "question": "In the 2004 action-packed spy sequel 'The Bourne Supremacy', Jason Bourne travels to which capital city of Germany to uncover his past?",
       "answer": "Berlin",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-indiana-jones-grail",
       "question": "In the 1989 action-adventure film 'Indiana Jones and the Last Crusade', Indy races against time to discover which mythical, life-giving chalice?",
       "answer": "Holy Grail",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-matrix-morpheus",
       "question": "What is the name of the resistance leader played by Laurence Fishburne who frees Neo from the machine-controlled simulation in 'The Matrix'?",
       "answer": "Morpheus",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-top-gun-goose",
       "question": "What is the tragic military call sign of Nick Bradshaw, Maverick's beloved Radar Intercept Officer and best friend in 'Top Gun'?",
       "answer": "Goose",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-spider-man-maguire",
       "question": "What is the full civilian name of the high school student bitten by a genetically modified spider in Sam Raimi's 2002 superhero action film?",
       "answer": "Peter Parker",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "action-movie-casino-royale-craig",
@@ -275,7 +313,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Texas Hold 'em"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-cliffhanger-stallone",
@@ -285,35 +324,40 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Money"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-total-recall-planet",
       "question": "In Paul Verhoeven's 1990 sci-fi action film 'Total Recall', Arnold Schwarzenegger's character uncovers a massive conspiracy on which planet?",
       "answer": "Mars",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-minority-report-cruise",
       "question": "In the 2002 sci-fi action thriller 'Minority Report', Tom Cruise operates a Washington D.C. police department that stops crimes before they happen known by what specialized name?",
       "answer": "Precrime",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-the-rock-prison",
       "question": "In Michael Bay's 1996 action thriller 'The Rock', rogue military forces seize control of which notorious, isolated former federal prison island?",
       "answer": "Alcatraz",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "action-movie-coba-kai-karate-kid",
       "question": "What is the name of the rival, aggressive karate dojo led by Sensei John Kreese that opposes Daniel LaRusso in the original Karate Kid?",
       "answer": "Cobra Kai",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "first-feature-length-animation",
@@ -325,7 +369,8 @@
       "acceptableAnswers": [
         "Snow White and the Seven Dwarfs",
         "Snow White"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "highest-grossing-film-all-time",
@@ -336,7 +381,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Avatar"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "rosebud-sled-movie",
@@ -347,7 +393,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Citizen Kane"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "godfather-author-surname",
@@ -359,7 +406,8 @@
       "acceptableAnswers": [
         "Francis Ford Coppola",
         "Coppola"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "jurassic-park-director",
@@ -371,7 +419,8 @@
       "acceptableAnswers": [
         "Steven Spielberg",
         "Spielberg"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "gump-chocolate-box-character",
@@ -383,7 +432,8 @@
       "acceptableAnswers": [
         "Forrest Gump",
         "Gump"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "yellow-brick-road-destination",
@@ -395,7 +445,8 @@
       "acceptableAnswers": [
         "Emerald City",
         "The Emerald City"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "dark-knight-joker-actor",
@@ -407,7 +458,8 @@
       "acceptableAnswers": [
         "Heath Ledger",
         "Ledger"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "star-wars-wookiee-copilot",
@@ -420,7 +472,8 @@
         "Chewbacca",
         "Chewie",
         "Chewy"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "titanic-jack-dawson-actor",
@@ -433,7 +486,8 @@
         "Leonardo DiCaprio",
         "DiCaprio",
         "Leonardo Di Caprio"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "wakanda-forever-hero",
@@ -444,7 +498,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Wakanda"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "lord-of-the-rings-director",
@@ -456,7 +511,8 @@
       "acceptableAnswers": [
         "Peter Jackson",
         "Jackson"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "matrix-red-pill-hero",
@@ -467,7 +523,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Neo"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "delorean-time-machine-movie",
@@ -478,7 +535,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Back to the Future"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "pulp-fiction-director",
@@ -490,7 +548,8 @@
       "acceptableAnswers": [
         "Quentin Tarantino",
         "Tarantino"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "hannibal-lecter-silence",
@@ -502,7 +561,8 @@
       "acceptableAnswers": [
         "Hannibal Lecter",
         "Lecter"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "toy-story-cowboy-name",
@@ -514,7 +574,8 @@
       "acceptableAnswers": [
         "Woody",
         "Sheriff Woody"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "holloway-marilyn-monroe-birth",
@@ -526,7 +587,8 @@
       "acceptableAnswers": [
         "Marilyn",
         "Marilyn Monroe"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "bates-motel-slasher",
@@ -538,7 +600,8 @@
       "acceptableAnswers": [
         "Norman Bates",
         "Bates"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "shrek-ogre-swamp",
@@ -549,7 +612,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Shrek"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "rocky-balboa-city",
@@ -561,7 +625,8 @@
       "acceptableAnswers": [
         "Philadelphia",
         "Philly"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "lion-king-villain",
@@ -572,7 +637,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Scar"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "academy-award-nickname",
@@ -585,7 +651,8 @@
         "Oscar",
         "Oscars",
         "The Oscar"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "casablanca-rick-actor",
@@ -598,7 +665,8 @@
         "Humphrey Bogart",
         "Bogart",
         "Bogey"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "indiana-jones-profession",
@@ -612,7 +680,8 @@
         "Archeology",
         "Archaeologist",
         "Archeologist"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "oz-kansas-orphan",
@@ -624,7 +693,8 @@
       "acceptableAnswers": [
         "Dorothy",
         "Dorothy Gale"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "the-shining-hotel",
@@ -638,7 +708,8 @@
         "Overlook Hotel",
         "The Overlook",
         "Overlook"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "avengers-mad-titan",
@@ -649,7 +720,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Thanos"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "godfather-don-actor",
@@ -661,7 +733,8 @@
       "acceptableAnswers": [
         "Marlon Brando",
         "Brando"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "star-wars-darth-vader-voice",
@@ -673,7 +746,8 @@
       "acceptableAnswers": [
         "James Earl Jones",
         "James Earl Jones"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "shawshank-redemption-author",
@@ -685,7 +759,8 @@
       "acceptableAnswers": [
         "Stephen King",
         "King"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "gladiator-maximus-actor",
@@ -697,7 +772,8 @@
       "acceptableAnswers": [
         "Russell Crowe",
         "Crowe"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "psycho-shower-victim",
@@ -710,7 +786,8 @@
         "Marion Crane",
         "Marion",
         "Crane"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "inception-director",
@@ -722,7 +799,8 @@
       "acceptableAnswers": [
         "Christopher Nolan",
         "Nolan"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "silence-lambs-fbi-agent",
@@ -735,7 +813,8 @@
         "Clarice Starling",
         "Clarice",
         "Starling"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "jaws-island-setting",
@@ -747,7 +826,8 @@
       "acceptableAnswers": [
         "Amity Island",
         "Amity"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "goodfellas-director",
@@ -759,7 +839,8 @@
       "acceptableAnswers": [
         "Martin Scorsese",
         "Scorsese"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "alien-ripley-actress",
@@ -771,7 +852,8 @@
       "acceptableAnswers": [
         "Sigourney Weaver",
         "Weaver"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "fight-club-soap-character",
@@ -784,7 +866,8 @@
         "Tyler Durden",
         "Tyler",
         "Durden"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "fight-club-rules",
@@ -797,7 +880,8 @@
         "You do not talk about Fight Club.",
         "Do not talk about Fight Club",
         "Don't talk about Fight Club"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "spiderman-peter-parker-uncle",
@@ -810,7 +894,8 @@
         "Uncle Ben",
         "Ben",
         "Ben Parker"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "shining-overlook-chef",
@@ -823,7 +908,8 @@
         "Dick Hallorann",
         "Hallorann",
         "Dick"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "back-to-future-scientist",
@@ -837,7 +923,8 @@
         "Emmett Brown",
         "Dr. Emmett Brown",
         "Doctor Brown"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "die-hard-nakatomi-hero",
@@ -850,7 +937,8 @@
         "John McClane",
         "McClane",
         "John Mc Clane"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "wizard-of-oz-dog",
@@ -861,7 +949,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Toto"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "terminator-connor-mother",
@@ -873,7 +962,8 @@
       "acceptableAnswers": [
         "Sarah Connor",
         "Sarah"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "pirates-caribbean-captain",
@@ -886,7 +976,8 @@
         "Jack Sparrow",
         "Captain Jack Sparrow",
         "Sparrow"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "truman-show-town",
@@ -898,7 +989,8 @@
       "acceptableAnswers": [
         "Seahaven",
         "Seahaven Island"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "find-nemo-forgetful-fish",
@@ -909,7 +1001,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Dory"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "dark-knight-gotham-da",
@@ -922,7 +1015,8 @@
         "Harvey Dent",
         "Dent",
         "Harvey"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "matrix-morpheus-ship",
@@ -934,7 +1028,8 @@
       "acceptableAnswers": [
         "Nebuchadnezzar",
         "The Nebuchadnezzar"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "social-network-napster-founder",
@@ -946,7 +1041,8 @@
       "acceptableAnswers": [
         "Sean Parker",
         "Parker"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "good-will-hunting-therapist",
@@ -958,7 +1054,8 @@
       "acceptableAnswers": [
         "Robin Williams",
         "Williams"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "good-will-hunting-apples",
@@ -969,7 +1066,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Apples"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "forrest-gump-director",
@@ -981,7 +1079,8 @@
       "acceptableAnswers": [
         "Robert Zemeckis",
         "Zemeckis"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "psycho-director",
@@ -993,7 +1092,8 @@
       "acceptableAnswers": [
         "Alfred Hitchcock",
         "Hitchcock"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "terminator-cyborg-actor",
@@ -1006,7 +1106,8 @@
         "Arnold Schwarzenegger",
         "Schwarzenegger",
         "Arnold"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "star-wars-creator",
@@ -1018,7 +1119,8 @@
       "acceptableAnswers": [
         "George Lucas",
         "Lucas"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "silence-lambs-buffalo-bill",
@@ -1030,7 +1132,8 @@
       "acceptableAnswers": [
         "Buffalo Bill",
         "Jame Gumb"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "fargo-marge-gunderson-actress",
@@ -1042,7 +1145,8 @@
       "acceptableAnswers": [
         "Frances McDormand",
         "McDormand"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "gladiator-director",
@@ -1054,7 +1158,8 @@
       "acceptableAnswers": [
         "Ridley Scott",
         "Scott"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "pulp-fiction-vincent-vega-actor",
@@ -1066,7 +1171,8 @@
       "acceptableAnswers": [
         "John Travolta",
         "Travolta"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "fight-club-narrator-actor",
@@ -1078,7 +1184,8 @@
       "acceptableAnswers": [
         "Edward Norton",
         "Norton"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "die-hard-hans-gruber-actor",
@@ -1090,7 +1197,8 @@
       "acceptableAnswers": [
         "Alan Rickman",
         "Rickman"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "godfather-michael-corleone-actor",
@@ -1102,7 +1210,8 @@
       "acceptableAnswers": [
         "Al Pacino",
         "Pacino"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "shawshank-redemption-andy-dufresne",
@@ -1115,7 +1224,8 @@
         "Andy Dufresne",
         "Andy",
         "Dufresne"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "monsters-inc-boo",
@@ -1126,7 +1236,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Boo"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "alien-chestburster-victim",
@@ -1138,7 +1249,8 @@
       "acceptableAnswers": [
         "Kane",
         "Gilbert Kane"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "rocky-apollo-creed-actor",
@@ -1150,7 +1262,8 @@
       "acceptableAnswers": [
         "Carl Weathers",
         "Weathers"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "goodfellas-henry-hill-actor",
@@ -1162,7 +1275,8 @@
       "acceptableAnswers": [
         "Ray Liotta",
         "Liotta"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "star-wars-princess-leia-actress",
@@ -1174,11 +1288,12 @@
       "acceptableAnswers": [
         "Carrie Fisher",
         "Fisher"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "titanic-cal-hockley-actor",
-      "question": "Who played the arrogant, wealthy antagonist Cal Hockley, serving as Rose's controlling fiancé aboard the ill-fated liner in Titanic?",
+      "question": "Who played the arrogant, wealthy antagonist Cal Hockley, serving as Rose's controlling fianc\u00e9 aboard the ill-fated liner in Titanic?",
       "answer": "Billy Zane",
       "answer_format": "write_in",
       "category": "Movies",
@@ -1186,7 +1301,8 @@
       "acceptableAnswers": [
         "Billy Zane",
         "Zane"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "pulp-fiction-mia-wallace-actress",
@@ -1198,7 +1314,8 @@
       "acceptableAnswers": [
         "Uma Thurman",
         "Thman"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "lord-of-the-rings-gollum",
@@ -1210,8 +1327,9 @@
       "acceptableAnswers": [
         "Gollum",
         "Smeagol",
-        "Sméagol"
-      ]
+        "Sm\u00e9agol"
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "gladiator-commodus-actor",
@@ -1223,7 +1341,8 @@
       "acceptableAnswers": [
         "Joaquin Phoenix",
         "Phoenix"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "fight-club-marla-singer",
@@ -1235,7 +1354,8 @@
       "acceptableAnswers": [
         "Marla Singer",
         "Marla"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "matrix-agent-smith",
@@ -1247,7 +1367,8 @@
       "acceptableAnswers": [
         "Agent Smith",
         "Smith"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "back-to-the-future-biff-tannen",
@@ -1260,7 +1381,8 @@
         "Biff Tannen",
         "Biff",
         "Tannen"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "forrest-gump-jenny-curran",
@@ -1272,7 +1394,8 @@
       "acceptableAnswers": [
         "Jenny Curran",
         "Jenny"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "whiplash-fletcher-actor",
@@ -1285,7 +1408,8 @@
         "J.K. Simmons",
         "J. K. Simmons",
         "Simmons"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "get-out-chris-washington-actor",
@@ -1297,7 +1421,8 @@
       "acceptableAnswers": [
         "Daniel Kaluuya",
         "Kaluuya"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "la-la-land-director",
@@ -1309,7 +1434,8 @@
       "acceptableAnswers": [
         "Damien Chazelle",
         "Chazelle"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "parasite-ki-taek-actor",
@@ -1322,7 +1448,8 @@
         "Song Kang-ho",
         "Song Kang ho",
         "Song"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "mad-max-fury-road-furiosa-actress",
@@ -1334,7 +1461,8 @@
       "acceptableAnswers": [
         "Charlize Theron",
         "Theron"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "knives-out-benoit-blanc-actor",
@@ -1346,7 +1474,8 @@
       "acceptableAnswers": [
         "Daniel Craig",
         "Craig"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "uncut-gems-howard-ratner-actor",
@@ -1358,7 +1487,8 @@
       "acceptableAnswers": [
         "Adam Sandler",
         "Sandler"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "arrival-louise-banks-actress",
@@ -1370,7 +1500,8 @@
       "acceptableAnswers": [
         "Amy Adams",
         "Adams"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "interstellar-cooper-actor",
@@ -1382,7 +1513,8 @@
       "acceptableAnswers": [
         "Matthew McConaughey",
         "McConaughey"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "dune-paul-atreides-actor",
@@ -1393,9 +1525,10 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Timothee Chalamet",
-        "Timothée Chalamet",
+        "Timoth\u00e9e Chalamet",
         "Chalamet"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "spider-verse-miles-morales",
@@ -1407,7 +1540,8 @@
       "acceptableAnswers": [
         "Miles Morales",
         "Miles"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "ex-machina-ava-actress",
@@ -1419,7 +1553,8 @@
       "acceptableAnswers": [
         "Alicia Vikander",
         "Vikander"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "black-swan-nina-sayers-actress",
@@ -1431,7 +1566,8 @@
       "acceptableAnswers": [
         "Natalie Portman",
         "Portman"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "the-grand-budapest-hotel-gustave-actor",
@@ -1443,7 +1579,8 @@
       "acceptableAnswers": [
         "Ralph Fiennes",
         "Fiennes"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "oppenheimer-j-robert-oppenheimer-actor",
@@ -1455,7 +1592,8 @@
       "acceptableAnswers": [
         "Cillian Murphy",
         "Murphy"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "her-theodore-twombly-actor",
@@ -1467,7 +1605,8 @@
       "acceptableAnswers": [
         "Joaquin Phoenix",
         "Phoenix"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "everything-everywhere-evelyn-wang-actress",
@@ -1479,7 +1618,8 @@
       "acceptableAnswers": [
         "Michelle Yeoh",
         "Yeoh"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "no-country-anton-chigurh-actor",
@@ -1491,7 +1631,8 @@
       "acceptableAnswers": [
         "Javier Bardem",
         "Bardem"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "inglourious-basterds-hans-landa-actor",
@@ -1503,7 +1644,8 @@
       "acceptableAnswers": [
         "Christoph Waltz",
         "Waltz"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "django-unchanged-calvin-candie-actor",
@@ -1515,7 +1657,8 @@
       "acceptableAnswers": [
         "Leonardo DiCaprio",
         "DiCaprio"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "the-social-network-mark-zuckerberg-actor",
@@ -1527,7 +1670,8 @@
       "acceptableAnswers": [
         "Jesse Eisenberg",
         "Eisenberg"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "the-batman-riddler-actor",
@@ -1539,7 +1683,8 @@
       "acceptableAnswers": [
         "Paul Dano",
         "Dano"
-      ]
+      ],
+      "subcategory": "characters-lore"
     },
     {
       "slug": "godfather-part-ii-fredo-corleone-actor",
@@ -1551,7 +1696,8 @@
       "acceptableAnswers": [
         "John Cazale",
         "Cazale"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "chinatown-jake-gittes-actor",
@@ -1563,7 +1709,8 @@
       "acceptableAnswers": [
         "Jack Nicholson",
         "Nicholson"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "one-flew-over-the-cuckoos-nest-nurse-ratched-actress",
@@ -1575,7 +1722,8 @@
       "acceptableAnswers": [
         "Louise Fletcher",
         "Fletcher"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "taxi-driver-travis-bickle-actor",
@@ -1589,7 +1737,8 @@
         "De Niro",
         "Robert DeNiro",
         "DeNiro"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "annie-hall-director",
@@ -1601,7 +1750,8 @@
       "acceptableAnswers": [
         "Woody Allen",
         "Allen"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "apocalypse-now-colonel-kurtz-actor",
@@ -1613,7 +1763,8 @@
       "acceptableAnswers": [
         "Marlon Brando",
         "Brando"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "raiders-of-the-lost-ark-marion-ravenwood-actress",
@@ -1625,15 +1776,17 @@
       "acceptableAnswers": [
         "Karen Allen",
         "Allen"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "joker-2-subtitle",
       "question": "What is the official subtitle of the 2024 Joker sequel starring Joaquin Phoenix and Lady Gaga?",
-      "answer": "Folie à Deux",
+      "answer": "Folie \u00e0 Deux",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "jeremy-allen-white-bruce-springsteen",
@@ -1641,7 +1794,8 @@
       "answer": "Bruce Springsteen",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "sonic-the-hedgehog-3-shadow-voice",
@@ -1649,7 +1803,8 @@
       "answer": "Keanu Reeves",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "actors-performers"
     },
     {
       "slug": "beetlejuice-sequel-title",
@@ -1657,7 +1812,8 @@
       "answer": "Beetlejuice Beetlejuice",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "deadpool-wolverine-cameo-blade",
@@ -1665,7 +1821,8 @@
       "answer": "Wesley Snipes",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "actors-performers"
     },
     {
       "slug": "blade-runner-roy-batty-actor",
@@ -1677,7 +1834,8 @@
       "acceptableAnswers": [
         "Rutger Hauer",
         "Hauer"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "scarface-tony-montana-actor",
@@ -1689,7 +1847,8 @@
       "acceptableAnswers": [
         "Al Pacino",
         "Pacino"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "amadeus-antonio-salieri-actor",
@@ -1701,7 +1860,8 @@
       "acceptableAnswers": [
         "F. Murray Abraham",
         "Abraham"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "blue-velvet-frank-booth-actor",
@@ -1713,7 +1873,8 @@
       "acceptableAnswers": [
         "Dennis Hopper",
         "Hopper"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "do-the-right-thing-mookie-actor",
@@ -1725,7 +1886,8 @@
       "acceptableAnswers": [
         "Spike Lee",
         "Lee"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "unforgiven-william-munny-actor",
@@ -1737,7 +1899,8 @@
       "acceptableAnswers": [
         "Clint Eastwood",
         "Eastwood"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "twisters-movie-star",
@@ -1745,11 +1908,12 @@
       "answer": "Twisters",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "schindlers-list-amon-goth-actor",
-      "question": "Who received critical acclaim for his deeply unsettling performance as the sadistic Nazi concentration camp commandant Amon Göth in Schindler's List?",
+      "question": "Who received critical acclaim for his deeply unsettling performance as the sadistic Nazi concentration camp commandant Amon G\u00f6th in Schindler's List?",
       "answer": "Ralph Fiennes",
       "answer_format": "write_in",
       "category": "Movies",
@@ -1757,7 +1921,8 @@
       "acceptableAnswers": [
         "Ralph Fiennes",
         "Fiennes"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "la-confidential-bud-white-actor",
@@ -1769,7 +1934,8 @@
       "acceptableAnswers": [
         "Russell Crowe",
         "Crowe"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "the-big-lebowski-the-dude-actor",
@@ -1781,7 +1947,8 @@
       "acceptableAnswers": [
         "Jeff Bridges",
         "Bridges"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "saving-private-ryan-captain-miller-actor",
@@ -1793,7 +1960,8 @@
       "acceptableAnswers": [
         "Tom Hanks",
         "Hanks"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "magnolia-frank-mackey-actor",
@@ -1805,7 +1973,8 @@
       "acceptableAnswers": [
         "Tom Cruise",
         "Cruise"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "memento-leonard-shelby-actor",
@@ -1817,7 +1986,8 @@
       "acceptableAnswers": [
         "Guy Pearce",
         "Pearce"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "mulholland-drive-betty-elms-actress",
@@ -1829,7 +1999,8 @@
       "acceptableAnswers": [
         "Naomi Watts",
         "Watts"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "almost-famous-penny-lane-actress",
@@ -1841,7 +2012,8 @@
       "acceptableAnswers": [
         "Kate Hudson",
         "Hudson"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "training-day-alonzo-harris-actor",
@@ -1853,7 +2025,8 @@
       "acceptableAnswers": [
         "Denzel Washington",
         "Washington"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "eternal-sunshine-joel-barish-actor",
@@ -1865,7 +2038,8 @@
       "acceptableAnswers": [
         "Jim Carrey",
         "Carrey"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "there-will-be-blood-daniel-plainview-actor",
@@ -1879,7 +2053,8 @@
         "Daniel Day Lewis",
         "Day-Lewis",
         "Day Lewis"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "zodiac-robert-graysmith-actor",
@@ -1891,7 +2066,8 @@
       "acceptableAnswers": [
         "Jake Gyllenhaal",
         "Gyllenhaal"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "the-master-lancaster-dodd-actor",
@@ -1904,7 +2080,8 @@
         "Philip Seymour Hoffman",
         "Philip Hoffman",
         "Hoffman"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "wolf-of-wall-street-jordan-belfort-actor",
@@ -1916,7 +2093,8 @@
       "acceptableAnswers": [
         "Leonardo DiCaprio",
         "DiCaprio"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "roma-director",
@@ -1927,10 +2105,11 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Alfonso Cuaron",
-        "Alfonso Cuarón",
+        "Alfonso Cuar\u00f3n",
         "Cuaron",
-        "Cuarón"
-      ]
+        "Cuar\u00f3n"
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "alien-ellen-ripley-actress",
@@ -1942,7 +2121,8 @@
       "acceptableAnswers": [
         "Sigourney Weaver",
         "Weaver"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "silence-of-the-lambs-clarice-starling-actress",
@@ -1954,7 +2134,8 @@
       "acceptableAnswers": [
         "Jodie Foster",
         "Foster"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "fargo-marge-gunderson-actress-2",
@@ -1966,7 +2147,8 @@
       "acceptableAnswers": [
         "Frances McDormand",
         "McDormand"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "kill-bill-the-bride-actress",
@@ -1978,7 +2160,8 @@
       "acceptableAnswers": [
         "Uma Thurman",
         "Thurman"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "misery-annie-wilkes-actress",
@@ -1990,7 +2173,8 @@
       "acceptableAnswers": [
         "Kathy Bates",
         "Bates"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "terminator-2-sarah-connor-actress",
@@ -2002,7 +2186,8 @@
       "acceptableAnswers": [
         "Linda Hamilton",
         "Hamilton"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "erin-brockovich-actress",
@@ -2014,7 +2199,8 @@
       "acceptableAnswers": [
         "Julia Roberts",
         "Roberts"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "the-devil-wears-prada-miranda-priestly-actress",
@@ -2026,7 +2212,8 @@
       "acceptableAnswers": [
         "Meryl Streep",
         "Streep"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "black-swan-nina-sayers-actress-2",
@@ -2038,7 +2225,8 @@
       "acceptableAnswers": [
         "Natalie Portman",
         "Portman"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "everything-everywhere-evelyn-wang-actress-2",
@@ -2050,7 +2238,8 @@
       "acceptableAnswers": [
         "Michelle Yeoh",
         "Yeoh"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "little-women-director-2019",
@@ -2062,7 +2251,8 @@
       "acceptableAnswers": [
         "Greta Gerwig",
         "Gerwig"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "lost-in-translation-director",
@@ -2074,7 +2264,8 @@
       "acceptableAnswers": [
         "Sofia Coppola",
         "Coppola"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "the-hurt-locker-director",
@@ -2086,7 +2277,8 @@
       "acceptableAnswers": [
         "Kathryn Bigelow",
         "Bigelow"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "promising-young-woman-director",
@@ -2098,20 +2290,22 @@
       "acceptableAnswers": [
         "Emerald Fennell",
         "Fennell"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "nomadland-director",
       "question": "Which acclaimed female filmmaker won the Academy Award for Best Director for helming the 2020 neo-western drama Nomadland?",
-      "answer": "Chloé Zhao",
+      "answer": "Chlo\u00e9 Zhao",
       "answer_format": "write_in",
       "category": "Movies",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Chloe Zhao",
-        "Chloé Zhao",
+        "Chlo\u00e9 Zhao",
         "Zhao"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "anatomy-of-a-fall-director",
@@ -2123,7 +2317,8 @@
       "acceptableAnswers": [
         "Justine Triet",
         "Triet"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "mad-max-fury-road-furiosa-actress-2",
@@ -2135,7 +2330,8 @@
       "acceptableAnswers": [
         "Charlize Theron",
         "Theron"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "the-matrix-trinity-actress",
@@ -2148,7 +2344,8 @@
         "Carrie-Anne Moss",
         "Carrie Anne Moss",
         "Moss"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "arrival-louise-banks-actress-2",
@@ -2160,7 +2357,8 @@
       "acceptableAnswers": [
         "Amy Adams",
         "Adams"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "sicario-kate-macer-actress-2",
@@ -2172,7 +2370,8 @@
       "acceptableAnswers": [
         "Emily Blunt",
         "Blunt"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "midsommar-dani-ardor-actress-2",
@@ -2184,11 +2383,12 @@
       "acceptableAnswers": [
         "Florence Pugh",
         "Pugh"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
-      "slug": "tár-lydia-tar-actress-2",
-      "question": "Who earned widespread critical acclaim for portraying Lydia Tár, an elite, complex orchestral conductor facing a public downfall in the 2022 film Tár?",
+      "slug": "t\u00e1r-lydia-tar-actress-2",
+      "question": "Who earned widespread critical acclaim for portraying Lydia T\u00e1r, an elite, complex orchestral conductor facing a public downfall in the 2022 film T\u00e1r?",
       "answer": "Cate Blanchett",
       "answer_format": "write_in",
       "category": "Movies",
@@ -2196,7 +2396,8 @@
       "acceptableAnswers": [
         "Cate Blanchett",
         "Blanchett"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "the-favorite-abigail-masham-actress",
@@ -2208,7 +2409,8 @@
       "acceptableAnswers": [
         "Emma Stone",
         "Stone"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "lady-bird-saoirse-ronan",
@@ -2220,7 +2422,8 @@
       "acceptableAnswers": [
         "Saoirse Ronan",
         "Ronan"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "roma-yalitza-aparicio",
@@ -2232,7 +2435,8 @@
       "acceptableAnswers": [
         "Yalitza Aparicio",
         "Aparicio"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "the-help-minny-jackson-actress",
@@ -2244,7 +2448,8 @@
       "acceptableAnswers": [
         "Octavia Spencer",
         "Spencer"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "mulholland-drive-betty-elms-actress-2",
@@ -2256,7 +2461,8 @@
       "acceptableAnswers": [
         "Naomi Watts",
         "Watts"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "almost-famous-penny-lane-actress-2",
@@ -2268,364 +2474,416 @@
       "acceptableAnswers": [
         "Kate Hudson",
         "Hudson"
-      ]
+      ],
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "the-social-network-jesse-eisenberg-true-story",
       "question": "Which tech entrepreneur was played by Jesse Eisenberg in the 2010 film The Social Network?",
       "answer": "Mark Zuckerberg",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-aviator-leonardo-dicaprio",
       "question": "Which aviation pioneer was played by Leonardo DiCaprio in the 2004 film The Aviator?",
       "answer": "Howard Hughes",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "a-beautiful-mind-russell-crowe",
       "question": "Which mathematician was played by Russell Crowe in the 2001 film A Beautiful Mind?",
       "answer": "John Nash",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-pursuit-of-happyness-will-smith-true-story",
       "question": "Which stockbroker and entrepreneur was played by Will Smith in the 2006 film The Pursuit of Happyness?",
       "answer": "Chris Gardner",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "ray-jamie-foxx",
       "question": "Which musician was played by Jamie Foxx in the 2004 film Ray?",
       "answer": "Ray Charles",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "walk-the-line-joaquin-phoenix",
       "question": "Which musician was played by Joaquin Phoenix in the 2005 film Walk the Line?",
       "answer": "Johnny Cash",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-theory-of-everything-eddie-redmayne-true-story",
       "question": "Which physicist was played by Eddie Redmayne in the 2014 film The Theory of Everything?",
       "answer": "Stephen Hawking",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-imitation-game-benedict-cumberbatch-true-story",
       "question": "Which mathematician and codebreaker was played by Benedict Cumberbatch in the 2014 film The Imitation Game?",
       "answer": "Alan Turing",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "capote-philip-seymour-hoffman",
       "question": "Which author was played by Philip Seymour Hoffman in the 2005 film Capote?",
       "answer": "Truman Capote",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-wolf-of-wall-street-leonardo-dicaprio-true-story",
       "question": "Which stockbroker was played by Leonardo DiCaprio in the 2013 film The Wolf of Wall Street?",
       "answer": "Jordan Belfort",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "moneyball-brad-pitt-true-story",
       "question": "Which baseball general manager was played by Brad Pitt in the 2011 film Moneyball?",
       "answer": "Billy Beane",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-fighter-mark-wahlberg-true-story",
       "question": "Which boxer was played by Mark Wahlberg in the 2010 film The Fighter?",
       "answer": "Micky Ward",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "rush-chris-hemsworth",
       "question": "Which Formula 1 driver was played by Chris Hemsworth in the 2013 film Rush?",
       "answer": "James Hunt",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "dallas-buyers-club-matthew-mcconaughey",
       "question": "Which AIDS activist was played by Matthew McConaughey in the 2013 film Dallas Buyers Club?",
       "answer": "Ron Woodroof",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-revenant-leonardo-dicaprio-true-story",
       "question": "Which frontiersman was played by Leonardo DiCaprio in the 2015 film The Revenant?",
       "answer": "Hugh Glass",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "hidden-figures-taraji-p-henson",
       "question": "Which mathematician was played by Taraji P. Henson in the 2016 film Hidden Figures?",
       "answer": "Katherine Johnson",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "darkest-hour-gary-oldman",
       "question": "Which British leader was played by Gary Oldman in the 2017 film Darkest Hour?",
       "answer": "Winston Churchill",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "i-tonya-margot-robbie",
       "question": "Which figure skater was played by Margot Robbie in the 2017 film I, Tonya?",
       "answer": "Tonya Harding",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-post-meryl-streep-true-story",
       "question": "Which journalist was played by Meryl Streep in the 2017 film The Post?",
       "answer": "Katharine Graham",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "vice-christian-bale",
       "question": "Which U.S. Vice President was played by Christian Bale in the 2018 film Vice?",
       "answer": "Dick Cheney",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "bohemian-rhapsody-rami-malek",
       "question": "Which musician was played by Rami Malek in the 2018 film Bohemian Rhapsody?",
       "answer": "Freddie Mercury",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "first-man-ryan-gosling",
       "question": "Which astronaut was played by Ryan Gosling in the 2018 film First Man?",
       "answer": "Neil Armstrong",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "ford-v-ferrari-matt-damon",
       "question": "Which car designer and racer was played by Matt Damon in the 2019 film Ford v Ferrari?",
       "answer": "Carroll Shelby",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "bombshell-charlize-theron",
       "question": "Which journalist was played by Charlize Theron in the 2019 film Bombshell?",
       "answer": "Megyn Kelly",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-irishman-robert-de-niro-true-story",
       "question": "Which labor union leader was played by Al Pacino in the 2019 film The Irishman?",
       "answer": "Jimmy Hoffa",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "judas-and-the-black-messiah-daniel-kaluuya",
       "question": "Which activist was played by Daniel Kaluuya in the 2021 film Judas and the Black Messiah?",
       "answer": "Fred Hampton",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "amadeus-tom-hulce",
       "question": "Which composer was played by Tom Hulce in the 1984 film Amadeus?",
       "answer": "Mozart",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "la-vie-en-rose-marion-cotillard",
       "question": "Which singer was played by Marion Cotillard in the 2007 film La Vie en Rose?",
-      "answer": "Édith Piaf",
+      "answer": "\u00c9dith Piaf",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "rocketman-taron-egerton",
       "question": "Which musician was played by Taron Egerton in the 2019 film Rocketman?",
       "answer": "Elton John",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "elvis-austin-butler",
       "question": "Which musician was played by Austin Butler in the 2022 film Elvis?",
       "answer": "Elvis Presley",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "priscilla-cailee-spaeny",
       "question": "Which celebrity was played by Cailee Spaeny in the 2023 film Priscilla?",
       "answer": "Priscilla Presley",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "maestro-bradley-cooper",
       "question": "Which conductor was played by Bradley Cooper in the 2023 film Maestro?",
       "answer": "Leonard Bernstein",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "im-not-there-cate-blanchett",
       "question": "Which musician was played by Cate Blanchett in the 2007 film I'm Not There?",
       "answer": "Bob Dylan",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "control-sam-riley",
       "question": "Which musician was played by Sam Riley in the 2007 film Control?",
       "answer": "Ian Curtis",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "shine-geoffrey-rush",
       "question": "Which pianist was played by Geoffrey Rush in the 1996 film Shine?",
       "answer": "David Helfgott",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "frida-salma-hayek",
       "question": "Which artist was played by Salma Hayek in the 2002 film Frida?",
       "answer": "Frida Kahlo",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "mr-turner-timothy-spall",
       "question": "Which painter was played by Timothy Spall in the 2014 film Mr. Turner?",
       "answer": "J.M.W. Turner",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "pollock-ed-harris",
       "question": "Which artist was played by Ed Harris in the 2000 film Pollock?",
       "answer": "Jackson Pollock",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-disaster-artist-james-franco",
       "question": "Which filmmaker was played by James Franco in the 2017 film The Disaster Artist?",
       "answer": "Tommy Wiseau",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "man-on-the-moon-jim-carrey",
       "question": "Which comedian was played by Jim Carrey in the 1999 film Man on the Moon?",
       "answer": "Andy Kaufman",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "whats-love-got-to-do-with-it-angela-bassett",
       "question": "Which singer was played by Angela Bassett in the 1993 film What's Love Got to Do with It?",
       "answer": "Tina Turner",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "selena-jennifer-lopez",
       "question": "Which singer was played by Jennifer Lopez in the 1997 film Selena?",
       "answer": "Selena Quintanilla",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "straight-outta-compton-jason-mitchell",
       "question": "Which rapper was played by Jason Mitchell in the 2015 film Straight Outta Compton?",
       "answer": "Eazy-E",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "lincoln-daniel-day-lewis",
       "question": "Which U.S. President was played by Daniel Day-Lewis in the 2012 film named after that president?",
       "answer": "Abraham Lincoln",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "gandhi-ben-kingsley",
       "question": "Which leader was played by Ben Kingsley in the 1982 film Gandhi?",
       "answer": "Mahatma Gandhi",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-queen-helen-mirren",
       "question": "Which monarch was played by Helen Mirren in the 2006 film The Queen?",
       "answer": "Queen Elizabeth II",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "spencer-kristen-stewart",
       "question": "Which princess was played by Kristen Stewart in the 2021 film Spencer?",
       "answer": "Princess Diana",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "malcolm-x-denzel-washington",
       "question": "Which civil rights leader was played by Denzel Washington in the 1992 film named after the leader?",
       "answer": "Malcolm X",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "milk-sean-penn",
       "question": "Which politician was played by Sean Penn in the 2008 film Milk?",
       "answer": "Harvey Milk",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "selma-david-oyelowo",
       "question": "Which civil rights leader was played by David Oyelowo in the 2014 film Selma?",
       "answer": "Martin Luther King Jr.",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "downfall-bruno-ganz",
       "question": "Which leader was played by Bruno Ganz in the 2004 film Downfall?",
       "answer": "Adolf Hitler",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-last-king-of-scotland-forest-whitaker",
@@ -2635,7 +2893,8 @@
         "Jackie Kennedy"
       ],
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "jackie-natalie-portman",
@@ -2645,84 +2904,96 @@
         "Jackie Kennedy"
       ],
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-right-stuff-ed-harris",
       "question": "Which astronaut was played by Ed Harris in the 1983 film The Right Stuff?",
       "answer": "John Glenn",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "patton-george-c-scott",
       "question": "Which general was played by George C. Scott in the 1970 film Patton?",
       "answer": "George Patton",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "w-josh-brolin",
       "question": "Which U.S. President was played by Josh Brolin in the 2008 film W?",
       "answer": "George W. Bush",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "j-edgar-leonardo-dicaprio",
       "question": "Which FBI director was played by Leonardo DiCaprio in the 2011 film J. Edgar?",
       "answer": "Hoover",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "shirley-regina-king",
       "question": "Which politician was played by Regina King in the 2024 film Shirley?",
       "answer": "Shirley Chisholm",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "spartacus-kirk-douglas",
       "question": "Which gladiator was played by Kirk Douglas in the 1960 film Spartacus?",
       "answer": "Spartacus",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "braveheart-mel-gibson",
       "question": "Which Scottish leader was played by Mel Gibson in the 1995 film Braveheart?",
       "answer": "William Wallace",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-messenger-the-story-of-joan-of-arc-milla-jovovich",
       "question": "Which historical figure was played by Milla Jovovich in the 1999 film The Messenger?",
       "answer": "Joan of Arc",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "raging-bull-robert-de-niro",
       "question": "Which boxer was played by Robert De Niro in the 1980 film Raging Bull?",
       "answer": "Jake LaMotta",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "ali-will-smith",
       "question": "Which boxer was played by Will Smith in the 2001 film named after the boxer?",
       "answer": "Muhammad Ali",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-hurricane-denzel-washington",
       "question": "Which boxer was played by Denzel Washington in the 1999 film The Hurricane?",
       "answer": "Rubin Carter",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "cinderella-man-russell-crowe",
@@ -2732,119 +3003,136 @@
         "Jim Braddock"
       ],
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "42-chadwick-boseman",
       "question": "Which baseball player was played by Chadwick Boseman in the 2013 film 42?",
       "answer": "Jackie Robinson",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "foxcatcher-channing-tatum",
       "question": "Which Olympic wrestler was played by Channing Tatum in the 2014 film Foxcatcher?",
       "answer": "Mark Schultz",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "battle-of-the-sexes-emma-stone",
       "question": "Which tennis player was played by Emma Stone in the 2017 film Battle of the Sexes?",
       "answer": "Billie Jean King",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "nyad-annette-bening",
       "question": "Which swimmer was played by Annette Bening in the 2023 film Nyad?",
       "answer": "Diana Nyad",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-iron-claw-zac-efron",
       "question": "Which wrestler was played by Zac Efron in the 2023 film The Iron Claw?",
       "answer": "Kevin Von Erich",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "goodfellas-ray-liotta",
       "question": "Which mobster was played by Ray Liotta in the 1990 film Goodfellas?",
       "answer": "Henry Hill",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "american-gangster-denzel-washington",
       "question": "Which drug lord was played by Denzel Washington in the 2007 film American Gangster?",
       "answer": "Frank Lucas",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "black-mass-johnny-depp",
       "question": "Which crime boss was played by Johnny Depp in the 2015 film Black Mass?",
       "answer": "Whitey Bulger",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "erin-brockovich-julia-roberts",
       "question": "Which legal clerk was played by Julia Roberts in the 2000 film named after this activist?",
       "answer": "Erin Brockovich",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "all-the-Presidents-Men-robert-redford",
       "question": "Which journalist was played by Robert Redford in the 1976 film All the President's Men?",
       "answer": "Bob Woodward",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "house-of-gucci-lady-gaga",
       "question": "Which socialite was played by Lady Gaga in the 2021 film House of Gucci?",
       "answer": "Patrizia Reggiani",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-blind-side-quinton-aaron",
       "question": "Which football player was played by Quinton Aaron in the 2009 film The Blind Side?",
       "answer": "Michael Oher",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "invincible-mark-wahlberg",
       "question": "Which football player was played by Mark Wahlberg in the 2006 film Invincible?",
       "answer": "Vince Papale",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "the-greatest-game-ever-played-shia-labeouf",
       "question": "Which golfer was played by Shia LaBeouf in the 2005 film The Greatest Game Ever Played?",
       "answer": "Francis Ouimet",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "oppenheimer-cillian-murphy",
       "question": "Which theoretical physicist known as the 'father of the atomic bomb' was played by Cillian Murphy in the 2023 biographical drama named after the physicist?",
       "answer": "J. Robert Oppenheimer",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "lincoln-2012-film",
       "question": "Which United States President was played by Daniel Day-Lewis in Steven Spielberg's 2012 historical drama named after the president?",
       "answer": "Abraham Lincoln",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biographical-films"
     },
     {
       "slug": "quote-buzz-lightyear-infinity",
@@ -2852,7 +3140,8 @@
       "answer": "Buzz Lightyear",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "quote-yoda-try",
@@ -2860,15 +3149,17 @@
       "answer": "Yoda",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
     },
     {
       "slug": "quote-bruce-lee-water",
-      "question": "Which iconic martial artist and actor famously advised philosophers to 'Empty your mind, be formless, shapeless — like water'?",
+      "question": "Which iconic martial artist and actor famously advised philosophers to 'Empty your mind, be formless, shapeless \u2014 like water'?",
       "answer": "Bruce Lee",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "quote-terminator-back",
@@ -2876,952 +3167,1088 @@
       "answer": "The Terminator",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "arnold-schwarzenegger-cyborg",
       "question": "Name that movie: Arnold Schwarzenegger stars as a killer cyborg sent back in time to kill the leader of the human resistance before he is born.",
       "answer": "The Terminator",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "tom-hanks-castaway",
       "question": "Name that movie: Tom Hanks stars as a FedEx executive stranded on a deserted island after a plane crash.",
       "answer": "Cast Away",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "guy-pearce-memory-loss",
       "question": "Name that movie: Guy Pearce stars as a man with short-term memory loss trying to uncover the truth about his wife's murder.",
       "answer": "Memento",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "keanu-reeves-matrix",
       "question": "Name that movie: Keanu Reeves stars as a computer hacker who learns that reality is a simulation created by machines.",
       "answer": "The Matrix",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "bruce-willis-dead-again",
       "question": "Name that movie: Bruce Willis stars as a troubled child psychologist who attempts to help an isolated young boy who is terrified of his ability to see and communicate with the dead.",
       "answer": "The Sixth Sense",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "robert-de-niro-taxi-driver",
       "question": "Name that movie: Robert De Niro stars as a mentally unstable veteran working as a taxi driver in New York City.",
       "answer": "Taxi Driver",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "marlon-brando-mafia-boss",
       "question": "Name that movie: Marlon Brando stars as the aging patriarch of a crime family in this epic mafia saga.",
       "answer": "The Godfather",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "harison-ford-archaeologist",
       "question": "Name that movie: Harrison Ford stars as an archaeologist and adventurer in this movie franchise.",
       "answer": "Indiana Jones",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "sylvester-stallone-boxer",
       "question": "Name that movie: Sylvester Stallone stars as an underdog boxer who gets a shot at the heavyweight championship.",
       "answer": "Rocky",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "johnny-depp-pirate",
       "question": "Name that movie: Johnny Depp stars as a swashbuckling pirate in this adventure series.",
       "answer": "Pirates of the Caribbean",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "leonardo-dicaprio-titanic",
       "question": "Name that movie: Leonardo DiCaprio stars as a poor artist who falls in love with a wealthy woman played by Kate Winslet aboard a ship that hits an iceberg.",
       "answer": "Titanic",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "clint-eastwood-outlaw",
       "question": "Name that movie: 1967 film where Clint Eastwood stars as a mysterious outlaw in a small Western town.",
       "answer": "The Good, the Bad and the Ugly",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "meryl-streep-devil",
       "question": "Name that movie: Meryl Streep stars as the powerful editor of a fashion magazine who demands perfection from her assistant.",
       "answer": "The Devil Wears Prada",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "jodie-foster-silence",
       "question": "Name that movie: Jodie Foster stars as a young FBI trainee tracking down a serial killer who skins his victims.",
       "answer": "The Silence of the Lambs",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "morgan-freeman-prison",
       "question": "Name that movie: Tim Robbins stars as a man wrongfully imprisoned for the murder of his wife.",
       "answer": "The Shawshank Redemption",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "dustin-hoffman-autism",
       "question": "Name that movie: Dustin Hoffman stars as an autistic savant with extraordinary mathematical abilities.",
       "answer": "Rain Man",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "tom-cruise-ethan-hunt",
       "question": "Name that movie: Tom Cruise stars as a secret agent who must clear his name after being framed for the deaths of his espionage team.",
       "answer": "Mission: Impossible",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "will-smith-ali",
       "question": "Name that movie: Will Smith stars in this biographical film named after a legendary boxer.",
       "answer": "Ali",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "julia-roberts-prostitute",
       "question": "Name that movie: Julia Roberts stars as a prostitute hired by a wealthy businessman for a week in this romantic comedy.",
       "answer": "Pretty Woman",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "brad-pitt-fight-club",
       "question": "Name that movie: Brad Pitt stars as a charismatic soap salesman who forms an underground fight club with an insomniac office worker.",
       "answer": "Fight Club",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "jim-carrey-mask",
       "question": "Name that movie: Jim Carrey stars as a timid bank clerk who discovers a magical mask that transforms him into a green-faced trickster.",
       "answer": "The Mask",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "sandra-bullock-bus",
       "question": "Name that movie: Sandra Bullock stars as a woman who must drive a city bus after a criminal plants a bomb on it.",
       "answer": "Speed",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "keanu-reeves-john-wick",
       "question": "Name that movie: Keanu Reeves stars as a retired hitman who returns to the criminal underworld to seek vengeance for the death of his dog.",
       "answer": "John Wick",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "matthew-mcconaughey-lawyer",
       "question": "Name that movie: Matthew McConaughey stars as a defense attorney who takes on a high-profile murder case in the South.",
       "answer": "A Time to Kill",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "scarlett-johansson-avenger",
       "question": "Name that movie: Scarlett Johansson stars as a highly trained spy and assassin who joins a team of superheroes.",
       "answer": "The Avengers",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "chris-pratt-guardians",
       "question": "Name that movie: Chris Pratt stars as a roguish space adventurer who teams up with a group of misfits to save the galaxy.",
       "answer": "Guardians of the Galaxy",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "ryan-reynolds-deadpool",
       "question": "Name that movie: Ryan Reynolds stars as a wisecracking, fast-healing mercenary with a disfigured face.",
       "answer": "Deadpool",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "humphrey-bogart-rick",
       "question": "Name that movie: Humphrey Bogart stars as Rick Blaine, a cynical American expatriate who runs a nightclub in Casablanca during World War II.",
       "answer": "Casablanca",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "marlon-brando-don",
       "question": "Name that movie: Marlon Brando stars as Don Vito Corleone, the aging patriarch of a powerful crime family.",
       "answer": "The Godfather",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "anthony-perkins-norman",
       "question": "Name that movie: Anthony Perkins stars as Norman Bates, a motel owner with a disturbing secret.",
       "answer": "Psycho",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "jack-nicholson-joker",
       "question": "Name that movie: Jack Nicholson stars as the Joker, a criminal mastermind who terrorizes Gotham City.",
       "answer": "Batman",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "sigourney-weaver-ripley",
       "question": "Name that movie: Sigourney Weaver stars as Ellen Ripley, a warrant officer battling a deadly alien aboard a spaceship.",
       "answer": "Alien",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "arnold-schwarzenegger-dutch",
       "question": "Name that movie: Arnold Schwarzenegger stars as Dutch, the leader of a team of commandos hunting a predatory alien in the jungle.",
       "answer": "Predator",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "bruce-willis-john-mcclane",
       "question": "Name that movie: Bruce Willis stars as John McClane, a New York cop who battles terrorists in a Los Angeles skyscraper.",
       "answer": "Die Hard",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "mel-gibson-max",
       "question": "Name that movie: Mel Gibson stars as Max Rockatansky, a former police officer fighting for survival in a post-apocalyptic wasteland.",
       "answer": "Mad Max",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "kurt-russell-snake",
       "question": "Name that movie: Kurt Russell stars as Snake Plissken, a former soldier sent into a dystopian New York to rescue the President's daughter.",
       "answer": "Escape from New York",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "wesley-snipes-blade",
       "question": "Name that movie: Wesley Snipes stars as a half-vampire, half-mortal warrior who hunts vampires.",
       "answer": "Blade",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "will-smith-j",
       "question": "Name that movie: Will Smith stars as Agent J, a member of a secret agency that monitors alien activity on Earth.",
       "answer": "Men in Black",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "tommy-lee-jones-k",
       "question": "Name that movie: Tommy Lee Jones stars as Agent K, a veteran agent who trains a new recruit to monitor alien activity.",
       "answer": "Men in Black",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "daniel-craig-bond",
       "question": "Name that movie: Daniel Craig stars as James Bond, a British secret agent who must stop a terrorist from destroying a new casino in Montenegro.",
       "answer": "Casino Royale",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "clint-eastwood-dirty-harry",
       "question": "Name that movie: Clint Eastwood stars as a San Francisco police inspector who must stop a serial killer.",
       "answer": "Dirty Harry",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "charleton-heston-moses",
       "question": "Name that movie: Charlton Heston stars as Moses, a Hebrew slave who leads his people out of Egypt.",
       "answer": "The Ten Commandments",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "russell-crowe-gladiator",
       "question": "Name that movie: Russell Crowe stars as Maximus, a Roman general who seeks revenge against the emperor who murdered his family.",
       "answer": "Gladiator",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "mel-gibson-braveheart",
       "question": "Name that movie: Mel Gibson stars as William Wallace, a Scottish warrior who leads a rebellion against English rule.",
       "answer": "Braveheart",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "forrest-gump-tom-hanks",
       "question": "Name that movie: Tom Hanks stars as a kind-hearted man with a low IQ who witnesses and unwittingly influences several defining historical events in the United States.",
       "answer": "Forrest Gump",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-truman-show-jim-carrey",
       "question": "Name that movie: Jim Carrey stars as a man who discovers his entire life is a fabricated reality TV show.",
       "answer": "The Truman Show",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-green-mile-tom-hanks",
       "question": "Name that movie: Tom Hanks stars as a death row supervisor who encounters a man with a supernatural gift.",
       "answer": "The Green Mile",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-pianist-adrien-brody",
       "question": "Name that movie: Adrien Brody stars as a Polish Jewish pianist who struggles to survive the destruction of the Warsaw ghetto.",
       "answer": "The Pianist",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "good-will-hunting-matt-damon",
       "question": "Name that movie: Matt Damon stars as a genius janitor at MIT who solves a difficult math problem left on a chalkboard.",
       "answer": "Good Will Hunting",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-departed-leonardo-dicaprio",
       "question": "Name that movie: Leonardo DiCaprio stars as an undercover cop infiltrating the mob in Boston.",
       "answer": "The Departed",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-revenant-leonardo-dicaprio",
       "question": "Name that movie: Leonardo DiCaprio stars as a frontiersman left for dead after a bear attack, seeking revenge against those who betrayed him.",
       "answer": "The Revenant",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-social-network-jesse-eisenberg",
       "question": "Name that movie: Jesse Eisenberg stars as Mark Zuckerberg, the founder of Facebook, as he navigates the legal and personal challenges of creating a social network.",
       "answer": "The Social Network",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-wolf-of-wall-street-leonardo-dicaprio",
       "question": "Name that movie: Leonardo DiCaprio stars as Jordan Belfort, a stockbroker who rises to wealth and infamy through fraud and corruption.",
       "answer": "The Wolf of Wall Street",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-aviatior-leonardo-dicaprio",
       "question": "Name that movie: Leonardo DiCaprio stars as Howard Hughes, an eccentric aviation pioneer and filmmaker.",
       "answer": "The Aviator",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-pursuit-of-happyness-will-smith",
       "question": "Name that movie: Will Smith stars as Chris Gardner, a struggling salesman who becomes homeless while raising his son.",
       "answer": "The Pursuit of Happyness",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-blind-side-sandra-bullock",
       "question": "Name that movie: Sandra Bullock stars as Leigh Anne Tuohy, a woman who takes in a homeless teenager and helps him fulfill his potential as a football player.",
       "answer": "The Blind Side",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-help-emma-stone",
       "question": "Name that movie: Emma Stone stars as Skeeter Phelan, a young writer documenting the stories of African-American maids in 1960s Mississippi.",
       "answer": "The Help",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-kings-speech-colin-firth",
       "question": "Name that movie: Colin Firth stars as King George VI, who overcomes his stammer with the help of a speech therapist.",
       "answer": "The King's Speech",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-imitation-game-benedict-cumberbatch",
       "question": "Name that movie: Benedict Cumberbatch stars as Alan Turing, a mathematician who helps crack the Enigma code during World War II.",
       "answer": "The Imitation Game",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-theory-of-everything-eddie-redmayne",
       "question": "Name that movie: Eddie Redmayne stars as Stephen Hawking, a theoretical physicist diagnosed with ALS at a young age.",
       "answer": "The Theory of Everything",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-martian-matt-damon",
       "question": "Name that movie: Matt Damon stars as an astronaut stranded on Mars who must find a way to survive and signal Earth for rescue.",
       "answer": "The Martian",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-grand-budapest-hotel-ralph-fiennes",
       "question": "Name that movie: Ralph Fiennes stars as Gustave H, a legendary concierge at a famous European hotel between the wars.",
       "answer": "The Grand Budapest Hotel",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-shape-of-water-sally-hawkins",
       "question": "Name that movie: Sally Hawkins stars as Elisa, a mute janitor who forms a unique bond with an amphibious creature in a secret lab.",
       "answer": "The Shape of Water",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-favourite-olivia-colman",
       "question": "Name that movie: Olivia Colman stars as Queen Anne in this dark comedy about power and favoritism in 18th-century England.",
       "answer": "The Favourite",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-joker-joaquin-phoenix",
       "question": "Name that movie: Joaquin Phoenix stars as Arthur Fleck, a mentally troubled comedian who descends into madness and becomes a criminal icon in Gotham City.",
       "answer": "Joker",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-irishman-robert-de-niro",
       "question": "Name that movie: Robert De Niro stars as Frank Sheeran, a truck driver who becomes a hitman involved with the Bufalino crime family.",
       "answer": "The Irishman",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-post-meryl-streep",
       "question": "Name that movie: Meryl Streep stars as Katharine Graham, the first female publisher of a major American newspaper, during the Pentagon Papers scandal.",
       "answer": "The Post",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-darkest-hour-gary-oldman",
       "question": "Name that movie: Gary Oldman stars as Winston Churchill during the early days of World War II, as he faces the decision of whether to negotiate with Hitler or fight on.",
       "answer": "The Darkest Hour",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-hateful-eight-samuel-l-jackson",
       "question": "Name that movie: Samuel L. Jackson stars as Major Marquis Warren, a bounty hunter caught in a deadly game of deception in a blizzard-bound stagecoach stopover.",
       "answer": "The Hateful Eight",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-revenant-tom-hardy",
       "question": "Name that movie: Tom Hardy stars as John Fitzgerald, a trappers who betrays and leaves Hugh Glass for dead in the wilderness.",
       "answer": "The Revenant",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "airplane-leslie-nielsen",
       "question": "Name that movie: Leslie Nielsen stars in this spoof of disaster movies, where a former fighter pilot must land a plane after the crew falls ill.",
       "answer": "Airplane!",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "caddyshack-rodney-dangerfield",
       "question": "Name that movie: Rodney Dangerfield stars as a loud, obnoxious real estate developer who clashes with a snobby golf course owner.",
       "answer": "Caddyshack",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "animal-house-john-belushi",
       "question": "Name that movie: John Belushi stars as John 'Bluto' Blutarsky, a wild fraternity member at a 1962 college.",
       "answer": "Animal House",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-hangover-bradley-cooper",
       "question": "Name that movie: Bradley Cooper stars as Phil Wenneck, one of three friends who wake up after a wild bachelor party in Las Vegas with no memory of the previous night.",
       "answer": "The Hangover",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "bridesmaids-kristen-wiig",
       "question": "Name that movie: Kristen Wiig stars as Annie Walker, a maid of honor whose life unravels as she leads her best friend and a group of colorful bridesmaids on a wild ride.",
       "answer": "Bridesmaids",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "superbad-jonah-hill",
       "question": "Name that movie: Jonah Hill stars as Seth, a high school student trying to lose his virginity before graduation in this raunchy teen comedy.",
       "answer": "Superbad",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "step-brothers-will-ferrell",
       "question": "Name that movie: Will Ferrell and John C. Reilly are grown men who are forced to live together after their parents marry.",
       "answer": "Step Brothers",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "anchorman-will-ferrell",
       "question": "Name that movie: Will Ferrell stars as Ron Burgundy, a 1970s news anchor who struggles to adapt as his station brings in a female co-anchor.",
       "answer": "Anchorman",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "old-school-will-ferrell",
       "question": "Name that movie: Will Ferrell stars as Frank Ricard, a former college student who starts a fraternity near his old campus.",
       "answer": "Old School",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "talladega-nights-will-ferrell",
       "question": "Name that movie: Will Ferrell stars as Ricky Bobby, a cocky NASCAR driver who faces a series of comedic misadventures.",
       "answer": "Talladega Nights",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "dumb-and-dumber-jim-carrey",
       "question": "Name that movie: Jim Carrey stars as Lloyd Christmas, one of two dim-witted best friends on a cross-country road trip.",
       "answer": "Dumb and Dumber",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "liar-liar-jim-carrey",
       "question": "Name that movie: Jim Carrey stars as Fletcher Reede, a lawyer who cannot lie for 24 hours due to his son's birthday wish.",
       "answer": "Liar Liar",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "meet-the-parents-ben-stiller",
       "question": "Name that movie: Ben Stiller stars as Greg Focker, a male nurse who struggles to make a good impression on his girlfriend's parents.",
       "answer": "Meet the Parents",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "zoolander-ben-stiller",
       "question": "Name that movie: Ben Stiller stars as a dim-witted male model caught up in a conspiracy to assassinate the Prime Minister of Malaysia.",
       "answer": "Zoolander",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-40-year-old-virgin-steve-carell",
       "question": "Name that movie: Steve Carell stars as Andy Stitzer, a middle-aged man who has never had sex and faces pressure from his friends to lose his virginity.",
       "answer": "The 40-Year-Old Virgin",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "evil-dead-2-bruce-campbell",
       "question": "Name that movie: Bruce Campbell stars as Ash Williams, a man who must battle demonic forces in a remote cabin in this horror-comedy.",
       "answer": "Evil Dead II",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "spaceballs-mel-brooks",
       "question": "Name that movie: Mel Brooks directs this parody of 'Star Wars,' where a rogue space pilot must rescue a princess from an evil empire.",
       "answer": "Spaceballs",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "blazing-saddles-mel-brooks",
       "question": "Name that movie: Mel Brooks directs this Western comedy where a black sheriff is appointed to a racist town to clean it up.",
       "answer": "Blazing Saddles",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "young-frankenstein-gene-wilder",
       "question": "Name that movie: Gene Wilder stars as Dr. Frederick Frankenstein, who attempts to recreate his grandfather's experiment to bring a corpse back to life.",
       "answer": "Young Frankenstein",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "groundhog-day-bill-murray",
       "question": "Name that movie: Bill Murray stars as Phil Connors, a weatherman stuck in a time loop, reliving the same day over and over again.",
       "answer": "Groundhog Day",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "ghostbusters-bill-murray",
       "question": "Name that movie: Bill Murray stars as Dr. Peter Venkman, a parapsychologist who starts a ghost-catching business in New York City.",
       "answer": "Ghostbusters",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "lost-in-translation-bill-murray",
       "question": "Name that movie: Bill Murray stars as Bob Harris, an aging actor who forms an unlikely friendship with a young woman in Tokyo.",
       "answer": "Lost in Translation",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "stripes-bill-murray",
       "question": "Name that movie: Bill Murray stars as John Winger, a cab driver who joins the Army with his best friend.",
       "answer": "Stripes",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "tootsie-dustin-hoffman",
       "question": "Name that movie: Dustin Hoffman stars as Michael Dorsey, an unemployed actor who disguises himself as a woman to land a role on a soap opera.",
       "answer": "Tootsie",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-producers-mel-brooks",
       "question": "Name that movie: Mel Brooks directs this comedy about two theatrical producers who scheme to get rich by overselling interests in a sure-to-flop Broadway musical.",
       "answer": "The Producers",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "when-harry-met-sally-billy-crystal",
       "question": "Name that movie: Billy Crystal stars as Harry Burns, a man who debates whether men and women can truly be platonic friends with Meg Ryan's character over 12 years.",
       "answer": "When Harry Met Sally",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "nightmare-on-elm-street-heather-langenkamp",
       "question": "Name that movie: Heather Langenkamp stars as Nancy Thompson, a teenager haunted by a disfigured killer named Freddie Kreuger in her dreams.",
       "answer": "A Nightmare on Elm Street",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-exorcist-linda-blair",
       "question": "Name that movie: Linda Blair stars as Regan MacNeil, a young girl possessed by a demonic entity.",
       "answer": "The Exorcist",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-shining-jack-nicholson",
       "question": "Name that movie: Jack Nicholson stars as Jack Torrance, a writer who descends into madness while caretaking a haunted hotel.",
       "answer": "The Shining",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "texas-chainsaw-massacre-marilyn-burns",
       "question": "Name that movie: Marilyn Burns stars as Sally Hardesty, a woman terrorized by a family of cannibals, including the chainsaw-wielding Leatherface.",
       "answer": "The Texas Chain Saw Massacre",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "scream-neve-campbell",
       "question": "Name that movie: Neve Campbell stars as Sidney Prescott, a high school student targeted by a masked killer known as Ghostface.",
       "answer": "Scream",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-ring-naomi-watts",
       "question": "Name that movie: Naomi Watts stars as Rachel Keller, a journalist investigating a cursed videotape that kills viewers seven days after watching it.",
       "answer": "The Ring",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "hoosiers-gene-hackman",
       "question": "Name that movie: Gene Hackman stars as Norman Dale, a high school basketball coach leading a small-town team to an unlikely championship.",
       "answer": "Hoosiers",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "remember-the-titans-denzel-washington",
       "question": "Name that movie: Denzel Washington stars in this sports drama based on the true story of a newly racially integrated high school football team in Alexandria, Virginia in 1971.",
       "answer": "Remember the Titans",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "jerry-maguire-tom-cruise",
       "question": "Name that movie: Tom Cruise stars as a sports agent who has a moral crisis and starts his own agency.",
       "answer": "Jerry Maguire",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "field-of-dreams-kevin-costner",
       "question": "Name that movie: Kevin Costner stars as a farmer who builds a baseball field in his cornfield after hearing a mysterious voice.",
       "answer": "Field of Dreams",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-natural-robert-redford",
       "question": "Name that movie: Robert Redford stars as a talented but troubled baseball player who gets a second chance at glory.",
       "answer": "The Natural",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "bull-durham-kevin-costner",
       "question": "Name that movie: Kevin Costner stars as Crash Davis, a minor league catcher mentoring a young pitcher in the North Carolina league.",
       "answer": "Bull Durham",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "major-league-charlie-sheen",
       "question": "Name that movie: Charlie Sheen stars as Ricky Vaughn, a wild pitcher for the Cleveland Indians in this underdog baseball comedy.",
       "answer": "Major League",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "white-men-cant-jump-wesley-snipes",
       "question": "Name that movie: Wesley Snipes stars as a streetball hustler who teams up with a white player to scam others on the court.",
       "answer": "White Men Can't Jump",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "space-jam-michael-jordan",
       "question": "Name that movie: Michael Jordan stars as himself, teaming up with Bugs Bunny and the Looney Tunes to play basketball against aliens.",
       "answer": "Space Jam",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "cool-runnings-john-candy",
       "question": "Name that movie: John Candy stars as Irving Blitzer, a disgraced Olympic bobsledder coaching the first Jamaican bobsled team.",
       "answer": "Cool Runnings",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "miracle-kurt-russell",
       "question": "Name that movie: Kurt Russell stars as Herb Brooks, the coach of the 1980 U.S. Olympic hockey team that defeats the Soviet Union.",
       "answer": "Miracle",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "invictus-morgan-freeman",
       "question": "Name that movie: Morgan Freeman stars as Nelson Mandela, who uses the 1995 Rugby World Cup to unite South Africa.",
       "answer": "Invictus",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "seabiscuit-tobey-maguire",
       "question": "Name that movie: Tobey Maguire stars as Red Pollard, a jockey who helps an underdog racehorse become a champion.",
       "answer": "Seabiscuit",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "secretariat-diane-lane",
       "question": "Name that movie: Diane Lane stars as Penny Chenery, the owner of the legendary racehorse Secretariat.",
       "answer": "Secretariat",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-fighter-mark-wahlberg",
       "question": "Name that movie: Mark Wahlberg stars as Micky Ward, a boxer from Lowell, Massachusetts, fighting for his career and family.",
       "answer": "The Fighter",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "warrior-tom-hardy",
       "question": "Name that movie: Tom Hardy stars plays an ex-Marine who enters the world of mixed martial arts to save his family.",
       "answer": "Warrior",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "creed-michael-b-jordan",
       "question": "Name that movie: Michael B. Jordan stars as Adonis Creed, the son of Apollo Creed, who trains under Rocky Balboa to become a boxer.",
       "answer": "Creed",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "million-dollar-baby-hilary-swank",
       "question": "Name that movie: Hilary Swank plays Maggie Fitzgerald, a determined, working-class amateur boxer who convinces a hardened, guilt-ridden trainer (played by Clint Eastwood) to help her achieve her dream of turning professional",
       "answer": "Million Dollar Baby",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-wrestler-mickey-rourke",
       "question": "Name that movie: Mickey Rourke stars as Randy 'The Ram' Robinson, an aging professional wrestler struggling with his career and personal life.",
       "answer": "The Wrestler",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "foxcatcher-steve-carell",
       "question": "Name that movie: Steve Carell stars as John du Pont, an eccentric millionaire who sponsors Olympic wrestlers with dark intentions.",
       "answer": "Foxcatcher",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "moneyball-brad-pitt",
       "question": "Name that movie: Brad Pitt stars as Billy Beane, the general manager of the Oakland Athletics, who uses sabermetrics to build a competitive team.",
       "answer": "Moneyball",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-rookie-dennis-quaid",
       "question": "Name that movie: Dennis Quaid stars as Jimmy Morris, a high school baseball coach who fulfills his dream of pitching in the Major Leagues.",
       "answer": "The Rookie",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-replacements-keanu-reeves",
       "question": "Name that movie: Keanu Reeves stars as Shane Falco, a former college quarterback brought in to lead a team of misfits during an NFL strike.",
       "answer": "The Replacements",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "any-given-sunday-al-pacino",
       "question": "Name that movie: Al Pacino stars as the coach of a fictional professional football team in Miami dealing with personal and professional struggles.",
       "answer": "Any Given Sunday",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-longest-yard-adam-sandler",
       "question": "Name that movie: Both Adam Sandler and Burt Reynolds have played Paul Crewe, a former NFL quarterback who organizes a prison football team to play against the guards.",
       "answer": "The Longest Yard",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "blades-of-glory-will-ferrell",
       "question": "Name that movie: Will Ferrell and John Heder play disgraced rival figure skaters who team up to compete in pairs skating.",
       "answer": "Blades of Glory",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "dodgeball-vince-vaughn",
       "question": "Name that movie: Vince Vaughn plays the owner of a local gym who enters his team in a dodgeball tournament to save his business.",
       "answer": "DodgeBall",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "star-wars-opening",
       "question": "In what movie does the opening line read: 'A long time ago in a galaxy far, far away...'?",
       "answer": "Star Wars",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "gone-with-the-wind-opening",
       "question": "In what movie does the opening line read: 'There was a land of Cavaliers and Cotton Fields called the Old South.'?",
       "answer": "Gone with the Wind",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-godfather-opening",
       "question": "In what movie does the opening monologue read: 'I believe in America. America has made my fortune. And I raised my daughter in the American fashion.'?",
       "answer": "The Godfather",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-departed-opening",
       "question": "In what movie does Jack Nicholson narrate this opening line: 'I don't want to be a product of my environment. I want my environment to be a product of me.'?",
       "answer": "The Departed",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "conan-the-barbarian-opening",
       "question": "What movie starts with this monologue: 'Between the time when the oceans drank Atlantis and the rise of the sons of Aryas, there was an age undreamed of. And unto this, Conan, destined to wear the jeweled crown of Aquilonia upon a troubled brow.'?",
       "answer": "Conan the Barbarian",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "eternal-sunshine-opening",
       "question": "What movie starts with this monologue by Jim Carey: 'Random Thoughts, for Valentines day, 2004. The day's a holiday invented by greeting card companies, to make people feel like crap. I ditched work today. Took a train out to Montauk. I don't know why.'",
       "answer": "Eternal Sunshine of the Spotless Mind",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "lotr-opening",
@@ -3832,119 +4259,136 @@
       "acceptableAnswers": [
         "LOTR",
         "The Lord of the Rings"
-      ]
+      ],
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "dr-strangelove-opening",
       "question": "In what movie does the opening line read: 'For more than a year, ominous rumors had been privately circulating among high-level western leaders that the Soviet Union had been at work on what was darkly hinted to be the Ultimate Weapon, a Doomsday Device.'?",
       "answer": "Dr. Strangelove",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "kill-bill-vol-1-opening",
       "question": "Which Quentin Tarantino movie has the opening line: 'Do you find me sadistic? You know, I bet I could fry an egg on your head right now, if I wanted to.'?",
       "answer": "Kill Bill: Vol. 1",
       "category": "Movies",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-social-network-opening",
       "question": "In what movie (based on a true story) does Jesse Eisenberg recite the following opening line: 'Did you know there are more people with genius IQs living in China than there are people of any kind living in the United States?'",
       "answer": "The Social Network",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "black-swan-opening",
       "question": "In what movie does the opening line read: 'I had the craziest dream last night. I was dancing the White Swan.'?",
       "answer": "Black Swan",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "raging-bull-opening",
-      "question": "What movie starts with this monologue by Robert de Niro: 'I remember those cheers. They still ring in my ears. After years, they remain in my thoughts. Go to one night, I took off my robe, and what’d I do? I forgot to wear shorts?'",
+      "question": "What movie starts with this monologue by Robert de Niro: 'I remember those cheers. They still ring in my ears. After years, they remain in my thoughts. Go to one night, I took off my robe, and what\u2019d I do? I forgot to wear shorts?'",
       "answer": "Raging Bull",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "patton-opening",
       "question": "What movie starts with this monologue by George C. Scott as General George Patton: 'Now, I want you to remember that no bastard ever won a war by dying for his country. He won it by making the other poor dumb bastard die for his country?'",
       "answer": "Patton",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "stand-by-me-opening",
       "question": "In what movie does the opening line read: 'I was 12 going on 13 the first time I saw a dead human being?'",
       "answer": "Stand by Me",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "full-metal-jacket-opening",
       "question": "In what movie does the opening line read: 'I am Gunnery Sergeant Hartman, your senior drill instructor. From now on you will speak only when spoken to, and the first and last words out of your filthy sewers will be sir.'?",
       "answer": "Full Metal Jacket",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "fear-and-loathing-in-las-vegas-opening",
       "question": "In what movie does the opening line read: 'We were somewhere around Barstow on the edge of the desert when the drugs began to take hold?'",
       "answer": "Fear and Loathing in Las Vegas",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "trainspotting-opening",
       "question": "In what movie does the opening line read: 'Choose Life. Choose a job. Choose a career. Choose a family. Choose a f***ing big television?'",
       "answer": "Trainspotting",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "fight-club-opening",
-      "question": "In what movie does the opening line read: 'People are always asking me if I know Tyler Durden…?'",
+      "question": "In what movie does the opening line read: 'People are always asking me if I know Tyler Durden\u2026?'",
       "answer": "Fight Club",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "apocalypse-now-opening",
       "question": "In what movie does the opening line read: 'Saigon. S**t! I'm still only in Saigon. Every time I think I'm gonna wake up back in the jungle...?'",
       "answer": "Apocalypse Now",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "the-big-lebowski-opening",
       "question": "In what movie does the opening line read: 'Way out west there was this fella I wanna tell ya about. Goes by the name of Jeff Lebowski?'",
       "answer": "The Big Lebowski",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "sin-city-opening",
       "question": "In what movie does the opening line read: 'She shivers in the wind like the last leaf on a dying tree?'",
       "answer": "Sin City",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "dirty-dancing-opening",
       "question": "In what movie does the opening line read: 'It was the summer of 1963, when everybody called me Baby and it didn't occur to me to mind?'",
       "answer": "Dirty Dancing",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "a-clockwork-orange-opening",
       "question": "In what movie does Malcolm McDowell say this opening line: 'There was me, that is Alex, and my three droogs, that is Pete, Georgie, and Dim, and we sat in the Korova Milkbar trying to make up our rassoodocks what to do with the evening?'",
       "answer": "A Clockwork Orange",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "which-film-won-the-first-academy-award-for-best-picture",
@@ -3952,14 +4396,16 @@
       "answer": "Wings",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "the-sound-of-music-opening",
       "question": "In what movie does the opening line read: 'The hills are alive with the sound of music?'",
       "answer": "The Sound of Music",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "barbie-movie-director",
@@ -3967,7 +4413,8 @@
       "answer": "Greta Gerwig",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "actors-performers"
     },
     {
       "slug": "oscar-slap-year",
@@ -3975,7 +4422,8 @@
       "answer": "Chris Rock",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "hunger-games-katniss-district",
@@ -3983,7 +4431,8 @@
       "answer": "District 12",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "barbie-ken-song-actor",
@@ -3991,7 +4440,8 @@
       "answer": "Ryan Gosling",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "actors-performers"
     },
     {
       "slug": "gladiator-ii-lead-actor",
@@ -3999,7 +4449,8 @@
       "answer": "Paul Mescal",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "actors-performers"
     },
     {
       "slug": "avengers-doomsday-dr-doom-actor",
@@ -4011,7 +4462,8 @@
       "acceptableAnswers": [
         "Robert Downey Junior",
         "Robert Downey"
-      ]
+      ],
+      "subcategory": "actors-performers"
     },
     {
       "slug": "oppenheimer-barbie-phenomenon",
@@ -4019,7 +4471,8 @@
       "answer": "Barbenheimer",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "it-ends-with-us-drama",
@@ -4027,7 +4480,8 @@
       "answer": "Justin Baldoni",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "wicked-movie-elphaba",
@@ -4035,7 +4489,8 @@
       "answer": "Cynthia Erivo",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "actors-performers"
     },
     {
       "slug": "everything-everywhere-lead-actress",
@@ -4043,7 +4498,8 @@
       "answer": "Michelle Yeoh",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "oppenheimer-lead-actor",
@@ -4051,7 +4507,8 @@
       "answer": "Cillian Murphy",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "marvel-mcu-first-movie",
@@ -4059,14 +4516,16 @@
       "answer": "Iron Man",
       "answer_format": "write_in",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "gone-girl-opening",
       "question": "In what movie does the opening line read: 'When I think of my wife, I always think of her head. I picture cracking her lovely skull, unspooling her brains, trying to get answers.'?",
       "answer": "Gone Girl",
       "category": "Movies",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "which-film-won-the-academy-award-for-best-picture-in-2020-becoming-the-first-non-english-language-film-to-do-so",
@@ -4074,7 +4533,8 @@
       "answer": "Parasite",
       "category": "Movies",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "awards-history-industry"
     },
     {
       "slug": "who-directed-the-2010-sci-fi-blockbuster-inception",
@@ -4085,7 +4545,8 @@
       ],
       "category": "Movies",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "actors-performers"
     },
     {
       "slug": "which-actress-is-widely-recognized-for-her-role-as-hermione-granger-in-the-harry-potter-film-series",
@@ -4096,7 +4557,8 @@
       ],
       "category": "Movies",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "actors-performers"
     },
     {
       "slug": "which-animated-film-features-a-lion-cub-named-simba",
@@ -4107,7 +4569,8 @@
       ],
       "category": "Movies",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "which-young-adult-novel-series-later-adapted-into-a-film-franchise-tells-the-story-of-vampires-werewolves-and-a-human-girl-named-bella-swan",
@@ -4119,7 +4582,8 @@
       ],
       "category": "Movies",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "plot-quotes-trivia"
     },
     {
       "slug": "which-animated-pixar-film-features-a-forgetful-blue-tang-named-dory",
@@ -4127,7 +4591,29 @@
       "answer": "Finding Nemo",
       "category": "Movies",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "plot-quotes-trivia"
+    },
+    {
+      "slug": "fred-astaire-birth-name-austerlitz",
+      "question": "Which dancer was born with the surname 'Austerlitz'?",
+      "answer": "Fred Astaire",
+      "answer_format": "write_in",
+      "category": "Movies",
+      "difficulty": "medium",
+      "subcategory": "actors-performers"
+    },
+    {
+      "slug": "ben-hur-1959-11-oscars",
+      "question": "Which 1959 movie won 11 Oscars and cost four million dollars to film?",
+      "answer": "Ben Hur",
+      "acceptableAnswers": [
+        "Ben-Hur"
+      ],
+      "answer_format": "write_in",
+      "category": "Movies",
+      "difficulty": "easy",
+      "subcategory": "awards-history-industry"
     }
   ]
 }

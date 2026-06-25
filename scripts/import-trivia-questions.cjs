@@ -364,6 +364,8 @@ function normalizeAndValidate(questions, options = {}) {
       const sourceOrder = Number(sourceOrderRaw);
       row.source_file = sourceFile || null;
       row.source_order = Number.isInteger(sourceOrder) && sourceOrder >= 0 ? sourceOrder : null;
+      const subcategory = String(item.subcategory ?? "").trim();
+      row.subcategory = subcategory || null;
     }
     if (status) {
       row.status = status;

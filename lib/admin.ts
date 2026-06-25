@@ -2075,11 +2075,6 @@ export async function deleteAdminVenue(venueId: string): Promise<void> {
     throw new Error("Venue id is required.");
   }
 
-  await Promise.all([
-    supabaseAdmin!.from("users").delete().eq("venue_id", id),
-    supabaseAdmin!.from("trivia_schedules").delete().eq("venue_id", id),
-  ]);
-
   const { error } = await supabaseAdmin!.from("venues").delete().eq("id", id);
   if (error) {
     throw new Error(error.message ?? "Failed to delete venue.");

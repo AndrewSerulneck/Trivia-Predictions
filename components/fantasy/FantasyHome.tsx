@@ -86,7 +86,6 @@ async function parseJsonResponse<T>(response: Response, contextMessage: string):
   }
 }
 
-const FALLBACK_HEADSHOT_SRC = "/images/player-silhouette.svg";
 const DISABLE_GEOFENCE_FOR_TESTING = true;
 type FantasySport = "nba" | "wnba" | "baseball" | "football";
 const FANTASY_SPORTS: Array<{ key: FantasySport; icon: string; label: string; available: boolean }> = [
@@ -609,34 +608,51 @@ function splitPlayerNameForLineup(name: string): { first: string; rest: string }
   return { first: parts[0]!, rest: parts.slice(1).join(" ") };
 }
 
+function playerInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
 // Player avatar framed for the chalkboard theme — chalk-cream ring by default,
-// emerald ring while the player is actively scoring. Falls back to silhouette.
+// emerald ring while the player is actively scoring. Falls back to jersey number or initials circle.
 function PlayerHeadshot({
   src,
   name,
+  jerseyNumber,
   live = false,
   sizeClass = "h-[30px] w-[30px]",
 }: {
   src?: string | null;
   name: string;
+  jerseyNumber?: string | null;
   live?: boolean;
   sizeClass?: string;
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const ringClass = live ? "border-[#6ee7b7]/60" : "border-[#fef3c7]/55";
+
+  if (!src || imgFailed) {
+    return (
+      <div
+        className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-[#0a3128] ${ringClass} flex items-center justify-center`}
+        aria-label={`${name} avatar`}
+      >
+        <span className="text-[#fef3c7] font-bold leading-none select-none" style={{ fontSize: "40%" }}>
+          {jerseyNumber ?? playerInitials(name)}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <img
-      src={src || FALLBACK_HEADSHOT_SRC}
+      src={src}
       alt={`${name} headshot`}
-      className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-[#0a3128] object-cover ${
-        live ? "border-[#6ee7b7]/60" : "border-[#fef3c7]/55"
-      }`}
+      className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-[#0a3128] object-cover ${ringClass}`}
       loading="lazy"
-      onError={(event) => {
-        const target = event.currentTarget;
-        if (target.src.endsWith(FALLBACK_HEADSHOT_SRC)) {
-          return;
-        }
-        target.src = FALLBACK_HEADSHOT_SRC;
-      }}
+      onError={() => setImgFailed(true)}
     />
   );
 }
@@ -1163,6 +1179,18 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         continue;
       }
       map.set(key, src);
+    }
+    return map;
+  }, [playerPool]);
+  const playerPoolJerseyByName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of playerPool) {
+      const key = normalizePlayerKey(item.playerName);
+      const num = String(item.jerseyNumber ?? "").trim();
+      if (!key || !num || map.has(key)) {
+        continue;
+      }
+      map.set(key, num);
     }
     return map;
   }, [playerPool]);
@@ -2628,6 +2656,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                           playerId: -(index + 1),
                           playerName,
                           headshotUrl: null,
+                          jerseyNumber: null,
                         }))
                   ).map((player) => {
                     const livePoints = livePointsByPlayer.get(String(player.playerId));
@@ -2658,6 +2687,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         <PlayerHeadshot
                           src={player.headshotUrl ?? playerPoolHeadshotByName.get(normalizePlayerKey(player.playerName)) ?? null}
                           name={player.playerName}
+                          jerseyNumber={player.jerseyNumber ?? playerPoolJerseyByName.get(normalizePlayerKey(player.playerName)) ?? null}
                           live={isScoring}
                           sizeClass="h-[60px] w-[60px]"
                         />
@@ -2889,6 +2919,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                       <PlayerHeadshot
                                         src={playerPoolHeadshotByName.get(normalizePlayerKey(name)) ?? null}
                                         name={name}
+                                        jerseyNumber={playerPoolJerseyByName.get(normalizePlayerKey(name)) ?? null}
                                         sizeClass="h-[42px] w-[42px]"
                                       />
                                     ) : (
@@ -2932,7 +2963,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                               }`}
                             >
                               {filled ? (
-                                <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} sizeClass="h-[34px] w-[34px]" />
+                                <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} jerseyNumber={playerPoolJerseyByName.get(normalizePlayerKey(name!)) ?? null} sizeClass="h-[34px] w-[34px]" />
                               ) : (
                                 <span className="text-base font-black text-[#fef3c7]/55">+</span>
                               )}
@@ -3070,7 +3101,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                     : "border border-white/[0.06] bg-white/[0.015]"
                                 }`}
                               >
-                                <PlayerHeadshot src={item.headshotUrl} name={item.playerName} />
+                                <PlayerHeadshot src={item.headshotUrl} name={item.playerName} jerseyNumber={item.jerseyNumber ?? null} />
                                 <div className="min-w-0 leading-[1.15]">
                                   <div className="flex items-center gap-1.5">
                                     <span className="truncate text-[13px] font-black text-[#fef3c7]">{item.playerName}</span>

@@ -9,21 +9,24 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Playbook"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "big-bang-theory-soft-kitty-illness",
       "question": "In The Big Bang Theory, what specific childhood comfort song must be sung to Sheldon Cooper whenever he falls ill?",
       "answer": "Soft Kitty",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "the-office-dunder-mifflin-city",
       "question": "In which specific Pennsylvania city is the main branch of the Dunder Mifflin Paper Company located in The Office?",
       "answer": "Scranton",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "rupauls-drag-race-first-winner",
@@ -31,7 +34,8 @@
       "answer": "BeBe Zahara Benet",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "reality-competition"
     },
     {
       "slug": "the-bear-restaurant-name",
@@ -42,7 +46,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Beef"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "pedro-pascal-last-of-us-role",
@@ -50,7 +55,8 @@
       "answer": "Joel",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "real-housewives-vanderpump-rules-spinoff",
@@ -62,7 +68,8 @@
       "acceptableAnswers": [
         "Real Housewives of Beverly Hills",
         "RHOBH"
-      ]
+      ],
+      "subcategory": "reality-competition"
     },
     {
       "slug": "wednesday-netflix-director",
@@ -70,7 +77,8 @@
       "answer": "Tim Burton",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "shogun-hulu-language",
@@ -78,7 +86,8 @@
       "answer": "Japanese",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "vanderpump-rules-valley-spinoff",
@@ -89,7 +98,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Valley"
-      ]
+      ],
+      "subcategory": "reality-competition"
     },
     {
       "slug": "vanderpump-rules-scandoval-partner",
@@ -97,84 +107,96 @@
       "answer": "Rachel 'Raquel' Leviss",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "reality-competition"
     },
     {
       "slug": "seinfeld-kramer-first-name",
       "question": "For the first few seasons of Seinfeld, Kramer's first name is kept a total mystery. What is his actual first name revealed in Season 6?",
       "answer": "Cosmo",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "himym-robin-pop-star-alias",
       "question": "In How I Met Your Mother, before moving to New York, Robin Scherbatsky was a teenage Canadian pop star. What was her stage name?",
       "answer": "Robin Sparkles",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "parks-and-rec-ron-swanson-bacon",
       "question": "In Parks and Recreation, what is the name of the ultra-patriotic, heavily restricted, breakfast-loving direct boss and department director?",
       "answer": "Ron Swanson",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "himym-marshall-lily-college",
       "question": "In How I Met Your Mother, Ted, Marshall, and Lily all met and became best friends while attending which specific Connecticut higher education institution?",
       "answer": "Wesleyan University",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "brooklyn-nine-nine-captain-dog",
       "question": "What is the name of Captain Raymond Holt's beloved, highly disciplined Pembroke Welsh Corgi in Brooklyn Nine-Nine?",
       "answer": "Cheddar",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "the-office-pretzel-day-character",
       "question": "On The Office, which Dunder Mifflin employee is famously willing to wait in a massive lobby line for \"Pretzel Day\" because it is the only day of the year he truly enjoys?",
       "answer": "Stanley Hudson",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "seinfeld-festivus-holiday-date",
       "question": "On Seinfeld, on what specific calendar date in December does Frank Costanza's alternative holiday \"Festivus\" officially take place?",
       "answer": "December 23",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "new-girl-apartment-loft-number",
       "question": "In New Girl, Jess moves into a sprawling downtown Los Angeles arts district loft with three single guys. What is the specific number of this loft apartment?",
       "answer": "4D",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "big-bang-theory-penny-hometown-state",
       "question": "On The Big Bang Theory, before moving to Los Angeles to pursue an acting career, Penny grew up on a rural farm in which Midwestern U.S. state?",
       "answer": "Nebraska",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "himym-slap-bet-total-count",
       "question": "In How I Met Your Mother, as a result of losing the \"Slap Bet\" over Robin's past, how many total times is Marshall legally allowed to slap Barney across the face throughout the series?",
       "answer": "8",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "friends-smelly-cat-singer",
       "question": "Which main character on Friends routinely performs the acoustic song \"Smelly Cat\" at Central Perk?",
       "answer": "Phoebe",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "stranger-things-eleven-favorite-food",
@@ -182,7 +204,8 @@
       "answer": "Eggo Waffles",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "rhony-scary-island-location",
@@ -190,7 +213,8 @@
       "answer": "St. John",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "reality-competition"
     },
     {
       "slug": "better-call-saul-saul-goodman-real-name",
@@ -203,7 +227,8 @@
         "Jimmy McGill",
         "James McGill",
         "James Morgan McGill"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "better-call-saul-kim-wexler-hometown-state",
@@ -214,98 +239,112 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Nebraska"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "seinfeld-jerry-car-theft-mechanic",
       "question": "In a famous multi-part Seinfeld episode, Jerry's car is stolen by his highly erratic auto mechanic, played by Brad Garrett. What is the mechanic's first name?",
       "answer": "Tony",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "big-bang-theory-comic-book-shop-owner",
       "question": "What is the first name of the lonely, down-on-his-luck owner of the local comic book shop that the guys frequent in The Big Bang Theory?",
       "answer": "Stuart",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "brooklyn-nine-nine-jake-peralta-die-hard",
       "question": "On Brooklyn Nine-Nine, Detective Jake Peralta's entire law enforcement career and personal philosophy are inspired by which specific 1980s action movie?",
       "answer": "Die Hard",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "friends-joey-tribbiani-soap-opera-character",
       "question": "On Friends, Joey Tribbiani scores his big acting break on Days of Our Lives playing a fictional neurosurgeon. What is the character's name?",
       "answer": "Dr. Drake Ramoray",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "seinfeld-puddy-favorite-nj-sports-team",
       "question": "On Seinfeld, Elaine's on-again, off-again boyfriend David Puddy is an incredibly intense sports fan who famously paints his face to support which NHL hockey team?",
       "answer": "New Jersey Devils",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "modern-family-cam-clown-name",
       "question": "In Modern Family, Cameron Tucker occasionally dresses up as his theatrical clown alter-ego for children's parties. What is his clown name?",
       "answer": "Fizbo",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "new-girl-drinking-game-name",
       "question": "What is the name of the highly complex, chaotic, and fictional drinking game played by the roommates in the New Girl loft?",
       "answer": "True American",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "schitts-creek-david-rose-store",
       "question": "What is the name of the curated, high-end general store that David Rose opens up in Schitt's Creek?",
       "answer": "Rose Apothecary",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "friends-monica-geller-middle-name",
       "question": "On Friends, while Chandler's middle name is Muriel, what is Monica Geller's middle name, which is briefly revealed during the show?",
       "answer": "E.M.",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "seinfeld-newman-usps-profession",
       "question": "On Seinfeld, Jerry's sinister apartment building nemesis, Newman, works for which United States federal government agency?",
       "answer": "United States Postal Service",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "himym-maclarens-pub-basement-laser-tag",
       "question": "In How I Met Your Mother, what is the name of the fictional neighborhood Irish pub located directly underneath Ted and Marshall's apartment where the gang hangs out?",
       "answer": "MacLaren's Pub",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "parks-and-rec-tom-haverford-entertainment-company",
       "question": "On Parks and Recreation, Tom Haverford and Jean-Ralphio Saperstein launch a short-lived, wildly extravagant multimedia entertainment company in Pawnee called what?",
       "answer": "Entertainment 720",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "scrubs-sacred-heart-hospital-city",
       "question": "The medical sitcom Scrubs takes place at the fictional Sacred Heart Hospital, which is located in which major U.S. state?",
       "answer": "California",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "community-greendale-mascot",
@@ -315,28 +354,32 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Greendale Human Being"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "that-70s-show-basement-circle",
       "question": "On That '70s Show, what is the first name of Eric Forman's formidable, hyper-strict, war-veteran father who constantly threatens to kick Eric's butt?",
       "answer": "Red",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "veep-selina-meyer-daughter-name",
       "question": "In the political satire Veep, what is the first name of Vice President Selina Meyer's routinely ignored and emotionally exhausted daughter?",
       "answer": "Catherine",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "frasier-kacl-radio-station-city",
       "question": "On Frasier, Dr. Frasier Crane hosts his daily, call-in psychological therapeutic talk show on KACL 780 AM talk radio in which major U.S. city?",
       "answer": "Seattle",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "despicable-me-4-villain-voice",
@@ -344,7 +387,8 @@
       "answer": "Will Ferrell",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "vanderpump-rules-hiatus",
@@ -352,140 +396,160 @@
       "answer": "Vanderpump Rules",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "reality-competition"
     },
     {
       "slug": "abbott-elementary-philadelphia-setting",
       "question": "The mockumentary sitcom Abbott Elementary centers on the dedicated teachers working at an underfunded public school located in which major U.S. city?",
       "answer": "Philadelphia",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "superstore-cloud-nine-store-number",
       "question": "The retail comedy Superstore tracks the eccentric employees working at the fictional Cloud 9 big-box store located in which Midwestern city?",
       "answer": "St. Louis",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "silicon-valley-compression-algorithm",
       "question": "In the tech-industry satire Silicon Valley, Richard Hendricks develops a revolutionary, record-breaking data compression platform named what?",
       "answer": "Pied Piper",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "hacks-deborah-vance-city",
       "question": "In the comedy-drama Hacks, legendary stand-up comic Deborah Vance fights to maintain her decades-long performance residency in which city?",
       "answer": "Las Vegas",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "peep-show-mark-jeremy-flat-location",
       "question": "The long-running British cult sitcom Peep Show follows the deeply awkward lives of roommates Mark and Jeremy sharing a flat in which area of London?",
       "answer": "Croydon",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "fleabag-hot-priest-drink",
       "question": "In Season 2 of Fleabag, the titular character bonds with the \"Hot Priest\" over canned gin and tonics from which upscale British supermarket chain?",
       "answer": "Marks & Spencer",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "derry-girls-catholic-school-setting",
       "question": "The comedy Derry Girls follows a group of teenagers navigating high school during the end of the Troubles in the 1990s in which country?",
       "answer": "Northern Ireland",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "unbreakable-kimmy-schmidt-bunker-state",
       "question": "On Unbreakable Kimmy Schmidt, before escaping to New York City, Kimmy Schmidt spent 15 years trapped inside a doomsday cult's underground bunker located in which U.S. state?",
       "answer": "Indiana",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "broad-city-abbi-ilana-workplace",
       "question": "In Broad City, Abbi Abrams works an unglamorous job cleaning up messes and folding towels at an upscale fitness fitness club named what?",
       "answer": "Soulstice",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "bojack-horseman-todd-chavez-voice-actor",
       "question": "Which Emmy-winning Breaking Bad actor provides the voice for BoJack Horseman's freeloading, couch-surfing human best friend Todd Chavez?",
       "answer": "Aaron Paul",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "animated-series"
     },
     {
       "slug": "the-mick-greenwich-mansion-setting",
       "question": "In the dark comedy The Mick, Kaitlin Olson's character Mackenzie is forced to move into a massive luxury mansion to raise her sister's kids in which wealthy Connecticut town?",
       "answer": "Greenwich",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "right-eous-gemstones-megachurch-state",
       "question": "The Righteous Gemstones follows a dysfunctional, world-famous family of televangelists running a network of megachurches based in which Southern U.S. state?",
       "answer": "South Carolina",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "catastrophe-rob-sharon-hometowns",
       "question": "In the sitcom Catastrophe, an accidental pregnancy forces an American businessman and an Irish schoolteacher to marry and build a life together in which city?",
       "answer": "London",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "insecure-issa-dee-nonprofit",
       "question": "At the start of Issa Rae's Insecure, Issa Dee works at a frustrating, out-of-touch youth non-profit organization named what?",
       "answer": "We Got Y'all",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "reservation-dogs-oklahoma-reservation",
       "question": "The critically acclaimed comedy-drama Reservation Dogs follows four Indigenous teenagers living on a reservation in rural parts of which U.S. state?",
       "answer": "Oklahoma",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "man-seeking-woman-josh-sister",
       "question": "In FXX's surreal dating comedy Man Seeking Woman, Josh Greenberg relies heavily on dating advice from his highly successful older sister. What is her first name?",
       "answer": "Liz",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "kim-convenience-toronto-neighborhood",
       "question": "The Canadian sitcom Kim's Convenience showcases a Korean-Canadian family operating a retail grocery store in which specific historic neighborhood of Toronto?",
       "answer": "Regent Park",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "3rd-rock-sun-high-commander-earth-name",
       "question": "What is the human name adopted by the alien High Commander of the expeditionary force in 3rd Rock from the Sun?",
       "answer": "Dick Solomon",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "3rd-rock-sun-oldest-alien-youngest-body",
       "question": "In 3rd Rock from the Sun, which member of the crew is actually the oldest alien in the group, despite being trapped in the body of a human teenager?",
       "answer": "Tommy",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "3rd-rock-sun-harry-transmission-boss",
@@ -495,56 +559,64 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Big Giant Head"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "3rd-rock-sun-dick-love-interest-office",
       "question": "On 3rd Rock from the Sun, Dick Solomon shares an office at Pendelton State University with an anthropology professor who becomes his main romantic interest. What is her name?",
       "answer": "Dr. Mary Albright",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "two-and-a-half-men-sharp-tongued-housekeeper",
       "question": "On Two and a Half Men, what is the first name of Charlie's highly cynical, sharp-tongued, and fiercely independent housekeeper?",
       "answer": "Berta",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "modern-family-phil-dunphy-real-estate-rival",
       "question": "On Modern Family, Phil Dunphy is a fiercely competitive real estate agent who is constantly annoyed by his smug professional rival. What is this rival's name?",
       "answer": "Gil Thorpe",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "modern-family-jay-pritchett-closet-company",
       "question": "On Modern Family, what is the name of the long-standing manufacturing company founded and managed by family patriarch Jay Pritchett?",
       "answer": "Pritchett's Closets & Blinds",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "modern-family-manny-delgado-biological-father",
       "question": "On Modern Family, Manny Delgado's biological father is a charming, unreliable, and smooth-talking Colombian man who occasionally drops in to disrupt the family. What is his first name?",
       "answer": "Javier",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "modern-family-claire-dunphy-college-boyfriend",
       "question": "On Modern Family, before marrying Phil, Claire Dunphy had a serious, wild college relationship with a man who later becomes a wealthy professor and returns in multiple episodes. What is his name?",
       "answer": "Professor Ronnie LaFontaine",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "the-simpsons-homer-bar-hangout",
       "question": "On The Simpsons, what is the name of the dingy Springfield tavern where Homer Simpson routinely drinks Duff Beer with his friends?",
       "answer": "Moe's Tavern",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "the-simpsons-ned-flanders-left-handed-store",
@@ -554,84 +626,96 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Leftorium"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "the-simpsons-comic-book-guy-real-name",
       "question": "On The Simpsons, the cynical, sarcastic proprietor of The Android's Dungeon & Baseball Card Shop is universally known as Comic Book Guy, but what is his actual canonical first and last name?",
       "answer": "Jeff Albertson",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "animated-series"
     },
     {
       "slug": "the-simpsons-springfield-founder-statue",
       "question": "On The Simpsons, the center of Springfield features a prominent bronze statue dedicated to the town's legendary, pirate-turned-pioneer founder. What was his name?",
       "answer": "Jebediah Springfield",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "animated-series"
     },
     {
       "slug": "family-guy-peter-griffin-quahog-brewery",
       "question": "On Family Guy, after losing his job at the toy factory, Peter Griffin spends much of his adult professional life working at which local Quahog beverage company?",
       "answer": "Pawtucket Brewery",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "family-guy-brian-griffin-prized-possession-car",
       "question": "On Family Guy, the highly intellectual family dog Brian Griffin drives a specific, eco-friendly vehicle throughout the series. What make and model is it?",
       "answer": "Toyota Prius",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "animated-series"
     },
     {
       "slug": "family-guy-news-anchors-tom-tricia",
       "question": "On Family Guy, the local Quahog Channel 5 news broadcasts are anchored by a slick, condescending man named Tom Tucker and his intense investigative co-anchor. What is her name?",
       "answer": "Tricia Takanawa",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "animated-series"
     },
     {
       "slug": "arrested-development-gob-bluth-segway",
       "question": "On Arrested Development, George Oscar \"Gob\" Bluth routinely fails at his career as a professional magician and prefers to travel around town using what specific motorized vehicle?",
       "answer": "Segway",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-tobias-funke-hybrid-profession",
       "question": "On Arrested Development, Tobias Fünke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
       "answer": "Analrapist",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-lucille-bluth-private-investigator",
       "question": "On Arrested Development, Lucille Bluth hires a slick, smooth-talking private investigator played by Martin Short to spy on her family, though he operates entirely from a small motorized wheelchair. What is his name?",
       "answer": "Uncle Jack",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-george-michael-fake-girlfriend",
       "question": "On Arrested Development, to prove his maturity, George Michael fabricates a completely fictional girlfriend supposedly living in Canada. What is the hilarious name he invents for her?",
       "answer": "Ann Hog",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "always-sunny-charlie-kelly-favorite-food",
       "question": "On It's Always Sunny in Philadelphia, Charlie Kelly frequently mentions his absolute favorite food, which he insists on eating raw or boiling with jellybeans. What is this food item?",
       "answer": "Milk steak",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "always-sunny-mac-real-first-name",
       "question": "On It's Always Sunny in Philadelphia, while universally known simply as \"Mac,\" the character's deeply embarrassing full legal first name is finally revealed in Season 7. What is it?",
       "answer": "Ronald",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "always-sunny-dee-reynolds-college-mascot",
@@ -641,42 +725,48 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Quaker"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "always-sunny-lethal-weapon-sequel-number",
       "question": "On It's Always Sunny in Philadelphia, the gang independently produces, directs, and stars in their own highly offensive, unauthorized cinematic sequels to which classic action movie franchise?",
       "answer": "Lethal Weapon",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "i-love-lucy-ricky-ricardo-nightclub",
       "question": "On I Love Lucy, Ricky Ricardo works as a prominent orchestra leader and entertainer at which famous fictional New York City nightclub?",
       "answer": "Tropicana",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "i-love-lucy-ethel-mertz-middle-name",
       "question": "On I Love Lucy, while Fred Mertz's middle name is Hobart, what is his wife Ethel's middle name, which is used to mock her in a few episodes?",
       "answer": "Roberta",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "new-girl-winston-bishop-beloved-cat",
       "question": "On New Girl, Winston Bishop forms an incredibly intense, borderline-unhealthy emotional bond with a pet cat he takes custody of. What is the cat's name?",
       "answer": "Ferguson",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "new-girl-schmidt-first-name-reveal",
       "question": "On New Girl, for the vast majority of the series, Schmidt is referred to solely by his last name. In Season 6, his actual first name is revealed to be the exact same first name as which other main loft roommate?",
       "answer": "Winston",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "new-girl-nick-miller-zombie-novel",
@@ -686,42 +776,48 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Pepperwood Chronicles"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "new-girl-coach-real-name-ernie",
       "question": "On New Girl, the athlete and personal trainer roommate universally known as \"Coach\" returns to the loft in later seasons. What is his actual canonical first name?",
       "answer": "Ernie",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "happy-endings-max-blum-college-fraternity",
       "question": "On Happy Endings, Max Blum breaks typical TV tropes by being a messy, sports-loving, un-stereotypical gay man. At which major university did he and Dave row crew and join a fraternity?",
       "answer": "University of Illinois",
       "category": "Television",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "happy-endings-jane-williams-extreme-perfectionism",
       "question": "On Happy Endings, Jane Kerkovich-Williams is a fiercely organized, hyper-competitive corporate executive who is married to which laid-back, sweet member of the friend group?",
       "answer": "Brad Williams",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "happy-endings-alex-kerkovich-boutique-shop",
       "question": "On Happy Endings, Alex Kerkovich, who famously leaves Dave at the altar in the pilot episode, operates a quirky, under-patronized retail clothing boutique named what?",
       "answer": "Xanadu",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "i-love-lucy-fred-mertz-former-vaudeville",
       "question": "On I Love Lucy, before becoming the Ricardos' landlord, Fred Mertz spent his early professional life touring the country in what specific entertainment field?",
       "answer": "Vaudeville",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "new-girl-the-douchebag-jar-fine",
@@ -731,196 +827,224 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Douchebag Jar"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "happy-endings-chicago-neighborhood-setting",
       "question": "The rapid-fire ensemble comedy Happy Endings tracks the lives of six best friends living and dating in which major Midwestern city?",
       "answer": "Chicago",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "spongebob-krusty-krab-building",
       "question": "In SpongeBob SquarePants, what specific object is the Krusty Krab restaurant?",
       "answer": "A lobster trap",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "spongebob-patrick-house",
       "question": "In SpongeBob SquarePants, Spongebob's best friend Patrick Start literally lives under a... what?",
       "answer": "Rock",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "spongebob-house",
       "question": "In SpongeBob SquarePants, what specific object is SpongeBob's house?",
       "answer": "A pineapple",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "looney-tunes-wile-e-coyote-company-acronym",
       "question": "In Looney Tunes, Wile E. Coyote orders all of his explosive gadgets, traps, and complex machinery from which fictional mail-order corporation?",
       "answer": "ACME",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "hey-arnold-helga-pataki-secret-shrine",
       "question": "In Hey Arnold, Helga Pataki keeps a massive, hidden love shrine dedicated to Arnold in the back of her bedroom closet. What is it made of?",
       "answer": "Chewed bubblegum",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "animated-series"
     },
     {
       "slug": "rugrats-tommy-pickles-signature-tool",
       "question": "In Rugrats, Tommy Pickles frequently escapes his playpen and breaks into restricted areas by hiding what specific household tool inside his diaper?",
       "answer": "Screwdriver",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "dexters-laboratory-annoying-sister-name",
       "question": "In Dexter's Laboratory, What is the first name of Dexter's tall, hyperactive, ballet-loving older sister who constantly breaks into his high-tech hidden facility?",
       "answer": "Dee Dee",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "powerpuff-girls-accidental-fourth-ingredient",
       "question": "Professor Utonium creates the Powerpuff Girls by mixing sugar, spice, and everything nice, but he accidentally knocks what catastrophic fourth element into the concoction?",
       "answer": "Chemical X",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "scooby-doo-velma-dinkley-lost-item",
       "question": "Whenever the Scooby-Doo gang gets ambushed or knocked down by a monster, Velma Dinkley routinely crawls along the floor blindly searching for what specific item?",
       "answer": "Her glasses",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "fairly-oddparents-crimson-chin-city-protection",
       "question": "In The Fairly OddParents, Timmy Turner's absolute favorite comic book superhero, The Crimson Chin, spends his nights leaping across buildings to protect which fictional U.S. metropolis?",
       "answer": "Chincinnati",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "spongebob-squidward-instrument",
       "question": "On Spongebob, what instrument does Squidward Tentacles play?",
       "answer": "Clarinet",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "spongebob-best-friend-starfish",
       "question": "What is the first name of SpongeBob SquarePants' pink starfish best friend who lives under a rock?",
       "answer": "Patrick",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-homer-favorite-snack",
       "question": "On The Simpsons, what pink-frosted, sprinkled bakery item is Homer Simpson's absolute favorite food?",
       "answer": "Donuts",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "pokemon-ash-ketchum-first-partner",
-      "question": "In Pok\u00e9mon, what electric-type mouse creature is Ash Ketchum's primary partner and global mascot of the franchise?",
+      "question": "In Pokémon, what electric-type mouse creature is Ash Ketchum's primary partner and global mascot of the franchise?",
       "answer": "Pikachu",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "south-park-muffled-voice-hoodie",
       "question": "Which main South Park character wears a tightly buttoned orange parka that completely muffles his voice?",
       "answer": "Kenny",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "family-guy-talking-baby",
       "question": "On the TV show Family Guy,what is the first name of the hyper-intelligent, football-headed baby who wants to take over the world?",
       "answer": "Stewie",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "rick-and-morty-dimension-designation",
       "question": "On Rick and Morty, Rick Sanchez frequently brags that he originates from what alphanumeric baseline dimension?",
       "answer": "C-137",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "animated-series"
     },
     {
       "slug": "bobs-burgers-louise-hat-animal",
       "question": "On Bob's Burgers, Louise Belcher is never seen without her signature pink headgear, which features the ears of what animal?",
       "answer": "Rabbit",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "looney-tunes-bugs-bunny-vegetable",
       "question": "In Looney Tunes, what crunchy orange vegetable does Bugs Bunny constantly chomp on while asking \"What's up, doc?\"",
       "answer": "Carrot",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "fairly-oddparents-timmy-fairy-godparents",
       "question": "In The Fairly OddParents, Timmy Turner's two primary floating fairy godparents are named Wanda and what?",
       "answer": "Cosmo",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "tmnt-michelangelo-signature-weapon",
       "question": "In Teenage Mutant Ninja Turtles, which specific martial arts weapon consisting of two sticks connected by a short chain is wielded by Michelangelo?",
       "answer": "Nunchucks",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "inspector-gadget-genius-niece",
       "question": "What is the name of Inspector Gadget's highly intelligent niece who actually solves all of his cases?",
       "answer": "Penny",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "garfield-owner-first-name",
       "question": "In Garfield and Friends, what is the first name of the socially awkward cartoonist who owns Garfield the cat and Odie the dog?",
       "answer": "Jon",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "jetsons-robotic-maid",
       "question": "What is the name of the robotic, apron-wearing live-in maid who takes care of the Jetson family?",
       "answer": "Rosie",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "flintstones-fred-pet-dinosaur",
       "question": "On The Flintstones, what is the name of Fred and Wilma Flintstone's energetic, barking purple pet prosauropod dinosaur?",
       "answer": "Dino",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "animated-series"
     },
     {
       "slug": "arthur-read-animal-species",
       "question": "On the animated PBS series 'Arthur,' Arthur Read is a popular schoolchild wearing round glasses, but what specific animal species is he?",
       "answer": "Aardvark",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "kardashian-youngest-sister",
@@ -928,7 +1052,8 @@
       "answer": "Kylie Jenner",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "reality-competition"
     },
     {
       "slug": "squid-game-country-of-origin",
@@ -939,7 +1064,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Korea"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "succession-waystar-royco-ceo",
@@ -947,7 +1073,8 @@
       "answer": "Logan Roy",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "bridgerton-narrator-voice",
@@ -955,7 +1082,8 @@
       "answer": "Julie Andrews",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "friends-tv-show-central-perk",
@@ -963,14 +1091,16 @@
       "answer": "Central Perk",
       "answer_format": "write_in",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "winnie-the-pooh-donkey-name",
       "question": "In Winnie the Pooh, what is the name of Christopher Robin's gloomy, thistle-eating stuffed donkey friend who constantly loses his tail?",
       "answer": "Eeyore",
       "category": "Television",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "sopranos-finale-song",
@@ -983,7 +1113,8 @@
         "Don't Stop Believin'",
         "Dont Stop Believin",
         "Don't Stop Believing"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "breaking-bad-walter-alter-ego",
@@ -994,7 +1125,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Heisenberg"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "game-of-thrones-stark-home",
@@ -1005,7 +1137,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Winterfell"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "stranger-things-alternate-dimension",
@@ -1017,7 +1150,8 @@
       "acceptableAnswers": [
         "The Upside Down",
         "Upside Down"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "mad-men-advertising-agency",
@@ -1030,7 +1164,8 @@
         "Sterling Cooper",
         "Sterling Cooper Advertising",
         "Sterling Cooper Advertising Agency"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "parks-and-rec-fictional-town",
@@ -1041,7 +1176,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Pawnee"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "ted-lasso-football-club",
@@ -1053,7 +1189,8 @@
       "acceptableAnswers": [
         "AFC Richmond",
         "Richmond"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "the-wire-barksdale-enforcer",
@@ -1066,7 +1203,8 @@
         "Stringer Bell",
         "Stringer",
         "Russell Bell"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "abbott-elementary-city",
@@ -1078,7 +1216,8 @@
       "acceptableAnswers": [
         "Philadelphia",
         "Philly"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "fleabag-confession-character",
@@ -1091,7 +1230,8 @@
         "The Hot Priest",
         "The Priest",
         "Priest"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "schitts-creek-motel",
@@ -1103,7 +1243,8 @@
       "acceptableAnswers": [
         "Rosebud Motel",
         "The Rosebud Motel"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "white-lotus-season-one-resort",
@@ -1115,7 +1256,8 @@
       "acceptableAnswers": [
         "Hawaii",
         "Maui"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "atlanta-earn-cousin-rapper",
@@ -1127,7 +1269,8 @@
       "acceptableAnswers": [
         "Paper Boi",
         "Paperboy"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "the-crown-queen-elizabeth-premiere",
@@ -1141,7 +1284,8 @@
         "Philip",
         "Duke of Edinburgh",
         "Prince Philip, Duke of Edinburgh"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "parks-and-recreation-ron-swanson-alter-ego",
@@ -1152,7 +1296,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Duke Silver"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "true-detective-carcosa-villain",
@@ -1163,7 +1308,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Yellow King"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "the-west-wing-president-hometown",
@@ -1174,7 +1320,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "New Hampshire"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "buffy-vampire-slayer-hometown",
@@ -1185,7 +1332,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Sunnydale"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "arrested-development-frozen-banana",
@@ -1198,7 +1346,8 @@
         "Frozen banana",
         "Bananas",
         "Chocolate-covered banana"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "yellowstone-dutton-ranch",
@@ -1209,7 +1358,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Montana"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "friday-night-lights-texas-town",
@@ -1220,7 +1370,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Texas"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "sopranos-pine-barrens-interior-decorator",
@@ -1231,7 +1382,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Interior decorator"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "simpsons-springfield-nuclear-owner",
@@ -1244,7 +1396,8 @@
         "Mr. Burns",
         "Charles Montgomery Burns",
         "Monty Burns"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "american-dad-alien-attic",
@@ -1256,7 +1409,8 @@
       "acceptableAnswers": [
         "Roger",
         "Roger the Alien"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "seinfeld-soup-nazi-line",
@@ -1268,7 +1422,8 @@
       "acceptableAnswers": [
         "No soup for you!",
         "No soup for you"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "friends-ross-divorce-count",
@@ -1280,7 +1435,8 @@
       "acceptableAnswers": [
         "3",
         "Three"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "sopranos-bada-bing-owner",
@@ -1293,7 +1449,8 @@
         "Silvio Dante",
         "Silvio",
         "Sil"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "american-dad-stan-employer",
@@ -1305,7 +1462,8 @@
       "acceptableAnswers": [
         "CIA",
         "Central Intelligence Agency"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "seinfeld-art-vandelay-profession",
@@ -1319,7 +1477,8 @@
         "An architect",
         "Importer exporter",
         "Importer-exporter"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "seinfeld-festivus-holiday-creator",
@@ -1331,7 +1490,8 @@
       "acceptableAnswers": [
         "Festivus",
         "Festivus for the rest of us"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "american-dad-cochrane-political-party",
@@ -1344,7 +1504,8 @@
         "Green Party",
         "The Green Party",
         "Libertarian"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "seinfeld-puddy-nj-devils",
@@ -1357,7 +1518,8 @@
         "New Jersey Devils",
         "Devils",
         "NJ Devils"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "scooby-doo-scooby-snacks",
@@ -1368,7 +1530,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Scooby Snacks"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-homers-favorite-beer",
@@ -1380,7 +1543,8 @@
       "acceptableAnswers": [
         "Duff Beer",
         "Duff"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "spongebob-squarepants-pet-snail",
@@ -1392,7 +1556,8 @@
       "acceptableAnswers": [
         "Gary",
         "Gary the Snail"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "south-park-frequently-killed-character",
@@ -1404,7 +1569,8 @@
       "acceptableAnswers": [
         "Kenny McCormick",
         "Kenny"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "flintstones-fictional-prehistoric-town",
@@ -1415,7 +1581,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Bedrock"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "tmnt-ninja-turtles-mentor-rat",
@@ -1427,7 +1594,8 @@
       "acceptableAnswers": [
         "Master Splinter",
         "Splinter"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "rugrats-tommy-pickles-dinosaur-toy",
@@ -1438,7 +1606,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Reptar"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "archer-spy-agency-original-name",
@@ -1450,7 +1619,8 @@
       "acceptableAnswers": [
         "ISIS",
         "International Secret Intelligence Service"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "invader-zim-robot-disguise",
@@ -1463,7 +1633,8 @@
         "Dog",
         "Green dog",
         "A dog"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "spongebob-pet-snail-creature",
@@ -1475,7 +1646,8 @@
       "acceptableAnswers": [
         "Snail",
         "Sea Snail"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "ed-edd-n-eddy-currency-obsession",
@@ -1488,7 +1660,8 @@
         "Jawbreakers",
         "Jawbreaker",
         "Giant jawbreakers"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "game-of-thrones-wall-faction",
@@ -1500,7 +1673,8 @@
       "acceptableAnswers": [
         "Night's Watch",
         "The Night's Watch"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "game-of-thrones-wildlings-crows",
@@ -1511,7 +1685,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Crows"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "sopranos-strip-club-name",
@@ -1524,7 +1699,8 @@
         "Bada Bing",
         "The Bada Bing",
         "Bada Bing!"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "walking-dead-villain-barbed-wire-bat",
@@ -1535,7 +1711,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Lucille"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "breaking-bad-fast-food-front",
@@ -1547,7 +1724,8 @@
       "acceptableAnswers": [
         "Los Pollos Hermanos",
         "Pollos Hermanos"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "the-office-dwight-schrute-farm-crop",
@@ -1559,7 +1737,8 @@
       "acceptableAnswers": [
         "Beet",
         "Beets"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "better-call-saul-cinnabon-city",
@@ -1570,7 +1749,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Omaha"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "the-wire-fictional-newspaper-season-5",
@@ -1582,7 +1762,8 @@
       "acceptableAnswers": [
         "The Baltimore Sun",
         "Baltimore Sun"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "succession-media-conglomerate-name",
@@ -1594,7 +1775,8 @@
       "acceptableAnswers": [
         "Waystar Royco",
         "Waystar"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "game-of-thrones-jaime-lannister-nickname",
@@ -1606,7 +1788,8 @@
       "acceptableAnswers": [
         "Kingslayer",
         "The Kingslayer"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "game-of-thrones-red-wedding",
@@ -1617,7 +1800,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Red Wedding, Red Wedding"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "sopranos-bobby-bacala-toy-obsession",
@@ -1631,7 +1815,8 @@
         "Toy trains",
         "Model railroads",
         "Trains"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "sopranos-tony-boat-name",
@@ -1644,7 +1829,8 @@
         "Stugots",
         "The Stugots",
         "Stugots II"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "lost-john-locke-wheelchair-reason",
@@ -1655,7 +1841,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Walk"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "game-of-thrones-arya-stark-sword-name",
@@ -1666,7 +1853,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Needle"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "game-of-thrones-hound-real-name",
@@ -1677,7 +1865,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Hound"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "sopranos-christopher-moltisanti-screenplay",
@@ -1688,7 +1877,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cleaver"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "sopranos-silvio-dante-impersonation",
@@ -1700,7 +1890,8 @@
       "acceptableAnswers": [
         "Al Pacino",
         "Pacino"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "stranger-things-jim-hopper-russian-prison",
@@ -1712,7 +1903,8 @@
       "acceptableAnswers": [
         "Siberia",
         "Kamchatka"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "arrested-development-buster-hand",
@@ -1723,7 +1915,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Hand"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-tobias-funke-medical-profession-hybrid",
@@ -1735,7 +1928,8 @@
       "acceptableAnswers": [
         "Analrapist",
         "An analrapist"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "new-girl-schmidt-first-name",
@@ -1747,7 +1941,8 @@
       "acceptableAnswers": [
         "Winston",
         "Winston Schmidt"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-oscar-bluth-farm-product",
@@ -1761,7 +1956,8 @@
         "Weed",
         "Cannabis",
         "Pot"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-george-michael-cousin-crush",
@@ -1772,7 +1968,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cousins"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-tobias-funke-acting-group",
@@ -1784,7 +1981,8 @@
       "acceptableAnswers": [
         "Blue Man Group",
         "The Blue Man Group"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-george-bluth-prison-religion",
@@ -1796,7 +1994,8 @@
       "acceptableAnswers": [
         "Judaism",
         "Jewish"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-buster-bluth-lost-hand-animal",
@@ -1809,7 +2008,8 @@
         "Seal",
         "A seal",
         "Loose seal"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-buster-bluth-prosthetic-device",
@@ -1822,7 +2022,8 @@
         "Hook",
         "A hook",
         "Prosthetic hook"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-tobias-funke-wardrobe-condition",
@@ -1834,7 +2035,8 @@
       "acceptableAnswers": [
         "Never-nude",
         "Never nude"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "arrested-development-gob-bluth-signature-magic-song",
@@ -1846,7 +2048,8 @@
       "acceptableAnswers": [
         "The Final Countdown",
         "Final Countdown"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-charlie-kelly-favorite-food",
@@ -1858,7 +2061,8 @@
       "acceptableAnswers": [
         "Milk steak",
         "Milksteak"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-dennis-reynolds-system-acronym",
@@ -1871,7 +2075,8 @@
         "DENNIS",
         "The D.E.N.N.I.S. System",
         "DENNIS System"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-mac-real-first-name",
@@ -1883,7 +2088,8 @@
       "acceptableAnswers": [
         "Ronald",
         "Ronald McDonald"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-rick-cricket-former-profession",
@@ -1896,7 +2102,8 @@
         "Priest",
         "Catholic priest",
         "Clergyman"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-nightman-cometh-villain",
@@ -1907,7 +2114,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Dayman"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-charlie-kelly-imaginary-mailroom-worker",
@@ -1919,7 +2127,8 @@
       "acceptableAnswers": [
         "Pepe Silvia",
         "Pepe Sylvia"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-mcpoyle-family-beverage",
@@ -1932,7 +2141,8 @@
         "Milk",
         "Warm milk",
         "Mother's milk"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-rum-ham-beach-incident",
@@ -1945,7 +2155,8 @@
         "Rum ham",
         "Rumham",
         "The rum ham"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-lethal-weapon-sequel-number",
@@ -1959,7 +2170,8 @@
         "Lethal Weapon 5",
         "Lethal Weapon 6",
         "Lethal Weapon 7"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-charlie-kelly-law-specialty",
@@ -1970,7 +2182,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Bird law"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-mac-exercise-bike-name",
@@ -1983,7 +2196,8 @@
         "Ass Pounder 4000",
         "Ass Pounder",
         "The Ass Pounder"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-charlie-kelly-favorite-game",
@@ -1995,7 +2209,8 @@
       "acceptableAnswers": [
         "Night Crawlers",
         "Nightcrawlers"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-charlie-invention-feline-footwear",
@@ -2007,7 +2222,8 @@
       "acceptableAnswers": [
         "Kitten Mittons",
         "Kitten Mittens"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-frank-reynolds-sweatshop-country",
@@ -2018,7 +2234,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Vietnam"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-charlie-kelly-favorite-hobby",
@@ -2029,7 +2246,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Magnets"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-the-waitress-real-first-name-mystery",
@@ -2041,7 +2259,8 @@
       "acceptableAnswers": [
         "The Waitress",
         "Waitress"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-charlie-kelly-blood-capsules-date",
@@ -2052,7 +2271,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Philanthropist"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-the-gang-buys-a-boat-implication",
@@ -2064,7 +2284,8 @@
       "acceptableAnswers": [
         "Implication",
         "The implication"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-the-gang-exploits-a-miracle-stain",
@@ -2078,7 +2299,8 @@
         "Mary",
         "Jesus",
         "God"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-maureen-ponderosa-cat-transformation",
@@ -2091,7 +2313,8 @@
         "Cat",
         "A cat",
         "Feline"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "its-always-sunny-the-gang-recycles-their-trash-limo",
@@ -2103,7 +2326,8 @@
       "acceptableAnswers": [
         "Limousine",
         "Limo"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "scrubs-jd-favorite-alcoholic-beverage",
@@ -2116,7 +2340,8 @@
         "Appletini",
         "Apple martini",
         "An appletini"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "scrubs-janitor-accidental-incident-penny",
@@ -2128,7 +2353,8 @@
       "acceptableAnswers": [
         "Penny",
         "A penny"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "friends-joey-tribbiani-acting-soap-opera",
@@ -2141,7 +2367,8 @@
         "Days of Our Lives",
         "Days",
         "DOOL"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "friends-ross-geller-profession-phd",
@@ -2153,7 +2380,8 @@
       "acceptableAnswers": [
         "Paleontology",
         "Paleontologist"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "friends-ross-geller-holiday-armadillo-heritage",
@@ -2166,7 +2394,8 @@
         "Holiday Armadillo",
         "The Holiday Armadillo",
         "An armadillo"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "friends-joey-tribbiani-bedtime-penguin-toy",
@@ -2178,7 +2407,8 @@
       "acceptableAnswers": [
         "Huggsy",
         "Hugsy"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "friends-ross-and-rachel-final-airport-destination",
@@ -2189,7 +2419,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Paris"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "new-girl-schmidt-misconduct-jar-monetary-penalty",
@@ -2203,7 +2434,8 @@
         "The douchebag jar",
         "jar",
         "The jar"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "archer-sterling-signature-danger-catchphrase",
@@ -2215,7 +2447,8 @@
       "acceptableAnswers": [
         "Danger Zone",
         "The Danger Zone"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "archer-burt-reynolds-celebrity-obsession-cameo",
@@ -2226,7 +2459,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Burt Reynolds"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "archer-dr-krieger-possible-cloned-dictator",
@@ -2238,7 +2472,8 @@
       "acceptableAnswers": [
         "Adolf Hitler",
         "Hitler"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-homer-middle-name-reveal",
@@ -2249,7 +2484,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Jay"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-waylon-smithers-malibu-stacy-hobby",
@@ -2263,7 +2499,8 @@
         "Malibu Stacy dolls",
         "Stacy dolls",
         "Dolls"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-homer-favorite-beer-brand",
@@ -2275,7 +2512,8 @@
       "acceptableAnswers": [
         "Duff",
         "Duff Beer"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-lisa-simpson-jazz-mentor-musician",
@@ -2286,7 +2524,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Saxophone"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-chief-wiggum-clueless-son-name",
@@ -2298,7 +2537,8 @@
       "acceptableAnswers": [
         "Ralph",
         "Ralph Wiggum"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-sideshow-bob-real-name",
@@ -2309,7 +2549,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Kelsey Grammer"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-mister-burns-beloved-teddy-bear",
@@ -2320,7 +2561,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Bobo"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-apu-nahasapeemapetilon-convenience-store",
@@ -2332,7 +2574,8 @@
       "acceptableAnswers": [
         "Kwik-E-Mart",
         "Kwik E Mart"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "simpsons-homer-brain-crayon-color",
@@ -2344,7 +2587,8 @@
       "acceptableAnswers": [
         "A crayon",
         "a blue crayon"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "house-of-cards-frank-underwood-hometown-district",
@@ -2356,7 +2600,8 @@
       "acceptableAnswers": [
         "South Carolina",
         "SC"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "house-of-cards-peter-russo-pennsylvania-governor-race",
@@ -2368,7 +2613,8 @@
       "acceptableAnswers": [
         "Pennsylvania",
         "PA"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "shameless-fiona-gallagher-oldest-sibling-role",
@@ -2380,7 +2626,8 @@
       "acceptableAnswers": [
         "Fiona",
         "Fiona Gallagher"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "shameless-frank-gallagher-favorite-local-bar",
@@ -2394,7 +2641,8 @@
         "The Alibi",
         "Alibi Room",
         "Alibi"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "fresh-prince-will-smith-hometown-neighborhood",
@@ -2407,7 +2655,8 @@
         "West Philadelphia",
         "Philadelphia",
         "West Philly"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "late-night-johnny-carson-sidekick-signature-introduction",
@@ -2420,7 +2669,8 @@
         "Heeere's Johnny",
         "Heres Johnny",
         "Here's Johnny"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "late-night-jay-leno-tonight-show-garage-hobby",
@@ -2434,7 +2684,8 @@
         "Automobiles",
         "Motorcycles",
         "Antique cars"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "late-night-jimmy-fallon-house-band-hip-hop",
@@ -2446,7 +2697,8 @@
       "acceptableAnswers": [
         "The Roots",
         "Roots"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "late-night-seth-meyers-snl-segment-origin",
@@ -2458,7 +2710,8 @@
       "acceptableAnswers": [
         "Weekend Update",
         "Update"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "late-night-johnny-carson-final-guest-1992",
@@ -2470,7 +2723,8 @@
       "acceptableAnswers": [
         "Bette Midler",
         "Midler"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "late-night-jay-leno-hugh-grant-interview-1995",
@@ -2482,7 +2736,8 @@
       "acceptableAnswers": [
         "Hugh Grant",
         "Grant"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "late-night-jimmy-kimmel-matt-damon-running-feud",
@@ -2494,7 +2749,8 @@
       "acceptableAnswers": [
         "Matt Damon",
         "Damon"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "late-night-stephen-colbert-jon-stewart-daily-show-origin",
@@ -2507,7 +2763,8 @@
         "The Daily Show",
         "The Daily Show with Jon Stewart",
         "Daily Show"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "late-night-conan-obrien-simpsons-writing-classic",
@@ -2518,7 +2775,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "The Simpsons"
-      ]
+      ],
+      "subcategory": "animated-series"
     },
     {
       "slug": "late-night-david-letterman-paul-shaffer-orchestra",
@@ -2530,7 +2788,8 @@
       "acceptableAnswers": [
         "Paul Shaffer",
         "Shaffer"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "snl-lorne-michaels-creator-role",
@@ -2543,7 +2802,8 @@
         "Lorne Michaels",
         "Michaels",
         "Lorne"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-signature-cold-open-catchphrase",
@@ -2556,7 +2816,8 @@
         "Live from New York, it's Saturday Night!",
         "Live from New York",
         "Live from New York its Saturday Night"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-chevy-chase-weekend-update-anchor",
@@ -2568,7 +2829,8 @@
       "acceptableAnswers": [
         "Chevy Chase",
         "Chase"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-eddie-murphy-1980s-savior",
@@ -2580,7 +2842,8 @@
       "acceptableAnswers": [
         "Eddie Murphy",
         "Murphy"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-tina-fey-sarah-palin-impression",
@@ -2592,7 +2855,8 @@
       "acceptableAnswers": [
         "Sarah Palin",
         "Palin"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-chris-farley-matt-foley-van-down-by-the-river",
@@ -2605,7 +2869,8 @@
         "The river",
         "River",
         "A river"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-will-ferrell-more-cowbell-blue-oyster-cult",
@@ -2618,7 +2883,8 @@
         "Cowbell",
         "The cowbell",
         "More cowbell"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "snl-kenan-thompson-longest-serving-record",
@@ -2631,7 +2897,8 @@
         "Kenan Thompson",
         "Kenan",
         "Thompson"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-george-carlin-first-host-1975",
@@ -2643,7 +2910,8 @@
       "acceptableAnswers": [
         "George Carlin",
         "Carlin"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-norm-macdonald-oj-simpson-update-firing",
@@ -2657,7 +2925,8 @@
         "OJ Simpson",
         "OJ",
         "Simpson"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-kristen-wiig-gilly-target-lady-breakout",
@@ -2669,7 +2938,8 @@
       "acceptableAnswers": [
         "Kristen Wiig",
         "Wiig"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-adam-sandler-hanukkah-song-debut",
@@ -2683,7 +2953,8 @@
         "The Chanukah Song",
         "Hanukkah Song",
         "Chanukah Song"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-darrell-hammond-bill-clinton-impression",
@@ -2696,7 +2967,8 @@
         "Bill Clinton",
         "Clinton",
         "President Clinton"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-colin-jost-michael-che-update-pairing",
@@ -2708,7 +2980,8 @@
       "acceptableAnswers": [
         "Michael Che",
         "Che"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-dan-aykroyd-john-belushi-blues-brothers-spin-off",
@@ -2720,7 +2993,8 @@
       "acceptableAnswers": [
         "The Blues Brothers",
         "Blues Brothers"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-lana-del-rey-criticized-debut-2012",
@@ -2733,7 +3007,8 @@
         "Lana Del Rey",
         "Del Rey",
         "Lana"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "snl-waynes-world-mike-myers-dana-carvey-basement",
@@ -2745,7 +3020,8 @@
       "acceptableAnswers": [
         "Aurora",
         "Aurora, Illinois"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "snl-waynes-world-mike-myers-dana-carvey-movie-name",
@@ -2757,7 +3033,8 @@
       "acceptableAnswers": [
         "Wayne's World",
         "Wayne World"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "severance-lumon-industries-employer",
@@ -2769,7 +3046,8 @@
       "acceptableAnswers": [
         "Lumon",
         "Lumon Industries"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "modern-family-mitchell-cam-daughter-lily",
@@ -2781,7 +3059,8 @@
       "acceptableAnswers": [
         "Lily",
         "Lily Tucker-Pritchett"
-      ]
+      ],
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "game-of-thrones-daenerys-bonded-dragon-drogon",
@@ -2792,7 +3071,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Drogon"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "ted-lasso-original-coaching-sport-football",
@@ -2804,7 +3084,8 @@
       "acceptableAnswers": [
         "American Football",
         "Football"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "abbott-elementary-school-location-philadelphia",
@@ -2816,7 +3097,8 @@
       "acceptableAnswers": [
         "Philadelphia",
         "Philly"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "invincible-guardians-globe-murderer-omni-man",
@@ -2828,7 +3110,8 @@
       "acceptableAnswers": [
         "Omni-Man",
         "Nolan Grayson"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "the-boys-hughie-girlfriend-death-a-train",
@@ -2840,7 +3123,8 @@
       "acceptableAnswers": [
         "A-Train",
         "Reggie Franklin"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "euphoria-rue-bennett-sister-gia",
@@ -2852,7 +3136,8 @@
       "acceptableAnswers": [
         "Gia",
         "Gia Bennett"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "stranger-things-millie-bobby-brown-tattoo-number",
@@ -2865,7 +3150,8 @@
         "11",
         "Eleven",
         "011"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "the-bear-carmie-berzatto-original-sandwich-shop",
@@ -2877,7 +3163,8 @@
       "acceptableAnswers": [
         "Chicagoland",
         "The Original Beef of Chicagoland"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "better-call-saul-jimmy-mcgill-alter-ego-cinnabon",
@@ -2888,7 +3175,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Omaha"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "the-last-of-us-cordyceps-fungus-infection",
@@ -2899,7 +3187,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Cordyceps"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "white-lotus-season-two-sicily-setting",
@@ -2910,7 +3199,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Sicily"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "the-crown-claire-foy-queen-elizabeth",
@@ -2922,7 +3212,8 @@
       "acceptableAnswers": [
         "Claire Foy",
         "Foy"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "yellowstone-dutton-family-ranch-state",
@@ -2933,7 +3224,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Montana"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "barry-bill-hader-acting-coach-winkler",
@@ -2944,7 +3236,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Acting"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "hacks-jean-smart-las-vegas-resort-palmetto",
@@ -2957,7 +3250,8 @@
         "Palmetto",
         "The Palmetto",
         "Palmetto Casino"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "peaky-blinders-shelby-family-city-birmingham",
@@ -2968,7 +3262,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Birmingham"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "the-mandalorian-din-djarin-bounty-hunter-guild",
@@ -2981,7 +3276,8 @@
         "Way",
         "The Way",
         "The Way of the Mandalore"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "only-murders-building-the-arconia-podcasters",
@@ -2993,7 +3289,8 @@
       "acceptableAnswers": [
         "The Arconia",
         "Arconia"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "cyberpunk-edgerunners-night-city-anime-setting",
@@ -3004,7 +3301,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Night City"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "fargo-season-five-jon-hamm-sheriff-character",
@@ -3016,7 +3314,8 @@
       "acceptableAnswers": [
         "Tillman",
         "Roy Tillman"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "true-detective-night-country-alaska-setting",
@@ -3027,7 +3326,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Alaska"
-      ]
+      ],
+      "subcategory": "drama-cable"
     },
     {
       "slug": "poker-face-natasha-lyonne-charlie-human-lie-detector",
@@ -3041,7 +3341,8 @@
         "Human lie detector",
         "Knowing when people lie",
         "Spotting lies"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "yellowjackets-soccer-team-high-school-state",
@@ -3053,7 +3354,8 @@
       "acceptableAnswers": [
         "New Jersey",
         "NJ"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "reservation-dogs-oklahoma-indigenous-creek-nation",
@@ -3064,7 +3366,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Oklahoma"
-      ]
+      ],
+      "subcategory": "snl-late-night-recent"
     },
     {
       "slug": "the-office-michael-scott-catchphrase",
@@ -3072,7 +3375,8 @@
       "answer": "That's what she said!",
       "category": "Television",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "which-popular-sitcom-set-in-the-90s-follows-the-lives-of-jerry-elaine-george-and-kramer-in-new-york-city",
@@ -3080,7 +3384,8 @@
       "answer": "Seinfeld",
       "category": "Television",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "what-fictional-country-is-the-primary-setting-for-the-highly-popular-k-drama-crash-landing-on-you",
@@ -3092,7 +3397,8 @@
       ],
       "category": "Television",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "george-rr-martin-ice-and-fire-series-title",
@@ -3104,7 +3410,8 @@
       ],
       "category": "Television",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "which-streaming-service-is-home-to-original-series-such-as-stranger-things-the-crown-and-ozark",
@@ -3112,7 +3419,8 @@
       "answer": "Netflix",
       "category": "Television",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "which-streaming-service-launched-the-hit-series-stranger-things",
@@ -3120,7 +3428,8 @@
       "answer": "Netflix",
       "category": "Television",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "who-played-the-character-tony-soprano-in-the-acclaimed-tv-series-the-sopranos",
@@ -3131,7 +3440,8 @@
       ],
       "category": "Television",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "which-hbo-series-features-dragons-and-warring-noble-houses-vying-for-the-iron-throne",
@@ -3142,7 +3452,8 @@
       ],
       "category": "Television",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "what-is-joey-tribbianis-signature-pick-up-line-in-the-tv-show-friends",
@@ -3155,7 +3466,8 @@
       ],
       "category": "Television",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "sitcoms-comedy"
     },
     {
       "slug": "kardashian-jenner-family-reality-series",
@@ -3166,7 +3478,8 @@
       ],
       "category": "Television",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "drama-cable"
     },
     {
       "slug": "which-actor-starred-as-the-character-walter-white-in-the-critically-acclaimed-tv-series-breaking-bad",
@@ -3177,7 +3490,355 @@
       ],
       "category": "Television",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "drama-cable"
+    },
+    {
+      "slug": "mash-acronym-mobile-army-surgical-hospital",
+      "question": "WHAT did the letters stand for in popular TV show and movie, \"M*A*S*H\"?",
+      "answer": "Mobile Army Surgical Hospital",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
+    },
+    {
+      "slug": "partridge-family-70s-sitcom",
+      "question": "Name the 70s American sitcom portraying the adventures of a family of pop musicians.",
+      "answer": "The Partridge Family",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
+    },
+    {
+      "slug": "flintstones-fred-barney-wilma-betty",
+      "question": "Which animated television series featured the characters Fred, Barney, Wilma and Betty?",
+      "answer": "The Flintstones",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "animated-series"
+    },
+    {
+      "slug": "big-brother-us-original-format",
+      "question": "In the US version of Big Brother, what is the maximum number of houseguests that typically start a regular season?",
+      "answer": "16",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "sixteen"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "big-brother-head-of-household",
+      "question": "In Big Brother, what is the name of the weekly competition that grants a player power over nominations?",
+      "answer": "Head of Household",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "HOH"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "americas-next-top-model-first-winner",
+      "question": "Who was the winner of the first cycle of America's Next Top Model?",
+      "answer": "Adrianne Curry",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "dancing-with-stars-first-winner",
+      "question": "Who was the first celebrity to win Dancing with the Stars (US)?",
+      "answer": "Kelly Monaco",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "the-bachelorette-first-season-lead",
+      "question": "Who was the very first Bachelorette on the American version of the show?",
+      "answer": "Trista Rehn",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Trista Sutter",
+        "Trista Rehn Sutter"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "the-bachelor-rose-ceremony",
+      "question": "On The Bachelor, what does the lead give to contestants they want to keep?",
+      "answer": "A rose",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Rose"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "jersey-shore-location",
+      "question": "What town in New Jersey was the original setting for the reality show Jersey Shore?",
+      "answer": "Seaside Heights",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Seaside"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "real-world-original-motto",
+      "question": "What famous phrase was used at the beginning of every episode of MTV's The Real World?",
+      "answer": "This is the true story",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "This is the true story of seven strangers"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "real-world-first-season-city",
+      "question": "In what city was the first season of MTV's The Real World set?",
+      "answer": "New York",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "New York City",
+        "NYC"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "flavor-of-love-host",
+      "question": "What rapper was the star and host of the VH1 reality dating show Flavor of Love?",
+      "answer": "Flavor Flav",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "rock-of-love-host",
+      "question": "What rock musician was the star of the VH1 reality dating show Rock of Love?",
+      "answer": "Bret Michaels",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "masked-singer-judge-robin",
+      "question": "On The Masked Singer, which former New Kids on the Block member serves as a judge?",
+      "answer": "Joey McIntyre",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Joey Mac"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "squid-game-reality-show-prize",
+      "question": "What was the prize money amount for the Netflix reality show Squid Game: The Challenge?",
+      "answer": "$4.56 million",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "4.56 million",
+        "$4,560,000"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "traitors-format-british-origin",
+      "question": "The reality competition The Traitors originated in which country?",
+      "answer": "The Netherlands",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Netherlands"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "rhobh-crystal-chandelier-nightclub",
+      "question": "On Real Housewives of Beverly Hills, what is the name of the nightclub owned by Lisa Vanderpump?",
+      "answer": "Sur",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "SUR"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "naked-and-afraid-survival-days",
+      "question": "On Naked and Afraid, how many days do participants typically have to survive in the wilderness?",
+      "answer": "21",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "21 days",
+        "Twenty-one"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "making-the-band-sean-combs",
+      "question": "What music mogul hosted the MTV reality show Making the Band?",
+      "answer": "Sean Combs",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Diddy",
+        "P. Diddy",
+        "Puff Daddy"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "big-brother-jury-house",
+      "question": "In Big Brother, what is the name of the location where evicted houseguests stay until the finale?",
+      "answer": "Jury House",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Jury",
+        "Jury"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "real-housewives-orange-county-original",
+      "question": "Where was the first season of The Real Housewives franchise set?",
+      "answer": "Orange County",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "OC"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "love-is-blind-pods",
+      "question": "On Love Is Blind, what are the private rooms called where contestants go on dates without seeing each other?",
+      "answer": "Pods",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Pods"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "masterchef-judge-ramsay",
+      "question": "What famous chef is the head judge on both Hell's Kitchen and MasterChef?",
+      "answer": "Gordon Ramsay",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Ramsay"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "fear-factor-host",
+      "question": "Who was the original host of the reality show Fear Factor?",
+      "answer": "Joe Rogan",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Joe Rogan ",
+        "Rogan"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "duck-dynasty-robertson-family-location",
+      "question": "In what state does the Robertson family live on Duck Dynasty?",
+      "answer": "Louisiana",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Television",
+      "subcategory": "reality-competition"
     }
   ]
 }

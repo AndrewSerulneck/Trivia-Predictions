@@ -7,7 +7,8 @@
       "answer": "Oscar Wilde",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "quote-george-orwell-big-brother",
@@ -15,7 +16,8 @@
       "answer": "George Orwell",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "quote-friedrich-nietzsche-monster",
@@ -23,7 +25,8 @@
       "answer": "Friedrich Nietzsche",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "quote-charles-dickens-cities",
@@ -31,7 +34,8 @@
       "answer": "Charles Dickens",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "quote-oscar-wilde-temptation",
@@ -39,7 +43,8 @@
       "answer": "Oscar Wilde",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "quote-julius-caesar-brute",
@@ -47,7 +52,8 @@
       "answer": "Julius Caesar",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "quote-sherlock-holmes-elementary",
@@ -55,7 +61,8 @@
       "answer": "Sherlock Holmes",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "quote-hamlet-to-be",
@@ -63,7 +70,8 @@
       "answer": "Hamlet",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "language-homonyms",
@@ -75,7 +83,8 @@
         "Homonyms",
         "Homophones",
         "Homographs"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "language-oxymoron",
@@ -85,7 +94,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Oxymoron"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-palindrome",
@@ -96,7 +106,8 @@
       "acceptableAnswers": [
         "Palindrome",
         "Palindromes"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "which-author-wrote-romeo-and-juliet",
@@ -104,7 +115,8 @@
       "answer": "William Shakespeare",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "language-onomatopoeia",
@@ -114,7 +126,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Onomatopoeia"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-portmanteau",
@@ -126,7 +139,8 @@
         "Portmanteau",
         "Portmanteau word",
         "Blend word"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-gerund",
@@ -136,7 +150,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Gerund"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-oxford-comma",
@@ -148,7 +163,8 @@
         "Oxford Comma",
         "Serial Comma",
         "Harvard Comma"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-alliteration",
@@ -158,7 +174,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Alliteration"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-anagram",
@@ -169,7 +186,8 @@
       "acceptableAnswers": [
         "Anagram",
         "Anagrams"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-malapropism",
@@ -180,7 +198,8 @@
       "acceptableAnswers": [
         "Malapropism",
         "Malaprop"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-antonym",
@@ -191,7 +210,8 @@
       "acceptableAnswers": [
         "Antonym",
         "Antonyms"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-conjunction",
@@ -202,7 +222,8 @@
       "acceptableAnswers": [
         "Conjunction",
         "Coordinating conjunction"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-euphemism",
@@ -213,7 +234,8 @@
       "acceptableAnswers": [
         "Euphemism",
         "Euphemisms"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-active-voice",
@@ -224,7 +246,8 @@
       "acceptableAnswers": [
         "Active Voice",
         "Active"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-acronym",
@@ -235,7 +258,8 @@
       "acceptableAnswers": [
         "Acronym",
         "Acronyms"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-superlative",
@@ -246,7 +270,8 @@
       "acceptableAnswers": [
         "Superlative",
         "Superlative adjective"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-etymology",
@@ -256,7 +281,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Etymology"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-interjection",
@@ -267,7 +293,8 @@
       "acceptableAnswers": [
         "Interjection",
         "Interjections"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-syntax",
@@ -277,7 +304,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Syntax"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-preposition",
@@ -288,7 +316,8 @@
       "acceptableAnswers": [
         "Preposition",
         "Prepositions"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-simile",
@@ -299,7 +328,8 @@
       "acceptableAnswers": [
         "Simile",
         "Similes"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-metaphor",
@@ -310,7 +340,8 @@
       "acceptableAnswers": [
         "Metaphor",
         "Metaphors"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-noun",
@@ -321,7 +352,8 @@
       "acceptableAnswers": [
         "Noun",
         "Nouns"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-verb",
@@ -332,7 +364,8 @@
       "acceptableAnswers": [
         "Verb",
         "Verbs"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-adjective",
@@ -343,7 +376,8 @@
       "acceptableAnswers": [
         "Adjective",
         "Adjectives"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-pronoun",
@@ -354,7 +388,8 @@
       "acceptableAnswers": [
         "Pronoun",
         "Pronouns"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-synonym",
@@ -365,7 +400,8 @@
       "acceptableAnswers": [
         "Synonym",
         "Synonyms"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-adverb",
@@ -376,7 +412,8 @@
       "acceptableAnswers": [
         "Adverb",
         "Adverbs"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-personification",
@@ -386,7 +423,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Personification"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-proper-noun",
@@ -397,7 +435,8 @@
       "acceptableAnswers": [
         "Proper Noun",
         "Proper Nouns"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-vowels",
@@ -408,7 +447,8 @@
       "acceptableAnswers": [
         "Vowels",
         "Vowel"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-consonants",
@@ -419,7 +459,8 @@
       "acceptableAnswers": [
         "Consonants",
         "Consonant"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-prefix",
@@ -430,7 +471,8 @@
       "acceptableAnswers": [
         "Prefix",
         "Prefixes"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-suffix",
@@ -441,7 +483,8 @@
       "acceptableAnswers": [
         "Suffix",
         "Suffixes"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-idiom",
@@ -453,7 +496,8 @@
         "Idiom",
         "Idioms",
         "Expression"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-contraction",
@@ -464,7 +508,8 @@
       "acceptableAnswers": [
         "Contraction",
         "Contractions"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-cliche",
@@ -474,10 +519,11 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cliche",
-        "Cliché",
+        "Clich\u00e9",
         "Cliches",
-        "Clichés"
-      ]
+        "Clich\u00e9s"
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-compound-word",
@@ -489,7 +535,8 @@
         "Compound Word",
         "Compound Words",
         "Compound"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-subject",
@@ -499,7 +546,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Subject"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-rhyme",
@@ -510,7 +558,8 @@
       "acceptableAnswers": [
         "Rhyme",
         "Rhymes"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-interrogation-point",
@@ -521,7 +570,8 @@
       "acceptableAnswers": [
         "Question Mark",
         "Question Marks"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "language-plural",
@@ -531,7 +581,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Plural"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "hero-batman",
@@ -543,28 +594,32 @@
         "Batman",
         "Bruce Wayne",
         "The Dark Knight"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "batman-real-name",
       "question": "What is Batman's real name? Include first and last name.",
       "answer": "Bruce Wayne",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "bruce-wayne-batman-real-name",
       "question": "What is Bruce Wayne's superhero alter ego?",
       "answer": "Batman",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "batman-city",
       "question": "What city does Batman protect?",
       "answer": "Gotham City",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "met-gala-annual-date",
@@ -572,7 +627,8 @@
       "answer": "May",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "quote-coco-chanel-irreplaceable",
@@ -580,7 +636,8 @@
       "answer": "Coco Chanel",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "hero-green-lantern",
@@ -592,14 +649,16 @@
         "Green Lantern",
         "Hal Jordan",
         "John Stewart"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-green-lantern-jewelry",
       "question": "What piece of jewelry gives the Green Lantern his power?",
       "answer": "A ring",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-deadpool",
@@ -610,7 +669,8 @@
       "acceptableAnswers": [
         "Deadpool",
         "Wade Wilson"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-iron-man",
@@ -621,14 +681,16 @@
       "acceptableAnswers": [
         "Iron Man",
         "Tony Stark"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "iron-man-real-name",
       "question": "What is Iron Man's real name? Include first and last name.",
       "answer": "Tony Stark",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-superman",
@@ -640,7 +702,8 @@
         "Superman",
         "Clark Kent",
         "Kal-El"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-the-flash",
@@ -653,7 +716,8 @@
         "Flash",
         "Barry Allen",
         "Wally West"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-captain-america",
@@ -664,7 +728,8 @@
       "acceptableAnswers": [
         "Captain America",
         "Steve Rogers"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-spiderman",
@@ -677,21 +742,24 @@
         "Spiderman",
         "Peter Parker",
         "Miles Morales"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "spiderman-real-name",
       "question": "What is Spider-Man's real name? Include first and last name.",
       "answer": "Peter Parker",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "spiderman-peter-parker-job",
       "question": "In the Spiderman universe, what is Peter Parker's primary occupation when he's not fighting crime?",
       "answer": "Photographer",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-the-incredible-hulk",
@@ -703,7 +771,8 @@
         "The Incredible Hulk",
         "Hulk",
         "The Hulk"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-wolverine",
@@ -714,7 +783,8 @@
       "acceptableAnswers": [
         "Wolverine",
         "Logan"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-storm",
@@ -725,7 +795,8 @@
       "acceptableAnswers": [
         "Storm",
         "Ororo Munroe"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-cyclops",
@@ -736,7 +807,8 @@
       "acceptableAnswers": [
         "Cyclops",
         "Scott Summers"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-rogue",
@@ -747,21 +819,24 @@
       "acceptableAnswers": [
         "Rogue",
         "Anna Marie"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-magneto",
       "question": "Which X-Men rival and periodic ally is the mutant Master of Magnetism, capable of controlling all types of metal?",
       "answer": "Magneto",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-magneto-powers",
       "question": "X-Men rival (and occasional ally) Magneto has the abiltity to control what substance?",
       "answer": "Metal",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-professor-x",
@@ -774,7 +849,8 @@
         "Professor Charles Xavier",
         "Charles Xavier",
         "Xavier"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-wonder-woman",
@@ -785,7 +861,8 @@
       "acceptableAnswers": [
         "Wonder Woman",
         "Diana Prince"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-aquaman",
@@ -796,7 +873,8 @@
       "acceptableAnswers": [
         "Aquaman",
         "Arthur Curry"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-thor",
@@ -807,14 +885,16 @@
       "acceptableAnswers": [
         "Thor",
         "Thor Odinson"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-thor-hammer",
       "question": "What weapon does the Marvel superhero Thor wield?",
       "answer": "Hammer",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-nightwing",
@@ -825,7 +905,8 @@
       "acceptableAnswers": [
         "Nightwing",
         "Dick Grayson"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-black-panther",
@@ -836,7 +917,8 @@
       "acceptableAnswers": [
         "Black Panther",
         "T'Challa"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-green-arrow",
@@ -847,7 +929,8 @@
       "acceptableAnswers": [
         "Green Arrow",
         "Oliver Queen"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-black-widow",
@@ -858,7 +941,8 @@
       "acceptableAnswers": [
         "Black Widow",
         "Natasha Romanoff"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-hawkeye",
@@ -869,7 +953,8 @@
       "acceptableAnswers": [
         "Hawkeye",
         "Clint Barton"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-shazam",
@@ -880,7 +965,8 @@
       "acceptableAnswers": [
         "Shazam",
         "Captain Marvel"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-human-torch",
@@ -891,7 +977,8 @@
       "acceptableAnswers": [
         "Human Torch",
         "Johnny Storm"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-joker",
@@ -902,7 +989,8 @@
       "acceptableAnswers": [
         "The Joker",
         "Joker"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-lex-luthor",
@@ -914,7 +1002,8 @@
         "Lex Luthor",
         "Lex",
         "Luthor"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-thanos",
@@ -924,7 +1013,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Thanos"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-green-goblin",
@@ -935,7 +1025,8 @@
       "acceptableAnswers": [
         "Green Goblin",
         "Norman Osborn"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-doctor-doom",
@@ -947,7 +1038,8 @@
         "Doctor Doom",
         "Dr. Doom",
         "Victor Von Doom"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-loki",
@@ -958,7 +1050,8 @@
       "acceptableAnswers": [
         "Loki",
         "Loki Laufeyson"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-venom",
@@ -969,7 +1062,8 @@
       "acceptableAnswers": [
         "Venom",
         "Eddie Brock"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-catwoman",
@@ -980,7 +1074,8 @@
       "acceptableAnswers": [
         "Catwoman",
         "Selina Kyle"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-riddler",
@@ -994,7 +1089,8 @@
         "Edward Nygma",
         "Edward Nigma",
         "Ed Nygma"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-doc-ock",
@@ -1007,7 +1103,8 @@
         "Dr. Octopus",
         "Doc Ock",
         "Otto Octavius"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-harley-quinn",
@@ -1018,7 +1115,8 @@
       "acceptableAnswers": [
         "Harley Quinn",
         "Harleen Quinzel"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-penguins",
@@ -1030,7 +1128,8 @@
         "The Penguin",
         "Penguin",
         "Oswald Cobblepot"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-reverse-flash",
@@ -1043,7 +1142,8 @@
         "Reverse Flash",
         "Professor Zoom",
         "Eobard Thawne"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-red-skull",
@@ -1055,7 +1155,8 @@
         "Red Skull",
         "The Red Skull",
         "Johann Schmidt"
-      ]
+      ],
+      "subcategory": "language-grammar"
     },
     {
       "slug": "villain-two-face",
@@ -1067,7 +1168,8 @@
         "Two-Face",
         "Two Face",
         "Harvey Dent"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-darkseid",
@@ -1077,7 +1179,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Darkseid"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-bane",
@@ -1087,7 +1190,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Bane"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-poison-ivy",
@@ -1098,7 +1202,8 @@
       "acceptableAnswers": [
         "Poison Ivy",
         "Pamela Isley"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-scarecrow",
@@ -1110,7 +1215,8 @@
         "Scarecrow",
         "The Scarecrow",
         "Jonathan Crane"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "villain-kingpin",
@@ -1122,7 +1228,8 @@
         "Kingpin",
         "The Kingpin",
         "Wilson Fisk"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-daredevil",
@@ -1134,7 +1241,8 @@
         "Daredevil",
         "Matt Murdock",
         "The Man Without Fear"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-doctor-strange",
@@ -1146,7 +1254,8 @@
         "Doctor Strange",
         "Dr. Strange",
         "Stephen Strange"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-ant-man",
@@ -1158,7 +1267,8 @@
         "Ant-Man",
         "Scott Lang",
         "Hank Pym"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-star-lord",
@@ -1170,7 +1280,8 @@
         "Star-Lord",
         "Star Lord",
         "Peter Quill"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-groot",
@@ -1180,7 +1291,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Groot"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-captain-marvel",
@@ -1191,7 +1303,8 @@
       "acceptableAnswers": [
         "Captain Marvel",
         "Carol Danvers"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-supergirl",
@@ -1202,7 +1315,8 @@
       "acceptableAnswers": [
         "Supergirl",
         "Kara Zor-El"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-nightcrawler",
@@ -1213,7 +1327,8 @@
       "acceptableAnswers": [
         "Nightcrawler",
         "Kurt Wagner"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-beast",
@@ -1225,7 +1340,8 @@
         "Beast",
         "Hank McCoy",
         "Dr. Hank McCoy"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-jean-grey",
@@ -1237,7 +1353,8 @@
         "Jean Grey",
         "Phoenix",
         "Marvel Girl"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-punisher",
@@ -1249,7 +1366,8 @@
         "The Punisher",
         "Punisher",
         "Frank Castle"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-ghost-rider",
@@ -1260,7 +1378,8 @@
       "acceptableAnswers": [
         "Ghost Rider",
         "Johnny Blaze"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-robin",
@@ -1271,7 +1390,8 @@
       "acceptableAnswers": [
         "Robin",
         "The Boy Wonder"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-the-thing",
@@ -1282,7 +1402,8 @@
       "acceptableAnswers": [
         "The Thing",
         "Ben Grimm"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "hero-quicksilver",
@@ -1293,14 +1414,16 @@
       "acceptableAnswers": [
         "Quicksilver",
         "Pietro Maximoff"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "history-action-comics-1",
       "question": "Action Comics #1 was published in 1938 and featured the first-ever comic book superhero. Which superhero was it?",
       "answer": "Superman",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "history-first-sidekick",
@@ -1312,7 +1435,8 @@
         "Robin",
         "Dick Grayson",
         "Robin the Boy Wonder"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "history-captain-america-1",
@@ -1324,7 +1448,8 @@
         "Captain America",
         "Captain America Comics #1",
         "Captain America Comics 1"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "history-first-female-led-comic",
@@ -1335,7 +1460,8 @@
       "acceptableAnswers": [
         "Wonder Woman",
         "Wonder Woman #1"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "history-marvel-age-start",
@@ -1347,7 +1473,8 @@
         "Fantastic Four",
         "The Fantastic Four",
         "Fantastic Four #1"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "history-watchmen",
@@ -1357,7 +1484,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Watchmen"
-      ]
+      ],
+      "subcategory": "comics-graphic-novels"
     },
     {
       "slug": "who-wrote-the-classic-novel-don-quixote",
@@ -1365,7 +1493,8 @@
       "answer": "Miguel de Cervantes",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "minority-report-adaptation",
@@ -1377,7 +1506,8 @@
       "acceptableAnswers": [
         "Minority Report",
         "The Minority Report"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "no-country-for-old-men-adaptation",
@@ -1388,7 +1518,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "No Country for Old Men"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "the-shining-adaptation",
@@ -1399,7 +1530,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Shining"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "forrest-gump-adaptation",
@@ -1410,7 +1542,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Forrest Gump"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "the-godfather-adaptation",
@@ -1421,7 +1554,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Godfather"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "jurassic-park-adaptation",
@@ -1432,7 +1566,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Jurassic Park"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "the-silence-of-the-lambs-adaptation",
@@ -1443,11 +1578,12 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Silence of the Lambs"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "children-of-men-adaptation",
-      "question": "What P.D. James novel was adapted into a 2006 film starring Clive Owen and directed by Alfonso Cuarón?",
+      "question": "What P.D. James novel was adapted into a 2006 film starring Clive Owen and directed by Alfonso Cuar\u00f3n?",
       "answer": "Children of Men",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1455,7 +1591,8 @@
       "acceptableAnswers": [
         "Children of Men",
         "The Children of Men"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "the-road-adaptation",
@@ -1466,7 +1603,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Road"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "gone-girl-adaptation",
@@ -1477,7 +1615,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Gone Girl"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "fight-club-adaptation",
@@ -1488,7 +1627,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Fight Club"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "blade-runner-adaptation",
@@ -1499,7 +1639,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Blade Runner"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "the-prestige-adaptation",
@@ -1510,7 +1651,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Prestige"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "misery-adaptation",
@@ -1521,7 +1663,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Misery"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "goodfellas-adaptation",
@@ -1532,7 +1675,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Wiseguy"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "jaws-adaptation",
@@ -1543,7 +1687,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Jaws"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "the-green-mile-adaptation",
@@ -1554,7 +1699,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Green Mile"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "drive-adaptation",
@@ -1565,7 +1711,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Drive"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "which-classic-novel-begins-with-the-line-call-me-ishmael",
@@ -1573,7 +1720,8 @@
       "answer": "Moby Dick",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "which-fictional-detective-lives-at-221b-baker-street",
@@ -1581,7 +1729,8 @@
       "answer": "Sherlock Holmes",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "which-artist-painted-the-starry-night",
@@ -1589,7 +1738,8 @@
       "answer": "Vincent van Gogh",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "who-painted-the-mona-lisa",
@@ -1597,7 +1747,8 @@
       "answer": "Leonardo da Vinci",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "who-wrote-the-odyssey",
@@ -1605,42 +1756,48 @@
       "answer": "Homer",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "it-was-the-best-of-times",
       "question": "In what book does the opening line read: 'It was the best of times, it was the worst of times.'?",
       "answer": "A Tale of Two Cities",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "all-children-grow-up",
       "question": "In what classic children's book does the opening line read: 'All children, except one, grow up.'?",
       "answer": "Peter Pan",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "mr-and-mrs-dursley",
       "question": "In what book does the opening line read: 'Mr. and Mrs. Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much.'?",
       "answer": "Harry Potter and the Sorcerer's Stone",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "in-a-hole-in-the-ground",
       "question": "In what book does the opening line read: 'In a hole in the ground there lived a hobbit.'?",
       "answer": "The Hobbit",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "it-was-a-bright-cold-day",
       "question": "In what book does the opening line read: 'It was a bright cold day in April, and the clocks were striking thirteen.'?",
       "answer": "1984",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "american-psycho-adaptation",
@@ -1651,18 +1808,20 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "American Psycho"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "the-revenant-adaptation",
-      "question": "What Michael Punke novel about fur trappers in the Dakota wilderness was adapted into a 2015 film starring Leonardo DiCaprio and directed by Alejandro G. Iñárritu?",
+      "question": "What Michael Punke novel about fur trappers in the Dakota wilderness was adapted into a 2015 film starring Leonardo DiCaprio and directed by Alejandro G. I\u00f1\u00e1rritu?",
       "answer": "The Revenant",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Revenant"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "the-princess-bride-adaptation",
@@ -1673,7 +1832,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Princess Bride"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "the-catcher-in-the-rye-classic",
@@ -1685,7 +1845,8 @@
       "acceptableAnswers": [
         "The Catcher in the Rye",
         "Catcher in the Rye"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "to-kill-a-mockingbird-classic",
@@ -1696,7 +1857,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "To Kill a Mockingbird"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-great-gatsby-classic",
@@ -1708,7 +1870,8 @@
       "acceptableAnswers": [
         "The Great Gatsby",
         "Great Gatsby"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "lord-of-the-flies-classic",
@@ -1720,7 +1883,8 @@
       "acceptableAnswers": [
         "Lord of the Flies",
         "The Lord of the Flies"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "of-mice-and-men-classic",
@@ -1731,7 +1895,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Of Mice and Men"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "1984-classic",
@@ -1743,7 +1908,8 @@
       "acceptableAnswers": [
         "1984",
         "Nineteen Eighty-Four"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "animal-farm-classic",
@@ -1754,7 +1920,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Animal Farm"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "fahrenheit-451-classic",
@@ -1765,7 +1932,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Fahrenheit 451"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "brave-new-world-classic",
@@ -1776,7 +1944,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Brave New World"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-crucible-classic",
@@ -1787,7 +1956,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Crucible"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-scarlet-letter-classic",
@@ -1799,7 +1969,8 @@
       "acceptableAnswers": [
         "The Scarlet Letter",
         "Scarlet Letter"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "frankenstein-classic",
@@ -1811,7 +1982,8 @@
       "acceptableAnswers": [
         "Frankenstein",
         "Frankenstein; or, The Modern Prometheus"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "romeo-and-juliet-classic",
@@ -1822,7 +1994,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Romeo and Juliet"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "macbeth-classic",
@@ -1833,7 +2006,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Macbeth"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "hamlet-classic",
@@ -1844,7 +2018,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Hamlet"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "pride-and-prejudice-classic",
@@ -1855,7 +2030,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Pride and Prejudice"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-grapes-of-wrath-classic",
@@ -1867,7 +2043,8 @@
       "acceptableAnswers": [
         "The Grapes of Wrath",
         "Grapes of Wrath"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-odyssey-classic",
@@ -1879,7 +2056,8 @@
       "acceptableAnswers": [
         "The Odyssey",
         "Odyssey"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-outsiders-classic",
@@ -1890,7 +2068,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Outsiders"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "death-of-a-salesman-classic",
@@ -1901,7 +2080,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Death of a Salesman"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "heart-of-darkness-classic",
@@ -1912,7 +2092,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Heart of Darkness"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-old-man-and-the-sea-classic",
@@ -1924,7 +2105,8 @@
       "acceptableAnswers": [
         "The Old Man and the Sea",
         "Old Man and the Sea"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "moby-dick-classic",
@@ -1936,29 +2118,32 @@
       "acceptableAnswers": [
         "Moby-Dick",
         "Moby Dick"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "jane-eyre-classic",
-      "question": "What 1847 novel by Charlotte Brontë details the personal growth and complex romance of an orphaned governess who discovers a dark secret hidden by her employer, Mr. Rochester?",
+      "question": "What 1847 novel by Charlotte Bront\u00eb details the personal growth and complex romance of an orphaned governess who discovers a dark secret hidden by her employer, Mr. Rochester?",
       "answer": "Jane Eyre",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Jane Eyre"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "wuthering-heights-classic",
-      "question": "What 1847 novel by Emily Brontë details the destructive, consuming passion between the intense Heathcliff and Catherine Earnshaw on the isolated Yorkshire moors?",
+      "question": "What 1847 novel by Emily Bront\u00eb details the destructive, consuming passion between the intense Heathcliff and Catherine Earnshaw on the isolated Yorkshire moors?",
       "answer": "Wuthering Heights",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Wuthering Heights"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-devil-wears-prada-adaptation",
@@ -1969,7 +2154,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Devil Wears Prada"
-      ]
+      ],
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "fear-and-loathing-in-las-vegas-novel",
@@ -1981,7 +2167,8 @@
       "acceptableAnswers": [
         "Fear and Loathing in Las Vegas",
         "Fear and Loathing in Las Vegas: A Savage Journey to the Heart of the American Dream"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-rum-diary-novel",
@@ -1992,7 +2179,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Rum Diary"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-man-in-the-high-castle-novel",
@@ -2003,7 +2191,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Man in the High Castle"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "infinite-jest-novel",
@@ -2014,7 +2203,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Infinite Jest"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-pale-king-novel",
@@ -2025,7 +2215,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Pale King"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "american-psycho-novel",
@@ -2036,7 +2227,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "American Psycho"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "less-than-zero-novel",
@@ -2047,7 +2239,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Less Than Zero"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-devil-wears-prada-novel",
@@ -2058,18 +2251,20 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Devil Wears Prada"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "trainspotting-novel",
-      "question": "What 1993 novel by Irvine Welsh details the gritty, episodic lives and substance abuse struggles of a group of heroin users—including Mark Renton and Sick Boy—in Edinburgh, Scotland?",
+      "question": "What 1993 novel by Irvine Welsh details the gritty, episodic lives and substance abuse struggles of a group of heroin users\u2014including Mark Renton and Sick Boy\u2014in Edinburgh, Scotland?",
       "answer": "Trainspotting",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Trainspotting"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-hunger-games-novel",
@@ -2080,7 +2275,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Hunger Games"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "twilight-novel",
@@ -2091,7 +2287,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Twilight"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "harry-potter-and-the-sorcerers-stone-novel",
@@ -2105,7 +2302,8 @@
         "Harry Potter and the Philosopher's Stone",
         "Harry Potter and the Philosophers Stone",
         "Harry Potter and the Sorcerers Stone"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-fellowship-of-the-ring-novel",
@@ -2118,7 +2316,8 @@
         "The Fellowship of the Ring",
         "The Lord of the Rings: The Fellowship of the Ring",
         "The Lord of the Rings"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-da-vinci-code-novel",
@@ -2129,7 +2328,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Da Vinci Code"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "gone-girl-novel",
@@ -2140,7 +2340,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Gone Girl"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-fault-in-our-stars-novel",
@@ -2151,7 +2352,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Fault in Our Stars"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "dune-novel",
@@ -2162,7 +2364,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Dune"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-notebook-novel",
@@ -2173,7 +2376,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Notebook"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-chronicles-of-narnia-lion-witch-wardrobe-novel",
@@ -2187,7 +2391,8 @@
         "The Lion the Witch and the Wardrobe",
         "The Chronicles of Narnia: The Lion, the Witch and the Wardrobe",
         "The Chronicles of Narnia"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "divergent-novel",
@@ -2198,7 +2403,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Divergent"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-martian-novel",
@@ -2209,7 +2415,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Martian"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "crazy-rich-asians-novel",
@@ -2220,7 +2427,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Crazy Rich Asians"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-help-novel",
@@ -2231,7 +2439,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Help"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "life-of-pi-novel",
@@ -2242,7 +2451,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Life of Pi"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "the-perks-of-being-a-wallflower-novel",
@@ -2253,7 +2463,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "The Perks of Being a Wallflower"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "it-novel",
@@ -2264,7 +2475,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "It"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "shrek-novel",
@@ -2276,7 +2488,8 @@
       "acceptableAnswers": [
         "Shrek!",
         "Shrek"
-      ]
+      ],
+      "subcategory": "classic-literature"
     },
     {
       "slug": "who-famously-painted-the-starry-night",
@@ -2288,7 +2501,8 @@
       ],
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "which-greek-mythological-figure-famously-flew-too-close-to-the-sun",
@@ -2296,7 +2510,8 @@
       "answer": "Icarus",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "which-greek-mythological-hero-slew-the-medusa",
@@ -2304,7 +2519,8 @@
       "answer": "Perseus",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "who-wrote-the-classic-novel-pride-and-prejudice",
@@ -2315,7 +2531,8 @@
       ],
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "who-wrote-the-famous-novel-to-kill-a-mockingbird",
@@ -2326,7 +2543,8 @@
       ],
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "before-becoming-a-major-film-franchise-harry-potter-was-a-series-of-books-written-by-which-author",
@@ -2338,804 +2556,1136 @@
       ],
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "artist-persistence-of-memory-dali",
       "question": "Which Spanish surrealist artist painted 'The Persistence of Memory,' the famous 1931 oil painting featuring melting clocks draped over a barren landscape?",
-      "answer": "Salvador Dalí",
-      "acceptableAnswers": ["Salvador Dalí", "Dalí"],
+      "answer": "Salvador Dal\u00ed",
+      "acceptableAnswers": [
+        "Salvador Dal\u00ed",
+        "Dal\u00ed"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-the-scream-munch",
       "question": "What is the name of this famous painting by Edvard Munch?",
       "answer": "The Scream",
-      "acceptableAnswers": ["The Scream", "Scream"],
+      "acceptableAnswers": [
+        "The Scream",
+        "Scream"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/The_Scream.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f4/The_Scream.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-birth-of-venus-botticelli",
       "question": "Which Italian Renaissance painter created 'The Birth of Venus?'",
       "answer": "Sandro Botticelli",
-      "acceptableAnswers": ["Sandro Botticelli", "Botticelli"],
+      "acceptableAnswers": [
+        "Sandro Botticelli",
+        "Botticelli"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Sandro_Botticelli_046.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Sandro_Botticelli_046.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-guernica-picasso",
       "question": "Which Spanish painter created 'Guernica,' the massive 1937 anti-war mural depicting the horrors of the bombing of a Basque town during the Spanish Civil War?",
       "answer": "Pablo Picasso",
-      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "acceptableAnswers": [
+        "Pablo Picasso",
+        "Picasso"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-water-lilies-monet",
       "question": "Which French Impressionist painter created the 'Water Lilies' series, hundreds of paintings of his flower garden and lily pond in Giverny?",
       "answer": "Claude Monet",
-      "acceptableAnswers": ["Claude Monet", "Monet"],
+      "acceptableAnswers": [
+        "Claude Monet",
+        "Monet"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/14/Claude_Monet_-_Water_Lilies_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/14/Claude_Monet_-_Water_Lilies_-_Google_Art_Project.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-campbells-soup-warhol",
       "question": "Which American Pop artist created 'Campbell's Soup Cans,' the 1962 series of 32 silkscreened canvases each depicting a different variety of canned soup?",
       "answer": "Andy Warhol",
-      "acceptableAnswers": ["Andy Warhol", "Warhol"],
+      "acceptableAnswers": [
+        "Andy Warhol",
+        "Warhol"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-the-night-watch-rembrandt",
       "question": "Which Dutch painter created 'The Night Watch,' the 1642 massive group portrait of a militia company, famous for its dramatic use of light and shadow?",
       "answer": "Rembrandt van Rijn",
-      "acceptableAnswers": ["Rembrandt van Rijn", "Rembrandt"],
+      "acceptableAnswers": [
+        "Rembrandt van Rijn",
+        "Rembrandt"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/94/The_Nightwatch_by_Rembrandt_-_Rijksmuseum.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/94/The_Nightwatch_by_Rembrandt_-_Rijksmuseum.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-school-of-athens-raphael",
       "question": "Which Italian High Renaissance painter created 'The School of Athens,' the Vatican fresco depicting Plato, Aristotle, and other ancient philosophers?",
       "answer": "Raphael",
-      "acceptableAnswers": ["Raphael", "Raffaello Sanzio"],
+      "acceptableAnswers": [
+        "Raphael",
+        "Raffaello Sanzio"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-liberty-leading-delacroix",
       "question": "Eugene Delacroix's most famous work is called 'Liberty Leading the People.' What revolution is being depicted here?",
       "answer": "The July Revolution",
-      "acceptableAnswers": ["The July Revolution", "July Revolution"],
+      "acceptableAnswers": [
+        "The July Revolution",
+        "July Revolution"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Eug%C3%A8ne_Delacroix_-_La_libert%C3%A9_guidant_le_peuple.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Eug%C3%A8ne_Delacroix_-_La_libert%C3%A9_guidant_le_peuple.jpg",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "title-creation-of-adam",
       "question": "What is the title of Michelangelo's famous 1512 fresco on the ceiling of the Sistine Chapel, depicting God reaching out with his finger to give life to Adam?",
       "answer": "The Creation of Adam",
-      "acceptableAnswers": ["The Creation of Adam", "Creation of Adam"],
+      "acceptableAnswers": [
+        "The Creation of Adam",
+        "Creation of Adam"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-fountain-duchamp",
       "question": "What is the title of Marcel Duchamp's 1917 'ready-made' sculpture, which consisted of a porcelain urinal signed with the pseudonym 'R. Mutt'?",
       "answer": "Fountain",
-      "acceptableAnswers": ["Fountain"],
+      "acceptableAnswers": [
+        "Fountain"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Marcel_Duchamp%2C_1917%2C_Fountain%2C_photograph_by_Alfred_Stieglitz.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Marcel_Duchamp%2C_1917%2C_Fountain%2C_photograph_by_Alfred_Stieglitz.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-impression-sunrise",
       "question": "What artistic movement is French painter Claude Monet most closely associated with?",
       "answer": "Impressionism",
-      "acceptableAnswers": ["Impressionism", "Impression, Sunrise", "Impression Sunrise"],
+      "acceptableAnswers": [
+        "Impressionism",
+        "Impression, Sunrise",
+        "Impression Sunrise"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Monet_-_Impression%2C_Sunrise.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Monet_-_Impression%2C_Sunrise.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-the-last-supper",
       "question": "What is the title of Leonardo da Vinci's 1498 mural painting depicting Jesus and his twelve apostles seated at a long table during the Passover meal?",
       "answer": "The Last Supper",
-      "acceptableAnswers": ["The Last Supper", "Last Supper", "Il Cenacolo"],
+      "acceptableAnswers": [
+        "The Last Supper",
+        "Last Supper",
+        "Il Cenacolo"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-david-michelangelo",
       "question": "What is the title of Michelangelo's 17-foot-tall marble statue of the biblical hero who defeated Goliath, carved from a single block of stone and displayed in Florence?",
       "answer": "David",
-      "acceptableAnswers": ["David", "Michelangelo's David"],
+      "acceptableAnswers": [
+        "David",
+        "Michelangelo's David"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Michelangelo%27s_David_-_right_view.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Michelangelo%27s_David_-_right_view.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "movement-surrealism",
-      "question": "What early 20th-century avant-garde art movement, led by André Breton and Salvador Dalí, is characterized by dreamlike imagery, unexpected juxtapositions, and exploration of the unconscious mind?",
+      "question": "What early 20th-century avant-garde art movement, led by Andr\u00e9 Breton and Salvador Dal\u00ed, is characterized by dreamlike imagery, unexpected juxtapositions, and exploration of the unconscious mind?",
       "answer": "Surrealism",
-      "acceptableAnswers": ["Surrealism"],
+      "acceptableAnswers": [
+        "Surrealism"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "movement-impressionism",
       "question": "What 19th-century French art movement, pioneered by Claude Monet and Pierre-Auguste Renoir, captures fleeting light and color using loose, visible brushstrokes and outdoor scenes?",
       "answer": "Impressionism",
-      "acceptableAnswers": ["Impressionism"],
+      "acceptableAnswers": [
+        "Impressionism"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Monet_-_Impression%2C_Sunrise.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Monet_-_Impression%2C_Sunrise.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "movement-cubism",
-      "question": "What early 20th-century art movement, co-founded by Pablo Picasso and Georges Braque, depicts subjects from multiple angles at once, breaking them down into geometric shapes — as foreshadowed in the pictured 1907 Picasso work 'Les Demoiselles d'Avignon'?",
+      "question": "What early 20th-century art movement, co-founded by Pablo Picasso and Georges Braque, depicts subjects from multiple angles at once, breaking them down into geometric shapes \u2014 as foreshadowed in the pictured 1907 Picasso work 'Les Demoiselles d'Avignon'?",
       "answer": "Cubism",
-      "acceptableAnswers": ["Cubism"],
+      "acceptableAnswers": [
+        "Cubism"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/4/4c/Les_Demoiselles_d%27Avignon.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/4/4c/Les_Demoiselles_d%27Avignon.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-old-guitarist-picasso",
-      "question": "Which Spanish artist painted this melancholy Blue Period work, 'The Old Guitarist' (1903–04), depicting a blind, hunched street musician?",
+      "question": "Which Spanish artist painted this melancholy Blue Period work, 'The Old Guitarist' (1903\u201304), depicting a blind, hunched street musician?",
       "answer": "Pablo Picasso",
-      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "acceptableAnswers": [
+        "Pablo Picasso",
+        "Picasso"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/b/bc/Old_guitarist_chicago.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/b/bc/Old_guitarist_chicago.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-three-musicians-picasso",
       "question": "Which artist painted this 1921 Synthetic Cubist work, 'Three Musicians,' featuring flat, brightly colored figures that resemble cut-and-pasted paper?",
       "answer": "Pablo Picasso",
-      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "acceptableAnswers": [
+        "Pablo Picasso",
+        "Picasso"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/6/6a/Pablo_Picasso%2C_1921%2C_Nous_autres_musiciens_%28Three_Musicians%29%2C_oil_on_canvas%2C_204.5_x_188.3_cm%2C_Philadelphia_Museum_of_Art.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/6/6a/Pablo_Picasso%2C_1921%2C_Nous_autres_musiciens_%28Three_Musicians%29%2C_oil_on_canvas%2C_204.5_x_188.3_cm%2C_Philadelphia_Museum_of_Art.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "movement-pop-art",
       "question": "What mid-20th-century art movement, associated with Andy Warhol and Roy Lichtenstein, borrows images from advertising, comic books, and consumer products?",
       "answer": "Pop Art",
-      "acceptableAnswers": ["Pop Art", "Pop art"],
+      "acceptableAnswers": [
+        "Pop Art",
+        "Pop art"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "movement-abstract-expressionism",
       "question": "What post-World War II American art movement, led by Jackson Pollock and Willem de Kooning, emphasizes spontaneous, automatic, or subconscious creation with energetic brushwork?",
       "answer": "Abstract Expressionism",
-      "acceptableAnswers": ["Abstract Expressionism"],
+      "acceptableAnswers": [
+        "Abstract Expressionism"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "movement-romanticism",
       "question": "What late 18th-to-19th century artistic movement emphasized intense emotion, individual experience, the sublime power of nature, and dramatic subjects, as seen in the works of Delacroix and Turner?",
       "answer": "Romanticism",
-      "acceptableAnswers": ["Romanticism"],
+      "acceptableAnswers": [
+        "Romanticism"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Eug%C3%A8ne_Delacroix_-_La_libert%C3%A9_guidant_le_peuple.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Eug%C3%A8ne_Delacroix_-_La_libert%C3%A9_guidant_le_peuple.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "movement-renaissance",
       "question": "What cultural movement spanning the 14th to 17th centuries, centered in Italy with masters like Leonardo da Vinci, Michelangelo, and Raphael, marked a rebirth of classical Greek and Roman ideals in art?",
       "answer": "Renaissance",
-      "acceptableAnswers": ["Renaissance", "Italian Renaissance"],
+      "acceptableAnswers": [
+        "Renaissance",
+        "Italian Renaissance"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-mona-lisa",
       "question": "What is the title of this famous 1503 painting by Leonardo da Vinci?",
       "answer": "Mona Lisa",
-      "acceptableAnswers": ["Mona Lisa", "La Gioconda", "Monna Lisa"],
+      "acceptableAnswers": [
+        "Mona Lisa",
+        "La Gioconda",
+        "Monna Lisa"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-starry-night",
       "question": "What is the title of this famous 1889 painting by Vincent van Gogh?",
       "answer": "The Starry Night",
-      "acceptableAnswers": ["The Starry Night", "Starry Night"],
+      "acceptableAnswers": [
+        "The Starry Night",
+        "Starry Night"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/66/VanGogh-starry_night_ballance1.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/66/VanGogh-starry_night_ballance1.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-last-supper-2",
       "question": "What is the title of this famous 1498 mural painting by Leonardo da Vinci?",
       "answer": "The Last Supper",
-      "acceptableAnswers": ["The Last Supper", "Last Supper", "Il Cenacolo"],
+      "acceptableAnswers": [
+        "The Last Supper",
+        "Last Supper",
+        "Il Cenacolo"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-guernica",
       "question": "What is the title of Pablo Picasso's famous 1937 anti-war mural depicting the bombing of a Basque town during the Spanish Civil War?",
       "answer": "Guernica",
-      "acceptableAnswers": ["Guernica", "The Guernica"],
+      "acceptableAnswers": [
+        "Guernica",
+        "The Guernica"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-birth-of-venus-2",
       "question": "What is the title of this famous 1486 painting by Sandro Botticelli?",
       "answer": "The Birth of Venus",
-      "acceptableAnswers": ["The Birth of Venus", "Birth of Venus"],
+      "acceptableAnswers": [
+        "The Birth of Venus",
+        "Birth of Venus"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Sandro_Botticelli_046.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Sandro_Botticelli_046.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-pieta",
       "question": "What is the title of this famous 1499 marble sculpture by Michelangelo?",
-      "answer": "Pietà",
-      "acceptableAnswers": ["Pietà", "Pieta", "The Pietà"],
+      "answer": "Piet\u00e0",
+      "acceptableAnswers": [
+        "Piet\u00e0",
+        "Pieta",
+        "The Piet\u00e0"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Michelangelo%27s_Piet%C3%A0_Saint_Peter%27s_Basilica_Vatican_City.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Michelangelo%27s_Piet%C3%A0_Saint_Peter%27s_Basilica_Vatican_City.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-american-gothic-2",
       "question": "What is the title of this famous 1930 painting by Grant Wood?",
       "answer": "American Gothic",
-      "acceptableAnswers": ["American Gothic"],
+      "acceptableAnswers": [
+        "American Gothic"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-self-portrait-van-gogh",
       "question": "What artist painted this 1887 self portrait?",
       "answer": "Vincent van Gogh",
-      "acceptableAnswers": ["Vincent van Gogh", "Van Gogh", "van Gogh"],
+      "acceptableAnswers": [
+        "Vincent van Gogh",
+        "Van Gogh",
+        "van Gogh"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "title-campbells-soup-cans-2",
       "question": "What is the title of Andy Warhol's famous 1962 silkscreen series depicting 32 varieties of canned soup?",
       "answer": "Campbell's Soup Cans",
-      "acceptableAnswers": ["Campbell's Soup Cans", "Campbells Soup Cans"],
+      "acceptableAnswers": [
+        "Campbell's Soup Cans",
+        "Campbells Soup Cans"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-mona-lisa",
       "question": "Which artist painted the Mona Lisa, the world's most famous portrait?",
       "answer": "Leonardo da Vinci",
-      "acceptableAnswers": ["Leonardo da Vinci", "da Vinci"],
+      "acceptableAnswers": [
+        "Leonardo da Vinci",
+        "da Vinci"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-starry-night",
       "question": "Which artist painted The Starry Night, the iconic swirling night sky masterpiece?",
       "answer": "Vincent van Gogh",
-      "acceptableAnswers": ["Vincent van Gogh", "Van Gogh", "van Gogh"],
+      "acceptableAnswers": [
+        "Vincent van Gogh",
+        "Van Gogh",
+        "van Gogh"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/66/VanGogh-starry_night_ballance1.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/66/VanGogh-starry_night_ballance1.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-last-supper",
       "question": "Which artist painted The Last Supper, the famous mural of Jesus with his disciples?",
       "answer": "Leonardo da Vinci",
-      "acceptableAnswers": ["Leonardo da Vinci", "da Vinci"],
+      "acceptableAnswers": [
+        "Leonardo da Vinci",
+        "da Vinci"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Leonardo_da_Vinci_-_The_Last_Supper_high_res.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-guernica-2",
       "question": "Which famous artist painted the stark 1937 anti-war mural titled Guernica?",
       "answer": "Pablo Picasso",
-      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "acceptableAnswers": [
+        "Pablo Picasso",
+        "Picasso"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-birth-of-venus-2",
       "question": "Which artist painted The Birth of Venus, the famous goddess rising from the sea foam?",
       "answer": "Sandro Botticelli",
-      "acceptableAnswers": ["Sandro Botticelli", "Botticelli"],
+      "acceptableAnswers": [
+        "Sandro Botticelli",
+        "Botticelli"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Sandro_Botticelli_046.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Sandro_Botticelli_046.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-pieta",
-      "question": "Which artist sculpted the Pietà, the moving marble statue of Mary mourning Jesus?",
+      "question": "Which artist sculpted the Piet\u00e0, the moving marble statue of Mary mourning Jesus?",
       "answer": "Michelangelo",
-      "acceptableAnswers": ["Michelangelo", "Michelangelo Buonarroti"],
+      "acceptableAnswers": [
+        "Michelangelo",
+        "Michelangelo Buonarroti"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Michelangelo%27s_Piet%C3%A0_Saint_Peter%27s_Basilica_Vatican_City.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Michelangelo%27s_Piet%C3%A0_Saint_Peter%27s_Basilica_Vatican_City.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-american-gothic-3",
       "question": "Which artist painted American Gothic, the iconic painting of a stern farmer couple?",
       "answer": "Grant Wood",
-      "acceptableAnswers": ["Grant Wood"],
+      "acceptableAnswers": [
+        "Grant Wood"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-self-portrait-van-gogh",
       "question": "Which artist painted this famous Self-Portrait from 1889?",
       "answer": "Vincent van Gogh",
-      "acceptableAnswers": ["Vincent van Gogh", "Van Gogh", "van Gogh"],
+      "acceptableAnswers": [
+        "Vincent van Gogh",
+        "Van Gogh",
+        "van Gogh"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-campbells-soup-cans-3",
       "question": "Which artist created Campbell's Soup Cans?",
       "answer": "Andy Warhol",
-      "acceptableAnswers": ["Andy Warhol", "Warhol"],
+      "acceptableAnswers": [
+        "Andy Warhol",
+        "Warhol"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "historical-figure-napoleon",
       "question": "What historical figure is depicted in this 1801 painting by Jacques-Louis David?",
       "answer": "Napoleon Bonaparte",
-      "acceptableAnswers": ["Napoleon Bonaparte", "Napoleon"],
+      "acceptableAnswers": [
+        "Napoleon Bonaparte",
+        "Napoleon"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Napoleon_at_the_Great_St._Bernard_-_Jacques-Louis_David_-_Google_Cultural_Institute.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Napoleon_at_the_Great_St._Bernard_-_Jacques-Louis_David_-_Google_Cultural_Institute.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "historical-figure-george-washington",
       "question": "What historical figure is depicted in this portrait by Gilbert Stuart?",
       "answer": "George Washington",
-      "acceptableAnswers": ["George Washington", "Washington"],
+      "acceptableAnswers": [
+        "George Washington",
+        "Washington"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://images.metmuseum.org/CRDImages/ad/web-large/DT62.jpg"
+      "imageUrl": "https://images.metmuseum.org/CRDImages/ad/web-large/DT62.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-norman-rockwell-freedom-from-want",
       "question": "Which iconic American artist painted this 1920 Saturday Evening Post cover, 'Hey Fellers, Come On In!,' showing a boy waving his friends toward a swimming hole?",
       "answer": "Norman Rockwell",
-      "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
+      "acceptableAnswers": [
+        "Norman Rockwell",
+        "Rockwell"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/73/Norman_Rockwell_-_Hey_Fellers%2C_Come_On_In%21_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/73/Norman_Rockwell_-_Hey_Fellers%2C_Come_On_In%21_-_Google_Art_Project.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-norman-rockwell-rosie",
       "question": "Which iconic American artist painted this 1918 Saturday Evening Post cover depicting Cousin Reginald in a schoolroom spelling bee?",
       "answer": "Norman Rockwell",
-      "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
+      "acceptableAnswers": [
+        "Norman Rockwell",
+        "Rockwell"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/Norman_Rockwell_-_Cousin_Reginald_Spells_Peloponnesus_%28Spelling_Bee%29_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/Norman_Rockwell_-_Cousin_Reginald_Spells_Peloponnesus_%28Spelling_Bee%29_-_Google_Art_Project.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-norman-rockwell-boy-baby-carriage",
       "question": "Which iconic American artist painted this 1916 work, 'Boy with Baby Carriage,' which became his very first cover for The Saturday Evening Post?",
       "answer": "Norman Rockwell",
-      "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
+      "acceptableAnswers": [
+        "Norman Rockwell",
+        "Rockwell"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/Norman_Rockwell_-_Boy_with_Baby_Carriage_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/Norman_Rockwell_-_Boy_with_Baby_Carriage_-_Google_Art_Project.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-norman-rockwell-no-swimming",
       "question": "Which iconic American artist painted this 1921 Saturday Evening Post cover, 'No Swimming,' showing three boys fleeing a swimming hole while pulling on their clothes?",
       "answer": "Norman Rockwell",
-      "acceptableAnswers": ["Norman Rockwell", "Rockwell"],
+      "acceptableAnswers": [
+        "Norman Rockwell",
+        "Rockwell"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/11/Norman_Rockwell_-_No_Swimming_-_Google_Art_Project.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/11/Norman_Rockwell_-_No_Swimming_-_Google_Art_Project.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-banksy-balloon",
       "question": "Which anonymous British street artist created 'Girl with Balloon', the famous stencil of a young girl reaching toward a red heart-shaped balloon?",
       "answer": "Banksy",
-      "acceptableAnswers": ["Banksy"],
+      "acceptableAnswers": [
+        "Banksy"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "artist-banksy-flower-thrower",
       "question": "Which anonymous British street artist created 'Love Is in the Air' (also known as the 'Flower Thrower'), a stencil of a masked protester hurling a bouquet of flowers instead of a Molotov cocktail?",
       "answer": "Banksy",
-      "acceptableAnswers": ["Banksy"],
+      "acceptableAnswers": [
+        "Banksy"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "portrait-mark-twain",
       "question": "Which American author, famous for writing 'The Adventures of Tom Sawyer' and 'Adventures of Huckleberry Finn,' is depicted in this portrait?",
       "answer": "Mark Twain",
-      "acceptableAnswers": ["Mark Twain", "Samuel Clemens", "Samuel Langhorne Clemens"],
+      "acceptableAnswers": [
+        "Mark Twain",
+        "Samuel Clemens",
+        "Samuel Langhorne Clemens"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/25/Mark_Twain%2C_Brady-Handy_photo_portrait%2C_Feb_7%2C_1871%2C_cropped.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/25/Mark_Twain%2C_Brady-Handy_photo_portrait%2C_Feb_7%2C_1871%2C_cropped.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "portrait-shakespeare",
       "question": "Which English playwright, author of 'Romeo and Juliet' and 'Hamlet,' is depicted in this portrait?",
       "answer": "William Shakespeare",
-      "acceptableAnswers": ["William Shakespeare", "Shakespeare"],
+      "acceptableAnswers": [
+        "William Shakespeare",
+        "Shakespeare"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Shakespeare.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Shakespeare.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "portrait-pablo-picasso",
       "question": "Which Spanish artist, known for pioneering Cubism and co-founding it with Georges Braque, is depicted in this portrait?",
       "answer": "Pablo Picasso",
-      "acceptableAnswers": ["Pablo Picasso", "Picasso"],
+      "acceptableAnswers": [
+        "Pablo Picasso",
+        "Picasso"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/98/Pablo_picasso_1.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/98/Pablo_picasso_1.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "portrait-andy-warhol",
       "question": "Which American Pop artist, famous for 'Campbell's Soup Cans' and his silkscreen portraits of Marilyn Monroe, is depicted in this photograph?",
       "answer": "Andy Warhol",
-      "acceptableAnswers": ["Andy Warhol", "Warhol"],
+      "acceptableAnswers": [
+        "Andy Warhol",
+        "Warhol"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Andy_Warhol_by_Jack_Mitchell.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Andy_Warhol_by_Jack_Mitchell.jpg",
+      "subcategory": "art-history-artists"
     },
     {
       "slug": "novel-robinson-crusoe",
       "question": "What 1719 novel by Daniel Defoe details the survival story of a shipwrecked Englishman who spends 28 years on a remote tropical island before being rescued?",
       "answer": "Robinson Crusoe",
-      "acceptableAnswers": ["Robinson Crusoe", "The Life and Strange Surprizing Adventures of Robinson Crusoe"],
+      "acceptableAnswers": [
+        "Robinson Crusoe",
+        "The Life and Strange Surprizing Adventures of Robinson Crusoe"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-time-machine",
       "question": "What 1895 novel by H.G. Wells follows an unnamed Victorian scientist who builds a machine that allows him to travel far into the future?",
       "answer": "The Time Machine",
-      "acceptableAnswers": ["The Time Machine", "Time Machine"],
+      "acceptableAnswers": [
+        "The Time Machine",
+        "Time Machine"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-series-of-unfortunate-events",
       "question": "What children's book series by Lemony Snicket follows the tragic misadventures of the three orphaned Baudelaire children as they try to escape the villainous Count Olaf?",
       "answer": "A Series of Unfortunate Events",
-      "acceptableAnswers": ["A Series of Unfortunate Events", "Series of Unfortunate Events"],
+      "acceptableAnswers": [
+        "A Series of Unfortunate Events",
+        "Series of Unfortunate Events"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-goosebumps",
       "question": "What is the bestselling children's horror book series by R.L. Stine, with titles like 'Welcome to Dead House' and 'The Haunted Mask?'",
       "answer": "Goosebumps",
-      "acceptableAnswers": ["Goosebumps"],
+      "acceptableAnswers": [
+        "Goosebumps"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "novel-nancy-drew",
       "question": "What long-running mystery book series follows a teenage sleuth who drives a blue convertible and solves crimes with her friends Bess and George?",
       "answer": "Nancy Drew",
-      "acceptableAnswers": ["Nancy Drew", "Nancy Drew Mystery Stories"],
+      "acceptableAnswers": [
+        "Nancy Drew",
+        "Nancy Drew Mystery Stories"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-siddhartha",
       "question": "What 1922 novel by Hermann Hesse tells the spiritual journey of a man in ancient India who seeks enlightenment?",
       "answer": "Siddhartha",
-      "acceptableAnswers": ["Siddhartha"],
+      "acceptableAnswers": [
+        "Siddhartha"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-clockwork-orange",
       "question": "What 1962 dystopian novel by Anthony Burgess, written in an invented slang called Nadsat, follows the violent teenage delinquent Alex and his controversial aversion therapy in a futuristic Britain?",
       "answer": "A Clockwork Orange",
-      "acceptableAnswers": ["A Clockwork Orange", "Clockwork Orange"],
+      "acceptableAnswers": [
+        "A Clockwork Orange",
+        "Clockwork Orange"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-crime-and-punishment",
       "question": "What 1866 novel by Fyodor Dostoevsky follows the impoverished ex-student Raskolnikov as he commits a murder and grapples with guilt, paranoia, and moral redemption in St. Petersburg?",
       "answer": "Crime and Punishment",
-      "acceptableAnswers": ["Crime and Punishment"],
+      "acceptableAnswers": [
+        "Crime and Punishment"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-les-miserables",
       "question": "What 1862 novel by Victor Hugo follows the ex-convict Jean Valjean as he seeks redemption while being relentlessly pursued by Inspector Javert, set against the backdrop of the 1832 Paris Uprising?",
-      "answer": "Les Misérables",
-      "acceptableAnswers": ["Les Misérables", "Les Miserables"],
+      "answer": "Les Mis\u00e9rables",
+      "acceptableAnswers": [
+        "Les Mis\u00e9rables",
+        "Les Miserables"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-dracula",
       "question": "What 1897 Gothic horror novel by Bram Stoker tells the story of a vampire's attempt to move from Transylvania to England as Professor Van Helsing tries to stop him?",
       "answer": "Dracula",
-      "acceptableAnswers": ["Dracula"],
+      "acceptableAnswers": [
+        "Dracula"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-war-and-peace",
       "question": "What epic 1869 novel by Leo Tolstoy weaves together the lives of aristocratic families during the Napoleonic Wars and the French invasion of Russia?",
       "answer": "War and Peace",
-      "acceptableAnswers": ["War and Peace"],
+      "acceptableAnswers": [
+        "War and Peace"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-count-of-monte-cristo",
-      "question": "What 1844 adventure novel by Alexandre Dumas follows Edmond Dantès, a man wrongfully imprisoned who escapes and discovers a hidden treasure?",
+      "question": "What 1844 adventure novel by Alexandre Dumas follows Edmond Dant\u00e8s, a man wrongfully imprisoned who escapes and discovers a hidden treasure?",
       "answer": "The Count of Monte Cristo",
-      "acceptableAnswers": ["The Count of Monte Cristo", "Count of Monte Cristo"],
+      "acceptableAnswers": [
+        "The Count of Monte Cristo",
+        "Count of Monte Cristo"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-three-musketeers",
       "question": "What 1844 novel by Alexandre Dumas follows the young d'Artagnan as he joins Athos, Porthos, and Aramis in adventures under the motto 'All for one, and one for all'?",
       "answer": "The Three Musketeers",
-      "acceptableAnswers": ["The Three Musketeers", "Three Musketeers"],
+      "acceptableAnswers": [
+        "The Three Musketeers",
+        "Three Musketeers"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "novel-charlottes-web",
       "question": "What 1952 children's novel by E.B. White tells the story of a pig named Wilbur who is saved from slaughter by a clever spider named Charlotte who weaves words into her web?",
       "answer": "Charlotte's Web",
-      "acceptableAnswers": ["Charlotte's Web", "Charlottes Web"],
+      "acceptableAnswers": [
+        "Charlotte's Web",
+        "Charlottes Web"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-stuart-little",
       "question": "What 1945 children's novel by E.B. White follows the adventures of an anthropomorphic mouse born into a human family in New York City?",
       "answer": "Stuart Little",
-      "acceptableAnswers": ["Stuart Little"],
+      "acceptableAnswers": [
+        "Stuart Little"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-charlie-chocolate-factory",
       "question": "What 1964 children's novel by Roald Dahl follows a poor boy named Charlie Bucket who wins a golden ticket to tour the magical chocolate factory of the eccentric Willy Wonka?",
       "answer": "Charlie and the Chocolate Factory",
-      "acceptableAnswers": ["Charlie and the Chocolate Factory"],
+      "acceptableAnswers": [
+        "Charlie and the Chocolate Factory"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-holes",
       "question": "What 1998 novel by Louis Sachar follows Stanley Yelnats, a boy wrongly sent to a juvenile detention camp in the Texas desert where the boys are forced to dig holes to build character?",
       "answer": "Holes",
-      "acceptableAnswers": ["Holes"],
+      "acceptableAnswers": [
+        "Holes"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-bridge-to-terabithia",
       "question": "What 1977 children's novel by Katherine Paterson tells the story of two lonely fifth-graders, Jess Aarons and Leslie Burke, who create a magical fantasy kingdom in the woods called Terabithia?",
       "answer": "Bridge to Terabithia",
-      "acceptableAnswers": ["Bridge to Terabithia"],
+      "acceptableAnswers": [
+        "Bridge to Terabithia"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-matilda",
       "question": "What 1988 children's novel by Roald Dahl follows a brilliant, telekinetic little girl with neglectful parents and the terrifying headmistress Miss Trunchbull?",
       "answer": "Matilda",
-      "acceptableAnswers": ["Matilda"],
+      "acceptableAnswers": [
+        "Matilda"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-hatchet",
       "question": "What 1987 young adult novel by Gary Paulsen follows 13-year-old Brian Robeson, who survives a plane crash in the Canadian wilderness with nothing but a hatchet gifted by his mother?",
       "answer": "Hatchet",
-      "acceptableAnswers": ["Hatchet"],
+      "acceptableAnswers": [
+        "Hatchet"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-wrinkle-in-time",
       "question": "What 1962 children's science fantasy novel by Madeleine L'Engle follows Meg Murry, her brother Charles Wallace, and their friend Calvin as they travel through space and time to rescue her father from the evil IT?",
       "answer": "A Wrinkle in Time",
-      "acceptableAnswers": ["A Wrinkle in Time", "Wrinkle in Time"],
+      "acceptableAnswers": [
+        "A Wrinkle in Time",
+        "Wrinkle in Time"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "novel-speak-anderson",
       "question": "What 1999 young adult novel by Laurie Halse Anderson follows a high school freshman named Melinda who becomes an outcast after calling the police at a party, and gradually finds her voice through art class?",
       "answer": "Speak",
-      "acceptableAnswers": ["Speak"],
+      "acceptableAnswers": [
+        "Speak"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-lorax",
       "question": "What 1971 children's book by Dr. Seuss tells the environmental tale of the Once-ler who destroys a forest of Truffula trees despite the protests of a small, mustachioed creature who 'speaks for the trees'?",
       "answer": "The Lorax",
-      "acceptableAnswers": ["The Lorax", "Lorax"],
+      "acceptableAnswers": [
+        "The Lorax",
+        "Lorax"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
     },
     {
       "slug": "novel-cat-in-the-hat",
       "question": "What 1957 children's book by Dr. Seuss features a tall, mischievous cat in a striped hat who shows up at the house of two bored children on a rainy day and creates chaos with Thing One and Thing Two?",
       "answer": "The Cat in the Hat",
-      "acceptableAnswers": ["The Cat in the Hat", "Cat in the Hat"],
+      "acceptableAnswers": [
+        "The Cat in the Hat",
+        "Cat in the Hat"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-beowulf",
       "question": "What ancient Old English epic poem, set in Scandinavia, tells the story of a Geatish hero who battles the monster Grendel?",
       "answer": "Beowulf",
-      "acceptableAnswers": ["Beowulf"],
+      "acceptableAnswers": [
+        "Beowulf"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "novel-jekyll-and-hyde",
       "question": "What 1886 Gothic novella by Robert Louis Stevenson follows a London lawyer who investigates the strange connection between the respectable Dr. Henry Jekyll and the violent, monstrous Edward Hyde?",
       "answer": "Strange Case of Dr Jekyll and Mr Hyde",
-      "acceptableAnswers": ["Strange Case of Dr Jekyll and Mr Hyde", "Dr Jekyll and Mr Hyde", "The Strange Case of Dr Jekyll and Mr Hyde", "Jekyll and Hyde"],
+      "acceptableAnswers": [
+        "Strange Case of Dr Jekyll and Mr Hyde",
+        "Dr Jekyll and Mr Hyde",
+        "The Strange Case of Dr Jekyll and Mr Hyde",
+        "Jekyll and Hyde"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     },
     {
       "slug": "play-wicked",
       "question": "What hit Broadway musical by Stephen Schwartz and Winnie Holzman reimagines the world of Oz from the perspective of the Wicked Witch of the West?",
       "answer": "Wicked",
-      "acceptableAnswers": ["Wicked"],
+      "acceptableAnswers": [
+        "Wicked"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "play-sweeney-todd",
       "question": "What 1979 Stephen Sondheim musical thriller follows a wrongfully exiled barber who returns to London seeking bloody revenge?",
       "answer": "Sweeney Todd",
-      "acceptableAnswers": ["Sweeney Todd", "Sweeney Todd: The Demon Barber of Fleet Street"],
+      "acceptableAnswers": [
+        "Sweeney Todd",
+        "Sweeney Todd: The Demon Barber of Fleet Street"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "play-hamilton",
       "question": "What 2015 Broadway musical by Lin-Manuel Miranda uses hip-hop, R&B, and pop to tell the story of an orphaned immigrant who became one of America's Founding Fathers and the first U.S. Treasury Secretary?",
       "answer": "Hamilton",
-      "acceptableAnswers": ["Hamilton", "Hamilton: An American Musical"],
+      "acceptableAnswers": [
+        "Hamilton",
+        "Hamilton: An American Musical"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "play-rent",
       "question": "What 1996 Pulitzer Prize-winning rock musical by Jonathan Larson follows a group of struggling artists, musicians, and HIV-positive friends living in New York City's East Village during the AIDS crisis?",
       "answer": "Rent",
-      "acceptableAnswers": ["Rent"],
+      "acceptableAnswers": [
+        "Rent"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "adaptations-theater"
     },
     {
       "slug": "play-book-of-mormon",
       "question": "What 2011 Tony Award-winning musical by South Park creators Trey Parker, Robert Lopez, and Matt Stone follows two Mormon missionaries sent to a village in Uganda to spread their faith?",
       "answer": "The Book of Mormon",
-      "acceptableAnswers": ["The Book of Mormon", "Book of Mormon"],
+      "acceptableAnswers": [
+        "The Book of Mormon",
+        "Book of Mormon"
+      ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "adaptations-theater"
+    },
+    {
+      "slug": "wisest-winnie-the-pooh-friend-owl",
+      "question": "Who is the wisest of Winnie the Pooh's friends?",
+      "answer": "Owl",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "subcategory": "classic-literature"
     }
   ]
 }

@@ -86,6 +86,7 @@ function seedSlots(params: {
 function installSeedOccurrenceMocks(params: {
   existingCount?: number;
   seenSlugs?: string[];
+  seenRows?: Array<{ question_id: string; seen_at: string }>;
   questions?: LiveTriviaSeedQuestion[];
 }) {
   const captures: {
@@ -93,12 +94,21 @@ function installSeedOccurrenceMocks(params: {
     sessionOptions: unknown;
     seenRows: unknown[];
     seenOptions: unknown;
+    deletedSlugs: string[];
+    resetRows: unknown[];
   } = {
     sessionRows: [],
     sessionOptions: null,
     seenRows: [],
     seenOptions: null,
+    deletedSlugs: [],
+    resetRows: [],
   };
+
+  // Seen rows can be provided with explicit timestamps, or derived from a slug list.
+  const seenRowData =
+    params.seenRows ??
+    (params.seenSlugs ?? []).map((questionId) => ({ question_id: questionId, seen_at: "2026-01-01T00:00:00Z" }));
 
   mocks.from.mockImplementation((table: string) => {
     if (table === "trivia_session_questions") {
@@ -119,16 +129,21 @@ function installSeedOccurrenceMocks(params: {
 
     if (table === "venue_seen_questions") {
       return {
-        select: vi.fn(() =>
-          makeAwaitableQuery({
-            data: (params.seenSlugs ?? []).map((questionId) => ({ question_id: questionId })),
-            error: null,
-          })
-        ),
+        select: vi.fn(() => makeAwaitableQuery({ data: seenRowData, error: null })),
         upsert: vi.fn((rows: unknown[], options: unknown) => {
           captures.seenRows = rows;
           captures.seenOptions = options;
           return { error: null };
+        }),
+        delete: vi.fn(() => {
+          const chain = {
+            eq: vi.fn(() => chain),
+            in: vi.fn((_column: string, values: string[]) => {
+              captures.deletedSlugs.push(...values);
+              return Promise.resolve({ error: null });
+            }),
+          };
+          return chain;
         }),
       };
     }
@@ -142,6 +157,21 @@ function installSeedOccurrenceMocks(params: {
     if (table === "trivia_schedules") {
       return {
         select: vi.fn(() => makeAwaitableQuery({ data: [], error: null })),
+      };
+    }
+
+    if (table === "venue_question_warnings") {
+      return {
+        insert: vi.fn(() => Promise.resolve({ error: null })),
+      };
+    }
+
+    if (table === "venue_category_resets") {
+      return {
+        insert: vi.fn((rows: unknown) => {
+          captures.resetRows.push(rows);
+          return Promise.resolve({ error: null });
+        }),
       };
     }
 
@@ -418,6 +448,32 @@ describe("Live Trivia occurrence seeding", () => {
     }
   });
 
+  it("spreads same-subcategory questions apart when alternatives exist", () => {
+    const questions: LiveTriviaSeedQuestion[] = [
+      makeQuestion("Movies", 1, { slug: "movies-actor-1", question: "Which actor played Batman in The Dark Knight?", subcategory: "actors-performers" }),
+      makeQuestion("Movies", 2, { slug: "movies-actor-2", question: "Which actor played Superman in Man of Steel?", subcategory: "actors-performers" }),
+      makeQuestion("Movies", 3, { slug: "movies-actor-3", question: "Which actor played Iron Man in the MCU?", subcategory: "actors-performers" }),
+      ...Array.from({ length: 12 }, (_, index) =>
+        makeQuestion("Movies", index + 4, {
+          slug: `movies-other-${String(index + 1).padStart(2, "0")}-topic`,
+          question: `What is movies topic ${index + 1}?`,
+          subcategory: `distinct-subcategory-${index + 1}`,
+        })
+      ),
+    ];
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 15 });
+    const actorPositions = result.slots
+      .map((slot, index) => ({ slug: slot.slug, index }))
+      .filter((entry) => entry.slug.startsWith("movies-actor-"))
+      .map((entry) => entry.index);
+
+    expect(actorPositions).toHaveLength(3);
+    for (let index = 1; index < actorPositions.length; index += 1) {
+      expect(actorPositions[index]! - actorPositions[index - 1]!).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it("still fills a round when every available question has the same subtopic", () => {
     const questions: LiveTriviaSeedQuestion[] = [
       makeQuestion("Geography", 1, {
@@ -587,6 +643,147 @@ describe("Live Trivia occurrence seeding", () => {
     expect(result.usedRecentCategory).toBe(true);
   });
 
+  // ── Phase 3: strict per-category exhaustion ───────────────────────────────
+
+  it("never picks a seen question while any unseen question remains in the category", () => {
+    // 2 unseen questions that belong to the same (clustered) slug family, so they
+    // violate slug-family spacing against each other — under the old tiering a
+    // spacing-clean SEEN question would have been preferred and these unseen ones
+    // could be dropped from the round entirely.
+    const unseen = [
+      makeQuestion("Music", 1, { slug: "music-beatles-01", question: "Which band recorded Hey Jude?" }),
+      makeQuestion("Music", 2, { slug: "music-beatles-02", question: "Which band recorded Let It Be?" }),
+    ];
+    // 18 spacing-clean, distinct-family questions, all already seen.
+    const seen = Array.from({ length: 18 }, (_, index) =>
+      makeQuestion("Music", index + 3, {
+        slug: `music-distinct-${String(index + 1).padStart(2, "0")}-topic`,
+        question: `Who composed distinct music topic ${index + 1}?`,
+      })
+    );
+    const seenSlugs = seen.map((q) => String(q.slug));
+
+    const result = seedSlots({
+      questions: [...unseen, ...seen],
+      seenSlugs,
+      numRounds: 1,
+      questionsPerRound: 15,
+    });
+
+    const slugs = result.slots.map((slot) => slot.slug);
+    // Both unseen questions must appear despite clustering.
+    expect(slugs).toContain("music-beatles-01");
+    expect(slugs).toContain("music-beatles-02");
+    // Every unseen pick must come before any seen pick.
+    const firstSeenIndex = slugs.findIndex((slug) => seenSlugs.includes(slug));
+    const lastUnseenIndex = Math.max(slugs.indexOf("music-beatles-01"), slugs.indexOf("music-beatles-02"));
+    expect(lastUnseenIndex).toBeLessThan(firstSeenIndex);
+  });
+
+  // ── Phase 2: cross-category overflow ──────────────────────────────────────
+
+  it("fills remaining slots from unseen questions in other categories before repeating", () => {
+    // All three categories are below questionsPerRound (2 each < 3), so they all go into
+    // fallbackCategories. One is selected as the primary; it picks 2 questions and falls short.
+    // Overflow should supply the 3rd slot from one of the other two categories.
+    const questions = [
+      ...makeCategory("Music", 2),
+      ...makeCategory("Sports", 2),
+      ...makeCategory("History", 2),
+    ];
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
+
+    expect(result.slots).toHaveLength(3);
+    expect(result.repeatedQuestions).toBe(false);
+    expect(result.usedOverflow).toBe(true);
+    expect(new Set(result.slots.map((slot) => slot.slug)).size).toBe(3);
+  });
+
+  it("does not repeat questions when overflow from other categories covers the shortfall", () => {
+    // Primary category (1 question) is way below questionsPerRound=3.
+    // Two other fallback categories each have 1 question. Together they supply the 2 missing slots.
+    const questions = [
+      makeQuestion("Music", 1),
+      makeQuestion("Sports", 1),
+      makeQuestion("History", 1),
+    ];
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
+
+    expect(result.slots).toHaveLength(3);
+    expect(result.repeatedQuestions).toBe(false);
+    expect(result.usedOverflow).toBe(true);
+    expect(new Set(result.slots.map((slot) => slot.slug)).size).toBe(3);
+  });
+
+  it("sets usedOverflow=false when the primary category can fill the round", () => {
+    const questions = makeCategory("Music", 5);
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
+
+    expect(result.slots).toHaveLength(3);
+    expect(result.usedOverflow).toBe(false);
+    expect(result.repeatedQuestions).toBe(false);
+  });
+
+  it("still repeats when the primary category is short AND no other unseen questions exist", () => {
+    const questions = makeCategory("Music", 2);
+    // No other categories — overflow pool is empty. Must repeat from Music.
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
+
+    expect(result.slots).toHaveLength(3);
+    expect(result.repeatedQuestions).toBe(true);
+    expect(result.usedOverflow).toBe(false);
+    expect(new Set(result.slots.map((slot) => slot.slug)).size).toBe(2);
+  });
+
+  it("does not use overflow when every full-round category can fill its own round", () => {
+    // Both Music (3) and Sports (5) meet the full-round threshold (>= questionsPerRound=3).
+    // Whichever is selected by the seeded shuffle, it fills 3 slots from its own pool — no shortfall.
+    const questions = [...makeCategory("Music", 3), ...makeCategory("Sports", 5)];
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
+
+    expect(result.slots).toHaveLength(3);
+    expect(result.usedOverflow).toBe(false);
+    expect(result.repeatedQuestions).toBe(false);
+  });
+
+  it("overflow fill is deterministic — same inputs produce same overflow selections", () => {
+    // All three categories below questionsPerRound → fallback mode → overflow fires.
+    const questions = [
+      ...makeCategory("Music", 2),
+      ...makeCategory("Sports", 2),
+      ...makeCategory("History", 2),
+    ];
+
+    const first = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
+    const second = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
+
+    expect(second.slots).toEqual(first.slots);
+    expect(second.usedOverflow).toBe(true);
+  });
+
+  it("overflow questions are not reused in subsequent rounds", () => {
+    // Round 1: primary category (Music, 2 questions) runs short; overflow pulls from Sports/History.
+    // Round 2: a different primary category runs short; overflow should not reuse the questions
+    // already used in round 1's overflow.
+    const questions = [
+      ...makeCategory("Music", 2),
+      ...makeCategory("Sports", 2),
+      ...makeCategory("History", 2),
+    ];
+
+    const result = seedSlots({ questions, numRounds: 2, questionsPerRound: 3 });
+
+    expect(result.slots).toHaveLength(6);
+    const allSlugs = result.slots.map((slot) => slot.slug);
+    // All 6 slots should be unique — no slug appears twice.
+    expect(new Set(allSlugs).size).toBe(6);
+    expect(result.repeatedQuestions).toBe(false);
+  });
+
   it("excludes blocked categories, non-live pools, and non-write-in-compatible answers", () => {
     const questions: LiveTriviaSeedQuestion[] = [
       ...makeCategory("Music", 3),
@@ -651,5 +848,60 @@ describe("Live Trivia occurrence seeding", () => {
         (row) => row.venue_id === "venue-1"
       )
     ).toBe(true);
+  });
+
+  // ── Phase 3: per-category epoch reset ─────────────────────────────────────
+
+  it("resets a fully-exhausted category, freeing oldest-seen questions and carrying forward recent ones", async () => {
+    const questions = makeCategory("Music", 6); // music-1 … music-6
+    // All 6 seen, oldest → newest (music-1 oldest, music-6 newest).
+    const seenRows = questions.map((q, index) => ({
+      question_id: String(q.slug),
+      seen_at: `2026-01-0${index + 1}T00:00:00Z`,
+    }));
+    const captures = installSeedOccurrenceMocks({ questions, seenRows });
+
+    await seedOccurrenceQuestions("schedule-1", "2026-06-12", "venue-1", 1);
+
+    // carryForward = min(30, floor(6/2)=3) = 3 → free the 3 oldest, keep the 3 newest.
+    expect(captures.deletedSlugs.slice().sort()).toEqual(["music-1", "music-2", "music-3"]);
+    expect(captures.resetRows).toHaveLength(1);
+    expect(captures.resetRows[0]).toMatchObject({
+      venue_id: "venue-1",
+      category: "Music",
+      category_total: 6,
+      freed_count: 3,
+      carried_forward_count: 3,
+    });
+  });
+
+  it("does not reset a category that still has unseen questions", async () => {
+    const questions = makeCategory("Music", 6);
+    // Only 4 of 6 seen — category is not exhausted.
+    const seenRows = questions.slice(0, 4).map((q, index) => ({
+      question_id: String(q.slug),
+      seen_at: `2026-01-0${index + 1}T00:00:00Z`,
+    }));
+    const captures = installSeedOccurrenceMocks({ questions, seenRows });
+
+    await seedOccurrenceQuestions("schedule-1", "2026-06-12", "venue-1", 1);
+
+    expect(captures.deletedSlugs).toEqual([]);
+    expect(captures.resetRows).toEqual([]);
+  });
+
+  it("does not reset categories when the occurrence is already seeded", async () => {
+    const questions = makeCategory("Music", 6);
+    const seenRows = questions.map((q, index) => ({
+      question_id: String(q.slug),
+      seen_at: `2026-01-0${index + 1}T00:00:00Z`,
+    }));
+    const captures = installSeedOccurrenceMocks({ existingCount: 15, questions, seenRows });
+
+    const result = await seedOccurrenceQuestions("schedule-1", "2026-06-12", "venue-1", 1);
+
+    expect(result).toEqual({ seeded: 0, skipped: 15 });
+    expect(captures.deletedSlugs).toEqual([]);
+    expect(captures.resetRows).toEqual([]);
   });
 });

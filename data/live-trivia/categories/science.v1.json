@@ -7,7 +7,8 @@
       "answer": "H2O",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "who-invented-the-light-bulb",
@@ -15,7 +16,8 @@
       "answer": "Thomas Edison",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "who-developed-the-theory-of-relativity",
@@ -23,7 +25,8 @@
       "answer": "Albert Einstein",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "what-gas-do-plants-absorb-from-the-atmosphere",
@@ -31,7 +34,8 @@
       "answer": "Carbon Dioxide",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "closest-planet-to-sun",
@@ -39,7 +43,8 @@
       "answer": "Mercury",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "gas-plants-absorb",
@@ -47,7 +52,8 @@
       "answer": "Carbon Dioxide",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "noble-gas-symbol-he",
@@ -55,7 +61,8 @@
       "answer": "Helium",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "powerhouse-of-the-cell",
@@ -63,7 +70,8 @@
       "answer": "Mitochondria",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "dna-structure-shape",
@@ -71,7 +79,8 @@
       "answer": "Double Helix",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "gravity-discovery-scientist",
@@ -79,7 +88,8 @@
       "answer": "Isaac Newton",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "blood-type-universal-donor",
@@ -87,7 +97,8 @@
       "answer": "O negative",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "most-abundant-gas-atmosphere",
@@ -95,7 +106,8 @@
       "answer": "Nitrogen",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "subatomic-particle-negative-charge",
@@ -103,7 +115,8 @@
       "answer": "Electron",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "planet-red-appearance",
@@ -111,7 +124,8 @@
       "answer": "Mars",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "mars-moons-names",
@@ -119,7 +133,8 @@
       "answer": "Mars",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "ph-scale-neutral-value",
@@ -127,7 +142,8 @@
       "answer": "7",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "absolute-zero-kelvin",
@@ -135,7 +151,8 @@
       "answer": "0 K",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "hardest-natural-substance",
@@ -143,7 +160,8 @@
       "answer": "Diamond",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "galaxy-earth-location",
@@ -151,7 +169,8 @@
       "answer": "Milky Way",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "periodic-table-first-element",
@@ -159,7 +178,8 @@
       "answer": "Hydrogen",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "diamond-element",
@@ -167,7 +187,8 @@
       "answer": "Carbon",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "saturn-moons-count",
@@ -175,7 +196,8 @@
       "answer": "Saturn",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "earliest-antibiotic",
@@ -183,7 +205,8 @@
       "answer": "Penicillin",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "sun-energy-process",
@@ -191,7 +214,8 @@
       "answer": "Nuclear Fusion",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "human-bone-count-adult",
@@ -199,7 +223,8 @@
       "answer": "206",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "light-refraction-definition",
@@ -207,7 +232,8 @@
       "answer": "Refraction",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "lithium-symbol",
@@ -215,7 +241,8 @@
       "answer": "Li",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "photosynthesis-byproduct",
@@ -223,7 +250,8 @@
       "answer": "Oxygen",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "noble-gas-neon-symbol",
@@ -231,7 +259,8 @@
       "answer": "Ne",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "human-stomach-acid",
@@ -239,7 +268,8 @@
       "answer": "Hydrochloric Acid",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "planet-rings-most-visible",
@@ -247,7 +277,8 @@
       "answer": "Saturn",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "electron-cloud-atom-center",
@@ -255,7 +286,8 @@
       "answer": "Nucleus",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "solid-to-gas-transition",
@@ -263,7 +295,8 @@
       "answer": "Sublimation",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "kelvin-boiling-point-water",
@@ -271,7 +304,8 @@
       "answer": "100",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "earth-atmosphere-lowest-layer",
@@ -279,7 +313,8 @@
       "answer": "Troposphere",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "einstein-relativity-equation",
@@ -287,7 +322,8 @@
       "answer": "Energy",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "human-eye-colored-part",
@@ -295,7 +331,8 @@
       "answer": "Iris",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "gold-symbol",
@@ -303,7 +340,8 @@
       "answer": "Au",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "vitamin-c-chemical-name",
@@ -311,7 +349,8 @@
       "answer": "Ascorbic Acid",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "earth-crust-most-abundant-metal",
@@ -319,7 +358,8 @@
       "answer": "Aluminum",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "seismic-waves-instrument",
@@ -327,7 +367,8 @@
       "answer": "Seismograph",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "dna-bases-cytosine-pair",
@@ -335,7 +376,8 @@
       "answer": "Guanine",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "mercury-state-at-room-temperature",
@@ -343,7 +385,8 @@
       "answer": "Mercury",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "force-mass-acceleration-law",
@@ -351,7 +394,8 @@
       "answer": "Acceleration",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "ocean-tides-cause",
@@ -362,7 +406,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Moon"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "noble-gas-argon-symbol",
@@ -370,7 +415,8 @@
       "answer": "Ar",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "blood-clotting-cells",
@@ -378,7 +424,8 @@
       "answer": "Platelets",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "largest-planet-solar-system",
@@ -386,7 +433,8 @@
       "answer": "Jupiter",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "human-chromosome-count",
@@ -394,7 +442,8 @@
       "answer": "23",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "alkali-metal-symbol-na",
@@ -402,7 +451,8 @@
       "answer": "Sodium",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "plant-cell-wall-material",
@@ -410,7 +460,8 @@
       "answer": "Cellulose",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "light-frequency-color-highest",
@@ -418,7 +469,8 @@
       "answer": "Violet",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "main-gas-in-the-sun",
@@ -426,7 +478,8 @@
       "answer": "Hydrogen",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "silver-symbol",
@@ -434,7 +487,8 @@
       "answer": "Ag",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "human-insulin-organ",
@@ -442,7 +496,8 @@
       "answer": "Pancreas",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "potassium-chemical-symbol",
@@ -450,7 +505,8 @@
       "answer": "K",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "moon-phases-new-moon",
@@ -458,7 +514,8 @@
       "answer": "New Moon",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "rarest-blood-type",
@@ -466,7 +523,8 @@
       "answer": "AB Negative",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "earth-most-abundant-gas",
@@ -474,7 +532,8 @@
       "answer": "Nitrogen",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "iron-chemical-symbol",
@@ -482,7 +541,8 @@
       "answer": "Fe",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "study-of-fungi",
@@ -490,7 +550,8 @@
       "answer": "Mycology",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "dry-ice-composition",
@@ -498,7 +559,8 @@
       "answer": "Carbon Dioxide",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "mercury-planet-atmosphere",
@@ -506,7 +568,8 @@
       "answer": "Mercury",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "magnesium-chemical-symbol",
@@ -514,7 +577,8 @@
       "answer": "Mg",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "uranus-rotation-axis",
@@ -522,7 +586,8 @@
       "answer": "Uranus",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "chemical-symbol-for-tin",
@@ -530,7 +595,8 @@
       "answer": "Sn",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "which-chemical-element-has-the-highest-melting-point",
@@ -538,7 +604,8 @@
       "answer": "Tungsten",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "what-is-the-chemical-formula-for-table-salt",
@@ -546,7 +613,8 @@
       "answer": "NaCl",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "what-is-the-process-by-which-plants-make-their-own-food",
@@ -554,7 +622,8 @@
       "answer": "Photosynthesis",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "photosynthesis-organelle",
@@ -562,7 +631,8 @@
       "answer": "Chloroplast",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "tungsten-chemical-symbol",
@@ -570,7 +640,8 @@
       "answer": "W",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "blood-red-color-protein",
@@ -578,7 +649,8 @@
       "answer": "Hemoglobin",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "closest-star-earth",
@@ -590,7 +662,8 @@
       "acceptableAnswers": [
         "Saturn",
         "Sol"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "hottest-planet-solar-system",
@@ -601,7 +674,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Venus"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "natural-satellite-earth",
@@ -613,7 +687,8 @@
       "acceptableAnswers": [
         "Moon",
         "Luna"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "first-man-moon",
@@ -625,7 +700,8 @@
       "acceptableAnswers": [
         "Neil Armstrong",
         "Armstrong"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "dwarf-planet-2006",
@@ -636,7 +712,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Pluto"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "number-of-planets",
@@ -648,7 +725,8 @@
       "acceptableAnswers": [
         "8",
         "Eight"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "space-telescope-1990",
@@ -661,7 +739,8 @@
         "Hubble",
         "Hubble Space Telescope",
         "HST"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "force-holds-planets",
@@ -673,7 +752,8 @@
       "acceptableAnswers": [
         "Gravity",
         "Gravitation"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "comet-75-years",
@@ -686,7 +766,8 @@
         "Halley's Comet",
         "Halley",
         "1P/Halley"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "quote-charles-darwin-adaptable",
@@ -694,7 +775,8 @@
       "answer": "Charles Darwin",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "agency-apollo-missions",
@@ -706,7 +788,8 @@
       "acceptableAnswers": [
         "NASA",
         "National Aeronautics and Space Administration"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "largest-volcano-solar-system",
@@ -717,7 +800,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Olympus Mons"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "star-group-patterns",
@@ -728,7 +812,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Constellation"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "north-star-name",
@@ -739,7 +824,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Polaris"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "cosmic-explosion-start",
@@ -751,7 +837,8 @@
       "acceptableAnswers": [
         "Big Bang",
         "The Big Bang Theory"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "light-cannot-escape",
@@ -762,7 +849,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Black hole"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "closest-major-galaxy",
@@ -775,7 +863,8 @@
         "Andromeda",
         "Andromeda Galaxy",
         "M31"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "furthest-planet-sun",
@@ -786,7 +875,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Neptune"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "gas-giant-tilted",
@@ -797,7 +887,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Uranus"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "shooting-star-term",
@@ -808,7 +899,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Meteor"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "giant-storm-jupiter",
@@ -820,7 +912,8 @@
       "acceptableAnswers": [
         "Great Red Spot",
         "The Great Red Spot"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "belt-between-planets",
@@ -833,7 +926,8 @@
         "Asteroid belt",
         "The asteroid belt",
         "Main asteroid belt"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "speed-of-light-constant",
@@ -844,7 +938,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Speed of light"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "first-artificial-satellite-science",
@@ -857,7 +952,8 @@
         "Sputnik 1",
         "Sputnik",
         "Sputnik I"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "hottest-layer-sun",
@@ -868,7 +964,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Corona"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "brightest-star-night-sky",
@@ -880,7 +977,8 @@
       "acceptableAnswers": [
         "Sirius",
         "Alpha Canis Majoris"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "mars-moons-count",
@@ -892,7 +990,8 @@
       "acceptableAnswers": [
         "2",
         "Two"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "northern-lights-term",
@@ -903,7 +1002,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Aurora borealis"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "star-explosion-death",
@@ -914,7 +1014,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Supernova"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "dense-collapsed-star",
@@ -925,7 +1026,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Neutron star"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "study-of-universe",
@@ -936,7 +1038,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Astronomy"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "distance-light-travels",
@@ -948,7 +1051,8 @@
       "acceptableAnswers": [
         "Light-year",
         "Light year"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "second-element-sun",
@@ -960,7 +1064,8 @@
       "acceptableAnswers": [
         "Helium",
         "He"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "outer-icy-region",
@@ -972,7 +1077,8 @@
       "acceptableAnswers": [
         "Kuiper belt",
         "The Kuiper belt"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "dark-spots-sun",
@@ -984,7 +1090,8 @@
       "acceptableAnswers": [
         "Sunspots",
         "Sunspot"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "first-liquid-water-moon",
@@ -995,7 +1102,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Jupiter"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "boundary-black-hole",
@@ -1006,7 +1114,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Event horizon"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "table-of-elements",
@@ -1019,7 +1128,8 @@
         "Periodic table",
         "The periodic table",
         "Periodic table of elements"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "lightest-chemical-element",
@@ -1031,7 +1141,8 @@
       "acceptableAnswers": [
         "Hydrogen",
         "H"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "liquid-to-gas-term",
@@ -1042,7 +1153,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Evaporation"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "sound-frequency-unit",
@@ -1054,7 +1166,8 @@
       "acceptableAnswers": [
         "Hertz",
         "Hz"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "gas-ozone-layer",
@@ -1066,7 +1179,8 @@
       "acceptableAnswers": [
         "Ozone",
         "O3"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "molten-rock-underground",
@@ -1077,7 +1191,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Magma"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "molten-rock-surface",
@@ -1088,7 +1203,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Lava"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "blood-pump-organ",
@@ -1099,7 +1215,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Heart"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "evolution-theory-pioneer",
@@ -1111,7 +1228,8 @@
       "acceptableAnswers": [
         "Charles Darwin",
         "Darwin"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "noble-gas-balloons",
@@ -1123,7 +1241,8 @@
       "acceptableAnswers": [
         "Helium",
         "He"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "study-of-plants",
@@ -1134,7 +1253,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Botany"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "insulins-producing-organ",
@@ -1145,7 +1265,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Pancreas"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "lightest-solid-metal",
@@ -1157,7 +1278,8 @@
       "acceptableAnswers": [
         "Lithium",
         "Li"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "study-of-insects",
@@ -1168,7 +1290,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Entomology"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "coin-attracting-force",
@@ -1180,7 +1303,8 @@
       "acceptableAnswers": [
         "Magnetics",
         "Magnets"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "organic-chemistry-element",
@@ -1192,7 +1316,8 @@
       "acceptableAnswers": [
         "Carbon",
         "C"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "resistance-measurement-unit",
@@ -1204,7 +1329,8 @@
       "acceptableAnswers": [
         "Ohm",
         "Ohms"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "coin-electric-unit",
@@ -1218,7 +1344,8 @@
         "Amperes",
         "Amp",
         "Amps"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "cloud-type-thunderstorm",
@@ -1230,7 +1357,8 @@
       "acceptableAnswers": [
         "Cumulonimbus",
         "Cumulonimbus cloud"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "gas-rusting-metal",
@@ -1242,7 +1370,8 @@
       "acceptableAnswers": [
         "Oxygen",
         "O2"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "study-of-fossils",
@@ -1253,7 +1382,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Paleontology"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "liquid-rock-volcano",
@@ -1264,7 +1394,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Volcano"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "table-salt-compound",
@@ -1276,7 +1407,8 @@
       "acceptableAnswers": [
         "Sodium chloride",
         "NaCl"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "study-of-weather",
@@ -1287,7 +1419,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Meteorology"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "outermost-layer-earth",
@@ -1298,7 +1431,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Crust"
-      ]
+      ],
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "positive-particle-nucleus",
@@ -1309,7 +1443,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Proton"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "force-mass-acceleration",
@@ -1320,7 +1455,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Force"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "force-measurement-unit",
@@ -1333,7 +1469,8 @@
         "Newton",
         "Newtons",
         "N"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "speed-with-direction",
@@ -1344,7 +1481,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Velocity"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "rate-of-speed-change",
@@ -1355,7 +1493,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Acceleration"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "tendency-resist-motion",
@@ -1366,7 +1505,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Inertia"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "motion-energy-term",
@@ -1377,7 +1517,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Kinetic energy"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "power-measurement-unit",
@@ -1390,7 +1531,8 @@
         "Watt",
         "Watts",
         "W"
-      ]
+      ],
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "atmospheric-pressure-tool",
@@ -1401,7 +1543,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Barometer"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "liquid-to-solid-phase",
@@ -1413,7 +1556,8 @@
       "acceptableAnswers": [
         "Freezing",
         "Solidification"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "solid-to-liquid-phase",
@@ -1425,7 +1569,8 @@
       "acceptableAnswers": [
         "Melting",
         "Liquefaction"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "gas-to-liquid-phase",
@@ -1436,7 +1581,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Condensation"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "brightest-halogen-gas",
@@ -1448,7 +1594,8 @@
       "acceptableAnswers": [
         "Chlorine",
         "Cl"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "coin-alkali-metal-banana",
@@ -1460,7 +1607,8 @@
       "acceptableAnswers": [
         "Potassium",
         "K"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "which-gas-is-responsible-for-the-characteristic-smell-of-rotten-eggs",
@@ -1468,7 +1616,8 @@
       "answer": "Hydrogen Sulfide",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "which-element-has-the-atomic-number-1",
@@ -1476,7 +1625,8 @@
       "answer": "Hydrogen",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "bone-health-mineral",
@@ -1488,7 +1638,8 @@
       "acceptableAnswers": [
         "Calcium",
         "Ca"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "rust-forming-metal",
@@ -1500,7 +1651,8 @@
       "acceptableAnswers": [
         "Iron",
         "Fe"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "wire-transition-metal",
@@ -1511,7 +1663,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Copper"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "galvanizing-metal-element",
@@ -1523,7 +1676,8 @@
       "acceptableAnswers": [
         "Zinc",
         "Zn"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "precious-metal-gold",
@@ -1534,7 +1688,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Gold"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "precious-metal-silver",
@@ -1545,7 +1700,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Silver"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "study-of-birds",
@@ -1556,7 +1712,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Ornithology"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "outer-skin-layer",
@@ -1567,7 +1724,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Epidermis"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "inner-skin-layer",
@@ -1578,7 +1736,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Dermis"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "voice-box-organ",
@@ -1589,7 +1748,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Larynx"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "largest-human-organ",
@@ -1600,7 +1760,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Skin"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "universal-blood-donor-type",
@@ -1614,7 +1775,8 @@
         "O negative",
         "Type O negative",
         "O neg"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "adult-rib-count",
@@ -1626,7 +1788,8 @@
       "acceptableAnswers": [
         "12 pairs",
         "24 ribs"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "patella-common-name",
@@ -1634,7 +1797,8 @@
       "answer": "Kneecap",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "skin-hair-pigment-substance",
@@ -1642,7 +1806,8 @@
       "answer": "Melanin",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "insulin-producing-organ",
@@ -1650,7 +1815,8 @@
       "answer": "Pancreas",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "average-body-temperature-fahrenheit",
@@ -1663,7 +1829,8 @@
         "98.6",
         "98.6 degrees",
         "98.6 degrees Fahrenheit"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "stomach-acid-type",
@@ -1674,7 +1841,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "HCl"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "blood-color-inside-body",
@@ -1682,7 +1850,8 @@
       "answer": "Red",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "inner-ear-snail-shell-structure",
@@ -1690,7 +1859,8 @@
       "answer": "Cochlea",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "oxygenated-blood-vessel-type",
@@ -1698,7 +1868,8 @@
       "answer": "Arteries",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "voice-box-medical-term",
@@ -1706,7 +1877,8 @@
       "answer": "Larynx",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "self-regenerating-organ",
@@ -1717,7 +1889,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Liver"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "clavicle-common-name",
@@ -1728,7 +1901,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Collar bone"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "sunlight-vitamin-production",
@@ -1736,7 +1910,8 @@
       "answer": "Vitamin D",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "bones-in-hands-and-wrists",
@@ -1744,7 +1919,8 @@
       "answer": "54",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "foot-specialist-medical-term",
@@ -1752,7 +1928,8 @@
       "answer": "Podiatrist",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "stethoscope-invention",
@@ -1763,7 +1940,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Stethoscope"
-      ]
+      ],
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "kidney-blood-filter-function",
@@ -1774,7 +1952,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Kidneys"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "strongest-longest-bone",
@@ -1785,7 +1964,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Thigh bone"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "eye-clear-front-surface",
@@ -1793,7 +1973,8 @@
       "answer": "Cornea",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "penicillin-discovery-fleming",
@@ -1801,7 +1982,8 @@
       "answer": "Penicillin",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "diaphragm-inhalation-muscle",
@@ -1809,7 +1991,8 @@
       "answer": "Diaphragm",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "salk-vaccine-polio",
@@ -1820,7 +2003,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Poliomyelitis"
-      ]
+      ],
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "heart-chamber-count",
@@ -1831,7 +2015,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "4"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "bone-to-bone-connective-tissue",
@@ -1842,7 +2027,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Ligament"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "bone-to-muscle-connective-tissue",
@@ -1853,7 +2039,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Tendon"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "stapes-smallest-bone-location",
@@ -1865,7 +2052,8 @@
       "acceptableAnswers": [
         "The ear",
         "Inner ear"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "jenner-smallpox-vaccine",
@@ -1873,7 +2061,8 @@
       "answer": "Smallpox",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "floating-bone-hyoid",
@@ -1884,7 +2073,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Hyoid"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "white-of-eye-medical-term",
@@ -1892,7 +2082,8 @@
       "answer": "Sclera",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "iron-hemoglobin-element",
@@ -1900,7 +2091,8 @@
       "answer": "Iron",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "bone-density-loss-condition",
@@ -1908,7 +2100,8 @@
       "answer": "Osteoporosis",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "high-blood-pressure-medical-term",
@@ -1916,7 +2109,8 @@
       "answer": "Hypertension",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "more-bones-at-birth",
@@ -1924,7 +2118,8 @@
       "answer": "True",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "mri-acronym",
@@ -1932,7 +2127,8 @@
       "answer": "Magnetic Resonance Imaging",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "ears-nose-never-stop-growing",
@@ -1940,7 +2136,8 @@
       "answer": "True",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "cranium-protects-organ",
@@ -1951,7 +2148,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Brain"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "front-cutting-teeth-name",
@@ -1962,7 +2160,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Incisor"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "iris-colored-eye-part",
@@ -1970,7 +2169,8 @@
       "answer": "Iris",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "first-insulin-injection-1922",
@@ -1978,7 +2178,8 @@
       "answer": "Insulin",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "only-eradicated-human-disease",
@@ -1986,7 +2187,8 @@
       "answer": "Smallpox",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "hemoglobin-oxygen-pigment",
@@ -1994,7 +2196,8 @@
       "answer": "Hemoglobin",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "retina-rods-cones",
@@ -2002,7 +2205,8 @@
       "answer": "Retina",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "blood-clotting-third-cell-type",
@@ -2013,7 +2217,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Thrombocytes"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "liver-filters-digestive-blood",
@@ -2024,7 +2229,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Liver"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "blood-sugar-chemical-name",
@@ -2032,7 +2238,8 @@
       "answer": "Glucose",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "brain-calorie-consumption",
@@ -2043,7 +2250,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Brain"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "dna-double-helix-1953",
@@ -2054,7 +2262,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Deoxyribonucleic acid"
-      ]
+      ],
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "mitochondria-cell-energy",
@@ -2062,7 +2271,8 @@
       "answer": "Mitochondria",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "human-chromosome-pairs",
@@ -2076,7 +2286,8 @@
         "46",
         "46 total",
         "46 chromosomes"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "recessive-gene-trait",
@@ -2084,7 +2295,8 @@
       "answer": "Recessive",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "triceps-elbow-extension",
@@ -2092,7 +2304,8 @@
       "answer": "Triceps",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "viagra-original-target-condition",
@@ -2105,7 +2318,8 @@
         "Hypertension",
         "Angina",
         "Heart disease"
-      ]
+      ],
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "prozac-first-ssri",
@@ -2116,7 +2330,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Fluoxetine"
-      ]
+      ],
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "statins-lower-cholesterol",
@@ -2124,7 +2339,8 @@
       "answer": "Cholesterol",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "epipen-allergic-reaction",
@@ -2132,7 +2348,8 @@
       "answer": "EpiPen",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "morphine-greek-god-dreams",
@@ -2140,7 +2357,8 @@
       "answer": "Morphine",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "antibiotics-against-life-etymology",
@@ -2148,7 +2366,8 @@
       "answer": "Antibiotics",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "mercury-syphilis-treatment",
@@ -2156,7 +2375,8 @@
       "answer": "Mercury",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "icu-acronym",
@@ -2164,7 +2384,8 @@
       "answer": "Intensive Care Unit",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "rx-abbreviation-meaning",
@@ -2172,7 +2393,8 @@
       "answer": "Prescription",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "low-red-blood-cell-count-condition",
@@ -2183,7 +2405,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Anaemia"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "sublingual-medication-placement",
@@ -2194,7 +2417,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Beneath the tongue"
-      ]
+      ],
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "otc-abbreviation",
@@ -2202,7 +2426,8 @@
       "answer": "Over the counter",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "itis-suffix-inflammation",
@@ -2213,7 +2438,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "itis"
-      ]
+      ],
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "myocardial-infarction-common-name",
@@ -2221,7 +2447,8 @@
       "answer": "Heart attack",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "diabetes-insulin-disease",
@@ -2229,7 +2456,8 @@
       "answer": "Diabetes",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "tuberculosis-consumption",
@@ -2240,7 +2468,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "TB"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "athletes-foot-ringworm-organism",
@@ -2251,7 +2480,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Fungi"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "epidemiology-study-of-disease-patterns",
@@ -2259,7 +2489,8 @@
       "answer": "Epidemiology",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "hippocratic-oath",
@@ -2270,7 +2501,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Hippocratic Oath"
-      ]
+      ],
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "newton-needle-eye-experiment",
@@ -2282,7 +2514,8 @@
       "acceptableAnswers": [
         "Isaac Newton",
         "Newton"
-      ]
+      ],
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "stockholm-syndrome",
@@ -2290,7 +2523,8 @@
       "answer": "Stockholm Syndrome",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "triage-patient-sorting",
@@ -2298,7 +2532,8 @@
       "answer": "Triage",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "virus-latin-origin",
@@ -2306,7 +2541,8 @@
       "answer": "Virus",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "oncologist-cancer-specialist",
@@ -2314,7 +2550,8 @@
       "answer": "Oncologist",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "code-blue-hospital",
@@ -2325,7 +2562,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Code Blue"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "scurvy-vitamin-c-deficiency",
@@ -2333,7 +2571,8 @@
       "answer": "Scurvy",
       "answer_format": "write_in",
       "category": "Science & Tech",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "brain-no-pain-receptors",
@@ -2344,7 +2583,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Brain"
-      ]
+      ],
+      "subcategory": "biology-human-body"
     },
     {
       "slug": "thyroid-butterfly-gland",
@@ -2355,7 +2595,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Thyroid gland"
-      ]
+      ],
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "what-is-a-group-of-lions-typically-called",
@@ -2363,7 +2604,8 @@
       "answer": "Pride",
       "category": "Science & Tech",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "which-land-animal-is-recognized-as-the-fastest-runner",
@@ -2371,7 +2613,8 @@
       "answer": "Cheetah",
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "what-does-html-stand-for-in-web-development",
@@ -2382,7 +2625,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "which-invention-is-widely-credited-to-johannes-gutenberg-around-1440",
@@ -2394,7 +2638,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "medicine-technology"
     },
     {
       "slug": "which-celestial-body-is-at-the-center-of-our-solar-system",
@@ -2402,7 +2647,8 @@
       "answer": "Sun",
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "what-is-the-name-of-the-galaxy-our-solar-system-resides-in",
@@ -2413,7 +2659,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "how-many-neck-vertebrae-does-a-giraffe-have-the-same-number-as-humans",
@@ -2424,7 +2671,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "what-do-you-call-a-group-of-wolves",
@@ -2432,7 +2680,8 @@
       "answer": "Pack",
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "how-many-days-are-in-a-standard-non-leap-year",
@@ -2440,7 +2689,8 @@
       "answer": "365",
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "what-is-the-chemical-symbol-for-the-element-sodium",
@@ -2448,7 +2698,8 @@
       "answer": "Na",
       "category": "Science & Tech",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "which-of-these-natural-phenomena-is-measured-by-the-richter-scale",
@@ -2460,7 +2711,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "which-roman-numeral-represents-the-number-100",
@@ -2468,7 +2720,8 @@
       "answer": "C",
       "category": "Science & Tech",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "how-many-planets-are-there-in-our-solar-system",
@@ -2479,7 +2732,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "which-type-of-celestial-body-is-characterized-by-a-long-glowing-tail-when-it-approaches-the-sun",
@@ -2487,7 +2741,8 @@
       "answer": "Comet",
       "category": "Science & Tech",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "what-does-the-ph-scale-measure",
@@ -2502,7 +2757,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "chemistry-periodic-table"
     },
     {
       "slug": "what-is-the-process-called-when-a-liquid-turns-into-a-gas",
@@ -2514,7 +2770,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "what-scientific-unit-measures-the-frequency-of-a-wave",
@@ -2525,7 +2782,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "physics-concepts"
     },
     {
       "slug": "which-theory-describes-the-origin-and-expansion-of-the-universe",
@@ -2536,7 +2794,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "what-celestial-body-is-at-the-center-of-the-milky-way-galaxy",
@@ -2549,7 +2808,8 @@
       ],
       "category": "Science & Tech",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "astronomy-earth-science"
     },
     {
       "slug": "which-element-is-most-abundant-by-mass-in-the-human-body",
@@ -2557,7 +2817,215 @@
       "answer": "Oxygen",
       "category": "Science & Tech",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "chemistry-periodic-table"
+    },
+    {
+      "slug": "ct-scan-acronym",
+      "question": "What does the acronym 'CT' stand for in CT scan medical imaging?",
+      "answer": "Computed Tomography",
+      "acceptableAnswers": [
+        "Computerized Tomography"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "hard",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "placebo-effect-definition",
+      "question": "What term describes the phenomenon where a patient experiences real symptom relief from a treatment with no active therapeutic ingredients?",
+      "answer": "Placebo effect",
+      "acceptableAnswers": [
+        "Placebo"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "pulse-oximeter-measurement",
+      "question": "What common non-invasive medical device clips onto a finger to measure oxygen saturation in the blood?",
+      "answer": "Pulse oximeter",
+      "acceptableAnswers": [
+        "Oximeter"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "defibrillator-function",
+      "question": "What medical device delivers a controlled electric shock to the heart to restore normal rhythm during cardiac arrest?",
+      "answer": "Defibrillator",
+      "acceptableAnswers": [
+        "AED",
+        "Automated External Defibrillator"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "vaccine-mechanism-antibodies",
+      "question": "What does the immune system produce in response to a vaccine, which helps neutralize future infections?",
+      "answer": "Antibodies",
+      "acceptableAnswers": [
+        "Antibody",
+        "Immunoglobulins"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "radiation-measurement-unit",
+      "question": "What is the standard unit of measurement for radiation exposure?",
+      "answer": "Roentgen",
+      "acceptableAnswers": [
+        "Roentgen (R)"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "hard",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "allergen-immune-response",
+      "question": "What general term describes a substance like pollen or peanuts that triggers a reaction by the immune system?",
+      "answer": "Allergen",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "atomic-number-definition",
+      "question": "Fill in the blank: The atomic number of an element in the periodic table represents the number of ____________ an element has.",
+      "answer": "Protons",
+      "acceptableAnswers": [
+        "Protons"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "chemistry-periodic-table"
+    },
+    {
+      "slug": "chemical-formula-carbon-dioxide",
+      "question": "What is the chemical formula for carbon dioxide?",
+      "answer": "CO2",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "chemistry-periodic-table"
+    },
+    {
+      "slug": "ozone-layer-function",
+      "question": "Fill in the blank: The Earth's stratosphere contains the _________ layer that protects us from UV radiation.",
+      "answer": "Ozone",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "astronomy-earth-science"
+    },
+    {
+      "slug": "continental-drift-theorist",
+      "question": "Fill in the blank: The scientific theory describing the gradual, large-scale movement of Earth's continents relative to one another over geologic time is called continental _________.",
+      "answer": "Drift",
+      "acceptableAnswers": [
+        "Drift"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "hard",
+      "subcategory": "astronomy-earth-science"
+    },
+    {
+      "slug": "earths-core-composition-nickel",
+      "question": "Earth's inner core is primarily composed of iron and which other metal?",
+      "answer": "Nickel",
+      "acceptableAnswers": [
+        "Nickel"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "astronomy-earth-science"
+    },
+    {
+      "slug": "earths-core-composition-iron",
+      "question": "Earth's inner core is primarily composed of nickel and which other metal?",
+      "answer": "Iron",
+      "acceptableAnswers": [
+        "Iron"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "astronomy-earth-science"
+    },
+    {
+      "slug": "solar-eclipse-earth-moon-alignment",
+      "question": "During a total solar eclipse, what passes directly between the Earth and the Sun?",
+      "answer": "The Moon",
+      "acceptableAnswers": [
+        "Moon"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "astronomy-earth-science"
+    },
+    {
+      "slug": "small-intestine-absorption",
+      "question": "Here's an easy one: Which is longer, the small intestine or large intestine?",
+      "answer": "Small intestine",
+      "acceptableAnswers": [
+        "Small bowel",
+        "small"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
+    },
+    {
+      "slug": "tooth-hardest-substance",
+      "question": "What is the hardest substance in the human body, found on the surface of teeth?",
+      "answer": "Enamel",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
+    },
+    {
+      "slug": "hormone-growth-regulation",
+      "question": "Which gland at the base of the brain is often called the 'master gland' because it produces hormones that regulat vital bodily funcitons like growth, metabolism and reproduction?",
+      "answer": "Pituitary gland",
+      "acceptableAnswers": [
+        "Pituitary"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
+    },
+    {
+      "slug": "electromagnetic-spectrum-longest-wavelength",
+      "question": "On the electromagnetic spectrum, which type of wave has the longest wavelength?",
+      "answer": "Radio waves",
+      "acceptableAnswers": [
+        "Radio"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     }
   ],
   "familiarity": "moderate"

@@ -39,6 +39,7 @@ import {
 } from "@/lib/admin";
 import type { PlaceholderAdTemplateInput } from "@/lib/admin";
 import { requireAdminAuth } from "@/lib/adminAuth";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   createChallengeCampaign,
   deleteChallengeCampaign,
@@ -299,6 +300,44 @@ export async function GET(request: Request) {
       const search = String(searchParams.get("search") ?? "").trim();
       const result = await listAdminAccounts({ page, pageSize, search });
       return NextResponse.json({ ok: true, ...result, page, pageSize, totalPages: Math.max(1, Math.ceil(result.total / pageSize)) });
+    }
+
+    if (resource === "username-moderation-log") {
+      const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+      const pageSize = Math.min(200, Math.max(1, parseInt(searchParams.get("pageSize") ?? "50", 10)));
+      const blockedOnly = searchParams.get("blockedOnly") === "1";
+      if (!supabaseAdmin) {
+        return NextResponse.json({ ok: false, error: "Supabase admin not configured." }, { status: 500 });
+      }
+      let query = supabaseAdmin
+        .from("username_change_attempts")
+        .select("id, requested_username, failure_reason, success, requester_ip, created_at", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
+      if (blockedOnly) {
+        query = query.eq("failure_reason", "moderation-blocked");
+      }
+      const { data, error: qErr, count } = await query;
+      if (qErr) {
+        return NextResponse.json({ ok: false, error: qErr.message }, { status: 500 });
+      }
+      const total = count ?? 0;
+      const items = (data ?? []).map((row: {
+        id: string;
+        requested_username: string | null;
+        failure_reason: string | null;
+        success: boolean;
+        requester_ip: string | null;
+        created_at: string;
+      }) => ({
+        id: row.id,
+        requestedUsername: row.requested_username ?? "",
+        failureReason: row.failure_reason,
+        success: row.success,
+        requesterIp: row.requester_ip,
+        createdAt: row.created_at,
+      }));
+      return NextResponse.json({ ok: true, items, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) });
     }
 
     if (resource === "live-showdown-session-questions") {

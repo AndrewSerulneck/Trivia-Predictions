@@ -6,6 +6,7 @@ export type NormalizedLiveTriviaSeedQuestion = {
   slug: string;
   question: string;
   category: string;
+  subcategory?: string | null;
   options: unknown;
   correct_answer: number;
   question_pool: LiveTriviaQuestionPool;
@@ -17,6 +18,7 @@ export type NormalizedLiveTriviaSeedQuestion = {
 export type LiveTriviaQuestionProfile = {
   slug: string;
   category: string;
+  subcategory: string;
   slugFamily: string;
   templateKey: string;
   topicTokens: Set<string>;
@@ -41,6 +43,8 @@ export const RECENT_TOPIC_WINDOW = 4;
 export const PENALTY_SEEN = 12;
 export const PENALTY_CLUSTER_IMMEDIATE = 120;
 export const PENALTY_CLUSTER_RECENT = 36;
+export const PENALTY_SUBCATEGORY_IMMEDIATE = 60;
+export const PENALTY_SUBCATEGORY_RECENT = 18;
 export const PENALTY_TEMPLATE_IMMEDIATE = 80;
 export const PENALTY_TEMPLATE_RECENT = 20;
 export const PENALTY_SLUG_FAMILY_IMMEDIATE = 150;
@@ -284,6 +288,7 @@ export function buildQuestionProfile(row: NormalizedLiveTriviaSeedQuestion): Liv
   return {
     slug: row.slug,
     category: row.category,
+    subcategory: String(row.subcategory ?? "").trim(),
     slugFamily: inferSlugFamily(row.slug),
     templateKey: inferTemplateKey(row.question),
     topicTokens,
@@ -354,6 +359,7 @@ export function scoreCandidate(profile: LiveTriviaQuestionProfile, state: RoundS
 
   if (immediate) {
     if (immediate.cluster === profile.cluster) penalty += PENALTY_CLUSTER_IMMEDIATE;
+    if (immediate.subcategory && profile.subcategory && immediate.subcategory === profile.subcategory) penalty += PENALTY_SUBCATEGORY_IMMEDIATE;
     if (immediate.templateKey === profile.templateKey) penalty += PENALTY_TEMPLATE_IMMEDIATE;
     if (immediate.slugFamily === profile.slugFamily) penalty += PENALTY_SLUG_FAMILY_IMMEDIATE;
     penalty += countTopicTokenOverlap(immediate.topicTokens, profile.topicTokens) * PENALTY_TOPIC_TOKEN_OVERLAP_IMMEDIATE;
@@ -361,6 +367,7 @@ export function scoreCandidate(profile: LiveTriviaQuestionProfile, state: RoundS
 
   for (const recent of recentProfiles.slice(0, -1)) {
     if (recent.cluster === profile.cluster) penalty += PENALTY_CLUSTER_RECENT;
+    if (recent.subcategory && profile.subcategory && recent.subcategory === profile.subcategory) penalty += PENALTY_SUBCATEGORY_RECENT;
     if (recent.templateKey === profile.templateKey) penalty += PENALTY_TEMPLATE_RECENT;
     if (recent.slugFamily === profile.slugFamily) penalty += PENALTY_SLUG_FAMILY_RECENT;
     penalty += countTopicTokenOverlap(recent.topicTokens, profile.topicTokens) * PENALTY_TOPIC_TOKEN_OVERLAP_RECENT;
@@ -374,6 +381,7 @@ export function normalizeLiveTriviaSeedQuestion(
     slug?: unknown;
     question?: unknown;
     category?: unknown;
+    subcategory?: unknown;
     options?: unknown;
     correct_answer?: unknown;
     question_pool?: unknown;
@@ -398,6 +406,7 @@ export function normalizeLiveTriviaSeedQuestion(
     slug: String(row.slug ?? "").trim(),
     question: String(row.question ?? "").trim(),
     category: normalizeLiveTriviaCategory(row.category),
+    subcategory: String(row.subcategory ?? "").trim() || null,
     options: row.options,
     correct_answer: answerIndex,
     question_pool: row.question_pool === "anytime_blitz" ? "anytime_blitz" : "live_showdown",

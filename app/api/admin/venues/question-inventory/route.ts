@@ -31,12 +31,12 @@ export async function GET(request: Request) {
     const threshold =
       Number.isFinite(thresholdParam) && thresholdParam >= 0 ? Math.floor(thresholdParam) : DEFAULT_LOW_THRESHOLD;
 
-    // Active live-eligible pool is shared across venues — count once.
+    // Active Live Trivia pool only — venue_seen_questions tracks live_showdown slugs.
     const { count: totalActiveCount, error: totalError } = await admin
       .from("trivia_questions")
       .select("id", { count: "exact", head: true })
       .eq("status", "active")
-      .in("question_pool", ["live_showdown", "anytime_blitz"]);
+      .eq("question_pool", "live_showdown");
     if (totalError) {
       throw new Error(totalError.message || "Failed to count active questions.");
     }

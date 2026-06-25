@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { browserSupportsWebAuthn, startAuthentication, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
@@ -2938,6 +2939,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
               </AnimatePresence>
             </div>
+          </div>
+          <div className="mx-auto mt-4 w-full max-w-md px-1">
+            <Link
+              href="/info"
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl border border-cyan-300/50 bg-cyan-400/10 px-5 py-3 text-center text-2xl font-black text-cyan-100 shadow-lg shadow-cyan-950/20 transition-colors hover:bg-cyan-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+            >
+              For more information click here.
+            </Link>
           </div>
         </div>
   </PageShell>

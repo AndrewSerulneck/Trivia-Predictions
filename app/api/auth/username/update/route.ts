@@ -12,6 +12,7 @@ import {
   resolveSupabaseAuthUserId,
 } from "@/lib/webauthn";
 import { normalizePin } from "@/lib/pin";
+import { checkUsername } from "@/lib/usernameModerator";
 
 export const runtime = "nodejs";
 
@@ -293,6 +294,21 @@ export async function POST(request: Request) {
           );
         }
       }
+    }
+
+    const moderationResult = await checkUsername(normalizedNewUsername);
+    if (!moderationResult.allowed) {
+      await recordUsernameChangeAttempt({
+        userId: user.id,
+        venueId: user.venue_id,
+        requestedUsername: normalizedNewUsername,
+        requestedUsernameNormalized: normalizedNewUsernameLookup,
+        success: false,
+        failureReason: "moderation-blocked",
+        requesterAuthId: bearerAuthUserId,
+        requesterIp,
+      });
+      return NextResponse.json({ ok: false, error: moderationResult.reason }, { status: 422 });
     }
 
     if (!isCaseOnlyChange) {

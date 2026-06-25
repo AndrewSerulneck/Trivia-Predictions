@@ -1091,7 +1091,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
               value={formRounds}
               onChange={(e) => setFormRounds(e.target.value)}
             />
-            <p className="mt-1 text-xs text-slate-400">Each round is 20 minutes.</p>
+            <p className="mt-1 text-xs text-slate-400">Each round is 27 min 30 sec (15 questions + intermission). 5 rounds ≈ 128 min 45 sec.</p>
           </div>
 
           <div className="col-span-2">

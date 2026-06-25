@@ -7,7 +7,8 @@
       "answer": "New England Patriots",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nba-all-time-scoring-leader",
@@ -15,7 +16,8 @@
       "answer": "LeBron James",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "world-cup-most-titles",
@@ -23,7 +25,8 @@
       "answer": "Brazil",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "mlb-home-run-record-season",
@@ -31,7 +34,8 @@
       "answer": "Barry Bonds",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nhl-most-career-points",
@@ -39,7 +43,8 @@
       "answer": "Wayne Gretzky",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "olympics-most-gold-medals",
@@ -47,7 +52,8 @@
       "answer": "Michael Phelps",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "masters-most-green-jackets",
@@ -55,7 +61,8 @@
       "answer": "Jack Nicklaus",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nfl-most-passing-yards-career",
@@ -63,7 +70,8 @@
       "answer": "Tom Brady",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "world-series-most-titles",
@@ -71,7 +79,8 @@
       "answer": "New York Yankees",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "ncaab-most-titles-mens",
@@ -83,7 +92,8 @@
       "acceptableAnswers": [
         "University of California, Los Angeles",
         "University of California Los Angeles"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "first-modern-olympics-year",
@@ -91,7 +101,8 @@
       "answer": "1896",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nfl-perfect-season-team",
@@ -102,7 +113,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "72 Dolphins"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nba-most-championships-player",
@@ -110,7 +122,8 @@
       "answer": "Bill Russell",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "stanley-cup-most-wins-team",
@@ -118,7 +131,8 @@
       "answer": "Montreal Canadiens",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "tennis-golden-slam-winner",
@@ -126,7 +140,8 @@
       "answer": "Steffi Graf",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nfl-longest-field-goal",
@@ -134,7 +149,8 @@
       "answer": "Justin Tucker",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "ufc-first-two-division-champ",
@@ -142,7 +158,8 @@
       "answer": "Conor McGregor",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nfl-most-sacks-career",
@@ -150,7 +167,8 @@
       "answer": "Bruce Smith",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "nba-team-most-wins-season",
@@ -162,7 +180,8 @@
       "acceptableAnswers": [
         "16 Warriors",
         "2016 Warriors"
-      ]
+      ],
+      "subcategory": "records-statistics"
     },
     {
       "slug": "cricket-highest-individual-test-score",
@@ -170,7 +189,8 @@
       "answer": "Brian Lara",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "nba-most-rebounds-game",
@@ -178,7 +198,8 @@
       "answer": "Wilt Chamberlain",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "nfl-most-mvp-awards",
@@ -186,7 +207,8 @@
       "answer": "Peyton Manning",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nhl-most-goals-season",
@@ -194,7 +216,8 @@
       "answer": "Wayne Gretzky",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "nba-first-unanimous-mvp",
@@ -205,7 +228,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Steph Curry"
-      ]
+      ],
+      "subcategory": "records-statistics"
     },
     {
       "slug": "boxing-heavyweight-undefeated-retired",
@@ -213,7 +237,8 @@
       "answer": "Rocky Marciano",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nfl-most-receiving-yards-career",
@@ -221,7 +246,8 @@
       "answer": "Jerry Rice",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "golf-lowest-round-major",
@@ -229,7 +255,8 @@
       "answer": "62",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "nfl-team-most-super-bowl-losses",
@@ -237,7 +264,8 @@
       "answer": "Denver Broncos",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nhl-most-shutouts-career",
@@ -245,7 +273,8 @@
       "answer": "Martin Brodeur",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "boxing-thrilla-in-manila-winner",
@@ -253,7 +282,8 @@
       "answer": "Muhammad Ali",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nba-most-points-single-game",
@@ -261,7 +291,8 @@
       "answer": "Wilt Chamberlain",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nfl-first-super-bowl-winner",
@@ -269,7 +300,8 @@
       "answer": "Green Bay Packers",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "how-many-players-are-on-a-standard-soccer-team-on-the-field",
@@ -277,7 +309,8 @@
       "answer": "11",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "which-country-hosted-the-2016-summer-olympics",
@@ -285,7 +318,8 @@
       "answer": "Brazil",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "soccer-ucl-most-titles-club",
@@ -293,7 +327,8 @@
       "answer": "Real Madrid",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nba-logo-silhouette-player",
@@ -301,7 +336,8 @@
       "answer": "Jerry West",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "mlb-most-grand-slams-career",
@@ -309,7 +345,8 @@
       "answer": "Alex Rodriguez",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "nba-most-three-pointers-career",
@@ -320,7 +357,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Steph Curry"
-      ]
+      ],
+      "subcategory": "records-statistics"
     },
     {
       "slug": "nfl-most-receiving-td-season",
@@ -328,7 +366,8 @@
       "answer": "Randy Moss",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "golf-youngest-masters-winner",
@@ -336,7 +375,8 @@
       "answer": "Tiger Woods",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "boxing-youngest-heavyweight-champ",
@@ -344,7 +384,8 @@
       "answer": "Mike Tyson",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nfl-most-points-scored-career",
@@ -352,343 +393,392 @@
       "answer": "Adam Vinatieri",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "michael-jordan-6-championships",
       "question": "Which team did Michael Jordan win 6 NBA championships with?",
       "answer": "Chicago Bulls",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "tom-brady-6-super-bowls",
       "question": "Which team did Tom Brady win his first 6 Super Bowls with?",
       "answer": "New England Patriots",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "kobe-bryant-5-championships",
       "question": "Which team did Kobe Bryant win 5 NBA championships with?",
       "answer": "Los Angeles Lakers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "shaquille-oneal-4-championships",
       "question": "Which team did Shaquille O'Neal win his first 3 NBA championships with?",
       "answer": "Los Angeles Lakers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "derek-jeter-5-world-series",
       "question": "Which team did Derek Jeter win 5 World Series titles with?",
       "answer": "New York Yankees",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "wayne-gretzky-4-stanley-cups",
       "question": "Which team did Wayne Gretzky win 4 Stanley Cups with?",
       "answer": "Edmonton Oilers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "lebron-james-3-championships",
       "question": "Which team did LeBron James win his first 2 NBA championships with?",
       "answer": "Miami Heat",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "magic-johnson-5-championships",
       "question": "Which team did Magic Johnson win 5 NBA championships with?",
       "answer": "Los Angeles Lakers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "larry-bird-3-championships",
       "question": "Which team did Larry Bird win 3 NBA championships with?",
       "answer": "Boston Celtics",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "tim-duncan-5-championships",
       "question": "Which team did Tim Duncan win 5 NBA championships with?",
       "answer": "San Antonio Spurs",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mariano-rivera-5-world-series",
       "question": "Which team did Mariano Rivera win 5 World Series titles with?",
       "answer": "New York Yankees",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "lionel-messi-3-ucl-titles",
       "question": "Which team did Lionel Messi win 3 UEFA Champions League titles with?",
       "answer": "Barcelona",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "cristiano-ronaldo-1-ucl-title",
       "question": "Which team did Cristiano Ronaldo win his first UEFA Champions League title with?",
       "answer": "Manchester United",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "pele-3-world-cups",
       "question": "Which national team did Pelé win 3 FIFA World Cups with?",
       "answer": "Brazil",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "serena-williams-14-grand-slams",
       "question": "Which country did Serena Williams represent when she won her first 14 Grand Slam singles titles?",
       "answer": "United States",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "roger-federer-15-grand-slams",
       "question": "Which country did Roger Federer represent when he won his first 15 Grand Slam singles titles?",
       "answer": "Switzerland",
       "category": "Sports",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "usain-bolt-8-olympic-golds",
       "question": "Which country did Usain Bolt represent when he won 8 Olympic gold medals?",
       "answer": "Jamaica",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "michael-phelps-8-olympic-golds",
       "question": "Which country did Michael Phelps represent when he won 8 gold medals at the 2008 Olympics?",
       "answer": "United States",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "simone-biles-4-olympic-golds",
       "question": "Which country did Simone Biles represent when she won 4 Olympic gold medals in 2016?",
       "answer": "United States",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "first-olympic-games-city",
       "question": "In which city were the first modern Olympic Games held in 1896?",
       "answer": "Athens",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nba-team-with-most-titles",
       "question": "Which NBA team has won the most championships in history?",
       "answer": "Boston Celtics",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "mlb-team-with-most-world-series",
       "question": "Which MLB team has won the most World Series titles?",
       "answer": "New York Yankees",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "nfl-team-with-most-super-bowls",
       "question": "Which NFL team has won the most Super Bowls?",
       "answer": "New England Patriots",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "boxing-heavyweight-champion",
       "question": "Who was the first boxer to win the heavyweight championship three times?",
       "answer": "Muhammad Ali",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "notable-figures"
     },
     {
       "slug": "soccer-world-cup-winner-2022",
       "question": "Which country won the 2022 FIFA World Cup?",
       "answer": "Argentina",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "olympic-symbol-rings",
       "question": "How many rings are in the Olympic symbol?",
       "answer": "5",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "fastest-100m-sprinter",
       "question": "Who holds the world record for the fastest 100-meter sprint?",
       "answer": "Usain Bolt",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "first-woman-to-win-us-open-golf",
       "question": "Who was the first woman to win the U.S. Open in golf?",
       "answer": "Patty Berg",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "notable-figures"
     },
     {
       "slug": "first-team-to-win-5-super-bowls",
       "question": "Which NFL team was the first to win 5 Super Bowls?",
       "answer": "San Francisco 49ers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "notable-figures"
     },
     {
       "slug": "most-wins-in-wimbledon",
       "question": "Who holds the record for the most Wimbledon singles titles?",
       "answer": "Roger Federer",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "first-nfl-player-to-rush-2000-yards",
       "question": "Who was the first NFL player to rush for 2,000 yards in a single season?",
       "answer": "O.J. Simpson",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "jets-original-name",
       "question": "Before they were called the New York 'Jets,' the franchise was originally called the New York _________.",
       "answer": "Titans",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "nba-boston",
       "question": "Name the professional basketball team from Boston.",
       "answer": "Celtics",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-green-bay",
       "question": "Name the professional football team from Green Bay.",
       "answer": "Packers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-new-york",
       "question": "Name the professional baseball team from New York that plays in the American League.",
       "answer": "Yankees",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-detroit",
       "question": "Name the professional hockey team from Detroit.",
       "answer": "Red Wings",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-chicago",
       "question": "Name the professional basketball team from Chicago.",
       "answer": "Bulls",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-dallas",
       "question": "Name the professional football team from Dallas.",
       "answer": "Cowboys",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-los-angeles",
       "question": "Name the professional baseball team from Los Angeles that plays in the National League.",
       "answer": "Dodgers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-boston",
       "question": "Name the professional hockey team from Boston.",
       "answer": "Bruins",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-los-angeles",
       "question": "Name the professional basketball team from Los Angeles that is not named the 'Lakers.'",
       "answer": "Clippers",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-pittsburgh",
       "question": "Name the professional football team from Pittsburgh.",
       "answer": "Steelers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-st-louis",
       "question": "Name the professional baseball team from St. Louis.",
       "answer": "Cardinals",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-chicago",
       "question": "Name the professional hockey team from Chicago.",
       "answer": "Blackhawks",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-golden-state",
       "question": "Name the professional basketball team from the San Francisco Bay Area.",
       "answer": "Golden State Warriors",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-kansas-city",
       "question": "Name the professional football team from Kansas City.",
       "answer": "Chiefs",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-san-francisco",
       "question": "Name the professional baseball team from San Francisco.",
       "answer": "Giants",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-montreal",
       "question": "Name the professional hockey team from Montreal.",
       "answer": "Canadiens",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-philadelphia",
@@ -698,168 +788,192 @@
         "Seventy-Sixers"
       ],
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-seattle",
       "question": "Name the professional football team from Seattle.",
       "answer": "Seahawks",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-atlanta",
       "question": "Name the professional baseball team from Atlanta.",
       "answer": "Braves",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-toronto",
       "question": "Name the professional hockey team from Toronto.",
       "answer": "Maple Leafs",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-miami",
       "question": "Name the professional basketball team from Miami.",
       "answer": "Heat",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-denver",
       "question": "Name the professional football team from Denver.",
       "answer": "Broncos",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-baltimore",
       "question": "Name the professional baseball team from Baltimore.",
       "answer": "Orioles",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-edmonton",
       "question": "Name the professional hockey team from Edmonton.",
       "answer": "Oilers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-houston",
       "question": "Name the professional basketball team from Houston.",
       "answer": "Rockets",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-new-orleans",
       "question": "Name the professional football team from New Orleans.",
       "answer": "Saints",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-cleveland",
       "question": "Name the professional baseball team from Cleveland.",
       "answer": "Guardians",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-vancouver",
       "question": "Name the professional hockey team from Vancouver.",
       "answer": "Canucks",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-san-antonio",
       "question": "Name the professional basketball team from San Antonio.",
       "answer": "Spurs",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-las-vegas",
       "question": "Name the professional football team from Las Vegas.",
       "answer": "Raiders",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-milwaukee",
       "question": "Name the professional basketball team from Milwaukee.",
       "answer": "Bucks",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-buffalo",
       "question": "Name the professional football team from Buffalo.",
       "answer": "Bills",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-chicago-nl",
       "question": "Name the professional baseball team from Chicago that plays in the National League.",
       "answer": "Cubs",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-colorado",
       "question": "Name the professional hockey team from Colorado.",
       "answer": "Avalanche",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-phoenix",
       "question": "Name the professional basketball team from Phoenix.",
       "answer": "Suns",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-cincinnati",
       "question": "Name the professional football team from Cincinnati.",
       "answer": "Bengals",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-new-york-nl",
       "question": "Name the professional baseball team from New York (NL).",
       "answer": "Mets",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-tampa-bay",
       "question": "Name the professional hockey team from Tampa Bay.",
       "answer": "Lightning",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-indiana",
       "question": "Name the professional basketball team from Indiana.",
       "answer": "Pacers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-tennessee",
       "question": "Name the professional football team from Tennessee.",
       "answer": "Titans",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-washington-dc",
@@ -869,42 +983,48 @@
         "Nats"
       ],
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-nashville",
       "question": "Name the professional hockey team from Nashville.",
       "answer": "Predators",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-utah",
       "question": "Name the professional basketball team from Utah.",
       "answer": "Jazz",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-jacksonville",
       "question": "Name the professional football team from Jacksonville.",
       "answer": "Jaguars",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-houston",
       "question": "Name the professional baseball team from Houston.",
       "answer": "Astros",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-washington",
       "question": "Name the professional hockey team from Washington, D.C.",
       "answer": "Capitals",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "quote-muhammad-ali-butterfly",
@@ -912,105 +1032,120 @@
       "answer": "Muhammad Ali",
       "answer_format": "write_in",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "notable-figures"
     },
     {
       "slug": "nba-denver",
       "question": "Name the professional basketball team from Denver.",
       "answer": "Nuggets",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-carolina",
       "question": "Name the professional football team from Carolina.",
       "answer": "Panthers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-oakland",
       "question": "Name the professional baseball team from Oakland.",
       "answer": "Athletics",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-florida",
       "question": "Name the professional hockey team from Florida (plays in Sunrise, FL).",
       "answer": "Panthers",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-orlando",
       "question": "Name the professional basketball team from Orlando.",
       "answer": "Magic",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-atlanta",
       "question": "Name the professional football team from Atlanta.",
       "answer": "Falcons",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-toronto",
       "question": "Name the professional baseball team from Toronto.",
       "answer": "Blue Jays",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-ottawa",
       "question": "Name the professional hockey team from Ottawa.",
       "answer": "Senators",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-minnesota",
       "question": "Name the professional basketball team from Minnesota.",
       "answer": "Timberwolves",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-arizona",
       "question": "Name the professional football team from Arizona.",
       "answer": "Cardinals",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "mlb-philadelphia",
       "question": "Name the professional baseball team from Philadelphia.",
       "answer": "Phillies",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nhl-calgary",
       "question": "Name the professional hockey team from Calgary.",
       "answer": "Flames",
       "category": "Sports",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nba-portland",
       "question": "Name the professional basketball team from Portland.",
       "answer": "Trail Blazers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "nfl-tampa-bay",
       "question": "Name the professional football team from Tampa Bay.",
       "answer": "Buccaneers",
       "category": "Sports",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "oklahoma-city-thunder-original-city",
@@ -1021,7 +1156,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Seattle"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "los-angeles-lakers-original-state",
@@ -1032,7 +1168,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Minnesota"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "washington-commanders-original-city",
@@ -1043,7 +1180,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Boston"
-      ]
+      ],
+      "subcategory": "notable-figures"
     },
     {
       "slug": "baltimore-ravens-original-city",
@@ -1054,7 +1192,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cleveland"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "tennessee-titans-original-name",
@@ -1066,7 +1205,8 @@
       "acceptableAnswers": [
         "Houston Oilers",
         "Oilers"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "san-francisco-giants-original-city",
@@ -1079,7 +1219,8 @@
         "New York City",
         "New York",
         "NYC"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "los-angeles-dodgers-original-borough",
@@ -1090,7 +1231,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Brooklyn"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "atlanta-braves-original-city",
@@ -1101,7 +1243,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Milwaukee"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "oakland-athletics-original-city",
@@ -1112,7 +1255,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Philadelphia"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "minnesota-twins-original-city",
@@ -1125,7 +1269,8 @@
         "Washington",
         "Washington D.C.",
         "Washington DC"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "baltimore-orioles-original-city",
@@ -1137,7 +1282,8 @@
       "acceptableAnswers": [
         "St. Louis",
         "St Louis"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "carolina-hurricanes-original-name",
@@ -1149,7 +1295,8 @@
       "acceptableAnswers": [
         "Carolina Hurricanes",
         "Hurricanes"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "colorado-avalanche-original-city",
@@ -1161,7 +1308,8 @@
       "acceptableAnswers": [
         "Quebec City",
         "Quebec"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "phoenix-coyotes-original-country",
@@ -1172,7 +1320,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Canada"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "dallas-stars-original-state",
@@ -1183,7 +1332,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Minnesota"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "calgary-flames-original-city",
@@ -1194,7 +1344,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Atlanta"
-      ]
+      ],
+      "subcategory": "notable-figures"
     },
     {
       "slug": "new-jersey-devils-original-state",
@@ -1205,7 +1356,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Colorado"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "memphis-grizzlies-original-city",
@@ -1216,7 +1368,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Vancouver"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "detroit-pistons-original-state",
@@ -1227,7 +1380,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Indiana"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "utah-jazz-original-city",
@@ -1238,7 +1392,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "New Orleans"
-      ]
+      ],
+      "subcategory": "notable-figures"
     },
     {
       "slug": "los-angeles-clippers-original-city",
@@ -1249,7 +1404,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Buffalo"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "cleveland-guardians-former-name",
@@ -1261,7 +1417,8 @@
       "acceptableAnswers": [
         "Cleveland Indians",
         "Indians"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "houston-astros-original-name",
@@ -1275,7 +1432,8 @@
         "Colt .45s",
         "Houston Colts",
         "Colts"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "anaheim-ducks-original-prefix",
@@ -1287,7 +1445,8 @@
       "acceptableAnswers": [
         "Mighty",
         "Mighty Ducks"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "tampa-bay-rays-former-prefix",
@@ -1299,7 +1458,8 @@
       "acceptableAnswers": [
         "Tampa Bay Devil Rays",
         "Devil Rays"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "chicago-bears-original-city",
@@ -1310,7 +1470,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Decatur"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "arizona-cardinals-original-city",
@@ -1321,7 +1482,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Chicago"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "indianapolis-colts-original-city",
@@ -1332,7 +1494,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Baltimore"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "washington-nationals-former-city",
@@ -1344,7 +1507,8 @@
       "acceptableAnswers": [
         "Montreal",
         "Montréal"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "los-angeles-rams-midwest-city",
@@ -1356,7 +1520,8 @@
       "acceptableAnswers": [
         "St. Louis",
         "St Louis"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "brooklyn-nets-former-state",
@@ -1367,7 +1532,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "New Jersey"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "winnipeg-jets-original-city",
@@ -1378,7 +1544,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Atlanta"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "golden-state-warriors-original-city",
@@ -1389,7 +1556,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Philadelphia"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "kansas-city-chiefs-original-name",
@@ -1401,7 +1569,8 @@
       "acceptableAnswers": [
         "Dallas Texans",
         "Texans"
-      ]
+      ],
+      "subcategory": "notable-figures"
     },
     {
       "slug": "oakland-athletics-2025-city",
@@ -1412,7 +1581,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Sacramento"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "toronto-blue-jays-original-name-rumor",
@@ -1425,7 +1595,8 @@
         "Labatt",
         "Labatt's",
         "Labatt Brewing Company"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "milwaukee-brewers-original-city",
@@ -1436,7 +1607,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Seattle"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "philadelphia-76ers-original-city",
@@ -1447,7 +1619,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Syracuse"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "las-vegas-raiders-original-city",
@@ -1458,7 +1631,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Oakland"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "new-orleans-pelicans-former-name",
@@ -1470,7 +1644,8 @@
       "acceptableAnswers": [
         "Hornets",
         "New Orleans Hornets"
-      ]
+      ],
+      "subcategory": "notable-figures"
     },
     {
       "slug": "edmonton-oilers-original-league-name",
@@ -1481,7 +1656,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Alberta"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "washington-commanders-former-name",
@@ -1493,7 +1669,8 @@
       "acceptableAnswers": [
         "Washington Football Team",
         "WFT"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "los-angeles-chargers-original-city",
@@ -1505,7 +1682,8 @@
       "acceptableAnswers": [
         "Los Angeles",
         "LA"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "oklahoma-city-thunder-former-mascot",
@@ -1516,7 +1694,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Squatch"
-      ]
+      ],
+      "subcategory": "notable-figures"
     },
     {
       "slug": "cincinnati-reds-1950s-rebrand",
@@ -1528,7 +1707,8 @@
       "acceptableAnswers": [
         "Redlegs",
         "Cincinnati Redlegs"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "detroit-lions-original-city",
@@ -1539,7 +1719,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Spartans"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "houston-rockets-original-city",
@@ -1550,7 +1731,8 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "San Diego"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "dallas-mavericks-expansion-year",
@@ -1561,7 +1743,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "1980"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "pittsburgh-pirates-original-name",
@@ -1572,7 +1755,8 @@
       "difficulty": "medium",
       "acceptableAnswers": [
         "Pirates"
-      ]
+      ],
+      "subcategory": "notable-figures"
     },
     {
       "slug": "utah-hockey-club-former-city",
@@ -1585,7 +1769,8 @@
         "Arizona Coyotes",
         "Coyotes",
         "Phoenix Coyotes"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "san-jose-sharks-original-bay-arena",
@@ -1596,7 +1781,8 @@
       "difficulty": "hard",
       "acceptableAnswers": [
         "Daly City"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "boston-red-sox-original-informal-name",
@@ -1608,7 +1794,8 @@
       "acceptableAnswers": [
         "Boston Americans",
         "Americans"
-      ]
+      ],
+      "subcategory": "notable-figures"
     },
     {
       "slug": "chicago-white-sox-original-city",
@@ -1621,7 +1808,8 @@
         "St. Paul",
         "St Paul",
         "Saint Paul"
-      ]
+      ],
+      "subcategory": "teams-franchises"
     },
     {
       "slug": "sacramento-kings-original-rochester-name",
@@ -1633,7 +1821,8 @@
       "acceptableAnswers": [
         "Rochester Royals",
         "Royals"
-      ]
+      ],
+      "subcategory": "historical-moments"
     },
     {
       "slug": "points-for-a-touchdown-american-football",
@@ -1644,7 +1833,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "how-many-strikes-in-a-row-are-needed-to-achieve-a-perfect-game-in-ten-pin-bowling",
@@ -1655,7 +1845,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "in-boxing-what-is-it-called-when-a-fight-is-stopped-because-one-fighter-is-unable-to-continue-due-to-injury-or-referee-decision-but-is-not-knocked-out",
@@ -1666,7 +1857,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "in-professional-tennis-how-many-grand-slam-tournaments-are-held-each-year",
@@ -1677,7 +1869,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "in-tennis-what-score-is-represented-by-the-term-love",
@@ -1688,7 +1881,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "what-is-the-name-of-the-traditional-japanese-martial-art-that-focuses-on-throws-joint-locks-and-pins",
@@ -1696,7 +1890,8 @@
       "answer": "Judo",
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "what-is-the-only-nfl-team-to-complete-a-perfect-undefeated-season-including-the-super-bowl",
@@ -1708,7 +1903,8 @@
       ],
       "category": "Sports",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "in-which-sport-is-a-shuttlecock-used",
@@ -1716,7 +1912,8 @@
       "answer": "Badminton",
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "which-individual-sport-involves-disciplines-such-as-dressage-eventing-and-show-jumping",
@@ -1729,7 +1926,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "before-becoming-a-successful-actor-dwayne-the-rock-johnson-was-a-prominent-figure-in-what-professional-sport",
@@ -1742,7 +1940,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "in-golf-what-is-the-term-for-a-score-of-three-strokes-under-par-on-a-single-hole",
@@ -1753,7 +1952,8 @@
       ],
       "category": "Sports",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "in-which-sport-would-you-find-positions-like-setter-and-libero",
@@ -1761,7 +1961,8 @@
       "answer": "Volleyball",
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "in-which-olympic-sport-do-athletes-compete-using-a-foil-pe-or-sabre",
@@ -1769,7 +1970,8 @@
       "answer": "Fencing",
       "category": "Sports",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "which-country-is-widely-recognized-as-the-birthplace-of-basketball",
@@ -1781,7 +1983,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-major-grand-slam-tennis-tournament-is-exclusively-played-on-red-clay-courts",
@@ -1792,7 +1995,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "what-is-the-maximum-number-of-rounds-in-a-professional-boxing-championship-match",
@@ -1803,7 +2007,8 @@
       ],
       "category": "Sports",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "what-is-the-maximum-score-for-a-single-dart-in-a-game-of-darts",
@@ -1814,7 +2019,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "what-is-the-name-of-the-international-governing-body-for-association-football-soccer",
@@ -1826,7 +2032,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "what-is-the-official-name-of-the-championship-trophy-awarded-in-the-nhl",
@@ -1834,7 +2041,8 @@
       "answer": "Stanley Cup",
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "which-of-these-combat-sports-is-often-referred-to-as-the-sweet-science",
@@ -1845,7 +2053,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-famous-golf-tournament-is-played-annually-at-augusta-national-golf-club",
@@ -1858,7 +2067,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-international-organization-is-the-governing-body-of-association-football-soccer",
@@ -1871,7 +2081,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-nba-player-is-famously-known-by-the-nickname-air-jordan",
@@ -1883,7 +2094,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "notable-figures"
     },
     {
       "slug": "which-nfl-team-holds-the-record-for-the-most-super-bowl-victories",
@@ -1894,7 +2106,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "which-south-american-city-hosted-the-summer-olympic-games-in-2016",
@@ -1905,7 +2118,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-swimming-stroke-is-named-after-an-insect",
@@ -1913,7 +2127,8 @@
       "answer": "Butterfly",
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-swimming-stroke-is-performed-lying-on-your-back",
@@ -1925,7 +2140,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "who-was-the-first-boxer-to-win-the-world-heavyweight-championship-three-times",
@@ -1937,7 +2153,8 @@
       ],
       "category": "Sports",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "notable-figures"
     },
     {
       "slug": "indy-500-laps",
@@ -1948,7 +2165,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "how-many-yards-must-an-american-football-team-advance-to-earn-a-first-down",
@@ -1961,7 +2179,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "in-tennis-what-is-it-called-when-a-player-wins-a-game-without-their-opponent-scoring-any-points",
@@ -1972,7 +2191,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "in-which-sport-would-you-typically-find-a-slapshot",
@@ -1983,7 +2203,8 @@
       ],
       "category": "Sports",
       "difficulty": "easy",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "what-is-the-maximum-number-of-rounds-in-a-professional-boxing-match-for-a-world-title",
@@ -1994,7 +2215,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "sport-birdie-eagle-bogey",
@@ -2002,7 +2224,8 @@
       "answer": "Golf",
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "rules-terminology"
     },
     {
       "slug": "which-country-has-won-the-most-fifa-world-cup-titles-in-mens-football",
@@ -2010,7 +2233,8 @@
       "answer": "Brazil",
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-of-the-four-grand-slam-tennis-tournaments-is-famously-played-on-clay-courts",
@@ -2021,7 +2245,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-martial-art-originated-in-korea-and-emphasizes-kicks",
@@ -2033,7 +2258,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-nba-legend-is-famously-associated-with-the-skyhook-shot",
@@ -2046,7 +2272,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-nfl-team-completed-the-only-perfect-undefeated-season-in-history-including-the-super-bowl",
@@ -2058,7 +2285,8 @@
       ],
       "category": "Sports",
       "difficulty": "medium",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "historical-moments"
     },
     {
       "slug": "which-nfl-team-holds-the-record-for-the-most-super-bowl-appearances",
@@ -2070,7 +2298,8 @@
       ],
       "category": "Sports",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "records-statistics"
     },
     {
       "slug": "which-former-professional-baseball-player-is-famously-known-for-breaking-the-color-barrier-in-major-league-baseball",
@@ -2082,7 +2311,8 @@
       ],
       "category": "Sports",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "notable-figures"
     },
     {
       "slug": "who-was-the-first-boxer-to-defeat-mike-tyson-professionally",
@@ -2093,7 +2323,1215 @@
       ],
       "category": "Sports",
       "difficulty": "hard",
-      "answer_format": "write_in"
+      "answer_format": "write_in",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "nfl-tom-brady-rookie-draft-pick",
+      "question": "In which round of the NFL Draft was Tom Brady selected?",
+      "answer": "6th",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "6th round",
+        "Sixth"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "pele-world-cup-titles",
+      "question": "What national team did Pele play for when he won the World Cup three times?",
+      "answer": "Brazil",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Brazil"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "michael-jordan-ncaa-championship",
+      "question": "What college did Michael Jordan play for when he won the NCAA championship in 1982?",
+      "answer": "University of North Carolina",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UNC",
+        "North Carolina"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "babe-ruth-original-team-boston",
+      "question": "Before joining the New York Yankees, Babe Ruth played for which MLB team?",
+      "answer": "Boston Red Sox",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Red Sox"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "jackie-robinson-dodgers-number-retired",
+      "question": "What jersey number did Jackie Robinson wear, which has been retired across all of Major League Baseball?",
+      "answer": "42",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Forty-two"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "muhammad-ali-olympic-medal-year",
+      "question": "Under his birth name Cassius Clay, Muhammad Ali won an Olympic gold medal in which year?",
+      "answer": "1960",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "wayne-gretzky-childhood-nickname",
+      "question": "What was Wayne Gretzky's childhood nickname, given because of his exceptional hockey skills from a young age?",
+      "answer": "The Great One",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Great One"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "usain-bolt-triple-triple-olympics",
+      "question": "Usain Bolt achieved a 'triple-triple' by winning gold in the 100m, 200m, and 4x100m relay at how many consecutive Olympics?",
+      "answer": "3",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Three"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "latrell-sprewell-choking-coach",
+      "question": "In 1997, which Golden State Warriors player was suspended for choking his head coach P.J. Carlesimo?",
+      "answer": "Latrell Sprewell",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Sprewell"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "tonya-harding-nancy-kerrigan-scandal",
+      "question": "The 1994 scandal involving figure skater Nancy Kerrigan's attack was orchestrated by which rival skater's ex-husband?",
+      "answer": "Tonya Harding",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "muhammad-ali-opposition",
+      "question": "Citing his Muslim faith Muhammad Ali refused to be drafted into which war?",
+      "answer": "Vietnam War",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Vietnam",
+        "Vietnam Conflict"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "tiger-woods-masters-first-win-age",
+      "question": "How old was Tiger Woods when he won his first Masters in 1997?",
+      "answer": "21",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "21 years old",
+        "Twenty-one"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "tiger-woods-masters-first-win-age-2",
+      "question": "Who was the youngest golfer to ever win the Masters?",
+      "answer": "Tiger Woods",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Tiger Woods"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "magic-johnson-hiv-retirement",
+      "question": "Basketball star Magic Johnson announced his retirement from the NBA in 1991 after contracting what disease?",
+      "answer": "HIV",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "AIDS",
+        "HIV/AIDS"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "roberto-clemente-charity-work-death",
+      "question": "Professional baseball player Roberto Clemente died in a plane crash in 1972 while delivering aid to which country?",
+      "answer": "Nicaragua",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "vince-lombardi-super-bowl-trophy",
+      "question": "The Super Bowl trophy is named after Vince Lombardi, who coached which NFL team to victory in the first two Super Bowls?",
+      "answer": "Green Bay Packers",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Packers",
+        "Green Bay"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "billie-jean-king-battle-of-sexes",
+      "question": "In the 1973 'Battle of the Sexes' tennis match, Billie Jean King defeated which male player?",
+      "answer": "Bobby Riggs",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "dick-fosbury-flop-high-jump",
+      "question": "Dick Fosbury revolutionized the high jump with a new backward technique. What is that technique called?",
+      "answer": "The Fosbury Flop",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Fosbury Flop"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "michael-phelps-beijing-2008-gold",
+      "question": "Michael Phelps still holds the record for most gold medals in a single Olympics thanks to his performance at the 2008 Beijing Olympics. How many did he win?",
+      "answer": "8",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Eight"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "michael-phelps-beijing-2008-gold-2",
+      "question": "At the 2008 Beijing Olympics, Michael Phelps broke Mark Spitz's record for most gold medals in a single Olympics. What kind of athlete was Mark Spitz?",
+      "answer": "Swimmer",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Swimmer"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "michael-phelps-broke-mark-spitz-record",
+      "question": "At the 2008 Beijing Olympics, whose record for most gold medals in a single Olympics did Michael Phelps break?",
+      "answer": "Mark Spitz",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Mark Spitz",
+        "Spitz "
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "nadia-comaneci-perfect-ten",
+      "question": "At the 1976 Olympics, Nadia Comaneci became the first gymnast to score a perfect 10.0. What country did she represent?",
+      "answer": "Romania",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "wilt-chamberlain-100-point-game",
+      "question": "Who is the only NBA player to score 100 points in a single NBA game?",
+      "answer": "Wilt Chamberlain",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Wilt Chamberlain"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "hulk-hogan-wrestlemania-main-event",
+      "question": "At WrestleMania III, Hulk Hogan memorably retained his WWF World Heavyweight Championship by executing the \"body slam heard 'round the world.\" Which legendary, 520-pound wrestler—who had been billed as undefeated for 15 years—did Hogan lift and defeat in this historic 'passing-of-the-torch moment?'",
+      "answer": "WrestleMania III",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Wrestlemania 3",
+        "Wrestlemania III"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "rick-flair-wooo-catchphrase",
+      "question": "What famous catchphrase is wrestling legend Ric Flair known for?",
+      "answer": "Wooo!",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Woo",
+        "Woooo!",
+        "Wooooo!",
+        "Whoooooo!"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "stone-cold-steve-austin-stunner",
+      "question": "What finishing move is Stone Cold Steve Austin famous for?",
+      "answer": "Stone Cold Stunner",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Stunner"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "dwayne-johnson-wrestling-name",
+      "question": "Before becoming a Hollywood star, what was Dwayne Johnson's WWF wrestling name?",
+      "answer": "The Rock",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Rock",
+        "Dwayne 'The Rock' Johnson"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "danica-patrick-indy-500-start-finish-pole",
+      "question": "What sport is Danica Patrick known for?",
+      "answer": "NASCAR",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Auto Racing",
+        "IndyCar",
+        "NASCAR"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "george-foreman-grille-endorsement",
+      "question": "After retiring from boxing, George Foreman earned more money from endorsing what kitchen appliance than he did from boxing?",
+      "answer": "George Foreman Grill",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Lean Mean Fat-Reducing Grilling Machine",
+        "Grill"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "shaquille-oneal-shaq-fu-games",
+      "question": "Shaquille O'Neal perfoms DJ sets under what name?",
+      "answer": "DJ Diesel",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "DJ Diesel",
+        "Shaq Diesel",
+        "Diesel"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "bo-jackson-nfl-mlb-career",
+      "question": "Bo Jackson achieved fame playing both professional football and what other sport?",
+      "answer": "Baseball",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "MLB",
+        "Major League Baseball"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "nfl-offside-vs-false-start",
+      "question": "In American football, which penalty occurs when a player moves before the snap and causes a defender to react? Hint: This is different from being 'offsides.'",
+      "answer": "False start",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nfl-false-start-vs-offsides",
+      "question": "In American football, which penalty occurs when a player crosses the line of scrimmage before the snap?",
+      "answer": "Offsides",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "baseball-infield-fly-rule",
+      "question": "In baseball, what is the rule called that prevents a fielder from intentionally dropping a fly ball with runners on base?",
+      "answer": "Infield fly rule",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "fly rule",
+        " infield fly rule",
+        "infield fly"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "basketball-goaltending-definition",
+      "question": "In basketball, what is it called when a defensive player touches the ball while it's on its way down toward the hoop?",
+      "answer": "Goaltending",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "soccer-offside-rule-basic",
+      "question": "Fill in the blank: In soccer, a player is ____________ if they are closer to the opponent's goal than the second-to-last defender and the ball.",
+      "answer": "offside",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "offsides",
+        "offside"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "cricket-leg-before-wicket-lbw",
+      "question": "In cricket, what does the acronym LBW stand for?",
+      "answer": "Leg Before Wicket",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "hockey-icing-rule",
+      "question": "In hockey, what is the infraction called when a player shoots the puck from behind the center line across the opponent's goal line without being touched?",
+      "answer": "Icing",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "soccer-penalty-kick-distance",
+      "question": "In soccer, how many yards (or meters) is a penalty kick taken from the goal?",
+      "answer": "12 yards",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "12 yards (11 meters)",
+        "12 yards",
+        "11 meters"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nfl-safety-scoring-play",
+      "question": "In American football, how many points is a safety worth?",
+      "answer": "2",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Two"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "baseball-balk-penalty",
+      "question": "In baseball, what is the penalty called when a pitcher makes an illegal motion meant to deceive a runner?",
+      "answer": "A balk",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Balk"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "rugby-try-scoring-points",
+      "question": "In rugby union, how many points is a try worth?",
+      "answer": "5",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Five"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nba-shot-clock-seconds",
+      "question": "How many seconds does an NBA team have to attempt a shot?",
+      "answer": "24",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Twenty-four"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "ncaa-basketball-shot-clock-difference",
+      "question": "Unlike the NBA's 24-second shot clock, how many seconds does the men's NCAA basketball shot clock allow?",
+      "answer": "30",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Thirty"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "tennis-deuce-scoring",
+      "question": "In tennis, what is the term for when the score is tied at 40-40?",
+      "answer": "Deuce",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nfl-two-point-conversion-value",
+      "question": "In American football, after scoring a touchdown, a team can attempt to kick an extra point or ... what?",
+      "answer": "2 Point Conversion",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Two point conversion"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "golf-handicap-definition",
+      "question": "In golf, what term describes a player's average number of strokes above par?",
+      "answer": "Handicap",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "hockey-power-play",
+      "question": "In hockey, what is the term for when one team has a player advantage due to a penalty?",
+      "answer": "Power play",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "bowling-strike-spare-definition",
+      "question": "In bowling, what is it called when a player knocks down all remaining pins with the second ball?",
+      "answer": "A spare",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Spare"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "soccer-yellow-red-card-meaning",
+      "question": "In soccer, how many yellow cards must a player receive in a single match to be shown a red card and be ejected?",
+      "answer": "2",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Two"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "mma-ring-shape",
+      "question": "In the UFC, what shape is the fighting area?",
+      "answer": "Octagon",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Octagon,"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nfl-overtime-rules-regular-season",
+      "question": "In NFL regular season overtime, how long is the period?",
+      "answer": "10 minutes",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Ten minutes",
+        "10 min"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nfl-overtime-rules-postseason",
+      "question": "In NFL postseason overtime, how long is the period?",
+      "answer": "15 minutes",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Fifteen minutes",
+        "15 min"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "horse-racing-furlong-distance",
+      "question": "In horse racing, how many yards are in a furlong?",
+      "answer": "220",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "220 yards"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "horse-racing-8-furlong-distance",
+      "question": "In horse racing, how many miles is an 8 furlong race?",
+      "answer": "1",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "1 mile",
+        "One"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nfl-downs-system-basics",
+      "question": "In American football, how many downs does an offense have to advance the ball 10 yards?",
+      "answer": "4",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Four"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nfl-yards-before-first-down",
+      "question": "In American football, how many yards must an offence gain for a first down?",
+      "answer": "10",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Ten"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nfl-sack",
+      "question": "In American football, what is the term for when a defensive player tackles the quarterback behind the line of scrimmage?",
+      "answer": "Sack",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "A sack",
+        "The sack"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "baseball-pitch-clock-2023",
+      "question": "As of 2023, how many seconds does an MLB pitcher have to begin their delivery with runners on base?",
+      "answer": "20",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "20 seconds",
+        "Twenty"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "basketball-three-second-rule",
+      "question": "In basketball, what is the rule that limits how long an offensive player can stand in the paint called?",
+      "answer": "Three-second rule",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Three seconds",
+        "3-second rule"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "curling-hammer-term",
+      "question": "In curling, what is the term for the last stone thrown in an end?",
+      "answer": "The hammer",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Hammer"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "triathlon-distances-olympic",
+      "question": "In an Olympic-distance triathlon, athletes swim 1.5km, bike 40km, and run how many kilometers?",
+      "answer": "10km",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "10 km",
+        "Ten kilometers",
+        "10K"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "cricket-googly-delivery",
+      "question": "In cricket, what is the term for a leg-spinner's ball that spins in the opposite direction to what the batsman expects?",
+      "answer": "Googly",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Wrong'un"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "nfl-pass-interference-penalty-yards",
+      "question": "Fill in the blank: In the NFL, the penalty for defensive pass interference is that the ball is placed at the exact spot where the foul occurred. This is known as a ______ foul.",
+      "answer": "Spot",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Spot",
+        "Spot foul"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "mlb-career-home-run-leader",
+      "question": "Who holds the MLB record for most career home runs?",
+      "answer": "Barry Bonds",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nba-career-assists-leader",
+      "question": "Who is the NBA's all-time leader in career assists?",
+      "answer": "John Stockton",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nba-career-rebounds-leader",
+      "question": "Who is the NBA's all-time leader in career rebounds?",
+      "answer": "Wilt Chamberlain",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nfl-career-rushing-yards-leader",
+      "question": "Who is the NFL's all-time leader in career rushing yards?",
+      "answer": "Emmitt Smith",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "mlb-career-strikeouts-pitcher",
+      "question": "Who holds the MLB record for most career strikeouts as a pitcher?",
+      "answer": "Nolan Ryan",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "mlb-single-season-home-run-record",
+      "question": "Who holds the MLB record for most home runs in a single season (73)?",
+      "answer": "Barry Bonds",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nba-single-season-points-average",
+      "question": "Who holds the NBA record for highest points per game in a single season (50.4)?",
+      "answer": "Wilt Chamberlain",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "super-bowl-most-wins-team",
+      "question": "Which NFL team holds the record for the most Super Bowl wins?",
+      "answer": "New England Patriots",
+      "answer_format": "write_in",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Patriots"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nba-longest-winning-streak",
+      "question": "Which NBA team holds the record for the longest winning streak (33 games)?",
+      "answer": "Los Angeles Lakers",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "LA Lakers",
+        "1971-72 Lakers",
+        "Lakers"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nfl-single-season-rushing-record",
+      "question": "Who holds the NFL record for most rushing yards in a single season (2,105)?",
+      "answer": "Eric Dickerson",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nfl-single-season-passing-td-record",
+      "question": "Who holds the NFL record for most passing touchdowns in a single season (55)?",
+      "answer": "Peyton Manning",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nhl-single-season-goals-record",
+      "question": "Who held the NHL single-season goal record (92) before it was broken in 2022-23?",
+      "answer": "Wayne Gretzky",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nhl-2023-goals-record-breaker",
+      "question": "Which NHL player broke Wayne Gretzky's NHL single-season goal record in 2022-23?",
+      "answer": "Connor McDavid",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "mlb-single-season-strikeout-record-batter",
+      "question": "Which MLB player holds the record for most strikeouts in a single season?",
+      "answer": "Mark Reynolds",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "grand-slam-tennis-most-titles",
+      "question": "Which tennis player has won the most Grand Slam singles titles (24)?",
+      "answer": "Novak Djokovic",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Djokovic"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "masters-golf-lowest-score",
+      "question": "What is the lowest 72-hole score ever recorded at the Masters? Hint: The average number of strokes is 290.",
+      "answer": "268",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "268",
+        "Twenty under par"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nba-fewest-wins-season",
+      "question": "Which NBA team holds the record for the fewest wins in a single season (9)?",
+      "answer": "Philadelphia 76ers",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Sixers",
+        "2015-16 Sixers",
+        "Philadelphia 76ers (2015-16)"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "world-cup-most-goals-tournament",
+      "question": "Who holds the record for the most goals scored in a single World Cup tournament (13)?",
+      "answer": "Just Fontaine",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "world-cup-most-goals-tournament-record-number",
+      "question": "What is the record for the most goals scored in a single World Cup tournament?",
+      "answer": "13",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Thirteen"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nba-championships-most-franchise",
+      "question": "Which franchise has the most NBA championships (18)?",
+      "answer": "Boston Celtics",
+      "answer_format": "write_in",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Celtics"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "nfl-single-game-passing-yards",
+      "question": "Norm Van Brocklin holds the NFL record for most passing yards in a single game. How many yards did he pass for?",
+      "answer": "554",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "554",
+        "Five hundred fifty-four"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "mlb-perfect-game-count",
+      "question": "How many official perfect games have been pitched in MLB history?",
+      "answer": "24",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "24",
+        "Twenty-four",
+        "23"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "olympics-most-games-oldest-medalist",
+      "question": "The Swedish shooter Oscar Swahn is the oldest person to ever win an Olympic gold medal. How old was he when he won his first gold medal?",
+      "answer": "60",
+      "answer_format": "write_in",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "60",
+        "Sixty"
+      ],
+      "imageUrl": null,
+      "imageCredit": null,
+      "category": "Sports",
+      "subcategory": "records-statistics"
     }
   ],
   "familiarity": "mainstream"

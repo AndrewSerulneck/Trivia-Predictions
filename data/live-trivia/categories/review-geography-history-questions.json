@@ -1,0 +1,289 @@
+{
+  "categoryName": "Geography & History",
+  "description": "New Geography and History questions for review before adding to main pools",
+  "reviewDate": "2026-06-25T19:40:25.671Z",
+  "questions": [
+    {
+      "slug": "highest-average-sexual-partners-country",
+      "question": "What country's inhabitants have the highest average number of sexual partners over the course of their lives?",
+      "answer": "Turkey",
+      "acceptableAnswers": [
+        "Türkiye"
+      ],
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "most-tourists-per-year-country",
+      "question": "What country gets the largest number of tourists every year?",
+      "answer": "France",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "most-snowfall-per-year-country",
+      "question": "What country gets the most snowfall every year?",
+      "answer": "Japan",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "highest-men-to-women-ratio-country",
+      "question": "What country has the highest ratio of men to women?",
+      "answer": "Qatar",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-indonesia-vs-greenland",
+      "question": "Which country is bigger by total land area: Indonesia or Greenland?",
+      "answer": "Greenland",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-mexico-vs-saudi-arabia",
+      "question": "Which country is bigger by total land area: Mexico or Saudi Arabia?",
+      "answer": "Saudi Arabia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-turkey-vs-chile",
+      "question": "Which country is bigger by total land area: Turkey or Chile?",
+      "answer": "Turkey",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-pakistan-vs-venezuela",
+      "question": "Which country is bigger by total land area: Pakistan or Venezuela?",
+      "answer": "Venezuela",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-colombia-vs-ethiopia",
+      "question": "Which country is bigger by total land area: Colombia or Ethiopia?",
+      "answer": "Colombia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-brazil-vs-australia",
+      "question": "Which country is bigger by total land area: Brazil or Australia?",
+      "answer": "Brazil",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "only-country-named-after-woman",
+      "question": "What's the only country named after a woman?",
+      "answer": "Saint Lucia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "largest-english-official-language-city",
+      "question": "What is the largest city in the world with English listed as the official language?",
+      "answer": "Lagos",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-portugal-vs-ireland",
+      "question": "Which country has more people: Portugal or Ireland?",
+      "answer": "Portugal",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-sweden-vs-greece",
+      "question": "Which country has more people: Sweden or Greece?",
+      "answer": "Sweden",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-italy-vs-colombia",
+      "question": "Which country has more people: Italy or Colombia?",
+      "answer": "Italy",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-france-vs-thailand",
+      "question": "Which country has more people: France or Thailand?",
+      "answer": "Thailand",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-canada-vs-poland",
+      "question": "Which country has more people: Canada or Poland?",
+      "answer": "Canada",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-germany-vs-turkey",
+      "question": "Which country has more people: Germany or Turkey?",
+      "answer": "Turkey",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-spain-vs-south-korea",
+      "question": "Which country has more people: Spain or South Korea?",
+      "answer": "South Korea",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-australia-vs-north-korea",
+      "question": "Which country has more people: Australia or North Korea?",
+      "answer": "Australia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-germany-vs-japan",
+      "question": "Which country is bigger by total land area: Germany or Japan?",
+      "answer": "Germany",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-portugal-vs-ireland",
+      "question": "Which country is bigger by total land area: Portugal or Ireland?",
+      "answer": "Ireland",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-italy-vs-vietnam",
+      "question": "Which country is larger by total land area: Italy or Vietnam?",
+      "answer": "Vietnam",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-uk-vs-romania",
+      "question": "Which country is larger by total land area: The United Kingdom or Romania?",
+      "answer": "Romania",
+      "category": "Geography",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Romania (UK)"
+      ],
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-norway-vs-poland",
+      "question": "Which country is larger by total land area: Norway or Poland?",
+      "answer": "Norway",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-france-vs-madagascar",
+      "question": "Which country is larger by total land area: France or Madagascar?",
+      "answer": "Madagascar",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-turkey-vs-pakistan",
+      "question": "Which country is larger by total land area: Turkey or Pakistan?",
+      "answer": "Pakistan",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "deepest-river-in-the-world",
+      "question": "What's the deepest river in the world?",
+      "answer": "Congo River",
+      "acceptableAnswers": [
+        "Congo",
+        "The Congo"
+      ],
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "most-alcohol-consumption-per-capita-country",
+      "question": "What country consumes the most alcohol per capita by far?",
+      "answer": "Romania",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "highest-plastic-surgeons-per-capita-state",
+      "question": "What state has the highest number of plastic surgeons per capita?",
+      "answer": "Utah",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "us-states-quirky"
+    },
+    {
+      "slug": "lowest-population-state",
+      "question": "What state has the lowest population?",
+      "answer": "Wyoming",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "us-states-quirky"
+    },
+    {
+      "slug": "smallest-state-by-area",
+      "question": "What state is the smallest by area?",
+      "answer": "Rhode Island",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "us-states-quirky"
+    },
+    {
+      "slug": "first-us-president-born-after-founding",
+      "question": "Who was the first U.S. president born after the country was founded?",
+      "answer": "Martin Van Buren",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
+    },
+    {
+      "slug": "only-us-president-first-language-not-english",
+      "question": "Who is the only U.S. president whose first language was NOT English?",
+      "answer": "Martin Van Buren",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "us-history-government"
+    }
+  ]
+}

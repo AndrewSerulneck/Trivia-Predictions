@@ -126,6 +126,7 @@ export type FantasyPlayerPoolItem = {
   playerId: number | null;
   playerName: string;
   headshotUrl: string | null;
+  jerseyNumber: string | null;
   coverage: number;
   projectedLine: number | null;
   position: string | null;
@@ -141,6 +142,7 @@ export type FantasyLineupPlayer = {
   playerId: number;
   playerName: string;
   headshotUrl?: string | null;
+  jerseyNumber?: string | null;
 };
 
 export type FantasyEntry = {
@@ -674,6 +676,7 @@ function parseLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
     const playerIdRaw = Number.parseInt(String(row.player_id ?? row.playerId ?? ""), 10);
     const playerName = String(row.player_name ?? row.playerName ?? "").trim();
     const headshotUrlRaw = String(row.headshot_url ?? row.headshotUrl ?? "").trim();
+    const jerseyNumberRaw = String(row.jersey_number ?? row.jerseyNumber ?? "").trim();
     if (!Number.isFinite(playerIdRaw) || playerIdRaw <= 0 || !playerName) {
       continue;
     }
@@ -681,7 +684,7 @@ function parseLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
       continue;
     }
     seen.add(playerIdRaw);
-    players.push({ playerId: playerIdRaw, playerName, headshotUrl: headshotUrlRaw || null });
+    players.push({ playerId: playerIdRaw, playerName, headshotUrl: headshotUrlRaw || null, jerseyNumber: jerseyNumberRaw || null });
   }
 
   return players.slice(0, FANTASY_MAX_LINEUP_SIZE);
@@ -1567,6 +1570,7 @@ type ApiSportsPoolSeed = {
   position?: string | null;
   team?: string | null;
   headshotUrl?: string | null;
+  jerseyNumber?: string | null;
 };
 
 function addApiSportsPoolSeed(map: Map<string, ApiSportsPoolSeed>, seed: ApiSportsPoolSeed): void {
@@ -1614,6 +1618,28 @@ function addApiSportsPoolSeed(map: Map<string, ApiSportsPoolSeed>, seed: ApiSpor
   if ((!existingByName.playerId || existingByName.playerId <= 0) && seed.playerId && seed.playerId > 0) {
     map.set(key, { ...existingByName, playerId: seed.playerId });
   }
+}
+
+async function loadJerseyNumbersByPlayerIds(playerIds: number[]): Promise<Map<number, string>> {
+  const result = new Map<number, string>();
+  if (!supabaseAdmin || playerIds.length === 0) return result;
+  const ids = playerIds.filter((id) => id > 0);
+  if (ids.length === 0) return result;
+  const { data } = await supabaseAdmin
+    .from("live_player_stats")
+    .select("player_id, jersey_number")
+    .in("player_id", ids)
+    .not("jersey_number", "is", null)
+    .neq("jersey_number", "")
+    .limit(ids.length * 2);
+  for (const row of (data as Array<Record<string, unknown>> | null) ?? []) {
+    const id = Number.parseInt(String(row.player_id ?? ""), 10);
+    const num = String(row.jersey_number ?? "").trim();
+    if (Number.isFinite(id) && id > 0 && num && !result.has(id)) {
+      result.set(id, num);
+    }
+  }
+  return result;
 }
 
 async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]): Promise<FantasyPlayerPoolItem[]> {
@@ -1785,6 +1811,7 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
       playerId: seed.playerId,
       playerName: seed.playerName,
       headshotUrl: seed.headshotUrl ?? null,
+      jerseyNumber: seed.jerseyNumber ?? null,
       coverage: sample?.samples ?? 1,
       projectedLine: sample?.avg ?? (bdlProj !== undefined ? bdlProj : null),
       position: seed.position ?? null,
@@ -1803,10 +1830,15 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
   });
 
   const poolWithIds = await attachPlayerIdsToPool(pool.slice(0, FANTASY_PLAYER_POOL_LIMIT));
-  const headshotByName = await loadNbaHeadshotsByName(poolWithIds.map((item) => item.playerName), poolLeague);
+  const resolvedIds = poolWithIds.map((item) => item.playerId).filter((id): id is number => id != null && id > 0);
+  const [headshotByName, jerseyByPlayerId] = await Promise.all([
+    loadNbaHeadshotsByName(poolWithIds.map((item) => item.playerName), poolLeague),
+    loadJerseyNumbersByPlayerIds(resolvedIds),
+  ]);
   return poolWithIds.map((item) => ({
     ...item,
     headshotUrl: headshotByName.get(normalizeNameKey(item.playerName)) ?? null,
+    jerseyNumber: (item.playerId != null ? jerseyByPlayerId.get(item.playerId) : undefined) ?? null,
   }));
 }
 

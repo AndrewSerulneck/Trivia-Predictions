@@ -241,14 +241,22 @@ body.tp-bingo-theme {
 
 html.tp-bingo-landscape-active,
 body.tp-bingo-landscape-active {
+  height: 100%;
   overflow: hidden !important;
   overscroll-behavior: none !important;
-  touch-action: manipulation !important;
+  touch-action: none !important;
   scrollbar-gutter: auto !important;
 }
 
 .tp-bingo-landscape-shell {
+  top: var(--bingo-landscape-top, 0px);
+  left: var(--bingo-landscape-left, 0px);
+  width: var(--bingo-landscape-vw, 100vw);
+  height: var(--bingo-landscape-vh, 100svh);
   font-size: 16px;
+  contain: layout paint size;
+  overscroll-behavior: none;
+  touch-action: pan-x;
 }
 
 .tp-game-page .tp-page-main .tp-bingo-landscape-shell .text-xs { font-size: 0.75rem !important; }
@@ -266,8 +274,8 @@ body.tp-bingo-landscape-active {
 }
 
 .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
-  max-height: min(calc(100svh - 5.7rem), calc(100vw - clamp(19rem, 35vw, 24rem)));
-  max-width: min(calc(100svh - 5.7rem), calc(100vw - clamp(19rem, 35vw, 24rem)));
+  max-height: min(calc(var(--bingo-landscape-vh, 100svh) - 5.7rem), calc(var(--bingo-landscape-vw, 100vw) - clamp(19rem, 35vw, 24rem)));
+  max-width: min(calc(var(--bingo-landscape-vh, 100svh) - 5.7rem), calc(var(--bingo-landscape-vw, 100vw) - clamp(19rem, 35vw, 24rem)));
 }
 
 .tp-bingo-landscape-shell .tp-bingo-landscape-arrow {
@@ -308,14 +316,25 @@ body.tp-bingo-landscape-active {
     padding-right: 0.55rem;
   }
 
+  .tp-bingo-landscape-shell .tp-bingo-landscape-fullscreen {
+    height: 2.25rem;
+    width: 2.25rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-fullscreen-unavailable {
+    height: 1.8rem;
+    max-width: 9rem;
+    font-size: 8px;
+  }
+
   .tp-bingo-landscape-shell .tp-bingo-landscape-content {
     gap: 0.4rem;
     grid-template-columns: 2.25rem minmax(0, 1fr) minmax(9.8rem, 10.8rem) 2.25rem;
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
-    max-height: calc(100svh - 4.85rem);
-    max-width: calc(100vw - 16rem);
+    max-height: calc(var(--bingo-landscape-vh, 100svh) - 4.85rem);
+    max-width: calc(var(--bingo-landscape-vw, 100vw) - 16rem);
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-arrow {
@@ -379,12 +398,16 @@ body.tp-bingo-landscape-active {
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
-    max-width: calc(100vw - 15.25rem);
+    max-width: calc(var(--bingo-landscape-vw, 100vw) - 15.25rem);
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-status {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-fullscreen-unavailable {
+    display: none;
   }
 }
 
@@ -398,7 +421,7 @@ body.tp-bingo-landscape-active {
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
-    max-width: calc(100vw - 13.75rem);
+    max-width: calc(var(--bingo-landscape-vw, 100vw) - 13.75rem);
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-empty {

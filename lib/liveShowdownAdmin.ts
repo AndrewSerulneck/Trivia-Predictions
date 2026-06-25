@@ -39,8 +39,12 @@ function removeLiveTriviaQuestionFromJson(slug: string): void {
     }
   }
 }
-const QUESTION_BLOCK_MS = 60_000;
-const ROUND_MS = 20 * 60_000;
+const ANSWERING_MS = 60_000;
+const REST_WARNING_MS = 15_000;
+const QUESTION_BLOCK_MS = ANSWERING_MS + REST_WARNING_MS; // 75 sec
+const MID_GAME_BREAK_MS = 525_000; // 8 min 45 sec
+const QUESTION_WINDOW_MS = QUESTIONS_PER_ROUND * QUESTION_BLOCK_MS; // 18 min 45 sec
+const ROUND_MS = QUESTION_WINDOW_MS + MID_GAME_BREAK_MS; // 27 min 30 sec
 const BLOCKED_LIVE_SHOWDOWN_CATEGORIES = new Set(["fantasy epics"]);
 
 type LiveShowdownQuestionRow = {
@@ -1288,15 +1292,18 @@ type CategoryCount = {
 export async function getLiveShowdownRoundCategories(): Promise<CategoryCount[]> {
   const admin = getAdminClient();
 
-  // 1. Fetch all active live_showdown / anytime_blitz questions from the DB.
+  // 1. Fetch all active live_showdown questions from the DB.
   // We deliberately do NOT filter by isLiveShowdownEligibleAnswer here so that
   // every category present in the pool appears in the dropdown. The
   // replaceRoundQuestionsWithCategory function will validate eligibility at
   // replacement time and fail with a clear error if too few questions are usable.
+  // Only live_showdown pool — replacement functions never draw from anytime_blitz,
+  // so showing anytime_blitz-only categories in the dropdown produces a confusing
+  // "no eligible replacement" error when selected.
   const { data, error } = await admin
     .from("trivia_questions")
     .select("id, slug, question, category, options, correct_answer, question_pool")
-    .in("question_pool", ["live_showdown", "anytime_blitz"])
+    .eq("question_pool", "live_showdown")
     .eq("status", "active");
 
   if (error) {

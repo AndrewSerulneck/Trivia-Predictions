@@ -283,6 +283,12 @@ export default function InfoPage() {
                 </svg>
               </a>
             </div>
+            <Link
+              href="/"
+              className="hidden md:inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-black text-white transition-colors hover:bg-white/10"
+            >
+              Play now
+            </Link>
             <a
               href="#contact"
               className="hidden md:inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 htm-btn-glow"
@@ -307,6 +313,9 @@ export default function InfoPage() {
               <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">How It Works</a>
               <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Pricing</a>
               <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Contact</a>
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">
+                Play now
+              </Link>
               <a
                 href="#contact"
                 onClick={() => setMobileMenuOpen(false)}
@@ -356,16 +365,22 @@ export default function InfoPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="#contact"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-8 py-4 text-base font-black text-slate-950 htm-btn-glow"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-8 py-4 text-lg font-black text-slate-950 htm-btn-glow"
               >
                 Request a Demo
               </a>
               <a
                 href="#games"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-8 py-4 text-base font-semibold text-white hover:bg-white/10 transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-8 py-4 text-lg font-black text-slate-950 hover:bg-amber-300 transition-colors"
               >
                 See the Games
               </a>
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-300/35 bg-slate-950/60 px-8 py-4 text-base font-black text-cyan-100 hover:bg-slate-900/80 transition-colors"
+              >
+                Play Hightop Challenge
+              </Link>
             </div>
           </div>
 
@@ -583,6 +598,12 @@ export default function InfoPage() {
                   >
                     Explore Games
                   </a>
+                  <Link
+                    href="/"
+                    className="inline-flex items-center justify-center rounded-xl border border-cyan-300/35 bg-slate-950/60 px-8 py-4 text-base font-black text-cyan-100 hover:bg-slate-900/80 transition-colors"
+                  >
+                    Go to Game
+                  </Link>
                 </div>
               </div>
             </div>
@@ -661,7 +682,7 @@ export default function InfoPage() {
               <div>
                 <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Platform</h4>
                 <ul className="flex flex-col gap-2 text-sm text-slate-500">
-                  {[["Features", "#features"], ["How It Works", "#how-it-works"], ["Pricing", "#pricing"]].map(([label, href]) => (
+                  {[["Features", "#features"], ["How It Works", "#how-it-works"], ["Pricing", "#pricing"], ["Player Game", "/"]].map(([label, href]) => (
                     <li key={label}><a href={href} className="hover:text-white transition-colors">{label}</a></li>
                   ))}
                 </ul>
