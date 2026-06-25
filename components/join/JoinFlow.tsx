@@ -47,6 +47,7 @@ import {
   setLoginInProgress,
 } from "@/lib/authFastPath";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
 import { getVenueById, listVenues, readCachedVenues } from "@/lib/venues";
 import {
   setVenueHomeRouteIntent,
@@ -377,19 +378,6 @@ const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onS
   );
 });
 
-function HightopNeonLogo() {
-  return (
-    <div className="w-full select-none" aria-label="Hightop Challenge">
-      <img
-        src="/brand/HTC_Logo_Final_Transparent copy.png"
-        alt="Hightop Challenge"
-        className="block h-auto w-full"
-        loading="eager"
-        decoding="async"
-      />
-    </div>
-  );
-}
 
 type UsernameStepProps = {
   direction: 1 | -1;
@@ -2474,8 +2462,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           />
         )}
         <div className="mx-auto w-full px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="relative left-1/2 w-[100dvw] max-w-none -translate-x-1/2">
-            <HightopNeonLogo />
+          <div className="relative left-1/2 w-[100dvw] max-w-none -translate-x-1/2 flex justify-center">
+            <ExplodingLogo width={320} />
           </div>
 
           {/* Dark join card */}

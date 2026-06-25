@@ -109,7 +109,7 @@
     {
       "slug": "aztec-empire-conqueror",
       "question": "Which Spanish conquistador led the expedition that caused the fall of the Aztec Empire?",
-      "answer": "Hern\u00e1n Cort\u00e9s",
+      "answer": "Hernán Cortés",
       "answer_format": "write_in",
       "category": "History & Government",
       "difficulty": "medium",
@@ -1005,7 +1005,7 @@
       "category": "History & Government",
       "difficulty": "easy",
       "acceptableAnswers": [
-        "Juan Sebasti\u00e1n Elcano"
+        "Juan Sebastián Elcano"
       ],
       "answer_format": "write_in",
       "subcategory": "ancient-medieval"
@@ -1339,7 +1339,7 @@
     },
     {
       "slug": "jose-cuervo",
-      "question": "Was Jos\u00e9 Cuervo a real person? Answer yes or no.",
+      "question": "Was José Cuervo a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
@@ -1795,7 +1795,7 @@
     },
     {
       "slug": "missouri-compromise",
-      "question": "What 1820 compromise banned slavery north of the 36\u00b030' parallel in the Louisiana Territory?",
+      "question": "What 1820 compromise banned slavery north of the 36°30' parallel in the Louisiana Territory?",
       "answer": "Missouri Compromise",
       "answer_format": "write_in",
       "category": "History & Government",
@@ -2138,7 +2138,7 @@
     {
       "slug": "detente-cold-war",
       "question": "What term describes the easing of Cold War tensions between the U.S. and USSR during the 1970s?",
-      "answer": "D\u00e9tente",
+      "answer": "Détente",
       "answer_format": "write_in",
       "category": "History & Government",
       "difficulty": "hard",
@@ -2510,7 +2510,7 @@
     },
     {
       "slug": "quote-jfk-ask-not",
-      "question": "Which US President declared during his 1961 inaugural address, 'Ask not what your country can do for you\u2014ask what you can do for your country'?",
+      "question": "Which US President declared during his 1961 inaugural address, 'Ask not what your country can do for you—ask what you can do for your country'?",
       "answer": "JFK",
       "acceptableAnswers": [
         "Kennedy",
@@ -3422,7 +3422,7 @@
       "answer": "Genghis Khan",
       "acceptableAnswers": [
         "Chinggis Khan",
-        "Tem\u00fcjin"
+        "Temüjin"
       ],
       "category": "History & Government",
       "difficulty": "medium",
@@ -3599,7 +3599,7 @@
     },
     {
       "slug": "joan-of-arc-orleans",
-      "question": "Which French teenaged peasant girl led the French army to a pivotal victory at Orl\u00e9ans during the Hundred Years' War?",
+      "question": "Which French teenaged peasant girl led the French army to a pivotal victory at Orléans during the Hundred Years' War?",
       "answer": "Joan of Arc",
       "answer_format": "write_in",
       "category": "History & Government",
@@ -3662,14 +3662,14 @@
     },
     {
       "slug": "chichen-itza-pyramid",
-      "question": "Which Maya city on Mexico's Yucat\u00e1n Peninsula contains the famous step pyramid known as El Castillo?",
+      "question": "Which Maya city on Mexico's Yucatán Peninsula contains the famous step pyramid known as El Castillo?",
       "answer": "Chichen Itza",
       "answer_format": "write_in",
       "category": "History & Government",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Chichen Itza",
-        "Chich\u00e9n Itz\u00e1"
+        "Chichén Itzá"
       ],
       "subcategory": "ancient-medieval"
     },
@@ -5450,6 +5450,22 @@
       "category": "History & Government",
       "difficulty": "easy",
       "subcategory": "famous-figures-quotes"
+    },
+    {
+      "slug": "first-us-president-born-after-founding",
+      "question": "Who was the first U.S. president born after the country was founded?",
+      "answer": "Martin Van Buren",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
+    },
+    {
+      "slug": "only-us-president-first-language-not-english",
+      "question": "Who is the only U.S. president whose first language was NOT English?",
+      "answer": "Martin Van Buren",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "us-history-government"
     }
   ],
   "familiarity": "moderate"

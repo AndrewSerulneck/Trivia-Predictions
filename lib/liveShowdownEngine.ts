@@ -258,7 +258,7 @@ let supportsOccurrenceDateColumn: boolean | null = null;
 let hasLoggedOccurrenceDateFallback = false;
 let supportsLiveTriviaSourceColumns: boolean | null = null;
 let hasLoggedLiveTriviaSourceColumnFallback = false;
-let cachedLiveTriviaSourceMetadata: Map<string, { sourceFile: string; sourceOrder: number }> | null = null;
+let cachedLiveTriviaSourceMetadata: Map<string, { sourceFile: string; sourceOrder: number; subcategory: string | null }> | null = null;
 
 function isMissingOccurrenceDateColumnError(message: string | undefined): boolean {
   const normalized = String(message ?? "").toLowerCase();
@@ -400,7 +400,10 @@ function seededShuffle<T>(items: readonly T[], seed: number): T[] {
 }
 
 function normalizeLiveTriviaCategory(value: string | null | undefined): string {
-  const normalized = String(value ?? "").trim();
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
   return normalized || "General";
 }
 
@@ -449,10 +452,10 @@ function getLiveTriviaSourceFile(value: unknown): string {
   return String(value ?? "").trim();
 }
 
-function readLiveTriviaSourceMetadata(): Map<string, { sourceFile: string; sourceOrder: number }> {
+function readLiveTriviaSourceMetadata(): Map<string, { sourceFile: string; sourceOrder: number; subcategory: string | null }> {
   if (cachedLiveTriviaSourceMetadata) return cachedLiveTriviaSourceMetadata;
 
-  const metadata = new Map<string, { sourceFile: string; sourceOrder: number }>();
+  const metadata = new Map<string, { sourceFile: string; sourceOrder: number; subcategory: string | null }>();
   const directory = path.join(process.cwd(), "data", "live-trivia", "categories");
   try {
     if (!fs.existsSync(directory)) {
@@ -475,9 +478,12 @@ function readLiveTriviaSourceMetadata(): Map<string, { sourceFile: string; sourc
         if (!item || typeof item !== "object") return;
         const slug = String((item as { slug?: unknown }).slug ?? "").trim();
         if (!slug) return;
-        metadata.set(slug, { sourceFile: file, sourceOrder: index });
+        const subcategoryRaw = (item as { subcategory?: unknown }).subcategory;
+        const subcategory = subcategoryRaw != null ? String(subcategoryRaw).trim() || null : null;
+        metadata.set(slug, { sourceFile: file, sourceOrder: index, subcategory });
       });
     }
+    cachedLiveTriviaSourceMetadata = metadata;
   } catch (error) {
     console.warn(
       `[live-trivia][source-metadata] Unable to load canonical JSON source metadata: ${
@@ -486,8 +492,7 @@ function readLiveTriviaSourceMetadata(): Map<string, { sourceFile: string; sourc
     );
   }
 
-  cachedLiveTriviaSourceMetadata = metadata;
-  return metadata;
+  return cachedLiveTriviaSourceMetadata ?? metadata;
 }
 
 function mergeLiveTriviaSourceMetadata(rows: readonly LiveTriviaSeedQuestion[]): LiveTriviaSeedQuestion[] {
@@ -503,6 +508,7 @@ function mergeLiveTriviaSourceMetadata(rows: readonly LiveTriviaSeedQuestion[]):
       ...row,
       source_order: getFiniteSourceOrder(row.source_order) ?? fallback.sourceOrder,
       source_file: getLiveTriviaSourceFile(row.source_file) || fallback.sourceFile,
+      subcategory: String(row.subcategory ?? "").trim() || fallback.subcategory,
     };
   });
 }

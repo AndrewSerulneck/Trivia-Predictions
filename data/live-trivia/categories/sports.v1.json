@@ -1152,7 +1152,7 @@
       "question": "Prior to relocating to Oklahoma City in 2008, the Thunder NBA franchise spent its first 41 seasons in what American city?",
       "answer": "Seattle",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Seattle"
@@ -1164,7 +1164,7 @@
       "question": "The Los Angeles Lakers originally earned their nickname due to the abundance of lakes in what Midwestern US state where the franchise was founded?",
       "answer": "Minnesota",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Minnesota"
@@ -1176,7 +1176,7 @@
       "question": "Before spending decades in Washington, D.C., the NFL franchise now known as the Commanders was founded in 1932 in what northeastern city?",
       "answer": "Boston",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Boston"
@@ -1188,7 +1188,7 @@
       "question": "The modern Baltimore Ravens NFL franchise was established in 1996 after owner Art Modell controversially relocated his football team from what Ohio city?",
       "answer": "Cleveland",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cleveland"
@@ -1200,7 +1200,7 @@
       "question": "Before moving to Tennessee and eventually becoming the Titans, this NFL franchise was founded in 1960 under what Texas-themed name?",
       "answer": "Houston Oilers",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Houston Oilers",
@@ -1213,7 +1213,7 @@
       "question": "Along with the Dodgers, the San Francisco Giants franchise famously relocated to California prior to the 1958 season from what East Coast city?",
       "answer": "New York City",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "New York City",
@@ -1227,7 +1227,7 @@
       "question": "Before moving to Los Angeles, the Dodgers baseball franchise was famously beloved in what specific New York City borough?",
       "answer": "Brooklyn",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Brooklyn"
@@ -1239,7 +1239,7 @@
       "question": "Before moving to Atlanta in 1966, the Braves baseball franchise spent a brief 13-year stint playing home games in what midwestern city?",
       "answer": "Milwaukee",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Milwaukee"
@@ -1251,7 +1251,7 @@
       "question": "Before historical stints in Kansas City and Oakland, the Athletics MLB franchise was originally founded in 1901 in what East Coast metropolis?",
       "answer": "Philadelphia",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Philadelphia"
@@ -1263,7 +1263,7 @@
       "question": "The Minnesota Twins baseball franchise played from 1901 to 1960 as the Senators in what American city?",
       "answer": "Washington",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Washington",
@@ -1277,7 +1277,7 @@
       "question": "The modern Baltimore Orioles MLB franchise spent over five decades operating as the Browns in what major Missouri city before relocating in 1954?",
       "answer": "St. Louis",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "St. Louis",
@@ -1290,7 +1290,7 @@
       "question": "When the NHL's Hartford Whalers relocated to North Carolina in 1997, they immediately rebranded the franchise using what weather-related name?",
       "answer": "Carolina Hurricanes",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Carolina Hurricanes",
@@ -1303,7 +1303,7 @@
       "question": "Before relocating to Denver in 1995 and winning the Stanley Cup, the Colorado Avalanche franchise played in what Canadian city as the Nordiques?",
       "answer": "Quebec City",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Quebec City",
@@ -1316,7 +1316,7 @@
       "question": "The NHL franchise formerly known as the Arizona Coyotes was originally founded in 1972 as the Jets in what North American country?",
       "answer": "Canada",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Canada"
@@ -1328,7 +1328,7 @@
       "question": "The Dallas Stars NHL franchise retained the 'Stars' part of its moniker from its original home in what cold Midwestern state?",
       "answer": "Minnesota",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Minnesota"
@@ -1340,7 +1340,7 @@
       "question": "The Calgary Flames NHL franchise originally kept its fiery nickname because it was founded in 1972 in what major southern US city?",
       "answer": "Atlanta",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Atlanta"
@@ -1352,7 +1352,7 @@
       "question": "Before moving to New Jersey in 1982, the Devils NHL franchise spent two seasons as the Rockies in what mountainous western state?",
       "answer": "Colorado",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Colorado"
@@ -1364,7 +1364,7 @@
       "question": "What NBA's 'Grizzlies' franchise spent its first six seasons playing home games in what major Canadian coastal city before moving to Tennessee in 2001?",
       "answer": "Vancouver",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Vancouver"
@@ -1376,7 +1376,7 @@
       "question": "The Detroit Pistons franchise was originally founded as the Fort Wayne Zollner Pistons in what US state before moving to Michigan in 1957?",
       "answer": "Indiana",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Indiana"
@@ -1388,7 +1388,7 @@
       "question": "The Utah Jazz NBA franchise chose to keep its music-themed nickname despite moving away from what culturally rich, musical southern city in 1979?",
       "answer": "New Orleans",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "New Orleans"
@@ -1400,7 +1400,7 @@
       "question": "Before relocating to San Diego and ultimately Los Angeles, the Clippers NBA franchise spent its first eight seasons playing as the Braves in what upstate New York city?",
       "answer": "Buffalo",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Buffalo"
@@ -1412,7 +1412,7 @@
       "question": "What was the official baseball team moniker used by the Cleveland MLB franchise from 1915 until their rebrand to the Guardians in 2021?",
       "answer": "Cleveland Indians",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cleveland Indians",
@@ -1425,7 +1425,7 @@
       "question": "When founded as an MLB expansion team in 1962, the Houston Astros franchise spent their first three seasons operating under what original name?",
       "answer": "Houston Colt .45s",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Houston Colt .45s",
@@ -1440,7 +1440,7 @@
       "question": "In 2006, the NHL franchise located in Anaheim shortened its team name by officially dropping what Disney-owned word from its moniker?",
       "answer": "Mighty",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Mighty",
@@ -1453,7 +1453,7 @@
       "question": "Prior to an organizational rebrand ahead of the 2008 MLB season, the Tampa Bay Rays used what longer name?",
       "answer": "Tampa Bay Devil Rays",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Tampa Bay Devil Rays",
@@ -1466,7 +1466,7 @@
       "question": "A charter member of the NFL, the franchise now known as the Chicago Bears was originally founded in 1919 in what other Illinois city?",
       "answer": "Decatur",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Decatur"
@@ -1478,7 +1478,7 @@
       "question": "Before relocations took them to St. Louis and later Arizona, the Cardinals NFL franchise was established in 1898 in what major Midwestern city?",
       "answer": "Chicago",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Chicago"
@@ -1490,7 +1490,7 @@
       "question": "In one of the most famous midnight relocations in sports history, the Colts NFL franchise secretly packed up moving trucks in 1984 to leave what East Coast city?",
       "answer": "Baltimore",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Baltimore"
@@ -1502,7 +1502,7 @@
       "question": "Before relocating to Washington, D.C. ahead of the 2005 MLB season, the Nationals franchise played its home games in what Canadian city?",
       "answer": "Montreal",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Montreal",
@@ -1515,7 +1515,7 @@
       "question": "Prior to returning to southern California in 2016, the Rams NFL franchise spent twenty seasons playing home games in what Missouri city?",
       "answer": "St. Louis",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "St. Louis",
@@ -1528,7 +1528,7 @@
       "question": "Before moving to Barclays Center in Brooklyn in 2012, the Nets NBA franchise spent thirty-five seasons representing what neighboring US state?",
       "answer": "New Jersey",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "New Jersey"
@@ -1540,7 +1540,7 @@
       "question": "The current Winnipeg Jets NHL franchise originally entered the league as an expansion team in 1999 based in what major southern US city?",
       "answer": "Atlanta",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Atlanta"
@@ -1552,7 +1552,7 @@
       "question": "Before moving to the San Francisco Bay Area in 1962, the Warriors NBA franchise was founded in 1946 in what East Coast city?",
       "answer": "Philadelphia",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Philadelphia"
@@ -1564,7 +1564,7 @@
       "question": "A charter member of the AFL, the franchise now known as the Kansas City Chiefs won the 1962 league championship under what original name?",
       "answer": "Dallas Texans",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Dallas Texans",
@@ -1577,7 +1577,7 @@
       "question": "Following their final season playing at the Oakland Coliseum in 2024, the Athletics MLB franchise temporarily relocated to what California city for the 2025 season?",
       "answer": "Sacramento",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Sacramento"
@@ -1589,7 +1589,7 @@
       "question": "What is the primary corporate brand name of the Canadian brewery that originally owned a massive stake in the Toronto MLB franchise, which heavily influenced the team's choice of 'Blue' in their name 'Blue Jays'?",
       "answer": "Labatt",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Labatt",
@@ -1603,7 +1603,7 @@
       "question": "The Milwaukee Brewers baseball franchise spent their inaugural 1969 expansion season playing as the Pilots in what major Pacific Northwest city?",
       "answer": "Seattle",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Seattle"
@@ -1615,7 +1615,7 @@
       "question": "Before rebranding as the 76ers upon moving to Philadelphia in 1963, this NBA franchise won the 1955 championship playing in what upstate New York city?",
       "answer": "Syracuse",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Syracuse"
@@ -1627,7 +1627,7 @@
       "question": "Prior to their high-profile moves to Los Angeles and finally to Las Vegas, the Raiders NFL franchise was founded in 1960 in what California city?",
       "answer": "Oakland",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Oakland"
@@ -1639,7 +1639,7 @@
       "question": "What official team nickname did the New Orleans NBA franchise drop in 2013, allowing it to be adopted by a newly formed franchise in Charlotte, North Carolina?",
       "answer": "Hornets",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Hornets",
@@ -1652,7 +1652,7 @@
       "question": "When founded in 1972 as a charter member of the World Hockey Association (WHA), the Edmonton Oilers initially used the name of what larger Canadian province instead of a city?",
       "answer": "Alberta",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Alberta"
@@ -1664,7 +1664,7 @@
       "question": "What name did the Washington NFL franchise use as their temporary placeholder team name during the 2020 and 2021 seasons?",
       "answer": "Washington Football Team",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Washington Football Team",
@@ -1677,7 +1677,7 @@
       "question": "The San Diego Chargers NFL franchise originally spent its inaugural 1960 season playing in what major California city before returning there decades later in 2017?",
       "answer": "Los Angeles",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Los Angeles",
@@ -1690,7 +1690,7 @@
       "question": "What is the name of the iconic, disgruntled wheedling pilot mascot that the Seattle SuperSonics left behind when the franchise converted into the Oklahoma City Thunder?",
       "answer": "Squatch",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Squatch"
@@ -1702,7 +1702,7 @@
       "question": "To avoid any political associations with communism during the height of the Red Scare, the Cincinnati MLB franchise officially altered their name from 'the Reds' to what alternative plural noun from 1953 to 1958? Hint: The Red_____s .",
       "answer": "Redlegs",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Redlegs",
@@ -1715,7 +1715,7 @@
       "question": "The Detroit Lions NFL franchise was originally established in 1930 with what as their team name?",
       "answer": "Spartans",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Spartans"
@@ -1727,7 +1727,7 @@
       "question": "The Houston Rockets NBA franchise kept its space-age moniker despite being founded in 1967 in what major Southern California coastal city famous for its aerospace industry?",
       "answer": "San Diego",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "San Diego"
@@ -1739,7 +1739,7 @@
       "question": "What year were the Dallas Mavericks officially introduced into the NBA as an expansion team during a league meeting at the All-Star Game? Remember: If no one gets it exactly right, the closest guess wins.",
       "answer": "1980",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "medium",
       "acceptableAnswers": [
         "1980"
@@ -1751,7 +1751,7 @@
       "question": "Founded in 1881 as the Alleghenys, the Pittsburgh MLB franchise officially adopted their current buccaneer-themed nickname after rival teams accused them of stealing a player. What team name did they adopt?",
       "answer": "Pirates",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Pirates"
@@ -1763,7 +1763,7 @@
       "question": "The NHL franchise that debuted as the Utah Hockey Club for the 2024–2025 season was formed by acquiring the entire active player roster of what dissolved desert franchise?",
       "answer": "Arizona Coyotes",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Arizona Coyotes",
@@ -1777,7 +1777,7 @@
       "question": "While waiting for construction to finish on their permanent arena in San Jose, the Sharks NHL expansion franchise spent their first two seasons playing home games in what neighboring California city?",
       "answer": "Daly City",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Daly City"
@@ -1789,7 +1789,7 @@
       "question": "Before adopting the Red Sox moniker in 1908, the American League baseball franchise in Boston was widely known by sports writers by what team name.",
       "answer": "Boston Americans",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Boston Americans",
@@ -1802,7 +1802,7 @@
       "question": "Before moving to the South Side of Chicago in 1900, the historic baseball charter franchise now known as the White Sox won a minor league title based in what Minnesota city?",
       "answer": "St. Paul",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "medium",
       "acceptableAnswers": [
         "St. Paul",
@@ -1816,7 +1816,7 @@
       "question": "When the Sacramento Kings franchise won their lone NBA title in 1951 while located in Rochester, New York, they competed under what distinct royal moniker?",
       "answer": "Rochester Royals",
       "answer_format": "write_in",
-      "category": "sports",
+      "category": "Sports",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Rochester Royals",

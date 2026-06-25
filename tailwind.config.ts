@@ -26,11 +26,17 @@ const config: Config = {
           "0%, 100%": { opacity: "0.4" },
           "50%": { opacity: "1" },
         },
+        "logo-burst": {
+          "0%": { transform: "scale(0.02)" },
+          "70%": { transform: "scale(1.1)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         shake: "shake 0.55s ease-in-out",
         "tp-glow-pulse": "tp-glow-pulse 2s ease-in-out infinite",
         "ht-pulse": "ht-pulse 2s ease-in-out infinite",
+        "logo-burst": "logo-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
       },
       colors: {
         ht: {

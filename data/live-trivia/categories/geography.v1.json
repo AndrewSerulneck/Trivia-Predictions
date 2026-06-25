@@ -219,7 +219,7 @@
     {
       "slug": "capital-of-brazil",
       "question": "What is the capital city of Brazil?",
-      "answer": "Bras\u00edlia",
+      "answer": "Brasília",
       "category": "Geography",
       "difficulty": "easy",
       "subcategory": "countries-capitals-borders"
@@ -2637,13 +2637,13 @@
       "category": "Geography",
       "difficulty": "easy",
       "imageUrl": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&fit=crop",
-      "imageCredit": "Photo by David K\u00f6hler on Unsplash",
+      "imageCredit": "Photo by David Köhler on Unsplash",
       "subcategory": "landmarks-wonders"
     },
     {
       "slug": "landmark-sagrada-familia",
-      "question": "Designed by the visionary Catalan architect Antoni Gaud\u00ed, this breathtaking, organic-styled basilica in Barcelona has been under continuous construction since 1882.",
-      "answer": "Sagrada Fam\u00edlia",
+      "question": "Designed by the visionary Catalan architect Antoni Gaudí, this breathtaking, organic-styled basilica in Barcelona has been under continuous construction since 1882.",
+      "answer": "Sagrada Família",
       "category": "Geography",
       "difficulty": "medium",
       "imageUrl": "https://images.unsplash.com/photo-1650964827770-421afa7960ac?w=800&fit=crop",
@@ -2672,7 +2672,7 @@
     },
     {
       "slug": "landmark-statue-of-liberty",
-      "question": "Designed by Fr\u00e9d\u00e9ric-Auguste Bartholdi and dedicated in 1886, this colossal copper sculpture on Liberty Island was a gift from the people of France to the United States.",
+      "question": "Designed by Frédéric-Auguste Bartholdi and dedicated in 1886, this colossal copper sculpture on Liberty Island was a gift from the people of France to the United States.",
       "answer": "Statue of Liberty",
       "category": "Geography",
       "difficulty": "easy",
@@ -2692,7 +2692,7 @@
     },
     {
       "slug": "landmark-chichen-itza",
-      "question": "Dominated by the massive step-pyramid known as El Castillo, this large pre-Columbian city built by the Maya civilization sits in the Mexican state of Yucat\u00e1n.",
+      "question": "Dominated by the massive step-pyramid known as El Castillo, this large pre-Columbian city built by the Maya civilization sits in the Mexican state of Yucatán.",
       "answer": "Chichen Itza",
       "category": "Geography",
       "difficulty": "easy",
@@ -2732,7 +2732,7 @@
     },
     {
       "slug": "landmark-sydney-opera-house",
-      "question": "Designed by Danish architect J\u00f8rn Utzon and formally opened in 1973, this Expressionist masterpiece on Bennelong Point features a series of distinctive gleaming white concrete 'shells' resembling sails.",
+      "question": "Designed by Danish architect Jørn Utzon and formally opened in 1973, this Expressionist masterpiece on Bennelong Point features a series of distinctive gleaming white concrete 'shells' resembling sails.",
       "answer": "Sydney Opera House",
       "category": "Geography",
       "difficulty": "easy",
@@ -2982,7 +2982,7 @@
     },
     {
       "slug": "landmark-arc-de-triomphe",
-      "question": "Commissioned by Napoleon in 1806 following his victory at Austerlitz, this monumental neoclassical arch stands proudly at the center of the Place Charles de Gaulle at the western end of the Champs-\u00c9lys\u00e9es.",
+      "question": "Commissioned by Napoleon in 1806 following his victory at Austerlitz, this monumental neoclassical arch stands proudly at the center of the Place Charles de Gaulle at the western end of the Champs-Élysées.",
       "answer": "Arc de Triomphe",
       "category": "Geography",
       "difficulty": "easy",
@@ -3183,7 +3183,7 @@
       "category": "Geography",
       "difficulty": "easy",
       "imageUrl": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&fit=crop",
-      "imageCredit": "Photo by David K\u00f6hler on Unsplash",
+      "imageCredit": "Photo by David Köhler on Unsplash",
       "subcategory": "countries-capitals-borders"
     },
     {
@@ -3346,7 +3346,7 @@
     },
     {
       "slug": "landmark-easy-chichen-itza-rebound",
-      "question": "Located on Mexico's Yucat\u00e1n Peninsula, this ancient Mayan city is dominated by a massive, world-famous step-pyramid known as El Castillo.",
+      "question": "Located on Mexico's Yucatán Peninsula, this ancient Mayan city is dominated by a massive, world-famous step-pyramid known as El Castillo.",
       "answer": "Chichen Itza",
       "category": "Geography",
       "difficulty": "easy",
@@ -3447,7 +3447,7 @@
       "category": "Geography",
       "difficulty": "easy",
       "imageUrl": "https://images.unsplash.com/photo-1600478750228-8b894da7bc48?w=800&fit=crop",
-      "imageCredit": "Photo by Daniel Lloyd Blunk-Fern\u00e1ndez on Unsplash",
+      "imageCredit": "Photo by Daniel Lloyd Blunk-Fernández on Unsplash",
       "subcategory": "landmarks-wonders"
     },
     {
@@ -3502,7 +3502,7 @@
     },
     {
       "slug": "landmark-easy-arc-de-triomphe-rebound",
-      "question": "This famous neoclassical triumphal arch stands proudly at the center of a massive traffic roundabout at the western end of the Champs-\u00c9lys\u00e9es in Paris.",
+      "question": "This famous neoclassical triumphal arch stands proudly at the center of a massive traffic roundabout at the western end of the Champs-Élysées in Paris.",
       "answer": "Arc de Triomphe",
       "category": "Geography",
       "difficulty": "easy",
@@ -3726,7 +3726,7 @@
         "Elizabeth Tower"
       ],
       "imageUrl": "https://images.unsplash.com/photo-1500380804539-4e1e8c1e7118?w=800&fit=crop",
-      "imageCredit": "Photo by Jurica Koleti\u0107 on Unsplash",
+      "imageCredit": "Photo by Jurica Koletić on Unsplash",
       "subcategory": "countries-capitals-borders"
     },
     {
@@ -3810,7 +3810,7 @@
     {
       "slug": "landmark-galapagos",
       "question": "This volcanic archipelago in the Pacific Ocean, belonging to Ecuador, was visited by Charles Darwin in 1835 and inspired his theory of natural selection through its unique wildlife.",
-      "answer": "Gal\u00e1pagos Islands",
+      "answer": "Galápagos Islands",
       "category": "Geography",
       "difficulty": "easy",
       "acceptableAnswers": [
@@ -3832,7 +3832,7 @@
         "The Amazon"
       ],
       "imageUrl": "https://images.unsplash.com/photo-1591081658714-f576fb7ea3ed?w=800&fit=crop",
-      "imageCredit": "Photo by Ivars Utin\u0101ns on Unsplash",
+      "imageCredit": "Photo by Ivars Utināns on Unsplash",
       "subcategory": "physical-geography"
     },
     {
@@ -3857,7 +3857,7 @@
     },
     {
       "slug": "landmark-bryce-canyon",
-      "question": "Located in southern Utah, this national park is known for its hoodoos \u2014 tall, thin spires of rock formed by erosion \u2014 and for having the world's largest concentration of these unique geological formations.",
+      "question": "Located in southern Utah, this national park is known for its hoodoos — tall, thin spires of rock formed by erosion — and for having the world's largest concentration of these unique geological formations.",
       "answer": "Bryce Canyon",
       "category": "Geography",
       "difficulty": "medium",
@@ -3884,7 +3884,7 @@
     },
     {
       "slug": "landmark-zion-national-park",
-      "question": "This national park in southwestern Utah is known for its steep red cliffs, The Narrows slot canyon, and Angels Landing \u2014 a trail that requires navigating chains bolted into sheer rock.",
+      "question": "This national park in southwestern Utah is known for its steep red cliffs, The Narrows slot canyon, and Angels Landing — a trail that requires navigating chains bolted into sheer rock.",
       "answer": "Zion National Park",
       "category": "Geography",
       "difficulty": "medium",
@@ -3911,7 +3911,7 @@
     },
     {
       "slug": "landmark-giant-causeway",
-      "question": "Located on the northeastern coast of Northern Ireland, this area of about 40,000 interlocking basalt columns \u2014 most of them hexagonal \u2014 was formed by an ancient volcanic eruption.",
+      "question": "Located on the northeastern coast of Northern Ireland, this area of about 40,000 interlocking basalt columns — most of them hexagonal — was formed by an ancient volcanic eruption.",
       "answer": "Giant's Causeway",
       "category": "Geography",
       "difficulty": "medium",
@@ -4808,7 +4808,7 @@
     },
     {
       "slug": "us-states-motto-united-we-stand",
-      "question": "Which southern state pairs its official motto, 'United we stand, divided we fall,' with an image of two men\u2014traditionally a statesman and a frontiersman\u2014embracing on its state seal?",
+      "question": "Which southern state pairs its official motto, 'United we stand, divided we fall,' with an image of two men—traditionally a statesman and a frontiersman—embracing on its state seal?",
       "answer": "Kentucky",
       "category": "Geography",
       "difficulty": "easy",
@@ -5076,7 +5076,7 @@
     },
     {
       "slug": "through-which-country-does-the-prime-meridian-0-longitude-primarily-pass",
-      "question": "Through which country does the Prime Meridian (0\u00b0 longitude) primarily pass?",
+      "question": "Through which country does the Prime Meridian (0° longitude) primarily pass?",
       "answer": "United Kingdom",
       "acceptableAnswers": [
         "UK",
@@ -5282,6 +5282,272 @@
       "category": "Geography",
       "difficulty": "medium",
       "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "highest-average-sexual-partners-country",
+      "question": "What country's inhabitants have the highest average number of sexual partners over the course of their lives?",
+      "answer": "Turkey",
+      "acceptableAnswers": [
+        "Türkiye"
+      ],
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "most-tourists-per-year-country",
+      "question": "What country gets the largest number of tourists every year?",
+      "answer": "France",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "most-snowfall-per-year-country",
+      "question": "What country gets the most snowfall every year?",
+      "answer": "Japan",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "highest-men-to-women-ratio-country",
+      "question": "What country has the highest ratio of men to women?",
+      "answer": "Qatar",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-indonesia-vs-greenland",
+      "question": "Which country is bigger by total land area: Indonesia or Greenland?",
+      "answer": "Greenland",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-mexico-vs-saudi-arabia",
+      "question": "Which country is bigger by total land area: Mexico or Saudi Arabia?",
+      "answer": "Saudi Arabia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-turkey-vs-chile",
+      "question": "Which country is bigger by total land area: Turkey or Chile?",
+      "answer": "Turkey",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-pakistan-vs-venezuela",
+      "question": "Which country is bigger by total land area: Pakistan or Venezuela?",
+      "answer": "Venezuela",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-colombia-vs-ethiopia",
+      "question": "Which country is bigger by total land area: Colombia or Ethiopia?",
+      "answer": "Colombia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-brazil-vs-australia",
+      "question": "Which country is bigger by total land area: Brazil or Australia?",
+      "answer": "Brazil",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "only-country-named-after-woman",
+      "question": "What's the only country named after a woman?",
+      "answer": "Saint Lucia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "largest-english-official-language-city",
+      "question": "What is the largest city in the world with English listed as the official language?",
+      "answer": "Lagos",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-portugal-vs-ireland",
+      "question": "Which country has more people: Portugal or Ireland?",
+      "answer": "Portugal",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-sweden-vs-greece",
+      "question": "Which country has more people: Sweden or Greece?",
+      "answer": "Sweden",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-italy-vs-colombia",
+      "question": "Which country has more people: Italy or Colombia?",
+      "answer": "Italy",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-france-vs-thailand",
+      "question": "Which country has more people: France or Thailand?",
+      "answer": "Thailand",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-canada-vs-poland",
+      "question": "Which country has more people: Canada or Poland?",
+      "answer": "Canada",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-germany-vs-turkey",
+      "question": "Which country has more people: Germany or Turkey?",
+      "answer": "Turkey",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-spain-vs-south-korea",
+      "question": "Which country has more people: Spain or South Korea?",
+      "answer": "South Korea",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "more-people-australia-vs-north-korea",
+      "question": "Which country has more people: Australia or North Korea?",
+      "answer": "Australia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-germany-vs-japan",
+      "question": "Which country is bigger by total land area: Germany or Japan?",
+      "answer": "Germany",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "bigger-land-area-portugal-vs-ireland",
+      "question": "Which country is bigger by total land area: Portugal or Ireland?",
+      "answer": "Ireland",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-italy-vs-vietnam",
+      "question": "Which country is larger by total land area: Italy or Vietnam?",
+      "answer": "Vietnam",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-uk-vs-romania",
+      "question": "Which country is larger by total land area: The United Kingdom or Romania?",
+      "answer": "Romania",
+      "category": "Geography",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Romania (UK)"
+      ],
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-norway-vs-poland",
+      "question": "Which country is larger by total land area: Norway or Poland?",
+      "answer": "Norway",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-france-vs-madagascar",
+      "question": "Which country is larger by total land area: France or Madagascar?",
+      "answer": "Madagascar",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "larger-land-area-turkey-vs-pakistan",
+      "question": "Which country is larger by total land area: Turkey or Pakistan?",
+      "answer": "Pakistan",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "deepest-river-in-the-world",
+      "question": "What's the deepest river in the world?",
+      "answer": "Congo River",
+      "acceptableAnswers": [
+        "Congo",
+        "The Congo"
+      ],
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "most-alcohol-consumption-per-capita-country",
+      "question": "What country consumes the most alcohol per capita by far?",
+      "answer": "Romania",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "highest-plastic-surgeons-per-capita-state",
+      "question": "What state has the highest number of plastic surgeons per capita?",
+      "answer": "Utah",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "us-states-quirky"
+    },
+    {
+      "slug": "lowest-population-state",
+      "question": "What state has the lowest population?",
+      "answer": "Wyoming",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "us-states-quirky"
+    },
+    {
+      "slug": "smallest-state-by-area",
+      "question": "What state is the smallest by area?",
+      "answer": "Rhode Island",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "us-states-quirky"
     }
   ]
 }
