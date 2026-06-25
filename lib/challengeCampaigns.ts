@@ -701,7 +701,16 @@ async function getLeaderboardSnapshotForCampaign(params: {
         : params.campaign.recurringType === "monthly" ? 30 * 86400000
         : 7 * 86400000;
       const nextCycleStart = new Date(cycleStart.getTime() + periodMs);
-      return { topEntries: [], viewer: null, isBetweenCycles: true, nextCycleStart: nextCycleStart.toISOString() };
+      const prevRpc = await getLeaderboardSnapshotViaRpc({
+        challengeId: params.campaign.id,
+        venueId: params.venueId,
+        viewerUserId: params.viewerUserId,
+        displayLimit: params.campaign.leaderboardDisplayLimit,
+        tiebreaker: params.campaign.leaderboardTiebreaker,
+        cycleStart,
+      });
+      const prevData = prevRpc ?? { topEntries: [], viewer: null };
+      return { ...prevData, isBetweenCycles: true, nextCycleStart: nextCycleStart.toISOString() };
     }
   }
 

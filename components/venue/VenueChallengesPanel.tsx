@@ -150,11 +150,48 @@ function VenueChallengesPanelInner({
                     ) : challenge.challengeMode === "leaderboard" ? (
                       <div className="mt-3">
                         {challenge.leaderboard?.isBetweenCycles ? (
-                          <p className="text-base text-slate-500">
-                            {challenge.leaderboard.nextCycleStart
-                              ? `Next challenge starts ${new Date(challenge.leaderboard.nextCycleStart).toLocaleDateString([], { weekday: "long" })} at ${new Date(challenge.leaderboard.nextCycleStart).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
-                              : "Next challenge coming soon"}
-                          </p>
+                          <div>
+                            {topEntries.length > 0 ? (
+                              <>
+                                <p className="mb-2 text-xs font-black uppercase tracking-[0.1em] text-slate-500">Previous Results</p>
+                                <div role="list" aria-label="Previous challenge leaderboard">
+                                  <div className="mb-1 flex items-center gap-2 border-b border-slate-700/60 pb-1.5 px-1">
+                                    <span className="w-6 shrink-0 text-right text-sm font-black uppercase tracking-[0.1em] text-slate-600">#</span>
+                                    <span className="min-w-0 flex-1 text-sm font-black uppercase tracking-[0.1em] text-slate-600">Player</span>
+                                    <span className="shrink-0 text-sm font-black uppercase tracking-[0.1em] text-slate-600">Pts</span>
+                                  </div>
+                                  {topEntries.map((entry) => {
+                                    const isViewer = entry.userId === currentUserId;
+                                    return (
+                                      <div key={entry.userId} role="listitem" className={`flex items-center gap-2 rounded px-1 py-1.5 ${isViewer ? "bg-cyan-500/10" : ""}`}>
+                                        <span className="w-6 shrink-0 text-right text-base font-black tabular-nums text-slate-500">{entry.rank}</span>
+                                        <span className={`min-w-0 flex-1 truncate text-lg font-semibold ${isViewer ? "text-cyan-300" : "text-slate-200"}`}>
+                                          {entry.username}{isViewer ? " (you)" : ""}
+                                        </span>
+                                        <span className="shrink-0 text-lg font-black tabular-nums text-amber-200">{entry.points.toLocaleString()}</span>
+                                      </div>
+                                    );
+                                  })}
+                                  {challenge.leaderboard?.viewer && !challenge.leaderboard.viewer.inTop ? (
+                                    <>
+                                      <div aria-hidden className="my-1 border-t border-slate-700/50" />
+                                      <div role="listitem" className="flex items-center gap-2 rounded bg-cyan-500/10 px-1 py-1.5">
+                                        <span className="w-6 shrink-0 text-right text-base font-black tabular-nums text-slate-500">{challenge.leaderboard.viewer.rank ?? "—"}</span>
+                                        <span className="min-w-0 flex-1 truncate text-base font-semibold text-cyan-300">{challenge.leaderboard.viewer.username ?? "You"} (you)</span>
+                                        <span className="shrink-0 text-lg font-black tabular-nums text-amber-200">{challenge.leaderboard.viewer.points.toLocaleString()}</span>
+                                      </div>
+                                    </>
+                                  ) : null}
+                                </div>
+                                <div aria-hidden className="my-2 border-t border-slate-700/50" />
+                              </>
+                            ) : null}
+                            <p className="text-base text-slate-500">
+                              {challenge.leaderboard.nextCycleStart
+                                ? `Next challenge starts ${new Date(challenge.leaderboard.nextCycleStart).toLocaleDateString([], { weekday: "long" })} at ${new Date(challenge.leaderboard.nextCycleStart).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                                : "Next challenge coming soon"}
+                            </p>
+                          </div>
                         ) : topEntries.length === 0 ? (
                           <p className="text-base text-slate-500">No scores yet — be the first to play!</p>
                         ) : (
