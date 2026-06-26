@@ -27,7 +27,7 @@
     },
     {
       "slug": "action-movie-john-wick-dog",
-      "question": "What specific breed of dog is the puppy named Daisy, whose tragic death sets off John Wick's violent quest for vengeance in the 2014 action film?",
+      "question": "In John Wick, what specific breed of dog is the puppy named Daisy, whose tragic death sets off John Wick's violent quest for vengeance?",
       "answer": "Beagle",
       "category": "Movies",
       "difficulty": "easy",
@@ -299,7 +299,7 @@
     },
     {
       "slug": "action-movie-spider-man-maguire",
-      "question": "What is the full civilian name of the high school student bitten by a genetically modified spider in Sam Raimi's 2002 superhero action film?",
+      "question": "In Sam Raimi's 2002 film Spider-Man, what is the full civilian name of the high school student bitten by a genetically modified spider?",
       "answer": "Peter Parker",
       "category": "Movies",
       "difficulty": "easy",
@@ -1372,7 +1372,7 @@
     },
     {
       "slug": "back-to-the-future-biff-tannen",
-      "question": "Who is the brutish, phrase-mangling town bully who terrorizes George McFly across multiple timelines in Hill Valley?",
+      "question": "In Back to the Future, who is the brutish, phrase-mangling town bully who terrorizes George McFly across multiple timelines in Hill Valley?",
       "answer": "Biff Tannen",
       "answer_format": "write_in",
       "category": "Movies",
@@ -2823,7 +2823,7 @@
     },
     {
       "slug": "lincoln-daniel-day-lewis",
-      "question": "Which U.S. President was played by Daniel Day-Lewis in the 2012 film named after that president?",
+      "question": "Which U.S. President was played by Daniel Day-Lewis in a 2012 film directed by Steven Spielberg?",
       "answer": "Abraham Lincoln",
       "category": "Movies",
       "difficulty": "easy",
@@ -2855,7 +2855,7 @@
     },
     {
       "slug": "malcolm-x-denzel-washington",
-      "question": "Which civil rights leader was played by Denzel Washington in the 1992 film named after the leader?",
+      "question": "Which civil rights leader was played by Denzel Washington in a 1992 film directed by Spike Lee?",
       "answer": "Malcolm X",
       "category": "Movies",
       "difficulty": "easy",
@@ -2981,7 +2981,7 @@
     },
     {
       "slug": "ali-will-smith",
-      "question": "Which boxer was played by Will Smith in the 2001 film named after the boxer?",
+      "question": "In the 2001 film Ali, which boxer was played by Will Smith?",
       "answer": "Muhammad Ali",
       "category": "Movies",
       "difficulty": "easy",
@@ -3072,8 +3072,8 @@
     },
     {
       "slug": "erin-brockovich-julia-roberts",
-      "question": "Which legal clerk was played by Julia Roberts in the 2000 film named after this activist?",
-      "answer": "Erin Brockovich",
+      "question": "Which actress played activist Erin Brockovich in the 2000 film about her life?",
+      "answer": "Julia Roberts",
       "category": "Movies",
       "difficulty": "easy",
       "subcategory": "biographical-films"
