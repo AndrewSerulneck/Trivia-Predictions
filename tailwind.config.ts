@@ -31,12 +31,25 @@ const config: Config = {
           "70%": { transform: "scale(1.1)" },
           "100%": { transform: "scale(1)" },
         },
+        "logo-press": {
+          "0%": { transform: "scale(1)" },
+          "100%": { transform: "scale(1.18)" },
+        },
+        "logo-release": {
+          "0%": { transform: "scale(1.18)" },
+          "35%": { transform: "scale(0.91)" },
+          "60%": { transform: "scale(1.06)" },
+          "80%": { transform: "scale(0.97)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         shake: "shake 0.55s ease-in-out",
         "tp-glow-pulse": "tp-glow-pulse 2s ease-in-out infinite",
         "ht-pulse": "ht-pulse 2s ease-in-out infinite",
-        "logo-burst": "logo-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        "logo-burst": "logo-burst 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        "logo-press": "logo-press 0.15s ease-out forwards",
+        "logo-release": "logo-release 0.55s ease-out forwards",
       },
       colors: {
         ht: {
