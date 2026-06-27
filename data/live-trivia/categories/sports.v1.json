@@ -10,6 +10,15 @@
       "difficulty": "easy",
       "subcategory": "historical-moments"
     },
+      {
+      "slug": "country-failed-to-qualify-world-cup-22-consecutive-times",
+      "question": "Which country has failed to qualify for the FIFA World Cup 22 consecutive times?",
+      "answer": "Luxembourg",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
+    },
     {
       "slug": "nba-all-time-scoring-leader",
       "question": "Who is the NBA's all-time leading regular season scorer?",
@@ -945,7 +954,7 @@
     },
     {
       "slug": "mlb-new-york-nl",
-      "question": "Name the professional baseball team from New York (NL).",
+      "question": "Name the professional baseball team from New York that plays in the National League.",
       "answer": "Mets",
       "category": "Sports",
       "difficulty": "easy",

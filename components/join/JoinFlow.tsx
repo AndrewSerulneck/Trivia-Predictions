@@ -69,6 +69,7 @@ import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel =
+  | "welcome"
   | "location-permission"
   | "auth-method-selection"
   | "account-creation"
@@ -159,6 +160,23 @@ const INVALID_PIN_MESSAGE = "Enter a valid 4-digit PIN.";
 const NO_LOCAL_PASSKEY_MESSAGE =
   "We're sorry, we don't have a passkey saved for your device! Please log in using your username and PIN, or create a new account.";
 const LOCAL_PASSKEY_USERNAMES_STORAGE_KEY = "tp_local_passkey_usernames";
+const WELCOME_SEEN_KEY = "tp_welcome_seen";
+const WELCOME_REPROMPT_MS = 8 * 60 * 60 * 1000; // 8 hours
+
+function shouldShowWelcome(): boolean {
+  try {
+    const raw = localStorage.getItem(WELCOME_SEEN_KEY);
+    if (!raw) return true;
+    const ts = parseInt(raw, 10);
+    return isNaN(ts) || Date.now() - ts > WELCOME_REPROMPT_MS;
+  } catch {
+    return true;
+  }
+}
+
+function markWelcomeSeen(): void {
+  try { localStorage.setItem(WELCOME_SEEN_KEY, String(Date.now())); } catch { /* non-critical */ }
+}
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
@@ -670,8 +688,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [lastLocationVerifiedAt, setLastLocationVerifiedAt] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [panelDirection, setPanelDirection] = useState<1 | -1>(1);
-  const [activePanel, setActivePanel] = useState<JoinPanel>("auth-method-selection");
+  const [activePanel, setActivePanel] = useState<JoinPanel>(() => shouldShowWelcome() ? "welcome" : "auth-method-selection");
+  const [welcomeSlide, setWelcomeSlide] = useState(0);
+  const [welcomeSlideDirection, setWelcomeSlideDirection] = useState<1 | -1>(1);
   const [animateInitialPanel] = useState(false);
+  const [initTrigger, setInitTrigger] = useState(0);
+  const welcomePendingRef = useRef(shouldShowWelcome());
   const [isOptimisticallyEntering, setIsOptimisticallyEntering] = useState(false);
   const [passkeyEnrollmentStep, setPasskeyEnrollmentStep] = useState<PasskeyEnrollmentStepData | null>(null);
   // Account-first auth state
@@ -723,6 +745,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   useEffect(() => {
     const load = async () => {
+      if (welcomePendingRef.current) {
+        setStatus("ready");
+        return;
+      }
       const initialJoinPageEntryIntent = readFreshJoinPageEntryIntent();
       const initialCachedVenueList = readCachedVenues() ?? [];
       const storedAccountId = (getAccountId() ?? "").trim();
@@ -979,7 +1005,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
 
     void load();
-  }, [venueParam, router, godMode]);
+  }, [venueParam, router, godMode, initTrigger]);
 
   const clearLoginWatchdog = useCallback(() => {
     if (loginWatchdogRef.current !== null) {
@@ -1137,6 +1163,47 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     },
     [godMode]
   );
+
+  const WELCOME_SLIDES = [
+    {
+      emoji: "🏆",
+      title: "Welcome to Hightop Challenge!™",
+      body: "We're a social sports gaming & entertainment platform where users can join and compete in various mini-games for points and prizes!",
+    },
+    {
+      emoji: "📍",
+      title: "Get Located",
+      body: "In order to play, you have to be at one of our partner venues, so please share your location with us — your location is never stored or shared! Then create a username and PIN.",
+    },
+    {
+      emoji: "🏟",
+      title: "Find Your Venue",
+      body: "If you're within range of one of our partner venues, you'll see a button with their name on it. Click their page to enter.",
+    },
+    {
+      title: "Once you're in, start playing!",
+      body: "You can just play for fun (and bragging rights) or you can check the \u201cChallenges\u201d panel to see what offers and prizes are available at your venue. Good luck and have fun!\n\n— The Hightop Challenge™ Team",
+    },
+  ] as const;
+
+  const handleWelcomeNext = useCallback(() => {
+    if (welcomeSlide < WELCOME_SLIDES.length - 1) {
+      setWelcomeSlideDirection(1);
+      setWelcomeSlide((s) => s + 1);
+    } else {
+      markWelcomeSeen();
+      welcomePendingRef.current = false;
+      setPanelDirection(1);
+      setInitTrigger((n) => n + 1);
+    }
+  }, [welcomeSlide, WELCOME_SLIDES.length]);
+
+  const handleWelcomePrev = useCallback(() => {
+    if (welcomeSlide > 0) {
+      setWelcomeSlideDirection(-1);
+      setWelcomeSlide((s) => s - 1);
+    }
+  }, [welcomeSlide]);
 
   const handleGrantLocation = useCallback(async () => {
     setLocationLoading(true);
@@ -2471,6 +2538,71 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             <div className="relative [overflow-x:clip]">
               <AnimatePresence initial={animateInitialPanel} custom={panelDirection} mode="wait">
 
+                {/* ── Welcome carousel panel ── */}
+                {activePanel === "welcome" && (
+                  <motion.div
+                    key="welcome"
+                    custom={panelDirection}
+                    variants={ONBOARDING_PANEL_VARIANTS}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={SWIPE_SPRING_TRANSITION}
+                    className="flex flex-col gap-4"
+                  >
+                    {/* Step dots — inside card, above slide content */}
+                    <div className="flex justify-center gap-2 pt-1">
+                      {WELCOME_SLIDES.map((_, i) => (
+                        <div
+                          key={i}
+                          className={`h-1.5 rounded-full transition-all duration-200 ${i === welcomeSlide ? "w-6 bg-cyan-400" : "w-1.5 bg-white/25"}`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Fixed-height clipping container — tall enough for the longest slide */}
+                    <div className="relative overflow-hidden h-[22rem]">
+                      <AnimatePresence initial={false} custom={welcomeSlideDirection} mode="wait">
+                        <motion.div
+                          key={welcomeSlide}
+                          custom={welcomeSlideDirection}
+                          variants={ONBOARDING_PANEL_VARIANTS}
+                          initial="enter"
+                          animate="center"
+                          exit="exit"
+                          transition={SWIPE_SPRING_TRANSITION}
+                          className="absolute inset-0 flex flex-col gap-4 text-center overflow-y-auto"
+                        >
+                          <div className="select-none text-[3.6rem]" aria-hidden>{WELCOME_SLIDES[welcomeSlide].emoji}</div>
+                          <h1 className="text-[1.8rem] font-black text-white">{WELCOME_SLIDES[welcomeSlide].title}</h1>
+                          <p className="flex-1 text-xl leading-relaxed text-ht-fg-muted whitespace-pre-line">
+                            {WELCOME_SLIDES[welcomeSlide].body}
+                          </p>
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+
+                    <div className="flex gap-3">
+                      {welcomeSlide > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleWelcomePrev}
+                          className="tp-clean-button inline-flex min-h-[50px] flex-1 items-center justify-center rounded-xl border border-white/20 py-3 px-6 text-base font-black text-white transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                        >
+                          ← Back
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleWelcomeNext}
+                        className="tp-clean-button inline-flex min-h-[50px] flex-1 items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                      >
+                        {welcomeSlide < WELCOME_SLIDES.length - 1 ? "Next →" : "Let's Go! →"}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* ── Location permission panel ── */}
                 {activePanel === "location-permission" && (
                   <motion.div
@@ -2933,7 +3065,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               href="/info"
               className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl border border-cyan-300/50 bg-cyan-400/10 px-5 py-3 text-center text-2xl font-black text-cyan-100 shadow-lg shadow-cyan-950/20 transition-colors hover:bg-cyan-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
             >
-              For more information click here.
+              Want HTC for your bar or venue? Click here.
             </Link>
           </div>
         </div>
