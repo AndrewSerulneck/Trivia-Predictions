@@ -1181,6 +1181,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       body: "If you're within range of one of our partner venues, you'll see a button with their name on it. Click their page to enter.",
     },
     {
+      emoji: "",
       title: "Once you're in, start playing!",
       body: "You can just play for fun (and bragging rights) or you can check the \u201cChallenges\u201d panel to see what offers and prizes are available at your venue. Good luck and have fun!\n\n— The Hightop Challenge™ Team",
     },
