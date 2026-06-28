@@ -86,11 +86,13 @@ function isDevStub(): boolean {
   return process.env.NODE_ENV !== "production" && process.env.SLIMCD_DEV_STUB === "true";
 }
 
-/** Auth fields for session operations (createSession / checkSession) — uses Public/QUEUE credential. */
+/** Auth fields for session operations (createSession / checkSession) — uses Public/QUEUE credential.
+ *  The Public credential authenticates by username alone (empty password). The Key field
+ *  in the SlimCD portal is not the API password — the credential is self-authenticating. */
 function sessionAuthFields(config: SlimCDConfig): Record<string, string> {
   return {
     username: config.publicUsername,
-    password: config.publicPassword,
+    password: "",
     clientid: config.clientId,
     siteid: config.siteId,
     priceid: config.priceId,
@@ -152,16 +154,16 @@ function parseXmlReply(xml: string): ParsedReply {
   return { response, responsecode, description, datablock };
 }
 
-async function postForm(url: string, fields: Record<string, string>): Promise<string> {
+async function postForm(url: string, fields: Record<string, string>, referer?: string): Promise<string> {
   const body = new URLSearchParams();
   for (const [key, value] of Object.entries(fields)) {
     body.set(key, value);
   }
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
+  const headers: Record<string, string> = { "Content-Type": "application/x-www-form-urlencoded" };
+  // SlimCD's Public/QUEUE credential enforces a Referer allowlist. Server-side
+  // requests have no Referer by default, so we must supply it explicitly.
+  if (referer) headers["Referer"] = referer;
+  const response = await fetch(url, { method: "POST", headers, body: body.toString() });
   if (!response.ok) {
     throw new Error(`SlimCD HTTP ${response.status} from ${url}`);
   }
@@ -229,12 +231,13 @@ export async function createSession(params: {
 
   const config = getConfig();
 
-  // update_card stores a card without charging. AUTH $0.00 validates the card and
-  // returns a gateid token. (LOAD is the documented store-only alternative; if a
-  // processor rejects $0 auths, switch this to a $1.00 AUTH that is later VOIDed,
-  // or to transtype=LOAD — confirm the right path with SlimCD for the account.)
-  const transtype = params.intent === "update_card" ? "AUTH" : "SALE";
+  // The Public/QUEUE credential requires transtype=QUEUE for session creation.
+  // The hosted payment form's own configuration determines the actual charge type.
+  // For update_card the amount is 0.00 (store-only / $0 AUTH on the form side).
+  const transtype = "QUEUE";
   const amount = params.intent === "update_card" ? "0.00" : centsToAmount(params.amountCents);
+
+  const siteOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://hightopchallenge.com";
 
   const fields: Record<string, string> = {
     ...sessionAuthFields(config),
@@ -250,7 +253,7 @@ export async function createSession(params: {
 
   let xml: string;
   try {
-    xml = await postForm(SLIMCD_CREATE_SESSION_URL, fields);
+    xml = await postForm(SLIMCD_CREATE_SESSION_URL, fields, siteOrigin);
   } catch (err) {
     return { ok: false, sessionId: null, sessionUrl: null, error: (err as Error).message };
   }
@@ -308,9 +311,10 @@ export async function checkSession(sessionId: string): Promise<SlimCDCheckResult
     var4: "",
   };
 
+  const siteOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://hightopchallenge.com";
   let xml: string;
   try {
-    xml = await postForm(SLIMCD_CHECK_SESSION_URL, fields);
+    xml = await postForm(SLIMCD_CHECK_SESSION_URL, fields, siteOrigin);
   } catch (err) {
     return emptyCheck((err as Error).message);
   }
