@@ -389,3 +389,33 @@ export interface PickEmGame {
   away_team_id: string;
   start_time: string;
 }
+
+export interface VenueOwner {
+  id: string;
+  authId: string;
+  email: string;
+  name: string;
+  createdAt?: string;
+}
+
+export interface BillingSubscription {
+  id: string;
+  venueId: string;
+  planType: string;
+  amountCents: number;
+  status: 'active' | 'past_due' | 'cancelled';
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  createdAt?: string;
+}
+
+export interface BillingInvoice {
+  id: string;
+  subscriptionId: string;
+  venueId: string;
+  description: string;
+  amountCents: number;
+  status: 'paid' | 'failed' | 'pending';
+  slimcdTicket?: string;
+  chargedAt: string;
+}

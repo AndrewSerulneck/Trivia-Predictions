@@ -20,6 +20,10 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return true;
   }
+  // Venue owner portal — not venue-scoped; guarded by its own tp_owner_sess auth.
+  if (pathname === "/owner" || pathname.startsWith("/owner/")) {
+    return true;
+  }
   if (pathname === "/api" || pathname.startsWith("/api/")) {
     return true;
   }

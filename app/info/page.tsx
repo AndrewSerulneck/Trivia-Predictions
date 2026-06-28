@@ -290,10 +290,10 @@ export default function InfoPage() {
               Play now
             </Link>
             <a
-              href="#contact"
+              href="/owner/login"
               className="hidden md:inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 htm-btn-glow"
             >
-              Get in touch
+              Venue Login
             </a>
             <button
               className="md:hidden flex flex-col gap-[5px] p-2"
@@ -317,11 +317,11 @@ export default function InfoPage() {
                 Play now
               </Link>
               <a
-                href="#contact"
+                href="/owner/login"
                 onClick={() => setMobileMenuOpen(false)}
                 className="mt-2 inline-flex justify-center rounded-xl bg-cyan-400 px-4 py-3 text-sm font-black text-slate-950"
               >
-                Get in touch
+                Venue Login
               </a>
             </div>
           )}
@@ -620,7 +620,7 @@ export default function InfoPage() {
               Interested in Hightop Challenge for your venue?
             </h2>
             <p className="htm-reveal text-slate-400 text-lg mb-10" data-reveal>
-              Fill out the form below and we&apos;ll reach out to walk you through everything.
+              Fill out the form below and we&apos;ll be in touch.
             </p>
             <div className="htm-reveal rounded-3xl border border-white/8 bg-white/3 p-8 md:p-10" data-reveal>
               <ContactForm />

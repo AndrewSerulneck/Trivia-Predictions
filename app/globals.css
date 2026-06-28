@@ -686,6 +686,17 @@ textarea {
   line-height: 1.25;
 }
 
+/* Owner page inputs — force dark background & white text during browser autofill.
+   Browsers use !important on autofill styles, so we must use the box-shadow inset
+   trick to override the background, and -webkit-text-fill-color for the text. */
+.owner-input:-webkit-autofill,
+.owner-input:-webkit-autofill:hover,
+.owner-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+}
+
 /* Cyan focus ring — higher specificity than bare `input` rule, overrides box-shadow: none */
 input:focus,
 select:focus,

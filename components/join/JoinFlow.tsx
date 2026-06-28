@@ -2573,7 +2573,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           transition={SWIPE_SPRING_TRANSITION}
                           className="absolute inset-0 flex flex-col gap-4 text-center overflow-y-auto"
                         >
-                          <div className="select-none text-[3.6rem]" aria-hidden>{WELCOME_SLIDES[welcomeSlide].emoji}</div>
+                          {WELCOME_SLIDES[welcomeSlide].emoji && <div className="select-none text-[3.6rem]" aria-hidden>{WELCOME_SLIDES[welcomeSlide].emoji}</div>}
                           <h1 className="text-[1.8rem] font-black text-white">{WELCOME_SLIDES[welcomeSlide].title}</h1>
                           <p className="flex-1 text-xl leading-relaxed text-ht-fg-muted whitespace-pre-line">
                             {WELCOME_SLIDES[welcomeSlide].body}
