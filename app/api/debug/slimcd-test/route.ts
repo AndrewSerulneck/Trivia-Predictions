@@ -11,8 +11,8 @@ async function tryAuth(username: string, password: string, clientId: string, sit
   fields.set("siteid", siteId);
   fields.set("priceid", priceId);
   fields.set("formname", formName);
-  fields.set("transtype", "AUTH");
-  fields.set("amount", "0.01");
+  fields.set("transtype", "SALE");
+  fields.set("amount", "1.00");
   fields.set("var1", "test");
   const res = await fetch(URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: fields.toString() });
   const text = await res.text();
@@ -31,16 +31,15 @@ export async function GET() {
   const priceId     = process.env.SLIMCD_PRICE_ID?.trim() ?? "";
   const formName    = process.env.SLIMCD_FORM_NAME?.trim() ?? "";
 
-  // Try 3 combinations to find which one SlimCD accepts
-  const [withKey, withEmptyPass, withNoSitePrice] = await Promise.all([
-    tryAuth(publicKey, publicPass,  clientId, siteId, priceId, formName),   // key as password
-    tryAuth(publicKey, "",          clientId, siteId, priceId, formName),   // empty password
-    tryAuth(publicKey, publicPass,  clientId, "",     "",      formName),   // no siteid/priceid
+  // Combo 2 (empty password) previously got "AUTH not allowed" — auth passed, wrong transtype.
+  // Now test SALE (real subscription flow) + empty password to confirm full success.
+  const [saleWithKey, saleEmptyPass] = await Promise.all([
+    tryAuth(publicKey, publicPass, clientId, siteId, priceId, formName),  // SALE + hex key
+    tryAuth(publicKey, "",         clientId, siteId, priceId, formName),  // SALE + empty password
   ]);
 
   return NextResponse.json({
-    "1_publicKey_with_hexPassword": { ok: withKey.ok, invalidLogin: withKey.invalidLogin, raw: withKey.raw },
-    "2_publicKey_emptyPassword":    { ok: withEmptyPass.ok, invalidLogin: withEmptyPass.invalidLogin, raw: withEmptyPass.raw },
-    "3_publicKey_noSitePrice":      { ok: withNoSitePrice.ok, invalidLogin: withNoSitePrice.invalidLogin, raw: withNoSitePrice.raw },
+    "1_SALE_with_hexPassword": { ok: saleWithKey.ok, invalidLogin: saleWithKey.invalidLogin, raw: saleWithKey.raw },
+    "2_SALE_emptyPassword":    { ok: saleEmptyPass.ok, invalidLogin: saleEmptyPass.invalidLogin, raw: saleEmptyPass.raw },
   });
 }
