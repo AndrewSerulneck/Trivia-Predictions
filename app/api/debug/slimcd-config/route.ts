@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const vars = {
+    SLIMCD_PUBLIC_API_KEY: !!process.env.SLIMCD_PUBLIC_API_KEY?.trim(),
+    SLIMCD_PUBLIC_PASSWORD: !!process.env.SLIMCD_PUBLIC_PASSWORD?.trim(),
     SLIMCD_PRIVATE_API_KEY: !!process.env.SLIMCD_PRIVATE_API_KEY?.trim(),
     SLIMCD_PASSWORD: !!process.env.SLIMCD_PASSWORD?.trim(),
     SLIMCD_CLIENT_ID: !!process.env.SLIMCD_CLIENT_ID?.trim(),

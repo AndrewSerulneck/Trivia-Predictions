@@ -37,8 +37,12 @@ const SLIMCD_SHOW_SESSION_BASE = "https://stats.slimcd.com/soft/showsession.asp"
 const SLIMCD_JSON_PAYMENT_URL = "https://trans.slimcd.com/soft/json/jsonpayment.asp";
 
 type SlimCDConfig = {
-  username: string;
-  password: string;
+  // Public/QUEUE credential — used for createSession and checkSession
+  publicUsername: string;
+  publicPassword: string;
+  // Private/RECURRING credential — used for chargeRecurring rebills
+  privateUsername: string;
+  privatePassword: string;
   clientId: string;
   siteId: string;
   priceId: string;
@@ -46,8 +50,10 @@ type SlimCDConfig = {
 };
 
 function getConfig(): SlimCDConfig {
-  const username = process.env.SLIMCD_PRIVATE_API_KEY?.trim() ?? "";
-  const password = process.env.SLIMCD_PASSWORD?.trim() ?? "";
+  const publicUsername = process.env.SLIMCD_PUBLIC_API_KEY?.trim() ?? "";
+  const publicPassword = process.env.SLIMCD_PUBLIC_PASSWORD?.trim() ?? "";
+  const privateUsername = process.env.SLIMCD_PRIVATE_API_KEY?.trim() ?? "";
+  const privatePassword = process.env.SLIMCD_PASSWORD?.trim() ?? "";
   const clientId = process.env.SLIMCD_CLIENT_ID?.trim() ?? "";
   const siteId = process.env.SLIMCD_SITE_ID?.trim() ?? "";
   const priceId = process.env.SLIMCD_PRICE_ID?.trim() ?? "";
@@ -58,13 +64,18 @@ function getConfig(): SlimCDConfig {
       "SlimCD is not fully configured. Check SLIMCD_CLIENT_ID, SLIMCD_SITE_ID, SLIMCD_PRICE_ID, and SLIMCD_FORM_NAME."
     );
   }
-  if (!username && !password) {
+  if (!publicUsername) {
     throw new Error(
-      "SlimCD authentication is not configured. Set SLIMCD_PRIVATE_API_KEY (API Access Credential) or SLIMCD_PASSWORD."
+      "SlimCD public credential not configured. Set SLIMCD_PUBLIC_API_KEY (the QUEUE-type credential)."
+    );
+  }
+  if (!privateUsername) {
+    throw new Error(
+      "SlimCD private credential not configured. Set SLIMCD_PRIVATE_API_KEY (the RECURRING-type credential)."
     );
   }
 
-  return { username, password, clientId, siteId, priceId, formName };
+  return { publicUsername, publicPassword, privateUsername, privatePassword, clientId, siteId, priceId, formName };
 }
 
 function centsToAmount(cents: number): string {
@@ -75,11 +86,22 @@ function isDevStub(): boolean {
   return process.env.NODE_ENV !== "production" && process.env.SLIMCD_DEV_STUB === "true";
 }
 
-/** Build the auth name/value pairs common to every SlimCD request. */
-function authFields(config: SlimCDConfig): Record<string, string> {
+/** Auth fields for session operations (createSession / checkSession) — uses Public/QUEUE credential. */
+function sessionAuthFields(config: SlimCDConfig): Record<string, string> {
   return {
-    username: config.username, // API Access Credential (empty password) when used
-    password: config.password,
+    username: config.publicUsername,
+    password: config.publicPassword,
+    clientid: config.clientId,
+    siteid: config.siteId,
+    priceid: config.priceId,
+  };
+}
+
+/** Auth fields for recurring charges — uses Private/RECURRING credential. */
+function recurringAuthFields(config: SlimCDConfig): Record<string, string> {
+  return {
+    username: config.privateUsername,
+    password: config.privatePassword,
     clientid: config.clientId,
     siteid: config.siteId,
     priceid: config.priceId,
@@ -215,7 +237,7 @@ export async function createSession(params: {
   const amount = params.intent === "update_card" ? "0.00" : centsToAmount(params.amountCents);
 
   const fields: Record<string, string> = {
-    ...authFields(config),
+    ...sessionAuthFields(config),
     formname: config.formName,
     transtype,
     amount,
@@ -276,7 +298,7 @@ export async function checkSession(sessionId: string): Promise<SlimCDCheckResult
   // wait=0 + waitforcompleted=no: this is a post-redirect status read, not a poll.
   // var1..var4 are re-supplied (empty) so SlimCD returns our stored custom values.
   const fields: Record<string, string> = {
-    ...authFields(config),
+    ...sessionAuthFields(config),
     sessionid: sessionId,
     wait: "0",
     waitforcompleted: "no",
@@ -354,7 +376,7 @@ export async function chargeRecurring(
   const config = getConfig();
 
   const fields: Record<string, string> = {
-    ...authFields(config),
+    ...recurringAuthFields(config),
     transtype: "SALE",
     amount: centsToAmount(amountCents),
     gateid,

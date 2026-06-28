@@ -6,8 +6,8 @@ import "server-only";
  * Returns the raw SlimCD response so we can see what error they're sending.
  */
 export async function GET() {
-  const username = process.env.SLIMCD_PRIVATE_API_KEY?.trim() ?? "";
-  const password = process.env.SLIMCD_PASSWORD?.trim() ?? "";
+  const username = process.env.SLIMCD_PUBLIC_API_KEY?.trim() ?? "";
+  const password = process.env.SLIMCD_PUBLIC_PASSWORD?.trim() ?? "";
   const clientId = process.env.SLIMCD_CLIENT_ID?.trim() ?? "";
   const siteId = process.env.SLIMCD_SITE_ID?.trim() ?? "";
   const priceId = process.env.SLIMCD_PRICE_ID?.trim() ?? "";
