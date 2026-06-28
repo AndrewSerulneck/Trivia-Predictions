@@ -11,7 +11,7 @@ async function tryAuth(username: string, password: string, clientId: string, sit
   fields.set("siteid", siteId);
   fields.set("priceid", priceId);
   fields.set("formname", formName);
-  fields.set("transtype", "SALE");
+  fields.set("transtype", "QUEUE");
   fields.set("amount", "1.00");
   fields.set("var1", "test");
   const res = await fetch(URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: fields.toString() });
@@ -31,15 +31,10 @@ export async function GET() {
   const priceId     = process.env.SLIMCD_PRICE_ID?.trim() ?? "";
   const formName    = process.env.SLIMCD_FORM_NAME?.trim() ?? "";
 
-  // Combo 2 (empty password) previously got "AUTH not allowed" — auth passed, wrong transtype.
-  // Now test SALE (real subscription flow) + empty password to confirm full success.
-  const [saleWithKey, saleEmptyPass] = await Promise.all([
-    tryAuth(publicKey, publicPass, clientId, siteId, priceId, formName),  // SALE + hex key
-    tryAuth(publicKey, "",         clientId, siteId, priceId, formName),  // SALE + empty password
-  ]);
+  // Empty password passes auth. Now try QUEUE transtype (what the credential allows).
+  const result = await tryAuth(publicKey, "", clientId, siteId, priceId, formName);
 
   return NextResponse.json({
-    "1_SALE_with_hexPassword": { ok: saleWithKey.ok, invalidLogin: saleWithKey.invalidLogin, raw: saleWithKey.raw },
-    "2_SALE_emptyPassword":    { ok: saleEmptyPass.ok, invalidLogin: saleEmptyPass.invalidLogin, raw: saleEmptyPass.raw },
+    "QUEUE_emptyPassword": { ok: result.ok, invalidLogin: result.invalidLogin, raw: result.raw },
   });
 }
