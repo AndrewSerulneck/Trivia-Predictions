@@ -1591,31 +1591,30 @@ export async function findOccurrencesToSeed(nowMs: number): Promise<LiveOccurren
     const rowTimezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
     const starts = enumerateOccurrenceStartsMs(row, nowMs);
 
-    let chosenMs: number | null = null;
+    // Seed every occurrence that's active now or starting within the lookahead
+    // window — not just the first match. A currently-active occurrence (e.g. a
+    // prior night's session still inside its round window) must not block
+    // seeding of the next upcoming occurrence; seedOccurrenceQuestions is
+    // idempotent per (scheduleId, occurrenceDate), so seeding both is safe.
+    const chosenStartsMs = new Set<number>();
     for (const startMs of starts) {
       const endMs = startMs + rounds * ROUND_MS;
-      if (nowMs >= startMs && nowMs < endMs) {
-        chosenMs = startMs;
-        break;
+      const isActive = nowMs >= startMs && nowMs < endMs;
+      const isUpcoming = startMs > nowMs && startMs - nowMs <= SEED_LOOKAHEAD_MS;
+      if (isActive || isUpcoming) {
+        chosenStartsMs.add(startMs);
       }
     }
-    if (chosenMs === null) {
-      for (const startMs of starts) {
-        if (startMs > nowMs && startMs - nowMs <= SEED_LOOKAHEAD_MS) {
-          if (chosenMs === null || startMs < chosenMs) {
-            chosenMs = startMs;
-          }
-        }
-      }
-    }
-    if (chosenMs === null) continue;
+    if (chosenStartsMs.size === 0) continue;
 
-    targets.push({
-      scheduleId: row.id,
-      occurrenceDate: formatZonedDate(chosenMs, rowTimezone),
-      venueId,
-      numRounds: rounds,
-    });
+    for (const chosenMs of chosenStartsMs) {
+      targets.push({
+        scheduleId: row.id,
+        occurrenceDate: formatZonedDate(chosenMs, rowTimezone),
+        venueId,
+        numRounds: rounds,
+      });
+    }
   }
 
   return targets;
