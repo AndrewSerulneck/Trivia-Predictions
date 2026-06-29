@@ -38,7 +38,7 @@ const RECENT_CATEGORY_SLOT_LOOKBACK_LIMIT = 360;
 
 export type LiveShowdownPhase = "answering" | "rest_warning" | "mid_game_break";
 
-type TriviaScheduleRow = {
+export type TriviaScheduleRow = {
   id: string;
   title: string;
   start_time: string;
@@ -1010,47 +1010,69 @@ async function loadScheduleRows(venueId?: string): Promise<TriviaScheduleRow[]> 
   return (withRecurring.data ?? []) as unknown as TriviaScheduleRow[];
 }
 
-// Enumerates candidate occurrence start times (UTC ms) for a schedule within a
-// window around now, honoring recurring_type / recurring_days in the schedule's
-// timezone. One-time / monthly / yearly schedules yield their single fixed start.
-function enumerateOccurrenceStartsMs(row: TriviaScheduleRow, nowMs: number): number[] {
+// A single concrete occurrence of a schedule: when it starts, when it ends, and
+// the calendar date (in the schedule's timezone) used to key its seeded questions.
+export type ScheduleOccurrence = {
+  startMs: number;
+  endMs: number;
+  occurrenceDate: string; // YYYY-MM-DD in the schedule's timezone
+};
+
+// SINGLE SOURCE OF TRUTH for occurrence enumeration. Every code path that needs to
+// know when a schedule's games happen — the seeding cron, the live-state resolver,
+// and the grader (via the live-state resolver) — derives occurrences from this one
+// function, so they can never disagree on a game's start/end window or its
+// occurrence date. Returns all candidate occurrences within a window around nowMs,
+// sorted ascending by start time, honoring recurring_type / recurring_days in the
+// schedule's timezone. One-time / monthly / yearly schedules yield their single
+// fixed start. Returns [] when start_time is unparseable.
+export function enumerateScheduleOccurrences(row: TriviaScheduleRow, nowMs: number): ScheduleOccurrence[] {
   const baseStartMs = Date.parse(String(row.start_time ?? ""));
   if (!Number.isFinite(baseStartMs)) return [];
 
   const recurringType = normalizeRecurringType(row.recurring_type);
   const rowTimezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
+  const rounds = clampRounds(Number(row.num_rounds));
   const dayMs = 24 * 60 * 60 * 1000;
 
-  if (recurringType === "daily" || recurringType === "weekly") {
-    const baseStartParts = getTimeZoneParts(new Date(baseStartMs), rowTimezone);
-    const recurringDays = normalizeRecurringDays(row.recurring_days);
-    const effectiveDays =
-      recurringType === "daily"
-        ? WEEKDAY_KEYS
-        : recurringDays.length > 0
-        ? recurringDays
-        : [baseStartParts.weekday];
+  const toOccurrence = (startMs: number): ScheduleOccurrence => ({
+    startMs,
+    endMs: startMs + rounds * ROUND_MS,
+    occurrenceDate: formatZonedDate(startMs, rowTimezone),
+  });
 
-    const starts: number[] = [];
-    for (let offset = -7; offset <= 14; offset += 1) {
-      const dayProbe = getTimeZoneParts(new Date(nowMs + offset * dayMs), rowTimezone);
-      if (!effectiveDays.includes(dayProbe.weekday)) continue;
-      const occurrenceMs = zonedDateTimeToUtcMs(
-        dayProbe.year,
-        dayProbe.month,
-        dayProbe.day,
-        baseStartParts.hour,
-        baseStartParts.minute,
-        baseStartParts.second,
-        rowTimezone
-      );
-      if (occurrenceMs < baseStartMs) continue;
-      starts.push(occurrenceMs);
-    }
-    return starts;
+  // none / monthly / yearly are treated as a single fixed start at baseStartMs.
+  if (recurringType !== "daily" && recurringType !== "weekly") {
+    return [toOccurrence(baseStartMs)];
   }
 
-  return [baseStartMs];
+  const baseStartParts = getTimeZoneParts(new Date(baseStartMs), rowTimezone);
+  const recurringDays = normalizeRecurringDays(row.recurring_days);
+  const effectiveDays =
+    recurringType === "daily"
+      ? WEEKDAY_KEYS
+      : recurringDays.length > 0
+      ? recurringDays
+      : [baseStartParts.weekday];
+
+  const occurrences: ScheduleOccurrence[] = [];
+  for (let offset = -7; offset <= 14; offset += 1) {
+    const dayProbe = getTimeZoneParts(new Date(nowMs + offset * dayMs), rowTimezone);
+    if (!effectiveDays.includes(dayProbe.weekday)) continue;
+    const occurrenceMs = zonedDateTimeToUtcMs(
+      dayProbe.year,
+      dayProbe.month,
+      dayProbe.day,
+      baseStartParts.hour,
+      baseStartParts.minute,
+      baseStartParts.second,
+      rowTimezone
+    );
+    if (occurrenceMs < baseStartMs) continue;
+    occurrences.push(toOccurrence(occurrenceMs));
+  }
+  occurrences.sort((a, b) => a.startMs - b.startMs);
+  return occurrences;
 }
 
 async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promise<{
@@ -1065,93 +1087,20 @@ async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promis
   const rows = await loadScheduleRows(venueId);
 
   const nowMs = Date.parse(nowIso);
-  const dayMs = 24 * 60 * 60 * 1000;
-  let activeCandidate: { row: TriviaScheduleRow; startMs: number } | null = null;
-  let upcomingCandidate: { row: TriviaScheduleRow; startMs: number } | null = null;
+  let activeCandidate: { row: TriviaScheduleRow; occurrence: ScheduleOccurrence } | null = null;
+  let upcomingCandidate: { row: TriviaScheduleRow; occurrence: ScheduleOccurrence } | null = null;
 
   for (const row of rows) {
-    const baseStartMs = Date.parse(String(row.start_time ?? ""));
-    if (!Number.isFinite(baseStartMs)) continue;
-    const rounds = clampRounds(Number(row.num_rounds));
-    const recurringType = normalizeRecurringType(row.recurring_type);
-    const rowTimezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
-
-    if (recurringType === "daily" || recurringType === "weekly") {
-      const baseStartParts = getTimeZoneParts(new Date(baseStartMs), rowTimezone);
-      const recurringDays = normalizeRecurringDays(row.recurring_days);
-      const effectiveDays =
-        recurringType === "daily"
-          ? WEEKDAY_KEYS
-          : recurringDays.length > 0
-          ? recurringDays
-          : [baseStartParts.weekday];
-
-      for (let offset = -7; offset <= 14; offset += 1) {
-        const dayProbe = getTimeZoneParts(new Date(nowMs + offset * dayMs), rowTimezone);
-        if (!effectiveDays.includes(dayProbe.weekday)) continue;
-        const occurrenceMs = zonedDateTimeToUtcMs(
-          dayProbe.year,
-          dayProbe.month,
-          dayProbe.day,
-          baseStartParts.hour,
-          baseStartParts.minute,
-          baseStartParts.second,
-          rowTimezone
-        );
-        if (occurrenceMs < baseStartMs) continue;
-        const endMs = occurrenceMs + rounds * ROUND_MS;
-        if (nowMs >= occurrenceMs && nowMs < endMs) {
-          if (!activeCandidate || occurrenceMs > activeCandidate.startMs) {
-            activeCandidate = { row, startMs: occurrenceMs };
-          }
-        } else if (occurrenceMs > nowMs) {
-          if (!upcomingCandidate || occurrenceMs < upcomingCandidate.startMs) {
-            upcomingCandidate = { row, startMs: occurrenceMs };
-          }
+    for (const occurrence of enumerateScheduleOccurrences(row, nowMs)) {
+      if (nowMs >= occurrence.startMs && nowMs < occurrence.endMs) {
+        // Most-recently-started active occurrence wins.
+        if (!activeCandidate || occurrence.startMs > activeCandidate.occurrence.startMs) {
+          activeCandidate = { row, occurrence };
         }
-      }
-      continue;
-    }
-
-  if (recurringType === "none" || recurringType === "monthly" || recurringType === "yearly") {
-      const endMs = baseStartMs + rounds * ROUND_MS;
-      if (nowMs >= baseStartMs && nowMs < endMs) {
-        if (!activeCandidate || baseStartMs > activeCandidate.startMs) {
-          activeCandidate = { row, startMs: baseStartMs };
-        }
-      } else if (baseStartMs > nowMs) {
-        if (!upcomingCandidate || baseStartMs < upcomingCandidate.startMs) {
-          upcomingCandidate = { row, startMs: baseStartMs };
-        }
-      }
-      continue;
-    }
-
-    const baseStartParts = getTimeZoneParts(new Date(baseStartMs), rowTimezone);
-    const recurringDays = normalizeRecurringDays(row.recurring_days);
-    const effectiveDays = recurringDays.length > 0 ? recurringDays : [baseStartParts.weekday];
-
-    for (let offset = -7; offset <= 14; offset += 1) {
-      const dayProbe = getTimeZoneParts(new Date(nowMs + offset * dayMs), rowTimezone);
-      if (!effectiveDays.includes(dayProbe.weekday)) continue;
-      const occurrenceMs = zonedDateTimeToUtcMs(
-        dayProbe.year,
-        dayProbe.month,
-        dayProbe.day,
-        baseStartParts.hour,
-        baseStartParts.minute,
-        baseStartParts.second,
-        rowTimezone
-      );
-      if (occurrenceMs < baseStartMs) continue;
-      const endMs = occurrenceMs + rounds * ROUND_MS;
-      if (nowMs >= occurrenceMs && nowMs < endMs) {
-        if (!activeCandidate || occurrenceMs > activeCandidate.startMs) {
-          activeCandidate = { row, startMs: occurrenceMs };
-        }
-      } else if (occurrenceMs > nowMs) {
-        if (!upcomingCandidate || occurrenceMs < upcomingCandidate.startMs) {
-          upcomingCandidate = { row, startMs: occurrenceMs };
+      } else if (occurrence.startMs > nowMs) {
+        // Soonest upcoming occurrence wins.
+        if (!upcomingCandidate || occurrence.startMs < upcomingCandidate.occurrence.startMs) {
+          upcomingCandidate = { row, occurrence };
         }
       }
     }
@@ -1160,21 +1109,15 @@ async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promis
   const active = activeCandidate
     ? {
         ...activeCandidate.row,
-        start_time: new Date(activeCandidate.startMs).toISOString(),
-        occurrenceDate: formatZonedDate(
-          activeCandidate.startMs,
-          String(activeCandidate.row.timezone ?? "America/New_York").trim() || "America/New_York"
-        ),
+        start_time: new Date(activeCandidate.occurrence.startMs).toISOString(),
+        occurrenceDate: activeCandidate.occurrence.occurrenceDate,
       }
     : null;
   const upcoming = upcomingCandidate
     ? {
         ...upcomingCandidate.row,
-        start_time: new Date(upcomingCandidate.startMs).toISOString(),
-        occurrenceDate: formatZonedDate(
-          upcomingCandidate.startMs,
-          String(upcomingCandidate.row.timezone ?? "America/New_York").trim() || "America/New_York"
-        ),
+        start_time: new Date(upcomingCandidate.occurrence.startMs).toISOString(),
+        occurrenceDate: upcomingCandidate.occurrence.occurrenceDate,
       }
     : null;
   return { active, upcoming };
@@ -1588,29 +1531,22 @@ export async function findOccurrencesToSeed(nowMs: number): Promise<LiveOccurren
     if (!venueId) continue;
 
     const rounds = clampRounds(Number(row.num_rounds));
-    const rowTimezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
-    const starts = enumerateOccurrenceStartsMs(row, nowMs);
 
     // Seed every occurrence that's active now or starting within the lookahead
     // window — not just the first match. A currently-active occurrence (e.g. a
     // prior night's session still inside its round window) must not block
     // seeding of the next upcoming occurrence; seedOccurrenceQuestions is
     // idempotent per (scheduleId, occurrenceDate), so seeding both is safe.
-    const chosenStartsMs = new Set<number>();
-    for (const startMs of starts) {
-      const endMs = startMs + rounds * ROUND_MS;
-      const isActive = nowMs >= startMs && nowMs < endMs;
-      const isUpcoming = startMs > nowMs && startMs - nowMs <= SEED_LOOKAHEAD_MS;
-      if (isActive || isUpcoming) {
-        chosenStartsMs.add(startMs);
-      }
-    }
-    if (chosenStartsMs.size === 0) continue;
-
-    for (const chosenMs of chosenStartsMs) {
+    const seenOccurrenceDates = new Set<string>();
+    for (const occurrence of enumerateScheduleOccurrences(row, nowMs)) {
+      const isActive = nowMs >= occurrence.startMs && nowMs < occurrence.endMs;
+      const isUpcoming = occurrence.startMs > nowMs && occurrence.startMs - nowMs <= SEED_LOOKAHEAD_MS;
+      if (!isActive && !isUpcoming) continue;
+      if (seenOccurrenceDates.has(occurrence.occurrenceDate)) continue;
+      seenOccurrenceDates.add(occurrence.occurrenceDate);
       targets.push({
         scheduleId: row.id,
-        occurrenceDate: formatZonedDate(chosenMs, rowTimezone),
+        occurrenceDate: occurrence.occurrenceDate,
         venueId,
         numRounds: rounds,
       });
