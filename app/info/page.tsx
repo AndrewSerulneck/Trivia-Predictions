@@ -293,7 +293,7 @@ export default function InfoPage() {
               href="/owner/login"
               className="hidden md:inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 htm-btn-glow"
             >
-              Venue Login
+              Partner Login
             </a>
             <button
               className="md:hidden flex flex-col gap-[5px] p-2"
@@ -321,7 +321,7 @@ export default function InfoPage() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="mt-2 inline-flex justify-center rounded-xl bg-cyan-400 px-4 py-3 text-sm font-black text-slate-950"
               >
-                Venue Login
+                Partner Login
               </a>
             </div>
           )}
