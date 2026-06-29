@@ -2257,6 +2257,18 @@ export async function getLiveShowdownState(
   const occurrenceDate = active.occurrenceDate;
 
   const totalRounds = clampRounds(Number(active.num_rounds));
+
+  // Lazy seeding safety net: if the cron missed this occurrence, seed it now.
+  // seedOccurrenceQuestions is idempotent — exits in one COUNT query when already seeded.
+  await seedOccurrenceQuestions(active.id, occurrenceDate, String(venueId), totalRounds).catch((err) => {
+    console.error(
+      "[getLiveShowdownState] lazy seed failed for",
+      active.id,
+      occurrenceDate,
+      ":",
+      err instanceof Error ? err.message : err
+    );
+  });
   const totalDurationMs = totalRounds * ROUND_MS;
   const clampedElapsedMs = Math.max(0, Math.min(nowMs - startMs, totalDurationMs - 1));
 
