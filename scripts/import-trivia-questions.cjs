@@ -563,6 +563,15 @@ async function pruneOrphanedLiveShowdownQuestions(supabase, canonicalSlugs) {
     return;
   }
 
+  const orphanRatio = dbSlugs.length > 0 ? orphanSlugs.length / dbSlugs.length : 0;
+  if (orphanRatio > 0.1) {
+    throw new Error(
+      `Prune aborted: ${orphanSlugs.length} of ${dbSlugs.length} active live_showdown questions ` +
+        `(${Math.round(orphanRatio * 100)}%) are missing from the JSON files. ` +
+        `This exceeds the 10% safety threshold — verify the JSON files are complete before re-running.`
+    );
+  }
+
   console.log(
     `Found ${orphanSlugs.length} orphaned live_showdown question(s) not present in JSON files. Marking as deleted...`
   );
