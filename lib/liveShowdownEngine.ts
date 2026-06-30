@@ -1892,6 +1892,38 @@ export async function seedOccurrenceQuestions(
   return { seeded: seedResult.slots.length, skipped: Math.max(0, totalSlots - seedResult.slots.length) };
 }
 
+// Returns how many questions are seeded for a given occurrence and whether the
+// count meets the expected total. Used by the pre-game verification cron so it
+// can surface genuine under-fill even after the idempotency guard exits early.
+export async function getOccurrenceReadiness(
+  scheduleId: string,
+  occurrenceDate: string,
+  numRounds: number
+): Promise<{ seededCount: number; expectedCount: number; ready: boolean }> {
+  const admin = supabaseAdmin;
+  const expectedCount = clampRounds(numRounds) * QUESTIONS_PER_ROUND;
+  if (!admin) return { seededCount: 0, expectedCount, ready: false };
+
+  const { count, error } = await runOccurrenceCompatibleQuery(
+    "getOccurrenceReadiness",
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("id", { count: "exact", head: true })
+        .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate),
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("id", { count: "exact", head: true })
+        .eq("schedule_id", scheduleId)
+  );
+  if (error) throw new Error(error.message || "Failed to check occurrence readiness.");
+
+  const seededCount = count ?? 0;
+  return { seededCount, expectedCount, ready: seededCount >= expectedCount };
+}
+
 // Number of leaderboard entries surfaced in state. Ranks are computed across the
 // full participant set so the viewer's rank is accurate even when off the board.
 const LEADERBOARD_DISPLAY_LIMIT = 10;
