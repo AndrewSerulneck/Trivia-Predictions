@@ -1,3 +1,5 @@
+import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
+
 type OwnerShellProps = {
   title: string;
   subtitle?: string;
@@ -11,11 +13,7 @@ export const OwnerShell = ({ title, subtitle, children, maxWidth = "sm" }: Owner
     <div className="flex min-h-screen flex-col items-center justify-start bg-slate-900 px-4 py-10">
       <div className={`w-full ${widthClass}`}>
         <div className="mb-6 text-center">
-          <img
-            src="/brand/HTC_Logo_Final_Transparent%20copy.png"
-            alt="Hightop Challenge"
-            className="mx-auto mb-3 h-16 object-contain"
-          />
+          <ExplodingLogo width={320} />
           <h1 className="text-2xl font-bold text-white">{title}</h1>
           {subtitle ? <p className="mt-1 text-sm text-slate-400">{subtitle}</p> : null}
         </div>

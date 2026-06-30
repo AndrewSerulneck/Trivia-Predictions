@@ -74,7 +74,7 @@ function seedSlots(params: {
   return buildLiveTriviaOccurrenceSeedSlots({
     questions: params.questions,
     seenSlugs: new Set(params.seenSlugs ?? []),
-    recentCategories: new Set(params.recentCategories ?? []),
+    recentCategories: params.recentCategories ?? [],
     scheduleId: "schedule-1",
     occurrenceDate: params.occurrenceDate ?? "2026-06-12",
     venueId: params.venueId ?? "venue-1",
@@ -641,6 +641,37 @@ describe("Live Trivia occurrence seeding", () => {
     expect(result.slots).toHaveLength(9);
     expect(categories).toEqual(new Set(["Music", "Sports", "Movies"]));
     expect(result.usedRecentCategory).toBe(true);
+  });
+
+  it("cooldown cap releases least-recently-used categories first, not alphabetically-first", () => {
+    // 5 categories, 3 rounds: maxCooledCount = 5 - 3 = 2.
+    // recentCategories ordered most-recently-used first: Sports > Music > Art.
+    // The cap keeps the 2 most-recent cooled (Sports, Music) and releases the
+    // stalest (Art) back to fresh priority alongside History and Movies.
+    // Old (alphabetical) behavior would have released Sports instead of Art.
+    const questions = [
+      ...makeCategory("Art", 3),
+      ...makeCategory("History", 3),
+      ...makeCategory("Movies", 3),
+      ...makeCategory("Music", 3),
+      ...makeCategory("Sports", 3),
+    ];
+
+    const result = seedSlots({
+      questions,
+      recentCategories: ["Sports", "Music", "Art"], // most-recent first
+      numRounds: 3,
+      questionsPerRound: 3,
+    });
+
+    // effectiveFreshCategories = [History, Movies, Art] (3 items).
+    // effectiveCooledCategories = [Sports, Music] (2 items, deprioritised).
+    // 3 fresh categories exactly fill 3 rounds, so cooled are never reached.
+    const selected = new Set(result.slots.map((slot) => slot.category));
+    expect(result.slots).toHaveLength(9);
+    expect(selected).toContain("Art");    // stalest cooled → released to fresh, selected
+    expect(selected).not.toContain("Sports"); // most-recent → stays cooled, not needed
+    expect(selected).not.toContain("Music");  // second-most-recent → stays cooled, not needed
   });
 
   // ── Phase 3: strict per-category exhaustion ───────────────────────────────

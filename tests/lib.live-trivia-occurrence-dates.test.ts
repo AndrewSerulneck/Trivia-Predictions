@@ -153,4 +153,24 @@ describe("findOccurrencesToSeed", () => {
     // live-state resolver + grader) must key the active game to the same date.
     expect(targets.map((t) => t.occurrenceDate)).toContain(activeOccurrence.occurrenceDate);
   });
+
+  it("narrow lookahead excludes a game starting 3 hours away while default 24h window includes it", async () => {
+    // Schedule: Sat/Sun/Mon 7pm EDT = 23:00 UTC.
+    // nowMs: Sunday 2026-06-28 at 20:00 UTC (4pm EDT) — Sunday's game starts at 23:00 UTC,
+    // which is exactly 3 hours away (> 2h verify window, < 24h nightly window).
+    const nowMs = Date.parse("2026-06-28T20:00:00.000Z");
+    const twoHours = 2 * 60 * 60 * 1000;
+
+    installScheduleRows([makeSchedule()]);
+    const narrowTargets = await findOccurrencesToSeed(nowMs, twoHours);
+
+    // Sunday's occurrence (2026-06-28) is 3h away — outside the 2h verify window.
+    expect(narrowTargets.map((t) => t.occurrenceDate)).not.toContain("2026-06-28");
+
+    installScheduleRows([makeSchedule()]);
+    const wideTargets = await findOccurrencesToSeed(nowMs);
+
+    // Same occurrence is inside the 24h nightly window.
+    expect(wideTargets.map((t) => t.occurrenceDate)).toContain("2026-06-28");
+  });
 });

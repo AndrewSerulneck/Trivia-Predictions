@@ -409,6 +409,94 @@ export interface BillingSubscription {
   createdAt?: string;
 }
 
+// ── Scategories ──────────────────────────────────────────────────────────────
+
+export type ScategoriesSessionStatus  = 'lobby' | 'active' | 'scoring' | 'complete';
+export type ScategoriesRoundStatus    = 'active' | 'scoring' | 'complete';
+export type ScategoriesRecurringType  = 'none' | 'daily' | 'weekly';
+
+export interface ScategoriesSchedule {
+  id:             string;
+  venueId:        string;
+  title:          string;
+  startTime:      string;
+  timezone:       string;
+  recurringType:  ScategoriesRecurringType;
+  recurringDays:  string[];
+  windowMinutes:  number;
+  isActive:       boolean;
+  createdAt:      string;
+  updatedAt:      string;
+}
+
+export type ScategoriesSessionSource = 'manual' | 'auto';
+
+export interface ScategoriesSession {
+  id:             string;
+  venueId:        string;
+  status:         ScategoriesSessionStatus;
+  source:         ScategoriesSessionSource;
+  scheduledEndAt: string | null;
+  createdAt:      string;
+  completedAt:    string | null;
+}
+
+export interface ScategoriesRound {
+  id:               string;
+  sessionId:        string;
+  venueId:          string;
+  letter:           string;
+  categorySetIndex: number;
+  categories:       string[];
+  startedAt:        string;
+  endsAt:           string;
+  status:           ScategoriesRoundStatus;
+  createdAt:        string;
+}
+
+export interface ScategoriesSubmission {
+  id:               string;
+  roundId:          string;
+  venueId:          string;
+  userId:           string;
+  authId:           string;
+  categoryIndex:    number;
+  answer:           string;
+  normalizedAnswer: string;
+  isUnique:         boolean | null;
+  isValid:          boolean | null;
+  pointsAwarded:    number;
+  submittedAt:      string;
+}
+
+/** Shape returned by the results API after scoring — one entry per category */
+export interface ScategoriesCategoryResult {
+  categoryIndex: number;
+  category:      string;
+  answers: {
+    userId:        string;
+    username:      string;
+    answer:        string;
+    isUnique:      boolean;
+    isValid:       boolean | null;
+    pointsAwarded: number;
+  }[];
+}
+
+export interface ScategoriesRoundResults {
+  roundId:    string;
+  letter:     string;
+  categories: string[];
+  results:    ScategoriesCategoryResult[];
+  totals: {
+    userId:   string;
+    username: string;
+    points:   number;
+  }[];
+}
+
+// ── BillingInvoice ────────────────────────────────────────────────────────────
+
 export interface BillingInvoice {
   id: string;
   subscriptionId: string;

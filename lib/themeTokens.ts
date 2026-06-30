@@ -169,6 +169,23 @@ export const GAME_THEME = {
       top:     { border: "border-[#d89a4f]/60",   fill: "bg-[#d89a4f]",    text: "text-[#d89a4f]"  },
     },
   },
+  /** Scategories — "The Word Rush": emerald→green→teal */
+  scategories: {
+    gradient:  "from-emerald-500 via-green-500 to-teal-500",
+    label:     "text-emerald-300 tracking-[0.14em] uppercase font-black text-sm",
+    border:    "border-emerald-400/60",
+    card:      "border-emerald-400/30",
+    fill:      "bg-emerald-500",
+    tint:      "bg-emerald-950/30",
+    primary:   "bg-emerald-500 text-slate-950 font-black rounded-xl",
+    phases: {
+      lobby:    { border: "border-emerald-400/60", fill: "bg-emerald-500",     text: "text-emerald-300" },
+      answering:{ border: "border-green-400/60",   fill: "bg-green-500",       text: "text-green-300"   },
+      scoring:  { border: "border-teal-400/60",    fill: "bg-teal-500",        text: "text-teal-300"    },
+      unique:   { border: "border-emerald-400/60", fill: "bg-emerald-500/20",  text: "text-emerald-300" },
+      duplicate:{ border: "border-slate-600",      fill: "bg-slate-800/50",    text: "text-slate-400"   },
+    },
+  },
   /** Predictions — "The Oracle": slate-950→deep navy→sky */
   predictions: {
     gradient:  "from-slate-950 via-[#1e3a5f] to-sky-700",

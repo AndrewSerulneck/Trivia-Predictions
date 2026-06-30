@@ -3,7 +3,7 @@
 import { getUserId, getVenueId } from "@/lib/storage";
 
 export type AnalyticsConsent = "granted" | "denied";
-export type GameAnalyticsType = "trivia" | "bingo" | "pickem" | "fantasy" | "speed-trivia" | "live-trivia";
+export type GameAnalyticsType = "trivia" | "bingo" | "pickem" | "fantasy" | "speed-trivia" | "live-trivia" | "scategories";
 export type GameOutcome = "won" | "lost" | "abandoned";
 
 type QueuedEvent = {
@@ -405,6 +405,7 @@ export function gameTypeForPath(pathname: string | null): GameAnalyticsType | nu
   if (pathname.startsWith("/trivia/live")) return "live-trivia";
   if (pathname.startsWith("/bingo/home") || pathname.startsWith("/bingo/select")) return "bingo";
   if (pathname.startsWith("/pickem") || pathname.startsWith("/predictions")) return "pickem";
+  if (pathname.startsWith("/scategories")) return "scategories";
   return null;
 }
 

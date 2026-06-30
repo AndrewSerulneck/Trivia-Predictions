@@ -602,7 +602,7 @@ function applySourceMetadata(
 export function buildLiveTriviaOccurrenceSeedSlots(params: {
   questions: readonly LiveTriviaSeedQuestion[];
   seenSlugs: ReadonlySet<string>;
-  recentCategories?: ReadonlySet<string>;
+  recentCategories?: ReadonlyArray<string>;
   scheduleId: string;
   occurrenceDate: string;
   venueId: string;
@@ -614,11 +614,12 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
   const questionsPerRound = Math.max(1, Math.min(100, Math.floor(Number(params.questionsPerRound ?? QUESTIONS_PER_ROUND))));
   const totalSlots = rounds * questionsPerRound;
   const byCategory = new Map<string, NormalizedLiveTriviaSeedQuestion[]>();
-  const recentCategorySet = new Set(
-    Array.from(params.recentCategories ?? [])
-      .map((category) => normalizeLiveTriviaCategory(category))
-      .filter(Boolean)
-  );
+  // recentCategories is ordered most-recently-used first; normalize in place so
+  // the ordering is preserved for the cooldown cap.
+  const recentCategoryNormalized = (params.recentCategories ?? [])
+    .map((category) => normalizeLiveTriviaCategory(category))
+    .filter(Boolean);
+  const recentCategorySet = new Set(recentCategoryNormalized);
 
   for (const row of params.questions) {
     const slug = String(row.slug ?? "").trim();
@@ -665,11 +666,21 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
     .sort((a, b) => a.localeCompare(b));
   const baseCategories = fullRoundCategories.length > 0 ? fullRoundCategories : fallbackCategories;
   const freshCategories = baseCategories.filter((category) => !recentCategorySet.has(category));
-  const cooledCategories = baseCategories.filter((category) => recentCategorySet.has(category));
+  // Build cooledCategories in recency order (most-recently-used first) by walking
+  // the recency-ordered input array and keeping only categories present in baseCategories.
+  const baseCategorySet = new Set(baseCategories);
+  const seenInCooled = new Set<string>();
+  const cooledCategories = recentCategoryNormalized.filter((c) => {
+    if (!baseCategorySet.has(c) || seenInCooled.has(c)) return false;
+    seenInCooled.add(c);
+    return true;
+  });
   // Cap: never put more categories in cooldown than what leaves at least `rounds`
   // fresh categories. With 8 categories and 5 rounds, at most 3 can be cooled.
   // Without this cap, RECENT_CATEGORY_COOLDOWN_OCCURRENCES × rounds-per-night
   // can exceed the total category count and make freshCategories always empty.
+  // The cap keeps the most-recently-used categories cooled and releases the
+  // stalest ones back to fresh priority (front of array = most recent = stays cooled).
   const maxCooledCount = Math.max(0, baseCategories.length - rounds);
   const effectiveCooledCategories = cooledCategories.slice(0, maxCooledCount);
   const effectiveFreshCategories = [...freshCategories, ...cooledCategories.slice(maxCooledCount)];
@@ -1398,7 +1409,10 @@ const SEED_LOOKAHEAD_MS = 24 * 60 * 60 * 1000;
 // Identifies every venue schedule whose occurrence is active now or starts within
 // the next SEED_LOOKAHEAD_MS, returning the occurrence date in the schedule's
 // timezone. Used by the per-occurrence seeder cron.
-export async function findOccurrencesToSeed(nowMs: number): Promise<LiveOccurrenceSeedTarget[]> {
+export async function findOccurrencesToSeed(
+  nowMs: number,
+  lookaheadMs = SEED_LOOKAHEAD_MS
+): Promise<LiveOccurrenceSeedTarget[]> {
   const rows = await loadScheduleRows();
   const targets: LiveOccurrenceSeedTarget[] = [];
 
@@ -1416,7 +1430,7 @@ export async function findOccurrencesToSeed(nowMs: number): Promise<LiveOccurren
     const seenOccurrenceDates = new Set<string>();
     for (const occurrence of enumerateScheduleOccurrences(row, nowMs)) {
       const isActive = nowMs >= occurrence.startMs && nowMs < occurrence.endMs;
-      const isUpcoming = occurrence.startMs > nowMs && occurrence.startMs - nowMs <= SEED_LOOKAHEAD_MS;
+      const isUpcoming = occurrence.startMs > nowMs && occurrence.startMs - nowMs <= lookaheadMs;
       if (!isActive && !isUpcoming) continue;
       if (seenOccurrenceDates.has(occurrence.occurrenceDate)) continue;
       seenOccurrenceDates.add(occurrence.occurrenceDate);
@@ -1435,15 +1449,15 @@ export async function findOccurrencesToSeed(nowMs: number): Promise<LiveOccurren
 async function loadRecentVenueLiveTriviaCategories(
   venueId: string,
   occurrenceDate: string
-): Promise<Set<string>> {
+): Promise<string[]> {
   const admin = supabaseAdmin;
   const safeVenueId = toSafeVenueId(venueId);
-  if (!admin || !safeVenueId) return new Set();
+  if (!admin || !safeVenueId) return [];
 
   try {
     const venueSchedules = await loadScheduleRows(safeVenueId);
     const scheduleIds = venueSchedules.map((row) => String(row.id ?? "").trim()).filter(Boolean);
-    if (scheduleIds.length === 0) return new Set();
+    if (scheduleIds.length === 0) return [];
 
     const { data: slotData, error: slotError } = await admin
       .from("trivia_session_questions")
@@ -1457,7 +1471,7 @@ async function loadRecentVenueLiveTriviaCategories(
         `[seedOccurrenceQuestions] skipped recent category cooldown for venue ${safeVenueId}: ` +
           `${slotError.message ?? "failed to load recent occurrence slots"}.`
       );
-      return new Set();
+      return [];
     }
 
     const recentRows = ((slotData ?? []) as Array<{ occurrence_date: string | null; question_id: string | null }>)
@@ -1476,7 +1490,7 @@ async function loadRecentVenueLiveTriviaCategories(
       if (recentDates.length >= RECENT_CATEGORY_COOLDOWN_OCCURRENCES) break;
     }
 
-    if (recentDates.length === 0) return new Set();
+    if (recentDates.length === 0) return [];
     const recentQuestionIds = Array.from(
       new Set(
         recentRows
@@ -1484,7 +1498,16 @@ async function loadRecentVenueLiveTriviaCategories(
           .map((row) => row.questionId)
       )
     );
-    if (recentQuestionIds.length === 0) return new Set();
+    if (recentQuestionIds.length === 0) return [];
+
+    // Track the most recent occurrence date each question ID appeared in.
+    // recentRows is ordered DESC by occurrence_date so first seen = most recent.
+    const mostRecentDateByQuestionId = new Map<string, string>();
+    for (const row of recentRows) {
+      if (!mostRecentDateByQuestionId.has(row.questionId)) {
+        mostRecentDateByQuestionId.set(row.questionId, row.occurrenceDate);
+      }
+    }
 
     const { data: questionData, error: questionError } = await admin
       .from("trivia_questions")
@@ -1497,20 +1520,35 @@ async function loadRecentVenueLiveTriviaCategories(
         `[seedOccurrenceQuestions] skipped recent category cooldown for venue ${safeVenueId}: ` +
           `${questionError.message ?? "failed to load recent categories"}.`
       );
-      return new Set();
+      return [];
     }
 
-    return new Set(
-      ((questionData ?? []) as Array<{ category: string | null }>)
-        .map((row) => normalizeLiveTriviaCategory(row.category))
-        .filter(Boolean)
-    );
+    // For each category, find the most recent occurrence date any of its questions appeared in.
+    const mostRecentDateByCategory = new Map<string, string>();
+    for (const row of (questionData ?? []) as Array<{ slug: string | null; category: string | null }>) {
+      const category = normalizeLiveTriviaCategory(row.category);
+      if (!category) continue;
+      const questionId = String(row.slug ?? "").trim();
+      const occDate = mostRecentDateByQuestionId.get(questionId) ?? "";
+      const existing = mostRecentDateByCategory.get(category) ?? "";
+      if (!existing || occDate > existing) {
+        mostRecentDateByCategory.set(category, occDate);
+      }
+    }
+
+    // Return categories sorted most-recently-used first so the cooldown cap in
+    // buildLiveTriviaOccurrenceSeedSlots releases the stalest categories first.
+    return Array.from(mostRecentDateByCategory.keys()).sort((a, b) => {
+      const dateA = mostRecentDateByCategory.get(a) ?? "";
+      const dateB = mostRecentDateByCategory.get(b) ?? "";
+      return dateB.localeCompare(dateA);
+    });
   } catch (error) {
     console.warn(
       `[seedOccurrenceQuestions] skipped recent category cooldown for venue ${safeVenueId}: ` +
         `${error instanceof Error ? error.message : "unknown error"}.`
     );
-    return new Set();
+    return [];
   }
 }
 
@@ -1681,7 +1719,7 @@ export async function seedOccurrenceQuestions(
       `[seedOccurrenceQuestions] venue ${safeVenueId} question inventory pressure for ${occurrenceDate} ` +
         `(seeded=${seedResult.slots.length}, needed=${totalSlots}, usedSeen=${seedResult.usedSeen}, ` +
         `repeatedQuestions=${seedResult.repeatedQuestions}, usedOverflow=${seedResult.usedOverflow}, ` +
-        `usedRecentCategory=${seedResult.usedRecentCategory}, recentCategoryCount=${recentCategories.size}).`
+        `usedRecentCategory=${seedResult.usedRecentCategory}, recentCategoryCount=${recentCategories.length}).`
     );
     // Persist warning row — best-effort, never blocks seeding.
     void admin
@@ -1985,6 +2023,11 @@ async function loadVenueName(venueId: string): Promise<string | null> {
   return data?.name ?? null;
 }
 
+// In-process guard for lazy seeding. Keyed by "scheduleId:occurrenceDate".
+// Prevents concurrent client polls from all racing through the idempotency
+// COUNT check before the first insert commits and launching N parallel seeds.
+const lazySeedInFlight = new Set<string>();
+
 export async function getLiveShowdownState(
   serverTimestamp: number,
   venueId: string,
@@ -2043,16 +2086,26 @@ export async function getLiveShowdownState(
   const totalRounds = clampRounds(Number(active.num_rounds));
 
   // Lazy seeding safety net: if the cron missed this occurrence, seed it now.
-  // seedOccurrenceQuestions is idempotent — exits in one COUNT query when already seeded.
-  await seedOccurrenceQuestions(active.id, occurrenceDate, String(venueId), totalRounds).catch((err) => {
-    console.error(
-      "[getLiveShowdownState] lazy seed failed for",
-      active.id,
-      occurrenceDate,
-      ":",
-      err instanceof Error ? err.message : err
-    );
-  });
+  // The in-process guard lets exactly one concurrent poll trigger the seed; the
+  // rest skip silently and rely on the seeded rows being visible on their next
+  // poll (or on a subsequent DB read within the same request via the state query).
+  const lazySeedKey = `${active.id}:${occurrenceDate}`;
+  if (!lazySeedInFlight.has(lazySeedKey)) {
+    lazySeedInFlight.add(lazySeedKey);
+    seedOccurrenceQuestions(active.id, occurrenceDate, String(venueId), totalRounds)
+      .catch((err) => {
+        console.error(
+          "[getLiveShowdownState] lazy seed failed for",
+          active.id,
+          occurrenceDate,
+          ":",
+          err instanceof Error ? err.message : err
+        );
+      })
+      .finally(() => {
+        lazySeedInFlight.delete(lazySeedKey);
+      });
+  }
   const totalDurationMs = totalRounds * ROUND_MS;
   const clampedElapsedMs = Math.max(0, Math.min(nowMs - startMs, totalDurationMs - 1));
 

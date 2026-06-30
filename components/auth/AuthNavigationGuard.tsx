@@ -30,7 +30,8 @@ function isInSessionGameRoute(pathname: string): boolean {
     pathname.startsWith("/activity") ||
     pathname.startsWith("/leaderboard") ||
     pathname.startsWith("/advertise") ||
-    pathname.startsWith("/info")
+    pathname.startsWith("/info") ||
+    pathname.startsWith("/scategories")
   );
 }
 

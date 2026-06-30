@@ -48,6 +48,7 @@ export const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
   bingo: ["Hightop", "Sports Bingo™"],
   pickem: ["Hightop", "Pick 'Em™"],
   fantasy: ["Hightop", "Fantasy™"],
+  scategories: ["Hightop", "S'Categories"],
 };
 
 export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
@@ -56,6 +57,7 @@ export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
   bingo: "linear-gradient(128deg,#10b981 0%,#14b8a6 52%,#0f766e 100%)",
   pickem: "linear-gradient(134deg,#3b82f6 0%,#6366f1 55%,#4f46e5 100%)",
   fantasy: "linear-gradient(134deg,#a855f7 0%,#8b5cf6 52%,#7c3aed 100%)",
+  scategories: "linear-gradient(132deg,#10b981 0%,#22c55e 50%,#14b8a6 100%)",
 };
 
 export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
@@ -64,6 +66,7 @@ export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
   bingo: "Bingo boards align with the games on TV. Watch the game, track your squares in real time, and earn points as the live action unfolds!",
   pickem: "Predict the winners of today's top matchups before the games start. Every correct call gets you one step closer to prizes and discounts!",
   fantasy: "Draft the ultimate roster from the star athletes in today's games. The better they perform, the more points you earn! ",
+  scategories: "One letter. 12 categories. 3 minutes. Unique answers score — duplicates cancel.",
 };
 
 export function formatCountdown(seconds: number): string {

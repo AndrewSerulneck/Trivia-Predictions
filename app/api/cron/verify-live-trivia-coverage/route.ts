@@ -5,6 +5,10 @@ import {
   seedOccurrenceQuestions,
 } from "@/lib/liveShowdownEngine";
 
+// Narrow window: verify cron only checks games starting within 2 hours so it
+// doesn't do the nightly cron's job and mask nightly-cron failures.
+const VERIFY_LOOKAHEAD_MS = 2 * 60 * 60 * 1000;
+
 function isAuthorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET?.trim();
   if (secret) {
@@ -15,7 +19,7 @@ function isAuthorized(request: Request): boolean {
     const headerSecret = request.headers.get("x-cron-secret") ?? "";
     return headerSecret === secret;
   }
-  return false;
+  return Boolean(request.headers.get("x-vercel-cron"));
 }
 
 type OccurrenceVerifyReport = {
@@ -34,7 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Unauthorized cron request." }, { status: 401 });
   }
 
-  const targets = await findOccurrencesToSeed(Date.now()).catch((err: unknown) => {
+  const targets = await findOccurrencesToSeed(Date.now(), VERIFY_LOOKAHEAD_MS).catch((err: unknown) => {
     const msg = err instanceof Error ? err.message : "Failed to load seeding targets.";
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   });
@@ -79,24 +83,37 @@ export async function POST(request: Request) {
               `schedule=${target.scheduleId} occurrence=${target.occurrenceDate} venue=${target.venueId}`
           );
         }
-      }
 
-      // Post-check: verify coverage after any self-heal attempt.
-      const after = await getOccurrenceReadiness(
-        target.scheduleId,
-        target.occurrenceDate,
-        target.numRounds
-      );
-      report.seededCount = after.seededCount;
-      report.expectedCount = after.expectedCount;
-      report.ready = after.ready;
-      if (!after.ready) {
-        anyDeficient = true;
-        console.error(
-          `[verify-live-trivia-coverage] DEFICIENT after self-heal: ` +
-            `schedule=${target.scheduleId} occurrence=${target.occurrenceDate} venue=${target.venueId} ` +
-            `seeded=${after.seededCount}/${after.expectedCount}`
+        // Post-check: verify coverage after self-heal attempt.
+        const after = await getOccurrenceReadiness(
+          target.scheduleId,
+          target.occurrenceDate,
+          target.numRounds
         );
+        report.seededCount = after.seededCount;
+        report.expectedCount = after.expectedCount;
+        report.ready = after.ready;
+        if (after.seededCount === 0) {
+          // Completely unseeded — the game cannot run at all.
+          anyDeficient = true;
+          console.error(
+            `[verify-live-trivia-coverage] DEFICIENT after self-heal: ` +
+              `schedule=${target.scheduleId} occurrence=${target.occurrenceDate} venue=${target.venueId} ` +
+              `seeded=${after.seededCount}/${after.expectedCount}`
+          );
+        } else if (!after.ready) {
+          // Partial fill: idempotency guard prevented re-seeding (pool exhaustion).
+          // Game will run with reduced content — warn but don't trigger an error.
+          console.warn(
+            `[verify-live-trivia-coverage] partial fill (pool exhaustion): ` +
+              `schedule=${target.scheduleId} occurrence=${target.occurrenceDate} venue=${target.venueId} ` +
+              `seeded=${after.seededCount}/${after.expectedCount}`
+          );
+        }
+      } else {
+        report.seededCount = before.seededCount;
+        report.expectedCount = before.expectedCount;
+        report.ready = true;
       }
     } catch (err) {
       report.error = err instanceof Error ? err.message : "Unknown error";

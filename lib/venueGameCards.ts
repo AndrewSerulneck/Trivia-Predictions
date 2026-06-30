@@ -1,4 +1,4 @@
-export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy";
+export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy" | "scategories";
 
 export type GameOnboardingStep = {
   stepLabel: string;
@@ -141,6 +141,40 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     ],
   },
   {
+    key: "scategories",
+    title: "Hightop S'Categories",
+    path: "/scategories",
+    cardClassName: "bg-emerald-600 text-white",
+    visibleOnVenueHome: false,  // card only shown when a live session exists
+    rules: [
+      "-A letter is drawn for the whole venue",
+      "-Name something in each category starting with that letter",
+      "-3 minutes to fill all 12 categories",
+      "-Unique answers score 2 points — duplicate answers cancel",
+    ],
+    steps: [
+      {
+        stepLabel: "What is it?",
+        heading: "One letter. 12 categories. Go.",
+        body: "A live word game for the whole venue. A letter drops — fill every category with something that starts with it.",
+      },
+      {
+        stepLabel: "How it works",
+        heading: "Think fast. Type faster.",
+        body: "You get 3 minutes to fill all 12 categories. Your answers lock when the timer expires.",
+      },
+      {
+        stepLabel: "Scoring",
+        heading: "Unique answers score. Copies cancel.",
+        body: [
+          "2 points for every answer nobody else wrote.",
+          "If two players write the same thing — both score zero.",
+          "Max 24 points per round.",
+        ],
+      },
+    ],
+  },
+  {
     key: "bingo",
     title: "Hightop Sports Bingo™",
     path: "/bingo",
@@ -181,7 +215,7 @@ export const VENUE_GAME_CARD_BY_KEY: Record<VenueGameKey, VenueGameCardConfig> =
   {} as Record<VenueGameKey, VenueGameCardConfig>
 );
 
-export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["speed-trivia", "live_trivia", "bingo", "pickem", "fantasy"];
+export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["speed-trivia", "live_trivia", "bingo", "pickem", "fantasy", "scategories"];
 
 export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null {
   if (pathname.startsWith("/trivia/live")) return "live_trivia";
@@ -190,5 +224,6 @@ export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null
   if (pathname.startsWith("/bingo")) return "bingo";
   if (pathname.startsWith("/fantasy")) return "fantasy";
   if (pathname.startsWith("/pending-challenges")) return "fantasy";
+  if (pathname.startsWith("/scategories")) return "scategories";
   return null;
 }

@@ -23,6 +23,16 @@ const WEEKDAY_LABELS: Record<string, string> = {
 
 const WEEKDAY_ORDER = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
+function formatScategoriesCountdown(seconds: number): string {
+  if (seconds <= 0) return "Starting soon";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
+  if (m > 0) return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `0:${String(s).padStart(2, "0")}`;
+}
+
 function formatRecurringScheduleLabel(status: LiveTriviaStatus, nextStartAtMs: number | null): string | null {
   if (status.recurringType !== "weekly" && status.recurringType !== "daily") return null;
   const days = [...status.recurringDays].sort(
@@ -66,6 +76,8 @@ type VenueGamesPanelProps = {
   orderedHomeCards: VenueGameCardConfig[];
   visibleBadgeByGame: Map<VenueGameKey, string>;
   badgeError: string;
+  scategoriesSessionActive?: boolean;
+  scategoriesNextWindowSeconds?: number | null;
   onTriggerPulse: () => void;
   onGoTo: (dest: VenueGameKey, sourceElement: HTMLElement | null) => void;
   onRetryBadges: () => void;
@@ -85,6 +97,8 @@ function VenueGamesPanelInner({
   orderedHomeCards,
   visibleBadgeByGame,
   badgeError,
+  scategoriesSessionActive = false,
+  scategoriesNextWindowSeconds = null,
   onTriggerPulse,
   onGoTo,
   onRetryBadges,
@@ -163,6 +177,55 @@ function VenueGamesPanelInner({
               </button>
             </div>
           </div>
+
+          {(scategoriesSessionActive || scategoriesNextWindowSeconds != null) && (
+            <div className="rounded-2xl border border-emerald-400/60 bg-ht-surface p-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+              <div className="flex items-stretch gap-3">
+                <div className="min-w-0 flex-1">
+                  {scategoriesSessionActive ? (
+                    <>
+                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                        Live game in progress!
+                      </p>
+                      <p className="mt-1 font-black text-emerald-200 text-[2.2rem] leading-none">
+                        S&apos;Categories
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-emerald-100/70">
+                        One letter · 12 categories · 3 minutes
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                        Next S&apos;Categories In
+                      </p>
+                      <p className="mt-1 font-black tabular-nums text-emerald-200 text-[2.2rem] leading-none">
+                        {scategoriesNextWindowSeconds != null
+                          ? formatScategoriesCountdown(scategoriesNextWindowSeconds)
+                          : "—"}
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-emerald-100/70">
+                        One letter · 12 categories · 3 minutes
+                      </p>
+                    </>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onMouseDown={onTriggerPulse}
+                  onClick={(event) => { onGoTo("scategories", event.currentTarget); }}
+                  disabled={pendingDestination !== null}
+                  className="tp-clean-button min-w-[7.2rem] rounded-[12px] border border-emerald-400/60 bg-emerald-500/20 px-4 py-2 text-lg font-black leading-tight text-emerald-200 shadow-[0_0_0_1px_rgba(52,211,153,0.28)] transition-all disabled:opacity-60 hover:bg-emerald-500/25"
+                >
+                  {scategoriesSessionActive ? (
+                    <>Join<br />now</>
+                  ) : (
+                    <>View<br />info</>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-3">
             {orderedHomeCards.map((card) => {

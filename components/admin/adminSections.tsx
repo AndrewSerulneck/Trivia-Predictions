@@ -13,6 +13,7 @@ import { TriviaAnswerGraderSection } from "@/components/admin/sections/TriviaAns
 import { TriviaImageReviewSection } from "@/components/admin/sections/TriviaImageReviewSection";
 import { TriviaListSection } from "@/components/admin/sections/TriviaListSection";
 import { LiveTriviaInventorySection } from "@/components/admin/sections/LiveTriviaInventorySection";
+import { ScategoriesSection } from "@/components/admin/sections/ScategoriesSection";
 import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsSection";
 import { UsernameModerationSection } from "@/components/admin/sections/UsernameModerationSection";
 import { UsersSection } from "@/components/admin/sections/UsersSection";
@@ -38,7 +39,8 @@ export type AdminSection =
   | "challenge-campaigns"
   | "live-trivia"
   | "live-trivia-inventory"
-  | "username-moderation";
+  | "username-moderation"
+  | "scategories";
 
 export type AdminSectionOption = {
   id: AdminSection;
@@ -101,6 +103,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "live-trivia",           label: "Live Trivia Schedules", slug: "live-trivia",           component: LiveTriviaSchedulesSection },
   { id: "live-trivia-inventory", label: "Question Inventory",    slug: "live-trivia-inventory", status: { label: "Ready", tone: "live" }, component: LiveTriviaInventorySection },
   { id: "pickem-settlement",     label: "Pick 'Em Settlement",   slug: "pickem-settlement",     status: { label: "Ready", tone: "live" }, component: PickEmSettlementSection },
+  { id: "scategories",           label: "S'Categories",          slug: "scategories",           status: { label: "Ready", tone: "live" }, component: ScategoriesSection },
 ];
 
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
@@ -124,6 +127,10 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: "Operations",
     items: ADMIN_SECTION_OPTIONS.filter((opt) => ["pickem-settlement"].includes(opt.id)),
   },
+  {
+    label: "Live Games",
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["scategories"].includes(opt.id)),
+  },
 ];
 
 export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
@@ -144,6 +151,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "ads-list",
   "ads-create",
   "pickem-settlement",
+  "scategories",
 ]);
 
 export function getAdminSectionBySlug(slug: string): AdminSectionOption | null {

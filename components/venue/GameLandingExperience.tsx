@@ -84,6 +84,7 @@ function analyticsGameType(gameKey: VenueGameKey): GameAnalyticsType {
   if (gameKey === "bingo") return "bingo";
   if (gameKey === "fantasy") return "fantasy";
   if (gameKey === "pickem") return "pickem";
+  if (gameKey === "scategories") return "scategories";
   return "speed-trivia";
 }
 

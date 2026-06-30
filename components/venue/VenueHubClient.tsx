@@ -92,7 +92,7 @@ type VenueMenuItem = {
   href: string;
 };
 
-const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["live_trivia", "speed-trivia", "bingo", "pickem", "fantasy"];
+const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["live_trivia", "speed-trivia", "bingo", "pickem", "fantasy", "scategories"];
 const VENUE_DRAWER_MENU_ITEMS: VenueMenuItem[] = [
   {
     label: "Career Stats",
@@ -341,6 +341,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     recurringType: null,
     recurringDays: [],
   });
+  const [scategoriesSessionActive, setScategoriesSessionActive] = useState(false);
+  const [scategoriesNextWindowAtMs, setScategoriesNextWindowAtMs] = useState<number | null>(null);
   const [liveCountdownNowMs, setLiveCountdownNowMs] = useState(() => Date.now());
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
@@ -362,6 +364,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const badgeRequestRef = useRef<AbortController | null>(null);
   const campaignRequestRef = useRef<AbortController | null>(null);
   const liveTriviaRequestRef = useRef<AbortController | null>(null);
+  const scategoriesRequestRef = useRef<AbortController | null>(null);
   const contentReady = !arrivalInProgress && homeRevealComplete && carouselBootstrapped;
 
   const hasUserTokenInCookie = useCallback((): boolean => {
@@ -1006,6 +1009,36 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     }
   }, [venue.id]);
 
+  const loadScategoriesStatus = useCallback(async () => {
+    scategoriesRequestRef.current?.abort();
+    const controller = new AbortController();
+    scategoriesRequestRef.current = controller;
+    const signal = controller.signal;
+    try {
+      const payload = await fetchJsonWithTimeout<{
+        ok: boolean;
+        session?: { status?: string } | null;
+        nextWindowAt?: string | null;
+      }>(
+        `/api/scategories/sessions?venueId=${encodeURIComponent(venue.id)}`,
+        3600,
+        signal
+      );
+      if (signal.aborted) return;
+      const status = payload?.session?.status ?? null;
+      const active = status === "lobby" || status === "active" || status === "scoring";
+      setScategoriesSessionActive(active);
+      const nextWin = payload?.nextWindowAt ? new Date(payload.nextWindowAt).getTime() : null;
+      setScategoriesNextWindowAtMs(nextWin);
+    } catch {
+      // Non-fatal — scategories card simply won't appear.
+    } finally {
+      if (scategoriesRequestRef.current === controller) {
+        scategoriesRequestRef.current = null;
+      }
+    }
+  }, [venue.id]);
+
   const runWarmup = useCallback(async () => {
     if (warmupPromiseRef.current) return warmupPromiseRef.current;
     const userId = getUserId() ?? "";
@@ -1256,6 +1289,14 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   useEffect(() => {
     if (!homeRevealComplete) return;
     if (!contentReady) return;
+    void loadScategoriesStatus();
+    const interval = window.setInterval(() => void loadScategoriesStatus(), 30000);
+    return () => window.clearInterval(interval);
+  }, [contentReady, homeRevealComplete, loadScategoriesStatus]);
+
+  useEffect(() => {
+    if (!homeRevealComplete) return;
+    if (!contentReady) return;
     router.prefetch("/trivia");
     router.prefetch("/trivia/live");
     router.prefetch("/predictions");
@@ -1265,6 +1306,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     router.prefetch("/pending-challenges");
     router.prefetch("/active-games");
     router.prefetch("/redeem-prizes");
+    router.prefetch("/scategories");
     if (!warmupStartedRef.current && !bootstrapSnapshotRef.current) {
       warmupStartedRef.current = true;
       void runWarmup();
@@ -1276,6 +1318,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       badgeRequestRef.current?.abort();
       campaignRequestRef.current?.abort();
       liveTriviaRequestRef.current?.abort();
+      scategoriesRequestRef.current?.abort();
     };
   }, []);
 
@@ -1335,6 +1378,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const nextLiveTriviaCountdownSeconds =
     liveTriviaStatus.nextStartAtMs != null
       ? Math.max(0, Math.floor((liveTriviaStatus.nextStartAtMs - liveCountdownNowMs) / 1000))
+      : null;
+  const scategoriesNextWindowSeconds =
+    !scategoriesSessionActive && scategoriesNextWindowAtMs != null
+      ? Math.max(0, Math.floor((scategoriesNextWindowAtMs - liveCountdownNowMs) / 1000))
       : null;
   const nextLiveTriviaCountdownLabel = liveTriviaStatus.live
     ? "Live Now"
@@ -1413,6 +1460,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           orderedHomeCards={orderedHomeCards}
           visibleBadgeByGame={visibleBadgeByGame}
           badgeError={badgeError}
+          scategoriesSessionActive={scategoriesSessionActive}
+          scategoriesNextWindowSeconds={scategoriesNextWindowSeconds}
           onTriggerPulse={triggerPulse}
           onGoTo={handleGoTo}
           onRetryBadges={retryBadges}

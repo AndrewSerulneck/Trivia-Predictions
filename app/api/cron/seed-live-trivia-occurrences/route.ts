@@ -13,7 +13,7 @@ function isAuthorized(request: Request): boolean {
     return headerSecret === secret;
   }
 
-  return false;
+  return Boolean(request.headers.get("x-vercel-cron"));
 }
 
 type SeedReport = {

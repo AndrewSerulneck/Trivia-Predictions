@@ -49,7 +49,7 @@ const OwnerLoginPage = () => {
   };
 
   return (
-    <OwnerShell title="Venue Owner Sign In" subtitle="Manage your subscription and billing">
+    <OwnerShell title="Partner Venue Sign In" subtitle="Manage your subscription and billing">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className={ownerLabelClass}>Email</label>

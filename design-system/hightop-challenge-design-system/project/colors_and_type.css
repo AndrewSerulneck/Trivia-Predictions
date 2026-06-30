@@ -156,6 +156,20 @@
   --ht-game-fantasy-primary:  var(--ht-violet-600);
   --ht-game-fantasy-secondary:var(--ht-cyan-500);
 
+  /* Scategories — Word Rush. Emerald → green → teal. */
+  --ht-emerald-950:             #022c22;
+  --ht-green-300:               #86efac;
+  --ht-green-400:               #4ade80;
+  --ht-green-500:               #22c55e;
+  --ht-teal-300:                #5eead4;
+  --ht-teal-400:                #2dd4bf;
+  --ht-teal-500:                #14b8a6;
+  --ht-game-scategories:        linear-gradient(132deg, #10b981 0%, #22c55e 50%, #14b8a6 100%);
+  --ht-game-scategories-edge:   var(--ht-emerald-400);
+  --ht-game-scategories-primary:   var(--ht-emerald-500);
+  --ht-game-scategories-secondary: var(--ht-teal-400);
+  --ht-shadow-glow-emerald:     0 0 0 1px rgba(52, 211, 153, 0.30), 0 8px 28px rgba(52, 211, 153, 0.18);
+
   /* -----------------------------------------------------------
      FOCUS RING — always cyan, always 2px halo
      ----------------------------------------------------------- */

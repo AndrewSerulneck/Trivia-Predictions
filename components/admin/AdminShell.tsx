@@ -24,6 +24,7 @@ import { AdAnalyticsDashboard } from "@/components/admin/AdAnalyticsDashboard";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
+import { ScategoriesSection } from "@/components/admin/sections/ScategoriesSection";
 import { QuestionInventoryAlert } from "@/components/admin/sections/QuestionInventoryAlert";
 import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
 
@@ -536,6 +537,8 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         return <AdsCreateSection venues={venueList} />;
       case "pickem-settlement":
         return <PickEmSettlementSection />;
+      case "scategories":
+        return <ScategoriesSection venues={venueList} />;
       default:
         return currentSectionOption ? <LegacyPanel section={currentSectionOption} /> : null;
     }

@@ -558,6 +558,14 @@ async function pruneOrphanedLiveShowdownQuestions(supabase, canonicalSlugs) {
 
   const orphanSlugs = dbSlugs.filter((slug) => !canonicalSlugs.has(slug));
 
+  if (dbSlugs.length === 0 && canonicalSlugs.size > 0) {
+    throw new Error(
+      `Prune aborted: DB returned 0 active live_showdown questions but JSON files contain ` +
+        `${canonicalSlugs.size} canonical slug(s). This likely indicates a connectivity or ` +
+        `auth issue — verify the service role key and DB connection before re-running.`
+    );
+  }
+
   if (orphanSlugs.length === 0) {
     console.log("No orphaned live_showdown questions found — DB is in sync with JSON.");
     return;
