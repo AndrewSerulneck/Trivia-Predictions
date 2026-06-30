@@ -254,77 +254,7 @@ function isMissingRecurringColumnsError(message: string | undefined): boolean {
   return mentionsRecurringColumn && (normalized.includes("does not exist") || normalized.includes("schema cache"));
 }
 
-let supportsOccurrenceDateColumn: boolean | null = null;
-let hasLoggedOccurrenceDateFallback = false;
-let supportsLiveTriviaSourceColumns: boolean | null = null;
-let hasLoggedLiveTriviaSourceColumnFallback = false;
 let cachedLiveTriviaSourceMetadata: Map<string, { sourceFile: string; sourceOrder: number; subcategory: string | null }> | null = null;
-
-function isMissingOccurrenceDateColumnError(message: string | undefined): boolean {
-  const normalized = String(message ?? "").toLowerCase();
-  return normalized.includes("occurrence_date") && normalized.includes("does not exist");
-}
-
-function isMissingLiveTriviaSourceColumnsError(message: string | undefined): boolean {
-  const normalized = String(message ?? "").toLowerCase();
-  const mentionsSourceColumn = normalized.includes("source_order") || normalized.includes("source_file");
-  return mentionsSourceColumn && (normalized.includes("does not exist") || normalized.includes("schema cache"));
-}
-
-function logOccurrenceDateFallbackOnce(scope: string): void {
-  if (hasLoggedOccurrenceDateFallback) return;
-  hasLoggedOccurrenceDateFallback = true;
-  console.warn(`[live-trivia][occurrence-compat] Falling back to legacy schema in ${scope} (missing occurrence_date column).`);
-}
-
-function logLiveTriviaSourceColumnFallbackOnce(): void {
-  if (hasLoggedLiveTriviaSourceColumnFallback) return;
-  hasLoggedLiveTriviaSourceColumnFallback = true;
-  console.warn("[live-trivia][source-metadata] Falling back to canonical JSON source metadata (missing source_order/source_file columns).");
-}
-
-async function runOccurrenceCompatibleQuery(
-  scope: string,
-  withOccurrence: () => PromiseLike<any>,
-  withoutOccurrence: () => PromiseLike<any>
-): Promise<any> {
-  if (supportsOccurrenceDateColumn === false) {
-    return withoutOccurrence();
-  }
-
-  const withResult = await withOccurrence();
-  if (withResult.error && isMissingOccurrenceDateColumnError(withResult.error.message ?? undefined)) {
-    supportsOccurrenceDateColumn = false;
-    logOccurrenceDateFallbackOnce(scope);
-    return withoutOccurrence();
-  }
-
-  if (!withResult.error) {
-    supportsOccurrenceDateColumn = true;
-  }
-  return withResult;
-}
-
-async function runLiveTriviaSourceCompatibleQuery(
-  withSourceColumns: () => PromiseLike<any>,
-  withoutSourceColumns: () => PromiseLike<any>
-): Promise<any> {
-  if (supportsLiveTriviaSourceColumns === false) {
-    return withoutSourceColumns();
-  }
-
-  const withResult = await withSourceColumns();
-  if (withResult.error && isMissingLiveTriviaSourceColumnsError(withResult.error.message ?? undefined)) {
-    supportsLiveTriviaSourceColumns = false;
-    logLiveTriviaSourceColumnFallbackOnce();
-    return withoutSourceColumns();
-  }
-
-  if (!withResult.error) {
-    supportsLiveTriviaSourceColumns = true;
-  }
-  return withResult;
-}
 
 function getTimeZoneParts(date: Date, timeZone: string): {
   year: number;
@@ -516,26 +446,14 @@ function mergeLiveTriviaSourceMetadata(rows: readonly LiveTriviaSeedQuestion[]):
 export async function loadActiveLiveTriviaSeedQuestionPool(
   admin: NonNullable<typeof supabaseAdmin>
 ): Promise<LiveTriviaSeedQuestion[]> {
-  const { data, error } = await runLiveTriviaSourceCompatibleQuery(
-    () =>
-      admin
-        .from("trivia_questions")
-        .select("slug, question, category, subcategory, options, correct_answer, question_pool, source_order, source_file")
-        .eq("status", "active")
-        .eq("question_pool", "live_showdown")
-        .not("slug", "is", null)
-        .order("slug", { ascending: true })
-        .limit(5000),
-    () =>
-      admin
-        .from("trivia_questions")
-        .select("slug, question, category, subcategory, options, correct_answer, question_pool")
-        .eq("status", "active")
-        .eq("question_pool", "live_showdown")
-        .not("slug", "is", null)
-        .order("slug", { ascending: true })
-        .limit(5000)
-  );
+  const { data, error } = await admin
+    .from("trivia_questions")
+    .select("slug, question, category, subcategory, options, correct_answer, question_pool, source_order, source_file")
+    .eq("status", "active")
+    .eq("question_pool", "live_showdown")
+    .not("slug", "is", null)
+    .order("slug", { ascending: true })
+    .limit(5000);
 
   if (error) {
     throw new Error(error.message || "Failed to load active Live Trivia question pool.");
@@ -1134,28 +1052,15 @@ async function loadSessionQuestion(
     return null;
   }
 
-  const { data: sessionRowData, error: sessionRowError } = await runOccurrenceCompatibleQuery(
-    "loadSessionQuestion",
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .select("id, schedule_id, question_id, round_number, question_index")
-        .eq("schedule_id", scheduleId)
-        .eq("occurrence_date", occurrenceDate)
-        .eq("round_number", roundNumber)
-        .eq("question_index", questionIndex)
-        .limit(1)
-        .maybeSingle(),
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .select("id, schedule_id, question_id, round_number, question_index")
-        .eq("schedule_id", scheduleId)
-        .eq("round_number", roundNumber)
-        .eq("question_index", questionIndex)
-        .limit(1)
-        .maybeSingle()
-  );
+  const { data: sessionRowData, error: sessionRowError } = await admin
+    .from("trivia_session_questions")
+    .select("id, schedule_id, question_id, round_number, question_index")
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
+    .eq("round_number", roundNumber)
+    .eq("question_index", questionIndex)
+    .limit(1)
+    .maybeSingle();
 
   if (sessionRowError) {
     throw new Error(sessionRowError.message || "Failed to load session question mapping.");
@@ -1293,30 +1198,16 @@ async function loadViewerResult(
   const userId = String(userIdRaw ?? "").trim();
   if (!userId) return null;
 
-  const { data, error } = await runOccurrenceCompatibleQuery(
-    "loadViewerResult",
-    () =>
-      admin
-        .from("live_showdown_answers")
-        .select("submitted_answer, is_correct, points_awarded")
-        .eq("user_id", userId)
-        .eq("schedule_id", scheduleId)
-        .eq("occurrence_date", occurrenceDate)
-        .eq("round_number", roundNumber)
-        .eq("question_index", questionIndex)
-        .limit(1)
-        .maybeSingle<{ submitted_answer: string; is_correct: boolean; points_awarded: number }>(),
-    () =>
-      admin
-        .from("live_showdown_answers")
-        .select("submitted_answer, is_correct, points_awarded")
-        .eq("user_id", userId)
-        .eq("schedule_id", scheduleId)
-        .eq("round_number", roundNumber)
-        .eq("question_index", questionIndex)
-        .limit(1)
-        .maybeSingle<{ submitted_answer: string; is_correct: boolean; points_awarded: number }>()
-  );
+  const { data, error } = await admin
+    .from("live_showdown_answers")
+    .select("submitted_answer, is_correct, points_awarded")
+    .eq("user_id", userId)
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
+    .eq("round_number", roundNumber)
+    .eq("question_index", questionIndex)
+    .limit(1)
+    .maybeSingle<{ submitted_answer: string; is_correct: boolean; points_awarded: number }>();
 
   if (error) {
     throw new Error(error.message || "Failed to load viewer showdown result.");
@@ -1353,24 +1244,13 @@ async function settleClosestGuessQuestion(
     return null;
   }
 
-  const { data, error } = await runOccurrenceCompatibleQuery(
-    "settleClosestGuessQuestion:load_submissions",
-    () =>
-      admin
-        .from("live_showdown_answers")
-        .select("id, user_id, submitted_answer, normalized_answer, is_correct, points_awarded")
-        .eq("schedule_id", scheduleId)
-        .eq("occurrence_date", occurrenceDate)
-        .eq("round_number", roundNumber)
-        .eq("question_index", questionIndex),
-    () =>
-      admin
-        .from("live_showdown_answers")
-        .select("id, user_id, submitted_answer, normalized_answer, is_correct, points_awarded")
-        .eq("schedule_id", scheduleId)
-        .eq("round_number", roundNumber)
-        .eq("question_index", questionIndex)
-  );
+  const { data, error } = await admin
+    .from("live_showdown_answers")
+    .select("id, user_id, submitted_answer, normalized_answer, is_correct, points_awarded")
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
+    .eq("round_number", roundNumber)
+    .eq("question_index", questionIndex);
 
   if (error) {
     throw new Error(error.message || "Failed to load live showdown submissions.");
@@ -1465,24 +1345,13 @@ async function settleClosestGuessQuestion(
     return shouldBeCorrect ? row.is_correct : !row.is_correct;
   });
   if (!flagsAlreadyCorrect) {
-    const { error: clearError } = await runOccurrenceCompatibleQuery(
-      "settleClosestGuessQuestion:clear_flags",
-      () =>
-        admin
-          .from("live_showdown_answers")
-          .update({ is_correct: false })
-          .eq("schedule_id", scheduleId)
-          .eq("occurrence_date", occurrenceDate)
-          .eq("round_number", roundNumber)
-          .eq("question_index", questionIndex),
-      () =>
-        admin
-          .from("live_showdown_answers")
-          .update({ is_correct: false })
-          .eq("schedule_id", scheduleId)
-          .eq("round_number", roundNumber)
-          .eq("question_index", questionIndex)
-    );
+    const { error: clearError } = await admin
+      .from("live_showdown_answers")
+      .update({ is_correct: false })
+      .eq("schedule_id", scheduleId)
+      .eq("occurrence_date", occurrenceDate)
+      .eq("round_number", roundNumber)
+      .eq("question_index", questionIndex);
 
     if (clearError) {
       throw new Error(clearError.message || "Failed to clear showdown correctness flags.");
@@ -1569,18 +1438,13 @@ async function loadRecentVenueLiveTriviaCategories(
     const scheduleIds = venueSchedules.map((row) => String(row.id ?? "").trim()).filter(Boolean);
     if (scheduleIds.length === 0) return new Set();
 
-    const { data: slotData, error: slotError } = await runOccurrenceCompatibleQuery(
-      "loadRecentVenueLiveTriviaCategories",
-      () =>
-        admin
-          .from("trivia_session_questions")
-          .select("occurrence_date, question_id")
-          .in("schedule_id", scheduleIds)
-          .lt("occurrence_date", occurrenceDate)
-          .order("occurrence_date", { ascending: false })
-          .limit(RECENT_CATEGORY_SLOT_LOOKBACK_LIMIT),
-      () => Promise.resolve({ data: [], error: null })
-    );
+    const { data: slotData, error: slotError } = await admin
+      .from("trivia_session_questions")
+      .select("occurrence_date, question_id")
+      .in("schedule_id", scheduleIds)
+      .lt("occurrence_date", occurrenceDate)
+      .order("occurrence_date", { ascending: false })
+      .limit(RECENT_CATEGORY_SLOT_LOOKBACK_LIMIT);
     if (slotError) {
       console.warn(
         `[seedOccurrenceQuestions] skipped recent category cooldown for venue ${safeVenueId}: ` +
@@ -1746,20 +1610,11 @@ export async function seedOccurrenceQuestions(
   const safeVenueId = toSafeVenueId(venueId);
 
   // Idempotency guard — never re-seed an occurrence that already has rows.
-  const { count: existingCount, error: existingError } = await runOccurrenceCompatibleQuery(
-    "seedOccurrenceQuestions:existing_count",
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .select("id", { count: "exact", head: true })
-        .eq("schedule_id", scheduleId)
-        .eq("occurrence_date", occurrenceDate),
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .select("id", { count: "exact", head: true })
-        .eq("schedule_id", scheduleId)
-  );
+  const { count: existingCount, error: existingError } = await admin
+    .from("trivia_session_questions")
+    .select("id", { count: "exact", head: true })
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate);
   if (existingError) {
     throw new Error(existingError.message || "Failed to check existing occurrence questions.");
   }
@@ -1843,37 +1698,20 @@ export async function seedOccurrenceQuestions(
       });
   }
 
-  const sessionRowsWithOccurrence = seedResult.slots.map((slot) => ({
+  const sessionRows = seedResult.slots.map((slot) => ({
     schedule_id: scheduleId,
     occurrence_date: occurrenceDate,
     question_id: slot.slug,
     round_number: slot.roundNumber,
     question_index: slot.questionIndex,
   }));
-  const sessionRowsLegacy = seedResult.slots.map((slot) => ({
-    schedule_id: scheduleId,
-    question_id: slot.slug,
-    round_number: slot.roundNumber,
-    question_index: slot.questionIndex,
-  }));
 
-  const { error: insertError } = await runOccurrenceCompatibleQuery(
-    "seedOccurrenceQuestions:insert",
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .upsert(sessionRowsWithOccurrence, {
-          onConflict: "schedule_id,occurrence_date,round_number,question_index",
-          ignoreDuplicates: true,
-        }),
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .upsert(sessionRowsLegacy, {
-          onConflict: "schedule_id,round_number,question_index",
-          ignoreDuplicates: true,
-        })
-  );
+  const { error: insertError } = await admin
+    .from("trivia_session_questions")
+    .upsert(sessionRows, {
+      onConflict: "schedule_id,occurrence_date,round_number,question_index",
+      ignoreDuplicates: true,
+    });
   if (insertError) {
     throw new Error(insertError.message || "Failed to seed occurrence questions.");
   }
@@ -1904,20 +1742,11 @@ export async function getOccurrenceReadiness(
   const expectedCount = clampRounds(numRounds) * QUESTIONS_PER_ROUND;
   if (!admin) return { seededCount: 0, expectedCount, ready: false };
 
-  const { count, error } = await runOccurrenceCompatibleQuery(
-    "getOccurrenceReadiness",
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .select("id", { count: "exact", head: true })
-        .eq("schedule_id", scheduleId)
-        .eq("occurrence_date", occurrenceDate),
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .select("id", { count: "exact", head: true })
-        .eq("schedule_id", scheduleId)
-  );
+  const { count, error } = await admin
+    .from("trivia_session_questions")
+    .select("id", { count: "exact", head: true })
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate);
   if (error) throw new Error(error.message || "Failed to check occurrence readiness.");
 
   const seededCount = count ?? 0;
@@ -1945,22 +1774,12 @@ async function loadRoundCategoriesForOccurrence(
   const admin = supabaseAdmin;
   if (!admin) return result;
 
-  const { data: slotData, error: slotError } = await runOccurrenceCompatibleQuery(
-    "loadRoundCategoriesForOccurrence",
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .select("round_number, question_id")
-        .eq("schedule_id", scheduleId)
-        .eq("occurrence_date", occurrenceDate)
-        .eq("question_index", 1),
-    () =>
-      admin
-        .from("trivia_session_questions")
-        .select("round_number, question_id")
-        .eq("schedule_id", scheduleId)
-        .eq("question_index", 1)
-  );
+  const { data: slotData, error: slotError } = await admin
+    .from("trivia_session_questions")
+    .select("round_number, question_id")
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
+    .eq("question_index", 1);
   if (slotError) {
     throw new Error(slotError.message || "Failed to load round categories.");
   }
@@ -2053,20 +1872,11 @@ async function loadGameLeaderboard(
 
   const viewerId = String(viewerUserId ?? "").trim();
 
-  const { data: answerData, error: answerError } = await runOccurrenceCompatibleQuery(
-    "loadGameLeaderboard",
-    () =>
-      admin
-        .from("live_showdown_answers")
-        .select("user_id, round_number, points_awarded, is_correct")
-        .eq("schedule_id", scheduleId)
-        .eq("occurrence_date", occurrenceDate),
-    () =>
-      admin
-        .from("live_showdown_answers")
-        .select("user_id, round_number, points_awarded, is_correct")
-        .eq("schedule_id", scheduleId)
-  );
+  const { data: answerData, error: answerError } = await admin
+    .from("live_showdown_answers")
+    .select("user_id, round_number, points_awarded, is_correct")
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate);
   if (answerError) {
     throw new Error(answerError.message || "Failed to load Live Showdown leaderboard answers.");
   }

@@ -22,7 +22,7 @@
     },
     {
       "path": "/api/cron/seed-live-trivia-occurrences",
-      "schedule": "0 1 * * *"
+      "schedule": "0 20 * * *"
     },
     {
       "path": "/api/cron/verify-live-trivia-coverage",
