@@ -666,7 +666,14 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
   const baseCategories = fullRoundCategories.length > 0 ? fullRoundCategories : fallbackCategories;
   const freshCategories = baseCategories.filter((category) => !recentCategorySet.has(category));
   const cooledCategories = baseCategories.filter((category) => recentCategorySet.has(category));
-  const eligibleCategories = [...freshCategories, ...cooledCategories];
+  // Cap: never put more categories in cooldown than what leaves at least `rounds`
+  // fresh categories. With 8 categories and 5 rounds, at most 3 can be cooled.
+  // Without this cap, RECENT_CATEGORY_COOLDOWN_OCCURRENCES × rounds-per-night
+  // can exceed the total category count and make freshCategories always empty.
+  const maxCooledCount = Math.max(0, baseCategories.length - rounds);
+  const effectiveCooledCategories = cooledCategories.slice(0, maxCooledCount);
+  const effectiveFreshCategories = [...freshCategories, ...cooledCategories.slice(maxCooledCount)];
+  const eligibleCategories = [...effectiveFreshCategories, ...effectiveCooledCategories];
 
   if (eligibleCategories.length === 0) {
     return { slots: [], usedSeen: false, repeatedQuestions: false, usedRecentCategory: false, usedOverflow: false };
@@ -695,8 +702,8 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
       String(cycleIndex),
     ]);
     const cycle = [
-      ...seededShuffle(freshCategories, freshSeed),
-      ...seededShuffle(cooledCategories, cooledSeed),
+      ...seededShuffle(effectiveFreshCategories, freshSeed),
+      ...seededShuffle(effectiveCooledCategories, cooledSeed),
     ];
     let addedThisCycle = 0;
     for (const category of cycle) {
@@ -1667,12 +1674,11 @@ export async function seedOccurrenceQuestions(
   if (
     seedResult.usedSeen ||
     seedResult.repeatedQuestions ||
-    seedResult.usedRecentCategory ||
     seedResult.usedOverflow ||
     seedResult.slots.length < totalSlots
   ) {
     console.warn(
-      `[seedOccurrenceQuestions] venue ${safeVenueId} ran low on unseen questions for ${occurrenceDate} ` +
+      `[seedOccurrenceQuestions] venue ${safeVenueId} question inventory pressure for ${occurrenceDate} ` +
         `(seeded=${seedResult.slots.length}, needed=${totalSlots}, usedSeen=${seedResult.usedSeen}, ` +
         `repeatedQuestions=${seedResult.repeatedQuestions}, usedOverflow=${seedResult.usedOverflow}, ` +
         `usedRecentCategory=${seedResult.usedRecentCategory}, recentCategoryCount=${recentCategories.size}).`
