@@ -1344,7 +1344,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   [router, triggerPulse, venue.id]
   );
 
-  const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
+  const homeCards = useMemo(
+    () =>
+      VENUE_HOME_GAME_KEYS
+        .map((key) => VENUE_GAME_CARD_BY_KEY[key])
+        .filter((card) => card.visibleOnVenueHome !== false),
+    []
+  );
   const currentUserId = useMemo(() => (getUserId() ?? "").trim(), []);
   const goToChallengeRedeem = useCallback(
     async (challengeId: string, sourceElement: HTMLElement | null) => {
