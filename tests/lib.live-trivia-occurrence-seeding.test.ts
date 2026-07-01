@@ -261,6 +261,41 @@ describe("Live Trivia occurrence seeding", () => {
     expect(result.usedSeen).toBe(true);
   });
 
+  it("prefers a category that can fill the round with unseen questions", () => {
+    const music = makeCategory("Music", 3);
+    const sports = makeCategory("Sports", 3);
+    const seenSlugs = ["music-1"];
+
+    const result = seedSlots({
+      questions: [...music, ...sports],
+      seenSlugs,
+      numRounds: 1,
+      questionsPerRound: 3,
+    });
+
+    expect(result.slots).toHaveLength(3);
+    expect(new Set(result.slots.map((slot) => slot.category))).toEqual(new Set(["Sports"]));
+    expect(result.usedSeen).toBe(false);
+  });
+
+  it("reuses a category with enough unseen inventory before selecting a stale category", () => {
+    const science = makeCategory("Science", 6);
+    const history = makeCategory("History", 3);
+    const seenSlugs = ["history-1"];
+
+    const result = seedSlots({
+      questions: [...science, ...history],
+      seenSlugs,
+      numRounds: 2,
+      questionsPerRound: 3,
+    });
+
+    expect(result.slots).toHaveLength(6);
+    expect(new Set(result.slots.map((slot) => slot.category))).toEqual(new Set(["Science"]));
+    expect(new Set(result.slots.map((slot) => slot.slug)).size).toBe(6);
+    expect(result.usedSeen).toBe(false);
+  });
+
   it("prefers categories that can fill a complete round", () => {
     const questions = [
       ...makeCategory("Music", 2),
@@ -723,12 +758,12 @@ describe("Live Trivia occurrence seeding", () => {
     expect(lastUnseenIndex).toBeLessThan(firstSeenIndex);
   });
 
-  // ── Phase 2: cross-category overflow ──────────────────────────────────────
+  // ── Category-pure shortage handling ───────────────────────────────────────
 
-  it("fills remaining slots from unseen questions in other categories before repeating", () => {
-    // All three categories are below questionsPerRound (2 each < 3), so they all go into
-    // fallbackCategories. One is selected as the primary; it picks 2 questions and falls short.
-    // Overflow should supply the 3rd slot from one of the other two categories.
+  it("does not fill a short round from other categories", () => {
+    // Live Trivia rounds are category-pure. If every category is below
+    // questionsPerRound, the selected category repeats instead of silently mixing
+    // categories inside the round.
     const questions = [
       ...makeCategory("Music", 2),
       ...makeCategory("Sports", 2),
@@ -738,14 +773,12 @@ describe("Live Trivia occurrence seeding", () => {
     const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
 
     expect(result.slots).toHaveLength(3);
-    expect(result.repeatedQuestions).toBe(false);
-    expect(result.usedOverflow).toBe(true);
-    expect(new Set(result.slots.map((slot) => slot.slug)).size).toBe(3);
+    expect(result.repeatedQuestions).toBe(true);
+    expect(result.usedOverflow).toBe(false);
+    expect(new Set(result.slots.map((slot) => slot.category)).size).toBe(1);
   });
 
-  it("does not repeat questions when overflow from other categories covers the shortfall", () => {
-    // Primary category (1 question) is way below questionsPerRound=3.
-    // Two other fallback categories each have 1 question. Together they supply the 2 missing slots.
+  it("keeps a round category-pure even when other categories have unseen questions", () => {
     const questions = [
       makeQuestion("Music", 1),
       makeQuestion("Sports", 1),
@@ -755,9 +788,9 @@ describe("Live Trivia occurrence seeding", () => {
     const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
 
     expect(result.slots).toHaveLength(3);
-    expect(result.repeatedQuestions).toBe(false);
-    expect(result.usedOverflow).toBe(true);
-    expect(new Set(result.slots.map((slot) => slot.slug)).size).toBe(3);
+    expect(result.repeatedQuestions).toBe(true);
+    expect(result.usedOverflow).toBe(false);
+    expect(new Set(result.slots.map((slot) => slot.category)).size).toBe(1);
   });
 
   it("sets usedOverflow=false when the primary category can fill the round", () => {
@@ -793,8 +826,9 @@ describe("Live Trivia occurrence seeding", () => {
     expect(result.repeatedQuestions).toBe(false);
   });
 
-  it("overflow fill is deterministic — same inputs produce same overflow selections", () => {
-    // All three categories below questionsPerRound → fallback mode → overflow fires.
+  it("category-pure shortage repeats are deterministic", () => {
+    // All three categories below questionsPerRound: the selected category repeats
+    // deterministically instead of drawing overflow questions from another category.
     const questions = [
       ...makeCategory("Music", 2),
       ...makeCategory("Sports", 2),
@@ -805,13 +839,12 @@ describe("Live Trivia occurrence seeding", () => {
     const second = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
 
     expect(second.slots).toEqual(first.slots);
-    expect(second.usedOverflow).toBe(true);
+    expect(second.usedOverflow).toBe(false);
+    expect(second.repeatedQuestions).toBe(true);
+    expect(new Set(second.slots.map((slot) => slot.category)).size).toBe(1);
   });
 
-  it("overflow questions are not reused in subsequent rounds", () => {
-    // Round 1: primary category (Music, 2 questions) runs short; overflow pulls from Sports/History.
-    // Round 2: a different primary category runs short; overflow should not reuse the questions
-    // already used in round 1's overflow.
+  it("keeps each short round category-pure across multiple rounds", () => {
     const questions = [
       ...makeCategory("Music", 2),
       ...makeCategory("Sports", 2),
@@ -821,10 +854,14 @@ describe("Live Trivia occurrence seeding", () => {
     const result = seedSlots({ questions, numRounds: 2, questionsPerRound: 3 });
 
     expect(result.slots).toHaveLength(6);
-    const allSlugs = result.slots.map((slot) => slot.slug);
-    // All 6 slots should be unique — no slug appears twice.
-    expect(new Set(allSlugs).size).toBe(6);
-    expect(result.repeatedQuestions).toBe(false);
+    for (const roundNumber of [1, 2]) {
+      const roundCategories = new Set(
+        result.slots.filter((slot) => slot.roundNumber === roundNumber).map((slot) => slot.category)
+      );
+      expect(roundCategories.size).toBe(1);
+    }
+    expect(result.usedOverflow).toBe(false);
+    expect(result.repeatedQuestions).toBe(true);
   });
 
   it("excludes blocked categories, non-live pools, and non-write-in-compatible answers", () => {

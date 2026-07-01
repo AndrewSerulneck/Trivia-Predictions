@@ -59,6 +59,7 @@
 
 ### Live Trivia (canonical name: "Live Trivia" or "Live Trivia Showdown" — never "Live Showdown")
 - Host-run, scheduled game. All users at the venue play simultaneously and their gameplay is synchronized.
+- Live Trivia rounds are category-pure: each round draws all of its questions from one category. For example, Round 1 may be Science & Tech and Round 2 may be History, but a single round must not mix Science, History, Sports, etc. Question freshness logic must preserve this category-separated round structure.
 - Players write in open-ended answers (no multiple choice). Questions must pass a rigorous validation to ensure answers are "rigid identifiers" (proper nouns, specific facts) — this narrows the acceptable answer field and eases grading burden.
 - Two question pools exist: `live_showdown` (for Live Trivia) and `anytime_blitz` (legacy name for Speed Trivia pool — do not use this name in UI or docs). The pools differ because answer formats and difficulty standards are entirely different.
 - Nightly question generation: `scripts/generate-live-trivia-nightly.cjs` → calls `generate-live-trivia-questions.cjs`.
