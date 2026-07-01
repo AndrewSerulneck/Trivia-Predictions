@@ -42,6 +42,10 @@ function broadcast(venueId: string, event: string, payload: Record<string, unkno
 const ROUND_DURATION_SECONDS = 180; // 3 minutes of play
 const ROUND_INTERVAL_SECONDS = 420; // 7 minutes between round starts (3 play + 4 results/intermission)
 const POINTS_PER_UNIQUE_ANSWER = 2;
+// Covers the race where a player's own page-load is what triggers driveVenueCategoryBlitz to
+// auto-open the round — their presence registration would otherwise land a few ms after
+// started_at and incorrectly spectator-lock the very person who opened the game.
+const SPECTATOR_GRACE_SECONDS = 8;
 const LETTERS = "ABCDEFGHIJKLMNOPRSTW"; // omit Q, U, V, X, Y, Z (hard letters)
 const CATEGORY_SETS: { id: number; categories: string[] }[] = categorySetsData.categorySets;
 
@@ -497,6 +501,78 @@ export async function endSession(sessionId: string): Promise<void> {
   }
 }
 
+// ── Presence / spectator role ────────────────────────────────────────────────
+
+/**
+ * Idempotently record the first time a user's client observed live state for
+ * a session. Repeat calls (refreshes, re-polls) never move first_seen_at —
+ * it's a one-time watermark used to decide player-vs-spectator per round.
+ */
+export async function registerSessionPresence(params: {
+  sessionId: string;
+  userId: string;
+  authId: string | null;
+  venueId: string;
+}): Promise<string> {
+  assertAdmin();
+  const { sessionId, userId, authId, venueId } = params;
+
+  await supabaseAdmin!
+    .from("category_blitz_session_participants")
+    .upsert(
+      { session_id: sessionId, user_id: userId, auth_id: authId, venue_id: venueId },
+      { onConflict: "session_id,user_id", ignoreDuplicates: true }
+    );
+
+  const { data, error } = await supabaseAdmin!
+    .from("category_blitz_session_participants")
+    .select("first_seen_at")
+    .eq("session_id", sessionId)
+    .eq("user_id", userId)
+    .single<{ first_seen_at: string }>();
+
+  if (error || !data) throw new Error(error?.message || "Failed to register presence.");
+  return data.first_seen_at;
+}
+
+async function getParticipantFirstSeenAt(sessionId: string, userId: string): Promise<string | null> {
+  assertAdmin();
+  const { data } = await supabaseAdmin!
+    .from("category_blitz_session_participants")
+    .select("first_seen_at")
+    .eq("session_id", sessionId)
+    .eq("user_id", userId)
+    .maybeSingle<{ first_seen_at: string }>();
+  return data?.first_seen_at ?? null;
+}
+
+/**
+ * A user is a player for a round if their presence was first observed at or
+ * before that round's start (plus a small grace window) — otherwise they
+ * joined mid-round and spectate that round only. Since first_seen_at never
+ * changes, a spectator during round N is automatically a player for round
+ * N+1 with no per-round bookkeeping.
+ */
+export function resolveViewerRole(
+  roundStartedAt: string,
+  firstSeenAt: string | null,
+): "player" | "spectator" {
+  if (!firstSeenAt) return "spectator";
+  const graceMs = SPECTATOR_GRACE_SECONDS * 1000;
+  return new Date(firstSeenAt).getTime() <= new Date(roundStartedAt).getTime() + graceMs
+    ? "player"
+    : "spectator";
+}
+
+export async function getViewerRoleForRound(
+  sessionId: string,
+  userId: string,
+  roundStartedAt: string,
+): Promise<"player" | "spectator"> {
+  const firstSeenAt = await getParticipantFirstSeenAt(sessionId, userId);
+  return resolveViewerRole(roundStartedAt, firstSeenAt);
+}
+
 // ── Submission ────────────────────────────────────────────────────────────────
 
 export async function submitAnswer(params: {
@@ -513,13 +589,20 @@ export async function submitAnswer(params: {
   // Validate round is still active.
   const { data: round, error: roundErr } = await supabaseAdmin!
     .from("category_blitz_rounds")
-    .select("id, status, ends_at")
+    .select("id, session_id, status, started_at, ends_at")
     .eq("id", roundId)
-    .maybeSingle<{ id: string; status: string; ends_at: string }>();
+    .maybeSingle<{ id: string; session_id: string; status: string; started_at: string; ends_at: string }>();
 
   if (roundErr || !round) throw new Error("Round not found.");
   if (round.status !== "active") throw new Error("This round is no longer accepting answers.");
   if (new Date(round.ends_at) < new Date()) throw new Error("The round timer has expired.");
+
+  // Enforcement boundary: reject spectators server-side. Client-side hiding
+  // of the submit button is UX only — this is what actually blocks it.
+  const viewerRole = await getViewerRoleForRound(round.session_id, userId, round.started_at);
+  if (viewerRole === "spectator") {
+    throw new Error("You're spectating this round — you can play once the next round begins.");
+  }
 
   const trimmed = answer.trim();
   if (!trimmed) throw new Error("Answer cannot be empty.");

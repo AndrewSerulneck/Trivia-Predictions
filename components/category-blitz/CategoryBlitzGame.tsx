@@ -298,12 +298,14 @@ function AnsweringScreen({
   roundId,
   timeRemaining,
   venueId,
+  isSpectating,
 }: {
   letter: string;
   categories: string[];
   roundId: string;
   timeRemaining: number;
   venueId: string;
+  isSpectating: boolean;
 }) {
   const [answers, setAnswers] = useState<string[]>(() => Array(12).fill(""));
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
@@ -316,7 +318,7 @@ function AnsweringScreen({
   const totalFilled = answers.filter((a) => a.trim().length > 0).length;
 
   const submitAnswers = useCallback(async () => {
-    if (submittedRef.current) return;
+    if (submittedRef.current || isSpectating) return;
     submittedRef.current = true;
     setSubmitState("submitting");
     setErrorMsg("");
@@ -341,7 +343,7 @@ function AnsweringScreen({
       setSubmitState("error");
       setErrorMsg("Submission failed. Please try again.");
     }
-  }, [answers, roundId, venueId]);
+  }, [answers, roundId, venueId, isSpectating]);
 
   const submitAnswersRef = useRef(submitAnswers);
 
@@ -351,11 +353,11 @@ function AnsweringScreen({
 
   // Auto-submit when timer hits zero — deferred so the effect doesn't trigger cascading state updates.
   useEffect(() => {
-    if (!isExpired || timerWasZeroRef.current || submitState !== "idle") return;
+    if (!isExpired || timerWasZeroRef.current || submitState !== "idle" || isSpectating) return;
     timerWasZeroRef.current = true;
     const t = window.setTimeout(() => { void submitAnswersRef.current(); }, 0);
     return () => window.clearTimeout(t);
-  }, [isExpired, submitState]);
+  }, [isExpired, submitState, isSpectating]);
 
   if (submitState === "done") {
     return (
@@ -419,6 +421,17 @@ function AnsweringScreen({
         </div>
       </div>
 
+      {isSpectating && (
+        <div className="shrink-0 border-b-2 border-amber-400/60 bg-amber-500/15 px-4 py-3 text-center">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-amber-300">
+            You&apos;re spectating this round
+          </p>
+          <p className="mt-1 text-xs text-amber-100/80">
+            You joined mid-round, so you can&apos;t play this one — you&apos;ll be able to play starting next round.
+          </p>
+        </div>
+      )}
+
       {/* Categories grid */}
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         <div className="space-y-2">
@@ -429,7 +442,7 @@ function AnsweringScreen({
                 answers[i].trim()
                   ? "border-emerald-400/50 bg-emerald-950/30"
                   : "border-slate-700/60 bg-slate-900/40"
-              } px-3 py-2.5`}
+              } px-3 py-2.5 ${isSpectating ? "opacity-50" : ""}`}
             >
               <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
                 {i + 1}
@@ -441,7 +454,7 @@ function AnsweringScreen({
                 <input
                   type="text"
                   value={answers[i]}
-                  disabled={isExpired || submitState !== "idle"}
+                  disabled={isExpired || submitState !== "idle" || isSpectating}
                   onChange={(e) => {
                     const next = [...answers];
                     next[i] = e.target.value;
@@ -466,7 +479,7 @@ function AnsweringScreen({
       </div>
 
       {/* Submit button */}
-      {submitState === "idle" && !isExpired && (
+      {submitState === "idle" && !isExpired && !isSpectating && (
         <div className="shrink-0 border-t border-emerald-400/20 px-4 py-3">
           {errorMsg && (
             <p className="mb-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
@@ -528,7 +541,10 @@ export function CategoryBlitzGame() {
     return () => window.clearTimeout(hydrateId);
   }, []);
 
-  const { phase, round, results, timeRemaining, nextRoundStartsIn, error } = useCategoryBlitzSession(isHydrated ? venueId : "");
+  const { phase, round, results, timeRemaining, nextRoundStartsIn, error, viewerRole } = useCategoryBlitzSession(
+    isHydrated ? venueId : "",
+    isHydrated ? userId : ""
+  );
 
   if (!isHydrated) {
     return (
@@ -618,6 +634,7 @@ export function CategoryBlitzGame() {
           roundId={round.id}
           timeRemaining={timeRemaining}
           venueId={venueId}
+          isSpectating={viewerRole === "spectator"}
         />
       )}
       {phase === "scoring" && <ScoringScreen />}

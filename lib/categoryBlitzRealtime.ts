@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import type { CategoryBlitzRound, CategoryBlitzRoundResults, CategoryBlitzSession } from "@/types";
+import type {
+  CategoryBlitzRound,
+  CategoryBlitzRoundResults,
+  CategoryBlitzSession,
+  CategoryBlitzViewerRole,
+} from "@/types";
 
 // ── Phase model ───────────────────────────────────────────────────────────────
 
@@ -23,6 +28,8 @@ export interface CategoryBlitzSessionState {
   nextRoundStartsIn: number | null;
   isConnected:     boolean;
   error:           string | null;
+  /** null outside an active/scoring round, or when viewer identity can't be resolved. */
+  viewerRole:      CategoryBlitzViewerRole | null;
 }
 
 // ── Broadcast payload types ───────────────────────────────────────────────────
@@ -48,7 +55,7 @@ const POLL_INTERVAL_MS = 15_000;   // fallback poll when realtime drops
 const TIMER_TICK_MS   = 250;       // timer precision
 const ROUND_INTERVAL_SECONDS = 420;
 
-export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionState {
+export function useCategoryBlitzSession(venueId: string, userId: string): CategoryBlitzSessionState {
   const [phase,         setPhase]         = useState<CategoryBlitzPhase>("idle");
   const [session,       setSession]       = useState<CategoryBlitzSession | null>(null);
   const [round,         setRound]         = useState<CategoryBlitzRound | null>(null);
@@ -57,12 +64,19 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
   const [nextRoundStartsIn, setNextRoundStartsIn] = useState<number | null>(null);
   const [isConnected,   setIsConnected]   = useState(false);
   const [error,         setError]         = useState<string | null>(null);
+  const [viewerRole,    setViewerRole]    = useState<CategoryBlitzViewerRole | null>(null);
 
   const mountedRef        = useRef(true);
   const scoringCalledRef  = useRef(false);  // prevent double-trigger per round
   const currentRoundIdRef = useRef<string | null>(null);
   const endsAtRef         = useRef<number | null>(null);  // ms epoch
+  const sessionIdRef      = useRef<string | null>(null);
+  const userIdRef         = useRef(userId);
   const loadResultsRef    = useRef<(roundId: string) => Promise<void>>(async () => {});
+
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
 
   useEffect(() => {
     if (venueId) return;
@@ -75,6 +89,7 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
       setNextRoundStartsIn(null);
       setError(null);
       setIsConnected(false);
+      setViewerRole(null);
       endsAtRef.current = null;
       currentRoundIdRef.current = null;
       scoringCalledRef.current = false;
@@ -126,9 +141,15 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
 
   const loadCurrentRound = useCallback(async (sessionId: string): Promise<void> => {
     try {
-      const res = await fetch(`/api/category-blitz/sessions/${sessionId}/current-round`);
-      const json = (await res.json()) as { ok: boolean; round?: CategoryBlitzRound | null };
+      const userIdParam = userIdRef.current ? `?userId=${encodeURIComponent(userIdRef.current)}` : "";
+      const res = await fetch(`/api/category-blitz/sessions/${sessionId}/current-round${userIdParam}`);
+      const json = (await res.json()) as {
+        ok: boolean;
+        round?: CategoryBlitzRound | null;
+        viewerRole?: CategoryBlitzViewerRole | null;
+      };
       if (!mountedRef.current || !json.ok || !json.round) return;
+      setViewerRole(json.viewerRole ?? null);
       applyRoundRef.current(json.round);
       if (json.round.status === "complete") {
         await loadResultsRef.current(json.round.id);
@@ -143,7 +164,8 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
   const loadSession = useCallback(async () => {
     if (!venueId) return;
     try {
-      const res = await fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}`);
+      const userIdParam = userIdRef.current ? `&userId=${encodeURIComponent(userIdRef.current)}` : "";
+      const res = await fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}${userIdParam}`);
       const json = (await res.json()) as { ok: boolean; session?: CategoryBlitzSession | null; error?: string };
       if (!mountedRef.current) return;
 
@@ -155,17 +177,20 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
       setError(null);
       const s = json.session ?? null;
       setSession(s);
+      sessionIdRef.current = s?.id ?? null;
       if (!s) {
         setRound(null);
         setResults(null);
         setTimeRemaining(0);
         setNextRoundStartsIn(null);
+        setViewerRole(null);
         endsAtRef.current = null;
         setPhase("idle");
         return;
       }
       if (s.status === "complete") {
         setRound(null);
+        setViewerRole(null);
         endsAtRef.current = null;
         setPhase("complete");
         return;
@@ -173,6 +198,7 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
       if (s.status === "lobby") {
         setRound(null);
         setResults(null);
+        setViewerRole(null);
         setTimeRemaining(0);
         setNextRoundStartsIn(null);
         endsAtRef.current = null;
@@ -278,19 +304,12 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
         if (!active || !mountedRef.current) return;
         const payload = msg.payload as RoundStartedPayload | null;
         if (!payload?.round) return;
-        const { id, letter, categories, startedAt, endsAt } = payload.round;
-        applyRoundRef.current({
-          id,
-          sessionId: "",  // not available in broadcast payload — session is tracked separately
-          venueId,
-          letter,
-          categorySetIndex: 0,
-          categories,
-          startedAt,
-          endsAt,
-          status: "active",
-          createdAt: startedAt,
-        });
+        // Refetch via the API rather than applying the broadcast payload
+        // directly — it's the only source that also resolves viewerRole
+        // (spectator vs player) for this specific user.
+        if (sessionIdRef.current) {
+          void loadCurrentRound(sessionIdRef.current);
+        }
       })
       .on("broadcast", { event: "round_scored" }, (msg) => {
         if (!active || !mountedRef.current) return;
@@ -301,6 +320,7 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
       .on("broadcast", { event: "session_ended" }, () => {
         if (!active || !mountedRef.current) return;
         setPhase("complete");
+        setViewerRole(null);
         endsAtRef.current = null;
         setNextRoundStartsIn(null);
       })
@@ -313,7 +333,7 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
       active = false;
       void client.removeChannel(channel);
     };
-  }, [venueId, loadResults]);
+  }, [venueId, loadResults, loadCurrentRound]);
 
   // ── Initial load + fallback poll ──────────────────────────────────────────
 
@@ -340,5 +360,5 @@ export function useCategoryBlitzSession(venueId: string): CategoryBlitzSessionSt
     };
   }, [venueId]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, isConnected, error };
+  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, isConnected, error, viewerRole };
 }

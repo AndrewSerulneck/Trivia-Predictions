@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
-import { createSession, driveVenueCategoryBlitz } from "@/lib/categoryBlitz";
+import { createSession, driveVenueCategoryBlitz, registerSessionPresence } from "@/lib/categoryBlitz";
 import { listSchedules, getNextScheduleOccurrence } from "@/lib/categoryBlitzSchedules";
+import { isSessionEnforced, readSession } from "@/lib/serverSession";
 
 /**
  * GET /api/category-blitz/sessions?venueId=...
@@ -28,6 +29,26 @@ export async function GET(request: Request) {
     ]);
     const nextOcc = getNextScheduleOccurrence(schedules, now);
     const nextWindowAt: string | null = nextOcc ? nextOcc.windowStart.toISOString() : null;
+
+    // Best-effort presence registration: the first time this user's client
+    // observes any live session state (lobby onward) becomes their
+    // first_seen_at watermark for spectator/player resolution. Never blocks
+    // the response — a failure here shouldn't take down session polling.
+    if (session && session.status !== "complete") {
+      const requestedUserId = (searchParams.get("userId") ?? "").trim();
+      const sessionUserId = readSession(request);
+      const resolvedUserId = isSessionEnforced()
+        ? sessionUserId && sessionUserId === requestedUserId ? sessionUserId : ""
+        : requestedUserId;
+      if (resolvedUserId) {
+        await registerSessionPresence({
+          sessionId: session.id,
+          userId: resolvedUserId,
+          authId: null,
+          venueId,
+        }).catch(() => undefined);
+      }
+    }
 
     return NextResponse.json({ ok: true, session, nextWindowAt });
   } catch (error) {

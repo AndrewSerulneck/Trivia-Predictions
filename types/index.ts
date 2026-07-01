@@ -431,6 +431,7 @@ export interface CategoryBlitzSchedule {
 }
 
 export type CategoryBlitzSessionSource = 'manual' | 'auto';
+export type CategoryBlitzViewerRole    = 'player' | 'spectator';
 
 export interface CategoryBlitzSession {
   id:             string;
