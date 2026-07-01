@@ -35,6 +35,7 @@ const ROUND_MS = QUESTION_WINDOW_MS + MID_GAME_BREAK_MS; // 27 min 30 sec
 const BLOCKED_LIVE_SHOWDOWN_CATEGORIES = new Set(["fantasy epics"]);
 const RECENT_CATEGORY_COOLDOWN_OCCURRENCES = 3;
 const RECENT_CATEGORY_SLOT_LOOKBACK_LIMIT = 360;
+const LIVE_TRIVIA_POOL_PAGE_SIZE = 1000;
 
 export type LiveShowdownPhase = "answering" | "rest_warning" | "mid_game_break";
 
@@ -446,20 +447,28 @@ function mergeLiveTriviaSourceMetadata(rows: readonly LiveTriviaSeedQuestion[]):
 export async function loadActiveLiveTriviaSeedQuestionPool(
   admin: NonNullable<typeof supabaseAdmin>
 ): Promise<LiveTriviaSeedQuestion[]> {
-  const { data, error } = await admin
-    .from("trivia_questions")
-    .select("slug, question, category, subcategory, options, correct_answer, question_pool, source_order, source_file")
-    .eq("status", "active")
-    .eq("question_pool", "live_showdown")
-    .not("slug", "is", null)
-    .order("slug", { ascending: true })
-    .limit(5000);
+  const rows: LiveTriviaSeedQuestion[] = [];
 
-  if (error) {
-    throw new Error(error.message || "Failed to load active Live Trivia question pool.");
+  for (let from = 0; ; from += LIVE_TRIVIA_POOL_PAGE_SIZE) {
+    const { data, error } = await admin
+      .from("trivia_questions")
+      .select("slug, question, category, subcategory, options, correct_answer, question_pool, source_order, source_file")
+      .eq("status", "active")
+      .eq("question_pool", "live_showdown")
+      .not("slug", "is", null)
+      .order("slug", { ascending: true })
+      .range(from, from + LIVE_TRIVIA_POOL_PAGE_SIZE - 1);
+
+    if (error) {
+      throw new Error(error.message || "Failed to load active Live Trivia question pool.");
+    }
+
+    const batch = (data ?? []) as LiveTriviaSeedQuestion[];
+    rows.push(...batch);
+    if (batch.length < LIVE_TRIVIA_POOL_PAGE_SIZE) break;
   }
 
-  return mergeLiveTriviaSourceMetadata((data ?? []) as LiveTriviaSeedQuestion[]);
+  return mergeLiveTriviaSourceMetadata(rows);
 }
 
 type LiveTriviaCandidatePick = {

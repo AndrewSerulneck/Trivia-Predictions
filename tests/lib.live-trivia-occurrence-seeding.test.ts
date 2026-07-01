@@ -52,6 +52,7 @@ function makeAwaitableQuery<T extends Record<string, unknown>>(result: T) {
     not: vi.fn(),
     order: vi.fn(),
     limit: vi.fn(),
+    range: vi.fn(),
   };
   query.eq.mockReturnValue(query);
   query.in.mockReturnValue(query);
@@ -59,6 +60,7 @@ function makeAwaitableQuery<T extends Record<string, unknown>>(result: T) {
   query.not.mockReturnValue(query);
   query.order.mockReturnValue(query);
   query.limit.mockReturnValue(query);
+  query.range.mockReturnValue(query);
   return query;
 }
 
@@ -96,6 +98,7 @@ function installSeedOccurrenceMocks(params: {
     seenOptions: unknown;
     deletedSlugs: string[];
     resetRows: unknown[];
+    questionRanges: Array<[number, number]>;
   } = {
     sessionRows: [],
     sessionOptions: null,
@@ -103,6 +106,7 @@ function installSeedOccurrenceMocks(params: {
     seenOptions: null,
     deletedSlugs: [],
     resetRows: [],
+    questionRanges: [],
   };
 
   // Seen rows can be provided with explicit timestamps, or derived from a slug list.
@@ -150,7 +154,15 @@ function installSeedOccurrenceMocks(params: {
 
     if (table === "trivia_questions") {
       return {
-        select: vi.fn(() => makeAwaitableQuery({ data: params.questions ?? [], error: null })),
+        select: vi.fn(() => {
+          const query = makeAwaitableQuery({ data: params.questions ?? [], error: null });
+          query.range.mockImplementation((from: number, to: number) => {
+            captures.questionRanges.push([from, to]);
+            query.data = (params.questions ?? []).slice(from, to + 1);
+            return query;
+          });
+          return query;
+        }),
       };
     }
 
@@ -837,6 +849,18 @@ describe("Live Trivia occurrence seeding", () => {
     expect(result).toEqual({ seeded: 0, skipped: 15 });
     expect(captures.sessionRows).toEqual([]);
     expect(captures.seenRows).toEqual([]);
+  });
+
+  it("loads the active Live Trivia question pool across multiple pages", async () => {
+    const captures = installSeedOccurrenceMocks({ questions: makeCategory("Music", 1005) });
+
+    const result = await seedOccurrenceQuestions("schedule-1", "2026-06-12", "venue-1", 1);
+
+    expect(result).toEqual({ seeded: 15, skipped: 0 });
+    expect(captures.questionRanges).toEqual([
+      [0, 999],
+      [1000, 1999],
+    ]);
   });
 
   it("inserts occurrence-aware session rows and records unique venue seen questions", async () => {
