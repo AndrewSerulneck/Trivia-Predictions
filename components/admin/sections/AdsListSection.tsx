@@ -6,6 +6,7 @@ import { BulkActionBar, PaginationBar, TD, TH, TR } from "@/components/admin/Adm
 import { getErrorMessage } from "@/lib/errors";
 import type { GeographicHierarchy } from "@/lib/geographicHierarchy";
 import { AdGeographicFilter } from "@/components/admin/ads/AdGeographicFilter";
+import { adminLabel } from "@/lib/adminStyles";
 import {
   AD_PAGE_OPTIONS,
   AD_TYPE_OPTIONS,
@@ -535,20 +536,20 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Search</label>
+            <label className={adminLabel}>Search</label>
             <input
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Advertiser, campaign, or slot key"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Page</label>
+            <label className={adminLabel}>Page</label>
             <select
               value={pageFilter}
               onChange={(event) => setPageFilter(event.target.value as AdPageKey | "all")}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               <option value="all">All Pages</option>
               {AD_PAGE_OPTIONS.map((option) => (
@@ -559,11 +560,11 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Ad Type</label>
+            <label className={adminLabel}>Ad Type</label>
             <select
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value as AdType | "all")}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               <option value="all">All Types</option>
               {AD_TYPE_OPTIONS.map((option) => (
@@ -574,11 +575,11 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Status</label>
+            <label className={adminLabel}>Status</label>
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               <option value="all">All</option>
               <option value="active">Active</option>
@@ -795,7 +796,7 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
                           <tr className="border-b border-slate-100 bg-slate-50/60">
                             <td colSpan={11} className="px-4 py-4">
                               <div className="mb-4">
-                                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                <label className={adminLabel}>
                                   Replace Image (JPEG/PNG/WebP, max 300KB)
                                 </label>
                                 <input

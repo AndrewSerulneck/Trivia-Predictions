@@ -500,6 +500,55 @@ body.tp-admin-theme .tp-app-shell {
   overflow: hidden !important;
 }
 
+/* ---------------------------------------------------------------------------
+   ADMIN FORM CONTROLS — the admin surface is a LIGHT panel on dark chrome.
+   The app root sets `color-scheme: dark`, and `body` sets a light inherited
+   text color. Together those make native controls (option popups, date/time
+   pickers, autofill) and un-classed inputs render dark-on-dark — a state that
+   Tailwind bg/text utilities on the box cannot reach (the OS paints the popup
+   layer). Force a light control surface for EVERY control inside the admin
+   theme, centrally, so no individual form can regress.
+   --------------------------------------------------------------------------- */
+body.tp-admin-theme input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+body.tp-admin-theme select,
+body.tp-admin-theme textarea {
+  color-scheme: light;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a;
+}
+
+/* Native dropdown option lists (rendered by the OS popup layer). */
+body.tp-admin-theme option,
+body.tp-admin-theme optgroup {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+/* Placeholders stay legible but muted. */
+body.tp-admin-theme input::placeholder,
+body.tp-admin-theme textarea::placeholder {
+  color: #94a3b8;
+  -webkit-text-fill-color: #94a3b8;
+}
+
+/* Date/time picker indicator — keep it visible on the light field. */
+body.tp-admin-theme input::-webkit-calendar-picker-indicator {
+  filter: invert(0.35);
+}
+
+/* Autofill: browsers force their own bg + text via !important; the inset
+   box-shadow trick is the only reliable way to keep the field light. */
+body.tp-admin-theme input:-webkit-autofill,
+body.tp-admin-theme input:-webkit-autofill:hover,
+body.tp-admin-theme input:-webkit-autofill:focus,
+body.tp-admin-theme textarea:-webkit-autofill,
+body.tp-admin-theme select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
+}
+
 /* Reserve scrollbar space on both sides only on desktop — prevents layout shift
    when a scrollbar appears without off-centering content on mobile. */
 @media (hover: hover) and (pointer: fine) {
@@ -1247,6 +1296,31 @@ h4,
 .admin-console button,
 .admin-console a {
   max-width: 100%;
+}
+
+/* ── Admin dashboard inputs: ensure readable text on all backgrounds ────────
+   The admin shell uses bg-[#030712] (near-black). Many admin section inputs
+   sit inside bg-white containers but lack explicit text-color classes, so
+   they inherit the body's light text color (#f8fafc) — invisible on white.
+
+   Rule 1: All admin inputs get white text by default (covers dark-bg inputs).
+   Rule 2: Inputs inside white-backed containers get dark text for readability.
+   Explicit text-color classes on the input element itself (e.g. text-slate-800)
+   will still win due to higher specificity.                                */
+.tp-admin-theme input,
+.tp-admin-theme select,
+.tp-admin-theme textarea {
+  color: #ffffff;
+}
+
+/* Inputs inside white-backed containers — restore dark text */
+.tp-admin-theme .bg-white input,
+.tp-admin-theme .bg-white select,
+.tp-admin-theme .bg-white textarea,
+.tp-admin-theme [class*="bg-white"] input,
+.tp-admin-theme [class*="bg-white"] select,
+.tp-admin-theme [class*="bg-white"] textarea {
+  color: #1e293b; /* slate-800 — dark enough to read on white */
 }
 
 button[class*="text-xs"],

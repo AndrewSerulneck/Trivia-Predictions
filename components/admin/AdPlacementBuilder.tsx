@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
 import type { Advertisement, AdPageKey, AdType, Venue } from "@/types";
 import { AD_PLACEMENTS } from "@/lib/adPlacements";
+import { adminLabel } from "@/lib/adminStyles";
 
 // ─── Canonical slot registry ──────────────────────────────────────────────────
 
@@ -557,12 +558,12 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-5">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Venues</label>
+            <label className={adminLabel}>Venues</label>
             <select
               multiple
               value={selectedVenueIds}
               onChange={(event) => handleMultiSelect(event, setSelectedVenueIds)}
-              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+              className="h-24 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               {venues.map((venue) => (
                 <option key={venue.id} value={venue.id}>
@@ -572,12 +573,12 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Cities</label>
+            <label className={adminLabel}>Cities</label>
             <select
               multiple
               value={selectedCities}
               onChange={(event) => handleMultiSelect(event, setSelectedCities)}
-              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+              className="h-24 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               {cityOptions.map((value) => (
                 <option key={value} value={value}>
@@ -587,12 +588,12 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">States</label>
+            <label className={adminLabel}>States</label>
             <select
               multiple
               value={selectedStates}
               onChange={(event) => handleMultiSelect(event, setSelectedStates)}
-              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+              className="h-24 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               {stateOptions.map((value) => (
                 <option key={value} value={value}>
@@ -602,12 +603,12 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Zip Codes</label>
+            <label className={adminLabel}>Zip Codes</label>
             <select
               multiple
               value={selectedZipCodes}
               onChange={(event) => handleMultiSelect(event, setSelectedZipCodes)}
-              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+              className="h-24 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               {zipCodeOptions.map((value) => (
                 <option key={value} value={value}>
@@ -617,12 +618,12 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Regions</label>
+            <label className={adminLabel}>Regions</label>
             <select
               multiple
               value={selectedRegions}
               onChange={(event) => handleMultiSelect(event, setSelectedRegions)}
-              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+              className="h-24 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               {regionOptions.map((value) => (
                 <option key={value} value={value}>

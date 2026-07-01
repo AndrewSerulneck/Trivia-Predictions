@@ -100,7 +100,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const ActiveComponent = ADMIN_SECTION_OPTIONS.find((opt) => opt.id === activeSection)?.component;
 
   return (
-    <div className="mx-auto w-full max-w-5xl p-3">
+    <div className="mx-auto w-full max-w-5xl p-3 [color-scheme:light]">
       <h1 className="text-xl font-semibold">BDL Admin</h1>
       <p className="mb-4 text-sm text-slate-600">Internal system management and operations.</p>
 
@@ -144,14 +144,14 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
               onChange={(e) => setAdminLoginUsername(e.target.value)}
               placeholder="Admin Username"
               autoComplete="username"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
             <input
               type="password"
               value={adminLoginPassword}
               onChange={(e) => setAdminLoginPassword(e.target.value)}
               placeholder="Admin Password"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
             <button
               type="button"

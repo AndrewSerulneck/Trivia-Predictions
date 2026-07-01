@@ -3,6 +3,8 @@ import { requireAdminAuth } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { listVenues } from "@/lib/venues";
 
+const PAGE_SIZE = 1000;
+
 export type CategoryInventory = {
   category: string;
   total: number;
@@ -40,6 +42,51 @@ type RecentWarning = {
   createdAt: string;
 };
 
+async function fetchAllActiveLiveTriviaQuestions(admin: NonNullable<typeof supabaseAdmin>) {
+  const rows: Array<{ slug: string | null; category: string | null }> = [];
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await admin
+      .from("trivia_questions")
+      .select("slug, category")
+      .eq("status", "active")
+      .eq("question_pool", "live_showdown")
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      throw new Error(error.message || "Failed to fetch active questions.");
+    }
+
+    const batch = (data ?? []) as Array<{ slug: string | null; category: string | null }>;
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+  }
+
+  return rows;
+}
+
+async function fetchAllVenueSeenQuestionSlugs(admin: NonNullable<typeof supabaseAdmin>, venueId: string) {
+  const slugs: string[] = [];
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await admin
+      .from("venue_seen_questions")
+      .select("question_id")
+      .eq("venue_id", venueId)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      throw new Error(error.message || `Failed to fetch seen questions for venue ${venueId}.`);
+    }
+
+    const batch = (data ?? []) as Array<{ question_id: string | null }>;
+    slugs.push(...batch.map((row) => row.question_id).filter((slug): slug is string => Boolean(slug)));
+    if (batch.length < PAGE_SIZE) break;
+  }
+
+  return slugs;
+}
+
 export async function GET(request: Request) {
   try {
     const auth = await requireAdminAuth(request);
@@ -51,24 +98,19 @@ export async function GET(request: Request) {
     }
     const admin = supabaseAdmin;
 
-    // 1. Fetch all active live_showdown questions with their category
-    const { data: activeQuestions, error: questionsError } = await admin
-      .from("trivia_questions")
-      .select("slug, category")
-      .eq("status", "active")
-      .eq("question_pool", "live_showdown");
-    if (questionsError) {
-      throw new Error(questionsError.message || "Failed to fetch active questions.");
-    }
+    // 1. Fetch all active live_showdown questions with their category.
+    // Supabase caps un-ranged selects at 1,000 rows, so this endpoint must
+    // paginate to stay aligned with the full pool used by scheduled games.
+    const activeQuestions = await fetchAllActiveLiveTriviaQuestions(admin);
 
     // Build category → set of slugs map
     const categorySlugMap = new Map<string, Set<string>>();
-    for (const q of activeQuestions ?? []) {
+    for (const q of activeQuestions) {
       const cat = q.category ?? "Uncategorized";
       if (!categorySlugMap.has(cat)) categorySlugMap.set(cat, new Set());
-      categorySlugMap.get(cat)!.add(q.slug);
+      if (q.slug) categorySlugMap.get(cat)!.add(q.slug);
     }
-    const allSlugs = new Set((activeQuestions ?? []).map((q) => q.slug));
+    const allSlugs = new Set(activeQuestions.map((q) => q.slug).filter((slug): slug is string => Boolean(slug)));
     const totalActive = allSlugs.size;
 
     const venues = await listVenues();
@@ -76,19 +118,12 @@ export async function GET(request: Request) {
     // 2. For each venue, fetch seen question slugs + recent warnings
     const venueInventories: VenueCategoryInventory[] = await Promise.all(
       venues.map(async (venue) => {
-        // Fetch seen question slugs for this venue
-        const { data: seenRows, error: seenError } = await admin
-          .from("venue_seen_questions")
-          .select("question_id")
-          .eq("venue_id", venue.id);
-        if (seenError) {
-          throw new Error(seenError.message || `Failed to fetch seen questions for venue ${venue.id}.`);
-        }
+        // Fetch seen question slugs for this venue. This can also pass 1,000
+        // after enough scheduled games, so it uses the same pagination helper.
+        const seenSlugs = await fetchAllVenueSeenQuestionSlugs(admin, venue.id);
 
         // Only count seen slugs that are still active (pool may have changed)
-        const seenActiveSet = new Set<string>(
-          (seenRows ?? []).map((r) => r.question_id).filter((s) => allSlugs.has(s))
-        );
+        const seenActiveSet = new Set<string>(seenSlugs.filter((slug) => allSlugs.has(slug)));
 
         // Per-category breakdown
         const categories: CategoryInventory[] = Array.from(categorySlugMap.entries())

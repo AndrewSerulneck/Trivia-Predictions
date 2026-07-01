@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { adminLabel } from "@/lib/adminStyles";
 import { getErrorMessage } from "@/lib/errors";
 import type {
   WriteInAnswerEvaluation,
@@ -116,61 +117,61 @@ export function TriviaAnswerGraderSection() {
 
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Correct Answer</label>
+            <label className={adminLabel}>Correct Answer</label>
             <input
               value={form.correct}
               onChange={(event) => setForm((prev) => ({ ...prev, correct: event.target.value }))}
               placeholder="Golden State Warriors"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Submitted Answer</label>
+            <label className={adminLabel}>Submitted Answer</label>
             <input
               value={form.submitted}
               onChange={(event) => setForm((prev) => ({ ...prev, submitted: event.target.value }))}
               placeholder="the Warriors"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div className="lg:col-span-2">
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Acceptable Answers</label>
+            <label className={adminLabel}>Acceptable Answers</label>
             <textarea
               value={form.acceptableAnswers}
               onChange={(event) => setForm((prev) => ({ ...prev, acceptableAnswers: event.target.value }))}
               placeholder={"One answer per line\nRussian Federation"}
               rows={4}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Question ID</label>
+            <label className={adminLabel}>Question ID</label>
             <input
               value={form.questionId}
               onChange={(event) => setForm((prev) => ({ ...prev, questionId: event.target.value }))}
               placeholder="Optional"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Answer Index</label>
+            <label className={adminLabel}>Answer Index</label>
             <input
               value={form.answerIndex}
               onChange={(event) => setForm((prev) => ({ ...prev, answerIndex: event.target.value }))}
               placeholder="0"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Extra Variant Indexes</label>
+            <label className={adminLabel}>Extra Variant Indexes</label>
             <input
               value={form.answerVariantIndexes}
               onChange={(event) => setForm((prev) => ({ ...prev, answerVariantIndexes: event.target.value }))}
               placeholder="1, 2"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
         </div>

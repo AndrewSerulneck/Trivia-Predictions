@@ -1,4 +1,4 @@
-export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy" | "scategories";
+export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy" | "category-blitz";
 
 export type GameOnboardingStep = {
   stepLabel: string;
@@ -141,9 +141,9 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     ],
   },
   {
-    key: "scategories",
-    title: "Hightop S'Categories",
-    path: "/scategories",
+    key: "category-blitz",
+    title: "Category Blitz",
+    path: "/category-blitz",
     cardClassName: "bg-emerald-600 text-white",
     visibleOnVenueHome: false,  // card only shown when a live session exists
     rules: [
@@ -215,7 +215,7 @@ export const VENUE_GAME_CARD_BY_KEY: Record<VenueGameKey, VenueGameCardConfig> =
   {} as Record<VenueGameKey, VenueGameCardConfig>
 );
 
-export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["speed-trivia", "live_trivia", "bingo", "pickem", "fantasy", "scategories"];
+export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["speed-trivia", "live_trivia", "bingo", "pickem", "fantasy", "category-blitz"];
 
 export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null {
   if (pathname.startsWith("/trivia/live")) return "live_trivia";
@@ -224,6 +224,6 @@ export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null
   if (pathname.startsWith("/bingo")) return "bingo";
   if (pathname.startsWith("/fantasy")) return "fantasy";
   if (pathname.startsWith("/pending-challenges")) return "fantasy";
-  if (pathname.startsWith("/scategories")) return "scategories";
+  if (pathname.startsWith("/category-blitz")) return "category-blitz";
   return null;
 }

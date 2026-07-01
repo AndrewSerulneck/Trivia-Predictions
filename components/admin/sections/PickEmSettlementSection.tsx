@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { adminLabel } from "@/lib/adminStyles";
 import { getErrorMessage } from "@/lib/errors";
 
 type PickEmMatchup = {
@@ -219,29 +220,29 @@ export function PickEmSettlementSection() {
 
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Date</label>
+            <label className={adminLabel}>Date</label>
             <input
               type="date"
               value={selectedDate}
               onChange={(event) => setSelectedDate(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Search Teams</label>
+            <label className={adminLabel}>Search Teams</label>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by team name"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Sport</label>
+            <label className={adminLabel}>Sport</label>
             <select
               value={sportFilter}
               onChange={(event) => setSportFilter(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               {sportOptions.map((option) => (
                 <option key={option} value={option}>
@@ -251,11 +252,11 @@ export function PickEmSettlementSection() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">League</label>
+            <label className={adminLabel}>League</label>
             <select
               value={leagueFilter}
               onChange={(event) => setLeagueFilter(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               {leagueOptions.map((option) => (
                 <option key={option} value={option}>

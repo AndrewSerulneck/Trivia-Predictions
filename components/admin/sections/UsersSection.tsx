@@ -277,7 +277,7 @@ export function UsersSection({ venues }: UsersSectionProps) {
                             onChange={(e) =>
                               setEditState((s) => ({ ...s, username: e.target.value }))
                             }
-                            className="w-36 rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-indigo-500"
+                            className="w-36 rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none focus:border-indigo-500"
                           />
                         ) : (
                           <span className="font-medium text-slate-900">{user.username}</span>
@@ -294,7 +294,7 @@ export function UsersSection({ venues }: UsersSectionProps) {
                             onChange={(e) =>
                               setEditState((s) => ({ ...s, points: e.target.value }))
                             }
-                            className="w-24 rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-indigo-500"
+                            className="w-24 rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none focus:border-indigo-500"
                           />
                         ) : (
                           <span className="tabular-nums">{user.points.toLocaleString()}</span>

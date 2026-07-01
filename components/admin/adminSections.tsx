@@ -13,7 +13,7 @@ import { TriviaAnswerGraderSection } from "@/components/admin/sections/TriviaAns
 import { TriviaImageReviewSection } from "@/components/admin/sections/TriviaImageReviewSection";
 import { TriviaListSection } from "@/components/admin/sections/TriviaListSection";
 import { LiveTriviaInventorySection } from "@/components/admin/sections/LiveTriviaInventorySection";
-import { ScategoriesSection } from "@/components/admin/sections/ScategoriesSection";
+import { CategoryBlitzSection } from "@/components/admin/sections/CategoryBlitzSection";
 import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsSection";
 import { UsernameModerationSection } from "@/components/admin/sections/UsernameModerationSection";
 import { UsersSection } from "@/components/admin/sections/UsersSection";
@@ -40,7 +40,7 @@ export type AdminSection =
   | "live-trivia"
   | "live-trivia-inventory"
   | "username-moderation"
-  | "scategories";
+  | "category-blitz";
 
 export type AdminSectionOption = {
   id: AdminSection;
@@ -103,7 +103,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "live-trivia",           label: "Live Trivia Schedules", slug: "live-trivia",           component: LiveTriviaSchedulesSection },
   { id: "live-trivia-inventory", label: "Question Inventory",    slug: "live-trivia-inventory", status: { label: "Ready", tone: "live" }, component: LiveTriviaInventorySection },
   { id: "pickem-settlement",     label: "Pick 'Em Settlement",   slug: "pickem-settlement",     status: { label: "Ready", tone: "live" }, component: PickEmSettlementSection },
-  { id: "scategories",           label: "S'Categories",          slug: "scategories",           status: { label: "Ready", tone: "live" }, component: ScategoriesSection },
+  { id: "category-blitz",           label: "Category Blitz",        slug: "category-blitz",           status: { label: "Ready", tone: "live" }, component: CategoryBlitzSection },
 ];
 
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
@@ -121,15 +121,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Challenges & Events",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["challenge-campaigns", "live-trivia", "live-trivia-inventory"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["challenge-campaigns", "live-trivia", "live-trivia-inventory", "category-blitz"].includes(opt.id)),
   },
   {
     label: "Operations",
     items: ADMIN_SECTION_OPTIONS.filter((opt) => ["pickem-settlement"].includes(opt.id)),
-  },
-  {
-    label: "Live Games",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["scategories"].includes(opt.id)),
   },
 ];
 
@@ -151,7 +147,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "ads-list",
   "ads-create",
   "pickem-settlement",
-  "scategories",
+  "category-blitz",
 ]);
 
 export function getAdminSectionBySlug(slug: string): AdminSectionOption | null {

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import type { Venue } from "@/types";
 import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/AdminShell";
+import { adminField, adminLabel } from "@/lib/adminStyles";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -500,9 +501,8 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   // ── Create form render ────────────────────────────────────────────────────
 
   if (mode !== "list") {
-    const field =
-      "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
-    const lbl = "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600";
+    const field = adminField;
+    const lbl = adminLabel;
 
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -983,13 +983,13 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
         </div>
 
         <div className="px-6 pt-4">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <label className={adminLabel}>
             Select a Venue
           </label>
           <select
             value={selectedVenueId}
             onChange={(e) => setSelectedVenueId(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
           >
             <option value="all">All Venues</option>
             {venues.map((venue) => (

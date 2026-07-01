@@ -268,7 +268,7 @@ export function AdAnalyticsDashboard() {
                 type="date"
                 value={customStartDate}
                 onChange={(event) => setCustomStartDate(event.target.value)}
-                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
               />
             </label>
             <label className="text-sm font-medium text-slate-700">
@@ -277,7 +277,7 @@ export function AdAnalyticsDashboard() {
                 type="date"
                 value={customEndDate}
                 onChange={(event) => setCustomEndDate(event.target.value)}
-                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
               />
             </label>
             {customRangeInvalid ? (

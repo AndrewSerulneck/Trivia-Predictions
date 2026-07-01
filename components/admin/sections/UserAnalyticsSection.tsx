@@ -689,13 +689,13 @@ export function UserAnalyticsSection({ venues = [] }: { venues?: Venue[] }) {
                     type="date"
                     value={filters.startDate}
                     onChange={(event) => setFilters((prev) => ({ ...prev, startDate: event.target.value }))}
-                    className="rounded-md border border-slate-200 px-3 py-2 text-sm"
+                    className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
                   />
                   <input
                     type="date"
                     value={filters.endDate}
                     onChange={(event) => setFilters((prev) => ({ ...prev, endDate: event.target.value }))}
-                    className="rounded-md border border-slate-200 px-3 py-2 text-sm"
+                    className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
                   />
                 </>
               ) : null}
@@ -711,7 +711,7 @@ export function UserAnalyticsSection({ venues = [] }: { venues?: Venue[] }) {
               <select
                 value={filters.groupBy}
                 onChange={(event) => setFilters((prev) => ({ ...prev, groupBy: event.target.value as GroupBy }))}
-                className="rounded-md border border-slate-200 px-3 py-2 text-sm"
+                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
               >
                 {GROUP_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>

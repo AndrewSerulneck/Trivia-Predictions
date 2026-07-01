@@ -161,14 +161,14 @@ const NO_LOCAL_PASSKEY_MESSAGE =
   "We're sorry, we don't have a passkey saved for your device! Please log in using your username and PIN, or create a new account.";
 const LOCAL_PASSKEY_USERNAMES_STORAGE_KEY = "tp_local_passkey_usernames";
 const WELCOME_SEEN_KEY = "tp_welcome_seen";
-const WELCOME_REPROMPT_MS = 8 * 60 * 60 * 1000; // 8 hours
+const WELCOME_REPROMPT_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 
 function shouldShowWelcome(): boolean {
   try {
     const raw = localStorage.getItem(WELCOME_SEEN_KEY);
     if (!raw) return true;
     const ts = parseInt(raw, 10);
-    return isNaN(ts) || Date.now() - ts > WELCOME_REPROMPT_MS;
+    return isNaN(ts) || Date.now() - ts >= WELCOME_REPROMPT_MS;
   } catch {
     return true;
   }

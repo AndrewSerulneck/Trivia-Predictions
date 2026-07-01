@@ -37,7 +37,7 @@
       "schedule": "0 9 * * *"
     },
     {
-      "path": "/api/cron/scategories-score",
+      "path": "/api/cron/category-blitz-score",
       "schedule": "*/1 * * * *"
     }
   ]

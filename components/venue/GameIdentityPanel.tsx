@@ -13,7 +13,7 @@ export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
     "[background:linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)]",
   fantasy:
     "bg-[#0a3128]",
-  scategories:
+  "category-blitz":
     "bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)]",
 };
 
@@ -28,7 +28,7 @@ export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
     "bg-[linear-gradient(134deg,rgba(37,99,235,0.22)_0%,rgba(124,58,237,0.22)_56%,rgba(236,72,153,0.2)_100%)] border-indigo-200/65",
   fantasy:
     "bg-[#020617] border-[#fef3c7]/20",
-  scategories:
+  "category-blitz":
     "bg-[linear-gradient(132deg,rgba(16,185,129,0.18)_0%,rgba(34,197,94,0.2)_50%,rgba(20,184,166,0.18)_100%)] border-emerald-400/30",
 };
 
@@ -38,7 +38,7 @@ export const GAME_IDENTITY_SUBTITLE: Record<VenueGameKey, string> = {
   bingo: "Track player-stat squares in real time.",
   pickem: "Pick winners and climb your venue league.",
   fantasy: "Build and challenge lineups head to head.",
-  scategories: "Live word game — one letter, 12 categories, 3 minutes.",
+  "category-blitz": "Live word game — one letter, 12 categories, 3 minutes.",
 };
 
 function normalizeRule(rule: string): string {
@@ -187,7 +187,7 @@ const GAME_SCORING: Record<VenueGameKey, ScoringConfig> = {
   live_trivia:    { kind: "stat", big: "2", label: "points per correct answer" },
   bingo:          { kind: "stat", big: "50", label: "points per Bingo", foot: "Up to 4 boards live at once" },
   fantasy:        { kind: "stat", big: "LIVE", label: "points climb as your players score" },
-  scategories: {
+  "category-blitz": {
     kind: "ladder",
     rows: [
       { value: "2", label: "points per unique answer" },
@@ -829,7 +829,7 @@ const GAME_STEP_ACCENT: Record<VenueGameKey, string> = {
   bingo:          "text-sky-300",
   pickem:         "text-amber-200",
   fantasy:        "text-violet-300",
-  scategories:    "text-emerald-300",
+  "category-blitz":    "text-emerald-300",
 };
 
 const GAME_STEP_DOT_ACTIVE: Record<VenueGameKey, string> = {
@@ -838,7 +838,7 @@ const GAME_STEP_DOT_ACTIVE: Record<VenueGameKey, string> = {
   bingo:          "bg-sky-300",
   pickem:         "bg-amber-200",
   fantasy:        "bg-violet-300",
-  scategories:    "bg-emerald-300",
+  "category-blitz":    "bg-emerald-300",
 };
 
 function renderBody(body: string | string[]) {

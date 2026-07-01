@@ -604,6 +604,38 @@ async function pruneOrphanedLiveShowdownQuestions(supabase, canonicalSlugs) {
   console.log(`Pruned ${orphanSlugs.length} orphaned live_showdown question(s):`, orphanSlugs);
 }
 
+async function verifyLiveShowdownImportAvailability(supabase, expectedCount) {
+  const { count, error } = await retryAsync(
+    async () => {
+      return supabase
+        .from("trivia_questions")
+        .select("id", { count: "exact", head: true })
+        .eq("question_pool", "live_showdown")
+        .eq("status", "active");
+    },
+    {
+      operation: "verify live_showdown active question count",
+    }
+  );
+
+  if (error) {
+    throw new Error(`Live Trivia availability verification failed: ${describeError(error)}`);
+  }
+
+  const activeCount = Math.max(0, count ?? 0);
+  if (activeCount < expectedCount) {
+    throw new Error(
+      `Live Trivia availability verification failed: DB has ${activeCount} active live_showdown ` +
+        `question(s), but local JSON import contained ${expectedCount}.`
+    );
+  }
+
+  console.log(
+    `Live Trivia availability verified: ${activeCount} active live_showdown question(s) in Supabase ` +
+      `for ${expectedCount} local JSON question(s).`
+  );
+}
+
 async function upsertRows(rows, options = {}) {
   const { supabaseUrl, supabase } = createSupabaseClient();
 
@@ -656,6 +688,10 @@ async function upsertRows(rows, options = {}) {
   if (options.pruneOrphans) {
     const canonicalSlugs = new Set(rows.map((row) => row.slug).filter(Boolean));
     await pruneOrphanedLiveShowdownQuestions(supabase, canonicalSlugs);
+  }
+
+  if (options.verifyLiveAvailability) {
+    await verifyLiveShowdownImportAvailability(supabase, rows.length);
   }
 
   const { count, error } = await retryAsync(
@@ -887,7 +923,7 @@ async function main() {
     return;
   }
 
-  await upsertRows(rows, { pruneOrphans: liveMode });
+  await upsertRows(rows, { pruneOrphans: liveMode, verifyLiveAvailability: liveMode });
 }
 
 if (require.main === module) {
