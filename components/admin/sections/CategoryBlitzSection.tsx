@@ -170,16 +170,18 @@ function LiveSessionPanel({ venueId }: { venueId: string }) {
             <p className="mt-0.5 text-sm text-slate-400">No live session right now.</p>
           )}
         </div>
-        {isLive ? (
-          <button
-            type="button"
-            onClick={() => void handleEnd()}
-            disabled={ending}
-            className="shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {ending ? "Ending..." : "End session now"}
-          </button>
-        ) : null}
+        <div className="flex shrink-0 gap-1.5">
+          {isLive ? (
+            <button
+              type="button"
+              onClick={() => void handleEnd()}
+              disabled={ending}
+              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {ending ? "Ending..." : "End session now"}
+            </button>
+          ) : null}
+        </div>
       </div>
       {msg && (
         <p className={`mt-2 text-xs font-semibold ${msg.ok ? "text-emerald-700" : "text-rose-700"}`}>{msg.text}</p>

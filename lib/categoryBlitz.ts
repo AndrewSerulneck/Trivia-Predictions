@@ -276,14 +276,41 @@ async function closeStaleAutoSession(session: CategoryBlitzSession): Promise<voi
 }
 
 /**
- * Safety net for player traffic: if a schedule window is already open but the
- * minute cron has not opened the auto session yet, open it on demand so players
- * can join immediately. Also self-heals a venue that's stuck behind an auto
- * session whose window already ended and was never closed (e.g. the cron
- * didn't run for a stretch) — otherwise that stale session blocks every
- * future window forever.
+ * Score this venue's currently active round if its timer has already
+ * expired. Best-effort: normally the player's own browser scores its round
+ * the instant its timer hits zero, and the cron sweeps up anything nobody
+ * was watching — this is a third safety net so a venue never sits on a dead
+ * timer just because this was the first request to notice.
  */
-export async function ensureScheduledSessionForVenue(
+async function scoreExpiredRoundForVenue(venueId: string, now: Date): Promise<void> {
+  assertAdmin();
+  const { data } = await supabaseAdmin!
+    .from("category_blitz_rounds")
+    .select("id")
+    .eq("venue_id", venueId)
+    .eq("status", "active")
+    .lt("ends_at", now.toISOString())
+    .maybeSingle<{ id: string }>();
+
+  if (data) {
+    await scoreRound(data.id).catch(() => undefined);
+  }
+}
+
+/**
+ * Drives one venue's Category Blitz forward on demand, exactly like
+ * getLiveShowdownState's lazy-seeding safety net drives Live Trivia: closes
+ * a stale auto session, scores an expired round, opens a fresh session for
+ * an open schedule window, and fires the next round once the current one has
+ * finished and enough time remains in the window.
+ *
+ * This is what makes the game playable without the production cron —
+ * `next dev` and preview deployments never run Vercel Cron, but every
+ * connected player's GET /sessions poll calls this, so the game advances
+ * itself as long as someone has the page open. runCategoryBlitzEngine (the
+ * cron) remains a backup for venues nobody is currently watching.
+ */
+export async function driveVenueCategoryBlitz(
   venueId: string,
   now: Date = new Date(),
 ): Promise<CategoryBlitzSession | null> {
@@ -292,31 +319,57 @@ export async function ensureScheduledSessionForVenue(
     await closeStaleAutoSession(existing);
     existing = null;
   }
-  if (existing) return existing;
+
+  await scoreExpiredRoundForVenue(venueId, now);
 
   const schedules = await listSchedules(venueId);
   const openSchedule = schedules.find((schedule) => isWindowOpen(schedule, now));
-  if (!openSchedule) return null;
 
-  const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
-  if (!occurrence || occurrence.windowStart > now || now >= occurrence.windowEnd) {
-    return null;
-  }
+  if (!existing) {
+    if (!openSchedule) return null;
 
-  try {
-    const created = await createSession(venueId, {
-      source: "auto",
-      scheduledEndAt: occurrence.windowEnd.toISOString(),
-    });
-    await startRound(created.id);
-    return await getActiveSession(venueId);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.includes("already active")) {
-      return await getActiveSession(venueId);
+    const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
+    if (!occurrence || occurrence.windowStart > now || now >= occurrence.windowEnd) {
+      return null;
     }
-    throw error;
+
+    try {
+      const created = await createSession(venueId, {
+        source: "auto",
+        scheduledEndAt: occurrence.windowEnd.toISOString(),
+      });
+      await startRound(created.id);
+      return await getActiveSession(venueId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("already active")) {
+        return await getActiveSession(venueId);
+      }
+      throw error;
+    }
   }
+
+  // Leave manual (admin-driven) sessions entirely alone — only the engine's
+  // own auto sessions advance themselves on read.
+  if (existing.source === "auto" && openSchedule) {
+    const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
+    if (occurrence) {
+      const canFitAnother = now.getTime() + ROUND_DURATION_SECONDS * 1000 <= occurrence.windowEnd.getTime();
+      if (canFitAnother) {
+        const latest = await getLatestRound(existing.id);
+        if (!latest) {
+          await startRound(existing.id);
+        } else if (latest.status === "complete") {
+          const nextRoundAt = new Date(latest.started_at).getTime() + ROUND_INTERVAL_SECONDS * 1000;
+          if (now.getTime() >= nextRoundAt) {
+            await startRound(existing.id);
+          }
+        }
+      }
+    }
+  }
+
+  return await getActiveSession(venueId);
 }
 
 export type CreateSessionOptions = {

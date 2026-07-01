@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
-import { createSession, ensureScheduledSessionForVenue } from "@/lib/categoryBlitz";
+import { createSession, driveVenueCategoryBlitz } from "@/lib/categoryBlitz";
 import { listSchedules, getNextScheduleOccurrence } from "@/lib/categoryBlitzSchedules";
 
 /**
@@ -8,10 +8,10 @@ import { listSchedules, getNextScheduleOccurrence } from "@/lib/categoryBlitzSch
  * Returns the active session (or null) plus the next scheduled window open time.
  * nextWindowAt is null when no future window exists.
  *
- * Always routes through ensureScheduledSessionForVenue (not a raw
- * getActiveSession lookup) so its stale-session self-heal always runs —
- * short-circuiting around it here previously let an orphaned session block
- * every future scheduled window for a venue.
+ * Always routes through driveVenueCategoryBlitz (not a raw getActiveSession
+ * lookup) so it self-heals a stale session AND advances/fires rounds on
+ * every poll — this is what makes the game playable without the production
+ * cron, which never runs against `next dev` or preview deployments.
  */
 export async function GET(request: Request) {
   try {
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
     const now = new Date();
     const [session, schedules] = await Promise.all([
-      ensureScheduledSessionForVenue(venueId, now),
+      driveVenueCategoryBlitz(venueId, now),
       listSchedules(venueId),
     ]);
     const nextOcc = getNextScheduleOccurrence(schedules, now);
