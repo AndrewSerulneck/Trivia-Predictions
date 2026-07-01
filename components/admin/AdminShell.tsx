@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Venue } from "@/types";
+import { adminLabel } from "@/lib/adminStyles";
 import {
   ADMIN_NAV_GROUPS,
   MIGRATED_SECTIONS,
@@ -24,7 +25,8 @@ import { AdAnalyticsDashboard } from "@/components/admin/AdAnalyticsDashboard";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
-import { ScategoriesSection } from "@/components/admin/sections/ScategoriesSection";
+import { CategoryBlitzSection } from "@/components/admin/sections/CategoryBlitzSection";
+import { LiveTriviaInventorySection } from "@/components/admin/sections/LiveTriviaInventorySection";
 import { QuestionInventoryAlert } from "@/components/admin/sections/QuestionInventoryAlert";
 import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
 
@@ -216,7 +218,7 @@ function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900">
+    <div className="flex min-h-screen items-center justify-center bg-slate-900 [color-scheme:light]">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
         <div className="mb-8 text-center">
           <div className="mb-2 text-2xl font-bold text-slate-900">Hightop Admin</div>
@@ -224,7 +226,7 @@ function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <label className={adminLabel}>
               Username
             </label>
             <input
@@ -233,11 +235,11 @@ function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <label className={adminLabel}>
               Password
             </label>
             <input
@@ -246,7 +248,7 @@ function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           {error && (
@@ -537,8 +539,10 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         return <AdsCreateSection venues={venueList} />;
       case "pickem-settlement":
         return <PickEmSettlementSection />;
-      case "scategories":
-        return <ScategoriesSection venues={venueList} />;
+      case "live-trivia-inventory":
+        return <LiveTriviaInventorySection />;
+      case "category-blitz":
+        return <CategoryBlitzSection venues={venueList} />;
       default:
         return currentSectionOption ? <LegacyPanel section={currentSectionOption} /> : null;
     }
@@ -550,7 +554,7 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
   };
 
   return (
-    <div className="w-full h-screen max-h-screen m-0 p-0 flex bg-[#030712] overflow-hidden">
+    <div className="w-full h-screen max-h-screen m-0 p-0 flex bg-[#030712] overflow-hidden [color-scheme:light]">
       {!isMobile ? (
         <Sidebar
           activeSection={activeSection}

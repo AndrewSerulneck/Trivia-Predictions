@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Venue } from "@/types";
 import { TH, TD, TR } from "@/components/admin/AdminShell";
 import { VenueMapPicker } from "@/components/admin/VenueMapPicker";
+import { adminField, adminLabel, adminFieldReadOnly } from "@/lib/adminStyles";
 
 type AddressPrediction = {
   placeId: string;
@@ -132,11 +133,9 @@ type VenueFormProps = {
 };
 
 function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, submitLabel, mode }: VenueFormProps) {
-  const field =
-    "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
-  const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600";
-  const readOnlyField =
-    "w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700";
+  const field = adminField;
+  const label = adminLabel;
+  const readOnlyField = adminFieldReadOnly;
 
   const [lookupQuery, setLookupQuery] = useState("");
   const [predictions, setPredictions] = useState<AddressPrediction[]>([]);

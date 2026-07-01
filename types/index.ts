@@ -409,19 +409,20 @@ export interface BillingSubscription {
   createdAt?: string;
 }
 
-// ── Scategories ──────────────────────────────────────────────────────────────
+// ── Category Blitz ───────────────────────────────────────────────────────────
 
-export type ScategoriesSessionStatus  = 'lobby' | 'active' | 'scoring' | 'complete';
-export type ScategoriesRoundStatus    = 'active' | 'scoring' | 'complete';
-export type ScategoriesRecurringType  = 'none' | 'daily' | 'weekly';
+export type CategoryBlitzSessionStatus  = 'lobby' | 'active' | 'scoring' | 'complete';
+export type CategoryBlitzRoundStatus    = 'active' | 'scoring' | 'complete';
+export type CategoryBlitzRecurringType  = 'none' | 'daily' | 'weekly';
 
-export interface ScategoriesSchedule {
+export interface CategoryBlitzSchedule {
   id:             string;
   venueId:        string;
   title:          string;
   startTime:      string;
+  endTime:        string;
   timezone:       string;
-  recurringType:  ScategoriesRecurringType;
+  recurringType:  CategoryBlitzRecurringType;
   recurringDays:  string[];
   windowMinutes:  number;
   isActive:       boolean;
@@ -429,19 +430,20 @@ export interface ScategoriesSchedule {
   updatedAt:      string;
 }
 
-export type ScategoriesSessionSource = 'manual' | 'auto';
+export type CategoryBlitzSessionSource = 'manual' | 'auto';
+export type CategoryBlitzViewerRole    = 'player' | 'spectator';
 
-export interface ScategoriesSession {
+export interface CategoryBlitzSession {
   id:             string;
   venueId:        string;
-  status:         ScategoriesSessionStatus;
-  source:         ScategoriesSessionSource;
+  status:         CategoryBlitzSessionStatus;
+  source:         CategoryBlitzSessionSource;
   scheduledEndAt: string | null;
   createdAt:      string;
   completedAt:    string | null;
 }
 
-export interface ScategoriesRound {
+export interface CategoryBlitzRound {
   id:               string;
   sessionId:        string;
   venueId:          string;
@@ -450,11 +452,11 @@ export interface ScategoriesRound {
   categories:       string[];
   startedAt:        string;
   endsAt:           string;
-  status:           ScategoriesRoundStatus;
+  status:           CategoryBlitzRoundStatus;
   createdAt:        string;
 }
 
-export interface ScategoriesSubmission {
+export interface CategoryBlitzSubmission {
   id:               string;
   roundId:          string;
   venueId:          string;
@@ -470,7 +472,7 @@ export interface ScategoriesSubmission {
 }
 
 /** Shape returned by the results API after scoring — one entry per category */
-export interface ScategoriesCategoryResult {
+export interface CategoryBlitzCategoryResult {
   categoryIndex: number;
   category:      string;
   answers: {
@@ -483,11 +485,11 @@ export interface ScategoriesCategoryResult {
   }[];
 }
 
-export interface ScategoriesRoundResults {
+export interface CategoryBlitzRoundResults {
   roundId:    string;
   letter:     string;
   categories: string[];
-  results:    ScategoriesCategoryResult[];
+  results:    CategoryBlitzCategoryResult[];
   totals: {
     userId:   string;
     username: string;

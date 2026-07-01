@@ -1,6 +1,7 @@
 name: Sync Live Trivia
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -20,8 +21,11 @@ jobs:
 
       - run: npm ci
 
-      - name: Import & prune live trivia questions
+      - name: Validate live trivia JSON
+        run: npm run live-trivia:check
+
+      - name: Import, prune, and verify live trivia questions
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories
+        run: npm run live-trivia:import

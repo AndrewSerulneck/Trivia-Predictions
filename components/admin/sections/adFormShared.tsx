@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { adminLabel } from "@/lib/adminStyles";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, Venue } from "@/types";
 import {
   AD_PLACEMENTS,
@@ -560,22 +561,22 @@ export function AdFormFields({
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Advertiser *</label>
+        <label className={adminLabel}>Advertiser *</label>
         <input
           value={draft.advertiserName}
           onChange={(event) => patch({ advertiserName: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
           placeholder="Brand or campaign name"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Page</label>
+        <label className={adminLabel}>Page</label>
         <select
           value={draft.pageKey}
           onChange={(event) => handlePageChange(event.target.value as AdPageKey)}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         >
           {AD_PAGE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -586,12 +587,12 @@ export function AdFormFields({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Ad Type</label>
+        <label className={adminLabel}>Ad Type</label>
         <select
           value={draft.adType}
           onChange={(event) => handleAdTypeChange(event.target.value as AdType)}
           disabled={disabled || !draft.pageKey || adTypeOptions.length === 0}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         >
           {adTypeOptions.length === 0 ? (
             <option value="">No ad types available for this page</option>
@@ -605,12 +606,12 @@ export function AdFormFields({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Slot</label>
+        <label className={adminLabel}>Slot</label>
         <select
           value={selectedSlotOptionId}
           onChange={(event) => handleSlotOptionChange(event.target.value)}
           disabled={disabled || !draft.pageKey || !draft.adType || slotOptions.length === 0}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         >
           {slotOptions.length === 0 ? (
             <option value="">No slots available for this page & ad type</option>
@@ -642,12 +643,12 @@ export function AdFormFields({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Trigger</label>
+        <label className={adminLabel}>Trigger</label>
         <select
           value={draft.displayTrigger}
           onChange={(event) => handleTriggerChange(event.target.value as AdDisplayTrigger)}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         >
           {triggerOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -658,12 +659,12 @@ export function AdFormFields({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Placement Key</label>
+        <label className={adminLabel}>Placement Key</label>
         <input
           value={draft.placementKey}
           onChange={(event) => patch({ placementKey: event.target.value })}
           disabled={disabled || isVenueLeaderboardSelection}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
           placeholder={isVenueLeaderboardSelection ? VENUE_LEADERBOARD_PLACEMENT_KEY : "Optional custom placement key"}
         />
         {isVenueLeaderboardSelection ? (
@@ -676,7 +677,7 @@ export function AdFormFields({
       {isRoundEndTrivia ? (
         <>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Round Number</label>
+            <label className={adminLabel}>Round Number</label>
             <input
               type="number"
               min={1}
@@ -684,12 +685,12 @@ export function AdFormFields({
               value={draft.roundNumber}
               onChange={(event) => patch({ roundNumber: event.target.value })}
               disabled={disabled}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
               placeholder="e.g. 1, 3, 5"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Queue After Round (Optional)</label>
+            <label className={adminLabel}>Queue After Round (Optional)</label>
             <input
               type="number"
               min={1}
@@ -697,7 +698,7 @@ export function AdFormFields({
               value={draft.cycleAfterRound}
               onChange={(event) => patch({ cycleAfterRound: event.target.value })}
               disabled={disabled}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
               placeholder="e.g. 8"
             />
             <p className="mt-1 text-xs text-slate-500">Set this to configure a cycle start point (for example: after round 8).</p>
@@ -706,7 +707,7 @@ export function AdFormFields({
       ) : null}
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+        <label className={adminLabel}>
           Sequence Index{isVenueLeaderboardSelection ? " *" : ""}
         </label>
         {isVenueLeaderboardSelection ? (
@@ -718,7 +719,7 @@ export function AdFormFields({
                 patch({ sequenceIndex: event.target.value });
               }}
               disabled={disabled}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               <option value="">Select sequence index</option>
               <option value="1">1</option>
@@ -740,72 +741,72 @@ export function AdFormFields({
             value={draft.sequenceIndex}
             onChange={(event) => patch({ sequenceIndex: event.target.value })}
             disabled={disabled}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             placeholder="Used for inline ordering"
           />
         )}
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Priority</label>
+        <label className={adminLabel}>Priority</label>
         <input
           type="number"
           min={0}
           value={draft.priority}
           onChange={(event) => patch({ priority: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Image URL *</label>
+        <label className={adminLabel}>Image URL *</label>
         <input
           value={draft.imageUrl}
           onChange={(event) => patch({ imageUrl: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Click URL *</label>
+        <label className={adminLabel}>Click URL *</label>
         <input
           value={draft.clickUrl}
           onChange={(event) => patch({ clickUrl: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
 
       <div className="md:col-span-2">
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Alt Text *</label>
+        <label className={adminLabel}>Alt Text *</label>
         <input
           value={draft.altText}
           onChange={(event) => patch({ altText: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Width</label>
+        <label className={adminLabel}>Width</label>
         <input
           type="number"
           min={1}
           value={draft.width}
           onChange={(event) => patch({ width: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Height</label>
+        <label className={adminLabel}>Height</label>
         <input
           type="number"
           min={1}
           value={draft.height}
           onChange={(event) => patch({ height: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
         <p className="mt-1 text-xs text-slate-500">
           Recommended: popup 540x960, banner 320x50, inline 300x250.
@@ -813,58 +814,58 @@ export function AdFormFields({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Frequency Interval</label>
+        <label className={adminLabel}>Frequency Interval</label>
         <input
           type="number"
           min={1}
           value={draft.frequencyInterval}
           onChange={(event) => patch({ frequencyInterval: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Dismiss Delay (s)</label>
+        <label className={adminLabel}>Dismiss Delay (s)</label>
         <input
           type="number"
           min={0}
           value={draft.dismissDelaySeconds}
           onChange={(event) => patch({ dismissDelaySeconds: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Popup Cooldown (s)</label>
+        <label className={adminLabel}>Popup Cooldown (s)</label>
         <input
           type="number"
           min={0}
           value={draft.popupCooldownSeconds}
           onChange={(event) => patch({ popupCooldownSeconds: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Start Date *</label>
+        <label className={adminLabel}>Start Date *</label>
         <input
           type="date"
           value={draft.startDate}
           onChange={(event) => patch({ startDate: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">End Date</label>
+        <label className={adminLabel}>End Date</label>
         <input
           type="date"
           value={draft.endDate}
           onChange={(event) => patch({ endDate: event.target.value })}
           disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
 
@@ -929,12 +930,12 @@ export function AdFormFields({
 
         {!draft.targetAllVenues ? (
           <div className="mt-3">
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Specific Venues</label>
+            <label className={adminLabel}>Specific Venues</label>
             <input
               value={venueSearch}
               onChange={(event) => setVenueSearch(event.target.value)}
               disabled={disabled}
-              className="mb-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="mb-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
               placeholder="Search venues by name/city/state"
             />
             <select
@@ -942,7 +943,7 @@ export function AdFormFields({
               value={draft.venueIds}
               onChange={handleVenueMultiSelect}
               disabled={disabled}
-              className="h-28 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+              className="h-28 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               {filteredVenueOptions.map((venue) => (
                 <option key={venue.id} value={venue.id}>
@@ -957,7 +958,7 @@ export function AdFormFields({
 
         <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Cities</label>
+            <label className={adminLabel}>Cities</label>
             <div className="rounded-lg border border-slate-300 bg-white p-2">
               <div className="mb-2 flex flex-wrap gap-1">
                 {draft.cities.map((value, index) => (
@@ -981,7 +982,7 @@ export function AdFormFields({
                   onChange={(event) => setCityInput(event.target.value)}
                   onKeyDown={(event) => handleMultiInputKeyDown(event, "cities", cityInput, () => setCityInput(""))}
                   disabled={disabled}
-                  className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
                   placeholder="Type a city and press Enter"
                 />
                 <button
@@ -1004,7 +1005,7 @@ export function AdFormFields({
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">States</label>
+            <label className={adminLabel}>States</label>
             <div className="rounded-lg border border-slate-300 bg-white p-2">
               <div className="mb-2 flex flex-wrap gap-1">
                 {draft.states.map((value, index) => (
@@ -1028,7 +1029,7 @@ export function AdFormFields({
                   onChange={(event) => setStateInput(event.target.value)}
                   onKeyDown={(event) => handleMultiInputKeyDown(event, "states", stateInput, () => setStateInput(""))}
                   disabled={disabled}
-                  className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
                   placeholder="Type a state code and press Enter"
                 />
                 <button
@@ -1051,7 +1052,7 @@ export function AdFormFields({
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Zip Codes</label>
+            <label className={adminLabel}>Zip Codes</label>
             <div className="rounded-lg border border-slate-300 bg-white p-2">
               <div className="mb-2 flex flex-wrap gap-1">
                 {draft.zipCodes.map((value, index) => (
@@ -1075,7 +1076,7 @@ export function AdFormFields({
                   onChange={(event) => setZipInput(event.target.value)}
                   onKeyDown={(event) => handleMultiInputKeyDown(event, "zipCodes", zipInput, () => setZipInput(""))}
                   disabled={disabled}
-                  className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
                   placeholder="Type a zip code and press Enter"
                 />
                 <button
@@ -1098,7 +1099,7 @@ export function AdFormFields({
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Regions</label>
+            <label className={adminLabel}>Regions</label>
             <div className="rounded-lg border border-slate-300 bg-white p-2">
               <div className="mb-2 flex flex-wrap gap-1">
                 {draft.regions.map((value, index) => (
@@ -1122,7 +1123,7 @@ export function AdFormFields({
                   onChange={(event) => setRegionInput(event.target.value)}
                   onKeyDown={(event) => handleMultiInputKeyDown(event, "regions", regionInput, () => setRegionInput(""))}
                   disabled={disabled}
-                  className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
                   placeholder="Type a region and press Enter"
                 />
                 <button

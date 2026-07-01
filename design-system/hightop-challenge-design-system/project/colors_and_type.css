@@ -164,10 +164,10 @@
   --ht-teal-300:                #5eead4;
   --ht-teal-400:                #2dd4bf;
   --ht-teal-500:                #14b8a6;
-  --ht-game-scategories:        linear-gradient(132deg, #10b981 0%, #22c55e 50%, #14b8a6 100%);
-  --ht-game-scategories-edge:   var(--ht-emerald-400);
-  --ht-game-scategories-primary:   var(--ht-emerald-500);
-  --ht-game-scategories-secondary: var(--ht-teal-400);
+  --ht-game-category-blitz:        linear-gradient(132deg, #10b981 0%, #22c55e 50%, #14b8a6 100%);
+  --ht-game-category-blitz-edge:   var(--ht-emerald-400);
+  --ht-game-category-blitz-primary:   var(--ht-emerald-500);
+  --ht-game-category-blitz-secondary: var(--ht-teal-400);
   --ht-shadow-glow-emerald:     0 0 0 1px rgba(52, 211, 153, 0.30), 0 8px 28px rgba(52, 211, 153, 0.18);
 
   /* -----------------------------------------------------------

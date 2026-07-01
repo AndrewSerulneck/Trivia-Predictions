@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import type { TriviaQuestion } from "@/types";
+import { adminField, adminLabel } from "@/lib/adminStyles";
 import { BulkActionBar, PaginationBar, TD, TH, TR } from "@/components/admin/AdminShell";
 
 const PAGE_SIZE = 25;
@@ -347,11 +348,11 @@ export function TriviaListSection() {
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Answer Format</label>
+            <label className={adminLabel}>Answer Format</label>
             <select
               value={answerFormatFilter}
               onChange={(event) => setAnswerFormatFilter(event.target.value as AnswerFormatFilter)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               <option value="all">Show All</option>
               <option value="multiple_choice">Multiple Choice</option>
@@ -361,11 +362,11 @@ export function TriviaListSection() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Category</label>
+            <label className={adminLabel}>Category</label>
             <select
               value={categoryFilter}
               onChange={(event) => setCategoryFilter(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               {categoryOptions.map((category) => (
                 <option key={category || "all"} value={category}>
@@ -375,30 +376,30 @@ export function TriviaListSection() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Start Date</label>
+            <label className={adminLabel}>Start Date</label>
             <input
               type="date"
               value={startDate}
               onChange={(event) => setStartDate(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">End Date</label>
+            <label className={adminLabel}>End Date</label>
             <input
               type="date"
               value={endDate}
               onChange={(event) => setEndDate(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Sort By</label>
+              <label className={adminLabel}>Sort By</label>
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value as SortField)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
               >
                 <option value="created_at">Created</option>
                 <option value="category">Category</option>
@@ -408,11 +409,11 @@ export function TriviaListSection() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Direction</label>
+              <label className={adminLabel}>Direction</label>
               <select
                 value={sortDirection}
                 onChange={(event) => setSortDirection(event.target.value as SortDirection)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
               >
                 <option value="desc">Desc</option>
                 <option value="asc">Asc</option>
@@ -541,41 +542,41 @@ export function TriviaListSection() {
                           <td colSpan={8} className="px-4 py-4">
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                               <div className="md:col-span-2">
-                                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Question</label>
+                                <label className={adminLabel}>Question</label>
                                 <textarea
                                   value={editing.question}
                                   onChange={(event) => setEditing({ ...editing, question: event.target.value })}
                                   rows={2}
-                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                 />
                               </div>
 
                               <div>
-                                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Category</label>
+                                <label className={adminLabel}>Category</label>
                                 <input
                                   value={editing.category}
                                   onChange={(event) => setEditing({ ...editing, category: event.target.value })}
-                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                 />
                               </div>
                               <div>
-                                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Difficulty</label>
+                                <label className={adminLabel}>Difficulty</label>
                                 <input
                                   value={editing.difficulty}
                                   onChange={(event) => setEditing({ ...editing, difficulty: event.target.value })}
-                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                 />
                               </div>
 
                               {questionType !== "live" && (
                                 <div>
-                                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Pool</label>
+                                  <label className={adminLabel}>Pool</label>
                                   <select
                                     value={editing.questionPool}
                                     onChange={(event) =>
                                       setEditing({ ...editing, questionPool: event.target.value as EditFormState["questionPool"] })
                                     }
-                                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                   >
                                     <option value="anytime_blitz">anytime_blitz</option>
                                     <option value="live_showdown">live_showdown</option>
@@ -584,13 +585,13 @@ export function TriviaListSection() {
                               )}
                               {questionType !== "live" && (
                                 <div>
-                                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Format</label>
+                                  <label className={adminLabel}>Format</label>
                                   <select
                                     value={editing.answerFormat}
                                     onChange={(event) =>
                                       setEditing({ ...editing, answerFormat: event.target.value as EditFormState["answerFormat"] })
                                     }
-                                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                   >
                                     <option value="multiple_choice">multiple_choice</option>
                                     <option value="write_in">write_in</option>
@@ -604,7 +605,7 @@ export function TriviaListSection() {
                                 <>
                                   {[0, 1, 2, 3].map((index) => (
                                     <div key={index}>
-                                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                      <label className={adminLabel}>
                                         Option {String.fromCharCode(65 + index)}
                                       </label>
                                       <input
@@ -614,16 +615,16 @@ export function TriviaListSection() {
                                           nextOptions[index] = event.target.value;
                                           setEditing({ ...editing, options: nextOptions });
                                         }}
-                                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                       />
                                     </div>
                                   ))}
                                   <div>
-                                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Correct Option</label>
+                                    <label className={adminLabel}>Correct Option</label>
                                     <select
                                       value={editing.correctAnswer}
                                       onChange={(event) => setEditing({ ...editing, correctAnswer: Number(event.target.value) })}
-                                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                     >
                                       <option value={0}>Option A</option>
                                       <option value={1}>Option B</option>
@@ -634,14 +635,14 @@ export function TriviaListSection() {
                                 </>
                               ) : (
                                 <div className="md:col-span-2">
-                                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                  <label className={adminLabel}>
                                     Correct Answer
                                   </label>
                                   <input
                                     type={editing.answerFormat === "numeric" ? "number" : "text"}
                                     value={editing.writeInAnswer}
                                     onChange={(event) => setEditing({ ...editing, writeInAnswer: event.target.value })}
-                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                   />
                                 </div>
                               )}

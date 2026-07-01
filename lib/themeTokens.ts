@@ -169,8 +169,8 @@ export const GAME_THEME = {
       top:     { border: "border-[#d89a4f]/60",   fill: "bg-[#d89a4f]",    text: "text-[#d89a4f]"  },
     },
   },
-  /** Scategories — "The Word Rush": emerald→green→teal */
-  scategories: {
+  /** Category Blitz — "The Word Rush": emerald→green→teal */
+  "category-blitz": {
     gradient:  "from-emerald-500 via-green-500 to-teal-500",
     label:     "text-emerald-300 tracking-[0.14em] uppercase font-black text-sm",
     border:    "border-emerald-400/60",

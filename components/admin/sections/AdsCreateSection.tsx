@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { Venue } from "@/types";
 import { getErrorMessage } from "@/lib/errors";
 import { AdFormFields, defaultAdDraft, draftToPayload, type AdDraft } from "./adFormShared";
+import { adminLabel } from "@/lib/adminStyles";
 
 type AdsCreateSectionProps = {
   venues: Venue[];
@@ -176,7 +177,7 @@ export function AdsCreateSection({ venues }: AdsCreateSectionProps) {
 
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <label className={adminLabel}>
             Upload Image (JPEG/PNG/WebP, max 300KB)
           </label>
           <input

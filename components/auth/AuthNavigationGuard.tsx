@@ -31,7 +31,7 @@ function isInSessionGameRoute(pathname: string): boolean {
     pathname.startsWith("/leaderboard") ||
     pathname.startsWith("/advertise") ||
     pathname.startsWith("/info") ||
-    pathname.startsWith("/scategories")
+    pathname.startsWith("/category-blitz")
   );
 }
 
