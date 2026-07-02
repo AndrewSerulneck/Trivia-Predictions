@@ -55,6 +55,11 @@ export interface Venue {
   longitude: number;
   radius: number;
   placeId?: string;
+  screenEnabled?: boolean;
+  screenBrandImageUrl?: string;
+  screenBrandPrimary?: string;
+  screenBrandSecondary?: string;
+  screenSponsorRotationEnabled?: boolean;
 }
 
 export interface User {

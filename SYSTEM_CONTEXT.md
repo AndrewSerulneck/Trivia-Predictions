@@ -70,6 +70,16 @@
 - Multiple choice questions, any topic or difficulty.
 - Nightly question generation: `scripts/generate-trivia-nightly.cjs` → calls `generate-trivia-questions.cjs`.
 
+### Category Blitz (formerly called "Scategories")
+- Scattergories-style word game. Each round draws one **set** of 12 categories and one shared **letter**; players race to name an answer for each category that starts with that letter. Unique answers score points (`lib/categoryBlitz.ts`).
+- **Answer grading:** Claude Haiku is the sole judge of whether a player's answer fits a category (`validateAnswersWithLLM` in `lib/categoryBlitz.ts`). This is why category quality matters so much — the category must be objective enough for an LLM to grade fairly.
+- **Category design is governed by `data/category-blitz/CATEGORY_TEST.md` (canonical).** Every category must pass BOTH gates: (1) **Is-A** — "[Answer] IS A(N) [Category]" is objectively/definitionally true, never situational or opinion-based; (2) **Letter-Coverage** — broad enough to have common answers for ~10+ of the 18 game letters (`ABCDEFGHILMNOPRSTW`; Q/U/V/X/Y/Z/J/K excluded as too hard). Reject only genuinely closed rosters (a baseball position, a planet). Always use that file's prompt — do not re-derive the rules.
+- **Content pipeline (pool → build → sets):**
+  - `data/category-blitz/category-pool.json` is the canonical library. To add categories, append them here (only ADD — keep existing good categories; rounds are always mixed, never themed; the `theme` tag is just an internal mixing aid).
+  - `data/category-blitz/category-sets.json` is **generated, never hand-edited.** Run `npm run category-blitz:build` (`scripts/build-category-blitz-sets.cjs`) to compose mixed sets of 12 and compute each set's derived `allowedLetters`.
+  - Since one letter applies to all 12 categories in a set, each set stores an `allowedLetters` array; the round only draws from it (`pickLetterForSet`). It is model-derived, cached in `data/category-blitz/letter-cache.json` (so only new categories are billed — this is what makes scaling to thousands cheap). Never hand-write it.
+  - Generation/analysis model: Claude Opus 4.8 (rejects the deprecated `temperature` param). Scripts run via `node --env-file=.env.local` and accept `ANTHROPIC_USERNAME_MODERATOR_API_KEY` locally.
+
 ### Sports Bingo
 - Players mark off bingo squares based on real sports events tied to live NBA, WNBA, and MLB games.
 - Each square has a `resolver` — a typed rule that defines what must happen for the square to be marked hit or miss. Resolver types include:

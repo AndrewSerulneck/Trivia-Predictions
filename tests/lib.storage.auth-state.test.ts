@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { getJoinWelcomeStorageKey } from "@/lib/joinWelcome";
 import { clearClientState, getUserId, getVenueId, saveUserId, saveVenueId } from "@/lib/storage";
 
 class MemoryStorage {
@@ -83,5 +84,14 @@ describe("storage auth state", () => {
 
     expect(getUserId()).toBeNull();
     expect(getVenueId()).toBeNull();
+  });
+
+  it("preserves the join welcome timestamp during auth reset", () => {
+    const key = getJoinWelcomeStorageKey();
+    window.localStorage.setItem(key, "123456789");
+
+    clearClientState();
+
+    expect(window.localStorage.getItem(key)).toBe("123456789");
   });
 });

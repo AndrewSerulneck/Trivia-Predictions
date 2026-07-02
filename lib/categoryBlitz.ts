@@ -46,8 +46,9 @@ const POINTS_PER_UNIQUE_ANSWER = 2;
 // auto-open the round — their presence registration would otherwise land a few ms after
 // started_at and incorrectly spectator-lock the very person who opened the game.
 const SPECTATOR_GRACE_SECONDS = 8;
-const LETTERS = "ABCDEFGHIJKLMNOPRSTW"; // omit Q, U, V, X, Y, Z (hard letters)
-const CATEGORY_SETS: { id: number; categories: string[] }[] = categorySetsData.categorySets;
+const LETTERS = "ABCDEFGHILMNOPRSTW"; // omit Q, U, V, X, Y, Z, J, K (hard letters)
+const CATEGORY_SETS: { id: number; categories: string[]; allowedLetters?: string[] }[] =
+  categorySetsData.categorySets;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,21 @@ function assertAdmin() {
 
 function pickRandomLetter(): string {
   return LETTERS[Math.floor(Math.random() * LETTERS.length)];
+}
+
+/**
+ * Pick the round letter for a specific category set. Each round applies ONE letter
+ * across all of the set's categories, so we draw from the set's `allowedLetters`
+ * (the letters with enough live answers across that set's board — see
+ * data/category-blitz/CATEGORY_TEST.md and scripts/backfill-category-blitz-letters.cjs).
+ * Falls back to the global pool if a set has no backfilled letters yet.
+ */
+function pickLetterForSet(set: { allowedLetters?: string[] }): string {
+  const pool = (set.allowedLetters ?? [])
+    .map((l) => l.toUpperCase())
+    .filter((l) => LETTERS.includes(l));
+  if (pool.length === 0) return pickRandomLetter();
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function pickCategorySetIndex(excludeIndices: number[]): number {
@@ -103,8 +119,10 @@ async function validateAnswersWithLLM(
 
   const prompt = `You are a strict judge for a letter-category word game. The required starting letter is "${letter}".
 
+Every category in this game is written to pass the "Is-A" Classification Test: the statement "[Answer] IS A(N) [Category]" must be objectively, definitionally true — not situational, subjective, or a vibe-based judgment call. Apply that same standard when grading.
+
 For each item below, answer YES if the answer is:
-  - A genuinely valid member of that category, AND
+  - A genuinely valid member of that category under the Is-A test (the statement "[Answer] IS A(N) [Category]" is definitionally true), AND
   - Starts with the letter "${letter}" (ignoring "the", "a", "an" at the start)
 
 Answer NO if the answer is wrong, too vague, off-topic, or starts with the wrong letter.
@@ -441,7 +459,7 @@ export async function startRound(sessionId: string): Promise<CategoryBlitzRound>
   const categorySet = CATEGORY_SETS.find((s) => s.id === setIndex);
   if (!categorySet) throw new Error("Failed to select category set.");
 
-  const letter = pickRandomLetter();
+  const letter = pickLetterForSet(categorySet);
   const endsAt = new Date(Date.now() + ROUND_DURATION_SECONDS * 1000).toISOString();
 
   // Mark session active.

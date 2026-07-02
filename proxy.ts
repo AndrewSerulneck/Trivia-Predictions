@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isVenueScreenPath } from "@/lib/venueScreenPaths";
+
+export { isVenueScreenPath };
 
 function isPublicPath(pathname: string): boolean {
   if (pathname === "/") {
@@ -22,6 +25,9 @@ function isPublicPath(pathname: string): boolean {
   }
   // Venue owner portal — not venue-scoped; guarded by its own tp_owner_sess auth.
   if (pathname === "/owner" || pathname.startsWith("/owner/")) {
+    return true;
+  }
+  if (isVenueScreenPath(pathname)) {
     return true;
   }
   if (pathname === "/api" || pathname.startsWith("/api/")) {

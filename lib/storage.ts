@@ -12,6 +12,14 @@ export const AUTH_STATE_RESET_EVENT = "tp:auth-state-reset";
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const memoryStore: Record<string, string> = {};
 
+function clearManagedLocalStorageKeys(): void {
+  removeLocalStorage(STORAGE_KEYS.venueId);
+  removeLocalStorage(STORAGE_KEYS.username);
+  removeLocalStorage(STORAGE_KEYS.userId);
+  removeLocalStorage(STORAGE_KEYS.accountId);
+  removeLocalStorage(STORAGE_KEYS.godMode);
+}
+
 function readLocalStorage(key: string): string | null {
   if (typeof window === "undefined") return null;
   try {
@@ -163,12 +171,9 @@ export function clearClientState(): void {
   delete memoryStore[STORAGE_KEYS.godMode];
   if (typeof window !== "undefined") {
     try {
-      window.localStorage.clear();
+      clearManagedLocalStorageKeys();
     } catch {
-      removeLocalStorage(STORAGE_KEYS.venueId);
-      removeLocalStorage(STORAGE_KEYS.username);
-      removeLocalStorage(STORAGE_KEYS.userId);
-      removeLocalStorage(STORAGE_KEYS.accountId);
+      clearManagedLocalStorageKeys();
     }
     try {
       window.sessionStorage.clear();

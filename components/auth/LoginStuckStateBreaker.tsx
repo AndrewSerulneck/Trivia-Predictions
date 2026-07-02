@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { clearLoginInProgress, readLoginInProgress } from "@/lib/authFastPath";
+import { isVenueScreenPath } from "@/lib/venueScreenPaths";
 
 const STUCK_LOGIN_TIMEOUT_MS = 5000;
 
@@ -19,6 +20,9 @@ export function LoginStuckStateBreaker() {
         return;
       }
       const currentPath = pathname ?? "";
+      if (isVenueScreenPath(currentPath)) {
+        return;
+      }
       // Never force redirect while user is on join/login routes.
       if (currentPath === "/" || currentPath === "/join") {
         return;

@@ -54,10 +54,15 @@ type VenueRow = {
   latitude: number;
   longitude: number;
   radius: number;
+  screen_enabled?: boolean | null;
+  screen_brand_image_url?: string | null;
+  screen_brand_primary?: string | null;
+  screen_brand_secondary?: string | null;
+  screen_sponsor_rotation_enabled?: boolean | null;
 };
 
 const VENUE_SELECT_WITH_PARSED_ADDRESS =
-  "id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius";
+  "id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, screen_enabled, screen_brand_image_url, screen_brand_primary, screen_brand_secondary, screen_sponsor_rotation_enabled";
 const VENUE_SELECT_LEGACY =
   "id, name, display_name, logo_text, icon_emoji, address, city, state, zip_code, county, region, latitude, longitude, radius";
 
@@ -79,12 +84,26 @@ function mapVenueRow(row: VenueRow): Venue {
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
     radius: Number(row.radius),
+    screenEnabled: typeof row.screen_enabled === "boolean" ? row.screen_enabled : undefined,
+    screenBrandImageUrl: row.screen_brand_image_url ?? undefined,
+    screenBrandPrimary: row.screen_brand_primary ?? undefined,
+    screenBrandSecondary: row.screen_brand_secondary ?? undefined,
+    screenSponsorRotationEnabled:
+      typeof row.screen_sponsor_rotation_enabled === "boolean" ? row.screen_sponsor_rotation_enabled : undefined,
   };
 }
 
 function isMissingParsedAddressColumns(errorMessage: string | undefined): boolean {
   const normalized = String(errorMessage ?? "").toLowerCase();
-  return normalized.includes("column venues.street does not exist") || normalized.includes("column venues.country does not exist");
+  return (
+    normalized.includes("column venues.street does not exist") ||
+    normalized.includes("column venues.country does not exist") ||
+    normalized.includes("column venues.screen_enabled does not exist") ||
+    normalized.includes("column venues.screen_brand_image_url does not exist") ||
+    normalized.includes("column venues.screen_brand_primary does not exist") ||
+    normalized.includes("column venues.screen_brand_secondary does not exist") ||
+    normalized.includes("column venues.screen_sponsor_rotation_enabled does not exist")
+  );
 }
 
 async function withTimedVenueQuery<T>(runQuery: (signal: AbortSignal) => PromiseLike<T>): Promise<T> {

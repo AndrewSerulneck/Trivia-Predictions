@@ -66,6 +66,7 @@ import { ensureSiteSession, syncUserGeographicData } from "@/lib/analytics";
 import { clearJoinPageEntryIntent, readFreshJoinPageEntryIntent } from "@/lib/joinPageNavigation";
 import { normalizePin } from "@/lib/pin";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
+import { markJoinWelcomeSeen, shouldShowJoinWelcome } from "@/lib/joinWelcome";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel =
@@ -160,22 +161,12 @@ const INVALID_PIN_MESSAGE = "Enter a valid 4-digit PIN.";
 const NO_LOCAL_PASSKEY_MESSAGE =
   "We're sorry, we don't have a passkey saved for your device! Please log in using your username and PIN, or create a new account.";
 const LOCAL_PASSKEY_USERNAMES_STORAGE_KEY = "tp_local_passkey_usernames";
-const WELCOME_SEEN_KEY = "tp_welcome_seen";
-const WELCOME_REPROMPT_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
-
 function shouldShowWelcome(): boolean {
-  try {
-    const raw = localStorage.getItem(WELCOME_SEEN_KEY);
-    if (!raw) return true;
-    const ts = parseInt(raw, 10);
-    return isNaN(ts) || Date.now() - ts >= WELCOME_REPROMPT_MS;
-  } catch {
-    return true;
-  }
+  return shouldShowJoinWelcome();
 }
 
 function markWelcomeSeen(): void {
-  try { localStorage.setItem(WELCOME_SEEN_KEY, String(Date.now())); } catch { /* non-critical */ }
+  markJoinWelcomeSeen();
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -737,6 +728,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   } | null>(null);
   useEffect(() => {
     setWebAuthnSupported(browserSupportsWebAuthn());
+  }, []);
+
+  useEffect(() => {
+    // Refresh the welcome timestamp on every join-page visit so the reprompt
+    // window is measured from the user's most recent visit, not just from the
+    // last time they completed the tutorial.
+    markWelcomeSeen();
   }, []);
 
   useEffect(() => {

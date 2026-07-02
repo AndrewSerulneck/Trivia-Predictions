@@ -3,2041 +3,493 @@
     {
       "id": 0,
       "categories": [
-        "A boy's name",
-        "Something in a kitchen",
-        "A type of sport",
-        "Something you wear",
-        "A TV show",
-        "A reason to be late",
-        "Something cold",
-        "An occupation",
-        "A board game",
-        "Something at a party",
-        "A type of music",
-        "Something found in a park"
+        "A type of lizard",
+        "A type of rock or mineral",
+        "A dish you would order at a restaurant",
+        "An item sold in a grocery store",
+        "An Asian country",
+        "A part of a door",
+        "A medieval occupation",
+        "A part of the human body",
+        "A type of dance",
+        "A rodent",
+        "A mode of transportation",
+        "A dessert"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "F",
+        "H",
+        "M",
+        "P",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 1,
       "categories": [
-        "A girl's name",
-        "Something in a bathroom",
-        "A country",
-        "A type of food",
-        "A movie title",
-        "Something you find in a purse",
-        "A word meaning big",
-        "A famous historical figure",
-        "An animal",
-        "Something you do at a gym",
-        "A brand of car",
-        "A type of weather"
+        "An item sold in a hardware store",
+        "A body of water such as a lake or sea",
+        "A part of a guitar",
+        "A type of scientist",
+        "A bone in the human body",
+        "An occupation or profession",
+        "A freshwater fish",
+        "A building material",
+        "An item sold in a delicatessen",
+        "A kitchen utensil",
+        "A US state",
+        "A part of a castle"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "F",
+        "H",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 2,
       "categories": [
-        "A celebrity first name",
-        "Something at a beach",
-        "A US city",
-        "A drink",
-        "A song title",
-        "Something in a classroom",
-        "A word meaning fast",
-        "A superhero",
-        "A piece of furniture",
-        "Something you see at a zoo",
-        "A pizza topping",
-        "A type of flower"
+        "A skilled trade",
+        "A muscle in the human body",
+        "A card or board game",
+        "A carnivore",
+        "A type of container",
+        "A type of meat",
+        "An item found in a bathroom",
+        "A nationality",
+        "A part of a book",
+        "A type of engineer",
+        "An organ in the human body",
+        "A sport"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "F",
+        "H",
+        "M",
+        "P",
+        "S",
+        "T"
       ]
     },
     {
       "id": 3,
       "categories": [
-        "A last name",
-        "Something in a garage",
-        "A European country",
-        "Something sweet",
-        "A book title",
-        "A thing you carry",
-        "A word meaning small",
-        "A type of doctor",
-        "A kitchen appliance",
-        "Something in the ocean",
-        "A type of cheese",
-        "A hobby"
+        "A houseplant",
+        "A garden tool",
+        "A sandwich",
+        "An item found in a laboratory",
+        "A landlocked country",
+        "A part of a ship",
+        "A profession in the arts",
+        "A dinosaur",
+        "A type of vehicle",
+        "A spice or seasoning",
+        "An item sold in a toy store",
+        "A geographic feature or landform"
+      ],
+      "allowedLetters": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "F",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T"
       ]
     },
     {
       "id": 4,
       "categories": [
-        "A nickname",
-        "Something at a wedding",
-        "A state in the USA",
-        "A snack food",
-        "A cartoon character",
-        "Something you lose",
-        "A word meaning happy",
-        "A job in sports",
-        "A piece of clothing",
-        "Something found underground",
-        "A type of pasta",
-        "Something that glows"
+        "A part of a shoe",
+        "A medical profession",
+        "A saltwater fish",
+        "A type of hat",
+        "A national cuisine",
+        "An item sold in a flower shop",
+        "A US city",
+        "A part of an airplane",
+        "A job in construction",
+        "A whale, dolphin, or porpoise",
+        "A color",
+        "A type of pasta"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "F",
+        "L",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 5,
       "categories": [
-        "A famous athlete",
-        "Something in a hotel",
-        "A city outside the USA",
-        "A breakfast food",
-        "A book series",
-        "Something you find in a wallet",
-        "An emotion",
-        "A type of teacher",
-        "A household tool",
-        "Something in the sky",
-        "A type of bread",
-        "A color"
+        "A household appliance",
+        "A river",
+        "A part of a desktop computer",
+        "A legal profession",
+        "A fish species",
+        "A type of aircraft",
+        "A pizza topping",
+        "An item sold in a fabric store",
+        "A European city",
+        "A part of a bicycle",
+        "A religious leader",
+        "An animal that lives in water"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "F",
+        "H",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 6,
       "categories": [
-        "A president's name",
-        "Something in a hospital",
-        "A country in Asia",
-        "A type of dessert",
-        "A video game",
-        "Something you plug in",
-        "A word meaning bad",
-        "A type of scientist",
-        "A piece of exercise equipment",
-        "Something in a forest",
-        "A spice or herb",
-        "A type of dance"
+        "A type of boat or watercraft",
+        "A cocktail or mixed drink",
+        "An item found in a classroom",
+        "An island",
+        "A part of an engine",
+        "A profession that requires a license",
+        "A mountain animal",
+        "A type of shoe",
+        "A crop grown by farmers",
+        "An item sold in a clothing store",
+        "An Asian city",
+        "A part of a clock"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "F",
+        "H",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 7,
       "categories": [
-        "A famous musician",
-        "Something at a carnival",
-        "A country in Africa",
-        "A fast food item",
-        "A podcast name",
-        "Something in a medicine cabinet",
-        "An adjective describing weather",
-        "A type of engineer",
-        "A type of vehicle",
-        "Something in a river",
-        "A cocktail or mixed drink",
-        "A sport played on ice"
+        "A government official",
+        "A herbivore",
+        "A piece of furniture",
+        "A type of soup",
+        "An item sold in a garden center",
+        "A language spoken in the world",
+        "A part of a roof",
+        "A herd animal",
+        "A type of coat or jacket",
+        "A sauce or condiment",
+        "An item found in a hospital",
+        "A Spanish-speaking country"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "H",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 8,
       "categories": [
-        "A comic book character",
-        "Something in an office",
-        "A country in South America",
+        "A part of a bridge",
+        "A cold-blooded animal",
+        "A type of fastener",
         "A vegetable",
-        "A TV channel",
-        "Something that flies",
-        "A word meaning scared",
-        "A job title",
-        "A type of hat",
-        "Something in a desert",
-        "A brand of sneakers",
-        "A type of music festival"
+        "An item found in a barn",
+        "A US state capital",
+        "A part of a standard motor vehicle",
+        "A shark species",
+        "A piece of sports equipment",
+        "A fruit",
+        "An item sold in a sporting goods store",
+        "A mountain or mountain range"
+      ],
+      "allowedLetters": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "H",
+        "L",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T"
       ]
     },
     {
       "id": 9,
       "categories": [
-        "An actor's name",
-        "Something in a basement",
-        "A country in Europe",
-        "A fruit",
-        "An award show",
-        "Something in a gym bag",
-        "A word meaning angry",
-        "A type of lawyer",
-        "A mode of transportation",
-        "Something you find in snow",
-        "A type of cake",
-        "A card game"
+        "A part of a theater",
+        "A water bird",
+        "A type of fabric or cloth",
+        "A breakfast food",
+        "An item found in a gym",
+        "A European country",
+        "A part of a house",
+        "A rainforest animal",
+        "A gemstone",
+        "An item sold in a bakery",
+        "An item found in a kitchen",
+        "A world currency"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "F",
+        "L",
+        "M",
+        "P",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 10,
       "categories": [
-        "A fictional character",
-        "Something in an airport",
-        "A Canadian city",
-        "Something you grill",
-        "A streaming show",
-        "Something in a suitcase",
-        "A word meaning tired",
-        "A type of coach or trainer",
-        "A type of bag",
-        "Something in the mountains",
-        "A type of soup",
-        "An outdoor activity"
+        "A part of a church",
+        "A hoofed animal",
+        "An electronic device",
+        "A type of cheese",
+        "An item sold in a bookstore",
+        "A country in North America",
+        "A part of a tree",
+        "A marine animal",
+        "A power tool",
+        "A snack food",
+        "An item sold in a pet store",
+        "A type of natural disaster"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "H",
+        "L",
+        "M",
+        "P",
+        "S",
+        "T"
       ]
     },
     {
       "id": 11,
       "categories": [
-        "A famous inventor",
-        "Something at a restaurant",
-        "A city in Texas",
-        "A sandwich filling",
-        "A reality TV show",
-        "Something you hang on a wall",
-        "A word meaning loud",
-        "A type of driver",
-        "A type of shoe",
-        "Something you find at a lake",
-        "A type of beer",
-        "A winter activity"
+        "A part of a window",
+        "An animal that can fly",
+        "A type of ball",
+        "A dairy product",
+        "An item found in an office",
+        "A country",
+        "A part of a camera",
+        "An animal that burrows underground",
+        "An article of clothing",
+        "A culinary herb",
+        "An item sold in a pharmacy",
+        "An island nation"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "F",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 12,
       "categories": [
-        "A fictional villain",
-        "Something in a school cafeteria",
-        "A city in Florida",
-        "A type of salad",
-        "A game show",
-        "Something that comes in a bottle",
-        "A word meaning cool or awesome",
-        "A type of pilot",
-        "A type of jacket",
-        "Something in a garden",
-        "A type of wine",
-        "A summer activity"
+        "An animal native to Africa",
+        "A musical instrument",
+        "A type of coffee drink",
+        "An item sold in a jewelry store",
+        "An African country",
+        "A venomous animal",
+        "A piece of jewelry",
+        "A baked good",
+        "An item found in a library",
+        "A capital city",
+        "A wildflower",
+        "A type of weapon"
+      ],
+      "allowedLetters": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T"
       ]
     },
     {
       "id": 13,
       "categories": [
-        "A famous author",
-        "Something in a fire station",
-        "A city in California",
-        "Something spicy",
-        "A talk show",
-        "Something you find in a drawer",
-        "A word meaning quiet",
-        "A type of surgeon",
-        "A type of watch",
-        "Something on a farm",
-        "A type of soda",
-        "A spring activity"
+        "An alcoholic beverage",
+        "An item sold in a music store",
+        "A weather condition or phenomenon",
+        "A species of bird",
+        "A type of bag",
+        "A type of cake",
+        "An item sold in an office supply store",
+        "A country in the Southern Hemisphere",
+        "An insect",
+        "A piece of dinnerware",
+        "A type of bread",
+        "An item found in a garage"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "F",
+        "L",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 14,
       "categories": [
-        "A famous painter",
-        "Something in a library",
-        "A city in New York",
-        "A type of nut",
-        "A children's TV show",
-        "Something in a pencil case",
-        "A word meaning rich",
-        "A type of therapist",
-        "A type of glove",
-        "Something in a swamp",
-        "A type of tea",
-        "A fall or autumn activity"
+        "A warm-blooded animal",
+        "A tool",
+        "A type of bean or legume",
+        "A dog breed",
+        "A piece of exercise equipment",
+        "An item sold in a butcher shop",
+        "A nocturnal animal",
+        "An art supply",
+        "A candy or sweet treat",
+        "A reptile",
+        "A fashion accessory",
+        "A type of pie"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "H",
+        "L",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T",
+        "W"
       ]
     },
     {
       "id": 15,
       "categories": [
-        "A sports team name",
-        "Something in a police station",
-        "A city in Illinois",
-        "A type of fish",
-        "An animated movie",
-        "Something in a junk drawer",
-        "A word meaning empty",
-        "A type of manager",
-        "A type of ring",
-        "Something in a jungle",
-        "A flavor of ice cream",
-        "A team sport"
+        "A flower",
+        "A metal",
+        "An animal native to Australia",
+        "A farm animal",
+        "A breed of horse",
+        "An omnivore",
+        "A grazing animal",
+        "A household pet",
+        "A wild mammal",
+        "A pond animal",
+        "A tree",
+        "A mollusk"
+      ],
+      "allowedLetters": [
+        "B",
+        "C",
+        "D",
+        "H",
+        "L",
+        "M",
+        "P",
+        "S",
+        "T"
       ]
     },
     {
       "id": 16,
       "categories": [
-        "A famous explorer",
-        "Something in a toy store",
-        "A city in Ohio",
-        "A type of bean",
-        "A horror movie",
-        "Something in a backpack",
-        "A word meaning strange",
-        "A type of analyst",
-        "A type of necklace",
-        "Something in a pond",
-        "A type of cookie",
-        "An individual sport"
-      ]
-    },
-    {
-      "id": 17,
-      "categories": [
-        "A famous scientist",
-        "Something in a convenience store",
-        "A city in Georgia",
-        "A type of berry",
-        "An action movie",
-        "Something in a toolbox",
-        "A word meaning old",
-        "A type of reporter",
-        "A type of earring",
-        "Something in outer space",
-        "A type of muffin",
-        "A water sport"
-      ]
-    },
-    {
-      "id": 18,
-      "categories": [
-        "A famous politician",
-        "Something in a music store",
-        "A city in Michigan",
-        "A type of pepper",
-        "A comedy movie",
-        "Something in a makeup bag",
-        "A word meaning young",
-        "A type of accountant",
-        "A type of bracelet",
-        "Something that is round",
-        "A type of donut",
-        "A combat or martial art"
-      ]
-    },
-    {
-      "id": 19,
-      "categories": [
-        "A famous chef",
-        "Something in a dentist's office",
-        "A city in Washington state",
-        "A type of grain",
-        "A romance movie",
-        "Something in a sewing kit",
-        "A word meaning clean",
-        "A type of editor",
-        "A type of belt",
-        "Something that is sharp",
-        "A type of candy bar",
-        "A gym exercise"
-      ]
-    },
-    {
-      "id": 20,
-      "categories": [
-        "A famous architect",
-        "Something in a hardware store",
-        "A city in Arizona",
-        "A type of meat",
-        "A sci-fi movie",
-        "Something in a first aid kit",
-        "A word meaning bright",
-        "A type of consultant",
-        "A type of scarf",
-        "Something that is flat",
-        "A type of pie",
-        "A racket sport"
-      ]
-    },
-    {
-      "id": 21,
-      "categories": [
-        "A famous comedian",
-        "Something in a nail salon",
-        "A city in Colorado",
-        "A type of chip or crisp",
-        "A documentary film",
-        "Something you find under a bed",
-        "A word meaning dark",
-        "A type of programmer",
-        "A type of boots",
-        "Something that is sticky",
-        "A type of pudding",
-        "A track and field event"
-      ]
-    },
-    {
-      "id": 22,
-      "categories": [
-        "A famous model",
-        "Something in a coffee shop",
-        "A city in Tennessee",
-        "A type of seed or grain",
-        "A biographical movie",
-        "Something in a diaper bag",
-        "A word meaning light",
-        "A type of developer",
-        "A type of sunglasses",
-        "Something that is soft",
-        "A type of brownie or bar",
-        "A swimming stroke"
-      ]
-    },
-    {
-      "id": 23,
-      "categories": [
-        "A famous dancer",
-        "Something in a pharmacy",
-        "A city in Nevada",
-        "A type of sauce",
-        "A sports movie",
-        "Something in a glove compartment",
-        "A word meaning new",
-        "A type of assistant",
-        "A type of sneaker brand",
-        "Something that makes noise",
-        "A type of granola or energy bar",
-        "A ball sport"
-      ]
-    },
-    {
-      "id": 24,
-      "categories": [
-        "A famous director",
-        "Something at a farmers market",
-        "A city in Louisiana",
-        "A condiment",
-        "A musical film",
-        "Something in a jewelry box",
-        "A word meaning thin",
-        "A type of coordinator",
-        "A type of dress",
-        "Something that is heavy",
-        "A type of cracker",
-        "A board or tabletop game"
-      ]
-    },
-    {
-      "id": 25,
-      "categories": [
-        "A famous journalist",
-        "Something in a tattoo parlor",
-        "A city in North Carolina",
-        "A type of dip",
-        "A heist movie",
-        "Something in a beach bag",
-        "A word meaning tall",
-        "A type of recruiter",
-        "A type of suit",
-        "Something that is transparent",
-        "A flavored popcorn",
-        "A game played with cards"
-      ]
-    },
-    {
-      "id": 26,
-      "categories": [
-        "A cartoon villain",
-        "Something in a laundry room",
-        "A city in Virginia",
-        "A type of wrap or burrito filling",
-        "A thriller movie",
-        "Something in a desk drawer",
-        "A word meaning strong",
-        "A type of instructor",
-        "A type of scarf or wrap",
-        "Something that is wet",
-        "A type of chip flavor",
-        "A puzzle or strategy game"
-      ]
-    },
-    {
-      "id": 27,
-      "categories": [
-        "A Disney princess name",
-        "Something in a science lab",
-        "A city in Pennsylvania",
-        "A finger food",
-        "A fantasy movie",
-        "Something in a pencil case",
-        "A word meaning fun",
-        "A type of coordinator",
-        "A type of coat",
-        "Something that is sharp or pointed",
-        "A type of smoothie flavor",
-        "A number or trivia game"
-      ]
-    },
-    {
-      "id": 28,
-      "categories": [
-        "A movie villain name",
-        "Something in a nursery or baby room",
-        "A city in Missouri",
-        "A type of dressing",
-        "A western movie",
-        "Something in a garage",
-        "A word meaning funny",
-        "A type of officer",
-        "A type of swimwear",
-        "Something that is rough",
-        "A type of lollipop or hard candy",
-        "A game you play outside"
-      ]
-    },
-    {
-      "id": 29,
-      "categories": [
-        "A famous YouTuber or influencer",
-        "Something in a gym",
-        "A city in Indiana",
-        "Something you can bake",
-        "A musical artist or band",
-        "Something in a hotel room",
-        "A word meaning important",
-        "A type of agent",
-        "A type of uniform",
-        "Something that is circular",
-        "A type of hot drink",
-        "A social or party game"
-      ]
-    },
-    {
-      "id": 30,
-      "categories": [
-        "A brand name",
-        "Something in a storage unit",
-        "A city in Minnesota",
-        "A type of noodle",
-        "A Netflix series",
-        "Something you bring to a potluck",
-        "A word meaning easy",
-        "A type of advisor",
-        "A type of pajamas",
-        "Something that can be yellow",
-        "A flavor of jam or jelly",
-        "A dice or chance game"
-      ]
-    },
-    {
-      "id": 31,
-      "categories": [
-        "A cartoon animal character",
-        "Something in a spa",
-        "A city in Wisconsin",
-        "A type of sushi",
-        "A HBO series",
-        "Something you buy at a drugstore",
-        "A word meaning boring",
-        "A type of specialist",
-        "A type of swimsuit",
-        "Something found at a construction site",
-        "A type of sparkling water",
-        "A game involving a ball and a goal"
-      ]
-    },
-    {
-      "id": 32,
-      "categories": [
-        "A fairy tale character",
-        "Something in a art museum",
-        "A city in Oregon",
-        "A type of taco filling",
-        "An Amazon Prime series",
-        "Something in a photo album",
-        "A word meaning brave",
-        "A type of planner",
-        "A type of running shoe",
-        "Something you find in rubble or ruins",
-        "A type of yogurt flavor",
-        "A ring toss or throwing game"
-      ]
-    },
-    {
-      "id": 33,
-      "categories": [
-        "A mythological figure",
-        "Something in a garden center",
-        "A city in Kentucky",
-        "A type of dumpling or pierogi filling",
-        "A Disney+ series",
-        "Something in a walk-in closet",
-        "A word meaning pretty",
-        "A type of captain",
-        "A type of shorts",
-        "Something you find in a cave",
-        "A type of salsa flavor",
-        "A role-playing or fantasy game"
-      ]
-    },
-    {
-      "id": 34,
-      "categories": [
-        "A historical villain",
-        "Something in a post office",
-        "A city in Maryland",
-        "A type of dumplings",
-        "An Apple TV+ series",
-        "Something in a storage closet",
-        "A word meaning lucky",
-        "A type of commander",
-        "A type of leggings or pants",
-        "Something in a haunted house",
-        "A type of hot sauce",
-        "A strategy or war game"
-      ]
-    },
-    {
-      "id": 35,
-      "categories": [
-        "A superhero name",
-        "Something in a pawn shop",
-        "A city in Alabama",
-        "A type of sausage",
-        "A Hulu series",
-        "Something in a junk mail pile",
-        "A word meaning ugly",
-        "A type of director",
-        "A type of sneaker style",
-        "Something at a construction yard",
-        "A type of protein bar",
-        "A children's playground game"
-      ]
-    },
-    {
-      "id": 36,
-      "categories": [
-        "A famous entrepreneur",
-        "Something in a nightclub",
-        "A city in South Carolina",
-        "A type of soda flavor",
-        "A podcast genre",
-        "Something you find on a keychain",
-        "A word meaning expensive",
-        "A type of producer",
-        "A type of tank top or vest",
-        "Something in the Arctic",
-        "A type of chips and salsa topping",
-        "A racing game or sport"
-      ]
-    },
-    {
-      "id": 37,
-      "categories": [
-        "A famous fashion designer",
-        "Something in a butcher shop",
-        "A city in Iowa",
-        "A type of cereal",
-        "A cooking or food show",
-        "Something on a to-do list",
-        "A word meaning free",
-        "A type of presenter",
-        "A type of loafer or flat shoe",
-        "Something in an igloo",
-        "A type of milkshake flavor",
-        "A team strategy sport"
-      ]
-    },
-    {
-      "id": 38,
-      "categories": [
-        "A famous astronaut",
-        "Something in a comic book store",
-        "A city in New Mexico",
-        "A type of steak",
-        "A travel or adventure show",
-        "Something you lose track of",
-        "A word meaning dangerous",
-        "A type of coordinator",
-        "A type of sandal",
-        "Something on a tropical island",
-        "A type of sorbet",
-        "A water-based sport or game"
-      ]
-    },
-    {
-      "id": 39,
-      "categories": [
-        "A famous general or military figure",
-        "Something in a print shop",
-        "A city in Utah",
-        "A type of salami or cured meat",
-        "A history or documentary show",
-        "Something in a work bag",
-        "A word meaning popular",
-        "A type of ambassador",
-        "A type of flip-flop brand",
-        "Something in a meadow",
-        "A type of frappuccino or blended drink",
-        "A solo athletic event"
-      ]
-    },
-    {
-      "id": 40,
-      "categories": [
-        "A famous queen or king",
-        "Something in a vet's office",
-        "A city in Arkansas",
-        "A type of stew or chili",
-        "A crime or detective show",
-        "Something in a lost and found",
-        "A word meaning secret",
-        "A type of minister or official",
-        "A type of clog or platform shoe",
-        "Something in a rainforest",
-        "A type of flavored water",
-        "A throwing or target sport"
-      ]
-    },
-    {
-      "id": 41,
-      "categories": [
-        "A famous duke, earl, or noble title",
-        "Something in a yoga studio",
-        "A city in Mississippi",
-        "A type of curry",
-        "A medical drama show",
-        "Something in a gym locker",
-        "A word meaning smart",
-        "A type of ambassador or delegate",
-        "A type of heel or wedge shoe",
-        "Something in a meadow at sunrise",
-        "A type of flavored chip",
-        "A sport played with a stick or club"
-      ]
-    },
-    {
-      "id": 42,
-      "categories": [
-        "A name from a fairy tale",
-        "Something in a thrift store",
-        "A city in Oklahoma",
-        "A type of risotto",
-        "A legal or courtroom drama",
-        "Something you pass around at a party",
-        "A word meaning weird",
-        "A type of coach",
-        "A type of high-top shoe",
-        "Something deep in the ocean",
-        "A type of hard seltzer flavor",
-        "An extreme or adventure sport"
-      ]
-    },
-    {
-      "id": 43,
-      "categories": [
-        "A superhero's alter ego",
-        "Something in a sushi restaurant",
-        "A city in Kansas",
-        "A type of grain bowl topping",
-        "A legal or law show",
-        "Something you can rent",
-        "A word meaning ordinary",
-        "A type of foreman",
-        "A type of platform sneaker",
-        "Something in a marsh or wetland",
-        "A type of fruit drink",
-        "A team water sport"
-      ]
-    },
-    {
-      "id": 44,
-      "categories": [
-        "A famous fairy tale villain",
-        "Something in a shoe store",
-        "A city in Nebraska",
-        "A type of flatbread",
-        "A sci-fi TV series",
-        "Something you keep in a car",
-        "A word meaning useful",
-        "A type of head teacher or principal",
-        "A type of oxford shoe",
-        "Something you find during low tide",
-        "A type of iced coffee or cold brew",
-        "A court or net sport"
-      ]
-    },
-    {
-      "id": 45,
-      "categories": [
-        "A character from Greek mythology",
-        "Something in a bowling alley",
-        "A city in New Hampshire",
-        "A type of quiche",
-        "A medical or science show",
-        "Something you would find in a tent",
-        "A word meaning helpful",
-        "A type of supervisor",
-        "A type of ankle boot",
-        "Something on a hiking trail",
-        "A type of pressed juice",
-        "A snow or slope sport"
-      ]
-    },
-    {
-      "id": 46,
-      "categories": [
-        "A character from Roman mythology",
-        "Something in a tattoo shop",
-        "A city in Vermont",
-        "A type of fritter or fried food",
-        "A supernatural or fantasy show",
-        "Something in a camping pack",
-        "A word meaning careful",
-        "A type of warden",
-        "A type of heeled boot",
-        "Something on a nature walk",
-        "A type of nut butter",
-        "A hitting or batting sport"
-      ]
-    },
-    {
-      "id": 47,
-      "categories": [
-        "A famous spy or secret agent",
-        "Something in a dance studio",
-        "A city in Connecticut",
-        "A type of frittata ingredient",
-        "An animated series for adults",
-        "Something in a tote bag",
-        "A word meaning creative",
-        "A type of guard",
-        "A type of loafer or slip-on",
-        "Something along a river trail",
-        "A type of nut snack",
-        "A balance or gymnastics sport"
-      ]
-    },
-    {
-      "id": 48,
-      "categories": [
-        "A name from Norse mythology",
-        "Something in a recording studio",
-        "A city in Maine",
-        "A type of fritter or pancake",
-        "A nature or wildlife documentary",
-        "Something in an emergency kit",
-        "A word meaning lazy",
-        "A type of officer",
-        "A type of derby shoe",
-        "Something found in a national park",
-        "A type of energy drink",
-        "A combat or fighting sport"
-      ]
-    },
-    {
-      "id": 49,
-      "categories": [
-        "A name from Egyptian mythology",
-        "Something in a film set",
-        "A city in Rhode Island",
-        "A type of queso or cheese dip",
-        "A competition or talent show",
-        "Something in a recycle bin",
-        "A word meaning rare",
-        "A type of president or head",
-        "A type of Chelsea boot",
-        "Something you find at a waterfall",
-        "A type of vitamin supplement",
-        "A target or precision sport"
-      ]
-    },
-    {
-      "id": 50,
-      "categories": [
-        "A famous opera character",
-        "Something in a bowling lane",
-        "A city in Delaware",
-        "A type of tapenade",
-        "A competition cooking show",
-        "Something in a mystery box",
-        "A word meaning loyal",
-        "A type of chancellor",
-        "A type of slip-on shoe",
-        "Something you find in a volcano region",
-        "A type of herbal supplement",
-        "A gymnastics or acrobatic event"
-      ]
-    },
-    {
-      "id": 51,
-      "categories": [
-        "A famous ballerina",
-        "Something in a gun range",
-        "A city in West Virginia",
-        "A type of topping for avocado toast",
-        "A home improvement or renovation show",
-        "Something people collect",
-        "A word meaning annoying",
-        "A type of dean",
-        "A type of mule shoe",
-        "Something you find in a tidal pool",
-        "A type of energy shot",
-        "A martial art style"
-      ]
-    },
-    {
-      "id": 52,
-      "categories": [
-        "A famous opera singer",
-        "Something in an escape room",
-        "A city in North Dakota",
-        "A topping for nachos",
-        "A fashion or style show",
-        "Something in a craft box",
-        "A word meaning strict",
-        "A type of elder or senior role",
-        "A type of Mary Jane shoe",
-        "Something you find on a glacier",
-        "A type of collagen or beauty supplement",
-        "A field or court sport"
-      ]
-    },
-    {
-      "id": 53,
-      "categories": [
-        "A famous architect",
-        "Something in a poker room",
-        "A city in South Dakota",
-        "A topping for hot dogs",
-        "A sports documentary",
-        "Something in a craft supply drawer",
-        "A word meaning messy",
-        "A type of moderator",
-        "A type of wedge shoe",
-        "Something you find on a cliff",
-        "A type of herbal tea",
-        "A net or volley sport"
-      ]
-    },
-    {
-      "id": 54,
-      "categories": [
-        "A name from a video game",
-        "Something in a haunted house",
-        "A city in Wyoming",
-        "A topping for waffles",
-        "A music competition show",
-        "Something you save",
-        "A word meaning polite",
-        "A type of liaison",
-        "A type of slip-on sandal",
-        "Something you find on a salt flat",
-        "A flavor of kombucha",
-        "A stick or puck sport"
-      ]
-    },
-    {
-      "id": 55,
-      "categories": [
-        "A famous chess player",
-        "Something in a sauna",
-        "A city in Montana",
-        "A topping for pancakes",
-        "A true crime podcast or show",
-        "Something in an attic",
-        "A word meaning generous",
-        "A type of liaison officer",
-        "A type of platform sandal",
-        "Something you find in a delta or bayou",
-        "A flavor of sparkling water",
-        "A ring or mat sport"
-      ]
-    },
-    {
-      "id": 56,
-      "categories": [
-        "A famous poker player",
-        "Something in a spa treatment room",
-        "A city in Idaho",
-        "A topping for french toast",
-        "A business or entrepreneurship show",
-        "Something in a basement workshop",
-        "A word meaning honest",
-        "A type of public figure",
-        "A type of kitten heel shoe",
-        "Something you find in a kelp forest",
-        "A flavored sparkling juice",
-        "A boat or paddle sport"
-      ]
-    },
-    {
-      "id": 57,
-      "categories": [
-        "A famous card game character",
-        "Something in a speakeasy",
-        "A city in Alaska",
-        "A topping for baked potatoes",
-        "A home cooking show",
-        "Something left behind after a party",
-        "A word meaning rude",
-        "A type of community leader",
-        "A type of block-heeled shoe",
-        "Something you find in a lagoon",
-        "A flavored energy drink brand",
-        "A skiing or snowboard event"
-      ]
-    },
-    {
-      "id": 58,
-      "categories": [
-        "A name from a fairy tale or folklore",
-        "Something in a greenhouse",
-        "A city in Hawaii",
-        "A topping for pizza",
-        "A late night TV show",
-        "Something in a lost luggage bin",
-        "A word meaning patient",
-        "A type of community organizer",
-        "A type of espadrille",
-        "Something you find in a hot spring",
-        "A flavored protein shake",
-        "A throwing or field event"
-      ]
-    },
-    {
-      "id": 59,
-      "categories": [
-        "A name from a legend",
-        "Something in a flower shop",
-        "A city in New Jersey",
-        "A topping for a burger",
-        "A morning news show",
-        "Something in a storage box in the basement",
-        "A word meaning ambitious",
-        "A type of civic leader",
-        "A type of sneaker collab or limited edition brand",
-        "Something you find in a gorge or canyon",
-        "A flavored sparkling lemonade",
-        "A climbing or bouldering sport"
-      ]
-    },
-    {
-      "id": 60,
-      "categories": [
+        "An animal that lays eggs",
+        "A snake species",
+        "A domesticated animal",
+        "A forest animal",
+        "An animal with horns or antlers",
+        "A desert animal",
+        "An Arctic or polar animal",
+        "A cat breed",
+        "An amphibian",
+        "A prehistoric animal",
         "A mythical creature",
-        "Something in a library",
-        "A breed of dog",
-        "A type of soup",
-        "An animated TV series",
-        "Something in a backyard",
-        "A word meaning intelligent",
-        "A type of artisan",
-        "A piece of jewelry",
-        "Something in a cave",
-        "A type of coffee drink",
-        "A team-based sport"
-      ]
-    },
-    {
-      "id": 61,
-      "categories": [
-        "A character from Shakespeare",
-        "Something in a record store",
-        "A breed of cat",
-        "A type of cheese",
-        "A reality dating show",
-        "Something on a beach",
-        "A word meaning delicious",
-        "A type of scholar",
-        "A type of hat",
-        "Something in a greenhouse",
-        "A type of chocolate",
-        "A winter sport"
-      ]
-    },
-    {
-      "id": 62,
-      "categories": [
-        "A famous cartoon villain",
-        "Something in a bank",
-        "A type of snake",
-        "A type of curry dish",
-        "A game show from the 2000s",
-        "Something you throw away",
-        "A word meaning mysterious",
-        "A type of artist",
-        "A type of belt",
-        "Something on a farm",
-        "A type of jam",
-        "A sport with a racket"
-      ]
-    },
-    {
-      "id": 63,
-      "categories": [
-        "A voice actor",
-        "Something in a beauty salon",
-        "A fish species",
-        "A type of rice dish",
-        "A stand-up comedy show",
-        "Something in a locket",
-        "A word meaning swift",
-        "A type of banker",
-        "A type of blazer",
-        "Something in a rainforest",
-        "A type of candy",
-        "A sport played on grass"
-      ]
-    },
-    {
-      "id": 64,
-      "categories": [
-        "A TikTok creator",
-        "Something in a kitchen drawer",
-        "A type of bird",
-        "A type of noodle soup",
-        "A K-pop band",
-        "Something in a school locker",
-        "A word meaning ancient",
-        "A type of pilot",
-        "A type of sunglasses style",
-        "Something in a swamp",
-        "A type of liqueur",
-        "A combat sport"
-      ]
-    },
-    {
-      "id": 65,
-      "categories": [
-        "A famous cartoon princess",
-        "Something in a mechanic's shop",
-        "A type of lizard",
-        "A type of stew",
-        "An old Western movie",
-        "Something in a medicine cabinet",
-        "A word meaning complex",
-        "A type of counselor",
-        "A type of cardigan",
-        "Something in a volcano",
-        "A type of liquor",
-        "An Olympic sport"
-      ]
-    },
-    {
-      "id": 66,
-      "categories": [
-        "A mythical monster",
-        "Something in a print shop",
-        "A large African animal",
-        "A type of pasta",
-        "A political thriller movie",
-        "Something under your bed",
-        "A word meaning stubborn",
-        "A type of meteorologist",
-        "A type of poncho",
-        "Something in an attic",
-        "A type of whiskey",
-        "A sport with horses"
-      ]
-    },
-    {
-      "id": 67,
-      "categories": [
-        "A popular Twitch streamer",
-        "Something in a barbershop",
-        "A jungle animal",
-        "A type of wrap",
-        "An action-packed anime",
-        "Something in a closet",
-        "A word meaning simple",
-        "A type of detective",
-        "A type of shawl",
-        "Something in a bayou",
-        "A type of brandy",
-        "A sport with a net"
-      ]
-    },
-    {
-      "id": 68,
-      "categories": [
-        "An action movie star",
-        "Something in a toy factory",
-        "A type of monkey",
-        "A type of pastry",
-        "A sci-fi anime series",
-        "Something in a locker",
-        "A word meaning perfect",
-        "A type of ambassador",
-        "A type of robe",
-        "Something in a marsh",
-        "A type of gin",
-        "A sport with a ball"
-      ]
-    },
-    {
-      "id": 69,
-      "categories": [
-        "A famous anime character",
-        "Something in a grocery store",
-        "A type of ape",
-        "A type of pancake",
-        "A magical girl anime",
-        "Something you find in pockets",
-        "A word meaning brave",
-        "A type of therapist",
-        "A type of jumper",
-        "Something on a mountain",
-        "A type of vodka",
-        "A sport with goals"
-      ]
-    },
-    {
-      "id": 70,
-      "categories": [
-        "A famous manga author",
-        "Something in a hardware store",
-        "A South American animal",
-        "A type of dumpling",
-        "A horror anime series",
-        "Something in a drawer",
-        "A word meaning cruel",
-        "A type of architect",
-        "A type of sweater",
-        "Something in a forest",
-        "A type of rum",
-        "A sport with a stick"
-      ]
-    },
-    {
-      "id": 71,
-      "categories": [
-        "A famous gamer",
-        "Something in a fitness center",
-        "An Australian animal",
-        "A type of bread pudding",
-        "An adventure anime",
-        "Something on your desk",
-        "A word meaning proud",
-        "A type of supervisor",
-        "A type of tank top",
-        "Something in a canyon",
-        "A type of tequila",
-        "A sport with a puck"
-      ]
-    },
-    {
-      "id": 72,
-      "categories": [
-        "A professional athlete in 2024",
-        "Something in a movie theater",
-        "An Asian animal",
-        "A type of meatball",
-        "A slice-of-life anime",
-        "Something on a nightstand",
-        "A word meaning wise",
-        "A type of referee",
-        "A type of tank",
-        "Something on a beach",
-        "A type of bourbon",
-        "A sport with a racquet"
-      ]
-    },
-    {
-      "id": 73,
-      "categories": [
-        "A famous fitness influencer",
-        "Something in a laundromat",
-        "A fast animal",
-        "A type of custard",
-        "A sports anime",
-        "Something you collect",
-        "A word meaning lonely",
-        "A type of secretary",
-        "A type of vest",
-        "Something in a tide pool",
-        "A type of sake",
-        "A sport with a net and ball"
-      ]
-    },
-    {
-      "id": 74,
-      "categories": [
-        "A famous chef or cook",
-        "Something in a mailbox",
-        "An endangered animal",
-        "A type of pie crust",
-        "A sports documentary",
-        "Something in a backpack",
-        "A word meaning quick",
-        "A type of warden",
-        "A type of blazer",
-        "Something in a coral reef",
-        "A type of mezcal",
-        "A winter team sport"
-      ]
-    },
-    {
-      "id": 75,
-      "categories": [
-        "A famous painter or sculptor",
-        "Something in a ticket office",
-        "A nocturnal animal",
-        "A type of cracker",
-        "A nature documentary",
-        "Something in a lunch box",
-        "A word meaning gentle",
-        "A type of judge",
-        "A type of tuxedo",
-        "Something in a stream",
-        "A type of wine region",
-        "A summer team sport"
-      ]
-    },
-    {
-      "id": 76,
-      "categories": [
-        "A famous photographer",
-        "Something in a waiting room",
-        "A burrowing animal",
-        "A type of wafer",
-        "A cooking competition show",
-        "Something in a gym bag",
-        "A word meaning unique",
-        "A type of mediator",
-        "A type of kimono",
-        "Something in a fjord",
-        "A type of sparkling wine",
-        "A team sport in water"
-      ]
-    },
-    {
-      "id": 77,
-      "categories": [
-        "A famous sculptor",
-        "Something in a hallway",
-        "A flying animal",
-        "A type of mousse",
-        "An action movie from the 90s",
-        "Something in a car",
-        "A word meaning elegant",
-        "A type of negotiator",
-        "A type of negligee",
-        "Something in a cave",
-        "A type of sake brand",
-        "A target sport"
-      ]
-    },
-    {
-      "id": 78,
-      "categories": [
-        "A famous conductor",
-        "Something in a bathroom cabinet",
-        "A tree-climbing animal",
-        "A type of custard pie",
-        "A period drama series",
-        "Something in your wallet",
-        "A word meaning graceful",
-        "A type of facilitator",
-        "A type of chemise",
-        "Something in a glacier",
-        "A type of sake flavor",
-        "A precision sport"
-      ]
-    },
-    {
-      "id": 79,
-      "categories": [
-        "A famous violinist",
-        "Something in a reception area",
-        "A swimming animal",
-        "A type of dough",
-        "A mystery thriller series",
-        "Something on a shelf",
-        "A word meaning fierce",
-        "A type of inspector",
-        "A type of teddy",
-        "Something in a well",
-        "A type of champagne",
-        "A throwing sport"
-      ]
-    },
-    {
-      "id": 80,
-      "categories": [
-        "A famous cellist",
-        "Something in a cubicle",
-        "A marine animal",
-        "A type of nougat",
-        "A crime procedural show",
-        "Something in a planter",
-        "A word meaning honest",
-        "A type of auditor",
-        "A type of babydoll",
-        "Something in quicksand",
-        "A type of rosé wine",
-        "An equestrian sport"
-      ]
-    },
-    {
-      "id": 81,
-      "categories": [
-        "A classical pianist",
-        "Something in a nursery",
-        "A hoofed animal",
-        "A type of fritter",
-        "A legal drama series",
-        "Something in a bouquet",
-        "A word meaning honest",
-        "A type of appraiser",
-        "A type of slip",
-        "Something in tundra",
-        "A type of dessert wine",
-        "An aquatic sport"
-      ]
-    },
-    {
-      "id": 82,
-      "categories": [
-        "A famous bassist",
-        "Something in a garage",
-        "A horned animal",
-        "A type of compote",
-        "A superhero origin series",
-        "Something in a museum",
-        "A word meaning sincere",
-        "A type of specialist",
-        "A type of slip dress",
-        "Something in peat",
-        "A type of fortified wine",
-        "A sliding sport"
-      ]
-    },
-    {
-      "id": 83,
-      "categories": [
-        "A jazz saxophonist",
-        "Something in a closet",
-        "A creeping animal",
-        "A type of spread",
-        "A vampire or monster series",
-        "Something in a vase",
-        "A word meaning tender",
-        "A type of consultant",
-        "A type of corset",
-        "Something in sediment",
-        "A type of aperitif",
-        "A skiing sport"
-      ]
-    },
-    {
-      "id": 84,
-      "categories": [
-        "A country music star",
-        "Something in a driveway",
-        "A burrowing mammal",
-        "A type of marmalade",
-        "A paranormal investigation show",
-        "Something in an arrangement",
-        "A word meaning bold",
-        "A type of curator",
-        "A type of garter",
-        "Something in silt",
-        "A type of sherry",
-        "A boarding sport"
-      ]
-    },
-    {
-      "id": 85,
-      "categories": [
-        "A hip-hop artist",
-        "Something in a shed",
-        "A colonial animal",
-        "A type of jam",
-        "A cult classic movie",
-        "Something in a terrarium",
-        "A word meaning strong",
-        "A type of archivist",
-        "A type of gown",
-        "Something in scree",
-        "A type of Madeira wine",
-        "A contact sport"
-      ]
-    },
-    {
-      "id": 86,
-      "categories": [
-        "A pop star",
-        "Something in a yard",
-        "A pack animal",
-        "A type of jelly",
-        "An indie film",
-        "Something in a case",
-        "A word meaning active",
-        "A type of librarian",
-        "A type of garment",
-        "Something in talus",
-        "A type of vermouth",
-        "A track sport"
-      ]
-    },
-    {
-      "id": 87,
-      "categories": [
-        "A rock musician",
-        "Something in a trunk",
-        "A herd animal",
-        "A type of preserve",
-        "A midnight movie",
-        "Something in a jar",
-        "A word meaning quick",
-        "A type of registrar",
-        "A type of leotard",
-        "Something in moraine",
-        "A type of wine spritzer",
-        "A field sport"
-      ]
-    },
-    {
-      "id": 88,
-      "categories": [
-        "A folk singer",
-        "Something in a cabinet",
-        "A carnivorous animal",
-        "A type of syrup",
-        "A silent film classic",
-        "Something in a safe",
-        "A word meaning noble",
-        "A type of archivist",
-        "A type of romper",
-        "Something in permafrost",
-        "A type of cider",
-        "A throwing event"
-      ]
-    },
-    {
-      "id": 89,
-      "categories": [
-        "An opera singer",
-        "Something in a warehouse",
-        "A herbivorous animal",
-        "A type of sauce",
-        "A B-movie classic",
-        "Something in a container",
-        "A word meaning clear",
-        "A type of sommelier",
-        "A type of playsuit",
-        "Something in sediment",
-        "A type of perry",
-        "A jumping event"
-      ]
-    },
-    {
-      "id": 90,
-      "categories": [
-        "A contemporary artist",
-        "Something in a studio",
-        "A colonial insect",
-        "A type of glaze",
-        "A neo-noir thriller",
-        "Something in a chest",
-        "A word meaning soft",
-        "A type of sommelier",
-        "A type of catsuit",
-        "Something in shale",
-        "A type of seltzer brand",
-        "A vaulting event"
-      ]
-    },
-    {
-      "id": 91,
-      "categories": [
-        "A digital artist",
-        "Something in an attic",
-        "A colonial bird",
-        "A type of filling",
-        "A arthouse film",
-        "Something in a vault",
-        "A word meaning dark",
-        "A type of mixologist",
-        "A type of unitard",
-        "Something in karst",
-        "A type of kombucha flavor",
-        "A relay event"
-      ]
-    },
-    {
-      "id": 92,
-      "categories": [
-        "An illustrator",
-        "Something in a basement",
-        "A nocturnal insect",
-        "A type of icing",
-        "A surrealist movie",
-        "Something in a compartment",
-        "A word meaning bright",
-        "A type of barista",
-        "A type of bikini",
-        "Something in stalagmites",
-        "A type of energy bar",
-        "A field event"
-      ]
-    },
-    {
-      "id": 93,
-      "categories": [
-        "A concept artist",
-        "Something in a corner",
-        "A beneficial insect",
-        "A type of batter",
-        "A documentary thriller",
-        "Something in a drawer",
-        "A word meaning warm",
-        "A type of sommelier",
-        "A type of bodysuit",
-        "Something in stalactites",
-        "A type of trail mix brand",
-        "A distance event"
-      ]
-    },
-    {
-      "id": 94,
-      "categories": [
-        "A mural artist",
-        "Something in a chamber",
-        "A social insect",
-        "A type of crust",
-        "A western thriller",
-        "Something in a case",
-        "A word meaning cold",
-        "A type of chef",
-        "A type of tankini",
-        "Something in cave formations",
-        "A type of protein bar",
-        "A walking event"
-      ]
-    },
-    {
-      "id": 95,
-      "categories": [
-        "A street artist",
-        "Something in a loft",
-        "A disease-carrying insect",
-        "A type of filling",
-        "A psychological thriller",
-        "Something in a locker",
-        "A word meaning open",
-        "A type of patissier",
-        "A type of monokini",
-        "Something in geodes",
-        "A type of granola bar",
-        "A race walking sport"
-      ]
-    },
-    {
-      "id": 96,
-      "categories": [
-        "A political cartoonist",
-        "Something in a shaft",
-        "A pollinating insect",
-        "A type of meringue",
-        "A heist thriller",
-        "Something in a alcove",
-        "A word meaning sad",
-        "A type of executive chef",
-        "A type of swim skirt",
-        "Something in bedrock",
-        "A type of breakfast bar",
-        "A sprint sport"
-      ]
-    },
-    {
-      "id": 97,
-      "categories": [
-        "A comic strip artist",
-        "Something in a vault",
-        "A swarm insect",
-        "A type of fondant",
-        "An action thriller",
-        "Something in a crypt",
-        "A word meaning angry",
-        "A type of sous chef",
-        "A type of sarong",
-        "Something in granite",
-        "A type of snack bar",
-        "A hurdle sport"
-      ]
-    },
-    {
-      "id": 98,
-      "categories": [
-        "A storyboard artist",
-        "Something in a dungeon",
-        "An aquatic insect",
-        "A type of fondant flower",
-        "A spy thriller",
-        "Something in a tomb",
-        "A word meaning shy",
-        "A type of pastry chef",
-        "A type of pareo",
-        "Something in marble",
-        "A type of diet bar",
-        "A steeplechase sport"
-      ]
-    },
-    {
-      "id": 99,
-      "categories": [
-        "A character designer",
-        "Something in a catacomb",
-        "A nocturnal insect",
-        "A type of glaze flower",
-        "A revenge thriller",
-        "Something in a reliquary",
-        "A word meaning quiet",
-        "A type of head chef",
-        "A type of muumuu",
-        "Something in sandstone",
-        "A type of meal bar",
-        "A middle-distance sport"
-      ]
-    },
-    {
-      "id": 100,
-      "categories": [
-        "A concept illustrator",
-        "Something in a mausoleum",
-        "A predatory insect",
-        "A type of sugar work",
-        "A pandemic thriller",
-        "Something in a shrine",
-        "A word meaning loyal",
-        "A type of executive sous chef",
-        "A type of peplum",
-        "Something in limestone",
-        "A type of cereal bar",
-        "A cross-country sport"
-      ]
-    },
-    {
-      "id": 101,
-      "categories": [
-        "A visual effects artist",
-        "Something in a grotto",
-        "A carnivorous insect",
-        "A type of sugar paste",
-        "A virus thriller",
-        "Something in an ossuary",
-        "A word meaning pure",
-        "A type of executive pastry chef",
-        "A type of wrap dress",
-        "Something in basalt",
-        "A type of nutrition bar",
-        "A long-distance sport"
-      ]
-    },
-    {
-      "id": 102,
-      "categories": [
-        "A texture artist",
-        "Something in a mummy case",
-        "A defensive insect",
-        "A type of Royal icing",
-        "A biopunk thriller",
-        "Something in a tomb painting",
-        "A word meaning grand",
-        "A type of pastry sous chef",
-        "A type of sheath dress",
-        "Something in pumice",
-        "A type of supplement bar",
-        "A marathon event"
-      ]
-    },
-    {
-      "id": 103,
-      "categories": [
-        "An environment artist",
-        "Something in a pyramid",
-        "A beneficial spider",
-        "A type of isomalt work",
-        "A zombie thriller",
-        "Something in a sarcophagus",
-        "A word meaning elegant",
-        "A type of head pastry chef",
-        "A type of coat dress",
-        "Something in obsidian",
-        "A type of vitamin bar",
-        "An ultramarathon event"
-      ]
-    },
-    {
-      "id": 104,
-      "categories": [
-        "A 3D modeler",
-        "Something in a burial chamber",
-        "An arachnid spider",
-        "A type of spun sugar",
-        "A crypto thriller",
-        "Something in a temple",
-        "A word meaning regal",
-        "A type of executive pastry chef",
-        "A type of shirt dress",
-        "Something in feldspar",
-        "A type of diet supplement bar",
-        "A relay marathon"
-      ]
-    },
-    {
-      "id": 105,
-      "categories": [
-        "A motion capture artist",
-        "Something in a necropolis",
-        "A web-building spider",
-        "A type of caramel work",
-        "A robot thriller",
-        "Something in an underground chamber",
-        "A word meaning majestic",
-        "A type of pastry executive",
-        "A type of jumper dress",
-        "Something in quartz",
-        "A type of wellness bar",
-        "A fell running sport"
-      ]
-    },
-    {
-      "id": 106,
-      "categories": [
-        "A rendering specialist",
-        "Something in a catacomb wall",
-        "A hunting spider",
-        "A type of pulled sugar",
-        "A AI thriller",
-        "Something in a burial vault",
-        "A word meaning splendid",
-        "A type of pastry sous chef",
-        "A type of pencil dress",
-        "Something in mica",
-        "A type of athletic bar",
-        "A skyrunning sport"
-      ]
-    },
-    {
-      "id": 107,
-      "categories": [
-        "A lighting artist",
-        "Something in a tomb shaft",
-        "A jumping spider",
-        "A type of modeling chocolate",
-        "A clone thriller",
-        "Something in an archaeological site",
-        "A word meaning magnificent",
-        "A type of pastry director",
-        "A type of trapeze dress",
-        "Something in slate",
-        "A type of power bar",
-        "A fellrunning sport"
-      ]
-    },
-    {
-      "id": 108,
-      "categories": [
-        "A color specialist",
-        "Something in a burial pit",
-        "A trapdoor spider",
-        "A type of tallow work",
-        "A simulation thriller",
-        "Something in a stone chamber",
-        "A word meaning radiant",
-        "A type of pastry lead",
-        "A type of A-line dress",
-        "Something in shist",
-        "A type of cereal energy bar",
-        "A mountain running sport"
-      ]
-    },
-    {
-      "id": 109,
-      "categories": [
-        "A composition artist",
-        "Something in a catacomb corridor",
-        "A wolf spider",
-        "A type of wax work",
-        "A neural thriller",
-        "Something in an underground temple",
-        "A word meaning brilliant",
-        "A type of pastry master",
-        "A type of empire dress",
-        "Something in schist",
-        "A type of snack energy bar",
-        "A trail running sport"
-      ]
-    },
-    {
-      "id": 110,
-      "categories": [
-        "A scene artist",
-        "Something in a tomb corridor",
-        "A crab spider",
-        "A type of candy thermometer craft",
-        "A mind-control thriller",
-        "Something in a hidden chamber",
-        "A word meaning stunning",
-        "A type of pastry chef leader",
-        "A type of sheath gown",
-        "Something in gneiss",
-        "A type of fitness bar",
-        "A orienteering sport"
-      ]
-    },
-    {
-      "id": 111,
-      "categories": [
-        "A VFX supervisor",
-        "Something in a crypt wall",
-        "A lynx spider",
-        "A type of nougat machine product",
-        "A quantum thriller",
-        "Something in a sacred vault",
-        "A word meaning exquisite",
-        "A type of pastry captain",
-        "A type of mermaid dress",
-        "Something in granite gneiss",
-        "A type of recovery bar",
-        "A rogaining sport"
-      ]
-    },
-    {
-      "id": 112,
-      "categories": [
-        "An effects compositor",
-        "Something in a tomb entrance",
-        "A jumping-fish spider",
-        "A type of confectionery machine output",
-        "A metaverse thriller",
-        "Something in a burial alcove",
-        "A word meaning gorgeous",
-        "A type of pastry commander",
-        "A type of fishtail dress",
-        "Something in migmatite",
-        "A type of endurance bar",
-        "A parkour sport"
-      ]
-    },
-    {
-      "id": 113,
-      "categories": [
-        "A particle effects artist",
-        "Something in a sarcophagus chamber",
-        "A lynx wolf spider",
-        "A type of sugar sculpture element",
-        "A dimension thriller",
-        "Something in a ritualistic space",
-        "A word meaning fabulous",
-        "A type of pastry head",
-        "A type of wrap gown",
-        "Something in pegmatite",
-        "A type of sustenance bar",
-        "A freerunning sport"
-      ]
-    },
-    {
-      "id": 114,
-      "categories": [
-        "A fluid dynamics artist",
-        "Something in a funerary chamber",
-        "A grass spider",
-        "A type of pastillage work",
-        "A parallel dimension thriller",
-        "Something in a sacred chamber",
-        "A word meaning resplendent",
-        "A type of pastry chief",
-        "A type of toga gown",
-        "Something in aplite",
-        "A type of hunger bar",
-        "A footgolf sport"
-      ]
-    },
-    {
-      "id": 115,
-      "categories": [
-        "A hair and fur artist",
-        "Something in a burial niche",
-        "A nursery web spider",
-        "A type of marzipan sculpture",
-        "A multiverse thriller",
-        "Something in an offering chamber",
-        "A word meaning divine",
-        "A type of pastry minister",
-        "A type of ball gown",
-        "Something in pegmatoid granite",
-        "A type of balance bar",
-        "A footvolley sport"
-      ]
-    },
-    {
-      "id": 116,
-      "categories": [
-        "A cloth simulation artist",
-        "Something in a mummy chamber",
-        "A funnel weaver spider",
-        "A type of fondant sculpture",
-        "A parallel world thriller",
-        "Something in a treasure chamber",
-        "A word meaning splendorous",
-        "A type of pastry general",
-        "A type of evening gown",
-        "Something in enderbitic granite",
-        "A type of energy sustenance bar",
-        "A speedminton sport"
-      ]
-    },
-    {
-      "id": 117,
-      "categories": [
-        "A rigging artist",
-        "Something in a death chamber",
-        "A sheet web spider",
-        "A type of modeling paste sculpture",
-        "An alternate reality thriller",
-        "Something in a ceremonial vault",
-        "A word meaning sumptuous",
-        "A type of pastry admiral",
-        "A type of formal gown",
-        "Something in kinzigite granite",
-        "A type of meal replacement bar",
-        "A pickleball sport"
-      ]
-    },
-    {
-      "id": 118,
-      "categories": [
-        "A character rigger",
-        "Something in a tomb annex",
-        "A bowl and doily spider",
-        "A type of modeling compound creation",
-        "A twisted timeline thriller",
-        "Something in a ritual space",
-        "A word meaning magnificent",
-        "A type of pastry commodore",
-        "A type of gala gown",
-        "Something in monzonite granite",
-        "A type of sport bar",
-        "A paddleball sport"
-      ]
-    },
-    {
-      "id": 119,
-      "categories": [
-        "A retargeting specialist",
-        "Something in a burial shaft",
-        "A scaffold spider",
-        "A type of edible art sculpture",
-        "A time-loop thriller",
-        "Something in a sacred passage",
-        "A word meaning resplendent",
-        "A type of pastry president",
-        "A type of designer gown",
-        "Something in tourmaline granite",
-        "A type of breakfast bar",
-        "A picklesnook sport"
+        "A type of lizard"
+      ],
+      "allowedLetters": [
+        "A",
+        "B",
+        "C",
+        "H",
+        "M",
+        "P",
+        "R",
+        "S",
+        "T"
       ]
     }
   ]

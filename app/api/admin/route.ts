@@ -4,8 +4,10 @@ import {
   bulkDeleteAdminAdvertisements,
   bulkSetAdminAdvertisementsActive,
   createAdminAdvertisement,
+  createAdminVenueScreenSponsor,
   deleteAdminAccount,
   deleteAdminVenue,
+  deleteAdminVenueScreenSponsor,
   createAdminVenue,
   autoSettleResolvedPredictionMarkets,
   createAdminTriviaQuestion,
@@ -23,6 +25,7 @@ import {
   listAdminPickEmMatchupsByDate,
   listAdminPickEmUnsettledGames,
   listAdminTriviaQuestions,
+  listAdminVenueScreenSponsors,
   listAllLiveTriviaCategories,
   listAllSpeedTriviaCategories,
   listAdminLiveTriviaQuestionsFromFiles,
@@ -32,6 +35,7 @@ import {
   settleAdminPickEmGame,
   updateAdminVenue,
   updateAdminAdvertisement,
+  updateAdminVenueScreenSponsor,
   updateAdminTriviaQuestion,
   updateAdminLiveTriviaQuestionInFile,
   updateAdminSpeedTriviaQuestionInFile,
@@ -251,6 +255,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, items });
     }
 
+    if (resource === "venue-screen-sponsors") {
+      const venueId = String(searchParams.get("venueId") ?? "").trim();
+      if (!venueId) {
+        return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });
+      }
+      const items = await listAdminVenueScreenSponsors(venueId);
+      return NextResponse.json({ ok: true, items });
+    }
+
     if (resource === "challenge-campaigns") {
       const venueId = String(searchParams.get("venueId") ?? "").trim() || undefined;
       const includeInactive = String(searchParams.get("includeInactive") ?? "true").trim().toLowerCase() !== "false";
@@ -368,7 +381,7 @@ export async function GET(request: Request) {
       {
         ok: false,
         error:
-          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-geography, resource=ads-debug, resource=pickem-unsettled, resource=pickem-matchups, resource=predictions-pending, resource=challenge-campaigns, or resource=live-showdown-schedules.",
+          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-geography, resource=ads-debug, resource=pickem-unsettled, resource=pickem-matchups, resource=predictions-pending, resource=challenge-campaigns, resource=venue-screen-sponsors, or resource=live-showdown-schedules.",
       },
       { status: 400 }
     );
@@ -457,6 +470,22 @@ export async function POST(request: Request) {
           county?: string;
           region?: string;
           placeId?: string;
+          screenEnabled?: boolean;
+          screenBrandImageUrl?: string;
+          screenBrandPrimary?: string;
+          screenBrandSecondary?: string;
+          screenSponsorRotationEnabled?: boolean;
+        }
+      | {
+          resource: "venue-screen-sponsors";
+          venueId: string;
+          title: string;
+          imageUrl: string;
+          linkUrl?: string;
+          displayOrder?: number;
+          isActive?: boolean;
+          startsAt?: string;
+          endsAt?: string;
         }
       | {
           resource: "ads-track";
@@ -744,6 +773,25 @@ export async function POST(request: Request) {
         county: body.county,
         region: body.region,
         placeId: body.placeId,
+        screenEnabled: body.screenEnabled,
+        screenBrandImageUrl: body.screenBrandImageUrl,
+        screenBrandPrimary: body.screenBrandPrimary,
+        screenBrandSecondary: body.screenBrandSecondary,
+        screenSponsorRotationEnabled: body.screenSponsorRotationEnabled,
+      });
+      return NextResponse.json({ ok: true, item });
+    }
+
+    if (body.resource === "venue-screen-sponsors") {
+      const item = await createAdminVenueScreenSponsor({
+        venueId: body.venueId,
+        title: body.title,
+        imageUrl: body.imageUrl,
+        linkUrl: body.linkUrl,
+        displayOrder: body.displayOrder,
+        isActive: body.isActive,
+        startsAt: body.startsAt,
+        endsAt: body.endsAt,
       });
       return NextResponse.json({ ok: true, item });
     }
@@ -926,6 +974,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    if (resource === "venue-screen-sponsors") {
+      await deleteAdminVenueScreenSponsor(id);
+      return NextResponse.json({ ok: true });
+    }
+
     if (resource === "challenge-campaigns") {
       await deleteChallengeCampaign(id);
       return NextResponse.json({ ok: true });
@@ -939,7 +992,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: "Unknown resource. Use resource=trivia, resource=ads, resource=venues, resource=challenge-campaigns, or resource=live-showdown-schedules.",
+        error: "Unknown resource. Use resource=trivia, resource=ads, resource=venues, resource=venue-screen-sponsors, resource=challenge-campaigns, or resource=live-showdown-schedules.",
       },
       { status: 400 }
     );
@@ -1037,6 +1090,23 @@ export async function PATCH(request: Request) {
           county?: string;
           region?: string;
           placeId?: string;
+          screenEnabled?: boolean;
+          screenBrandImageUrl?: string;
+          screenBrandPrimary?: string;
+          screenBrandSecondary?: string;
+          screenSponsorRotationEnabled?: boolean;
+        }
+      | {
+          resource: "venue-screen-sponsors";
+          id: string;
+          venueId: string;
+          title: string;
+          imageUrl: string;
+          linkUrl?: string;
+          displayOrder?: number;
+          isActive?: boolean;
+          startsAt?: string;
+          endsAt?: string;
         }
       | {
           resource: "challenge-campaigns";
@@ -1242,6 +1312,26 @@ export async function PATCH(request: Request) {
         county: body.county,
         region: body.region,
         placeId: body.placeId,
+        screenEnabled: body.screenEnabled,
+        screenBrandImageUrl: body.screenBrandImageUrl,
+        screenBrandPrimary: body.screenBrandPrimary,
+        screenBrandSecondary: body.screenBrandSecondary,
+        screenSponsorRotationEnabled: body.screenSponsorRotationEnabled,
+      });
+      return NextResponse.json({ ok: true, item });
+    }
+
+    if (body.resource === "venue-screen-sponsors") {
+      const item = await updateAdminVenueScreenSponsor({
+        id: body.id,
+        venueId: body.venueId,
+        title: body.title,
+        imageUrl: body.imageUrl,
+        linkUrl: body.linkUrl,
+        displayOrder: body.displayOrder,
+        isActive: body.isActive,
+        startsAt: body.startsAt,
+        endsAt: body.endsAt,
       });
       return NextResponse.json({ ok: true, item });
     }

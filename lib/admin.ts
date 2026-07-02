@@ -107,6 +107,24 @@ type VenueRow = {
   longitude: number;
   radius: number;
   place_id: string | null;
+  screen_enabled?: boolean | null;
+  screen_brand_image_url?: string | null;
+  screen_brand_primary?: string | null;
+  screen_brand_secondary?: string | null;
+  screen_sponsor_rotation_enabled?: boolean | null;
+};
+
+type VenueScreenSponsorRow = {
+  id: string;
+  venue_id: string;
+  title: string;
+  image_url: string;
+  link_url: string | null;
+  display_order: number;
+  is_active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
 };
 
 type PickEmPendingGameRow = {
@@ -280,6 +298,40 @@ function mapVenueRow(row: VenueRow): Venue {
     longitude: Number(row.longitude),
     radius: Number(row.radius),
     placeId: row.place_id ?? undefined,
+    screenEnabled: typeof row.screen_enabled === "boolean" ? row.screen_enabled : undefined,
+    screenBrandImageUrl: row.screen_brand_image_url ?? undefined,
+    screenBrandPrimary: row.screen_brand_primary ?? undefined,
+    screenBrandSecondary: row.screen_brand_secondary ?? undefined,
+    screenSponsorRotationEnabled:
+      typeof row.screen_sponsor_rotation_enabled === "boolean" ? row.screen_sponsor_rotation_enabled : undefined,
+  };
+}
+
+export type AdminVenueScreenSponsor = {
+  id: string;
+  venueId: string;
+  title: string;
+  imageUrl: string;
+  linkUrl?: string;
+  displayOrder: number;
+  isActive: boolean;
+  startsAt?: string;
+  endsAt?: string;
+  createdAt: string;
+};
+
+function mapVenueScreenSponsorRow(row: VenueScreenSponsorRow): AdminVenueScreenSponsor {
+  return {
+    id: row.id,
+    venueId: row.venue_id,
+    title: row.title,
+    imageUrl: row.image_url,
+    linkUrl: row.link_url ?? undefined,
+    displayOrder: Number(row.display_order ?? 0),
+    isActive: Boolean(row.is_active),
+    startsAt: row.starts_at ?? undefined,
+    endsAt: row.ends_at ?? undefined,
+    createdAt: row.created_at,
   };
 }
 
@@ -1875,6 +1927,11 @@ export async function createAdminVenue(input: {
   county?: string;
   region?: string;
   placeId?: string;
+  screenEnabled?: boolean;
+  screenBrandImageUrl?: string;
+  screenBrandPrimary?: string;
+  screenBrandSecondary?: string;
+  screenSponsorRotationEnabled?: boolean;
 }): Promise<Venue> {
   assertAdminConfigured();
 
@@ -1897,6 +1954,18 @@ export async function createAdminVenue(input: {
   }
   if (!street) {
     throw new Error("Street address is required.");
+  }
+  const screenBrandImageUrl = String(input.screenBrandImageUrl ?? "").trim();
+  const screenBrandPrimary = String(input.screenBrandPrimary ?? "").trim();
+  const screenBrandSecondary = String(input.screenBrandSecondary ?? "").trim();
+  if (screenBrandImageUrl && !isValidHttpUrl(screenBrandImageUrl)) {
+    throw new Error("Screen brand image URL must be a valid http(s) URL.");
+  }
+  if (screenBrandPrimary && !/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(screenBrandPrimary)) {
+    throw new Error("Screen primary color must be a valid hex color.");
+  }
+  if (screenBrandSecondary && !/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(screenBrandSecondary)) {
+    throw new Error("Screen secondary color must be a valid hex color.");
   }
 
   const radius = Number.isFinite(input.radius) ? Math.round(Number(input.radius)) : 150;
@@ -1959,8 +2028,13 @@ export async function createAdminVenue(input: {
       longitude: resolvedLongitude,
       radius,
       place_id: input.placeId?.trim() || null,
+      screen_enabled: input.screenEnabled ?? true,
+      screen_brand_image_url: screenBrandImageUrl || null,
+      screen_brand_primary: screenBrandPrimary || null,
+      screen_brand_secondary: screenBrandSecondary || null,
+      screen_sponsor_rotation_enabled: Boolean(input.screenSponsorRotationEnabled),
     })
-    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, place_id")
+    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, place_id, screen_enabled, screen_brand_image_url, screen_brand_primary, screen_brand_secondary, screen_sponsor_rotation_enabled")
     .single<VenueRow>();
 
   if (error || !data) {
@@ -1988,6 +2062,11 @@ export async function updateAdminVenue(input: {
   county?: string;
   region?: string;
   placeId?: string;
+  screenEnabled?: boolean;
+  screenBrandImageUrl?: string;
+  screenBrandPrimary?: string;
+  screenBrandSecondary?: string;
+  screenSponsorRotationEnabled?: boolean;
 }): Promise<Venue> {
   assertAdminConfigured();
 
@@ -2015,6 +2094,18 @@ export async function updateAdminVenue(input: {
   }
   if (!street) {
     throw new Error("Street address is required.");
+  }
+  const screenBrandImageUrl = String(input.screenBrandImageUrl ?? "").trim();
+  const screenBrandPrimary = String(input.screenBrandPrimary ?? "").trim();
+  const screenBrandSecondary = String(input.screenBrandSecondary ?? "").trim();
+  if (screenBrandImageUrl && !isValidHttpUrl(screenBrandImageUrl)) {
+    throw new Error("Screen brand image URL must be a valid http(s) URL.");
+  }
+  if (screenBrandPrimary && !/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(screenBrandPrimary)) {
+    throw new Error("Screen primary color must be a valid hex color.");
+  }
+  if (screenBrandSecondary && !/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(screenBrandSecondary)) {
+    throw new Error("Screen secondary color must be a valid hex color.");
   }
 
   const radius = Number.isFinite(input.radius) ? Math.round(input.radius) : Number.NaN;
@@ -2056,9 +2147,14 @@ export async function updateAdminVenue(input: {
       longitude: resolvedLongitude,
       radius,
       place_id: input.placeId?.trim() || null,
+      screen_enabled: input.screenEnabled ?? true,
+      screen_brand_image_url: screenBrandImageUrl || null,
+      screen_brand_primary: screenBrandPrimary || null,
+      screen_brand_secondary: screenBrandSecondary || null,
+      screen_sponsor_rotation_enabled: Boolean(input.screenSponsorRotationEnabled),
     })
     .eq("id", id)
-    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, place_id")
+    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, place_id, screen_enabled, screen_brand_image_url, screen_brand_primary, screen_brand_secondary, screen_sponsor_rotation_enabled")
     .single<VenueRow>();
 
   if (error || !data) {
@@ -2066,6 +2162,162 @@ export async function updateAdminVenue(input: {
   }
 
   return mapVenueRow(data);
+}
+
+export async function listAdminVenueScreenSponsors(venueId: string): Promise<AdminVenueScreenSponsor[]> {
+  assertAdminConfigured();
+  const normalizedVenueId = String(venueId ?? "").trim();
+  if (!normalizedVenueId) {
+    throw new Error("Venue id is required.");
+  }
+
+  const { data, error } = await supabaseAdmin!
+    .from("venue_screen_sponsors")
+    .select("id, venue_id, title, image_url, link_url, display_order, is_active, starts_at, ends_at, created_at")
+    .eq("venue_id", normalizedVenueId)
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to load venue screen sponsors.");
+  }
+
+  return ((data ?? []) as VenueScreenSponsorRow[]).map(mapVenueScreenSponsorRow);
+}
+
+function validateVenueScreenSponsorInput(input: {
+  venueId?: string;
+  title: string;
+  imageUrl: string;
+  linkUrl?: string;
+  displayOrder?: number;
+  startsAt?: string;
+  endsAt?: string;
+}): {
+  venueId: string;
+  title: string;
+  imageUrl: string;
+  linkUrl: string | null;
+  displayOrder: number;
+  startsAt: string | null;
+  endsAt: string | null;
+} {
+  const venueId = String(input.venueId ?? "").trim();
+  const title = String(input.title ?? "").trim();
+  const imageUrl = String(input.imageUrl ?? "").trim();
+  const linkUrl = String(input.linkUrl ?? "").trim();
+  const startsAt = String(input.startsAt ?? "").trim();
+  const endsAt = String(input.endsAt ?? "").trim();
+  const displayOrder = Number.isFinite(Number(input.displayOrder)) ? Math.round(Number(input.displayOrder)) : 0;
+
+  if (!venueId) throw new Error("Venue id is required.");
+  if (!title) throw new Error("Sponsor title is required.");
+  if (!imageUrl) throw new Error("Sponsor image URL is required.");
+  if (!isValidHttpUrl(imageUrl)) throw new Error("Sponsor image URL must be a valid http(s) URL.");
+  if (linkUrl && !isValidHttpUrl(linkUrl)) throw new Error("Sponsor link URL must be a valid http(s) URL.");
+  if (displayOrder < 0 || displayOrder > 999) throw new Error("Sponsor display order must be between 0 and 999.");
+  if (startsAt && Number.isNaN(Date.parse(startsAt))) throw new Error("Sponsor start time must be a valid date.");
+  if (endsAt && Number.isNaN(Date.parse(endsAt))) throw new Error("Sponsor end time must be a valid date.");
+  if (startsAt && endsAt && Date.parse(endsAt) < Date.parse(startsAt)) {
+    throw new Error("Sponsor end time must be after the start time.");
+  }
+
+  return {
+    venueId,
+    title,
+    imageUrl,
+    linkUrl: linkUrl || null,
+    displayOrder,
+    startsAt: startsAt || null,
+    endsAt: endsAt || null,
+  };
+}
+
+export async function createAdminVenueScreenSponsor(input: {
+  venueId: string;
+  title: string;
+  imageUrl: string;
+  linkUrl?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+  startsAt?: string;
+  endsAt?: string;
+}): Promise<AdminVenueScreenSponsor> {
+  assertAdminConfigured();
+  const normalized = validateVenueScreenSponsorInput(input);
+
+  const { data, error } = await supabaseAdmin!
+    .from("venue_screen_sponsors")
+    .insert({
+      venue_id: normalized.venueId,
+      title: normalized.title,
+      image_url: normalized.imageUrl,
+      link_url: normalized.linkUrl,
+      display_order: normalized.displayOrder,
+      is_active: input.isActive ?? true,
+      starts_at: normalized.startsAt,
+      ends_at: normalized.endsAt,
+    })
+    .select("id, venue_id, title, image_url, link_url, display_order, is_active, starts_at, ends_at, created_at")
+    .single<VenueScreenSponsorRow>();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to create venue screen sponsor.");
+  }
+
+  return mapVenueScreenSponsorRow(data);
+}
+
+export async function updateAdminVenueScreenSponsor(input: {
+  id: string;
+  venueId: string;
+  title: string;
+  imageUrl: string;
+  linkUrl?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+  startsAt?: string;
+  endsAt?: string;
+}): Promise<AdminVenueScreenSponsor> {
+  assertAdminConfigured();
+  const id = String(input.id ?? "").trim();
+  if (!id) throw new Error("Sponsor id is required.");
+  const normalized = validateVenueScreenSponsorInput(input);
+
+  const { data, error } = await supabaseAdmin!
+    .from("venue_screen_sponsors")
+    .update({
+      venue_id: normalized.venueId,
+      title: normalized.title,
+      image_url: normalized.imageUrl,
+      link_url: normalized.linkUrl,
+      display_order: normalized.displayOrder,
+      is_active: input.isActive ?? true,
+      starts_at: normalized.startsAt,
+      ends_at: normalized.endsAt,
+    })
+    .eq("id", id)
+    .select("id, venue_id, title, image_url, link_url, display_order, is_active, starts_at, ends_at, created_at")
+    .single<VenueScreenSponsorRow>();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to update venue screen sponsor.");
+  }
+
+  return mapVenueScreenSponsorRow(data);
+}
+
+export async function deleteAdminVenueScreenSponsor(id: string): Promise<void> {
+  assertAdminConfigured();
+  const normalizedId = String(id ?? "").trim();
+  if (!normalizedId) {
+    throw new Error("Sponsor id is required.");
+  }
+
+  const { error } = await supabaseAdmin!.from("venue_screen_sponsors").delete().eq("id", normalizedId);
+  if (error) {
+    throw new Error(error.message ?? "Failed to delete venue screen sponsor.");
+  }
 }
 
 export async function deleteAdminVenue(venueId: string): Promise<void> {

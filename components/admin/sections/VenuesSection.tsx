@@ -42,6 +42,35 @@ type VenueFormState = {
   latitude: string;
   longitude: string;
   placeId: string;
+  screenEnabled: boolean;
+  screenBrandImageUrl: string;
+  screenBrandPrimary: string;
+  screenBrandSecondary: string;
+  screenSponsorRotationEnabled: boolean;
+};
+
+type VenueScreenSponsor = {
+  id: string;
+  venueId: string;
+  title: string;
+  imageUrl: string;
+  linkUrl?: string;
+  displayOrder: number;
+  isActive: boolean;
+  startsAt?: string;
+  endsAt?: string;
+  createdAt: string;
+};
+
+type SponsorFormState = {
+  id: string | null;
+  title: string;
+  imageUrl: string;
+  linkUrl: string;
+  displayOrder: string;
+  isActive: boolean;
+  startsAt: string;
+  endsAt: string;
 };
 
 const LOOKUP_INACTIVITY_MS = 5 * 60 * 1000;
@@ -63,6 +92,22 @@ const BLANK_FORM: VenueFormState = {
   latitude: "",
   longitude: "",
   placeId: "",
+  screenEnabled: true,
+  screenBrandImageUrl: "",
+  screenBrandPrimary: "",
+  screenBrandSecondary: "",
+  screenSponsorRotationEnabled: false,
+};
+
+const BLANK_SPONSOR_FORM: SponsorFormState = {
+  id: null,
+  title: "",
+  imageUrl: "",
+  linkUrl: "",
+  displayOrder: "0",
+  isActive: true,
+  startsAt: "",
+  endsAt: "",
 };
 
 function venueToForm(v: Venue): VenueFormState {
@@ -82,6 +127,11 @@ function venueToForm(v: Venue): VenueFormState {
     latitude: String(v.latitude),
     longitude: String(v.longitude),
     placeId: v.placeId ?? "",
+    screenEnabled: v.screenEnabled ?? true,
+    screenBrandImageUrl: v.screenBrandImageUrl ?? "",
+    screenBrandPrimary: v.screenBrandPrimary ?? "",
+    screenBrandSecondary: v.screenBrandSecondary ?? "",
+    screenSponsorRotationEnabled: v.screenSponsorRotationEnabled ?? false,
   };
 }
 
@@ -120,8 +170,369 @@ function createSessionToken(): string {
   return Math.random().toString(36).slice(2).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24);
 }
 
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isValidHexColor(value: string): boolean {
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value);
+}
+
+function toLocalDateTimeInput(iso: string | undefined): string {
+  if (!iso) return "";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const offsetMs = parsed.getTimezoneOffset() * 60_000;
+  return new Date(parsed.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function sponsorToForm(sponsor: VenueScreenSponsor): SponsorFormState {
+  return {
+    id: sponsor.id,
+    title: sponsor.title,
+    imageUrl: sponsor.imageUrl,
+    linkUrl: sponsor.linkUrl ?? "",
+    displayOrder: String(sponsor.displayOrder),
+    isActive: sponsor.isActive,
+    startsAt: toLocalDateTimeInput(sponsor.startsAt),
+    endsAt: toLocalDateTimeInput(sponsor.endsAt),
+  };
+}
+
+function normalizeDateTimeInput(value: string): string | undefined {
+  const trimmed = value.trim();
+  return trimmed ? new Date(trimmed).toISOString() : undefined;
+}
+
+type VenueScreenSponsorManagerProps = {
+  venueId: string;
+  sponsorsEnabled: boolean;
+};
+
+function VenueScreenSponsorManager({ venueId, sponsorsEnabled }: VenueScreenSponsorManagerProps) {
+  const [sponsors, setSponsors] = useState<VenueScreenSponsor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [form, setForm] = useState<SponsorFormState>(BLANK_SPONSOR_FORM);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSponsors() {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetch(`/api/admin?resource=venue-screen-sponsors&venueId=${encodeURIComponent(venueId)}`);
+        const payload = (await res.json()) as { ok: boolean; items?: VenueScreenSponsor[]; error?: string };
+        if (!res.ok || !payload.ok) {
+          throw new Error(payload.error ?? "Failed to load sponsors.");
+        }
+        if (!cancelled) {
+          setSponsors(payload.items ?? []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load sponsors.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadSponsors();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [venueId]);
+
+  function resetForm() {
+    setForm(BLANK_SPONSOR_FORM);
+    setIsFormOpen(false);
+  }
+
+  function validateForm(): string | null {
+    if (!form.title.trim()) return "Sponsor title is required.";
+    if (!form.imageUrl.trim()) return "Sponsor image URL is required.";
+    if (!isValidHttpUrl(form.imageUrl.trim())) return "Sponsor image URL must be a valid http(s) URL.";
+    if (form.linkUrl.trim() && !isValidHttpUrl(form.linkUrl.trim())) return "Sponsor link URL must be a valid http(s) URL.";
+    const displayOrder = Number.parseInt(form.displayOrder, 10);
+    if (!Number.isFinite(displayOrder) || displayOrder < 0 || displayOrder > 999) {
+      return "Display order must be between 0 and 999.";
+    }
+    if (form.startsAt && Number.isNaN(Date.parse(form.startsAt))) return "Start time must be a valid date.";
+    if (form.endsAt && Number.isNaN(Date.parse(form.endsAt))) return "End time must be a valid date.";
+    if (form.startsAt && form.endsAt && Date.parse(form.endsAt) < Date.parse(form.startsAt)) {
+      return "End time must be after the start time.";
+    }
+    return null;
+  }
+
+  async function handleSubmit() {
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      setSuccess("");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setSuccess("");
+    try {
+      const method = form.id ? "PATCH" : "POST";
+      const res = await fetch("/api/admin", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "venue-screen-sponsors",
+          id: form.id ?? undefined,
+          venueId,
+          title: form.title.trim(),
+          imageUrl: form.imageUrl.trim(),
+          linkUrl: form.linkUrl.trim() || undefined,
+          displayOrder: Number.parseInt(form.displayOrder, 10) || 0,
+          isActive: form.isActive,
+          startsAt: normalizeDateTimeInput(form.startsAt),
+          endsAt: normalizeDateTimeInput(form.endsAt),
+        }),
+      });
+      const payload = (await res.json()) as { ok: boolean; item?: VenueScreenSponsor; error?: string };
+      if (!res.ok || !payload.ok || !payload.item) {
+        throw new Error(payload.error ?? "Failed to save sponsor.");
+      }
+
+      setSponsors((prev) => {
+        const next = form.id
+          ? prev.map((item) => (item.id === payload.item!.id ? payload.item! : item))
+          : [...prev, payload.item!];
+        return next
+          .slice()
+          .sort((a, b) => a.displayOrder - b.displayOrder || a.createdAt.localeCompare(b.createdAt));
+      });
+      setSuccess(form.id ? "Sponsor updated." : "Sponsor added.");
+      resetForm();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save sponsor.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Delete this sponsor slot?")) return;
+    setBusy(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch(`/api/admin?resource=venue-screen-sponsors&id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      const payload = (await res.json()) as { ok: boolean; error?: string };
+      if (!res.ok || !payload.ok) {
+        throw new Error(payload.error ?? "Failed to delete sponsor.");
+      }
+      setSponsors((prev) => prev.filter((item) => item.id !== id));
+      setSuccess("Sponsor deleted.");
+      if (form.id === id) {
+        resetForm();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete sponsor.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900">Sponsor Rotation</h3>
+          <p className="text-xs text-slate-500">
+            Manage the idle-screen sponsor slots shown at <code>/venue/{venueId}/screen</code>.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setForm(BLANK_SPONSOR_FORM);
+            setIsFormOpen(true);
+            setError("");
+            setSuccess("");
+          }}
+          className="min-h-[44px] rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+        >
+          + Add Sponsor Slot
+        </button>
+      </div>
+
+      {!sponsorsEnabled ? (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Sponsor rotation is currently disabled for this venue. You can still stage sponsor slots here and enable rotation above when ready.
+        </div>
+      ) : null}
+
+      {success ? <div className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{success}</div> : null}
+      {error ? <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+
+      {isFormOpen ? (
+        <div className="mt-4 grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+          <div>
+            <label className={adminLabel}>Sponsor Title *</label>
+            <input className={adminField} value={form.title} onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))} />
+          </div>
+          <div>
+            <label className={adminLabel}>Display Order</label>
+            <input
+              type="number"
+              min={0}
+              max={999}
+              className={adminField}
+              value={form.displayOrder}
+              onChange={(event) => setForm((prev) => ({ ...prev, displayOrder: event.target.value }))}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className={adminLabel}>Image URL *</label>
+            <input className={adminField} value={form.imageUrl} onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))} />
+          </div>
+          <div className="md:col-span-2">
+            <label className={adminLabel}>Link URL</label>
+            <input className={adminField} value={form.linkUrl} onChange={(event) => setForm((prev) => ({ ...prev, linkUrl: event.target.value }))} />
+          </div>
+          <div>
+            <label className={adminLabel}>Starts At</label>
+            <input
+              type="datetime-local"
+              className={adminField}
+              value={form.startsAt}
+              onChange={(event) => setForm((prev) => ({ ...prev, startsAt: event.target.value }))}
+            />
+          </div>
+          <div>
+            <label className={adminLabel}>Ends At</label>
+            <input
+              type="datetime-local"
+              className={adminField}
+              value={form.endsAt}
+              onChange={(event) => setForm((prev) => ({ ...prev, endsAt: event.target.value }))}
+            />
+          </div>
+          <label className="flex items-center gap-3 text-sm font-medium text-slate-700 md:col-span-2">
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(event) => setForm((prev) => ({ ...prev, isActive: event.target.checked }))}
+            />
+            Sponsor slot is active
+          </label>
+          <div className="flex flex-col gap-3 md:col-span-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={busy}
+              className="min-h-[44px] rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {busy ? "Saving..." : form.id ? "Update Sponsor" : "Create Sponsor"}
+            </button>
+            <button
+              type="button"
+              onClick={resetForm}
+              disabled={busy}
+              className="min-h-[44px] rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50">
+              <th className={TH}>Title</th>
+              <th className={TH}>Order</th>
+              <th className={TH}>Window</th>
+              <th className={TH}>Status</th>
+              <th className={`${TH} text-right`}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="py-10 text-center text-sm text-slate-400">Loading sponsor slots...</td>
+              </tr>
+            ) : sponsors.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-10 text-center text-sm text-slate-400">No sponsor slots yet.</td>
+              </tr>
+            ) : (
+              sponsors.map((sponsor) => (
+                <tr key={sponsor.id} className={TR}>
+                  <td className={TD}>
+                    <div className="font-medium text-slate-900">{sponsor.title}</div>
+                    <div className="max-w-[320px] truncate text-xs text-slate-500">{sponsor.imageUrl}</div>
+                  </td>
+                  <td className={TD}>{sponsor.displayOrder}</td>
+                  <td className={TD}>
+                    <div className="text-slate-700">{sponsor.startsAt ? new Date(sponsor.startsAt).toLocaleString() : "Starts immediately"}</div>
+                    <div className="text-xs text-slate-500">{sponsor.endsAt ? `Ends ${new Date(sponsor.endsAt).toLocaleString()}` : "No end date"}</div>
+                  </td>
+                  <td className={TD}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${sponsor.isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>
+                      {sponsor.isActive ? "Active" : "Paused"}
+                    </span>
+                  </td>
+                  <td className={`${TD} text-right`}>
+                    <div className="inline-flex flex-col gap-2 sm:flex-row">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm(sponsorToForm(sponsor));
+                          setIsFormOpen(true);
+                          setError("");
+                          setSuccess("");
+                        }}
+                        className="min-h-[44px] rounded border border-slate-200 px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void handleDelete(sponsor.id);
+                        }}
+                        className="min-h-[44px] rounded border border-red-200 px-3 py-1 text-xs text-red-700 hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 type VenueFormProps = {
   title: string;
+  venueId?: string;
   form: VenueFormState;
   onChange: (patch: Partial<VenueFormState>) => void;
   onSubmit: () => void;
@@ -132,7 +543,7 @@ type VenueFormProps = {
   mode: "create" | "edit";
 };
 
-function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, submitLabel, mode }: VenueFormProps) {
+function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, error, submitLabel, mode }: VenueFormProps) {
   const field = adminField;
   const label = adminLabel;
   const readOnlyField = adminFieldReadOnly;
@@ -143,7 +554,6 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
   const [manualMode, setManualMode] = useState(false);
-
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionTokenRef = useRef<string>("");
@@ -286,7 +696,23 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-      <h2 className="mb-5 text-base font-semibold text-slate-900">{title}</h2>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+          {venueId ? <p className="mt-1 text-xs text-slate-500">Venue ID: <span className="font-mono">{venueId}</span></p> : null}
+        </div>
+        {venueId ? (
+          <a
+            href={`/venue/${encodeURIComponent(venueId)}/screen`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+          >
+            Open Screen Preview
+          </a>
+        ) : null}
+      </div>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <label className={label}>Venue Name *</label>
@@ -439,7 +865,6 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
             onChange={(event) => onChange({ longitude: event.target.value, placeId: "" })}
           />
         </div>
-
         <div>
           <label className={label}>County</label>
           <input className={field} value={form.county} onChange={(event) => onChange({ county: event.target.value })} />
@@ -477,6 +902,54 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
             onChange={(lat, lng) => onChange({ latitude: String(lat), longitude: String(lng), placeId: "" })}
           />
         </div>
+
+        <div className="md:col-span-2">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <h3 className="text-sm font-semibold text-slate-900">Venue Screen Settings</h3>
+            <p className="mt-1 text-xs text-slate-500">Configure the public TV/projector display at the venue screen URL.</p>
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                <input type="checkbox" checked={form.screenEnabled} onChange={(event) => onChange({ screenEnabled: event.target.checked })} />
+                Venue screen is enabled
+              </label>
+              <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={form.screenSponsorRotationEnabled}
+                  onChange={(event) => onChange({ screenSponsorRotationEnabled: event.target.checked })}
+                />
+                Sponsor rotation is enabled
+              </label>
+              <div className="md:col-span-2">
+                <label className={label}>Brand Image URL</label>
+                <input
+                  className={field}
+                  placeholder="https://cdn.example.com/venue-screen-brand.png"
+                  value={form.screenBrandImageUrl}
+                  onChange={(event) => onChange({ screenBrandImageUrl: event.target.value })}
+                />
+              </div>
+              <div>
+                <label className={label}>Primary Brand Color</label>
+                <input
+                  className={field}
+                  placeholder="#0f172a"
+                  value={form.screenBrandPrimary}
+                  onChange={(event) => onChange({ screenBrandPrimary: event.target.value })}
+                />
+              </div>
+              <div>
+                <label className={label}>Secondary Brand Color</label>
+                <input
+                  className={field}
+                  placeholder="#f59e0b"
+                  value={form.screenBrandSecondary}
+                  onChange={(event) => onChange({ screenBrandSecondary: event.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {error ? <div className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div> : null}
@@ -499,6 +972,12 @@ function VenueForm({ title, form, onChange, onSubmit, onCancel, busy, error, sub
           </button>
         ) : null}
       </div>
+
+      {venueId ? (
+        <div className="mt-6">
+          <VenueScreenSponsorManager venueId={venueId} sponsorsEnabled={form.screenSponsorRotationEnabled} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -577,6 +1056,11 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
       county: form.county.trim() || undefined,
       region: form.region.trim() || undefined,
       placeId: form.placeId.trim() || undefined,
+      screenEnabled: form.screenEnabled,
+      screenBrandImageUrl: form.screenBrandImageUrl.trim() || undefined,
+      screenBrandPrimary: form.screenBrandPrimary.trim() || undefined,
+      screenBrandSecondary: form.screenBrandSecondary.trim() || undefined,
+      screenSponsorRotationEnabled: form.screenSponsorRotationEnabled,
     };
   }
 
@@ -596,11 +1080,21 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
     if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
       return "Longitude must be between -180 and 180.";
     }
+    if (form.screenBrandImageUrl.trim() && !isValidHttpUrl(form.screenBrandImageUrl.trim())) {
+      return "Brand image URL must be a valid http(s) URL.";
+    }
+    if (form.screenBrandPrimary.trim() && !isValidHexColor(form.screenBrandPrimary.trim())) {
+      return "Primary brand color must be a valid hex color.";
+    }
+    if (form.screenBrandSecondary.trim() && !isValidHexColor(form.screenBrandSecondary.trim())) {
+      return "Secondary brand color must be a valid hex color.";
+    }
     return null;
   }
 
   function startCreate() {
     setForm(BLANK_FORM);
+    setEditingVenue(null);
     setError("");
     setSuccessMsg("");
     setMode("create");
@@ -663,6 +1157,7 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
       if (!payload.ok || !payload.item) throw new Error(payload.error ?? "Failed to update venue.");
 
       setVenueList((prev) => prev.map((venue) => (venue.id === payload.item!.id ? payload.item! : venue)));
+      setEditingVenue(payload.item);
       setSuccessMsg(`Venue "${payload.item.name}" updated.`);
       setMode("list");
     } catch (err) {
@@ -718,6 +1213,7 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
       <VenueForm
         key={`venue-edit-${editingVenue.id}`}
         title={`Editing: ${editingVenue.name}`}
+        venueId={editingVenue.id}
         form={form}
         onChange={patchForm}
         onSubmit={handleEdit}
@@ -730,8 +1226,7 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
     );
   }
 
-  const sortLabel = (key: SortKey, text: string) =>
-    `${text}${sortBy === key ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}`;
+  const sortLabel = (key: SortKey, text: string) => `${text}${sortBy === key ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}`;
 
   return (
     <div className="space-y-4">
@@ -761,13 +1256,14 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("city")}>{sortLabel("city", "City")}</th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("state")}>{sortLabel("state", "State")}</th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("zipCode")}>{sortLabel("zipCode", "Zip")}</th>
+                <th className={TH}>Screen</th>
                 <th className={`${TH} text-right`}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {sortedVenues.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-sm text-slate-400">No venues yet. Create one above.</td>
+                  <td colSpan={7} className="py-12 text-center text-sm text-slate-400">No venues yet. Create one above.</td>
                 </tr>
               ) : (
                 sortedVenues.map((venue) => (
@@ -787,6 +1283,16 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
                     <td className={`${TD} text-slate-600`}>{venue.city ?? "-"}</td>
                     <td className={`${TD} text-slate-600`}>{venue.state ?? "-"}</td>
                     <td className={`${TD} text-slate-600`}>{venue.zipCode ?? "-"}</td>
+                    <td className={TD}>
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-semibold ${venue.screenEnabled === false ? "bg-slate-200 text-slate-700" : "bg-emerald-100 text-emerald-800"}`}>
+                          {venue.screenEnabled === false ? "Disabled" : "Enabled"}
+                        </span>
+                        <a href={`/venue/${encodeURIComponent(venue.id)}/screen`} target="_blank" rel="noreferrer" className="text-xs font-semibold text-indigo-600 hover:underline">
+                          Preview screen
+                        </a>
+                      </div>
+                    </td>
                     <td className={`${TD} text-right`}>
                       <div className="inline-flex flex-col gap-2 sm:flex-row">
                         <button

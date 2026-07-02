@@ -30,6 +30,12 @@
 - **Speed Trivia JSON export is intentional:** Only export approved Speed Trivia rows from Supabase to `data/trivia/categories/` through the Admin Review GitHub PR export flow.
 - **Preserve current local file contents when scripting:** Any script that updates trivia JSON must read the current on-disk file first and only make the requested incremental changes.
 
+## Category Blitz Source of Truth
+- **The pool is canonical: `data/category-blitz/category-pool.json`.** This is the library of all categories. To add categories, append them here (a `theme` tag is an optional internal mixing aid, not a gameplay concept — rounds are always mixed). Only ADD to the pool; keep existing good categories.
+- **`data/category-blitz/category-sets.json` is GENERATED, not hand-edited.** It is built from the pool by `npm run category-blitz:build` (`scripts/build-category-blitz-sets.cjs`), which composes mixed sets of 12 and computes each set's derived `allowedLetters`. After editing the pool, re-run the build. A letter cache (`data/category-blitz/letter-cache.json`) means only new categories are billed to the model.
+- **Always follow `data/category-blitz/CATEGORY_TEST.md` when writing or evaluating categories:** Every category must pass BOTH the Is-A gate (objective, definitional) and the Letter-Coverage gate (broad; relaxed to ~10+/18 since `allowedLetters` now filters per set). That file contains the canonical generation prompt — reuse it rather than re-deriving the rules.
+- **Never hand-write `allowedLetters`:** it is model-derived. `npm run category-blitz:letters` recomputes it for the existing sets in place (used only when hand-editing a set); the normal path is `category-blitz:build`.
+
 ## Architecture & Database Patterns
 - **Client Queries:** Use `lib/supabase.ts` via `createClient(url, anonKey)`. Subject to RLS.
 - **Server/API Queries:** Use `lib/supabaseAdmin.ts` via `createClient(url, serviceRoleKey)`. Guarded by `"server-only"`, bypasses RLS. Used for server-side mutations inside API routes.

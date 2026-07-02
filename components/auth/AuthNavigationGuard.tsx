@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { getSelectedVenueLock, setSelectedVenueLock } from "@/lib/authFastPath";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
+import { isVenueScreenPath } from "@/lib/venueScreenPaths";
 
 function getVenueIdFromPath(pathname: string): string {
   const match = pathname.match(/^\/venue\/([^/?#]+)/i);
@@ -75,6 +76,9 @@ export function AuthNavigationGuard() {
     }
 
     const currentPath = pathname ?? "/";
+    if (isVenueScreenPath(currentPath)) {
+      return;
+    }
     // Admin is protected by dedicated admin auth; never apply venue/session redirects here.
     if (currentPath.startsWith("/admin")) {
       return;
