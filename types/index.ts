@@ -476,6 +476,8 @@ export interface CategoryBlitzSubmission {
   submittedAt:      string;
 }
 
+export type CategoryBlitzAnswerReason = 'correct' | 'duplicate' | 'wrong_letter' | 'invalid' | 'pending';
+
 /** Shape returned by the results API after scoring — one entry per category */
 export interface CategoryBlitzCategoryResult {
   categoryIndex: number;
@@ -487,6 +489,7 @@ export interface CategoryBlitzCategoryResult {
     isUnique:      boolean;
     isValid:       boolean | null;
     pointsAwarded: number;
+    reason:        CategoryBlitzAnswerReason;
   }[];
 }
 
@@ -495,6 +498,7 @@ export interface CategoryBlitzRoundResults {
   letter:     string;
   categories: string[];
   results:    CategoryBlitzCategoryResult[];
+  /** Session-cumulative leaderboard (points across all rounds so far, not just this one), sorted descending. */
   totals: {
     userId:   string;
     username: string;

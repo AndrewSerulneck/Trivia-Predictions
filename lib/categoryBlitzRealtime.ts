@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { ROUND_INTERVAL_SECONDS } from "@/lib/categoryBlitzShared";
 import type {
   CategoryBlitzRound,
   CategoryBlitzRoundResults,
@@ -28,8 +29,17 @@ export interface CategoryBlitzSessionState {
   nextRoundStartsIn: number | null;
   isConnected:     boolean;
   error:           string | null;
+  /**
+   * True once `error` has persisted across several consecutive poll failures
+   * (see ESCALATE_AFTER_FAILURES) — distinguishes a real, ongoing outage from
+   * a single transient blip so the UI can escalate from a quiet "Reconnecting…"
+   * badge to a blocking error state that the player can actually act on.
+   */
+  errorEscalated:  boolean;
   /** null outside an active/scoring round, or when viewer identity can't be resolved. */
   viewerRole:      CategoryBlitzViewerRole | null;
+  /** Manually re-attempt loading the session — for the escalated error state's retry action. */
+  retry: () => void;
 }
 
 // ── Broadcast payload types ───────────────────────────────────────────────────
@@ -53,7 +63,9 @@ type RoundScoredPayload = {
 
 const POLL_INTERVAL_MS = 15_000;   // fallback poll when realtime drops
 const TIMER_TICK_MS   = 250;       // timer precision
-const ROUND_INTERVAL_SECONDS = 420;
+// After this many consecutive loadSession failures (~1 minute at POLL_INTERVAL_MS),
+// treat the outage as persistent rather than a transient blip and escalate.
+const ESCALATE_AFTER_FAILURES = 4;
 
 export function useCategoryBlitzSession(venueId: string, userId: string): CategoryBlitzSessionState {
   const [phase,         setPhase]         = useState<CategoryBlitzPhase>("idle");
@@ -64,9 +76,11 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   const [nextRoundStartsIn, setNextRoundStartsIn] = useState<number | null>(null);
   const [isConnected,   setIsConnected]   = useState(false);
   const [error,         setError]         = useState<string | null>(null);
+  const [errorEscalated, setErrorEscalated] = useState(false);
   const [viewerRole,    setViewerRole]    = useState<CategoryBlitzViewerRole | null>(null);
 
   const mountedRef        = useRef(true);
+  const errorStreakRef    = useRef(0);       // consecutive loadSession failures
   const scoringCalledRef  = useRef(false);  // prevent double-trigger per round
   const currentRoundIdRef = useRef<string | null>(null);
   const endsAtRef         = useRef<number | null>(null);  // ms epoch
@@ -88,11 +102,13 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       setTimeRemaining(0);
       setNextRoundStartsIn(null);
       setError(null);
+      setErrorEscalated(false);
       setIsConnected(false);
       setViewerRole(null);
       endsAtRef.current = null;
       currentRoundIdRef.current = null;
       scoringCalledRef.current = false;
+      errorStreakRef.current = 0;
     }, 0);
     return () => window.clearTimeout(resetId);
   }, [venueId]);
@@ -170,11 +186,15 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       if (!mountedRef.current) return;
 
       if (!json.ok) {
+        errorStreakRef.current += 1;
         setError(json.error ?? "Failed to load session.");
+        setErrorEscalated(errorStreakRef.current >= ESCALATE_AFTER_FAILURES);
         return;
       }
 
+      errorStreakRef.current = 0;
       setError(null);
+      setErrorEscalated(false);
       const s = json.session ?? null;
       setSession(s);
       sessionIdRef.current = s?.id ?? null;
@@ -208,7 +228,10 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       // Session is active/scoring — load the current round.
       await loadCurrentRound(s.id);
     } catch {
-      if (mountedRef.current) setError("Failed to connect to game.");
+      if (!mountedRef.current) return;
+      errorStreakRef.current += 1;
+      setError("Failed to connect to game.");
+      setErrorEscalated(errorStreakRef.current >= ESCALATE_AFTER_FAILURES);
     }
   }, [venueId, loadCurrentRound]);
 
@@ -360,5 +383,9 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
     };
   }, [venueId]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, isConnected, error, viewerRole };
+  const retry = useCallback(() => {
+    void loadSessionRef.current();
+  }, []);
+
+  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, isConnected, error, errorEscalated, viewerRole, retry };
 }

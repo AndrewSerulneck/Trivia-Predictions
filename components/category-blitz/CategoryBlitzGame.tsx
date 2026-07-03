@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
 import { useCategoryBlitzSession } from "@/lib/categoryBlitzRealtime";
+import { answerStartsWithLetter } from "@/lib/categoryBlitzShared";
 import type { CategoryBlitzRoundResults } from "@/types";
 
 const LETTER_GRADIENT =
@@ -20,6 +21,13 @@ function formatMmSs(seconds: number): string {
   const s = safe % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
+
+const REASON_LABEL: Record<string, string> = {
+  wrong_letter: "wrong letter",
+  invalid: "not valid",
+  duplicate: "used by another player",
+  pending: "scoring…",
+};
 
 // ── Idle / complete screens ───────────────────────────────────────────────────
 
@@ -164,17 +172,62 @@ function ResultsScreen({
   userId: string;
   nextRoundStartsIn: number | null;
 }) {
-  const viewerTotal = results.totals.find((t) => t.userId === userId)?.points ?? 0;
+  const standings = results.totals.slice().sort((a, b) => b.points - a.points);
+  const top10 = standings.slice(0, 10);
+  const viewerRank = standings.findIndex((t) => t.userId === userId);
+  const viewerInTop10 = viewerRank > -1 && viewerRank < 10;
+  const viewerEntry = viewerRank > -1 ? standings[viewerRank] : null;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
       <IntermissionStatus nextRoundStartsIn={nextRoundStartsIn} />
 
-      {/* Score banner */}
-      <div className={`rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-4 text-center`}>
-        <p className={TEXT_LABEL}>Your score this round</p>
-        <p className={`mt-1 text-5xl font-black tabular-nums ${TEXT_ACCENT}`}>{viewerTotal}</p>
-        <p className="text-sm text-emerald-100/60">points</p>
+      {/* Leaderboard */}
+      <div className={`rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-4`}>
+        <p className={`${TEXT_LABEL} text-center`}>Leaderboard</p>
+        <div className="mt-3 space-y-1.5">
+          {top10.map((entry, i) => (
+            <div
+              key={entry.userId}
+              className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${
+                entry.userId === userId
+                  ? "border-emerald-400/50 bg-emerald-950/40"
+                  : "border-slate-700/50 bg-slate-900/30"
+              }`}
+            >
+              <span className="w-5 text-center text-xs font-black text-slate-500">{i + 1}</span>
+              <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-200">
+                {entry.username}
+                {entry.userId === userId ? (
+                  <span className={`ml-1 text-[0.6rem] font-black uppercase tracking-widest ${TEXT_ACCENT}`}> you</span>
+                ) : null}
+              </span>
+              <span className={`text-base font-black tabular-nums ${entry.userId === userId ? TEXT_ACCENT : "text-slate-300"}`}>
+                {entry.points}
+              </span>
+            </div>
+          ))}
+          {top10.length === 0 && (
+            <p className="py-2 text-center text-sm text-emerald-100/60">No scores yet.</p>
+          )}
+          {/* Viewer's own row, shown separately when outside the top 10 */}
+          {viewerEntry && !viewerInTop10 && (
+            <>
+              <p className="py-0.5 text-center text-xs font-black text-slate-500">···</p>
+              <div className={`flex items-center gap-3 rounded-xl border ${BORDER_ACTIVE} bg-emerald-950/40 px-3 py-2`}>
+                <span className={`w-5 text-center text-xs font-black ${TEXT_ACCENT}`}>{viewerRank + 1}</span>
+                <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-200">
+                  {viewerEntry.username}
+                  <span className={`ml-1 text-[0.6rem] font-black uppercase tracking-widest ${TEXT_ACCENT}`}> you</span>
+                </span>
+                <span className={`text-base font-black tabular-nums ${TEXT_ACCENT}`}>{viewerEntry.points}</span>
+              </div>
+            </>
+          )}
+          {!viewerEntry && (
+            <p className="py-2 text-center text-xs text-emerald-100/60">You haven&apos;t scored any points yet.</p>
+          )}
+        </div>
       </div>
 
       {/* Category breakdown */}
@@ -182,12 +235,15 @@ function ResultsScreen({
       <div className="space-y-2">
         {results.results.map((cat) => {
           const viewerAnswer = cat.answers.find((a) => a.userId === userId);
+          const reason = viewerAnswer?.reason;
           return (
             <div
               key={cat.categoryIndex}
               className={`rounded-xl border ${
-                viewerAnswer?.isUnique
+                reason === "correct"
                   ? "border-emerald-400/50 bg-emerald-950/40"
+                  : reason === "wrong_letter" || reason === "invalid"
+                  ? "border-rose-500/50 bg-rose-950/30"
                   : viewerAnswer
                   ? "border-slate-600 bg-slate-800/40"
                   : "border-slate-700/50 bg-slate-900/30"
@@ -200,9 +256,9 @@ function ResultsScreen({
                   </p>
                   {viewerAnswer ? (
                     <p className={`mt-0.5 truncate text-sm font-bold ${
-                      viewerAnswer.isUnique && viewerAnswer.isValid !== false
+                      reason === "correct"
                         ? "text-emerald-300"
-                        : viewerAnswer.isUnique && viewerAnswer.isValid === false
+                        : reason === "wrong_letter" || reason === "invalid"
                         ? "text-rose-400"
                         : "text-slate-400"
                     }`}>
@@ -211,17 +267,26 @@ function ResultsScreen({
                   ) : (
                     <p className="mt-0.5 text-sm italic text-slate-600">no answer</p>
                   )}
+                  {viewerAnswer && reason && reason !== "correct" ? (
+                    <p className="mt-0.5 text-[0.65rem] font-semibold text-rose-300/80">
+                      {REASON_LABEL[reason] ?? reason}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="shrink-0 text-right">
-                  {viewerAnswer?.isUnique && viewerAnswer.isValid !== false ? (
+                  {reason === "correct" ? (
                     <span className="inline-flex items-center rounded-md border border-emerald-400/50 bg-emerald-500/20 px-2 py-0.5 text-[0.65rem] font-black text-emerald-300">
                       +2
                     </span>
-                  ) : viewerAnswer?.isUnique && viewerAnswer.isValid === false ? (
+                  ) : reason === "wrong_letter" ? (
+                    <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[0.65rem] font-black text-rose-400">
+                      wrong letter
+                    </span>
+                  ) : reason === "invalid" ? (
                     <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[0.65rem] font-black text-rose-400">
                       invalid
                     </span>
-                  ) : viewerAnswer && viewerAnswer.isUnique === false ? (
+                  ) : reason === "duplicate" ? (
                     <span className="text-[0.65rem] font-black text-slate-500">dup</span>
                   ) : null}
                 </div>
@@ -249,41 +314,6 @@ function ResultsScreen({
           );
         })}
       </div>
-
-      {/* Leaderboard */}
-      {results.totals.length > 0 && (
-        <>
-          <p className={`${TEXT_LABEL} mt-2`}>Round leaderboard</p>
-          <div className="space-y-1.5">
-            {results.totals
-              .slice()
-              .sort((a, b) => b.points - a.points)
-              .map((entry, i) => (
-                <div
-                  key={entry.userId}
-                  className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${
-                    entry.userId === userId
-                      ? `border-emerald-400/50 bg-emerald-950/40`
-                      : "border-slate-700/50 bg-slate-900/30"
-                  }`}
-                >
-                  <span className="w-5 text-center text-xs font-black text-slate-500">
-                    {i + 1}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-200">
-                    {entry.username}
-                    {entry.userId === userId ? (
-                      <span className={`ml-1 text-[0.6rem] font-black uppercase tracking-widest ${TEXT_ACCENT}`}> you</span>
-                    ) : null}
-                  </span>
-                  <span className={`text-base font-black tabular-nums ${entry.userId === userId ? TEXT_ACCENT : "text-slate-300"}`}>
-                    {entry.points}
-                  </span>
-                </div>
-              ))}
-          </div>
-        </>
-      )}
     </div>
   );
 }
@@ -435,46 +465,56 @@ function AnsweringScreen({
       {/* Categories grid */}
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         <div className="space-y-2">
-          {categories.map((category, i) => (
-            <div
-              key={i}
-              className={`flex items-center gap-2 rounded-xl border ${
-                answers[i].trim()
-                  ? "border-emerald-400/50 bg-emerald-950/30"
-                  : "border-slate-700/60 bg-slate-900/40"
-              } px-3 py-2.5 ${isSpectating ? "opacity-50" : ""}`}
-            >
-              <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
-                {i + 1}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[0.68rem] font-black uppercase tracking-widest text-slate-400">
-                  {category}
-                </p>
-                <input
-                  type="text"
-                  value={answers[i]}
-                  disabled={isExpired || submitState !== "idle" || isSpectating}
-                  onChange={(e) => {
-                    const next = [...answers];
-                    next[i] = e.target.value;
-                    setAnswers(next);
-                  }}
-                  placeholder={`${letter}…`}
-                  className={`mt-0.5 w-full bg-transparent text-sm font-bold outline-none placeholder:text-slate-600 ${
-                    answers[i].trim() ? "text-emerald-200" : "text-white"
-                  } disabled:opacity-50`}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="words"
-                  spellCheck={false}
-                />
+          {categories.map((category, i) => {
+            const filled = answers[i].trim().length > 0;
+            const wrongLetter = filled && !answerStartsWithLetter(answers[i], letter);
+            return (
+              <div
+                key={i}
+                className={`flex items-center gap-2 rounded-xl border ${
+                  wrongLetter
+                    ? "border-rose-500/70 bg-rose-950/30"
+                    : filled
+                    ? "border-emerald-400/50 bg-emerald-950/30"
+                    : "border-slate-700/60 bg-slate-900/40"
+                } px-3 py-2.5 ${isSpectating ? "opacity-50" : ""}`}
+              >
+                <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[0.68rem] font-black uppercase tracking-widest text-slate-400">
+                    {category}
+                  </p>
+                  <input
+                    type="text"
+                    value={answers[i]}
+                    disabled={isExpired || submitState !== "idle" || isSpectating}
+                    onChange={(e) => {
+                      const next = [...answers];
+                      next[i] = e.target.value;
+                      setAnswers(next);
+                    }}
+                    placeholder={`${letter}…`}
+                    className={`mt-0.5 w-full bg-transparent text-sm font-bold outline-none placeholder:text-slate-600 ${
+                      wrongLetter ? "text-rose-300" : filled ? "text-emerald-200" : "text-white"
+                    } disabled:opacity-50`}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="words"
+                    spellCheck={false}
+                  />
+                </div>
+                {wrongLetter ? (
+                  <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
+                    wrong letter
+                  </span>
+                ) : filled ? (
+                  <span className="shrink-0 text-emerald-400/70">✓</span>
+                ) : null}
               </div>
-              {answers[i].trim() && (
-                <span className="shrink-0 text-emerald-400/70">✓</span>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -541,7 +581,7 @@ export function CategoryBlitzGame() {
     return () => window.clearTimeout(hydrateId);
   }, []);
 
-  const { phase, round, results, timeRemaining, nextRoundStartsIn, error, viewerRole } = useCategoryBlitzSession(
+  const { phase, round, results, timeRemaining, nextRoundStartsIn, error, errorEscalated, viewerRole, retry } = useCategoryBlitzSession(
     isHydrated ? venueId : "",
     isHydrated ? userId : ""
   );
@@ -578,12 +618,32 @@ export function CategoryBlitzGame() {
     );
   }
 
-  if (error) {
+  // Only take over the whole screen with a connection error when there's no
+  // usable phase content yet (we've never successfully loaded a session), OR
+  // once the failure has persisted long enough to call it a real outage
+  // (errorEscalated) rather than a passing network blip — otherwise a single
+  // dropped poll would wipe answers and scoring reasons off the screen during
+  // intermission for no reason.
+  if (error && (phase === "idle" || errorEscalated)) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm rounded-2xl border border-rose-400/40 bg-slate-900 p-5 text-center">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-300">Connection error</p>
           <p className="mt-2 text-sm text-slate-400">{error}</p>
+          {errorEscalated && (
+            <>
+              <p className="mt-2 text-xs text-slate-500">
+                This has been failing for a while — your game state may be stale.
+              </p>
+              <button
+                type="button"
+                onClick={retry}
+                className="mt-4 w-full rounded-xl border border-rose-400/50 bg-rose-500/20 py-2.5 text-sm font-black uppercase tracking-wider text-rose-300"
+              >
+                Retry
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -596,30 +656,25 @@ export function CategoryBlitzGame() {
     >
       {/* Header bar */}
       <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950 px-4 py-3`}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div
-              className={`h-2 w-2 rounded-full ${
-                phase === "answering"
-                  ? "animate-pulse bg-emerald-400"
-                  : phase === "lobby"
-                  ? "animate-pulse bg-amber-400"
-                  : phase === "results" || phase === "scoring"
-                  ? "bg-cyan-400"
-                  : "bg-slate-600"
-              }`}
-            />
-            <p className={`text-[0.7rem] font-black uppercase tracking-[0.16em] ${TEXT_ACCENT}`}>
-              {phase === "idle" ? "Category Blitz" : phase === "lobby" ? "Lobby" : phase === "answering" ? "Round Active" : phase === "scoring" ? "Scoring" : phase === "results" ? "Results" : "Game Over"}
-            </p>
-          </div>
-          {(phase === "results" || phase === "scoring") && (
-            <div className="text-right">
-              <p className="text-[0.58rem] font-black uppercase tracking-[0.16em] text-slate-500">Next Round</p>
-              <p className={`text-sm font-black tabular-nums ${TEXT_ACCENT}`}>
-                {nextRoundStartsIn != null ? formatMmSs(nextRoundStartsIn) : "Waiting"}
-              </p>
-            </div>
+        <div className="flex items-center gap-2">
+          <div
+            className={`h-2 w-2 rounded-full ${
+              phase === "answering"
+                ? "animate-pulse bg-emerald-400"
+                : phase === "lobby"
+                ? "animate-pulse bg-amber-400"
+                : phase === "results" || phase === "scoring"
+                ? "bg-cyan-400"
+                : "bg-slate-600"
+            }`}
+          />
+          <p className={`text-[0.7rem] font-black uppercase tracking-[0.16em] ${TEXT_ACCENT}`}>
+            {phase === "idle" ? "Category Blitz" : phase === "lobby" ? "Lobby" : phase === "answering" ? "Round Active" : phase === "scoring" ? "Scoring" : phase === "results" ? "Results" : "Game Over"}
+          </p>
+          {error && (
+            <span className="ml-auto text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
+              Reconnecting…
+            </span>
           )}
         </div>
       </div>

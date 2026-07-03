@@ -4,12 +4,14 @@ import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
+import { ROUND_DURATION_SECONDS, ROUND_INTERVAL_SECONDS, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
 import type {
   CategoryBlitzSession,
   CategoryBlitzRound,
   CategoryBlitzSubmission,
   CategoryBlitzCategoryResult,
   CategoryBlitzRoundResults,
+  CategoryBlitzAnswerReason,
 } from "@/types";
 import {
   listAllActiveSchedules,
@@ -19,7 +21,7 @@ import {
 } from "@/lib/categoryBlitzSchedules";
 import categorySetsData from "@/data/category-blitz/category-sets.json";
 
-const anthropic = new Anthropic();
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY_CATEGORY_BLITZ_ANSWER_GRADER });
 
 // ── Broadcast helpers ─────────────────────────────────────────────────────────
 
@@ -39,8 +41,6 @@ function broadcast(venueId: string, event: string, payload: Record<string, unkno
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const ROUND_DURATION_SECONDS = 180; // 3 minutes of play
-const ROUND_INTERVAL_SECONDS = 420; // 7 minutes between round starts (3 play + 4 results/intermission)
 const POINTS_PER_UNIQUE_ANSWER = 2;
 // Covers the race where a player's own page-load is what triggers driveVenueCategoryBlitz to
 // auto-open the round — their presence registration would otherwise land a few ms after
@@ -96,6 +96,7 @@ export function normalizeAnswer(raw: string): string {
     .trim();
 }
 
+
 // ── LLM answer validation ─────────────────────────────────────────────────────
 
 type ValidationRequest = { subId: string; category: string; answer: string };
@@ -117,15 +118,16 @@ async function validateAnswersWithLLM(
     .map((r, i) => `${i + 1}. Category: "${r.category}" | Answer: "${r.answer}"`)
     .join("\n");
 
-  const prompt = `You are a strict judge for a letter-category word game. The required starting letter is "${letter}".
+  // Note: the starting-letter requirement is checked deterministically
+  // (answerStartsWithLetter) before this ever runs, so only letter-correct,
+  // unique answers reach the LLM — this prompt judges category fit only.
+  const prompt = `You are a strict judge for a letter-category word game. All answers below already start with the letter "${letter}"; do not re-check that.
 
 Every category in this game is written to pass the "Is-A" Classification Test: the statement "[Answer] IS A(N) [Category]" must be objectively, definitionally true — not situational, subjective, or a vibe-based judgment call. Apply that same standard when grading.
 
-For each item below, answer YES if the answer is:
-  - A genuinely valid member of that category under the Is-A test (the statement "[Answer] IS A(N) [Category]" is definitionally true), AND
-  - Starts with the letter "${letter}" (ignoring "the", "a", "an" at the start)
+For each item below, answer YES if the answer is a genuinely valid member of that category under the Is-A test (the statement "[Answer] IS A(N) [Category]" is definitionally true).
 
-Answer NO if the answer is wrong, too vague, off-topic, or starts with the wrong letter.
+Answer NO if the answer is wrong, too vague, or off-topic for the category.
 
 Be strict: partial answers, brand names used wrong, or creative stretches that don't actually fit the category should be NO.
 
@@ -161,8 +163,13 @@ ${lines}`;
     for (const req of requests) {
       if (!resultMap.has(req.subId)) resultMap.set(req.subId, true);
     }
-  } catch {
+    console.log(`[categoryBlitz] validated ${requests.length} answer(s) via Haiku for letter "${letter}"`);
+  } catch (err) {
     // On any failure, treat all answers as valid so scoring isn't blocked.
+    console.error(
+      `[categoryBlitz] Haiku validation FAILED for ${requests.length} answer(s), defaulting all to valid=true:`,
+      err instanceof Error ? err.message : err
+    );
     for (const req of requests) {
       resultMap.set(req.subId, true);
     }
@@ -292,7 +299,9 @@ function isStaleAutoSession(session: CategoryBlitzSession, now: Date): boolean {
 async function closeStaleAutoSession(session: CategoryBlitzSession): Promise<void> {
   const latest = await getLatestRound(session.id);
   if (latest && latest.status === "active") {
-    await scoreRound(latest.id).catch(() => undefined);
+    await scoreRound(latest.id).catch((err) => {
+      console.error(`[categoryBlitz] scoreRound failed while closing stale session ${session.id}:`, err instanceof Error ? err.message : err);
+    });
   }
   await endSession(session.id);
 }
@@ -315,7 +324,9 @@ async function scoreExpiredRoundForVenue(venueId: string, now: Date): Promise<vo
     .maybeSingle<{ id: string }>();
 
   if (data) {
-    await scoreRound(data.id).catch(() => undefined);
+    await scoreRound(data.id).catch((err) => {
+      console.error(`[categoryBlitz] scoreRound failed for venue ${venueId}, round ${data.id}:`, err instanceof Error ? err.message : err);
+    });
   }
 }
 
@@ -654,6 +665,34 @@ export async function submitAnswer(params: {
 // ── Scoring ───────────────────────────────────────────────────────────────────
 
 /**
+ * Add this round's per-user points onto the session's running cumulative
+ * total, so buildResults() can read the leaderboard directly instead of
+ * re-summing every round's submissions on every results fetch.
+ */
+const mergeCumulativeSessionTotals = async (
+  sessionId: string,
+  roundPointsByUser: Map<string, number>,
+): Promise<void> => {
+  if (roundPointsByUser.size === 0) return;
+
+  const { data: sessionRow } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select("cumulative_totals")
+    .eq("id", sessionId)
+    .maybeSingle<{ cumulative_totals: Record<string, number> | null }>();
+
+  const merged: Record<string, number> = { ...(sessionRow?.cumulative_totals ?? {}) };
+  for (const [userId, pts] of roundPointsByUser) {
+    merged[userId] = (merged[userId] ?? 0) + pts;
+  }
+
+  await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .update({ cumulative_totals: merged })
+    .eq("id", sessionId);
+};
+
+/**
  * Score all submissions for a round.
  * - Marks round status 'scoring' to prevent new submissions.
  * - Groups answers by category; within each category, answers with the same
@@ -718,9 +757,18 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
     }
   }
 
-  // Step 2: LLM-validate only the unique answers (duplicates already score 0).
+  // Step 1.5: deterministic starting-letter check, before any LLM call. Wrong-
+  // letter answers score 0 regardless of category fit and never reach Haiku.
+  const letterOkMap = new Map<string, boolean>(); // subId → starts with round.letter
+  for (const sub of submissions) {
+    letterOkMap.set(sub.id, answerStartsWithLetter(sub.answer, round.letter));
+  }
+
+  // Step 2: LLM-validate only unique, letter-correct answers.
   const categories: string[] = Array.isArray(round.categories) ? round.categories : [];
-  const uniqueSubs = submissions.filter((s) => uniquenessMap.get(s.id) === true);
+  const uniqueSubs = submissions.filter(
+    (s) => uniquenessMap.get(s.id) === true && letterOkMap.get(s.id) === true
+  );
   const validationRequests: ValidationRequest[] = uniqueSubs.map((s) => ({
     subId: s.id,
     category: categories[s.category_index] ?? `Category ${s.category_index}`,
@@ -728,12 +776,13 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
   }));
   const validityMap = await validateAnswersWithLLM(round.letter, validationRequests);
 
-  // Step 3: compute final points (unique + valid = 2 pts, anything else = 0).
+  // Step 3: compute final points (unique + correct letter + valid = 2 pts, anything else = 0).
   const updates: { id: string; is_unique: boolean; is_valid: boolean | null; points_awarded: number }[] = [];
   for (const sub of submissions) {
-    const isUnique = uniquenessMap.get(sub.id) ?? false;
-    const isValid  = isUnique ? (validityMap.get(sub.id) ?? true) : null;
-    const pts      = isUnique && isValid ? POINTS_PER_UNIQUE_ANSWER : 0;
+    const isUnique  = uniquenessMap.get(sub.id) ?? false;
+    const letterOk  = letterOkMap.get(sub.id) ?? false;
+    const isValid   = isUnique ? (letterOk ? (validityMap.get(sub.id) ?? true) : false) : null;
+    const pts       = isUnique && isValid ? POINTS_PER_UNIQUE_ANSWER : 0;
     updates.push({ id: sub.id, is_unique: isUnique, is_valid: isValid, points_awarded: pts });
   }
 
@@ -754,11 +803,12 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
     pointsByUser.set(sub.user_id, (pointsByUser.get(sub.user_id) ?? 0) + u.points_awarded);
   }
 
-  await Promise.all(
-    Array.from(pointsByUser.entries()).map(([userId, pts]) =>
+  await Promise.all([
+    ...Array.from(pointsByUser.entries()).map(([userId, pts]) =>
       pts > 0 ? awardCategoryBlitzPoints({ userId, venueId: round.venue_id, points: pts }) : Promise.resolve()
-    )
-  );
+    ),
+    mergeCumulativeSessionTotals(round.session_id, pointsByUser),
+  ]);
 
   // Mark round complete.
   await supabaseAdmin!
@@ -807,6 +857,22 @@ async function awardCategoryBlitzPoints(params: {
 
 // ── Results ───────────────────────────────────────────────────────────────────
 
+/**
+ * The specific reason a submission did or didn't score, for player-facing
+ * display. Derived from already-persisted columns plus the round's letter —
+ * never stored, so it can't drift from the scoring logic above.
+ */
+const submissionReason = (
+  s: Pick<SubmissionRow, "is_unique" | "is_valid" | "answer">,
+  letter: string
+): CategoryBlitzAnswerReason => {
+  if (s.is_unique === null) return "pending"; // not yet scored
+  if (s.is_unique === false) return "duplicate";
+  if (!answerStartsWithLetter(s.answer, letter)) return "wrong_letter";
+  if (s.is_valid === false) return "invalid";
+  return "correct";
+};
+
 async function buildResults(roundId: string, round: RoundRow): Promise<CategoryBlitzRoundResults> {
   // Load current submission state (may have been updated if scoring already ran).
   const { data: subRows } = await supabaseAdmin!
@@ -843,16 +909,36 @@ async function buildResults(roundId: string, round: RoundRow): Promise<CategoryB
         isUnique: s.is_unique ?? false,
         isValid: s.is_valid ?? null,
         pointsAwarded: s.points_awarded,
+        reason: submissionReason(s, round.letter),
       })),
     };
   });
 
-  // Tally total points per user for this round.
-  const totalsByUser = new Map<string, number>();
-  for (const sub of submissions) {
-    totalsByUser.set(sub.user_id, (totalsByUser.get(sub.user_id) ?? 0) + sub.points_awarded);
+  // Session-cumulative leaderboard: read the running total maintained
+  // incrementally by mergeCumulativeSessionTotals() at scoring time, instead
+  // of re-summing every round's submissions on every results fetch (this is
+  // polled every 15s per connected client throughout intermission).
+  const { data: sessionRow } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select("cumulative_totals")
+    .eq("id", round.session_id)
+    .maybeSingle<{ cumulative_totals: Record<string, number> | null }>();
+  const cumulativeTotals = sessionRow?.cumulative_totals ?? {};
+
+  // A user may have played an earlier round but not this one — fetch any
+  // usernames not already loaded above.
+  const missingUserIds = Object.keys(cumulativeTotals).filter((id) => !usernameMap.has(id));
+  if (missingUserIds.length > 0) {
+    const { data: missingUserRows } = await supabaseAdmin!
+      .from("users")
+      .select("id, username")
+      .in("id", missingUserIds);
+    for (const u of missingUserRows ?? []) {
+      usernameMap.set(u.id, u.username);
+    }
   }
-  const totals = Array.from(totalsByUser.entries())
+
+  const totals = Object.entries(cumulativeTotals)
     .sort(([, a], [, b]) => b - a)
     .map(([userId, points]) => ({
       userId,

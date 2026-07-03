@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { utcIsoToDatetimeLocalValue } from "@/lib/categoryBlitzScheduleTime";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { datetimeLocalValueToUtcIso, utcIsoToDatetimeLocalValue } from "@/lib/categoryBlitzScheduleTime";
+import { gameDurationMinutes, roundsFromWindowMinutes } from "@/lib/categoryBlitzShared";
 import type { Venue, CategoryBlitzSchedule, CategoryBlitzSession } from "@/types";
 
 const TIMEZONES = [
@@ -198,8 +199,11 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [rounds, setRounds] = useState(1);
   const [timezone, setTimezone] = useState("America/New_York");
+  // Tracks the schedule's stored duration while editing, so we can warn before
+  // silently changing it if the round-count reconstruction doesn't match exactly.
+  const [editingOriginalWindowMinutes, setEditingOriginalWindowMinutes] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const mountedRef = useRef(true);
 
@@ -213,7 +217,7 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
   const resetForm = useCallback(() => {
     setTitle("");
     setStartTime("");
-    setEndTime("");
+    setRounds(1);
     setTimezone("America/New_York");
   }, []);
 
@@ -244,12 +248,14 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
   useEffect(() => {
     setShowForm(false);
     setEditingId(null);
+    setEditingOriginalWindowMinutes(null);
     setMsg(null);
     resetForm();
   }, [venueId, resetForm]);
 
   const cancelEdit = useCallback(() => {
     setEditingId(null);
+    setEditingOriginalWindowMinutes(null);
     setMsg(null);
     resetForm();
   }, [resetForm]);
@@ -260,7 +266,8 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
     setTitle(schedule.title);
     setTimezone(schedule.timezone);
     setStartTime(utcIsoToDatetimeLocalValue(schedule.startTime, schedule.timezone));
-    setEndTime(utcIsoToDatetimeLocalValue(schedule.endTime, schedule.timezone));
+    setRounds(roundsFromWindowMinutes(schedule.windowMinutes));
+    setEditingOriginalWindowMinutes(schedule.windowMinutes);
     setMsg(null);
   };
 
@@ -269,15 +276,22 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
       setMsg({ text: "Select a venue before creating a schedule.", ok: false });
       return false;
     }
-    if (!title.trim() || !startTime || !endTime) {
-      setMsg({ text: "Title, start time, and end time are required.", ok: false });
+    if (!title.trim() || !startTime) {
+      setMsg({ text: "Title and start time are required.", ok: false });
       return false;
     }
-    if (endTime <= startTime) {
-      setMsg({ text: "End time must be after the start time.", ok: false });
+    if (!Number.isFinite(rounds) || rounds < 1) {
+      setMsg({ text: "At least 1 round is required.", ok: false });
       return false;
     }
     return true;
+  };
+
+  /** Derive the end datetime-local value from start time + round count, in the selected timezone. */
+  const computeEndTime = (): string => {
+    const startUtcMs = Date.parse(datetimeLocalValueToUtcIso(startTime, timezone));
+    const endUtcIso = new Date(startUtcMs + gameDurationMinutes(rounds) * 60_000).toISOString();
+    return utcIsoToDatetimeLocalValue(endUtcIso, timezone);
   };
 
   const handleCreate = async () => {
@@ -293,7 +307,7 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
           venueId,
           title: title.trim(),
           startTime,
-          endTime,
+          endTime: computeEndTime(),
           timezone,
         }),
       });
@@ -314,6 +328,18 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
   const handleUpdate = async () => {
     if (!editingId || !validateForm()) return;
 
+    // roundsFromWindowMinutes is a lossy inverse of gameDurationMinutes — if the
+    // stored duration doesn't exactly fit the rounds*3+(rounds-1)*7 formula (e.g.
+    // a schedule from before round-based scheduling existed), saving would
+    // silently reinterpret and change its length. Confirm with the admin first.
+    const newWindowMinutes = gameDurationMinutes(rounds);
+    if (editingOriginalWindowMinutes != null && newWindowMinutes !== editingOriginalWindowMinutes) {
+      const proceed = confirm(
+        `This schedule's duration will change from ${formatDuration(editingOriginalWindowMinutes)} to ${formatDuration(newWindowMinutes)} to match ${rounds} round${rounds === 1 ? "" : "s"}. Continue?`
+      );
+      if (!proceed) return;
+    }
+
     setSaving(true);
     setMsg(null);
     try {
@@ -323,7 +349,7 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
         body: JSON.stringify({
           title: title.trim(),
           startTime,
-          endTime,
+          endTime: computeEndTime(),
           timezone,
         }),
       });
@@ -399,12 +425,12 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
           mode="create"
           title={title}
           startTime={startTime}
-          endTime={endTime}
+          rounds={rounds}
           timezone={timezone}
           saving={saving}
           onTitleChange={setTitle}
           onStartTimeChange={setStartTime}
-          onEndTimeChange={setEndTime}
+          onRoundsChange={setRounds}
           onTimezoneChange={setTimezone}
           onCancel={() => {
             setShowForm(false);
@@ -466,12 +492,12 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
                   mode="edit"
                   title={title}
                   startTime={startTime}
-                  endTime={endTime}
+                  rounds={rounds}
                   timezone={timezone}
                   saving={saving}
                   onTitleChange={setTitle}
                   onStartTimeChange={setStartTime}
-                  onEndTimeChange={setEndTime}
+                  onRoundsChange={setRounds}
                   onTimezoneChange={setTimezone}
                   onCancel={cancelEdit}
                   onSave={() => void handleUpdate()}
@@ -489,12 +515,12 @@ function ScheduleEditor({
   mode,
   title,
   startTime,
-  endTime,
+  rounds,
   timezone,
   saving,
   onTitleChange,
   onStartTimeChange,
-  onEndTimeChange,
+  onRoundsChange,
   onTimezoneChange,
   onCancel,
   onSave,
@@ -502,16 +528,37 @@ function ScheduleEditor({
   mode: "create" | "edit";
   title: string;
   startTime: string;
-  endTime: string;
+  rounds: number;
   timezone: string;
   saving: boolean;
   onTitleChange: (value: string) => void;
   onStartTimeChange: (value: string) => void;
-  onEndTimeChange: (value: string) => void;
+  onRoundsChange: (value: number) => void;
   onTimezoneChange: (value: string) => void;
   onCancel: () => void;
   onSave: () => void;
 }) {
+  const safeRounds = Math.max(1, Math.floor(rounds) || 1);
+  const durationMinutes = gameDurationMinutes(safeRounds);
+
+  const endsAtLabel = useMemo(() => {
+    if (!startTime) return null;
+    try {
+      const startUtcMs = Date.parse(datetimeLocalValueToUtcIso(startTime, timezone));
+      const endMs = startUtcMs + durationMinutes * 60_000;
+      return new Date(endMs).toLocaleString("en-US", {
+        timeZone: timezone,
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return null;
+    }
+  }, [startTime, timezone, durationMinutes]);
+
   return (
     <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-black uppercase tracking-wider text-slate-500">
@@ -541,11 +588,13 @@ function ScheduleEditor({
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-500">End day & time</label>
+          <label className="mb-1 block text-xs font-semibold text-slate-500">Number of rounds</label>
           <input
-            type="datetime-local"
-            value={endTime}
-            onChange={(event) => onEndTimeChange(event.target.value)}
+            type="number"
+            min={1}
+            step={1}
+            value={safeRounds}
+            onChange={(event) => onRoundsChange(Math.max(1, Math.floor(Number(event.target.value)) || 1))}
             className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
@@ -563,9 +612,18 @@ function ScheduleEditor({
               </option>
             ))}
           </select>
-          <p className="mt-0.5 text-[10px] text-slate-400">
-            The start and end values are interpreted in this timezone for the selected venue.
+        </div>
+
+        <div className="sm:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+          <p className="text-xs font-semibold text-emerald-800">
+            {safeRounds} round{safeRounds === 1 ? "" : "s"} · {formatDuration(durationMinutes)} total
+            {safeRounds > 1 ? ` (3 min/round, 7 min between rounds)` : ""}
           </p>
+          {endsAtLabel ? (
+            <p className="mt-0.5 text-[11px] text-emerald-700">Game will end at {endsAtLabel} ({timezone})</p>
+          ) : (
+            <p className="mt-0.5 text-[11px] text-emerald-700">Pick a start time to see when the game ends.</p>
+          )}
         </div>
       </div>
 
