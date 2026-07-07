@@ -1,10 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
-import { useCategoryBlitzSession } from "@/lib/categoryBlitzRealtime";
+import { useCategoryBlitzSession, type CategoryBlitzPhase } from "@/lib/categoryBlitzRealtime";
 import { answerStartsWithLetter } from "@/lib/categoryBlitzShared";
+import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
+import { GameOnboardingCard } from "@/components/venue/GameIdentityPanel";
+import GradingCascade, { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
+import RoundStartReveal from "@/components/category-blitz/RoundStartReveal";
+import LiveLeaderboard from "@/components/category-blitz/LiveLeaderboard";
+import ValidAnswerGlow from "@/components/category-blitz/ValidAnswerGlow";
+import WrongLetterReject from "@/components/category-blitz/WrongLetterReject";
+import TimerUrgency from "@/components/category-blitz/TimerUrgency";
+import SubmitLockAnimation from "@/components/category-blitz/SubmitLockAnimation";
+import NextRoundCountdown from "@/components/category-blitz/NextRoundCountdown";
+import SessionCompleteFireworks from "@/components/category-blitz/SessionCompleteFireworks";
 import type { CategoryBlitzRoundResults } from "@/types";
+
+const LOBBY_TUTORIAL_ROTATE_MS = 6000;
 
 const LETTER_GRADIENT =
   "bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)]";
@@ -88,20 +103,71 @@ function IdleScreen({ venueId }: { venueId: string | null }) {
   );
 }
 
-function LobbyScreen({ username }: { username: string | null }) {
+function LobbyScreen({
+  username,
+  lobbyCountdown,
+}: {
+  username: string | null;
+  lobbyCountdown: number | null;
+}) {
+  const steps = VENUE_GAME_CARD_BY_KEY["category-blitz"].steps;
+  const [stepIndex, setStepIndex] = useState(0);
+
+  // Auto-rotate the same rules cards shown before a player's first game, so
+  // returning players who skip the tutorial (via the 7-day recency check)
+  // still see the rules refreshed while they wait.
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setStepIndex((i) => (i + 1) % steps.length);
+    }, LOBBY_TUTORIAL_ROTATE_MS);
+    return () => window.clearInterval(id);
+  }, [steps.length]);
+
+  const isUrgent = lobbyCountdown != null && lobbyCountdown <= 10;
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
-      <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-6 text-center`}>
-        <p className={TEXT_LABEL}>Waiting for host</p>
-        <p className="mt-3 text-2xl font-black text-white">You&apos;re in the lobby!</p>
+    <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto px-4 py-6">
+      <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-5 text-center`}>
+        <p className={TEXT_LABEL}>You&apos;re in the lobby</p>
         {username ? <p className="mt-1 text-lg font-bold text-emerald-200">{username}</p> : null}
-        <p className="mt-3 text-sm text-emerald-100/80">
-          The host will start a round shortly. Keep this screen open — the letter and categories will appear automatically.
-        </p>
+        {lobbyCountdown != null ? (
+          <>
+            <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Game starts in</p>
+            <p
+              className={`mt-1 font-black tabular-nums text-[2.6rem] leading-none ${
+                isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
+              }`}
+            >
+              {formatMmSs(lobbyCountdown)}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mt-3 text-xl font-black text-white">Waiting for host</p>
+            <p className="mt-2 text-sm text-emerald-100/80">
+              The host will start a round shortly. Keep this screen open — the letter and categories will appear automatically.
+            </p>
+          </>
+        )}
         <div className={`mt-4 inline-flex items-center gap-2 rounded-full border ${BORDER_ACTIVE} bg-emerald-950/30 px-3 py-1.5 text-xs font-black uppercase tracking-widest ${TEXT_ACCENT}`}>
           <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
           Ready
         </div>
+      </div>
+
+      <div className="relative h-60 w-full max-w-sm shrink-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={stepIndex}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0 h-full w-full"
+          >
+            <GameOnboardingCard gameKey="category-blitz" step={steps[stepIndex]} stepIndex={stepIndex} className="h-full w-full" />
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -182,51 +248,11 @@ function ResultsScreen({
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
       <IntermissionStatus nextRoundStartsIn={nextRoundStartsIn} />
 
-      {/* Leaderboard */}
+      {/* Live Leaderboard with count-up, rank reorder, and point-gain flash */}
       <div className={`rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-4`}>
         <p className={`${TEXT_LABEL} text-center`}>Leaderboard</p>
-        <div className="mt-3 space-y-1.5">
-          {top10.map((entry, i) => (
-            <div
-              key={entry.userId}
-              className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${
-                entry.userId === userId
-                  ? "border-emerald-400/50 bg-emerald-950/40"
-                  : "border-slate-700/50 bg-slate-900/30"
-              }`}
-            >
-              <span className="w-5 text-center text-xs font-black text-slate-500">{i + 1}</span>
-              <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-200">
-                {entry.username}
-                {entry.userId === userId ? (
-                  <span className={`ml-1 text-[0.6rem] font-black uppercase tracking-widest ${TEXT_ACCENT}`}> you</span>
-                ) : null}
-              </span>
-              <span className={`text-base font-black tabular-nums ${entry.userId === userId ? TEXT_ACCENT : "text-slate-300"}`}>
-                {entry.points}
-              </span>
-            </div>
-          ))}
-          {top10.length === 0 && (
-            <p className="py-2 text-center text-sm text-emerald-100/60">No scores yet.</p>
-          )}
-          {/* Viewer's own row, shown separately when outside the top 10 */}
-          {viewerEntry && !viewerInTop10 && (
-            <>
-              <p className="py-0.5 text-center text-xs font-black text-slate-500">···</p>
-              <div className={`flex items-center gap-3 rounded-xl border ${BORDER_ACTIVE} bg-emerald-950/40 px-3 py-2`}>
-                <span className={`w-5 text-center text-xs font-black ${TEXT_ACCENT}`}>{viewerRank + 1}</span>
-                <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-200">
-                  {viewerEntry.username}
-                  <span className={`ml-1 text-[0.6rem] font-black uppercase tracking-widest ${TEXT_ACCENT}`}> you</span>
-                </span>
-                <span className={`text-base font-black tabular-nums ${TEXT_ACCENT}`}>{viewerEntry.points}</span>
-              </div>
-            </>
-          )}
-          {!viewerEntry && (
-            <p className="py-2 text-center text-xs text-emerald-100/60">You haven&apos;t scored any points yet.</p>
-          )}
+        <div className="mt-3">
+          <LiveLeaderboard entries={results.totals} meId={userId} />
         </div>
       </div>
 
@@ -407,7 +433,10 @@ function AnsweringScreen({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      {submitState === "submitting" && (
+        <SubmitLockAnimation answersCount={totalFilled} />
+      )}
       {/* Sticky header */}
       <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950/90 px-4 py-3`}>
         <div className="flex items-center gap-3">
@@ -430,13 +459,7 @@ function AnsweringScreen({
           </div>
           {/* Timer */}
           <div className="shrink-0 text-right">
-            <p
-              className={`text-3xl font-black tabular-nums leading-none ${
-                isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
-              }`}
-            >
-              {formatMmSs(timeRemaining)}
-            </p>
+            <TimerUrgency timeRemaining={timeRemaining} label={formatMmSs(timeRemaining)} />
             <p className="text-[0.6rem] font-black uppercase tracking-widest text-slate-500">remaining</p>
           </div>
         </div>
@@ -468,10 +491,9 @@ function AnsweringScreen({
           {categories.map((category, i) => {
             const filled = answers[i].trim().length > 0;
             const wrongLetter = filled && !answerStartsWithLetter(answers[i], letter);
-            return (
+            const inputRow = (
               <div
-                key={i}
-                className={`flex items-center gap-2 rounded-xl border ${
+                className={`relative flex items-center gap-2 rounded-xl border ${
                   wrongLetter
                     ? "border-rose-500/70 bg-rose-950/30"
                     : filled
@@ -479,6 +501,10 @@ function AnsweringScreen({
                     : "border-slate-700/60 bg-slate-900/40"
                 } px-3 py-2.5 ${isSpectating ? "opacity-50" : ""}`}
               >
+                {/* Valid answer glow + checkmark pop feedback */}
+                {!wrongLetter && filled ? (
+                  <ValidAnswerGlow key={answers[i]} />
+                ) : null}
                 <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
                   {i + 1}
                 </span>
@@ -505,14 +531,19 @@ function AnsweringScreen({
                     spellCheck={false}
                   />
                 </div>
-                {wrongLetter ? (
+                {wrongLetter && (
                   <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
                     wrong letter
                   </span>
-                ) : filled ? (
-                  <span className="shrink-0 text-emerald-400/70">✓</span>
-                ) : null}
+                )}
               </div>
+            );
+            return wrongLetter ? (
+              <WrongLetterReject key={answers[i]}>
+                {inputRow}
+              </WrongLetterReject>
+            ) : (
+              <div key={i}>{inputRow}</div>
             );
           })}
         </div>
@@ -535,15 +566,6 @@ function AnsweringScreen({
         </div>
       )}
 
-      {submitState === "submitting" && (
-        <div className="shrink-0 border-t border-emerald-400/20 px-4 py-4 text-center">
-          <div className="flex items-center justify-center gap-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-400/40 border-t-emerald-400" />
-            <p className="text-sm font-bold text-emerald-300">Submitting…</p>
-          </div>
-        </div>
-      )}
-
       {submitState === "error" && (
         <div className="shrink-0 border-t border-rose-400/20 px-4 py-3">
           <p className="mb-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
@@ -563,9 +585,57 @@ function AnsweringScreen({
   );
 }
 
+// ── Header ────────────────────────────────────────────────────────────────────
+
+function Header({
+  phase,
+  error,
+  onBack,
+}: {
+  phase?: CategoryBlitzPhase;
+  error?: string | null;
+  onBack?: () => void;
+}) {
+  return (
+    <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950 px-4 py-3`}>
+      <div className="flex items-center gap-2">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back to venue"
+            className="tp-clean-button -ml-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-slate-300 transition-colors hover:text-white"
+          >
+            <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+          </button>
+        ) : null}
+        <div
+          className={`h-2 w-2 rounded-full ${
+            phase === "answering"
+              ? "animate-pulse bg-emerald-400"
+              : phase === "lobby"
+              ? "animate-pulse bg-amber-400"
+              : phase === "results" || phase === "scoring"
+              ? "bg-cyan-400"
+              : "bg-slate-600"
+          }`}
+        />
+        <p className={`text-[0.7rem] font-black uppercase tracking-[0.16em] ${TEXT_ACCENT}`}>
+          {phase === "lobby" ? "Lobby" : phase === "answering" ? "Round Active" : phase === "scoring" ? "Scoring" : phase === "results" ? "Results" : phase === "complete" ? "Game Over" : "Category Blitz"}
+        </p>
+        {error && (
+          <span className="ml-auto text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
+            Reconnecting…
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Root component ────────────────────────────────────────────────────────────
 
-export function CategoryBlitzGame() {
+export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [venueId, setVenueId] = useState("");
   const [username, setUsername] = useState<string | null>(null);
@@ -581,10 +651,60 @@ export function CategoryBlitzGame() {
     return () => window.clearTimeout(hydrateId);
   }, []);
 
-  const { phase, round, results, timeRemaining, nextRoundStartsIn, error, errorEscalated, viewerRole, retry } = useCategoryBlitzSession(
+  const { phase, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry } = useCategoryBlitzSession(
     isHydrated ? venueId : "",
     isHydrated ? userId : ""
   );
+
+  // Round start reveal: play the letter drop + category cascade once per round
+  // when we enter the answering phase, then transition to the answer input.
+  const [revealedRoundId, setRevealedRoundId] = useState<string | null>(null);
+  const showReveal = phase === "answering" && !!round && round.id !== revealedRoundId;
+
+  // Live grading reveal: play the cascade once per round when its results land,
+  // then hand off to the full ResultsScreen. Keyed on roundId so it fires for
+  // each new round but not on the 15s intermission re-polls.
+  const [gradedRoundId, setGradedRoundId] = useState<string | null>(null);
+
+  // The viewer's OWN answers, one row per category they answered — the
+  // emotionally relevant set to watch get graded. Memoized so the ~4x/sec
+  // timer re-renders don't hand GradingCascade a fresh array and stall its
+  // internal reveal timers.
+  const gradingAnswers: GradingAnswer[] = useMemo(() => {
+    if (!results || !userId) return [];
+    return results.results.flatMap((cat) => {
+      const mine = cat.answers.find((a) => a.userId === userId);
+      if (!mine) return [];
+      return [{
+        category: cat.category,
+        answer: mine.answer,
+        reason: mine.reason,
+        explanation: mine.explanation,
+        points: mine.pointsAwarded,
+      }];
+    });
+  }, [results, userId]);
+
+  const showCascade =
+    phase === "results" &&
+    !!results &&
+    results.roundId !== gradedRoundId &&
+    gradingAnswers.length > 0;
+
+  // Next-round countdown: a full-screen "get ready" beat for the final 5s of
+  // intermission, after the grading cascade has finished. Keyed on roundId so
+  // it plays once per round's intermission rather than retriggering on every
+  // 250ms timer tick while nextRoundStartsIn sits at/under the threshold.
+  const [countdownDoneRoundId, setCountdownDoneRoundId] = useState<string | null>(null);
+  const NEXT_ROUND_COUNTDOWN_THRESHOLD_SECONDS = 5;
+  const showNextRoundCountdown =
+    phase === "results" &&
+    !!results &&
+    !showCascade &&
+    nextRoundStartsIn !== null &&
+    nextRoundStartsIn > 0 &&
+    nextRoundStartsIn <= NEXT_ROUND_COUNTDOWN_THRESHOLD_SECONDS &&
+    results.roundId !== countdownDoneRoundId;
 
   if (!isHydrated) {
     return (
@@ -592,14 +712,7 @@ export function CategoryBlitzGame() {
         className="flex flex-col overflow-hidden bg-slate-950 text-white"
         style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
       >
-        <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950 px-4 py-3`}>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-slate-600" />
-            <p className={`text-[0.7rem] font-black uppercase tracking-[0.16em] ${TEXT_ACCENT}`}>
-              Category Blitz
-            </p>
-          </div>
-        </div>
+        <Header onBack={onBack} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
           <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
             <p className={TEXT_LABEL}>Loading game status</p>
@@ -612,8 +725,14 @@ export function CategoryBlitzGame() {
 
   if (!venueId) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
-        <p className="text-sm text-slate-400">No venue session. Return to your venue page.</p>
+      <div
+        className="flex flex-col overflow-hidden bg-slate-950 text-white"
+        style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
+      >
+        <Header onBack={onBack} />
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
+          <p className="text-sm text-slate-400">No venue session. Return to your venue page.</p>
+        </div>
       </div>
     );
   }
@@ -626,24 +745,30 @@ export function CategoryBlitzGame() {
   // intermission for no reason.
   if (error && (phase === "idle" || errorEscalated)) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
-        <div className="w-full max-w-sm rounded-2xl border border-rose-400/40 bg-slate-900 p-5 text-center">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-300">Connection error</p>
-          <p className="mt-2 text-sm text-slate-400">{error}</p>
-          {errorEscalated && (
-            <>
-              <p className="mt-2 text-xs text-slate-500">
-                This has been failing for a while — your game state may be stale.
-              </p>
-              <button
-                type="button"
-                onClick={retry}
-                className="mt-4 w-full rounded-xl border border-rose-400/50 bg-rose-500/20 py-2.5 text-sm font-black uppercase tracking-wider text-rose-300"
-              >
-                Retry
-              </button>
-            </>
-          )}
+      <div
+        className="flex flex-col overflow-hidden bg-slate-950 text-white"
+        style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
+      >
+        <Header phase={phase} error={error} onBack={onBack} />
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
+          <div className="w-full max-w-sm rounded-2xl border border-rose-400/40 bg-slate-900 p-5 text-center">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-300">Connection error</p>
+            <p className="mt-2 text-sm text-slate-400">{error}</p>
+            {errorEscalated && (
+              <>
+                <p className="mt-2 text-xs text-slate-500">
+                  This has been failing for a while — your game state may be stale.
+                </p>
+                <button
+                  type="button"
+                  onClick={retry}
+                  className="mt-4 w-full rounded-xl border border-rose-400/50 bg-rose-500/20 py-2.5 text-sm font-black uppercase tracking-wider text-rose-300"
+                >
+                  Retry
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -651,52 +776,61 @@ export function CategoryBlitzGame() {
 
   return (
     <div
-      className="flex flex-col overflow-hidden bg-slate-950 text-white"
+      className="relative flex flex-col overflow-hidden bg-slate-950 text-white"
       style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
     >
-      {/* Header bar */}
-      <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950 px-4 py-3`}>
-        <div className="flex items-center gap-2">
-          <div
-            className={`h-2 w-2 rounded-full ${
-              phase === "answering"
-                ? "animate-pulse bg-emerald-400"
-                : phase === "lobby"
-                ? "animate-pulse bg-amber-400"
-                : phase === "results" || phase === "scoring"
-                ? "bg-cyan-400"
-                : "bg-slate-600"
-            }`}
-          />
-          <p className={`text-[0.7rem] font-black uppercase tracking-[0.16em] ${TEXT_ACCENT}`}>
-            {phase === "idle" ? "Category Blitz" : phase === "lobby" ? "Lobby" : phase === "answering" ? "Round Active" : phase === "scoring" ? "Scoring" : phase === "results" ? "Results" : "Game Over"}
-          </p>
-          {error && (
-            <span className="ml-auto text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
-              Reconnecting…
-            </span>
-          )}
-        </div>
-      </div>
+      <Header phase={phase} error={error} onBack={onBack} />
+      {showNextRoundCountdown && (
+        <NextRoundCountdown
+          secondsUntilNextRound={nextRoundStartsIn ?? 0}
+          onZero={() => setCountdownDoneRoundId(results?.roundId ?? null)}
+        />
+      )}
 
       {/* Phase content */}
       {phase === "idle" && <IdleScreen venueId={venueId} />}
-      {phase === "lobby" && <LobbyScreen username={username} />}
+      {phase === "lobby" && <LobbyScreen username={username} lobbyCountdown={lobbyCountdown} />}
       {phase === "answering" && round && (
-        <AnsweringScreen
-          letter={round.letter}
-          categories={round.categories}
-          roundId={round.id}
-          timeRemaining={timeRemaining}
-          venueId={venueId}
-          isSpectating={viewerRole === "spectator"}
-        />
+        showReveal ? (
+          <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto">
+            <RoundStartReveal
+              letter={round.letter}
+              categories={round.categories}
+              onDone={() => setRevealedRoundId(round.id)}
+            />
+          </div>
+        ) : (
+          <AnsweringScreen
+            letter={round.letter}
+            categories={round.categories}
+            roundId={round.id}
+            timeRemaining={timeRemaining}
+            venueId={venueId}
+            isSpectating={viewerRole === "spectator"}
+          />
+        )
       )}
       {phase === "scoring" && <ScoringScreen />}
       {phase === "results" && results && (
-        <ResultsScreen results={results} userId={userId} nextRoundStartsIn={nextRoundStartsIn} />
+        showCascade ? (
+          <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto py-4">
+            <GradingCascade
+              answers={gradingAnswers}
+              onComplete={() => setGradedRoundId(results.roundId)}
+            />
+          </div>
+        ) : (
+          <ResultsScreen results={results} userId={userId} nextRoundStartsIn={nextRoundStartsIn} />
+        )
       )}
-      {phase === "complete" && <CompleteScreen />}
+      {phase === "complete" && (
+        <>
+          {results && results.totals.length > 0 && (
+            <SessionCompleteFireworks finalStandings={results.totals} />
+          )}
+          <CompleteScreen />
+        </>
+      )}
     </div>
   );
 }

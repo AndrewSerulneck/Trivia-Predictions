@@ -1628,3 +1628,178 @@ a[role="button"][class*="text-[11px]"] {
     box-shadow: 0 0 12px 2px rgba(255, 255, 255, 0.7);
   }
 }
+
+/* ===== Category Blitz — GradingCascade (tp-*) ===== */
+
+@keyframes tp-scan {
+  0%   { transform: translateX(-120%) skewX(-12deg); }
+  100% { transform: translateX(320%)  skewX(-12deg); }
+}
+.tp-scanline {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(16, 185, 129, 0.16),
+    rgba(16, 185, 129, 0.28),
+    transparent
+  );
+  animation: tp-scan 1.6s ease-in-out infinite;
+}
+
+@keyframes tp-verdict-pop {
+  0%   { transform: scale(0.97); }
+  45%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+.tp-verdict-pop {
+  animation: tp-verdict-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes tp-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+.tp-shake { animation: tp-shake 0.4s ease-in-out both; }
+
+@keyframes tp-dot-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1); }
+}
+.tp-dot-pulse { animation: tp-dot-pulse 1s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-scanline { display: none; }
+  .tp-verdict-pop,
+  .tp-shake,
+  .tp-dot-pulse { animation: none !important; }
+}
+
+/* ===== Category Blitz — ValidAnswerGlow (tp-*) ===== */
+
+@keyframes tp-valid-glow {
+  0%   { background-color: transparent; border-color: transparent; box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+  35%  { background-color: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 12px rgba(16, 185, 129, 0.25); }
+  100% { background-color: transparent; border-color: transparent; box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+}
+.tp-valid-glow {
+  border-width: 1px;
+  border-style: solid;
+  animation: tp-valid-glow 0.3s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-valid-glow { display: none; }
+}
+
+/* ===== Category Blitz — WrongLetterReject (tp-*) ===== */
+
+@keyframes tp-reject-flash {
+  0%   { background-color: transparent; border-color: transparent; box-shadow: 0 0 0 rgba(244, 63, 94, 0); }
+  30%  { background-color: rgba(244, 63, 94, 0.14); border-color: rgba(251, 113, 133, 0.55); box-shadow: 0 0 10px rgba(244, 63, 94, 0.25); }
+  100% { background-color: transparent; border-color: transparent; box-shadow: 0 0 0 rgba(244, 63, 94, 0); }
+}
+.tp-reject-flash {
+  border-width: 1px;
+  border-style: solid;
+  animation: tp-reject-flash 0.35s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-reject-flash { animation: none !important; }
+}
+
+/* ===== Category Blitz — TimerUrgency (tp-*) ===== */
+
+@keyframes tp-timer-panic-glow {
+  0%, 100% { text-shadow: 0 0 0 rgba(244, 63, 94, 0); }
+  50%      { text-shadow: 0 0 10px rgba(244, 63, 94, 0.45); }
+}
+.tp-timer-panic {
+  animation: tp-timer-panic-glow 0.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-timer-panic { animation: none !important; }
+}
+
+/* ===== Category Blitz — SubmitLockAnimation (tp-*) ===== */
+
+@keyframes tp-lock-shimmer {
+  0%   { transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+  40%  { opacity: 1; }
+  100% { transform: translateX(240%) skewX(-18deg); opacity: 0; }
+}
+.tp-lock-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  animation: tp-lock-shimmer 0.6s ease-out 0.5s both;
+}
+
+@keyframes tp-lock-seal {
+  0%, 100% { box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+  50%      { box-shadow: 0 0 22px rgba(16, 185, 129, 0.45); }
+}
+.tp-lock-seal {
+  animation: tp-lock-seal 0.5s ease-out 0.5s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-lock-shimmer,
+  .tp-lock-seal { animation: none !important; }
+}
+
+/* ===== Category Blitz — NextRoundCountdown (tp-*) ===== */
+
+@keyframes tp-count-glow {
+  0%, 100% { text-shadow: 0 0 0 currentColor; }
+  50%      { text-shadow: 0 0 24px currentColor; }
+}
+.tp-count-glow {
+  animation: tp-count-glow 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-count-glow { animation: none !important; }
+}
+
+/* ===== Category Blitz — SessionCompleteFireworks (tp-*) ===== */
+
+@keyframes tp-fw-glow {
+  0%, 100% { text-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+  50%      { text-shadow: 0 0 22px rgba(16, 185, 129, 0.55); }
+}
+.tp-fw-glow {
+  animation: tp-fw-glow 1.4s ease-in-out 0.4s infinite;
+}
+
+@keyframes tp-fw-shimmer {
+  0%   { transform: translateX(-160%) skewX(-20deg); opacity: 0; }
+  45%  { opacity: 0.9; }
+  100% { transform: translateX(220%) skewX(-20deg); opacity: 0; }
+}
+.tp-fw-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  animation: tp-fw-shimmer 0.9s ease-out 1.6s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-fw-glow,
+  .tp-fw-shimmer { animation: none !important; }
+}
