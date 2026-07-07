@@ -27,6 +27,8 @@ export interface CategoryBlitzSessionState {
   results:         CategoryBlitzRoundResults | null;
   timeRemaining:   number;        // seconds remaining in current round (0 when not answering)
   nextRoundStartsIn: number | null;
+  /** Seconds until the lobby's round starts, or null when there's no known start time (e.g. a manual session). */
+  lobbyCountdown:  number | null;
   isConnected:     boolean;
   error:           string | null;
   /**
@@ -74,6 +76,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   const [results,       setResults]       = useState<CategoryBlitzRoundResults | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [nextRoundStartsIn, setNextRoundStartsIn] = useState<number | null>(null);
+  const [lobbyCountdown, setLobbyCountdown] = useState<number | null>(null);
   const [isConnected,   setIsConnected]   = useState(false);
   const [error,         setError]         = useState<string | null>(null);
   const [errorEscalated, setErrorEscalated] = useState(false);
@@ -84,6 +87,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   const scoringCalledRef  = useRef(false);  // prevent double-trigger per round
   const currentRoundIdRef = useRef<string | null>(null);
   const endsAtRef         = useRef<number | null>(null);  // ms epoch
+  const lobbyStartsAtRef  = useRef<number | null>(null);  // ms epoch
   const sessionIdRef      = useRef<string | null>(null);
   const userIdRef         = useRef(userId);
   const loadResultsRef    = useRef<(roundId: string) => Promise<void>>(async () => {});
@@ -101,11 +105,13 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       setResults(null);
       setTimeRemaining(0);
       setNextRoundStartsIn(null);
+      setLobbyCountdown(null);
       setError(null);
       setErrorEscalated(false);
       setIsConnected(false);
       setViewerRole(null);
       endsAtRef.current = null;
+      lobbyStartsAtRef.current = null;
       currentRoundIdRef.current = null;
       scoringCalledRef.current = false;
       errorStreakRef.current = 0;
@@ -203,8 +209,10 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setResults(null);
         setTimeRemaining(0);
         setNextRoundStartsIn(null);
+        setLobbyCountdown(null);
         setViewerRole(null);
         endsAtRef.current = null;
+        lobbyStartsAtRef.current = null;
         setPhase("idle");
         return;
       }
@@ -212,6 +220,8 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setRound(null);
         setViewerRole(null);
         endsAtRef.current = null;
+        lobbyStartsAtRef.current = null;
+        setLobbyCountdown(null);
         setPhase("complete");
         return;
       }
@@ -222,10 +232,12 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setTimeRemaining(0);
         setNextRoundStartsIn(null);
         endsAtRef.current = null;
+        lobbyStartsAtRef.current = s.startsAt ? new Date(s.startsAt).getTime() : null;
         setPhase("lobby");
         return;
       }
       // Session is active/scoring — load the current round.
+      lobbyStartsAtRef.current = null;
       await loadCurrentRound(s.id);
     } catch {
       if (!mountedRef.current) return;
@@ -300,6 +312,12 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
           scoringCalledRef.current = true;
           void triggerScoringRef.current(currentRoundIdRef.current);
         }
+      }
+
+      if (phase === "lobby" && lobbyStartsAtRef.current !== null) {
+        setLobbyCountdown(Math.max(0, Math.round((lobbyStartsAtRef.current - Date.now()) / 1000)));
+      } else {
+        setLobbyCountdown(null);
       }
 
       if ((phase === "results" || phase === "scoring") && round?.startedAt) {
@@ -387,5 +405,5 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
     void loadSessionRef.current();
   }, []);
 
-  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, isConnected, error, errorEscalated, viewerRole, retry };
+  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, isConnected, error, errorEscalated, viewerRole, retry };
 }
