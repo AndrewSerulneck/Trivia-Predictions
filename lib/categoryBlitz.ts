@@ -4,7 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
-import { ROUND_DURATION_SECONDS, ROUND_INTERVAL_SECONDS, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
+import { ROUND_DURATION_SECONDS, ROUND_INTERVAL_SECONDS, LOBBY_DWELL_SECONDS, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
 import type {
   CategoryBlitzSession,
   CategoryBlitzRound,
@@ -100,18 +100,20 @@ export function normalizeAnswer(raw: string): string {
 // ── LLM answer validation ─────────────────────────────────────────────────────
 
 type ValidationRequest = { subId: string; category: string; answer: string };
-type ValidationResult  = { subId: string; valid: boolean };
+/** Per-submission verdict from the grader: validity plus, when invalid, a short "why". */
+type ValidationVerdict = { valid: boolean; reason: string | null };
 
 /**
  * Validate a batch of unique answers against their categories using Claude Haiku.
- * Returns a map of submission id → valid (true/false).
- * Falls back to valid=true on any API error so scoring never hard-fails.
+ * Returns a map of submission id → { valid, reason }, where `reason` is a short
+ * (≤8-word) player-facing explanation present ONLY when valid is false.
+ * Falls back to valid=true (reason null) on any API error so scoring never hard-fails.
  */
 async function validateAnswersWithLLM(
   letter: string,
   requests: ValidationRequest[],
-): Promise<Map<string, boolean>> {
-  const resultMap = new Map<string, boolean>();
+): Promise<Map<string, ValidationVerdict>> {
+  const resultMap = new Map<string, ValidationVerdict>();
   if (requests.length === 0) return resultMap;
 
   const lines = requests
@@ -125,13 +127,15 @@ async function validateAnswersWithLLM(
 
 Every category in this game is written to pass the "Is-A" Classification Test: the statement "[Answer] IS A(N) [Category]" must be objectively, definitionally true — not situational, subjective, or a vibe-based judgment call. Apply that same standard when grading.
 
-For each item below, answer YES if the answer is a genuinely valid member of that category under the Is-A test (the statement "[Answer] IS A(N) [Category]" is definitionally true).
+For each item below, decide valid=true if the answer is a genuinely valid member of that category under the Is-A test (the statement "[Answer] IS A(N) [Category]" is definitionally true).
 
-Answer NO if the answer is wrong, too vague, or off-topic for the category.
+Decide valid=false if the answer is wrong, too vague, or off-topic for the category.
 
-Be strict: partial answers, brand names used wrong, or creative stretches that don't actually fit the category should be NO.
+Be strict: partial answers, brand names used wrong, or creative stretches that don't actually fit the category are valid=false.
 
-Return ONLY a JSON array with objects {"index": <number>, "valid": <true|false>}. No explanation.
+When (and only when) valid is false, also give "reason": a punchy explanation of AT MOST 8 words, addressed to the player, of why it doesn't fit (e.g. "A trout is a fish, not a mammal"). When valid is true, set "reason" to null.
+
+Return ONLY a JSON array with objects {"index": <number>, "valid": <true|false>, "reason": <string|null>}. No other text.
 
 Items:
 ${lines}`;
@@ -139,7 +143,7 @@ ${lines}`;
   try {
     const message = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 512,
+      max_tokens: 1024,
       temperature: 0,
       messages: [{ role: "user", content: prompt }],
     });
@@ -153,15 +157,21 @@ ${lines}`;
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error("No JSON array in LLM response");
 
-    const parsed = JSON.parse(jsonMatch[0]) as { index: number; valid: boolean }[];
+    const parsed = JSON.parse(jsonMatch[0]) as { index: number; valid: boolean; reason?: unknown }[];
     for (const item of parsed) {
       const req = requests[item.index - 1];
-      if (req) resultMap.set(req.subId, Boolean(item.valid));
+      if (!req) continue;
+      const valid = Boolean(item.valid);
+      const reason =
+        !valid && typeof item.reason === "string" && item.reason.trim()
+          ? item.reason.trim().slice(0, 120)
+          : null;
+      resultMap.set(req.subId, { valid, reason });
     }
 
-    // Any request not covered by the response defaults to valid=true (safe fallback).
+    // Any request not covered by the response defaults to valid (safe fallback).
     for (const req of requests) {
-      if (!resultMap.has(req.subId)) resultMap.set(req.subId, true);
+      if (!resultMap.has(req.subId)) resultMap.set(req.subId, { valid: true, reason: null });
     }
     console.log(`[categoryBlitz] validated ${requests.length} answer(s) via Haiku for letter "${letter}"`);
   } catch (err) {
@@ -171,7 +181,7 @@ ${lines}`;
       err instanceof Error ? err.message : err
     );
     for (const req of requests) {
-      resultMap.set(req.subId, true);
+      resultMap.set(req.subId, { valid: true, reason: null });
     }
   }
 
@@ -186,6 +196,7 @@ type SessionRow = {
   status: string;
   source: string;
   scheduled_end_at: string | null;
+  starts_at: string | null;
   created_at: string;
   completed_at: string | null;
 };
@@ -214,6 +225,7 @@ type SubmissionRow = {
   normalized_answer: string;
   is_unique: boolean | null;
   is_valid: boolean | null;
+  invalid_reason: string | null;
   points_awarded: number;
   submitted_at: string;
 };
@@ -225,12 +237,13 @@ function toSession(row: SessionRow): CategoryBlitzSession {
     status: row.status as CategoryBlitzSession["status"],
     source: (row.source === "auto" ? "auto" : "manual"),
     scheduledEndAt: row.scheduled_end_at,
+    startsAt: row.starts_at,
     createdAt: row.created_at,
     completedAt: row.completed_at,
   };
 }
 
-const SESSION_COLS = "id, venue_id, status, source, scheduled_end_at, created_at, completed_at";
+const SESSION_COLS = "id, venue_id, status, source, scheduled_end_at, starts_at, created_at, completed_at";
 
 function toRound(row: RoundRow): CategoryBlitzRound {
   return {
@@ -330,6 +343,17 @@ async function scoreExpiredRoundForVenue(venueId: string, now: Date): Promise<vo
   }
 }
 
+/** When a freshly opened auto session's lobby should end, capped so it never outlasts the schedule window. */
+function computeLobbyStartsAt(now: Date, windowEnd: Date): string {
+  const startsAtMs = Math.min(now.getTime() + LOBBY_DWELL_SECONDS * 1000, windowEnd.getTime());
+  return new Date(startsAtMs).toISOString();
+}
+
+/** True once a lobby session's dwell period has elapsed and its first round should fire. */
+function isLobbyStartDue(session: CategoryBlitzSession, now: Date): boolean {
+  return session.status === "lobby" && !!session.startsAt && now.getTime() >= new Date(session.startsAt).getTime();
+}
+
 /**
  * Drives one venue's Category Blitz forward on demand, exactly like
  * getLiveShowdownState's lazy-seeding safety net drives Live Trivia: closes
@@ -367,11 +391,11 @@ export async function driveVenueCategoryBlitz(
     }
 
     try {
-      const created = await createSession(venueId, {
+      await createSession(venueId, {
         source: "auto",
         scheduledEndAt: occurrence.windowEnd.toISOString(),
+        startsAt: computeLobbyStartsAt(now, occurrence.windowEnd),
       });
-      await startRound(created.id);
       return await getActiveSession(venueId);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -384,18 +408,22 @@ export async function driveVenueCategoryBlitz(
 
   // Leave manual (admin-driven) sessions entirely alone — only the engine's
   // own auto sessions advance themselves on read.
-  if (existing.source === "auto" && openSchedule) {
-    const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
-    if (occurrence) {
-      const canFitAnother = now.getTime() + ROUND_DURATION_SECONDS * 1000 <= occurrence.windowEnd.getTime();
-      if (canFitAnother) {
-        const latest = await getLatestRound(existing.id);
-        if (!latest) {
-          await startRound(existing.id);
-        } else if (latest.status === "complete") {
-          const nextRoundAt = new Date(latest.started_at).getTime() + ROUND_INTERVAL_SECONDS * 1000;
-          if (now.getTime() >= nextRoundAt) {
-            await startRound(existing.id);
+  if (existing.source === "auto") {
+    if (existing.status === "lobby") {
+      if (isLobbyStartDue(existing, now)) {
+        await startRound(existing.id);
+      }
+    } else if (openSchedule) {
+      const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
+      if (occurrence) {
+        const canFitAnother = now.getTime() + ROUND_DURATION_SECONDS * 1000 <= occurrence.windowEnd.getTime();
+        if (canFitAnother) {
+          const latest = await getLatestRound(existing.id);
+          if (latest && latest.status === "complete") {
+            const nextRoundAt = new Date(latest.started_at).getTime() + ROUND_INTERVAL_SECONDS * 1000;
+            if (now.getTime() >= nextRoundAt) {
+              await startRound(existing.id);
+            }
           }
         }
       }
@@ -410,6 +438,8 @@ export type CreateSessionOptions = {
   source?: CategoryBlitzSession["source"];
   /** When the scheduled window closes (auto sessions). The engine ends the session at this time. */
   scheduledEndAt?: string | null;
+  /** When the lobby's first round should start. Null means an admin starts it explicitly. */
+  startsAt?: string | null;
 };
 
 /**
@@ -428,6 +458,7 @@ export async function createSession(
       status: "lobby",
       source: options.source ?? "manual",
       scheduled_end_at: options.scheduledEndAt ?? null,
+      starts_at: options.startsAt ?? null,
     })
     .select(SESSION_COLS)
     .single<SessionRow>();
@@ -654,7 +685,7 @@ export async function submitAnswer(params: {
       { onConflict: "round_id,auth_id,category_index" }
     )
     .select(
-      "id, round_id, venue_id, user_id, auth_id, category_index, answer, normalized_answer, is_unique, is_valid, points_awarded, submitted_at"
+      "id, round_id, venue_id, user_id, auth_id, category_index, answer, normalized_answer, is_unique, is_valid, invalid_reason, points_awarded, submitted_at"
     )
     .single<SubmissionRow>();
 
@@ -730,7 +761,7 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
   const { data: submissionRows, error: subErr } = await supabaseAdmin!
     .from("category_blitz_submissions")
     .select(
-      "id, round_id, venue_id, user_id, auth_id, category_index, answer, normalized_answer, is_unique, is_valid, points_awarded, submitted_at"
+      "id, round_id, venue_id, user_id, auth_id, category_index, answer, normalized_answer, is_unique, is_valid, invalid_reason, points_awarded, submitted_at"
     )
     .eq("round_id", roundId);
 
@@ -777,21 +808,31 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
   const validityMap = await validateAnswersWithLLM(round.letter, validationRequests);
 
   // Step 3: compute final points (unique + correct letter + valid = 2 pts, anything else = 0).
-  const updates: { id: string; is_unique: boolean; is_valid: boolean | null; points_awarded: number }[] = [];
+  // invalid_reason carries Haiku's short "why" and is persisted only for answers
+  // the LLM actually judged invalid — the live grading reveal reads it back later.
+  const updates: {
+    id: string;
+    is_unique: boolean;
+    is_valid: boolean | null;
+    invalid_reason: string | null;
+    points_awarded: number;
+  }[] = [];
   for (const sub of submissions) {
     const isUnique  = uniquenessMap.get(sub.id) ?? false;
     const letterOk  = letterOkMap.get(sub.id) ?? false;
-    const isValid   = isUnique ? (letterOk ? (validityMap.get(sub.id) ?? true) : false) : null;
+    const verdict   = validityMap.get(sub.id);
+    const isValid   = isUnique ? (letterOk ? (verdict?.valid ?? true) : false) : null;
+    const invalidReason = isUnique && letterOk && verdict && !verdict.valid ? verdict.reason : null;
     const pts       = isUnique && isValid ? POINTS_PER_UNIQUE_ANSWER : 0;
-    updates.push({ id: sub.id, is_unique: isUnique, is_valid: isValid, points_awarded: pts });
+    updates.push({ id: sub.id, is_unique: isUnique, is_valid: isValid, invalid_reason: invalidReason, points_awarded: pts });
   }
 
-  // Persist uniqueness, validity, and points on each submission row.
+  // Persist uniqueness, validity, explanation, and points on each submission row.
   await Promise.all(
-    updates.map(({ id, is_unique, is_valid, points_awarded }) =>
+    updates.map(({ id, is_unique, is_valid, invalid_reason, points_awarded }) =>
       supabaseAdmin!
         .from("category_blitz_submissions")
-        .update({ is_unique, is_valid, points_awarded })
+        .update({ is_unique, is_valid, invalid_reason, points_awarded })
         .eq("id", id)
     )
   );
@@ -873,11 +914,37 @@ const submissionReason = (
   return "correct";
 };
 
+/**
+ * Short player-facing "why it didn't score" line for the live grading reveal.
+ * `invalid` reuses Haiku's persisted explanation; `wrong_letter` and
+ * `duplicate` are templated deterministically (no LLM). Undefined for
+ * correct/pending answers, which need no explanation.
+ */
+const submissionExplanation = (
+  s: Pick<SubmissionRow, "invalid_reason">,
+  reason: CategoryBlitzAnswerReason,
+  letter: string,
+  duplicateCount: number,
+): string | undefined => {
+  switch (reason) {
+    case "wrong_letter":
+      return `Doesn't start with ${letter.toUpperCase()}`;
+    case "duplicate":
+      return duplicateCount > 1
+        ? `${duplicateCount} players gave this answer — it cancels out`
+        : "Another player gave the same answer";
+    case "invalid":
+      return s.invalid_reason?.trim() || "Not a valid answer for this category";
+    default:
+      return undefined;
+  }
+};
+
 async function buildResults(roundId: string, round: RoundRow): Promise<CategoryBlitzRoundResults> {
   // Load current submission state (may have been updated if scoring already ran).
   const { data: subRows } = await supabaseAdmin!
     .from("category_blitz_submissions")
-    .select("id, round_id, venue_id, user_id, auth_id, category_index, answer, normalized_answer, is_unique, is_valid, points_awarded, submitted_at")
+    .select("id, round_id, venue_id, user_id, auth_id, category_index, answer, normalized_answer, is_unique, is_valid, invalid_reason, points_awarded, submitted_at")
     .eq("round_id", roundId);
 
   const submissions: SubmissionRow[] = subRows ?? [];
@@ -899,18 +966,28 @@ async function buildResults(roundId: string, round: RoundRow): Promise<CategoryB
 
   const results: CategoryBlitzCategoryResult[] = categories.map((category, idx) => {
     const catSubs = submissions.filter((s) => s.category_index === idx);
+    // How many players landed on each normalized answer in this category — lets
+    // the duplicate explanation say "3 players gave this answer".
+    const dupCounts = new Map<string, number>();
+    for (const s of catSubs) {
+      dupCounts.set(s.normalized_answer, (dupCounts.get(s.normalized_answer) ?? 0) + 1);
+    }
     return {
       categoryIndex: idx,
       category,
-      answers: catSubs.map((s) => ({
-        userId: s.user_id,
-        username: usernameMap.get(s.user_id) ?? "Unknown",
-        answer: s.answer,
-        isUnique: s.is_unique ?? false,
-        isValid: s.is_valid ?? null,
-        pointsAwarded: s.points_awarded,
-        reason: submissionReason(s, round.letter),
-      })),
+      answers: catSubs.map((s) => {
+        const reason = submissionReason(s, round.letter);
+        return {
+          userId: s.user_id,
+          username: usernameMap.get(s.user_id) ?? "Unknown",
+          answer: s.answer,
+          isUnique: s.is_unique ?? false,
+          isValid: s.is_valid ?? null,
+          pointsAwarded: s.points_awarded,
+          reason,
+          explanation: submissionExplanation(s, reason, round.letter, dupCounts.get(s.normalized_answer) ?? 1),
+        };
+      }),
     };
   });
 
@@ -1092,13 +1169,14 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
 
       const session = await getActiveSession(venueId);
 
-      // Open a fresh auto session (with first round) if nothing is running.
+      // Open a fresh auto session — it dwells in the lobby until its
+      // startsAt elapses (checked below), rather than firing a round immediately.
       if (!session) {
-        const created = await createSession(venueId, {
+        await createSession(venueId, {
           source: "auto",
           scheduledEndAt: windowEnd.toISOString(),
+          startsAt: computeLobbyStartsAt(now, windowEnd),
         });
-        await startRound(created.id);
         result.opened.push(venueId);
         continue;
       }
@@ -1106,16 +1184,20 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
       // Leave manual sessions entirely alone.
       if (session.source !== "auto") continue;
 
+      if (session.status === "lobby") {
+        if (isLobbyStartDue(session, now)) {
+          await startRound(session.id);
+          result.started.push(venueId);
+        }
+        continue;
+      }
+
       // Only fire another round if a full one can finish inside the window.
       const canFitAnother = now.getTime() + ROUND_DURATION_SECONDS * 1000 <= windowEnd.getTime();
       if (!canFitAnother) continue;
 
       const latest = await getLatestRound(session.id);
-      if (!latest) {
-        await startRound(session.id);
-        result.started.push(venueId);
-        continue;
-      }
+      if (!latest) continue; // status is 'active' only once a round exists — defensive guard
 
       // Wait for the current round (and its results window) before the next start.
       if (latest.status !== "complete") continue;

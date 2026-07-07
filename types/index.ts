@@ -444,6 +444,8 @@ export interface CategoryBlitzSession {
   status:         CategoryBlitzSessionStatus;
   source:         CategoryBlitzSessionSource;
   scheduledEndAt: string | null;
+  /** When the lobby's round should start (set on auto-created sessions). Null for manual sessions the admin starts explicitly. */
+  startsAt:       string | null;
   createdAt:      string;
   completedAt:    string | null;
 }
@@ -490,6 +492,13 @@ export interface CategoryBlitzCategoryResult {
     isValid:       boolean | null;
     pointsAwarded: number;
     reason:        CategoryBlitzAnswerReason;
+    /**
+     * Short player-facing explanation of a non-scoring verdict, for the live
+     * grading reveal. Present only when reason !== 'correct' and !== 'pending':
+     * Haiku's ≤8-word "why" for `invalid`, a templated line for `wrong_letter`
+     * / `duplicate`. Undefined for correct/pending answers.
+     */
+    explanation?:  string;
   }[];
 }
 
