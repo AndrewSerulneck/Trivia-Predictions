@@ -79,6 +79,21 @@ function markOnboardingComplete(gameKey: VenueGameKey): void {
   }
 }
 
+/** True when this browser recorded playing `gameKey` at this venue within ONBOARDING_STALE_MS. */
+function hasRecentOnboarding(gameKey: VenueGameKey): boolean {
+  try {
+    const venueId = getVenueId()?.trim() ?? "";
+    if (!venueId) return false;
+    const raw = localStorage.getItem(onboardingStorageKey(gameKey, venueId));
+    if (!raw) return false;
+    const timestamp = Number(raw);
+    if (!Number.isFinite(timestamp)) return false;
+    return Date.now() - timestamp < ONBOARDING_STALE_MS;
+  } catch {
+    return false;
+  }
+}
+
 function analyticsGameType(gameKey: VenueGameKey): GameAnalyticsType {
   if (gameKey === "live_trivia") return "live-trivia";
   if (gameKey === "bingo") return "bingo";
@@ -93,6 +108,7 @@ export function GameLandingExperience({
   playLabel = "Play",
   initialPlaying = false,
   autoResume = true,
+  skipOnboardingIfRecent = false,
   playHref,
   showPlayingBackButton = true,
   showShellUserStatus = true,
@@ -109,6 +125,8 @@ export function GameLandingExperience({
   playLabel?: string;
   initialPlaying?: boolean;
   autoResume?: boolean;
+  /** Skip straight past the tutorial slides if this browser played `gameKey` at this venue within the last 7 days. */
+  skipOnboardingIfRecent?: boolean;
   playHref?: string;
   showPlayingBackButton?: boolean;
   showShellUserStatus?: boolean;
@@ -124,7 +142,9 @@ export function GameLandingExperience({
   const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(initialPlaying);
   const [rulesExiting, setRulesExiting] = useState(false);
-  const [isResumeCheckPending, setIsResumeCheckPending] = useState(!initialPlaying && autoResume);
+  const [isResumeCheckPending, setIsResumeCheckPending] = useState(
+    !initialPlaying && (autoResume || skipOnboardingIfRecent)
+  );
   const [currentStep, setCurrentStep] = useState(() => getOnboardingInitialStep(gameKey));
   const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
   const steps = VENUE_GAME_CARD_BY_KEY[gameKey].steps;
@@ -134,18 +154,18 @@ export function GameLandingExperience({
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    if (initialPlaying || !autoResume) {
+    if (initialPlaying || (!autoResume && !skipOnboardingIfRecent)) {
       // Defer to avoid calling setState synchronously inside an effect
       Promise.resolve().then(() => setIsResumeCheckPending(false));
       return;
     }
     let canceled = false;
     void (async () => {
-      const canResume = await hasResumableSession(gameKey);
+      const canResume = autoResume ? await hasResumableSession(gameKey) : false;
       if (canceled) {
         return;
       }
-      if (canResume) {
+      if (canResume || (skipOnboardingIfRecent && hasRecentOnboarding(gameKey))) {
         // Defer state updates to avoid cascading synchronous renders
         Promise.resolve().then(() => setIsPlaying(true));
       }
@@ -154,7 +174,7 @@ export function GameLandingExperience({
     return () => {
       canceled = true;
     };
-  }, [autoResume, gameKey, initialPlaying]);
+  }, [autoResume, gameKey, initialPlaying, skipOnboardingIfRecent]);
 
   useEffect(() => {
     return () => {
@@ -197,6 +217,7 @@ export function GameLandingExperience({
 
   useEffect(() => {
     if (!isPlaying) return;
+    markOnboardingComplete(gameKey);
     startGameSession(analyticsGameType(gameKey));
     return () => {
       endCurrentGameSession("abandoned");
@@ -218,14 +239,13 @@ export function GameLandingExperience({
       return;
     }
     forceRecoverDocumentScroll();
-    markOnboardingComplete(gameKey);
     setRulesExiting(true);
     playTimerRef.current = setTimeout(() => {
       playTimerRef.current = null;
       setRulesExiting(false);
       setIsPlaying(true);
     }, 300);
-  }, [gameKey, playDisabled, playHref, router]);
+  }, [playDisabled, playHref, router]);
 
   const transitionToStep = useCallback((targetStep: number) => {
     if (targetStep === currentStep) {

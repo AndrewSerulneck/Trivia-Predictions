@@ -13,6 +13,9 @@ export const ROUND_INTERVAL_SECONDS = 600;
 /** Seconds of intermission between rounds (derived, not a separate source of truth). */
 export const INTERMISSION_SECONDS = ROUND_INTERVAL_SECONDS - ROUND_DURATION_SECONDS;
 
+/** Seconds a freshly auto-created session dwells in the lobby before its first round starts. */
+export const LOBBY_DWELL_SECONDS = 60;
+
 /**
  * True when `answer` starts with `letter`, ignoring a leading "the"/"a"/"an"
  * and case. A bare article with nothing after it ("a", "the") is rejected

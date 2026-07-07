@@ -7,6 +7,7 @@ export default function CategoryBlitzPage() {
       gameKey="category-blitz"
       playLabel="Join Game"
       playHref="/category-blitz/play"
+      skipOnboardingIfRecent
       playingHidesShellNav
       playingContainerClassName="p-0"
     >

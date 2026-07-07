@@ -102,6 +102,7 @@ function makeCategorySession(overrides: Partial<CategoryBlitzSession> = {}): Cat
     status: "active",
     source: "auto",
     scheduledEndAt: "2026-07-02T21:00:00.000Z",
+    startsAt: null,
     createdAt: "2026-07-02T19:55:00.000Z",
     completedAt: null,
     ...overrides,
