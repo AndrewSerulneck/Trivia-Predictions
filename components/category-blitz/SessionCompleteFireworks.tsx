@@ -1,10 +1,22 @@
 "use client";
 
 import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 interface SessionCompleteFireworksProps {
   finalStandings: { username: string; points: number }[];
+  /**
+   * Fired once the celebration has held on screen long enough to register —
+   * the caller unmounts this overlay in response, revealing the persistent
+   * final-standings screen underneath. See docs/category-blitz-scoring-and-bugfix-plan.md
+   * Phase 5. Not rendered at all for the session winner, who gets the shared
+   * full-screen CategoryBlitzChampionAnimation instead (see CategoryBlitzGame).
+   */
+  onDone?: () => void;
 }
+
+const HOLD_MS = 2600;
+const HOLD_MS_REDUCED = 900;
 
 // Deterministic confetti (no Math.random -> no hydration drift): 14 shapes fanned
 // out on a circle with varied distance/size/color/rotation.
@@ -47,12 +59,26 @@ const MEDAL = ["text-amber-300", "text-slate-300", "text-amber-600"];
 
 const SessionCompleteFireworks = ({
   finalStandings,
+  onDone,
 }: SessionCompleteFireworksProps) => {
   const reduce = useReducedMotion() ?? false;
   const top3 = finalStandings.slice(0, 3);
+  const doneRef = useRef(false);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (!doneRef.current) {
+        doneRef.current = true;
+        onDone?.();
+      }
+    }, reduce ? HOLD_MS_REDUCED : HOLD_MS);
+    return () => window.clearTimeout(id);
+  }, [reduce, onDone]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center overflow-hidden bg-slate-950/80 backdrop-blur-sm">
+    <motion.div
+      exit={reduce ? { opacity: 0 } : { opacity: 0, transition: { duration: 0.4 } }}
+      className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center overflow-hidden bg-slate-950/80 backdrop-blur-sm">
       {/* confetti burst from center */}
       {!reduce &&
         CONFETTI.map((c, i) => (
@@ -147,7 +173,7 @@ const SessionCompleteFireworks = ({
         Game over. Final standings:{" "}
         {top3.map((p, i) => `${i + 1}. ${p.username}, ${p.points} points`).join("; ")}.
       </span>
-    </div>
+    </motion.div>
   );
 };
 

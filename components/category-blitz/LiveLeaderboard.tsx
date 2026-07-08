@@ -8,6 +8,8 @@ import {
   type Variants,
 } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { RankBadge } from "@/components/trivia/RankBadge";
+import { EASE_ACCEL, EASE_SNAP } from "@/lib/motionEasing";
 
 interface LeaderboardEntry {
   userId: string;
@@ -18,11 +20,19 @@ interface LeaderboardEntry {
 interface LiveLeaderboardProps {
   entries: LeaderboardEntry[];
   meId: string;
+  /**
+   * When true, every row animates to its exit state instead of "show" — the
+   * EXIT half of the intermission transition (leaderboard rows accelerate
+   * out as the next-round countdown takes over). See
+   * docs/category-blitz-scoring-and-bugfix-plan.md Phase 4.
+   */
+  exiting?: boolean;
 }
 
 const listV: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
+  show: { transition: { staggerChildren: 0.04, delayChildren: 0.1 } },
+  exit: { transition: { staggerChildren: 0.025 } },
 };
 
 const useCountUp = (value: number, reduce: boolean) => {
@@ -51,9 +61,10 @@ interface RowProps {
   rank: number;
   isMe: boolean;
   reduce: boolean;
+  exiting?: boolean;
 }
 
-const Row = ({ entry, rank, isMe, reduce }: RowProps) => {
+const Row = ({ entry, rank, isMe, reduce, exiting }: RowProps) => {
   const shown = useCountUp(entry.points, reduce);
 
   // Detect between-round point gains -> emerald flash + floating "+N".
@@ -73,23 +84,24 @@ const Row = ({ entry, rank, isMe, reduce }: RowProps) => {
   }, [entry.points]);
 
   const rowV: Variants = {
-    hidden: reduce ? { opacity: 0 } : { opacity: 0, x: 40 },
+    hidden: reduce ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.98 },
     show: {
       opacity: 1,
-      x: 0,
-      transition: { duration: 0.3, ease: "easeOut" },
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.24, ease: EASE_SNAP },
     },
     exit: reduce
       ? { opacity: 0, transition: { duration: 0 } }
-      : { opacity: 0, x: 40, transition: { duration: 0.2 } },
+      : { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.2, ease: EASE_ACCEL } },
   };
 
   return (
     <motion.li
-      layout
+      layout={!exiting}
       variants={rowV}
       initial="hidden"
-      animate="show"
+      animate={exiting ? "exit" : "show"}
       exit="exit"
       transition={{
         layout: reduce
@@ -117,12 +129,8 @@ const Row = ({ entry, rank, isMe, reduce }: RowProps) => {
         )}
       </AnimatePresence>
 
-      <span
-        className={`relative w-5 shrink-0 text-center text-sm font-black tabular-nums ${
-          isMe ? "text-emerald-300" : "text-slate-500"
-        }`}
-      >
-        {rank}
+      <span className="relative shrink-0">
+        <RankBadge rank={rank} />
       </span>
 
       <span
@@ -167,7 +175,7 @@ const Row = ({ entry, rank, isMe, reduce }: RowProps) => {
   );
 };
 
-const LiveLeaderboard = ({ entries, meId }: LiveLeaderboardProps) => {
+const LiveLeaderboard = ({ entries, meId, exiting = false }: LiveLeaderboardProps) => {
   const reduce = useReducedMotion() ?? false;
 
   const ranked = [...entries].sort(
@@ -182,7 +190,7 @@ const LiveLeaderboard = ({ entries, meId }: LiveLeaderboardProps) => {
       <motion.ul
         variants={listV}
         initial="hidden"
-        animate="show"
+        animate={exiting ? "exit" : "show"}
         className="flex flex-col gap-1.5"
       >
         <AnimatePresence mode="popLayout" initial={false}>
@@ -193,6 +201,7 @@ const LiveLeaderboard = ({ entries, meId }: LiveLeaderboardProps) => {
               rank={i + 1}
               isMe={e.userId === meId}
               reduce={reduce}
+              exiting={exiting}
             />
           ))}
         </AnimatePresence>
@@ -201,10 +210,10 @@ const LiveLeaderboard = ({ entries, meId }: LiveLeaderboardProps) => {
       {mePinned && (
         <>
           <div
-            className="py-0.5 text-center text-sm font-black leading-none text-slate-600"
+            className="py-0.5 text-center text-[0.65rem] font-bold uppercase tracking-wide text-slate-500"
             aria-hidden
           >
-            ···
+            ··· you&apos;re ranked #{meIndex + 1} ···
           </div>
           <ul className="flex flex-col">
             <Row
@@ -213,6 +222,7 @@ const LiveLeaderboard = ({ entries, meId }: LiveLeaderboardProps) => {
               rank={meIndex + 1}
               isMe
               reduce={reduce}
+              exiting={exiting}
             />
           </ul>
         </>

@@ -14,6 +14,7 @@ import { LiveTriviaCategoryAnnouncementAnimation } from "@/components/animations
 import { FantasyScoreUpAnimation } from "@/components/animations/FantasyScoreUpAnimation";
 import { FantasyLiveCollectAnimation } from "@/components/animations/FantasyLiveCollectAnimation";
 import { LiveTriviaChampionAnimation } from "@/components/animations/LiveTriviaChampionAnimation";
+import { CategoryBlitzChampionAnimation } from "@/components/animations/CategoryBlitzChampionAnimation";
 
 export type AnimationComponent = ComponentType<GameplayAnimationProps>;
 
@@ -36,4 +37,5 @@ export const ANIMATION_REGISTRY: Record<AnimationType, AnimationComponent> = {
   FANTASY_SCORE_UP: FantasyScoreUpAnimation,
   FANTASY_LIVE_COLLECT: FantasyLiveCollectAnimation,
   LIVE_TRIVIA_CHAMPION: LiveTriviaChampionAnimation,
+  CATEGORY_BLITZ_CHAMPION: CategoryBlitzChampionAnimation,
 };

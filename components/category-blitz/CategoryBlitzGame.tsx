@@ -5,7 +5,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
 import { useCategoryBlitzSession, type CategoryBlitzPhase } from "@/lib/categoryBlitzRealtime";
+import { isCategoryBlitzTestModeEnabled, setCategoryBlitzTestMode } from "@/lib/categoryBlitzTestMode";
 import { answerStartsWithLetter } from "@/lib/categoryBlitzShared";
+import { CB_LETTER_BADGE_LAYOUT_ID, cbCategoryRowLayoutId } from "@/lib/categoryBlitzMotion";
+import { EASE_SNAP } from "@/lib/motionEasing";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
 import { GameOnboardingCard } from "@/components/venue/GameIdentityPanel";
 import GradingCascade, { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
@@ -17,6 +20,9 @@ import TimerUrgency from "@/components/category-blitz/TimerUrgency";
 import SubmitLockAnimation from "@/components/category-blitz/SubmitLockAnimation";
 import NextRoundCountdown from "@/components/category-blitz/NextRoundCountdown";
 import SessionCompleteFireworks from "@/components/category-blitz/SessionCompleteFireworks";
+import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
+import DevAnimationPanel from "@/components/category-blitz/DevAnimationPanel";
+import { RankBadge } from "@/components/trivia/RankBadge";
 import type { CategoryBlitzRoundResults } from "@/types";
 
 const LOBBY_TUTORIAL_ROTATE_MS = 6000;
@@ -27,6 +33,15 @@ const BORDER_ACTIVE = "border-emerald-400/60";
 const BORDER_CARD = "border-emerald-400/30";
 const TEXT_ACCENT = "text-emerald-300";
 const TEXT_LABEL = "text-emerald-300 tracking-[0.14em] uppercase font-black text-xs";
+
+/** Matches RoundStartReveal's LAYOUT_MORPH_TRANSITION so the badge/row FLIP
+ *  uses the same branded easing on both ends of the reveal → gameplay morph. */
+const LAYOUT_MORPH_TRANSITION = { duration: 0.45, ease: EASE_SNAP } as const;
+
+/** Fade-in for gameplay chrome that has no reveal counterpart (invite banner,
+ *  header label, timer, progress bar) — delayed so it settles in just behind
+ *  the badge/row morph instead of popping in the instant the reveal ends. */
+const CHROME_ENTRANCE_TRANSITION = { duration: 0.3, ease: EASE_SNAP, delay: 0.12 } as const;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -42,6 +57,7 @@ const REASON_LABEL: Record<string, string> = {
   invalid: "not valid",
   duplicate: "used by another player",
   pending: "scoring…",
+  insufficient_players: "not enough players",
 };
 
 // ── Idle / complete screens ───────────────────────────────────────────────────
@@ -103,12 +119,34 @@ function IdleScreen({ venueId }: { venueId: string | null }) {
   );
 }
 
+/**
+ * Amber-tinted banner shown when fewer than 3 players are registered for this
+ * session. The game works fully (answers are validated, revealed, etc.) but
+ * points are only awarded once 3+ players participate — see Phase 1 scoring gate.
+ */
+function InviteBanner({ playerCount }: { playerCount?: number }) {
+  if (playerCount === undefined || playerCount > 2) return null;
+
+  const message =
+    playerCount === 1
+      ? "Playing solo — game works fully, but you need 3+ players to score points. Invite a friend!"
+      : `Playing with ${playerCount} friends — game works fully, but you need 3+ players to score points. Invite a friend!`;
+
+  return (
+    <div className="mx-auto w-full max-w-sm rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-center text-[0.65rem] font-semibold leading-snug text-amber-200/90">
+      {message}
+    </div>
+  );
+}
+
 function LobbyScreen({
   username,
   lobbyCountdown,
+  playerCount,
 }: {
   username: string | null;
   lobbyCountdown: number | null;
+  playerCount?: number;
 }) {
   const steps = VENUE_GAME_CARD_BY_KEY["category-blitz"].steps;
   const [stepIndex, setStepIndex] = useState(0);
@@ -126,7 +164,8 @@ function LobbyScreen({
   const isUrgent = lobbyCountdown != null && lobbyCountdown <= 10;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto px-4 py-6">
+    <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto px-4 py-6">
+      <InviteBanner playerCount={playerCount} />
       <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-5 text-center`}>
         <p className={TEXT_LABEL}>You&apos;re in the lobby</p>
         {username ? <p className="mt-1 text-lg font-bold text-emerald-200">{username}</p> : null}
@@ -215,14 +254,127 @@ function IntermissionStatus({
   );
 }
 
-function CompleteScreen() {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
-      <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
-        <p className={TEXT_LABEL}>Game over</p>
-        <p className="mt-3 text-xl font-black text-white">The session has ended.</p>
-        <p className="mt-2 text-sm text-slate-400">Thanks for playing! Your points have been awarded.</p>
+/**
+ * Final game-over screen: viewer's own score banner, a top-3 podium (plus a
+ * pinned rank row if the viewer placed outside it), and a stats bar showing
+ * final rank + rank movement across the session. Modeled on Live Trivia's
+ * post-game podium block — see docs/category-blitz-scoring-and-bugfix-plan.md
+ * Phase 5.
+ */
+function CompleteScreen({
+  results,
+  userId,
+  rankGained,
+}: {
+  results: CategoryBlitzRoundResults | null;
+  userId: string;
+  rankGained: number | null;
+}) {
+  const standings = (results?.totals ?? []).slice().sort((a, b) => b.points - a.points);
+
+  if (standings.length === 0) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
+        <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
+          <p className={TEXT_LABEL}>Game over</p>
+          <p className="mt-3 text-xl font-black text-white">The session has ended.</p>
+          <p className="mt-2 text-sm text-slate-400">Thanks for playing!</p>
+        </div>
       </div>
+    );
+  }
+
+  const viewerRank = standings.findIndex((t) => t.userId === userId);
+  const viewerEntry = viewerRank > -1 ? standings[viewerRank] : null;
+  const viewerInPodium = viewerRank > -1 && viewerRank < 3;
+  const podium = standings.slice(0, 3).map((entry, i) => ({ ...entry, rank: i + 1 }));
+  const podiumOrder = [podium[1], podium[0], podium[2]];
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-6">
+      {/* Viewer's own final score */}
+      <div className={`flex items-center gap-3 rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 px-4 py-4`}>
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${LETTER_GRADIENT}`}>
+          <span className="text-2xl leading-none">🏁</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={TEXT_LABEL}>{viewerRank === 0 ? "Game Over · Champion" : "Game Over"}</p>
+          <p className="truncate text-lg font-black leading-tight text-white">{viewerEntry?.username ?? "You"}</p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className={`text-3xl font-black tabular-nums leading-none ${TEXT_ACCENT}`}>
+            {viewerEntry?.points ?? 0}
+          </p>
+          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-600/80">Points</p>
+        </div>
+      </div>
+
+      {/* Final standings podium */}
+      <div className={`rounded-2xl border ${BORDER_CARD} bg-slate-900/70 px-4 py-4`}>
+        <p className={`${TEXT_LABEL} mb-3`}>Final Standings</p>
+        <div className="flex items-end justify-center gap-2">
+          {podiumOrder.map((entry, slot) => {
+            if (!entry) return <div key={`empty-${slot}`} className="flex-1" />;
+            const isMe = entry.userId === userId;
+            const cardClass =
+              entry.rank === 1
+                ? "min-h-36 border-emerald-400/60 bg-emerald-500/15"
+                : entry.rank === 2
+                ? "min-h-28 border-slate-600 bg-slate-800/50"
+                : "min-h-24 border-slate-700 bg-slate-800/30";
+            return (
+              <div
+                key={entry.userId}
+                className={`flex flex-1 flex-col items-center justify-end gap-1.5 rounded-xl border px-2 pb-3 pt-3 text-center ${cardClass} ${
+                  isMe ? "ring-2 ring-emerald-400" : ""
+                }`}
+              >
+                <RankBadge rank={entry.rank} />
+                <p className="w-full truncate text-xs font-bold text-slate-100">
+                  {entry.username}
+                  {isMe && <span className="ml-1 text-[9px] font-black uppercase text-emerald-400/80">you</span>}
+                </p>
+                <p className="text-lg font-black tabular-nums text-white">{entry.points}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {!viewerInPodium && viewerEntry && (
+          <div className="mt-3 flex items-center gap-3 rounded-xl border border-emerald-400/50 bg-emerald-500/10 px-3 py-2.5">
+            <RankBadge rank={viewerRank + 1} />
+            <span className="min-w-0 flex-1 truncate text-sm font-bold text-emerald-100">
+              {viewerEntry.username}
+              <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400/70">you</span>
+            </span>
+            <span className="shrink-0 text-base font-black tabular-nums text-white">{viewerEntry.points}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Stats bar: final rank + rank movement across the session */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col items-center rounded-2xl border border-emerald-400/30 bg-emerald-600/15 py-3">
+          <span className="text-xl font-black tabular-nums text-emerald-300">
+            {rankGained != null
+              ? rankGained > 0
+                ? `▲ ${rankGained}`
+                : rankGained < 0
+                ? `▼ ${Math.abs(rankGained)}`
+                : "—"
+              : "—"}
+          </span>
+          <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Rank Gained</span>
+        </div>
+        <div className="flex flex-col items-center rounded-2xl border border-cyan-400/30 bg-cyan-600/15 py-3">
+          <span className="text-xl font-black tabular-nums text-cyan-300">
+            {viewerRank > -1 ? `#${viewerRank + 1}` : "—"}
+          </span>
+          <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Final Rank</span>
+        </div>
+      </div>
+
+      <p className="pb-2 text-center text-xs text-slate-500">Thanks for playing! Your points have been awarded.</p>
     </div>
   );
 }
@@ -233,10 +385,14 @@ function ResultsScreen({
   results,
   userId,
   nextRoundStartsIn,
+  playerCount,
+  leaderboardExiting = false,
 }: {
   results: CategoryBlitzRoundResults;
   userId: string;
   nextRoundStartsIn: number | null;
+  playerCount?: number;
+  leaderboardExiting?: boolean;
 }) {
   const standings = results.totals.slice().sort((a, b) => b.points - a.points);
   const top10 = standings.slice(0, 10);
@@ -246,17 +402,18 @@ function ResultsScreen({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+      <InviteBanner playerCount={playerCount} />
       <IntermissionStatus nextRoundStartsIn={nextRoundStartsIn} />
 
       {/* Live Leaderboard with count-up, rank reorder, and point-gain flash */}
       <div className={`rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-4`}>
         <p className={`${TEXT_LABEL} text-center`}>Leaderboard</p>
         <div className="mt-3">
-          <LiveLeaderboard entries={results.totals} meId={userId} />
+          <LiveLeaderboard entries={results.totals} meId={userId} exiting={leaderboardExiting} />
         </div>
       </div>
 
-      {/* Category breakdown */}
+      {/* Category breakdown — kept underneath the leaderboard */}
       <p className={`${TEXT_LABEL} mt-1`}>Letter: {results.letter}</p>
       <div className="space-y-2">
         {results.results.map((cat) => {
@@ -270,6 +427,8 @@ function ResultsScreen({
                   ? "border-emerald-400/50 bg-emerald-950/40"
                   : reason === "wrong_letter" || reason === "invalid"
                   ? "border-rose-500/50 bg-rose-950/30"
+                  : reason === "insufficient_players"
+                  ? "border-amber-400/50 bg-amber-950/40"
                   : viewerAnswer
                   ? "border-slate-600 bg-slate-800/40"
                   : "border-slate-700/50 bg-slate-900/30"
@@ -286,6 +445,8 @@ function ResultsScreen({
                         ? "text-emerald-300"
                         : reason === "wrong_letter" || reason === "invalid"
                         ? "text-rose-400"
+                        : reason === "insufficient_players"
+                        ? "text-amber-300"
                         : "text-slate-400"
                     }`}>
                       {viewerAnswer.answer || <span className="italic opacity-50">no answer</span>}
@@ -294,7 +455,11 @@ function ResultsScreen({
                     <p className="mt-0.5 text-sm italic text-slate-600">no answer</p>
                   )}
                   {viewerAnswer && reason && reason !== "correct" ? (
-                    <p className="mt-0.5 text-[0.65rem] font-semibold text-rose-300/80">
+                    <p className={`mt-0.5 text-[0.65rem] font-semibold ${
+                      reason === "insufficient_players"
+                        ? "text-amber-300/80"
+                        : "text-rose-300/80"
+                    }`}>
                       {REASON_LABEL[reason] ?? reason}
                     </p>
                   ) : null}
@@ -314,6 +479,10 @@ function ResultsScreen({
                     </span>
                   ) : reason === "duplicate" ? (
                     <span className="text-[0.65rem] font-black text-slate-500">dup</span>
+                  ) : reason === "insufficient_players" ? (
+                    <span className="inline-flex items-center rounded-md border border-amber-400/50 bg-amber-500/20 px-2 py-0.5 text-[0.65rem] font-black text-amber-300">
+                      no contest
+                    </span>
                   ) : null}
                 </div>
               </div>
@@ -348,36 +517,80 @@ function ResultsScreen({
 
 type SubmitState = "idle" | "submitting" | "done" | "error";
 
-function AnsweringScreen({
+/** Debounce delay before an in-progress answer is autosaved to the server. */
+const AUTOSAVE_DEBOUNCE_MS = 600;
+
+export function AnsweringScreen({
   letter,
   categories,
   roundId,
   timeRemaining,
   venueId,
+  userId,
   isSpectating,
+  playerCount,
 }: {
   letter: string;
   categories: string[];
   roundId: string;
   timeRemaining: number;
   venueId: string;
+  userId: string;
   isSpectating: boolean;
+  playerCount?: number;
 }) {
   const [answers, setAnswers] = useState<string[]>(() => Array(12).fill(""));
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const submittedRef = useRef(false);
   const timerWasZeroRef = useRef(false);
+  // Per-category debounce timers + last-autosaved value, so a slow network or
+  // dropped tab doesn't lose an answer that was typed but never manually
+  // submitted — each field autosaves shortly after the user stops typing,
+  // reusing the same per-category upsert the final submit already uses.
+  const autosaveTimersRef = useRef<Array<number | null>>(Array(12).fill(null));
+  const lastAutosavedRef = useRef<string[]>(Array(12).fill(""));
 
   const isExpired = timeRemaining <= 0;
   const isUrgent = timeRemaining > 0 && timeRemaining <= 30;
   const totalFilled = answers.filter((a) => a.trim().length > 0).length;
+
+  const autosaveAnswer = useCallback(
+    (categoryIndex: number, answer: string) => {
+      if (!answer || lastAutosavedRef.current[categoryIndex] === answer) return;
+      lastAutosavedRef.current[categoryIndex] = answer;
+      void fetch(`/api/category-blitz/rounds/${roundId}/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ venueId, userId, categoryIndex, answer }),
+      }).catch(() => {
+        // Best-effort — if this fails, the final submit-on-expiry resends
+        // every filled category anyway, so nothing is silently lost.
+      });
+    },
+    [roundId, venueId, userId]
+  );
+
+  useEffect(() => {
+    const timers = autosaveTimersRef.current;
+    return () => {
+      for (const t of timers) if (t !== null) window.clearTimeout(t);
+    };
+  }, []);
 
   const submitAnswers = useCallback(async () => {
     if (submittedRef.current || isSpectating) return;
     submittedRef.current = true;
     setSubmitState("submitting");
     setErrorMsg("");
+
+    const timers = autosaveTimersRef.current;
+    for (let i = 0; i < timers.length; i++) {
+      if (timers[i] !== null) {
+        window.clearTimeout(timers[i]!);
+        timers[i] = null;
+      }
+    }
 
     try {
       const filled = answers
@@ -389,7 +602,7 @@ function AnsweringScreen({
           fetch(`/api/category-blitz/rounds/${roundId}/submit`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ venueId, categoryIndex, answer }),
+            body: JSON.stringify({ venueId, userId, categoryIndex, answer }),
           })
         )
       );
@@ -399,7 +612,7 @@ function AnsweringScreen({
       setSubmitState("error");
       setErrorMsg("Submission failed. Please try again.");
     }
-  }, [answers, roundId, venueId, isSpectating]);
+  }, [answers, roundId, venueId, userId, isSpectating]);
 
   const submitAnswersRef = useRef(submitAnswers);
 
@@ -437,41 +650,70 @@ function AnsweringScreen({
       {submitState === "submitting" && (
         <SubmitLockAnimation answersCount={totalFilled} />
       )}
-      {/* Sticky header */}
+      <motion.div
+        className="shrink-0 px-4 pt-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={CHROME_ENTRANCE_TRANSITION}
+      >
+        <InviteBanner playerCount={playerCount} />
+      </motion.div>
+      {/* Sticky header — its bar (border/background/position) stays static so
+          it doesn't shift the badge's projected target mid-morph; only the
+          content INSIDE it (label, timer, progress) fades in, staggered
+          slightly behind the badge/row morph so the handoff reads as one
+          sequenced beat rather than shared elements morphing while
+          everything else pops in instantly. */}
       <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950/90 px-4 py-3`}>
         <div className="flex items-center gap-3">
-          {/* Letter badge */}
-          <div
+          {/* Letter badge — shares layoutId with the reveal badge so the
+              round-start reveal morphs its big centered badge down into this
+              header slot instead of cutting. */}
+          <motion.div
+            layoutId={CB_LETTER_BADGE_LAYOUT_ID}
+            transition={{ layout: LAYOUT_MORPH_TRANSITION }}
             className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${LETTER_GRADIENT} shadow-[0_0_18px_rgba(16,185,129,0.35)]`}
           >
-            <span
-              className="text-4xl font-black leading-none text-slate-950"
-              style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
-            >
+            <span className="font-['Bree_Serif',_Nunito,_serif] text-4xl font-black leading-none text-slate-950">
               {letter}
             </span>
-          </div>
-          <div className="min-w-0 flex-1">
+          </motion.div>
+          <motion.div
+            className="min-w-0 flex-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={CHROME_ENTRANCE_TRANSITION}
+          >
             <p className={TEXT_LABEL}>Letter for this round</p>
             <p className="text-xs text-slate-400">
               {totalFilled}/{categories.length} filled
             </p>
-          </div>
+          </motion.div>
           {/* Timer */}
-          <div className="shrink-0 text-right">
+          <motion.div
+            className="shrink-0 text-right"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={CHROME_ENTRANCE_TRANSITION}
+          >
             <TimerUrgency timeRemaining={timeRemaining} label={formatMmSs(timeRemaining)} />
             <p className="text-[0.6rem] font-black uppercase tracking-widest text-slate-500">remaining</p>
-          </div>
+          </motion.div>
         </div>
         {/* Progress bar */}
-        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-800">
+        <motion.div
+          className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-800"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={CHROME_ENTRANCE_TRANSITION}
+        >
           <div
             className={`h-full rounded-full transition-all duration-300 ${
               isUrgent ? "bg-rose-500" : "bg-emerald-500"
             }`}
             style={{ width: `${Math.max(0, Math.min(100, (timeRemaining / 180) * 100))}%` }}
           />
-        </div>
+        </motion.div>
       </div>
 
       {isSpectating && (
@@ -520,6 +762,14 @@ function AnsweringScreen({
                       const next = [...answers];
                       next[i] = e.target.value;
                       setAnswers(next);
+
+                      const timers = autosaveTimersRef.current;
+                      if (timers[i] !== null) window.clearTimeout(timers[i]!);
+                      const trimmed = e.target.value.trim();
+                      timers[i] = window.setTimeout(() => {
+                        timers[i] = null;
+                        autosaveAnswer(i, trimmed);
+                      }, AUTOSAVE_DEBOUNCE_MS);
                     }}
                     placeholder={`${letter}…`}
                     className={`mt-0.5 w-full bg-transparent text-sm font-bold outline-none placeholder:text-slate-600 ${
@@ -538,31 +788,30 @@ function AnsweringScreen({
                 )}
               </div>
             );
-            return wrongLetter ? (
-              <WrongLetterReject key={answers[i]}>
-                {inputRow}
-              </WrongLetterReject>
-            ) : (
-              <div key={i}>{inputRow}</div>
+            return (
+              <motion.div
+                key={i}
+                layoutId={cbCategoryRowLayoutId(i)}
+                transition={{ layout: LAYOUT_MORPH_TRANSITION }}
+              >
+                <WrongLetterReject shakeToken={wrongLetter ? answers[i] : null}>
+                  {inputRow}
+                </WrongLetterReject>
+              </motion.div>
             );
           })}
         </div>
       </div>
 
-      {/* Submit button */}
+      {/* Autosave footnote — answers save as you type and are graded automatically when the timer ends. */}
       {submitState === "idle" && !isExpired && !isSpectating && (
         <div className="shrink-0 border-t border-emerald-400/20 px-4 py-3">
           {errorMsg && (
             <p className="mb-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
           )}
-          <button
-            type="button"
-            onClick={() => void submitAnswers()}
-            disabled={submitState !== "idle" || totalFilled === 0}
-            className={`w-full rounded-xl py-3.5 text-sm font-black uppercase tracking-[0.1em] text-slate-950 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${LETTER_GRADIENT}`}
-          >
-            Submit Answers ({totalFilled}/{categories.length})
-          </button>
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.1em] text-emerald-300/70">
+            Answers save automatically — graded when the timer runs out
+          </p>
         </div>
       )}
 
@@ -574,6 +823,7 @@ function AnsweringScreen({
             onClick={() => {
               submittedRef.current = false;
               setSubmitState("idle");
+              void submitAnswers();
             }}
             className="w-full rounded-xl border border-rose-400/50 bg-rose-500/20 py-3 text-sm font-black text-rose-300"
           >
@@ -640,21 +890,52 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   const [venueId, setVenueId] = useState("");
   const [username, setUsername] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
+  const [testMode, setTestMode] = useState(false);
 
   useEffect(() => {
     const hydrateId = window.setTimeout(() => {
       setVenueId(getVenueId() ?? "");
       setUsername(getUsername() ?? null);
       setUserId(getUserId() ?? "");
+      setTestMode(isCategoryBlitzTestModeEnabled());
       setIsHydrated(true);
     }, 0);
     return () => window.clearTimeout(hydrateId);
   }, []);
 
-  const { phase, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry } = useCategoryBlitzSession(
+  const toggleTestMode = useCallback(() => {
+    setTestMode((prev) => {
+      const next = !prev;
+      setCategoryBlitzTestMode(next);
+      return next;
+    });
+  }, []);
+
+  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry, markRevealDone } = useCategoryBlitzSession(
     isHydrated ? venueId : "",
     isHydrated ? userId : ""
   );
+  const { triggerAnimation } = useAnimationTrigger();
+
+  // Phase 5 stats bar: snapshot the viewer's rank the first time this session
+  // produces results with them in it, so the game-over screen can show how far
+  // they climbed/fell (rankGained = firstRank - finalRank, positive = climbed).
+  // Keyed on session.id (not a plain boolean) so it resets cleanly if another
+  // session starts in the same page lifetime. State (not a ref) because the
+  // value feeds the render below — refs can't be read during render.
+  const [firstRank, setFirstRank] = useState<{ sessionId: string; rank: number } | null>(null);
+  if (results && userId && session?.id && firstRank?.sessionId !== session.id) {
+    const standings = results.totals.slice().sort((a, b) => b.points - a.points);
+    const rank = standings.findIndex((t) => t.userId === userId);
+    if (rank !== -1) setFirstRank({ sessionId: session.id, rank: rank + 1 });
+  }
+  const rankGained = useMemo(() => {
+    if (!results || !userId || !firstRank || firstRank.sessionId !== session?.id) return null;
+    const standings = results.totals.slice().sort((a, b) => b.points - a.points);
+    const finalRank = standings.findIndex((t) => t.userId === userId);
+    if (finalRank === -1) return null;
+    return firstRank.rank - (finalRank + 1);
+  }, [results, userId, session?.id, firstRank]);
 
   // Round start reveal: play the letter drop + category cascade once per round
   // when we enter the answering phase, then transition to the answer input.
@@ -691,12 +972,35 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     results.roundId !== gradedRoundId &&
     gradingAnswers.length > 0;
 
+  // Phase 4 ENTER transition: once the cascade finishes revealing every
+  // answer, it plays its own exit animation (rows accelerate up/out, ACCEL
+  // curve) for 200ms — during that same window ResultsScreen mounts
+  // underneath and its leaderboard rows snap in (SNAP curve), so the handoff
+  // reads as one coordinated beat instead of an abrupt cut. See
+  // docs/category-blitz-scoring-and-bugfix-plan.md Phase 4.
+  const [cascadeExiting, setCascadeExiting] = useState(false);
+  useEffect(() => {
+    if (!cascadeExiting) return;
+    const id = window.setTimeout(() => {
+      setGradedRoundId(results?.roundId ?? null);
+      setCascadeExiting(false);
+    }, 200);
+    return () => window.clearTimeout(id);
+  }, [cascadeExiting, results]);
+
   // Next-round countdown: a full-screen "get ready" beat for the final 5s of
   // intermission, after the grading cascade has finished. Keyed on roundId so
   // it plays once per round's intermission rather than retriggering on every
   // 250ms timer tick while nextRoundStartsIn sits at/under the threshold.
   const [countdownDoneRoundId, setCountdownDoneRoundId] = useState<string | null>(null);
   const NEXT_ROUND_COUNTDOWN_THRESHOLD_SECONDS = 5;
+
+  // Memoized so the ~4x/sec timer re-renders don't hand NextRoundCountdown a
+  // fresh onZero identity on every tick and stall its internal setTimeout
+  // (same pattern as gradingAnswers above — see GradingCascade comment).
+  const handleCountdownZero = useCallback(() => {
+    setCountdownDoneRoundId(results?.roundId ?? null);
+  }, [results]);
   const showNextRoundCountdown =
     phase === "results" &&
     !!results &&
@@ -705,6 +1009,49 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     nextRoundStartsIn > 0 &&
     nextRoundStartsIn <= NEXT_ROUND_COUNTDOWN_THRESHOLD_SECONDS &&
     results.roundId !== countdownDoneRoundId;
+
+  // Phase 4 EXIT transition: delay the countdown overlay's actual mount by
+  // 200ms so the leaderboard's own exit animation (rows accelerate up/out,
+  // triggered immediately below via `leaderboardExiting`) has time to play
+  // before the overlay appears on top of it.
+  const [countdownOverlayVisible, setCountdownOverlayVisible] = useState(false);
+  useEffect(() => {
+    if (!showNextRoundCountdown) return;
+    const id = window.setTimeout(() => setCountdownOverlayVisible(true), 200);
+    return () => {
+      window.clearTimeout(id);
+      setCountdownOverlayVisible(false);
+    };
+  }, [showNextRoundCountdown]);
+
+  // True once the session is complete and the viewer placed first.
+  const isChampion = useMemo(() => {
+    if (!results || results.totals.length === 0) return false;
+    const sorted = results.totals.slice().sort((a, b) => b.points - a.points);
+    return sorted[0]?.userId === userId;
+  }, [results, userId]);
+
+  // The winner gets the same full-screen champion celebration Live Trivia
+  // uses (fireworks + trophy + "CATEGORY BLITZ WINNER!") instead of the
+  // smaller inline SessionCompleteFireworks overlay below — fired once per
+  // session via the global animation trigger (see AnimationTriggerProvider,
+  // mounted in app/layout.tsx).
+  const championFiredSessionRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (phase !== "complete" || !session || !isChampion) return;
+    if (championFiredSessionRef.current === session.id) return;
+    championFiredSessionRef.current = session.id;
+    triggerAnimation("CATEGORY_BLITZ_CHAMPION");
+  }, [phase, session, isChampion, triggerAnimation]);
+
+  // Game-over celebration: SessionCompleteFireworks holds itself on screen
+  // briefly (see its own onDone timer) then reports back so it can be
+  // unmounted, revealing the persistent podium/stats CompleteScreen beneath
+  // it. Keyed on session.id so a later session's game-over plays again.
+  // Skipped entirely for the champion, who gets the full-screen animation
+  // above instead — CompleteScreen renders underneath either way.
+  const [fireworksDoneSessionId, setFireworksDoneSessionId] = useState<string | null>(null);
+  const fireworksDone = fireworksDoneSessionId === session?.id;
 
   if (!isHydrated) {
     return (
@@ -780,23 +1127,36 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
       style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
     >
       <Header phase={phase} error={error} onBack={onBack} />
-      {showNextRoundCountdown && (
+      <button
+        type="button"
+        onClick={toggleTestMode}
+        className={`fixed bottom-2 right-2 z-[999] rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${
+          testMode ? "bg-amber-400 text-slate-950" : "bg-slate-800/80 text-slate-400"
+        }`}
+      >
+        Test mode: {testMode ? "on" : "off"}
+      </button>
+      {testMode && <DevAnimationPanel />}
+      {countdownOverlayVisible && (
         <NextRoundCountdown
           secondsUntilNextRound={nextRoundStartsIn ?? 0}
-          onZero={() => setCountdownDoneRoundId(results?.roundId ?? null)}
+          onZero={handleCountdownZero}
         />
       )}
 
       {/* Phase content */}
       {phase === "idle" && <IdleScreen venueId={venueId} />}
-      {phase === "lobby" && <LobbyScreen username={username} lobbyCountdown={lobbyCountdown} />}
+      {phase === "lobby" && <LobbyScreen username={username} lobbyCountdown={lobbyCountdown} playerCount={session?.playerCount} />}
       {phase === "answering" && round && (
         showReveal ? (
           <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto">
             <RoundStartReveal
               letter={round.letter}
               categories={round.categories}
-              onDone={() => setRevealedRoundId(round.id)}
+              onDone={() => {
+                setRevealedRoundId(round.id);
+                markRevealDone(round.id);
+              }}
             />
           </div>
         ) : (
@@ -806,29 +1166,43 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
             roundId={round.id}
             timeRemaining={timeRemaining}
             venueId={venueId}
+            userId={userId}
             isSpectating={viewerRole === "spectator"}
+            playerCount={session?.playerCount}
           />
         )
       )}
       {phase === "scoring" && <ScoringScreen />}
-      {phase === "results" && results && (
+      {phase === "results" && results && userId && (
         showCascade ? (
           <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto py-4">
             <GradingCascade
               answers={gradingAnswers}
-              onComplete={() => setGradedRoundId(results.roundId)}
+              exiting={cascadeExiting}
+              onComplete={() => setCascadeExiting(true)}
             />
           </div>
         ) : (
-          <ResultsScreen results={results} userId={userId} nextRoundStartsIn={nextRoundStartsIn} />
+          <ResultsScreen
+            results={results}
+            userId={userId}
+            nextRoundStartsIn={nextRoundStartsIn}
+            playerCount={session?.playerCount}
+            leaderboardExiting={showNextRoundCountdown}
+          />
         )
       )}
       {phase === "complete" && (
         <>
-          {results && results.totals.length > 0 && (
-            <SessionCompleteFireworks finalStandings={results.totals} />
-          )}
-          <CompleteScreen />
+          <AnimatePresence>
+            {!fireworksDone && !isChampion && results && results.totals.length > 0 && (
+              <SessionCompleteFireworks
+                finalStandings={results.totals}
+                onDone={() => setFireworksDoneSessionId(session?.id ?? null)}
+              />
+            )}
+          </AnimatePresence>
+          <CompleteScreen results={results} userId={userId} rankGained={rankGained} />
         </>
       )}
     </div>

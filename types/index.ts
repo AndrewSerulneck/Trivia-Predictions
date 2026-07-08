@@ -448,6 +448,12 @@ export interface CategoryBlitzSession {
   startsAt:       string | null;
   createdAt:      string;
   completedAt:    string | null;
+  /**
+   * Number of unique participants registered for this session.
+   * Populated by the API when requested; undefined when the session is loaded
+   * from a context that doesn't compute it (e.g. admin panel).
+   */
+  playerCount?:  number;
 }
 
 export interface CategoryBlitzRound {
@@ -478,7 +484,7 @@ export interface CategoryBlitzSubmission {
   submittedAt:      string;
 }
 
-export type CategoryBlitzAnswerReason = 'correct' | 'duplicate' | 'wrong_letter' | 'invalid' | 'pending';
+export type CategoryBlitzAnswerReason = 'correct' | 'duplicate' | 'wrong_letter' | 'invalid' | 'pending' | 'insufficient_players';
 
 /** Shape returned by the results API after scoring — one entry per category */
 export interface CategoryBlitzCategoryResult {
@@ -503,10 +509,12 @@ export interface CategoryBlitzCategoryResult {
 }
 
 export interface CategoryBlitzRoundResults {
-  roundId:    string;
-  letter:     string;
-  categories: string[];
-  results:    CategoryBlitzCategoryResult[];
+  roundId:     string;
+  letter:      string;
+  categories:  string[];
+  results:     CategoryBlitzCategoryResult[];
+  /** Number of unique participants registered for this session at scoring time. */
+  playerCount: number;
   /** Session-cumulative leaderboard (points across all rounds so far, not just this one), sorted descending. */
   totals: {
     userId:   string;

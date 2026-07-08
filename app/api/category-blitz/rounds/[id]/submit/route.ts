@@ -47,8 +47,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       authId = userRow.auth_id ?? "";
     }
 
-    if (!userId || !authId) {
-      return NextResponse.json({ ok: false, error: "Could not resolve user." }, { status: 400 });
+    // When session is enforced (production), we require both userId and authId
+    // resolved from the session. When session is NOT enforced (dev), accept
+    // the client-supplied userId from the request body — the client's getUserId()
+    // reads the same tp:user-id source the entire UI uses for lookups.
+    if (isSessionEnforced()) {
+      if (!userId || !authId) {
+        return NextResponse.json({ ok: false, error: "Could not resolve user." }, { status: 400 });
+      }
+    } else if (!userId) {
+      return NextResponse.json({ ok: false, error: "userId is required." }, { status: 400 });
     }
 
     const { id: roundId } = await params;

@@ -21,10 +21,11 @@ export async function GET(request: Request) {
     if (!venueId) {
       return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });
     }
+    const testMode = searchParams.get("testMode") === "1";
 
     const now = new Date();
     const [session, schedules] = await Promise.all([
-      driveVenueCategoryBlitz(venueId, now),
+      driveVenueCategoryBlitz(venueId, now, testMode),
       listSchedules(venueId),
     ]);
     const nextOcc = getNextScheduleOccurrence(schedules, now);

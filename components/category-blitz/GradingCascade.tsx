@@ -4,13 +4,15 @@ import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import CorrectBurst from "@/components/category-blitz/CorrectBurst";
 import WrongVerdict from "@/components/category-blitz/WrongVerdict";
+import { EASE_ACCEL } from "@/lib/motionEasing";
 
 type Verdict =
   | "correct"
   | "duplicate"
   | "wrong_letter"
   | "invalid"
-  | "pending";
+  | "pending"
+  | "insufficient_players";
 
 export interface GradingAnswer {
   category: string;
@@ -23,6 +25,13 @@ export interface GradingAnswer {
 interface GradingCascadeProps {
   answers: GradingAnswer[];
   onComplete?: () => void;
+  /**
+   * When true, every row animates to its exit state instead of "show" — the
+   * ENTER half of the intermission transition (results rows accelerate out
+   * as the leaderboard snaps in behind them). See
+   * docs/category-blitz-scoring-and-bugfix-plan.md Phase 4.
+   */
+  exiting?: boolean;
 }
 
 const FIRST_DELAY_MS = 450;
@@ -31,11 +40,13 @@ const STEP_MS = 200;
 const container: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.05 } },
+  exit: { transition: { staggerChildren: 0.03 } },
 };
 
 const cardIn: Variants = {
   hidden: { opacity: 0, y: 8 },
   show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+  exit: { opacity: 0, y: -14, scale: 0.96, transition: { duration: 0.18, ease: EASE_ACCEL } },
 };
 
 const RESOLVED: Record<
@@ -62,6 +73,11 @@ const RESOLVED: Record<
     card: "border-slate-700/60 bg-slate-800/40",
     badge: "bg-slate-700/40 text-slate-300 ring-1 ring-slate-600/40",
     label: "dup",
+  },
+  insufficient_players: {
+    card: "border-amber-400/40 bg-amber-500/10",
+    badge: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/30",
+    label: "insufficient players",
   },
 };
 
@@ -177,7 +193,7 @@ const Row = ({ data, shown, reduce }: RowProps) => {
   );
 };
 
-const GradingCascade = ({ answers, onComplete }: GradingCascadeProps) => {
+const GradingCascade = ({ answers, onComplete, exiting = false }: GradingCascadeProps) => {
   const reduce = useReducedMotion() ?? false;
   const [revealed, setRevealed] = useState(0);
   const doneRef = useRef(false);
@@ -204,7 +220,7 @@ const GradingCascade = ({ answers, onComplete }: GradingCascadeProps) => {
     <motion.ul
       variants={container}
       initial="hidden"
-      animate="show"
+      animate={exiting ? "exit" : "show"}
       aria-live="polite"
       className="mx-auto flex w-full max-w-sm flex-col gap-2 bg-slate-950 p-3"
     >

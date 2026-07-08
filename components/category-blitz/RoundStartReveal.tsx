@@ -6,6 +6,16 @@ import {
   type Variants,
 } from "framer-motion";
 import { useEffect, useRef } from "react";
+import {
+  CB_LETTER_BADGE_LAYOUT_ID,
+  cbCategoryRowLayoutId,
+} from "@/lib/categoryBlitzMotion";
+import { EASE_SNAP } from "@/lib/motionEasing";
+
+/** Shared with AnsweringScreen's matching layoutId elements so the FLIP
+ *  between the reveal and the gameplay screen uses the same branded easing
+ *  on both ends instead of Framer's default spring. */
+const LAYOUT_MORPH_TRANSITION = { duration: 0.45, ease: EASE_SNAP } as const;
 
 interface RoundStartRevealProps {
   letter: string;
@@ -73,7 +83,8 @@ const RoundStartReveal = ({
         )}
 
         <motion.div
-          className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[linear-gradient(132deg,#10b981,#22c55e,#14b8a6)] text-4xl font-black text-emerald-950 shadow-lg shadow-emerald-500/20"
+          layoutId={CB_LETTER_BADGE_LAYOUT_ID}
+          className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)] font-['Bree_Serif',_Nunito,_serif] text-4xl font-black leading-none text-slate-950 shadow-lg shadow-emerald-500/20"
           initial={
             reduce
               ? { opacity: 0 }
@@ -86,11 +97,12 @@ const RoundStartReveal = ({
           }
           transition={
             reduce
-              ? { duration: 0.25 }
+              ? { duration: 0.25, layout: LAYOUT_MORPH_TRANSITION }
               : {
                   duration: LETTER_LAND_MS,
                   ease: [0.34, 1.56, 0.64, 1],
                   scale: { duration: LETTER_LAND_MS, times: [0, 0.55, 0.8, 1] },
+                  layout: LAYOUT_MORPH_TRANSITION,
                 }
           }
         >
@@ -98,21 +110,34 @@ const RoundStartReveal = ({
         </motion.div>
       </div>
 
-      {/* category cascade */}
+      {/* category cascade — each row mirrors the live AnsweringScreen input
+          row (number + uppercase label + reserved placeholder line) and shares
+          its layoutId, so the reveal's final frame IS the empty gameplay form
+          and Phase 3's morph has nothing to reshape. */}
       <motion.ul
         variants={list}
         initial="hidden"
         animate="show"
-        className="flex w-full flex-col gap-1.5"
+        className="flex w-full flex-col gap-2"
       >
         {categories.map((c, i) => (
           <motion.li
             key={`${c}-${i}`}
+            layoutId={cbCategoryRowLayoutId(i)}
             variants={reduce ? rowReduced : row}
+            transition={{ layout: LAYOUT_MORPH_TRANSITION }}
             onAnimationComplete={i === categories.length - 1 ? fire : undefined}
-            className="rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-sm font-semibold text-slate-200"
+            className="relative flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/40 px-3 py-2.5"
           >
-            {c}
+            <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
+              {i + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.68rem] font-black uppercase tracking-widest text-slate-400">
+                {c}
+              </p>
+              <p className="mt-0.5 text-sm font-bold text-slate-600">{letter}…</p>
+            </div>
           </motion.li>
         ))}
       </motion.ul>

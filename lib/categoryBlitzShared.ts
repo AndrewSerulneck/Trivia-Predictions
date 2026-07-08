@@ -17,6 +17,36 @@ export const INTERMISSION_SECONDS = ROUND_INTERVAL_SECONDS - ROUND_DURATION_SECO
 export const LOBBY_DWELL_SECONDS = 60;
 
 /**
+ * Milliseconds of tolerance past a round's `ends_at` before the server treats
+ * the round as truly expired, and before any client/poll/cron path is allowed
+ * to lock it into scoring. Absorbs network latency and client clock drift on
+ * the auto-submit-at-zero path so an in-flight submission isn't dropped just
+ * because it lands a few hundred ms after the deadline.
+ */
+export const SUBMISSION_GRACE_MS = 2000;
+
+/**
+ * Test mode (see lib/categoryBlitzTestMode.ts) shortens every wait — round
+ * duration, lobby dwell, and the gap before the next round — to this many
+ * seconds, so a solo tester isn't stuck waiting on production-length timers.
+ * Never applied to the cron-driven engine, only to per-request/client math
+ * that a tester explicitly opts into.
+ */
+export const TEST_MODE_SECONDS = 10;
+
+/** Seconds of active play per round, shortened in test mode. */
+export const roundDurationSeconds = (testMode: boolean): number =>
+  testMode ? TEST_MODE_SECONDS : ROUND_DURATION_SECONDS;
+
+/** Seconds between one round's start and the next, shortened in test mode. */
+export const roundIntervalSeconds = (testMode: boolean): number =>
+  testMode ? TEST_MODE_SECONDS * 2 : ROUND_INTERVAL_SECONDS;
+
+/** Seconds a freshly auto-created session dwells in the lobby, shortened in test mode. */
+export const lobbyDwellSeconds = (testMode: boolean): number =>
+  testMode ? TEST_MODE_SECONDS : LOBBY_DWELL_SECONDS;
+
+/**
  * True when `answer` starts with `letter`, ignoring a leading "the"/"a"/"an"
  * and case. A bare article with nothing after it ("a", "the") is rejected
  * rather than treated as starting with the article's own letter.

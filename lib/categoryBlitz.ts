@@ -4,7 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
-import { ROUND_DURATION_SECONDS, ROUND_INTERVAL_SECONDS, LOBBY_DWELL_SECONDS, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
+import { ROUND_DURATION_SECONDS, ROUND_INTERVAL_SECONDS, SUBMISSION_GRACE_MS, roundDurationSeconds, roundIntervalSeconds, lobbyDwellSeconds, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
 import type {
   CategoryBlitzSession,
   CategoryBlitzRound,
@@ -243,6 +243,20 @@ function toSession(row: SessionRow): CategoryBlitzSession {
   };
 }
 
+/**
+ * Enrich a session with the current participant count so the frontend can
+ * show the "invite a friend" banner when playerCount <= 2.
+ * Uses `category_blitz_session_participants` which tracks all users who
+ * registered presence via `registerSessionPresence()`.
+ */
+async function withPlayerCount(session: CategoryBlitzSession): Promise<CategoryBlitzSession> {
+  const { count } = await supabaseAdmin!
+    .from("category_blitz_session_participants")
+    .select("user_id", { count: "exact", head: true })
+    .eq("session_id", session.id);
+  return { ...session, playerCount: count ?? 0 };
+}
+
 const SESSION_COLS = "id, venue_id, status, source, scheduled_end_at, starts_at, created_at, completed_at";
 
 function toRound(row: RoundRow): CategoryBlitzRound {
@@ -294,6 +308,36 @@ export async function getActiveSession(venueId: string): Promise<CategoryBlitzSe
 }
 
 /**
+ * How long a completed session stays visible to `driveVenueCategoryBlitz`
+ * callers (i.e. the poll/reload path) after ending, so a client whose
+ * realtime `session_ended` broadcast was missed (dropped socket, tab loaded
+ * after the game ended, etc.) still sees the Game Over screen and fireworks
+ * instead of falling through to "no game running". getActiveSession()
+ * deliberately excludes "complete" sessions (so a new one can be created
+ * once this window lapses) — this is the one caller that needs the recent
+ * exception.
+ */
+const RECENTLY_COMPLETED_GRACE_MS = 3 * 60 * 1000;
+
+/** Most recently completed session for a venue if it finished within the grace window, else null. */
+async function getRecentlyCompletedSession(venueId: string, now: Date): Promise<CategoryBlitzSession | null> {
+  assertAdmin();
+  const cutoff = new Date(now.getTime() - RECENTLY_COMPLETED_GRACE_MS);
+  const { data, error } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select(SESSION_COLS)
+    .eq("venue_id", venueId)
+    .eq("status", "complete")
+    .gte("completed_at", cutoff.toISOString())
+    .order("completed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<SessionRow>();
+
+  if (error) throw new Error(error.message || "Failed to load Category Blitz session.");
+  return data ? toSession(data) : null;
+}
+
+/**
  * True when an auto (engine-driven) session's scheduled window has already
  * closed. Manual (admin-driven) sessions have no scheduled_end_at and are
  * never considered stale here — only the cron/admin can end those.
@@ -301,6 +345,21 @@ export async function getActiveSession(venueId: string): Promise<CategoryBlitzSe
 function isStaleAutoSession(session: CategoryBlitzSession, now: Date): boolean {
   if (session.source !== "auto" || !session.scheduledEndAt) return false;
   return new Date(session.scheduledEndAt).getTime() <= now.getTime();
+}
+
+/**
+ * True when an auto session's last round finished long enough ago that it's
+ * clearly abandoned (nobody polling to advance it), regardless of how far
+ * away its scheduled_end_at still is. Catches sessions — e.g. from test-mode
+ * runs with a fast cadence — left dangling mid-window, which would otherwise
+ * block new schedule windows from ever starting a session for this venue.
+ */
+async function isIdleAutoSession(session: CategoryBlitzSession, now: Date, testMode: boolean): Promise<boolean> {
+  if (session.source !== "auto" || session.status !== "active") return false;
+  const latest = await getLatestRound(session.id);
+  if (!latest || latest.status !== "complete") return false;
+  const idleThresholdMs = Math.max(roundIntervalSeconds(testMode), 60) * 5 * 1000;
+  return now.getTime() - new Date(latest.started_at).getTime() >= idleThresholdMs;
 }
 
 /**
@@ -328,12 +387,13 @@ async function closeStaleAutoSession(session: CategoryBlitzSession): Promise<voi
  */
 async function scoreExpiredRoundForVenue(venueId: string, now: Date): Promise<void> {
   assertAdmin();
+  const cutoff = new Date(now.getTime() - SUBMISSION_GRACE_MS);
   const { data } = await supabaseAdmin!
     .from("category_blitz_rounds")
     .select("id")
     .eq("venue_id", venueId)
     .eq("status", "active")
-    .lt("ends_at", now.toISOString())
+    .lt("ends_at", cutoff.toISOString())
     .maybeSingle<{ id: string }>();
 
   if (data) {
@@ -344,8 +404,8 @@ async function scoreExpiredRoundForVenue(venueId: string, now: Date): Promise<vo
 }
 
 /** When a freshly opened auto session's lobby should end, capped so it never outlasts the schedule window. */
-function computeLobbyStartsAt(now: Date, windowEnd: Date): string {
-  const startsAtMs = Math.min(now.getTime() + LOBBY_DWELL_SECONDS * 1000, windowEnd.getTime());
+function computeLobbyStartsAt(now: Date, windowEnd: Date, testMode: boolean): string {
+  const startsAtMs = Math.min(now.getTime() + lobbyDwellSeconds(testMode) * 1000, windowEnd.getTime());
   return new Date(startsAtMs).toISOString();
 }
 
@@ -370,9 +430,10 @@ function isLobbyStartDue(session: CategoryBlitzSession, now: Date): boolean {
 export async function driveVenueCategoryBlitz(
   venueId: string,
   now: Date = new Date(),
+  testMode: boolean = false,
 ): Promise<CategoryBlitzSession | null> {
   let existing = await getActiveSession(venueId);
-  if (existing && isStaleAutoSession(existing, now)) {
+  if (existing && (isStaleAutoSession(existing, now) || (await isIdleAutoSession(existing, now, testMode)))) {
     await closeStaleAutoSession(existing);
     existing = null;
   }
@@ -383,6 +444,12 @@ export async function driveVenueCategoryBlitz(
   const openSchedule = schedules.find((schedule) => isWindowOpen(schedule, now));
 
   if (!existing) {
+    // Give a client that missed the "session_ended" broadcast (dropped
+    // socket, tab loaded after the game ended) a window to still land on the
+    // Game Over screen via poll/reload, instead of "no game running".
+    const recentlyCompleted = await getRecentlyCompletedSession(venueId, now);
+    if (recentlyCompleted) return withPlayerCount(recentlyCompleted);
+
     if (!openSchedule) return null;
 
     const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
@@ -394,13 +461,15 @@ export async function driveVenueCategoryBlitz(
       await createSession(venueId, {
         source: "auto",
         scheduledEndAt: occurrence.windowEnd.toISOString(),
-        startsAt: computeLobbyStartsAt(now, occurrence.windowEnd),
+        startsAt: computeLobbyStartsAt(now, occurrence.windowEnd, testMode),
       });
-      return await getActiveSession(venueId);
+      const s = await getActiveSession(venueId);
+      return s ? withPlayerCount(s) : null;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes("already active")) {
-        return await getActiveSession(venueId);
+        const s = await getActiveSession(venueId);
+        return s ? withPlayerCount(s) : null;
       }
       throw error;
     }
@@ -411,18 +480,18 @@ export async function driveVenueCategoryBlitz(
   if (existing.source === "auto") {
     if (existing.status === "lobby") {
       if (isLobbyStartDue(existing, now)) {
-        await startRound(existing.id);
+        await startRound(existing.id, testMode);
       }
     } else if (openSchedule) {
       const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
       if (occurrence) {
-        const canFitAnother = now.getTime() + ROUND_DURATION_SECONDS * 1000 <= occurrence.windowEnd.getTime();
+        const canFitAnother = now.getTime() + roundDurationSeconds(testMode) * 1000 <= occurrence.windowEnd.getTime();
         if (canFitAnother) {
           const latest = await getLatestRound(existing.id);
           if (latest && latest.status === "complete") {
-            const nextRoundAt = new Date(latest.started_at).getTime() + ROUND_INTERVAL_SECONDS * 1000;
+            const nextRoundAt = new Date(latest.started_at).getTime() + roundIntervalSeconds(testMode) * 1000;
             if (now.getTime() >= nextRoundAt) {
-              await startRound(existing.id);
+              await startRound(existing.id, testMode);
             }
           }
         }
@@ -430,7 +499,8 @@ export async function driveVenueCategoryBlitz(
     }
   }
 
-  return await getActiveSession(venueId);
+  const s = await getActiveSession(venueId);
+  return s ? withPlayerCount(s) : null;
 }
 
 export type CreateSessionOptions = {
@@ -473,7 +543,7 @@ export async function createSession(
 }
 
 /** Advance a lobby session to 'active' and create the first round. */
-export async function startRound(sessionId: string): Promise<CategoryBlitzRound> {
+export async function startRound(sessionId: string, testMode: boolean = false): Promise<CategoryBlitzRound> {
   assertAdmin();
 
   // Load session to get venueId and confirm it's in lobby/active state.
@@ -502,7 +572,7 @@ export async function startRound(sessionId: string): Promise<CategoryBlitzRound>
   if (!categorySet) throw new Error("Failed to select category set.");
 
   const letter = pickLetterForSet(categorySet);
-  const endsAt = new Date(Date.now() + ROUND_DURATION_SECONDS * 1000).toISOString();
+  const endsAt = new Date(Date.now() + roundDurationSeconds(testMode) * 1000).toISOString();
 
   // Mark session active.
   await supabaseAdmin!
@@ -655,7 +725,9 @@ export async function submitAnswer(params: {
 
   if (roundErr || !round) throw new Error("Round not found.");
   if (round.status !== "active") throw new Error("This round is no longer accepting answers.");
-  if (new Date(round.ends_at) < new Date()) throw new Error("The round timer has expired.");
+  if (new Date(round.ends_at).getTime() + SUBMISSION_GRACE_MS < Date.now()) {
+    throw new Error("The round timer has expired.");
+  }
 
   // Enforcement boundary: reject spectators server-side. Client-side hiding
   // of the submit button is UX only — this is what actually blocks it.
@@ -750,12 +822,38 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
     return buildResults(roundId, round);
   }
 
-  // Lock round to prevent new submissions.
-  await supabaseAdmin!
+  // Lock round to prevent new submissions — only transition from active→scoring.
+  // Use .select() to confirm exactly one caller won the race; if the update
+  // affected zero rows, another concurrent invocation already claimed the lock,
+  // so await its result via re-fetch instead of duplicating the work.
+  const { data: lockedRound } = await supabaseAdmin!
     .from("category_blitz_rounds")
     .update({ status: "scoring" })
     .eq("id", roundId)
-    .eq("status", "active"); // only transition from active→scoring
+    .eq("status", "active")
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (!lockedRound) {
+    // Another caller (client-triggered + cron) grabbed the lock first.
+    // Re-fetch the round (now "scoring" or "complete") and await the results.
+    const { data: existingRound } = await supabaseAdmin!
+      .from("category_blitz_rounds")
+      .select("id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at")
+      .eq("id", roundId)
+      .maybeSingle<RoundRow>();
+    if (!existingRound) throw new Error("Round not found after concurrency retry.");
+    return buildResults(roundId, existingRound);
+  }
+
+  // Count unique session participants. If fewer than 3 players are present,
+  // no one scores any points this round regardless of answer quality — the
+  // minimum-player-count gate prevents trivial 1v0 or 1v1 scoring (Phase 1).
+  const { count: participantCount } = await supabaseAdmin!
+    .from("category_blitz_session_participants")
+    .select("user_id", { count: "exact", head: true })
+    .eq("session_id", round.session_id);
+  const insufficientPlayers = (participantCount ?? 0) < 3;
 
   // Load all submissions for this round.
   const { data: submissionRows, error: subErr } = await supabaseAdmin!
@@ -795,7 +893,9 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
     letterOkMap.set(sub.id, answerStartsWithLetter(sub.answer, round.letter));
   }
 
-  // Step 2: LLM-validate only unique, letter-correct answers.
+  // Step 2: LLM-validate unique, letter-correct answers.
+  // Validation always runs so players can see if their answer *would* have been
+  // correct — only the points award itself is gated on player count (step 3).
   const categories: string[] = Array.isArray(round.categories) ? round.categories : [];
   const uniqueSubs = submissions.filter(
     (s) => uniquenessMap.get(s.id) === true && letterOkMap.get(s.id) === true
@@ -808,6 +908,9 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
   const validityMap = await validateAnswersWithLLM(round.letter, validationRequests);
 
   // Step 3: compute final points (unique + correct letter + valid = 2 pts, anything else = 0).
+  // When insufficientPlayers (< 3), all answers score 0 regardless of content,
+  // but the answer is still fully validated above so the grading reveal can
+  // show whether the answer would have been correct.
   // invalid_reason carries Haiku's short "why" and is persisted only for answers
   // the LLM actually judged invalid — the live grading reveal reads it back later.
   const updates: {
@@ -823,7 +926,7 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
     const verdict   = validityMap.get(sub.id);
     const isValid   = isUnique ? (letterOk ? (verdict?.valid ?? true) : false) : null;
     const invalidReason = isUnique && letterOk && verdict && !verdict.valid ? verdict.reason : null;
-    const pts       = isUnique && isValid ? POINTS_PER_UNIQUE_ANSWER : 0;
+    const pts       = insufficientPlayers ? 0 : (isUnique && isValid ? POINTS_PER_UNIQUE_ANSWER : 0);
     updates.push({ id: sub.id, is_unique: isUnique, is_valid: isValid, invalid_reason: invalidReason, points_awarded: pts });
   }
 
@@ -902,11 +1005,18 @@ async function awardCategoryBlitzPoints(params: {
  * The specific reason a submission did or didn't score, for player-facing
  * display. Derived from already-persisted columns plus the round's letter —
  * never stored, so it can't drift from the scoring logic above.
+ *
+ * When `playerCount` is provided and below 3, all reasons are overridden to
+ * `"insufficient_players"` regardless of actual validity — the scoring gate
+ * zeroed out points for the whole round because not enough players participated
+ * (see Phase 1 / docs/category-blitz-scoring-and-bugfix-plan.md).
  */
 const submissionReason = (
   s: Pick<SubmissionRow, "is_unique" | "is_valid" | "answer">,
-  letter: string
+  letter: string,
+  playerCount?: number
 ): CategoryBlitzAnswerReason => {
+  if (playerCount !== undefined && playerCount < 3) return "insufficient_players";
   if (s.is_unique === null) return "pending"; // not yet scored
   if (s.is_unique === false) return "duplicate";
   if (!answerStartsWithLetter(s.answer, letter)) return "wrong_letter";
@@ -949,6 +1059,14 @@ async function buildResults(roundId: string, round: RoundRow): Promise<CategoryB
 
   const submissions: SubmissionRow[] = subRows ?? [];
 
+  // Count unique session participants — used below to override all reasons to
+  // "insufficient_players" when < 3 players were present at scoring time.
+  const { count: sessionPlayerCount } = await supabaseAdmin!
+    .from("category_blitz_session_participants")
+    .select("user_id", { count: "exact", head: true })
+    .eq("session_id", round.session_id);
+  const playerCount = sessionPlayerCount ?? 0;
+
   // Load usernames for all submitters.
   const userIds = [...new Set(submissions.map((s) => s.user_id))];
   const usernameMap = new Map<string, string>();
@@ -976,7 +1094,7 @@ async function buildResults(roundId: string, round: RoundRow): Promise<CategoryB
       categoryIndex: idx,
       category,
       answers: catSubs.map((s) => {
-        const reason = submissionReason(s, round.letter);
+        const reason = submissionReason(s, round.letter, playerCount);
         return {
           userId: s.user_id,
           username: usernameMap.get(s.user_id) ?? "Unknown",
@@ -1029,6 +1147,7 @@ async function buildResults(roundId: string, round: RoundRow): Promise<CategoryB
     categories,
     results,
     totals,
+    playerCount,
   };
 }
 
@@ -1073,12 +1192,12 @@ async function getLatestRound(sessionId: string): Promise<RoundRow | null> {
 export async function scoreExpiredRounds(): Promise<{ scored: string[]; errors: string[] }> {
   assertAdmin();
 
-  const now = new Date().toISOString();
+  const cutoff = new Date(Date.now() - SUBMISSION_GRACE_MS).toISOString();
   const { data: expiredRows, error } = await supabaseAdmin!
     .from("category_blitz_rounds")
     .select("id")
     .eq("status", "active")
-    .lt("ends_at", now);
+    .lt("ends_at", cutoff);
 
   if (error) throw new Error(error.message || "Failed to query expired rounds.");
 
@@ -1175,7 +1294,7 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
         await createSession(venueId, {
           source: "auto",
           scheduledEndAt: windowEnd.toISOString(),
-          startsAt: computeLobbyStartsAt(now, windowEnd),
+          startsAt: computeLobbyStartsAt(now, windowEnd, false),
         });
         result.opened.push(venueId);
         continue;

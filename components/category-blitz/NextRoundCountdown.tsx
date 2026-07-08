@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { EASE_POP, EASE_SNAP } from "@/lib/motionEasing";
 
 interface NextRoundCountdownProps {
   secondsUntilNextRound: number;
@@ -60,46 +61,52 @@ const NextRoundCountdown = ({
       role="status"
       aria-live="assertive"
     >
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={label}
-          className={`select-none font-black tabular-nums ${
-            isFinal
-              ? `${finalColor} ${count === "go" ? "text-7xl" : "text-8xl"} ${
-                  !reduce ? "tp-count-glow" : ""
-                }`
-              : "text-4xl text-slate-100"
-          }`}
-          initial={
-            reduce
-              ? { opacity: 1 }
-              : isFinal
-                ? { scale: 0, opacity: 0 }
-                : { scale: 0.8, opacity: 0 }
-          }
-          animate={
-            reduce
-              ? { opacity: 1 }
-              : isFinal
-                ? { scale: [0, 1.4, 1], opacity: [0, 1, 1] }
-                : { scale: [0.8, 1.2, 1], opacity: [0, 1, 1] }
-          }
-          exit={
-            reduce
-              ? { opacity: 0 }
-              : { scale: isFinal ? 1.3 : 1.1, opacity: 0 }
-          }
+      <div className="flex flex-col items-center">
+        <motion.p
+          className="mb-3 select-none text-[0.8rem] font-black uppercase tracking-[0.28em] text-slate-400"
+          initial={reduce ? { opacity: 1 } : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={
-            reduce
-              ? { duration: 0.15 }
-              : isFinal
-                ? { duration: 0.5, times: [0, 0.5, 1], ease: "easeOut" }
-                : { duration: 0.3, times: [0, 0.5, 1], ease: "easeOut" }
+            reduce ? { duration: 0.15 } : { duration: 0.26, ease: EASE_SNAP, delay: 0.12 }
           }
         >
-          {label}
-        </motion.span>
-      </AnimatePresence>
+          Next round starting
+        </motion.p>
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={label}
+            className={`select-none font-black tabular-nums ${
+              isFinal
+                ? `${finalColor} ${count === "go" ? "text-7xl" : "text-8xl"} ${
+                    !reduce ? "tp-count-glow" : ""
+                  }`
+                : "text-4xl text-slate-100"
+            }`}
+            initial={
+              reduce
+                ? { opacity: 1 }
+                : isFinal
+                  ? { scale: 1.4, opacity: 0 }
+                  : { scale: 0.8, opacity: 0 }
+            }
+            animate={{ opacity: 1, scale: 1 }}
+            exit={
+              reduce
+                ? { opacity: 0 }
+                : { scale: isFinal ? 1.3 : 1.1, opacity: 0 }
+            }
+            transition={
+              reduce
+                ? { duration: 0.15 }
+                : isFinal
+                  ? { duration: 0.3, ease: EASE_POP }
+                  : { duration: 0.3, times: [0, 0.5, 1], ease: "easeOut" }
+            }
+          >
+            {label}
+          </motion.span>
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

@@ -12,7 +12,8 @@ export type AnimationType =
   | "LIVE_TRIVIA_NEXT_CATEGORY"
   | "FANTASY_SCORE_UP"
   | "FANTASY_LIVE_COLLECT"
-  | "LIVE_TRIVIA_CHAMPION";
+  | "LIVE_TRIVIA_CHAMPION"
+  | "CATEGORY_BLITZ_CHAMPION";
 
 export interface AnimationPayload {
   inputRect?: DOMRect | null;
