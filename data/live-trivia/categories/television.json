@@ -3839,6 +3839,75 @@
       "imageCredit": null,
       "category": "Television",
       "subcategory": "reality-competition"
+    },
+    {
+      "slug": "before-starring-in-oppenheimer-cillian-murphy-gained-widespread-fame-as-tommy-shelby-in-which-british-crime-drama",
+      "question": "Before starring in \"Oppenheimer\", Cillian Murphy gained widespread fame as Tommy Shelby in which British crime drama?",
+      "answer": "Peaky Blinders",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "hard",
+      "subcategory": "drama-cable"
+    },
+    {
+      "slug": "in-the-tv-show-game-of-thrones-what-is-the-name-of-the-continent-where-most-of-the-story-takes-place",
+      "question": "In the TV show \"Game of Thrones\", what is the name of the continent where most of the story takes place?",
+      "answer": "Westeros",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
+    },
+    {
+      "slug": "the-fantasy-novel-series-a-song-of-ice-and-fire-by-george-rr-martin-was-adapted-into-which-hbo-phenomenon",
+      "question": "The fantasy novel series \"A Song of Ice and Fire\" by George R.R. Martin was adapted into which HBO phenomenon?",
+      "answer": "Game of Thrones",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "hard",
+      "subcategory": "drama-cable"
+    },
+    {
+      "slug": "what-is-the-name-of-the-yellow-animated-family-created-by-matt-groening",
+      "question": "What is the name of the yellow animated family created by Matt Groening?",
+      "answer": "The Simpsons",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "animated-series",
+      "acceptableAnswers": [
+        "Simpsons"
+      ]
+    },
+    {
+      "slug": "what-is-the-name-of-the-yellow-anthropomorphic-sea-sponge-who-lives-in-a-pineapple-under-the-sea",
+      "question": "What is the name of the yellow, anthropomorphic sea sponge who lives in a pineapple under the sea?",
+      "answer": "SpongeBob SquarePants",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "animated-series"
+    },
+    {
+      "slug": "which-band-performed-the-iconic-theme-song-ill-be-there-for-you-for-the-tv-show-friends",
+      "question": "Which band performed the iconic theme song 'I'll Be There For You' for the TV show 'Friends'?",
+      "answer": "The Rembrandts",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy",
+      "acceptableAnswers": [
+        "Rembrandts"
+      ]
+    },
+    {
+      "slug": "who-created-the-popular-animated-sitcom-family-guy-and-voices-many-of-its-characters",
+      "question": "Who created the popular animated sitcom \"Family Guy\" and voices many of its characters?",
+      "answer": "Seth MacFarlane",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "animated-series"
     }
   ]
 }

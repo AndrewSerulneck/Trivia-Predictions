@@ -5466,7 +5466,103 @@
       "category": "History & Government",
       "difficulty": "hard",
       "subcategory": "us-history-government"
+    },
+    {
+      "slug": "the-byzantine-empire-was-a-continuation-of-which-ancient-empire",
+      "question": "The Byzantine Empire was a continuation of which ancient empire?",
+      "answer": "Roman Empire",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "ancient-medieval"
+    },
+    {
+      "slug": "the-term-iron-curtain-symbolizing-the-ideological-division-of-europe-during-the-cold-war-was-popularized-by-which-leader",
+      "question": "The term \"iron curtain\" symbolizing the ideological division of Europe during the Cold War was popularized by which leader?",
+      "answer": "Winston Churchill",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "wars-battles-conflicts"
+    },
+    {
+      "slug": "what-significant-event-occurred-on-december-7-1941-leading-to-the-united-states-entry-into-world-war-ii",
+      "question": "What significant event occurred on December 7, 1941, leading to the United States' entry into World War II?",
+      "answer": "Attack on Pearl Harbor",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
+    },
+    {
+      "slug": "which-ancient-civilization-is-credited-with-inventing-democracy",
+      "question": "Which ancient civilization is credited with inventing democracy?",
+      "answer": "Greek",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "ancient-medieval",
+      "acceptableAnswers": [
+        "Ancient Greece",
+        "Athens"
+      ]
+    },
+    {
+      "slug": "which-famous-queen-of-england-reigned-for-over-60-years-and-had-an-era-named-after-her",
+      "question": "Which famous queen of England reigned for over 60 years and had an era named after her?",
+      "answer": "Queen Victoria",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes",
+      "acceptableAnswers": [
+        "Victoria"
+      ]
+    },
+    {
+      "slug": "which-us-president-delivered-the-gettysburg-address-during-the-american-civil-war",
+      "question": "Which U.S. President delivered the Gettysburg Address during the American Civil War?",
+      "answer": "Abraham Lincoln",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
+    },
+    {
+      "slug": "who-formulated-the-theory-of-evolution-by-natural-selection",
+      "question": "Who formulated the theory of evolution by natural selection?",
+      "answer": "Charles Darwin",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
+    },
+    {
+      "slug": "who-led-the-soviet-union-during-the-majority-of-world-war-ii",
+      "question": "Who led the Soviet Union during the majority of World War II?",
+      "answer": "Joseph Stalin",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "wars-battles-conflicts"
+    },
+    {
+      "slug": "who-served-as-the-first-president-of-the-united-states",
+      "question": "Who served as the first President of the United States?",
+      "answer": "George Washington",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
+    },
+    {
+      "slug": "who-was-the-first-emperor-of-the-roman-empire-effectively-ending-the-roman-republic",
+      "question": "Who was the first emperor of the Roman Empire, effectively ending the Roman Republic?",
+      "answer": "Augustus",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
     }
-  ],
-  "familiarity": "moderate"
+  ]
 }

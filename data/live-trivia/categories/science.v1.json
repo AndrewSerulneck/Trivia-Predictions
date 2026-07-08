@@ -3579,7 +3579,90 @@
       "category": "Science & Tech",
       "difficulty": "easy",
       "subcategory": "chemistry-periodic-table"
+    },
+    {
+      "slug": "in-web-addresses-what-do-the-letters-www-typically-stand-for",
+      "question": "In web addresses, what do the letters \"www\" typically stand for?",
+      "answer": "World Wide Web",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "what-is-the-fear-of-confined-spaces-called",
+      "question": "What is the fear of confined spaces called?",
+      "answer": "Claustrophobia",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "what-is-the-smallest-prime-number",
+      "question": "What is the smallest prime number?",
+      "answer": "2",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "hard",
+      "subcategory": "physics-concepts",
+      "acceptableAnswers": [
+        "two"
+      ]
+    },
+    {
+      "slug": "before-its-rebranding-to-x-what-was-the-original-name-of-elon-musks-social-media-platform",
+      "question": "Before its rebranding to \"X\", what was the original name of Elon Musk's social media platform?",
+      "answer": "Twitter",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "in-physics-what-is-the-unit-of-electrical-resistance",
+      "question": "In physics, what is the unit of electrical resistance?",
+      "answer": "Ohm",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
+    },
+    {
+      "slug": "what-is-the-standard-unit-of-force-in-the-international-system-of-units-si",
+      "question": "What is the standard unit of force in the International System of Units (SI)?",
+      "answer": "Newton",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
+    },
+    {
+      "slug": "what-supercontinent-existed-during-the-late-paleozoic-and-early-mesozoic-eras-before-the-continents-drifted-to-their-current-positions",
+      "question": "What supercontinent existed during the late Paleozoic and early Mesozoic eras, before the continents drifted to their current positions?",
+      "answer": "Pangea",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "hard",
+      "subcategory": "astronomy-earth-science"
+    },
+    {
+      "slug": "which-major-artery-carries-oxygenated-blood-from-the-heart-to-the-rest-of-the-body",
+      "question": "Which major artery carries oxygenated blood from the heart to the rest of the body?",
+      "answer": "Aorta",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
+    },
+    {
+      "slug": "which-subatomic-particle-possesses-a-negative-electrical-charge",
+      "question": "Which subatomic particle possesses a negative electrical charge?",
+      "answer": "Electron",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "physics-concepts"
     }
-  ],
-  "familiarity": "moderate"
+  ]
 }

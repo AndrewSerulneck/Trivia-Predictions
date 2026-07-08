@@ -10,7 +10,7 @@
       "difficulty": "easy",
       "subcategory": "historical-moments"
     },
-      {
+    {
       "slug": "country-failed-to-qualify-world-cup-22-consecutive-times",
       "question": "Which country has failed to qualify for the FIFA World Cup 22 consecutive times?",
       "answer": "Luxembourg",
@@ -3541,7 +3541,267 @@
       "imageCredit": null,
       "category": "Sports",
       "subcategory": "records-statistics"
+    },
+    {
+      "slug": "how-many-players-are-there-in-a-standard-starting-lineup-for-a-soccer-football-team",
+      "question": "How many players are there in a standard starting lineup for a soccer (football) team?",
+      "answer": "11",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology",
+      "acceptableAnswers": [
+        "eleven"
+      ]
+    },
+    {
+      "slug": "in-which-country-did-the-sport-of-basketball-originate",
+      "question": "In which country did the sport of basketball originate?",
+      "answer": "United States",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "historical-moments",
+      "acceptableAnswers": [
+        "USA",
+        "US",
+        "America",
+        "United States of America"
+      ]
+    },
+    {
+      "slug": "in-which-country-did-the-sport-of-golf-originate",
+      "question": "In which country did the sport of golf originate?",
+      "answer": "Scotland",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "how-many-grand-slam-tournaments-are-held-annually-in-professional-tennis",
+      "question": "How many Grand Slam tournaments are held annually in professional tennis?",
+      "answer": "4",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "records-statistics",
+      "acceptableAnswers": [
+        "four"
+      ]
+    },
+    {
+      "slug": "how-many-players-are-on-a-water-polo-team-in-the-water-at-one-time",
+      "question": "How many players are on a water polo team in the water at one time?",
+      "answer": "7",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "records-statistics",
+      "acceptableAnswers": [
+        "seven"
+      ]
+    },
+    {
+      "slug": "how-many-points-is-a-touchdown-worth-in-american-football-excluding-extra-points",
+      "question": "How many points is a touchdown worth in American football (excluding extra points)?",
+      "answer": "6",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "records-statistics",
+      "acceptableAnswers": [
+        "six"
+      ]
+    },
+    {
+      "slug": "how-many-sets-must-a-male-player-win-to-claim-a-grand-slam-tennis-match",
+      "question": "How many sets must a male player win to claim a Grand Slam tennis match?",
+      "answer": "3",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "how-many-squares-are-there-on-a-standard-chessboard",
+      "question": "How many squares are there on a standard chessboard?",
+      "answer": "64",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "records-statistics",
+      "acceptableAnswers": [
+        "sixty-four"
+      ]
+    },
+    {
+      "slug": "how-many-yards-must-an-american-football-team-advance-to-get-a-first-down",
+      "question": "How many yards must an American football team advance to get a first down?",
+      "answer": "10",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "records-statistics",
+      "acceptableAnswers": [
+        "ten"
+      ]
+    },
+    {
+      "slug": "in-which-sport-would-you-find-terms-like-scrum-lineout-and-try",
+      "question": "In which sport would you find terms like 'scrum', 'lineout', and 'try'?",
+      "answer": "Rugby",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-which-team-sport-must-a-team-win-a-set-by-at-least-two-points",
+      "question": "In which team sport must a team win a set by at least two points?",
+      "answer": "Volleyball",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-does-scoring-a-birdie-mean-in-golf",
+      "question": "What does scoring a 'birdie' mean in golf?",
+      "answer": "Completing a hole in one stroke under par",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "as-of-2024-which-nba-franchise-holds-the-record-for-the-most-nba-championships",
+      "question": "As of 2024, which NBA franchise holds the record for the most NBA championships?",
+      "answer": "Boston Celtics",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "what-is-the-maximum-number-of-points-a-player-can-score-in-a-single-frame-of-ten-pin-bowling-without-any-strikes-or-spares",
+      "question": "What is the maximum number of points a player can score in a single frame of ten-pin bowling without any strikes or spares?",
+      "answer": "19",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "rules-terminology",
+      "acceptableAnswers": [
+        "nineteen"
+      ]
+    },
+    {
+      "slug": "what-is-the-name-of-the-competition-combining-ten-different-track-and-field-events",
+      "question": "What is the name of the competition combining ten different track and field events?",
+      "answer": "Decathlon",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-is-the-name-of-the-trophy-awarded-to-the-winner-of-the-nfls-championship-game",
+      "question": "What is the name of the trophy awarded to the winner of the NFL's championship game?",
+      "answer": "Vince Lombardi Trophy",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-is-the-only-city-to-have-hosted-the-summer-olympics-three-times",
+      "question": "What is the only city to have hosted the Summer Olympics three times?",
+      "answer": "London",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "what-is-the-term-for-a-score-of-40-40-in-a-tennis-game",
+      "question": "What is the term for a score of 40-40 in a tennis game?",
+      "answer": "Deuce",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "which-city-is-home-to-the-famous-fenway-park-baseball-stadium",
+      "question": "Which city is home to the famous 'Fenway Park' baseball stadium?",
+      "answer": "Boston",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "teams-franchises"
+    },
+    {
+      "slug": "which-country-has-won-the-most-fifa-world-cup-titles-in-mens-football-history",
+      "question": "Which country has won the most FIFA World Cup titles in men's football history?",
+      "answer": "Brazil",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "which-female-athlete-holds-the-record-for-the-most-olympic-gold-medals-in-track-and-field",
+      "question": "Which female athlete holds the record for the most Olympic gold medals in track and field?",
+      "answer": "Allyson Felix",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "which-international-organization-governs-the-sport-of-football-soccer-worldwide",
+      "question": "Which international organization governs the sport of football (soccer) worldwide?",
+      "answer": "FIFA",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "which-nfl-team-won-the-first-super-bowl-in-1967",
+      "question": "Which NFL team won the first Super Bowl in 1967?",
+      "answer": "Green Bay Packers",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "which-racket-sport-uses-scoring-terms-such-as-love-deuce-and-advantage",
+      "question": "Which racket sport uses scoring terms such as 'love', 'deuce', and 'advantage'?",
+      "answer": "Tennis",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "which-sport-uses-terms-like-spiker-blocker-and-libero",
+      "question": "Which sport uses terms like \"spiker,\" \"blocker,\" and \"libero\"?",
+      "answer": "Volleyball",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "who-is-the-only-golfer-to-have-won-all-four-major-championships-at-least-twice",
+      "question": "Who is the only golfer to have won all four major championships at least twice?",
+      "answer": "Jack Nicklaus",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "rules-terminology"
     }
-  ],
-  "familiarity": "mainstream"
+  ]
 }

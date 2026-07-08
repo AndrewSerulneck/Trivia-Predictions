@@ -5548,6 +5548,270 @@
       "category": "Geography",
       "difficulty": "easy",
       "subcategory": "us-states-quirky"
+    },
+    {
+      "slug": "which-continent-is-the-only-natural-habitat-for-kangaroos",
+      "question": "Which continent is the only natural habitat for kangaroos?",
+      "answer": "Australia",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "from-which-country-do-croissants-originate",
+      "question": "From which country do croissants originate?",
+      "answer": "Austria",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "from-which-country-does-the-popular-culinary-dish-sushi-originate",
+      "question": "From which country does the popular culinary dish \"sushi\" originate?",
+      "answer": "Japan",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "what-is-the-name-of-the-imaginary-line-that-divides-the-earth-into-northern-and-southern-hemispheres",
+      "question": "What is the name of the imaginary line that divides the Earth into Northern and Southern Hemispheres?",
+      "answer": "Equator",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "which-country-is-famous-for-the-taj-mahal",
+      "question": "Which country is famous for the Taj Mahal?",
+      "answer": "India",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "landmarks-wonders"
+    },
+    {
+      "slug": "which-is-the-smallest-independent-state-in-the-world-by-land-area",
+      "question": "Which is the smallest independent state in the world by land area?",
+      "answer": "Vatican City",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders",
+      "acceptableAnswers": [
+        "Vatican"
+      ]
+    },
+    {
+      "slug": "the-city-of-venice-is-built-on-an-archipelago-of-islands-in-which-country",
+      "question": "The city of Venice is built on an archipelago of islands in which country?",
+      "answer": "Italy",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "the-deccan-plateau-is-a-large-plateau-in-which-country",
+      "question": "The Deccan Plateau is a large plateau in which country?",
+      "answer": "India",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "the-golden-gate-bridge-is-a-famous-landmark-in-which-us-city",
+      "question": "The Golden Gate Bridge is a famous landmark in which U.S. city?",
+      "answer": "San Francisco",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "landmarks-wonders"
+    },
+    {
+      "slug": "the-serengeti-national-park-known-for-its-annual-wildlife-migration-is-primarily-located-in-which-country",
+      "question": "The Serengeti National Park, known for its annual wildlife migration, is primarily located in which country?",
+      "answer": "Tanzania",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "the-worlds-highest-uninterrupted-waterfall-angel-falls-is-located-in-which-south-american-country",
+      "question": "The world's highest uninterrupted waterfall, Angel Falls, is located in which South American country?",
+      "answer": "Venezuela",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "landmarks-wonders"
+    },
+    {
+      "slug": "the-ring-of-fire-is-primarily-located-in-the-basin-of-which-ocean",
+      "question": "The 'Ring of Fire' is primarily located in the basin of which ocean?",
+      "answer": "Pacific Ocean",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography",
+      "acceptableAnswers": [
+        "Pacific"
+      ]
+    },
+    {
+      "slug": "the-danube-river-which-flows-through-the-most-countries-in-the-world-is-primarily-located-on-which-continent",
+      "question": "The Danube River, which flows through the most countries in the world, is primarily located on which continent?",
+      "answer": "Europe",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "the-nile-river-empties-into-the-mediterranean-sea-after-flowing-primarily-through-which-country",
+      "question": "The Nile River empties into the Mediterranean Sea after flowing primarily through which country?",
+      "answer": "Egypt",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "the-sahara-desert-spans-across-much-of-which-continent",
+      "question": "The Sahara Desert spans across much of which continent?",
+      "answer": "Africa",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "which-continent-is-also-a-country",
+      "question": "Which continent is also a country?",
+      "answer": "Australia",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-country-is-both-an-island-and-a-continent",
+      "question": "Which country is both an island and a continent?",
+      "answer": "Australia",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-country-is-home-to-the-largest-portion-of-the-amazon-rainforest",
+      "question": "Which country is home to the largest portion of the Amazon Rainforest?",
+      "answer": "Brazil",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-european-capital-city-is-renowned-for-its-numerous-bridges-and-canals-often-called-the-venice-of-the-north",
+      "question": "Which European capital city is renowned for its numerous bridges and canals, often called the \"Venice of the North\"?",
+      "answer": "Amsterdam",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-imaginary-line-circles-the-earth-at-0-degrees-latitude-dividing-it-into-the-northern-and-southern-hemispheres",
+      "question": "Which imaginary line circles the Earth at 0 degrees latitude, dividing it into the Northern and Southern Hemispheres?",
+      "answer": "Equator",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "which-landlocked-country-in-south-america-is-named-after-a-prominent-south-american-independence-leader",
+      "question": "Which landlocked country in South America is named after prominent South American independence leader Simon Bolivar?",
+      "answer": "Bolivia",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-major-mountain-range-forms-a-traditional-geographical-boundary-between-europe-and-asia",
+      "question": "Which major mountain range forms a traditional geographical boundary between Europe and Asia?",
+      "answer": "Ural Mountains",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography",
+      "acceptableAnswers": [
+        "Urals"
+      ]
+    },
+    {
+      "slug": "which-mountain-range-forms-a-natural-boundary-between-europe-and-asia",
+      "question": "Which mountain range forms a natural boundary between Europe and Asia?",
+      "answer": "Urals",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography",
+      "acceptableAnswers": [
+        "Ural Mountains"
+      ]
+    },
+    {
+      "slug": "which-ocean-borders-the-western-coast-of-the-united-states",
+      "question": "Which ocean borders the western coast of the United States?",
+      "answer": "Pacific Ocean",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "physical-geography",
+      "acceptableAnswers": [
+        "Pacific"
+      ]
+    },
+    {
+      "slug": "which-of-the-following-is-an-archipelagic-country-in-southeast-asia-consisting-of-over-7000-islands",
+      "question": "Which of the following is an archipelagic country in Southeast Asia, consisting of over 7,000 islands?",
+      "answer": "Philippines",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-sea-is-landlocked-and-known-for-its-extremely-high-salt-content-allowing-people-to-float-effortlessly",
+      "question": "Which sea is landlocked and known for its extremely high salt content, allowing people to float effortlessly?",
+      "answer": "Dead Sea",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "physical-geography",
+      "acceptableAnswers": [
+        "Dead"
+      ]
+    },
+    {
+      "slug": "which-sea-is-located-between-the-balkan-peninsula-and-anatolia",
+      "question": "Which sea is located between the Balkan Peninsula and Anatolia?",
+      "answer": "Aegean Sea",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography",
+      "acceptableAnswers": [
+        "Aegean"
+      ]
     }
   ]
 }

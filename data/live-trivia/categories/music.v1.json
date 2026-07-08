@@ -3294,7 +3294,234 @@
       "imageCredit": null,
       "category": "Music",
       "subcategory": "music-history-events"
+    },
+    {
+      "slug": "what-award-is-given-annually-by-the-recording-academy-to-recognize-outstanding-achievements-in-the-music-industry",
+      "question": "What award is given annually by the Recording Academy to recognize outstanding achievements in the music industry?",
+      "answer": "Grammy",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "what-instrument-is-louis-armstrong-famously-associated-with",
+      "question": "What instrument is Louis Armstrong famously associated with?",
+      "answer": "Trumpet",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "taylor-swifts-2008-album-featuring-love-story-and-you-belong-with-me-is-titled-what",
+      "question": "Taylor Swift's 2008 album, featuring 'Love Story' and 'You Belong With Me', is titled what?",
+      "answer": "Fearless",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "the-album-sgt-peppers-lonely-hearts-club-band-is-famously-associated-with-which-band",
+      "question": "The album 'Sgt. Pepper's Lonely Hearts Club Band' is famously associated with which band?",
+      "answer": "The Beatles",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "albums-songs-lyrics",
+      "acceptableAnswers": [
+        "Beatles"
+      ]
+    },
+    {
+      "slug": "what-is-the-musical-term-for-a-composition-for-a-solo-instrument-or-voice-usually-with-orchestral-accompaniment-in-several-movements",
+      "question": "What is the musical term for a composition for a solo instrument or voice, usually with orchestral accompaniment, in several movements?",
+      "answer": "Concerto",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "what-is-the-smallest-interval-in-western-tonal-music",
+      "question": "What is the smallest interval in Western tonal music?",
+      "answer": "Semitone",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "which-artist-is-known-for-her-powerful-vocals-and-hit-songs-like-rolling-in-the-deep-and-someone-like-you",
+      "question": "Which artist is known for her powerful vocals and hit songs like \"Rolling in the Deep\" and \"Someone Like You\"?",
+      "answer": "Adele",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-band-is-known-for-hits-like-dont-stop-believin-and-separate-ways",
+      "question": "Which band is known for hits like \"Don't Stop Believin'\" and \"Separate Ways\"?",
+      "answer": "Journey",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-band-is-known-for-the-album-rumours-featuring-hits-like-go-your-own-way-and-dreams",
+      "question": "Which band is known for the album 'Rumours', featuring hits like 'Go Your Own Way' and 'Dreams'?",
+      "answer": "Fleetwood Mac",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "albums-songs-lyrics"
+    },
+    {
+      "slug": "which-city-is-famously-associated-with-the-formation-and-early-career-of-the-beatles",
+      "question": "Which city is famously associated with the formation and early career of The Beatles?",
+      "answer": "Liverpool",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "which-classical-music-term-means-fast-or-lively",
+      "question": "Which classical music term means \"fast\" or \"lively\"?",
+      "answer": "Allegro",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "which-jazz-legend-is-famous-for-his-trumpet-playing-and-distinctive-gravelly-voice-with-hits-like-what-a-wonderful-world",
+      "question": "Which jazz legend is famous for his trumpet playing and distinctive gravelly voice, with hits like 'What a Wonderful World'?",
+      "answer": "Louis Armstrong",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-legendary-guitarist-famously-played-a-white-fender-stratocaster-at-woodstock",
+      "question": "Which legendary guitarist famously played a white Fender Stratocaster at Woodstock?",
+      "answer": "Jimi Hendrix",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "which-legendary-guitarist-is-known-for-his-performance-at-woodstock-including-his-rendition-of-the-star-spangled-banner",
+      "question": "Which legendary guitarist is known for his performance at Woodstock, including his rendition of 'The Star-Spangled Banner'?",
+      "answer": "Jimi Hendrix",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "which-pop-and-rb-icon-released-the-2008-hit-song-single-ladies-put-a-ring-on-it",
+      "question": "Which pop and R&B icon released the 2008 hit song 'Single Ladies (Put a Ring on It)'?",
+      "answer": "Beyoncé",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-pop-icon-is-widely-credited-with-popularizing-the-moonwalk-dance-move",
+      "question": "Which pop icon is widely credited with popularizing the 'Moonwalk' dance move?",
+      "answer": "Michael Jackson",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-pop-star-is-known-for-hits-like-like-a-prayer-and-vogue",
+      "question": "Which pop star is known for hits like 'Like a Prayer' and 'Vogue'?",
+      "answer": "Madonna",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-singer-is-famously-known-as-the-queen-of-pop",
+      "question": "Which singer is famously known as the 'Queen of Pop'?",
+      "answer": "Madonna",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-singer-is-known-for-hits-like-single-ladies-put-a-ring-on-it",
+      "question": "Which singer is known for hits like \"Single Ladies (Put a Ring on It)\"?",
+      "answer": "Beyoncé",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "who-was-the-charismatic-lead-singer-of-the-british-rock-band-queen",
+      "question": "Who was the charismatic lead singer of the British rock band Queen?",
+      "answer": "Freddie Mercury",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "what-is-the-stage-name-of-the-artist-known-for-hits-like-bad-romance-and-poker-face",
+      "question": "What is the stage name of the artist known for hits like \"Bad Romance\" and \"Poker Face\"?",
+      "answer": "Lady Gaga",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-artist-achieved-massive-internet-fame-with-hits-like-old-town-road-blending-country-and-hip-hop-genres",
+      "question": "Which artist achieved massive internet fame with hits like \"Old Town Road,\" blending country and hip-hop genres?",
+      "answer": "Lil Nas X",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-singer-is-known-for-hits-like-bad-guy-and-therefore-i-am",
+      "question": "Which singer is known for hits like \"Bad Guy\" and \"Therefore I Am\"?",
+      "answer": "Billie Eilish",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-singer-is-widely-known-by-the-nickname-queen-of-pop",
+      "question": "Which singer is widely known by the nickname \"Queen of Pop\"?",
+      "answer": "Madonna",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "who-is-the-lead-singer-of-the-rock-band-u2",
+      "question": "Who is the lead singer of the rock band U2?",
+      "answer": "Bono",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "artist-identity"
     }
-  ],
-  "familiarity": "mainstream"
+  ]
 }
