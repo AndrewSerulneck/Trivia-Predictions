@@ -82,7 +82,7 @@
     },
     {
       "slug": "shogun-hulu-language",
-      "question": "The 2024 Emmy-winning series 'Sh\u014dgun' is primarily performed in which language?",
+      "question": "The 2024 Emmy-winning series 'Shōgun' is primarily performed in which language?",
       "answer": "Japanese",
       "answer_format": "write_in",
       "category": "Television",
@@ -679,7 +679,7 @@
     },
     {
       "slug": "arrested-development-tobias-funke-hybrid-profession",
-      "question": "On Arrested Development, Tobias F\u00fcnke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
+      "question": "On Arrested Development, Tobias Fünke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
       "answer": "Analrapist",
       "category": "Television",
       "difficulty": "medium",
@@ -944,7 +944,7 @@
     },
     {
       "slug": "pokemon-ash-ketchum-first-partner",
-      "question": "In Pok\u00e9mon, what electric-type mouse creature is Ash Ketchum's primary partner and global mascot of the franchise?",
+      "question": "In Pokémon, what electric-type mouse creature is Ash Ketchum's primary partner and global mascot of the franchise?",
       "answer": "Pikachu",
       "category": "Television",
       "difficulty": "easy",
@@ -1920,7 +1920,7 @@
     },
     {
       "slug": "arrested-development-tobias-funke-medical-profession-hybrid",
-      "question": "On Arrested Development, Tobias F\u00fcnke loses his medical license and invents a new, highly questionable professional title combining the words 'analyst' and 'therapist'\u2014what is this word?",
+      "question": "On Arrested Development, Tobias Fünke loses his medical license and invents a new, highly questionable professional title combining the words 'analyst' and 'therapist'—what is this word?",
       "answer": "Analrapist",
       "answer_format": "write_in",
       "category": "Television",
@@ -1973,7 +1973,7 @@
     },
     {
       "slug": "arrested-development-tobias-funke-acting-group",
-      "question": "On Arrested Development, Tobias F\u00fcnke joins a dynamic, color-coded theatrical performance art group known by what collective name?",
+      "question": "On Arrested Development, Tobias Fünke joins a dynamic, color-coded theatrical performance art group known by what collective name?",
       "answer": "Blue Man Group",
       "answer_format": "write_in",
       "category": "Television",
@@ -2027,7 +2027,7 @@
     },
     {
       "slug": "arrested-development-tobias-funke-wardrobe-condition",
-      "question": "On Arrested Development, Tobias F\u00fcnke suffers from a psychological condition that makes it impossible for him to ever be completely naked, earning him what specific label?",
+      "question": "On Arrested Development, Tobias Fünke suffers from a psychological condition that makes it impossible for him to ever be completely naked, earning him what specific label?",
       "answer": "Never-nude",
       "answer_format": "write_in",
       "category": "Television",
@@ -3987,6 +3987,839 @@
       "category": "Television",
       "difficulty": "easy",
       "subcategory": "snl-late-night-recent"
+    },
+    {
+      "slug": "inventor-all-electronic-television",
+      "question": "Who is credited with inventing the first fully functional all-electronic television system?",
+      "answer": "Philo Farnsworth",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Farnsworth",
+        "Philo Taylor Farnsworth"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "year-first-electronic-tv-image",
+      "question": "In what year did Philo Farnsworth successfully transmit the first all-electronic television image?",
+      "answer": "1927",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "1927"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "year-first-tv-commercial",
+      "question": "In what year did the first paid television commercial air in the United States?",
+      "answer": "1941",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "1941"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "bulova-first-tv-advertiser",
+      "question": "What famous brand of luxury watches paid $9 to air the very first television commercial in American history in 1941?",
+      "answer": "Bulova",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Bulova Watch Company",
+        "Bulova Watch"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "nbc-first-us-tv-network",
+      "question": "Which network launched the first regularly scheduled television broadcasts in the United States in 1939?",
+      "answer": "NBC",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "National Broadcasting Company"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "new-york-worlds-fair-1939-tv-debut",
+      "question": "At which major 1939 event did NBC debut its first regular television broadcasts, featuring President Franklin D. Roosevelt?",
+      "answer": "New York World's Fair",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "World's Fair",
+        "1939 World's Fair"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "abc-first-flintstones-animated-prime-time-cartoon",
+      "question": "Which cartoon was launched in 1960 as the first prime-time animated series?",
+      "answer": "The Flintstones",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "The Flintstones"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "abc-first-flintstones-animated-prime-time",
+      "question": "Which network took a major risk by launching The Flintstones in 1960 as the first prime-time animated series?",
+      "answer": "ABC",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "American Broadcasting Company"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "swanson-tv-dinner-year",
+      "question": "What company released the first 'TV Dinner' using leftover Thanksgiving turkey?",
+      "answer": "Swanson",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Swanson"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-color-broadcast-series",
+      "question": "What was the first television series to air an episode in color on a commercially available color system?",
+      "answer": "The Colgate Comedy Hour",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Colgate Comedy Hour"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "year-kennedy-nixon-debate",
+      "question": "In what year did the first televised presidential debate air?",
+      "answer": "1960",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "1960"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "tv-kennedy-nixon-debate-JFK",
+      "question": "The first televised presidential debate was between Richard Nixon and who else?",
+      "answer": "John F. Kennedy",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "John F. Kennedy",
+        "Kennedy",
+        "John Kennedy",
+        "JFK",
+        "Jack Kennedy"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "tv-kennedy-nixon-debate-nixon",
+      "question": "The first televised presidential debate was between John F. Kennedy and who else?",
+      "answer": "Richard Nixon",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Richard Nixon",
+        "Nixon"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "tv-kennedy-nixon-debate-year",
+      "question": "In what year's election was the first televised presidential debate between John F. Kennedy and Richard Nixon?",
+      "answer": "1960",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "1960"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "eisenhower-first-televised-press-conference",
+      "question": "Which U.S. president held the first televised presidential news conference in 1955?",
+      "answer": "Dwight D. Eisenhower",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Eisenhower",
+        "President Eisenhower",
+        "Dwight Eisenhower"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "year-mash-finale-most-watched",
+      "question": "The 1983 series finale of what show became the most-watched episode of television in American history?",
+      "answer": "M*A*S*H",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "M*A*S*H",
+        "MASH"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "1990s-most-watched-tv-show-baywatch",
+      "question": "What 90s TV show is globally the most watched series of all time?",
+      "answer": "Baywatch",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Baywatch"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "hank-mccune-first-laugh-track",
+      "question": "What was the first television series to feature a laugh track, premiering in 1950?",
+      "answer": "The Hank McCune Show",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Hank McCune Show"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "american-family-first-reality-tv",
+      "question": "Which PBS series, aired in 1973, is widely recognized as the first reality television program?",
+      "answer": "An American Family",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "An American Family"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "cnn-launch-year-1980",
+      "question": "In what year did CNN, the first 24-hour cable news network, launch?",
+      "answer": "1980",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "1980"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "cnn-launch-year-network-first-24-hour-news",
+      "question": "What was the first 24-hour news network?",
+      "answer": "CNN",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "CNN"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "star-trek-interracial-kiss-first",
+      "question": "What year did Star Trek make history by airing the first interracial kiss on American television?",
+      "answer": "1968",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "1968"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "star-trek-interracial-kiss-first-actor",
+      "question": "In 1968, Star Trek made history by airing the first interracial kiss on American television betweeen Nichelle Nichols and what actor?",
+      "answer": "William Shatner",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "William Shatner",
+        "Shatner"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "star-trek-interracial-kiss-first-show-name",
+      "question": "What show made history by airing the first interracial kiss on American television?",
+      "answer": "Star Trek",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Star Trek"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "year-first-super-bowl-aired",
+      "question": "Which Super Bowl was the first to air on television?",
+      "answer": "1",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "I",
+        "1",
+        "One"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-videotaped-tv-broadcast",
+      "question": "The first coast-to-coast broadcast of a videotaped television program featured which singer in a 1957 special?",
+      "answer": "Frank Sinatra",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Sinatra",
+        "Frank Sinatra"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "dukakis-bush-interactive-poll-first-year",
+      "question": "The first interactive presidential debate allowing real-time audience polling featured Michael Dukakis and George H.W. Bush in what year?",
+      "answer": "1988",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "1988"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "dukakis-bush-interactive-poll-first-michael-dukakis",
+      "question": "The first interactive presidential debate allowing real-time audience polling featured Michael Dukakis and what future U.S. president?",
+      "answer": "George H.W. Bush",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "George H.W. Bush",
+        "Bush"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "dukakis-bush-interactive-poll-first-george-hw-bush-candidate",
+      "question": "The first interactive presidential debate allowing real-time audience polling featured future U.S. president George H.W. Bush and what other candidate?",
+      "answer": "Michael Dukakis",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Michael Dukakis",
+        "Dukakis"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-miniseries-early-70s",
+      "question": "What 1977 ABC miniseries, based on Alex Haley's novel, became a landmark cultural event and is considered the first blockbuster television miniseries?",
+      "answer": "Roots",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Roots"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "vatican-first-pope-on-tv",
+      "question": "Which pope made the first televised papal appearance in 1932?",
+      "answer": "Pope Pius XI",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Pius XI",
+        "Pope Pius",
+        "Pius"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "what-year-was-tivo-launched",
+      "question": "In what year was TiVo, the first commercially successful digital video recorder, launched?",
+      "answer": "1999",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "1999"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-series-appear-in-syndication",
+      "question": "Lucille Ball starred in the first television series successfully sold into syndication, rerunning in local markets nationwide. What was it called?",
+      "answer": "I Love Lucy",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "I Love Lucy"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-scripted-pay-cable-original-series",
+      "question": "What was the first original scripted series produced by a premium cable network, debuting on HBO in 1983?",
+      "answer": "The Hitchhiker",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "The Hitchhiker"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "digital-tv-transition-year-us",
+      "question": "In what year did the United States officially complete the transition from analog to digital television broadcasting?",
+      "answer": "2009",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "2009",
+        "June 12, 2009"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "nbc-peacock-first-color-broadcast",
+      "question": "In 1956, NBC introduced a logo that resembled what animal to promote its new color broadcasts?",
+      "answer": "Peacock",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Peacock"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "duck-and-cover-civil-defense-tv",
+      "question": "What was the name of the 1952 civil defense film broadcast on television teaching schoolchildren what to do in a nuclear attack?",
+      "answer": "Duck and Cover",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Duck and Cover"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "howdy-doody-first-kids-tv-show",
+      "question": "What pioneering children's television program, featuring a freckled marionette, premiered on NBC in 1947?",
+      "answer": "Howdy Doody",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Howdy Doody",
+        "The Howdy Doody Show"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "mtv-launch-year-first-video",
+      "question": "In what year did MTV launch?",
+      "answer": "1981",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "1981"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "video-killed-the-radio-star-first-mtv-video",
+      "question": "What song was the first music video ever aired on MTV when it launched?",
+      "answer": "Video Killed the Radio Star",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Video Killed the Radio Star"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "home-box-office-hbo-first-pay-cable",
+      "question": "What was the first premium cable network, launched in 1972?",
+      "answer": "HBO",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "HBO",
+        "Home Box Office"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "netflix-first-streaming-original-series",
+      "question": "What was the name of Netflix's first original series, which premiered in 2013 and launched the era of streaming-first content?",
+      "answer": "House of Cards",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "House of Cards"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-game-show-spelling-bee",
+      "question": "What was the first television game show, which aired on BBC in 1938?",
+      "answer": "Spelling Bee",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Spelling Bee"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "tv-weekly-guide-magazine-first-issue",
+      "question": "In what year was the first issue of TV Guide magazine published?",
+      "answer": "1953",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "1953"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "tonight-show-johnny-carson-debut-year",
+      "question": "Who holds the record for the longest-running late-night talk show host of all time?",
+      "answer": "Johnny Carson",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Johnny Carson"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "heres-johnny-tonight-show-catchphrase",
+      "question": "What is the famous catchphrase used to introduce television host Johnny Carson on The Tonight Show?",
+      "answer": "Here's Johnny!",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Here's Johnny!"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-network-news-special",
+      "question": "The first live, coast-to-coast television news broadcast covered the 1951 Japanese Peace Treaty Conference in which U.S. city?",
+      "answer": "San Francisco",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "San Francisco"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "zworykin-iconoscope-inventor",
+      "question": "Which Russian-American inventor, working for RCA, developed the Iconoscope camera tube that made electronic television practical?",
+      "answer": "Vladimir Zworykin",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Zworykin",
+        "Vladimir Zworykin"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-drama-the-queens-messenger",
+      "question": "What was the first dramatic program broadcast on American television, airing in 1928?",
+      "answer": "The Queen's Messenger",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Queen's Messenger"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-news-anchor-name",
+      "question": "Who is considered television's first news anchor, hosting CBS Television News beginning in 1948?",
+      "answer": "Douglas Edwards",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Douglas Edwards"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-female-tv-news-anchor",
+      "question": "Who became the first female anchor of a major network evening news program in 1976?",
+      "answer": "Barbara Walters",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Barbara Walters"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-african-american-tv-host",
+      "question": "Who became the first African American host of a nationally televised talk show in 1986?",
+      "answer": "Oprah Winfrey",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Oprah Winfrey",
+        "Oprah"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "bet-first-african-american-cable-network",
+      "question": "What was the first cable television network aimed at African American audiences, launched in 1980?",
+      "answer": "BET",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "BET",
+        "Black Entertainment Television"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-sitcom-recognized",
+      "question": "What is widely recognized as the first sitcom on American television, which premiered in 1947?",
+      "answer": "Mary Kay and Johnny",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Mary Kay and Johnny"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "cable-tv-inventor-pennsylvania",
+      "question": "In what state was the first community antenna television system, the precursor to cable TV, invented in 1948?",
+      "answer": "Pennsylvania",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Pennsylvania",
+        "PA"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-series-to-use-live-studio-audience",
+      "question": "What television sitcom made history as the first to film using 3 cameras in front of a live studio audience?",
+      "answer": "I Love Lucy",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "I Love Lucy"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "most-watched-broadcast-all-time",
+      "question": "What 1969 event remains the most-watched television broadcast in history, with an estimated 600 million viewers worldwide?",
+      "answer": "Moon Landing",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Apollo 11",
+        "Moon landing",
+        "Apollo 11 moon landing",
+        "First moon landing"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-pilot-episode-concept",
+      "question": "What term is used for a test episode produced to sell a television series to a network?",
+      "answer": "Pilot",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Pilot",
+        "Pilot episode"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "fcc-chairman-vast-wasteland-speech",
+      "question": "In 1961, FCC Chairman Newton Minow famously described American television as 'a vast'.... what?",
+      "answer": "Wasteland",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Vast wasteland",
+        "Wasteland",
+        "A vast wasteland"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-network-news-magazine",
+      "question": "What award-winning CBS news program, which debuted in 1968, is recognized as the first television news magazine?",
+      "answer": "60 Minutes",
+      "category": "Television",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "60 Minutes"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-today-show-morning-tv",
+      "question": "What NBC program, which debuted in 1952, is recognized as the first television morning news and talk show?",
+      "answer": "Today",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Today",
+        "The Today Show"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-daytime-talk-show",
+      "question": "What 1967 ABC program is credited as the first daytime television talk show to feature audience participation?",
+      "answer": "The Phil Donahue Show",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "The Phil Donahue Show",
+        "Donahue",
+        "Phil Donahue Show"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-network-aimed-at-women",
+      "question": "What was the first cable television network specifically targeted at female viewers, launched in 1996?",
+      "answer": "Oxygen",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Oxygen",
+        "Oxygen Network"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "pbs-creation-year",
+      "question": "What does PBS stand for?",
+      "answer": "Public Broadcasting Service",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Public Broadcasting Service"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-series-canceled-and-brought-back",
+      "question": "What 1960s sci-fi series was famously canceled after three seasons and then brought back due to an unprecedented fan write-in campaign?",
+      "answer": "Star Trek",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Star Trek",
+        "Star Trek: The Original Series"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-holiday-special",
+      "question": "What 1964 animated special was the first prime-time holiday television special?",
+      "answer": "Rudolph the Red-Nosed Reindeer",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Rudolph the Red-Nosed Reindeer",
+        "Rudolph"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "nielsen-ratings-introduced-year",
+      "question": "What is the name for the ratings system that measures television audiences?",
+      "answer": "Nielsen ratings",
+      "category": "Television",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Nielsen",
+        "Nielsen ratings"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-series-international-co-production",
+      "question": "What 1970s children's show was the first television series to be co-produced by different countries' broadcasters?",
+      "answer": "Sesame Street",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Sesame Street"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-american-tv-channel-in-spanish",
+      "question": "What was the first Spanish-language television network in the United States, launched in 1986?",
+      "answer": "Univision",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Univision"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-broadcast-color-compatible",
+      "question": "Which network was the first to broadcast regular programming entirely in compatible color?",
+      "answer": "NBC",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "NBC"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "quiz-show-scandals-1950s-show-name",
+      "question": "What famously rigged 1950s quiz show led to a major scandal that changed television game show regulations?",
+      "answer": "Twenty-One",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "21",
+        "Twenty-One",
+        "Twenty One"
+      ],
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "first-tv-sitcom-filmed-before-live-audience",
+      "question": "What sitcom was the first to be filmed entirely before a live studio audience?",
+      "answer": "I Love Lucy",
+      "category": "Television",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "I Love Lucy"
+      ],
+      "subcategory": "television-history"
     }
   ]
 }
