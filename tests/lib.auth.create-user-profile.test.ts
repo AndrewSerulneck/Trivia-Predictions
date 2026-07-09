@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
-  getUser: vi.fn(),
+  getSession: vi.fn(),
   signInAnonymously: vi.fn(),
   signOut: vi.fn(),
 }));
@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/supabase", () => ({
   supabase: {
     auth: {
-      getUser: mocks.getUser,
+      getSession: mocks.getSession,
       signInAnonymously: mocks.signInAnonymously,
       signOut: mocks.signOut,
     },
@@ -22,9 +22,10 @@ import { createUserProfile } from "@/lib/auth";
 describe("createUserProfile", () => {
   beforeEach(() => {
     mocks.fetch.mockReset();
-    mocks.getUser.mockReset();
+    mocks.getSession.mockReset();
     mocks.signInAnonymously.mockReset();
     mocks.signOut.mockReset();
+    mocks.getSession.mockResolvedValue({ data: { session: null } });
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
     vi.stubGlobal("fetch", mocks.fetch);
   });
@@ -36,7 +37,7 @@ describe("createUserProfile", () => {
 
   it("falls back after auth user lookup timeout and still calls /api/join/profile", async () => {
     vi.useFakeTimers();
-    mocks.getUser.mockImplementation(() => new Promise(() => {}));
+    mocks.signInAnonymously.mockImplementation(() => new Promise(() => {}));
     mocks.fetch.mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -72,7 +73,7 @@ describe("createUserProfile", () => {
   });
 
   it("forwards trace + venue headers to /api/join/profile", async () => {
-    mocks.getUser.mockResolvedValue({ data: { user: { id: "00000000-0000-4000-8000-000000000010" } } });
+    mocks.signInAnonymously.mockResolvedValue({ data: { user: { id: "00000000-0000-4000-8000-000000000010" } } });
     mocks.fetch.mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -107,7 +108,7 @@ describe("createUserProfile", () => {
   });
 
   it("surfaces incorrect PIN errors from /api/join/profile", async () => {
-    mocks.getUser.mockResolvedValue({ data: { user: { id: "00000000-0000-4000-8000-000000000011" } } });
+    mocks.signInAnonymously.mockResolvedValue({ data: { user: { id: "00000000-0000-4000-8000-000000000011" } } });
     mocks.fetch.mockResolvedValue(
       new Response(
         JSON.stringify({

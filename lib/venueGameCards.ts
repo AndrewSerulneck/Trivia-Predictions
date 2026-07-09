@@ -150,13 +150,14 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       "-A letter is drawn for the whole venue",
       "-Name something in each category starting with that letter",
       "-3 minutes to fill all 12 categories",
-      "-Unique answers score 2 points — duplicate answers cancel",
+      "-Unique answers win points.",
+      "-Be creative. If someone else thought of the same response as you, no points!",
     ],
     steps: [
       {
         stepLabel: "What is it?",
-        heading: "One letter. 12 categories. Go.",
-        body: "A live word game for the whole venue. A letter drops — fill every category with something that starts with it.",
+        heading: "A live word game for the whole venue.",
+        body: "A letter drops at the beginning of each round. Your goal is to fill every category with something that starts with that letter.",
       },
       {
         stepLabel: "How it works",
@@ -165,11 +166,10 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       },
       {
         stepLabel: "Scoring",
-        heading: "Unique answers score. Copies cancel.",
+        heading: "Players get points for unique answers.",
         body: [
-          "2 points for every answer nobody else wrote.",
-          "If two players write the same thing — both score zero.",
-          "Max 24 points per round.",
+          "If someone else in the room thought of the same answer as you, neither of you get points. So be creative!"
+,
         ],
       },
     ],

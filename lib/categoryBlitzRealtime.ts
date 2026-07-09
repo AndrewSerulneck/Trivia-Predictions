@@ -29,6 +29,15 @@ function nextRoundStartAtMs(
   return new Date(round.startedAt).getTime() + roundIntervalSeconds(testMode) * 1000;
 }
 
+/**
+ * Dev-only structured logging for tracing the reveal/scoring gate on the
+ * client — free to leave in since it never runs in production builds.
+ */
+function debugLog(...args: unknown[]): void {
+  if (process.env.NODE_ENV === "production") return;
+  console.debug(...args);
+}
+
 // ── Phase model ───────────────────────────────────────────────────────────────
 
 export type CategoryBlitzPhase =
@@ -77,6 +86,16 @@ export interface CategoryBlitzSessionState {
    * skip one that hasn't played yet (see settleResultsPhase / Phase 3).
    */
   markResultsRevealDone: (roundId: string) => void;
+  /**
+   * Dismiss the current "complete" session client-side, forcing the phase
+   * back to "idle" immediately instead of waiting out the server's
+   * RECENTLY_COMPLETED_GRACE_MS window (see lib/categoryBlitz.ts →
+   * getRecentlyCompletedSession). Used to fast-path off the no-standings
+   * "session has ended" fallback within a few seconds of an admin ending a
+   * session — the poll/realtime paths would otherwise keep re-delivering the
+   * same completed session as "complete" for up to 3 minutes.
+   */
+  dismissComplete: () => void;
 }
 
 // ── Broadcast payload types ───────────────────────────────────────────────────
@@ -153,6 +172,11 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   const phaseRef          = useRef<CategoryBlitzPhase>("idle");
   const lobbyStartsAtRef  = useRef<number | null>(null);  // ms epoch
   const sessionIdRef      = useRef<string | null>(null);
+  /** Session ID that dismissComplete() has fast-forwarded past — loadSession
+   *  treats further "complete" deliveries of this same session as if there
+   *  were no session at all, so a dismissed session can't resurrect the
+   *  fallback screen on the next poll (see dismissComplete below). */
+  const dismissedSessionIdRef = useRef<string | null>(null);
   const userIdRef         = useRef(userId);
   const loadResultsRef    = useRef<(roundId: string) => Promise<void>>(async () => {});
 
@@ -184,6 +208,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       scoringCalledRef.current = false;
       errorStreakRef.current = 0;
       pendingActiveRoundRef.current = null;
+      dismissedSessionIdRef.current = null;
     }, 0);
     return () => window.clearTimeout(resetId);
   }, [venueId]);
@@ -241,6 +266,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   }, [enterResultsOrReveal]);
 
   const markRevealDone = useCallback((roundId: string): void => {
+    debugLog(`[categoryBlitzRealtime] revealDoneRef set for round ${roundId} via markRevealDone (normal onDone)`);
     revealDoneRef.current = roundId;
     if (pendingPhaseRef.current?.roundId === roundId) {
       const { phase: pending } = pendingPhaseRef.current;
@@ -316,6 +342,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         // forever waiting on a callback that will never come. Gated on
         // `r.status !== "active"` so a resync of a round that's genuinely
         // still ticking can't cut off a reveal actually playing right now.
+        debugLog(`[categoryBlitzRealtime] revealDoneRef set for round ${r.id} via forceReveal (visibility resync)`);
         revealDoneRef.current = r.id;
       }
       currentRoundIdRef.current = r.id;
@@ -448,6 +475,21 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         return;
       }
       if (s.status === "complete") {
+        if (dismissedSessionIdRef.current === s.id) {
+          // Already fast-forwarded past this completed session (see
+          // dismissComplete) — treat it as if the server had returned no
+          // session, rather than re-entering "complete" for the rest of the
+          // server's grace window.
+          setSession(null);
+          setRound(null);
+          setResults(null);
+          setViewerRole(null);
+          endsAtRef.current = null;
+          lobbyStartsAtRef.current = null;
+          setLobbyCountdown(null);
+          setPhase("idle");
+          return;
+        }
         setRound(null);
         setViewerRole(null);
         endsAtRef.current = null;
@@ -512,6 +554,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       try {
         const res = await fetch(`/api/category-blitz/rounds/${roundId}/score`, { method: "POST" });
         const json = (await res.json()) as { ok: boolean; results?: CategoryBlitzRoundResults };
+        debugLog(`[categoryBlitzRealtime] POST /score for round ${roundId} returned status=${res.status} ok=${json.ok} hasResults=${!!json.results}`);
         if (!mountedRef.current) return;
         if (json.ok && json.results) {
           setResults(json.results);
@@ -531,7 +574,8 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
           scoringCalledRef.current = false;
           setPhase("scoring");
         }
-      } catch {
+      } catch (err) {
+        debugLog(`[categoryBlitzRealtime] POST /score for round ${roundId} threw:`, err instanceof Error ? err.message : err);
         // Network or parse error — reset the guard so the next timer tick
         // retries, keeping the backoff implicit (250ms tick cadence).
         if (mountedRef.current) {
@@ -552,23 +596,22 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         const remaining = Math.max(0, Math.round((endsAtRef.current - Date.now()) / 1000));
         setTimeRemaining(remaining);
 
-        if (
-          remaining === 0 &&
-          // Wait out the same grace window the server gives late submissions
-          // (SUBMISSION_GRACE_MS) before locking the round into scoring —
-          // otherwise this client's own auto-submit-on-expiry POSTs can lose
-          // the race against its own scoring trigger and get rejected with
-          // "no longer accepting answers".
-          Date.now() - endsAtRef.current >= SUBMISSION_GRACE_MS &&
-          !scoringCalledRef.current &&
-          currentRoundIdRef.current &&
-          // Don't trigger scoring until the round-start reveal animation has
-          // finished — otherwise the phase flips to "results" mid-reveal and
-          // RoundStartReveal unmounts before its onDone fires (Bug 3).
-          revealDoneRef.current === currentRoundIdRef.current
-        ) {
-          scoringCalledRef.current = true;
-          void triggerScoringRef.current(currentRoundIdRef.current);
+        if (remaining === 0 && !scoringCalledRef.current && currentRoundIdRef.current) {
+          const graceElapsed = Date.now() - endsAtRef.current >= SUBMISSION_GRACE_MS;
+          const revealReady = revealDoneRef.current === currentRoundIdRef.current;
+          if (
+            graceElapsed &&
+            // Don't trigger scoring until the round-start reveal animation has
+            // finished — otherwise the phase flips to "results" mid-reveal and
+            // RoundStartReveal unmounts before its onDone fires (Bug 3).
+            revealReady
+          ) {
+            debugLog(`[categoryBlitzRealtime] scoring gate satisfied for round ${currentRoundIdRef.current}, firing POST /score`);
+            scoringCalledRef.current = true;
+            void triggerScoringRef.current(currentRoundIdRef.current);
+          } else {
+            debugLog(`[categoryBlitzRealtime] scoring gate blocked for round ${currentRoundIdRef.current}: graceElapsed=${graceElapsed} revealReady=${revealReady}`);
+          }
         }
       }
 
@@ -614,7 +657,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         if (!active || !mountedRef.current) return;
         const payload = msg.payload as RoundScoredPayload | null;
         if (!payload?.roundId) return;
-        void loadResults(payload.roundId);
+        void loadResultsRef.current(payload.roundId);
       })
       .on("broadcast", { event: "session_ended" }, () => {
         if (!active || !mountedRef.current) return;
@@ -639,7 +682,14 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       active = false;
       void client.removeChannel(channel);
     };
-  }, [venueId, loadResults, loadCurrentRound, loadFinalResults]);
+  // loadResultsRef.current (not loadResults directly) so this effect doesn't
+  // re-subscribe on every round change — loadResults's identity is unstable
+  // (depends on `round`, which setRound() replaces on every poll response),
+  // which was tearing down and rebuilding the realtime channel roughly every
+  // 15s and dropping it mid-handshake ("WebSocket is closed before the
+  // connection is established"). loadCurrentRound/loadFinalResults are stable
+  // (empty useCallback deps) so they're safe to depend on directly.
+  }, [venueId, loadCurrentRound, loadFinalResults]);
 
   // ── Initial load + fallback poll ──────────────────────────────────────────
 
@@ -695,5 +745,17 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
     void loadSessionRef.current();
   }, []);
 
-  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, isConnected, error, errorEscalated, viewerRole, retry, markRevealDone, markResultsRevealDone };
+  const dismissComplete = useCallback(() => {
+    if (sessionIdRef.current) dismissedSessionIdRef.current = sessionIdRef.current;
+    setSession(null);
+    setRound(null);
+    setResults(null);
+    setViewerRole(null);
+    endsAtRef.current = null;
+    lobbyStartsAtRef.current = null;
+    setLobbyCountdown(null);
+    setPhase("idle");
+  }, []);
+
+  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, isConnected, error, errorEscalated, viewerRole, retry, markRevealDone, markResultsRevealDone, dismissComplete };
 }

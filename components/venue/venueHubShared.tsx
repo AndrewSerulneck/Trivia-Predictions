@@ -66,7 +66,7 @@ export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
   bingo: "Bingo boards align with the games on TV. Watch the game, track your squares in real time, and earn points as the live action unfolds!",
   pickem: "Predict the winners of today's top matchups before the games start. Every correct call gets you one step closer to prizes and discounts!",
   fantasy: "Draft the ultimate roster from the star athletes in today's games. The better they perform, the more points you earn! ",
-  "category-blitz": "One letter. 12 categories. 3 minutes. Unique answers score — duplicates cancel.",
+  "category-blitz": "One letter. Twelve categories. Unique answers get points.",
 };
 
 export function formatCountdown(seconds: number): string {

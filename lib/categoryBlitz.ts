@@ -68,6 +68,16 @@ function assertAdmin() {
   if (!supabaseAdmin) throw new Error("Supabase admin client is not configured.");
 }
 
+/**
+ * Dev-only structured logging for tracing Category Blitz's state machine
+ * (scoring, round-driving decisions) without re-deriving it from source on
+ * every debugging pass. Free to leave in — never runs in production.
+ */
+function debugLog(...args: unknown[]): void {
+  if (process.env.NODE_ENV === "production") return;
+  console.debug(...args);
+}
+
 /** Fisher–Yates shuffle returning a new array (never mutates the source pool). */
 function shuffle<T>(arr: readonly T[]): T[] {
   const out = [...arr];
@@ -480,7 +490,7 @@ export async function endVenueAutoSession(venueId: string): Promise<void> {
 async function scoreExpiredRoundForVenue(venueId: string, now: Date): Promise<void> {
   assertAdmin();
   const cutoff = new Date(now.getTime() - SUBMISSION_GRACE_MS);
-  const { data } = await supabaseAdmin!
+  const { data, error } = await supabaseAdmin!
     .from("category_blitz_rounds")
     .select("id")
     .eq("venue_id", venueId)
@@ -488,10 +498,18 @@ async function scoreExpiredRoundForVenue(venueId: string, now: Date): Promise<vo
     .lt("ends_at", cutoff.toISOString())
     .maybeSingle<{ id: string }>();
 
+  if (error) {
+    console.error(`[categoryBlitz] scoreExpiredRoundForVenue query failed for venue ${venueId}:`, error.message);
+    return;
+  }
+
   if (data) {
+    debugLog(`[categoryBlitz] scoreExpiredRoundForVenue: found expired round ${data.id} for venue ${venueId}, scoring it`);
     await scoreRound(data.id).catch((err) => {
       console.error(`[categoryBlitz] scoreRound failed for venue ${venueId}, round ${data.id}:`, err instanceof Error ? err.message : err);
     });
+  } else {
+    debugLog(`[categoryBlitz] scoreExpiredRoundForVenue: no expired round for venue ${venueId}`);
   }
 }
 
@@ -546,7 +564,9 @@ export async function driveVenueCategoryBlitz(
   requestedTestMode: boolean = false,
 ): Promise<CategoryBlitzSession | null> {
   let existing = await getActiveSession(venueId);
+  debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): session status in = ${existing ? existing.status : "none"}`);
   if (existing && (isStaleAutoSession(existing, now) || (await isIdleAutoSession(existing, now)))) {
+    debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): closing stale/idle auto session ${existing.id}`);
     await closeStaleAutoSession(existing);
     existing = null;
   }
@@ -561,12 +581,19 @@ export async function driveVenueCategoryBlitz(
     // socket, tab loaded after the game ended) a window to still land on the
     // Game Over screen via poll/reload, instead of "no game running".
     const recentlyCompleted = await getRecentlyCompletedSession(venueId, now);
-    if (recentlyCompleted) return withPlayerCount(recentlyCompleted);
+    if (recentlyCompleted) {
+      debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): no session, but a recently-completed one is in its grace window`);
+      return withPlayerCount(recentlyCompleted);
+    }
 
-    if (!openSchedule) return null;
+    if (!openSchedule) {
+      debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): no session, no open schedule window — no-op`);
+      return null;
+    }
 
     const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
     if (!occurrence || occurrence.windowStart > now || now >= occurrence.windowEnd) {
+      debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): no session, schedule window not currently open — no-op`);
       return null;
     }
 
@@ -577,11 +604,13 @@ export async function driveVenueCategoryBlitz(
         startsAt: computeLobbyStartsAt(now, occurrence.windowEnd, requestedTestMode),
         testMode: requestedTestMode,
       });
+      debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): created new auto session`);
       const s = await getActiveSession(venueId);
       return s ? withPlayerCount(s) : null;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes("already active")) {
+        debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): lost the race to create a session, reading the winner`);
         const s = await getActiveSession(venueId);
         return s ? withPlayerCount(s) : null;
       }
@@ -594,6 +623,7 @@ export async function driveVenueCategoryBlitz(
   if (existing.source === "auto") {
     if (existing.status === "lobby") {
       if (isLobbyStartDue(existing, now)) {
+        debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): lobby dwell elapsed, starting first round`);
         await startRound(existing.id);
       }
     } else if (openSchedule) {
@@ -604,15 +634,23 @@ export async function driveVenueCategoryBlitz(
           const latest = await getLatestRound(existing.id);
           if (latest && latest.status === "complete") {
             if (now.getTime() >= nextRoundStartAtMs(latest, existing.testMode)) {
+              debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): advancing to next round`);
               await startRound(existing.id);
+            } else {
+              debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): last round complete, intermission not elapsed yet`);
             }
+          } else {
+            debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): existing session, round in progress or not yet scored — no-op`);
           }
+        } else {
+          debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): not enough time left in window for another round — no-op`);
         }
       }
     }
   }
 
   const s = await getActiveSession(venueId);
+  debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): session status out = ${s ? s.status : "none"}`);
   return s ? withPlayerCount(s) : null;
 }
 
@@ -869,7 +907,7 @@ export async function getViewerRoleForRound(
 export async function submitAnswer(params: {
   roundId: string;
   userId: string;
-  authId: string;
+  authId?: string;
   venueId: string;
   categoryIndex: number;
   answer: string;
@@ -910,12 +948,12 @@ export async function submitAnswer(params: {
         round_id: roundId,
         venue_id: venueId,
         user_id: userId,
-        auth_id: authId,
+        auth_id: authId || null,
         category_index: categoryIndex,
         answer: trimmed,
         normalized_answer: normalized,
       },
-      { onConflict: "round_id,auth_id,category_index" }
+      { onConflict: "round_id,user_id,category_index" }
     )
     .select(
       "id, round_id, venue_id, user_id, auth_id, category_index, answer, normalized_answer, is_unique, is_valid, invalid_reason, points_awarded, submitted_at"
@@ -968,6 +1006,7 @@ const mergeCumulativeSessionTotals = async (
  */
 export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundResults> {
   assertAdmin();
+  debugLog(`[categoryBlitz] scoreRound(${roundId}): entered`);
 
   // Load round (idempotency: skip if already scored).
   const { data: round, error: roundErr } = await supabaseAdmin!
@@ -978,6 +1017,7 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
 
   if (roundErr || !round) throw new Error("Round not found.");
   if (round.status === "complete") {
+    debugLog(`[categoryBlitz] scoreRound(${roundId}): already complete, returning existing results`);
     return buildResults(roundId, round);
   }
 
@@ -990,6 +1030,7 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
   // "scoring" or "complete" reaching here is an idempotent re-fetch, not a
   // new claim, so it must not be blocked by this check.
   if (round.status === "active" && Date.now() < new Date(round.ends_at).getTime() - SUBMISSION_GRACE_MS) {
+    debugLog(`[categoryBlitz] scoreRound(${roundId}): rejected — expiry guard, round hasn't ended yet`);
     throw new Error("The round timer has not expired yet.");
   }
 
@@ -1008,6 +1049,7 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
   if (!lockedRound) {
     // Another caller (client-triggered + cron) grabbed the lock first.
     // Re-fetch the round (now "scoring" or "complete") and await the results.
+    debugLog(`[categoryBlitz] scoreRound(${roundId}): lock already held by another caller, awaiting its result`);
     const { data: existingRound } = await supabaseAdmin!
       .from("category_blitz_rounds")
       .select(ROUND_COLS)
@@ -1016,6 +1058,7 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
     if (!existingRound) throw new Error("Round not found after concurrency retry.");
     return buildResults(roundId, existingRound);
   }
+  debugLog(`[categoryBlitz] scoreRound(${roundId}): claimed scoring lock`);
 
   // Count unique session participants. If fewer than 3 players are present,
   // no one scores any points this round regardless of answer quality — the
@@ -1028,6 +1071,7 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
   // CATEGORY_BLITZ_ALLOW_SOLO_SCORING bypasses it so a solo tester can verify
   // grading/leaderboard end-to-end (Phase 2 — see docs/category-blitz-bugs-timing-fix.md).
   const insufficientPlayers = (participantCount ?? 0) < 3 && !isCategoryBlitzSoloScoringEnabled();
+  debugLog(`[categoryBlitz] scoreRound(${roundId}): ${participantCount ?? 0} participant(s), insufficientPlayers=${insufficientPlayers}`);
 
   // Load all submissions for this round.
   const { data: submissionRows, error: subErr } = await supabaseAdmin!
@@ -1149,6 +1193,7 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
 
   const results = await buildResults(roundId, round);
 
+  debugLog(`[categoryBlitz] scoreRound(${roundId}): graded and completed`);
   broadcast(round.venue_id, "round_scored", { roundId, totals: results.totals });
 
   return results;

@@ -56,12 +56,37 @@ async function getCurrentAuthUserId(traceId?: string): Promise<string | null> {
     return null;
   }
 
-  let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
   const startedAt = Date.now();
   logAuthIncident("auth-helper", "auth-user-lookup-start", { traceId: traceId ?? null });
+
+  // Fast path: a session already exists (local read, no network round trip).
+  // This is the common case once a browser has signed in anonymously before.
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const existingAuthUserId = sessionData.session?.user?.id ?? null;
+    if (existingAuthUserId) {
+      logAuthIncident("auth-helper", "auth-user-lookup-finish", {
+        traceId: traceId ?? null,
+        authUserFound: true,
+        source: "existing-session",
+        elapsedMs: Date.now() - startedAt,
+      });
+      return existingAuthUserId;
+    }
+  } catch {
+    // Fall through — try establishing a fresh session below.
+  }
+
+  // No session yet — this is the common case for a brand-new join, since
+  // nothing upstream signs in anonymously before profile/account creation
+  // runs. Establish one now (a real network call) so auth_id has an actual
+  // chance of getting populated, bounded by a timeout so a slow/unreachable
+  // auth endpoint never blocks the join flow. A timeout here just leaves
+  // auth_id null, which every table that references it now tolerates.
+  let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
   try {
     const result = await Promise.race([
-      supabase.auth.getUser().catch(() => ({ data: { user: null } })),
+      supabase.auth.signInAnonymously().catch(() => ({ data: { user: null } })),
       new Promise<{ data: { user: null } }>((resolve) => {
         timeoutId = globalThis.setTimeout(() => {
           resolve({ data: { user: null } });
@@ -73,6 +98,7 @@ async function getCurrentAuthUserId(traceId?: string): Promise<string | null> {
     logAuthIncident("auth-helper", "auth-user-lookup-finish", {
       traceId: traceId ?? null,
       authUserFound: Boolean(authUserId),
+      source: "signed-in-anonymously",
       elapsedMs: Date.now() - startedAt,
     });
     return authUserId;

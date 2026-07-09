@@ -119,11 +119,11 @@ export function GameRuleCardPanel({
             className={`mt-3 min-h-0 flex-1 overflow-y-auto text-white/95 ${
               isLandingLayout
                 ? denseRules
-                  ? "space-y-3 text-[clamp(1.25rem,3.45vw,1.9rem)] leading-[1.24]"
-                  : "space-y-4 text-[clamp(1.45rem,3.9vw,2.3rem)] leading-[1.2]"
+                  ? "space-y-2.5 text-[clamp(1rem,3vw,1.35rem)] leading-[1.3]"
+                  : "space-y-3 text-[clamp(1.1rem,3.3vw,1.5rem)] leading-[1.25]"
                 : denseRules
-                  ? "space-y-2.5 text-[clamp(1.458rem,4.293vw,2.025rem)] leading-[1.12]"
-                  : "space-y-3 text-[clamp(1.62rem,4.6575vw,2.43rem)] leading-[1.1]"
+                  ? "space-y-2 text-[clamp(0.92rem,3.2vw,1.2rem)] leading-[1.28]"
+                  : "space-y-2.5 text-[clamp(1rem,3.5vw,1.35rem)] leading-[1.25]"
             }`}
           >
             {rules.map((rule) => (
@@ -883,15 +883,15 @@ export function GameOnboardingCard({
             {step.stepLabel}
           </div>
           {isHookStep ? (
-            <div className="flex min-h-0 flex-1 flex-col justify-center gap-4">
+            <div className="flex min-h-0 flex-1 flex-col justify-center gap-3">
               <div
-                className="text-[clamp(1.85rem,5.4vw,2.85rem)] leading-[1.08] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)]"
+                className="text-[clamp(1.6rem,4.8vw,2.2rem)] leading-[1.08] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)]"
                 style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
               >
                 {step.heading}
               </div>
-              <div className={`h-1 w-16 rounded-full ${GAME_STEP_DOT_ACTIVE[gameKey]}`} />
-              <div className="text-[clamp(1.05rem,3vw,1.45rem)] leading-[1.35] text-white/85 font-medium">
+              <div className={`h-0.5 w-14 rounded-full ${GAME_STEP_DOT_ACTIVE[gameKey]}`} />
+              <div className="text-[clamp(0.92rem,2.6vw,1.2rem)] leading-[1.35] text-white/85 font-medium">
                 {renderBody(step.body)}
               </div>
             </div>
@@ -909,8 +909,8 @@ export function GameOnboardingCard({
               <div
                 className={`shrink-0 font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.6)] ${
                   hasCustomIllustration
-                    ? "text-[clamp(1.5rem,4.4vw,2rem)] leading-[1.18]"
-                    : "text-[clamp(1.2rem,3.4vw,1.75rem)] leading-[1.18]"
+                    ? "text-[clamp(1.2rem,3.8vw,1.7rem)] leading-[1.18]"
+                    : "text-[clamp(1rem,3vw,1.35rem)] leading-[1.2]"
                 }`}
                 style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
               >
@@ -919,8 +919,8 @@ export function GameOnboardingCard({
               <div
                 className={`shrink-0 font-medium leading-[1.38] text-white/85 ${
                   hasCustomIllustration
-                    ? "text-[clamp(1.15rem,3.3vw,1.45rem)]"
-                    : "text-[clamp(1rem,2.8vw,1.3rem)]"
+                    ? "text-[clamp(0.95rem,2.8vw,1.2rem)]"
+                    : "text-[clamp(0.85rem,2.5vw,1.1rem)]"
                 }`}
               >
                 {renderBody(step.body)}

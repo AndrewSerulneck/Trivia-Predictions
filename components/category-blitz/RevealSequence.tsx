@@ -1,25 +1,31 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import GradingCascade, { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
 import LiveLeaderboard from "@/components/category-blitz/LiveLeaderboard";
-import { EASE_SNAP } from "@/lib/motionEasing";
+import IntermissionStatus from "@/components/category-blitz/IntermissionStatus";
 import type { CategoryBlitzRoundResults } from "@/types";
 
 const TEXT_LABEL = "text-emerald-300 tracking-[0.14em] uppercase font-black text-xs";
 
 // How long to let the leaderboard play its count-up / reorder / +N flash after
-// the guided scroll before settling into the resting intermission. The resting
-// screen shows the same (settled) leaderboard, so settling promptly just brings
-// the next-round countdown into view — no content disappears.
+// it pushes the cascade down before settling into the resting intermission.
+// The resting screen shows the same (settled) leaderboard, so settling
+// promptly just brings the next-round countdown into view — no content
+// disappears.
 const LEADERBOARD_HOLD_MS = 2200;
 const LEADERBOARD_HOLD_REDUCED_MS = 500;
+
+// Spring used to push the previous round's answers down the page as the
+// leaderboard + countdown drop in above them — a little overshoot so the
+// push reads as a lively "thud" rather than a linear slide.
+const PUSH_SPRING = { type: "spring" as const, stiffness: 300, damping: 24, mass: 0.9 };
 
 // Absolute safety net: if the cascade's onComplete or any beat callback never
 // fires (stalled animation, dropped timer), force the settle so the viewer is
 // never stranded in the "reveal" phase. Generous enough not to clip a normal
-// run (worst case ≈ full cascade + scroll + leaderboard hold ≈ 10s).
+// run (worst case ≈ full cascade + push-down spring + leaderboard hold ≈ 7s).
 const MAX_SEQUENCE_MS = 16_000;
 
 // Deliberate full-screen pacing for beat 1. Scale the per-row step to the answer
@@ -37,13 +43,19 @@ interface RevealSequenceProps {
   roundId: string;
   /** Called once the whole reveal journey has settled; advances to "results". */
   onSettled: (roundId: string) => void;
+  /** Next-round countdown, folded into the push-down beat alongside the
+   *  leaderboard so both drop in together. */
+  nextRoundStartsIn: number | null;
 }
 
 /**
  * Phase 4 — the single-column vertical reveal journey for one scored round.
  *
  * Beat 1: the viewer's answers grade in on a full-screen GradingCascade.
- * Beat 2: when the cascade finishes, we smooth-scroll down to the leaderboard.
+ * Beat 2: when the cascade finishes, the leaderboard + "next round starts in"
+ *         card drop in above it with a spring, pushing the graded answers
+ *         down the page via layout reflow — nothing is covered or removed,
+ *         the viewer can still scroll down to review them.
  * Beat 3: the leaderboard plays its rank-change animation (count-up / reorder /
  *         +N flash — all already built into LiveLeaderboard).
  * Beat 4: after a short hold, onSettled fires and the hook flips to the resting
@@ -52,10 +64,9 @@ interface RevealSequenceProps {
  * Every beat is backed by a fallback timer so a missed callback can never
  * strand the viewer in "reveal" (see MAX_SEQUENCE_MS and the hold timer).
  */
-const RevealSequence = ({ answers, leaderboardEntries, meId, roundId, onSettled }: RevealSequenceProps) => {
+const RevealSequence = ({ answers, leaderboardEntries, meId, roundId, onSettled, nextRoundStartsIn }: RevealSequenceProps) => {
   const reduce = useReducedMotion() ?? false;
   const [stage, setStage] = useState<"revealing" | "leaderboard">("revealing");
-  const leaderboardRef = useRef<HTMLDivElement>(null);
   const settledRef = useRef(false);
 
   const settle = useCallback(() => {
@@ -76,14 +87,12 @@ const RevealSequence = ({ answers, leaderboardEntries, meId, roundId, onSettled 
     setStage("leaderboard");
   }, []);
 
-  // Beat 2 → 3 → 4: guide the scroll to the leaderboard, let it animate, then
-  // settle into the resting intermission.
+  // Beat 2 → 3 → 4: let the push-down + leaderboard animation play, then
+  // settle into the resting intermission. The leaderboard mounts at the top
+  // of the (unscrolled) container, so it lands in view on its own — no
+  // scrollIntoView needed, and the viewer stays free to scroll up/down.
   useEffect(() => {
     if (stage !== "leaderboard") return;
-    leaderboardRef.current?.scrollIntoView({
-      behavior: reduce ? "auto" : "smooth",
-      block: "start",
-    });
     const hold = reduce ? LEADERBOARD_HOLD_REDUCED_MS : LEADERBOARD_HOLD_MS;
     const id = window.setTimeout(settle, hold);
     return () => window.clearTimeout(id);
@@ -97,8 +106,33 @@ const RevealSequence = ({ answers, leaderboardEntries, meId, roundId, onSettled 
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      {/* Beat 1 — full-screen answer reveal */}
-      <section className="flex min-h-full shrink-0 flex-col justify-center py-6">
+      {/* Beats 2–4 — leaderboard + next-round countdown, mounted above the
+          cascade only once it finishes, so they drop in with a spring and
+          push the graded answers down via layout reflow. Nothing is removed
+          or covered — the viewer can still scroll down to the answers. */}
+      <AnimatePresence initial={false}>
+        {stage === "leaderboard" && (
+          <motion.section
+            key="leaderboard"
+            layout
+            initial={reduce ? false : { opacity: 0, y: -60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={reduce ? { duration: 0.15 } : PUSH_SPRING}
+            className="shrink-0 px-3 py-6"
+          >
+            <div className="mx-auto mb-4 w-full max-w-sm">
+              <IntermissionStatus nextRoundStartsIn={nextRoundStartsIn} compact />
+            </div>
+            <p className={`${TEXT_LABEL} mx-auto mb-3 w-full max-w-sm text-center`}>Leaderboard</p>
+            <LiveLeaderboard entries={leaderboardEntries} meId={meId} />
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* Beat 1 — full-screen answer reveal. `layout` lets this section
+          animate its reflow (in sync with the leaderboard's spring above)
+          when it gets pushed down instead of jumping instantly. */}
+      <motion.section layout transition={reduce ? { duration: 0 } : PUSH_SPRING} className="flex min-h-full shrink-0 flex-col justify-center py-6">
         <p className={`${TEXT_LABEL} mx-auto mb-3 w-full max-w-sm px-3 text-center`}>Your answers</p>
         <GradingCascade
           answers={answers}
@@ -106,23 +140,7 @@ const RevealSequence = ({ answers, leaderboardEntries, meId, roundId, onSettled 
           firstDelayMs={firstDelayMs}
           stepMs={stepMs}
         />
-      </section>
-
-      {/* Beats 3–4 — leaderboard, mounted (and thus animated) only once we
-          reach it, so its entrance/count-up plays in view rather than off
-          the bottom of the screen. */}
-      <section ref={leaderboardRef} className="flex min-h-full shrink-0 flex-col justify-center py-6">
-        {stage === "leaderboard" && (
-          <motion.div
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, ease: EASE_SNAP }}
-          >
-            <p className={`${TEXT_LABEL} mx-auto mb-3 w-full max-w-sm px-3 text-center`}>Leaderboard</p>
-            <LiveLeaderboard entries={leaderboardEntries} meId={meId} />
-          </motion.div>
-        )}
-      </section>
+      </motion.section>
     </div>
   );
 };

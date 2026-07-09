@@ -10,7 +10,7 @@ import { answerStartsWithLetter } from "@/lib/categoryBlitzShared";
 import { CB_LETTER_BADGE_LAYOUT_ID, cbCategoryRowLayoutId } from "@/lib/categoryBlitzMotion";
 import { EASE_SNAP } from "@/lib/motionEasing";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
-import { GameOnboardingCard } from "@/components/venue/GameIdentityPanel";
+import { GameOnboardingCard, GAME_STEP_DOT_ACTIVE } from "@/components/venue/GameIdentityPanel";
 import { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
 import RevealSequence from "@/components/category-blitz/RevealSequence";
 import RoundStartReveal, { ROUND_START_REVEAL_MAX_MS } from "@/components/category-blitz/RoundStartReveal";
@@ -20,13 +20,13 @@ import WrongLetterReject from "@/components/category-blitz/WrongLetterReject";
 import TimerUrgency from "@/components/category-blitz/TimerUrgency";
 import SubmitLockAnimation from "@/components/category-blitz/SubmitLockAnimation";
 import NextRoundCountdown from "@/components/category-blitz/NextRoundCountdown";
+import IntermissionStatus from "@/components/category-blitz/IntermissionStatus";
 import SessionCompleteFireworks from "@/components/category-blitz/SessionCompleteFireworks";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import DevAnimationPanel from "@/components/category-blitz/DevAnimationPanel";
 import { RankBadge } from "@/components/trivia/RankBadge";
 import type { CategoryBlitzRoundResults } from "@/types";
 
-const LOBBY_TUTORIAL_ROTATE_MS = 6000;
 
 const LETTER_GRADIENT =
   "bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)]";
@@ -73,58 +73,23 @@ function formatIdleCountdown(seconds: number): string {
   return `0:${String(s).padStart(2, "0")}`;
 }
 
-function IdleScreen({ venueId }: { venueId: string | null }) {
-  const [nextWindowAtMs, setNextWindowAtMs] = useState<number | null>(null);
-  const [nowMs, setNowMs] = useState<number>(() => Date.now());
-
-  useEffect(() => {
-    if (!venueId) return;
-    // Match the main session hook's testMode param (lib/categoryBlitzRealtime.ts)
-    // so this poll and the hook's poll never disagree on which round-duration
-    // regime is active — the DB-level uq_category_blitz_rounds_session_open
-    // constraint (see project_category_blitz_startround_race) now prevents any
-    // resulting race from creating duplicate rounds, but they should still
-    // agree on intent rather than relying on whichever caller wins.
-    const testModeParam = isCategoryBlitzTestModeEnabled() ? "&testMode=1" : "";
-    void fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}${testModeParam}`)
-      .then((r) => r.json())
-      .then((json: { ok: boolean; nextWindowAt?: string | null }) => {
-        if (json.nextWindowAt) setNextWindowAtMs(new Date(json.nextWindowAt).getTime());
-      })
-      .catch(() => undefined);
-  }, [venueId]);
-
-  useEffect(() => {
-    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  const countdownSeconds =
-    nextWindowAtMs != null
-      ? Math.max(0, Math.floor((nextWindowAtMs - nowMs) / 1000))
-      : null;
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
-      <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
-        <p className={TEXT_LABEL}>Category Blitz</p>
-        {countdownSeconds != null ? (
-          <>
-            <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Next game in</p>
-            <p className="mt-1 font-black tabular-nums text-emerald-300 text-[2.8rem] leading-none">
-              {formatIdleCountdown(countdownSeconds)}
-            </p>
-            <p className="mt-3 text-sm text-slate-400">One letter · 12 categories · 3 minutes</p>
-          </>
-        ) : (
-          <>
-            <p className="mt-3 text-xl font-black text-white">No game is running right now.</p>
-            <p className="mt-2 text-sm text-slate-400">Check back later for the next session.</p>
-          </>
-        )}
-      </div>
-    </div>
-  );
+/**
+ * Fetch the venue's next scheduled Category Blitz window (or null if none is
+ * scheduled), matching the main session hook's testMode param (see
+ * lib/categoryBlitzRealtime.ts) so this poll and the hook's poll never
+ * disagree on which round-duration regime is active. Shared by the idle
+ * lobby's "next game in" countdown and the game-over screen's "next game"
+ * messaging (Phase 4) so both read the same field the same way.
+ */
+async function fetchCategoryBlitzNextWindowAt(venueId: string): Promise<number | null> {
+  const testModeParam = isCategoryBlitzTestModeEnabled() ? "&testMode=1" : "";
+  try {
+    const res = await fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}${testModeParam}`);
+    const json = (await res.json()) as { ok: boolean; nextWindowAt?: string | null };
+    return json.nextWindowAt ? new Date(json.nextWindowAt).getTime() : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -147,74 +112,230 @@ function InviteBanner({ playerCount }: { playerCount?: number }) {
   );
 }
 
+/**
+ * Compact bullet list of the game's rules (VENUE_GAME_CARD_BY_KEY["category-blitz"].rules),
+ * shown underneath the status card so players can review the rules without
+ * having to click through the tutorial slides.
+ */
+function RulesList() {
+  const rules = VENUE_GAME_CARD_BY_KEY["category-blitz"].rules.map((rule) => rule.replace(/^\s*-\s*/, "").trim());
+  return (
+    <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-4`}>
+      <p className={`${TEXT_LABEL} mb-2`}>Rules</p>
+      <div className="space-y-1.5">
+        {rules.map((rule) => (
+          <p key={rule} className="text-sm leading-snug text-slate-300">
+            • {rule}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Combined pre-game screen for both the "idle" (no active session) and
+ * "lobby" (session exists, waiting for host/countdown) phases — the ONLY
+ * screen a player lands on before a round starts. Always shows the rules and
+ * lets the player click through the same tutorial slides shown on first
+ * entry, so review is available without leaving this screen. The status card
+ * up top reflects whichever of the three pre-game states applies: no game
+ * scheduled, a scheduled game counting down to its lobby window, or an open
+ * lobby counting down to round start.
+ */
 function LobbyScreen({
+  phase,
+  venueId,
   username,
   lobbyCountdown,
   playerCount,
 }: {
+  phase: "idle" | "lobby";
+  venueId: string | null;
   username: string | null;
   lobbyCountdown: number | null;
   playerCount?: number;
 }) {
+  const [nextWindowAtMs, setNextWindowAtMs] = useState<number | null>(null);
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    if (phase !== "idle" || !venueId) return;
+    let cancelled = false;
+    void fetchCategoryBlitzNextWindowAt(venueId).then((ms) => {
+      if (!cancelled && ms !== null) setNextWindowAtMs(ms);
+    });
+    return () => { cancelled = true; };
+  }, [phase, venueId]);
+
+  useEffect(() => {
+    if (phase !== "idle") return;
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [phase]);
+
+  const idleCountdownSeconds =
+    phase === "idle" && nextWindowAtMs != null
+      ? Math.max(0, Math.floor((nextWindowAtMs - nowMs) / 1000))
+      : null;
+
   const steps = VENUE_GAME_CARD_BY_KEY["category-blitz"].steps;
   const [stepIndex, setStepIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
 
-  // Auto-rotate the same rules cards shown before a player's first game, so
-  // returning players who skip the tutorial (via the 7-day recency check)
-  // still see the rules refreshed while they wait.
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setStepIndex((i) => (i + 1) % steps.length);
-    }, LOBBY_TUTORIAL_ROTATE_MS);
-    return () => window.clearInterval(id);
-  }, [steps.length]);
+  const transitionToStep = useCallback((targetStep: number) => {
+    if (targetStep === stepIndex) return;
+    setSlideDirection(targetStep > stepIndex ? 1 : -1);
+    setStepIndex(targetStep);
+  }, [stepIndex]);
 
+  const goToNextStep = useCallback(() => {
+    transitionToStep(Math.min(stepIndex + 1, steps.length - 1));
+  }, [stepIndex, steps.length, transitionToStep]);
+
+  const goToPreviousStep = useCallback(() => {
+    transitionToStep(Math.max(stepIndex - 1, 0));
+  }, [stepIndex, transitionToStep]);
+
+  const isLastStep = stepIndex === steps.length - 1;
   const isUrgent = lobbyCountdown != null && lobbyCountdown <= 10;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto px-4 py-6">
-      <InviteBanner playerCount={playerCount} />
-      <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-5 text-center`}>
-        <p className={TEXT_LABEL}>You&apos;re in the lobby</p>
-        {username ? <p className="mt-1 text-lg font-bold text-emerald-200">{username}</p> : null}
-        {lobbyCountdown != null ? (
-          <>
-            <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Game starts in</p>
-            <p
-              className={`mt-1 font-black tabular-nums text-[2.6rem] leading-none ${
-                isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
-              }`}
-            >
-              {formatMmSs(lobbyCountdown)}
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="mt-3 text-xl font-black text-white">Waiting for host</p>
-            <p className="mt-2 text-sm text-emerald-100/80">
-              The host will start a round shortly. Keep this screen open — the letter and categories will appear automatically.
-            </p>
-          </>
-        )}
-        <div className={`mt-4 inline-flex items-center gap-2 rounded-full border ${BORDER_ACTIVE} bg-emerald-950/30 px-3 py-1.5 text-xs font-black uppercase tracking-widest ${TEXT_ACCENT}`}>
-          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-          Ready
-        </div>
-      </div>
+      {phase === "lobby" ? <InviteBanner playerCount={playerCount} /> : null}
 
-      <div className="relative h-60 w-full max-w-sm shrink-0">
-        <AnimatePresence mode="wait">
+      {phase === "lobby" ? (
+        <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-5 text-center`}>
+          <p className={TEXT_LABEL}>You&apos;re in the lobby</p>
+          {username ? <p className="mt-1 text-lg font-bold text-emerald-200">{username}</p> : null}
+          {lobbyCountdown != null ? (
+            <>
+              <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Game starts in</p>
+              <p
+                className={`mt-1 font-black tabular-nums text-[2.6rem] leading-none ${
+                  isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
+                }`}
+              >
+                {formatMmSs(lobbyCountdown)}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mt-3 text-xl font-black text-white">Waiting for host</p>
+              <p className="mt-2 text-sm text-emerald-100/80">
+                The host will start a round shortly. Keep this screen open — the letter and categories will appear automatically.
+              </p>
+            </>
+          )}
+          <div className={`mt-4 inline-flex items-center gap-2 rounded-full border ${BORDER_ACTIVE} bg-emerald-950/30 px-3 py-1.5 text-xs font-black uppercase tracking-widest ${TEXT_ACCENT}`}>
+            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+            Ready
+          </div>
+        </div>
+      ) : (
+        <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
+          <p className={TEXT_LABEL}>Category Blitz</p>
+          {idleCountdownSeconds != null ? (
+            <>
+              <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Next game in</p>
+              <p className="mt-1 font-black tabular-nums text-emerald-300 text-[2.8rem] leading-none">
+                {formatIdleCountdown(idleCountdownSeconds)}
+              </p>
+              <p className="mt-3 text-sm text-slate-400">One letter · 12 categories · 3 minutes</p>
+            </>
+          ) : (
+            <>
+              <p className="mt-3 text-xl font-black text-white">No game is running right now.</p>
+              <p className="mt-2 text-sm text-slate-400">Check back later for the next session.</p>
+            </>
+          )}
+        </div>
+      )}
+
+      <RulesList />
+
+      {/* Click-through tutorial — no auto-rotation, user navigates manually like Bingo/Pick 'Em/Fantasy */}
+      <div className="relative w-full max-w-sm shrink-0" style={{ minHeight: "18rem" }}>
+        <AnimatePresence mode="wait" custom={slideDirection}>
           <motion.div
-            key={stepIndex}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            key={`cb-lobby-${stepIndex}`}
+            custom={slideDirection}
+            variants={{
+              enter: (dir: 1 | -1) => ({
+                x: dir > 0 ? "104%" : "-104%",
+                opacity: 0.72,
+                scale: 0.985,
+              }),
+              center: {
+                x: "0%",
+                opacity: 1,
+                scale: 1,
+              },
+              exit: (dir: 1 | -1) => ({
+                x: dir > 0 ? "-104%" : "104%",
+                opacity: 0.72,
+                scale: 0.985,
+              }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0 h-full w-full"
           >
             <GameOnboardingCard gameKey="category-blitz" step={steps[stepIndex]} stepIndex={stepIndex} className="h-full w-full" />
           </motion.div>
         </AnimatePresence>
+      </div>
+
+      {/* Step dots */}
+      <div className="flex shrink-0 items-center justify-center gap-2">
+        {steps.map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            onClick={() => transitionToStep(index)}
+            className={`tp-clean-button h-2 rounded-full transition-all duration-200 ${
+              index === stepIndex
+                ? `w-6 ${GAME_STEP_DOT_ACTIVE["category-blitz"]}`
+                : "w-2 bg-white/30"
+            }`}
+            aria-label={`Go to step ${index + 1}`}
+          />
+        ))}
+      </div>
+
+      {/* Navigation buttons */}
+      <div className="grid w-full max-w-sm shrink-0 grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={stepIndex > 0 ? goToPreviousStep : undefined}
+          disabled={stepIndex === 0}
+          className={`tp-clean-button inline-flex min-h-[44px] items-center justify-center rounded-full px-3 py-2 text-sm font-black transition-all ${
+            stepIndex === 0
+              ? "bg-slate-800/50 text-slate-600 opacity-0 pointer-events-none"
+              : "bg-gradient-to-r from-orange-500 to-amber-400 text-slate-900"
+          }`}
+        >
+          Back
+        </button>
+        {isLastStep ? (
+          <button
+            type="button"
+            onClick={goToPreviousStep}
+            className="tp-clean-button inline-flex min-h-[44px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-sm font-black text-white"
+          >
+            Start over
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={goToNextStep}
+            className="tp-clean-button inline-flex min-h-[44px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-sm font-black text-white"
+          >
+            Next
+          </button>
+        )}
       </div>
     </div>
   );
@@ -235,49 +356,119 @@ function ScoringScreen() {
   );
 }
 
-function IntermissionStatus({
-  nextRoundStartsIn,
-  compact = false,
-}: {
-  nextRoundStartsIn: number | null;
-  compact?: boolean;
-}) {
-  if (nextRoundStartsIn == null) {
-    return (
-      <div className={`rounded-2xl border ${BORDER_CARD} bg-slate-900/60 ${compact ? "px-3 py-2" : "p-4"} text-center`}>
-        <p className={TEXT_LABEL}>Status</p>
-        <p className={`mt-2 font-black text-white ${compact ? "text-sm" : "text-lg"}`}>Waiting for next round</p>
-      </div>
-    );
-  }
+/**
+ * Steps the viewer's venue-wide point TOTAL (users.points — the same number
+ * shown on the venue leaderboard) from its pre-session value up to its
+ * post-session value, mirroring Speed Trivia's "Total Points" count-up
+ * (components/trivia/TriviaGame.tsx ~line 1267). This is deliberately a
+ * different number from `viewerEntry.points` in CompleteScreen (that's this
+ * session's own cumulative score) — it's the running account total climbing
+ * by however much this game just added to it.
+ */
+function useTotalPointsCountUp(totalBefore: number | null, totalAfter: number | null) {
+  const [displayTotal, setDisplayTotal] = useState<number | null>(null);
+  const [pulsing, setPulsing] = useState(false);
 
-  return (
-    <div className={`rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 ${compact ? "px-3 py-2" : "p-4"} text-center`}>
-      <p className={TEXT_LABEL}>Next round starts in</p>
-      <p className={`mt-1 font-black tabular-nums ${TEXT_ACCENT} ${compact ? "text-xl" : "text-4xl"}`}>
-        {formatMmSs(nextRoundStartsIn)}
-      </p>
-      {!compact ? <p className="mt-2 text-xs text-emerald-100/70">Results stay visible until the next letter drops.</p> : null}
-    </div>
-  );
+  useEffect(() => {
+    if (totalBefore === null || totalAfter === null) return;
+    setDisplayTotal(totalBefore);
+    setPulsing(false);
+
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const schedule = (fn: () => void, ms: number) => {
+      timers.push(setTimeout(() => { if (!cancelled) fn(); }, ms));
+    };
+
+    const diff = totalAfter - totalBefore;
+    const DURATION_MS = 800;
+    const steps = Math.min(Math.max(Math.abs(diff), 1), 30);
+    const stepMs = DURATION_MS / steps;
+    // Pause 400ms so the player registers the "before" total, then count up.
+    for (let i = 1; i <= steps; i++) {
+      schedule(() => {
+        const progress = i / steps;
+        setDisplayTotal(i === steps ? totalAfter : Math.round(totalBefore + diff * progress));
+      }, 400 + stepMs * i);
+    }
+    schedule(() => setPulsing(true), 400 + DURATION_MS + 80);
+    schedule(() => setPulsing(false), 400 + DURATION_MS + 480);
+
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
+  }, [totalBefore, totalAfter]);
+
+  return { displayTotal, pulsing };
 }
 
 /**
  * Final game-over screen: viewer's own score banner, a top-3 podium (plus a
- * pinned rank row if the viewer placed outside it), and a stats bar showing
- * final rank + rank movement across the session. Modeled on Live Trivia's
- * post-game podium block — see docs/category-blitz-scoring-and-bugfix-plan.md
- * Phase 5.
+ * pinned rank row if the viewer placed outside it), a stats bar showing
+ * final rank + rank movement across the session, and a count-up of the
+ * viewer's venue point total climbing by whatever this game just added to
+ * it. Modeled on Live Trivia's post-game podium block — see
+ * docs/category-blitz-scoring-and-bugfix-plan.md Phase 5.
  */
+/**
+ * "Next game" messaging shown on the game-over screen: a live countdown to
+ * the venue's next scheduled window, or an explicit "nothing scheduled"
+ * message. `info === null` means the fetch hasn't resolved yet — render
+ * nothing rather than flash an incorrect "no game" before it lands.
+ */
+function NextGameStatus({ info }: { info: { nextWindowAtMs: number | null } | null }) {
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    if (!info || info.nextWindowAtMs == null) return;
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [info]);
+
+  if (!info) return null;
+
+  const countdownSeconds =
+    info.nextWindowAtMs != null ? Math.max(0, Math.floor((info.nextWindowAtMs - nowMs) / 1000)) : null;
+
+  return (
+    <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-4 text-center`}>
+      <p className={TEXT_LABEL}>Next Game</p>
+      {countdownSeconds != null ? (
+        <p className="mt-1 font-black tabular-nums text-emerald-300 text-2xl leading-none">
+          {formatIdleCountdown(countdownSeconds)}
+        </p>
+      ) : (
+        <p className="mt-1 text-sm text-slate-400">No further games are scheduled. Check back later!</p>
+      )}
+    </div>
+  );
+}
+
 function CompleteScreen({
   results,
   userId,
   rankGained,
+  venuePointsBefore,
+  venuePointsAfter,
+  nextWindowInfo,
 }: {
   results: CategoryBlitzRoundResults | null;
   userId: string;
   rankGained: number | null;
+  /** Viewer's venue-wide point total captured before this session started, or null if unavailable. */
+  venuePointsBefore: number | null;
+  /** Viewer's venue-wide point total captured once the session completed, or null if unavailable. */
+  venuePointsAfter: number | null;
+  /** Next scheduled window for this venue, or null while still loading. See NextGameStatus. */
+  nextWindowInfo: { nextWindowAtMs: number | null } | null;
 }) {
+  const { displayTotal: totalPointsDisplay, pulsing: totalPointsPulsing } = useTotalPointsCountUp(
+    venuePointsBefore,
+    venuePointsAfter
+  );
+  const totalPointsGain =
+    venuePointsBefore !== null && venuePointsAfter !== null ? venuePointsAfter - venuePointsBefore : null;
   const standings = (results?.totals ?? []).slice().sort((a, b) => b.points - a.points);
 
   if (standings.length === 0) {
@@ -288,6 +479,7 @@ function CompleteScreen({
           <p className="mt-3 text-xl font-black text-white">The session has ended.</p>
           <p className="mt-2 text-sm text-slate-400">Thanks for playing!</p>
         </div>
+        <NextGameStatus info={nextWindowInfo} />
       </div>
     );
   }
@@ -381,6 +573,29 @@ function CompleteScreen({
           <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Final Rank</span>
         </div>
       </div>
+
+      {/* Venue point total count-up — mirrors Speed Trivia's "Total Points" card */}
+      {totalPointsDisplay !== null && (
+        <div
+          className={`rounded-2xl border-2 bg-emerald-500/10 px-4 py-3 text-center transition-all duration-300 ${
+            totalPointsPulsing ? "border-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.35)]" : BORDER_ACTIVE
+          }`}
+        >
+          <p className={TEXT_LABEL}>Your Total Points</p>
+          <p
+            className={`mt-1 font-black tabular-nums text-3xl leading-none transition-transform duration-150 ${TEXT_ACCENT} ${
+              totalPointsPulsing ? "scale-110" : "scale-100"
+            }`}
+          >
+            {totalPointsDisplay}
+          </p>
+          {totalPointsGain !== null && (
+            <p className="mt-0.5 text-xs text-slate-400">+{totalPointsGain} this game</p>
+          )}
+        </div>
+      )}
+
+      <NextGameStatus info={nextWindowInfo} />
 
       <p className="pb-2 text-center text-xs text-slate-500">Thanks for playing! Your points have been awarded.</p>
     </div>
@@ -622,7 +837,7 @@ export function AnsweringScreen({
         .map((a, i) => ({ categoryIndex: i, answer: a.trim() }))
         .filter((e) => e.answer.length > 0);
 
-      await Promise.all(
+      const responses = await Promise.all(
         filled.map(({ categoryIndex, answer }) =>
           fetch(`/api/category-blitz/rounds/${roundId}/submit`, {
             method: "POST",
@@ -631,6 +846,9 @@ export function AnsweringScreen({
           })
         )
       );
+      if (responses.some((r) => !r.ok)) {
+        throw new Error("Submission failed.");
+      }
       setSubmitState("done");
     } catch {
       submittedRef.current = false;
@@ -936,11 +1154,89 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     });
   }, []);
 
-  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry, markRevealDone, markResultsRevealDone } = useCategoryBlitzSession(
+  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry, markRevealDone, markResultsRevealDone, dismissComplete } = useCategoryBlitzSession(
     isHydrated ? venueId : "",
     isHydrated ? userId : ""
   );
   const { triggerAnimation } = useAnimationTrigger();
+
+  // An admin ending a session (or one ending with no completed round) lands
+  // here with no standings to show — CompleteScreen's bare "session has
+  // ended" fallback (no podium, no next-game info). Without this, that
+  // screen would sit for up to RECENTLY_COMPLETED_GRACE_MS (3 minutes, see
+  // lib/categoryBlitz.ts) before the server stops re-delivering the
+  // completed session and the client falls back to idle. Fast-path it to 3
+  // seconds instead. Only applies to the empty fallback — a session that
+  // completed with real standings keeps them on screen (see Phase 3/4:
+  // points count-up + next-game messaging) until the player navigates away
+  // or the grace window naturally lapses.
+  const hasCompleteStandings = phase === "complete" && !!results && results.totals.length > 0;
+  useEffect(() => {
+    if (phase !== "complete" || hasCompleteStandings) return;
+    const t = window.setTimeout(() => { dismissComplete(); }, 3000);
+    return () => window.clearTimeout(t);
+  }, [phase, hasCompleteStandings, dismissComplete]);
+
+  // Venue point total count-up (CompleteScreen's "Your Total Points" card):
+  // snapshot the viewer's venue-wide leaderboard total (users.points, the
+  // same number /api/leaderboard and TriviaGame's own count-up read) once
+  // when a new session first appears, before any of its rounds have scored,
+  // then again once the session completes and its points have been awarded
+  // (lib/categoryBlitz.ts awardCategoryBlitzPoints writes into that same
+  // column). Both snapshots are keyed by session.id so a second session in
+  // the same page lifetime gets its own before/after pair.
+  const fetchVenuePoints = useCallback(async (): Promise<number | null> => {
+    if (!venueId || !userId) return null;
+    try {
+      const res = await fetch(`/api/leaderboard?venue=${encodeURIComponent(venueId)}&userId=${encodeURIComponent(userId)}`);
+      const json = (await res.json()) as { ok: boolean; entries?: { userId: string; points: number }[] };
+      if (!json.ok) return null;
+      const entry = (json.entries ?? []).find((e) => e.userId === userId);
+      return entry ? entry.points : null;
+    } catch {
+      return null;
+    }
+  }, [venueId, userId]);
+
+  const [venuePointsBefore, setVenuePointsBefore] = useState<{ sessionId: string; points: number } | null>(null);
+  const [venuePointsAfter, setVenuePointsAfter] = useState<{ sessionId: string; points: number } | null>(null);
+
+  useEffect(() => {
+    if (!session?.id || phase === "complete" || venuePointsBefore?.sessionId === session.id) return;
+    let cancelled = false;
+    void fetchVenuePoints().then((points) => {
+      if (cancelled || points === null) return;
+      setVenuePointsBefore({ sessionId: session.id, points });
+    });
+    return () => { cancelled = true; };
+  }, [session?.id, phase, venuePointsBefore, fetchVenuePoints]);
+
+  useEffect(() => {
+    if (phase !== "complete" || !session?.id || venuePointsAfter?.sessionId === session.id) return;
+    let cancelled = false;
+    void fetchVenuePoints().then((points) => {
+      if (cancelled || points === null) return;
+      setVenuePointsAfter({ sessionId: session.id, points });
+    });
+    return () => { cancelled = true; };
+  }, [phase, session?.id, venuePointsAfter, fetchVenuePoints]);
+
+  // Next-game messaging on the game-over screen (CompleteScreen's
+  // NextGameStatus): once a session completes, fetch the venue's next
+  // scheduled window the same way the idle lobby does, so the player learns
+  // when to come back (or that nothing else is scheduled) without first
+  // having to fall back to the lobby screen themselves.
+  const [completeNextWindow, setCompleteNextWindow] = useState<{ sessionId: string; nextWindowAtMs: number | null } | null>(null);
+
+  useEffect(() => {
+    if (phase !== "complete" || !session?.id || completeNextWindow?.sessionId === session.id) return;
+    let cancelled = false;
+    void fetchCategoryBlitzNextWindowAt(venueId).then((ms) => {
+      if (cancelled) return;
+      setCompleteNextWindow({ sessionId: session.id, nextWindowAtMs: ms });
+    });
+    return () => { cancelled = true; };
+  }, [phase, session?.id, completeNextWindow, venueId]);
 
   // Phase 5 stats bar: snapshot the viewer's rank the first time this session
   // produces results with them in it, so the game-over screen can show how far
@@ -1005,6 +1301,9 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
       round.id !== revealedRoundId &&
       nowMs - new Date(round.startedAt).getTime() > ROUND_START_REVEAL_MAX_MS
     ) {
+      if (process.env.NODE_ENV !== "production") {
+        console.debug(`[CategoryBlitzGame] round ${round.id}: reveal never mounted, marking done via elapsed-time fallback`);
+      }
       markRevealDone(round.id);
     }
   }, [phase, round, revealedRoundId, nowMs, markRevealDone]);
@@ -1211,8 +1510,15 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
       )}
 
       {/* Phase content */}
-      {phase === "idle" && <IdleScreen venueId={venueId} />}
-      {phase === "lobby" && <LobbyScreen username={username} lobbyCountdown={lobbyCountdown} playerCount={session?.playerCount} />}
+      {(phase === "idle" || phase === "lobby") && (
+        <LobbyScreen
+          phase={phase}
+          venueId={venueId}
+          username={username}
+          lobbyCountdown={lobbyCountdown}
+          playerCount={session?.playerCount}
+        />
+      )}
       {phase === "answering" && round && (
         showReveal ? (
           <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto">
@@ -1250,6 +1556,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
             meId={userId}
             roundId={results.roundId}
             onSettled={handleRevealSettled}
+            nextRoundStartsIn={nextRoundStartsIn}
           />
         ) : (
           <ScoringScreen />
@@ -1274,7 +1581,18 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
               />
             )}
           </AnimatePresence>
-          <CompleteScreen results={results} userId={userId} rankGained={rankGained} />
+          <CompleteScreen
+            results={results}
+            userId={userId}
+            rankGained={rankGained}
+            venuePointsBefore={session?.id && venuePointsBefore?.sessionId === session.id ? venuePointsBefore.points : null}
+            venuePointsAfter={session?.id && venuePointsAfter?.sessionId === session.id ? venuePointsAfter.points : null}
+            nextWindowInfo={
+              session?.id && completeNextWindow?.sessionId === session.id
+                ? { nextWindowAtMs: completeNextWindow.nextWindowAtMs }
+                : null
+            }
+          />
         </>
       )}
     </div>

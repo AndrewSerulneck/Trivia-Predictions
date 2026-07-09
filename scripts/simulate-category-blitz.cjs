@@ -90,6 +90,18 @@ function section(title) {
   console.log(`\n${C.bold}${C.cyan}▸ ${title}${C.reset}`);
 }
 
+// scoreRound has a real expiry guard (Date.now() must reach round.endsAt,
+// within a 2s grace window) — it is not test-mode aware beyond shortening
+// that window via the session's test_mode flag. Every check below must wait
+// out the round's actual duration before scoring it.
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+async function waitForRoundToEnd(round) {
+  const msRemaining = new Date(round.endsAt).getTime() - Date.now();
+  if (msRemaining > 0) await sleep(msRemaining + 250);
+}
+
 // ── Supabase (service role) for setup/teardown ──────────────────────────────
 
 function getAdminClient() {
@@ -323,6 +335,7 @@ async function playRound(ctx, roundNumber) {
     rejected.length ? `${rejected.length} rejected e.g. "${rejected[0].reason?.message}"` : "");
 
   // Score and verify.
+  await waitForRoundToEnd(round);
   const scored = await engine.scoreRound(round.id);
   const byUserCat = new Map();
   for (const cat of scored.results) {
@@ -385,6 +398,7 @@ async function concurrencyStress(ctx) {
   );
 
   // Score sequentially twice → must be idempotent (no double award).
+  await waitForRoundToEnd(round);
   const first = await engine.scoreRound(round.id);
   const firstTotal = first.totals.reduce((s, t) => s + t.points, 0);
   const second = await engine.scoreRound(round.id);
@@ -402,10 +416,79 @@ async function concurrencyStress(ctx) {
       })
     )
   );
+  await waitForRoundToEnd(round2);
   const [ra, rb] = await Promise.all([engine.scoreRound(round2.id), engine.scoreRound(round2.id)]);
   const ta = ra.totals.reduce((s, t) => s + t.points, 0);
   const tb = rb.totals.reduce((s, t) => s + t.points, 0);
   soft("concurrent double-score does not inflate totals (race guard)", ta === tb, `A=${ta} B=${tb}`);
+}
+
+// ── Null auth_id regression guard ───────────────────────────────────────────
+//
+// Reproduces the actual production incident: an account whose auth_id is
+// null (the normal state before the Phase 2 auth.ts fix populates it, and
+// still possible any time signInAnonymously() fails/times out) must be able
+// to submit and get scored exactly like any other player. Before the Phase 1
+// migration, category_blitz_submissions.auth_id was NOT NULL + FK'd, so every
+// submission from such a player was rejected with a 400 the client never
+// surfaced — this is the check that would have caught it.
+
+async function nullAuthIdCheck(ctx, db, venueId, runId) {
+  section("Null auth_id regression guard");
+  const username = `sim${runId}noauth`;
+  const { data: profile, error: profErr } = await db
+    .from("users")
+    .insert({
+      auth_id: null,
+      username,
+      username_normalized: username.toLowerCase(),
+      venue_id: venueId,
+      points: 0,
+    })
+    .select("id, auth_id, username")
+    .single();
+  if (profErr || !profile) throw new Error(`null-auth_id player insert failed: ${profErr?.message}`);
+  const noAuthPlayer = { userId: profile.id, authId: profile.auth_id, username: profile.username };
+
+  const { engine, sessionId } = ctx;
+  try {
+    await engine.registerSessionPresence({
+      sessionId, userId: noAuthPlayer.userId, authId: noAuthPlayer.authId, venueId,
+    });
+
+    const round = await engine.startRound(sessionId);
+    let submitError = null;
+    try {
+      await engine.submitAnswer({
+        roundId: round.id,
+        userId: noAuthPlayer.userId,
+        authId: noAuthPlayer.authId,
+        venueId,
+        categoryIndex: 0,
+        answer: `${round.letter}noauthtest`,
+      });
+    } catch (e) {
+      submitError = e;
+    }
+    hard(
+      "submission succeeds for a player with no auth_id (the actual production bug)",
+      !submitError,
+      submitError?.message ?? ""
+    );
+
+    await waitForRoundToEnd(round);
+    const scored = await engine.scoreRound(round.id);
+    const verdict = scored.results
+      .find((c) => c.categoryIndex === 0)
+      ?.answers.find((a) => a.userId === noAuthPlayer.userId);
+    hard(
+      "null-auth_id player's answer gets scored like anyone else",
+      Boolean(verdict),
+      verdict ? "" : "no verdict found"
+    );
+  } finally {
+    await db.from("users").delete().eq("id", noAuthPlayer.userId);
+  }
 }
 
 // ── Spectator enforcement ───────────────────────────────────────────────────
@@ -426,6 +509,7 @@ async function spectatorCheck(ctx) {
     });
   } catch (e) { rejected = true; msg = e.message; }
   hard("un-registered (spectating) user is blocked from submitting", rejected, msg);
+  await waitForRoundToEnd(round);
   await engine.scoreRound(round.id);
 }
 
@@ -450,7 +534,7 @@ async function main() {
     players = await createSimPlayers(db, venueId, args.users, runId);
     console.log(`${C.dim}Seeded ${players.length} sim players at ${venueId}.${C.reset}`);
 
-    const session = await engine.createSession(venueId, { source: "manual" });
+    const session = await engine.createSession(venueId, { source: "manual", testMode: true });
     const sessionId = session.id;
 
     // Register all-but-one player as present BEFORE any round starts → players.
@@ -462,6 +546,8 @@ async function main() {
     // The last player is deliberately never registered as present, so it acts
     // as the "joined-late" spectator for spectatorCheck. Everyone else plays.
     const ctx = { engine, venueId, sessionId, players: players.slice(0, -1), ghost: players[players.length - 1], args };
+
+    await nullAuthIdCheck(ctx, db, venueId, runId);
 
     if (args.concurrencyOnly) {
       await concurrencyStress(ctx);
