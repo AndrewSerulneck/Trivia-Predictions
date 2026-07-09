@@ -11,8 +11,9 @@ import { CB_LETTER_BADGE_LAYOUT_ID, cbCategoryRowLayoutId } from "@/lib/category
 import { EASE_SNAP } from "@/lib/motionEasing";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
 import { GameOnboardingCard } from "@/components/venue/GameIdentityPanel";
-import GradingCascade, { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
-import RoundStartReveal from "@/components/category-blitz/RoundStartReveal";
+import { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
+import RevealSequence from "@/components/category-blitz/RevealSequence";
+import RoundStartReveal, { ROUND_START_REVEAL_MAX_MS } from "@/components/category-blitz/RoundStartReveal";
 import LiveLeaderboard from "@/components/category-blitz/LiveLeaderboard";
 import ValidAnswerGlow from "@/components/category-blitz/ValidAnswerGlow";
 import WrongLetterReject from "@/components/category-blitz/WrongLetterReject";
@@ -78,7 +79,14 @@ function IdleScreen({ venueId }: { venueId: string | null }) {
 
   useEffect(() => {
     if (!venueId) return;
-    void fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}`)
+    // Match the main session hook's testMode param (lib/categoryBlitzRealtime.ts)
+    // so this poll and the hook's poll never disagree on which round-duration
+    // regime is active — the DB-level uq_category_blitz_rounds_session_open
+    // constraint (see project_category_blitz_startround_race) now prevents any
+    // resulting race from creating duplicate rounds, but they should still
+    // agree on intent rather than relying on whichever caller wins.
+    const testModeParam = isCategoryBlitzTestModeEnabled() ? "&testMode=1" : "";
+    void fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}${testModeParam}`)
       .then((r) => r.json())
       .then((json: { ok: boolean; nextWindowAt?: string | null }) => {
         if (json.nextWindowAt) setNextWindowAtMs(new Date(json.nextWindowAt).getTime());
@@ -403,13 +411,23 @@ function ResultsScreen({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
       <InviteBanner playerCount={playerCount} />
-      <IntermissionStatus nextRoundStartsIn={nextRoundStartsIn} />
+      {/* The reveal journey (RevealSequence) just animated the leaderboard a
+          beat earlier, then settled here — so the countdown "drops in" above a
+          leaderboard that's already at rest (settled: no replayed count-up). */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: EASE_SNAP }}
+      >
+        <IntermissionStatus nextRoundStartsIn={nextRoundStartsIn} />
+      </motion.div>
 
-      {/* Live Leaderboard with count-up, rank reorder, and point-gain flash */}
+      {/* Live Leaderboard — rendered settled so it doesn't replay the count-up /
+          reorder it just performed inside RevealSequence. */}
       <div className={`rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-4`}>
         <p className={`${TEXT_LABEL} text-center`}>Leaderboard</p>
         <div className="mt-3">
-          <LiveLeaderboard entries={results.totals} meId={userId} exiting={leaderboardExiting} />
+          <LiveLeaderboard entries={results.totals} meId={userId} exiting={leaderboardExiting} settled />
         </div>
       </div>
 
@@ -455,13 +473,20 @@ function ResultsScreen({
                     <p className="mt-0.5 text-sm italic text-slate-600">no answer</p>
                   )}
                   {viewerAnswer && reason && reason !== "correct" ? (
-                    <p className={`mt-0.5 text-[0.65rem] font-semibold ${
-                      reason === "insufficient_players"
-                        ? "text-amber-300/80"
-                        : "text-rose-300/80"
-                    }`}>
-                      {REASON_LABEL[reason] ?? reason}
-                    </p>
+                    <div>
+                      <p className={`mt-0.5 text-[0.65rem] font-semibold ${
+                        reason === "insufficient_players"
+                          ? "text-amber-300/80"
+                          : "text-rose-300/80"
+                      }`}>
+                        {REASON_LABEL[reason] ?? reason}
+                      </p>
+                      {viewerAnswer.explanation && (
+                        <p className="mt-0.5 text-[0.6rem] leading-snug text-slate-500">
+                          {viewerAnswer.explanation}
+                        </p>
+                      )}
+                    </div>
                   ) : null}
                 </div>
                 <div className="shrink-0 text-right">
@@ -865,13 +890,13 @@ function Header({
               ? "animate-pulse bg-emerald-400"
               : phase === "lobby"
               ? "animate-pulse bg-amber-400"
-              : phase === "results" || phase === "scoring"
+              : phase === "results" || phase === "scoring" || phase === "reveal"
               ? "bg-cyan-400"
               : "bg-slate-600"
           }`}
         />
         <p className={`text-[0.7rem] font-black uppercase tracking-[0.16em] ${TEXT_ACCENT}`}>
-          {phase === "lobby" ? "Lobby" : phase === "answering" ? "Round Active" : phase === "scoring" ? "Scoring" : phase === "results" ? "Results" : phase === "complete" ? "Game Over" : "Category Blitz"}
+          {phase === "lobby" ? "Lobby" : phase === "answering" ? "Round Active" : phase === "scoring" ? "Scoring" : phase === "reveal" ? "Revealing" : phase === "results" ? "Results" : phase === "complete" ? "Game Over" : "Category Blitz"}
         </p>
         {error && (
           <span className="ml-auto text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
@@ -911,7 +936,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     });
   }, []);
 
-  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry, markRevealDone } = useCategoryBlitzSession(
+  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry, markRevealDone, markResultsRevealDone } = useCategoryBlitzSession(
     isHydrated ? venueId : "",
     isHydrated ? userId : ""
   );
@@ -939,13 +964,50 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   // Round start reveal: play the letter drop + category cascade once per round
   // when we enter the answering phase, then transition to the answer input.
+  //
+  // A page reload remounts this component from scratch: `revealedRoundId`
+  // resets to null, so without the elapsed-time check below, a round that's
+  // already been running a while would replay RoundStartReveal from the top
+  // — burning more of the round's already-ticking clock and re-arming
+  // markRevealDone's completion gate from scratch every time a frustrated
+  // player reloads mid-round (Root Cause 4 in
+  // docs/category-blitz-no-grading-analysis.md). Comparing against
+  // ROUND_START_REVEAL_MAX_MS on every render (rather than a one-shot
+  // mount check) also generalizes to any other way this tab could end up
+  // "still answering, reveal never shown" long after a round actually
+  // started — a freshly-started round always has ~0 elapsed time here, so
+  // this never cuts off a reveal that's genuinely still playing.
   const [revealedRoundId, setRevealedRoundId] = useState<string | null>(null);
-  const showReveal = phase === "answering" && !!round && round.id !== revealedRoundId;
+  // Render bodies can't call Date.now() directly (impure) — mirror it into
+  // state via its own tick instead, same pattern as IdleScreen's countdown.
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNowMs(Date.now()), 250);
+    return () => window.clearInterval(id);
+  }, []);
+  const showReveal =
+    phase === "answering" &&
+    !!round &&
+    round.id !== revealedRoundId &&
+    nowMs - new Date(round.startedAt).getTime() <= ROUND_START_REVEAL_MAX_MS;
 
-  // Live grading reveal: play the cascade once per round when its results land,
-  // then hand off to the full ResultsScreen. Keyed on roundId so it fires for
-  // each new round but not on the 15s intermission re-polls.
-  const [gradedRoundId, setGradedRoundId] = useState<string | null>(null);
+  // The case above (elapsed time already past the reveal's max duration)
+  // never mounts RoundStartReveal, so its onDone/markRevealDone callback
+  // never fires on its own — without this, the auto-scoring timer gate
+  // (revealDoneRef, lib/categoryBlitzRealtime.ts) would stay blocked for
+  // the rest of the round. Mirrors the visibility-resync forceReveal path
+  // in the hook; safe to call every render since markRevealDone is
+  // idempotent per round ID.
+  useEffect(() => {
+    if (
+      phase === "answering" &&
+      round &&
+      round.id !== revealedRoundId &&
+      nowMs - new Date(round.startedAt).getTime() > ROUND_START_REVEAL_MAX_MS
+    ) {
+      markRevealDone(round.id);
+    }
+  }, [phase, round, revealedRoundId, nowMs, markRevealDone]);
 
   // The viewer's OWN answers, one row per category they answered — the
   // emotionally relevant set to watch get graded. Memoized so the ~4x/sec
@@ -966,27 +1028,32 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     });
   }, [results, userId]);
 
-  const showCascade =
-    phase === "results" &&
-    !!results &&
-    results.roundId !== gradedRoundId &&
-    gradingAnswers.length > 0;
+  // The grading cascade now runs inside the server-anchored "reveal" phase
+  // (see useCategoryBlitzSession Phase 3) instead of a client-derived boolean.
+  // We render the cascade once the viewer's graded answers have populated; if
+  // "reveal" is entered before `results` land, we hold a loading beat rather
+  // than skipping. `markResultsRevealDone` advances the phase to "results".
+  const revealReady = phase === "reveal" && !!results && !!userId;
+  const showCascade = revealReady && gradingAnswers.length > 0;
 
-  // Phase 4 ENTER transition: once the cascade finishes revealing every
-  // answer, it plays its own exit animation (rows accelerate up/out, ACCEL
-  // curve) for 200ms — during that same window ResultsScreen mounts
-  // underneath and its leaderboard rows snap in (SNAP curve), so the handoff
-  // reads as one coordinated beat instead of an abrupt cut. See
-  // docs/category-blitz-scoring-and-bugfix-plan.md Phase 4.
-  const [cascadeExiting, setCascadeExiting] = useState(false);
+  // Spectators / players who submitted nothing have no cascade to play — as
+  // soon as their (empty) graded answers resolve, advance straight to results
+  // so we don't hold the loading beat forever.
   useEffect(() => {
-    if (!cascadeExiting) return;
-    const id = window.setTimeout(() => {
-      setGradedRoundId(results?.roundId ?? null);
-      setCascadeExiting(false);
-    }, 200);
-    return () => window.clearTimeout(id);
-  }, [cascadeExiting, results]);
+    if (revealReady && gradingAnswers.length === 0 && results) {
+      markResultsRevealDone(results.roundId);
+    }
+  }, [revealReady, gradingAnswers.length, results, markResultsRevealDone]);
+
+  // Phase 4: the reveal journey (RevealSequence — full-screen cascade → guided
+  // scroll → leaderboard) reports back here once it has settled, flipping the
+  // hook from "reveal" to the resting "results" intermission. Kept stable
+  // (markResultsRevealDone is itself stable) so RevealSequence's own beat
+  // timers don't churn on the ~4x/sec results-phase re-renders.
+  const handleRevealSettled = useCallback(
+    (roundId: string) => { markResultsRevealDone(roundId); },
+    [markResultsRevealDone]
+  );
 
   // Next-round countdown: a full-screen "get ready" beat for the final 5s of
   // intermission, after the grading cascade has finished. Keyed on roundId so
@@ -1004,7 +1071,6 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   const showNextRoundCountdown =
     phase === "results" &&
     !!results &&
-    !showCascade &&
     nextRoundStartsIn !== null &&
     nextRoundStartsIn > 0 &&
     nextRoundStartsIn <= NEXT_ROUND_COUNTDOWN_THRESHOLD_SECONDS &&
@@ -1173,24 +1239,30 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         )
       )}
       {phase === "scoring" && <ScoringScreen />}
-      {phase === "results" && results && userId && (
-        showCascade ? (
-          <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto py-4">
-            <GradingCascade
-              answers={gradingAnswers}
-              exiting={cascadeExiting}
-              onComplete={() => setCascadeExiting(true)}
-            />
-          </div>
-        ) : (
-          <ResultsScreen
-            results={results}
-            userId={userId}
-            nextRoundStartsIn={nextRoundStartsIn}
-            playerCount={session?.playerCount}
-            leaderboardExiting={showNextRoundCountdown}
+      {/* Reveal phase: play the full-screen reveal journey (cascade → guided
+          scroll → leaderboard), or hold a loading beat while the viewer's
+          graded answers are still in flight (never skip it). */}
+      {phase === "reveal" && (
+        showCascade && results ? (
+          <RevealSequence
+            answers={gradingAnswers}
+            leaderboardEntries={results.totals}
+            meId={userId}
+            roundId={results.roundId}
+            onSettled={handleRevealSettled}
           />
+        ) : (
+          <ScoringScreen />
         )
+      )}
+      {phase === "results" && results && userId && (
+        <ResultsScreen
+          results={results}
+          userId={userId}
+          nextRoundStartsIn={nextRoundStartsIn}
+          playerCount={session?.playerCount}
+          leaderboardExiting={showNextRoundCountdown}
+        />
       )}
       {phase === "complete" && (
         <>

@@ -42,6 +42,17 @@ export const roundDurationSeconds = (testMode: boolean): number =>
 export const roundIntervalSeconds = (testMode: boolean): number =>
   testMode ? TEST_MODE_SECONDS * 2 : ROUND_INTERVAL_SECONDS;
 
+/**
+ * Seconds of intermission AFTER a round finishes scoring before the next round
+ * starts. The next round is anchored on `scored_at + intermissionSeconds`, not
+ * `started_at + interval`, so grading latency never eats into the review window
+ * (see supabase/migrations/…_category_blitz_round_scored_at.sql). Equals the
+ * nominal interval minus the round duration, so with instant grading the
+ * overall cadence is unchanged from the old `started_at + interval` model.
+ */
+export const intermissionSeconds = (testMode: boolean): number =>
+  roundIntervalSeconds(testMode) - roundDurationSeconds(testMode);
+
 /** Seconds a freshly auto-created session dwells in the lobby, shortened in test mode. */
 export const lobbyDwellSeconds = (testMode: boolean): number =>
   testMode ? TEST_MODE_SECONDS : LOBBY_DWELL_SECONDS;

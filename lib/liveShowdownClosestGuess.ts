@@ -66,18 +66,27 @@ export function parseLargePureNumberAnswer(correctTargetRaw: string): number | n
   if (!raw) return null;
 
   const compact = raw.replace(/,/g, "");
-  if (!/^[+-]?\d+(?:\.\d+)?$/.test(compact)) {
-    return null;
+
+  // Pure numeric check — catches all standard year answers (e.g. "1453", "1969").
+  if (/^[+-]?\d+(?:\.\d+)?$/.test(compact)) {
+    const value = Number(compact);
+    if (!Number.isFinite(value)) return null;
+    if (Math.abs(value) < 100) return null;
+    const digitCount = compact.replace(/[^\d]/g, "").length;
+    if (digitCount < 3) return null;
+    return value;
   }
 
-  const value = Number(compact);
-  if (!Number.isFinite(value)) return null;
-  if (Math.abs(value) < 100) return null;
+  // Year with era suffix — catches answers like "753 BC", "500 BCE", "1066 AD".
+  // Matches a 3- or 4-digit year optionally followed by BC/BCE/AD/CE (case-insensitive).
+  const yearMatch = raw.match(/^(\d{3,4})\s*(BC|BCE|AD|CE)$/i);
+  if (yearMatch) {
+    const value = Number(yearMatch[1]);
+    if (!Number.isFinite(value)) return null;
+    return value;
+  }
 
-  const digitCount = compact.replace(/[^\d]/g, "").length;
-  if (digitCount < 3) return null;
-
-  return value;
+  return null;
 }
 
 function parseNumericGuessFromText(valueRaw: string): ParsedGuess | null {

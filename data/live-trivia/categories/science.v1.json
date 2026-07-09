@@ -1334,7 +1334,7 @@
     },
     {
       "slug": "coin-electric-unit",
-      "question": "What standard scientific unit is used to measure electrical current, named after physicist André-Marie Ampère?",
+      "question": "What standard scientific unit is used to measure electrical current, named after physicist Andr\u00e9-Marie Amp\u00e8re?",
       "answer": "Ampere",
       "answer_format": "write_in",
       "category": "Science & Tech",
@@ -1821,7 +1821,7 @@
     {
       "slug": "average-body-temperature-fahrenheit",
       "question": "What is the standard, average human body temperature in Fahrenheit rounded to the nearest tenth of a degree?",
-      "answer": "98.6°F",
+      "answer": "98.6\u00b0F",
       "answer_format": "write_in",
       "category": "Science & Tech",
       "difficulty": "easy",
@@ -1933,7 +1933,7 @@
     },
     {
       "slug": "stethoscope-invention",
-      "question": "What classic medical tool was invented in 1816 by French physician René Laennec because he felt uncomfortable placing his ear directly on women's chests?",
+      "question": "What classic medical tool was invented in 1816 by French physician Ren\u00e9 Laennec because he felt uncomfortable placing his ear directly on women's chests?",
       "answer": "The stethoscope",
       "answer_format": "write_in",
       "category": "Science & Tech",
@@ -2371,7 +2371,7 @@
     },
     {
       "slug": "mercury-syphilis-treatment",
-      "question": "What heavy metal, historically nicknamed \"quicksilver,\" was used for centuries as a standard—and toxic—treatment for syphilis before antibiotics were discovered?",
+      "question": "What heavy metal, historically nicknamed \"quicksilver,\" was used for centuries as a standard\u2014and toxic\u2014treatment for syphilis before antibiotics were discovered?",
       "answer": "Mercury",
       "answer_format": "write_in",
       "category": "Science & Tech",
@@ -2567,7 +2567,7 @@
     },
     {
       "slug": "scurvy-vitamin-c-deficiency",
-      "question": "What historical, terrifyingly named disease—caused by a vitamin C deficiency—led to bleeding gums, opening wounds, and loss of teeth for sailors on long voyages?",
+      "question": "What historical, terrifyingly named disease\u2014caused by a vitamin C deficiency\u2014led to bleeding gums, opening wounds, and loss of teeth for sailors on long voyages?",
       "answer": "Scurvy",
       "answer_format": "write_in",
       "category": "Science & Tech",
@@ -3663,6 +3663,129 @@
       "category": "Science & Tech",
       "difficulty": "medium",
       "subcategory": "physics-concepts"
+    },
+    {
+      "slug": "what-color-is-a-polar-bears-skin-underneath-its-fur",
+      "question": "What color is a polar bear's skin underneath its fur?",
+      "answer": "Black",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
+    },
+    {
+      "slug": "what-is-a-young-goat-commonly-called",
+      "question": "What is a young goat commonly called?",
+      "answer": "Kid",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "biology-human-body"
+    },
+    {
+      "slug": "which-venomous-spider-is-identifiable-by-a-red-hourglass-shape-on-its-underside",
+      "question": "Which venomous spider is identifiable by a red hourglass shape on its underside?",
+      "answer": "Black Widow",
+      "acceptableAnswers": [
+        "Black Widow Spider"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "biology-human-body"
+    },
+    {
+      "slug": "which-company-developed-the-playstation-gaming-console",
+      "question": "Which company developed the PlayStation gaming console?",
+      "answer": "Sony",
+      "acceptableAnswers": [
+        "Sony Corporation"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "who-is-generally-credited-with-inventing-the-light-bulb",
+      "question": "Who is generally credited with inventing the practical incandescent light bulb?",
+      "answer": "Thomas Edison",
+      "acceptableAnswers": [
+        "Edison",
+        "Thomas A. Edison",
+        "Thomas Alva Edison"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "which-console-was-released-by-nintendo-in-2006-popularizing-motion-controls",
+      "question": "Which console was released by Nintendo in 2006, popularizing motion controls?",
+      "answer": "Wii",
+      "acceptableAnswers": [
+        "Nintendo Wii"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "medicine-technology"
+    },
+    {
+      "slug": "how-many-planets-in-our-solar-system-are-known-to-have-rings",
+      "question": "How many planets in our solar system are known to have rings?",
+      "answer": "Four",
+      "acceptableAnswers": [
+        "4"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "astronomy-earth-science"
+    },
+    {
+      "slug": "what-color-of-visible-light-has-the-shortest-wavelength",
+      "question": "What color of visible light has the shortest wavelength?",
+      "answer": "Violet",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "easy",
+      "subcategory": "physics-concepts"
+    },
+    {
+      "slug": "what-is-the-name-of-the-supercontinent-that-existed-on-earth-millions-of-years-ago-before-breaking-apart-into-the-continents-we-know-today",
+      "question": "What is the name of the ancient supercontinent that eventually broke apart to form the continents we know today?",
+      "answer": "Pangea",
+      "acceptableAnswers": [
+        "Pangaea"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "hard",
+      "subcategory": "astronomy-earth-science"
+    },
+    {
+      "slug": "what-is-the-process-called-when-a-liquid-changes-into-a-gas-below-its-boiling-point",
+      "question": "What is the name of the process when a liquid changes into a gas below its boiling point?",
+      "answer": "Evaporation",
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "hard",
+      "subcategory": "physics-concepts"
+    },
+    {
+      "slug": "what-does-the-atomic-number-of-an-element-represent",
+      "question": "What subatomic particle's count defines an element's atomic number?",
+      "answer": "Protons",
+      "acceptableAnswers": [
+        "Number of protons",
+        "Proton count"
+      ],
+      "answer_format": "write_in",
+      "category": "Science & Tech",
+      "difficulty": "medium",
+      "subcategory": "chemistry-periodic-table"
     }
   ]
 }

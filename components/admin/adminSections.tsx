@@ -14,6 +14,7 @@ import { TriviaImageReviewSection } from "@/components/admin/sections/TriviaImag
 import { TriviaListSection } from "@/components/admin/sections/TriviaListSection";
 import { LiveTriviaInventorySection } from "@/components/admin/sections/LiveTriviaInventorySection";
 import { CategoryBlitzSection } from "@/components/admin/sections/CategoryBlitzSection";
+import { LlmCostSection } from "@/components/admin/sections/LlmCostSection";
 import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsSection";
 import { UsernameModerationSection } from "@/components/admin/sections/UsernameModerationSection";
 import { UsersSection } from "@/components/admin/sections/UsersSection";
@@ -40,7 +41,8 @@ export type AdminSection =
   | "live-trivia"
   | "live-trivia-inventory"
   | "username-moderation"
-  | "category-blitz";
+  | "category-blitz"
+  | "llm-cost";
 
 export type AdminSectionOption = {
   id: AdminSection;
@@ -104,6 +106,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "live-trivia-inventory", label: "Question Inventory",    slug: "live-trivia-inventory", status: { label: "Ready", tone: "live" }, component: LiveTriviaInventorySection },
   { id: "pickem-settlement",     label: "Pick 'Em Settlement",   slug: "pickem-settlement",     status: { label: "Ready", tone: "live" }, component: PickEmSettlementSection },
   { id: "category-blitz",           label: "Category Blitz",        slug: "category-blitz",           status: { label: "Ready", tone: "live" }, component: CategoryBlitzSection },
+  { id: "llm-cost",                 label: "LLM Cost",              slug: "llm-cost",                 status: { label: "Ready", tone: "live" }, component: LlmCostSection },
 ];
 
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
@@ -125,7 +128,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Operations",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["pickem-settlement"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["pickem-settlement", "llm-cost"].includes(opt.id)),
   },
 ];
 
@@ -148,6 +151,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "ads-create",
   "pickem-settlement",
   "category-blitz",
+  "llm-cost",
 ]);
 
 export function getAdminSectionBySlug(slug: string): AdminSectionOption | null {

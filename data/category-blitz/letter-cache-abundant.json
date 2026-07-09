@@ -1,0 +1,2612 @@
+{
+  "A fish species": [
+    "B",
+    "C",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A wild mammal": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A species of bird": [
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A tree": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "S",
+    "W"
+  ],
+  "An insect": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "H",
+    "L",
+    "M",
+    "T",
+    "W"
+  ],
+  "A dog breed": [
+    "B",
+    "C",
+    "D",
+    "G",
+    "L",
+    "P",
+    "S"
+  ],
+  "A flower": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A cat breed": [
+    "A",
+    "B",
+    "M",
+    "P",
+    "S"
+  ],
+  "A snake species": [
+    "A",
+    "B",
+    "C",
+    "G",
+    "P",
+    "R",
+    "T",
+    "W"
+  ],
+  "A reptile": [
+    "A",
+    "C",
+    "G",
+    "I",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A breed of horse": [
+    "A",
+    "C",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An amphibian": [
+    "F",
+    "N",
+    "S",
+    "T"
+  ],
+  "A dinosaur": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "I",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A mollusk": [
+    "C",
+    "M",
+    "O",
+    "S"
+  ],
+  "A type of lizard": [
+    "G",
+    "I",
+    "M"
+  ],
+  "A shark species": [
+    "B",
+    "H",
+    "L",
+    "M",
+    "N",
+    "S",
+    "T",
+    "W"
+  ],
+  "A rodent": [
+    "C",
+    "G",
+    "M",
+    "R",
+    "S"
+  ],
+  "A whale, dolphin, or porpoise": [
+    "B",
+    "H",
+    "O",
+    "P",
+    "S",
+    "W"
+  ],
+  "An animal that lays eggs": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A freshwater fish": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "A water bird": [
+    "D",
+    "G",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A saltwater fish": [
+    "B",
+    "C",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A warm-blooded animal": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A cold-blooded animal": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "G",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An animal that can fly": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "M",
+    "P",
+    "S",
+    "W"
+  ],
+  "A hoofed animal": [
+    "B",
+    "C",
+    "D",
+    "G",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A venomous animal": [
+    "B",
+    "C",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "An animal with horns or antlers": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "G",
+    "M",
+    "R",
+    "S"
+  ],
+  "A herbivore": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "G",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A household pet": [
+    "C",
+    "F",
+    "G",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A carnivore": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A domesticated animal": [
+    "C",
+    "D",
+    "G",
+    "H",
+    "P",
+    "S"
+  ],
+  "A marine animal": [
+    "C",
+    "D",
+    "H",
+    "O",
+    "S",
+    "T",
+    "W"
+  ],
+  "A pond animal": [
+    "C",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A farm animal": [
+    "C",
+    "D",
+    "G",
+    "H",
+    "P",
+    "S"
+  ],
+  "An animal that lives in water": [
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "M",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An omnivore": [
+    "B",
+    "C",
+    "H",
+    "O",
+    "P",
+    "R",
+    "S"
+  ],
+  "An Arctic or polar animal": [
+    "P",
+    "S",
+    "W"
+  ],
+  "An animal native to Africa": [
+    "B",
+    "C",
+    "E",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "W"
+  ],
+  "An animal native to Australia": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A mountain animal": [
+    "G",
+    "M",
+    "S"
+  ],
+  "A forest animal": [
+    "B",
+    "D",
+    "F",
+    "M",
+    "R",
+    "S",
+    "W"
+  ],
+  "A desert animal": [
+    "C",
+    "L",
+    "R",
+    "S"
+  ],
+  "A grazing animal": [
+    "C",
+    "D",
+    "G",
+    "H",
+    "S"
+  ],
+  "A rainforest animal": [
+    "A",
+    "C",
+    "F",
+    "G",
+    "L",
+    "M",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "A herd animal": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S"
+  ],
+  "A nocturnal animal": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A prehistoric animal": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An animal that burrows underground": [
+    "B",
+    "C",
+    "F",
+    "G",
+    "M",
+    "P",
+    "R",
+    "W"
+  ],
+  "A mythical creature": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A houseplant": [
+    "A",
+    "C",
+    "P",
+    "S"
+  ],
+  "A fruit": [
+    "A",
+    "B",
+    "C",
+    "G",
+    "L",
+    "M",
+    "O",
+    "P",
+    "S"
+  ],
+  "A wildflower": [
+    "B",
+    "C",
+    "D",
+    "P"
+  ],
+  "A vegetable": [
+    "A",
+    "B",
+    "C",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A type of pasta": [
+    "A",
+    "C",
+    "F",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A type of cheese": [
+    "B",
+    "C",
+    "F",
+    "G",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A spice or seasoning": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A dessert": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "S",
+    "T"
+  ],
+  "A cocktail or mixed drink": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A candy or sweet treat": [
+    "C",
+    "F",
+    "G",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of soup": [
+    "C",
+    "M",
+    "P",
+    "T"
+  ],
+  "A type of coffee drink": [
+    "A",
+    "C",
+    "F",
+    "L",
+    "M"
+  ],
+  "A breakfast food": [
+    "B",
+    "C",
+    "F",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A baked good": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S"
+  ],
+  "A sauce or condiment": [
+    "B",
+    "C",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A snack food": [
+    "C",
+    "P",
+    "S"
+  ],
+  "A dish you would order at a restaurant": [
+    "B",
+    "C",
+    "F",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A type of bread": [
+    "B",
+    "C",
+    "F",
+    "M",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A national cuisine": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "I",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An alcoholic beverage": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A crop grown by farmers": [
+    "B",
+    "C",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a bakery": [
+    "B",
+    "C",
+    "D",
+    "P",
+    "S"
+  ],
+  "An item sold in a butcher shop": [
+    "B",
+    "C",
+    "L",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item sold in a delicatessen": [
+    "B",
+    "C",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A sandwich": [
+    "B",
+    "C",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A culinary herb": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of cake": [
+    "C",
+    "P",
+    "S"
+  ],
+  "A pizza topping": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of meat": [
+    "B",
+    "C",
+    "L",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of bean or legume": [
+    "B",
+    "C",
+    "F",
+    "L",
+    "P",
+    "S"
+  ],
+  "A dairy product": [
+    "B",
+    "C",
+    "M"
+  ],
+  "A type of seafood": [
+    "C",
+    "L",
+    "M",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of pie": [
+    "A",
+    "B",
+    "C",
+    "P",
+    "S"
+  ],
+  "An ice cream flavor": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S"
+  ],
+  "A disease": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A cosmetic or toiletry product": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An Olympic sporting event": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A college major": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "H",
+    "M",
+    "P",
+    "S"
+  ],
+  "A type of crime": [
+    "A",
+    "B",
+    "F",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A unit of measurement": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found in a medicine cabinet": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A math term": [
+    "A",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A toy": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something with wheels": [
+    "B",
+    "C",
+    "M",
+    "S",
+    "T",
+    "W"
+  ],
+  "A bone in the human body": [
+    "C",
+    "F",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A muscle in the human body": [
+    "B",
+    "D",
+    "G",
+    "H",
+    "P",
+    "T"
+  ],
+  "An organ in the human body": [
+    "A",
+    "B",
+    "H",
+    "L",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item sold in a hardware store": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "N",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in an office supply store": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item sold in a grocery store": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a pet store": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a pharmacy": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A part of the human body": [
+    "A",
+    "C",
+    "E",
+    "F",
+    "H",
+    "L",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item sold in a toy store": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a garden center": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a kitchen": [
+    "B",
+    "C",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a sporting goods store": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a clothing store": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found in a bathroom": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in an office": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a classroom": [
+    "B",
+    "C",
+    "D",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a garage": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a hospital": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a bookstore": [
+    "B",
+    "C",
+    "M",
+    "P"
+  ],
+  "A household appliance": [
+    "D",
+    "F",
+    "M",
+    "O",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A kitchen utensil": [
+    "C",
+    "F",
+    "G",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a jewelry store": [
+    "B",
+    "C",
+    "P",
+    "R",
+    "W"
+  ],
+  "An item sold in a fabric store": [
+    "B",
+    "C",
+    "F",
+    "L",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item sold in a music store": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found in a gym": [
+    "B",
+    "D",
+    "M",
+    "P",
+    "R",
+    "T",
+    "W"
+  ],
+  "An item found in a barn": [
+    "H",
+    "P",
+    "S"
+  ],
+  "An item sold in a flower shop": [
+    "C",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An item found in a laboratory": [
+    "B",
+    "C",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A part of a standard motor vehicle": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "H",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a library": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A part of a desktop computer": [
+    "C",
+    "M",
+    "P",
+    "S"
+  ],
+  "A part of a house": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A part of a bicycle": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A part of an airplane": [
+    "C",
+    "F",
+    "S",
+    "T",
+    "W"
+  ],
+  "A part of a ship": [
+    "B",
+    "D",
+    "H",
+    "M",
+    "P",
+    "S"
+  ],
+  "A part of a guitar": [
+    "B",
+    "F",
+    "H",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A part of a castle": [
+    "B",
+    "D",
+    "G",
+    "M",
+    "P",
+    "T",
+    "W"
+  ],
+  "A part of a tree": [
+    "B",
+    "L",
+    "R",
+    "S",
+    "T"
+  ],
+  "A part of a book": [
+    "C",
+    "P"
+  ],
+  "A part of a camera": [
+    "L",
+    "S"
+  ],
+  "A part of a clock": [
+    "H",
+    "P",
+    "S"
+  ],
+  "A part of a shoe": [
+    "H",
+    "L",
+    "S",
+    "T"
+  ],
+  "A part of a bridge": [
+    "D",
+    "P",
+    "S",
+    "T"
+  ],
+  "A part of an engine": [
+    "C",
+    "P",
+    "S"
+  ],
+  "A part of a window": [
+    "F",
+    "P",
+    "S"
+  ],
+  "A part of a roof": [
+    "S"
+  ],
+  "A part of a door": [
+    "H",
+    "L",
+    "P"
+  ],
+  "A part of a church": [
+    "A",
+    "C",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A part of a theater": [
+    "B",
+    "S"
+  ],
+  "A country": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A river": [
+    "A",
+    "C",
+    "D",
+    "M",
+    "N",
+    "O",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A capital city": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A language spoken in the world": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An island": [
+    "B",
+    "C",
+    "H",
+    "M",
+    "S",
+    "T"
+  ],
+  "A nationality": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A weather condition or phenomenon": [
+    "C",
+    "D",
+    "F",
+    "H",
+    "M",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A mountain or mountain range": [
+    "A",
+    "C",
+    "E",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A body of water such as a lake or sea": [
+    "B",
+    "C",
+    "L",
+    "P",
+    "R",
+    "S"
+  ],
+  "An Asian city": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "M",
+    "S",
+    "T"
+  ],
+  "A European country": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S"
+  ],
+  "A US city": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A US state capital": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An African country": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "G",
+    "L",
+    "M",
+    "N",
+    "S",
+    "T"
+  ],
+  "An Asian country": [
+    "B",
+    "C",
+    "I",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A US state": [
+    "A",
+    "C",
+    "I",
+    "M",
+    "N",
+    "O",
+    "S",
+    "T",
+    "W"
+  ],
+  "A country in North America": [
+    "C"
+  ],
+  "An island nation": [
+    "C",
+    "F",
+    "I",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A Spanish-speaking country": [
+    "C",
+    "E",
+    "P"
+  ],
+  "A European city": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A country in the Southern Hemisphere": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A geographic feature or landform": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "I",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A world currency": [
+    "D",
+    "P",
+    "R"
+  ],
+  "A landlocked country": [
+    "A",
+    "B",
+    "C",
+    "L",
+    "M",
+    "N",
+    "S"
+  ],
+  "A type of natural disaster": [
+    "A",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A musical instrument": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A tool": [
+    "A",
+    "C",
+    "D",
+    "H",
+    "P",
+    "S",
+    "W"
+  ],
+  "A piece of furniture": [
+    "B",
+    "C",
+    "D",
+    "S",
+    "T"
+  ],
+  "An article of clothing": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of hat": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of shoe": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A gemstone": [
+    "A",
+    "C",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of fabric or cloth": [
+    "C",
+    "D",
+    "F",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of bag": [
+    "B",
+    "C",
+    "D",
+    "G",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A metal": [
+    "A",
+    "C",
+    "I",
+    "L",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of container": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of vehicle": [
+    "B",
+    "C",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A piece of jewelry": [
+    "B",
+    "C",
+    "P",
+    "R"
+  ],
+  "A mode of transportation": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of boat or watercraft": [
+    "C",
+    "D",
+    "F",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of rock or mineral": [
+    "B",
+    "C",
+    "G",
+    "L",
+    "M",
+    "O",
+    "P",
+    "S"
+  ],
+  "A color": [
+    "B",
+    "C",
+    "G",
+    "P",
+    "T",
+    "W"
+  ],
+  "A power tool": [
+    "D",
+    "S"
+  ],
+  "A type of coat or jacket": [
+    "B",
+    "P",
+    "T"
+  ],
+  "A garden tool": [
+    "H",
+    "R",
+    "S",
+    "T"
+  ],
+  "A piece of sports equipment": [
+    "B",
+    "C",
+    "D",
+    "G",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A piece of dinnerware": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "An electronic device": [
+    "C",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A type of ball": [
+    "B",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of fastener": [
+    "B",
+    "C",
+    "P",
+    "S"
+  ],
+  "A building material": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "A piece of exercise equipment": [
+    "B",
+    "D",
+    "R",
+    "T",
+    "W"
+  ],
+  "An art supply": [
+    "B",
+    "C",
+    "P"
+  ],
+  "A type of aircraft": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of weapon": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A fashion accessory": [
+    "B",
+    "C",
+    "H",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A medical profession": [
+    "D",
+    "N",
+    "P",
+    "S"
+  ],
+  "An occupation or profession": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A profession that requires a license": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "L",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A job in construction": [
+    "C",
+    "P"
+  ],
+  "A skilled trade": [
+    "B",
+    "C",
+    "E",
+    "M",
+    "P",
+    "T",
+    "W"
+  ],
+  "A religious leader": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "P",
+    "R"
+  ],
+  "A government official": [
+    "A",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S"
+  ],
+  "A medieval occupation": [
+    "B",
+    "C",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of engineer": [
+    "C",
+    "E",
+    "M",
+    "S"
+  ],
+  "A legal profession": [
+    "B",
+    "C",
+    "L",
+    "P",
+    "S"
+  ],
+  "A type of scientist": [
+    "B",
+    "C",
+    "G",
+    "P"
+  ],
+  "A profession in the arts": [
+    "A",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S",
+    "W"
+  ],
+  "A sport": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A card or board game": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S"
+  ],
+  "A type of dance": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A constellation": [
+    "C",
+    "L",
+    "P",
+    "S"
+  ],
+  "A famous landmark or monument": [
+    "B",
+    "C",
+    "E",
+    "L",
+    "P",
+    "S",
+    "T"
+  ],
+  "A fictional character from literature": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A figure from Greek or Roman mythology": [
+    "A",
+    "C",
+    "H",
+    "M",
+    "P",
+    "T"
+  ],
+  "An element on the periodic table": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "A programming language": [
+    "C",
+    "P"
+  ],
+  "A famous scientist": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "M",
+    "N",
+    "P",
+    "T"
+  ],
+  "A famous painter or sculptor": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "R",
+    "T"
+  ],
+  "A musical genre": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A video game franchise or series": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A chemical compound": [
+    "A",
+    "C",
+    "M",
+    "P",
+    "S",
+    "W"
+  ],
+  "A species of primate": [
+    "B",
+    "C",
+    "G",
+    "M",
+    "O",
+    "S"
+  ],
+  "A historical time period or era": [
+    "B",
+    "C",
+    "D",
+    "I",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A famous philosopher": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S"
+  ],
+  "A type of mushroom or fungus": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A famous composer": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A fictional superhero or supervillain": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "I",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An ancient civilization or empire": [
+    "A",
+    "C",
+    "E",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A major world city": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A flowering plant": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of tea": [
+    "B",
+    "C",
+    "G",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "W"
+  ],
+  "A national park": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "G",
+    "R",
+    "S"
+  ],
+  "A type of military rank or title": [
+    "A",
+    "C",
+    "G",
+    "L",
+    "M",
+    "P",
+    "S"
+  ],
+  "A type of fuel or energy source": [
+    "C",
+    "D",
+    "P",
+    "S",
+    "W"
+  ],
+  "A famous mathematician": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F",
+    "G",
+    "L",
+    "N",
+    "P",
+    "R"
+  ],
+  "A character from the Bible": [
+    "A",
+    "C",
+    "D",
+    "E",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A substance found in the human body": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of bird of prey": [
+    "B",
+    "C",
+    "E",
+    "F",
+    "H",
+    "O",
+    "S"
+  ],
+  "A type of exercise or workout": [
+    "C",
+    "D",
+    "L",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A type of building or structure": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of wood": [
+    "B",
+    "C",
+    "M",
+    "O",
+    "P",
+    "R",
+    "T",
+    "W"
+  ],
+  "A character from a Disney movie": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A common surname": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An endangered species": [
+    "B",
+    "C",
+    "G",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A holiday or celebration": [
+    "C",
+    "E",
+    "H",
+    "P"
+  ],
+  "A famous athlete": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous film director": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A character from a Shakespeare play": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "I",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A type of medicine or drug": [
+    "A",
+    "C",
+    "I",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An animal commonly found in a zoo": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous explorer": [
+    "C",
+    "D",
+    "M"
+  ],
+  "A type of government or political system": [
+    "A",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A famous inventor": [
+    "B",
+    "E",
+    "F",
+    "M",
+    "T",
+    "W"
+  ],
+  "A famous author or writer": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An automobile brand or manufacturer": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of berry": [
+    "B",
+    "C",
+    "S"
+  ],
+  "A famous actor or actress": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous singer": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A genre of film or television": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous painting": [
+    "G",
+    "M",
+    "S",
+    "T"
+  ]
+}

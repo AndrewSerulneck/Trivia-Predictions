@@ -1293,7 +1293,7 @@
     },
     {
       "slug": "titanic-cal-hockley-actor",
-      "question": "Who played the arrogant, wealthy antagonist Cal Hockley, serving as Rose's controlling fiancé aboard the ill-fated liner in Titanic?",
+      "question": "Who played the arrogant, wealthy antagonist Cal Hockley, serving as Rose's controlling fianc\u00e9 aboard the ill-fated liner in Titanic?",
       "answer": "Billy Zane",
       "answer_format": "write_in",
       "category": "Movies",
@@ -1327,7 +1327,7 @@
       "acceptableAnswers": [
         "Gollum",
         "Smeagol",
-        "Sméagol"
+        "Sm\u00e9agol"
       ],
       "subcategory": "actors-performers"
     },
@@ -1525,7 +1525,7 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Timothee Chalamet",
-        "Timothée Chalamet",
+        "Timoth\u00e9e Chalamet",
         "Chalamet"
       ],
       "subcategory": "actors-performers"
@@ -1782,7 +1782,7 @@
     {
       "slug": "joker-2-subtitle",
       "question": "What is the official subtitle of the 2024 Joker sequel starring Joaquin Phoenix and Lady Gaga?",
-      "answer": "Folie à Deux",
+      "answer": "Folie \u00e0 Deux",
       "answer_format": "write_in",
       "category": "Movies",
       "difficulty": "easy",
@@ -1913,7 +1913,7 @@
     },
     {
       "slug": "schindlers-list-amon-goth-actor",
-      "question": "Who received critical acclaim for his deeply unsettling performance as the sadistic Nazi concentration camp commandant Amon Göth in Schindler's List?",
+      "question": "Who received critical acclaim for his deeply unsettling performance as the sadistic Nazi concentration camp commandant Amon G\u00f6th in Schindler's List?",
       "answer": "Ralph Fiennes",
       "answer_format": "write_in",
       "category": "Movies",
@@ -2105,9 +2105,9 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Alfonso Cuaron",
-        "Alfonso Cuarón",
+        "Alfonso Cuar\u00f3n",
         "Cuaron",
-        "Cuarón"
+        "Cuar\u00f3n"
       ],
       "subcategory": "awards-history-industry"
     },
@@ -2296,13 +2296,13 @@
     {
       "slug": "nomadland-director",
       "question": "Which acclaimed female filmmaker won the Academy Award for Best Director for helming the 2020 neo-western drama Nomadland?",
-      "answer": "Chloé Zhao",
+      "answer": "Chlo\u00e9 Zhao",
       "answer_format": "write_in",
       "category": "Movies",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Chloe Zhao",
-        "Chloé Zhao",
+        "Chlo\u00e9 Zhao",
         "Zhao"
       ],
       "subcategory": "awards-history-industry"
@@ -2388,7 +2388,7 @@
     },
     {
       "slug": "tr-lydia-tar-actress-2",
-      "question": "Who earned widespread critical acclaim for portraying Lydia Tár, an elite, complex orchestral conductor facing a public downfall in the 2022 film Tár?",
+      "question": "Who earned widespread critical acclaim for portraying Lydia T\u00e1r, an elite, complex orchestral conductor facing a public downfall in the 2022 film T\u00e1r?",
       "answer": "Cate Blanchett",
       "answer_format": "write_in",
       "category": "Movies",
@@ -2696,7 +2696,7 @@
     {
       "slug": "la-vie-en-rose-marion-cotillard",
       "question": "Which singer was played by Marion Cotillard in the 2007 film La Vie en Rose?",
-      "answer": "Édith Piaf",
+      "answer": "\u00c9dith Piaf",
       "category": "Movies",
       "difficulty": "easy",
       "subcategory": "biographical-films"
@@ -3154,7 +3154,7 @@
     },
     {
       "slug": "quote-bruce-lee-water",
-      "question": "Which iconic martial artist and actor famously advised philosophers to 'Empty your mind, be formless, shapeless — like water'?",
+      "question": "Which iconic martial artist and actor famously advised philosophers to 'Empty your mind, be formless, shapeless \u2014 like water'?",
       "answer": "Bruce Lee",
       "answer_format": "write_in",
       "category": "Movies",
@@ -4296,7 +4296,7 @@
     },
     {
       "slug": "raging-bull-opening",
-      "question": "What movie starts with this monologue by Robert de Niro: 'I remember those cheers. They still ring in my ears. After years, they remain in my thoughts. Go to one night, I took off my robe, and what’d I do? I forgot to wear shorts?'",
+      "question": "What movie starts with this monologue by Robert de Niro: 'I remember those cheers. They still ring in my ears. After years, they remain in my thoughts. Go to one night, I took off my robe, and what\u2019d I do? I forgot to wear shorts?'",
       "answer": "Raging Bull",
       "category": "Movies",
       "difficulty": "easy",
@@ -4344,7 +4344,7 @@
     },
     {
       "slug": "fight-club-opening",
-      "question": "In what movie does the opening line read: 'People are always asking me if I know Tyler Durden…?'",
+      "question": "In what movie does the opening line read: 'People are always asking me if I know Tyler Durden\u2026?'",
       "answer": "Fight Club",
       "category": "Movies",
       "difficulty": "easy",
@@ -4650,6 +4650,83 @@
       "category": "Movies",
       "difficulty": "medium",
       "subcategory": "awards-history-industry"
+    },
+    {
+      "slug": "what-is-the-name-of-marios-younger-brother-in-the-super-mario-bros-video-game-franchise",
+      "question": "What is the name of Mario's younger brother in the Super Mario Bros. video game franchise?",
+      "answer": "Luigi",
+      "answer_format": "write_in",
+      "category": "Movies",
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
+    },
+    {
+      "slug": "what-is-the-name-of-the-wizarding-school-attended-by-harry-potter",
+      "question": "What is the name of the wizarding school attended by Harry Potter?",
+      "answer": "Hogwarts",
+      "answer_format": "write_in",
+      "category": "Movies",
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
+    },
+    {
+      "slug": "which-acclaimed-composer-is-known-for-creating-the-scores-for-films-such-as-inception-dune-and-the-dark-knight",
+      "question": "Which acclaimed composer is known for creating the scores for films such as 'Inception', 'Dune', and 'The Dark Knight'?",
+      "answer": "Hans Zimmer",
+      "acceptableAnswers": [
+        "Zimmer"
+      ],
+      "answer_format": "write_in",
+      "category": "Movies",
+      "difficulty": "hard",
+      "subcategory": "plot-quotes-trivia"
+    },
+    {
+      "slug": "which-horror-film-franchise-features-a-masked-killer-known-as-ghostface",
+      "question": "Which horror film franchise features a masked killer known as Ghostface?",
+      "answer": "Scream",
+      "answer_format": "write_in",
+      "category": "Movies",
+      "difficulty": "medium",
+      "subcategory": "characters-lore"
+    },
+    {
+      "slug": "who-played-the-role-of-jack-dawson-in-the-film-titanic",
+      "question": "Who played Jack Dawson in the 1997 film 'Titanic'?",
+      "answer": "Leonardo DiCaprio",
+      "acceptableAnswers": [
+        "Leo DiCaprio",
+        "DiCaprio"
+      ],
+      "answer_format": "write_in",
+      "category": "Movies",
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
+    },
+    {
+      "slug": "who-voiced-the-character-of-genie-in-the-original-1992-animated-disney-film-aladdin",
+      "question": "Who voiced the Genie in Disney's 1992 animated film 'Aladdin'?",
+      "answer": "Robin Williams",
+      "acceptableAnswers": [
+        "Williams"
+      ],
+      "answer_format": "write_in",
+      "category": "Movies",
+      "difficulty": "hard",
+      "subcategory": "characters-lore"
+    },
+    {
+      "slug": "who-wrote-and-directed-the-critically-acclaimed-horror-film-get-out",
+      "question": "Who wrote and directed the critically acclaimed horror film 'Get Out'?",
+      "answer": "Jordan Peele",
+      "acceptableAnswers": [
+        "Peele",
+        "Jordan P."
+      ],
+      "answer_format": "write_in",
+      "category": "Movies",
+      "difficulty": "hard",
+      "subcategory": "plot-quotes-trivia"
     }
   ]
 }

@@ -1,15 +1,18 @@
 /**
- * Shared helpers for computing Category Blitz `allowedLetters`.
+ * Shared helpers for computing which letters are "abundant" for a category.
  *
- * A round draws ONE letter and applies it to all 12 categories in a set, so a
- * letter is only safe if enough of the set's categories have a common answer
- * starting with it. These helpers ask a model, per category, which of the 18
- * game letters are "live," and reduce that to a per-set letter pool.
+ * The game is organized letter-first: for each of the 18 game letters we keep
+ * the list of categories that have an ABUNDANCE of common answers starting with
+ * it (default: ≥3). At round time the runtime picks a letter and draws 12
+ * categories at random from that letter's vetted pool, so every category on the
+ * board is guaranteed to have several answers for the called letter.
+ *
+ * These helpers ask a model, per category, which of the 18 game letters clear
+ * the abundance bar, then invert that into a letter → categories index.
  *
  * Consumed by:
- *   scripts/backfill-category-blitz-letters.cjs  (recompute letters for existing sets)
- *   scripts/build-category-blitz-sets.cjs        (compose mixed sets from the pool)
- * Runtime consumer: lib/categoryBlitz.ts (pickLetterForSet)
+ *   scripts/build-category-blitz-letter-index.cjs  (build the letter → categories index)
+ * Runtime consumer: lib/categoryBlitz.ts (letter-first round assembly)
  */
 
 const fs = require("node:fs");
@@ -19,6 +22,12 @@ const Anthropic = require("@anthropic-ai/sdk");
 const LETTERS = "ABCDEFGHILMNOPRSTW".split("");
 
 const DEFAULT_MODEL = process.env.CATEGORY_BLITZ_LETTER_MODEL || "claude-opus-4-8";
+
+// A letter counts as "abundant" for a category only if a typical adult can name
+// at least this many common answers starting with it. This is the bar that
+// keeps single-answer traps (e.g. "P" for "A US state" → only Pennsylvania) out
+// of a letter's category pool.
+const DEFAULT_ABUNDANCE = 3;
 
 function resolveApiKey() {
   // Deployed envs set the SDK default ANTHROPIC_API_KEY; locally the repo's
@@ -41,33 +50,33 @@ function makeClient() {
   return new Ctor({ apiKey });
 }
 
-function buildPrompt(category) {
+function buildPrompt(category, threshold = DEFAULT_ABUNDANCE) {
   return `You are analyzing a category for a fast word game.
 
 Allowed letters (the only ones that can be called): ${LETTERS.join(" ")}
 
 Category: "${category}"
 
-For each allowed letter, decide: could a typical adult quickly name at least one COMMON answer that genuinely IS-A member of this category AND starts with that letter (ignoring a leading "a", "an", or "the")? Only count answers a normal person would actually think of — exclude obscure, technical, or stretch answers.
+For each allowed letter, decide: could a typical adult quickly name at least ${threshold} DIFFERENT common answers that genuinely IS-A member of this category AND start with that letter (ignoring a leading "a", "an", or "the")? Only count answers a normal person would actually think of — exclude obscure, technical, or stretch answers. A letter passes ONLY if there are ${threshold} or more such common answers (e.g. if a category has just one well-known answer for a letter, that letter FAILS).
 
-Return ONLY a JSON array of the uppercase letters that pass. No explanation.`;
+Do this evaluation silently in your head. Output ONLY the final JSON array of the uppercase letters that pass, e.g. ["A","C","M"]. No reasoning, no preamble, no per-letter notes — just the array.`;
 }
 
-/** Ask the model which of the 18 letters are live for one category. Returns a Set. */
-async function liveLettersFor(client, model, category) {
+/** Ask the model which of the 18 letters are abundant (≥threshold answers) for one category. Returns a Set. */
+async function liveLettersFor(client, model, category, threshold = DEFAULT_ABUNDANCE) {
   const message = await client.messages.create({
     model,
-    max_tokens: 128,
-    messages: [{ role: "user", content: buildPrompt(category) }],
+    max_tokens: 256,
+    messages: [{ role: "user", content: buildPrompt(category, threshold) }],
   });
   const text = message.content
     .filter((b) => b.type === "text")
     .map((b) => b.text)
     .join("");
-  // Take the first flat [...] group; some replies append a second array or prose.
-  const match = text.match(/\[[^[\]]*\]/);
-  if (!match) throw new Error(`No JSON array for "${category}": ${text.slice(0, 120)}`);
-  const parsed = JSON.parse(match[0]);
+  // Take the LAST flat [...] group so any leading reasoning prose is ignored.
+  const matches = text.match(/\[[^[\]]*\]/g);
+  if (!matches) throw new Error(`No JSON array for "${category}": ${text.slice(0, 120)}`);
+  const parsed = JSON.parse(matches[matches.length - 1]);
   return new Set(
     parsed.map((l) => String(l).toUpperCase()).filter((l) => LETTERS.includes(l)),
   );
@@ -118,7 +127,7 @@ async function mapPool(items, concurrency, fn) {
  * (category text → letter array) so unchanged categories are never re-billed.
  * Mutates and rewrites the cache as new categories are analyzed.
  */
-async function resolveLiveLetters(categories, { client, model, cachePath, concurrency, onProgress }) {
+async function resolveLiveLetters(categories, { client, model, cachePath, concurrency, threshold = DEFAULT_ABUNDANCE, onProgress }) {
   const cache = fs.existsSync(cachePath)
     ? JSON.parse(fs.readFileSync(cachePath, "utf8"))
     : {};
@@ -127,7 +136,7 @@ async function resolveLiveLetters(categories, { client, model, cachePath, concur
 
   let done = 0;
   await mapPool(missing, concurrency, async (cat) => {
-    const live = await liveLettersFor(client, model, cat);
+    const live = await liveLettersFor(client, model, cat, threshold);
     cache[cat] = sortByPool(live);
     fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2) + "\n", "utf8");
     done += 1;
@@ -138,12 +147,32 @@ async function resolveLiveLetters(categories, { client, model, cachePath, concur
   return { liveMap, analyzed: missing.length, cached: distinct.length - missing.length };
 }
 
+/**
+ * Invert per-category abundant letters into a letter → categories index.
+ * `categories` preserves pool order so each letter's list stays stable/readable.
+ * Returns { index: { [letter]: string[] }, counts: { [letter]: number } }.
+ */
+function invertToLetterIndex(categories, liveMap) {
+  const index = Object.fromEntries(LETTERS.map((l) => [l, []]));
+  for (const cat of categories) {
+    const live = liveMap.get(cat);
+    if (!live) continue;
+    for (const letter of LETTERS) {
+      if (live.has(letter)) index[letter].push(cat);
+    }
+  }
+  const counts = Object.fromEntries(LETTERS.map((l) => [l, index[l].length]));
+  return { index, counts };
+}
+
 module.exports = {
   LETTERS,
   DEFAULT_MODEL,
+  DEFAULT_ABUNDANCE,
   makeClient,
   liveLettersFor,
   allowedForSet,
+  invertToLetterIndex,
   mapPool,
   resolveLiveLetters,
   sortByPool,

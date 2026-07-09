@@ -446,6 +446,8 @@ export interface CategoryBlitzSession {
   scheduledEndAt: string | null;
   /** When the lobby's round should start (set on auto-created sessions). Null for manual sessions the admin starts explicitly. */
   startsAt:       string | null;
+  /** Pinned once at session creation — see docs/category-blitz-no-grading-analysis.md Root Cause 2 for why this must not be re-negotiated per-request. */
+  testMode:       boolean;
   createdAt:      string;
   completedAt:    string | null;
   /**
@@ -467,6 +469,8 @@ export interface CategoryBlitzRound {
   endsAt:           string;
   status:           CategoryBlitzRoundStatus;
   createdAt:        string;
+  /** When scoreRound finished grading and marked the round complete; null until then. */
+  scoredAt:         string | null;
 }
 
 export interface CategoryBlitzSubmission {

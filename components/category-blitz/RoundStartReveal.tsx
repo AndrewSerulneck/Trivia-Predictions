@@ -25,6 +25,16 @@ interface RoundStartRevealProps {
 
 const LETTER_LAND_MS = 0.5; // seconds; shockwave + cascade key off this
 
+/**
+ * Conservative upper bound on how long this whole animation can possibly run
+ * (letter-land delay + up to 12 staggered category rows + each row's own
+ * transition), with headroom for a slow device. Exported so callers that
+ * need to decide "has this round's reveal definitely already finished" —
+ * e.g. CategoryBlitzGame skipping the replay on a mid-round reload — don't
+ * have to hand-derive it from the animation constants above.
+ */
+export const ROUND_START_REVEAL_MAX_MS = 3000;
+
 const list: Variants = {
   hidden: {},
   show: {

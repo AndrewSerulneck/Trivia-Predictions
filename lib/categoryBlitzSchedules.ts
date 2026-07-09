@@ -47,6 +47,19 @@ function toSchedule(row: ScheduleRow): CategoryBlitzSchedule {
 const SELECT_COLS =
   "id, venue_id, title, start_time, timezone, recurring_type, recurring_days, window_minutes, is_active, created_at, updated_at";
 
+/** Get a single schedule by id, or null if not found. */
+export async function getSchedule(scheduleId: string): Promise<CategoryBlitzSchedule | null> {
+  assertAdmin();
+  const { data, error } = await supabaseAdmin!
+    .from("category_blitz_schedules")
+    .select(SELECT_COLS)
+    .eq("id", scheduleId)
+    .maybeSingle<ScheduleRow>();
+
+  if (error) throw new Error(error.message || "Failed to load schedule.");
+  return data ? toSchedule(data) : null;
+}
+
 /** List all active schedules for a venue, ordered by start time. */
 export async function listSchedules(venueId: string): Promise<CategoryBlitzSchedule[]> {
   assertAdmin();
@@ -140,15 +153,27 @@ export async function updateSchedule(
   return toSchedule(data);
 }
 
-/** Soft-delete (deactivate) a schedule. */
-export async function deleteSchedule(scheduleId: string): Promise<void> {
+/** Soft-delete (deactivate) a schedule and return its venue id (or null if not found). */
+export async function deleteSchedule(scheduleId: string): Promise<string | null> {
   assertAdmin();
+
+  // Fetch venue_id before soft-deleting so the caller can end any running auto session.
+  const { data: schedule } = await supabaseAdmin!
+    .from("category_blitz_schedules")
+    .select("venue_id")
+    .eq("id", scheduleId)
+    .maybeSingle<{ venue_id: string }>();
+
+  const venueId = schedule?.venue_id ?? null;
+
   const { error } = await supabaseAdmin!
     .from("category_blitz_schedules")
     .update({ is_active: false })
     .eq("id", scheduleId);
 
   if (error) throw new Error(error.message || "Failed to delete schedule.");
+
+  return venueId;
 }
 
 // ── Next-occurrence computation ───────────────────────────────────────────────

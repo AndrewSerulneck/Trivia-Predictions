@@ -31,10 +31,11 @@
 - **Preserve current local file contents when scripting:** Any script that updates trivia JSON must read the current on-disk file first and only make the requested incremental changes.
 
 ## Category Blitz Source of Truth
-- **The pool is canonical: `data/category-blitz/category-pool.json`.** This is the library of all categories. To add categories, append them here (a `theme` tag is an optional internal mixing aid, not a gameplay concept — rounds are always mixed). Only ADD to the pool; keep existing good categories.
-- **`data/category-blitz/category-sets.json` is GENERATED, not hand-edited.** It is built from the pool by `npm run category-blitz:build` (`scripts/build-category-blitz-sets.cjs`), which composes mixed sets of 12 and computes each set's derived `allowedLetters`. After editing the pool, re-run the build. A letter cache (`data/category-blitz/letter-cache.json`) means only new categories are billed to the model.
-- **Always follow `data/category-blitz/CATEGORY_TEST.md` when writing or evaluating categories:** Every category must pass BOTH the Is-A gate (objective, definitional) and the Letter-Coverage gate (broad; relaxed to ~10+/18 since `allowedLetters` now filters per set). That file contains the canonical generation prompt — reuse it rather than re-deriving the rules.
-- **Never hand-write `allowedLetters`:** it is model-derived. `npm run category-blitz:letters` recomputes it for the existing sets in place (used only when hand-editing a set); the normal path is `category-blitz:build`.
+- **The game is LETTER-FIRST.** A round picks one usable letter, then draws 12 categories at random from that letter's vetted pool — so boards are freshly assembled every round and every category is guaranteed several common answers for the called letter (no single-answer traps like "P" for "A US state").
+- **The pool is canonical: `data/category-blitz/category-pool.json`.** This is the library of all categories. To add categories, append them here (a `theme` tag is an optional legacy field, not used by the letter-first build). Only ADD to the pool; keep existing good categories.
+- **`data/category-blitz/category-letter-index.json` is GENERATED, not hand-edited.** It is built from the pool by `npm run category-blitz:build` (`scripts/build-category-blitz-letter-index.cjs`), which asks the model, per category, which letters have an ABUNDANCE of common answers (≥3, `--threshold`), then inverts that into `letters[L] → [categories]` plus `usableLetters` (letters with ≥12 categories). After editing the pool, re-run the build. A cache (`data/category-blitz/letter-cache-abundant.json`) means only new categories are billed to the model.
+- **Always follow `data/category-blitz/CATEGORY_TEST.md` when writing or evaluating categories:** Every category must pass BOTH the Is-A gate (objective, definitional) and the Letter-Coverage gate (broad). That file contains the canonical generation prompt — reuse it rather than re-deriving the rules.
+- **The abundance bar is model-derived, never hand-authored.** Don't hand-edit `category-letter-index.json` or the cache; re-run `npm run category-blitz:build` (add `--dry-run` to preview per-letter counts without writing).
 
 ## Architecture & Database Patterns
 - **Client Queries:** Use `lib/supabase.ts` via `createClient(url, anonKey)`. Subject to RLS.
@@ -48,3 +49,12 @@
 - **Functions:** Prefer arrow functions for components and utilities.
 - **Imports:** Always use absolute path alias `@/` (e.g., `@/lib/supabase`, `@/components/ui/PageShell`). No relative imports (`../`).
 - **Styling:** Tailwind utility classes only. No custom CSS, no CSS modules, no inline `style={{}}`. Design tokens reside in `lib/themeTokens.ts`.
+
+## Manual Testing & Auth Storage
+- **Dual-layer auth identity:** User identity (`tp_user_id`, `tp_venue_id`) and session (`tp_sess` when `SESSION_SECRET` is configured) are stored **both in cookies and localStorage** by the client.
+  - **Cookies** (`lib/storage.ts` — `setCookie`, `readCookie`): Server-side gate in `proxy.ts` uses these to enforce access control on every request. Direct navigation (e.g., Playwright, curl, direct-to-URL) will redirect to `/` if cookies are missing — **even if localStorage is populated**.
+  - **localStorage** (`lib/storage.ts` — `writeLocalStorage`, `readLocalStorage`): Client-side components use these for display and temporary state; `getVenueId()` and `getUserId()` fall back to cookies if localStorage is empty, so cookies are the only essential layer.
+  - **Session cookies** (`lib/serverSession.ts`): When `SESSION_SECRET` is set (production, or enforced locally), the `tp_sess` cookie must be a valid HMAC-signed payload. Unsigned payloads will be rejected. Use `createSessionCookie(userId)` to generate a valid value, or see [Phase 2 optional tooling](#phase-2--ship-a-reusable-print-test-auth-script) for a helper script.
+- **For test harnesses:** Always set cookies before navigating. Populate localStorage only if you need to test client-side fallback behavior (rare). Setting cookies via `page.context().addCookies([...])` (Playwright), `-b` (curl), or equivalent for your tool is required for direct navigation to succeed.
+- **Source of truth:** `proxy.ts` (server-side route gate), `lib/storage.ts` (read/write contract), `lib/serverSession.ts` (signature validation).
+

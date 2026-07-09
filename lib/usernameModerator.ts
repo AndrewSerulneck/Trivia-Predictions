@@ -2,6 +2,7 @@
  * Username moderation — Phase 1: static blocklist + leet-speak normalization.
  * Phase 2: Claude Haiku AI classification for anything the static check misses.
  */
+import { trackAnthropicUsage } from "@/lib/llmCostTracker";
 
 export type ModerationResult =
   | { allowed: true }
@@ -235,6 +236,11 @@ export async function checkUsernameAI(username: string): Promise<ModerationResul
       system: MODERATION_SYSTEM_PROMPT,
       messages: [{ role: "user", content: `Username: "${username}"` }],
     });
+
+    // Track cost — fire-and-forget.
+    trackAnthropicUsage(message.usage, "claude-haiku-4-5", "username_moderation", {
+      username: username.slice(0, 50),
+    }).catch(() => {});
 
     const text = message.content.find((b) => b.type === "text")?.text ?? "";
     const parsed = JSON.parse(text) as HaikuResponse;

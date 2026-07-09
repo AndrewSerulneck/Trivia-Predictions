@@ -80,7 +80,6 @@ export function TriviaPendingReviewSection() {
     setLoading(true);
     setError("");
     setSuccess("");
-    setSelectedIds({});
     setEditingId(null);
     setEditDraft(null);
     try {
@@ -120,6 +119,7 @@ export function TriviaPendingReviewSection() {
 
   useEffect(() => {
     setCategoryFilter("all");
+    setSelectedIds({});
     setPage(1);
     void fetchPending(activeTab, 1);
   }, [activeTab, fetchPending]);
@@ -525,39 +525,51 @@ export function TriviaPendingReviewSection() {
           </div>
 
           {liveExportItems.length === 0 ? (
-            <div className="mt-4 rounded-lg border border-dashed border-indigo-300 bg-white/70 px-4 py-6 text-sm text-slate-500">
+            <div className="mt-4 rounded-lg border border-dashed border-slate-400 bg-white/70 px-4 py-6 text-sm text-slate-500">
               Select Speed Trivia pending questions, then use <span className="font-semibold text-slate-700">Add To Live Export List</span>.
             </div>
           ) : (
-            <div className="mt-4 space-y-3">
-              {liveExportItems.map((item) => (
-                <div key={item.sourceId} className="rounded-lg border border-indigo-200 bg-white p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="text-xs font-semibold uppercase tracking-wide text-indigo-700">
-                        {item.category} • {item.difficulty}
-                      </div>
-                      <div className="font-semibold text-slate-900">{item.question}</div>
-                      <div className="text-sm text-slate-700">
-                        <span className="font-semibold">Answer:</span> {item.answer}
-                      </div>
-                      {item.acceptableAnswers && item.acceptableAnswers.length > 0 ? (
-                        <div className="text-sm text-slate-600">
-                          <span className="font-semibold">Also accept:</span> {item.acceptableAnswers.join(", ")}
-                        </div>
-                      ) : null}
-                      <div className="text-xs text-slate-500">Slug: {item.slug}</div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeLiveExportItem(item.sourceId)}
-                      className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-300">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-slate-300 bg-slate-800">
+                    <th className="px-2 py-1.5 text-left font-semibold uppercase tracking-wide text-white">#</th>
+                    <th className="px-2 py-1.5 text-left font-semibold uppercase tracking-wide text-white">Category</th>
+                    <th className="px-2 py-1.5 text-left font-semibold uppercase tracking-wide text-white">Question</th>
+                    <th className="px-2 py-1.5 text-left font-semibold uppercase tracking-wide text-white">Answer</th>
+                    <th className="px-2 py-1.5 text-right font-semibold uppercase tracking-wide text-white"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {liveExportItems.map((item, index) => (
+                    <tr key={item.sourceId} className="border-b border-slate-200 hover:bg-slate-100 last:border-b-0">
+                      <td className="px-2 py-1.5 text-slate-400">{index + 1}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5">
+                        <span className="rounded bg-slate-200 px-1.5 py-0.5 font-medium text-slate-700">{item.category}</span>
+                        <span className="ml-1 text-slate-400">{item.difficulty}</span>
+                      </td>
+                      <td className="max-w-[20rem] truncate px-2 py-1.5 text-slate-900" title={item.question}>
+                        {item.question}
+                      </td>
+                      <td className="max-w-[14rem] truncate px-2 py-1.5 text-slate-700" title={`${item.answer}${item.acceptableAnswers?.length ? ` (also accept: ${item.acceptableAnswers.join(", ")})` : ""}`}>
+                        {item.answer}
+                        {item.acceptableAnswers && item.acceptableAnswers.length > 0 ? (
+                          <span className="ml-1 text-slate-400">+{item.acceptableAnswers.length}</span>
+                        ) : null}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-1.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => removeLiveExportItem(item.sourceId)}
+                          className="rounded bg-slate-200 px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-300"
+                        >
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

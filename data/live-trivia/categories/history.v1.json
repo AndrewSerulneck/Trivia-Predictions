@@ -109,7 +109,7 @@
     {
       "slug": "aztec-empire-conqueror",
       "question": "Which Spanish conquistador led the expedition that caused the fall of the Aztec Empire?",
-      "answer": "Hernán Cortés",
+      "answer": "Hern\u00e1n Cort\u00e9s",
       "answer_format": "write_in",
       "category": "History & Government",
       "difficulty": "medium",
@@ -1005,7 +1005,7 @@
       "category": "History & Government",
       "difficulty": "easy",
       "acceptableAnswers": [
-        "Juan Sebastián Elcano"
+        "Juan Sebasti\u00e1n Elcano"
       ],
       "answer_format": "write_in",
       "subcategory": "ancient-medieval"
@@ -1339,7 +1339,7 @@
     },
     {
       "slug": "jose-cuervo",
-      "question": "Was José Cuervo a real person? Answer yes or no.",
+      "question": "Was Jos\u00e9 Cuervo a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History & Government",
       "difficulty": "easy",
@@ -1795,7 +1795,7 @@
     },
     {
       "slug": "missouri-compromise",
-      "question": "What 1820 compromise banned slavery north of the 36°30' parallel in the Louisiana Territory?",
+      "question": "What 1820 compromise banned slavery north of the 36\u00b030' parallel in the Louisiana Territory?",
       "answer": "Missouri Compromise",
       "answer_format": "write_in",
       "category": "History & Government",
@@ -2138,7 +2138,7 @@
     {
       "slug": "detente-cold-war",
       "question": "What term describes the easing of Cold War tensions between the U.S. and USSR during the 1970s?",
-      "answer": "Détente",
+      "answer": "D\u00e9tente",
       "answer_format": "write_in",
       "category": "History & Government",
       "difficulty": "hard",
@@ -2510,7 +2510,7 @@
     },
     {
       "slug": "quote-jfk-ask-not",
-      "question": "Which US President declared during his 1961 inaugural address, 'Ask not what your country can do for you—ask what you can do for your country'?",
+      "question": "Which US President declared during his 1961 inaugural address, 'Ask not what your country can do for you\u2014ask what you can do for your country'?",
       "answer": "JFK",
       "acceptableAnswers": [
         "Kennedy",
@@ -3422,7 +3422,7 @@
       "answer": "Genghis Khan",
       "acceptableAnswers": [
         "Chinggis Khan",
-        "Temüjin"
+        "Tem\u00fcjin"
       ],
       "category": "History & Government",
       "difficulty": "medium",
@@ -3599,7 +3599,7 @@
     },
     {
       "slug": "joan-of-arc-orleans",
-      "question": "Which French teenaged peasant girl led the French army to a pivotal victory at Orléans during the Hundred Years' War?",
+      "question": "Which French teenaged peasant girl led the French army to a pivotal victory at Orl\u00e9ans during the Hundred Years' War?",
       "answer": "Joan of Arc",
       "answer_format": "write_in",
       "category": "History & Government",
@@ -3662,14 +3662,14 @@
     },
     {
       "slug": "chichen-itza-pyramid",
-      "question": "Which Maya city on Mexico's Yucatán Peninsula contains the famous step pyramid known as El Castillo?",
+      "question": "Which Maya city on Mexico's Yucat\u00e1n Peninsula contains the famous step pyramid known as El Castillo?",
       "answer": "Chichen Itza",
       "answer_format": "write_in",
       "category": "History & Government",
       "difficulty": "hard",
       "acceptableAnswers": [
         "Chichen Itza",
-        "Chichén Itzá"
+        "Chich\u00e9n Itz\u00e1"
       ],
       "subcategory": "ancient-medieval"
     },
@@ -5563,6 +5563,206 @@
       "category": "History & Government",
       "difficulty": "medium",
       "subcategory": "ancient-medieval"
+    },
+    {
+      "slug": "the-word-wiki-from-wikipedia-comes-from-the-hawaiian-word-for-what",
+      "question": "The word \"wiki\" from Wikipedia comes from the Hawaiian word for what?",
+      "answer": "Fast",
+      "acceptableAnswers": [
+        "Quick"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
+    },
+    {
+      "slug": "which-greek-mythological-figure-flew-too-close-to-the-sun",
+      "question": "Which Greek mythological figure flew too close to the sun?",
+      "answer": "Icarus",
+      "acceptableAnswers": [
+        "Ikarus"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "ancient-medieval"
+    },
+    {
+      "slug": "which-philosopher-is-famous-for-the-phrase-i-think-therefore-i-am",
+      "question": "Which philosopher is famous for the phrase \"I think, therefore I am\"?",
+      "answer": "Ren\u00e9 Descartes",
+      "acceptableAnswers": [
+        "Descartes",
+        "Rene Descartes"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "famous-figures-quotes"
+    },
+    {
+      "slug": "genghis-khan-founded-and-was-the-first-great-khan-of-which-empire",
+      "question": "Genghis Khan founded and was the first Great Khan of which empire?",
+      "answer": "Mongol Empire",
+      "acceptableAnswers": [
+        "Mongolian Empire"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "ancient-medieval"
+    },
+    {
+      "slug": "which-european-explorer-is-credited-with-being-the-first-to-reach-india-by-sea-sailing-around-africa",
+      "question": "Name the European explorer who was the first to reach India by sea, sailing around Africa.",
+      "answer": "Vasco da Gama",
+      "acceptableAnswers": [
+        "Da Gama"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "ancient-medieval"
+    },
+    {
+      "slug": "which-document-ratified-in-1781-served-as-the-first-constitution-of-the-united-states",
+      "question": "Ratified in 1781, what document was the first constitution of the United States?",
+      "answer": "Articles of Confederation",
+      "acceptableAnswers": [
+        "Articles of Confed",
+        "The Articles"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
+    },
+    {
+      "slug": "the-term-meiji-restoration-refers-to-a-period-of-rapid-modernization-and-political-change-in-which-country",
+      "question": "The Meiji Restoration refers to a period of rapid modernization and political change in what country?",
+      "answer": "Japan",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
+    },
+    {
+      "slug": "what-was-the-name-of-the-ship-that-transported-the-pilgrims-from-england-to-the-new-world-in-1620",
+      "question": "What was the name of the ship that transported the Pilgrims from England to the New World in 1620?",
+      "answer": "Mayflower",
+      "acceptableAnswers": [
+        "The Mayflower",
+        "May Flower"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
+    },
+    {
+      "slug": "which-document-formally-declared-the-american-colonies-independent-from-british-rule",
+      "question": "Which document formally declared the American colonies independent from British rule?",
+      "answer": "Declaration of Independence",
+      "acceptableAnswers": [
+        "The Declaration of Independence",
+        "Declaration"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
+    },
+    {
+      "slug": "which-major-global-conflict-ended-in-1945",
+      "question": "Which major global conflict ended in 1945?",
+      "answer": "World War II",
+      "acceptableAnswers": [
+        "WWII",
+        "WW2",
+        "Second World War",
+        "The Second World War"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "wars-battles-conflicts"
+    },
+    {
+      "slug": "who-authored-the-influential-pamphlet-common-sense-advocating-for-american-independence-from-great-britain",
+      "question": "Who authored the influential pamphlet 'Common Sense,' advocating for American independence from Great Britain?",
+      "answer": "Thomas Paine",
+      "acceptableAnswers": [
+        "Paine",
+        "T. Paine"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
+    },
+    {
+      "slug": "which-american-president-is-known-for-delivering-the-gettysburg-address",
+      "question": "Who delivered the Gettysburg Address?",
+      "answer": "Abraham Lincoln",
+      "acceptableAnswers": [
+        "Lincoln",
+        "A. Lincoln"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "famous-figures-quotes"
+    },
+    {
+      "slug": "who-is-credited-with-the-first-european-discovery-of-the-americas-in-1492",
+      "question": "Who is credited with the European discovery of the Americas in 1492?",
+      "answer": "Christopher Columbus",
+      "acceptableAnswers": [
+        "Columbus"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "cultural-social-history"
+    },
+    {
+      "slug": "who-led-the-american-continental-army-during-the-revolutionary-war",
+      "question": "Who led the American Continental Army during the Revolutionary War?",
+      "answer": "George Washington",
+      "acceptableAnswers": [
+        "Washington",
+        "G. Washington"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "us-history-government"
+    },
+    {
+      "slug": "which-historical-figure-is-recognized-as-the-primary-author-of-the-united-states-declaration-of-independence",
+      "question": "Who was the primary author of the U.S. Declaration of Independence?",
+      "answer": "Thomas Jefferson",
+      "acceptableAnswers": [
+        "Jefferson"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "famous-figures-quotes"
+    },
+    {
+      "slug": "which-iconic-fashion-designer-is-credited-with-creating-the-little-black-dress",
+      "question": "Name the iconic fashion designer credited with creating the 'little black dress'.",
+      "answer": "Coco Chanel",
+      "acceptableAnswers": [
+        "Chanel",
+        "Gabrielle Chanel"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
     }
   ]
 }

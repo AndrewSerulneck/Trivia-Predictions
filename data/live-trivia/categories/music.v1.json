@@ -823,7 +823,7 @@
     {
       "slug": "music-easy-beyonce",
       "question": "Originally rising to fame as the frontwoman of Destiny's Child, this cultural icon became a solo powerhouse known to fans worldwide as 'Queen Bey'.",
-      "answer": "Beyoncé",
+      "answer": "Beyonc\u00e9",
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "easy",
@@ -978,7 +978,7 @@
     },
     {
       "slug": "outkast-members",
-      "question": "Name the rap duo that consists of André 3000 and Big Boi.",
+      "question": "Name the rap duo that consists of Andr\u00e9 3000 and Big Boi.",
       "answer": "OutKast",
       "category": "Music",
       "difficulty": "easy",
@@ -1002,7 +1002,7 @@
     },
     {
       "slug": "wu-tang-clan-members",
-      "question": "Name the rap group that consists of RZA, GZA, Method Man, Raekwon, Ghostface Killah, Inspectah Deck, U-God, Masta Killa, and Ol’ Dirty Bastard.",
+      "question": "Name the rap group that consists of RZA, GZA, Method Man, Raekwon, Ghostface Killah, Inspectah Deck, U-God, Masta Killa, and Ol\u2019 Dirty Bastard.",
       "answer": "Wu-Tang Clan",
       "category": "Music",
       "difficulty": "easy",
@@ -1122,7 +1122,7 @@
     },
     {
       "slug": "destinys-child-members",
-      "question": "Name the pop group that consists of Beyoncé Knowles, Kelly Rowland, and Michelle Williams.",
+      "question": "Name the pop group that consists of Beyonc\u00e9 Knowles, Kelly Rowland, and Michelle Williams.",
       "answer": "Destiny's Child",
       "category": "Music",
       "difficulty": "easy",
@@ -1146,7 +1146,7 @@
     },
     {
       "slug": "abba-members",
-      "question": "Name the pop group that consists of Agnetha Fältskog, Björn Ulvaeus, Benny Andersson, and Anni-Frid Lyngstad.",
+      "question": "Name the pop group that consists of Agnetha F\u00e4ltskog, Bj\u00f6rn Ulvaeus, Benny Andersson, and Anni-Frid Lyngstad.",
       "answer": "ABBA",
       "category": "Music",
       "difficulty": "easy",
@@ -1370,7 +1370,7 @@
     },
     {
       "slug": "green-day-members",
-      "question": "Name the punk rock band that consists of Billie Joe Armstrong, Mike Dirnt, and Tré Cool.",
+      "question": "Name the punk rock band that consists of Billie Joe Armstrong, Mike Dirnt, and Tr\u00e9 Cool.",
       "answer": "Green Day",
       "category": "Music",
       "difficulty": "easy",
@@ -2487,7 +2487,7 @@
     {
       "slug": "which-pop-star-released-the-hit-song-single-ladies-put-a-ring-on-it",
       "question": "Which pop star released the hit song \"Single Ladies (Put a Ring on It)\"?",
-      "answer": "Beyoncé",
+      "answer": "Beyonc\u00e9",
       "acceptableAnswers": [
         "Beyonce",
         "Bey",
@@ -2564,7 +2564,7 @@
     {
       "slug": "which-artist-released-the-groundbreaking-album-lemonade-in-2016",
       "question": "Who released the groundbreaking album \"Lemonade\" in 2016?",
-      "answer": "Beyoncé",
+      "answer": "Beyonc\u00e9",
       "acceptableAnswers": [
         "Beyonce"
       ],
@@ -2588,7 +2588,7 @@
     },
     {
       "slug": "who-composed-the-famous-classical-piece-fr-elise",
-      "question": "Who composed the famous classical piano piece \"Für Elise\"?",
+      "question": "Who composed the famous classical piano piece \"F\u00fcr Elise\"?",
       "answer": "Ludwig van Beethoven",
       "acceptableAnswers": [
         "Beethoven",
@@ -2751,7 +2751,7 @@
     {
       "slug": "which-artist-released-the-hit-song-single-ladies-put-a-ring-on-it",
       "question": "Who sang the hit song 'Single Ladies (Put a Ring on It)'?",
-      "answer": "Beyoncé",
+      "answer": "Beyonc\u00e9",
       "acceptableAnswers": [
         "Bey",
         "Beyonce Knowles"
@@ -2824,7 +2824,7 @@
     {
       "slug": "which-singer-is-known-for-her-lemonade-album-and-hits-like-single-ladies-put-a-ring-on-it",
       "question": "Which singer is known for her 'Lemonade' album and hits like \"Single Ladies (Put a Ring on It)\"?",
-      "answer": "Beyoncé",
+      "answer": "Beyonc\u00e9",
       "acceptableAnswers": [
         "Beyonce",
         "Queen Bey"
@@ -3077,7 +3077,7 @@
     },
     {
       "slug": "beyonce-renaissance-album-predecessor",
-      "question": "Before 'Cowboy Carter', Beyoncé released which 2022 studio album that paid homage to ballroom and dance music?",
+      "question": "Before 'Cowboy Carter', Beyonc\u00e9 released which 2022 studio album that paid homage to ballroom and dance music?",
       "answer": "Renaissance",
       "answer_format": "write_in",
       "difficulty": "medium",
@@ -3427,7 +3427,7 @@
     {
       "slug": "which-pop-and-rb-icon-released-the-2008-hit-song-single-ladies-put-a-ring-on-it",
       "question": "Which pop and R&B icon released the 2008 hit song 'Single Ladies (Put a Ring on It)'?",
-      "answer": "Beyoncé",
+      "answer": "Beyonc\u00e9",
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "easy",
@@ -3463,7 +3463,7 @@
     {
       "slug": "which-singer-is-known-for-hits-like-single-ladies-put-a-ring-on-it",
       "question": "Which singer is known for hits like \"Single Ladies (Put a Ring on It)\"?",
-      "answer": "Beyoncé",
+      "answer": "Beyonc\u00e9",
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "easy",
@@ -3522,6 +3522,931 @@
       "category": "Music",
       "difficulty": "medium",
       "subcategory": "artist-identity"
+    },
+    {
+      "slug": "how-many-keys-does-a-standard-full-size-piano-typically-have",
+      "question": "How many keys does a standard full-size piano typically have?",
+      "answer": "88",
+      "acceptableAnswers": [
+        "eighty-eight",
+        "88 keys"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "in-what-year-did-the-famous-woodstock-music-art-fair-take-place",
+      "question": "In what year did the famous Woodstock Music & Art Fair take place?",
+      "answer": "1969",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "which-artist-broke-through-with-the-hit-song-bad-guy-and-is-known-for-her-whispery-vocals-and-dark-electronic-pop-sound",
+      "question": "Name the artist known for her whispery vocals, dark electronic-pop sound, and breakthrough hit \"Bad Guy\".",
+      "answer": "Billie Eilish",
+      "acceptableAnswers": [
+        "Eilish"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-artist-released-the-single-happy-which-was-a-global-hit-and-featured-in-the-film-despicable-me-2",
+      "question": "Name the artist who released the global hit 'Happy' from the film 'Despicable Me 2'.",
+      "answer": "Pharrell Williams",
+      "acceptableAnswers": [
+        "Pharrell"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-bands-debut-album-was-appetite-for-destruction",
+      "question": "Released in 1987, \"Appetite for Destruction\" was the debut album for what iconic hard rock band?",
+      "answer": "Guns N' Roses",
+      "acceptableAnswers": [
+        "Guns and Roses",
+        "GNR"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "albums-songs-lyrics"
+    },
+    {
+      "slug": "the-beatles-hometown-city",
+      "question": "What British city is the hometown of The Beatles?",
+      "answer": "Liverpool",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-instrument-is-paul-mccartney-famously-known-for-playing-in-the-beatles",
+      "question": "What instrument is Paul McCartney most famous for playing in The Beatles?",
+      "answer": "Bass Guitar",
+      "acceptableAnswers": [
+        "Bass"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "what-instrument-is-yo-yo-ma-famously-known-for-playing",
+      "question": "What instrument is world-renowned musician Yo-Yo Ma famously known for playing?",
+      "answer": "Cello",
+      "acceptableAnswers": [
+        "Violoncello"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "what-is-generally-considered-the-most-commonly-played-musical-instrument-in-the-world",
+      "question": "What is generally considered the most commonly played musical instrument in the world?",
+      "answer": "Guitar",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "what-is-the-smallest-interval-in-western-music-also-known-as-a-semitone",
+      "question": "What is the smallest interval in Western music, also known as a semitone?",
+      "answer": "Half step",
+      "acceptableAnswers": [
+        "Half-step"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "what-is-the-term-for-a-group-of-three-or-more-musical-notes-played-simultaneously",
+      "question": "What is the term for a group of three or more musical notes played simultaneously?",
+      "answer": "Chord",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "what-genre-of-music-originated-in-the-bronx-new-york-during-the-late-1970s",
+      "question": "What music genre originated in the Bronx, New York, in the late 1970s?",
+      "answer": "Hip-Hop",
+      "acceptableAnswers": [
+        "Hip Hop",
+        "Hip-hop music"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "what-was-the-debut-studio-album-released-by-the-beatles-in-the-uk",
+      "question": "What was the debut studio album released by The Beatles in the UK?",
+      "answer": "Please Please Me",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "albums-songs-lyrics"
+    },
+    {
+      "slug": "what-was-the-first-music-video-ever-played-on-mtv-when-it-launched-in-1981",
+      "question": "What was the first music video ever played on MTV when it launched in 1981?",
+      "answer": "Video Killed the Radio Star by The Buggles",
+      "acceptableAnswers": [
+        "Video Killed the Radio Star"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "the-album-pet-sounds-is-widely-considered-a-masterpiece-by-which-american-band",
+      "question": "Which American band is widely considered to have created the masterpiece album 'Pet Sounds'?",
+      "answer": "The Beach Boys",
+      "acceptableAnswers": [
+        "Beach Boys"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "albums-songs-lyrics"
+    },
+    {
+      "slug": "which-iconic-boy-band-famously-sang-the-hit-i-want-it-that-way",
+      "question": "Which boy band famously sang 'I Want It That Way'?",
+      "answer": "Backstreet Boys",
+      "acceptableAnswers": [
+        "BSB"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-city-is-widely-regarded-as-the-birthplace-of-jazz-music",
+      "question": "Which city is widely regarded as the birthplace of jazz music?",
+      "answer": "New Orleans",
+      "acceptableAnswers": [
+        "NOLA"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "which-iconic-guitarist-is-known-for-his-influential-song-purple-haze",
+      "question": "Which iconic guitarist is known for his influential song 'Purple Haze'?",
+      "answer": "Jimi Hendrix",
+      "acceptableAnswers": [
+        "Hendrix"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-iconic-rock-band-is-known-for-their-tongue-and-lips-logo",
+      "question": "Which iconic rock band is known for their 'tongue and lips' logo?",
+      "answer": "The Rolling Stones",
+      "acceptableAnswers": [
+        "Rolling Stones",
+        "Stones"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-legendary-rb-artist-is-known-for-songs-like-superstition-and-i-wish",
+      "question": "Which legendary R&B artist is known for songs like 'Superstition' and 'I Wish'?",
+      "answer": "Stevie Wonder",
+      "acceptableAnswers": [
+        "Stevland Hardaway Morris"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-legendary-reggae-musician-sang-three-little-birds-and-one-love",
+      "question": "Which legendary reggae musician sang 'Three Little Birds' and 'One Love'?",
+      "answer": "Bob Marley",
+      "acceptableAnswers": [
+        "Marley"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-member-of-the-beatles-was-often-referred-to-as-the-quiet-beatle",
+      "question": "Which member of The Beatles was often referred to as 'the quiet Beatle'?",
+      "answer": "George Harrison",
+      "acceptableAnswers": [
+        "Harrison"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-rapper-is-known-for-the-hit-song-99-problems",
+      "question": "Which rapper is known for the hit song '99 Problems'?",
+      "answer": "Jay-Z",
+      "acceptableAnswers": [
+        "Jay Z",
+        "Shawn Carter"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "who-is-famously-known-as-the-king-of-rock-and-roll",
+      "question": "Who is famously known as the 'King of Rock and Roll'?",
+      "answer": "Elvis Presley",
+      "acceptableAnswers": [
+        "Elvis"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "which-artist-is-widely-known-as-the-king-of-pop",
+      "question": "Who is widely known as the 'King of Pop'?",
+      "answer": "Michael Jackson",
+      "acceptableAnswers": [
+        "MJ"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "who-is-known-as-the-queen-of-soul",
+      "question": "Who is widely known by the title 'Queen of Soul'?",
+      "answer": "Aretha Franklin",
+      "acceptableAnswers": [
+        "Aretha"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "artist-identity"
+    },
+    {
+      "slug": "before-his-solo-career-harry-styles-was-a-member-of-which-boy-band",
+      "question": "Before his solo career, Harry Styles was a member of which famous boy band?",
+      "answer": "One Direction",
+      "acceptableAnswers": [
+        "1D",
+        "1 Direction"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "indio-california-music-festival",
+      "question": "What annual music festival, known for its diverse lineup, is held in Indio, California?",
+      "answer": "Coachella",
+      "acceptableAnswers": [
+        "Coachella Valley Music and Arts Festival"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "what-k-pop-group-is-known-for-hits-like-dynamite-and-butter",
+      "question": "What K-Pop group is known for hits like 'Dynamite' and 'Butter'?",
+      "answer": "BTS",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "janet-jackson-2004-super-bowl-halftime",
+      "question": "Which artist famously performed at the 2004 Super Bowl halftime show, leading to a controversial wardrobe malfunction?",
+      "answer": "Janet Jackson",
+      "acceptableAnswers": [
+        "Janet"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-artist-famously-released-the-viral-music-video-for-anaconda-in-2014",
+      "question": "Which artist famously released the viral music video for 'Anaconda' in 2014?",
+      "answer": "Nicki Minaj",
+      "acceptableAnswers": [
+        "Nicki"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-artist-famously-smashed-a-guitar-on-stage-during-a-performance-at-the-monterey-pop-festival-in-1967",
+      "question": "Which artist famously smashed a guitar on stage during a performance at the Monterey Pop Festival in 1967?",
+      "answer": "Jimi Hendrix",
+      "acceptableAnswers": [
+        "Hendrix"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "which-artist-famously-wore-a-meat-dress-to-the-2010-mtv-video-music-awards",
+      "question": "Which artist famously wore a meat dress to the 2010 MTV Video Music Awards?",
+      "answer": "Lady Gaga",
+      "acceptableAnswers": [
+        "Gaga"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-artist-released-the-album-21-featuring-hits-like-rolling-in-the-deep-and-someone-like-you",
+      "question": "Which artist released the album '21', featuring hits like 'Rolling in the Deep' and 'Someone Like You'?",
+      "answer": "Adele",
+      "acceptableAnswers": [
+        "Adele Adkins"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "which-musician-famously-bit-the-head-off-a-bat-during-a-live-performance-in-1982",
+      "question": "Which musician famously bit the head off a bat during a live performance in 1982?",
+      "answer": "Ozzy Osbourne",
+      "acceptableAnswers": [
+        "Ozzy"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "which-pop-superstar-released-the-visual-album-lemonade",
+      "question": "Which pop superstar released the visual album \"Lemonade\"?",
+      "answer": "Beyonc\u00e9",
+      "acceptableAnswers": [
+        "Beyonce"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "contemporary-pop-culture"
+    },
+    {
+      "slug": "creedence-clearwater-revival-original-name",
+      "question": "What was the original name of the band Creedence Clearwater Revival before they changed it?",
+      "answer": "The Golliwogs",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "the-doors-morrison-hotel-album",
+      "question": "Which 1970 album by The Doors was named after the hotel where Jim Morrison once lived?",
+      "answer": "Morrison Hotel",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "lynyrd-skynyrd-plane-crash-year",
+      "question": "What kind of accident claimed the lives of Lynyrd Skynyrd members Ronnie Van Zant and Steve Gaines?",
+      "answer": "Plane Crash",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "deep-purple-smoke-on-the-water-lyric",
+      "question": "Complete this Deep Purple lyric from 'Smoke on the Water': 'We all came out to Montreux, on the Lake Geneva _________.'",
+      "answer": "shoreline",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "black-sabbath-original-singer",
+      "question": "Who was the original lead singer of Black Sabbath?",
+      "answer": "Ozzy Osbourne",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "John Osbourne",
+        "Ozzy"
+      ]
+    },
+    {
+      "slug": "black-sabbath-new-singer",
+      "question": "Who replaced Ozzy Osbourne as the lead singer of Black Sabbath in 1979?",
+      "answer": "Ronnie James Dio",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Dio"
+      ]
+    },
+    {
+      "slug": "rush-drummer-lyricist",
+      "question": "Which member of Rush was the band's primary lyricist and legendary drummer?",
+      "answer": "Neil Peart",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "van-halen-eruption-guitarist",
+      "question": "Which guitarist popularized the two-handed tapping technique with the instrumental song 'Eruption'?",
+      "answer": "Eddie Van Halen",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Edward Van Halen",
+        "Ed Van Halen"
+      ]
+    },
+    {
+      "slug": "def-leppard-drummer-one-arm",
+      "question": "What appendage did Def Leppard drummer lose in a car accident (but, miraculously, it did not stop him from playing drums)?",
+      "answer": "Arm",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "bon-jovi-wanted-dead-or-alive-lyric",
+      "question": "Complete this Bon Jovi lyric from 'Wanted Dead or Alive': 'I've seen a million faces, and I've ________ them all.'",
+      "answer": "rocked",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "journey-any-way-you-want-it-lyric",
+      "question": "Complete this Journey lyric from 'Any Way You Want It': 'Any way you want it, that's the way you _________.'",
+      "answer": "need it",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "foreigner-feels-like-the-first-time-year",
+      "question": "In what year did Foreigner release their debut single 'Feels Like the First Time'?",
+      "answer": "1977",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "boston-more-than-a-feeling-lyric",
+      "question": "Complete this Boston lyric from 'More Than a Feeling': 'I looked out this morning and the sun was _________.'",
+      "answer": "gone",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "reo-speedwagon-keep-on-loving-you-year",
+      "question": "In what year did REO Speedwagon release 'Keep On Loving You'?",
+      "answer": "1980",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "styx-come-sail-away-lyric",
+      "question": "What classic rock band wrote the song 'Mr. Roboto' in 1983?",
+      "answer": "Styx",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "kiss-band-members-makeup",
+      "question": "Which member of KISS was known as 'The Demon' and known for his long tongue?",
+      "answer": "Gene Simmons",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Gene Simmons"
+      ]
+    },
+    {
+      "slug": "zz-top-beard-member",
+      "question": "The only member of ZZ Top who never grew a beard is their drummer. What is his name?",
+      "answer": "Frank Beard",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "tom-petty-free-fallin-lyric",
+      "question": "Complete this Tom Petty lyric from 'Free Fallin'': 'She's a good girl, loves her mama, loves Jesus and  ____________ .'",
+      "answer": "America too",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "dire-straits-sultans-of-swing-guitar",
+      "question": "Which Dire Straits member played the iconic guitar solos on 'Sultans of Swing'?",
+      "answer": "Mark Knopfler",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "the-police-roxanne-lyric",
+      "question": "Complete this The Police lyric from 'Roxanne': 'Roxanne, you don't have to put on the ________.'",
+      "answer": "red light",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "the-clash-london-calling-album-year",
+      "question": "'London Calling' is the 1979 lead single and double album by what English rock band that pioneered the punk genre?",
+      "answer": "The Clash",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "ramones-blitzkrieg-bop-lyric",
+      "question": "Complete this Ramones lyric from 'Blitzkrieg Bop': 'Hey ho, let's _________!'",
+      "answer": "go",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "the-kinks-you-really-got-me-original",
+      "question": "What rock band originally wrote the song 'You Really Got Me?'",
+      "answer": "The Kinks",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "the-band-the-weight-lyric",
+      "question": "Complete this The Band lyric from 'The Weight': 'Take a load off Fanny, take a load for _________.'",
+      "answer": "free",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "neil-young-heart-of-gold-lyric",
+      "question": "Complete this Neil Young lyric: 'I want to live, I want to give, I've been a ________ for a heart of gold.'",
+      "answer": "miner",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "heart-barracuda-ann-wilson",
+      "question": "Which Wilson sister is the lead singer of the rock band Heart?",
+      "answer": "Ann Wilson",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "pat-benatar-hit-me-with-your-best-shot-year",
+      "question": "Who released the song 'Hit Me with Your Best Shot' in 1980?",
+      "answer": "Pat Benatar",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "joan-jett-i-love-rock-n-roll-cover",
+      "question": "Joan Jett & the Blackhearts' 'I Love Rock 'n' Roll' was originally recorded by which British band?",
+      "answer": "The Arrows",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "blondie-call-me-lyric",
+      "question": "Complete this Blondie lyric from 'Call Me': 'Call me, call me any, anytime, call me, ___________, you can call me any time at all.'",
+      "answer": "my love",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "talking-heads-once-in-a-lifetime-lyric",
+      "question": "Complete this Talking Heads lyric from 'Once in a Lifetime': 'And you may find yourself living in a shotgun _________.'",
+      "answer": "shack",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "rem-losing-my-religion-year",
+      "question": "'Losing My Religion' was released in 1991 by what band?",
+      "answer": "R.E.M.",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "rem-lead-singer-michael-stipe",
+      "question": "Who is the lead singer of rock band R.E.M.?",
+      "answer": "Michael Stipe",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "the-cars-just-what-i-needed-lyric",
+      "question": "Complete this The Cars lyric from 'Just What I Needed': 'I guess you're just what I needed, I needed someone to _________.'",
+      "answer": "feed",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "cheap-trick-i-want-you-to-want-me-lyric",
+      "question": "What classic rock band recorded the theme song to the T.V. series 'That 70s Show?'",
+      "answer": "Cheap Trick",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "kansas-dust-in-the-wind-lyric",
+      "question": "Complete this Kansas lyric: 'All we are is _________________.'",
+      "answer": "dust in the wind",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "genesis-phil-collins-drums",
+      "question": "Before becoming the lead singer of Genesis, which instrument did Phil Collins primarily play?",
+      "answer": "Drums",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Drum kit",
+        "Drum set"
+      ]
+    },
+    {
+      "slug": "jethro-tull-flute-player",
+      "question": "Which instrument is Jethro Tull frontman Ian Anderson famous for playing?",
+      "answer": "Flute",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "pink-floyd-wish-you-were-here-dedication",
+      "question": "Pink Floyd's 'Wish You Were Here' was dedicated to which former band member?",
+      "answer": "Syd Barrett",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Roger Keith Barrett"
+      ]
+    },
+    {
+      "slug": "led-zeppelin-whole-lotta-love-lyric",
+      "question": "Complete this Led Zeppelin lyric from 'Whole Lotta Love': 'You need coolin', baby, I'm not _________.'",
+      "answer": "foolin'",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "fooling"
+      ]
+    },
+    {
+      "slug": "acdc-back-in-black-album-tribute",
+      "question": "AC/DC's 'Back in Black' album was a tribute to which former band member?",
+      "answer": "Bon Scott",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Ronald Belford Scott"
+      ]
+    },
+    {
+      "slug": "aerosmith-walk-this-way-run-dmc",
+      "question": "Which hip-hop group collaborated with Aerosmith on the 1986 remake of 'Walk This Way'?",
+      "answer": "Run-D.M.C.",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Run DMC",
+        "Run-DMC"
+      ]
+    },
+    {
+      "slug": "eric-clapton-layla-origin",
+      "question": "Eric Clapton wrote 'Layla' inspired by his love for the wife of which famous musician?",
+      "answer": "George Harrison",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "bruce-springsteen-born-in-the-usa-album-year",
+      "question": "In what year did Bruce Springsteen release 'Born in the U.S.A.'?",
+      "answer": "1984",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "billy-joel-we-didnt-start-the-fire-lyric",
+      "question": "Complete this Billy Joel lyric from 'We Didn't Start the Fire': 'We didn't start the fire, it was always _________ since the world's been turning.'",
+      "answer": "burning",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "the-beatles-abbey-road-medley",
+      "question": "The Beatles' 'Abbey Road' features a famous medley on which side of the album?",
+      "answer": "Side Two",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Side 2",
+        "Side B",
+        "second side"
+      ]
+    },
+    {
+      "slug": "the-beach-boys-pet-sounds-competition",
+      "question": "Brian Wilson of The Beach Boys created 'Pet Sounds' in direct competition with which Beatles album?",
+      "answer": "Rubber Soul",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "janis-joplin-backup-band",
+      "question": "What was the name of Janis Joplin's backup band?",
+      "answer": "Big Brother and the Holding Company",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Big Brother",
+        "Big Brother & the Holding Company"
+      ]
+    },
+    {
+      "slug": "crosby-stills-nash-young-deja-vu-year",
+      "question": "In what year did Crosby, Stills, Nash & Young release 'D\u00e9j\u00e0 Vu'?",
+      "answer": "1970",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "crosby-stills-nash-beatles-rock-n-roll-hall",
+      "question": "Only 2 bands have had every member inducted into the Rock and Roll Hall of Fame twice. The Beatles are one. Name the other one.",
+      "answer": "Crosby, Stills and Nash",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock",
+      "acceptableAnswers": [
+        "Crosby, Stills",
+        "Crosby, Stills & Nash",
+        "Crosby Stills Nash",
+        "Stills Nash"
+      ]
+    },
+    {
+      "slug": "beatles-rock-n-roll-hall-crosby-stills-nash-twice",
+      "question": "Only 2 bands have had every member inducted into the Rock and Roll Hall of Fame twice. The first is Crosby, Stills and Nash. Name the other one.",
+      "answer": "The Beatles",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "rock-and-roll-hall-of-fame-eric-clapton-3-times",
+      "question": "Who is the only person to be inducted into the Rock and Roll Hall of Fame three times?",
+      "answer": "Eric Clapton",
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
     }
   ]
 }

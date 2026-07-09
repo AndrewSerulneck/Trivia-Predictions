@@ -131,6 +131,7 @@ type CategoryBlitzRoundRow = {
   ends_at: string;
   status: string;
   created_at: string;
+  scored_at: string | null;
 };
 
 function optionalTrim(value: unknown): string | null {
@@ -202,6 +203,7 @@ function mapCategoryBlitzRound(row: CategoryBlitzRoundRow): CategoryBlitzRound {
     endsAt: row.ends_at,
     status: row.status as CategoryBlitzRound["status"],
     createdAt: row.created_at,
+    scoredAt: row.scored_at,
   };
 }
 
@@ -297,7 +299,7 @@ async function getLatestCategoryBlitzRound(sessionId: string): Promise<CategoryB
 
   const { data, error } = await supabaseAdmin
     .from("category_blitz_rounds")
-    .select("id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at")
+    .select("id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at, scored_at")
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false })
     .limit(1)

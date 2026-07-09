@@ -22,7 +22,13 @@
       "Bash(supabase projects *)",
       "Bash(find /Users/anthropic/Documents/Trivia-Predictions/scripts -type f 2>/dev/null || echo \"No scripts directory found\")",
       "Read(//Users/anthropic/Documents/Trivia-Predictions/**)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(npm run lint *)",
+      "Bash(npx vitest *)",
+      "Bash(npm run test *)",
+      "Bash(supabase migration list *)"
     ]
   }
 }

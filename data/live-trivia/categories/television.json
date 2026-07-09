@@ -82,7 +82,7 @@
     },
     {
       "slug": "shogun-hulu-language",
-      "question": "The 2024 Emmy-winning series 'Shōgun' is primarily performed in which language?",
+      "question": "The 2024 Emmy-winning series 'Sh\u014dgun' is primarily performed in which language?",
       "answer": "Japanese",
       "answer_format": "write_in",
       "category": "Television",
@@ -679,7 +679,7 @@
     },
     {
       "slug": "arrested-development-tobias-funke-hybrid-profession",
-      "question": "On Arrested Development, Tobias Fünke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
+      "question": "On Arrested Development, Tobias F\u00fcnke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
       "answer": "Analrapist",
       "category": "Television",
       "difficulty": "medium",
@@ -944,7 +944,7 @@
     },
     {
       "slug": "pokemon-ash-ketchum-first-partner",
-      "question": "In Pokémon, what electric-type mouse creature is Ash Ketchum's primary partner and global mascot of the franchise?",
+      "question": "In Pok\u00e9mon, what electric-type mouse creature is Ash Ketchum's primary partner and global mascot of the franchise?",
       "answer": "Pikachu",
       "category": "Television",
       "difficulty": "easy",
@@ -1920,7 +1920,7 @@
     },
     {
       "slug": "arrested-development-tobias-funke-medical-profession-hybrid",
-      "question": "On Arrested Development, Tobias Fünke loses his medical license and invents a new, highly questionable professional title combining the words 'analyst' and 'therapist'—what is this word?",
+      "question": "On Arrested Development, Tobias F\u00fcnke loses his medical license and invents a new, highly questionable professional title combining the words 'analyst' and 'therapist'\u2014what is this word?",
       "answer": "Analrapist",
       "answer_format": "write_in",
       "category": "Television",
@@ -1973,7 +1973,7 @@
     },
     {
       "slug": "arrested-development-tobias-funke-acting-group",
-      "question": "On Arrested Development, Tobias Fünke joins a dynamic, color-coded theatrical performance art group known by what collective name?",
+      "question": "On Arrested Development, Tobias F\u00fcnke joins a dynamic, color-coded theatrical performance art group known by what collective name?",
       "answer": "Blue Man Group",
       "answer_format": "write_in",
       "category": "Television",
@@ -2027,7 +2027,7 @@
     },
     {
       "slug": "arrested-development-tobias-funke-wardrobe-condition",
-      "question": "On Arrested Development, Tobias Fünke suffers from a psychological condition that makes it impossible for him to ever be completely naked, earning him what specific label?",
+      "question": "On Arrested Development, Tobias F\u00fcnke suffers from a psychological condition that makes it impossible for him to ever be completely naked, earning him what specific label?",
       "answer": "Never-nude",
       "answer_format": "write_in",
       "category": "Television",
@@ -3908,6 +3908,85 @@
       "category": "Television",
       "difficulty": "medium",
       "subcategory": "animated-series"
+    },
+    {
+      "slug": "before-his-acclaimed-role-in-breaking-bad-bryan-cranston-was-widely-known-for-playing-the-father-in-which-fox-sitcom",
+      "question": "Before his acclaimed role in 'Breaking Bad', Bryan Cranston played the father in what Fox sitcom?",
+      "answer": "Malcolm in the Middle",
+      "acceptableAnswers": [
+        "Malcolm"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
+    },
+    {
+      "slug": "who-plays-the-character-eleven-in-the-netflix-series-stranger-things",
+      "question": "Name the actress who plays Eleven in the Netflix series 'Stranger Things'.",
+      "answer": "Millie Bobby Brown",
+      "acceptableAnswers": [
+        "Millie Brown"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "snl-late-night-recent"
+    },
+    {
+      "slug": "what-is-the-name-of-the-cheerful-sea-sponge-who-lives-in-a-pineapple-under-the-sea",
+      "question": "What is the name of the cheerful sea sponge who lives in a pineapple under the sea?",
+      "answer": "SpongeBob SquarePants",
+      "acceptableAnswers": [
+        "SpongeBob"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "characters-lore"
+    },
+    {
+      "slug": "in-the-tv-series-breaking-bad-what-subject-did-walter-white-teach-at-the-beginning-of-the-show",
+      "question": "What subject did Walter White teach at the beginning of 'Breaking Bad'?",
+      "answer": "Chemistry",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "hard",
+      "subcategory": "plot-quotes-trivia"
+    },
+    {
+      "slug": "which-popular-sitcom-set-in-new-york-city-follows-the-lives-of-ted-mosby-and-his-friends",
+      "question": "Which popular sitcom, set in New York City, follows the lives of Ted Mosby and his friends?",
+      "answer": "How I Met Your Mother",
+      "acceptableAnswers": [
+        "HIMYM",
+        "How I Met Your Mom"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "sitcoms-comedy"
+    },
+    {
+      "slug": "which-streaming-service-produced-the-hit-series-squid-game",
+      "question": "Which streaming service produced the hit series \"Squid Game\"?",
+      "answer": "Netflix",
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "snl-late-night-recent"
+    },
+    {
+      "slug": "which-streaming-service-released-the-popular-series-the-mandalorian",
+      "question": "Which streaming service released the popular series 'The Mandalorian'?",
+      "answer": "Disney+",
+      "acceptableAnswers": [
+        "Disney Plus"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "snl-late-night-recent"
     }
   ]
 }

@@ -38,3 +38,18 @@ export function setCategoryBlitzTestMode(enabled: boolean): void {
     // ignore storage failures (private browsing, quota, etc.)
   }
 }
+
+/**
+ * Server-side-only toggle that bypasses the <3-player scoring gate so a solo
+ * tester can verify grading/leaderboard end-to-end without needing two other
+ * participants. Set `CATEGORY_BLITZ_ALLOW_SOLO_SCORING=true` in your .env.local.
+ *
+ * When enabled:
+ * - `insufficientPlayers` in scoreRound evaluates to false regardless of count
+ * - `buildResults` shows real answer reasons instead of "insufficient_players"
+ *
+ * Never enabled in production — this is a dev/test convenience flag only.
+ */
+export function isCategoryBlitzSoloScoringEnabled(): boolean {
+  return normalizeBoolean(process.env.CATEGORY_BLITZ_ALLOW_SOLO_SCORING);
+}

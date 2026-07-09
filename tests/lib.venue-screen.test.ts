@@ -103,6 +103,7 @@ function makeCategorySession(overrides: Partial<CategoryBlitzSession> = {}): Cat
     source: "auto",
     scheduledEndAt: "2026-07-02T21:00:00.000Z",
     startsAt: null,
+    testMode: false,
     createdAt: "2026-07-02T19:55:00.000Z",
     completedAt: null,
     ...overrides,
@@ -121,6 +122,7 @@ function makeCategoryRound(overrides: Partial<CategoryBlitzRound> = {}): Categor
     endsAt: "2026-07-02T20:01:00.000Z",
     status: "active",
     createdAt: "2026-07-02T19:58:00.000Z",
+    scoredAt: null,
     ...overrides,
   };
 }

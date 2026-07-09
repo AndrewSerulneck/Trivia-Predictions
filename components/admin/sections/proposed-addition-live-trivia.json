@@ -1,0 +1,1417 @@
+[
+  {
+    "slug": "what-color-is-a-polar-bears-skin-underneath-its-fur",
+    "question": "What color is a polar bear's skin underneath its fur?",
+    "answer": "Black",
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "medium",
+    "subcategory": "biology-human-body"
+  },
+  {
+    "slug": "what-is-a-young-goat-commonly-called",
+    "question": "What is a young goat commonly called?",
+    "answer": "Kid",
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "easy",
+    "subcategory": "biology-human-body"
+  },
+  {
+    "slug": "which-venomous-spider-is-identifiable-by-a-red-hourglass-shape-on-its-underside",
+    "question": "Which venomous spider is identifiable by a red hourglass shape on its underside?",
+    "answer": "Black Widow",
+    "acceptableAnswers": [
+      "Black Widow Spider"
+    ],
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "medium",
+    "subcategory": "biology-human-body"
+  },
+  {
+    "slug": "the-word-wiki-from-wikipedia-comes-from-the-hawaiian-word-for-what",
+    "question": "The word \"wiki\" from Wikipedia comes from the Hawaiian word for what?",
+    "answer": "Fast",
+    "acceptableAnswers": [
+      "Quick"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "hard",
+    "subcategory": "cultural-social-history"
+  },
+  {
+    "slug": "what-is-the-most-widely-spoken-language-in-the-world-by-number-of-native-speakers",
+    "question": "What language is the most widely spoken in the world by number of native speakers?",
+    "answer": "Mandarin Chinese",
+    "acceptableAnswers": [
+      "Chinese",
+      "Mandarin",
+      "Standard Chinese"
+    ],
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "easy",
+    "subcategory": "countries-capitals-borders"
+  },
+  {
+    "slug": "which-classic-novel-features-the-character-atticus-finch",
+    "question": "Which classic novel features the character Atticus Finch?",
+    "answer": "To Kill a Mockingbird",
+    "acceptableAnswers": [
+      "Mockingbird"
+    ],
+    "answer_format": "write_in",
+    "category": "Art, Literature and Comics",
+    "difficulty": "medium",
+    "subcategory": "literary-quotes-and-lines"
+  },
+  {
+    "slug": "which-company-developed-the-playstation-gaming-console",
+    "question": "Which company developed the PlayStation gaming console?",
+    "answer": "Sony",
+    "acceptableAnswers": [
+      "Sony Corporation"
+    ],
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "medium",
+    "subcategory": "medicine-technology"
+  },
+  {
+    "slug": "which-greek-mythological-figure-flew-too-close-to-the-sun",
+    "question": "Which Greek mythological figure flew too close to the sun?",
+    "answer": "Icarus",
+    "acceptableAnswers": [
+      "Ikarus"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "hard",
+    "subcategory": "ancient-medieval"
+  },
+  {
+    "slug": "which-philosopher-is-famous-for-the-phrase-i-think-therefore-i-am",
+    "question": "Which philosopher is famous for the phrase \"I think, therefore I am\"?",
+    "answer": "Ren\u00e9 Descartes",
+    "acceptableAnswers": [
+      "Descartes",
+      "Rene Descartes"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "hard",
+    "subcategory": "famous-figures-quotes"
+  },
+  {
+    "slug": "who-is-generally-credited-with-inventing-the-light-bulb",
+    "question": "Who is generally credited with inventing the practical incandescent light bulb?",
+    "answer": "Thomas Edison",
+    "acceptableAnswers": [
+      "Edison",
+      "Thomas A. Edison",
+      "Thomas Alva Edison"
+    ],
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "medium",
+    "subcategory": "medicine-technology"
+  },
+  {
+    "slug": "who-wrote-romeo-and-juliet",
+    "question": "Who wrote \"Romeo and Juliet\"?",
+    "answer": "William Shakespeare",
+    "acceptableAnswers": [
+      "Shakespeare",
+      "Will Shakespeare"
+    ],
+    "answer_format": "write_in",
+    "category": "Art, Literature and Comics",
+    "difficulty": "medium",
+    "subcategory": "literary-quotes-and-lines"
+  },
+  {
+    "slug": "which-continent-is-the-only-one-to-be-crossed-by-both-the-equator-and-the-prime-meridian",
+    "question": "Name the only continent that is crossed by both the Equator and the Prime Meridian.",
+    "answer": "Africa",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "hard",
+    "subcategory": "physical-geography"
+  },
+  {
+    "slug": "the-atacama-desert-is-primarily-located-in-which-country",
+    "question": "The Atacama Desert is primarily located in which country?",
+    "answer": "Chile",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "hard",
+    "subcategory": "physical-geography"
+  },
+  {
+    "slug": "the-gobi-desert-spans-parts-of-china-and-which-other-large-asian-country",
+    "question": "The Gobi Desert spans parts of China and which other large Asian country?",
+    "answer": "Mongolia",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "hard",
+    "subcategory": "physical-geography"
+  },
+  {
+    "slug": "the-tasman-sea-lies-between-australia-and-which-island-nation",
+    "question": "The Tasman Sea lies between Australia and which island nation?",
+    "answer": "New Zealand",
+    "acceptableAnswers": [
+      "NZ"
+    ],
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "medium",
+    "subcategory": "physical-geography"
+  },
+  {
+    "slug": "what-is-the-worlds-largest-archipelago",
+    "question": "What country is home to the world's largest archipelago?",
+    "answer": "Indonesia",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "medium",
+    "subcategory": "physical-geography"
+  },
+  {
+    "slug": "seine-river-paris-capital",
+    "question": "What European capital city does the River Seine flow through?",
+    "answer": "Paris",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "easy",
+    "subcategory": "countries-capitals-borders"
+  },
+  {
+    "slug": "what-is-the-largest-island-in-the-world-by-land-area-excluding-continents",
+    "question": "What is the largest island in the world by land area (excluding continents)?",
+    "answer": "Greenland",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "hard",
+    "subcategory": "physical-geography"
+  },
+  {
+    "slug": "which-african-country-has-the-largest-population",
+    "question": "Which African country has the largest population?",
+    "answer": "Nigeria",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "medium",
+    "subcategory": "countries-capitals-borders"
+  },
+  {
+    "slug": "which-country-is-home-to-the-most-volcanoes",
+    "question": "Which country is home to the most volcanoes?",
+    "answer": "Indonesia",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "hard",
+    "subcategory": "physical-geography"
+  },
+  {
+    "slug": "country-of-tokyo-capital",
+    "question": "Which country's capital city is Tokyo?",
+    "answer": "Japan",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "easy",
+    "subcategory": "countries-capitals-borders"
+  },
+  {
+    "slug": "which-european-capital-city-is-famously-built-on-14-islands-with-its-city-center-situated-on-stadsholmen",
+    "question": "Which European capital city is famously built on 14 islands, with its city center situated on Stadsholmen?",
+    "answer": "Stockholm",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "medium",
+    "subcategory": "countries-capitals-borders"
+  },
+  {
+    "slug": "which-european-country-is-known-for-its-distinctive-boot-like-shape",
+    "question": "Which European country is known for its distinctive boot-like shape?",
+    "answer": "Italy",
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "easy",
+    "subcategory": "countries-capitals-borders"
+  },
+  {
+    "slug": "which-major-mountain-range-runs-along-the-western-side-of-north-america",
+    "question": "Which major mountain range runs along the western side of North America?",
+    "answer": "Rocky Mountains",
+    "acceptableAnswers": [
+      "Rockies"
+    ],
+    "answer_format": "write_in",
+    "category": "Geography",
+    "difficulty": "easy",
+    "subcategory": "physical-geography"
+  },
+  {
+    "slug": "genghis-khan-founded-and-was-the-first-great-khan-of-which-empire",
+    "question": "Genghis Khan founded and was the first Great Khan of which empire?",
+    "answer": "Mongol Empire",
+    "acceptableAnswers": [
+      "Mongolian Empire"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "medium",
+    "subcategory": "ancient-medieval"
+  },
+  {
+    "slug": "which-european-explorer-is-credited-with-being-the-first-to-reach-india-by-sea-sailing-around-africa",
+    "question": "Name the European explorer who was the first to reach India by sea, sailing around Africa.",
+    "answer": "Vasco da Gama",
+    "acceptableAnswers": [
+      "Da Gama"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "hard",
+    "subcategory": "ancient-medieval"
+  },
+  {
+    "slug": "which-document-ratified-in-1781-served-as-the-first-constitution-of-the-united-states",
+    "question": "Ratified in 1781, what document was the first constitution of the United States?",
+    "answer": "Articles of Confederation",
+    "acceptableAnswers": [
+      "Articles of Confed",
+      "The Articles"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "medium",
+    "subcategory": "us-history-government"
+  },
+  {
+    "slug": "the-term-meiji-restoration-refers-to-a-period-of-rapid-modernization-and-political-change-in-which-country",
+    "question": "The Meiji Restoration refers to a period of rapid modernization and political change in what country?",
+    "answer": "Japan",
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "hard",
+    "subcategory": "cultural-social-history"
+  },
+  {
+    "slug": "what-was-the-name-of-the-ship-that-transported-the-pilgrims-from-england-to-the-new-world-in-1620",
+    "question": "What was the name of the ship that transported the Pilgrims from England to the New World in 1620?",
+    "answer": "Mayflower",
+    "acceptableAnswers": [
+      "The Mayflower",
+      "May Flower"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "easy",
+    "subcategory": "cultural-social-history"
+  },
+  {
+    "slug": "which-document-formally-declared-the-american-colonies-independent-from-british-rule",
+    "question": "Which document formally declared the American colonies independent from British rule?",
+    "answer": "Declaration of Independence",
+    "acceptableAnswers": [
+      "The Declaration of Independence",
+      "Declaration"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "easy",
+    "subcategory": "us-history-government"
+  },
+  {
+    "slug": "which-major-global-conflict-ended-in-1945",
+    "question": "Which major global conflict ended in 1945?",
+    "answer": "World War II",
+    "acceptableAnswers": [
+      "WWII",
+      "WW2",
+      "Second World War",
+      "The Second World War"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "easy",
+    "subcategory": "wars-battles-conflicts"
+  },
+  {
+    "slug": "who-authored-the-influential-pamphlet-common-sense-advocating-for-american-independence-from-great-britain",
+    "question": "Who authored the influential pamphlet 'Common Sense,' advocating for American independence from Great Britain?",
+    "answer": "Thomas Paine",
+    "acceptableAnswers": [
+      "Paine",
+      "T. Paine"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "easy",
+    "subcategory": "famous-figures-quotes"
+  },
+  {
+    "slug": "which-american-president-is-known-for-delivering-the-gettysburg-address",
+    "question": "Who delivered the Gettysburg Address?",
+    "answer": "Abraham Lincoln",
+    "acceptableAnswers": [
+      "Lincoln",
+      "A. Lincoln"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "easy",
+    "subcategory": "famous-figures-quotes"
+  },
+  {
+    "slug": "who-is-credited-with-the-first-european-discovery-of-the-americas-in-1492",
+    "question": "Who is credited with the European discovery of the Americas in 1492?",
+    "answer": "Christopher Columbus",
+    "acceptableAnswers": [
+      "Columbus"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "easy",
+    "subcategory": "cultural-social-history"
+  },
+  {
+    "slug": "who-led-the-american-continental-army-during-the-revolutionary-war",
+    "question": "Who led the American Continental Army during the Revolutionary War?",
+    "answer": "George Washington",
+    "acceptableAnswers": [
+      "Washington",
+      "G. Washington"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "medium",
+    "subcategory": "us-history-government"
+  },
+  {
+    "slug": "which-historical-figure-is-recognized-as-the-primary-author-of-the-united-states-declaration-of-independence",
+    "question": "Who was the primary author of the U.S. Declaration of Independence?",
+    "answer": "Thomas Jefferson",
+    "acceptableAnswers": [
+      "Jefferson"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "medium",
+    "subcategory": "famous-figures-quotes"
+  },
+  {
+    "slug": "how-many-keys-does-a-standard-full-size-piano-typically-have",
+    "question": "How many keys does a standard full-size piano typically have?",
+    "answer": "88",
+    "acceptableAnswers": [
+      "eighty-eight",
+      "88 keys"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "genres-instruments-terminology"
+  },
+  {
+    "slug": "in-what-year-did-the-famous-woodstock-music-art-fair-take-place",
+    "question": "In what year did the famous Woodstock Music & Art Fair take place?",
+    "answer": "1969",
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "hard",
+    "subcategory": "music-history-events"
+  },
+  {
+    "slug": "which-artist-broke-through-with-the-hit-song-bad-guy-and-is-known-for-her-whispery-vocals-and-dark-electronic-pop-sound",
+    "question": "Name the artist known for her whispery vocals, dark electronic-pop sound, and breakthrough hit \"Bad Guy\".",
+    "answer": "Billie Eilish",
+    "acceptableAnswers": [
+      "Eilish"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "which-artist-released-the-single-happy-which-was-a-global-hit-and-featured-in-the-film-despicable-me-2",
+    "question": "Name the artist who released the global hit 'Happy' from the film 'Despicable Me 2'.",
+    "answer": "Pharrell Williams",
+    "acceptableAnswers": [
+      "Pharrell"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "which-bands-debut-album-was-appetite-for-destruction",
+    "question": "Released in 1987, \"Appetite for Destruction\" was the debut album for what iconic hard rock band?",
+    "answer": "Guns N' Roses",
+    "acceptableAnswers": [
+      "Guns and Roses",
+      "GNR"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "albums-songs-lyrics"
+  },
+  {
+    "slug": "the-beatles-hometown-city",
+    "question": "What British city is the hometown of The Beatles?",
+    "answer": "Liverpool",
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "artist-identity"
+  },
+  {
+    "slug": "which-instrument-is-paul-mccartney-famously-known-for-playing-in-the-beatles",
+    "question": "What instrument is Paul McCartney most famous for playing in The Beatles?",
+    "answer": "Bass Guitar",
+    "acceptableAnswers": [
+      "Bass"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "genres-instruments-terminology"
+  },
+  {
+    "slug": "what-instrument-is-yo-yo-ma-famously-known-for-playing",
+    "question": "What instrument is world-renowned musician Yo-Yo Ma famously known for playing?",
+    "answer": "Cello",
+    "acceptableAnswers": [
+      "Violoncello"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "genres-instruments-terminology"
+  },
+  {
+    "slug": "what-is-generally-considered-the-most-commonly-played-musical-instrument-in-the-world",
+    "question": "What is generally considered the most commonly played musical instrument in the world?",
+    "answer": "Guitar",
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "genres-instruments-terminology"
+  },
+  {
+    "slug": "what-is-the-smallest-interval-in-western-music-also-known-as-a-semitone",
+    "question": "What is the smallest interval in Western music, also known as a semitone?",
+    "answer": "Half step",
+    "acceptableAnswers": [
+      "Half-step"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "genres-instruments-terminology"
+  },
+  {
+    "slug": "what-is-the-term-for-a-group-of-three-or-more-musical-notes-played-simultaneously",
+    "question": "What is the term for a group of three or more musical notes played simultaneously?",
+    "answer": "Chord",
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "genres-instruments-terminology"
+  },
+  {
+    "slug": "what-genre-of-music-originated-in-the-bronx-new-york-during-the-late-1970s",
+    "question": "What music genre originated in the Bronx, New York, in the late 1970s?",
+    "answer": "Hip-Hop",
+    "acceptableAnswers": [
+      "Hip Hop",
+      "Hip-hop music"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "music-history-events"
+  },
+  {
+    "slug": "what-was-the-debut-studio-album-released-by-the-beatles-in-the-uk",
+    "question": "What was the debut studio album released by The Beatles in the UK?",
+    "answer": "Please Please Me",
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "albums-songs-lyrics"
+  },
+  {
+    "slug": "what-was-the-first-music-video-ever-played-on-mtv-when-it-launched-in-1981",
+    "question": "What was the first music video ever played on MTV when it launched in 1981?",
+    "answer": "Video Killed the Radio Star by The Buggles",
+    "acceptableAnswers": [
+      "Video Killed the Radio Star"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "hard",
+    "subcategory": "music-history-events"
+  },
+  {
+    "slug": "the-album-pet-sounds-is-widely-considered-a-masterpiece-by-which-american-band",
+    "question": "Which American band is widely considered to have created the masterpiece album 'Pet Sounds'?",
+    "answer": "The Beach Boys",
+    "acceptableAnswers": [
+      "Beach Boys"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "hard",
+    "subcategory": "albums-songs-lyrics"
+  },
+  {
+    "slug": "which-iconic-boy-band-famously-sang-the-hit-i-want-it-that-way",
+    "question": "Which boy band famously sang 'I Want It That Way'?",
+    "answer": "Backstreet Boys",
+    "acceptableAnswers": [
+      "BSB"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "which-city-is-widely-regarded-as-the-birthplace-of-jazz-music",
+    "question": "Which city is widely regarded as the birthplace of jazz music?",
+    "answer": "New Orleans",
+    "acceptableAnswers": [
+      "NOLA"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "music-history-events"
+  },
+  {
+    "slug": "which-iconic-guitarist-is-known-for-his-influential-song-purple-haze",
+    "question": "Which iconic guitarist is known for his influential song 'Purple Haze'?",
+    "answer": "Jimi Hendrix",
+    "acceptableAnswers": [
+      "Hendrix"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "artist-identity"
+  },
+  {
+    "slug": "which-iconic-rock-band-is-known-for-their-tongue-and-lips-logo",
+    "question": "Which iconic rock band is known for their 'tongue and lips' logo?",
+    "answer": "The Rolling Stones",
+    "acceptableAnswers": [
+      "Rolling Stones",
+      "Stones"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "artist-identity"
+  },
+  {
+    "slug": "which-legendary-rb-artist-is-known-for-songs-like-superstition-and-i-wish",
+    "question": "Which legendary R&B artist is known for songs like 'Superstition' and 'I Wish'?",
+    "answer": "Stevie Wonder",
+    "acceptableAnswers": [
+      "Stevland Hardaway Morris"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "artist-identity"
+  },
+  {
+    "slug": "which-legendary-reggae-musician-sang-three-little-birds-and-one-love",
+    "question": "Which legendary reggae musician sang 'Three Little Birds' and 'One Love'?",
+    "answer": "Bob Marley",
+    "acceptableAnswers": [
+      "Marley"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "artist-identity"
+  },
+  {
+    "slug": "which-member-of-the-beatles-was-often-referred-to-as-the-quiet-beatle",
+    "question": "Which member of The Beatles was often referred to as 'the quiet Beatle'?",
+    "answer": "George Harrison",
+    "acceptableAnswers": [
+      "Harrison"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "artist-identity"
+  },
+  {
+    "slug": "which-rapper-is-known-for-the-hit-song-99-problems",
+    "question": "Which rapper is known for the hit song '99 Problems'?",
+    "answer": "Jay-Z",
+    "acceptableAnswers": [
+      "Jay Z",
+      "Shawn Carter"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "who-is-famously-known-as-the-king-of-rock-and-roll",
+    "question": "Who is famously known as the 'King of Rock and Roll'?",
+    "answer": "Elvis Presley",
+    "acceptableAnswers": [
+      "Elvis"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "artist-identity"
+  },
+  {
+    "slug": "which-artist-is-widely-known-as-the-king-of-pop",
+    "question": "Who is widely known as the 'King of Pop'?",
+    "answer": "Michael Jackson",
+    "acceptableAnswers": [
+      "MJ"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "artist-identity"
+  },
+  {
+    "slug": "who-is-known-as-the-queen-of-soul",
+    "question": "Who is widely known by the title 'Queen of Soul'?",
+    "answer": "Aretha Franklin",
+    "acceptableAnswers": [
+      "Aretha"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "artist-identity"
+  },
+  {
+    "slug": "before-his-acclaimed-role-in-breaking-bad-bryan-cranston-was-widely-known-for-playing-the-father-in-which-fox-sitcom",
+    "question": "Before his acclaimed role in 'Breaking Bad', Bryan Cranston played the father in what Fox sitcom?",
+    "answer": "Malcolm in the Middle",
+    "acceptableAnswers": [
+      "Malcolm"
+    ],
+    "answer_format": "write_in",
+    "category": "Television",
+    "difficulty": "medium",
+    "subcategory": "sitcoms-comedy"
+  },
+  {
+    "slug": "before-his-solo-career-harry-styles-was-a-member-of-which-boy-band",
+    "question": "Before his solo career, Harry Styles was a member of which famous boy band?",
+    "answer": "One Direction",
+    "acceptableAnswers": [
+      "1D",
+      "1 Direction"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "who-plays-the-character-eleven-in-the-netflix-series-stranger-things",
+    "question": "Name the actress who plays Eleven in the Netflix series 'Stranger Things'.",
+    "answer": "Millie Bobby Brown",
+    "acceptableAnswers": [
+      "Millie Brown"
+    ],
+    "answer_format": "write_in",
+    "category": "Television",
+    "difficulty": "medium",
+    "subcategory": "snl-late-night-recent"
+  },
+  {
+    "slug": "which-iconic-fashion-designer-is-credited-with-creating-the-little-black-dress",
+    "question": "Name the iconic fashion designer credited with creating the 'little black dress'.",
+    "answer": "Coco Chanel",
+    "acceptableAnswers": [
+      "Chanel",
+      "Gabrielle Chanel"
+    ],
+    "answer_format": "write_in",
+    "category": "History & Government",
+    "difficulty": "hard",
+    "subcategory": "cultural-social-history"
+  },
+  {
+    "slug": "indio-california-music-festival",
+    "question": "What annual music festival, known for its diverse lineup, is held in Indio, California?",
+    "answer": "Coachella",
+    "acceptableAnswers": [
+      "Coachella Valley Music and Arts Festival"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "what-is-the-name-of-marios-younger-brother-in-the-super-mario-bros-video-game-franchise",
+    "question": "What is the name of Mario's younger brother in the Super Mario Bros. video game franchise?",
+    "answer": "Luigi",
+    "answer_format": "write_in",
+    "category": "Movies",
+    "difficulty": "easy",
+    "subcategory": "characters-lore"
+  },
+  {
+    "slug": "what-is-the-name-of-the-cheerful-sea-sponge-who-lives-in-a-pineapple-under-the-sea",
+    "question": "What is the name of the cheerful sea sponge who lives in a pineapple under the sea?",
+    "answer": "SpongeBob SquarePants",
+    "acceptableAnswers": [
+      "SpongeBob"
+    ],
+    "answer_format": "write_in",
+    "category": "Television",
+    "difficulty": "easy",
+    "subcategory": "characters-lore"
+  },
+  {
+    "slug": "what-is-the-name-of-the-wizarding-school-attended-by-harry-potter",
+    "question": "What is the name of the wizarding school attended by Harry Potter?",
+    "answer": "Hogwarts",
+    "answer_format": "write_in",
+    "category": "Movies",
+    "difficulty": "easy",
+    "subcategory": "characters-lore"
+  },
+  {
+    "slug": "what-k-pop-group-is-known-for-hits-like-dynamite-and-butter",
+    "question": "What K-Pop group is known for hits like 'Dynamite' and 'Butter'?",
+    "answer": "BTS",
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "in-the-tv-series-breaking-bad-what-subject-did-walter-white-teach-at-the-beginning-of-the-show",
+    "question": "What subject did Walter White teach at the beginning of 'Breaking Bad'?",
+    "answer": "Chemistry",
+    "answer_format": "write_in",
+    "category": "Television",
+    "difficulty": "hard",
+    "subcategory": "plot-quotes-trivia"
+  },
+  {
+    "slug": "which-acclaimed-composer-is-known-for-creating-the-scores-for-films-such-as-inception-dune-and-the-dark-knight",
+    "question": "Which acclaimed composer is known for creating the scores for films such as 'Inception', 'Dune', and 'The Dark Knight'?",
+    "answer": "Hans Zimmer",
+    "acceptableAnswers": [
+      "Zimmer"
+    ],
+    "answer_format": "write_in",
+    "category": "Movies",
+    "difficulty": "hard",
+    "subcategory": "plot-quotes-trivia"
+  },
+  {
+    "slug": "janet-jackson-2004-super-bowl-halftime",
+    "question": "Which artist famously performed at the 2004 Super Bowl halftime show, leading to a controversial wardrobe malfunction?",
+    "answer": "Janet Jackson",
+    "acceptableAnswers": [
+      "Janet"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "which-artist-famously-released-the-viral-music-video-for-anaconda-in-2014",
+    "question": "Which artist famously released the viral music video for 'Anaconda' in 2014?",
+    "answer": "Nicki Minaj",
+    "acceptableAnswers": [
+      "Nicki"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "which-artist-famously-smashed-a-guitar-on-stage-during-a-performance-at-the-monterey-pop-festival-in-1967",
+    "question": "Which artist famously smashed a guitar on stage during a performance at the Monterey Pop Festival in 1967?",
+    "answer": "Jimi Hendrix",
+    "acceptableAnswers": [
+      "Hendrix"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "medium",
+    "subcategory": "music-history-events"
+  },
+  {
+    "slug": "which-artist-famously-wore-a-meat-dress-to-the-2010-mtv-video-music-awards",
+    "question": "Which artist famously wore a meat dress to the 2010 MTV Video Music Awards?",
+    "answer": "Lady Gaga",
+    "acceptableAnswers": [
+      "Gaga"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "which-artist-released-the-album-21-featuring-hits-like-rolling-in-the-deep-and-someone-like-you",
+    "question": "Which artist released the album '21', featuring hits like 'Rolling in the Deep' and 'Someone Like You'?",
+    "answer": "Adele",
+    "acceptableAnswers": [
+      "Adele Adkins"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "which-console-was-released-by-nintendo-in-2006-popularizing-motion-controls",
+    "question": "Which console was released by Nintendo in 2006, popularizing motion controls?",
+    "answer": "Wii",
+    "acceptableAnswers": [
+      "Nintendo Wii"
+    ],
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "easy",
+    "subcategory": "medicine-technology"
+  },
+  {
+    "slug": "which-horror-film-franchise-features-a-masked-killer-known-as-ghostface",
+    "question": "Which horror film franchise features a masked killer known as Ghostface?",
+    "answer": "Scream",
+    "answer_format": "write_in",
+    "category": "Movies",
+    "difficulty": "medium",
+    "subcategory": "characters-lore"
+  },
+  {
+    "slug": "which-musician-famously-bit-the-head-off-a-bat-during-a-live-performance-in-1982",
+    "question": "Which musician famously bit the head off a bat during a live performance in 1982?",
+    "answer": "Ozzy Osbourne",
+    "acceptableAnswers": [
+      "Ozzy"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "hard",
+    "subcategory": "music-history-events"
+  },
+  {
+    "slug": "which-pop-superstar-released-the-visual-album-lemonade",
+    "question": "Which pop superstar released the visual album \"Lemonade\"?",
+    "answer": "Beyonc\u00e9",
+    "acceptableAnswers": [
+      "Beyonce"
+    ],
+    "answer_format": "write_in",
+    "category": "Music",
+    "difficulty": "easy",
+    "subcategory": "contemporary-pop-culture"
+  },
+  {
+    "slug": "which-popular-sitcom-set-in-new-york-city-follows-the-lives-of-ted-mosby-and-his-friends",
+    "question": "Which popular sitcom, set in New York City, follows the lives of Ted Mosby and his friends?",
+    "answer": "How I Met Your Mother",
+    "acceptableAnswers": [
+      "HIMYM",
+      "How I Met Your Mom"
+    ],
+    "answer_format": "write_in",
+    "category": "Television",
+    "difficulty": "medium",
+    "subcategory": "sitcoms-comedy"
+  },
+  {
+    "slug": "which-streaming-service-produced-the-hit-series-squid-game",
+    "question": "Which streaming service produced the hit series \"Squid Game\"?",
+    "answer": "Netflix",
+    "answer_format": "write_in",
+    "category": "Television",
+    "difficulty": "easy",
+    "subcategory": "snl-late-night-recent"
+  },
+  {
+    "slug": "which-streaming-service-released-the-popular-series-the-mandalorian",
+    "question": "Which streaming service released the popular series 'The Mandalorian'?",
+    "answer": "Disney+",
+    "acceptableAnswers": [
+      "Disney Plus"
+    ],
+    "answer_format": "write_in",
+    "category": "Television",
+    "difficulty": "easy",
+    "subcategory": "snl-late-night-recent"
+  },
+  {
+    "slug": "who-played-the-role-of-jack-dawson-in-the-film-titanic",
+    "question": "Who played Jack Dawson in the 1997 film 'Titanic'?",
+    "answer": "Leonardo DiCaprio",
+    "acceptableAnswers": [
+      "Leo DiCaprio",
+      "DiCaprio"
+    ],
+    "answer_format": "write_in",
+    "category": "Movies",
+    "difficulty": "easy",
+    "subcategory": "characters-lore"
+  },
+  {
+    "slug": "who-voiced-the-character-of-genie-in-the-original-1992-animated-disney-film-aladdin",
+    "question": "Who voiced the Genie in Disney's 1992 animated film 'Aladdin'?",
+    "answer": "Robin Williams",
+    "acceptableAnswers": [
+      "Williams"
+    ],
+    "answer_format": "write_in",
+    "category": "Movies",
+    "difficulty": "hard",
+    "subcategory": "characters-lore"
+  },
+  {
+    "slug": "who-wrote-and-directed-the-critically-acclaimed-horror-film-get-out",
+    "question": "Who wrote and directed the critically acclaimed horror film 'Get Out'?",
+    "answer": "Jordan Peele",
+    "acceptableAnswers": [
+      "Peele",
+      "Jordan P."
+    ],
+    "answer_format": "write_in",
+    "category": "Movies",
+    "difficulty": "hard",
+    "subcategory": "plot-quotes-trivia"
+  },
+  {
+    "slug": "who-wrote-the-a-song-of-ice-and-fire-book-series-which-was-adapted-into-the-tv-show-game-of-thrones",
+    "question": "Who wrote the 'A Song of Ice and Fire' book series, which was adapted into the TV show 'Game of Thrones'?",
+    "answer": "George R.R. Martin",
+    "acceptableAnswers": [
+      "George Martin",
+      "GRRM",
+      "George Raymond Richard Martin"
+    ],
+    "answer_format": "write_in",
+    "category": "Art, Literature and Comics",
+    "difficulty": "medium",
+    "subcategory": "literary-quotes-and-lines"
+  },
+  {
+    "slug": "how-many-planets-in-our-solar-system-are-known-to-have-rings",
+    "question": "How many planets in our solar system are known to have rings?",
+    "answer": "Four",
+    "acceptableAnswers": [
+      "4"
+    ],
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "medium",
+    "subcategory": "astronomy-earth-science"
+  },
+  {
+    "slug": "what-color-of-visible-light-has-the-shortest-wavelength",
+    "question": "What color of visible light has the shortest wavelength?",
+    "answer": "Violet",
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "easy",
+    "subcategory": "physics-concepts"
+  },
+  {
+    "slug": "what-is-the-name-of-the-supercontinent-that-existed-on-earth-millions-of-years-ago-before-breaking-apart-into-the-continents-we-know-today",
+    "question": "What is the name of the ancient supercontinent that eventually broke apart to form the continents we know today?",
+    "answer": "Pangea",
+    "acceptableAnswers": [
+      "Pangaea"
+    ],
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "hard",
+    "subcategory": "astronomy-earth-science"
+  },
+  {
+    "slug": "what-is-the-process-called-when-a-liquid-changes-into-a-gas-below-its-boiling-point",
+    "question": "What is the name of the process when a liquid changes into a gas below its boiling point?",
+    "answer": "Evaporation",
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "hard",
+    "subcategory": "physics-concepts"
+  },
+  {
+    "slug": "what-does-the-atomic-number-of-an-element-represent",
+    "question": "What subatomic particle's count defines an element's atomic number?",
+    "answer": "Protons",
+    "acceptableAnswers": [
+      "Number of protons",
+      "Proton count"
+    ],
+    "answer_format": "write_in",
+    "category": "Science & Tech",
+    "difficulty": "medium",
+    "subcategory": "chemistry-periodic-table"
+  },
+  {
+    "slug": "how-many-minutes-in-regulation-half-soccer-match",
+    "question": "How many minutes are in a regulation half of a soccer match?",
+    "answer": "45",
+    "acceptableAnswers": [
+      "forty-five",
+      "45 minutes",
+      "45 mins"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "yards-for-first-down-american-football",
+    "question": "How many yards must an offensive team gain for a first down in American football?",
+    "answer": "10",
+    "acceptableAnswers": [
+      "ten"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "in-basketball-how-many-points-is-a-standard-field-goal-shot-from-inside-the-arc-typically-worth",
+    "question": "In basketball, how many points is a field goal shot from inside the arc worth?",
+    "answer": "2 points",
+    "acceptableAnswers": [
+      "2",
+      "two",
+      "two points",
+      "2 pts",
+      "2 pt"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "in-basketball-what-achievement-is-it-when-a-player-records-double-digits-in-three-statistical-categories-in-a-single-game",
+    "question": "In basketball, what is the term for a player recording double-digits in three statistical categories in a single game?",
+    "answer": "Triple-double",
+    "acceptableAnswers": [
+      "Triple double"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "in-boxing-what-is-it-called-when-a-fighter-wins-by-the-referee-stopping-the-fight-because-one-fighter-is-unable-to-continue",
+    "question": "In boxing, what is the term for when a referee stops a fight because one fighter is unable to continue, resulting in a win for the other?",
+    "answer": "Technical Knockout",
+    "acceptableAnswers": [
+      "TKO"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "what-term-is-used-in-golf-for-a-score-of-two-strokes-under-par-on-a-single-hole",
+    "question": "In golf, what term is used for a score of two strokes under par on a single hole?",
+    "answer": "Eagle",
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "hard",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "in-ice-hockey-what-is-it-called-when-a-player-scores-three-goals-in-a-single-game",
+    "question": "In ice hockey, what is it called when a player scores three goals in a single game?",
+    "answer": "Hat Trick",
+    "acceptableAnswers": [
+      "Hat-trick"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "in-soccer-what-is-awarded-if-a-player-commits-a-foul-inside-their-own-penalty-area",
+    "question": "In soccer, what is awarded if a player commits a foul inside their own penalty area?",
+    "answer": "Penalty kick",
+    "acceptableAnswers": [
+      "Penalty",
+      "PK"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "in-tennis-what-is-the-term-for-a-score-of-40-40",
+    "question": "In tennis, what is the term for a score of 40-40?",
+    "answer": "Deuce",
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "in-volleyball-what-is-the-maximum-number-of-times-a-team-can-hit-the-ball-before-it-must-cross-the-net",
+    "question": "In volleyball, what is the maximum number of times a team can hit the ball before it must cross the net?",
+    "answer": "3",
+    "acceptableAnswers": [
+      "three"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "in-which-olympic-sport-would-athletes-perform-movements-like-a-pirouette-or-a-salchow",
+    "question": "In which Olympic sport would athletes perform movements like a 'pirouette' or a 'salchow'?",
+    "answer": "Figure Skating",
+    "acceptableAnswers": [
+      "Ice Skating"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "in-which-sport-would-you-commonly-find-terms-like-love-deuce-and-advantage",
+    "question": "In which sport would you commonly find terms like 'love', 'deuce', and 'advantage'?",
+    "answer": "Tennis",
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "what-is-the-total-length-of-an-american-football-field-including-both-end-zones",
+    "question": "Including both end zones, what is the total length of an American football field?",
+    "answer": "120 yards",
+    "acceptableAnswers": [
+      "120 yd",
+      "120 yds",
+      "one hundred twenty yards"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "what-is-the-common-name-for-a-footrace-that-covers-a-distance-of-42195-kilometers",
+    "question": "What is the common name for a footrace that covers a distance of 42.195 kilometers?",
+    "answer": "Marathon",
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "what-is-the-highest-score-achievable-with-a-single-dart-in-a-standard-game-of-darts",
+    "question": "What is the highest score achievable with a single dart in a standard game of darts?",
+    "answer": "60",
+    "acceptableAnswers": [
+      "sixty"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "what-is-the-name-of-the-professional-basketball-league-in-the-united-states-and-canada",
+    "question": "What is the name of the professional basketball league in the United States and Canada?",
+    "answer": "NBA",
+    "acceptableAnswers": [
+      "National Basketball Association"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "what-is-the-object-called-that-is-hit-back-and-forth-over-the-net-in-badminton",
+    "question": "What is the object hit over the net in badminton called?",
+    "answer": "Shuttlecock",
+    "acceptableAnswers": [
+      "Birdie"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "what-is-the-only-grand-slam-tennis-tournament-played-on-a-clay-court",
+    "question": "What is the only Grand Slam tennis tournament played on a clay court?",
+    "answer": "French Open",
+    "acceptableAnswers": [
+      "Roland Garros"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "hard",
+    "subcategory": "historical-moments"
+  },
+  {
+    "slug": "what-is-the-term-for-a-score-in-american-football-where-an-offensive-player-is-tackled-in-their-own-end-zone",
+    "question": "What is the term for a score in American football where an offensive player is tackled in their own end zone?",
+    "answer": "Safety",
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "which-legendary-basketball-player-is-widely-known-by-the-nickname-air-jordan",
+    "question": "What legendary basketball player is known by the nickname 'Air Jordan'?",
+    "answer": "Michael Jordan",
+    "acceptableAnswers": [
+      "Jordan",
+      "MJ",
+      "Mike Jordan"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "notable-figures"
+  },
+  {
+    "slug": "what-is-the-nickname-of-legendary-boxer-cassius-clay",
+    "question": "What name did legendary boxer Cassius Clay adopt after converting to Islam?",
+    "answer": "Muhammad Ali",
+    "acceptableAnswers": [
+      "Ali"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "notable-figures"
+  },
+  {
+    "slug": "nfl-team-most-super-bowls-6-wins",
+    "question": "What NFL team is tied for the most Super Bowl titles with 6 wins?",
+    "answer": "New England Patriots",
+    "acceptableAnswers": [
+      "Patriots",
+      "New England"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "historical-moments"
+  },
+  {
+    "slug": "what-is-the-name-of-the-championship-trophy-awarded-to-the-winner-of-the-nhl-national-hockey-league-playoffs",
+    "question": "What trophy is awarded to the winner of the NHL playoffs?",
+    "answer": "Stanley Cup",
+    "acceptableAnswers": [
+      "The Stanley Cup",
+      "Lord Stanley's Cup"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "historical-moments"
+  },
+  {
+    "slug": "which-country-has-won-the-most-olympic-gold-medals-in-mens-basketball",
+    "question": "Which country has won the most Olympic gold medals in men's basketball?",
+    "answer": "United States",
+    "acceptableAnswers": [
+      "USA",
+      "U.S.",
+      "U.S.A.",
+      "America"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "historical-moments"
+  },
+  {
+    "slug": "which-country-holds-the-record-for-the-most-gold-medals-won-in-the-history-of-the-winter-olympic-games",
+    "question": "Which country holds the record for the most gold medals won in the history of the Winter Olympic Games?",
+    "answer": "Norway",
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "hard",
+    "subcategory": "records-statistics"
+  },
+  {
+    "slug": "which-sport-uses-the-term-birdie",
+    "question": "Which sport commonly uses the term 'birdie'?",
+    "answer": "Golf",
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "which-sport-involves-using-a-putter-to-get-a-ball-into-a-hole",
+    "question": "Which sport involves using a 'putter' to get a ball into a hole?",
+    "answer": "Golf",
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "easy",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "which-track-and-field-throwing-event-involves-propelling-a-heavy-metal-sphere-from-the-shoulder",
+    "question": "Which track and field throwing event involves propelling a heavy metal sphere from the shoulder?",
+    "answer": "Shot put",
+    "acceptableAnswers": [
+      "Shotput"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "medium",
+    "subcategory": "rules-terminology"
+  },
+  {
+    "slug": "who-was-the-first-person-to-break-the-4-minute-mile-barrier",
+    "question": "Who was the first person to break the 4-minute mile barrier?",
+    "answer": "Roger Bannister",
+    "acceptableAnswers": [
+      "Bannister"
+    ],
+    "answer_format": "write_in",
+    "category": "Sports",
+    "difficulty": "hard",
+    "subcategory": "records-statistics"
+  }
+]

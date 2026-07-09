@@ -32,6 +32,18 @@ interface GradingCascadeProps {
    * docs/category-blitz-scoring-and-bugfix-plan.md Phase 4.
    */
   exiting?: boolean;
+  /**
+   * Delay before the FIRST row resolves, in ms. Defaults to FIRST_DELAY_MS.
+   * RevealSequence passes a larger, deliberate value for the full-screen
+   * reveal (Phase 4 beat 1).
+   */
+  firstDelayMs?: number;
+  /**
+   * Delay between each subsequent row resolving, in ms. Defaults to STEP_MS.
+   * RevealSequence scales this to the answer count so a short and a long
+   * answer list both feel unhurried but not sluggish.
+   */
+  stepMs?: number;
 }
 
 const FIRST_DELAY_MS = 450;
@@ -146,35 +158,42 @@ const Row = ({ data, shown, reduce }: RowProps) => {
             explanation={data.explanation ?? ""}
           />
         ) : (
-          <div className="flex items-start justify-between gap-3">
-            <p
-              className={`mt-0.5 min-w-0 truncate text-sm font-bold ${
-                isDup
-                  ? "text-slate-500 line-through"
-                  : resolved
-                    ? "text-slate-100"
-                    : "text-slate-400"
-              }`}
-            >
-              {data.answer ?? "—"}
-            </p>
-            <div className="relative shrink-0">
-              {reason === "pending" ? (
-                <span
-                  className="tp-dot-pulse block h-2 w-2 rounded-full bg-emerald-400"
-                  aria-hidden
-                />
-              ) : (
-                <span
-                  className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                    meta?.badge ?? ""
-                  }`}
-                >
-                  {isCorrect && <Check reduce={reduce} />}
-                  {meta?.label}
-                </span>
-              )}
+          <div>
+            <div className="flex items-start justify-between gap-3">
+              <p
+                className={`mt-0.5 min-w-0 truncate text-sm font-bold ${
+                  isDup
+                    ? "text-slate-500 line-through"
+                    : resolved
+                      ? "text-slate-100"
+                      : "text-slate-400"
+                }`}
+              >
+                {data.answer ?? "—"}
+              </p>
+              <div className="relative shrink-0">
+                {reason === "pending" ? (
+                  <span
+                    className="tp-dot-pulse block h-2 w-2 rounded-full bg-emerald-400"
+                    aria-hidden
+                  />
+                ) : (
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                      meta?.badge ?? ""
+                    }`}
+                  >
+                    {isCorrect && <Check reduce={reduce} />}
+                    {meta?.label}
+                  </span>
+                )}
+              </div>
             </div>
+            {isDup && data.explanation && (
+              <p className="mt-1 text-[0.65rem] leading-snug text-slate-500">
+                {data.explanation}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -193,7 +212,13 @@ const Row = ({ data, shown, reduce }: RowProps) => {
   );
 };
 
-const GradingCascade = ({ answers, onComplete, exiting = false }: GradingCascadeProps) => {
+const GradingCascade = ({
+  answers,
+  onComplete,
+  exiting = false,
+  firstDelayMs = FIRST_DELAY_MS,
+  stepMs = STEP_MS,
+}: GradingCascadeProps) => {
   const reduce = useReducedMotion() ?? false;
   const [revealed, setRevealed] = useState(0);
   const doneRef = useRef(false);
@@ -204,10 +229,10 @@ const GradingCascade = ({ answers, onComplete, exiting = false }: GradingCascade
     if (revealed >= answers.length) return;
     const next = answers[revealed];
     if (!next || next.reason === "pending") return;
-    const delay = revealed === 0 ? FIRST_DELAY_MS : STEP_MS;
+    const delay = revealed === 0 ? firstDelayMs : stepMs;
     const id = window.setTimeout(() => setRevealed((n) => n + 1), delay);
     return () => window.clearTimeout(id);
-  }, [revealed, answers]);
+  }, [revealed, answers, firstDelayMs, stepMs]);
 
   useEffect(() => {
     if (!doneRef.current && answers.length > 0 && revealed >= answers.length) {

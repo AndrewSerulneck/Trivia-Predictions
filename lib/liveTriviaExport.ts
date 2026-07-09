@@ -1,3 +1,5 @@
+import { trackGeminiUsage } from "@/lib/llmCostTracker";
+
 type PendingSpeedQuestion = {
   id: string;
   slug: string | null;
@@ -159,6 +161,9 @@ async function callGeminiForLiveRewrite(prompt: string): Promise<Record<string, 
     const message = data?.error?.message || response.statusText || "Unknown Gemini API error";
     throw new Error(`Gemini API request failed (${response.status}): ${message}`);
   }
+
+  // Track cost — fire-and-forget.
+  trackGeminiUsage(data.usageMetadata ?? {}, model, "live_trivia_rewrite").catch(() => {});
 
   const text = (data?.candidates?.[0]?.content?.parts || [])
     .map((part: { text?: string }) => (typeof part?.text === "string" ? part.text : ""))

@@ -519,9 +519,9 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Cliche",
-        "Cliché",
+        "Clich\u00e9",
         "Cliches",
-        "Clichés"
+        "Clich\u00e9s"
       ],
       "subcategory": "language-grammar"
     },
@@ -1583,7 +1583,7 @@
     },
     {
       "slug": "children-of-men-adaptation",
-      "question": "What P.D. James novel was adapted into a 2006 film starring Clive Owen and directed by Alfonso Cuarón?",
+      "question": "What P.D. James novel was adapted into a 2006 film starring Clive Owen and directed by Alfonso Cuar\u00f3n?",
       "answer": "Children of Men",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -1813,7 +1813,7 @@
     },
     {
       "slug": "the-revenant-adaptation",
-      "question": "What Michael Punke novel about fur trappers in the Dakota wilderness was adapted into a 2015 film starring Leonardo DiCaprio and directed by Alejandro G. Iñárritu?",
+      "question": "What Michael Punke novel about fur trappers in the Dakota wilderness was adapted into a 2015 film starring Leonardo DiCaprio and directed by Alejandro G. I\u00f1\u00e1rritu?",
       "answer": "The Revenant",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -2123,7 +2123,7 @@
     },
     {
       "slug": "jane-eyre-classic",
-      "question": "What 1847 novel by Charlotte Brontë details the personal growth and complex romance of an orphaned governess who discovers a dark secret hidden by her employer, Mr. Rochester?",
+      "question": "What 1847 novel by Charlotte Bront\u00eb details the personal growth and complex romance of an orphaned governess who discovers a dark secret hidden by her employer, Mr. Rochester?",
       "answer": "Jane Eyre",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -2135,7 +2135,7 @@
     },
     {
       "slug": "wuthering-heights-classic",
-      "question": "What 1847 novel by Emily Brontë details the destructive, consuming passion between the intense Heathcliff and Catherine Earnshaw on the isolated Yorkshire moors?",
+      "question": "What 1847 novel by Emily Bront\u00eb details the destructive, consuming passion between the intense Heathcliff and Catherine Earnshaw on the isolated Yorkshire moors?",
       "answer": "Wuthering Heights",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -2256,7 +2256,7 @@
     },
     {
       "slug": "trainspotting-novel",
-      "question": "What 1993 novel by Irvine Welsh details the gritty, episodic lives and substance abuse struggles of a group of heroin users—including Mark Renton and Sick Boy—in Edinburgh, Scotland?",
+      "question": "What 1993 novel by Irvine Welsh details the gritty, episodic lives and substance abuse struggles of a group of heroin users\u2014including Mark Renton and Sick Boy\u2014in Edinburgh, Scotland?",
       "answer": "Trainspotting",
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -2562,10 +2562,10 @@
     {
       "slug": "artist-persistence-of-memory-dali",
       "question": "Which Spanish surrealist artist painted 'The Persistence of Memory,' the famous 1931 oil painting featuring melting clocks draped over a barren landscape?",
-      "answer": "Salvador Dalí",
+      "answer": "Salvador Dal\u00ed",
       "acceptableAnswers": [
-        "Salvador Dalí",
-        "Dalí"
+        "Salvador Dal\u00ed",
+        "Dal\u00ed"
       ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -2755,7 +2755,7 @@
     },
     {
       "slug": "movement-surrealism",
-      "question": "What early 20th-century avant-garde art movement, led by André Breton and Salvador Dalí, is characterized by dreamlike imagery, unexpected juxtapositions, and exploration of the unconscious mind?",
+      "question": "What early 20th-century avant-garde art movement, led by Andr\u00e9 Breton and Salvador Dal\u00ed, is characterized by dreamlike imagery, unexpected juxtapositions, and exploration of the unconscious mind?",
       "answer": "Surrealism",
       "acceptableAnswers": [
         "Surrealism"
@@ -2780,7 +2780,7 @@
     },
     {
       "slug": "movement-cubism",
-      "question": "What early 20th-century art movement, co-founded by Pablo Picasso and Georges Braque, depicts subjects from multiple angles at once, breaking them down into geometric shapes — as foreshadowed in the pictured 1907 Picasso work 'Les Demoiselles d'Avignon'?",
+      "question": "What early 20th-century art movement, co-founded by Pablo Picasso and Georges Braque, depicts subjects from multiple angles at once, breaking them down into geometric shapes \u2014 as foreshadowed in the pictured 1907 Picasso work 'Les Demoiselles d'Avignon'?",
       "answer": "Cubism",
       "acceptableAnswers": [
         "Cubism"
@@ -2793,7 +2793,7 @@
     },
     {
       "slug": "artist-old-guitarist-picasso",
-      "question": "Which Spanish artist painted this melancholy Blue Period work, 'The Old Guitarist' (1903–04), depicting a blind, hunched street musician?",
+      "question": "Which Spanish artist painted this melancholy Blue Period work, 'The Old Guitarist' (1903\u201304), depicting a blind, hunched street musician?",
       "answer": "Pablo Picasso",
       "acceptableAnswers": [
         "Pablo Picasso",
@@ -2945,11 +2945,11 @@
     {
       "slug": "title-pieta",
       "question": "What is the title of this famous 1499 marble sculpture by Michelangelo?",
-      "answer": "Pietà",
+      "answer": "Piet\u00e0",
       "acceptableAnswers": [
-        "Pietà",
+        "Piet\u00e0",
         "Pieta",
-        "The Pietà"
+        "The Piet\u00e0"
       ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
@@ -3070,7 +3070,7 @@
     },
     {
       "slug": "artist-pieta",
-      "question": "Which artist sculpted the Pietà, the moving marble statue of Mary mourning Jesus?",
+      "question": "Which artist sculpted the Piet\u00e0, the moving marble statue of Mary mourning Jesus?",
       "answer": "Michelangelo",
       "acceptableAnswers": [
         "Michelangelo",
@@ -3392,9 +3392,9 @@
     {
       "slug": "novel-les-miserables",
       "question": "What 1862 novel by Victor Hugo follows the ex-convict Jean Valjean as he seeks redemption while being relentlessly pursued by Inspector Javert, set against the backdrop of the 1832 Paris Uprising?",
-      "answer": "Les Misérables",
+      "answer": "Les Mis\u00e9rables",
       "acceptableAnswers": [
-        "Les Misérables",
+        "Les Mis\u00e9rables",
         "Les Miserables"
       ],
       "answer_format": "write_in",
@@ -3428,7 +3428,7 @@
     },
     {
       "slug": "novel-count-of-monte-cristo",
-      "question": "What 1844 adventure novel by Alexandre Dumas follows Edmond Dantès, a man wrongfully imprisoned who escapes and discovers a hidden treasure?",
+      "question": "What 1844 adventure novel by Alexandre Dumas follows Edmond Dant\u00e8s, a man wrongfully imprisoned who escapes and discovers a hidden treasure?",
       "answer": "The Count of Monte Cristo",
       "acceptableAnswers": [
         "The Count of Monte Cristo",
@@ -3707,6 +3707,45 @@
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "subcategory": "classic-literature"
+    },
+    {
+      "slug": "which-classic-novel-features-the-character-atticus-finch",
+      "question": "Which classic novel features the character Atticus Finch?",
+      "answer": "To Kill a Mockingbird",
+      "acceptableAnswers": [
+        "Mockingbird"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "literary-quotes-and-lines"
+    },
+    {
+      "slug": "who-wrote-romeo-and-juliet",
+      "question": "Who wrote \"Romeo and Juliet\"?",
+      "answer": "William Shakespeare",
+      "acceptableAnswers": [
+        "Shakespeare",
+        "Will Shakespeare"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "literary-quotes-and-lines"
+    },
+    {
+      "slug": "who-wrote-the-a-song-of-ice-and-fire-book-series-which-was-adapted-into-the-tv-show-game-of-thrones",
+      "question": "Who wrote the 'A Song of Ice and Fire' book series, which was adapted into the TV show 'Game of Thrones'?",
+      "answer": "George R.R. Martin",
+      "acceptableAnswers": [
+        "George Martin",
+        "GRRM",
+        "George Raymond Richard Martin"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "literary-quotes-and-lines"
     }
   ]
 }

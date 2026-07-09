@@ -511,7 +511,7 @@
     },
     {
       "slug": "pele-3-world-cups",
-      "question": "Which national team did Pelé win 3 FIFA World Cups with?",
+      "question": "Which national team did Pel\u00e9 win 3 FIFA World Cups with?",
       "answer": "Brazil",
       "category": "Sports",
       "difficulty": "medium",
@@ -1515,7 +1515,7 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Montreal",
-        "Montréal"
+        "Montr\u00e9al"
       ],
       "subcategory": "teams-franchises"
     },
@@ -1769,7 +1769,7 @@
     },
     {
       "slug": "utah-hockey-club-former-city",
-      "question": "The NHL franchise that debuted as the Utah Hockey Club for the 2024–2025 season was formed by acquiring the entire active player roster of what dissolved desert franchise?",
+      "question": "The NHL franchise that debuted as the Utah Hockey Club for the 2024\u20132025 season was formed by acquiring the entire active player roster of what dissolved desert franchise?",
       "answer": "Arizona Coyotes",
       "answer_format": "write_in",
       "category": "Sports",
@@ -1975,7 +1975,7 @@
     },
     {
       "slug": "in-which-olympic-sport-do-athletes-compete-using-a-foil-pe-or-sabre",
-      "question": "In which Olympic sport do athletes compete using a foil, épée, or sabre?",
+      "question": "In which Olympic sport do athletes compete using a foil, \u00e9p\u00e9e, or sabre?",
       "answer": "Fencing",
       "category": "Sports",
       "difficulty": "hard",
@@ -2036,7 +2036,7 @@
       "question": "What is the name of the international governing body for association football (soccer)?",
       "answer": "FIFA",
       "acceptableAnswers": [
-        "Fédération Internationale de Football Association",
+        "F\u00e9d\u00e9ration Internationale de Football Association",
         "International Federation of Association Football"
       ],
       "category": "Sports",
@@ -2086,7 +2086,7 @@
       "acceptableAnswers": [
         "F.I.F.A.",
         "International Federation of Association Football",
-        "Fédération Internationale de Football Association"
+        "F\u00e9d\u00e9ration Internationale de Football Association"
       ],
       "category": "Sports",
       "difficulty": "easy",
@@ -2656,7 +2656,7 @@
     },
     {
       "slug": "hulk-hogan-wrestlemania-main-event",
-      "question": "At WrestleMania III, Hulk Hogan memorably retained his WWF World Heavyweight Championship by executing the \"body slam heard 'round the world.\" Which legendary, 520-pound wrestler—who had been billed as undefeated for 15 years—did Hogan lift and defeat in this historic 'passing-of-the-torch moment?'",
+      "question": "At WrestleMania III, Hulk Hogan memorably retained his WWF World Heavyweight Championship by executing the \"body slam heard 'round the world.\" Which legendary, 520-pound wrestler\u2014who had been billed as undefeated for 15 years\u2014did Hogan lift and defeat in this historic 'passing-of-the-torch moment?'",
       "answer": "WrestleMania III",
       "answer_format": "write_in",
       "difficulty": "hard",
@@ -3802,6 +3802,346 @@
       "category": "Sports",
       "difficulty": "hard",
       "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "how-many-minutes-in-regulation-half-soccer-match",
+      "question": "How many minutes are in a regulation half of a soccer match?",
+      "answer": "45",
+      "acceptableAnswers": [
+        "forty-five",
+        "45 minutes",
+        "45 mins"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "yards-for-first-down-american-football",
+      "question": "How many yards must an offensive team gain for a first down in American football?",
+      "answer": "10",
+      "acceptableAnswers": [
+        "ten"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-basketball-how-many-points-is-a-standard-field-goal-shot-from-inside-the-arc-typically-worth",
+      "question": "In basketball, how many points is a field goal shot from inside the arc worth?",
+      "answer": "2 points",
+      "acceptableAnswers": [
+        "2",
+        "two",
+        "two points",
+        "2 pts",
+        "2 pt"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-basketball-what-achievement-is-it-when-a-player-records-double-digits-in-three-statistical-categories-in-a-single-game",
+      "question": "In basketball, what is the term for a player recording double-digits in three statistical categories in a single game?",
+      "answer": "Triple-double",
+      "acceptableAnswers": [
+        "Triple double"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-boxing-what-is-it-called-when-a-fighter-wins-by-the-referee-stopping-the-fight-because-one-fighter-is-unable-to-continue",
+      "question": "In boxing, what is the term for when a referee stops a fight because one fighter is unable to continue, resulting in a win for the other?",
+      "answer": "Technical Knockout",
+      "acceptableAnswers": [
+        "TKO"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-term-is-used-in-golf-for-a-score-of-two-strokes-under-par-on-a-single-hole",
+      "question": "In golf, what term is used for a score of two strokes under par on a single hole?",
+      "answer": "Eagle",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-ice-hockey-what-is-it-called-when-a-player-scores-three-goals-in-a-single-game",
+      "question": "In ice hockey, what is it called when a player scores three goals in a single game?",
+      "answer": "Hat Trick",
+      "acceptableAnswers": [
+        "Hat-trick"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-soccer-what-is-awarded-if-a-player-commits-a-foul-inside-their-own-penalty-area",
+      "question": "In soccer, what is awarded if a player commits a foul inside their own penalty area?",
+      "answer": "Penalty kick",
+      "acceptableAnswers": [
+        "Penalty",
+        "PK"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-tennis-what-is-the-term-for-a-score-of-40-40",
+      "question": "In tennis, what is the term for a score of 40-40?",
+      "answer": "Deuce",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-volleyball-what-is-the-maximum-number-of-times-a-team-can-hit-the-ball-before-it-must-cross-the-net",
+      "question": "In volleyball, what is the maximum number of times a team can hit the ball before it must cross the net?",
+      "answer": "3",
+      "acceptableAnswers": [
+        "three"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-which-olympic-sport-would-athletes-perform-movements-like-a-pirouette-or-a-salchow",
+      "question": "In which Olympic sport would athletes perform movements like a 'pirouette' or a 'salchow'?",
+      "answer": "Figure Skating",
+      "acceptableAnswers": [
+        "Ice Skating"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-which-sport-would-you-commonly-find-terms-like-love-deuce-and-advantage",
+      "question": "In which sport would you commonly find terms like 'love', 'deuce', and 'advantage'?",
+      "answer": "Tennis",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-is-the-total-length-of-an-american-football-field-including-both-end-zones",
+      "question": "Including both end zones, what is the total length of an American football field?",
+      "answer": "120 yards",
+      "acceptableAnswers": [
+        "120 yd",
+        "120 yds",
+        "one hundred twenty yards"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-is-the-common-name-for-a-footrace-that-covers-a-distance-of-42195-kilometers",
+      "question": "What is the common name for a footrace that covers a distance of 42.195 kilometers?",
+      "answer": "Marathon",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-is-the-highest-score-achievable-with-a-single-dart-in-a-standard-game-of-darts",
+      "question": "What is the highest score achievable with a single dart in a standard game of darts?",
+      "answer": "60",
+      "acceptableAnswers": [
+        "sixty"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-is-the-name-of-the-professional-basketball-league-in-the-united-states-and-canada",
+      "question": "What is the name of the professional basketball league in the United States and Canada?",
+      "answer": "NBA",
+      "acceptableAnswers": [
+        "National Basketball Association"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-is-the-object-called-that-is-hit-back-and-forth-over-the-net-in-badminton",
+      "question": "What is the object hit over the net in badminton called?",
+      "answer": "Shuttlecock",
+      "acceptableAnswers": [
+        "Birdie"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "what-is-the-only-grand-slam-tennis-tournament-played-on-a-clay-court",
+      "question": "What is the only Grand Slam tennis tournament played on a clay court?",
+      "answer": "French Open",
+      "acceptableAnswers": [
+        "Roland Garros"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "what-is-the-term-for-a-score-in-american-football-where-an-offensive-player-is-tackled-in-their-own-end-zone",
+      "question": "What is the term for a score in American football where an offensive player is tackled in their own end zone?",
+      "answer": "Safety",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "which-legendary-basketball-player-is-widely-known-by-the-nickname-air-jordan",
+      "question": "What legendary basketball player is known by the nickname 'Air Jordan'?",
+      "answer": "Michael Jordan",
+      "acceptableAnswers": [
+        "Jordan",
+        "MJ",
+        "Mike Jordan"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "what-is-the-nickname-of-legendary-boxer-cassius-clay",
+      "question": "What name did legendary boxer Cassius Clay adopt after converting to Islam?",
+      "answer": "Muhammad Ali",
+      "acceptableAnswers": [
+        "Ali"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "nfl-team-most-super-bowls-6-wins",
+      "question": "What NFL team is tied for the most Super Bowl titles with 6 wins?",
+      "answer": "New England Patriots",
+      "acceptableAnswers": [
+        "Patriots",
+        "New England"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "what-is-the-name-of-the-championship-trophy-awarded-to-the-winner-of-the-nhl-national-hockey-league-playoffs",
+      "question": "What trophy is awarded to the winner of the NHL playoffs?",
+      "answer": "Stanley Cup",
+      "acceptableAnswers": [
+        "The Stanley Cup",
+        "Lord Stanley's Cup"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "which-country-has-won-the-most-olympic-gold-medals-in-mens-basketball",
+      "question": "Which country has won the most Olympic gold medals in men's basketball?",
+      "answer": "United States",
+      "acceptableAnswers": [
+        "USA",
+        "U.S.",
+        "U.S.A.",
+        "America"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "which-country-holds-the-record-for-the-most-gold-medals-won-in-the-history-of-the-winter-olympic-games",
+      "question": "Which country holds the record for the most gold medals won in the history of the Winter Olympic Games?",
+      "answer": "Norway",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "which-sport-uses-the-term-birdie",
+      "question": "Which sport commonly uses the term 'birdie'?",
+      "answer": "Golf",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "which-sport-involves-using-a-putter-to-get-a-ball-into-a-hole",
+      "question": "Which sport involves using a 'putter' to get a ball into a hole?",
+      "answer": "Golf",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "which-track-and-field-throwing-event-involves-propelling-a-heavy-metal-sphere-from-the-shoulder",
+      "question": "Which track and field throwing event involves propelling a heavy metal sphere from the shoulder?",
+      "answer": "Shot put",
+      "acceptableAnswers": [
+        "Shotput"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "who-was-the-first-person-to-break-the-4-minute-mile-barrier",
+      "question": "Who was the first person to break the 4-minute mile barrier?",
+      "answer": "Roger Bannister",
+      "acceptableAnswers": [
+        "Bannister"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "records-statistics"
     }
   ]
 }

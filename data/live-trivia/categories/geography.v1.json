@@ -219,7 +219,7 @@
     {
       "slug": "capital-of-brazil",
       "question": "What is the capital city of Brazil?",
-      "answer": "Brasília",
+      "answer": "Bras\u00edlia",
       "category": "Geography",
       "difficulty": "easy",
       "subcategory": "countries-capitals-borders"
@@ -2637,13 +2637,13 @@
       "category": "Geography",
       "difficulty": "easy",
       "imageUrl": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&fit=crop",
-      "imageCredit": "Photo by David Köhler on Unsplash",
+      "imageCredit": "Photo by David K\u00f6hler on Unsplash",
       "subcategory": "landmarks-wonders"
     },
     {
       "slug": "landmark-sagrada-familia",
-      "question": "Designed by the visionary Catalan architect Antoni Gaudí, this breathtaking, organic-styled basilica in Barcelona has been under continuous construction since 1882.",
-      "answer": "Sagrada Família",
+      "question": "Designed by the visionary Catalan architect Antoni Gaud\u00ed, this breathtaking, organic-styled basilica in Barcelona has been under continuous construction since 1882.",
+      "answer": "Sagrada Fam\u00edlia",
       "category": "Geography",
       "difficulty": "medium",
       "imageUrl": "https://images.unsplash.com/photo-1650964827770-421afa7960ac?w=800&fit=crop",
@@ -2672,7 +2672,7 @@
     },
     {
       "slug": "landmark-statue-of-liberty",
-      "question": "Designed by Frédéric-Auguste Bartholdi and dedicated in 1886, this colossal copper sculpture on Liberty Island was a gift from the people of France to the United States.",
+      "question": "Designed by Fr\u00e9d\u00e9ric-Auguste Bartholdi and dedicated in 1886, this colossal copper sculpture on Liberty Island was a gift from the people of France to the United States.",
       "answer": "Statue of Liberty",
       "category": "Geography",
       "difficulty": "easy",
@@ -2692,7 +2692,7 @@
     },
     {
       "slug": "landmark-chichen-itza",
-      "question": "Dominated by the massive step-pyramid known as El Castillo, this large pre-Columbian city built by the Maya civilization sits in the Mexican state of Yucatán.",
+      "question": "Dominated by the massive step-pyramid known as El Castillo, this large pre-Columbian city built by the Maya civilization sits in the Mexican state of Yucat\u00e1n.",
       "answer": "Chichen Itza",
       "category": "Geography",
       "difficulty": "easy",
@@ -2732,7 +2732,7 @@
     },
     {
       "slug": "landmark-sydney-opera-house",
-      "question": "Designed by Danish architect Jørn Utzon and formally opened in 1973, this Expressionist masterpiece on Bennelong Point features a series of distinctive gleaming white concrete 'shells' resembling sails.",
+      "question": "Designed by Danish architect J\u00f8rn Utzon and formally opened in 1973, this Expressionist masterpiece on Bennelong Point features a series of distinctive gleaming white concrete 'shells' resembling sails.",
       "answer": "Sydney Opera House",
       "category": "Geography",
       "difficulty": "easy",
@@ -2982,7 +2982,7 @@
     },
     {
       "slug": "landmark-arc-de-triomphe",
-      "question": "Commissioned by Napoleon in 1806 following his victory at Austerlitz, this monumental neoclassical arch stands proudly at the center of the Place Charles de Gaulle at the western end of the Champs-Élysées.",
+      "question": "Commissioned by Napoleon in 1806 following his victory at Austerlitz, this monumental neoclassical arch stands proudly at the center of the Place Charles de Gaulle at the western end of the Champs-\u00c9lys\u00e9es.",
       "answer": "Arc de Triomphe",
       "category": "Geography",
       "difficulty": "easy",
@@ -3183,7 +3183,7 @@
       "category": "Geography",
       "difficulty": "easy",
       "imageUrl": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&fit=crop",
-      "imageCredit": "Photo by David Köhler on Unsplash",
+      "imageCredit": "Photo by David K\u00f6hler on Unsplash",
       "subcategory": "countries-capitals-borders"
     },
     {
@@ -3346,7 +3346,7 @@
     },
     {
       "slug": "landmark-easy-chichen-itza-rebound",
-      "question": "Located on Mexico's Yucatán Peninsula, this ancient Mayan city is dominated by a massive, world-famous step-pyramid known as El Castillo.",
+      "question": "Located on Mexico's Yucat\u00e1n Peninsula, this ancient Mayan city is dominated by a massive, world-famous step-pyramid known as El Castillo.",
       "answer": "Chichen Itza",
       "category": "Geography",
       "difficulty": "easy",
@@ -3447,7 +3447,7 @@
       "category": "Geography",
       "difficulty": "easy",
       "imageUrl": "https://images.unsplash.com/photo-1600478750228-8b894da7bc48?w=800&fit=crop",
-      "imageCredit": "Photo by Daniel Lloyd Blunk-Fernández on Unsplash",
+      "imageCredit": "Photo by Daniel Lloyd Blunk-Fern\u00e1ndez on Unsplash",
       "subcategory": "landmarks-wonders"
     },
     {
@@ -3502,7 +3502,7 @@
     },
     {
       "slug": "landmark-easy-arc-de-triomphe-rebound",
-      "question": "This famous neoclassical triumphal arch stands proudly at the center of a massive traffic roundabout at the western end of the Champs-Élysées in Paris.",
+      "question": "This famous neoclassical triumphal arch stands proudly at the center of a massive traffic roundabout at the western end of the Champs-\u00c9lys\u00e9es in Paris.",
       "answer": "Arc de Triomphe",
       "category": "Geography",
       "difficulty": "easy",
@@ -3726,7 +3726,7 @@
         "Elizabeth Tower"
       ],
       "imageUrl": "https://images.unsplash.com/photo-1500380804539-4e1e8c1e7118?w=800&fit=crop",
-      "imageCredit": "Photo by Jurica Koletić on Unsplash",
+      "imageCredit": "Photo by Jurica Koleti\u0107 on Unsplash",
       "subcategory": "countries-capitals-borders"
     },
     {
@@ -3810,7 +3810,7 @@
     {
       "slug": "landmark-galapagos",
       "question": "This volcanic archipelago in the Pacific Ocean, belonging to Ecuador, was visited by Charles Darwin in 1835 and inspired his theory of natural selection through its unique wildlife.",
-      "answer": "Galápagos Islands",
+      "answer": "Gal\u00e1pagos Islands",
       "category": "Geography",
       "difficulty": "easy",
       "acceptableAnswers": [
@@ -3832,7 +3832,7 @@
         "The Amazon"
       ],
       "imageUrl": "https://images.unsplash.com/photo-1591081658714-f576fb7ea3ed?w=800&fit=crop",
-      "imageCredit": "Photo by Ivars Utināns on Unsplash",
+      "imageCredit": "Photo by Ivars Utin\u0101ns on Unsplash",
       "subcategory": "physical-geography"
     },
     {
@@ -3857,7 +3857,7 @@
     },
     {
       "slug": "landmark-bryce-canyon",
-      "question": "Located in southern Utah, this national park is known for its hoodoos — tall, thin spires of rock formed by erosion — and for having the world's largest concentration of these unique geological formations.",
+      "question": "Located in southern Utah, this national park is known for its hoodoos \u2014 tall, thin spires of rock formed by erosion \u2014 and for having the world's largest concentration of these unique geological formations.",
       "answer": "Bryce Canyon",
       "category": "Geography",
       "difficulty": "medium",
@@ -3884,7 +3884,7 @@
     },
     {
       "slug": "landmark-zion-national-park",
-      "question": "This national park in southwestern Utah is known for its steep red cliffs, The Narrows slot canyon, and Angels Landing — a trail that requires navigating chains bolted into sheer rock.",
+      "question": "This national park in southwestern Utah is known for its steep red cliffs, The Narrows slot canyon, and Angels Landing \u2014 a trail that requires navigating chains bolted into sheer rock.",
       "answer": "Zion National Park",
       "category": "Geography",
       "difficulty": "medium",
@@ -3911,7 +3911,7 @@
     },
     {
       "slug": "landmark-giant-causeway",
-      "question": "Located on the northeastern coast of Northern Ireland, this area of about 40,000 interlocking basalt columns — most of them hexagonal — was formed by an ancient volcanic eruption.",
+      "question": "Located on the northeastern coast of Northern Ireland, this area of about 40,000 interlocking basalt columns \u2014 most of them hexagonal \u2014 was formed by an ancient volcanic eruption.",
       "answer": "Giant's Causeway",
       "category": "Geography",
       "difficulty": "medium",
@@ -4808,7 +4808,7 @@
     },
     {
       "slug": "us-states-motto-united-we-stand",
-      "question": "Which southern state pairs its official motto, 'United we stand, divided we fall,' with an image of two men—traditionally a statesman and a frontiersman—embracing on its state seal?",
+      "question": "Which southern state pairs its official motto, 'United we stand, divided we fall,' with an image of two men\u2014traditionally a statesman and a frontiersman\u2014embracing on its state seal?",
       "answer": "Kentucky",
       "category": "Geography",
       "difficulty": "easy",
@@ -5076,7 +5076,7 @@
     },
     {
       "slug": "through-which-country-does-the-prime-meridian-0-longitude-primarily-pass",
-      "question": "Through which country does the Prime Meridian (0° longitude) primarily pass?",
+      "question": "Through which country does the Prime Meridian (0\u00b0 longitude) primarily pass?",
       "answer": "United Kingdom",
       "acceptableAnswers": [
         "UK",
@@ -5288,7 +5288,7 @@
       "question": "What country's inhabitants have the highest average number of sexual partners over the course of their lives?",
       "answer": "Turkey",
       "acceptableAnswers": [
-        "Türkiye"
+        "T\u00fcrkiye"
       ],
       "category": "Geography",
       "difficulty": "hard",
@@ -5812,6 +5812,143 @@
       "acceptableAnswers": [
         "Aegean"
       ]
+    },
+    {
+      "slug": "what-is-the-most-widely-spoken-language-in-the-world-by-number-of-native-speakers",
+      "question": "What language is the most widely spoken in the world by number of native speakers?",
+      "answer": "Mandarin Chinese",
+      "acceptableAnswers": [
+        "Chinese",
+        "Mandarin",
+        "Standard Chinese"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-continent-is-the-only-one-to-be-crossed-by-both-the-equator-and-the-prime-meridian",
+      "question": "Name the only continent that is crossed by both the Equator and the Prime Meridian.",
+      "answer": "Africa",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "the-atacama-desert-is-primarily-located-in-which-country",
+      "question": "The Atacama Desert is primarily located in which country?",
+      "answer": "Chile",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "the-gobi-desert-spans-parts-of-china-and-which-other-large-asian-country",
+      "question": "The Gobi Desert spans parts of China and which other large Asian country?",
+      "answer": "Mongolia",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "the-tasman-sea-lies-between-australia-and-which-island-nation",
+      "question": "The Tasman Sea lies between Australia and which island nation?",
+      "answer": "New Zealand",
+      "acceptableAnswers": [
+        "NZ"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "what-is-the-worlds-largest-archipelago",
+      "question": "What country is home to the world's largest archipelago?",
+      "answer": "Indonesia",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "seine-river-paris-capital",
+      "question": "What European capital city does the River Seine flow through?",
+      "answer": "Paris",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "what-is-the-largest-island-in-the-world-by-land-area-excluding-continents",
+      "question": "What is the largest island in the world by land area (excluding continents)?",
+      "answer": "Greenland",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "which-african-country-has-the-largest-population",
+      "question": "Which African country has the largest population?",
+      "answer": "Nigeria",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-country-is-home-to-the-most-volcanoes",
+      "question": "Which country is home to the most volcanoes?",
+      "answer": "Indonesia",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "physical-geography"
+    },
+    {
+      "slug": "country-of-tokyo-capital",
+      "question": "Which country's capital city is Tokyo?",
+      "answer": "Japan",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-european-capital-city-is-famously-built-on-14-islands-with-its-city-center-situated-on-stadsholmen",
+      "question": "Which European capital city is famously built on 14 islands, with its city center situated on Stadsholmen?",
+      "answer": "Stockholm",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-european-country-is-known-for-its-distinctive-boot-like-shape",
+      "question": "Which European country is known for its distinctive boot-like shape?",
+      "answer": "Italy",
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "countries-capitals-borders"
+    },
+    {
+      "slug": "which-major-mountain-range-runs-along-the-western-side-of-north-america",
+      "question": "Which major mountain range runs along the western side of North America?",
+      "answer": "Rocky Mountains",
+      "acceptableAnswers": [
+        "Rockies"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "physical-geography"
     }
   ]
 }

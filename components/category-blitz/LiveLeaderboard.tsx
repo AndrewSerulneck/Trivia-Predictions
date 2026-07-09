@@ -27,6 +27,14 @@ interface LiveLeaderboardProps {
    * docs/category-blitz-scoring-and-bugfix-plan.md Phase 4.
    */
   exiting?: boolean;
+  /**
+   * Render in the already-settled resting state: no entrance stagger and no
+   * count-up (scores shown at final value immediately). Used by the resting
+   * intermission (ResultsScreen) so the leaderboard doesn't replay its
+   * count-up/reorder after RevealSequence just animated it a beat earlier —
+   * see the "double leaderboard animation" gotcha, Phase 4.
+   */
+  settled?: boolean;
 }
 
 const listV: Variants = {
@@ -35,11 +43,12 @@ const listV: Variants = {
   exit: { transition: { staggerChildren: 0.025 } },
 };
 
-const useCountUp = (value: number, reduce: boolean) => {
+const useCountUp = (value: number, reduce: boolean, settled: boolean) => {
   const [count, setCount] = useState(0);
   const prev = useRef(0);
+  const skip = reduce || settled;
   useEffect(() => {
-    if (reduce) {
+    if (skip) {
       prev.current = value;
       return;
     }
@@ -50,10 +59,10 @@ const useCountUp = (value: number, reduce: boolean) => {
     });
     prev.current = value;
     return () => controls.stop();
-  }, [value, reduce]);
-  // When reduce is true, return the full value instantly. When animating,
+  }, [value, skip]);
+  // When reduce/settled, return the full value instantly. When animating,
   // return the current animated count (which starts at 0 and animates up).
-  return reduce ? value : count;
+  return skip ? value : count;
 };
 
 interface RowProps {
@@ -62,10 +71,11 @@ interface RowProps {
   isMe: boolean;
   reduce: boolean;
   exiting?: boolean;
+  settled?: boolean;
 }
 
-const Row = ({ entry, rank, isMe, reduce, exiting }: RowProps) => {
-  const shown = useCountUp(entry.points, reduce);
+const Row = ({ entry, rank, isMe, reduce, exiting, settled = false }: RowProps) => {
+  const shown = useCountUp(entry.points, reduce, settled);
 
   // Detect between-round point gains -> emerald flash + floating "+N".
   const prevPoints = useRef(entry.points);
@@ -100,7 +110,7 @@ const Row = ({ entry, rank, isMe, reduce, exiting }: RowProps) => {
     <motion.li
       layout={!exiting}
       variants={rowV}
-      initial="hidden"
+      initial={settled ? "show" : "hidden"}
       animate={exiting ? "exit" : "show"}
       exit="exit"
       transition={{
@@ -175,7 +185,7 @@ const Row = ({ entry, rank, isMe, reduce, exiting }: RowProps) => {
   );
 };
 
-const LiveLeaderboard = ({ entries, meId, exiting = false }: LiveLeaderboardProps) => {
+const LiveLeaderboard = ({ entries, meId, exiting = false, settled = false }: LiveLeaderboardProps) => {
   const reduce = useReducedMotion() ?? false;
 
   const ranked = [...entries].sort(
@@ -189,7 +199,7 @@ const LiveLeaderboard = ({ entries, meId, exiting = false }: LiveLeaderboardProp
     <div className="mx-auto flex w-full max-w-sm flex-col gap-1.5 bg-slate-950 p-3">
       <motion.ul
         variants={listV}
-        initial="hidden"
+        initial={settled ? "show" : "hidden"}
         animate={exiting ? "exit" : "show"}
         className="flex flex-col gap-1.5"
       >
@@ -202,6 +212,7 @@ const LiveLeaderboard = ({ entries, meId, exiting = false }: LiveLeaderboardProp
               isMe={e.userId === meId}
               reduce={reduce}
               exiting={exiting}
+              settled={settled}
             />
           ))}
         </AnimatePresence>
@@ -223,6 +234,7 @@ const LiveLeaderboard = ({ entries, meId, exiting = false }: LiveLeaderboardProp
               isMe
               reduce={reduce}
               exiting={exiting}
+              settled={settled}
             />
           </ul>
         </>

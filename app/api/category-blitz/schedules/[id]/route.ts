@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import { datetimeLocalValueToUtcIso } from "@/lib/categoryBlitzScheduleTime";
-import { deleteSchedule, updateSchedule } from "@/lib/categoryBlitzSchedules";
+import { deleteSchedule, getSchedule, updateSchedule } from "@/lib/categoryBlitzSchedules";
+import { endVenueAutoSession } from "@/lib/categoryBlitz";
 
 function isValidationError(message: string): boolean {
   return (
@@ -36,12 +37,29 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!startTime) return NextResponse.json({ ok: false, error: "startTime is required." }, { status: 400 });
     if (!endTime)   return NextResponse.json({ ok: false, error: "endTime is required." }, { status: 400 });
 
+    // Look up the current schedule so we can compare the old start time
+    // against the new one — only restart the session when the start time
+    // actually changes (title-only or timezone-only edits keep the session).
+    const current = await getSchedule(id);
+    if (!current) {
+      return NextResponse.json({ ok: false, error: "Schedule not found." }, { status: 404 });
+    }
+    const oldStartTime = current.startTime;
+
     const schedule = await updateSchedule(id, {
       title,
       startTime: datetimeLocalValueToUtcIso(startTime, timezone),
       endTime: datetimeLocalValueToUtcIso(endTime, timezone),
       timezone,
     });
+
+    // If the start time changed, end any active auto session so the next
+    // client poll creates a fresh session from the updated schedule instead
+    // of continuing on the old round cadence.
+    if (oldStartTime !== schedule.startTime) {
+      await endVenueAutoSession(schedule.venueId);
+    }
+
     return NextResponse.json({ ok: true, schedule });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to update schedule.";
@@ -61,7 +79,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    await deleteSchedule(id);
+    const venueId = await deleteSchedule(id);
+
+    // End any active auto session so players aren't stranded in a dead intermission.
+    if (venueId) {
+      await endVenueAutoSession(venueId);
+    }
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json(

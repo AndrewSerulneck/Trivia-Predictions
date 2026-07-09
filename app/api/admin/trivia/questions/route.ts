@@ -98,6 +98,7 @@ export async function GET(request: Request) {
 
     const { data, count, error } = await query
       .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
       .range(offset, offset + limit - 1);
 
     if (error) {
