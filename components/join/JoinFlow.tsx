@@ -679,7 +679,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [lastLocationVerifiedAt, setLastLocationVerifiedAt] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [panelDirection, setPanelDirection] = useState<1 | -1>(1);
-  const [activePanel, setActivePanel] = useState<JoinPanel>(() => shouldShowWelcome() ? "welcome" : "auth-method-selection");
+  const [activePanel, setActivePanel] = useState<JoinPanel>("welcome");
   const [welcomeSlide, setWelcomeSlide] = useState(0);
   const [welcomeSlideDirection, setWelcomeSlideDirection] = useState<1 | -1>(1);
   const [animateInitialPanel] = useState(false);
@@ -739,6 +739,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   useEffect(() => {
     clearJoinPageEntryIntent();
+  }, []);
+
+  // Hydration safety: if the welcome has already been seen (localStorage),
+  // skip past it on the client so the server-rendered welcome panel
+  // matches the initial client render.
+  useEffect(() => {
+    if (!shouldShowWelcome()) {
+      setActivePanel("auth-method-selection");
+      welcomePendingRef.current = false;
+    }
   }, []);
 
   useEffect(() => {

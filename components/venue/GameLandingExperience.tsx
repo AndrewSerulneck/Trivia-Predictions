@@ -19,6 +19,7 @@ import { type VenueGameKey, VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards"
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import { hasResumableSession } from "@/lib/gameResume";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
+import { hasRecentOnboarding, markOnboardingComplete } from "@/lib/gameOnboarding";
 import { GameOnboardingCard, GAME_CARD_BG_BY_KEY, GAME_STEP_DOT_ACTIVE } from "@/components/venue/GameIdentityPanel";
 import { PageShell } from "@/components/ui/PageShell";
 
@@ -36,7 +37,6 @@ function recoverGamePageScrollState() {
   }
 }
 
-const ONBOARDING_STALE_MS = 7 * 24 * 60 * 60 * 1000;
 const SWIPE_MIN_DISTANCE_PX = 48;
 const SWIPE_MAX_VERTICAL_DRIFT_PX = 40;
 const ONBOARDING_CARD_TRANSITION = {
@@ -61,37 +61,8 @@ const ONBOARDING_CARD_VARIANTS: Variants = {
   }),
 };
 
-function onboardingStorageKey(gameKey: VenueGameKey, venueId: string): string {
-  return `tp_onboarding_${gameKey}_${venueId}`;
-}
-
 function getOnboardingInitialStep(_gameKey: VenueGameKey): number {
   return 0;
-}
-
-function markOnboardingComplete(gameKey: VenueGameKey): void {
-  try {
-    const venueId = getVenueId()?.trim() ?? "";
-    if (!venueId) return;
-    localStorage.setItem(onboardingStorageKey(gameKey, venueId), String(Date.now()));
-  } catch {
-    // localStorage unavailable — silently skip
-  }
-}
-
-/** True when this browser recorded playing `gameKey` at this venue within ONBOARDING_STALE_MS. */
-function hasRecentOnboarding(gameKey: VenueGameKey): boolean {
-  try {
-    const venueId = getVenueId()?.trim() ?? "";
-    if (!venueId) return false;
-    const raw = localStorage.getItem(onboardingStorageKey(gameKey, venueId));
-    if (!raw) return false;
-    const timestamp = Number(raw);
-    if (!Number.isFinite(timestamp)) return false;
-    return Date.now() - timestamp < ONBOARDING_STALE_MS;
-  } catch {
-    return false;
-  }
 }
 
 function analyticsGameType(gameKey: VenueGameKey): GameAnalyticsType {
@@ -338,6 +309,23 @@ export function GameLandingExperience({
           mainClassName={isPlaying ? "pt-0!" : undefined}
         >
           {isPlaying ? (
+            // Category Blitz pins its own root to `var(--tp-vh)` and manages its
+            // own internal scroll regions — a second, independently scrollable/
+            // growable wrapper here lets iOS's elastic overscroll drag the whole
+            // "fixed" game off screen when a nested list hits its scroll limit.
+            // Give it a single, non-scrolling height boundary instead; every
+            // other game keeps the original grow-and-scroll wrapper.
+            gameKey === "category-blitz" ? (
+              <div
+                data-venue-game-scroll
+                className={`animate-tp-surface-enter relative z-10 flex flex-col overflow-hidden overscroll-none ${playingContainerClassName ?? "px-2 py-2 sm:px-3 sm:py-3"}`}
+                style={{ height: "var(--tp-vh, 100dvh)" }}
+              >
+                {showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
+                  ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
+                  : children}
+              </div>
+            ) : (
             <div
               data-venue-game-scroll
               className={`animate-tp-surface-enter relative z-10 flex min-h-[100dvh] flex-col overflow-y-auto touch-pan-y ${playingContainerClassName ?? "px-2 py-2 sm:px-3 sm:py-3"}`}
@@ -355,6 +343,7 @@ export function GameLandingExperience({
               </div>
             )}
             </div>
+            )
           ) : isResumeCheckPending ? (
             <div className="flex h-full min-h-[60dvh] items-center justify-center px-4">
               <div className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-4 py-3 text-sm font-semibold text-ht-fg-muted">

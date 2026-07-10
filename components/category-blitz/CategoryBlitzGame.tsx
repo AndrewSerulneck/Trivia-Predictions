@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FocusEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
@@ -10,7 +10,6 @@ import { answerStartsWithLetter } from "@/lib/categoryBlitzShared";
 import { CB_LETTER_BADGE_LAYOUT_ID, cbCategoryRowLayoutId } from "@/lib/categoryBlitzMotion";
 import { EASE_SNAP } from "@/lib/motionEasing";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
-import { GameOnboardingCard, GAME_STEP_DOT_ACTIVE } from "@/components/venue/GameIdentityPanel";
 import { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
 import RevealSequence from "@/components/category-blitz/RevealSequence";
 import RoundStartReveal, { ROUND_START_REVEAL_MAX_MS } from "@/components/category-blitz/RoundStartReveal";
@@ -121,7 +120,7 @@ function RulesList() {
   const rules = VENUE_GAME_CARD_BY_KEY["category-blitz"].rules.map((rule) => rule.replace(/^\s*-\s*/, "").trim());
   return (
     <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-4`}>
-      <p className={`${TEXT_LABEL} mb-2`}>Rules</p>
+      <p className={`${TEXT_LABEL} mb-2`}>Gameplay</p>
       <div className="space-y-1.5">
         {rules.map((rule) => (
           <p key={rule} className="text-sm leading-snug text-slate-300">
@@ -136,12 +135,12 @@ function RulesList() {
 /**
  * Combined pre-game screen for both the "idle" (no active session) and
  * "lobby" (session exists, waiting for host/countdown) phases — the ONLY
- * screen a player lands on before a round starts. Always shows the rules and
- * lets the player click through the same tutorial slides shown on first
- * entry, so review is available without leaving this screen. The status card
- * up top reflects whichever of the three pre-game states applies: no game
- * scheduled, a scheduled game counting down to its lobby window, or an open
- * lobby counting down to round start.
+ * screen a player lands on before a round starts. Shows the rules as a quick
+ * reference; the illustrated tutorial slides only run once, before this
+ * lobby, as an overlay on the venue home screen (VenueHubClient) — they must
+ * not reappear here. The status card up top reflects whichever of the three
+ * pre-game states applies: no game scheduled, a scheduled game counting down
+ * to its lobby window, or an open lobby counting down to round start.
  */
 function LobbyScreen({
   phase,
@@ -179,29 +178,10 @@ function LobbyScreen({
       ? Math.max(0, Math.floor((nextWindowAtMs - nowMs) / 1000))
       : null;
 
-  const steps = VENUE_GAME_CARD_BY_KEY["category-blitz"].steps;
-  const [stepIndex, setStepIndex] = useState(0);
-  const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
-
-  const transitionToStep = useCallback((targetStep: number) => {
-    if (targetStep === stepIndex) return;
-    setSlideDirection(targetStep > stepIndex ? 1 : -1);
-    setStepIndex(targetStep);
-  }, [stepIndex]);
-
-  const goToNextStep = useCallback(() => {
-    transitionToStep(Math.min(stepIndex + 1, steps.length - 1));
-  }, [stepIndex, steps.length, transitionToStep]);
-
-  const goToPreviousStep = useCallback(() => {
-    transitionToStep(Math.max(stepIndex - 1, 0));
-  }, [stepIndex, transitionToStep]);
-
-  const isLastStep = stepIndex === steps.length - 1;
   const isUrgent = lobbyCountdown != null && lobbyCountdown <= 10;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto px-4 py-6">
+    <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto overscroll-contain px-4 py-6">
       {phase === "lobby" ? <InviteBanner playerCount={playerCount} /> : null}
 
       {phase === "lobby" ? (
@@ -253,90 +233,6 @@ function LobbyScreen({
       )}
 
       <RulesList />
-
-      {/* Click-through tutorial — no auto-rotation, user navigates manually like Bingo/Pick 'Em/Fantasy */}
-      <div className="relative w-full max-w-sm shrink-0" style={{ minHeight: "18rem" }}>
-        <AnimatePresence mode="wait" custom={slideDirection}>
-          <motion.div
-            key={`cb-lobby-${stepIndex}`}
-            custom={slideDirection}
-            variants={{
-              enter: (dir: 1 | -1) => ({
-                x: dir > 0 ? "104%" : "-104%",
-                opacity: 0.72,
-                scale: 0.985,
-              }),
-              center: {
-                x: "0%",
-                opacity: 1,
-                scale: 1,
-              },
-              exit: (dir: 1 | -1) => ({
-                x: dir > 0 ? "-104%" : "104%",
-                opacity: 0.72,
-                scale: 0.985,
-              }),
-            }}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 h-full w-full"
-          >
-            <GameOnboardingCard gameKey="category-blitz" step={steps[stepIndex]} stepIndex={stepIndex} className="h-full w-full" />
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Step dots */}
-      <div className="flex shrink-0 items-center justify-center gap-2">
-        {steps.map((_, index) => (
-          <button
-            key={index}
-            type="button"
-            onClick={() => transitionToStep(index)}
-            className={`tp-clean-button h-2 rounded-full transition-all duration-200 ${
-              index === stepIndex
-                ? `w-6 ${GAME_STEP_DOT_ACTIVE["category-blitz"]}`
-                : "w-2 bg-white/30"
-            }`}
-            aria-label={`Go to step ${index + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* Navigation buttons */}
-      <div className="grid w-full max-w-sm shrink-0 grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={stepIndex > 0 ? goToPreviousStep : undefined}
-          disabled={stepIndex === 0}
-          className={`tp-clean-button inline-flex min-h-[44px] items-center justify-center rounded-full px-3 py-2 text-sm font-black transition-all ${
-            stepIndex === 0
-              ? "bg-slate-800/50 text-slate-600 opacity-0 pointer-events-none"
-              : "bg-gradient-to-r from-orange-500 to-amber-400 text-slate-900"
-          }`}
-        >
-          Back
-        </button>
-        {isLastStep ? (
-          <button
-            type="button"
-            onClick={goToPreviousStep}
-            className="tp-clean-button inline-flex min-h-[44px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-sm font-black text-white"
-          >
-            Start over
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={goToNextStep}
-            className="tp-clean-button inline-flex min-h-[44px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-sm font-black text-white"
-          >
-            Next
-          </button>
-        )}
-      </div>
     </div>
   );
 }
@@ -491,7 +387,7 @@ function CompleteScreen({
   const podiumOrder = [podium[1], podium[0], podium[2]];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-6">
       {/* Viewer's own final score */}
       <div className={`flex items-center gap-3 rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 px-4 py-4`}>
         <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${LETTER_GRADIENT}`}>
@@ -624,7 +520,7 @@ function ResultsScreen({
   const viewerEntry = viewerRank > -1 ? standings[viewerRank] : null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4">
       <InviteBanner playerCount={playerCount} />
       {/* The reveal journey (RevealSequence) just animated the leaderboard a
           beat earlier, then settled here — so the countdown "drops in" above a
@@ -818,6 +714,47 @@ export function AnsweringScreen({
     };
   }, []);
 
+  // On-screen keyboards resize the visual viewport (--tp-vh, ViewportHeightSync)
+  // rather than push content up, so a focused input near the bottom of the
+  // list can end up hidden behind the keyboard even though the game
+  // container itself shrank correctly. Wait for that resize (or a fallback
+  // timeout, for keyboards that don't fire visualViewport resize) and then
+  // scroll the field into view within its own scroll container.
+  const scrollFocusCleanupRef = useRef<(() => void) | null>(null);
+
+  const handleAnswerInputFocus = useCallback((event: FocusEvent<HTMLInputElement>) => {
+    scrollFocusCleanupRef.current?.();
+
+    const target = event.currentTarget;
+    let settled = false;
+    const scrollIntoView = () => {
+      if (settled) return;
+      settled = true;
+      target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    };
+
+    const viewport = window.visualViewport;
+    const onViewportResize = () => {
+      // ViewportHeightSync debounces --tp-vh updates ~120ms behind the
+      // resize event — wait for that so the scroll container has already
+      // taken on its new (keyboard-adjusted) height before we scroll it.
+      window.setTimeout(scrollIntoView, 150);
+    };
+    viewport?.addEventListener("resize", onViewportResize, { once: true });
+    const fallbackTimer = window.setTimeout(scrollIntoView, 400);
+
+    scrollFocusCleanupRef.current = () => {
+      viewport?.removeEventListener("resize", onViewportResize);
+      window.clearTimeout(fallbackTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      scrollFocusCleanupRef.current?.();
+    };
+  }, []);
+
   const submitAnswers = useCallback(async () => {
     if (submittedRef.current || isSpectating) return;
     submittedRef.current = true;
@@ -971,7 +908,7 @@ export function AnsweringScreen({
       )}
 
       {/* Categories grid */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
         <div className="space-y-2">
           {categories.map((category, i) => {
             const filled = answers[i].trim().length > 0;
@@ -1014,6 +951,7 @@ export function AnsweringScreen({
                         autosaveAnswer(i, trimmed);
                       }, AUTOSAVE_DEBOUNCE_MS);
                     }}
+                    onFocus={handleAnswerInputFocus}
                     placeholder={`${letter}…`}
                     className={`mt-0.5 w-full bg-transparent text-sm font-bold outline-none placeholder:text-slate-600 ${
                       wrongLetter ? "text-rose-300" : filled ? "text-emerald-200" : "text-white"
@@ -1521,7 +1459,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
       )}
       {phase === "answering" && round && (
         showReveal ? (
-          <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto">
+          <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto overscroll-contain">
             <RoundStartReveal
               letter={round.letter}
               categories={round.categories}

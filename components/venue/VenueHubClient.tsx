@@ -25,8 +25,10 @@ import {
 } from "@/lib/venueHomeBootstrap";
 import { VENUE_GAME_CARD_BY_KEY, VENUE_HOME_GAME_KEYS, type VenueGameKey } from "@/lib/venueGameCards";
 import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
+import { hasRecentOnboarding } from "@/lib/gameOnboarding";
 import { VenueHubHeaderBar } from "@/components/venue/VenueHubHeaderBar";
 import { VenueGamesPanel } from "@/components/venue/VenueGamesPanel";
+import { CategoryBlitzOnboardingOverlay } from "@/components/venue/CategoryBlitzOnboardingOverlay";
 import { VenueChallengesPanel } from "@/components/venue/VenueChallengesPanel";
 import { VenueLeaderboardPanel } from "@/components/venue/VenueLeaderboardPanel";
 import {
@@ -1306,7 +1308,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     router.prefetch("/pending-challenges");
     router.prefetch("/active-games");
     router.prefetch("/redeem-prizes");
-    router.prefetch("/category-blitz");
+    router.prefetch("/category-blitz/play");
     if (!warmupStartedRef.current && !bootstrapSnapshotRef.current) {
       warmupStartedRef.current = true;
       void runWarmup();
@@ -1322,8 +1324,43 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     };
   }, []);
 
+  const [categoryBlitzOnboardingOpen, setCategoryBlitzOnboardingOpen] = useState(false);
+  const categoryBlitzSourceElementRef = useRef<HTMLElement | null>(null);
+
+  const enterCategoryBlitzLobby = useCallback(
+    async (sourceElement: HTMLElement | null) => {
+      triggerPulse();
+      setPendingDestination("category-blitz");
+      try {
+        await runVenueGameOpenTransition({
+          gameKey: "category-blitz",
+          sourceElement,
+          targetPath: "/category-blitz/play",
+          navigate: () => router.push("/category-blitz/play"),
+        });
+      } catch {
+        setPendingDestination(null);
+      }
+    },
+    [router, triggerPulse]
+  );
+
   const goTo = useCallback(
     async (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
+      if (dest === "category-blitz") {
+        // Tutorial cards must never render on the lobby route itself — show
+        // them as an overlay here on the home screen (skipped entirely if the
+        // browser already completed onboarding for this venue recently), then
+        // land directly on the live game/waiting lobby.
+        if (hasRecentOnboarding("category-blitz")) {
+          await enterCategoryBlitzLobby(sourceElement);
+          return;
+        }
+        categoryBlitzSourceElementRef.current = sourceElement;
+        setCategoryBlitzOnboardingOpen(true);
+        return;
+      }
+
       const destination = VENUE_GAME_CARD_BY_KEY[dest];
       if (!destination) return;
       const targetPath =
@@ -1341,8 +1378,20 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         setPendingDestination(null);
       }
     },
-  [router, triggerPulse, venue.id]
+  [enterCategoryBlitzLobby, router, triggerPulse, venue.id]
   );
+
+  const closeCategoryBlitzOnboarding = useCallback(() => {
+    categoryBlitzSourceElementRef.current = null;
+    setCategoryBlitzOnboardingOpen(false);
+  }, []);
+
+  const joinCategoryBlitzFromOnboarding = useCallback(() => {
+    setCategoryBlitzOnboardingOpen(false);
+    const sourceElement = categoryBlitzSourceElementRef.current;
+    categoryBlitzSourceElementRef.current = null;
+    void enterCategoryBlitzLobby(sourceElement);
+  }, [enterCategoryBlitzLobby]);
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
   const currentUserId = useMemo(() => (getUserId() ?? "").trim(), []);
@@ -1642,6 +1691,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      <CategoryBlitzOnboardingOverlay
+        open={categoryBlitzOnboardingOpen}
+        onClose={closeCategoryBlitzOnboarding}
+        onJoin={joinCategoryBlitzFromOnboarding}
+      />
     </div>
   );
 }
