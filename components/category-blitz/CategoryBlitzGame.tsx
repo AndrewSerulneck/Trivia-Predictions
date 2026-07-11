@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FocusEvent } fr
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
+import { useScheduleUpdatedFlash } from "@/lib/hooks/useScheduleUpdatedBroadcast";
+import ScheduleUpdatedToast from "@/components/ui/ScheduleUpdatedToast";
 import { useCategoryBlitzSession, type CategoryBlitzPhase } from "@/lib/categoryBlitzRealtime";
 import { isCategoryBlitzTestModeEnabled, setCategoryBlitzTestMode } from "@/lib/categoryBlitzTestMode";
 import { answerStartsWithLetter } from "@/lib/categoryBlitzShared";
@@ -158,14 +160,23 @@ function LobbyScreen({
   const [nextWindowAtMs, setNextWindowAtMs] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
-  useEffect(() => {
+  const refetchNextWindow = useCallback(() => {
     if (phase !== "idle" || !venueId) return;
-    let cancelled = false;
-    void fetchCategoryBlitzNextWindowAt(venueId).then((ms) => {
-      if (!cancelled && ms !== null) setNextWindowAtMs(ms);
-    });
-    return () => { cancelled = true; };
+    void fetchCategoryBlitzNextWindowAt(venueId).then((ms) => setNextWindowAtMs(ms));
   }, [phase, venueId]);
+
+  useEffect(() => {
+    refetchNextWindow();
+  }, [refetchNextWindow]);
+
+  // An admin creating/editing/deleting a schedule broadcasts "schedule_updated"
+  // on this venue's session channel (see lib/categoryBlitzSchedules.ts) — refetch
+  // immediately instead of leaving this countdown stuck on whatever was
+  // scheduled when this screen first mounted.
+  const scheduleJustUpdated = useScheduleUpdatedFlash(
+    phase === "idle" && venueId ? `category-blitz-session:${venueId}` : null,
+    refetchNextWindow,
+  );
 
   useEffect(() => {
     if (phase !== "idle") return;
@@ -215,6 +226,9 @@ function LobbyScreen({
       ) : (
         <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
           <p className={TEXT_LABEL}>Category Blitz</p>
+          <div className="mt-2 flex justify-center">
+            <ScheduleUpdatedToast show={scheduleJustUpdated} />
+          </div>
           {idleCountdownSeconds != null ? (
             <>
               <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Next game in</p>

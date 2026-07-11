@@ -147,11 +147,11 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     cardClassName: "bg-emerald-600 text-white",
     visibleOnVenueHome: false,  // card only shown when a live session exists
     rules: [
-      "-A letter is drawn for the whole venue",
-      "-Name something in each category starting with that letter",
-      "-3 minutes to fill all 12 categories",
-      "-Unique answers win points.",
-      "-Be creative. If someone else thought of the same response as you, no points!",
+      "-Each round, one letter and 12 categories are revealed",
+      "-Players must name something in each category starting with that letter",
+      "-Be quick! You have 3 minutes to fill all 12 categories",
+      "-Only unique answers win points.",
+      "-The point is to be original. If someone else thought of the same response as you in any category, no points!",
     ],
     steps: [
       {

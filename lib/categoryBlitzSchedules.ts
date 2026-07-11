@@ -7,6 +7,7 @@ import {
   isScheduleWindowOpen,
 } from "@/lib/categoryBlitzScheduleTime";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { broadcastCategoryBlitz } from "@/lib/categoryBlitzBroadcast";
 import type { CategoryBlitzSchedule, CategoryBlitzRecurringType } from "@/types";
 
 function assertAdmin() {
@@ -116,7 +117,9 @@ export async function createSchedule(params: CreateScheduleParams): Promise<Cate
     .single<ScheduleRow>();
 
   if (error) throw new Error(error.message || "Failed to create schedule.");
-  return toSchedule(data);
+  const schedule = toSchedule(data);
+  await broadcastCategoryBlitz(venueId, "schedule_updated", { scheduleId: schedule.id });
+  return schedule;
 }
 
 export type UpdateScheduleParams = {
@@ -150,7 +153,9 @@ export async function updateSchedule(
     .single<ScheduleRow>();
 
   if (error) throw new Error(error.message || "Failed to update schedule.");
-  return toSchedule(data);
+  const schedule = toSchedule(data);
+  await broadcastCategoryBlitz(schedule.venueId, "schedule_updated", { scheduleId: schedule.id });
+  return schedule;
 }
 
 /** Soft-delete (deactivate) a schedule and return its venue id (or null if not found). */
@@ -172,6 +177,8 @@ export async function deleteSchedule(scheduleId: string): Promise<string | null>
     .eq("id", scheduleId);
 
   if (error) throw new Error(error.message || "Failed to delete schedule.");
+
+  if (venueId) await broadcastCategoryBlitz(venueId, "schedule_updated", { scheduleId });
 
   return venueId;
 }

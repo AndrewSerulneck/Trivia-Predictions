@@ -521,6 +521,18 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
     }
   }, [venueId, loadCurrentRound, loadFinalResults]);
 
+  // loadSessionRef must be declared (and kept in sync) before the realtime
+  // subscription effect below, which reads it from the "schedule_updated"
+  // handler — declaring it after would mean an earlier effect closes over a
+  // ref assigned by a later one, which is unsound even though it happens to
+  // work at runtime (effect callbacks only fire after the whole render pass
+  // completes).
+  const loadSessionRef = useRef(loadSession);
+
+  useEffect(() => {
+    loadSessionRef.current = loadSession;
+  });
+
   // ── Load results ──────────────────────────────────────────────────────────
 
   const loadResults = useCallback(async (roundId: string) => {
@@ -659,6 +671,13 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         if (!payload?.roundId) return;
         void loadResultsRef.current(payload.roundId);
       })
+      .on("broadcast", { event: "schedule_updated" }, () => {
+        // Admin created/edited/deleted a schedule — refresh immediately
+        // instead of waiting out the 15s fallback poll, so the idle/lobby
+        // countdown reflects the change right away.
+        if (!active || !mountedRef.current) return;
+        void loadSessionRef.current();
+      })
       .on("broadcast", { event: "session_ended" }, () => {
         if (!active || !mountedRef.current) return;
         setPhase("complete");
@@ -692,12 +711,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   }, [venueId, loadCurrentRound, loadFinalResults]);
 
   // ── Initial load + fallback poll ──────────────────────────────────────────
-
-  const loadSessionRef = useRef(loadSession);
-
-  useEffect(() => {
-    loadSessionRef.current = loadSession;
-  });
 
   useEffect(() => {
     mountedRef.current = true;

@@ -2,6 +2,7 @@ import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { broadcastCategoryBlitz } from "@/lib/categoryBlitzBroadcast";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { trackAnthropicUsage } from "@/lib/llmCostTracker";
 import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
@@ -24,22 +25,6 @@ import {
 import letterIndexData from "@/data/category-blitz/category-letter-index.json";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY_CATEGORY_BLITZ_ANSWER_GRADER });
-
-// ── Broadcast helpers ─────────────────────────────────────────────────────────
-
-/** Channel name all players in a venue subscribe to for session events. */
-export function categoryBlitzChannelName(venueId: string): string {
-  return `category-blitz-session:${venueId}`;
-}
-
-function broadcast(venueId: string, event: string, payload: Record<string, unknown>): void {
-  if (!supabaseAdmin) return;
-  void supabaseAdmin.channel(categoryBlitzChannelName(venueId)).send({
-    type: "broadcast",
-    event,
-    payload,
-  });
-}
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -643,7 +628,19 @@ export async function driveVenueCategoryBlitz(
             debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): existing session, round in progress or not yet scored — no-op`);
           }
         } else {
-          debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): not enough time left in window for another round — no-op`);
+          // No time left in the window for another round. If the last round
+          // has already been scored, this session is done — end it now
+          // instead of leaving it "active" until scheduledEndAt actually
+          // elapses (or the idle timeout / cron eventually catches it),
+          // which otherwise strands connected clients on the reveal/results
+          // screen for the last round instead of advancing to Game Over.
+          const latest = await getLatestRound(existing.id);
+          if (latest && latest.status === "complete") {
+            debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): last round complete, no time for another — ending session`);
+            await endSession(existing.id);
+          } else {
+            debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): not enough time left in window for another round — no-op`);
+          }
         }
       }
     }
@@ -775,7 +772,7 @@ export async function startRound(sessionId: string): Promise<CategoryBlitzRound>
   }
 
   const round = toRound(roundRow);
-  broadcast(sessionRow.venue_id, "round_started", {
+  await broadcastCategoryBlitz(sessionRow.venue_id, "round_started", {
     round: {
       id: round.id,
       letter: round.letter,
@@ -803,7 +800,7 @@ export async function endSession(sessionId: string): Promise<void> {
     .eq("id", sessionId);
 
   if (sessionRow?.venue_id) {
-    broadcast(sessionRow.venue_id, "session_ended", { sessionId });
+    await broadcastCategoryBlitz(sessionRow.venue_id, "session_ended", { sessionId });
   }
 }
 
@@ -1194,7 +1191,7 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
   const results = await buildResults(roundId, round);
 
   debugLog(`[categoryBlitz] scoreRound(${roundId}): graded and completed`);
-  broadcast(round.venue_id, "round_scored", { roundId, totals: results.totals });
+  await broadcastCategoryBlitz(round.venue_id, "round_scored", { roundId, totals: results.totals });
 
   return results;
 }

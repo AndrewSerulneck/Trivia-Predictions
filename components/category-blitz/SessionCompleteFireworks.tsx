@@ -15,8 +15,8 @@ interface SessionCompleteFireworksProps {
   onDone?: () => void;
 }
 
-const HOLD_MS = 2600;
-const HOLD_MS_REDUCED = 900;
+const HOLD_MS = 60_000;
+const HOLD_MS_REDUCED = 60_000;
 
 // Deterministic confetti (no Math.random -> no hydration drift): 14 shapes fanned
 // out on a circle with varied distance/size/color/rotation.

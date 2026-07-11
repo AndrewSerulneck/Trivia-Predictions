@@ -10,6 +10,7 @@ import {
   loadActiveLiveTriviaSeedQuestionPool,
 } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { broadcastLiveTrivia } from "@/lib/liveTriviaBroadcast";
 
 const QUESTIONS_PER_ROUND = 15;
 
@@ -584,6 +585,7 @@ export async function createAdminLiveShowdownSchedule(params: {
     throw new Error(mappingInsert.error.message || "Failed to seed Live Showdown session questions.");
   }
 
+  await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId: schedule.id });
   return mapScheduleRow(schedule);
 }
 
@@ -751,6 +753,7 @@ export async function updateAdminLiveShowdownSchedule(params: {
     if (legacyUpdate.error || !legacyUpdate.data) {
       throw new Error(legacyUpdate.error?.message || "Failed to update Live Showdown schedule.");
     }
+    await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId });
     return mapScheduleRow({ ...(legacyUpdate.data as TriviaScheduleRowLegacy), recurring_type: "none", recurring_days: null });
   }
 
@@ -758,6 +761,7 @@ export async function updateAdminLiveShowdownSchedule(params: {
     throw new Error(updateResult.error?.message || "Failed to update Live Showdown schedule.");
   }
 
+  await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId });
   return mapScheduleRow(updateResult.data as TriviaScheduleRow);
 }
 
@@ -767,6 +771,14 @@ export async function deleteAdminLiveShowdownSchedule(scheduleIdRaw: string): Pr
   if (!scheduleId) {
     throw new Error("scheduleId is required.");
   }
+
+  // Fetch venue_id before deleting so we can notify that venue's lobby.
+  const { data: existingSchedule } = await admin
+    .from("trivia_schedules")
+    .select("venue_id")
+    .eq("id", scheduleId)
+    .maybeSingle<{ venue_id: string }>();
+  const venueId = existingSchedule?.venue_id ?? null;
 
   const { error: deleteSessionQuestionsError } = await admin
     .from("trivia_session_questions")
@@ -795,6 +807,8 @@ export async function deleteAdminLiveShowdownSchedule(scheduleIdRaw: string): Pr
   if (deleteScheduleError) {
     throw new Error(deleteScheduleError.message || "Failed to delete Live Showdown schedule.");
   }
+
+  if (venueId) await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId });
 
   return { deleted: Array.isArray(data) && data.length > 0 };
 }

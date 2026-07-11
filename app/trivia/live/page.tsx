@@ -10,6 +10,8 @@ import { RevealedAnswerBanner } from "@/components/animations/RevealedAnswerBann
 import { EmceeTypeInAnnouncement } from "@/components/animations/EmceeTypeInAnnouncement";
 import { LiveTriviaLeaderboardRow } from "@/components/animations/LiveTriviaLeaderboardRow";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
+import { useScheduleUpdatedFlash } from "@/lib/hooks/useScheduleUpdatedBroadcast";
+import ScheduleUpdatedToast from "@/components/ui/ScheduleUpdatedToast";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import {
   resolveLiveTriviaVenueContext,
@@ -499,6 +501,14 @@ export default function LiveShowdownPage() {
     const timer = window.setInterval(() => void fetchState(), intervalMs);
     return () => window.clearInterval(timer);
   }, [fetchState, isGameActive, isFinalResultsWindow]);
+
+  // An admin creating/editing/deleting a Live Trivia schedule broadcasts
+  // "schedule_updated" on this venue's channel (see lib/liveShowdownAdmin.ts)
+  // — refetch immediately instead of waiting out the 15s idle poll above.
+  const scheduleJustUpdated = useScheduleUpdatedFlash(
+    resolvedVenueId ? `live-trivia-session:${resolvedVenueId}` : null,
+    fetchState,
+  );
 
   // Local countdown state: derives secondsRemaining from the known
   // nextSchedule.startTime so the countdown stays smooth between server fetches.
@@ -1194,6 +1204,9 @@ export default function LiveShowdownPage() {
           <>
             <section className="rounded-2xl border border-amber-400/60 bg-slate-900 p-4 text-center">
               <p className="text-xs uppercase tracking-[0.14em] text-amber-300">Live Trivia Status</p>
+              <div className="mt-2 flex justify-center">
+                <ScheduleUpdatedToast show={scheduleJustUpdated} />
+              </div>
               {!state.isGameActive ? (
                 <p className="mt-2 text-2xl font-black tabular-nums text-amber-200">
                   Next Live Trivia Showdown in {formatCountdown(preGameSecondsRemaining)}
@@ -1554,6 +1567,9 @@ export default function LiveShowdownPage() {
 
                 {/* ── Countdown ── */}
                 <section className="rounded-2xl border border-amber-400/60 bg-slate-900 p-4 text-center">
+                  <div className="mb-2 flex justify-center">
+                    <ScheduleUpdatedToast show={scheduleJustUpdated} />
+                  </div>
                   {state.nextSchedule ? (
                     <>
                       <p className="text-sm uppercase tracking-[0.14em] text-amber-300">Game Begins In</p>
