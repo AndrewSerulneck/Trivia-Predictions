@@ -8,9 +8,11 @@ import { trackAnthropicUsage } from "@/lib/llmCostTracker";
 import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
 import { isCategoryBlitzSoloScoringEnabled } from "@/lib/categoryBlitzTestMode";
 import { ROUND_DURATION_SECONDS, SUBMISSION_GRACE_MS, roundDurationSeconds, roundIntervalSeconds, intermissionSeconds, lobbyDwellSeconds, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
+import { isReverseRound, reverseRoundPoints } from "@/lib/categoryBlitzModes";
 import type {
   CategoryBlitzSession,
   CategoryBlitzRound,
+  CategoryBlitzMode,
   CategoryBlitzSubmission,
   CategoryBlitzCategoryResult,
   CategoryBlitzRoundResults,
@@ -47,6 +49,12 @@ const LETTER_CATEGORIES: Record<string, string[]> = letterIndexData.letters;
 const USABLE_LETTERS: string[] = letterIndexData.usableLetters;
 const ROUND_CATEGORY_COUNT = letterIndexData.setSize;
 
+// "Blend In!" (reverse-mode) letter-first index — same shape, but built only
+// from category-pool.json entries tagged modes: ["B"] (see
+// scripts/build-category-blitz-letter-index.cjs).
+const B_LETTER_CATEGORIES: Record<string, string[]> = letterIndexData.bLetters;
+const B_USABLE_LETTERS: string[] = letterIndexData.bUsableLetters;
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function assertAdmin() {
@@ -79,9 +87,9 @@ function shuffle<T>(arr: readonly T[]): T[] {
  * A round applies ONE letter to all its categories, so we only ever draw from
  * `usableLetters` — the letters with enough abundant categories to fill a board.
  */
-function pickRoundLetter(usedLetters: string[]): string {
-  const available = USABLE_LETTERS.filter((l) => !usedLetters.includes(l));
-  const pool = available.length > 0 ? available : USABLE_LETTERS;
+function pickRoundLetter(usedLetters: string[], usableLetters: string[] = USABLE_LETTERS): string {
+  const available = usableLetters.filter((l) => !usedLetters.includes(l));
+  const pool = available.length > 0 ? available : usableLetters;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -91,8 +99,8 @@ function pickRoundLetter(usedLetters: string[]): string {
  * category is guaranteed (by the build) to have several common answers for this
  * letter, so no category is a dead end.
  */
-function assembleBoardForLetter(letter: string): string[] {
-  const pool = LETTER_CATEGORIES[letter] ?? [];
+function assembleBoardForLetter(letter: string, letterCategories: Record<string, string[]> = LETTER_CATEGORIES): string[] {
+  const pool = letterCategories[letter] ?? [];
   return shuffle(pool).slice(0, ROUND_CATEGORY_COUNT);
 }
 
@@ -248,6 +256,136 @@ ${lines}`;
   return resultMap;
 }
 
+// ── LLM safety moderation (reverse / "Blend In!" rounds) ──────────────────────
+
+/** Per-answer safety verdict from the moderator: safe plus, when unsafe, a short internal note. */
+type ModerationVerdict = { safe: boolean; reason: string | null };
+
+/**
+ * Safety moderator for "Blend In!" (reverse) rounds. This REPLACES the Is-A
+ * validity judge (validateAnswersWithLLM): a reverse round is graded by crowd
+ * consensus, not category-membership, so Haiku's job changes from "is this a
+ * valid answer?" to "is this SAFE to show the whole room?". Answers flagged as
+ * hateful (slurs / racism / bigotry / misogyny), sexual, harassing, violent, or
+ * political score 0 and are suppressed from the reveal.
+ *
+ * CRITICAL DIFFERENCE from validateAnswersWithLLM: that judge fails OPEN (API
+ * trouble → treat as valid, because a wrongly-rejected trivia answer is a minor
+ * annoyance). Moderation fails CLOSED: any answer the model does not clearly
+ * clear as safe — a missing item, an unparseable response, or a total API
+ * outage — is treated as unsafe (safe=false). Uncertain content never scores
+ * and is never shown to the room. Same retry/timeout/chunk harness otherwise.
+ */
+async function moderateAnswersWithLLM(
+  letter: string,
+  requests: ValidationRequest[],
+): Promise<Map<string, ModerationVerdict>> {
+  const resultMap = new Map<string, ModerationVerdict>();
+  if (requests.length === 0) return resultMap;
+
+  const lines = requests
+    .map((r, i) => `${i + 1}. Category: "${r.category}" | Answer: "${r.answer}"`)
+    .join("\n");
+
+  const prompt = `You are a content-safety moderator for a live bar trivia game. Every answer below was typed by a player and, if allowed, will be shown on a big public screen and read out loud to a room of adults.
+
+The game's categories are deliberately playful and opinion-based (e.g. "an annoying celebrity", "an overrated movie", "a guilty pleasure song"). So negative, snarky, or joking opinions about public figures, movies, music, food, brands, teams, or trends are completely FINE and SAFE. Do not flag an answer just for being mean, dumb, random, or a weak answer — that is the crowd's job, not yours.
+
+Your ONLY job is to catch genuinely harmful content. Mark safe=false if, and only if, an answer does any of these:
+- Contains or targets someone with a slur or hateful/demeaning content based on race, ethnicity, nationality, religion, gender, sexual orientation, gender identity, or disability — including coded language or "dog whistles".
+- Is sexually explicit, or sexualizes minors in any way.
+- Harasses, threatens, or "doxxes" a specific person, or targets an ordinary private (non-famous) individual by name.
+- Praises, encourages, or calls for violence.
+- Is political: a politician, political candidate, party, elected/appointed official, activist primarily known for a partisan cause, or a hot-button political / culture-war topic. (Entertainers, athletes, musicians, and other pop-culture figures are NOT political and are safe, even if they are polarizing.)
+
+Otherwise, mark safe=true.
+
+Fail safe: if you are genuinely UNSURE whether something is a slur, a dog whistle, or a political figure/topic, mark safe=false.
+
+For each item, when safe=false give "reason": a very short internal note (at most 6 words) naming the problem (e.g. "racial slur", "political figure"). When safe=true, set "reason" to null.
+
+Return ONLY a JSON array of objects {"index": <number>, "safe": <true|false>, "reason": <string|null>}. No other text.
+
+Items:
+${lines}`;
+
+  // ── Retry loop with exponential backoff (mirrors validateAnswersWithLLM) ─────
+  for (let attempt = 1; attempt <= LLM_MAX_RETRIES; attempt++) {
+    const isFinalAttempt = attempt === LLM_MAX_RETRIES;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+
+      const message = await anthropic.messages.create(
+        {
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 1024,
+          temperature: 0,
+          messages: [{ role: "user", content: prompt }],
+        },
+        { signal: controller.signal },
+      );
+
+      clearTimeout(timeout);
+
+      const text = message.content
+        .filter((b) => b.type === "text")
+        .map((b) => (b as { type: "text"; text: string }).text)
+        .join("");
+
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) throw new Error("No JSON array in moderation response");
+
+      const parsed = JSON.parse(jsonMatch[0]) as { index: number; safe: boolean; reason?: unknown }[];
+      for (const item of parsed) {
+        const req = requests[item.index - 1];
+        if (!req) continue;
+        // Only an explicit `safe: true` clears an answer — anything else is unsafe.
+        const safe = item.safe === true;
+        const reason = !safe
+          ? (typeof item.reason === "string" && item.reason.trim() ? item.reason.trim().slice(0, 120) : "flagged")
+          : null;
+        resultMap.set(req.subId, { safe, reason });
+      }
+
+      // Fail CLOSED: any request the model didn't explicitly clear is unsafe.
+      for (const req of requests) {
+        if (!resultMap.has(req.subId)) resultMap.set(req.subId, { safe: false, reason: "unmoderated" });
+      }
+      console.log(`[categoryBlitz] moderated ${requests.length} answer(s) via Haiku for letter "${letter}" (attempt ${attempt})`);
+
+      trackAnthropicUsage(message.usage, "claude-haiku-4-5-20251001", "category_blitz_moderation", {
+        letter,
+        answer_count: requests.length,
+      }).catch(() => {});
+
+      return resultMap;
+    } catch (err) {
+      const isAbort = err instanceof Error && err.name === "AbortError";
+      const msg = `[categoryBlitz] Haiku moderation attempt ${attempt}/${LLM_MAX_RETRIES} failed for letter "${letter}" (${requests.length} answer(s))` +
+        (isAbort ? " — request timed out" : ` — ${err instanceof Error ? err.message : err}`);
+
+      if (isFinalAttempt) {
+        // Distinct log tag from the standard judge's fail-open path, and opposite
+        // meaning: here exhaustion means we suppress, not that we let content through.
+        console.warn(
+          `[category_blitz_moderation_failclosed] ${msg}. Failing closed — all treated as unsafe (0 pts, suppressed from reveal).`
+        );
+      } else {
+        const delay = LLM_RETRY_BASE_MS * Math.pow(2, attempt - 1) + Math.random() * 500;
+        console.warn(`${msg}. Retrying in ${Math.round(delay)}ms…`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  // ── Fallback (all retries exhausted) — fail closed: everything unsafe. ────────
+  for (const req of requests) {
+    resultMap.set(req.subId, { safe: false, reason: "moderation unavailable" });
+  }
+  return resultMap;
+}
+
 // ── Row → domain mappers ──────────────────────────────────────────────────────
 
 type SessionRow = {
@@ -274,6 +412,7 @@ type RoundRow = {
   status: string;
   created_at: string;
   scored_at: string | null;
+  mode: string;
 };
 
 type SubmissionRow = {
@@ -321,7 +460,7 @@ async function withPlayerCount(session: CategoryBlitzSession): Promise<CategoryB
 }
 
 const SESSION_COLS = "id, venue_id, status, source, scheduled_end_at, starts_at, test_mode, created_at, completed_at";
-const ROUND_COLS = "id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at, scored_at";
+const ROUND_COLS = "id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at, scored_at, mode";
 
 function toRound(row: RoundRow): CategoryBlitzRound {
   return {
@@ -336,6 +475,7 @@ function toRound(row: RoundRow): CategoryBlitzRound {
     status: row.status as CategoryBlitzRound["status"],
     createdAt: row.created_at,
     scoredAt: row.scored_at,
+    mode: (row.mode === "reverse" ? "reverse" : "standard"),
   };
 }
 
@@ -498,9 +638,16 @@ async function scoreExpiredRoundForVenue(venueId: string, now: Date): Promise<vo
   }
 }
 
-/** When a freshly opened auto session's lobby should end, capped so it never outlasts the schedule window. */
-function computeLobbyStartsAt(now: Date, windowEnd: Date, testMode: boolean): string {
-  const startsAtMs = Math.min(now.getTime() + lobbyDwellSeconds(testMode) * 1000, windowEnd.getTime());
+/**
+ * When a freshly opened auto session's lobby should end, capped so it never
+ * outlasts the schedule window. Anchored on the window's actual open instant
+ * (`windowStart`), not the moment a poll happens to notice it — sessions are
+ * created lazily, so anchoring on "now" would drift by however long detection
+ * lagged, producing a jump once the authoritative DB value lands on clients
+ * that estimated from the window-open time directly.
+ */
+function computeLobbyStartsAt(windowStart: Date, windowEnd: Date, testMode: boolean): string {
+  const startsAtMs = Math.min(windowStart.getTime() + lobbyDwellSeconds(testMode) * 1000, windowEnd.getTime());
   return new Date(startsAtMs).toISOString();
 }
 
@@ -586,7 +733,7 @@ export async function driveVenueCategoryBlitz(
       await createSession(venueId, {
         source: "auto",
         scheduledEndAt: occurrence.windowEnd.toISOString(),
-        startsAt: computeLobbyStartsAt(now, occurrence.windowEnd, requestedTestMode),
+        startsAt: computeLobbyStartsAt(occurrence.windowStart, occurrence.windowEnd, requestedTestMode),
         testMode: requestedTestMode,
       });
       debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): created new auto session`);
@@ -725,8 +872,12 @@ export async function startRound(sessionId: string): Promise<CategoryBlitzRound>
     .eq("session_id", sessionId);
 
   const usedLetters = (priorRounds ?? []).map((r: { letter: string }) => r.letter);
-  const letter = pickRoundLetter(usedLetters);
-  const categories = assembleBoardForLetter(letter);
+  const roundIndex = (priorRounds ?? []).length;
+  const mode: CategoryBlitzMode = isReverseRound(roundIndex) ? "reverse" : "standard";
+  const usableLetters = mode === "reverse" ? B_USABLE_LETTERS : USABLE_LETTERS;
+  const letterCategories = mode === "reverse" ? B_LETTER_CATEGORIES : LETTER_CATEGORIES;
+  const letter = pickRoundLetter(usedLetters, usableLetters);
+  const categories = assembleBoardForLetter(letter, letterCategories);
   if (categories.length === 0) throw new Error("Failed to assemble a category board for the round.");
 
   // category_set_index predates the letter-first model; nothing reads it for
@@ -751,6 +902,7 @@ export async function startRound(sessionId: string): Promise<CategoryBlitzRound>
       categories,
       ends_at: endsAt,
       status: "active",
+      mode,
     })
     .select(ROUND_COLS)
     .single<RoundRow>();
@@ -779,6 +931,7 @@ export async function startRound(sessionId: string): Promise<CategoryBlitzRound>
       categories: round.categories,
       startedAt: round.startedAt,
       endsAt: round.endsAt,
+      mode: round.mode,
     },
   });
   return round;
@@ -802,6 +955,84 @@ export async function endSession(sessionId: string): Promise<void> {
   if (sessionRow?.venue_id) {
     await broadcastCategoryBlitz(sessionRow.venue_id, "session_ended", { sessionId });
   }
+}
+
+/**
+ * Test-mode-only: force the current session past whatever it's waiting on
+ * (answer timer, intermission, or lobby dwell) so a solo tester isn't stuck
+ * watching real-time countdowns. Refuses anything but an auto session with
+ * `test_mode === true`, read fresh from the DB row here — never trusted from
+ * the caller — the same posture as startRound's own test_mode pin (see the
+ * requestedTestMode comment on driveVenueCategoryBlitz).
+ *
+ * Implementation nudges `ends_at`/`scored_at`/`starts_at` into the past by
+ * whatever a real expiry would have produced, then hands off to the
+ * unmodified driveVenueCategoryBlitz — so every existing guardrail (startRound's
+ * unique-index race recovery, the schedule-window canFitAnother/auto-end
+ * check, scoreRound's locking) fires exactly as it would on a real expiry.
+ * This function invents no new state transitions or write paths.
+ */
+export async function skipRound(sessionId: string): Promise<CategoryBlitzSession | null> {
+  assertAdmin();
+
+  const { data: sessionRow, error: sessionErr } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select(SESSION_COLS)
+    .eq("id", sessionId)
+    .maybeSingle<SessionRow>();
+
+  if (sessionErr || !sessionRow) {
+    throw new Error("Session not found.");
+  }
+  if (!sessionRow.test_mode) {
+    throw new Error("Skip round is only available for test-mode sessions.");
+  }
+  if (sessionRow.source !== "auto") {
+    throw new Error("Skip round is only available for auto-scheduled sessions.");
+  }
+  if (!["lobby", "active"].includes(sessionRow.status)) {
+    throw new Error(`Cannot skip a round on a session with status '${sessionRow.status}'.`);
+  }
+
+  const now = new Date();
+  // Comfortably past the expiry/grace tolerances so the round or lobby dwell
+  // reads as unambiguously elapsed regardless of clock drift.
+  const pastAnchor = new Date(now.getTime() - (roundIntervalSeconds(true) * 1000 + SUBMISSION_GRACE_MS * 2)).toISOString();
+
+  if (sessionRow.status === "lobby") {
+    await supabaseAdmin!
+      .from("category_blitz_sessions")
+      .update({ starts_at: pastAnchor })
+      .eq("id", sessionId);
+  } else {
+    const latest = await getLatestRound(sessionId);
+    if (latest && latest.status !== "complete") {
+      // Force the timer past its expiry so scoreRound's own guard
+      // (lib/categoryBlitz.ts scoreRound expiry check) passes, then score
+      // with whatever was submitted so far — same as a real timeout.
+      await supabaseAdmin!
+        .from("category_blitz_rounds")
+        .update({ ends_at: pastAnchor })
+        .eq("id", latest.id);
+      await scoreRound(latest.id);
+    }
+    // Collapse the intermission — covers both the round just scored above and
+    // an already-complete round still waiting out its review window.
+    const settled = await getLatestRound(sessionId);
+    if (settled && settled.status === "complete") {
+      await supabaseAdmin!
+        .from("category_blitz_rounds")
+        .update({ scored_at: pastAnchor })
+        .eq("id", settled.id);
+    }
+  }
+
+  // Let the real engine do the rest: fires startRound (with its race guard)
+  // or endSession (respecting the schedule-window auto-end check) exactly as
+  // it would for a naturally expired timer. A null return means the session
+  // legitimately ended (e.g. skipped past the last round in the window) —
+  // that's correct auto-end behavior, not an error.
+  return driveVenueCategoryBlitz(sessionRow.venue_id, now);
 }
 
 // ── Presence / spectator role ────────────────────────────────────────────────
@@ -994,9 +1225,14 @@ const mergeCumulativeSessionTotals = async (
 /**
  * Score all submissions for a round.
  * - Marks round status 'scoring' to prevent new submissions.
- * - Groups answers by category; within each category, answers with the same
- *   normalized form are duplicates (is_unique = false, 0 pts). Unique answers
- *   earn POINTS_PER_UNIQUE_ANSWER (2 pts).
+ * - STANDARD ("Be Unique!") rounds: within each category, answers sharing a
+ *   normalized form are duplicates (0 pts); unique + letter-correct + Is-A-valid
+ *   answers earn POINTS_PER_UNIQUE_ANSWER (2 pts). Validity judge fails OPEN.
+ * - REVERSE ("Blend In!") rounds: answers are graded by crowd consensus — each
+ *   scores 1 pt per distinct player who gave the same normalized answer, uncapped
+ *   (reverseRoundPoints). A fail-CLOSED safety moderator replaces the validity
+ *   judge; unsafe answers score 0 and are suppressed from the reveal.
+ * - Either way the <3-player gate zeroes the whole round.
  * - Awards points to each user's row in the users table.
  * - Marks round 'complete' when done.
  * Returns the scored results.
@@ -1089,55 +1325,17 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
     byCategory.set(sub.category_index, arr);
   }
 
-  // Step 1: compute uniqueness per category.
-  const uniquenessMap = new Map<string, boolean>(); // subId → isUnique
-  for (const [, subs] of byCategory) {
-    const normCounts = new Map<string, number>();
-    for (const sub of subs) {
-      normCounts.set(sub.normalized_answer, (normCounts.get(sub.normalized_answer) ?? 0) + 1);
-    }
-    for (const sub of subs) {
-      uniquenessMap.set(sub.id, (normCounts.get(sub.normalized_answer) ?? 0) === 1);
-    }
-  }
-
-  // Step 1.5: deterministic starting-letter check, before any LLM call. Wrong-
-  // letter answers score 0 regardless of category fit and never reach Haiku.
+  // Deterministic starting-letter check, before any LLM call. Wrong-letter
+  // answers score 0 in BOTH modes and never earn points.
   const letterOkMap = new Map<string, boolean>(); // subId → starts with round.letter
   for (const sub of submissions) {
     letterOkMap.set(sub.id, answerStartsWithLetter(sub.answer, round.letter));
   }
 
-  // Step 2: LLM-validate unique, letter-correct answers.
-  // Validation always runs so players can see if their answer *would* have been
-  // correct — only the points award itself is gated on player count (step 3).
   const categories: string[] = Array.isArray(round.categories) ? round.categories : [];
-  const uniqueSubs = submissions.filter(
-    (s) => uniquenessMap.get(s.id) === true && letterOkMap.get(s.id) === true
-  );
-  const validationRequests: ValidationRequest[] = uniqueSubs.map((s) => ({
-    subId: s.id,
-    category: categories[s.category_index] ?? `Category ${s.category_index}`,
-    answer: s.answer,
-  }));
 
-  // Chunk requests so one oversized payload isn't the single point of failure;
-  // each chunk independently retries and falls back on its own.
-  const validityMap = new Map<string, ValidationVerdict>();
-  for (let i = 0; i < validationRequests.length; i += LLM_CHUNK_SIZE) {
-    const chunk = validationRequests.slice(i, i + LLM_CHUNK_SIZE);
-    const chunkResult = await validateAnswersWithLLM(round.letter, chunk);
-    for (const [subId, verdict] of chunkResult) {
-      validityMap.set(subId, verdict);
-    }
-  }
-
-  // Step 3: compute final points (unique + correct letter + valid = 2 pts, anything else = 0).
-  // When insufficientPlayers (< 3), all answers score 0 regardless of content,
-  // but the answer is still fully validated above so the grading reveal can
-  // show whether the answer would have been correct.
-  // invalid_reason carries Haiku's short "why" and is persisted only for answers
-  // the LLM actually judged invalid — the live grading reveal reads it back later.
+  // Per-submission scoring verdicts. Both modes fill this identically-shaped
+  // array so the persist / award / complete steps below stay mode-agnostic.
   const updates: {
     id: string;
     is_unique: boolean;
@@ -1145,14 +1343,127 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
     invalid_reason: string | null;
     points_awarded: number;
   }[] = [];
-  for (const sub of submissions) {
-    const isUnique  = uniquenessMap.get(sub.id) ?? false;
-    const letterOk  = letterOkMap.get(sub.id) ?? false;
-    const verdict   = validityMap.get(sub.id);
-    const isValid   = isUnique ? (letterOk ? (verdict?.valid ?? true) : false) : null;
-    const invalidReason = isUnique && letterOk && verdict && !verdict.valid ? verdict.reason : null;
-    const pts       = insufficientPlayers ? 0 : (isUnique && isValid ? POINTS_PER_UNIQUE_ANSWER : 0);
-    updates.push({ id: sub.id, is_unique: isUnique, is_valid: isValid, invalid_reason: invalidReason, points_awarded: pts });
+
+  if (round.mode === "reverse") {
+    // ── "Blend In!" scoring: crowd consensus + safety moderation ──────────────
+    // Points reward matching the crowd: each answer scores 1 pt per DISTINCT
+    // player who gave the same normalized answer, uncapped (reverseRoundPoints).
+    // Obscurity is punished — a solo answer scores just 1. The Is-A validity
+    // judge is replaced by a fail-closed safety moderator: unsafe answers score
+    // 0 and are suppressed from the reveal (buildResults drops them).
+
+    // Consensus: per category, normalized answer → set of distinct players.
+    // Built over letter-correct submissions only (wrong-letter answers can't score).
+    const consensusByCategory = new Map<number, Map<string, Set<string>>>();
+    for (const sub of submissions) {
+      if (letterOkMap.get(sub.id) !== true) continue;
+      const perCat = consensusByCategory.get(sub.category_index) ?? new Map<string, Set<string>>();
+      const users = perCat.get(sub.normalized_answer) ?? new Set<string>();
+      users.add(sub.user_id);
+      perCat.set(sub.normalized_answer, users);
+      consensusByCategory.set(sub.category_index, perCat);
+    }
+
+    // Moderate EVERY submission, deduped by (category, normalized answer) so
+    // identical answers are judged once — saving tokens AND guaranteeing that
+    // matching answers share one verdict. Moderating wrong-letter answers too
+    // means a slur is suppressed even when it also fails the letter check.
+    const modKeyForSub = (s: SubmissionRow) => `${s.category_index} ${s.normalized_answer}`;
+    const modSeen = new Set<string>();
+    const moderationRequests: ValidationRequest[] = [];
+    for (const sub of submissions) {
+      const key = modKeyForSub(sub);
+      if (modSeen.has(key)) continue;
+      modSeen.add(key);
+      moderationRequests.push({
+        subId: key, // keyed by (category, normalized answer), not submission id
+        category: categories[sub.category_index] ?? `Category ${sub.category_index}`,
+        answer: sub.answer,
+      });
+    }
+
+    // Chunk like the standard judge so one oversized payload isn't a single
+    // point of failure; each chunk retries and fails closed on its own.
+    const safetyByKey = new Map<string, ModerationVerdict>();
+    for (let i = 0; i < moderationRequests.length; i += LLM_CHUNK_SIZE) {
+      const chunk = moderationRequests.slice(i, i + LLM_CHUNK_SIZE);
+      const chunkResult = await moderateAnswersWithLLM(round.letter, chunk);
+      for (const [key, verdict] of chunkResult) safetyByKey.set(key, verdict);
+    }
+
+    for (const sub of submissions) {
+      // Fail closed: a missing verdict is unsafe (uncertain → no score, suppressed).
+      const verdict = safetyByKey.get(modKeyForSub(sub)) ?? { safe: false, reason: "unmoderated" };
+      if (!verdict.safe) {
+        // is_valid=false marks "moderated" in reverse rounds (see submissionReason).
+        updates.push({ id: sub.id, is_unique: false, is_valid: false, invalid_reason: verdict.reason, points_awarded: 0 });
+        continue;
+      }
+      if (letterOkMap.get(sub.id) !== true) {
+        // Safe but wrong letter: revealed as wrong_letter, scores 0.
+        updates.push({ id: sub.id, is_unique: false, is_valid: true, invalid_reason: null, points_awarded: 0 });
+        continue;
+      }
+      const matchingPlayers = consensusByCategory.get(sub.category_index)?.get(sub.normalized_answer)?.size ?? 1;
+      // In reverse rounds is_unique carries the inverted "matched the crowd" bit
+      // (≥2 players) — submissionReason reads it that way. Consensus is
+      // meaningless solo, so the <3-player gate still zeroes the whole round.
+      const matched = matchingPlayers >= 2;
+      const pts = insufficientPlayers ? 0 : reverseRoundPoints(matchingPlayers);
+      updates.push({ id: sub.id, is_unique: matched, is_valid: true, invalid_reason: null, points_awarded: pts });
+    }
+  } else {
+    // ── "Be Unique!" scoring: uniqueness + Is-A validity (unchanged) ──────────
+    // Step 1: compute uniqueness per category.
+    const uniquenessMap = new Map<string, boolean>(); // subId → isUnique
+    for (const [, subs] of byCategory) {
+      const normCounts = new Map<string, number>();
+      for (const sub of subs) {
+        normCounts.set(sub.normalized_answer, (normCounts.get(sub.normalized_answer) ?? 0) + 1);
+      }
+      for (const sub of subs) {
+        uniquenessMap.set(sub.id, (normCounts.get(sub.normalized_answer) ?? 0) === 1);
+      }
+    }
+
+    // Step 2: LLM-validate unique, letter-correct answers.
+    // Validation always runs so players can see if their answer *would* have been
+    // correct — only the points award itself is gated on player count (step 3).
+    const uniqueSubs = submissions.filter(
+      (s) => uniquenessMap.get(s.id) === true && letterOkMap.get(s.id) === true
+    );
+    const validationRequests: ValidationRequest[] = uniqueSubs.map((s) => ({
+      subId: s.id,
+      category: categories[s.category_index] ?? `Category ${s.category_index}`,
+      answer: s.answer,
+    }));
+
+    // Chunk requests so one oversized payload isn't the single point of failure;
+    // each chunk independently retries and falls back on its own.
+    const validityMap = new Map<string, ValidationVerdict>();
+    for (let i = 0; i < validationRequests.length; i += LLM_CHUNK_SIZE) {
+      const chunk = validationRequests.slice(i, i + LLM_CHUNK_SIZE);
+      const chunkResult = await validateAnswersWithLLM(round.letter, chunk);
+      for (const [subId, verdict] of chunkResult) {
+        validityMap.set(subId, verdict);
+      }
+    }
+
+    // Step 3: compute final points (unique + correct letter + valid = 2 pts, anything else = 0).
+    // When insufficientPlayers (< 3), all answers score 0 regardless of content,
+    // but the answer is still fully validated above so the grading reveal can
+    // show whether the answer would have been correct.
+    // invalid_reason carries Haiku's short "why" and is persisted only for answers
+    // the LLM actually judged invalid — the live grading reveal reads it back later.
+    for (const sub of submissions) {
+      const isUnique  = uniquenessMap.get(sub.id) ?? false;
+      const letterOk  = letterOkMap.get(sub.id) ?? false;
+      const verdict   = validityMap.get(sub.id);
+      const isValid   = isUnique ? (letterOk ? (verdict?.valid ?? true) : false) : null;
+      const invalidReason = isUnique && letterOk && verdict && !verdict.valid ? verdict.reason : null;
+      const pts       = insufficientPlayers ? 0 : (isUnique && isValid ? POINTS_PER_UNIQUE_ANSWER : 0);
+      updates.push({ id: sub.id, is_unique: isUnique, is_valid: isValid, invalid_reason: invalidReason, points_awarded: pts });
+    }
   }
 
   // Persist uniqueness, validity, explanation, and points on each submission row.
@@ -1243,12 +1554,25 @@ async function awardCategoryBlitzPoints(params: {
 const submissionReason = (
   s: Pick<SubmissionRow, "is_unique" | "is_valid" | "answer">,
   letter: string,
+  mode: CategoryBlitzMode,
   playerCount?: number,
   /** When true, the <3-player gate is bypassed — real reasons are shown even when alone. */
   allowSoloScoring: boolean = false,
 ): CategoryBlitzAnswerReason => {
   if (playerCount !== undefined && playerCount < 3 && !allowSoloScoring) return "insufficient_players";
   if (s.is_unique === null) return "pending"; // not yet scored
+
+  if (mode === "reverse") {
+    // Reverse persistence: is_valid=false ⇒ moderated (unsafe); is_unique carries
+    // the inverted "matched the crowd" bit (true = ≥2 players, scored several
+    // points; false = solo, scored just 1). Moderated is checked before
+    // wrong_letter so an unsafe answer is suppressed even if it also mis-lettered.
+    if (s.is_valid === false) return "moderated";
+    if (!answerStartsWithLetter(s.answer, letter)) return "wrong_letter";
+    if (s.is_unique === true) return "correct";  // blended in with the crowd
+    return "too_obscure";                        // safe & on-topic, but nobody matched
+  }
+
   if (s.is_unique === false) return "duplicate";
   if (!answerStartsWithLetter(s.answer, letter)) return "wrong_letter";
   if (s.is_valid === false) return "invalid";
@@ -1256,23 +1580,39 @@ const submissionReason = (
 };
 
 /**
- * Short player-facing "why it didn't score" line for the live grading reveal.
- * `invalid` reuses Haiku's persisted explanation; `wrong_letter` and
- * `duplicate` are templated deterministically (no LLM). Undefined for
- * correct/pending answers, which need no explanation.
+ * Short player-facing line for the live grading reveal. In standard rounds this
+ * explains non-scoring verdicts (invalid reuses Haiku's persisted "why";
+ * wrong_letter / duplicate are templated). In reverse rounds it also annotates
+ * the scoring verdicts (correct shows how many matched; too_obscure explains the
+ * lonely +1). `moderated` answers are suppressed upstream, so no copy is needed.
+ * `matchCount` is the number of players who gave this normalized answer.
  */
 const submissionExplanation = (
   s: Pick<SubmissionRow, "invalid_reason">,
   reason: CategoryBlitzAnswerReason,
   letter: string,
-  duplicateCount: number,
+  mode: CategoryBlitzMode,
+  matchCount: number,
 ): string | undefined => {
+  if (mode === "reverse") {
+    switch (reason) {
+      case "wrong_letter":
+        return `Doesn't start with ${letter.toUpperCase()}`;
+      case "correct":
+        return `${matchCount} players said this — +${matchCount}`;
+      case "too_obscure":
+        return "Only you said this — blend in for more points";
+      default:
+        return undefined; // moderated (suppressed), insufficient_players, pending
+    }
+  }
+
   switch (reason) {
     case "wrong_letter":
       return `Doesn't start with ${letter.toUpperCase()}`;
     case "duplicate":
-      return duplicateCount > 1
-        ? `${duplicateCount} players gave this answer — it cancels out`
+      return matchCount > 1
+        ? `${matchCount} players gave this answer — it cancels out`
         : "Another player gave the same answer";
     case "invalid":
       return s.invalid_reason?.trim() || "Not a valid answer for this category";
@@ -1312,11 +1652,13 @@ async function buildResults(roundId: string, round: RoundRow): Promise<CategoryB
   }
 
   const categories: string[] = Array.isArray(round.categories) ? round.categories : [];
+  const roundMode: CategoryBlitzMode = round.mode === "reverse" ? "reverse" : "standard";
 
   const results: CategoryBlitzCategoryResult[] = categories.map((category, idx) => {
     const catSubs = submissions.filter((s) => s.category_index === idx);
-    // How many players landed on each normalized answer in this category — lets
-    // the duplicate explanation say "3 players gave this answer".
+    // How many players landed on each normalized answer in this category — feeds
+    // the standard "3 players gave this answer" line AND the reverse consensus
+    // payout ("N players said this — +N").
     const dupCounts = new Map<string, number>();
     for (const s of catSubs) {
       dupCounts.set(s.normalized_answer, (dupCounts.get(s.normalized_answer) ?? 0) + 1);
@@ -1324,19 +1666,23 @@ async function buildResults(roundId: string, round: RoundRow): Promise<CategoryB
     return {
       categoryIndex: idx,
       category,
-      answers: catSubs.map((s) => {
-        const reason = submissionReason(s, round.letter, playerCount, isCategoryBlitzSoloScoringEnabled());
-        return {
-          userId: s.user_id,
-          username: usernameMap.get(s.user_id) ?? "Unknown",
-          answer: s.answer,
-          isUnique: s.is_unique ?? false,
-          isValid: s.is_valid ?? null,
-          pointsAwarded: s.points_awarded,
-          reason,
-          explanation: submissionExplanation(s, reason, round.letter, dupCounts.get(s.normalized_answer) ?? 1),
-        };
-      }),
+      answers: catSubs
+        .map((s) => {
+          const reason = submissionReason(s, round.letter, roundMode, playerCount, isCategoryBlitzSoloScoringEnabled());
+          return {
+            userId: s.user_id,
+            username: usernameMap.get(s.user_id) ?? "Unknown",
+            answer: s.answer,
+            isUnique: s.is_unique ?? false,
+            isValid: s.is_valid ?? null,
+            pointsAwarded: s.points_awarded,
+            reason,
+            explanation: submissionExplanation(s, reason, round.letter, roundMode, dupCounts.get(s.normalized_answer) ?? 1),
+          };
+        })
+        // Suppress moderated (unsafe) answers entirely — never shown back to the
+        // room. Reverse-only in practice; standard rounds never produce it.
+        .filter((a) => a.reason !== "moderated"),
     };
   });
 
@@ -1375,6 +1721,7 @@ async function buildResults(roundId: string, round: RoundRow): Promise<CategoryB
   return {
     roundId,
     letter: round.letter,
+    mode: roundMode,
     categories,
     results,
     totals,
@@ -1522,7 +1869,7 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
         await createSession(venueId, {
           source: "auto",
           scheduledEndAt: windowEnd.toISOString(),
-          startsAt: computeLobbyStartsAt(now, windowEnd, false),
+          startsAt: computeLobbyStartsAt(windowStart, windowEnd, false),
         });
         result.opened.push(venueId);
         continue;

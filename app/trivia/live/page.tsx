@@ -25,6 +25,8 @@ import { ReadyPrompt } from "@/components/trivia/ReadyPrompt";
 import { RoundStartCountdownOverlay } from "@/components/animations/RoundStartCountdownOverlay";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
+import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
+import { buildLiveTriviaStorySharePayload } from "@/lib/socialShare/storyPayloads";
 
 type Phase = "answering" | "rest_warning" | "mid_game_break" | "pre_game";
 
@@ -326,6 +328,39 @@ export default function LiveShowdownPage() {
 
     return { champion, podium, totalCorrect, totalAnswered, correctRate, rankGained, viewerEntry, viewerScore, isChampion };
   }, [state?.leaderboard, state?.viewerRoundByRound, state?.viewerRank, viewerId, savedLeaderboard, savedViewerRank, savedViewerRoundByRound]);
+
+  const liveTriviaStorySharePayload = useMemo(() => {
+    if (!isPostGame || !postGameStats) return null;
+
+    const username = (getUsername() ?? "").trim() || "Player";
+    const venueName = state?.venueName ?? state?.scheduleTitle ?? null;
+    const finalRank = (state?.viewerRank ?? savedViewerRank) ?? null;
+    const finalPoints = postGameLeaderboard?.viewerScore ?? postGameStats.correct * 10;
+    const correctRate = postGameLeaderboard?.correctRate ?? postGameStats.correctRate;
+
+    return buildLiveTriviaStorySharePayload({
+      venueId: resolvedVenueId || "unknown-venue",
+      venueName,
+      userId: viewerId || "unknown-user",
+      username,
+      finalRank,
+      finalPoints,
+      correctRate,
+      isChampion: postGameLeaderboard?.isChampion ?? false,
+    });
+  }, [
+    isPostGame,
+    postGameLeaderboard?.correctRate,
+    postGameLeaderboard?.isChampion,
+    postGameLeaderboard?.viewerScore,
+    postGameStats,
+    resolvedVenueId,
+    savedViewerRank,
+    state?.scheduleTitle,
+    state?.venueName,
+    state?.viewerRank,
+    viewerId,
+  ]);
 
   const isPreGameLobby = Boolean(hasOnboarded && !isPostGame && (!state?.isGameActive || state?.activePhase === "pre_game"));
   const isSpectatingActiveBlock = Boolean(
@@ -1420,6 +1455,14 @@ export default function LiveShowdownPage() {
                       </div>
                     </div>
 
+                    {liveTriviaStorySharePayload ? (
+                      <StoryShareLauncher
+                        payload={liveTriviaStorySharePayload}
+                        title={postGameLeaderboard.isChampion ? "Share the champion shot" : "Share your trivia run"}
+                        buttonLabel="Create story"
+                      />
+                    ) : null}
+
                     {/* Section 5 — Back to venue */}
                     <button
                       type="button"
@@ -1531,6 +1574,14 @@ export default function LiveShowdownPage() {
                         <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
                       </div>
                     </div>
+
+                    {liveTriviaStorySharePayload ? (
+                      <StoryShareLauncher
+                        payload={liveTriviaStorySharePayload}
+                        title="Share your trivia run"
+                        buttonLabel="Create story"
+                      />
+                    ) : null}
 
                     {/* Back to venue */}
                     <button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, LayoutGroup } from "framer-motion";
 import RoundStartReveal from "@/components/category-blitz/RoundStartReveal";
 import { AnsweringScreen } from "@/components/category-blitz/CategoryBlitzGame";
@@ -14,6 +14,19 @@ import ValidAnswerGlow from "@/components/category-blitz/ValidAnswerGlow";
 import WrongLetterReject from "@/components/category-blitz/WrongLetterReject";
 import CorrectBurst from "@/components/category-blitz/CorrectBurst";
 import WrongVerdict from "@/components/category-blitz/WrongVerdict";
+import CategoryBlitzModeFlipTakeover from "@/components/animations/CategoryBlitzModeFlipTakeover";
+import {
+  MODE_FLIP_VARIANTS,
+  getModeFlipTakeoverVariant,
+  setModeFlipTakeoverVariant,
+  type ModeFlipVariant,
+} from "@/lib/categoryBlitzModes";
+
+const MODE_FLIP_VARIANT_LABELS: Record<ModeFlipVariant, string> = {
+  card: "Card turn",
+  splitFlap: "Split-flap",
+  overspin: "Overspin",
+};
 
 type DemoKey =
   | "reveal"
@@ -27,7 +40,10 @@ type DemoKey =
   | "validGlow"
   | "wrongLetter"
   | "correctBurst"
-  | "wrongVerdict";
+  | "wrongVerdict"
+  | "modeFlipCard"
+  | "modeFlipSplitFlap"
+  | "modeFlipOverspin";
 
 const DEMO_LABELS: Record<DemoKey, string> = {
   reveal: "Round start reveal",
@@ -42,6 +58,15 @@ const DEMO_LABELS: Record<DemoKey, string> = {
   wrongLetter: "Wrong letter reject",
   correctBurst: "Correct burst",
   wrongVerdict: "Wrong verdict",
+  modeFlipCard: "Mode flip — card turn",
+  modeFlipSplitFlap: "Mode flip — split-flap",
+  modeFlipOverspin: "Mode flip — overspin",
+};
+
+const DEMO_KEY_TO_MODE_FLIP_VARIANT: Partial<Record<DemoKey, ModeFlipVariant>> = {
+  modeFlipCard: "card",
+  modeFlipSplitFlap: "splitFlap",
+  modeFlipOverspin: "overspin",
 };
 
 const MOCK_GRADING_ANSWERS: GradingAnswer[] = [
@@ -94,6 +119,10 @@ const RevealMorphDemo = () => {
 const DevAnimationPanel = () => {
   const [demo, setDemo] = useState<DemoKey | null>(null);
   const [open, setOpen] = useState(false);
+  // Which variant CategoryBlitzGame's real trigger site actually plays for a
+  // live "Blend In!" round — independent of whichever variant is being
+  // previewed below via the demo buttons.
+  const [liveVariant, setLiveVariant] = useState<ModeFlipVariant>(() => getModeFlipTakeoverVariant());
 
   return (
     <>
@@ -106,18 +135,37 @@ const DevAnimationPanel = () => {
           Animations {open ? "▾" : "▸"}
         </button>
         {open && (
-          <div className="flex flex-col gap-1 overflow-y-auto px-2 pb-2">
-            {(Object.keys(DEMO_LABELS) as DemoKey[]).map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setDemo(key)}
-                className="rounded bg-slate-800 px-2 py-1 text-left text-white hover:bg-slate-700"
-              >
-                {DEMO_LABELS[key]}
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="flex flex-col gap-1 border-b border-amber-400/20 px-2 pb-2 pt-1">
+              <p className="text-[0.65rem] font-black uppercase tracking-wide text-slate-400">Live mode-flip variant</p>
+              <div className="flex gap-1">
+                {MODE_FLIP_VARIANTS.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => { setModeFlipTakeoverVariant(v); setLiveVariant(v); }}
+                    className={`flex-1 rounded px-1.5 py-1 text-[0.65rem] font-bold ${
+                      liveVariant === v ? "bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                    }`}
+                  >
+                    {MODE_FLIP_VARIANT_LABELS[v]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 overflow-y-auto px-2 pb-2 pt-1">
+              {(Object.keys(DEMO_LABELS) as DemoKey[]).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setDemo(key)}
+                  className="rounded bg-slate-800 px-2 py-1 text-left text-white hover:bg-slate-700"
+                >
+                  {DEMO_LABELS[key]}
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -211,12 +259,21 @@ const DevAnimationPanel = () => {
             {demo === "wrongVerdict" && (
               <WrongVerdict answer="Mongoose" explanation="not a movie" />
             )}
+
           </div>
+          )}
+
+          {DEMO_KEY_TO_MODE_FLIP_VARIANT[demo] && (
+            <CategoryBlitzModeFlipTakeover
+              payload={{ modeFlipVariant: DEMO_KEY_TO_MODE_FLIP_VARIANT[demo] }}
+              onComplete={() => setDemo(null)}
+            />
           )}
         </div>
       )}
     </>
   );
 };
+
 
 export default DevAnimationPanel;

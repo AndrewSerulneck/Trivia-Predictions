@@ -26,21 +26,24 @@ export const LOBBY_DWELL_SECONDS = 60;
 export const SUBMISSION_GRACE_MS = 2000;
 
 /**
- * Test mode (see lib/categoryBlitzTestMode.ts) shortens every wait — round
- * duration, lobby dwell, and the gap before the next round — to this many
- * seconds, so a solo tester isn't stuck waiting on production-length timers.
- * Never applied to the cron-driven engine, only to per-request/client math
- * that a tester explicitly opts into.
+ * Test mode (see lib/categoryBlitzTestMode.ts) shortens lobby dwell and the
+ * gap before the next round to this many seconds, so a solo tester isn't
+ * stuck waiting on production-length timers. Never applied to the
+ * cron-driven engine, only to per-request/client math that a tester
+ * explicitly opts into.
  */
 export const TEST_MODE_SECONDS = 10;
 
+/** Seconds of active play per round in test mode (kept generous enough to actually answer). */
+export const TEST_MODE_ROUND_DURATION_SECONDS = 30;
+
 /** Seconds of active play per round, shortened in test mode. */
 export const roundDurationSeconds = (testMode: boolean): number =>
-  testMode ? TEST_MODE_SECONDS : ROUND_DURATION_SECONDS;
+  testMode ? TEST_MODE_ROUND_DURATION_SECONDS : ROUND_DURATION_SECONDS;
 
 /** Seconds between one round's start and the next, shortened in test mode. */
 export const roundIntervalSeconds = (testMode: boolean): number =>
-  testMode ? TEST_MODE_SECONDS * 2 : ROUND_INTERVAL_SECONDS;
+  testMode ? TEST_MODE_ROUND_DURATION_SECONDS + TEST_MODE_SECONDS : ROUND_INTERVAL_SECONDS;
 
 /**
  * Seconds of intermission AFTER a round finishes scoring before the next round

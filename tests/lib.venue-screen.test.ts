@@ -123,6 +123,7 @@ function makeCategoryRound(overrides: Partial<CategoryBlitzRound> = {}): Categor
     status: "active",
     createdAt: "2026-07-02T19:58:00.000Z",
     scoredAt: null,
+    mode: "standard",
     ...overrides,
   };
 }

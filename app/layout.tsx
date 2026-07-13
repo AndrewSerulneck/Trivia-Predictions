@@ -19,9 +19,42 @@ import "./globals.css";
 const GLOBAL_LEGAL_NOTICE =
   "Use of this platform is restricted to authorized, geofenced locations. To inquire about becoming an activated venue or to obtain a commercial license for your establishment, please contact partnerships@hightopchallenge.com.";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hightopchallenge.com";
+
 export const metadata: Metadata = {
-  title: "Hightop Challenge",
-  description: "Venue-based trivia and prediction competitions.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Hightop Challenge",
+    template: "%s | Hightop Challenge",
+  },
+  description:
+    "Browser-based venue gaming for bars and restaurants with live trivia, speed trivia, sports bingo, pick'em, fantasy sports, and venue-scoped challenges.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Hightop Challenge",
+    title: "Hightop Challenge",
+    description:
+      "Browser-based venue gaming for bars and restaurants with live trivia, speed trivia, sports bingo, pick'em, fantasy sports, and venue-scoped challenges.",
+    images: [
+      {
+        url: "/brand/hero-poster.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Hightop Challenge venue gaming platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hightop Challenge",
+    description:
+      "Browser-based venue gaming for bars and restaurants with live trivia, speed trivia, sports bingo, pick'em, fantasy sports, and venue-scoped challenges.",
+    images: ["/brand/hero-poster.jpg"],
+  },
 };
 
 export const viewport: Viewport = {

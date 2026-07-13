@@ -11,6 +11,8 @@ type Verdict =
   | "duplicate"
   | "wrong_letter"
   | "invalid"
+  | "too_obscure"
+  | "moderated"
   | "pending"
   | "insufficient_players";
 
@@ -20,6 +22,34 @@ export interface GradingAnswer {
   reason: Verdict;
   explanation?: string;
   points: number;
+  /** "reverse" ("Blend In!") cards glow brighter the more players matched — see reverseGlow below. Defaults to "standard". */
+  mode?: "standard" | "reverse";
+}
+
+/**
+ * "Blend In!" (reverse) glow tier for a matched ("correct") answer — brighter
+ * the more players hit it (consensus made visible). `points` is exactly the
+ * matching-player count (reverseRoundPoints is the identity function), so it
+ * doubles as the tier lookup. Mirrors reverseMatchGlow in CategoryBlitzGame's
+ * ResultsScreen so the live cascade and the static results card agree.
+ */
+function reverseGlow(points: number): { card: string; badge: string } {
+  if (points >= 5) {
+    return {
+      card: "border-amber-300/70 bg-fuchsia-900/50 shadow-[0_0_22px_rgba(245,158,11,0.55)]",
+      badge: "bg-amber-400/20 text-amber-200 ring-1 ring-amber-300/50",
+    };
+  }
+  if (points >= 3) {
+    return {
+      card: "border-fuchsia-400/60 bg-fuchsia-900/40 shadow-[0_0_14px_rgba(217,70,239,0.4)]",
+      badge: "bg-fuchsia-500/20 text-fuchsia-200 ring-1 ring-fuchsia-400/40",
+    };
+  }
+  return {
+    card: "border-fuchsia-400/40 bg-fuchsia-950/30",
+    badge: "bg-fuchsia-500/15 text-fuchsia-300 ring-1 ring-fuchsia-400/30",
+  };
 }
 
 interface GradingCascadeProps {
@@ -86,6 +116,20 @@ const RESOLVED: Record<
     badge: "bg-slate-700/40 text-slate-300 ring-1 ring-slate-600/40",
     label: "dup",
   },
+  // Reverse ("Blend In!") rounds: a safe, on-topic answer nobody else matched —
+  // still scores 1. (Phase 5 restyles the reverse reveal in the mode's palette.)
+  too_obscure: {
+    card: "border-slate-700/60 bg-slate-800/40",
+    badge: "bg-slate-700/40 text-slate-300 ring-1 ring-slate-600/40",
+    label: "solo",
+  },
+  // Suppressed from the reveal upstream (buildResults), so this never renders;
+  // present only to satisfy the exhaustive Verdict map.
+  moderated: {
+    card: "border-slate-800 bg-slate-900/50",
+    badge: "bg-slate-800/60 text-slate-500 ring-1 ring-slate-700/40",
+    label: "—",
+  },
   insufficient_players: {
     card: "border-amber-400/40 bg-amber-500/10",
     badge: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/30",
@@ -129,13 +173,17 @@ const Row = ({ data, shown, reduce }: RowProps) => {
   const isWrong = reason === "wrong_letter" || reason === "invalid";
   const isDup = reason === "duplicate";
   const isCorrect = reason === "correct";
+  const isTooObscure = reason === "too_obscure";
   const meta = reason === "pending" ? null : RESOLVED[reason];
+  // "Blend In!" matched answers glow brighter the more players hit it —
+  // consensus made visible (Phase 5). Only correct answers in a reverse round.
+  const glow = isCorrect && data.mode === "reverse" ? reverseGlow(data.points) : null;
 
   return (
     <motion.li
       variants={cardIn}
       className={`relative overflow-hidden rounded-xl border px-3 py-2.5 transition-colors duration-300 ${
-        meta ? meta.card : "border-slate-800 bg-slate-900/50"
+        glow ? glow.card : meta ? meta.card : "border-slate-800 bg-slate-900/50"
       }`}
     >
       {/* Pending: emerald scanline sweeping across, as if being graded. */}
@@ -180,16 +228,16 @@ const Row = ({ data, shown, reduce }: RowProps) => {
                 ) : (
                   <span
                     className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                      meta?.badge ?? ""
+                      glow ? glow.badge : meta?.badge ?? ""
                     }`}
                   >
                     {isCorrect && <Check reduce={reduce} />}
-                    {meta?.label}
+                    {glow ? `+${data.points}` : meta?.label}
                   </span>
                 )}
               </div>
             </div>
-            {isDup && data.explanation && (
+            {(isDup || isTooObscure || (isCorrect && data.mode === "reverse")) && data.explanation && (
               <p className="mt-1 text-[0.65rem] leading-snug text-slate-500">
                 {data.explanation}
               </p>

@@ -17,6 +17,9 @@ function readBrowserToggle(): boolean {
   }
 }
 
+// Used by skipRound (lib/categoryBlitz.ts) to gate the dev-only button in the UI.
+// The actual skip-round security boundary is the session's own DB column
+// (read fresh every call), not this client toggle — see skipRound's docstring.
 export function isCategoryBlitzTestModeEnabled(): boolean {
   if (normalizeBoolean(process.env.NEXT_PUBLIC_CATEGORY_BLITZ_TEST_MODE)) {
     return true;

@@ -5,9 +5,9 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import GradingCascade, { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
 import LiveLeaderboard from "@/components/category-blitz/LiveLeaderboard";
 import IntermissionStatus from "@/components/category-blitz/IntermissionStatus";
+import { GAME_THEME } from "@/lib/themeTokens";
+import { MODE_CONFIG } from "@/lib/categoryBlitzModes";
 import type { CategoryBlitzRoundResults } from "@/types";
-
-const TEXT_LABEL = "text-emerald-300 tracking-[0.14em] uppercase font-black text-xs";
 
 // How long to let the leaderboard play its count-up / reorder / +N flash after
 // it pushes the cascade down before settling into the resting intermission.
@@ -66,6 +66,9 @@ interface RevealSequenceProps {
  */
 const RevealSequence = ({ answers, leaderboardEntries, meId, roundId, onSettled, nextRoundStartsIn }: RevealSequenceProps) => {
   const reduce = useReducedMotion() ?? false;
+  // Every answer in the batch shares the same round, so the first one's mode
+  // (default "standard" if the batch is empty) is the round's mode.
+  const theme = GAME_THEME[MODE_CONFIG[answers[0]?.mode ?? "standard"].themeKey];
   const [stage, setStage] = useState<"revealing" | "leaderboard">("revealing");
   const settledRef = useRef(false);
 
@@ -123,7 +126,7 @@ const RevealSequence = ({ answers, leaderboardEntries, meId, roundId, onSettled,
             <div className="mx-auto mb-4 w-full max-w-sm">
               <IntermissionStatus nextRoundStartsIn={nextRoundStartsIn} compact />
             </div>
-            <p className={`${TEXT_LABEL} mx-auto mb-3 w-full max-w-sm text-center`}>Leaderboard</p>
+            <p className={`${theme.textLabel} mx-auto mb-3 w-full max-w-sm text-center`}>Leaderboard</p>
             <LiveLeaderboard entries={leaderboardEntries} meId={meId} />
           </motion.section>
         )}
@@ -133,7 +136,7 @@ const RevealSequence = ({ answers, leaderboardEntries, meId, roundId, onSettled,
           animate its reflow (in sync with the leaderboard's spring above)
           when it gets pushed down instead of jumping instantly. */}
       <motion.section layout transition={reduce ? { duration: 0 } : PUSH_SPRING} className="flex min-h-full shrink-0 flex-col justify-center py-6">
-        <p className={`${TEXT_LABEL} mx-auto mb-3 w-full max-w-sm px-3 text-center`}>Your answers</p>
+        <p className={`${theme.textLabel} mx-auto mb-3 w-full max-w-sm px-3 text-center`}>Your answers</p>
         <GradingCascade
           answers={answers}
           onComplete={handleCascadeComplete}

@@ -458,6 +458,9 @@ export interface CategoryBlitzSession {
   playerCount?:  number;
 }
 
+/** Internal enum only — never rendered. See lib/categoryBlitzModes.ts MODE_CONFIG for player-facing labels. */
+export type CategoryBlitzMode = "standard" | "reverse";
+
 export interface CategoryBlitzRound {
   id:               string;
   sessionId:        string;
@@ -471,6 +474,8 @@ export interface CategoryBlitzRound {
   createdAt:        string;
   /** When scoreRound finished grading and marked the round complete; null until then. */
   scoredAt:         string | null;
+  /** 'standard' ("Be Unique!") or 'reverse' ("Blend In!"). */
+  mode:             CategoryBlitzMode;
 }
 
 export interface CategoryBlitzSubmission {
@@ -488,7 +493,15 @@ export interface CategoryBlitzSubmission {
   submittedAt:      string;
 }
 
-export type CategoryBlitzAnswerReason = 'correct' | 'duplicate' | 'wrong_letter' | 'invalid' | 'pending' | 'insufficient_players';
+export type CategoryBlitzAnswerReason =
+  | 'correct'               // scored: standard = unique+valid; reverse = matched the crowd
+  | 'duplicate'             // standard only: another player gave the same answer (0 pts)
+  | 'wrong_letter'          // answer didn't start with the round letter (0 pts)
+  | 'invalid'               // standard only: failed the Is-A validity judge (0 pts)
+  | 'too_obscure'           // reverse only: safe & on-topic but solo — nobody matched (scores 1)
+  | 'moderated'             // reverse only: flagged unsafe — 0 pts AND suppressed from the reveal
+  | 'pending'               // not yet scored
+  | 'insufficient_players'; // <3 players present — whole round scored 0
 
 /** Shape returned by the results API after scoring — one entry per category */
 export interface CategoryBlitzCategoryResult {
@@ -515,6 +528,8 @@ export interface CategoryBlitzCategoryResult {
 export interface CategoryBlitzRoundResults {
   roundId:     string;
   letter:      string;
+  /** The scored round's mode — drives the reveal's color world (see lib/categoryBlitzModes.ts). */
+  mode:        CategoryBlitzMode;
   categories:  string[];
   results:     CategoryBlitzCategoryResult[];
   /** Number of unique participants registered for this session at scoring time. */

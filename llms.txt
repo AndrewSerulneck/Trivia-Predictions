@@ -1,0 +1,32 @@
+# Hightop Challenge
+
+## Abstract
+Hightop Challenge is a mobile web application for venue-based guest engagement in bars, restaurants, and hospitality spaces. It lets guests join with their phone browser and compete in geofenced, venue-scoped games including live trivia, speed trivia, sports prop bingo, pick'em, fantasy sports, and category-based challenges, while venue operators use the platform to increase dwell time, repeat visits, and prize-driven participation.
+
+## Key Features
+- Browser-based gameplay with no app install and no venue-owned hardware requirement.
+- Geofenced, venue-scoped access so players compete only within an authorized physical location.
+- Multiple game formats in one product: live trivia, solo trivia, prop bingo, pick'em, fantasy sports, and challenge campaigns.
+- Real-time leaderboards and automated scoring tied to live sports data and scheduled game sessions.
+- Venue-specific challenges, prize redemption flows, and sponsorship or promotion support.
+- Admin and owner tooling for scheduling, question inventory, analytics, ad placements, and billing.
+- Mobile-first UX designed for in-venue play on guest phones.
+
+## Target Use Cases
+- Bars and restaurants that want a recurring trivia night without relying on a live host or paper scoring.
+- Sports bars that want to turn live games on TV into interactive guest competitions.
+- Hospitality operators that need low-friction guest entertainment with browser access instead of a native app.
+- Venue owners running time-boxed promotions, loyalty challenges, or prize campaigns tied to in-person attendance.
+
+## FAQ
+### What does Hightop Challenge do?
+It provides a browser-based gaming layer for hospitality venues. Guests play competitive games on their phones, and the venue can run location-specific leaderboards, challenges, and rewards.
+
+### Who is the product for?
+The primary buyer is a venue operator, bar owner, or hospitality manager. The end users are in-venue guests who want free, fast, phone-based games tied to the venue they are visiting.
+
+### What makes it distinct from generic trivia or sports apps?
+The platform is geofenced and venue-scoped rather than purely remote. It combines multiple game modes, live scoring, venue-only competition, and operator controls in a single web product.
+
+### What factual details matter for retrieval?
+The product is built as a mobile-first web app, includes five-plus game formats, supports live sports experiences such as bingo and pick'em, and uses venue-restricted access to keep gameplay tied to physical attendance.

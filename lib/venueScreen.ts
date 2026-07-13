@@ -2,6 +2,7 @@ import "server-only";
 
 import { driveVenueCategoryBlitz, getRoundResults } from "@/lib/categoryBlitz";
 import { getNextScheduleOccurrence, listSchedules } from "@/lib/categoryBlitzSchedules";
+import { lobbyDwellSeconds } from "@/lib/categoryBlitzShared";
 import { getLiveShowdownState, type LiveShowdownState } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getVenueScreenPollIntervalMs } from "@/lib/venueScreenTiming";
@@ -132,6 +133,7 @@ type CategoryBlitzRoundRow = {
   status: string;
   created_at: string;
   scored_at: string | null;
+  mode: string;
 };
 
 function optionalTrim(value: unknown): string | null {
@@ -204,6 +206,7 @@ function mapCategoryBlitzRound(row: CategoryBlitzRoundRow): CategoryBlitzRound {
     status: row.status as CategoryBlitzRound["status"],
     createdAt: row.created_at,
     scoredAt: row.scored_at,
+    mode: (row.mode === "reverse" ? "reverse" : "standard"),
   };
 }
 
@@ -299,7 +302,7 @@ async function getLatestCategoryBlitzRound(sessionId: string): Promise<CategoryB
 
   const { data, error } = await supabaseAdmin
     .from("category_blitz_rounds")
-    .select("id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at, scored_at")
+    .select("id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at, scored_at, mode")
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -318,13 +321,20 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
     listSchedules(venueId).catch(() => []),
   ]);
   const next = getNextScheduleOccurrence(schedules, now);
+  // Round 1 actually fires `lobbyDwellSeconds` after the window opens (see
+  // lib/categoryBlitz.ts's computeLobbyStartsAt), so the venue idle screen's
+  // "starts in" preview should point at that instant, not the window open
+  // time, to match the single countdown shown once a player opens the game.
+  const nextStartsAt = next
+    ? new Date(next.windowStart.getTime() + lobbyDwellSeconds(false) * 1000).toISOString()
+    : null;
 
   if (!session || session.status === "complete") {
     return {
       session: null,
       round: null,
       leaderboard: null,
-      nextStartsAt: next?.windowStart.toISOString() ?? null,
+      nextStartsAt,
       nextRecurringDays: next?.schedule.recurringDays ?? [],
     };
   }
@@ -338,7 +348,7 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
     session,
     round,
     leaderboard: results ? toLeaderboard(results.totals) : null,
-    nextStartsAt: next?.windowStart.toISOString() ?? null,
+    nextStartsAt,
     nextRecurringDays: next?.schedule.recurringDays ?? [],
   };
 }

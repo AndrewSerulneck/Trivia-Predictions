@@ -6,6 +6,7 @@ import { roundIntervalSeconds, intermissionSeconds, SUBMISSION_GRACE_MS } from "
 import { isCategoryBlitzTestModeEnabled } from "@/lib/categoryBlitzTestMode";
 import type {
   CategoryBlitzRound,
+  CategoryBlitzMode,
   CategoryBlitzRoundResults,
   CategoryBlitzSession,
   CategoryBlitzViewerRole,
@@ -107,6 +108,7 @@ type RoundStartedPayload = {
     categories: string[];
     startedAt:  string;
     endsAt:     string;
+    mode:       CategoryBlitzMode;
   };
 };
 

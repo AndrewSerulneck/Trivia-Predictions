@@ -2608,5 +2608,113 @@
     "M",
     "S",
     "T"
+  ],
+  "An underrated movie": [],
+  "An annoying rapper": [],
+  "A one-hit wonder music artist": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An overrated movie": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "I",
+    "P",
+    "T"
+  ],
+  "A washed-up celebrity": [],
+  "A guilty pleasure song": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A cringe fashion trend": [
+    "B",
+    "C",
+    "P",
+    "S"
+  ],
+  "An overhyped restaurant chain": [
+    "C",
+    "P",
+    "S"
+  ],
+  "A boring vacation destination": [],
+  "An annoying celebrity": [
+    "C",
+    "D",
+    "M",
+    "P"
+  ],
+  "A trend that needs to end": [
+    "A",
+    "C",
+    "F",
+    "P",
+    "S"
+  ],
+  "An overrated tourist attraction": [
+    "B",
+    "L",
+    "P",
+    "S",
+    "T"
+  ],
+  "A red flag in a relationship": [
+    "C",
+    "D",
+    "I",
+    "L",
+    "P"
+  ],
+  "An outdated slang word": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "R",
+    "S",
+    "T"
+  ],
+  "A celebrity power couple": [],
+  "An annoying customer service phrase": [
+    "C",
+    "I",
+    "P",
+    "W"
+  ],
+  "An overrated TV show": [
+    "B",
+    "F",
+    "G",
+    "H",
+    "L",
+    "S",
+    "T",
+    "W"
+  ],
+  "A boring hobby": [
+    "S"
   ]
 }

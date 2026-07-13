@@ -19,8 +19,8 @@ const TRIVIA_SHOWCASES: GameShowcase[] = [
         height: 1484,
         callouts: [
           { x: 50, y: 25, label: "Massive question database", description: "You get access to our huge library of trivia questions across dozens of categories — fresh rounds every time." },
-          { x: 22, y: 31, label: "Timed rounds", description: "Every question is on the clock, so the pace stays fast and the room stays loud." },
-          { x: 50, y: 40, label: "Everyone answers at once", description: "Every guest at the bar answers in real time from their own phone — no buzzers, no paper." },
+          { x: 22, y: 31, label: "Timed rounds", description: "Every question is a race against the clock, so the energy is always high." },
+          { x: 50, y: 40, label: "Everyone answers at once", description: "Every guest at the bar answers in real time from their own phone — no pen and paper." },
         ],
       },
       {
@@ -30,8 +30,8 @@ const TRIVIA_SHOWCASES: GameShowcase[] = [
         height: 1484,
         callouts: [
           { x: 80, y: 13, label: "Built-in intermissions", description: "Scheduled breaks between rounds are the perfect window for guests to flag down a bartender for another round." },
-          { x: 50, y: 42, label: "Venue-only leaderboard", description: "Standings update live and rank only the players in your bar — bragging rights stay local." },
-          { x: 86, y: 30, label: "Round-by-round scoring", description: "Per-round point swings keep latecomers in the hunt and the whole room invested to the final question." },
+          { x: 50, y: 42, label: "Venue-only leaderboard", description: "Standings update live and rank the players in your bar." },
+          { x: 86, y: 30, label: "Guests can join anytime", description: "Each round is a new opportunity for new users to join the game. Latecomers are always welcome!" },
         ],
       },
     ],
@@ -60,7 +60,7 @@ const SPORTS_SHOWCASES: GameShowcase[] = [
   {
     name: "Prop Bingo",
     description:
-      "Every game already on your TVs becomes a promotional tool. Guests get personal bingo cards that resolve live against real NFL, NBA, WNBA, and MLB stats — giving them a personal stake in every play, every quarter, every inning. The game on screen sells the next round.",
+      "Every game already on your TVs becomes a promotional tool. Unique digital bingo cards are created for each player and resolve live against real NFL, NBA, WNBA, and MLB stats — giving them a personal stake in every play, every quarter, every inning. The game on screen sells the next round.",
     shots: [
       {
         src: "/info/bingo-vertical.png",
@@ -93,7 +93,7 @@ const SPORTS_SHOWCASES: GameShowcase[] = [
   {
     name: "Pick'Em",
     description:
-      "Let guests make fresh picks on the day's matchups — then run house challenges around whatever's on your screens. Launch a 'Pick the most World Cup winners' campaign, offer a prize, and watch passive viewers turn into active competitors with a reason to stay, order another round, and see who wins.",
+      "A pick 'em league that all of your guests can join. The goal is simple: Look at the days matchups and pick more winners than everyone else. Just one idea: Offer a discount to the user who can predict the most winnners each week of the NFL season, then watch passive viewers turn into active competitors with a reason to come back week after week.",
     shots: [
       {
         src: "/info/pick-em.png",
@@ -119,9 +119,9 @@ const SPORTS_SHOWCASES: GameShowcase[] = [
         width: 339,
         height: 711,
         callouts: [
-          { x: 50, y: 57, label: "Draft a daily roster", description: "Guests pick a lineup from the games you're already showing — then sweat every stat line." },
-          { x: 50, y: 30, label: "Compete against the house", description: "Players go head-to-head with the venue average, turning any slow game into a personal contest." },
-          { x: 74, y: 39, label: "Bar-run prizes", description: "Tie a real reward like a bar tab to the win and watch casual viewers turn into regulars." },
+          { x: 50, y: 30, label: "Draft a daily roster", description: "Guests pick a lineup from the games on TV that day and earn points based on how their roster performs." },
+          { x: 50, y: 45, label: "Live play by play updates", description: "Users' scores are updated in real time — and users only earn points while they're at your bar." },
+          { x: 74, y: 57, label: "Bar-run prizes", description: "Tie a real reward or discount to whoever drafts the best roster that day and encourage guests to stay until the end of every game to win." },
         ],
       },
     ],
@@ -132,8 +132,8 @@ const FEATURES = [
   { icon: "📍", title: "Drives repeat visits", body: "Every game is geofenced to your venue — it only works in your bar! Players compete with the people around them. That shared competition creates a community and keeps them coming back." },
   { icon: "🍺", title: "Longer stays, higher tabs", body: "Games keep guests engaged longer, encouraging additional food and beverage purchases with every round." },
   { icon: "📱", title: "No hardware required", body: "Players use their own phones. No tablets, no installs, no devices to buy, replace, charge, or update. No app download required." },
-  { icon: "📅", title: "Schedule around your business", body: "Launch live trivia, speed trivia, or other challenges whenever you need a boost. Target slow periods and turn them into your busiest nights." },
-  { icon: "💰", title: "Affordable monthly licensing", body: "Flat-rate pricing with no hidden fees. Just $35 per week." },
+  { icon: "📅", title: "Schedule around your business", body: "Schedule group trivia or one of our other live community games whenever you need a boost. Target slow periods and turn them into your busiest nights." },
+  { icon: "💰", title: "Advertise with us!", body: "Subscribe and broadcast your ads to our growing network of partner venues at a big discount." },
   { icon: "🎯", title: "Custom promotions & sponsorships", body: "Offer prizes to boost engagement, run sponsor integrations, or create custom challenges. Hightop gives you the tools — you set the stakes." },
 ];
 
@@ -142,6 +142,29 @@ const HOW_IT_WORKS = [
   { step: "2", title: "They play on their own phones", body: "Players join instantly from their browser. Live Trivia, Sports Bingo, Pick'Em — everything runs on whatever phone is already in their pocket." },
   { step: "3", title: "They compete with each other", body: "Real-time leaderboards show who's winning. The competition is between the people actually sitting in your bar." },
   { step: "4", title: "Prizes keep them coming back", body: "Offer discounts, free rounds, or custom rewards. Winners have a reason to return — and bring friends next time." },
+];
+
+const SEMANTIC_QA = [
+  {
+    question: "What games are there?",
+    answer:
+      "Everything from classic bar trivia to live sports competitions like pick 'em leagues, fantasy sports, sports brackets, and much more. See below for a full list of products we offer. Use all of it to run promotions and drive engagement that increases revenue.",
+  },
+  {
+    question: "How does it work?",
+    answer:
+      "Guests join from their phones by scanning a QR code. Gameplay is restricted to addresses you desginate — it only works when users are physically at your establishment. Players compete with the people around them for bragging rights and prizes.",
+  },
+  {
+    question: "Is it complicated?",
+    answer:
+      "Not at all.  The platform is designed to be simple for both venue operators and guests. Players join by scanning a QR code, and the games run themselves. Once you subscribe, you're up and running instantly. You can schedule group games, set up challenges, and offer prizes — all from your phone.",
+  },
+  {
+    question: "Why should I sign up?",
+    answer:
+      "The platform is built to increase dwell time and repeat visits. When guests are engaged in a game, they stay longer and order more. The shared experience and competitive nature of the games fosters community, creating a loyal customer base that comes back week after week.",
+  },
 ];
 
 export default function InfoPage() {
@@ -265,7 +288,7 @@ export default function InfoPage() {
                 aria-label="Instagram"
                 className="text-slate-400 hover:text-white transition-colors"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                   <circle cx="12" cy="12" r="4" />
                   <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
@@ -278,17 +301,11 @@ export default function InfoPage() {
                 aria-label="Facebook"
                 className="text-slate-400 hover:text-white transition-colors"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
                 </svg>
               </a>
             </div>
-            <Link
-              href="/"
-              className="hidden md:inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-black text-white transition-colors hover:bg-white/10"
-            >
-              Play now
-            </Link>
             <a
               href="/owner/login"
               className="hidden md:inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 htm-btn-glow"
@@ -357,30 +374,40 @@ export default function InfoPage() {
               <span className="htm-grad">Game Nights</span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
-              Real-time competition that keeps guests engaged and coming back for more.
+              Digital games that can only be accessed at your bar, played on your guests&apos; phones.
+             
             </p>
             <p className="text-base text-slate-500 max-w-xl mx-auto mb-10 leading-relaxed">
-              Live Trivia, Sports Bingo, Pick&apos;Em, and Fantasy Sports — all scoped to your bar, played on your guests&apos; phones.
+
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="#contact"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-8 py-4 text-lg font-black text-slate-950 htm-btn-glow"
-              >
-                Request a Demo
-              </a>
-              <a
-                href="#games"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-8 py-4 text-lg font-black text-slate-950 hover:bg-amber-300 transition-colors"
-              >
-                See the Games
-              </a>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
-                href="/"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-300/35 bg-slate-950/60 px-8 py-4 text-base font-black text-cyan-100 hover:bg-slate-900/80 transition-colors"
+                href="/join"
+                className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 px-10 py-5 text-lg font-black text-slate-950 htm-btn-glow shadow-lg shadow-cyan-400/25 hover:shadow-cyan-400/40 transition-all"
               >
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-950/20">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-slate-950 ml-0.5">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </span>
                 Play Hightop Challenge
               </Link>
+              <a
+                href="#games"
+                className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-8 py-4 text-base font-black text-slate-950 htm-btn-glow shadow-lg shadow-amber-400/25 hover:shadow-amber-400/40 transition-all"
+              >
+                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-slate-950/20">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-950">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                  </svg>
+                </span>
+                See the Games
+              </a>
             </div>
           </div>
 
@@ -389,6 +416,33 @@ export default function InfoPage() {
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M12 5v14M5 12l7 7 7-7" />
             </svg>
+          </div>
+        </section>
+
+        {/* ── SEMANTIC QA ── */}
+        <section aria-labelledby="geo-faq" className="py-24 px-5 bg-slate-900/40">
+          <div className="mx-auto max-w-5xl">
+            <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
+              Overview
+            </div>
+            <h2 id="geo-faq" className="htm-reveal text-3xl sm:text-4xl font-black mb-4 max-w-3xl" data-reveal>
+              What is Hightop Challenge?
+            </h2>
+            <p className="htm-reveal max-w-3xl text-slate-400 text-lg mb-12 leading-relaxed" data-reveal>
+              Hightop Challenge is an app for businesses to run games and competitions to keep guests engaged and coming back for more. 
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {SEMANTIC_QA.map((item) => (
+                <article
+                  key={item.question}
+                  className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/3 p-7"
+                  data-reveal
+                >
+                  <h3 className="text-xl font-black text-white mb-3">{item.question}</h3>
+                  <p className="text-base text-slate-400 leading-relaxed">{item.answer}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -565,47 +619,6 @@ export default function InfoPage() {
               >
                 Get Started
               </a>
-            </div>
-          </div>
-        </section>
-
-        {/* ── FINAL CTA ── */}
-        <section className="py-24 px-5 bg-slate-900/40">
-          <div className="mx-auto max-w-3xl">
-            <div
-              className="htm-reveal relative rounded-3xl overflow-hidden border border-cyan-400/15 bg-slate-900 p-12 md:p-16 text-center"
-              data-reveal
-            >
-              <div className="pointer-events-none absolute inset-0">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 rounded-full bg-cyan-500/12 blur-3xl" />
-                <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-violet-500/10 blur-3xl" />
-              </div>
-              <div className="relative">
-                <h2 className="text-3xl sm:text-4xl font-black mb-4">Ready to level up your venue?</h2>
-                <p className="text-slate-400 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
-                  Join venues already using Hightop Challenge to create unforgettable nights and build loyal regulars.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <a
-                    href="#contact"
-                    className="inline-flex items-center justify-center rounded-xl bg-cyan-400 px-8 py-4 text-base font-black text-slate-950 htm-btn-glow"
-                  >
-                    Request a Demo
-                  </a>
-                  <a
-                    href="#games"
-                    className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-8 py-4 text-base font-semibold text-white hover:bg-white/10 transition-colors"
-                  >
-                    Explore Games
-                  </a>
-                  <Link
-                    href="/"
-                    className="inline-flex items-center justify-center rounded-xl border border-cyan-300/35 bg-slate-950/60 px-8 py-4 text-base font-black text-cyan-100 hover:bg-slate-900/80 transition-colors"
-                  >
-                    Go to Game
-                  </Link>
-                </div>
-              </div>
             </div>
           </div>
         </section>

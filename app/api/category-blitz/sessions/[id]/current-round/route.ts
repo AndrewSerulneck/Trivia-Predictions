@@ -16,6 +16,7 @@ type RoundRow = {
   status: string;
   created_at: string;
   scored_at: string | null;
+  mode: string;
 };
 
 /** GET /api/category-blitz/sessions/[id]/current-round — fetch the latest round for a session */
@@ -29,7 +30,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const { data, error } = await supabaseAdmin
       .from("category_blitz_rounds")
       .select(
-        "id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at, scored_at"
+        "id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at, scored_at, mode"
       )
       .eq("session_id", sessionId)
       .order("created_at", { ascending: false })
@@ -54,6 +55,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       status: data.status as CategoryBlitzRound["status"],
       createdAt: data.created_at,
       scoredAt: data.scored_at,
+      mode: (data.mode === "reverse" ? "reverse" : "standard"),
     };
 
     let viewerRole: CategoryBlitzViewerRole | null = null;

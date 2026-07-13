@@ -17,3 +17,6 @@ supabase/.temp
 
 .env.local.bak
 .env.local.pre-clean.bak
+
+# Verification harness screenshot output (scripts/verify-mode-flip.mjs)
+tmp/

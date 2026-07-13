@@ -186,6 +186,62 @@ export const GAME_THEME = {
       duplicate:{ border: "border-slate-600",      fill: "bg-slate-800/50",    text: "text-slate-400"   },
     },
   },
+  /**
+   * Category Blitz "Be Unique!" round — the standard scoring world (score by
+   * uniqueness). Mirrors "category-blitz" above; kept as its own key so
+   * lib/categoryBlitzModes.ts MODE_CONFIG.standard.themeKey can look it up
+   * without the game surface needing a fallback branch.
+   */
+  blitzStandard: {
+    /** Full-page canvas behind the board for the round's duration (§4c). */
+    pageBg:        "bg-slate-950",
+    gradient:      "from-emerald-500 via-green-500 to-teal-500",
+    letterGradient:"bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)]",
+    letterGlow:    "shadow-[0_0_18px_rgba(16,185,129,0.35)]",
+    borderActive:  "border-emerald-400/60",
+    borderCard:    "border-emerald-400/30",
+    textAccent:    "text-emerald-300",
+    textLabel:     "text-emerald-300 tracking-[0.14em] uppercase font-black text-xs",
+    bgTint:        "bg-emerald-500/10",
+    bgTintDeep:    "bg-emerald-950/30",
+    progressFill:  "bg-emerald-500",
+    spinnerRing:   "border-emerald-400/40 border-t-emerald-400",
+    filledBorder:  "border-emerald-400/50",
+    filledBg:      "bg-emerald-950/30",
+    filledText:    "text-emerald-200",
+    borderSoft:    "border-emerald-400/20",
+    textSoft:      "text-emerald-100/70",
+    textAccentSoft:"text-emerald-300/70",
+  },
+  /**
+   * Category Blitz "Blend In!" round — the reverse/consensus scoring world
+   * (score by matching the crowd). Hot magenta/gold vs. the standard round's
+   * cool emerald, so the flip reads as an unmistakable full color-world swap
+   * per docs/category-blitz-mode-b-plan.md §4c — never a hardcoded color in
+   * the component, always this token set via MODE_CONFIG.reverse.themeKey.
+   */
+  blitzReverse: {
+    /** Deep magenta/violet canvas — the ambient "sustained cue" a player who
+     *  missed the flip takeover still reads as "different mode" (§4c). */
+    pageBg:        "bg-[#1a0b2e]",
+    gradient:      "from-fuchsia-600 via-pink-500 to-amber-400",
+    letterGradient:"bg-[linear-gradient(132deg,#d946ef_0%,#ec4899_50%,#f59e0b_100%)]",
+    letterGlow:    "shadow-[0_0_18px_rgba(217,70,239,0.45)]",
+    borderActive:  "border-fuchsia-400/60",
+    borderCard:    "border-fuchsia-400/30",
+    textAccent:    "text-fuchsia-300",
+    textLabel:     "text-fuchsia-300 tracking-[0.14em] uppercase font-black text-xs",
+    bgTint:        "bg-fuchsia-500/10",
+    bgTintDeep:    "bg-fuchsia-950/30",
+    progressFill:  "bg-fuchsia-500",
+    spinnerRing:   "border-fuchsia-400/40 border-t-fuchsia-400",
+    filledBorder:  "border-fuchsia-400/50",
+    filledBg:      "bg-fuchsia-950/30",
+    filledText:    "text-fuchsia-200",
+    borderSoft:    "border-fuchsia-400/20",
+    textSoft:      "text-fuchsia-100/70",
+    textAccentSoft:"text-fuchsia-300/70",
+  },
   /** Predictions — "The Oracle": slate-950→deep navy→sky */
   predictions: {
     gradient:  "from-slate-950 via-[#1e3a5f] to-sky-700",

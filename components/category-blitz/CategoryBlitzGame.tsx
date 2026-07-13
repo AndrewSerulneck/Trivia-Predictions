@@ -8,7 +8,7 @@ import { useScheduleUpdatedFlash } from "@/lib/hooks/useScheduleUpdatedBroadcast
 import ScheduleUpdatedToast from "@/components/ui/ScheduleUpdatedToast";
 import { useCategoryBlitzSession, type CategoryBlitzPhase } from "@/lib/categoryBlitzRealtime";
 import { isCategoryBlitzTestModeEnabled, setCategoryBlitzTestMode } from "@/lib/categoryBlitzTestMode";
-import { answerStartsWithLetter } from "@/lib/categoryBlitzShared";
+import { answerStartsWithLetter, lobbyDwellSeconds } from "@/lib/categoryBlitzShared";
 import { CB_LETTER_BADGE_LAYOUT_ID, cbCategoryRowLayoutId } from "@/lib/categoryBlitzMotion";
 import { EASE_SNAP } from "@/lib/motionEasing";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
@@ -26,7 +26,11 @@ import SessionCompleteFireworks from "@/components/category-blitz/SessionComplet
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import DevAnimationPanel from "@/components/category-blitz/DevAnimationPanel";
 import { RankBadge } from "@/components/trivia/RankBadge";
-import type { CategoryBlitzRoundResults } from "@/types";
+import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
+import { buildCategoryBlitzStorySharePayload } from "@/lib/socialShare/storyPayloads";
+import { GAME_THEME } from "@/lib/themeTokens";
+import { MODE_CONFIG, getModeFlipTakeoverVariant } from "@/lib/categoryBlitzModes";
+import type { CategoryBlitzRoundResults, CategoryBlitzMode } from "@/types";
 
 
 const LETTER_GRADIENT =
@@ -58,9 +62,39 @@ const REASON_LABEL: Record<string, string> = {
   wrong_letter: "wrong letter",
   invalid: "not valid",
   duplicate: "used by another player",
+  too_obscure: "only you said this",
+  moderated: "flagged",
   pending: "scoring…",
   insufficient_players: "not enough players",
 };
+
+/**
+ * "Blend In!" (reverse) results card glow — a matched answer glows brighter
+ * the more players hit it (docs/category-blitz-mode-b-plan.md Phase 5:
+ * "consensus made visible"). `points` is exactly the matching-player count
+ * (reverseRoundPoints is the identity function), so it doubles as the glow
+ * tier lookup with no separate count needed. Tiers are static Tailwind
+ * literals — never interpolated — per lib/themeTokens.ts's scanning rule.
+ */
+function reverseMatchGlow(points: number): { card: string; badge: string } {
+  if (points >= 5) {
+    return {
+      card: "border-amber-300/70 bg-fuchsia-900/50 shadow-[0_0_22px_rgba(245,158,11,0.55)]",
+      badge: "border-amber-300/60 bg-amber-400/20 text-amber-200",
+    };
+  }
+  if (points >= 3) {
+    return {
+      card: "border-fuchsia-400/60 bg-fuchsia-900/40 shadow-[0_0_14px_rgba(217,70,239,0.4)]",
+      badge: "border-fuchsia-400/50 bg-fuchsia-500/20 text-fuchsia-200",
+    };
+  }
+  // points === 2 (minimum for "correct" — a match, no glow yet)
+  return {
+    card: "border-fuchsia-400/40 bg-fuchsia-950/30",
+    badge: "border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300",
+  };
+}
 
 // ── Idle / complete screens ───────────────────────────────────────────────────
 
@@ -150,12 +184,14 @@ function LobbyScreen({
   username,
   lobbyCountdown,
   playerCount,
+  testMode,
 }: {
   phase: "idle" | "lobby";
   venueId: string | null;
   username: string | null;
   lobbyCountdown: number | null;
   playerCount?: number;
+  testMode: boolean;
 }) {
   const [nextWindowAtMs, setNextWindowAtMs] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
@@ -179,17 +215,27 @@ function LobbyScreen({
   );
 
   useEffect(() => {
-    if (phase !== "idle") return;
     const id = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [phase]);
+  }, []);
 
-  const idleCountdownSeconds =
-    phase === "idle" && nextWindowAtMs != null
-      ? Math.max(0, Math.floor((nextWindowAtMs - nowMs) / 1000))
-      : null;
+  // Single continuous target covering both the wait for the schedule window
+  // to open AND the lobby dwell after it, so the on-screen countdown never
+  // resets partway through. `lobbyCountdown` (from the session hook, once
+  // the DB row's `starts_at` is known) is authoritative and takes over the
+  // instant it's available; `roundStartAtMs` (computed client-side from the
+  // schedule) covers every moment before that, including the entire idle
+  // phase where no session row exists yet.
+  const roundStartAtMs = nextWindowAtMs != null ? nextWindowAtMs + lobbyDwellSeconds(testMode) * 1000 : null;
 
-  const isUrgent = lobbyCountdown != null && lobbyCountdown <= 10;
+  const countdownSeconds =
+    lobbyCountdown != null
+      ? lobbyCountdown
+      : roundStartAtMs != null
+        ? Math.max(0, Math.floor((roundStartAtMs - nowMs) / 1000))
+        : null;
+
+  const isUrgent = countdownSeconds != null && countdownSeconds <= 10;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto overscroll-contain px-4 py-6">
@@ -199,7 +245,7 @@ function LobbyScreen({
         <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-5 text-center`}>
           <p className={TEXT_LABEL}>You&apos;re in the lobby</p>
           {username ? <p className="mt-1 text-lg font-bold text-emerald-200">{username}</p> : null}
-          {lobbyCountdown != null ? (
+          {countdownSeconds != null ? (
             <>
               <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Game starts in</p>
               <p
@@ -207,7 +253,7 @@ function LobbyScreen({
                   isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
                 }`}
               >
-                {formatMmSs(lobbyCountdown)}
+                {formatMmSs(countdownSeconds)}
               </p>
             </>
           ) : (
@@ -229,11 +275,11 @@ function LobbyScreen({
           <div className="mt-2 flex justify-center">
             <ScheduleUpdatedToast show={scheduleJustUpdated} />
           </div>
-          {idleCountdownSeconds != null ? (
+          {countdownSeconds != null ? (
             <>
-              <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Next game in</p>
+              <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Game starts in</p>
               <p className="mt-1 font-black tabular-nums text-emerald-300 text-[2.8rem] leading-none">
-                {formatIdleCountdown(idleCountdownSeconds)}
+                {formatIdleCountdown(countdownSeconds)}
               </p>
               <p className="mt-3 text-sm text-slate-400">One letter · 12 categories · 3 minutes</p>
             </>
@@ -251,15 +297,16 @@ function LobbyScreen({
   );
 }
 
-function ScoringScreen() {
+function ScoringScreen({ mode = "standard" }: { mode?: CategoryBlitzMode }) {
+  const theme = GAME_THEME[MODE_CONFIG[mode].themeKey];
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
-      <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
-        <p className={TEXT_LABEL}>Scoring in progress</p>
+      <div className={`w-full max-w-sm rounded-2xl border ${theme.borderCard} bg-slate-900/70 p-6 text-center`}>
+        <p className={theme.textLabel}>Scoring in progress</p>
         <p className="mt-3 text-xl font-black text-white">Checking answers…</p>
-        <p className="mt-2 text-sm text-slate-400">Unique answers score 2 pts. Duplicates cancel.</p>
+        <p className="mt-2 text-sm text-slate-400">{MODE_CONFIG[mode].rule}</p>
         <div className="mt-4 flex justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-400/40 border-t-emerald-400" />
+          <div className={`h-6 w-6 animate-spin rounded-full border-2 ${theme.spinnerRing}`} />
         </div>
       </div>
     </div>
@@ -358,6 +405,8 @@ function NextGameStatus({ info }: { info: { nextWindowAtMs: number | null } | nu
 function CompleteScreen({
   results,
   userId,
+  venueId,
+  username,
   rankGained,
   venuePointsBefore,
   venuePointsAfter,
@@ -365,6 +414,8 @@ function CompleteScreen({
 }: {
   results: CategoryBlitzRoundResults | null;
   userId: string;
+  venueId: string;
+  username: string | null;
   rankGained: number | null;
   /** Viewer's venue-wide point total captured before this session started, or null if unavailable. */
   venuePointsBefore: number | null;
@@ -381,7 +432,7 @@ function CompleteScreen({
     venuePointsBefore !== null && venuePointsAfter !== null ? venuePointsAfter - venuePointsBefore : null;
   const standings = (results?.totals ?? []).slice().sort((a, b) => b.points - a.points);
 
-  if (standings.length === 0) {
+  if (!results || standings.length === 0) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
         <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
@@ -399,6 +450,23 @@ function CompleteScreen({
   const viewerInPodium = viewerRank > -1 && viewerRank < 3;
   const podium = standings.slice(0, 3).map((entry, i) => ({ ...entry, rank: i + 1 }));
   const podiumOrder = [podium[1], podium[0], podium[2]];
+  const viewerAnswers = results.results
+    .map((category) => category.answers.find((answer) => answer.userId === userId) ?? null)
+    .filter((answer): answer is NonNullable<typeof answer> => answer !== null);
+  const correctAnswers = viewerAnswers.filter((answer) => answer.reason === "correct").length;
+  const correctRate = viewerAnswers.length > 0 ? Math.round((correctAnswers / viewerAnswers.length) * 100) : null;
+  const storySharePayload = viewerEntry
+    ? buildCategoryBlitzStorySharePayload({
+        venueId: venueId || "unknown-venue",
+        venueName: null,
+        userId: userId || "unknown-user",
+        username: viewerEntry.username || username || "Player",
+        finalRank: viewerRank + 1,
+        finalPoints: viewerEntry.points,
+        correctRate,
+        isChampion: viewerRank === 0,
+      })
+    : null;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-6">
@@ -505,6 +573,15 @@ function CompleteScreen({
         </div>
       )}
 
+      {storySharePayload ? (
+        <StoryShareLauncher
+          payload={storySharePayload}
+          title={viewerRank === 0 ? "Share the champion shot" : "Share your blitz run"}
+          buttonLabel="Create story"
+          className="border-emerald-300/30 bg-emerald-300/[0.08]"
+        />
+      ) : null}
+
       <NextGameStatus info={nextWindowInfo} />
 
       <p className="pb-2 text-center text-xs text-slate-500">Thanks for playing! Your points have been awarded.</p>
@@ -532,6 +609,8 @@ function ResultsScreen({
   const viewerRank = standings.findIndex((t) => t.userId === userId);
   const viewerInTop10 = viewerRank > -1 && viewerRank < 10;
   const viewerEntry = viewerRank > -1 ? standings[viewerRank] : null;
+  const isReverse = results.mode === "reverse";
+  const theme = GAME_THEME[MODE_CONFIG[results.mode].themeKey];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4">
@@ -549,26 +628,36 @@ function ResultsScreen({
 
       {/* Live Leaderboard — rendered settled so it doesn't replay the count-up /
           reorder it just performed inside RevealSequence. */}
-      <div className={`rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-4`}>
-        <p className={`${TEXT_LABEL} text-center`}>Leaderboard</p>
+      <div className={`rounded-2xl border-2 ${theme.borderActive} ${theme.bgTint} p-4`}>
+        <p className={`${theme.textLabel} text-center`}>Leaderboard</p>
         <div className="mt-3">
           <LiveLeaderboard entries={results.totals} meId={userId} exiting={leaderboardExiting} settled />
         </div>
       </div>
 
       {/* Category breakdown — kept underneath the leaderboard */}
-      <p className={`${TEXT_LABEL} mt-1`}>Letter: {results.letter}</p>
+      <p className={`${theme.textLabel} mt-1`}>Letter: {results.letter}</p>
       <div className="space-y-2">
         {results.results.map((cat) => {
           const viewerAnswer = cat.answers.find((a) => a.userId === userId);
           const reason = viewerAnswer?.reason;
+          // Reverse "correct" (matched the crowd) glows brighter the more
+          // players hit it — consensus made visible (Phase 5). Standard mode
+          // and every other reason keep the flat per-reason card look.
+          const glow = isReverse && reason === "correct" && viewerAnswer
+            ? reverseMatchGlow(viewerAnswer.pointsAwarded)
+            : null;
           return (
             <div
               key={cat.categoryIndex}
               className={`rounded-xl border ${
-                reason === "correct"
+                glow
+                  ? glow.card
+                  : reason === "correct"
                   ? "border-emerald-400/50 bg-emerald-950/40"
-                  : reason === "wrong_letter" || reason === "invalid"
+                  : reason === "too_obscure"
+                  ? "border-slate-600 bg-slate-800/40"
+                  : reason === "wrong_letter" || reason === "invalid" || reason === "moderated"
                   ? "border-rose-500/50 bg-rose-950/30"
                   : reason === "insufficient_players"
                   ? "border-amber-400/50 bg-amber-950/40"
@@ -585,8 +674,10 @@ function ResultsScreen({
                   {viewerAnswer ? (
                     <p className={`mt-0.5 truncate text-sm font-bold ${
                       reason === "correct"
-                        ? "text-emerald-300"
-                        : reason === "wrong_letter" || reason === "invalid"
+                        ? (isReverse ? "text-fuchsia-200" : "text-emerald-300")
+                        : reason === "too_obscure"
+                        ? "text-slate-300"
+                        : reason === "wrong_letter" || reason === "invalid" || reason === "moderated"
                         ? "text-rose-400"
                         : reason === "insufficient_players"
                         ? "text-amber-300"
@@ -602,6 +693,8 @@ function ResultsScreen({
                       <p className={`mt-0.5 text-[0.65rem] font-semibold ${
                         reason === "insufficient_players"
                           ? "text-amber-300/80"
+                          : reason === "too_obscure"
+                          ? "text-slate-400"
                           : "text-rose-300/80"
                       }`}>
                         {REASON_LABEL[reason] ?? reason}
@@ -616,8 +709,14 @@ function ResultsScreen({
                 </div>
                 <div className="shrink-0 text-right">
                   {reason === "correct" ? (
-                    <span className="inline-flex items-center rounded-md border border-emerald-400/50 bg-emerald-500/20 px-2 py-0.5 text-[0.65rem] font-black text-emerald-300">
-                      +2
+                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[0.65rem] font-black ${
+                      glow ? glow.badge : "border-emerald-400/50 bg-emerald-500/20 text-emerald-300"
+                    }`}>
+                      +{viewerAnswer?.pointsAwarded ?? 0}
+                    </span>
+                  ) : reason === "too_obscure" ? (
+                    <span className="inline-flex items-center rounded-md border border-slate-600 bg-slate-700/30 px-2 py-0.5 text-[0.65rem] font-black text-slate-300">
+                      +{viewerAnswer?.pointsAwarded ?? 0}
                     </span>
                   ) : reason === "wrong_letter" ? (
                     <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[0.65rem] font-black text-rose-400">
@@ -626,6 +725,10 @@ function ResultsScreen({
                   ) : reason === "invalid" ? (
                     <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[0.65rem] font-black text-rose-400">
                       invalid
+                    </span>
+                  ) : reason === "moderated" ? (
+                    <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[0.65rem] font-black text-rose-400">
+                      flagged
                     </span>
                   ) : reason === "duplicate" ? (
                     <span className="text-[0.65rem] font-black text-slate-500">dup</span>
@@ -646,7 +749,7 @@ function ResultsScreen({
                         key={a.userId}
                         className={`inline-flex rounded-full border px-2 py-0.5 text-[0.6rem] font-semibold ${
                           a.isUnique
-                            ? "border-emerald-700/50 text-emerald-400/70"
+                            ? (isReverse ? "border-fuchsia-700/50 text-fuchsia-400/70" : "border-emerald-700/50 text-emerald-400/70")
                             : "border-slate-700 text-slate-600"
                         }`}
                       >
@@ -679,6 +782,7 @@ export function AnsweringScreen({
   userId,
   isSpectating,
   playerCount,
+  mode = "standard",
 }: {
   letter: string;
   categories: string[];
@@ -688,7 +792,12 @@ export function AnsweringScreen({
   userId: string;
   isSpectating: boolean;
   playerCount?: number;
+  /** Round mode — flips the whole board's accent/background to the "Blend In!"
+   *  color world for the round's duration. Defaults to "standard" so callers
+   *  mid-migration (or a round with no mode yet) render the familiar look. */
+  mode?: CategoryBlitzMode;
 }) {
+  const theme = GAME_THEME[MODE_CONFIG[mode].themeKey];
   const [answers, setAnswers] = useState<string[]>(() => Array(12).fill(""));
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -825,14 +934,14 @@ export function AnsweringScreen({
   if (submitState === "done") {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
-        <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-6 text-center`}>
-          <p className={TEXT_LABEL}>Answers submitted</p>
+        <div className={`w-full max-w-sm rounded-2xl border-2 ${theme.borderActive} ${theme.bgTint} p-6 text-center`}>
+          <p className={theme.textLabel}>Answers submitted</p>
           <p className="mt-3 text-xl font-black text-white">
             {totalFilled === 0 ? "No answers recorded." : `${totalFilled} answer${totalFilled !== 1 ? "s" : ""} submitted!`}
           </p>
-          <p className="mt-2 text-sm text-emerald-100/70">Waiting for scoring…</p>
+          <p className={`mt-2 text-sm ${theme.textSoft}`}>Waiting for scoring…</p>
           <div className="mt-4 flex justify-center">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-400/40 border-t-emerald-400" />
+            <div className={`h-5 w-5 animate-spin rounded-full border-2 ${theme.spinnerRing}`} />
           </div>
         </div>
       </div>
@@ -858,7 +967,7 @@ export function AnsweringScreen({
           slightly behind the badge/row morph so the handoff reads as one
           sequenced beat rather than shared elements morphing while
           everything else pops in instantly. */}
-      <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950/90 px-4 py-3`}>
+      <div className={`shrink-0 border-b ${theme.borderActive} bg-slate-950/90 px-4 py-3`}>
         <div className="flex items-center gap-3">
           {/* Letter badge — shares layoutId with the reveal badge so the
               round-start reveal morphs its big centered badge down into this
@@ -866,7 +975,7 @@ export function AnsweringScreen({
           <motion.div
             layoutId={CB_LETTER_BADGE_LAYOUT_ID}
             transition={{ layout: LAYOUT_MORPH_TRANSITION }}
-            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${LETTER_GRADIENT} shadow-[0_0_18px_rgba(16,185,129,0.35)]`}
+            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${theme.letterGradient} ${theme.letterGlow}`}
           >
             <span className="font-['Bree_Serif',_Nunito,_serif] text-4xl font-black leading-none text-slate-950">
               {letter}
@@ -878,10 +987,7 @@ export function AnsweringScreen({
             animate={{ opacity: 1 }}
             transition={CHROME_ENTRANCE_TRANSITION}
           >
-            <p className={TEXT_LABEL}>Letter for this round</p>
-            <p className="text-xs text-slate-400">
-              {totalFilled}/{categories.length} filled
-            </p>
+            <p className={theme.textLabel}>{MODE_CONFIG[mode].rule}</p>
           </motion.div>
           {/* Timer */}
           <motion.div
@@ -903,7 +1009,7 @@ export function AnsweringScreen({
         >
           <div
             className={`h-full rounded-full transition-all duration-300 ${
-              isUrgent ? "bg-rose-500" : "bg-emerald-500"
+              isUrgent ? "bg-rose-500" : theme.progressFill
             }`}
             style={{ width: `${Math.max(0, Math.min(100, (timeRemaining / 180) * 100))}%` }}
           />
@@ -933,7 +1039,7 @@ export function AnsweringScreen({
                   wrongLetter
                     ? "border-rose-500/70 bg-rose-950/30"
                     : filled
-                    ? "border-emerald-400/50 bg-emerald-950/30"
+                    ? `${theme.filledBorder} ${theme.filledBg}`
                     : "border-slate-700/60 bg-slate-900/40"
                 } px-3 py-2.5 ${isSpectating ? "opacity-50" : ""}`}
               >
@@ -968,7 +1074,7 @@ export function AnsweringScreen({
                     onFocus={handleAnswerInputFocus}
                     placeholder={`${letter}…`}
                     className={`mt-0.5 w-full bg-transparent text-sm font-bold outline-none placeholder:text-slate-600 ${
-                      wrongLetter ? "text-rose-300" : filled ? "text-emerald-200" : "text-white"
+                      wrongLetter ? "text-rose-300" : filled ? theme.filledText : "text-white"
                     } disabled:opacity-50`}
                     autoComplete="off"
                     autoCorrect="off"
@@ -1000,11 +1106,11 @@ export function AnsweringScreen({
 
       {/* Autosave footnote — answers save as you type and are graded automatically when the timer ends. */}
       {submitState === "idle" && !isExpired && !isSpectating && (
-        <div className="shrink-0 border-t border-emerald-400/20 px-4 py-3">
+        <div className={`shrink-0 border-t ${theme.borderSoft} px-4 py-3`}>
           {errorMsg && (
             <p className="mb-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
           )}
-          <p className="text-center text-xs font-semibold uppercase tracking-[0.1em] text-emerald-300/70">
+          <p className={`text-center text-xs font-semibold uppercase tracking-[0.1em] ${theme.textAccentSoft}`}>
             Answers save automatically — graded when the timer runs out
           </p>
         </div>
@@ -1111,6 +1217,39 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     isHydrated ? userId : ""
   );
   const { triggerAnimation } = useAnimationTrigger();
+
+  // Dev-only: force the current wait (answer timer, intermission, or lobby
+  // dwell) to elapse immediately instead of watching real-time countdowns.
+  // Visibility here is purely a UX convenience — the actual safety boundary
+  // is server-side (skipRound rejects anything but a session whose own
+  // test_mode DB column is true), so gating on session.testMode (server
+  // truth) rather than just the local toggle avoids showing a button that
+  // would just 403 against a real session.
+  const [isSkippingRound, setIsSkippingRound] = useState(false);
+  const canSkipRound = testMode && !!session?.testMode && (session?.status === "lobby" || session?.status === "active");
+  const skipRound = useCallback(() => {
+    if (!session?.id || isSkippingRound) return;
+    setIsSkippingRound(true);
+    void fetch(`/api/category-blitz/sessions/${session.id}/skip-round`, { method: "POST" })
+      .catch(() => {
+        // Best-effort — the realtime subscription/poll will simply keep
+        // showing the current state if this fails, same as any other
+        // dropped dev-tooling request.
+      })
+      .finally(() => setIsSkippingRound(false));
+  }, [session, isSkippingRound]);
+
+  // The round in play right now drives the whole page's ambient color world
+  // (§4c) — "Blend In!" for the round's full duration (answering → scoring →
+  // reveal → results), falling back to "standard" once nothing round-scoped
+  // is active (lobby/idle/complete keep the default look). `results` (the
+  // just-scored round) takes over from `round` once the round itself is
+  // superseded by the next one's realtime payload but its results are still
+  // on screen.
+  const isRoundScopedPhase = phase === "answering" || phase === "scoring" || phase === "reveal" || phase === "results";
+  const activeMode: CategoryBlitzMode =
+    (isRoundScopedPhase ? round?.mode ?? results?.mode : undefined) ?? "standard";
+  const pageTheme = GAME_THEME[MODE_CONFIG[activeMode].themeKey];
 
   // An admin ending a session (or one ending with no completed round) lands
   // here with no standings to show — CompleteScreen's bare "session has
@@ -1275,6 +1414,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         reason: mine.reason,
         explanation: mine.explanation,
         points: mine.pointsAwarded,
+        mode: results.mode,
       }];
     });
   }, [results, userId]);
@@ -1361,6 +1501,20 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     triggerAnimation("CATEGORY_BLITZ_CHAMPION");
   }, [phase, session, isChampion, triggerAnimation]);
 
+  // "Blend In!" mode-flip takeover (docs/category-blitz-mode-b-plan.md §4b):
+  // fires exactly once per round, the moment a freshly-started reverse round
+  // is detected (the same `showReveal` window RoundStartReveal uses) — never
+  // for the reverse → standard reversion, which relies on the ModeSign flip +
+  // ambient board theme shift alone. Keyed on round.id so a reload mid-round
+  // (showReveal already false by then) never replays it.
+  const modeFlipFiredRoundRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!showReveal || !round || round.mode !== "reverse") return;
+    if (modeFlipFiredRoundRef.current === round.id) return;
+    modeFlipFiredRoundRef.current = round.id;
+    triggerAnimation("CATEGORY_BLITZ_MODE_FLIP", { modeFlipVariant: getModeFlipTakeoverVariant() });
+  }, [showReveal, round, triggerAnimation]);
+
   // Game-over celebration: SessionCompleteFireworks holds itself on screen
   // briefly (see its own onDone timer) then reports back so it can be
   // unmounted, revealing the persistent podium/stats CompleteScreen beneath
@@ -1440,7 +1594,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   return (
     <div
-      className="relative flex flex-col overflow-hidden bg-slate-950 text-white"
+      className={`relative flex flex-col overflow-hidden text-white transition-colors duration-700 ${pageTheme.pageBg}`}
       style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
     >
       <Header phase={phase} error={error} onBack={onBack} />
@@ -1453,6 +1607,16 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
       >
         Test mode: {testMode ? "on" : "off"}
       </button>
+      {canSkipRound && (
+        <button
+          type="button"
+          onClick={skipRound}
+          disabled={isSkippingRound}
+          className="fixed bottom-2 right-32 z-[999] rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-950 disabled:opacity-50"
+        >
+          {isSkippingRound ? "Skipping…" : "Skip round"}
+        </button>
+      )}
       {testMode && <DevAnimationPanel />}
       {countdownOverlayVisible && (
         <NextRoundCountdown
@@ -1469,6 +1633,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
           username={username}
           lobbyCountdown={lobbyCountdown}
           playerCount={session?.playerCount}
+          testMode={testMode}
         />
       )}
       {phase === "answering" && round && (
@@ -1493,10 +1658,11 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
             userId={userId}
             isSpectating={viewerRole === "spectator"}
             playerCount={session?.playerCount}
+            mode={round.mode}
           />
         )
       )}
-      {phase === "scoring" && <ScoringScreen />}
+      {phase === "scoring" && <ScoringScreen mode={activeMode} />}
       {/* Reveal phase: play the full-screen reveal journey (cascade → guided
           scroll → leaderboard), or hold a loading beat while the viewer's
           graded answers are still in flight (never skip it). */}
@@ -1511,7 +1677,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
             nextRoundStartsIn={nextRoundStartsIn}
           />
         ) : (
-          <ScoringScreen />
+          <ScoringScreen mode={activeMode} />
         )
       )}
       {phase === "results" && results && userId && (
@@ -1536,6 +1702,8 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
           <CompleteScreen
             results={results}
             userId={userId}
+            venueId={venueId}
+            username={username}
             rankGained={rankGained}
             venuePointsBefore={session?.id && venuePointsBefore?.sessionId === session.id ? venuePointsBefore.points : null}
             venuePointsAfter={session?.id && venuePointsAfter?.sessionId === session.id ? venuePointsAfter.points : null}

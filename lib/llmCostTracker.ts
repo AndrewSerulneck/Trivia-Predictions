@@ -21,6 +21,7 @@ const GEMINI_PRICING: Record<string, ModelPrice> = {
 
 export type LlmUsageFeature =
   | "category_blitz_grading"
+  | "category_blitz_moderation"
   | "username_moderation"
   | "live_trivia_rewrite";
 

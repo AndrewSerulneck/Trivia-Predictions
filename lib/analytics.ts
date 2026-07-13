@@ -1,10 +1,52 @@
 "use client";
 
 import { getUserId, getVenueId } from "@/lib/storage";
+import type {
+  CameraPermissionState,
+  StoryCameraErrorCode,
+  StoryExternalAppTarget,
+  StoryShareFallbackMode,
+  StoryShareGameType,
+  StorySharePipelineStatus,
+  StoryShareTemplateVariant,
+} from "@/lib/socialShare/contracts";
 
 export type AnalyticsConsent = "granted" | "denied";
 export type GameAnalyticsType = "trivia" | "bingo" | "pickem" | "fantasy" | "speed-trivia" | "live-trivia" | "category-blitz";
 export type GameOutcome = "won" | "lost" | "abandoned";
+export type StoryShareAnalyticsEventName =
+  | "story_share_opened"
+  | "story_camera_permission_result"
+  | "story_capture_completed"
+  | "story_share_attempted"
+  | "story_share_completed"
+  | "story_share_fallback_used";
+
+export interface StoryShareAnalyticsContext {
+  storyShareId: string;
+  gameType: StoryShareGameType;
+  templateVariant?: StoryShareTemplateVariant | null;
+  finalRank?: number | null;
+  finalPoints?: number | null;
+  correctRate?: number | null;
+  isChampion?: boolean | null;
+  venueId?: string;
+  userId?: string;
+}
+
+interface StoryShareAnalyticsEventInput extends StoryShareAnalyticsContext {
+  eventName: StoryShareAnalyticsEventName;
+  fallbackMode?: StoryShareFallbackMode | null;
+  externalAppTarget?: StoryExternalAppTarget | null;
+  shareStatus?: StorySharePipelineStatus | null;
+  permissionState?: CameraPermissionState | null;
+  cameraErrorCode?: StoryCameraErrorCode | null;
+  fallbackRecommended?: boolean | null;
+  resultReason?: string | null;
+  imageWidth?: number | null;
+  imageHeight?: number | null;
+  usedCameraFallback?: boolean | null;
+}
 
 type QueuedEvent = {
   requestId: string;
@@ -28,6 +70,22 @@ type QueuedEvent = {
   regionKey?: string | null;
   country?: string | null;
   dataSource?: "geolocation" | "signup";
+  storyShareId?: string;
+  templateVariant?: StoryShareTemplateVariant | null;
+  fallbackMode?: StoryShareFallbackMode | null;
+  externalAppTarget?: StoryExternalAppTarget | null;
+  shareStatus?: StorySharePipelineStatus | null;
+  permissionState?: CameraPermissionState | null;
+  cameraErrorCode?: StoryCameraErrorCode | null;
+  finalRank?: number | null;
+  finalPoints?: number | null;
+  correctRate?: number | null;
+  isChampion?: boolean | null;
+  fallbackRecommended?: boolean | null;
+  resultReason?: string | null;
+  imageWidth?: number | null;
+  imageHeight?: number | null;
+  usedCameraFallback?: boolean | null;
 };
 
 type StoredSiteSession = {
@@ -118,6 +176,10 @@ function uuid(): string {
   return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (char) =>
     (Number(char) ^ ((Math.random() * 16) >> (Number(char) / 4))).toString(16)
   );
+}
+
+export function createStoryShareAnalyticsId(): string {
+  return uuid();
 }
 
 function nowIso(): string {
@@ -364,6 +426,90 @@ export function syncUserGeographicData(input: {
     dataSource: input.dataSource ?? "signup",
   });
   scheduleFlush();
+}
+
+function enqueueStoryShareEvent(input: StoryShareAnalyticsEventInput) {
+  const storyShareId = input.storyShareId.trim();
+  if (!storyShareId) return;
+
+  enqueue({
+    type: input.eventName,
+    gameType: input.gameType,
+    userId: input.userId,
+    venueId: input.venueId,
+    storyShareId,
+    templateVariant: input.templateVariant ?? null,
+    fallbackMode: input.fallbackMode ?? null,
+    externalAppTarget: input.externalAppTarget ?? null,
+    shareStatus: input.shareStatus ?? null,
+    permissionState: input.permissionState ?? null,
+    cameraErrorCode: input.cameraErrorCode ?? null,
+    finalRank: input.finalRank ?? null,
+    finalPoints: input.finalPoints ?? null,
+    correctRate: input.correctRate ?? null,
+    isChampion: input.isChampion ?? null,
+    fallbackRecommended: input.fallbackRecommended ?? null,
+    resultReason: input.resultReason ?? null,
+    imageWidth: input.imageWidth ?? null,
+    imageHeight: input.imageHeight ?? null,
+    usedCameraFallback: input.usedCameraFallback ?? null,
+  });
+  scheduleFlush();
+}
+
+export function trackStoryShareEvent(input: StoryShareAnalyticsEventInput) {
+  try {
+    enqueueStoryShareEvent(input);
+  } catch {
+    // Analytics should never block the camera/share flow.
+  }
+}
+
+export function trackStoryShareOpened(input: StoryShareAnalyticsContext) {
+  trackStoryShareEvent({ ...input, eventName: "story_share_opened" });
+}
+
+export function trackStoryCameraPermissionResult(
+  input: StoryShareAnalyticsContext & {
+    permissionState: CameraPermissionState;
+    cameraErrorCode?: StoryCameraErrorCode | null;
+    usedCameraFallback?: boolean | null;
+  }
+) {
+  trackStoryShareEvent({ ...input, eventName: "story_camera_permission_result" });
+}
+
+export function trackStoryCaptureCompleted(
+  input: StoryShareAnalyticsContext & {
+    imageWidth?: number | null;
+    imageHeight?: number | null;
+  }
+) {
+  trackStoryShareEvent({ ...input, eventName: "story_capture_completed" });
+}
+
+export function trackStoryShareAttempted(input: StoryShareAnalyticsContext) {
+  trackStoryShareEvent({ ...input, eventName: "story_share_attempted" });
+}
+
+export function trackStoryShareCompleted(
+  input: StoryShareAnalyticsContext & {
+    shareStatus: StorySharePipelineStatus;
+    fallbackRecommended?: boolean | null;
+    resultReason?: string | null;
+  }
+) {
+  trackStoryShareEvent({ ...input, eventName: "story_share_completed" });
+}
+
+export function trackStoryShareFallbackUsed(
+  input: StoryShareAnalyticsContext & {
+    fallbackMode: StoryShareFallbackMode;
+    externalAppTarget?: StoryExternalAppTarget | null;
+    resultReason?: string | null;
+  }
+) {
+  trackStoryShareEvent({ ...input, eventName: "story_share_fallback_used" });
 }
 
 export function flushAnalytics(useBeacon = false): Promise<void> | void {

@@ -23,6 +23,22 @@ type AnalyticsEvent = {
   regionKey?: string | null;
   country?: string | null;
   dataSource?: string | null;
+  storyShareId?: string;
+  templateVariant?: string | null;
+  fallbackMode?: string | null;
+  externalAppTarget?: string | null;
+  shareStatus?: string | null;
+  permissionState?: string | null;
+  cameraErrorCode?: string | null;
+  finalRank?: number | null;
+  finalPoints?: number | null;
+  correctRate?: number | null;
+  isChampion?: boolean | null;
+  fallbackRecommended?: boolean | null;
+  resultReason?: string | null;
+  imageWidth?: number | null;
+  imageHeight?: number | null;
+  usedCameraFallback?: boolean | null;
 };
 
 const seenRequestIds = new Map<string, number>();
@@ -35,6 +51,25 @@ function trim(value: unknown): string {
 function nullableTrim(value: unknown): string | null {
   const normalized = trim(value);
   return normalized || null;
+}
+
+function nullableEnum<T extends string>(value: unknown, allowed: readonly T[]): T | null {
+  const normalized = trim(value) as T;
+  return allowed.includes(normalized) ? normalized : null;
+}
+
+function nullableInteger(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return Math.trunc(value);
+}
+
+function nullableNumber(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return value;
+}
+
+function nullableBoolean(value: unknown): boolean | null {
+  return typeof value === "boolean" ? value : null;
 }
 
 function isUuid(value: string): boolean {
@@ -81,6 +116,29 @@ function eventTimestamp(value: unknown): string {
   if (Number.isFinite(parsed.getTime())) return parsed.toISOString();
   return new Date().toISOString();
 }
+
+const STORY_SHARE_EVENT_TYPES = [
+  "story_share_opened",
+  "story_camera_permission_result",
+  "story_capture_completed",
+  "story_share_attempted",
+  "story_share_completed",
+  "story_share_fallback_used",
+] as const;
+
+const STORY_SHARE_GAME_TYPES = ["live-trivia", "category-blitz"] as const;
+const STORY_TEMPLATE_VARIANTS = ["default", "champion", "top3", "funny", "minimal"] as const;
+const STORY_FALLBACK_MODES = ["web-share", "download", "deep-link", "copy-only"] as const;
+const STORY_EXTERNAL_APP_TARGETS = ["instagram", "facebook"] as const;
+const STORY_SHARE_STATUSES = ["shared", "unsupported", "canceled", "failed"] as const;
+const STORY_PERMISSION_STATES = ["unknown", "prompt", "granted", "denied", "unsupported"] as const;
+const STORY_CAMERA_ERROR_CODES = [
+  "permission-denied",
+  "no-camera",
+  "insecure-context",
+  "unsupported-browser",
+  "unknown",
+] as const;
 
 async function userBelongsToVenue(userId: string, venueId: string): Promise<boolean> {
   if (!supabaseAdmin || !userId || !venueId || !isUuid(userId)) return false;
@@ -206,6 +264,57 @@ async function handleEvent(event: AnalyticsEvent, request: Request, fallback: { 
         data_source: trim(event.dataSource) === "geolocation" ? "geolocation" : "signup",
       },
       { onConflict: "user_id" }
+    );
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  if (STORY_SHARE_EVENT_TYPES.includes(type as (typeof STORY_SHARE_EVENT_TYPES)[number])) {
+    const storyShareId = trim(event.storyShareId);
+    const eventId = trim(event.requestId);
+    const gameType = nullableEnum(event.gameType, STORY_SHARE_GAME_TYPES);
+    if (!storyShareId || !venueId || !gameType || !isUuid(eventId)) return;
+
+    const verifiedUserId =
+      userId && isUuid(userId) && (await userBelongsToVenue(userId, venueId))
+        ? userId
+        : null;
+    const userSessionId = nullableTrim(event.userSessionId);
+    const gameSessionId = nullableTrim(event.gameSessionId);
+    const finalRank = nullableInteger(event.finalRank);
+    const finalPoints = nullableInteger(event.finalPoints);
+    const correctRate = nullableNumber(event.correctRate);
+    const imageWidth = nullableInteger(event.imageWidth);
+    const imageHeight = nullableInteger(event.imageHeight);
+
+    const { error } = await supabaseAdmin.from("story_share_events").upsert(
+      {
+        event_id: eventId,
+        story_share_id: storyShareId,
+        user_id: verifiedUserId,
+        venue_id: venueId,
+        user_session_id: userSessionId && isUuid(userSessionId) ? userSessionId : null,
+        game_session_id: gameSessionId && isUuid(gameSessionId) ? gameSessionId : null,
+        game_type: gameType,
+        event_type: type,
+        event_at: occurredAt,
+        template_variant: nullableEnum(event.templateVariant, STORY_TEMPLATE_VARIANTS),
+        fallback_mode: nullableEnum(event.fallbackMode, STORY_FALLBACK_MODES),
+        external_app_target: nullableEnum(event.externalAppTarget, STORY_EXTERNAL_APP_TARGETS),
+        share_status: nullableEnum(event.shareStatus, STORY_SHARE_STATUSES),
+        permission_state: nullableEnum(event.permissionState, STORY_PERMISSION_STATES),
+        camera_error_code: nullableEnum(event.cameraErrorCode, STORY_CAMERA_ERROR_CODES),
+        final_rank: finalRank != null && finalRank > 0 ? finalRank : null,
+        final_points: finalPoints != null && finalPoints >= 0 ? finalPoints : null,
+        correct_rate: correctRate != null ? Math.max(0, Math.min(100, correctRate)) : null,
+        is_champion: nullableBoolean(event.isChampion),
+        fallback_recommended: nullableBoolean(event.fallbackRecommended),
+        result_reason: nullableTrim(event.resultReason),
+        image_width: imageWidth != null && imageWidth > 0 ? imageWidth : null,
+        image_height: imageHeight != null && imageHeight > 0 ? imageHeight : null,
+        used_camera_fallback: nullableBoolean(event.usedCameraFallback),
+      },
+      { onConflict: "event_id" }
     );
     if (error) throw new Error(error.message);
   }
