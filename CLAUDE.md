@@ -49,6 +49,13 @@
 - **Types:** Manually maintained in `types/index.ts`. Do not look for or assume auto-generated Supabase types.
 - **Dev Mode:** React Strict Mode is disabled in `next.config.ts`. Do not assume double-mount behavior during debugging.
 
+## Join/Login Flow (Auth-First)
+- **Canonical order:** `auth-method-selection` ("How do you want to continue?" — Face ID/Touch ID, Username/PIN, or Create Account) → username → PIN/passkey → **only then** the venue list.
+- **Geolocation runs after authentication, never before.** The initial page load (`JoinFlow.tsx`'s load effect) picks only the entry panel — it does not call geolocation, geofence-filter venues, or show the location-permission panel. All venue-list construction happens in `buildVenueListAfterAuth`, triggered by a `useEffect` keyed on `activePanel === "venue-list"` (guarded by `venueListBuiltRef` so it runs once per session).
+- **God Mode accounts (`accounts.god_mode`) see ALL venues, with zero geolocation calls.** Every other account gets exactly one geolocation check and sees only in-range venues (existing geofence math, unchanged). `buildVenueListAfterAuth` decides this by calling `getGodMode()` — which is safe to trust only because every auth-success path (`saveGodMode(account.godMode)`) already persisted the server-confirmed value before the venue-list panel/effect can run. There is no unauthenticated god-mode lookup anywhere in this flow — do not add one; it would be a username-enumeration leak.
+- **`venueListBuiltRef` must be reset** whenever the user returns to `auth-method-selection` (sign-out, back navigation) so the next login rebuilds the list fresh. It must NOT be reset by in-session back-navigation to the venue list itself (e.g. from a venue-login sub-screen) — that should reuse the already-built list, not re-prompt location.
+- **Full history/rationale:** `docs/join-flow-location-error-plan.md`.
+
 ## Code Style & Constraints
 - **TypeScript:** Strict mode enabled. Absolutely no `any`. Use explicit types imported from `@/types`.
 - **Functions:** Prefer arrow functions for components and utilities.

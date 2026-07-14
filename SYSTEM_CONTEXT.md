@@ -29,9 +29,10 @@
   - Challenge-based prize delivery: users win venue discounts/coupons by meeting challenge goals.
 
 ## 2. Key User Flows
-- Landing -> Account Creation -> Venue Selection:
-  - Entry starts at `/` using `JoinFlow`.
+- Landing -> Account Creation -> Venue Selection (auth-first):
+  - Entry starts at `/` using `JoinFlow`. The canonical panel order is: "How do you want to continue?" (Face ID/Touch ID, Username/PIN, or Create Account) -> username -> PIN/passkey -> **only then** the venue list.
   - User creates or logs into a **global account** via `/api/join/account` (username + PIN, or passkey via WebAuthn). The `accounts` table holds global identity; points/leaderboards are venue-specific.
+  - **Geolocation runs only after authentication succeeds, never before.** The venue list is built exactly once post-auth (`buildVenueListAfterAuth` in `JoinFlow.tsx`): God Mode accounts (`accounts.god_mode`) see ALL venues with zero geolocation calls; every other account gets a single geolocation check and sees only in-range venues. There is no unauthenticated god-mode lookup — see `CLAUDE.md`'s "Join/Login Flow (Auth-First)" section and `docs/join-flow-location-error-plan.md` for the full rationale.
   - User chooses/arrives with venue context (`venueId`), profile is ensured via API (`/api/join/profile`, `/api/join/ensure-venue`).
 - Venue Selection -> Home Screen:
   - User lands at `/venue/[venueId]` (rendered by `VenueHubClient`), which is the venue home hub.

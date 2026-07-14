@@ -11,6 +11,54 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export const VENUE_PRESENCE_TTL_MS = 3 * 60 * 1000;
 export const VENUE_PRESENCE_FALSE_POSITIVE_WINDOW_MS = 5 * 60 * 1000;
 
+// God Mode accounts (Andrew, Marc — `accounts.god_mode`) may access any venue from
+// anywhere on Earth, so they bypass all presence/geofence checks. The presence system
+// keys on `users.id`, but god mode lives on `accounts.god_mode` (keyed by `account_id`),
+// so this must join users -> accounts. A user with a null/missing `account_id` (legacy
+// rows) fails closed to NOT god mode. This is server-authoritative: the client
+// `getGodMode()` localStorage flag is a UX hint only and is never trusted for enforcement.
+const GOD_MODE_CACHE_TTL_MS = 60 * 1000;
+const godModeCache = new Map<string, { value: boolean; expiresAt: number }>();
+
+export async function isGodModeUser(userId: string): Promise<boolean> {
+  const normalizedUserId = userId.trim();
+  if (!supabaseAdmin || !normalizedUserId) return false;
+
+  const cached = godModeCache.get(normalizedUserId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  let value = false;
+  try {
+    const { data: userRow, error: userError } = await supabaseAdmin
+      .from("users")
+      .select("account_id")
+      .eq("id", normalizedUserId)
+      .maybeSingle<{ account_id: string | null }>();
+
+    const accountId = String(userRow?.account_id ?? "").trim();
+    if (!userError && accountId) {
+      const { data: accountRow, error: accountError } = await supabaseAdmin
+        .from("accounts")
+        .select("god_mode")
+        .eq("id", accountId)
+        .maybeSingle<{ god_mode: boolean | null }>();
+      if (!accountError) {
+        value = Boolean(accountRow?.god_mode);
+      }
+    }
+  } catch {
+    // Fail closed: if the god-mode lookup errors, treat the user as a normal
+    // account so geofencing/presence enforcement still applies. God accounts are a
+    // small allowlist; a transient miss recovers on the next (cached) check.
+    value = false;
+  }
+
+  godModeCache.set(normalizedUserId, { value, expiresAt: Date.now() + GOD_MODE_CACHE_TTL_MS });
+  return value;
+}
+
 export type VenuePresenceCode =
   | "AUTH_REQUIRED"
   | "VENUE_PRESENCE_REQUIRED"
@@ -431,6 +479,25 @@ export async function verifyVenuePresenceLocation(params: {
     return failure({ code: "VENUE_PRESENCE_UNAVAILABLE", status: "missing", httpStatus: 503 });
   }
 
+  // God Mode: bypass location/distance/belongs checks entirely. A god account stays
+  // active from anywhere on Earth. Still write a verified lease so Partner Dashboard
+  // diagnostics stay coherent. Server-authoritative — never trusts a client flag.
+  if (await isGodModeUser(userId)) {
+    const presence = await recordVerifiedVenuePresence({
+      userId,
+      venueId,
+      source: params.source ?? "heartbeat",
+      ttlMs: params.ttlMs,
+    });
+    if (presence) return presence;
+    return {
+      ok: true,
+      status: "active",
+      expiresAt: toIso(now + getVenuePresenceTtlMs()),
+      lastVerifiedAt: toIso(now),
+    };
+  }
+
   if (!params.location || !isValidGeofenceCoordinates(params.location)) {
     await upsertPresence({
       userId,
@@ -545,6 +612,19 @@ export async function getActiveVenuePresence(params: {
   const venueId = params.venueId.trim();
   if (!userId || !venueId) {
     return failure({ code: "VENUE_PRESENCE_REQUIRED", status: "missing" });
+  }
+
+  // God Mode: mutation guards read this function. A god account must pass even with an
+  // expired lease or no lease row at all (the client heartbeat loop may not be running).
+  // This is the load-bearing bypass — every mutation-guarded route ultimately depends on it.
+  if (await isGodModeUser(userId)) {
+    const now = Date.now();
+    return {
+      ok: true,
+      status: "active",
+      expiresAt: toIso(now + getVenuePresenceTtlMs()),
+      lastVerifiedAt: toIso(now),
+    };
   }
 
   const { data, error } = await supabaseAdmin

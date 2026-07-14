@@ -13,7 +13,16 @@ import {
   type GeofenceCoordinates,
 } from "@/lib/geofence";
 
-async function userResponse(userId: string, data: Record<string, unknown>): Promise<NextResponse> {
+// God Mode accounts get a long-lived lease at join so Partner Dashboard diagnostics
+// don't show a "paused"/expired lease between heartbeats — actual enforcement is
+// handled server-side by lib/venuePresence.ts regardless of this TTL (see Phase B).
+const GOD_MODE_JOIN_LEASE_TTL_MS = 100 * 365 * 24 * 60 * 60 * 1000;
+
+async function userResponse(
+  userId: string,
+  data: Record<string, unknown>,
+  options?: { godMode?: boolean }
+): Promise<NextResponse> {
   const user = data.user as { venueId?: unknown } | undefined;
   const venueId = String(user?.venueId ?? "").trim();
   if (venueId) {
@@ -21,6 +30,7 @@ async function userResponse(userId: string, data: Record<string, unknown>): Prom
       userId,
       venueId,
       source: "join",
+      ttlMs: options?.godMode ? GOD_MODE_JOIN_LEASE_TTL_MS : undefined,
     });
   }
 
@@ -277,18 +287,22 @@ async function resolveVenueProfileForAccount(params: {
     logAuthIncident("join-profile-route", "post-account-path-existing-profile", {
       traceId, accountId, venueId, userId: existingProfile.id, elapsedMs: Date.now() - startedAt,
     });
-    return userResponse(existingProfile.id, {
-      ok: true,
-      user: {
-        id: existingProfile.id,
-        accountId,
-        authId: existingProfile.auth_id ?? undefined,
-        username: existingProfile.username,
-        venueId: existingProfile.venue_id,
-        points: existingProfile.points,
-        createdAt: existingProfile.created_at,
+    return userResponse(
+      existingProfile.id,
+      {
+        ok: true,
+        user: {
+          id: existingProfile.id,
+          accountId,
+          authId: existingProfile.auth_id ?? undefined,
+          username: existingProfile.username,
+          venueId: existingProfile.venue_id,
+          points: existingProfile.points,
+          createdAt: existingProfile.created_at,
+        },
       },
-    });
+      { godMode: Boolean(account.god_mode) }
+    );
   }
 
   const { data: newProfile, error: insertProfileError } = await supabaseAdmin!
@@ -319,18 +333,22 @@ async function resolveVenueProfileForAccount(params: {
         .eq("venue_id", venueId)
         .maybeSingle<UserRow>();
       if (racedProfile) {
-        return userResponse(racedProfile.id, {
-          ok: true,
-          user: {
-            id: racedProfile.id,
-            accountId,
-            authId: racedProfile.auth_id ?? undefined,
-            username: racedProfile.username,
-            venueId: racedProfile.venue_id,
-            points: racedProfile.points,
-            createdAt: racedProfile.created_at,
+        return userResponse(
+          racedProfile.id,
+          {
+            ok: true,
+            user: {
+              id: racedProfile.id,
+              accountId,
+              authId: racedProfile.auth_id ?? undefined,
+              username: racedProfile.username,
+              venueId: racedProfile.venue_id,
+              points: racedProfile.points,
+              createdAt: racedProfile.created_at,
+            },
           },
-        });
+          { godMode: Boolean(account.god_mode) }
+        );
       }
     }
     return NextResponse.json(
@@ -342,18 +360,22 @@ async function resolveVenueProfileForAccount(params: {
   logAuthIncident("join-profile-route", "post-account-path-created-profile", {
     traceId, accountId, venueId, userId: newProfile.id, elapsedMs: Date.now() - startedAt,
   });
-  return userResponse(newProfile.id, {
-    ok: true,
-    user: {
-      id: newProfile.id,
-      accountId,
-      authId: newProfile.auth_id ?? undefined,
-      username: newProfile.username,
-      venueId: newProfile.venue_id,
-      points: newProfile.points,
-      createdAt: newProfile.created_at,
+  return userResponse(
+    newProfile.id,
+    {
+      ok: true,
+      user: {
+        id: newProfile.id,
+        accountId,
+        authId: newProfile.auth_id ?? undefined,
+        username: newProfile.username,
+        venueId: newProfile.venue_id,
+        points: newProfile.points,
+        createdAt: newProfile.created_at,
+      },
     },
-  });
+    { godMode: Boolean(account.god_mode) }
+  );
 }
 
 export async function POST(request: Request) {

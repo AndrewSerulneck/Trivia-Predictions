@@ -186,6 +186,19 @@ function isLocationPermissionDenied(error: unknown): boolean {
   return maybeCode === 1;
 }
 
+// GeolocationPositionError codes are browser-native (e.g. Chromium's raw message
+// for code 3 is literally "Timeout expired") — never surface error.message for
+// these directly, map to player-facing copy instead. Mirrors the same
+// never-show-raw-errors contract used for the post-join VenueAccessOverlay.
+function getLocationErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === "object") {
+    const maybeCode = (error as { code?: unknown }).code;
+    if (maybeCode === 2) return "We couldn't determine your location. Please try again.";
+    if (maybeCode === 3) return "Location took too long to respond. Please try again.";
+  }
+  return getErrorMessage(error, fallback);
+}
+
 function isPasskeyUserCancel(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const err = error as Record<string, unknown>;
@@ -722,6 +735,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const pinSubmittingRef = useRef(false);
   const passkeyRegistrationPromptedRef = useRef(false);
   const hasSuccessfulInitialRenderRef = useRef(false);
+  // Guards the post-auth venue-list builder so it runs once per authenticated
+  // session (not on every re-render or back-nav to the list). Reset when the user
+  // returns to auth-method-selection (sign out / back) so the next login rebuilds.
+  const venueListBuiltRef = useRef(false);
   const enrollmentOptionsRef = useRef<{
     challengeId: string;
     options: Parameters<typeof startRegistration>[0]["optionsJSON"];
@@ -767,58 +784,20 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       if (initialJoinPageEntryIntent?.source === "leave-venue") {
         setPanelDirection(-1);
       }
-      if (!venueParam && initialCachedVenueList.length > 0 && (DISABLE_GEOFENCE_FOR_TESTING || godMode)) {
-        setVenueList(initialCachedVenueList);
-        setStatus("ready");
-      }
 
-      // If accountId is stored, load venues and show the venue-list so the user can explicitly choose.
+      // Auth-first flow: when a venue is deep-linked (?v=) AND the user already has a
+      // stored identity, jump straight to the venue list. Geolocation/geofence
+      // filtering is NOT done here — the post-auth builder effect
+      // (buildVenueListAfterAuth) owns list construction, showing all venues for
+      // god-mode accounts and running a single geolocation check for everyone else.
       if (venueParam && hasStoredJoinIdentity) {
         setStatus("loading");
         try {
-          const [venues, venueData] = await Promise.all([listVenues(), getVenueById(venueParam)]);
+          const venueData = await getVenueById(venueParam);
           if (!venueData) {
             setStatus("error");
             setErrorMessage(`Venue "${venueParam}" was not found.`);
             return;
-          }
-          if (DISABLE_GEOFENCE_FOR_TESTING || godMode) {
-            setVenueList(venues);
-            setLocationVerified(true);
-            setVerifiedLocation(null);
-            setLocationNotice("Testing mode: location checks are disabled.");
-          } else {
-            setLocationLoading(true);
-            const { coords, permissionDenied } = await getInitialLocation();
-            if (coords) {
-              const nearbyVenues = venues
-                .map((item) => ({
-                  venue: item,
-                  distance: calculateDistanceMeters(coords, {
-                    latitude: item.latitude,
-                    longitude: item.longitude,
-                  }),
-                }))
-                .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
-                .sort((a, b) => a.distance - b.distance)
-                .map((item) => item.venue);
-              setVenueList(nearbyVenues);
-              setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
-              setLocationNotice(
-                nearbyVenues.length > 0
-                  ? `Found ${nearbyVenues.length} nearby venue(s).`
-                  : "No venue is currently in range from your location."
-              );
-            } else {
-              setVenueList([]);
-              setVerifiedLocation(null);
-              setLocationNotice(
-                permissionDenied
-                  ? "Location permission is off. Turn it on to see nearby venues."
-                  : "Location check unavailable right now. Retry to see nearby venues."
-              );
-            }
-            setLocationLoading(false);
           }
           setVenue(venueData);
           setAccountIdState(storedAccountId || null);
@@ -837,7 +816,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       // Preserve a stable join UI after first successful initialization.
       // Background refreshes should not blank the panel/state.
-      if (!hasSuccessfulInitialRenderRef.current && (initialCachedVenueList.length === 0 || !(DISABLE_GEOFENCE_FOR_TESTING || godMode))) {
+      if (!hasSuccessfulInitialRenderRef.current && (initialCachedVenueList.length === 0 || !(DISABLE_GEOFENCE_FOR_TESTING || getGodMode()))) {
         setStatus("loading");
         setErrorMessage("");
         setLocationVerified(false);
@@ -850,9 +829,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       try {
         if (!venueParam) {
-          const venues = await listVenues();
-          // Skip auth selection if the user already has either an account-level
-          // identity or a legacy venue session we can continue from.
+          // Auth-first flow: at initial load we ONLY choose the entry panel. No
+          // geolocation, no geofence filtering, and no location-permission prompt
+          // here — the first screen is always "How do you want to continue?" (or the
+          // venue list for an already-identified user). The post-auth builder effect
+          // (buildVenueListAfterAuth) constructs the list once auth resolves: all
+          // venues for god-mode accounts, a single geolocation + nearby filter for
+          // everyone else.
           if (hasStoredJoinIdentity) {
             setAccountIdState(storedAccountId || null);
             setAccountUsername(storedUsername);
@@ -862,62 +845,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           }
           setStatus("ready");
           hasSuccessfulInitialRenderRef.current = true;
-
-          if (DISABLE_GEOFENCE_FOR_TESTING || godMode) {
-            setLocationVerified(true);
-            setVerifiedLocation(null);
-            setVenueList(venues);
-            setLocationNotice("Testing mode: location checks are disabled.");
-            setLocationLoading(false);
-            setVenue(null);
-            return;
-          }
-
-          const permState = await checkPermissionState();
-          setLocationPermissionState(permState);
-          if (permState === "prompt") {
-            setActivePanel("location-permission");
-            setVenueList(venues);
-            setLocationLoading(false);
-            setVenue(null);
-            return;
-          }
-
-          setLocationLoading(true);
-          const { coords, permissionDenied } = await getInitialLocation();
-          if (permissionDenied) {
-            setLocationPermissionState("denied");
-            setActivePanel("location-permission");
-            setVenueList(venues);
-            setLocationLoading(false);
-            setVenue(null);
-            return;
-          }
-          if (coords) {
-            const nearbyVenues = venues
-              .map((item) => ({
-                venue: item,
-                distance: calculateDistanceMeters(coords, {
-                  latitude: item.latitude,
-                  longitude: item.longitude,
-                }),
-              }))
-              .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
-              .sort((a, b) => a.distance - b.distance)
-              .map((item) => item.venue);
-            setVenueList(nearbyVenues);
-            setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
-            setLocationNotice(
-              nearbyVenues.length > 0
-                ? `Found ${nearbyVenues.length} nearby venue(s).`
-                : "No venue is currently in range from your location."
-            );
-          } else {
-            setVenueList([]);
-            setVerifiedLocation(null);
-            setLocationNotice("Location check unavailable right now. Retry to see nearby venues.");
-          }
           setLocationLoading(false);
+          setLocationNotice("");
           setVenue(null);
           return;
         }
@@ -944,7 +873,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           return;
         }
 
-        if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode)) {
+        if (!(DISABLE_GEOFENCE_FOR_TESTING || getGodMode())) {
           const permState = await checkPermissionState();
           setLocationPermissionState(permState);
           if (permState === "prompt") {
@@ -989,7 +918,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               setLocationPermissionState("denied");
               setActivePanel("location-permission");
             } else {
-              setErrorMessage(getErrorMessage(error, "Unable to verify location."));
+              setErrorMessage(getLocationErrorMessage(error, "Unable to verify location."));
             }
           } finally {
             setLocationLoading(false);
@@ -1013,7 +942,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
 
     void load();
-  }, [venueParam, router, godMode, initTrigger]);
+  }, [venueParam, router, initTrigger]);
 
   const clearLoginWatchdog = useCallback(() => {
     if (loginWatchdogRef.current !== null) {
@@ -1162,7 +1091,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           setLocationPermissionState("denied");
           setActivePanel("location-permission");
         } else {
-          setErrorMessage(getErrorMessage(error, "Unable to verify location."));
+          setErrorMessage(getLocationErrorMessage(error, "Unable to verify location."));
         }
         return { allowed: false };
       } finally {
@@ -1171,6 +1100,72 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     },
     [godMode]
   );
+
+  // Auth-first venue-list construction. Runs AFTER authentication succeeds (every
+  // auth path calls saveGodMode(account.godMode) before transitioning to the list),
+  // so getGodMode() is authoritative here — there is no pre-auth god-mode read and
+  // therefore no username-enumeration surface. God-mode accounts see ALL venues with
+  // no geolocation at all; everyone else gets a single geolocation check and the
+  // in-range venues only.
+  const buildVenueListAfterAuth = useCallback(async () => {
+    const isGod = DISABLE_GEOFENCE_FOR_TESTING || getGodMode();
+    try {
+      const venues = await listVenues();
+      if (isGod) {
+        setVenueList(venues);
+        setLocationVerified(true);
+        setVerifiedLocation(null);
+        setLastLocationVerifiedAt(Date.now());
+        setLocationNotice(getGodMode() ? "God mode: showing all venues." : "Testing mode: location checks are disabled.");
+        setLocationLoading(false);
+        return;
+      }
+
+      setLocationLoading(true);
+      setLocationNotice("Finding venues near you…");
+      const { coords, permissionDenied } = await getInitialLocation();
+      if (coords) {
+        const nearbyVenues = venues
+          .map((item) => ({
+            venue: item,
+            distance: calculateDistanceMeters(coords, { latitude: item.latitude, longitude: item.longitude }),
+          }))
+          .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
+          .sort((a, b) => a.distance - b.distance)
+          .map((item) => item.venue);
+        setVenueList(nearbyVenues);
+        setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
+        setLocationNotice(
+          nearbyVenues.length > 0
+            ? `Found ${nearbyVenues.length} nearby venue(s).`
+            : "No venue is currently in range from your location."
+        );
+      } else {
+        setVenueList([]);
+        setVerifiedLocation(null);
+        setLocationNotice(
+          permissionDenied
+            ? "Location permission is off. Turn it on to see nearby venues."
+            : "Location check unavailable right now. Retry to see nearby venues."
+        );
+      }
+    } catch (error) {
+      setVenueList([]);
+      setVerifiedLocation(null);
+      setLocationNotice(getLocationErrorMessage(error, "Unable to load venues right now. Please try again."));
+    } finally {
+      setLocationLoading(false);
+    }
+  }, []);
+
+  // Trigger the builder the moment any path shows the venue list. The ref guard keeps
+  // it to once per authenticated session (no rebuild on re-render or back-nav).
+  useEffect(() => {
+    if (activePanel !== "venue-list") return;
+    if (venueListBuiltRef.current) return;
+    venueListBuiltRef.current = true;
+    void buildVenueListAfterAuth();
+  }, [activePanel, buildVenueListAfterAuth]);
 
   const WELCOME_SLIDES = [
     {
@@ -1922,6 +1917,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   // ── Account-first handlers ──────────────────────────────────────────────────
 
   const handleBackToAuthMethodSelection = useCallback(() => {
+    venueListBuiltRef.current = false;
     setPanelDirection(-1);
     setActivePanel("auth-method-selection");
     setLoginStep("username");
@@ -2220,6 +2216,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   }, []);
 
   const handleSignOut = useCallback(() => {
+    venueListBuiltRef.current = false;
     hardClearAuthAndCache();
     setAccountIdState(null);
     setAccountUsername("");

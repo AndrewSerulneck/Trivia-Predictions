@@ -15,6 +15,7 @@ import { VenueAccessOverlay } from "@/components/venue/VenueAccessOverlay";
 import { getCurrentLocation, type Coordinates } from "@/lib/geolocation";
 import {
   AUTH_STATE_CHANGED_EVENT,
+  getGodMode,
   getUserId,
   getVenueId,
 } from "@/lib/storage";
@@ -78,6 +79,10 @@ export function VenuePresenceBoundary({
   const pathname = usePathname();
   const [userId, setUserId] = useState(() => String(getUserId() ?? "").trim());
   const [storedVenueId, setStoredVenueId] = useState(() => String(getVenueId() ?? "").trim());
+  // God Mode accounts are enforced server-side (lib/venuePresence.ts); this local flag is
+  // a UX optimization only — it suppresses the overlay flicker and skips the watchPosition/
+  // heartbeat loop so god accounts don't burn battery/network polling location they don't need.
+  const [isGodMode, setIsGodMode] = useState(() => getGodMode());
   const [overlay, setOverlay] = useState<VenueAccessOverlayContent | null>(null);
   const [lastFailure, setLastFailure] = useState<VenuePresenceClientFailure | null>(null);
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
@@ -98,6 +103,7 @@ export function VenuePresenceBoundary({
     const syncSession = () => {
       setUserId(String(getUserId() ?? "").trim());
       setStoredVenueId(String(getVenueId() ?? "").trim());
+      setIsGodMode(getGodMode());
     };
 
     window.addEventListener(AUTH_STATE_CHANGED_EVENT, syncSession as EventListener);
@@ -130,6 +136,9 @@ export function VenuePresenceBoundary({
     async (location: Coordinates | null, options: { showChecking?: boolean } = {}) => {
       if (!enabled || !userId || !activeVenueId) {
         return false;
+      }
+      if (isGodMode) {
+        return true;
       }
       if (heartbeatInFlightRef.current) {
         return heartbeatInFlightRef.current;
@@ -178,12 +187,15 @@ export function VenuePresenceBoundary({
       heartbeatInFlightRef.current = request;
       return request;
     },
-    [activeVenueId, applyFailure, enabled, userId]
+    [activeVenueId, applyFailure, enabled, isGodMode, userId]
   );
 
   const recheckLocation = useCallback(async () => {
     if (!enabled || !userId || !activeVenueId) {
       return false;
+    }
+    if (isGodMode) {
+      return true;
     }
     try {
       setIsCheckingAccess(true);
@@ -197,10 +209,10 @@ export function VenuePresenceBoundary({
       setIsCheckingAccess(false);
       return false;
     }
-  }, [activeVenueId, applyFailure, enabled, sendHeartbeat, userId]);
+  }, [activeVenueId, applyFailure, enabled, isGodMode, sendHeartbeat, userId]);
 
   useEffect(() => {
-    if (!enabled || !userId || !activeVenueId) {
+    if (!enabled || !userId || !activeVenueId || isGodMode) {
       setOverlay(null);
       setLastFailure(null);
       setIsCheckingAccess(false);
@@ -291,21 +303,21 @@ export function VenuePresenceBoundary({
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [activeVenueId, applyFailure, enabled, recheckLocation, sendHeartbeat, userId]);
+  }, [activeVenueId, applyFailure, enabled, isGodMode, recheckLocation, sendHeartbeat, userId]);
 
   const contextValue = useMemo<VenuePresenceContextValue>(
     () => ({
       capturePresenceFailure,
-      isAccessPaused: Boolean(overlay),
-      isInteractionBlocked: Boolean(overlay),
+      isAccessPaused: !isGodMode && Boolean(overlay),
+      isInteractionBlocked: !isGodMode && Boolean(overlay),
       isCheckingAccess,
       lastFailure,
       recheckLocation,
     }),
-    [capturePresenceFailure, isCheckingAccess, lastFailure, overlay, recheckLocation]
+    [capturePresenceFailure, isCheckingAccess, isGodMode, lastFailure, overlay, recheckLocation]
   );
 
-  if (!enabled) {
+  if (!enabled || isGodMode) {
     return <>{children}</>;
   }
 
