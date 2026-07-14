@@ -97,7 +97,7 @@ export function GameLandingExperience({
   playLabel?: string;
   initialPlaying?: boolean;
   autoResume?: boolean;
-  /** Skip straight past the tutorial slides if this browser played `gameKey` at this venue within the last 7 days. */
+  /** Skip straight past the tutorial slides if this browser played `gameKey` at this venue within the last 24 hours. */
   skipOnboardingIfRecent?: boolean;
   playHref?: string;
   showPlayingBackButton?: boolean;

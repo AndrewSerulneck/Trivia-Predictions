@@ -94,7 +94,7 @@ type VenueMenuItem = {
   href: string;
 };
 
-const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["live_trivia", "speed-trivia", "bingo", "pickem", "fantasy", "category-blitz"];
+const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["speed-trivia", "category-blitz", "live_trivia", "bingo", "fantasy", "pickem"];
 const VENUE_DRAWER_MENU_ITEMS: VenueMenuItem[] = [
   {
     label: "Career Stats",

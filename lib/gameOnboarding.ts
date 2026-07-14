@@ -1,7 +1,7 @@
 import { getVenueId } from "@/lib/storage";
 import type { VenueGameKey } from "@/lib/venueGameCards";
 
-export const ONBOARDING_STALE_MS = 7 * 24 * 60 * 60 * 1000;
+export const ONBOARDING_STALE_MS = 24 * 60 * 60 * 1000;
 
 function onboardingStorageKey(gameKey: VenueGameKey, venueId: string): string {
   return `tp_onboarding_${gameKey}_${venueId}`;

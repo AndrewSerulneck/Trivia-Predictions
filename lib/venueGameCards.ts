@@ -12,7 +12,7 @@ export type VenueGameCardConfig = {
   path: string;
   cardClassName: string;
   rules: string[];
-  steps: [GameOnboardingStep, GameOnboardingStep, GameOnboardingStep];
+  steps: [GameOnboardingStep, GameOnboardingStep, GameOnboardingStep] | [GameOnboardingStep, GameOnboardingStep, GameOnboardingStep, GameOnboardingStep];
   visibleOnVenueHome?: boolean;
 };
 
@@ -152,7 +152,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       "-Be quick! You have 3 minutes to fill all 12 categories",
       "-Only unique answers earn points.",
       "-The point is to be original. If someone else thought of the same response as you in any category, no points!",
-      
+      "-Watch out! In Majority Rules rounds, the rules flip — the point is to match the crowd. More popular answers score more points.",
     ],
     steps: [
       {
@@ -169,9 +169,13 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
         stepLabel: "Scoring",
         heading: "Players get points for unique answers.",
         body: [
-          "If someone else in the room thought of the same answer as you, neither of you get points. So be creative!"
-,
+          "If someone else in the room thought of the same answer as you, neither of you get points. So be creative!",
         ],
+      },
+      {
+        stepLabel: "Watch out!",
+        heading: "Sometimes the rules flip.",
+        body: "In 'Majority Rules' mode, you win by giving the answer you think most other players will write. Be predictable, not creative!",
       },
     ],
   },
@@ -216,7 +220,7 @@ export const VENUE_GAME_CARD_BY_KEY: Record<VenueGameKey, VenueGameCardConfig> =
   {} as Record<VenueGameKey, VenueGameCardConfig>
 );
 
-export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["speed-trivia", "live_trivia", "bingo", "pickem", "fantasy", "category-blitz"];
+export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["speed-trivia", "category-blitz", "live_trivia", "bingo", "fantasy", "pickem"];
 
 export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null {
   if (pathname.startsWith("/trivia/live")) return "live_trivia";

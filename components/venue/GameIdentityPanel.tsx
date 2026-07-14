@@ -811,6 +811,320 @@ function FantasyIllustration({ stepIndex }: { stepIndex: number }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Category Blitz onboarding illustrations
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CB_CATEGORIES = [
+  "Animal",
+  "City",
+  "Color",
+  "Food",
+  "Movie",
+  "Musician",
+  "Name",
+  "Sport",
+  "TV Show",
+  "Vehicle",
+  "Video Game",
+  "Website",
+] as const;
+
+const CB_ANSWERS_STEP1 = [
+  { cat: "Animal", val: "Aardvark", filled: true, typing: false },
+  { cat: "City", val: "Athens", filled: true, typing: false },
+  { cat: "Color", val: "Aqua...", filled: false, typing: true },
+  { cat: "Food", val: "", filled: false, typing: false },
+  { cat: "Movie", val: "Avatar", filled: true, typing: false },
+  { cat: "Musician", val: "Adele", filled: true, typing: false },
+  { cat: "Name", val: "", filled: false, typing: false },
+  { cat: "Sport", val: "Archery", filled: true, typing: false },
+  { cat: "TV Show", val: "", filled: false, typing: false },
+  { cat: "Vehicle", val: "", filled: false, typing: false },
+  { cat: "Video Game", val: "Apex...", filled: false, typing: true },
+  { cat: "Website", val: "Amazon", filled: true, typing: false },
+] as const;
+
+const CB_ANSWERS_STEP2 = [
+  { cat: "Animal", you: "Aardvark", other: "Aardvark", status: "duplicate" },
+  { cat: "City", you: "Athens", other: "Anchorage", status: "unique" },
+  { cat: "Color", you: "Aqua", other: "Aqua", status: "duplicate" },
+  { cat: "Food", you: "Apple", other: "Avocado", status: "unique" },
+] as const;
+
+function CBCategoryCard({ label, index }: { label: string; index: number }) {
+  const colors = [
+    "from-pink-500/80 to-rose-600/80",
+    "from-violet-500/80 to-purple-600/80",
+    "from-fuchsia-500/80 to-pink-600/80",
+    "from-purple-500/80 to-indigo-600/80",
+  ] as const;
+  const colorClass = colors[index % colors.length];
+  return (
+    <div
+      className={`flex items-center justify-center rounded-lg border border-white/20 bg-gradient-to-br ${colorClass} px-1 py-1.5 text-center shadow-sm`}
+    >
+      <span className="text-[0.55rem] font-bold leading-tight text-white/95">{label}</span>
+    </div>
+  );
+}
+
+function CBAnswerRow({
+  category,
+  value,
+  filled,
+  typing,
+}: {
+  category: string;
+  value: string;
+  filled: boolean;
+  typing?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-16 shrink-0 text-[0.6rem] font-semibold text-pink-200/70">{category}</span>
+      <div
+        className={`flex-1 rounded-md border px-2 py-1 text-[0.65rem] font-medium ${
+          filled
+            ? "border-pink-300/40 bg-pink-500/20 text-white"
+            : typing
+              ? "border-amber-300/50 bg-amber-500/15 text-amber-100"
+              : "border-white/15 bg-black/20 text-white/30"
+        }`}
+      >
+        {value || (typing ? "|" : "...")}
+      </div>
+    </div>
+  );
+}
+
+function CBResultRow({
+  category,
+  you,
+  other,
+  status,
+}: {
+  category: string;
+  you: string;
+  other: string;
+  status: "unique" | "duplicate";
+}) {
+  const isUnique = status === "unique";
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
+      <span className="w-14 shrink-0 text-[0.55rem] font-semibold text-pink-200/60">{category}</span>
+      <div className="flex flex-1 items-center gap-1.5">
+        <span
+          className={`text-[0.6rem] font-medium ${isUnique ? "text-emerald-300" : "text-rose-300/70 line-through"}`}
+        >
+          {you}
+        </span>
+        {isUnique ? (
+          <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[0.5rem] font-black text-emerald-300">+2</span>
+        ) : (
+          <span className="text-[0.5rem] text-rose-300/60">Someone said {other}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CategoryBlitzIllustration({ stepIndex }: { stepIndex: number }) {
+  // Step 0: Letter drop + categories grid
+  if (stepIndex === 0) {
+    return (
+      <div className="w-full space-y-3">
+        {/* Letter Badge */}
+        <div className="flex items-center justify-center">
+          <div className="flex items-center gap-3 rounded-2xl border-2 border-amber-300/40 bg-gradient-to-br from-amber-500/20 to-orange-600/20 px-5 py-3 shadow-[0_0_20px_rgba(251,191,36,0.25)]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-amber-200/80">Letter</span>
+            <span
+              className="text-4xl font-black text-amber-100"
+              style={{ fontFamily: '"Bree Serif", serif', textShadow: "0 0 16px rgba(251,191,36,0.5)" }}
+            >
+              A
+            </span>
+          </div>
+        </div>
+        {/* Categories Grid */}
+        <div className="grid grid-cols-3 gap-1.5">
+          {CB_CATEGORIES.map((cat, i) => (
+            <CBCategoryCard key={cat} label={cat} index={i} />
+          ))}
+        </div>
+        {/* Timer hint */}
+        <div className="flex items-center justify-center gap-2">
+          <span className="rounded-full border border-pink-300/30 bg-pink-500/10 px-3 py-1 text-[0.6rem] font-semibold text-pink-200/80">
+            3:00 to fill all 12
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 1: Active gameplay view
+  if (stepIndex === 1) {
+    return (
+      <div className="w-full space-y-2">
+        {/* Timer Bar */}
+        <div className="flex items-center justify-between rounded-lg border border-pink-300/30 bg-black/30 px-3 py-2">
+          <span className="text-[0.6rem] font-bold uppercase tracking-wider text-amber-300">Round Timer</span>
+          <span
+            className="text-lg font-black text-amber-100"
+            style={{ fontFamily: "ui-monospace, monospace" }}
+          >
+            2:34
+          </span>
+        </div>
+        {/* Answer Inputs */}
+        <div className="space-y-1">
+          {CB_ANSWERS_STEP1.slice(0, 6).map((item) => (
+            <CBAnswerRow
+              key={item.cat}
+              category={item.cat}
+              value={item.val}
+              filled={item.filled}
+              typing={item.typing}
+            />
+          ))}
+        </div>
+        {/* Progress indicator */}
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-[0.55rem] text-white/50">5/12 filled</span>
+          <div className="flex gap-0.5">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 w-1.5 rounded-full ${
+                  i < 5 ? "bg-amber-400 shadow-[0_0_4px_rgba(251,191,36,0.5)]" : "bg-white/15"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 2: Duplicate detection / scoring
+  if (stepIndex === 2) {
+    return (
+      <div className="w-full space-y-2">
+        {/* Header */}
+        <div className="flex items-center justify-between rounded-lg border border-pink-300/30 bg-black/30 px-3 py-2">
+          <span className="text-[0.6rem] font-bold uppercase tracking-wider text-amber-300">Answer Check</span>
+          <span className="text-[0.6rem] font-semibold text-white/60">Same answer = no points</span>
+        </div>
+        {/* Results */}
+        <div className="space-y-1">
+          {CB_ANSWERS_STEP2.map((item) => (
+            <CBResultRow
+              key={item.cat}
+              category={item.cat}
+              you={item.you}
+              other={item.other}
+              status={item.status}
+            />
+          ))}
+        </div>
+        {/* Total */}
+        <div className="flex items-center justify-center pt-1">
+          <div className="flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-4 py-1.5">
+            <span className="text-[0.65rem] font-bold text-emerald-200">Unique answers:</span>
+            <span
+              className="text-lg font-black text-emerald-300"
+              style={{ fontFamily: '"Bree Serif", serif' }}
+            >
+              2
+            </span>
+            <span className="text-[0.65rem] font-bold text-emerald-400">× 2 pts = 4</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 3: Majority Rules mode ("Watch out!")
+  return (
+    <div className="w-full space-y-3">
+      {/* Mode Switch Banner */}
+      <div className="relative overflow-hidden rounded-xl border-2 border-amber-400/50 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 px-4 py-3 shadow-[0_0_20px_rgba(251,191,36,0.2)]">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+        </div>
+        <div className="relative flex items-center justify-center gap-2">
+          <span className="text-lg">⚠️</span>
+          <span
+            className="text-[0.85rem] font-black uppercase tracking-wider text-amber-200"
+            style={{ fontFamily: '"Bree Serif", serif' }}
+          >
+            Mode Switch!
+          </span>
+          <span className="text-lg">⚠️</span>
+        </div>
+      </div>
+
+      {/* Mode Comparison */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Normal Mode */}
+        <div className="rounded-lg border border-white/20 bg-black/30 px-3 py-2 opacity-50">
+          <div className="mb-2 text-center text-[0.55rem] font-bold uppercase tracking-wider text-white/60">
+            Normal Mode
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/30 text-[0.5rem]">✓</div>
+              <span className="text-[0.55rem] text-white/70">Unique = good</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500/30 text-[0.5rem]">✗</div>
+              <span className="text-[0.55rem] text-white/70">Same = bad</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Majority Rules */}
+        <div className="rounded-lg border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/20 to-orange-600/20 px-3 py-2 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
+          <div className="mb-2 text-center text-[0.55rem] font-black uppercase tracking-wider text-amber-200">
+            Majority Rules
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/40 text-[0.5rem] font-bold text-emerald-300">✓</div>
+              <span className="text-[0.55rem] font-medium text-white/90">Popular = good</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500/40 text-[0.5rem] font-bold text-rose-300">✗</div>
+              <span className="text-[0.55rem] font-medium text-white/90">Unique = bad</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Example */}
+      <div className="rounded-lg border border-pink-300/25 bg-pink-900/15 px-3 py-2.5">
+        <div className="mb-2 text-center text-[0.6rem] font-bold uppercase tracking-wider text-pink-200/80">
+          Think: "What will others write?"
+        </div>
+        <div className="flex items-center justify-center gap-2">
+          <div className="flex flex-col items-center rounded-lg border border-white/15 bg-black/30 px-3 py-2">
+            <span className="text-[0.5rem] uppercase tracking-wider text-white/50">Category</span>
+            <span className="text-[0.75rem] font-bold text-white/80">Animal</span>
+          </div>
+          <span className="text-[0.9rem] text-white/40">→</span>
+          <div className="flex flex-col items-center rounded-lg border border-amber-400/40 bg-amber-500/20 px-4 py-2 shadow-[0_0_10px_rgba(251,191,36,0.2)]">
+            <span className="text-[0.5rem] uppercase tracking-wider text-amber-200/70">Your Pick</span>
+            <span className="text-[0.85rem] font-black text-amber-100">Alligator</span>
+          </div>
+        </div>
+        <div className="mt-2 text-center text-[0.55rem] text-white/50">
+          If 5+ players say "Alligator" → You get points!
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Dispatch: returns the right illustration for any game × step
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -824,6 +1138,7 @@ function GameStepIllustration({
   if (gameKey === "bingo") return <BingoIllustration stepIndex={stepIndex} />;
   if (gameKey === "pickem") return <PickEmIllustration stepIndex={stepIndex} />;
   if (gameKey === "fantasy") return <FantasyIllustration stepIndex={stepIndex} />;
+  if (gameKey === "category-blitz") return <CategoryBlitzIllustration stepIndex={stepIndex} />;
   return null;
 }
 
@@ -871,7 +1186,7 @@ export function GameOnboardingCard({
 }) {
   const card = VENUE_GAME_CARD_BY_KEY[gameKey];
   const accentClass = GAME_STEP_ACCENT[gameKey];
-  const hasCustomIllustration = gameKey === "bingo" || gameKey === "pickem" || gameKey === "fantasy";
+  const hasCustomIllustration = gameKey === "bingo" || gameKey === "pickem" || gameKey === "fantasy" || gameKey === "category-blitz";
   const isHookStep = stepIndex === 0 && !hasCustomIllustration;
   const displayTitle = (gameKey === "bingo" || gameKey === "pickem") ? card.title.replace(/^Hightop\s+/i, "") : card.title;
 
@@ -898,13 +1213,13 @@ export function GameOnboardingCard({
           {isHookStep ? (
             <div className="flex min-h-0 flex-1 flex-col justify-center gap-3">
               <div
-                className={`text-[clamp(1.6rem,4.8vw,2.2rem)] leading-[1.08] font-black ${gameKey === "category-blitz" ? "text-amber-50 [text-shadow:0_1px_0_rgba(60,10,40,0.7),0_0_14px_rgba(255,200,100,0.35)]" : "text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)]"}`}
+                className="text-[clamp(1.6rem,4.8vw,2.2rem)] leading-[1.08] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)]"
                 style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
               >
                 {step.heading}
               </div>
               <div className={`h-0.5 w-14 rounded-full ${GAME_STEP_DOT_ACTIVE[gameKey]}`} />
-              <div className={`text-[clamp(0.92rem,2.6vw,1.2rem)] leading-[1.35] font-medium ${gameKey === "category-blitz" ? "text-amber-100/85" : "text-white/85"}`}>
+              <div className="text-[clamp(0.92rem,2.6vw,1.2rem)] leading-[1.35] font-medium text-white/85">
                 {renderBody(step.body)}
               </div>
             </div>

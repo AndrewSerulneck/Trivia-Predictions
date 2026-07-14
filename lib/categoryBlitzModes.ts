@@ -14,7 +14,7 @@ export const MODE_CONFIG: Record<CategoryBlitzMode, {
   themeKey: CategoryBlitzThemeKey; // key into themeTokens GAME_THEME
 }> = {
   standard: { puckLabel: "Be Unique!", rule: "Only unique answers earn points — be original.",      themeKey: "blitzStandard" },
-  reverse:  { puckLabel: "Match the Crowd!",  rule: "More popular answers score more points this round!", themeKey: "blitzReverse"  },
+  reverse:  { puckLabel: "Majority Rules!",  rule: "More popular answers score more points this round!", themeKey: "blitzReverse"  },
 };
 
 // Cadence knob — flip to a random-25% strategy later without touching startRound.
