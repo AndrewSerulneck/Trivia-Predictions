@@ -3216,7 +3216,7 @@
       ],
       "answer_format": "write_in",
       "category": "Art, Literature and Comics",
-      "difficulty": "easy",
+      "difficulty": "hard",
       "subcategory": "art-history-artists"
     },
     {
@@ -3746,6 +3746,798 @@
       "category": "Art, Literature and Comics",
       "difficulty": "medium",
       "subcategory": "literary-quotes-and-lines"
+    },
+    {
+      "slug": "gadsby-without-letter-e",
+      "question": "The 1939 novel Gadsby by Ernest Vincent Wright was written without using a specific letter from the alphabet. Which letter was it?",
+      "answer": "E",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "E",
+        "The letter E",
+        "Letter E"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "quote-hamlet-to-be-or-not-to-be",
+      "question": "Which Shakespeare character recites the famous soliloquy, 'To be, or not to be?'",
+      "answer": "Hamlet",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "subcategory": "literary-quotes-and-lines"
+    },
+    {
+      "slug": "quote-macbeth-dagger",
+      "question": "Which Shakespeare character said: 'Is this a dagger which I see before me, the handle toward my hand? Come, let me clutch thee'",
+      "answer": "Macbeth",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "literary-quotes-and-lines"
+    },
+    {
+      "slug": "who-painted-sistine-chapel",
+      "question": "Who painted the Sistine Chapel?",
+      "answer": "Michelangelo",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Michelangelo",
+        "Michelangelo Buonarroti"
+      ],
+      "subcategory": "art-history-artists"
+    },
+    {
+      "slug": "deathly-hallows-resurrection-stone",
+      "question": "The three objects that make up the Deathly Hallows from the Harry Potter book series are the Elder Wand, the Cloak of Invisibility, and what else?",
+      "answer": "Resurrection Stone",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Resurrection Stone",
+        "The Resurrection Stone"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "gilbert-and-sullivan-partners",
+      "question": "The operas 'H.M.S. Pinafore' and 'The Pirates of Penzance' were written by the famous Victorian-era theatrical partners named 'Gilbert' and... Who?",
+      "answer": "Sullivan",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Sullivan",
+        "Arthur Sullivan",
+        "Sir Arthur Sullivan"
+      ],
+      "subcategory": "adaptations-theater"
+    },
+    {
+      "slug": "oedipus-tragic-prophecy",
+      "question": "Name the ancient Greek play about a hero who was predicted to kill his father and marry his mother.",
+      "answer": "Oedipus Rex",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Oedipus Rex",
+        "Oedipus",
+        "Oedipus the King",
+        "Oedipus Tyrannus"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "odysseus-king-ithaca",
+      "question": "In Homer's epic poem, The Iliad, who is the king of Ithaca who was stuck on a 10-year journey from the Trojan War before returning home to his wife?",
+      "answer": "Odysseus",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Odysseus",
+        "Ulysses"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "sun-tzu-art-of-war",
+      "question": "What is the name of the classical Chinese text by Sun Tzu that serves as a treatise on military strategy?",
+      "answer": "The Art of War",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "The Art of War",
+        "Art of War"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "dante-divine-comedy",
+      "question": "Which medieval narrative poem describes Dante's journey through Hell, Purgatory, and Paradise?",
+      "answer": "The Divine Comedy",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "The Divine Comedy",
+        "Divine Comedy",
+        "La Divina Commedia"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "king-arthur-excalibur",
+      "question": "According to the legend of King Arthur, what is the name of the sword he pulls from the stone in order to prove his lineage and become King of Britain?",
+      "answer": "Excalibur",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Excalibur",
+        "The Sword Excalibur",
+        "Caliburn"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "don-quixote-alonso-quijano",
+      "question": "What is the Miguel de Cervantes novel about Alonso Quijano, who reads so many chivalry books that he becomes delusional and sets out on a knightly adventure?",
+      "answer": "Don Quixote",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Don Quixote",
+        "Don Quijote",
+        "El Ingenioso Hidalgo Don Quixote de la Mancha"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "les-miserables-bread-theft",
+      "question": "In the novel Les Miserables by Victor Hugo, convict Jean Valjean serves 19 years in prison for stealing what?",
+      "answer": "Bread",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Bread",
+        "A loaf of bread"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "a-christmas-carol-marley",
+      "question": "Which Charles Dickens book tells the story of an old man who hates Christmas until he's visited by the ghost of his business partner, Jacob Marley?",
+      "answer": "A Christmas Carol",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "A Christmas Carol",
+        "A Christmas Carol in Prose"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "the-great-gatsby-american-dream",
+      "question": "Which novel by F. Scott Fitzgerald explores the American Dream and the troubled romance of Jay Gatsby and Daisy Buchanan?",
+      "answer": "The Great Gatsby",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Great Gatsby",
+        "Great Gatsby"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "othello-setting-venice-cyprus",
+      "question": "Which Shakespeare play is set in Venice and Cyprus?",
+      "answer": "Othello",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Othello",
+        "Othello: The Moor of Venice"
+      ],
+      "subcategory": "adaptations-theater"
+    },
+    {
+      "slug": "alice-white-rabbit-late",
+      "question": "Which creature in Alice's Adventures in Wonderland is famously always late?",
+      "answer": "The White Rabbit",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The White Rabbit",
+        "White Rabbit",
+        "Rabbit"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "wonderful-wizard-of-oz-dorothy",
+      "question": "What children's classic story by L. Frank Baum tells the story of a little girl named Dorothy and her dog Toto who are swept away by a cyclone to the magical land of Oz?",
+      "answer": "The Wonderful Wizard of Oz",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Wonderful Wizard of Oz",
+        "The Wizard of Oz",
+        "Wonderful Wizard of Oz"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "dr-seuss-the-lorax",
+      "question": "Which Dr. Seuss book has an underlying message warning about environmental destruction through the voice of a fuzzy orange creature?",
+      "answer": "The Lorax",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Lorax",
+        "Lorax"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "jungle-book-mowgli",
+      "question": "What's the name of the boy brought up by wolves in Kipling's The Jungle Book?",
+      "answer": "Mowgli",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Mowgli"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "who-wrote-the-jungle-book",
+      "question": "Who wrote the classic children's story 'The Jungle Book'?",
+      "answer": "Rudyard Kipling",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Rudyard Kipling",
+        "Kipling"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "where-the-wild-things-are-max",
+      "question": "Which classic children's book features Max, a boy who wears a wolf costume and sails to an island of wild monsters?",
+      "answer": "Where the Wild Things Are",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Where the Wild Things Are"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "pinocchio-wooden-puppet",
+      "question": "Which Italian classic story features a wooden puppet who dreams of becoming a real boy?",
+      "answer": "Pinocchio",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Pinocchio",
+        "The Adventures of Pinocchio"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "first-full-length-animated-feature",
+      "question": "What was the first full-length animated feature film based on a fairy tale?",
+      "answer": "Snow White and the Seven Dwarfs",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Snow White and the Seven Dwarfs",
+        "Snow White and the Seven Dwarves",
+        "Snow White"
+      ],
+      "subcategory": "adaptations-theater"
+    },
+    {
+      "slug": "rapunzel-long-hair",
+      "question": "Which fairy tale features a girl with hair so long that she lets down her locks to be rescued?",
+      "answer": "Rapunzel",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Rapunzel"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "mary-poppins-nanny-umbrella",
+      "question": "Which 1964 novel features a nanny who flies with an umbrella and makes medicine taste like cherries?",
+      "answer": "Mary Poppins",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Mary Poppins"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "green-eggs-and-ham-50-words",
+      "question": "What famous Dr. Seuss book was the result of a bet he made with his publisher that he could write an entire story using only 50 unique words?",
+      "answer": "Green Eggs and Ham",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Green Eggs and Ham"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "curious-george-yellow-hat",
+      "question": "The Man with the Yellow Hat is a character in what classic children's story?",
+      "answer": "Curious George",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Curious George"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "the-little-engine-that-could",
+      "question": "In what children's classic does a little blue engine repeat 'I think I can' to climb a big hill?",
+      "answer": "The Little Engine That Could",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "The Little Engine That Could",
+        "The Little Engine that Could"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "stuart-little-mouse",
+      "question": "What classic children's novel tells the story of a tiny mouse born into a human family and his journey in city adventures?",
+      "answer": "Stuart Little",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Stuart Little"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "plato-the-republic",
+      "question": "Who is the Greek philosopher who wrote 'The Republic,' a Socratic dialogue on justice and the ideal state?",
+      "answer": "Plato",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Plato"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "marcus-aurelius-meditations",
+      "question": "Which Roman emperor and philosopher wrote 'Meditations,' which are still read as classics of Stoic thought?",
+      "answer": "Marcus Aurelius",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Marcus Aurelius",
+        "Marcus Aurelius Antoninus"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "dostoevsky-sentenced-death-pardon",
+      "question": "Which Russian novelist was once sentenced to death but got a last-minute pardon before writing Crime and Punishment?",
+      "answer": "Fyodor Dostoevsky",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Fyodor Dostoevsky",
+        "Dostoevsky",
+        "Fyodor Dostoyevsky"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "emily-dickinson-reclusive-poet",
+      "question": "Name the American poet who was so reclusive that she only published 10 out of her 1800 poems while she was alive, yet became a legend after her death.",
+      "answer": "Emily Dickinson",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Emily Dickinson"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "charles-dickens-blacking-factory",
+      "question": "Which Victorian novelist worked in a blacking factory as a child, an experience that shaped his book, Oliver Twist?",
+      "answer": "Charles Dickens",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Charles Dickens",
+        "Dickens"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "mark-twain-samuel-clemens",
+      "question": "Name the author whose real name was Samuel Langhorne Clemens, but he's better known by a riverboat term meaning 'two fathoms deep.'",
+      "answer": "Mark Twain",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Mark Twain",
+        "Samuel Clemens",
+        "Samuel Langhorne Clemens"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "james-joyce-ulysses-nearly-blind",
+      "question": "What Nobel Prize-winning Irish writer was nearly blind while writing Ulysses?",
+      "answer": "James Joyce",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "James Joyce",
+        "Joyce"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "charlotte-bronte-currer-bell",
+      "question": "Which 19th-century novelist used the pen name 'Currer Bell' to disguise her gender?",
+      "answer": "Charlotte Bront\u00eb",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Charlotte Bront\u00eb",
+        "Charlotte Bronte",
+        "Currer Bell"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "walt-whitman-leaves-of-grass",
+      "question": "Who wrote the collection of poetry 'Leaves of Grass,' and was called America's 'poet of democracy'?",
+      "answer": "Walt Whitman",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Walt Whitman",
+        "Whitman"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "o-captain-my-captain-lincoln",
+      "question": "'O Captain! My Captain!' is a famous poem by Walt Whitman about the death of which American president?",
+      "answer": "Abraham Lincoln",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Abraham Lincoln",
+        "Lincoln",
+        "President Lincoln",
+        "Abraham Lincoln (1809\u20131865)"
+      ],
+      "subcategory": "literary-quotes-and-lines"
+    },
+    {
+      "slug": "who-wrote-o-captain-my-captain",
+      "question": "Which American poet is responsible for writing 'O Captain! My Captain!'?",
+      "answer": "Walt Whitman",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Walt Whitman",
+        "Whitman"
+      ],
+      "subcategory": "literary-quotes-and-lines"
+    },
+    {
+      "slug": "shakespeare-coined-words-eyeball",
+      "question": "Which playwright coined more than 1,700 words still used in English today, including 'eyeball' and 'bedroom'?",
+      "answer": "William Shakespeare",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "William Shakespeare",
+        "Shakespeare"
+      ],
+      "subcategory": "language-grammar"
+    },
+    {
+      "slug": "jane-austen-burned-letters",
+      "question": "What author famously destroyed many of her letters and asked her sister to burn her unpublished work after her death?",
+      "answer": "Jane Austen",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Jane Austen",
+        "Austen"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "george-orwell-eric-blair-pen-name",
+      "question": "The 20th-century British author Eric Arthur Blair was well known for his insightful commentary on politics, society, and human nature. What was his pen name?",
+      "answer": "George Orwell",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "George Orwell",
+        "Orwell"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "edgar-allan-poe-the-raven",
+      "question": "What American writer is most famous for writing the iconic poem 'The Raven' and chilling short stories like 'The Tell-Tale Heart'?",
+      "answer": "Edgar Allan Poe",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Edgar Allan Poe",
+        "Edgar Allen Poe",
+        "Poe"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "toni-morrison-nobel-literature",
+      "question": "Who was the first African woman to win the Nobel Prize in Literature?",
+      "answer": "Toni Morrison",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Toni Morrison",
+        "Morrison"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "james-baldwin-go-tell-it",
+      "question": "Which African American author and activist wrote 'Go Tell It on the Mountain' and debated Malcolm X and William F. Buckley?",
+      "answer": "James Baldwin",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "James Baldwin",
+        "Baldwin"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "franz-kafka-the-trial",
+      "question": "What writer fled the Nazis, escaped to America, and wrote 3 novels: The Trial (1925), The Castle (1926), and Amerika (1927), all published by his friend after his death?",
+      "answer": "Franz Kafka",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Franz Kafka",
+        "Kafka"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "bob-dylan-nobel-prize-literature",
+      "question": "Who is the only author to win the Nobel Prize in Literature for a work that includes song lyrics?",
+      "answer": "Bob Dylan",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Bob Dylan",
+        "Dylan"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "virginia-woolf-room-of-ones-own",
+      "question": "What feminist author wrote A Room of One's Own, arguing that women needed money and privacy to write?",
+      "answer": "Virginia Woolf",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Virginia Woolf",
+        "Woolf"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "leo-tolstoy-exiled-siberia",
+      "question": "What Russian author was exiled to Siberia for revolutionary activities before writing Anna Karenina?",
+      "answer": "Leo Tolstoy",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Leo Tolstoy",
+        "Tolstoy",
+        "Lev Tolstoy",
+        "Count Lev Nikolayevich Tolstoy"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "heart-of-darkness-apocalypse-now",
+      "question": "What adventure novel by Joseph Conrad was later adapted into the 1979 film 'Apocalypse Now'?",
+      "answer": "Heart of Darkness",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Heart of Darkness"
+      ],
+      "subcategory": "adaptations-theater"
+    },
+    {
+      "slug": "1984-truth-is-what-state-says",
+      "question": "What dystopian novel by George Orwell imagined a society where truth is whatever the state says it is?",
+      "answer": "1984",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "1984",
+        "Nineteen Eighty-Four"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "sonnet-14-line-poem",
+      "question": "What style of poetry was mastered by Shakespeare and is known for its 14-line structure and strict rhyme scheme?",
+      "answer": "Sonnet",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Sonnet",
+        "Shakespearean Sonnet",
+        "English Sonnet"
+      ],
+      "subcategory": "language-grammar"
+    },
+    {
+      "slug": "haiku-5-7-5-syllables",
+      "question": "What Japanese poetic form traditionally has 17 syllables in a 5-7-5 pattern?",
+      "answer": "Haiku",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Haiku",
+        "Haiku poem"
+      ],
+      "subcategory": "language-grammar"
+    },
+    {
+      "slug": "brave-new-world-engineered-hierarchy",
+      "question": "What is the name of Aldous Huxley's dystopian classic novel about citizens who are environmentally engineered into an intelligence-based social hierarchy?",
+      "answer": "Brave New World",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Brave New World"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "paradise-lost-john-milton",
+      "question": "What epic poem by the English poet John Milton explores the biblical story of the fall of man?",
+      "answer": "Paradise Lost",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Paradise Lost"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "judy-blume-are-you-there-god",
+      "question": "What famous author wrote 'Are You There God? It's Me, Margaret,' a children's novel that sparked vicious school debates for its frank discussion of puberty?",
+      "answer": "Judy Blume",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Judy Blume",
+        "Blume"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "lady-chatterleys-lover-obscenity",
+      "question": "Which controversial novel by D.H. Lawrence faced multiple obscenity trials for its explicit scenes?",
+      "answer": "Lady Chatterley's Lover",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Lady Chatterley's Lover",
+        "Lady Chatterleys Lover"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "salman-rushdie-satanic-verses",
+      "question": "What Pakistani author wrote the novel 'The Satanic Verses' which sparked global protests and a fatwa calling for his death?",
+      "answer": "Salman Rushdie",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Salman Rushdie",
+        "Rushdie"
+      ],
+      "subcategory": "classic-literature"
+    },
+    {
+      "slug": "all-quiet-on-the-western-front-banned",
+      "question": "Which 1928 anti-war novel was banned in multiple countries for describing soldiers' extreme physical and mental trauma during World War I?",
+      "answer": "All Quiet on the Western Front",
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "All Quiet on the Western Front",
+        "Im Westen nichts Neues"
+      ],
+      "subcategory": "classic-literature"
     }
   ]
 }
