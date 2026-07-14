@@ -21,7 +21,12 @@ export function createSessionCookie(userId: string): string {
     ? `${payload}.${createHmac("sha256", s).update(payload).digest("base64url")}`
     : payload;
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  return `${COOKIE_NAME}=${encodeURIComponent(value)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${MAX_AGE}${secure}`;
+  // Phase 6 domain split: scope to the parent domain (e.g. `.hightopchallenge.com`)
+  // when configured so the session survives apex ↔ `play.` navigation. Empty by
+  // default → host-only cookie (localhost/preview unaffected).
+  const domain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN?.trim();
+  const domainAttr = domain ? `; Domain=${domain}` : "";
+  return `${COOKIE_NAME}=${encodeURIComponent(value)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${MAX_AGE}${secure}${domainAttr}`;
 }
 
 export function readSession(request: Request): string | null {

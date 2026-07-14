@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { GameAppBar } from "@/components/venue/AppBar";
+import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
@@ -201,6 +202,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   const normalizedInitialSportSlug = String(initialSportSlug ?? "").trim().toLowerCase();
   const todayDateKey = getLocalDateKey();
   const router = useRouter();
+  const venuePresence = useVenuePresence();
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [nflWeekStartDate, setNflWeekStartDate] = useState("");
@@ -587,12 +589,16 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         }),
       });
 
-      const payload = (await response.json()) as { ok: boolean; error?: string };
+      const payload = (await response.json()) as { ok: boolean; code?: string; error?: string; userMessage?: string };
+      const presenceFailure = venuePresence.capturePresenceFailure(payload);
+      if (presenceFailure) {
+        throw new Error(presenceFailure.userMessage);
+      }
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to save your pick.");
       }
     },
-    [nflWeekStartDate, selectedDate, selectedSportSlug, userId, venueId]
+    [nflWeekStartDate, selectedDate, selectedSportSlug, userId, venueId, venuePresence]
   );
 
   const clearPickRequest = useCallback(
@@ -609,12 +615,16 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         }),
       });
 
-      const payload = (await response.json()) as { ok: boolean; error?: string };
+      const payload = (await response.json()) as { ok: boolean; code?: string; error?: string; userMessage?: string };
+      const presenceFailure = venuePresence.capturePresenceFailure(payload);
+      if (presenceFailure) {
+        throw new Error(presenceFailure.userMessage);
+      }
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to clear your pick.");
       }
     },
-    [userId]
+    [userId, venuePresence]
   );
 
   const flushGamePick = useCallback(
@@ -675,6 +685,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
       }
       if (!isViewingToday) {
         setSubmitMessage("You can only place picks for today. Switch back to today to make picks.");
+        return;
+      }
+      if (venuePresence.isInteractionBlocked) {
         return;
       }
       const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
@@ -742,11 +755,12 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         void flushGamePick(game.id, pickTeam);
       }
     },
-    [clearPickRequest, flushGamePick, isViewingToday, loadDailyPickCount, optimisticPickByGame, pickCount, scheduleBackgroundRefresh, userId, venueId]
+    [clearPickRequest, flushGamePick, isViewingToday, loadDailyPickCount, optimisticPickByGame, pickCount, scheduleBackgroundRefresh, userId, venueId, venuePresence.isInteractionBlocked]
   );
 
   useEffect(() => {
     if (!userId || !venueId) return;
+    if (venuePresence.isInteractionBlocked) return;
     if (!pointsBank || pointsBank.unclaimedCorrectPicks <= 0) return;
     if (hasAutoCollectedRef.current) return;
     hasAutoCollectedRef.current = true;
@@ -775,7 +789,13 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             settledPicks: number;
           };
           error?: string;
+          code?: string;
+          userMessage?: string;
         };
+        const presenceFailure = venuePresence.capturePresenceFailure(payload);
+        if (presenceFailure) {
+          return;
+        }
         if (!payload.ok || !payload.result || !payload.result.claimed || payload.result.pointsAwarded <= 0) {
           return;
         }
@@ -806,7 +826,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
       }
     };
     void run();
-  }, [loadDailyPickCount, loadGames, pointsBank, selectedDate, userId, venueId]);
+  }, [loadDailyPickCount, loadGames, pointsBank, selectedDate, userId, venueId, venuePresence]);
 
   useEffect(() => {
     void loadDailyPickCount();

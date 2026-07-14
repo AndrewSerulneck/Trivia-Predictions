@@ -97,6 +97,12 @@ const OwnerRegisterPage = () => {
 
   return (
     <OwnerShell title="Create Owner Account" subtitle={step === 1 ? "Tell us about you and your venue" : "Confirm your venue"}>
+      <Link
+        href="/owner/login"
+        className="mb-5 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900"
+      >
+        ← Back
+      </Link>
       {step === 1 ? (
         <form onSubmit={handleFindVenue} className="space-y-4">
           <div>

@@ -65,17 +65,25 @@ function removeLocalStorage(key: string): void {
   }
 }
 
+// Phase 6 domain split: when set (e.g. `.hightopchallenge.com`), scope cookies to
+// the parent domain so a session set on the apex stays valid on `play.`. Empty
+// by default → host-only cookies (localhost/preview keep working untouched).
+function cookieDomainAttr(): string {
+  const domain = (process.env.NEXT_PUBLIC_COOKIE_DOMAIN ?? "").trim();
+  return domain ? `; Domain=${domain}` : "";
+}
+
 function setCookie(name: string, value: string): void {
   if (typeof document === "undefined") return;
   const safeName = encodeURIComponent(name);
   const safeValue = encodeURIComponent(value);
-  document.cookie = `${safeName}=${safeValue}; Max-Age=${COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax`;
+  document.cookie = `${safeName}=${safeValue}; Max-Age=${COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax${cookieDomainAttr()}`;
 }
 
 function clearCookie(name: string): void {
   if (typeof document === "undefined") return;
   const safeName = encodeURIComponent(name);
-  document.cookie = `${safeName}=; Max-Age=0; Path=/; SameSite=Lax`;
+  document.cookie = `${safeName}=; Max-Age=0; Path=/; SameSite=Lax${cookieDomainAttr()}`;
 }
 
 function dispatchAuthStateEvent(type: string): void {

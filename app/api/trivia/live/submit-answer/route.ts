@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { submitLiveShowdownAnswer } from "@/lib/liveShowdownSubmission";
+import { maybeRequireActiveVenuePresence, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
 export async function POST(request: Request) {
   try {
@@ -32,6 +33,8 @@ export async function POST(request: Request) {
       );
     }
 
+    await maybeRequireActiveVenuePresence({ userId, venueId });
+
     const result = await submitLiveShowdownAnswer({
       userId,
       venueId,
@@ -44,6 +47,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, result });
   } catch (error) {
+    const presenceResponse = venuePresenceErrorResponse(error);
+    if (presenceResponse) return presenceResponse;
+
     const message = error instanceof Error ? error.message : "Failed to submit Live Showdown answer.";
     const status =
       /required|invalid/i.test(message)

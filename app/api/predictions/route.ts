@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listPredictionMarkets } from "@/lib/polymarket";
 import { getPredictionQuota, submitPredictionPick } from "@/lib/userPredictions";
+import { maybeRequireActiveVenuePresenceForUser, venuePresenceErrorResponse } from "@/lib/venuePresence";
 import type { Prediction } from "@/types";
 
 type ClientPrediction = Pick<Prediction, "id" | "question" | "source" | "closesAt" | "outcomes" | "sport" | "league" | "isClosed">;
@@ -64,6 +65,8 @@ export async function POST(request: Request) {
       );
     }
 
+    await maybeRequireActiveVenuePresenceForUser({ userId: String(body.userId).trim() });
+
     const pick = await submitPredictionPick({
       userId: body.userId,
       predictionId: body.predictionId,
@@ -74,6 +77,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, pick, quota });
   } catch (error) {
+    const presenceResponse = venuePresenceErrorResponse(error);
+    if (presenceResponse) return presenceResponse;
+
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to submit prediction pick." },
       { status: 500 }

@@ -5,6 +5,11 @@ import {
   generateSportsBingoBoard,
   listUserSportsBingoCards,
 } from "@/lib/sportsBingo";
+import {
+  maybeRequireActiveVenuePresence,
+  maybeRequireActiveVenuePresenceForUser,
+  venuePresenceErrorResponse,
+} from "@/lib/venuePresence";
 
 function normalizeBoolean(value: string | null, fallback = false): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -94,6 +99,8 @@ export async function POST(request: Request) {
         );
       }
 
+      await maybeRequireActiveVenuePresence({ userId, venueId });
+
       const card = await createSportsBingoCard({
         userId,
         venueId,
@@ -115,6 +122,8 @@ export async function POST(request: Request) {
         );
       }
 
+      await maybeRequireActiveVenuePresenceForUser({ userId });
+
       const result = await claimSportsBingoReward({ userId, cardId });
       return NextResponse.json({ ok: true, result });
     }
@@ -124,6 +133,9 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   } catch (error) {
+    const presenceResponse = venuePresenceErrorResponse(error);
+    if (presenceResponse) return presenceResponse;
+
     return NextResponse.json(
       {
         ok: false,

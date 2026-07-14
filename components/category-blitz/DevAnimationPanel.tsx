@@ -6,7 +6,6 @@ import RoundStartReveal from "@/components/category-blitz/RoundStartReveal";
 import { AnsweringScreen } from "@/components/category-blitz/CategoryBlitzGame";
 import GradingCascade, { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
 import LiveLeaderboard from "@/components/category-blitz/LiveLeaderboard";
-import NextRoundCountdown from "@/components/category-blitz/NextRoundCountdown";
 import SessionCompleteFireworks from "@/components/category-blitz/SessionCompleteFireworks";
 import SubmitLockAnimation from "@/components/category-blitz/SubmitLockAnimation";
 import TimerUrgency from "@/components/category-blitz/TimerUrgency";
@@ -33,7 +32,6 @@ type DemoKey =
   | "revealMorph"
   | "cascade"
   | "leaderboard"
-  | "countdown"
   | "fireworks"
   | "submitLock"
   | "timerUrgency"
@@ -50,7 +48,6 @@ const DEMO_LABELS: Record<DemoKey, string> = {
   revealMorph: "Reveal → gameplay morph",
   cascade: "Grading cascade",
   leaderboard: "Live leaderboard",
-  countdown: "Next-round countdown",
   fireworks: "Session complete fireworks",
   submitLock: "Submit lock",
   timerUrgency: "Timer urgency",
@@ -205,12 +202,6 @@ const DevAnimationPanel = () => {
 
             {demo === "leaderboard" && (
               <LiveLeaderboard entries={MOCK_LEADERBOARD_ENTRIES} meId="me" />
-            )}
-
-            {demo === "countdown" && (
-              <div className="relative h-64 w-full max-w-sm">
-                <NextRoundCountdown secondsUntilNextRound={5} onZero={() => setDemo(null)} />
-              </div>
             )}
 
             {demo === "fireworks" && (

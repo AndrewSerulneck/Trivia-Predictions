@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import type { ChallengeCampaignWin, PrizeType, PrizeWin } from "@/types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -237,6 +238,7 @@ function RedeemModal({ win, onConfirm, onClose, confirming, confirmed }: RedeemM
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PrizeWalletPanel() {
+  const venuePresence = useVenuePresence();
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -382,7 +384,11 @@ export function PrizeWalletPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, venueId, challengeId: redeemingWin.challengeId }),
       });
-      const payload = (await res.json()) as { ok: boolean; error?: string };
+      const payload = (await res.json()) as { ok: boolean; code?: string; error?: string; userMessage?: string };
+      const presenceFailure = venuePresence.capturePresenceFailure(payload);
+      if (presenceFailure) {
+        throw new Error(presenceFailure.userMessage);
+      }
       if (!payload.ok) throw new Error(payload.error ?? "Failed to redeem prize.");
       setRedeemConfirmed(true);
       await load();
@@ -396,7 +402,7 @@ export function PrizeWalletPanel() {
     } finally {
       setRedeemConfirming(false);
     }
-  }, [redeemingWin, userId, venueId, load]);
+  }, [redeemingWin, userId, venueId, load, venuePresence]);
 
   // ── Render ───────────────────────────────────────────────────────────────
 

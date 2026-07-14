@@ -5,15 +5,44 @@ type OwnerShellProps = {
   subtitle?: string;
   children: React.ReactNode;
   maxWidth?: "sm" | "lg";
+  /**
+   * "light" (default) keeps the legacy white-card shell used by the auth/billing
+   * pages. "dark" is the dark-native Partner Dashboard surface (per
+   * docs/partner-dashboard-design.md): canvas background, no white card — screens
+   * render their own ht-surface cards.
+   */
+  variant?: "light" | "dark";
 };
 
-export const OwnerShell = ({ title, subtitle, children, maxWidth = "sm" }: OwnerShellProps) => {
+export const OwnerShell = ({
+  title,
+  subtitle,
+  children,
+  maxWidth = "sm",
+  variant = "light",
+}: OwnerShellProps) => {
   const widthClass = maxWidth === "lg" ? "max-w-2xl" : "max-w-sm";
+
+  if (variant === "dark") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-start bg-ht-canvas px-4 pb-16 pt-8">
+        <div className={`w-full ${widthClass}`}>
+          <div className="mb-6 text-center">
+            <ExplodingLogo width={220} variant="canvas" />
+            <h1 className="ht-h1 mt-1">{title}</h1>
+            {subtitle ? <p className="mt-1 text-sm font-semibold text-ht-muted">{subtitle}</p> : null}
+          </div>
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-start bg-slate-900 px-4 py-10">
       <div className={`w-full ${widthClass}`}>
         <div className="mb-6 text-center">
-          <ExplodingLogo width={320} />
+          <ExplodingLogo width={320} variant="slate" />
           <h1 className="text-2xl font-bold text-white">{title}</h1>
           {subtitle ? <p className="mt-1 text-sm text-slate-400">{subtitle}</p> : null}
         </div>

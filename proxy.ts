@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isVenueScreenPath } from "@/lib/venueScreenPaths";
+import { decideDomainSplit } from "@/lib/domainSplit";
 
 export { isVenueScreenPath };
 
@@ -28,6 +29,12 @@ function isPublicPath(pathname: string): boolean {
     return true;
   }
   if (isVenueScreenPath(pathname)) {
+    return true;
+  }
+  // Public TV pairing page (Phase 5b) — a TV browser has no auth cookies. Its
+  // pairing APIs live under /api/tv-pair/* and are already covered by the /api/
+  // rule below.
+  if (pathname === "/tv" || pathname.startsWith("/tv/")) {
     return true;
   }
   if (pathname === "/api" || pathname.startsWith("/api/")) {
@@ -71,6 +78,21 @@ function hasValidEntryHandoff(request: NextRequest, venueId: string): boolean {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Phase 6 — domain split (flag-gated; no-op when NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED
+  // is off or the host is unknown/preview). Runs before the auth gate so a game
+  // route hit on the apex is bounced to `play.` regardless of session state.
+  const host = request.headers.get("host") ?? request.nextUrl.host;
+  const split = decideDomainSplit(host, pathname);
+  if (split.action === "rewrite") {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = split.path;
+    return NextResponse.rewrite(rewriteUrl);
+  }
+  if (split.action === "redirect") {
+    const redirectUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, `https://${split.host}`);
+    return NextResponse.redirect(redirectUrl, 308);
+  }
 
   if (isPublicPath(pathname)) {
     return NextResponse.next();

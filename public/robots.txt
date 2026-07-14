@@ -18,3 +18,5 @@ Allow: /
 
 User-agent: Applebot-Extended
 Allow: /
+
+Sitemap: https://hightopchallenge.com/sitemap.xml

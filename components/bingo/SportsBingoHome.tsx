@@ -17,6 +17,7 @@ import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { ActionPop, type ActionPopTone } from "@/components/bingo/ActionPop";
 import { ViewTabs, FoldLine, LiveDot } from "@/components/venue/GameChrome";
 import { GameAppBar } from "@/components/venue/AppBar";
+import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 
 type BingoCardSquare = {
@@ -798,6 +799,7 @@ export function SportsBingoHome({
 }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const { triggerAnimation } = useAnimationTrigger();
+  const venuePresence = useVenuePresence();
   const prevCardsRef = useRef<BingoCard[]>([]);
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
@@ -1769,7 +1771,7 @@ export function SportsBingoHome({
   }, [isLandscapeGameView]);
 
   const collectAllBingoPoints = useCallback(async () => {
-    if (!userId || isCollectingAllBingo || unclaimedWonBingoCards.length === 0) return;
+    if (!userId || isCollectingAllBingo || unclaimedWonBingoCards.length === 0 || venuePresence.isInteractionBlocked) return;
     setIsCollectingAllBingo(true);
     setErrorMessage("");
     let totalAwarded = 0;
@@ -1783,7 +1785,11 @@ export function SportsBingoHome({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "claim", userId, cardId: card.id }),
         });
-        const payload = (await response.json()) as ClaimResponse;
+        const payload = (await response.json()) as ClaimResponse & { code?: string; userMessage?: string };
+        const presenceFailure = venuePresence.capturePresenceFailure(payload);
+        if (presenceFailure) {
+          break;
+        }
         if (payload.ok && payload.result) {
           totalAwarded += payload.result.rewardPoints;
         }
@@ -1812,7 +1818,7 @@ export function SportsBingoHome({
       setIsCollectingAllBingo(false);
       void loadCards({ background: true });
     }
-  }, [isCollectingAllBingo, loadCards, unclaimedWonBingoCards, userId]);
+  }, [isCollectingAllBingo, loadCards, unclaimedWonBingoCards, userId, venuePresence]);
 
   const expandedActiveCard = useMemo(
     () => activeCards.find((card) => card.id === expandedActiveCardId) ?? null,
@@ -1860,7 +1866,7 @@ export function SportsBingoHome({
   }, [hasStartedActiveCard, loadCards, nextActiveCardStartMs, userId]);
 
   const claimPoints = async (card: BingoCard, sourceElement: HTMLElement | null = null) => {
-    if (!userId || claimingCardId) {
+    if (!userId || claimingCardId || venuePresence.isInteractionBlocked) {
       return;
     }
 
@@ -1876,7 +1882,11 @@ export function SportsBingoHome({
           cardId: card.id,
         }),
       });
-      const payload = (await response.json()) as ClaimResponse;
+      const payload = (await response.json()) as ClaimResponse & { code?: string; userMessage?: string };
+      const presenceFailure = venuePresence.capturePresenceFailure(payload);
+      if (presenceFailure) {
+        throw new Error(presenceFailure.userMessage);
+      }
       if (!payload.ok || !payload.result) {
         throw new Error(payload.error ?? "Failed to claim Bingo points.");
       }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import { datetimeLocalValueToUtcIso } from "@/lib/categoryBlitzScheduleTime";
 import { deleteSchedule, getSchedule, updateSchedule } from "@/lib/categoryBlitzSchedules";
-import { endVenueAutoSession } from "@/lib/categoryBlitz";
+import { abandonVenueAutoSession, endVenueAutoSession } from "@/lib/categoryBlitz";
 
 function isValidationError(message: string): boolean {
   return (
@@ -81,9 +81,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params;
     const venueId = await deleteSchedule(id);
 
-    // End any active auto session so players aren't stranded in a dead intermission.
+    // Abandon (don't gracefully end) any active auto session so players drop
+    // back to the lobby instead of a Game Over screen — deleting a schedule
+    // discards the running game rather than finishing it.
     if (venueId) {
-      await endVenueAutoSession(venueId);
+      await abandonVenueAutoSession(venueId);
     }
 
     return NextResponse.json({ ok: true });

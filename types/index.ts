@@ -246,6 +246,8 @@ export interface ChallengeCampaign {
   prizeType?: PrizeType | null;
   prizeGiftCertificateAmount?: number | null;
   isActive: boolean;
+  /** Phase 9a: the venue owner who created this competition, or null for admin-created. */
+  createdByOwnerId?: string | null;
 }
 
 export interface ChallengeCampaignWin {
@@ -416,7 +418,7 @@ export interface BillingSubscription {
 
 // ── Category Blitz ───────────────────────────────────────────────────────────
 
-export type CategoryBlitzSessionStatus  = 'lobby' | 'active' | 'scoring' | 'complete';
+export type CategoryBlitzSessionStatus  = 'lobby' | 'active' | 'scoring' | 'complete' | 'abandoned';
 export type CategoryBlitzRoundStatus    = 'active' | 'scoring' | 'complete';
 export type CategoryBlitzRecurringType  = 'none' | 'daily' | 'weekly';
 
@@ -434,6 +436,17 @@ export interface CategoryBlitzSchedule {
   createdAt:      string;
   updatedAt:      string;
 }
+
+// ── Partner Dashboard: owner-scoped live-game scheduling ──────────────────────
+// The owner scheduling surface is game-type-agnostic on the wire so the UI can
+// be built once for "games that don't exist yet." Today only Category Blitz is
+// wired to an engine (see SUPPORTED_OWNER_SCHEDULE_GAME_TYPES in
+// lib/ownerSchedule.ts); Live Trivia is part of the contract but not yet
+// schedulable through this surface.
+export type OwnerScheduleGameType = 'category_blitz' | 'live_trivia';
+
+/** A schedule as returned by the owner surface: the engine row tagged with its game type. */
+export type OwnerSchedule = CategoryBlitzSchedule & { gameType: OwnerScheduleGameType };
 
 export type CategoryBlitzSessionSource = 'manual' | 'auto';
 export type CategoryBlitzViewerRole    = 'player' | 'spectator';

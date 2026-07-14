@@ -9,6 +9,7 @@ import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { supabase } from "@/lib/supabase";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
+import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { ViewTabs, FoldLine } from "@/components/venue/GameChrome";
 import { GameAppBar } from "@/components/venue/AppBar";
@@ -690,6 +691,7 @@ type FantasyHomeProps = {
 
 export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEntryId = "", onBack }: FantasyHomeProps) {
   const { triggerAnimation } = useAnimationTrigger();
+  const venuePresence = useVenuePresence();
   const [userId, setUserId] = useState(() => getUserId() ?? "");
   const [venueId, setVenueId] = useState(() => getVenueId() ?? "");
   const [games, setGames] = useState<FantasyGame[]>([]);
@@ -817,8 +819,8 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
   }, [triggerAnimation]);
 
   useEffect(() => {
-    geofencePauseRef.current = isGeofencePaused;
-  }, [isGeofencePaused]);
+    geofencePauseRef.current = isGeofencePaused || venuePresence.isInteractionBlocked;
+  }, [isGeofencePaused, venuePresence.isInteractionBlocked]);
 
   useEffect(() => { setIsMounted(true); }, []);
 
@@ -870,7 +872,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         setIsGeofencePaused(paused);
         setGeofencePauseReason(
           paused
-            ? `Fantasy scoring paused: you're ${Math.round(distance)}m away (allowed ${Math.round(allowed)}m). Return to venue to resume live scoring.`
+            ? "Fantasy scoring is paused until we confirm you're back inside this partner venue."
             : ""
         );
       } catch {
@@ -1481,7 +1483,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
   );
 
   const collectLivePoints = useCallback(async () => {
-    if (!trackedEntry || isCollectingLive || uncollectedPoints <= 0 || isGeofencePaused) return;
+    if (!trackedEntry || isCollectingLive || uncollectedPoints <= 0 || isGeofencePaused || venuePresence.isInteractionBlocked) return;
     setIsCollectingLive(true);
     try {
       const res = await fetch("/api/fantasy/entries", {
@@ -1489,7 +1491,9 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "collect-live", userId, entryId: trackedEntry.id }),
       });
-      const data = await parseJsonResponse<{ ok: boolean; result?: { platformPointsAwarded: number }; error?: string }>(res, "Failed to collect live fantasy points");
+      const data = await parseJsonResponse<{ ok: boolean; code?: string; result?: { platformPointsAwarded: number }; error?: string; userMessage?: string }>(res, "Failed to collect live fantasy points");
+      const presenceFailure = venuePresence.capturePresenceFailure(data);
+      if (presenceFailure) throw new Error(presenceFailure.userMessage);
       if (!data.ok) throw new Error(data.error ?? "Collection failed");
       const awarded = data.result?.platformPointsAwarded ?? 0;
       setLastCollectedPoints((prev) => prev + awarded);
@@ -1507,10 +1511,10 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     } finally {
       setIsCollectingLive(false);
     }
-  }, [isCollectingLive, isGeofencePaused, trackedEntry, triggerAnimation, uncollectedPoints, userId]);
+  }, [isCollectingLive, isGeofencePaused, trackedEntry, triggerAnimation, uncollectedPoints, userId, venuePresence]);
 
   useEffect(() => {
-    if (!trackedEntry || uncollectedPoints <= 0 || isGeofencePaused) {
+    if (!trackedEntry || uncollectedPoints <= 0 || isGeofencePaused || venuePresence.isInteractionBlocked) {
       if (autoCollectLiveTimerRef.current !== null) {
         window.clearTimeout(autoCollectLiveTimerRef.current);
         autoCollectLiveTimerRef.current = null;
@@ -1528,7 +1532,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         autoCollectLiveTimerRef.current = null;
       }
     };
-  }, [collectLivePoints, isGeofencePaused, trackedEntry, uncollectedPoints]);
+  }, [collectLivePoints, isGeofencePaused, trackedEntry, uncollectedPoints, venuePresence.isInteractionBlocked]);
 
   useEffect(() => {
     if (!selectedGameId) {
@@ -1892,6 +1896,9 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     if (!userId || !venueId || !selectedGameId || lineup.length !== requiredLineupSize) {
       return false;
     }
+    if (venuePresence.isInteractionBlocked) {
+      return false;
+    }
 
     setSubmitting(true);
     setStatusMessage("");
@@ -1911,7 +1918,11 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         }),
       });
 
-      const payload = await parseJsonResponse<{ ok: boolean; error?: string }>(response, "Failed to submit fantasy lineup");
+      const payload = await parseJsonResponse<{ ok: boolean; code?: string; error?: string; userMessage?: string }>(response, "Failed to submit fantasy lineup");
+      const presenceFailure = venuePresence.capturePresenceFailure(payload);
+      if (presenceFailure) {
+        throw new Error(presenceFailure.userMessage);
+      }
       if (!payload.ok) {
         const message = payload.error ?? "Failed to submit fantasy lineup.";
         if (isDuplicateSlateEntryError(message)) {
@@ -1976,6 +1987,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     selectedGameId,
     userId,
     venueId,
+    venuePresence,
   ]);
 
   useEffect(() => {
@@ -2046,7 +2058,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
   }, []);
 
   useEffect(() => {
-    if (loadingEntries || !userId) return;
+    if (loadingEntries || !userId || venuePresence.isInteractionBlocked) return;
     const toCollect = entries.filter(
       (entry) =>
         entry.id &&
@@ -2069,8 +2081,15 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
           });
           const payload = await parseJsonResponse<{
             ok: boolean;
+            code?: string;
+            userMessage?: string;
             result?: { claimed: boolean; pointsAwarded: number };
+            error?: string;
           }>(response, "Failed to collect fantasy entries");
+          const presenceFailure = venuePresence.capturePresenceFailure(payload);
+          if (presenceFailure) {
+            continue;
+          }
           if (payload.ok && payload.result?.claimed) {
             totalAwarded += payload.result.pointsAwarded;
           }
@@ -2097,7 +2116,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       void loadEntries(false);
     };
     void run();
-  }, [entries, loadEntries, loadingEntries, userId]);
+  }, [entries, loadEntries, loadingEntries, userId, venuePresence]);
 
   const myLeaderboardEntry = useMemo(
     () => leaderboard.find((row) => row.userId === userId) ?? null,
@@ -2515,9 +2534,9 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
 
         <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
 
-        {isGeofencePaused ? (
+        {isGeofencePaused || venuePresence.isInteractionBlocked ? (
           <p className="rounded-xl border border-amber-400/40 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-200">
-            {geofencePauseReason || "Fantasy scoring is paused while outside the venue geofence."}
+            {geofencePauseReason || "Fantasy scoring is paused until we confirm you're back inside this partner venue."}
           </p>
         ) : null}
 
@@ -2611,7 +2630,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
             </div>
 
             {/* Geofence status banner */}
-            {!isGeofencePaused && hasLiveEntry ? (
+            {!isGeofencePaused && !venuePresence.isInteractionBlocked && hasLiveEntry ? (
               <div className="flex items-center gap-2 rounded-[10px] border border-sky-400/30 bg-sky-400/[0.08] px-3 py-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />

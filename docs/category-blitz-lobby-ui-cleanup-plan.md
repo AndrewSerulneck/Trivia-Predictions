@@ -56,7 +56,7 @@ LOE: Tiny. Model: Sonnet.
 Seeded real standard-mode and reverse-mode rounds on `sim-category-blitz` and
 screenshotted the live header via Playwright for both. Confirmed: no
 mode-sign puck in either mode, header rule text ("Unique answers win — be
-original." / "Match the crowd — popular answers win.") plus the green/pink
+original." / "Write the response you think will be most popular.") plus the green/pink
 per-mode color theme clearly distinguish the modes, no "X/12 filled" text,
 progress bar still renders. Cleaned up all seeded sessions/users after.
 LOE: Tiny. Model: Sonnet.

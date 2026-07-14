@@ -26,6 +26,7 @@ import { RoundStartCountdownOverlay } from "@/components/animations/RoundStartCo
 import { QuestionImage } from "@/components/trivia/QuestionImage";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
+import { VenuePresenceBoundary, useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { buildLiveTriviaStorySharePayload } from "@/lib/socialShare/storyPayloads";
 
 type Phase = "answering" | "rest_warning" | "mid_game_break" | "pre_game";
@@ -186,7 +187,7 @@ function computeRankMovement(entries: LeaderboardEntry[]): Map<string, number> {
   return movement;
 }
 
-export default function LiveShowdownPage() {
+function LiveShowdownPageContent() {
   const searchParams = useSearchParams();
   const { triggerAnimation } = useAnimationTrigger();
   const [state, setState] = useState<LiveState | null>(null);
@@ -243,6 +244,7 @@ export default function LiveShowdownPage() {
     storedVenueId,
   });
   const resolvedVenueId = venueContext.venueId;
+  const venuePresence = useVenuePresence();
   const resolvedVenueSource: LiveTriviaVenueSource = venueContext.source;
   const answerInputRef = useRef<HTMLInputElement>(null);
 
@@ -816,6 +818,7 @@ export default function LiveShowdownPage() {
       // Explicit spectator guard — do not submit answers or forfeits on behalf of spectators.
       // This is intentional, not just inferred from disabled button state.
       if (spectatingRef.current) return;
+      if (venuePresence.isInteractionBlocked) return;
       if (!state?.isGameActive || !state.scheduleId || !state.currentRound || !state.currentQuestionIndex) return;
       const userId = (getUserId() ?? "").trim();
       const venueId = resolvedVenueId;
@@ -844,9 +847,13 @@ export default function LiveShowdownPage() {
         });
         const payload = (await response.json()) as {
           ok: boolean;
+          code?: string;
           error?: string;
+          userMessage?: string;
           result?: { isCorrect: boolean; alreadySubmitted?: boolean; pendingClosestGuess?: boolean };
         };
+        const presenceFailure = venuePresence.capturePresenceFailure(payload);
+        if (presenceFailure) throw new Error(presenceFailure.userMessage);
         if (!payload.ok || !payload.result) throw new Error(payload.error || "Submission failed.");
 
         const nextResult: SubmissionResult = {
@@ -868,7 +875,7 @@ export default function LiveShowdownPage() {
         setIsSubmitting(false);
       }
     },
-    [activeKey, resolvedVenueId, state]
+    [activeKey, resolvedVenueId, state, venuePresence]
   );
 
   // Keep refs in sync so the stable forfeit listener always reads the freshest
@@ -2007,5 +2014,13 @@ export default function LiveShowdownPage() {
         </div>
       ) : null}
     </motion.main>
+  );
+}
+
+export default function LiveShowdownPage() {
+  return (
+    <VenuePresenceBoundary>
+      <LiveShowdownPageContent />
+    </VenuePresenceBoundary>
   );
 }

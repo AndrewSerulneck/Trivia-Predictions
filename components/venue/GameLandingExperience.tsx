@@ -21,6 +21,7 @@ import { hasResumableSession } from "@/lib/gameResume";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { hasRecentOnboarding, markOnboardingComplete } from "@/lib/gameOnboarding";
 import { GameOnboardingCard, GAME_CARD_BG_BY_KEY, GAME_STEP_DOT_ACTIVE } from "@/components/venue/GameIdentityPanel";
+import { VenuePresenceBoundary } from "@/components/venue/VenuePresenceBoundary";
 import { PageShell } from "@/components/ui/PageShell";
 
 function recoverGamePageScrollState() {
@@ -289,6 +290,11 @@ export function GameLandingExperience({
     router.push("/");
   }, [gameKey, router]);
 
+  const playingChild =
+    showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
+      ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
+      : children;
+
   return (
     <div
       data-venue-game-surface
@@ -321,9 +327,7 @@ export function GameLandingExperience({
                 className={`animate-tp-surface-enter relative z-10 flex flex-col overflow-hidden overscroll-none ${playingContainerClassName ?? "px-2 py-2 sm:px-3 sm:py-3"}`}
                 style={{ height: "var(--tp-vh, 100dvh)" }}
               >
-                {showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
-                  ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
-                  : children}
+                <VenuePresenceBoundary enabled={isPlaying}>{playingChild}</VenuePresenceBoundary>
               </div>
             ) : (
             <div
@@ -332,15 +336,11 @@ export function GameLandingExperience({
               style={{ WebkitOverflowScrolling: "touch" }}
             >
             {playingHidesShellNav ? (
-              showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
-                ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
-                : children
+              <VenuePresenceBoundary enabled={isPlaying}>{playingChild}</VenuePresenceBoundary>
             ) : (
-              <div className="min-h-0 flex-1 overflow-hidden">
-                {showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
-                  ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
-                  : children}
-              </div>
+              <VenuePresenceBoundary enabled={isPlaying}>
+                <div className="min-h-0 flex-1 overflow-hidden">{playingChild}</div>
+              </VenuePresenceBoundary>
             )}
             </div>
             )

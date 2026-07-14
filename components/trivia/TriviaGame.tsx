@@ -9,6 +9,7 @@ import { readWarmTriviaCache } from "@/lib/warmupCache";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import { canAdvanceToNextTriviaQuestion } from "@/lib/triviaRoundProgress";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
+import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
 import type { TriviaQuestion } from "@/types";
 
@@ -323,6 +324,7 @@ export function TriviaGame({
 }) {
   const router = useRouter();
   const { triggerAnimation } = useAnimationTrigger();
+  const venuePresence = useVenuePresence();
   const gameRootRef = useRef<HTMLDivElement>(null);
   const nextQuestionButtonRef = useRef<HTMLButtonElement>(null);
   const [questions, setQuestions] = useState<TriviaQuestion[]>(initialQuestions);
@@ -473,10 +475,15 @@ export function TriviaGame({
         answer: -1,
         timeElapsed: elapsed,
       }),
-    }).catch(() => {
-      // Best effort: if this fails we still continue loading trivia.
-    });
-  }, []);
+    })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => null)) as unknown;
+        venuePresence.capturePresenceFailure(payload);
+      })
+      .catch(() => {
+        // Best effort: if this fails we still continue loading trivia.
+      });
+  }, [venuePresence]);
 
   const recoverInterruptedQuestion = useCallback(async (): Promise<RecoveredRoundState | null> => {
     if (typeof window === "undefined") {
@@ -979,6 +986,10 @@ export function TriviaGame({
         });
 
         const payload = (await response.json()) as SubmitResponse;
+        const presenceFailure = venuePresence.capturePresenceFailure(payload);
+        if (presenceFailure) {
+          throw new Error(presenceFailure.userMessage);
+        }
         if (!payload.ok || !payload.result) {
           if (payload.quota) {
             setQuota(payload.quota);
@@ -1072,6 +1083,7 @@ export function TriviaGame({
       triggerCelebration,
       triggerPointsFlow,
       triviaQuotaLocked,
+      venuePresence,
     ]
   );
 

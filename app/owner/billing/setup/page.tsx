@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { OwnerShell, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
-
-const SUBSCRIPTION_AMOUNT_CENTS = 14000; // $140.00 / month
+import Link from "next/link";
+import { OwnerShell } from "@/components/owner/OwnerShell";
 
 type BillingResponse = {
   ok: boolean;
@@ -54,23 +53,19 @@ const OwnerBillingSetupPage = () => {
     setPaying(true);
     setError(null);
     try {
-      const response = await fetch("/api/owner/billing/session", {
+      const response = await fetch("/api/owner/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          venueId,
-          intent: "subscribe",
-          amountCents: SUBSCRIPTION_AMOUNT_CENTS,
-        }),
+        body: JSON.stringify({ venueId }),
       });
-      const data = (await response.json()) as { ok: boolean; sessionUrl?: string; error?: string };
-      if (!data.ok || !data.sessionUrl) {
+      const data = (await response.json()) as { ok: boolean; url?: string; error?: string };
+      if (!data.ok || !data.url) {
         setError(data.error ?? "Could not start payment session. Please try again.");
         setPaying(false);
         return;
       }
-      // Redirect to SlimCD's hosted payment page
-      window.location.href = data.sessionUrl;
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
     } catch {
       setError("Network error. Please try again.");
       setPaying(false);
@@ -78,36 +73,44 @@ const OwnerBillingSetupPage = () => {
   };
 
   return (
-    <OwnerShell title="Set Up Your Subscription" subtitle="$140.00 / month">
-      {loading ? (
-        <p className="text-center text-sm text-slate-500">Loading…</p>
-      ) : error ? (
-        <p className="text-sm font-medium text-rose-600">{error}</p>
-      ) : !venueId ? (
-        <p className="text-sm text-slate-600">
-          We couldn&apos;t find a venue linked to your account. Please contact support.
-        </p>
-      ) : (
-        <>
-          <div className="mb-5 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
-            <div className="flex justify-between">
-              <span>Hightop Challenge Subscription</span>
-              <span className="font-semibold text-slate-900">$140.00 / mo</span>
-            </div>
+    <OwnerShell title="Set Up Your Subscription" subtitle="Unlock the app for your venue" maxWidth="lg" variant="dark">
+      <div className="space-y-5">
+        <Link
+          href="/owner/dashboard"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ht-exit-border bg-gradient-to-br from-ht-exit-from via-ht-exit-via to-ht-exit-to px-4 text-sm font-black text-ht-exit-text"
+        >
+          ← Dashboard
+        </Link>
+
+        {loading ? (
+          <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
+        ) : error ? (
+          <div className="rounded-xl bg-ht-rose-500/15 px-4 py-3 text-sm font-bold text-ht-rose-300">{error}</div>
+        ) : !venueId ? (
+          <div className="rounded-2xl border border-ht-hairline bg-ht-surface p-6 text-center text-sm font-semibold text-ht-muted shadow-ht-card">
+            We couldn&apos;t find a venue linked to your account. Please contact support.
           </div>
-          <p className="mb-5 text-sm text-slate-500">
-            Clicking the button below will take you to a secure payment page to enter your card details.
-          </p>
-          <button
-            type="button"
-            onClick={handlePay}
-            disabled={paying}
-            className={`${ownerPrimaryButtonClass} w-full disabled:opacity-60`}
-          >
-            {paying ? "Redirecting to payment…" : "Subscribe — $140.00/mo"}
-          </button>
-        </>
-      )}
+        ) : (
+          <div className="rounded-2xl border border-indigo-400/40 bg-ht-surface p-6 shadow-ht-card">
+            <p className="text-[11px] font-black uppercase tracking-wider text-ht-indigo-300">Venue Pro</p>
+            <div className="mt-1 font-black text-ht-primary">
+              <span className="text-4xl">$140</span>
+              <span className="text-base text-ht-muted"> /mo</span>
+            </div>
+            <p className="mt-4 text-sm font-semibold text-ht-muted">
+              You&apos;ll be taken to Stripe&apos;s secure checkout to enter your card. Cancel anytime.
+            </p>
+            <button
+              type="button"
+              onClick={handlePay}
+              disabled={paying}
+              className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-ht-cyan-500 px-4 font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px disabled:opacity-60"
+            >
+              {paying ? "Redirecting to payment…" : "Subscribe — $140/mo"}
+            </button>
+          </div>
+        )}
+      </div>
     </OwnerShell>
   );
 };

@@ -5,6 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ContactForm } from "@/components/info/ContactForm";
 import { GameShowcaseBlock, type GameShowcase } from "@/components/info/AnnotatedScreenshot";
+import { gameHref } from "@/lib/domainSplit";
+
+// Game CTAs point at the player game, which moves to `play.` under the domain
+// split — gameHref stays relative while the split is off. The apex is marketing,
+// so it hosts this page and the Partner Login (/owner/login) directly.
+const PLAY_HREF = gameHref("/");
+const JOIN_HREF = gameHref("/join");
 
 const TRIVIA_SHOWCASES: GameShowcase[] = [
   {
@@ -330,7 +337,7 @@ export default function InfoPage() {
               <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">How It Works</a>
               <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Pricing</a>
               <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Contact</a>
-              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">
+              <Link href={PLAY_HREF} onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">
                 Play now
               </Link>
               <a
@@ -382,7 +389,7 @@ export default function InfoPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
-                href="/join"
+                href={JOIN_HREF}
                 className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 px-10 py-5 text-lg font-black text-slate-950 htm-btn-glow shadow-lg shadow-cyan-400/25 hover:shadow-cyan-400/40 transition-all"
               >
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-950/20">

@@ -606,6 +606,21 @@ export async function endVenueAutoSession(venueId: string): Promise<void> {
 }
 
 /**
+ * Abandon any active auto (engine-driven) session for a venue — used when an
+ * admin deletes the schedule out from under a running game. Unlike
+ * endVenueAutoSession, the in-progress round is NOT scored (the game is being
+ * discarded, not finished), so players fall back to the lobby instead of a
+ * Game Over screen. Points already awarded by earlier completed rounds are
+ * left untouched. Safe to call when no session exists; manual sessions are
+ * never touched, matching endVenueAutoSession's posture.
+ */
+export async function abandonVenueAutoSession(venueId: string): Promise<void> {
+  const session = await getActiveSession(venueId);
+  if (!session || session.source !== "auto") return;
+  await abandonSession(session.id);
+}
+
+/**
  * Score this venue's currently active round if its timer has already
  * expired. Best-effort: normally the player's own browser scores its round
  * the instant its timer hits zero, and the cron sweeps up anything nobody
@@ -958,6 +973,33 @@ export async function endSession(sessionId: string): Promise<void> {
 }
 
 /**
+ * Abandon a session: mark it 'abandoned' (distinct from 'complete') without
+ * scoring the in-progress round, and broadcast "session_abandoned" so clients
+ * drop back to the lobby instead of the Game Over screen. Because the status
+ * is not 'complete', getActiveSession and getRecentlyCompletedSession both
+ * ignore it — so a reload after abandoning shows the lobby, not a stale Game
+ * Over. Used when an admin deletes the schedule mid-game.
+ */
+export async function abandonSession(sessionId: string): Promise<void> {
+  assertAdmin();
+
+  const { data: sessionRow } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select("venue_id")
+    .eq("id", sessionId)
+    .maybeSingle<{ venue_id: string }>();
+
+  await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .update({ status: "abandoned", completed_at: new Date().toISOString() })
+    .eq("id", sessionId);
+
+  if (sessionRow?.venue_id) {
+    await broadcastCategoryBlitz(sessionRow.venue_id, "session_abandoned", { sessionId });
+  }
+}
+
+/**
  * Test-mode-only: force the current session past whatever it's waiting on
  * (answer timer, intermission, or lobby dwell) so a solo tester isn't stuck
  * watching real-time countdowns. Refuses anything but an auto session with
@@ -1033,6 +1075,54 @@ export async function skipRound(sessionId: string): Promise<CategoryBlitzSession
   // legitimately ended (e.g. skipped past the last round in the window) —
   // that's correct auto-end behavior, not an error.
   return driveVenueCategoryBlitz(sessionRow.venue_id, now);
+}
+
+/**
+ * Test-mode-only dev convenience: flip an already-running auto session's
+ * `test_mode` column to true so a tester who turned the toggle on AFTER the
+ * session was created can still get the Skip-round tooling — instead of
+ * waiting for the current session to end and a fresh one to be born in test
+ * mode (the only other way `test_mode` becomes true, at create time in
+ * driveVenueCategoryBlitz). Idempotent: a session that's already test mode is
+ * returned unchanged. Refuses anything but a lobby/active auto session, and
+ * reads the row fresh here rather than trusting the caller — the same DB-row
+ * posture as skipRound. This is purely a column flip; it invents no new state
+ * transitions and hands nothing to the engine, so the next natural read (poll)
+ * simply sees the session as test mode.
+ */
+export async function enableSessionTestMode(sessionId: string): Promise<CategoryBlitzSession | null> {
+  assertAdmin();
+
+  const { data: sessionRow, error: sessionErr } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select(SESSION_COLS)
+    .eq("id", sessionId)
+    .maybeSingle<SessionRow>();
+
+  if (sessionErr || !sessionRow) {
+    throw new Error("Session not found.");
+  }
+  if (sessionRow.source !== "auto") {
+    throw new Error("Test mode is only available for auto-scheduled sessions.");
+  }
+  if (!["lobby", "active"].includes(sessionRow.status)) {
+    throw new Error(`Cannot enable test mode on a session with status '${sessionRow.status}'.`);
+  }
+  if (sessionRow.test_mode) {
+    return withPlayerCount(toSession(sessionRow));
+  }
+
+  const { data: updated, error: updateErr } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .update({ test_mode: true })
+    .eq("id", sessionId)
+    .select(SESSION_COLS)
+    .maybeSingle<SessionRow>();
+
+  if (updateErr || !updated) {
+    throw new Error("Failed to enable test mode.");
+  }
+  return withPlayerCount(toSession(updated));
 }
 
 // ── Presence / spectator role ────────────────────────────────────────────────

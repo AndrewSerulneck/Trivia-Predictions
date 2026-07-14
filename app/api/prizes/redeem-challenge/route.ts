@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { redeemChallengePrize } from "@/lib/challengeCampaigns";
+import { maybeRequireActiveVenuePresence, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
 function toClientErrorStatus(message: string): number {
   const normalized = message.toLowerCase();
@@ -34,9 +35,14 @@ export async function POST(request: Request) {
       );
     }
 
+    await maybeRequireActiveVenuePresence({ userId, venueId });
+
     const result = await redeemChallengePrize({ userId, venueId, challengeId });
     return NextResponse.json({ ok: true, result });
   } catch (error) {
+    const presenceResponse = venuePresenceErrorResponse(error);
+    if (presenceResponse) return presenceResponse;
+
     const message = error instanceof Error ? error.message : "Failed to redeem challenge prize.";
     return NextResponse.json({ ok: false, error: message }, { status: toClientErrorStatus(message) });
   }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
 import { submitAnswer } from "@/lib/categoryBlitz";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { maybeRequireActiveVenuePresence, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
 /** POST /api/category-blitz/rounds/[id]/submit — player submits an answer for one category */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -59,10 +60,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ ok: false, error: "Could not resolve user." }, { status: 400 });
     }
 
+    await maybeRequireActiveVenuePresence({ userId, venueId });
+
     const { id: roundId } = await params;
     const submission = await submitAnswer({ roundId, userId, authId, venueId, categoryIndex, answer });
     return NextResponse.json({ ok: true, submission });
   } catch (error) {
+    const presenceResponse = venuePresenceErrorResponse(error);
+    if (presenceResponse) return presenceResponse;
+
     const message = error instanceof Error ? error.message : "Failed to submit answer.";
     const status =
       message.includes("spectating") ? 403 :

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import type { ChallengeCampaign } from "@/types";
 
@@ -168,6 +169,7 @@ function gameTypeLabel(gameTypes: string[]): string {
 
 export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
   const router = useRouter();
+  const venuePresence = useVenuePresence();
   const [userId, setUserId] = useState("");
   const [wins, setWins] = useState<ChallengeWin[]>([]);
   const [activeCampaigns, setActiveCampaigns] = useState<CampaignSnapshot[]>([]);
@@ -275,6 +277,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
     async (win: ChallengeWin, sourceRect: DOMRect) => {
       const key = claimKey(win);
       if (!userId || !venueId || !win.challengeId || claimingId || win.claimedAt) return;
+      if (venuePresence.isInteractionBlocked) return;
       setClaimingId(key);
       setErrorMessage("");
       setStatusMessage("");
@@ -286,9 +289,15 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
         });
         const payload = (await response.json()) as {
           ok: boolean;
+          code?: string;
           result?: { claimed: boolean; challengeName: string };
           error?: string;
+          userMessage?: string;
         };
+        const presenceFailure = venuePresence.capturePresenceFailure(payload);
+        if (presenceFailure) {
+          throw new Error(presenceFailure.userMessage);
+        }
         if (!payload.ok || !payload.result) {
           throw new Error(payload.error ?? "Failed to redeem challenge prize.");
         }
@@ -320,7 +329,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [claimingId, load, userId, venueId]
+    [claimingId, load, userId, venueId, venuePresence]
   );
 
   return (

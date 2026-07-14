@@ -5,6 +5,7 @@ import { DEFAULT_VENUE_BY_ID } from "@/lib/defaultVenues";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { normalizePin as normalizeCanonicalPin } from "@/lib/pin";
 import { createSessionCookie, isSessionEnforced, readSession } from "@/lib/serverSession";
+import { recordVerifiedVenuePresence } from "@/lib/venuePresence";
 import {
   calculateDistanceMeters,
   getGeofenceThresholdMeters,
@@ -12,7 +13,17 @@ import {
   type GeofenceCoordinates,
 } from "@/lib/geofence";
 
-function userResponse(userId: string, data: Record<string, unknown>): NextResponse {
+async function userResponse(userId: string, data: Record<string, unknown>): Promise<NextResponse> {
+  const user = data.user as { venueId?: unknown } | undefined;
+  const venueId = String(user?.venueId ?? "").trim();
+  if (venueId) {
+    await recordVerifiedVenuePresence({
+      userId,
+      venueId,
+      source: "join",
+    });
+  }
+
   const res = NextResponse.json(data);
   res.headers.append("Set-Cookie", createSessionCookie(userId));
   return res;

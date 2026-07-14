@@ -20,10 +20,10 @@ import ValidAnswerGlow from "@/components/category-blitz/ValidAnswerGlow";
 import WrongLetterReject from "@/components/category-blitz/WrongLetterReject";
 import TimerUrgency from "@/components/category-blitz/TimerUrgency";
 import SubmitLockAnimation from "@/components/category-blitz/SubmitLockAnimation";
-import NextRoundCountdown from "@/components/category-blitz/NextRoundCountdown";
 import IntermissionStatus from "@/components/category-blitz/IntermissionStatus";
 import SessionCompleteFireworks from "@/components/category-blitz/SessionCompleteFireworks";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
+import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import DevAnimationPanel from "@/components/category-blitz/DevAnimationPanel";
 import { RankBadge } from "@/components/trivia/RankBadge";
 import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
@@ -798,6 +798,7 @@ export function AnsweringScreen({
   mode?: CategoryBlitzMode;
 }) {
   const theme = GAME_THEME[MODE_CONFIG[mode].themeKey];
+  const venuePresence = useVenuePresence();
   const [answers, setAnswers] = useState<string[]>(() => Array(12).fill(""));
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -816,18 +817,23 @@ export function AnsweringScreen({
 
   const autosaveAnswer = useCallback(
     (categoryIndex: number, answer: string) => {
-      if (!answer || lastAutosavedRef.current[categoryIndex] === answer) return;
+      if (venuePresence.isInteractionBlocked || !answer || lastAutosavedRef.current[categoryIndex] === answer) return;
       lastAutosavedRef.current[categoryIndex] = answer;
       void fetch(`/api/category-blitz/rounds/${roundId}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ venueId, userId, categoryIndex, answer }),
-      }).catch(() => {
-        // Best-effort — if this fails, the final submit-on-expiry resends
-        // every filled category anyway, so nothing is silently lost.
-      });
+      })
+        .then(async (response) => {
+          const payload = (await response.json().catch(() => null)) as unknown;
+          venuePresence.capturePresenceFailure(payload);
+        })
+        .catch(() => {
+          // Best-effort — if this fails, the final submit-on-expiry resends
+          // every filled category anyway, so nothing is silently lost.
+        });
     },
-    [roundId, venueId, userId]
+    [roundId, venueId, userId, venuePresence]
   );
 
   useEffect(() => {
@@ -879,7 +885,7 @@ export function AnsweringScreen({
   }, []);
 
   const submitAnswers = useCallback(async () => {
-    if (submittedRef.current || isSpectating) return;
+    if (submittedRef.current || isSpectating || venuePresence.isInteractionBlocked) return;
     submittedRef.current = true;
     setSubmitState("submitting");
     setErrorMsg("");
@@ -906,16 +912,23 @@ export function AnsweringScreen({
           })
         )
       );
-      if (responses.some((r) => !r.ok)) {
-        throw new Error("Submission failed.");
+      for (const response of responses) {
+        const payload = (await response.json().catch(() => null)) as unknown;
+        const presenceFailure = venuePresence.capturePresenceFailure(payload);
+        if (presenceFailure) {
+          throw new Error(presenceFailure.userMessage);
+        }
+        if (!response.ok) {
+          throw new Error("Submission failed.");
+        }
       }
       setSubmitState("done");
-    } catch {
+    } catch (error) {
       submittedRef.current = false;
       setSubmitState("error");
-      setErrorMsg("Submission failed. Please try again.");
+      setErrorMsg(error instanceof Error ? error.message : "Submission failed. Please try again.");
     }
-  }, [answers, roundId, venueId, userId, isSpectating]);
+  }, [answers, roundId, venueId, userId, isSpectating, venuePresence]);
 
   const submitAnswersRef = useRef(submitAnswers);
 
@@ -925,11 +938,11 @@ export function AnsweringScreen({
 
   // Auto-submit when timer hits zero — deferred so the effect doesn't trigger cascading state updates.
   useEffect(() => {
-    if (!isExpired || timerWasZeroRef.current || submitState !== "idle" || isSpectating) return;
+    if (!isExpired || timerWasZeroRef.current || submitState !== "idle" || isSpectating || venuePresence.isInteractionBlocked) return;
     timerWasZeroRef.current = true;
     const t = window.setTimeout(() => { void submitAnswersRef.current(); }, 0);
     return () => window.clearTimeout(t);
-  }, [isExpired, submitState, isSpectating]);
+  }, [isExpired, submitState, isSpectating, venuePresence.isInteractionBlocked]);
 
   if (submitState === "done") {
     return (
@@ -1204,6 +1217,15 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     return () => window.clearTimeout(hydrateId);
   }, []);
 
+  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry, markRevealDone, markResultsRevealDone, dismissComplete } = useCategoryBlitzSession(
+    isHydrated ? venueId : "",
+    isHydrated ? userId : ""
+  );
+  const { triggerAnimation } = useAnimationTrigger();
+
+  // Turning the toggle on force-converts the live auto session to test mode —
+  // see the effect below (keyed on session.id), which handles both this and
+  // the already-on-at-load case.
   const toggleTestMode = useCallback(() => {
     setTestMode((prev) => {
       const next = !prev;
@@ -1211,12 +1233,6 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
       return next;
     });
   }, []);
-
-  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry, markRevealDone, markResultsRevealDone, dismissComplete } = useCategoryBlitzSession(
-    isHydrated ? venueId : "",
-    isHydrated ? userId : ""
-  );
-  const { triggerAnimation } = useAnimationTrigger();
 
   // Dev-only: force the current wait (answer timer, intermission, or lobby
   // dwell) to elapse immediately instead of watching real-time countdowns.
@@ -1226,18 +1242,43 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   // truth) rather than just the local toggle avoids showing a button that
   // would just 403 against a real session.
   const [isSkippingRound, setIsSkippingRound] = useState(false);
+
+  // If test mode is already on (persisted from a prior visit) when a
+  // non-test auto session comes into view, force-convert it once so the
+  // Skip-round button appears without the tester having to re-toggle. Keyed on
+  // session.id so it fires at most once per session; the flipped column
+  // arrives on the next poll.
+  const convertedSessionRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!testMode || !session?.id || session.source !== "auto" || session.testMode) return;
+    if (!["lobby", "active"].includes(session.status)) return;
+    if (convertedSessionRef.current === session.id) return;
+    convertedSessionRef.current = session.id;
+    void fetch(`/api/category-blitz/sessions/${session.id}/enable-test-mode`, { method: "POST" }).catch(() => {
+      // Best-effort dev tooling — poll keeps showing current state on failure.
+    });
+  }, [testMode, session?.id, session?.source, session?.testMode, session?.status]);
+
   const canSkipRound = testMode && !!session?.testMode && (session?.status === "lobby" || session?.status === "active");
   const skipRound = useCallback(() => {
     if (!session?.id || isSkippingRound) return;
     setIsSkippingRound(true);
     void fetch(`/api/category-blitz/sessions/${session.id}/skip-round`, { method: "POST" })
+      .then((res) => {
+        // Don't wait for the 15s fallback poll (or a realtime push that may
+        // lag) to reflect the skip — the endpoint has already advanced the
+        // server state by the time it responds, so reload immediately for a
+        // snappy, near-instant transition. Only on success; a failed skip left
+        // the state unchanged, so a reload would just re-show the same thing.
+        if (res.ok) retry();
+      })
       .catch(() => {
         // Best-effort — the realtime subscription/poll will simply keep
         // showing the current state if this fails, same as any other
         // dropped dev-tooling request.
       })
       .finally(() => setIsSkippingRound(false));
-  }, [session, isSkippingRound]);
+  }, [session, isSkippingRound, retry]);
 
   // The round in play right now drives the whole page's ambient color world
   // (§4c) — "Blend In!" for the round's full duration (answering → scoring →
@@ -1446,40 +1487,13 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     [markResultsRevealDone]
   );
 
-  // Next-round countdown: a full-screen "get ready" beat for the final 5s of
-  // intermission, after the grading cascade has finished. Keyed on roundId so
-  // it plays once per round's intermission rather than retriggering on every
-  // 250ms timer tick while nextRoundStartsIn sits at/under the threshold.
-  const [countdownDoneRoundId, setCountdownDoneRoundId] = useState<string | null>(null);
-  const NEXT_ROUND_COUNTDOWN_THRESHOLD_SECONDS = 5;
-
-  // Memoized so the ~4x/sec timer re-renders don't hand NextRoundCountdown a
-  // fresh onZero identity on every tick and stall its internal setTimeout
-  // (same pattern as gradingAnswers above — see GradingCascade comment).
-  const handleCountdownZero = useCallback(() => {
-    setCountdownDoneRoundId(results?.roundId ?? null);
-  }, [results]);
-  const showNextRoundCountdown =
+  // Leaderboard exit beat: rows accelerate up/out as intermission runs out,
+  // just before the round flips over.
+  const leaderboardExiting =
     phase === "results" &&
     !!results &&
     nextRoundStartsIn !== null &&
-    nextRoundStartsIn > 0 &&
-    nextRoundStartsIn <= NEXT_ROUND_COUNTDOWN_THRESHOLD_SECONDS &&
-    results.roundId !== countdownDoneRoundId;
-
-  // Phase 4 EXIT transition: delay the countdown overlay's actual mount by
-  // 200ms so the leaderboard's own exit animation (rows accelerate up/out,
-  // triggered immediately below via `leaderboardExiting`) has time to play
-  // before the overlay appears on top of it.
-  const [countdownOverlayVisible, setCountdownOverlayVisible] = useState(false);
-  useEffect(() => {
-    if (!showNextRoundCountdown) return;
-    const id = window.setTimeout(() => setCountdownOverlayVisible(true), 200);
-    return () => {
-      window.clearTimeout(id);
-      setCountdownOverlayVisible(false);
-    };
-  }, [showNextRoundCountdown]);
+    nextRoundStartsIn <= 1;
 
   // True once the session is complete and the viewer placed first.
   const isChampion = useMemo(() => {
@@ -1618,12 +1632,6 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         </button>
       )}
       {testMode && <DevAnimationPanel />}
-      {countdownOverlayVisible && (
-        <NextRoundCountdown
-          secondsUntilNextRound={nextRoundStartsIn ?? 0}
-          onZero={handleCountdownZero}
-        />
-      )}
 
       {/* Phase content */}
       {(phase === "idle" || phase === "lobby") && (
@@ -1686,7 +1694,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
           userId={userId}
           nextRoundStartsIn={nextRoundStartsIn}
           playerCount={session?.playerCount}
-          leaderboardExiting={showNextRoundCountdown}
+          leaderboardExiting={leaderboardExiting}
         />
       )}
       {phase === "complete" && (

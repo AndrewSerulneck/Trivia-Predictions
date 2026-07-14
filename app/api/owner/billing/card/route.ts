@@ -1,3 +1,7 @@
+// DEPRECATED (SlimCD): superseded by the Stripe billing flow — POST /api/owner/billing/checkout,
+// POST /api/owner/billing/portal, and the webhook /api/webhooks/stripe. Retained only
+// for any legacy subscriptions created before the Stripe cutover; no new code should
+// call this route. Slated for removal once no active SlimCD subscriptions remain.
 import { NextResponse } from "next/server";
 
 // This route has been replaced by the Secure Sessions flow:

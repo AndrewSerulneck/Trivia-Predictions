@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTriviaQuestions, submitTriviaAnswer, TriviaLimitReachedError } from "@/lib/trivia";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
+import { maybeRequireActiveVenuePresenceForUser, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -32,6 +33,8 @@ export async function POST(request: Request) {
     }
     const userId = sessionUserId ?? body.userId;
 
+    await maybeRequireActiveVenuePresenceForUser({ userId: String(userId ?? "").trim() });
+
     const result = await submitTriviaAnswer({
       userId,
       questionId: body.questionId,
@@ -47,6 +50,9 @@ export async function POST(request: Request) {
         { status: 429 }
       );
     }
+    const presenceResponse = venuePresenceErrorResponse(error);
+    if (presenceResponse) return presenceResponse;
+
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to submit answer." },
       { status: 500 }

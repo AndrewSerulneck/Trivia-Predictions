@@ -694,6 +694,29 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         // that reconnected right at the end and never saw that broadcast.
         if (sessionIdRef.current) void loadFinalResults(sessionIdRef.current);
       })
+      .on("broadcast", { event: "session_abandoned" }, () => {
+        // Admin deleted the schedule mid-game — the session is discarded, not
+        // finished. Snap straight back to the lobby (phase "idle") instead of
+        // the Game Over screen, clearing any round/results/deferred transition
+        // so a late markResultsRevealDone can't revive the dead session. Then
+        // reconcile with the server (which no longer returns this session) to
+        // pick up the venue's next scheduled window for the idle countdown.
+        if (!active || !mountedRef.current) return;
+        setSession(null);
+        sessionIdRef.current = null;
+        setRound(null);
+        setResults(null);
+        setViewerRole(null);
+        setTimeRemaining(0);
+        setNextRoundStartsIn(null);
+        setLobbyCountdown(null);
+        endsAtRef.current = null;
+        lobbyStartsAtRef.current = null;
+        pendingActiveRoundRef.current = null;
+        pendingPhaseRef.current = null;
+        setPhase("idle");
+        void loadSessionRef.current();
+      })
       .subscribe((status) => {
         if (!mountedRef.current) return;
         setIsConnected(status === "SUBSCRIBED");

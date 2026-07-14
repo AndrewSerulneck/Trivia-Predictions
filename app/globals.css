@@ -138,6 +138,14 @@
   --ht-game-fantasy-primary:  #7c3aed;
   --ht-game-fantasy-secondary:#06b6d4;
 
+  /* Category Blitz — fuchsia → violet (complementary to Live Trivia's cyan;
+     true cyan-complement red-orange is reserved for the exit pill) */
+  --ht-game-blitz:       linear-gradient(132deg, #d946ef 0%, #a21caf 48%, #7c3aed 100%);
+  /* Billing / Partner Dashboard neutral — indigo */
+  --ht-game-billing:     linear-gradient(132deg, #6366f1 0%, #4f46e5 55%, #4338ca 100%);
+  /* Venue Display icon — cyan home-base */
+  --ht-game-display:     linear-gradient(132deg, #0891b2 0%, #0ea5e9 100%);
+
   /* -----------------------------------------------------------
      FOCUS RING — always cyan, always 2px halo
      ----------------------------------------------------------- */
@@ -1877,6 +1885,20 @@ a[role="button"][class*="text-[11px]"] {
   .tp-timer-panic { animation: none !important; }
 }
 
+/* ===== Category Blitz — IntermissionStatus urgency (tp-*) ===== */
+
+@keyframes tp-countdown-urgent {
+  0%, 100% { color: rgb(52, 211, 153); text-shadow: 0 0 0 rgba(52, 211, 153, 0); }
+  50%      { color: rgb(251, 191, 36); text-shadow: 0 0 14px rgba(251, 191, 36, 0.55); }
+}
+.tp-countdown-urgent {
+  animation: tp-countdown-urgent 0.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-countdown-urgent { animation: none !important; color: rgb(52, 211, 153); }
+}
+
 /* ===== Category Blitz — SubmitLockAnimation (tp-*) ===== */
 
 @keyframes tp-lock-shimmer {
@@ -1907,19 +1929,6 @@ a[role="button"][class*="text-[11px]"] {
   .tp-lock-seal { animation: none !important; }
 }
 
-/* ===== Category Blitz — NextRoundCountdown (tp-*) ===== */
-
-@keyframes tp-count-glow {
-  0%, 100% { text-shadow: 0 0 0 currentColor; }
-  50%      { text-shadow: 0 0 24px currentColor; }
-}
-.tp-count-glow {
-  animation: tp-count-glow 0.5s ease-out both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tp-count-glow { animation: none !important; }
-}
 
 /* ===== Category Blitz — SessionCompleteFireworks (tp-*) ===== */
 

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { readSelectedBingoGame } from "@/lib/bingoSelectedGameCache";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 
 type BingoGame = {
   id: string;
@@ -235,6 +236,7 @@ function getGeneratingLoaderVariant(sportKey: string): {
 export function SportsBingoSelectBoard() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const venuePresence = useVenuePresence();
 
   const sportKey = (searchParams.get("sportKey") ?? "basketball_nba").trim() || "basketball_nba";
   const gameId = (searchParams.get("gameId") ?? "").trim();
@@ -419,6 +421,9 @@ export function SportsBingoSelectBoard() {
       setErrorMessage("Join a venue before locking this card.");
       return;
     }
+    if (venuePresence.isInteractionBlocked) {
+      return;
+    }
 
     setPlaying(true);
     setErrorMessage("");
@@ -440,7 +445,11 @@ export function SportsBingoSelectBoard() {
           })),
         }),
       });
-      const payload = (await response.json()) as PlayResponse;
+      const payload = (await response.json()) as PlayResponse & { code?: string; userMessage?: string };
+      const presenceFailure = venuePresence.capturePresenceFailure(payload);
+      if (presenceFailure) {
+        throw new Error(presenceFailure.userMessage);
+      }
       if (!payload.ok || !payload.card) {
         throw new Error(payload.error ?? "Failed to lock your bingo card.");
       }
@@ -451,7 +460,7 @@ export function SportsBingoSelectBoard() {
     } finally {
       setPlaying(false);
     }
-  }, [preview, router, userId, venueId]);
+  }, [preview, router, userId, venueId, venuePresence]);
 
   const renderPreviewGrid = (squares: BingoBoardSquare[]) => {
     const byIndex = new Map<number, BingoBoardSquare>();

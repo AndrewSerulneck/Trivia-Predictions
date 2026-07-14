@@ -91,6 +91,11 @@ const config: Config = {
             400: "#e879f9",
             500: "#d946ef",
           },
+          indigo: {
+            300: "#a5b4fc",
+            400: "#818cf8",
+            500: "#6366f1",
+          },
           rose: {
             300: "#fda4af",
             400: "#fb7185",
@@ -109,6 +114,12 @@ const config: Config = {
         "ht-canvas": "var(--ht-canvas)",
         "ht-surface": "var(--ht-surface)",
         "ht-elevated": "var(--ht-elevated)",
+      },
+      backgroundImage: {
+        "ht-game-live": "var(--ht-game-live)",
+        "ht-game-blitz": "var(--ht-game-blitz)",
+        "ht-game-billing": "var(--ht-game-billing)",
+        "ht-game-display": "var(--ht-game-display)",
       },
       borderColor: {
         "ht-hairline": "var(--ht-border-hairline)",

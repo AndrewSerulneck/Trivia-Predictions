@@ -10,6 +10,7 @@ type SubscriptionRow = {
   status: string;
   current_period_start: string | null;
   current_period_end: string | null;
+  cancel_at_period_end: boolean;
   slimcd_recurring_token: string | null;
   created_at: string;
 };
@@ -42,7 +43,9 @@ export async function GET(request: Request) {
 
   const { data: subscriptions, error: subError } = await supabaseAdmin
     .from("billing_subscriptions")
-    .select("id, venue_id, plan_type, amount_cents, status, current_period_start, current_period_end, slimcd_recurring_token, created_at")
+    .select(
+      "id, venue_id, plan_type, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, slimcd_recurring_token, created_at"
+    )
     .in("venue_id", auth.venueIds)
     .returns<SubscriptionRow[]>();
 
@@ -73,6 +76,7 @@ export async function GET(request: Request) {
       status: s.status,
       currentPeriodStart: s.current_period_start,
       currentPeriodEnd: s.current_period_end,
+      cancelAtPeriodEnd: s.cancel_at_period_end,
       hasPaymentMethod: Boolean(s.slimcd_recurring_token),
       createdAt: s.created_at,
     })),

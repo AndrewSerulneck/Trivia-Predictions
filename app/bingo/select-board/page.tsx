@@ -1,6 +1,7 @@
 import { PageShell } from "@/components/ui/PageShell";
 import { BackButton } from "@/components/navigation/BackButton";
 import { SportsBingoSelectBoard } from "@/components/bingo/SportsBingoSelectBoard";
+import { VenuePresenceBoundary } from "@/components/venue/VenuePresenceBoundary";
 import { APP_PAGE_NAMES } from "@/lib/pageNames";
 
 export default async function SportsBingoSelectBoardPage({
@@ -21,7 +22,9 @@ export default async function SportsBingoSelectBoardPage({
     >
       <div className="h-full space-y-4 overflow-y-auto pr-1">
         <BackButton href={backHref} label="Back" preferHref />
-        <SportsBingoSelectBoard />
+        <VenuePresenceBoundary>
+          <SportsBingoSelectBoard />
+        </VenuePresenceBoundary>
       </div>
     </PageShell>
   );

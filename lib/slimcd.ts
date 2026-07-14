@@ -1,6 +1,11 @@
 import "server-only";
 
 /**
+ * DEPRECATED: billing has migrated to Stripe (lib/stripe.ts + /api/webhooks/stripe).
+ * This module is retained only to service any subscriptions created before the
+ * Stripe cutover. Do not wire new flows through it; remove once no active SlimCD
+ * subscriptions remain.
+ *
  * SlimCD server-side integration — Secure Sessions & Hosted Payment Pages.
  *
  * Contract verified against "SLIM CD Secure Sessions & Hosted Payment Pages"

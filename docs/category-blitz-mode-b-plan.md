@@ -110,7 +110,7 @@ export const MODE_CONFIG: Record<CategoryBlitzMode, {
   rule: string;           // one-line instruction shown in takeover + board header
   themeKey: string;       // key into themeTokens color set
 }> = {
-  standard: { puckLabel: "Be Unique!", rule: "Unique answers win — be original.",      themeKey: "blitzStandard" },
+  standard: { puckLabel: "Be Unique!", rule: "Only unique answers win points — be original.",      themeKey: "blitzStandard" },
   reverse:  { puckLabel: "Blend In!",  rule: "Match the crowd — popular answers win.", themeKey: "blitzReverse"  },
 };
 

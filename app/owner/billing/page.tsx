@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { OwnerShell, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
+import { OwnerShell } from "@/components/owner/OwnerShell";
 
 type Subscription = {
   id: string;
@@ -12,6 +12,7 @@ type Subscription = {
   amountCents: number;
   status: "active" | "past_due" | "cancelled";
   currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
   hasPaymentMethod: boolean;
 };
 
@@ -28,10 +29,19 @@ const formatDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—";
 
 const invoiceStatusStyles: Record<Invoice["status"], string> = {
-  paid: "text-emerald-600",
-  failed: "text-rose-600",
-  pending: "text-amber-600",
+  paid: "text-ht-emerald-300",
+  failed: "text-ht-rose-300",
+  pending: "text-ht-amber-300",
 };
+
+const subStatus: Record<Subscription["status"], { tone: string; dot: string; label: string }> = {
+  active: { tone: "bg-ht-emerald-500/15 text-ht-emerald-300", dot: "bg-ht-emerald-400", label: "Active" },
+  past_due: { tone: "bg-ht-rose-500/15 text-ht-rose-300", dot: "bg-ht-rose-400", label: "Payment due" },
+  cancelled: { tone: "bg-ht-elevated text-ht-muted", dot: "bg-slate-500", label: "Cancelled" },
+};
+
+const displayStatus = (subscription: Subscription): Subscription["status"] =>
+  subscription.cancelAtPeriodEnd ? "cancelled" : subscription.status;
 
 function bannerFromParams(
   success: string | null,
@@ -39,8 +49,6 @@ function bannerFromParams(
 ): { text: string; kind: "success" | "error" | "warn" } | null {
   if (success === "subscribed") return { text: "Subscription activated. Welcome aboard!", kind: "success" };
   if (success === "card-updated") return { text: "Payment method updated successfully.", kind: "success" };
-  if (success === "subscribed" && error === "invoice=pending")
-    return { text: "Payment received. Invoice is being recorded — check back shortly.", kind: "warn" };
   if (error === "payment-declined") return { text: "Payment was declined. Please try a different card.", kind: "error" };
   if (error === "incomplete") return { text: "Payment was not completed. Please try again.", kind: "error" };
   if (error === "db&payment=ok")
@@ -50,10 +58,21 @@ function bannerFromParams(
 }
 
 const bannerStyles = {
-  success: "bg-emerald-50 text-emerald-800",
-  error: "bg-rose-50 text-rose-800",
-  warn: "bg-amber-50 text-amber-800",
+  success: "bg-ht-emerald-500/15 text-ht-emerald-300",
+  error: "bg-ht-rose-500/15 text-ht-rose-300",
+  warn: "bg-ht-amber-500/15 text-ht-amber-300",
 };
+
+const cardLabelClass = "text-[11px] font-black uppercase tracking-wider text-ht-muted";
+
+const ExitPill = () => (
+  <Link
+    href="/owner/dashboard"
+    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ht-exit-border bg-gradient-to-br from-ht-exit-from via-ht-exit-via to-ht-exit-to px-4 text-sm font-black text-ht-exit-text"
+  >
+    ← Dashboard
+  </Link>
+);
 
 const OwnerBillingPage = () => {
   const router = useRouter();
@@ -99,18 +118,18 @@ const OwnerBillingPage = () => {
     setUpdatingCard(true);
     setActionMessage(null);
     try {
-      const response = await fetch("/api/owner/billing/session", {
+      const response = await fetch("/api/owner/billing/portal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ venueId: subscription.venueId, intent: "update_card" }),
+        body: JSON.stringify({ venueId: subscription.venueId }),
       });
-      const data = (await response.json()) as { ok: boolean; sessionUrl?: string; error?: string };
-      if (!data.ok || !data.sessionUrl) {
-        setActionMessage(data.error ?? "Could not start card update. Please try again.");
+      const data = (await response.json()) as { ok: boolean; url?: string; error?: string };
+      if (!data.ok || !data.url) {
+        setActionMessage(data.error ?? "Could not open billing portal. Please try again.");
         setUpdatingCard(false);
         return;
       }
-      window.location.href = data.sessionUrl;
+      window.location.href = data.url;
     } catch {
       setActionMessage("Network error. Please try again.");
       setUpdatingCard(false);
@@ -130,125 +149,154 @@ const OwnerBillingPage = () => {
       setActionMessage(data.error ?? "Failed to cancel.");
       return;
     }
-    setActionMessage("Subscription cancelled.");
+    setActionMessage("Subscription will cancel at the end of your billing period.");
+    // Reflect it immediately — don't make the owner wait on a webhook round-trip
+    // (or a manual page refresh) to see the cancellation took effect.
+    setSubscription((prev) => (prev ? { ...prev, cancelAtPeriodEnd: true } : prev));
     await refresh();
   };
 
   return (
-    <OwnerShell title="Billing" maxWidth="lg">
+    <OwnerShell title="Billing" subtitle="Subscription, payment & invoices" maxWidth="lg" variant="dark">
       {loading ? (
-        <p className="text-center text-sm text-slate-500">Loading…</p>
+        <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
       ) : !subscription ? (
-        <div className="space-y-4">
+        <div className="space-y-5">
+          <ExitPill />
           {banner ? (
-            <div className={`rounded-lg px-4 py-3 text-sm font-medium ${bannerStyles[banner.kind]}`}>
-              {banner.text}
-            </div>
+            <div className={`rounded-xl px-4 py-3 text-sm font-bold ${bannerStyles[banner.kind]}`}>{banner.text}</div>
           ) : null}
-          <div className="space-y-4 text-center">
-            <p className="text-sm text-slate-600">You don&apos;t have a subscription yet.</p>
-            <Link href="/owner/billing/setup" className={ownerPrimaryButtonClass}>
-              Set Up Subscription
+          <div className="rounded-2xl border border-ht-hairline bg-ht-surface p-8 text-center shadow-ht-card">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ht-game-billing text-2xl">
+              💳
+            </div>
+            <p className="ht-h2 mt-4">No subscription yet</p>
+            <p className="mt-2 text-sm font-semibold text-ht-muted">
+              Subscribe to unlock the geofenced app for your venue and let your guests play.
+            </p>
+            <Link
+              href="/owner/billing/setup"
+              className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-ht-cyan-500 px-4 font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px"
+            >
+              Set up subscription
             </Link>
           </div>
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* Return-URL banner (success/error from SlimCD redirect) */}
+        <div className="space-y-5">
+          <ExitPill />
+
           {banner ? (
-            <div className={`rounded-lg px-4 py-3 text-sm font-medium ${bannerStyles[banner.kind]}`}>
-              {banner.text}
-            </div>
+            <div className={`rounded-xl px-4 py-3 text-sm font-bold ${bannerStyles[banner.kind]}`}>{banner.text}</div>
           ) : actionMessage ? (
-            <div className="rounded-lg bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-700">
-              {actionMessage}
-            </div>
+            <div className="rounded-xl bg-ht-cyan-500/15 px-4 py-3 text-sm font-bold text-ht-cyan-300">{actionMessage}</div>
           ) : null}
 
-          {/* Current Plan */}
-          <section className="rounded-xl border border-slate-200 p-5">
-            <h2 className="mb-3 text-lg font-bold text-slate-900">Current Plan</h2>
-            <dl className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-slate-500">Plan</dt>
-                <dd className="font-medium capitalize text-slate-900">{subscription.planType}</dd>
+          {/* Subscription card — indigo glow */}
+          <div className="relative overflow-hidden rounded-2xl border border-indigo-400/40 bg-ht-surface p-5 shadow-ht-card">
+            <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-ht-game-billing opacity-20 blur-2xl" />
+            <div className="relative">
+              <div className="mb-2 flex items-start justify-between">
+                <span className="text-[22px] font-black uppercase tracking-wider text-ht-indigo-300">
+                  {subscription.planType}
+                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[21px] font-black uppercase tracking-wider ${subStatus[displayStatus(subscription)].tone}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${subStatus[displayStatus(subscription)].dot}`} />
+                    {subStatus[displayStatus(subscription)].label}
+                  </span>
+                  {subscription.status === "cancelled" || subscription.cancelAtPeriodEnd ? (
+                    <Link
+                      href="/owner/billing/setup"
+                      className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ht-cyan-500 px-3 py-1 text-[24px] font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px"
+                    >
+                      Resubscribe
+                    </Link>
+                  ) : null}
+                </div>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-slate-500">Amount</dt>
-                <dd className="font-medium text-slate-900">{formatAmount(subscription.amountCents)} / mo</dd>
+              <div className="font-black text-ht-primary">
+                <span className="text-4xl">{`$${Math.round(subscription.amountCents / 100)}`}</span>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-slate-500">Status</dt>
-                <dd className="font-medium capitalize text-slate-900">{subscription.status.replace("_", " ")}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-slate-500">
-                  {subscription.status === "cancelled" ? "Access ends" : "Next billing date"}
-                </dt>
-                <dd className="font-medium text-slate-900">{formatDate(subscription.currentPeriodEnd)}</dd>
-              </div>
-            </dl>
-          </section>
+              <dl className="mt-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-ht-muted">
+                    {subscription.status === "cancelled" || subscription.cancelAtPeriodEnd
+                      ? "Access ends"
+                      : "Next billing date"}
+                  </dt>
+                  <dd className="font-bold text-ht-primary">{formatDate(subscription.currentPeriodEnd)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-ht-muted">Billing cycle</dt>
+                  <dd className="font-bold text-ht-primary">Monthly Subscription</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
 
-          {/* Payment Method */}
-          <section className="rounded-xl border border-slate-200 p-5">
-            <h2 className="mb-3 text-lg font-bold text-slate-900">Payment Method</h2>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">
+          {/* Payment method */}
+          <div>
+            <p className={`${cardLabelClass} mb-2`}>Payment method</p>
+            <div className="flex items-center gap-3 rounded-2xl border border-ht-hairline bg-ht-surface p-4 shadow-ht-card">
+              <div className="h-8 w-12 shrink-0 rounded-md bg-ht-elevated" />
+              <span className="flex-1 text-sm font-bold text-ht-secondary">
                 {subscription.hasPaymentMethod ? "Card on file" : "No card on file"}
               </span>
               <button
                 type="button"
                 onClick={handleUpdateCard}
                 disabled={updatingCard}
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+                className="text-sm font-black text-ht-cyan-300 transition hover:text-ht-cyan-200 disabled:opacity-50"
               >
-                {updatingCard ? "Redirecting…" : "Update Card"}
+                {updatingCard ? "Opening…" : "Update"}
               </button>
             </div>
-          </section>
-
-          {/* Invoice History */}
-          <section className="rounded-xl border border-slate-200 p-5">
-            <h2 className="mb-3 text-lg font-bold text-slate-900">Invoice History</h2>
-            {invoices.length === 0 ? (
-              <p className="text-sm text-slate-500">No invoices yet.</p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                    <th className="pb-2">Date</th>
-                    <th className="pb-2">Description</th>
-                    <th className="pb-2 text-right">Amount</th>
-                    <th className="pb-2 text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoices.map((invoice) => (
-                    <tr key={invoice.id} className="border-b border-slate-100">
-                      <td className="py-2 text-slate-600">{formatDate(invoice.chargedAt)}</td>
-                      <td className="py-2 text-slate-900">{invoice.description}</td>
-                      <td className="py-2 text-right font-medium text-slate-900">{formatAmount(invoice.amountCents)}</td>
-                      <td className={`py-2 text-right font-semibold capitalize ${invoiceStatusStyles[invoice.status]}`}>
-                        {invoice.status}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </section>
-
-          <div className="flex items-center justify-between">
-            <Link href="/owner/dashboard" className="text-sm text-slate-500 hover:text-slate-700">
-              ← Back to dashboard
-            </Link>
-            {subscription.status !== "cancelled" ? (
-              <button type="button" onClick={handleCancel} className="text-sm font-semibold text-rose-600 hover:text-rose-800">
-                Cancel Subscription
-              </button>
-            ) : null}
           </div>
+
+          {/* Invoices */}
+          <div>
+            <p className={`${cardLabelClass} mb-2`}>Invoices</p>
+            <div className="rounded-2xl border border-ht-hairline bg-ht-surface px-4 shadow-ht-card">
+              {invoices.length === 0 ? (
+                <p className="py-5 text-center text-sm font-semibold text-ht-muted">No invoices yet.</p>
+              ) : (
+                invoices.map((invoice, i) => (
+                  <div
+                    key={invoice.id}
+                    className={`flex items-center justify-between py-3 ${i > 0 ? "border-t border-ht-hairline" : ""}`}
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-ht-primary">{formatDate(invoice.chargedAt)}</div>
+                      <div className="truncate text-xs font-semibold text-ht-muted">{invoice.description}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="tabular-nums text-sm font-bold text-ht-primary">
+                        {formatAmount(invoice.amountCents)}
+                      </span>
+                      <span className={`text-xs font-black capitalize ${invoiceStatusStyles[invoice.status]}`}>
+                        {invoice.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {subscription.status !== "cancelled" && !subscription.cancelAtPeriodEnd ? (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="w-full py-2 text-center text-sm font-black text-ht-rose-400 transition hover:text-ht-rose-300"
+            >
+              Cancel subscription
+            </button>
+          ) : subscription.cancelAtPeriodEnd ? (
+            <p className="text-center text-sm font-semibold text-ht-muted">
+              You'll keep access until {formatDate(subscription.currentPeriodEnd)}.
+            </p>
+          ) : null}
         </div>
       )}
     </OwnerShell>

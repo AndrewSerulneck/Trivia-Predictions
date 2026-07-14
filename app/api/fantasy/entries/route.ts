@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { claimFantasyReward, collectFantasyLivePoints, debugFantasyScoring, listUserFantasyEntries, refreshFantasyProgress, submitFantasyEntry, updateFantasyEntryLineup } from "@/lib/fantasy";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
+import {
+  maybeRequireActiveVenuePresence,
+  maybeRequireActiveVenuePresenceForUser,
+  venuePresenceErrorResponse,
+} from "@/lib/venuePresence";
 
 function normalizeBoolean(value: string | null, fallback: boolean): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -93,6 +98,8 @@ export async function POST(request: Request) {
     const action = String(body.action ?? "").trim().toLowerCase();
 
     if (action === "claim") {
+      await maybeRequireActiveVenuePresenceForUser({ userId: mutationUserId });
+
       const result = await claimFantasyReward({
         userId: mutationUserId,
         entryId: String(body.entryId ?? "").trim(),
@@ -101,6 +108,8 @@ export async function POST(request: Request) {
     }
 
     if (action === "collect-live") {
+      await maybeRequireActiveVenuePresenceForUser({ userId: mutationUserId });
+
       const result = await collectFantasyLivePoints({
         userId: mutationUserId,
         entryId: String(body.entryId ?? "").trim(),
@@ -108,25 +117,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, result });
     }
 
+    const venueId = String(body.venueId ?? "").trim();
+    await maybeRequireActiveVenuePresence({ userId: mutationUserId, venueId });
+
     const entry =
       action === "update"
         ? await updateFantasyEntryLineup({
             userId: mutationUserId,
-            venueId: String(body.venueId ?? "").trim(),
+            venueId,
             gameId: String(body.gameId ?? "").trim(),
             lineup: body.lineup,
             tzOffsetMinutes: body.tzOffsetMinutes,
           })
         : await submitFantasyEntry({
-          userId: mutationUserId,
-          venueId: String(body.venueId ?? "").trim(),
-          gameId: String(body.gameId ?? "").trim(),
-          lineup: body.lineup,
-          tzOffsetMinutes: body.tzOffsetMinutes,
-        });
+            userId: mutationUserId,
+            venueId,
+            gameId: String(body.gameId ?? "").trim(),
+            lineup: body.lineup,
+            tzOffsetMinutes: body.tzOffsetMinutes,
+          });
 
     return NextResponse.json({ ok: true, entry });
   } catch (error) {
+    const presenceResponse = venuePresenceErrorResponse(error);
+    if (presenceResponse) return presenceResponse;
+
     const message = error instanceof Error ? error.message : "Failed to submit fantasy entry.";
     return NextResponse.json({ ok: false, error: message }, { status: toClientErrorStatus(message) });
   }

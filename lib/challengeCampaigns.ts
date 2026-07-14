@@ -47,7 +47,14 @@ type ChallengeCampaignRow = {
   prize_type: string | null;
   prize_gift_certificate_amount: number | null;
   is_active: boolean;
+  // Phase 9a: the venue owner who created this campaign, or null for admin-created.
+  created_by_owner_id: string | null;
 };
+
+// Single source of truth for the campaign SELECT list (was duplicated across the
+// list + create-insert queries). Includes created_by_owner_id (Phase 9a).
+const CAMPAIGN_SELECT_COLUMNS =
+  "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active, created_by_owner_id";
 
 type ChallengeCampaignProgressRow = {
   id: string;
@@ -270,6 +277,7 @@ function mapCampaignRow(
     prizeType: VALID_PRIZE_TYPES.includes(row.prize_type as PrizeType) ? (row.prize_type as PrizeType) : null,
     prizeGiftCertificateAmount: row.prize_gift_certificate_amount ?? null,
     isActive: Boolean(row.is_active),
+    createdByOwnerId: row.created_by_owner_id ?? null,
   };
 }
 
@@ -888,6 +896,8 @@ export async function listChallengeCampaigns(params: {
   venueId?: string;
   includeInactive?: boolean;
   includeResolved?: boolean;
+  /** Phase 9a: scope to campaigns created by this owner (null/absent = all). */
+  createdByOwnerId?: string | null;
 } = {}): Promise<ChallengeCampaign[]> {
   assertConfigured();
   const includeInactive = Boolean(params.includeInactive);
@@ -895,9 +905,7 @@ export async function listChallengeCampaigns(params: {
 
   let query = supabaseAdmin!
     .from("challenge_campaigns")
-    .select(
-      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active"
-    )
+    .select(CAMPAIGN_SELECT_COLUMNS)
     .order("display_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(200);
@@ -907,6 +915,10 @@ export async function listChallengeCampaigns(params: {
   }
   if (!includeResolved) {
     query = query.is("winner_user_id", null);
+  }
+  // Phase 9a: owner-scoped listing filters to a single owner's campaigns.
+  if (params.createdByOwnerId) {
+    query = query.eq("created_by_owner_id", params.createdByOwnerId);
   }
 
   const { data, error } = await query.returns<ChallengeCampaignRow[]>();
@@ -1004,6 +1016,8 @@ export async function createChallengeCampaign(input: {
   prizeType?: PrizeType | null;
   prizeGiftCertificateAmount?: number | null;
   isActive?: boolean;
+  /** Phase 9a: stamp the creating owner (null/absent = admin-created). */
+  createdByOwnerId?: string | null;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
   const name = String(input.name ?? "").trim();
@@ -1048,14 +1062,13 @@ export async function createChallengeCampaign(input: {
         ? Math.max(0.01, Number(input.prizeGiftCertificateAmount))
         : null,
     is_active: input.isActive ?? true,
+    created_by_owner_id: input.createdByOwnerId ?? null,
   };
 
   const { data, error } = await supabaseAdmin!
     .from("challenge_campaigns")
     .insert(row)
-    .select(
-      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active"
-    )
+    .select(CAMPAIGN_SELECT_COLUMNS)
     .single<ChallengeCampaignRow>();
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to create challenge campaign.");
@@ -1173,6 +1186,31 @@ export async function deleteChallengeCampaign(id: string): Promise<void> {
   if (!challengeId) throw new Error("Challenge id is required.");
   const { error } = await supabaseAdmin!.from("challenge_campaigns").delete().eq("id", challengeId);
   if (error) throw new Error(error.message ?? "Failed to delete challenge campaign.");
+}
+
+/**
+ * Minimal ownership lookup for the owner-scoped competitions surface (Phase 9a):
+ * just the fields needed to enforce "is this the creator, and does the owner
+ * control the venue" before a delete. Returns null when the id doesn't exist.
+ */
+export async function getChallengeCampaignOwnership(
+  id: string,
+): Promise<{ id: string; createdByOwnerId: string | null; venueIds: string[] } | null> {
+  assertConfigured();
+  const challengeId = String(id ?? "").trim();
+  if (!challengeId) return null;
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select("id, created_by_owner_id, venue_ids")
+    .eq("id", challengeId)
+    .maybeSingle<{ id: string; created_by_owner_id: string | null; venue_ids: string[] | null }>();
+  if (error) throw new Error(error.message ?? "Failed to load campaign.");
+  if (!data) return null;
+  return {
+    id: data.id,
+    createdByOwnerId: data.created_by_owner_id ?? null,
+    venueIds: Array.isArray(data.venue_ids) ? data.venue_ids : [],
+  };
 }
 
 export type ChallengeCycleWinnerRecord = {

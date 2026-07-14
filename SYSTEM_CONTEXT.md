@@ -6,6 +6,17 @@
   - Core value loop: shared, location-scoped competition → leaderboard progression → challenge wins → prizes (venue discounts/coupons) → users return to earn more → larger audience → higher ad revenue.
   - Venue Home third panel is **Challenges** (campaign-style progression), while legacy **head-to-head user challenges** remain a separate subsystem.
 
+## 0. Strategic Direction (Next Few Weeks — READ FIRST)
+> This section describes where the product is deliberately heading. When making routing, navigation, or IA decisions, align with this direction even if the current code does not yet reflect it. The step-by-step build is tracked in **`docs/partner-dashboard-plan.md`** (canonical plan).
+
+- **`/info` becomes the apex homepage.** Today `hightopchallenge.com` (apex) lands on the player game login (`/` → `JoinFlow`). We are flipping this: `/info` will become the apex/home page — the marketing site we want Google to index and the page a first-time visitor sees. Treat `/info` as the future home page in copy, canonical URLs, and internal links.
+- **The player game login relocates to `play.hightopchallenge.com`.** The current apex login (`/` → `JoinFlow`) and all venue/game routes move under the `play.` subdomain. Apex host → marketing (`/info`); `play.` host → the game. This is enforced at the edge in **`proxy.ts`** (the live Next.js 16 edge gate — the framework renamed `middleware.ts` → `proxy.ts`; do **not** add a `middleware.ts`, it's a build error) via `lib/domainSplit.ts`, **shipped behind `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED` (off = today's single origin, fully inert).** To flip it live without downtime, follow the exact runbook: **`docs/phase-6-domain-split-runbook.md`** (DNS + envs + smoke tests; reversal is one flag). The split layers in front of `proxy.ts`'s existing (live) cookie auth-gate without changing it.
+- **The old "payments page" is becoming the mobile-first Partner Dashboard.** The `/owner/*` surface (currently owner auth + subscription/billing, reached via the "Partner Login" button on `/info`) is being expanded into a mobile-first **Partner Dashboard** for subscriber venues. A subscriber venue is a venue that pays for our geofenced platform so their guests can play. From their phone, a partner will be able to:
+  1. **Schedule live games** their whole venue plays together at the same time (Live Trivia, Category Blitz, and future live games). Scheduling is currently **admin-only** (`requireAdminAuth`); it must become **owner-scoped** so partners can self-serve for their own venue(s).
+  2. **Put the display/TV URL on their venue's screens.** The public venue screen already exists at `/venue/[venueId]/screen` (a "follow-along" display for guests not playing on their phone). The dashboard will surface this URL/QR for the partner to open on a smart TV or TV-app (Amazon/Google/Apple TV apps do not exist yet — we are browser-only today; those are a future native build).
+  3. **Submit payment / manage subscription.** Billing today runs on **SlimCD** (`lib/slimcd.ts`, hosted-payment sessions). We are migrating billing to **Stripe** this week; the Partner Dashboard is the surface for subscribe / update card / invoices.
+- **Terminology:** prefer **"Partner Dashboard"** and **"subscriber venue" / "partner"** in new UI copy. "Owner" persists in code/table names (`venue_owners`, `venue_owner_venues`, `/owner/*`, `requireOwnerAuth`) — do not rename those without a deliberate migration.
+
 ## 1. Project Essence
 - Website type:
   - Location-aware, geofenced-style gaming web app for bars/venues.
@@ -190,7 +201,14 @@
   - **Advertising** — manage ads, create ad, placement builder, ad analytics.
   - **Challenges & Events** — challenge manager, Live Trivia schedules.
   - **Operations** — Pick'em settlement.
-- Venue-operator-facing dashboard: not planned currently (far future, no concrete timeline).
+- Venue-operator-facing dashboard: **now in active development** as the **Partner Dashboard** (`/owner/*`, reached via "Partner Login" on `/info`). See §0 Strategic Direction and `docs/partner-dashboard-plan.md`. Distinct from `/admin` (internal staff): the Partner Dashboard is owner-scoped (`requireOwnerAuth`, `venue_owner_venues`) and mobile-first, letting subscriber venues self-serve scheduling, the TV display URL, and billing for only their own venue(s).
+
+### Partner / Owner surface (current state)
+- **Auth:** `venue_owners` + `venue_owner_venues` tables; guarded by `lib/requireOwnerAuth.ts`. Pages: `/owner/login`, `/owner/register`, `/owner/forgot-password`, `/owner/reset-password`, `/owner/dashboard`, `/owner/billing`, `/owner/billing/setup`. Shared shell: `components/owner/OwnerShell.tsx`.
+- **Billing (SlimCD today → Stripe this week):** `app/api/owner/billing/*` (`billing`, `subscription`, `session`, `return`, `card`; `subscribe` is a deprecated 410 stub). `lib/slimcd.ts` creates hosted-payment sessions; `billing_subscriptions` stores `slimcd_recurring_token`, status, period. The Stripe migration replaces the session/return/card flow and recurring-token model — see the plan.
+- **Live-game scheduling (to be owner-scoped):** `app/api/category-blitz/schedules/*` + `lib/categoryBlitzSchedules.ts` currently require **admin** auth. The Partner Dashboard needs owner-scoped create/list/delete restricted to the caller's `venue_owner_venues`.
+- **TV display URL:** public venue screen at `app/venue/[venueId]/screen` + `app/api/venue-screen/state`; surfaced (URL + QR) in `app/owner/display/page.tsx`. The URL is built with `gameUrl()` from `lib/domainSplit.ts`, so it automatically points at `play.` once the domain split is enabled.
+- **Domain split (Phase 6):** host-based routing lives at the top of the live edge gate `proxy.ts` (via `lib/domainSplit.ts`), flag-gated off behind `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED` and inert until enabled. `proxy.ts` is Next 16's renamed middleware file — never add a `middleware.ts`. Cutover steps: **`docs/phase-6-domain-split-runbook.md`**.
 
 ## 10. Design System & Brand Guidelines
 - **Canonical source of truth for brand:** `design-system/hightop-challenge-design-system/project/colors_and_type.css` — defines all CSS custom properties for colors, typography, and surface tokens.

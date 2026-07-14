@@ -8,6 +8,11 @@ import {
   submitPickEmPick,
 } from "@/lib/pickem";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
+import {
+  maybeRequireActiveVenuePresence,
+  maybeRequireActiveVenuePresenceForUser,
+  venuePresenceErrorResponse,
+} from "@/lib/venuePresence";
 
 function normalizeBoolean(value: string | null, fallback: boolean): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -104,6 +109,11 @@ export async function POST(request: Request) {
     const mutationUserId = sessionUserId ?? String(body.userId ?? "").trim();
     const action = String(body.action ?? "").trim().toLowerCase();
     if (action === "claim_points") {
+      await maybeRequireActiveVenuePresence({
+        userId: mutationUserId,
+        venueId: String(body.venueId ?? "").trim(),
+      });
+
       const result = await claimPickEmPoints({
         userId: mutationUserId,
         venueId: String(body.venueId ?? "").trim(),
@@ -114,6 +124,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, result });
     }
     if (action === "claim") {
+      await maybeRequireActiveVenuePresenceForUser({ userId: mutationUserId });
+
       const result = await claimPickEmReward({
         userId: mutationUserId,
         pickId: String(body.pickId ?? "").trim(),
@@ -122,12 +134,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, result });
     }
     if (action === "clear") {
+      await maybeRequireActiveVenuePresenceForUser({ userId: mutationUserId });
+
       const result = await clearPickEmPick({
         userId: mutationUserId,
         gameId: String(body.gameId ?? "").trim(),
       });
       return NextResponse.json({ ok: true, result });
     }
+
+    await maybeRequireActiveVenuePresence({
+      userId: mutationUserId,
+      venueId: String(body.venueId ?? "").trim(),
+    });
 
     const pick = await submitPickEmPick({
       userId: mutationUserId,
@@ -142,6 +161,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, pick });
   } catch (error) {
+    const presenceResponse = venuePresenceErrorResponse(error);
+    if (presenceResponse) return presenceResponse;
+
     const message = error instanceof Error ? error.message : "Failed to submit Pick 'Em pick.";
     return NextResponse.json({ ok: false, error: message }, { status: toClientErrorStatus(message) });
   }

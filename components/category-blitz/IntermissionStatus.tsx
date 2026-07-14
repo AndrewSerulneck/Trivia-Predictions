@@ -28,10 +28,30 @@ const IntermissionStatus = ({ nextRoundStartsIn, compact = false }: Intermission
     );
   }
 
+  if (nextRoundStartsIn <= 0) {
+    return (
+      <div className={`rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 ${compact ? "px-3 py-2" : "p-4"} text-center`}>
+        <p className={TEXT_LABEL}>Next round starts in</p>
+        <p
+          className={`mt-1 animate-pulse font-black ${TEXT_ACCENT} ${compact ? "text-base" : "text-2xl"}`}
+        >
+          Loading categories…
+        </p>
+        {!compact ? <p className="mt-2 text-xs text-emerald-100/70">Results stay visible until the next letter drops.</p> : null}
+      </div>
+    );
+  }
+
+  const isUrgent = nextRoundStartsIn <= 10;
+
   return (
     <div className={`rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 ${compact ? "px-3 py-2" : "p-4"} text-center`}>
       <p className={TEXT_LABEL}>Next round starts in</p>
-      <p className={`mt-1 font-black tabular-nums ${TEXT_ACCENT} ${compact ? "text-xl" : "text-4xl"}`}>
+      <p
+        className={`mt-1 font-black tabular-nums ${compact ? "text-xl" : "text-4xl"} ${
+          isUrgent ? "tp-countdown-urgent" : TEXT_ACCENT
+        }`}
+      >
         {formatMmSs(nextRoundStartsIn)}
       </p>
       {!compact ? <p className="mt-2 text-xs text-emerald-100/70">Results stay visible until the next letter drops.</p> : null}
