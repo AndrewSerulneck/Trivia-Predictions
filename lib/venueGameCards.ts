@@ -152,6 +152,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       "-Be quick! You have 3 minutes to fill all 12 categories",
       "-Only unique answers earn points.",
       "-The point is to be original. If someone else thought of the same response as you in any category, no points!",
+      
     ],
     steps: [
       {

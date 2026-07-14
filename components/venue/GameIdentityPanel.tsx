@@ -14,7 +14,7 @@ export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
   fantasy:
     "bg-[#0a3128]",
   "category-blitz":
-    "bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)]",
+    "bg-[linear-gradient(132deg,#a10d63_0%,#7c0a4a_50%,#4a052c_100%)]",
 };
 
 export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
@@ -29,7 +29,7 @@ export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
   fantasy:
     "bg-[#020617] border-[#fef3c7]/20",
   "category-blitz":
-    "bg-[linear-gradient(132deg,rgba(16,185,129,0.18)_0%,rgba(34,197,94,0.2)_50%,rgba(20,184,166,0.18)_100%)] border-emerald-400/30",
+    "bg-[linear-gradient(132deg,rgba(161,13,99,0.18)_0%,rgba(124,10,74,0.2)_50%,rgba(74,5,44,0.18)_100%)] border-pink-400/30",
 };
 
 export const GAME_IDENTITY_SUBTITLE: Record<VenueGameKey, string> = {
@@ -60,9 +60,14 @@ export function GameRuleCardPanel({
   const questionMarkCount = isLandingLayout ? 12 : 18;
   const denseRules = rules.length >= 5;
 
+  const isCategoryBlitz = gameKey === "category-blitz";
+  const titleColorClass = isCategoryBlitz
+    ? "text-amber-50 [text-shadow:0_1px_0_rgba(60,10,40,0.8),0_3px_0_rgba(60,10,40,0.58),0_0_12px_rgba(255,200,100,0.5)]"
+    : "text-white [text-shadow:0_1px_0_rgba(12,18,28,0.8),0_3px_0_rgba(12,18,28,0.58),0_0_12px_rgba(255,255,255,0.5)]";
+
   return (
     <div
-      className={`relative flex min-h-0 overflow-hidden rounded-[2rem] border-[3px] border-white/60 text-white shadow-[0_12px_26px_rgba(15,23,42,0.5)] ${
+      className={`relative flex min-h-0 overflow-hidden rounded-[2rem] border-[3px] border-white/60 shadow-[0_12px_26px_rgba(15,23,42,0.5)] ${
         isLandingLayout ? "p-5 sm:p-6" : "p-4"
       } ${GAME_CARD_BG_BY_KEY[gameKey]} ${className}`}
     >
@@ -72,12 +77,13 @@ export function GameRuleCardPanel({
           const col = index % 7;
           const left = 4 + col * 13.6 + (row % 2 ? -1.8 : 1.8);
           const top = 2 + row * 19 + ((index * 7) % 10);
+          const qMarkClass = isCategoryBlitz
+            ? "text-pink-200/40"
+            : index % 3 === 0 ? "text-cyan-100/40" : index % 3 === 1 ? "text-emerald-200/35" : "text-yellow-200/35";
           return (
             <span
               key={index}
-              className={`absolute select-none font-black leading-none ${
-                index % 3 === 0 ? "text-cyan-100/40" : index % 3 === 1 ? "text-emerald-200/35" : "text-yellow-200/35"
-              }`}
+              className={`absolute select-none font-black leading-none ${qMarkClass}`}
               style={{
                 left: `${left}%`,
                 top: `${top}%`,
@@ -96,15 +102,17 @@ export function GameRuleCardPanel({
             isLandingLayout
               ? "text-[clamp(2rem,6.2vw,3.35rem)] leading-[1.02]"
               : "text-[clamp(3.1rem,10.2vw,4.7rem)] leading-[0.98]"
-          } font-black uppercase tracking-[0.045em] text-white [text-shadow:0_1px_0_rgba(12,18,28,0.8),0_3px_0_rgba(12,18,28,0.58),0_0_12px_rgba(255,255,255,0.5)]`}
+          } font-black uppercase tracking-[0.045em] ${titleColorClass}`}
           style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
         >
           {card.title}
         </div>
         <div
-          className={`flex min-h-0 flex-1 flex-col rounded-2xl border border-white/40 bg-black/28 ${
-            isLandingLayout ? "px-4 py-4 sm:px-5 sm:py-5" : "px-3 py-3"
-          }`}
+          className={`flex min-h-0 flex-1 flex-col rounded-2xl border ${
+            isCategoryBlitz
+              ? "border-pink-300/25 bg-pink-900/20"
+              : "border-white/40 bg-black/28"
+          } ${isLandingLayout ? "px-4 py-4 sm:px-5 sm:py-5" : "px-3 py-3"}`}
         >
           <div
             className={`${
@@ -829,7 +837,7 @@ const GAME_STEP_ACCENT: Record<VenueGameKey, string> = {
   bingo:          "text-sky-300",
   pickem:         "text-amber-200",
   fantasy:        "text-violet-300",
-  "category-blitz":    "text-emerald-300",
+  "category-blitz":    "text-amber-300",
 };
 
 const GAME_STEP_DOT_ACTIVE: Record<VenueGameKey, string> = {
@@ -838,7 +846,7 @@ const GAME_STEP_DOT_ACTIVE: Record<VenueGameKey, string> = {
   bingo:          "bg-sky-300",
   pickem:         "bg-amber-200",
   fantasy:        "bg-violet-300",
-  "category-blitz":    "bg-emerald-300",
+  "category-blitz":    "bg-amber-300",
 };
 
 function renderBody(body: string | string[]) {
@@ -867,31 +875,36 @@ export function GameOnboardingCard({
   const isHookStep = stepIndex === 0 && !hasCustomIllustration;
   const displayTitle = (gameKey === "bingo" || gameKey === "pickem") ? card.title.replace(/^Hightop\s+/i, "") : card.title;
 
+  const titleTextColor = gameKey === "category-blitz" ? "text-amber-50" : "text-white";
+  const titleTextShadow = gameKey === "category-blitz"
+    ? "[text-shadow:0_1px_0_rgba(60,10,40,0.8),0_3px_0_rgba(60,10,40,0.58),0_0_12px_rgba(255,200,100,0.5)]"
+    : "[text-shadow:0_1px_0_rgba(12,18,28,0.8),0_3px_0_rgba(12,18,28,0.58),0_0_12px_rgba(255,255,255,0.5)]";
+
   return (
     <div
-      className={`relative flex min-h-0 overflow-hidden rounded-[2rem] border-[3px] border-white/60 text-white shadow-[0_12px_26px_rgba(15,23,42,0.5)] p-5 sm:p-6 ${GAME_CARD_BG_BY_KEY[gameKey]} ${className}`}
+      className={`relative flex min-h-0 overflow-hidden rounded-[2rem] border-[3px] border-white/60 shadow-[0_12px_26px_rgba(15,23,42,0.5)] p-5 sm:p-6 ${GAME_CARD_BG_BY_KEY[gameKey]} ${className}`}
     >
       <div className="relative flex min-h-0 flex-1 flex-col gap-4">
         <div
-          className="text-[clamp(2rem,6.2vw,3.35rem)] leading-[1.02] font-black uppercase tracking-[0.045em] text-white [text-shadow:0_1px_0_rgba(12,18,28,0.8),0_3px_0_rgba(12,18,28,0.58),0_0_12px_rgba(255,255,255,0.5)]"
+          className={`text-[clamp(2rem,6.2vw,3.35rem)] leading-[1.02] font-black uppercase tracking-[0.045em] ${titleTextColor} ${titleTextShadow}`}
           style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
         >
           {displayTitle}
         </div>
-        <div className={`flex min-h-0 flex-1 flex-col rounded-2xl border border-white/40 px-4 py-4 sm:px-5 sm:py-5 ${gameKey === "bingo" ? "gap-1" : gameKey === "fantasy" && stepIndex === 1 ? "gap-5" : gameKey === "fantasy" ? "gap-4" : "gap-3"}`}>
+        <div className={`flex min-h-0 flex-1 flex-col rounded-2xl border px-4 py-4 sm:px-5 sm:py-5 ${gameKey === "category-blitz" ? "border-pink-300/25 bg-pink-900/20" : "border-white/40"} ${gameKey === "bingo" ? "gap-1" : gameKey === "fantasy" && stepIndex === 1 ? "gap-5" : gameKey === "fantasy" ? "gap-4" : "gap-3"}`}>
           <div className={`shrink-0 text-[1.1rem] tracking-[0.16em] font-black uppercase ${accentClass}`}>
             {step.stepLabel}
           </div>
           {isHookStep ? (
             <div className="flex min-h-0 flex-1 flex-col justify-center gap-3">
               <div
-                className="text-[clamp(1.6rem,4.8vw,2.2rem)] leading-[1.08] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)]"
+                className={`text-[clamp(1.6rem,4.8vw,2.2rem)] leading-[1.08] font-black ${gameKey === "category-blitz" ? "text-amber-50 [text-shadow:0_1px_0_rgba(60,10,40,0.7),0_0_14px_rgba(255,200,100,0.35)]" : "text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)]"}`}
                 style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
               >
                 {step.heading}
               </div>
               <div className={`h-0.5 w-14 rounded-full ${GAME_STEP_DOT_ACTIVE[gameKey]}`} />
-              <div className="text-[clamp(0.92rem,2.6vw,1.2rem)] leading-[1.35] text-white/85 font-medium">
+              <div className={`text-[clamp(0.92rem,2.6vw,1.2rem)] leading-[1.35] font-medium ${gameKey === "category-blitz" ? "text-amber-100/85" : "text-white/85"}`}>
                 {renderBody(step.body)}
               </div>
             </div>
@@ -907,7 +920,7 @@ export function GameOnboardingCard({
                 )}
               </div>
               <div
-                className={`shrink-0 font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.6)] ${
+                className={`shrink-0 font-black ${gameKey === "category-blitz" ? "text-amber-50 [text-shadow:0_1px_0_rgba(60,10,40,0.6)]" : "text-white [text-shadow:0_1px_0_rgba(12,18,28,0.6)]"} ${
                   hasCustomIllustration
                     ? "text-[clamp(1.2rem,3.8vw,1.7rem)] leading-[1.18]"
                     : "text-[clamp(1rem,3vw,1.35rem)] leading-[1.2]"
@@ -917,7 +930,7 @@ export function GameOnboardingCard({
                 {step.heading}
               </div>
               <div
-                className={`shrink-0 font-medium leading-[1.38] text-white/85 ${
+                className={`shrink-0 font-medium leading-[1.38] ${gameKey === "category-blitz" ? "text-amber-100/85" : "text-white/85"} ${
                   hasCustomIllustration
                     ? "text-[clamp(0.95rem,2.8vw,1.2rem)]"
                     : "text-[clamp(0.85rem,2.5vw,1.1rem)]"

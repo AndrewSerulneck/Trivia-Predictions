@@ -26,7 +26,7 @@ import type { GameplayAnimationProps } from "@/types/animation";
  * three variants land flat on the reverse "Blend In!" face (rotation ≡ 180° mod
  * 360°), so the backface never flashes.
  */
-const HOLD_MS = 550;
+const HOLD_MS = 3500;
 const DISSOLVE_MS = 650;
 const SLAT_COUNT = 10;
 // Half-thickness pushed onto each face (px). Two faces at ±d + side walls of
@@ -99,7 +99,7 @@ const Face = ({ side }: { side: "standard" | "reverse" }) => {
       }`}
     >
       <p className={`font-mono text-xs uppercase tracking-[0.3em] ${isReverse ? "text-amber-300" : "text-sky-300"}`}>
-        {isReverse ? "New scoring this round" : "This round"}
+        {isReverse ? "Reverse Round!" : "This round"}
       </p>
       <h1
         className={`font-['Bree_Serif',_Georgia,_serif] text-[13vw] font-normal leading-[0.92] sm:text-6xl ${
@@ -110,7 +110,7 @@ const Face = ({ side }: { side: "standard" | "reverse" }) => {
       >
         {MODE_CONFIG[side].puckLabel}
       </h1>
-      <p className={`max-w-[23ch] text-sm sm:text-base ${isReverse ? "text-amber-50/90" : "text-sky-100/80"}`}>
+      <p className={`max-w-[40ch] text-sm sm:text-base ${isReverse ? "text-amber-50/90" : "text-sky-100/80"}`}>
         {MODE_CONFIG[side].rule}
       </p>
     </div>

@@ -57,7 +57,7 @@ export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
   bingo: "linear-gradient(128deg,#10b981 0%,#14b8a6 52%,#0f766e 100%)",
   pickem: "linear-gradient(134deg,#3b82f6 0%,#6366f1 55%,#4f46e5 100%)",
   fantasy: "linear-gradient(134deg,#a855f7 0%,#8b5cf6 52%,#7c3aed 100%)",
-  "category-blitz": "linear-gradient(132deg,#10b981 0%,#22c55e 50%,#14b8a6 100%)",
+  "category-blitz": "linear-gradient(132deg,#a10d63 0%,#7c0a4a 50%,#4a052c 100%)",
 };
 
 export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {

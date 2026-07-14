@@ -179,32 +179,32 @@ function VenueGamesPanelInner({
           </div>
 
           {(categoryBlitzSessionActive || categoryBlitzNextWindowSeconds != null) && (
-            <div className="rounded-2xl border border-emerald-400/60 bg-ht-surface p-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+            <div className="rounded-2xl border border-pink-400/60 bg-[linear-gradient(132deg,#a10d63_0%,#7c0a4a_50%,#4a052c_100%)] p-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
               <div className="flex items-stretch gap-3">
                 <div className="min-w-0 flex-1">
                   {categoryBlitzSessionActive ? (
                     <>
-                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
                         Live game in progress!
                       </p>
-                      <p className="mt-1 font-black text-emerald-200 text-[2.2rem] leading-none">
+                      <p className="mt-1 font-black text-amber-100 text-[2.2rem] leading-none">
                         Category Blitz
                       </p>
-                      <p className="mt-1 text-xs font-semibold text-emerald-100/70">
+                      <p className="mt-1 text-xs font-semibold text-amber-50/70">
                         One letter · 12 categories · 3 minutes
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
                         Next Category Blitz In
                       </p>
-                      <p className="mt-1 font-black tabular-nums text-emerald-200 text-[2.2rem] leading-none">
+                      <p className="mt-1 font-black tabular-nums text-amber-100 text-[2.2rem] leading-none">
                         {categoryBlitzNextWindowSeconds != null
                           ? formatCategoryBlitzCountdown(categoryBlitzNextWindowSeconds)
                           : "—"}
                       </p>
-                      <p className="mt-1 text-xs font-semibold text-emerald-100/70">
+                      <p className="mt-1 text-xs font-semibold text-amber-50/70">
                         One letter · 12 categories · 3 minutes
                       </p>
                     </>
@@ -215,7 +215,7 @@ function VenueGamesPanelInner({
                   onMouseDown={onTriggerPulse}
                   onClick={(event) => { onGoTo("category-blitz", event.currentTarget); }}
                   disabled={pendingDestination !== null}
-                  className="tp-clean-button min-w-[7.2rem] rounded-[12px] border border-emerald-400/60 bg-emerald-500/20 px-4 py-2 text-lg font-black leading-tight text-emerald-200 shadow-[0_0_0_1px_rgba(52,211,153,0.28)] transition-all disabled:opacity-60 hover:bg-emerald-500/25"
+                  className="tp-clean-button min-w-[7.2rem] rounded-[12px] border border-amber-400/60 bg-amber-500/20 px-4 py-2 text-lg font-black leading-tight text-amber-200 shadow-[0_0_0_1px_rgba(251,191,36,0.28)] transition-all disabled:opacity-60 hover:bg-amber-500/25"
                 >
                   {categoryBlitzSessionActive ? (
                     <>Join<br />now</>

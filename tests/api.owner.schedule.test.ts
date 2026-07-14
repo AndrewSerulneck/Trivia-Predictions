@@ -319,15 +319,26 @@ describe("Phase 4b — Live Trivia scheduling", () => {
   });
 
   it("GET merges both engines into one venue calendar, tagged by game type", async () => {
-    mocks.listSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listSchedules.mockResolvedValue([
+      makeSchedule({
+        recurringType: "weekly",
+        recurringDays: ["thu", "sat"],
+      }),
+    ]);
     mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeAdminLive({ id: "lt-9" })]);
 
     const res = await GET(new Request("http://localhost/api/owner/schedule?venueId=venue-1"));
-    const body = (await res.json()) as { ok: boolean; schedules: Array<{ id: string; gameType: string }> };
+    const body = (await res.json()) as {
+      ok: boolean;
+      schedules: Array<{ id: string; gameType: string; recurringType: string; recurringDays: string[] }>;
+    };
 
     expect(res.status).toBe(200);
     const byType = Object.fromEntries(body.schedules.map((s) => [s.gameType, s.id]));
     expect(byType).toEqual({ category_blitz: "schedule-1", live_trivia: "lt-9" });
+    const categoryBlitz = body.schedules.find((s) => s.gameType === "category_blitz");
+    expect(categoryBlitz?.recurringType).toBe("weekly");
+    expect(categoryBlitz?.recurringDays).toEqual(["thu", "sat"]);
   });
 
   it("GET filters Live Trivia rows to the requested venue only", async () => {

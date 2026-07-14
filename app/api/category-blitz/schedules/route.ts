@@ -7,7 +7,10 @@ function isValidationError(message: string): boolean {
   return (
     message === "A valid start date and time are required." ||
     message === "A valid start and end date/time are required." ||
-    message === "End date/time must be after the start date/time."
+    message === "End date/time must be after the start date/time." ||
+    message === "recurringType must be none, daily, or weekly." ||
+    message === "Select at least one day for weekly recurring schedules." ||
+    message === "recurringDays must contain valid weekday keys."
   );
 }
 
@@ -43,6 +46,8 @@ export async function POST(request: Request) {
       startTime?: string;
       endTime?: string;
       timezone?: string;
+      recurringType?: string;
+      recurringDays?: string[];
     };
 
     const venueId   = String(body.venueId ?? "").trim();
@@ -62,6 +67,8 @@ export async function POST(request: Request) {
       startTime: datetimeLocalValueToUtcIso(startTime, timezone),
       endTime: datetimeLocalValueToUtcIso(endTime, timezone),
       timezone,
+      recurringType: body.recurringType,
+      recurringDays: body.recurringDays,
     });
     return NextResponse.json({ ok: true, schedule });
   } catch (error) {

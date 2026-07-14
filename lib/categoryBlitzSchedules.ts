@@ -10,6 +10,9 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { broadcastCategoryBlitz } from "@/lib/categoryBlitzBroadcast";
 import type { CategoryBlitzSchedule, CategoryBlitzRecurringType } from "@/types";
 
+const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+type CategoryBlitzWeekday = (typeof WEEKDAY_KEYS)[number];
+
 function assertAdmin() {
   if (!supabaseAdmin) throw new Error("Supabase admin client is not configured.");
 }
@@ -47,6 +50,42 @@ function toSchedule(row: ScheduleRow): CategoryBlitzSchedule {
 
 const SELECT_COLS =
   "id, venue_id, title, start_time, timezone, recurring_type, recurring_days, window_minutes, is_active, created_at, updated_at";
+
+function normalizeScheduleRecurrence(params: {
+  recurringType?: string;
+  recurringDays?: unknown;
+}): { recurringType: CategoryBlitzRecurringType; recurringDays: CategoryBlitzWeekday[] } {
+  const rawType = String(params.recurringType ?? "none").trim().toLowerCase();
+  if (rawType !== "none" && rawType !== "daily" && rawType !== "weekly") {
+    throw new Error("recurringType must be none, daily, or weekly.");
+  }
+
+  if (rawType !== "weekly") {
+    return { recurringType: rawType, recurringDays: [] };
+  }
+
+  if (!Array.isArray(params.recurringDays)) {
+    throw new Error("Select at least one day for weekly recurring schedules.");
+  }
+
+  const recurringDays = Array.from(
+    new Set(
+      params.recurringDays.map((entry) => String(entry ?? "").trim().toLowerCase())
+    )
+  );
+  const invalidDay = recurringDays.find((entry) => !WEEKDAY_KEYS.includes(entry as CategoryBlitzWeekday));
+  if (invalidDay) {
+    throw new Error("recurringDays must contain valid weekday keys.");
+  }
+  if (recurringDays.length === 0) {
+    throw new Error("Select at least one day for weekly recurring schedules.");
+  }
+
+  return {
+    recurringType: "weekly",
+    recurringDays: recurringDays as CategoryBlitzWeekday[],
+  };
+}
 
 /** Get a single schedule by id, or null if not found. */
 export async function getSchedule(scheduleId: string): Promise<CategoryBlitzSchedule | null> {
@@ -94,6 +133,8 @@ export type CreateScheduleParams = {
   startTime: string;
   endTime: string;
   timezone: string;
+  recurringType?: string;
+  recurringDays?: string[];
 };
 
 /** Create a new schedule. */
@@ -101,6 +142,7 @@ export async function createSchedule(params: CreateScheduleParams): Promise<Cate
   assertAdmin();
   const { venueId, title, startTime, endTime, timezone } = params;
   const windowMinutes = computeWindowMinutesFromRange(startTime, endTime);
+  const recurrence = normalizeScheduleRecurrence(params);
 
   const { data, error } = await supabaseAdmin!
     .from("category_blitz_schedules")
@@ -109,8 +151,8 @@ export async function createSchedule(params: CreateScheduleParams): Promise<Cate
       title,
       start_time: startTime,
       timezone,
-      recurring_type: "none",
-      recurring_days: [],
+      recurring_type: recurrence.recurringType,
+      recurring_days: recurrence.recurringDays,
       window_minutes: windowMinutes,
     })
     .select(SELECT_COLS)
@@ -127,6 +169,8 @@ export type UpdateScheduleParams = {
   startTime: string;
   endTime: string;
   timezone: string;
+  recurringType?: string;
+  recurringDays?: string[];
 };
 
 /** Update mutable fields on an existing schedule. */
@@ -137,6 +181,7 @@ export async function updateSchedule(
   assertAdmin();
   const { title, startTime, endTime, timezone } = params;
   const windowMinutes = computeWindowMinutesFromRange(startTime, endTime);
+  const recurrence = normalizeScheduleRecurrence(params);
 
   const { data, error } = await supabaseAdmin!
     .from("category_blitz_schedules")
@@ -144,8 +189,8 @@ export async function updateSchedule(
       title,
       start_time: startTime,
       timezone,
-      recurring_type: "none",
-      recurring_days: [],
+      recurring_type: recurrence.recurringType,
+      recurring_days: recurrence.recurringDays,
       window_minutes: windowMinutes,
     })
     .eq("id", scheduleId)

@@ -1,0 +1,90 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CategoryBlitzSchedule } from "@/types";
+
+const mocks = vi.hoisted(() => ({
+  driveVenueCategoryBlitz: vi.fn(),
+  registerSessionPresence: vi.fn(),
+  listSchedules: vi.fn(),
+}));
+
+vi.mock("@/lib/categoryBlitz", () => ({
+  createSession: vi.fn(),
+  driveVenueCategoryBlitz: mocks.driveVenueCategoryBlitz,
+  registerSessionPresence: mocks.registerSessionPresence,
+}));
+vi.mock("@/lib/categoryBlitzSchedules", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/categoryBlitzSchedules")>(
+    "@/lib/categoryBlitzSchedules"
+  );
+  return {
+    ...actual,
+    listSchedules: mocks.listSchedules,
+  };
+});
+vi.mock("@/lib/adminAuth", () => ({
+  requireAdminAuth: vi.fn(),
+}));
+vi.mock("@/lib/serverSession", () => ({
+  isSessionEnforced: vi.fn(() => false),
+  readSession: vi.fn(() => null),
+}));
+
+import { GET } from "@/app/api/category-blitz/sessions/route";
+
+function makeSchedule(overrides: Partial<CategoryBlitzSchedule> = {}): CategoryBlitzSchedule {
+  return {
+    id: "schedule-1",
+    venueId: "venue-1",
+    title: "Weekly Category Blitz",
+    startTime: "2026-07-01T23:00:00.000Z",
+    endTime: "2026-07-02T00:00:00.000Z",
+    timezone: "America/New_York",
+    recurringType: "weekly",
+    recurringDays: ["wed"],
+    windowMinutes: 60,
+    isActive: true,
+    createdAt: "2026-07-01T00:00:00.000Z",
+    updatedAt: "2026-07-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("GET /api/category-blitz/sessions", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    mocks.driveVenueCategoryBlitz.mockReset();
+    mocks.registerSessionPresence.mockReset();
+    mocks.listSchedules.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("returns the next recurring Category Blitz window for lobby countdowns", async () => {
+    vi.setSystemTime(new Date("2026-07-02T12:00:00.000Z"));
+    mocks.driveVenueCategoryBlitz.mockResolvedValue(null);
+    mocks.listSchedules.mockResolvedValue([makeSchedule()]);
+
+    const response = await GET(
+      new Request("http://localhost/api/category-blitz/sessions?venueId=venue-1")
+    );
+    const body = (await response.json()) as {
+      ok: boolean;
+      session: null;
+      nextWindowAt: string | null;
+    };
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      ok: true,
+      session: null,
+      nextWindowAt: "2026-07-08T23:00:00.000Z",
+    });
+    expect(mocks.driveVenueCategoryBlitz).toHaveBeenCalledWith(
+      "venue-1",
+      new Date("2026-07-02T12:00:00.000Z"),
+      false
+    );
+  });
+});

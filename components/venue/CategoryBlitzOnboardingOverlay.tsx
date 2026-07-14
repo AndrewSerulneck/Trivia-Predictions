@@ -115,7 +115,7 @@ export function CategoryBlitzOnboardingOverlay({
   return (
     <div
       data-category-blitz-onboarding
-      className="fixed inset-0 z-[2200] flex flex-col bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)]"
+      className="fixed inset-0 z-[2200] flex flex-col bg-[linear-gradient(132deg,#a10d63_0%,#7c0a4a_50%,#4a052c_100%)]"
       style={{ height: "var(--tp-vh, 100dvh)" }}
     >
       <div className="mx-auto flex h-full min-h-0 w-full max-w-[28rem] flex-col px-1.5 pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1.5 sm:px-2 sm:pt-2">

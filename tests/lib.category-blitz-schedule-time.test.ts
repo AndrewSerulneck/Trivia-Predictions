@@ -10,6 +10,7 @@ import {
   datetimeLocalValueToUtcIso,
   getCurrentOrNextScheduleWindow,
   isScheduleWindowOpen,
+  listScheduleWindowOccurrences,
   utcIsoToDatetimeLocalValue,
 } from "@/lib/categoryBlitzScheduleTime";
 import {
@@ -87,5 +88,100 @@ describe("Category Blitz schedule windows", () => {
     const next = getNextScheduleOccurrence([schedule], now);
     expect(next?.windowStart.toISOString()).toBe("2026-07-01T03:20:00.000Z");
     expect(next?.windowEnd.toISOString()).toBe("2026-07-01T07:20:00.000Z");
+  });
+
+  it("opens daily recurring windows at the same venue-local wall-clock time", () => {
+    const schedule = makeSchedule({
+      recurringType: "daily",
+      windowMinutes: 240,
+    });
+    const now = new Date("2026-07-03T04:00:00.000Z");
+
+    const occurrence = getCurrentOrNextScheduleWindow(schedule, now);
+    expect(occurrence?.windowStart.toISOString()).toBe("2026-07-03T03:20:00.000Z");
+    expect(occurrence?.windowEnd.toISOString()).toBe("2026-07-03T07:20:00.000Z");
+    expect(occurrence?.occurrenceDate).toBe("2026-07-02");
+    expect(isScheduleWindowOpen(schedule, now)).toBe(true);
+  });
+
+  it("opens weekly recurring windows on one selected weekday", () => {
+    const schedule = makeSchedule({
+      recurringType: "weekly",
+      recurringDays: ["thu"],
+      windowMinutes: 240,
+    });
+    const now = new Date("2026-07-02T12:00:00.000Z");
+
+    const occurrence = getCurrentOrNextScheduleWindow(schedule, now);
+    expect(occurrence?.windowStart.toISOString()).toBe("2026-07-03T03:20:00.000Z");
+    expect(occurrence?.windowEnd.toISOString()).toBe("2026-07-03T07:20:00.000Z");
+    expect(occurrence?.occurrenceDate).toBe("2026-07-02");
+    expect(isScheduleWindowOpen(schedule, now)).toBe(false);
+  });
+
+  it("opens weekly recurring windows on multiple selected weekdays", () => {
+    const schedule = makeSchedule({
+      recurringType: "weekly",
+      recurringDays: ["thu", "sat"],
+      windowMinutes: 240,
+    });
+    const now = new Date("2026-07-03T04:00:00.000Z");
+
+    const active = getCurrentOrNextScheduleWindow(schedule, now);
+    expect(active?.windowStart.toISOString()).toBe("2026-07-03T03:20:00.000Z");
+    expect(active?.windowEnd.toISOString()).toBe("2026-07-03T07:20:00.000Z");
+    expect(isScheduleWindowOpen(schedule, now)).toBe(true);
+
+    const afterThursdayWindow = new Date("2026-07-03T08:00:00.000Z");
+    const next = getCurrentOrNextScheduleWindow(schedule, afterThursdayWindow);
+    expect(next?.windowStart.toISOString()).toBe("2026-07-05T03:20:00.000Z");
+    expect(next?.windowEnd.toISOString()).toBe("2026-07-05T07:20:00.000Z");
+    expect(next?.occurrenceDate).toBe("2026-07-04");
+  });
+
+  it("falls back to the original start weekday when a weekly schedule has no selected days", () => {
+    const schedule = makeSchedule({
+      recurringType: "weekly",
+      recurringDays: [],
+      windowMinutes: 240,
+    });
+    const now = new Date("2026-07-02T12:00:00.000Z");
+
+    const occurrence = getCurrentOrNextScheduleWindow(schedule, now);
+    expect(occurrence?.windowStart.toISOString()).toBe("2026-07-08T03:20:00.000Z");
+    expect(occurrence?.windowEnd.toISOString()).toBe("2026-07-08T07:20:00.000Z");
+    expect(occurrence?.occurrenceDate).toBe("2026-07-07");
+  });
+
+  it("normalizes weekly recurring days and ignores invalid entries", () => {
+    const schedule = makeSchedule({
+      recurringType: "weekly",
+      recurringDays: ["THU", "nonsense", "thu", "sat"],
+      windowMinutes: 240,
+    });
+    const now = new Date("2026-07-02T12:00:00.000Z");
+
+    const occurrences = listScheduleWindowOccurrences(schedule, now);
+    const starts = occurrences.map((occurrence) => occurrence.windowStart.toISOString());
+    expect(starts).toContain("2026-07-03T03:20:00.000Z");
+    expect(starts).toContain("2026-07-05T03:20:00.000Z");
+    expect(starts.filter((start) => start === "2026-07-03T03:20:00.000Z")).toHaveLength(1);
+  });
+
+  it("keeps helper APIs in agreement for an active recurring window", () => {
+    const schedule = makeSchedule({
+      recurringType: "weekly",
+      recurringDays: ["thu"],
+      windowMinutes: 240,
+    });
+    const now = new Date("2026-07-03T04:00:00.000Z");
+
+    const occurrence = getCurrentOrNextScheduleWindow(schedule, now);
+    const next = getNextScheduleOccurrence([schedule], now);
+
+    expect(nextOccurrence(schedule, now)?.toISOString()).toBe(occurrence?.windowStart.toISOString());
+    expect(isWindowOpen(schedule, now)).toBe(isScheduleWindowOpen(schedule, now));
+    expect(next?.windowStart.toISOString()).toBe(occurrence?.windowStart.toISOString());
+    expect(next?.windowEnd.toISOString()).toBe(occurrence?.windowEnd.toISOString());
   });
 });

@@ -8,8 +8,15 @@ function isValidationError(message: string): boolean {
   return (
     message === "A valid start date and time are required." ||
     message === "A valid start and end date/time are required." ||
-    message === "End date/time must be after the start date/time."
+    message === "End date/time must be after the start date/time." ||
+    message === "recurringType must be none, daily, or weekly." ||
+    message === "Select at least one day for weekly recurring schedules." ||
+    message === "recurringDays must contain valid weekday keys."
   );
+}
+
+function recurringDaysKey(days: string[] | undefined): string {
+  return [...(days ?? [])].sort().join(",");
 }
 
 /** PATCH /api/category-blitz/schedules/[id] — update a schedule (admin only) */
@@ -26,6 +33,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       startTime?: string;
       endTime?: string;
       timezone?: string;
+      recurringType?: string;
+      recurringDays?: string[];
     };
 
     const title     = String(body.title ?? "").trim();
@@ -37,26 +46,39 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!startTime) return NextResponse.json({ ok: false, error: "startTime is required." }, { status: 400 });
     if (!endTime)   return NextResponse.json({ ok: false, error: "endTime is required." }, { status: 400 });
 
-    // Look up the current schedule so we can compare the old start time
-    // against the new one — only restart the session when the start time
-    // actually changes (title-only or timezone-only edits keep the session).
+    // Look up the current schedule so we can compare old timing/recurrence
+    // semantics against the updated row. Title-only edits keep the session.
     const current = await getSchedule(id);
     if (!current) {
       return NextResponse.json({ ok: false, error: "Schedule not found." }, { status: 404 });
     }
-    const oldStartTime = current.startTime;
+
+    const nextRecurringType = body.recurringType ?? current.recurringType;
+    const nextRecurringDays =
+      body.recurringType === undefined && body.recurringDays === undefined
+        ? current.recurringDays
+        : body.recurringDays;
 
     const schedule = await updateSchedule(id, {
       title,
       startTime: datetimeLocalValueToUtcIso(startTime, timezone),
       endTime: datetimeLocalValueToUtcIso(endTime, timezone),
       timezone,
+      recurringType: nextRecurringType,
+      recurringDays: nextRecurringDays,
     });
 
-    // If the start time changed, end any active auto session so the next
-    // client poll creates a fresh session from the updated schedule instead
-    // of continuing on the old round cadence.
-    if (oldStartTime !== schedule.startTime) {
+    // If timing or recurrence changed, end any active auto session so the next
+    // client poll creates a fresh session from the updated schedule instead of
+    // continuing on an obsolete window/cadence.
+    const scheduleSemanticsChanged =
+      current.startTime !== schedule.startTime ||
+      current.endTime !== schedule.endTime ||
+      current.timezone !== schedule.timezone ||
+      current.recurringType !== schedule.recurringType ||
+      recurringDaysKey(current.recurringDays) !== recurringDaysKey(schedule.recurringDays);
+
+    if (scheduleSemanticsChanged) {
       await endVenueAutoSession(schedule.venueId);
     }
 

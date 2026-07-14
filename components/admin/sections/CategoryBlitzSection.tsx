@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { datetimeLocalValueToUtcIso, utcIsoToDatetimeLocalValue } from "@/lib/categoryBlitzScheduleTime";
 import { gameDurationMinutes, roundsFromWindowMinutes } from "@/lib/categoryBlitzShared";
-import type { Venue, CategoryBlitzSchedule, CategoryBlitzSession } from "@/types";
+import type { Venue, CategoryBlitzSchedule, CategoryBlitzSession, CategoryBlitzRecurringType } from "@/types";
 
 const TIMEZONES = [
   "America/New_York",
@@ -14,6 +14,22 @@ const TIMEZONES = [
   "America/Anchorage",
   "Pacific/Honolulu",
 ];
+
+const RECURRING_OPTIONS: Array<{ value: CategoryBlitzRecurringType; label: string }> = [
+  { value: "none", label: "None (One-off)" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+];
+
+const WEEKDAY_OPTIONS = [
+  { key: "sun", label: "Sun" },
+  { key: "mon", label: "Mon" },
+  { key: "tue", label: "Tue" },
+  { key: "wed", label: "Wed" },
+  { key: "thu", label: "Thu" },
+  { key: "fri", label: "Fri" },
+  { key: "sat", label: "Sat" },
+] as const;
 
 function formatScheduleTime(iso: string, timeZone: string): string {
   try {
@@ -38,6 +54,17 @@ function formatDuration(windowMinutes: number): string {
   if (hours === 0) return `${minutes} min`;
   if (minutes === 0) return `${hours} hr${hours === 1 ? "" : "s"}`;
   return `${hours} hr ${minutes} min`;
+}
+
+function formatRecurringLabel(schedule: Pick<CategoryBlitzSchedule, "recurringType" | "recurringDays">): string {
+  if (schedule.recurringType === "daily") return "Daily";
+  if (schedule.recurringType === "weekly") {
+    const days = WEEKDAY_OPTIONS
+      .filter((day) => schedule.recurringDays.includes(day.key))
+      .map((day) => day.label);
+    return days.length > 0 ? `Weekly: ${days.join(", ")}` : "Weekly";
+  }
+  return "One-off";
 }
 
 export function CategoryBlitzSection({ venues = [] }: { venues?: Venue[] }) {
@@ -201,6 +228,8 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
   const [startTime, setStartTime] = useState("");
   const [rounds, setRounds] = useState(1);
   const [timezone, setTimezone] = useState("America/New_York");
+  const [recurringType, setRecurringType] = useState<CategoryBlitzRecurringType>("none");
+  const [recurringDays, setRecurringDays] = useState<string[]>([]);
   // Tracks the schedule's stored duration while editing, so we can warn before
   // silently changing it if the round-count reconstruction doesn't match exactly.
   const [editingOriginalWindowMinutes, setEditingOriginalWindowMinutes] = useState<number | null>(null);
@@ -219,6 +248,8 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
     setStartTime("");
     setRounds(1);
     setTimezone("America/New_York");
+    setRecurringType("none");
+    setRecurringDays([]);
   }, []);
 
   const fetchSchedules = useCallback(async () => {
@@ -267,6 +298,8 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
     setTimezone(schedule.timezone);
     setStartTime(utcIsoToDatetimeLocalValue(schedule.startTime, schedule.timezone));
     setRounds(roundsFromWindowMinutes(schedule.windowMinutes));
+    setRecurringType(schedule.recurringType ?? "none");
+    setRecurringDays(schedule.recurringDays ?? []);
     setEditingOriginalWindowMinutes(schedule.windowMinutes);
     setMsg(null);
   };
@@ -282,6 +315,10 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
     }
     if (!Number.isFinite(rounds) || rounds < 1) {
       setMsg({ text: "At least 1 round is required.", ok: false });
+      return false;
+    }
+    if (recurringType === "weekly" && recurringDays.length === 0) {
+      setMsg({ text: "Select at least one day for weekly recurring schedules.", ok: false });
       return false;
     }
     return true;
@@ -309,6 +346,8 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
           startTime,
           endTime: computeEndTime(),
           timezone,
+          recurringType,
+          recurringDays: recurringType === "weekly" ? recurringDays : [],
         }),
       });
       const json = (await response.json()) as { ok: boolean; error?: string };
@@ -351,6 +390,8 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
           startTime,
           endTime: computeEndTime(),
           timezone,
+          recurringType,
+          recurringDays: recurringType === "weekly" ? recurringDays : [],
         }),
       });
       const json = (await response.json()) as { ok: boolean; error?: string };
@@ -427,11 +468,18 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
           startTime={startTime}
           rounds={rounds}
           timezone={timezone}
+          recurringType={recurringType}
+          recurringDays={recurringDays}
           saving={saving}
           onTitleChange={setTitle}
           onStartTimeChange={setStartTime}
           onRoundsChange={setRounds}
           onTimezoneChange={setTimezone}
+          onRecurringTypeChange={(value) => {
+            setRecurringType(value);
+            if (value !== "weekly") setRecurringDays([]);
+          }}
+          onRecurringDaysChange={setRecurringDays}
           onCancel={() => {
             setShowForm(false);
             setMsg(null);
@@ -459,7 +507,7 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700">
-                    Scheduled range
+                    {formatRecurringLabel(schedule)}
                   </span>
                   <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
                     {formatDuration(schedule.windowMinutes)}
@@ -494,11 +542,18 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
                   startTime={startTime}
                   rounds={rounds}
                   timezone={timezone}
+                  recurringType={recurringType}
+                  recurringDays={recurringDays}
                   saving={saving}
                   onTitleChange={setTitle}
                   onStartTimeChange={setStartTime}
                   onRoundsChange={setRounds}
                   onTimezoneChange={setTimezone}
+                  onRecurringTypeChange={(value) => {
+                    setRecurringType(value);
+                    if (value !== "weekly") setRecurringDays([]);
+                  }}
+                  onRecurringDaysChange={setRecurringDays}
                   onCancel={cancelEdit}
                   onSave={() => void handleUpdate()}
                 />
@@ -517,11 +572,15 @@ function ScheduleEditor({
   startTime,
   rounds,
   timezone,
+  recurringType,
+  recurringDays,
   saving,
   onTitleChange,
   onStartTimeChange,
   onRoundsChange,
   onTimezoneChange,
+  onRecurringTypeChange,
+  onRecurringDaysChange,
   onCancel,
   onSave,
 }: {
@@ -530,11 +589,15 @@ function ScheduleEditor({
   startTime: string;
   rounds: number;
   timezone: string;
+  recurringType: CategoryBlitzRecurringType;
+  recurringDays: string[];
   saving: boolean;
   onTitleChange: (value: string) => void;
   onStartTimeChange: (value: string) => void;
   onRoundsChange: (value: number) => void;
   onTimezoneChange: (value: string) => void;
+  onRecurringTypeChange: (value: CategoryBlitzRecurringType) => void;
+  onRecurringDaysChange: (value: string[]) => void;
   onCancel: () => void;
   onSave: () => void;
 }) {
@@ -612,6 +675,53 @@ function ScheduleEditor({
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-slate-500">Recurring</label>
+          <select
+            value={recurringType}
+            onChange={(event) => onRecurringTypeChange(event.target.value as CategoryBlitzRecurringType)}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            {RECURRING_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-slate-500">Weekly Days</label>
+          <div className="flex min-h-[38px] flex-wrap gap-2 rounded-lg border border-slate-200 px-3 py-2">
+            {WEEKDAY_OPTIONS.map((day) => {
+              const checked = recurringDays.includes(day.key);
+              return (
+                <label key={day.key} className="inline-flex items-center gap-1.5 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600"
+                    disabled={recurringType !== "weekly"}
+                    checked={checked}
+                    onChange={() =>
+                      onRecurringDaysChange(
+                        checked
+                          ? recurringDays.filter((item) => item !== day.key)
+                          : [...recurringDays, day.key]
+                      )
+                    }
+                  />
+                  {day.label}
+                </label>
+              );
+            })}
+          </div>
+          <p className="mt-1 text-xs text-slate-400">
+            {recurringType === "weekly"
+              ? "Choose one or more weekdays."
+              : "Weekly days are only used when Recurring = Weekly."}
+          </p>
         </div>
 
         <div className="sm:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">

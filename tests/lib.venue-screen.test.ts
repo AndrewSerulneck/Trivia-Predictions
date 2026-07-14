@@ -259,6 +259,7 @@ describe("selectVenueScreenState", () => {
         round: null,
         leaderboard: null,
         nextStartsAt: "2026-07-03T01:00:00.000Z",
+        nextRecurringDays: ["thu", "sat"],
       },
       idle: { sponsorSlots },
       updatedAt,
@@ -276,7 +277,7 @@ describe("selectVenueScreenState", () => {
     });
     expect(state.idle?.nextCategoryBlitz).toEqual({
       startsAt: "2026-07-03T01:00:00.000Z",
-      recurringDays: [],
+      recurringDays: ["thu", "sat"],
     });
     expect(state.idle?.sponsorSlots).toEqual(sponsorSlots);
   });

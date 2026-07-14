@@ -158,8 +158,8 @@ function RulesList() {
     <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-4`}>
       <p className={`${TEXT_LABEL} mb-2`}>Gameplay</p>
       <div className="space-y-1.5">
-        {rules.map((rule) => (
-          <p key={rule} className="text-sm leading-snug text-slate-300">
+        {rules.map((rule, index) => (
+          <p key={index} className="text-sm leading-snug text-slate-300">
             • {rule}
           </p>
         ))}
@@ -1437,6 +1437,12 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         console.debug(`[CategoryBlitzGame] round ${round.id}: reveal never mounted, marking done via elapsed-time fallback`);
       }
       markRevealDone(round.id);
+      // Latch this round as "revealed" so the fallback fires once, not on
+      // every nowMs tick. Without this, `round.id !== revealedRoundId` stays
+      // true forever and re-runs markRevealDone (+ the debug log) ~4x/sec for
+      // the rest of the round. Mirrors what mounting RoundStartReveal does via
+      // setRevealedRoundId when the reveal actually plays.
+      setRevealedRoundId(round.id);
     }
   }, [phase, round, revealedRoundId, nowMs, markRevealDone]);
 

@@ -380,14 +380,7 @@ export default function InfoPage() {
               <br />
               <span className="htm-grad">Game Nights</span>
             </h1>
-            <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
-              Digital games that can only be accessed at your bar, played on your guests&apos; phones.
-             
-            </p>
-            <p className="text-base text-slate-500 max-w-xl mx-auto mb-10 leading-relaxed">
-
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10">
               <Link
                 href={JOIN_HREF}
                 className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 px-10 py-5 text-lg font-black text-slate-950 htm-btn-glow shadow-lg shadow-cyan-400/25 hover:shadow-cyan-400/40 transition-all"
@@ -416,6 +409,11 @@ export default function InfoPage() {
                 See the Games
               </a>
             </div>
+            <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
+              Digital games that can only be accessed at your bar, played on your guests&apos; phones.
+             
+            </p>
+
           </div>
 
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-slate-600 text-xs">
