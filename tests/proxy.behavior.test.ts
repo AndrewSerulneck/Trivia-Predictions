@@ -113,6 +113,12 @@ describe("proxy domain split (flag on) layers in front of the auth-gate", () => 
     expect(res.headers.get("x-middleware-rewrite")).toContain("/info");
   });
 
+  it("rewrites play / to the temporary Coming Soon page", () => {
+    enableSplit();
+    const res = proxy(makeRequest("/", { host: "play.hightopchallenge.com" }));
+    expect(res.headers.get("x-middleware-rewrite")).toContain("/coming-soon");
+  });
+
   it("still applies the auth-gate to game routes served on the play host", () => {
     enableSplit();
     const res = proxy(makeRequest("/venue/brunswick-grove", { host: "play.hightopchallenge.com" }));

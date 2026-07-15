@@ -24,7 +24,7 @@ export function LoginStuckStateBreaker() {
         return;
       }
       // Never force redirect while user is on join/login routes.
-      if (currentPath === "/" || currentPath === "/join") {
+      if (currentPath === "/" || currentPath === "/join" || currentPath.startsWith("/coming-soon")) {
         return;
       }
       if (!state.tokenVerified) {

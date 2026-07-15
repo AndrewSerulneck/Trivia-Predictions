@@ -140,6 +140,7 @@ const NO_DECISION: DomainSplitDecision = { action: "none" };
  *
  * - Apex `/` rewrites to the marketing `/info` experience (URL stays `/`).
  * - Apex + a game page → redirect to the same path on `play.`.
+ * - Play `/` rewrites to a temporary Coming Soon page (URL stays `/`).
  * - `play.` + a marketing page → redirect to the same path on the apex.
  * - Unknown hosts (localhost, preview) and the flag being off → no-op.
  */
@@ -161,8 +162,9 @@ export const decideDomainSplit = (
     return NO_DECISION;
   }
 
-  // kind === "play": send marketing pages back to the apex; serve everything
-  // else (including `/` → the game) here.
+  // kind === "play": keep the long-term player host alive while the public
+  // launch page is being prepared; send marketing pages back to the apex.
+  if (pathname === "/") return { action: "rewrite", path: "/coming-soon" };
   if (page === "marketing") return { action: "redirect", host: apexHost() };
   return NO_DECISION;
 };

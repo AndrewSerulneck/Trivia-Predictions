@@ -132,9 +132,16 @@ describe("decideDomainSplit", () => {
     });
   });
 
-  it("serves the game (including `/`) on the play host without redirect", () => {
+  it("rewrites play `/` to the temporary Coming Soon page", () => {
     enableSplit();
-    expect(decideDomainSplit("play.hightopchallenge.com", "/")).toEqual({ action: "none" });
+    expect(decideDomainSplit("play.hightopchallenge.com", "/")).toEqual({
+      action: "rewrite",
+      path: "/coming-soon",
+    });
+  });
+
+  it("serves game routes on the play host without redirect", () => {
+    enableSplit();
     expect(decideDomainSplit("play.hightopchallenge.com", "/venue/x")).toEqual({ action: "none" });
   });
 
