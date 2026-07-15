@@ -71,6 +71,7 @@ function analyticsGameType(gameKey: VenueGameKey): GameAnalyticsType {
   if (gameKey === "bingo") return "bingo";
   if (gameKey === "fantasy") return "fantasy";
   if (gameKey === "pickem") return "pickem";
+  if (gameKey === "nfl-pickem") return "pickem";
   if (gameKey === "category-blitz") return "category-blitz";
   return "speed-trivia";
 }
@@ -157,7 +158,7 @@ export function GameLandingExperience({
   }, []);
 
   useEffect(() => {
-    if (gameKey !== "pickem") {
+    if (gameKey !== "pickem" && gameKey !== "nfl-pickem") {
       return;
     }
 

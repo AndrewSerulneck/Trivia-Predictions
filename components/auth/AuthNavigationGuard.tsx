@@ -22,6 +22,7 @@ function isInSessionGameRoute(pathname: string): boolean {
     pathname.startsWith("/trivia") ||
     pathname.startsWith("/predictions") ||
     pathname.startsWith("/pickem") ||
+    pathname.startsWith("/nfl-pickem") ||
     pathname.startsWith("/bingo") ||
     pathname.startsWith("/fantasy") ||
     pathname.startsWith("/active-games") ||

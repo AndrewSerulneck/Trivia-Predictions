@@ -49,6 +49,7 @@ const FALLBACK_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
   pickem: "linear-gradient(134deg,#2563eb 0%,#7c3aed 56%,#ec4899 100%)",
   fantasy: "linear-gradient(134deg,#7c3aed 0%,#2563eb 48%,#06b6d4 100%)",
   "category-blitz": "linear-gradient(132deg,#10b981 0%,#22c55e 50%,#14b8a6 100%)",
+  "nfl-pickem": "linear-gradient(132deg,#059669 0%,#10b981 50%,#34d399 100%)",
 };
 
 function wait(ms: number): Promise<void> {

@@ -27,11 +27,11 @@ function formatLocalDateTime(iso: string): string {
 
 function gameTypeLabel(gameType: ChallengeGameType): string {
   if (gameType === "pickem") return "Hightop Pick 'Em";
-  if (gameType === "fantasy") return "Hightop Fantasy";
+  if (gameType === "fantasy") return "Hightop Fantasy Sports";
   if (gameType === "live-trivia") return "Hightop Live Trivia";
-  if (gameType === "speed-trivia") return "Hightop Speed Trivia";
-  if (gameType === "trivia") return "Hightop Speed Trivia";
-  return "Hightop Sports Bingo";
+  if (gameType === "speed-trivia") return "Speed Trivia";
+  if (gameType === "trivia") return "Speed Trivia";
+  return "Prop Bingo";
 }
 
 function statusStyle(status: ChallengeInvite["status"]): string {
@@ -269,10 +269,10 @@ export function PendingChallengesPanel() {
             className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-secondary hover:opacity-80 transition-opacity"
           >
             <option value="pickem">Hightop Pick &apos;Em</option>
-            <option value="fantasy">Hightop Fantasy</option>
-            <option value="speed-trivia">Hightop Speed Trivia</option>
+            <option value="fantasy">Hightop Fantasy Sports</option>
+            <option value="speed-trivia">Speed Trivia</option>
             <option value="live-trivia">Hightop Live Trivia</option>
-            <option value="bingo">Hightop Sports Bingo</option>
+            <option value="bingo">Prop Bingo</option>
           </select>
         </div>
         <textarea

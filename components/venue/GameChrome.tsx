@@ -12,7 +12,7 @@ import { ChevronDown } from "lucide-react";
 //   fantasy → amber-200 (#fde68a)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type GameChromeKey = "bingo" | "fantasy" | "pickem";
+export type GameChromeKey = "bingo" | "fantasy" | "pickem" | "nfl-pickem";
 
 // Small animated "live" dot — mirrors the design's pulsing status indicator.
 export const LiveDot = ({ className = "bg-emerald-400" }: { className?: string }) => (
@@ -21,6 +21,16 @@ export const LiveDot = ({ className = "bg-emerald-400" }: { className?: string }
 
 // GameMark — the compact game-identity tile that stands in for the dead 44px title.
 export const GameMark = ({ game }: { game: GameChromeKey }) => {
+  if (game === "nfl-pickem") {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[6px] border border-emerald-400 bg-emerald-600 text-[14px] font-black leading-none text-white"
+      >
+        🏈
+      </span>
+    );
+  }
   if (game === "pickem") {
     return (
       <span

@@ -27,6 +27,7 @@ const GAME_LABEL: Record<GameChromeKey, string> = {
   bingo: "Bingo",
   fantasy: "Fantasy",
   pickem: "Pick 'Em",
+  "nfl-pickem": "NFL Pick 'Em",
 };
 
 export function AppBar({
@@ -58,7 +59,10 @@ export function GameAppBar({
 }) {
   const summary = usePointsSummary();
   const router = useRouter();
-  const accentText = game === "bingo" ? "text-sky-300" : "text-amber-200";
+  const accentText =
+    game === "bingo" ? "text-sky-300" :
+    game === "nfl-pickem" ? "text-amber-200" :
+    "text-amber-200";
 
   // Prefer the parent-injected exit (which runs the venue return animation),
   // but always guarantee a working back action even if that wiring is absent.

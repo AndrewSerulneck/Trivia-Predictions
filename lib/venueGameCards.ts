@@ -1,4 +1,4 @@
-export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy" | "category-blitz";
+export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy" | "category-blitz" | "nfl-pickem";
 
 export type GameOnboardingStep = {
   stepLabel: string;
@@ -19,7 +19,7 @@ export type VenueGameCardConfig = {
 export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
   {
     key: "speed-trivia",
-    title: "Hightop Speed Trivia",
+    title: "Speed Trivia",
     path: "/trivia",
     cardClassName: "bg-blue-600 text-white",
     visibleOnVenueHome: true,
@@ -79,7 +79,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
   },
   {
     key: "fantasy",
-    title: "Hightop Fantasy™",
+    title: "Hightop Fantasy Sports",
     path: "/fantasy",
     cardClassName: "bg-slate-800 text-white",
     visibleOnVenueHome: true,
@@ -181,7 +181,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
   },
   {
     key: "bingo",
-    title: "Hightop Sports Bingo™",
+    title: "Prop Bingo",
     path: "/bingo",
     cardClassName: "bg-amber-600 text-white",
     visibleOnVenueHome: true,
@@ -210,6 +210,36 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       },
     ],
   },
+  {
+    key: "nfl-pickem",
+    title: "NFL Pick 'Em",
+    path: "/nfl-pickem",
+    cardClassName: "[background:linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)] text-white",
+    visibleOnVenueHome: true,
+    rules: [
+      "-Pick winners for all NFL games each week",
+      "-Picks lock at Thursday Night Football kickoff",
+      "-10 points per correct pick",
+      "-View past weeks to see your results",
+    ],
+    steps: [
+      {
+        stepLabel: "Weekly Picks",
+        heading: "Think you know ball? Prove it.",
+        body: "This is a weekly contest to see who can pick the most winners each week of the NFL season.",
+      },
+      {
+        stepLabel: "Picks Lock at Game Time",
+        heading: "Make your picks before kickoff.",
+        body: "Once the game starts, everyone's picks are locked in.",
+      },
+      {
+        stepLabel: "Track Results",
+        heading: "Keep track of your picks (and everyone elses) on the venue leaderboard.",
+        body: "Play for bragging rights, or check the rewards tab to see if your venue offers a prize for NFL Pick 'Em!",
+      },
+    ],
+  },
 ];
 
 export const VENUE_GAME_CARD_BY_KEY: Record<VenueGameKey, VenueGameCardConfig> = VENUE_GAME_CARDS.reduce(
@@ -220,11 +250,12 @@ export const VENUE_GAME_CARD_BY_KEY: Record<VenueGameKey, VenueGameCardConfig> =
   {} as Record<VenueGameKey, VenueGameCardConfig>
 );
 
-export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["speed-trivia", "category-blitz", "live_trivia", "bingo", "fantasy", "pickem"];
+export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["category-blitz", "speed-trivia", "live_trivia", "bingo", "fantasy", "pickem", "nfl-pickem"];
 
 export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null {
   if (pathname.startsWith("/trivia/live")) return "live_trivia";
   if (pathname.startsWith("/trivia")) return "speed-trivia";
+  if (pathname.startsWith("/nfl-pickem")) return "nfl-pickem";
   if (pathname.startsWith("/pickem")) return "pickem";
   if (pathname.startsWith("/bingo")) return "bingo";
   if (pathname.startsWith("/fantasy")) return "fantasy";

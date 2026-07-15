@@ -15,6 +15,8 @@ export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
     "bg-[#0a3128]",
   "category-blitz":
     "bg-[linear-gradient(132deg,#a10d63_0%,#7c0a4a_50%,#4a052c_100%)]",
+  "nfl-pickem":
+    "[background:linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)]",
 };
 
 export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
@@ -30,6 +32,8 @@ export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
     "bg-[#020617] border-[#fef3c7]/20",
   "category-blitz":
     "bg-[linear-gradient(132deg,rgba(161,13,99,0.18)_0%,rgba(124,10,74,0.2)_50%,rgba(74,5,44,0.18)_100%)] border-pink-400/30",
+  "nfl-pickem":
+    "bg-[linear-gradient(134deg,rgba(37,99,235,0.22)_0%,rgba(124,58,237,0.22)_56%,rgba(236,72,153,0.2)_100%)] border-indigo-200/65",
 };
 
 export const GAME_IDENTITY_SUBTITLE: Record<VenueGameKey, string> = {
@@ -39,6 +43,7 @@ export const GAME_IDENTITY_SUBTITLE: Record<VenueGameKey, string> = {
   pickem: "Pick winners and climb your venue league.",
   fantasy: "Build and challenge lineups head to head.",
   "category-blitz": "Live word game — one letter, 12 categories, 3 minutes.",
+  "nfl-pickem": "Pick the most NFL winners each week. That's it.",
 };
 
 function normalizeRule(rule: string): string {
@@ -212,6 +217,15 @@ const GAME_SCORING: Record<VenueGameKey, ScoringConfig> = {
       { value: "3×", label: "bonus at a perfect 10" },
     ],
     foot: "Max 300 points",
+  },
+  "nfl-pickem": {
+    kind: "ladder",
+    rows: [
+      { value: "10", label: "points per correct pick" },
+      { value: "Weekly", label: "new games every week" },
+      { value: "Season", label: "track your record" },
+    ],
+    foot: "Picks lock at TNF kickoff",
   },
 };
 
@@ -650,6 +664,51 @@ function PickEmIllustration({ stepIndex }: { stepIndex: number }) {
         winnerIsAway
       />
       <PEPipBar count={8} total={10} />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NFL Pick 'Em onboarding illustrations (NFL-specific team names)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function NFLPickEmIllustration({ stepIndex }: { stepIndex: number }) {
+  if (stepIndex === 0) {
+    return (
+      <div className="w-full">
+        <PETicket sport="NFL" away="Chiefs" home="Ravens" picked="away" />
+      </div>
+    );
+  }
+
+  if (stepIndex === 1) {
+    return (
+      <div className="w-full space-y-1.5">
+        <PETicket sport="NFL" away="Chiefs" home="Ravens" picked="away" small />
+        <PETicket sport="NFL" away="49ers" home="Cowboys" picked="home" small />
+        <PETicket sport="NFL" away="Eagles" home="Packers" picked={null} awaiting small />
+        <div className="flex justify-center pt-0.5">
+          <span className="text-[0.52rem] font-semibold text-white/30">
+            More games below ↓
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full space-y-2">
+      <PETicket
+        sport="NFL"
+        away="Bills"
+        home="Dolphins"
+        picked="away"
+        settled
+        awayScore={28}
+        homeScore={21}
+        winnerIsAway
+      />
+      <PEPipBar count={8} total={14} />
     </div>
   );
 }
@@ -1137,6 +1196,7 @@ function GameStepIllustration({
 }) {
   if (gameKey === "bingo") return <BingoIllustration stepIndex={stepIndex} />;
   if (gameKey === "pickem") return <PickEmIllustration stepIndex={stepIndex} />;
+  if (gameKey === "nfl-pickem") return <NFLPickEmIllustration stepIndex={stepIndex} />;
   if (gameKey === "fantasy") return <FantasyIllustration stepIndex={stepIndex} />;
   if (gameKey === "category-blitz") return <CategoryBlitzIllustration stepIndex={stepIndex} />;
   return null;
@@ -1152,7 +1212,8 @@ const GAME_STEP_ACCENT: Record<VenueGameKey, string> = {
   bingo:          "text-sky-300",
   pickem:         "text-amber-200",
   fantasy:        "text-violet-300",
-  "category-blitz":    "text-amber-300",
+  "category-blitz": "text-amber-300",
+  "nfl-pickem": "text-amber-200",
 };
 
 const GAME_STEP_DOT_ACTIVE: Record<VenueGameKey, string> = {
@@ -1161,7 +1222,8 @@ const GAME_STEP_DOT_ACTIVE: Record<VenueGameKey, string> = {
   bingo:          "bg-sky-300",
   pickem:         "bg-amber-200",
   fantasy:        "bg-violet-300",
-  "category-blitz":    "bg-amber-300",
+  "category-blitz": "bg-amber-300",
+  "nfl-pickem": "bg-amber-200",
 };
 
 function renderBody(body: string | string[]) {
@@ -1186,9 +1248,9 @@ export function GameOnboardingCard({
 }) {
   const card = VENUE_GAME_CARD_BY_KEY[gameKey];
   const accentClass = GAME_STEP_ACCENT[gameKey];
-  const hasCustomIllustration = gameKey === "bingo" || gameKey === "pickem" || gameKey === "fantasy" || gameKey === "category-blitz";
+  const hasCustomIllustration = gameKey === "bingo" || gameKey === "pickem" || gameKey === "nfl-pickem" || gameKey === "fantasy" || gameKey === "category-blitz";
   const isHookStep = stepIndex === 0 && !hasCustomIllustration;
-  const displayTitle = (gameKey === "bingo" || gameKey === "pickem") ? card.title.replace(/^Hightop\s+/i, "") : card.title;
+  const displayTitle = (gameKey === "bingo" || gameKey === "pickem" || gameKey === "nfl-pickem") ? card.title.replace(/^Hightop\s+/i, "") : card.title;
 
   const titleTextColor = gameKey === "category-blitz" ? "text-amber-50" : "text-white";
   const titleTextShadow = gameKey === "category-blitz"

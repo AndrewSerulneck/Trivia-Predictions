@@ -550,7 +550,7 @@ export function gameTypeForPath(pathname: string | null): GameAnalyticsType | nu
   if (!pathname || pathname.startsWith("/admin")) return null;
   if (pathname.startsWith("/trivia/live")) return "live-trivia";
   if (pathname.startsWith("/bingo/home") || pathname.startsWith("/bingo/select")) return "bingo";
-  if (pathname.startsWith("/pickem") || pathname.startsWith("/predictions")) return "pickem";
+  if (pathname.startsWith("/nfl-pickem") || pathname.startsWith("/pickem") || pathname.startsWith("/predictions")) return "pickem";
   if (pathname.startsWith("/category-blitz")) return "category-blitz";
   return null;
 }

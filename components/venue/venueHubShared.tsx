@@ -43,12 +43,13 @@ export type ChallengeCampaignCard = {
 };
 
 export const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
-  "speed-trivia": ["Hightop", "Speed Trivia"],
+  "speed-trivia": ["Speed Trivia", ""],
   live_trivia: ["Hightop", "Live Trivia"],
-  bingo: ["Hightop", "Sports Bingo™"],
+  bingo: ["Prop Bingo", ""],
   pickem: ["Hightop", "Pick 'Em™"],
-  fantasy: ["Hightop", "Fantasy™"],
-  "category-blitz": ["Hightop", "Category Blitz"],
+  fantasy: ["Hightop", "Fantasy Sports"],
+  "category-blitz": ["Category Blitz", ""],
+  "nfl-pickem": ["NFL", "Pick 'Em"],
 };
 
 export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
@@ -58,6 +59,7 @@ export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
   pickem: "linear-gradient(134deg,#3b82f6 0%,#6366f1 55%,#4f46e5 100%)",
   fantasy: "linear-gradient(134deg,#a855f7 0%,#8b5cf6 52%,#7c3aed 100%)",
   "category-blitz": "linear-gradient(132deg,#a10d63 0%,#7c0a4a 50%,#4a052c 100%)",
+  "nfl-pickem": "linear-gradient(115deg,#1a2f72 0%,#1a2f72 46%,#6b1a4e 54%,#6b1a4e 100%)",
 };
 
 export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
@@ -67,6 +69,7 @@ export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
   pickem: "Predict the winners of today's top matchups before the games start. Every correct call gets you one step closer to prizes and discounts!",
   fantasy: "Draft the ultimate roster from the star athletes in today's games. The better they perform, the more points you earn! ",
   "category-blitz": "One letter. Twelve categories. Unique answers get points.",
+  "nfl-pickem": "A weekly contest to see who can pick the most winners each week of the NFL season.",
 };
 
 export function formatCountdown(seconds: number): string {
