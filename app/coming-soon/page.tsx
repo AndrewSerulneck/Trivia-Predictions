@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
-import { marketingHref } from "@/lib/domainSplit";
 
 export const metadata: Metadata = {
   title: "Coming Soon",
@@ -38,27 +36,8 @@ export default function ComingSoonPage() {
           Play site coming soon
         </p>
         <h1 className="max-w-2xl font-display text-5xl leading-[1.02] text-slate-50 sm:text-6xl">
-          A new home for Hightop gameplay is on the way.
+          FUTURE GAMES LOGIN PAGE.
         </h1>
-        <p className="mt-6 max-w-xl text-lg leading-8 text-slate-200">
-          We are getting play.hightopchallenge.com ready for live trivia, sports contests,
-          venue challenges, and everything guests play from the bar.
-        </p>
-
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href={marketingHref("/info")}
-            className="rounded-full bg-cyan-300 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-slate-950"
-          >
-            Learn About Hightop
-          </Link>
-          <Link
-            href={marketingHref("/owner/login")}
-            className="rounded-full border border-white/18 bg-white/8 px-5 py-3 text-sm font-extrabold text-slate-100 transition hover:bg-white/12 focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-slate-950"
-          >
-            Partner Login
-          </Link>
-        </div>
       </section>
     </main>
   );
