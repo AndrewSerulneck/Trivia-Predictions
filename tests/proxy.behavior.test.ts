@@ -49,6 +49,23 @@ describe("proxy auth-gate (domain split off — default/production)", () => {
     }
   });
 
+  it("rewrites only the play subdomain root to the Coming Soon page", () => {
+    const playRoot = proxy(makeRequest("/", { host: "play.hightopchallenge.com" }));
+    expect(playRoot.headers.get("x-middleware-rewrite")).toContain("/coming-soon");
+
+    const apexRoot = proxy(makeRequest("/", { host: "hightopchallenge.com" }));
+    expect(isPassThrough(apexRoot)).toBe(true);
+
+    const playJoin = proxy(makeRequest("/join", { host: "play.hightopchallenge.com" }));
+    expect(isPassThrough(playJoin)).toBe(true);
+  });
+
+  it("does not expose the Coming Soon route on the apex site", () => {
+    const res = proxy(makeRequest("/coming-soon", { host: "hightopchallenge.com" }));
+    expect(res.status).toBe(307);
+    expect(new URL(res.headers.get("location") ?? "").pathname).toBe("/");
+  });
+
   it("passes the public venue screen through but gates the venue hub", () => {
     expect(isPassThrough(proxy(makeRequest("/venue/brunswick-grove/screen")))).toBe(true);
     const hub = proxy(makeRequest("/venue/brunswick-grove"));
@@ -113,7 +130,7 @@ describe("proxy domain split (flag on) layers in front of the auth-gate", () => 
     expect(res.headers.get("x-middleware-rewrite")).toContain("/info");
   });
 
-  it("rewrites play / to the temporary Coming Soon page", () => {
+  it("rewrites play / to the temporary Coming Soon page before the broader split", () => {
     enableSplit();
     const res = proxy(makeRequest("/", { host: "play.hightopchallenge.com" }));
     expect(res.headers.get("x-middleware-rewrite")).toContain("/coming-soon");

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isVenueScreenPath } from "@/lib/venueScreenPaths";
-import { decideDomainSplit } from "@/lib/domainSplit";
+import { apexHost, decideDomainSplit, playHost } from "@/lib/domainSplit";
 
 export { isVenueScreenPath };
 
@@ -79,13 +79,35 @@ function hasValidEntryHandoff(request: NextRequest, venueId: string): boolean {
   return Date.now() - entryAt <= 60_000;
 }
 
+function isPlayRootRequest(host: string, pathname: string): boolean {
+  return host.replace(/:\d+$/, "").toLowerCase() === playHost() && pathname === "/";
+}
+
+function isApexHost(host: string): boolean {
+  const normalized = host.replace(/:\d+$/, "").toLowerCase();
+  const apex = apexHost();
+  return normalized === apex || normalized === `www.${apex}`;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get("host") ?? request.nextUrl.host;
+
+  // Temporary placeholder for the play subdomain only. This does not require the
+  // broader domain split flag, so the rest of the website stays unchanged.
+  if (isPlayRootRequest(host, pathname)) {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = "/coming-soon";
+    return NextResponse.rewrite(rewriteUrl);
+  }
+
+  if (pathname === "/coming-soon" && isApexHost(host)) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
   // Phase 6 — domain split (flag-gated; no-op when NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED
   // is off or the host is unknown/preview). Runs before the auth gate so a game
   // route hit on the apex is bounced to `play.` regardless of session state.
-  const host = request.headers.get("host") ?? request.nextUrl.host;
   const split = decideDomainSplit(host, pathname);
   if (split.action === "rewrite") {
     const rewriteUrl = request.nextUrl.clone();
