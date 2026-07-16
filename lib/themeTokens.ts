@@ -103,7 +103,6 @@ export const GAME_THEME = {
       countdown:    { border: "border-amber-400/60",   fill: "bg-amber-500",        text: "text-amber-300"   },
       correct:      { border: "border-emerald-400/60", fill: "bg-emerald-500/20",   text: "text-emerald-300" },
       wrong:        { border: "border-rose-400/60",    fill: "bg-rose-500/20",      text: "text-rose-300"    },
-      spectating:   { border: "border-sky-400/60",     fill: "bg-sky-500",          text: "text-sky-300"     },
     },
   },
   /** Speed Trivia — "The Sprint": sky→blue→violet */

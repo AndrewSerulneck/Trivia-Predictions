@@ -41,7 +41,7 @@ export type ResolvedContinuousConfig = {
 // defaulted venue behaves identically to one that saved a fresh config with no
 // customization. An empty `categoryPool` means "all categories".
 export const CONTINUOUS_DEFAULT_ROUND_DURATION_SECONDS = 180;
-export const CONTINUOUS_DEFAULT_INTERMISSION_SECONDS = 300;
+export const CONTINUOUS_DEFAULT_INTERMISSION_SECONDS = 180;
 export const CONTINUOUS_DEFAULT_MODE_SELECTION: "random" = "random";
 export const CONTINUOUS_DEFAULT_MIN_CATEGORIES_PER_LETTER = 12;
 
@@ -391,8 +391,8 @@ export async function setContinuousConfig(
     .upsert({
       venue_id: venueId,
       is_active: config.isActive,
-      round_duration_seconds: config.roundDurationSeconds ?? 180,
-      intermission_seconds: config.intermissionSeconds ?? 300,
+      round_duration_seconds: config.roundDurationSeconds ?? CONTINUOUS_DEFAULT_ROUND_DURATION_SECONDS,
+      intermission_seconds: config.intermissionSeconds ?? CONTINUOUS_DEFAULT_INTERMISSION_SECONDS,
       mode_selection: config.modeSelection ?? "random",
       category_pool: config.categoryPool ?? [],
       min_categories_per_letter: config.minCategoriesPerLetter ?? 12,

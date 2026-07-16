@@ -10,8 +10,8 @@
  *
  * Why it exists: proving Category Blitz stays correct under real concurrent
  * play (duplicates cancelling, wrong-letter/invalid answers scoring 0, unique
- * valid answers scoring 2, cumulative session totals, the leaderboard, the
- * spectator lock, and scoring idempotency) without opening 10+ real sessions.
+ * valid answers scoring 2, cumulative session totals, the leaderboard,
+ * mid-round join, and scoring idempotency) without opening 10+ real sessions.
  *
  * "Blend In!" (reverse mode, docs/category-blitz-mode-b-plan.md) rounds are
  * exercised automatically: the cadence is deterministic (isReverseRound:
@@ -686,26 +686,37 @@ async function nullAuthIdCheck(ctx, db, venueId, runId) {
   }
 }
 
-// ── Spectator enforcement ───────────────────────────────────────────────────
-
-async function spectatorCheck(ctx) {
+// ── Mid-round join (spectating removed) ──────────────────────────────────────
+//
+// Category Blitz runs as a continuous loop, so there is no player-vs-spectator
+// distinction any more: anyone can play the live round the moment they arrive,
+// even if they join after it started and were never registered as present
+// before round-start. This is the inverse of the old "spectator lock" — a
+// brand-new, never-registered user must be able to submit AND get scored.
+async function midRoundJoinCheck(ctx) {
   const { engine, venueId, sessionId } = ctx;
-  section("Spectator enforcement");
+  section("Mid-round join (anyone can play the live round)");
   const round = await engine.startRound(sessionId);
-  // A brand-new player who never registered presence → first_seen_at null →
-  // spectator → server-side submit must be rejected.
+  // A brand-new player who never registered presence before this round started
+  // — the exact "joined mid-round" case that used to be blocked as a spectator.
   const ghost = ctx.ghost;
-  let rejected = false;
-  let msg = "";
+  let submitError = null;
   try {
     await engine.submitAnswer({
       roundId: round.id, userId: ghost.userId, authId: ghost.authId,
       venueId, categoryIndex: 0, answer: `${round.letter}ghost`,
     });
-  } catch (e) { rejected = true; msg = e.message; }
-  hard("un-registered (spectating) user is blocked from submitting", rejected, msg);
+  } catch (e) { submitError = e; }
+  hard("mid-round joiner (never registered present) can submit to the live round", !submitError,
+    submitError?.message ?? "");
+
   await waitForRoundToEnd(round);
-  await engine.scoreRound(round.id);
+  const scored = await engine.scoreRound(round.id);
+  const verdict = scored.results
+    .find((c) => c.categoryIndex === 0)
+    ?.answers.find((a) => a.userId === ghost.userId);
+  hard("the mid-round joiner's answer is scored like anyone else's", Boolean(verdict),
+    verdict ? "" : "no verdict found for the mid-round joiner");
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
@@ -732,14 +743,14 @@ async function main() {
     const session = await engine.createSession(venueId, { source: "manual", testMode: true });
     const sessionId = session.id;
 
-    // Register all-but-one player as present BEFORE any round starts → players.
-    // The last player stays unregistered so spectatorCheck can use it.
+    // Register all-but-one player as present BEFORE any round starts.
+    // The last player stays unregistered so midRoundJoinCheck can use it.
     for (const p of players.slice(0, -1)) {
       await engine.registerSessionPresence({ sessionId, userId: p.userId, authId: p.authId, venueId });
     }
 
     // The last player is deliberately never registered as present, so it acts
-    // as the "joined-late" spectator for spectatorCheck. Everyone else plays.
+    // as the "joined-late" player for midRoundJoinCheck. Everyone else plays.
     const ctx = { engine, db, venueId, sessionId, players: players.slice(0, -1), ghost: players[players.length - 1], args };
 
     await nullAuthIdCheck(ctx, db, venueId, runId);
@@ -769,7 +780,7 @@ async function main() {
       const sorted = last.totals.every((t, i, arr) => i === 0 || arr[i - 1].points >= t.points);
       hard("leaderboard is sorted by points descending", sorted);
 
-      await spectatorCheck(ctx);
+      await midRoundJoinCheck(ctx);
       await concurrencyStress(ctx);
     }
 

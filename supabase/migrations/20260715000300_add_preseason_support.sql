@@ -77,7 +77,10 @@ ALTER TABLE nfl_pickem_weeks
 DROP CONSTRAINT IF EXISTS nfl_pickem_weeks_season_week_unique;
 
 ALTER TABLE nfl_pickem_weeks
-ADD CONSTRAINT nfl_pickem_weeks_season_week_type_unique 
+DROP CONSTRAINT IF EXISTS nfl_pickem_weeks_season_week_type_unique;
+
+ALTER TABLE nfl_pickem_weeks
+ADD CONSTRAINT nfl_pickem_weeks_season_week_type_unique
 UNIQUE (season, week_number, week_type);
 
 COMMENT ON COLUMN nfl_pickem_weeks.week_type IS 'Type of NFL week: preseason, regular, or postseason';

@@ -71,7 +71,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const message = error instanceof Error ? error.message : "Failed to submit answer.";
     const status =
-      message.includes("spectating") ? 403 :
       message.includes("not found") ? 404 :
       message.includes("expired") || message.includes("no longer") ? 400 :
       message.includes("empty") || message.includes("too long") ? 400 :

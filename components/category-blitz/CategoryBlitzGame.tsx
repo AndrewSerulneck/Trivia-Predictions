@@ -832,7 +832,6 @@ export function AnsweringScreen({
   timeRemaining,
   venueId,
   userId,
-  isSpectating,
   playerCount,
   mode = "standard",
 }: {
@@ -842,7 +841,6 @@ export function AnsweringScreen({
   timeRemaining: number;
   venueId: string;
   userId: string;
-  isSpectating: boolean;
   playerCount?: number;
   /** Round mode — flips the whole board's accent/background to the "Blend In!"
    *  color world for the round's duration. Defaults to "standard" so callers
@@ -937,7 +935,7 @@ export function AnsweringScreen({
   }, []);
 
   const submitAnswers = useCallback(async () => {
-    if (submittedRef.current || isSpectating || venuePresence.isInteractionBlocked) return;
+    if (submittedRef.current || venuePresence.isInteractionBlocked) return;
     submittedRef.current = true;
     setSubmitState("submitting");
     setErrorMsg("");
@@ -980,7 +978,7 @@ export function AnsweringScreen({
       setSubmitState("error");
       setErrorMsg(error instanceof Error ? error.message : "Submission failed. Please try again.");
     }
-  }, [answers, roundId, venueId, userId, isSpectating, venuePresence]);
+  }, [answers, roundId, venueId, userId, venuePresence]);
 
   const submitAnswersRef = useRef(submitAnswers);
 
@@ -990,11 +988,11 @@ export function AnsweringScreen({
 
   // Auto-submit when timer hits zero — deferred so the effect doesn't trigger cascading state updates.
   useEffect(() => {
-    if (!isExpired || timerWasZeroRef.current || submitState !== "idle" || isSpectating || venuePresence.isInteractionBlocked) return;
+    if (!isExpired || timerWasZeroRef.current || submitState !== "idle" || venuePresence.isInteractionBlocked) return;
     timerWasZeroRef.current = true;
     const t = window.setTimeout(() => { void submitAnswersRef.current(); }, 0);
     return () => window.clearTimeout(t);
-  }, [isExpired, submitState, isSpectating, venuePresence.isInteractionBlocked]);
+  }, [isExpired, submitState, venuePresence.isInteractionBlocked]);
 
   if (submitState === "done") {
     return (
@@ -1081,17 +1079,6 @@ export function AnsweringScreen({
         </motion.div>
       </div>
 
-      {isSpectating && (
-        <div className="shrink-0 border-b-2 border-amber-400/60 bg-amber-500/15 px-4 py-3 text-center">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-amber-300">
-            You&apos;re spectating this round
-          </p>
-          <p className="mt-1 text-xs text-amber-100/80">
-            You joined mid-round, so you can&apos;t play this one — you&apos;ll be able to play starting next round.
-          </p>
-        </div>
-      )}
-
       {/* Categories grid */}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
         <div className="space-y-2">
@@ -1106,7 +1093,7 @@ export function AnsweringScreen({
                     : filled
                     ? `${theme.filledBorder} ${theme.filledBg}`
                     : "border-slate-700/60 bg-slate-900/40"
-                } px-3 py-2.5 ${isSpectating ? "opacity-50" : ""}`}
+                } px-3 py-2.5`}
               >
                 {/* Valid answer glow + checkmark pop feedback */}
                 {!wrongLetter && filled ? (
@@ -1122,7 +1109,7 @@ export function AnsweringScreen({
                   <input
                     type="text"
                     value={answers[i]}
-                    disabled={isExpired || submitState !== "idle" || isSpectating}
+                    disabled={isExpired || submitState !== "idle"}
                     onChange={(e) => {
                       const next = [...answers];
                       next[i] = e.target.value;
@@ -1170,7 +1157,7 @@ export function AnsweringScreen({
       </div>
 
       {/* Autosave footnote — answers save as you type and are graded automatically when the timer ends. */}
-      {submitState === "idle" && !isExpired && !isSpectating && (
+      {submitState === "idle" && !isExpired && (
         <div className={`shrink-0 border-t ${theme.borderSoft} px-4 py-3`}>
           {errorMsg && (
             <p className="mb-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
@@ -1278,7 +1265,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     return () => window.clearTimeout(hydrateId);
   }, []);
 
-  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, viewerRole, retry, markRevealDone, markResultsRevealDone, dismissComplete } = useCategoryBlitzSession(
+  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete } = useCategoryBlitzSession(
     isHydrated ? venueId : "",
     isHydrated ? userId : ""
   );
@@ -1536,9 +1523,9 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   const revealReady = phase === "reveal" && !!results && !!userId;
   const showCascade = revealReady && gradingAnswers.length > 0;
 
-  // Spectators / players who submitted nothing have no cascade to play — as
-  // soon as their (empty) graded answers resolve, advance straight to results
-  // so we don't hold the loading beat forever.
+  // Players who submitted nothing have no cascade to play — as soon as their
+  // (empty) graded answers resolve, advance straight to results so we don't
+  // hold the loading beat forever.
   useEffect(() => {
     if (revealReady && gradingAnswers.length === 0 && results) {
       markResultsRevealDone(results.roundId);
@@ -1748,7 +1735,6 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
             timeRemaining={timeRemaining}
             venueId={venueId}
             userId={userId}
-            isSpectating={viewerRole === "spectator"}
             playerCount={session?.playerCount}
             mode={round.mode}
           />

@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getViewerRoleForRound } from "@/lib/categoryBlitz";
-import { isSessionEnforced, readSession } from "@/lib/serverSession";
-import type { CategoryBlitzRound, CategoryBlitzViewerRole } from "@/types";
+import type { CategoryBlitzRound } from "@/types";
 
 type RoundRow = {
   id: string;
@@ -20,7 +18,7 @@ type RoundRow = {
 };
 
 /** GET /api/category-blitz/sessions/[id]/current-round — fetch the latest round for a session */
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: sessionId } = await params;
     if (!supabaseAdmin) {
@@ -58,20 +56,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       mode: (data.mode === "reverse" ? "reverse" : "standard"),
     };
 
-    let viewerRole: CategoryBlitzViewerRole | null = null;
-    if (round.status !== "complete") {
-      const { searchParams } = new URL(request.url);
-      const requestedUserId = (searchParams.get("userId") ?? "").trim();
-      const sessionUserId = readSession(request);
-      const resolvedUserId = isSessionEnforced()
-        ? sessionUserId && sessionUserId === requestedUserId ? sessionUserId : ""
-        : requestedUserId;
-      if (resolvedUserId) {
-        viewerRole = await getViewerRoleForRound(round.sessionId, resolvedUserId, round.startedAt);
-      }
-    }
-
-    return NextResponse.json({ ok: true, round, viewerRole });
+    return NextResponse.json({ ok: true, round });
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to load round." },

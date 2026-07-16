@@ -9,7 +9,6 @@ import type {
   CategoryBlitzMode,
   CategoryBlitzRoundResults,
   CategoryBlitzSession,
-  CategoryBlitzViewerRole,
 } from "@/types";
 
 /**
@@ -89,8 +88,6 @@ export interface CategoryBlitzSessionState {
    * badge to a blocking error state that the player can actually act on.
    */
   errorEscalated:  boolean;
-  /** null outside an active/scoring round, or when viewer identity can't be resolved. */
-  viewerRole:      CategoryBlitzViewerRole | null;
   /** Manually re-attempt loading the session — for the escalated error state's retry action. */
   retry: () => void;
   /**
@@ -157,7 +154,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   const [isConnected,   setIsConnected]   = useState(false);
   const [error,         setError]         = useState<string | null>(null);
   const [errorEscalated, setErrorEscalated] = useState(false);
-  const [viewerRole,    setViewerRole]    = useState<CategoryBlitzViewerRole | null>(null);
 
   const mountedRef        = useRef(true);
   const errorStreakRef    = useRef(0);       // consecutive loadSession failures
@@ -241,7 +237,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       setError(null);
       setErrorEscalated(false);
       setIsConnected(false);
-      setViewerRole(null);
       endsAtRef.current = null;
       lobbyStartsAtRef.current = null;
       currentRoundIdRef.current = null;
@@ -441,10 +436,8 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       const json = (await res.json()) as {
         ok: boolean;
         round?: CategoryBlitzRound | null;
-        viewerRole?: CategoryBlitzViewerRole | null;
       };
       if (!mountedRef.current || !json.ok || !json.round) return;
-      setViewerRole(json.viewerRole ?? null);
       applyRoundRef.current(json.round, opts);
       if (json.round.status === "complete") {
         await loadResultsRef.current(json.round.id);
@@ -508,7 +501,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setTimeRemaining(0);
         setNextRoundStartsIn(null);
         setLobbyCountdown(null);
-        setViewerRole(null);
         endsAtRef.current = null;
         lobbyStartsAtRef.current = null;
         setPhase("idle");
@@ -523,7 +515,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
           setSession(null);
           setRound(null);
           setResults(null);
-          setViewerRole(null);
           endsAtRef.current = null;
           lobbyStartsAtRef.current = null;
           setLobbyCountdown(null);
@@ -531,7 +522,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
           return;
         }
         setRound(null);
-        setViewerRole(null);
         endsAtRef.current = null;
         lobbyStartsAtRef.current = null;
         setLobbyCountdown(null);
@@ -542,7 +532,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       if (s.status === "lobby") {
         setRound(null);
         setResults(null);
-        setViewerRole(null);
         setTimeRemaining(0);
         setNextRoundStartsIn(null);
         endsAtRef.current = null;
@@ -699,8 +688,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         const payload = msg.payload as RoundStartedPayload | null;
         if (!payload?.round) return;
         // Refetch via the API rather than applying the broadcast payload
-        // directly — it's the only source that also resolves viewerRole
-        // (spectator vs player) for this specific user.
+        // directly, so this client's view stays consistent with server state.
         if (sessionIdRef.current) {
           void loadCurrentRound(sessionIdRef.current);
         }
@@ -721,7 +709,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       .on("broadcast", { event: "session_ended" }, () => {
         if (!active || !mountedRef.current) return;
         setPhase("complete");
-        setViewerRole(null);
         endsAtRef.current = null;
         setNextRoundStartsIn(null);
         // Drop any deferred next round — the session is over, so a late
@@ -739,7 +726,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         // the 15s fallback poll.
         if (!active || !mountedRef.current) return;
         setPhase("complete");
-        setViewerRole(null);
         endsAtRef.current = null;
         setNextRoundStartsIn(null);
         pendingActiveRoundRef.current = null;
@@ -757,7 +743,6 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         sessionIdRef.current = null;
         setRound(null);
         setResults(null);
-        setViewerRole(null);
         setTimeRemaining(0);
         setNextRoundStartsIn(null);
         setLobbyCountdown(null);
@@ -839,12 +824,11 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
     setSession(null);
     setRound(null);
     setResults(null);
-    setViewerRole(null);
     endsAtRef.current = null;
     lobbyStartsAtRef.current = null;
     setLobbyCountdown(null);
     setPhase("idle");
   }, []);
 
-  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, isConnected, error, errorEscalated, viewerRole, retry, markRevealDone, markResultsRevealDone, dismissComplete };
+  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, isConnected, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete };
 }

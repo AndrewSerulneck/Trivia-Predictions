@@ -105,7 +105,6 @@ const RevealMorphDemo = () => {
           timeRemaining={175}
           venueId="demo-venue"
           userId="demo-user"
-          isSpectating={false}
           playerCount={3}
         />
       )}

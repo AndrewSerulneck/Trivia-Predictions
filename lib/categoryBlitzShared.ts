@@ -23,7 +23,7 @@ export const isContinuousDefaultEnabled = (): boolean =>
 export const ROUND_DURATION_SECONDS = 180;
 
 /** Seconds between one round's start and the next (play time + intermission). */
-export const ROUND_INTERVAL_SECONDS = 480;
+export const ROUND_INTERVAL_SECONDS = 360;
 
 /** Seconds of intermission between rounds (derived, not a separate source of truth). */
 export const INTERMISSION_SECONDS = ROUND_INTERVAL_SECONDS - ROUND_DURATION_SECONDS;

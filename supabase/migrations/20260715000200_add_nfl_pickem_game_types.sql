@@ -58,7 +58,8 @@ ALTER TABLE ad_events
 ALTER TABLE ad_events
   ADD CONSTRAINT ad_events_page_key_valid
   CHECK (page_key IS NULL OR page_key IN (
-    'global', 'join', 'venue', 'trivia', 
+    'global', 'join', 'venue', 'trivia',
+    'speed-trivia', 'live-trivia',
     'sports-bingo', 'pickem', 'fantasy', 'nfl-pickem'
   ));
 
@@ -69,6 +70,7 @@ ALTER TABLE advertisements
 ALTER TABLE advertisements
   ADD CONSTRAINT ads_page_key_valid
   CHECK (page_key IN (
-    'global', 'join', 'venue', 'trivia', 
+    'global', 'join', 'venue', 'trivia',
+    'speed-trivia', 'live-trivia',
     'sports-bingo', 'pickem', 'fantasy', 'nfl-pickem'
   ));

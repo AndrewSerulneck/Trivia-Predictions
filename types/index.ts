@@ -451,7 +451,6 @@ export type OwnerScheduleGameType = 'category_blitz' | 'live_trivia';
 export type OwnerSchedule = CategoryBlitzSchedule & { gameType: OwnerScheduleGameType };
 
 export type CategoryBlitzSessionSource = 'manual' | 'auto';
-export type CategoryBlitzViewerRole    = 'player' | 'spectator';
 
 export interface CategoryBlitzSession {
   id:             string;
