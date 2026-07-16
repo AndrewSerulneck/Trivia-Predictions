@@ -3,14 +3,22 @@ import type { CategoryBlitzSchedule } from "@/types";
 
 const mocks = vi.hoisted(() => ({
   driveVenueCategoryBlitz: vi.fn(),
+  driveContinuousCategoryBlitz: vi.fn(),
   registerSessionPresence: vi.fn(),
   listSchedules: vi.fn(),
+  resolveContinuousConfig: vi.fn(),
 }));
 
 vi.mock("@/lib/categoryBlitz", () => ({
   createSession: vi.fn(),
   driveVenueCategoryBlitz: mocks.driveVenueCategoryBlitz,
+  driveContinuousCategoryBlitz: mocks.driveContinuousCategoryBlitz,
   registerSessionPresence: mocks.registerSessionPresence,
+}));
+// The sessions route checks continuous mode first; default to null (scheduled
+// venue) so these tests exercise the unchanged scheduled path.
+vi.mock("@/lib/categoryBlitzPool", () => ({
+  resolveContinuousConfig: mocks.resolveContinuousConfig,
 }));
 vi.mock("@/lib/categoryBlitzSchedules", async () => {
   const actual = await vi.importActual<typeof import("@/lib/categoryBlitzSchedules")>(
@@ -53,8 +61,12 @@ describe("GET /api/category-blitz/sessions", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     mocks.driveVenueCategoryBlitz.mockReset();
+    mocks.driveContinuousCategoryBlitz.mockReset();
     mocks.registerSessionPresence.mockReset();
     mocks.listSchedules.mockReset();
+    mocks.resolveContinuousConfig.mockReset();
+    // Default: continuous mode off, so the route takes the scheduled path.
+    mocks.resolveContinuousConfig.mockResolvedValue(null);
   });
 
   afterEach(() => {

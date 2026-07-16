@@ -64,6 +64,7 @@ import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { ensureSiteSession, syncUserGeographicData } from "@/lib/analytics";
 import { clearJoinPageEntryIntent, readFreshJoinPageEntryIntent } from "@/lib/joinPageNavigation";
+import { resolveVenueProfileServerFirst } from "@/lib/joinVenueEntry";
 import { normalizePin } from "@/lib/pin";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 import { markJoinWelcomeSeen, shouldShowJoinWelcome } from "@/lib/joinWelcome";
@@ -873,62 +874,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           return;
         }
 
-        if (!(DISABLE_GEOFENCE_FOR_TESTING || getGodMode())) {
-          const permState = await checkPermissionState();
-          setLocationPermissionState(permState);
-          if (permState === "prompt") {
-            setActivePanel("location-permission");
-            setLocationLoading(false);
-            return;
-          }
-          setLocationLoading(true);
-          try {
-            let current = await getCurrentLocation();
-            if (!Number.isFinite(current.accuracy) || (current.accuracy ?? 9999) > 500) {
-              current = await getBestCurrentLocation({
-                sampleDurationMs: 2800,
-                timeoutMs: 5500,
-                desiredAccuracyMeters: 220,
-              });
-            }
-            const distance = calculateDistanceMeters(current, {
-              latitude: venueData.latitude,
-              longitude: venueData.longitude,
-            });
-            setDistanceMeters(distance);
-            const allowedDistance = getGeofenceThresholdMeters(venueData.radius, current.accuracy);
-            if (distance <= allowedDistance) {
-              setLocationVerified(true);
-              setVerifiedLocation(current);
-              setLastLocationVerifiedAt(Date.now());
-              setLocationNotice("");
-            } else {
-              setLocationVerified(false);
-              setVerifiedLocation(null);
-              setLastLocationVerifiedAt(null);
-              setLocationNotice("");
-              setErrorMessage(`You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`);
-            }
-          } catch (error) {
-            setLocationVerified(false);
-            setVerifiedLocation(null);
-            setLastLocationVerifiedAt(null);
-            setLocationNotice("");
-            if (isLocationPermissionDenied(error)) {
-              setLocationPermissionState("denied");
-              setActivePanel("location-permission");
-            } else {
-              setErrorMessage(getLocationErrorMessage(error, "Unable to verify location."));
-            }
-          } finally {
-            setLocationLoading(false);
-          }
-        } else {
-          setLocationVerified(true);
-          setVerifiedLocation(null);
-          setLastLocationVerifiedAt(Date.now());
-          setLocationNotice("");
-        }
+        // Auth-first contract: a direct venue link must not run browser
+        // geolocation before the user has authenticated. God Mode is known only
+        // after account auth; normal users are geofenced later by the
+        // server-first venue profile resolver.
+        setLocationLoading(false);
+        setLocationNotice("");
       } catch (error) {
         if (hasSuccessfulInitialRenderRef.current) {
           // Keep current panel/list visible and only surface a non-blocking error.
@@ -1033,6 +984,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const verifyVenueAccess = useCallback(
     async (selectedVenue: Venue): Promise<VenueAccessResult> => {
+      // GOD MODE JOIN CONTRACT:
+      // This browser geofence helper is a UX precheck for non-god venue entry only.
+      // It is not authoritative for account-backed joins, because the durable truth
+      // lives in `accounts.god_mode` and is enforced by `/api/join/profile`.
       if (DISABLE_GEOFENCE_FOR_TESTING || godMode) {
         setLocationLoading(false);
         setLocationVerified(true);
@@ -1293,10 +1248,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const navigateToResolvedVenue = useCallback(
     async (selectedVenue: Venue, user: User) => {
+      const preserveGodMode = getGodMode();
       hardClearAuthAndCachePreserveVenue(selectedVenue.id);
       saveVenueId(selectedVenue.id);
       saveUsername(user.username);
       saveUserId(user.id);
+      if (preserveGodMode) {
+        saveGodMode(true);
+      }
       ensureSiteSession();
       syncUserGeographicData({
         zipCode: selectedVenue.zipCode,
@@ -1321,6 +1280,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const resolveAndNavigate = useCallback(
     async (resolvedAccountId: string, selectedVenue: Venue, location?: Coordinates) => {
+      // GOD MODE JOIN CONTRACT:
+      // This API call is the server-authoritative venue entry boundary. Do not add
+      // client-only geofence requirements in front of it for account-backed users;
+      // the API reads `accounts.god_mode` and bypasses geofence for those accounts.
       setErrorMessage("");
       setPendingVenueSelectionId(selectedVenue.id);
       setStatus("saving");
@@ -1339,7 +1302,25 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       let didNavigate = false;
       try {
-        const user = await resolveVenueProfile({ accountId: resolvedAccountId, venueId: selectedVenue.id, location });
+        const user = await resolveVenueProfileServerFirst({
+          selectedVenue,
+          location,
+          verifyVenueAccess,
+          onLocationBlocked: () => {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+            }
+          },
+          resolveProfile: (profileLocation) =>
+            resolveVenueProfile({
+              accountId: resolvedAccountId,
+              venueId: selectedVenue.id,
+              location: profileLocation,
+            }),
+        });
+        if (!user) {
+          return;
+        }
         await navigateToResolvedVenue(selectedVenue, user);
         didNavigate = true;
       } catch (error) {
@@ -1360,7 +1341,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
       }
     },
-    [navigateToResolvedVenue]
+    [navigateToResolvedVenue, verifyVenueAccess]
   );
 
   const resolveAndNavigateFromSession = useCallback(
@@ -1383,7 +1364,25 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       let didNavigate = false;
       try {
-        const user = await resolveVenueProfileFromSession({ sessionUserId, venueId: selectedVenue.id, location });
+        const user = await resolveVenueProfileServerFirst({
+          selectedVenue,
+          location,
+          verifyVenueAccess,
+          onLocationBlocked: () => {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+            }
+          },
+          resolveProfile: (profileLocation) =>
+            resolveVenueProfileFromSession({
+              sessionUserId,
+              venueId: selectedVenue.id,
+              location: profileLocation,
+            }),
+        });
+        if (!user) {
+          return;
+        }
         await navigateToResolvedVenue(selectedVenue, user);
         didNavigate = true;
       } catch (error) {
@@ -1404,7 +1403,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
       }
     },
-    [navigateToResolvedVenue]
+    [navigateToResolvedVenue, verifyVenueAccess]
   );
 
   const handleSelectVenue = useCallback(
@@ -1416,25 +1415,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       // Account-first path: resolve venue profile and navigate.
       const resolvedAccountId = accountId || getAccountId();
       if (resolvedAccountId) {
-        void (async () => {
-          const access = await verifyVenueAccess(selectedVenue);
-          if (!access.allowed) {
-            return;
-          }
-          await resolveAndNavigate(resolvedAccountId, selectedVenue, access.location);
-        })();
+        // Server first: `/api/join/profile` reads `accounts.god_mode`, so God Mode
+        // can never be blocked by stale client-local location/god-mode state.
+        // Normal accounts that need location fall back to `verifyVenueAccess`.
+        void resolveAndNavigate(resolvedAccountId, selectedVenue);
         return;
       }
 
       const sessionUserId = (getUserId() ?? "").trim();
       if (sessionUserId) {
-        void (async () => {
-          const access = await verifyVenueAccess(selectedVenue);
-          if (!access.allowed) {
-            return;
-          }
-          await resolveAndNavigateFromSession(sessionUserId, selectedVenue, access.location);
-        })();
+        void resolveAndNavigateFromSession(sessionUserId, selectedVenue);
         return;
       }
 
@@ -2292,6 +2282,36 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setErrorMessage(INVALID_PIN_MESSAGE);
       return;
     }
+
+    try {
+      const account = await createOrLoginAccount({
+        username,
+        pin: effectivePin,
+        mode: "login",
+      });
+      saveAccountId(account.id);
+      saveGodMode(account.godMode ?? false);
+      setAccountIdState(account.id);
+      setAccountUsername(account.username);
+      await resolveAndNavigate(account.id, venue);
+      return;
+    } catch (error) {
+      const message = getErrorMessage(error, "Account authentication failed.");
+      if (message === "Incorrect PIN.") {
+        setErrorMessage("That PIN doesn't match the username you entered. Try again.");
+        setIsPinShaking(true);
+        setPin("");
+        return;
+      }
+      if (!message.includes("do not recognize that username/PIN combination")) {
+        setErrorMessage(message);
+        return;
+      }
+      // Legacy venue-scoped users fall through to the old location-gated profile
+      // creation path. God Mode accounts live in `accounts`, so they never reach
+      // this browser geofence gate.
+    }
+
     if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode) && !locationVerified) {
       setErrorMessage("Verify your location before creating a profile.");
       return;

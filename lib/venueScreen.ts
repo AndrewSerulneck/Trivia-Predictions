@@ -1,6 +1,6 @@
 import "server-only";
 
-import { driveVenueCategoryBlitz, getRoundResults } from "@/lib/categoryBlitz";
+import { driveContinuousCategoryBlitz, driveVenueCategoryBlitz, getRoundResults } from "@/lib/categoryBlitz";
 import { getNextScheduleOccurrence, listSchedules } from "@/lib/categoryBlitzSchedules";
 import { lobbyDwellSeconds } from "@/lib/categoryBlitzShared";
 import { getLiveShowdownState, type LiveShowdownState } from "@/lib/liveShowdownEngine";
@@ -316,6 +316,26 @@ async function getLatestCategoryBlitzRound(sessionId: string): Promise<CategoryB
 }
 
 async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueScreenCategoryBlitzInput> {
+  // Continuous mode takes precedence and drives its own session/rounds with no
+  // schedule windows. driveContinuousCategoryBlitz returns null when continuous
+  // mode isn't enabled for the venue, so scheduled venues fall straight through.
+  const continuous = await driveContinuousCategoryBlitz(venueId, now).catch(() => null);
+  if (continuous?.session && continuous.session.status !== "complete") {
+    const continuousSession = continuous.session;
+    const continuousRound = await getLatestCategoryBlitzRound(continuousSession.id).catch(() => null);
+    const continuousResults =
+      continuousRound && (continuousRound.status === "complete" || continuousSession.status === "scoring")
+        ? await getRoundResults(continuousRound.id).catch(() => null)
+        : null;
+    return {
+      session: continuousSession,
+      round: continuousRound,
+      leaderboard: continuousResults ? toLeaderboard(continuousResults.totals) : null,
+      nextStartsAt: null,
+      nextRecurringDays: [],
+    };
+  }
+
   const [session, schedules] = await Promise.all([
     driveVenueCategoryBlitz(venueId, now).catch(() => null),
     listSchedules(venueId).catch(() => []),

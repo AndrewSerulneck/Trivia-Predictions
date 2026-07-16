@@ -162,7 +162,7 @@ describe("god mode presence bypass", () => {
     expect(result.ok).toBe(true);
     expect(result).toMatchObject({
       status: "active",
-      expiresAt: "2026-07-14T16:03:00.000Z",
+      expiresAt: "2026-07-14T16:15:00.000Z",
       lastVerifiedAt: "2026-07-14T16:00:00.000Z",
     });
     // A verified lease is still written for diagnostics coherence.
@@ -190,7 +190,7 @@ describe("god mode presence bypass", () => {
     expect(result.ok).toBe(true);
     expect(result).toMatchObject({
       status: "active",
-      expiresAt: "2026-07-14T16:03:00.000Z",
+      expiresAt: "2026-07-14T16:15:00.000Z",
     });
   });
 

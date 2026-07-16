@@ -41,7 +41,7 @@ describe("reverseRoundPoints", () => {
 describe("MODE_CONFIG", () => {
   it("defines exactly the standard and reverse modes with their locked puck labels", () => {
     expect(MODE_CONFIG.standard.puckLabel).toBe("Be Unique!");
-    expect(MODE_CONFIG.reverse.puckLabel).toBe("Blend In!");
+    expect(MODE_CONFIG.reverse.puckLabel).toBe("Majority Rules!");
   });
 
   it("never surfaces a marketing/mode name field — puckLabel + rule are the only player-facing copy", () => {

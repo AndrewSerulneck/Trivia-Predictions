@@ -421,6 +421,8 @@ export interface BillingSubscription {
 export type CategoryBlitzSessionStatus  = 'lobby' | 'active' | 'scoring' | 'complete' | 'abandoned';
 export type CategoryBlitzRoundStatus    = 'active' | 'scoring' | 'complete';
 export type CategoryBlitzRecurringType  = 'none' | 'daily' | 'weekly';
+export type CategoryBlitzSessionType    = 'scheduled' | 'continuous';
+export type CategoryBlitzModeSelection  = 'random' | 'weighted_standard' | 'weighted_reverse';
 
 export interface CategoryBlitzSchedule {
   id:             string;
@@ -456,6 +458,8 @@ export interface CategoryBlitzSession {
   venueId:        string;
   status:         CategoryBlitzSessionStatus;
   source:         CategoryBlitzSessionSource;
+  /** 'scheduled' for time-boxed sessions, 'continuous' for infinite loop mode */
+  sessionType:    CategoryBlitzSessionType;
   scheduledEndAt: string | null;
   /** When the lobby's round should start (set on auto-created sessions). Null for manual sessions the admin starts explicitly. */
   startsAt:       string | null;
@@ -469,6 +473,32 @@ export interface CategoryBlitzSession {
    * from a context that doesn't compute it (e.g. admin panel).
    */
   playerCount?:  number;
+  /**
+   * Continuous-mode round length, in seconds. Transport-only: attached by the
+   * sessions API for continuous sessions so the client's "next round in"
+   * countdown anchors on the venue's configured cadence. Undefined for
+   * scheduled sessions (they use the shared defaults). Not a persisted column.
+   */
+  roundDurationSeconds?: number;
+  /**
+   * Continuous-mode intermission between rounds, in seconds. Transport-only —
+   * see roundDurationSeconds. Undefined for scheduled sessions.
+   */
+  intermissionSeconds?: number;
+}
+
+/** Configuration for Category Blitz continuous loop mode per venue */
+export interface CategoryBlitzContinuousConfig {
+  id:                     string;
+  venueId:                string;
+  isActive:               boolean;
+  roundDurationSeconds:   number;
+  intermissionSeconds:    number;
+  modeSelection:          CategoryBlitzModeSelection;
+  categoryPool:           string[];
+  minCategoriesPerLetter: number;
+  createdAt:              string;
+  updatedAt:              string;
 }
 
 /** Internal enum only — never rendered. See lib/categoryBlitzModes.ts MODE_CONFIG for player-facing labels. */

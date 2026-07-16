@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -7,8 +7,34 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 // Skip tests if environment variables are not set
 const describeIfEnv = supabaseUrl && supabaseServiceKey ? describe : describe.skip;
 
+type NflPickemWeekRow = {
+  id: string;
+  season: number;
+  week_number: number;
+  week_start_date: string;
+  week_end_date: string;
+  thursday_kickoff: string;
+  status: string;
+  games_count: number;
+};
+
+type TestDb = {
+  public: {
+    Tables: {
+      nfl_pickem_weeks: {
+        Row: NflPickemWeekRow;
+        Insert: Omit<NflPickemWeekRow, "id"> & { id?: string };
+        Update: Partial<NflPickemWeekRow>;
+        Relationships: [];
+      };
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+  };
+};
+
 describeIfEnv("NFL Pick 'Em API", () => {
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  let supabase: SupabaseClient<TestDb>;
   
   const testWeek = {
     season: 2099,
@@ -23,11 +49,13 @@ describeIfEnv("NFL Pick 'Em API", () => {
   let weekId: string;
 
   beforeAll(async () => {
+    supabase = createClient<TestDb>(supabaseUrl, supabaseServiceKey);
+
     // Insert test week
     const { data, error } = await supabase
       .from("nfl_pickem_weeks")
       .insert(testWeek)
-      .select()
+      .select("id")
       .single();
 
     if (error) throw error;
@@ -35,6 +63,8 @@ describeIfEnv("NFL Pick 'Em API", () => {
   });
 
   afterAll(async () => {
+    if (!weekId) return;
+
     // Clean up
     await supabase.from("nfl_pickem_weeks").delete().eq("id", weekId);
   });

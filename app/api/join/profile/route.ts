@@ -12,6 +12,7 @@ import {
   isValidGeofenceCoordinates,
   type GeofenceCoordinates,
 } from "@/lib/geofence";
+import { JOIN_LOCATION_REQUIRED_MESSAGE } from "@/lib/joinVenueEntry";
 
 // God Mode accounts get a long-lived lease at join so Partner Dashboard diagnostics
 // don't show a "paused"/expired lease between heartbeats — actual enforcement is
@@ -185,6 +186,11 @@ async function verifyJoinGeofence(params: {
   traceId: string | null;
 }): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
   const { venueId, location, bypass, traceId } = params;
+  // GOD MODE JOIN CONTRACT:
+  // `bypass` must only come from a server-side lookup of `accounts.god_mode`
+  // (or the explicit testing flag). Never require browser geolocation for a
+  // God Mode account at this boundary, and never trust client-local god-mode
+  // storage as the authoritative source.
   if (DISABLE_GEOFENCE_FOR_TESTING || bypass) {
     return { ok: true };
   }
@@ -194,7 +200,7 @@ async function verifyJoinGeofence(params: {
     return {
       ok: false,
       response: NextResponse.json(
-        { ok: false, error: "Location verification is required to enter this venue." },
+        { ok: false, error: JOIN_LOCATION_REQUIRED_MESSAGE },
         { status: 403 }
       ),
     };
@@ -262,6 +268,10 @@ async function resolveVenueProfileForAccount(params: {
     return NextResponse.json({ ok: false, error: "Account not found." }, { status: 404 });
   }
 
+  // Server-authoritative God Mode bypass. Andrew, marc, Rick, and any future
+  // `accounts.god_mode` account must be able to join any venue without location.
+  // Client geofence checks are allowed only as non-authoritative UX for normal
+  // users; they must not be placed in front of this account-backed API path.
   const geofence = await verifyJoinGeofence({ venueId, location, bypass: Boolean(account.god_mode), traceId });
   if (!geofence.ok) {
     return geofence.response;

@@ -7,8 +7,14 @@ import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { trackAnthropicUsage } from "@/lib/llmCostTracker";
 import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
 import { isCategoryBlitzSoloScoringEnabled } from "@/lib/categoryBlitzTestMode";
-import { ROUND_DURATION_SECONDS, SUBMISSION_GRACE_MS, roundDurationSeconds, roundIntervalSeconds, intermissionSeconds, lobbyDwellSeconds, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
+import { ROUND_DURATION_SECONDS, SUBMISSION_GRACE_MS, isContinuousDefaultEnabled, roundDurationSeconds, roundIntervalSeconds, intermissionSeconds, lobbyDwellSeconds, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
 import { isReverseRound, reverseRoundPoints } from "@/lib/categoryBlitzModes";
+import {
+  resolveContinuousConfig,
+  pickRandomLetter,
+  pickRandomMode,
+  assembleRandomBoard,
+} from "@/lib/categoryBlitzPool";
 import type {
   CategoryBlitzSession,
   CategoryBlitzRound,
@@ -393,6 +399,7 @@ type SessionRow = {
   venue_id: string;
   status: string;
   source: string;
+  session_type: string;
   scheduled_end_at: string | null;
   starts_at: string | null;
   test_mode: boolean;
@@ -437,6 +444,7 @@ function toSession(row: SessionRow): CategoryBlitzSession {
     venueId: row.venue_id,
     status: row.status as CategoryBlitzSession["status"],
     source: (row.source === "auto" ? "auto" : "manual"),
+    sessionType: (row.session_type === "continuous" ? "continuous" : "scheduled"),
     scheduledEndAt: row.scheduled_end_at,
     startsAt: row.starts_at,
     testMode: row.test_mode,
@@ -459,7 +467,7 @@ async function withPlayerCount(session: CategoryBlitzSession): Promise<CategoryB
   return { ...session, playerCount: count ?? 0 };
 }
 
-const SESSION_COLS = "id, venue_id, status, source, scheduled_end_at, starts_at, test_mode, created_at, completed_at";
+const SESSION_COLS = "id, venue_id, status, source, session_type, scheduled_end_at, starts_at, test_mode, created_at, completed_at";
 const ROUND_COLS = "id, session_id, venue_id, letter, category_set_index, categories, started_at, ends_at, status, created_at, scored_at, mode";
 
 function toRound(row: RoundRow): CategoryBlitzRound {
@@ -498,13 +506,25 @@ function toSubmission(row: SubmissionRow): CategoryBlitzSubmission {
 
 // ── Session management ────────────────────────────────────────────────────────
 
-/** Returns the active/lobby session for a venue, or null. */
+/**
+ * Returns the active/lobby SCHEDULED session for a venue, or null.
+ *
+ * Deliberately excludes `session_type = 'continuous'`: continuous sessions live
+ * in the same table but are driven by a completely separate engine
+ * (getContinuousSession / driveContinuousCategoryBlitz). Without this filter the
+ * scheduled driver — which runs on every player poll — would pick up a
+ * continuous session and apply schedule/stale/lobby logic to it, corrupting it.
+ * The partial unique index (`uq_scategories_sessions_venue_active`) already
+ * guarantees at most one open session per venue, so filtering here never hides a
+ * scheduled session that legitimately exists.
+ */
 export async function getActiveSession(venueId: string): Promise<CategoryBlitzSession | null> {
   assertAdmin();
   const { data, error } = await supabaseAdmin!
     .from("category_blitz_sessions")
     .select(SESSION_COLS)
     .eq("venue_id", venueId)
+    .eq("session_type", "scheduled")
     .in("status", ["lobby", "active", "scoring"])
     .maybeSingle<SessionRow>();
 
@@ -532,6 +552,7 @@ async function getRecentlyCompletedSession(venueId: string, now: Date): Promise<
     .from("category_blitz_sessions")
     .select(SESSION_COLS)
     .eq("venue_id", venueId)
+    .eq("session_type", "scheduled")
     .eq("status", "complete")
     .gte("completed_at", cutoff.toISOString())
     .order("completed_at", { ascending: false })
@@ -686,6 +707,54 @@ function nextRoundStartAtMs(round: Pick<RoundRow, "scored_at" | "started_at">, t
 }
 
 /**
+ * Abandon any open SCHEDULED session for a venue, freeing the venue's single
+ * open-session slot (shared partial unique index `uq_scategories_sessions_venue_active`).
+ * abandonSession (not endSession) so clients drop back to the lobby and re-poll
+ * straight into the continuous session, rather than seeing a spurious Game Over.
+ * getActiveSession is scheduled-only, so this never touches a continuous session.
+ * Idempotent: once abandoned, the session is excluded from getActiveSession.
+ */
+async function retireOpenScheduledSession(venueId: string): Promise<void> {
+  const stale = await getActiveSession(venueId);
+  if (!stale) return;
+  debugLog(`[categoryBlitz] retireOpenScheduledSession(${venueId}): retiring scheduled session ${stale.id} — venue is running continuous`);
+  await abandonSession(stale.id).catch((err) => {
+    console.error(
+      `[categoryBlitz] failed to retire scheduled session ${stale.id} for continuous venue ${venueId}:`,
+      err instanceof Error ? err.message : err,
+    );
+  });
+}
+
+/**
+ * Phase 4 (docs/CATEGORY_BLITZ_CONTINUOUS_DEFAULT_PLAN.md): once continuous mode
+ * is the universal default, the legacy scheduled engine must stand down for any
+ * venue that is running continuous — it must never open a competing scheduled
+ * session, and it must retire any scheduled session still live from before the
+ * switch. That retirement is not optional: the partial unique index
+ * `uq_scategories_sessions_venue_active` allows only ONE open session per venue
+ * across all session types, so a lingering scheduled session would permanently
+ * hold the slot and block continuous from ever starting.
+ *
+ * Returns true when this venue is running continuous (caller should skip all
+ * scheduled logic), false otherwise (scheduled engine proceeds as before).
+ *
+ * Gated on the rollout flag so that with the flag off, behavior is byte-for-byte
+ * the pre-rollout scheduled engine — no new abandons, fully reversible.
+ */
+async function standDownScheduledIfContinuous(venueId: string): Promise<boolean> {
+  if (!isContinuousDefaultEnabled()) return false;
+
+  const continuousConfig = await resolveContinuousConfig(venueId);
+  if (!continuousConfig) return false; // scheduled venue (or explicit opt-out)
+
+  // Retire any scheduled session still holding this venue's open-session slot so
+  // it can't compete with the continuous session for the venue.
+  await retireOpenScheduledSession(venueId);
+  return true;
+}
+
+/**
  * Drives one venue's Category Blitz forward on demand, exactly like
  * getLiveShowdownState's lazy-seeding safety net drives Live Trivia: closes
  * a stale auto session, scores an expired round, opens a fresh session for
@@ -710,6 +779,11 @@ export async function driveVenueCategoryBlitz(
   // independent of what the UI's toggle displayed).
   requestedTestMode: boolean = false,
 ): Promise<CategoryBlitzSession | null> {
+  // Phase 4: if this venue runs continuous mode, the scheduled engine stands
+  // down entirely (and retires any lingering scheduled session). Continuous is
+  // driven by driveContinuousCategoryBlitz, never here.
+  if (await standDownScheduledIfContinuous(venueId)) return null;
+
   let existing = await getActiveSession(venueId);
   debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): session status in = ${existing ? existing.status : "none"}`);
   if (existing && (isStaleAutoSession(existing, now) || (await isIdleAutoSession(existing, now)))) {
@@ -1944,6 +2018,11 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
 
   for (const venueId of venueIds) {
     try {
+      // Phase 4: never drive a venue that runs continuous mode — the scheduled
+      // engine stands down and retires any lingering scheduled session so it
+      // can't compete for the venue's single open-session slot.
+      if (await standDownScheduledIfContinuous(venueId)) continue;
+
       const openSchedule = schedules.find((s) => s.venueId === venueId && isWindowOpen(s, now));
       if (!openSchedule) continue;
 
@@ -1991,6 +2070,359 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
       }
     } catch (e) {
       result.errors.push(`drive ${venueId}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  return result;
+}
+
+// ── Continuous Loop Mode ──────────────────────────────────────────────────────
+
+export type ContinuousSessionResult = {
+  session: CategoryBlitzSession;
+  round?: CategoryBlitzRound;
+  action: "created" | "started_round" | "waiting_intermission" | "round_in_progress";
+};
+
+/**
+ * Get the active continuous session for a venue, or null if none exists.
+ * Unlike scheduled sessions, continuous sessions never end naturally - they
+ * must be explicitly stopped via endContinuousSession().
+ */
+export async function getContinuousSession(venueId: string): Promise<CategoryBlitzSession | null> {
+  assertAdmin();
+  const { data, error } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select(SESSION_COLS)
+    .eq("venue_id", venueId)
+    .eq("session_type", "continuous")
+    .in("status", ["lobby", "active", "scoring"])
+    .maybeSingle<SessionRow>();
+
+  if (error) throw new Error(error.message || "Failed to load continuous session.");
+  return data ? toSession(data) : null;
+}
+
+/**
+ * Create a new continuous session for a venue.
+ * Continuous sessions start immediately (no lobby dwell) and run indefinitely.
+ */
+export async function createContinuousSession(
+  venueId: string,
+  testMode: boolean = false,
+): Promise<CategoryBlitzSession> {
+  assertAdmin();
+
+  // Verify continuous mode is enabled for this venue (override row or global
+  // default once the rollout flag is on).
+  const config = await resolveContinuousConfig(venueId);
+  if (!config || !config.isActive) {
+    throw new Error("Continuous mode is not enabled for this venue.");
+  }
+
+  const { data, error } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .insert({
+      venue_id: venueId,
+      status: "active", // Skip lobby, go straight to active
+      source: "auto",
+      session_type: "continuous",
+      scheduled_end_at: null, // No end time - runs forever
+      starts_at: new Date().toISOString(), // Start immediately
+      test_mode: testMode,
+    })
+    .select(SESSION_COLS)
+    .single<SessionRow>();
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("A continuous session is already active for this venue.");
+    }
+    throw new Error(error.message || "Failed to create continuous session.");
+  }
+
+  const session = toSession(data);
+  await broadcastCategoryBlitz(venueId, "continuous_session_created", {
+    sessionId: session.id,
+  });
+
+  return session;
+}
+
+/**
+ * Start a round for a continuous session.
+ * Unlike scheduled mode:
+ * - Uses pure random letter selection (no repeat avoidance)
+ * - Uses weighted random mode selection
+ * - Uses custom timing from continuous config
+ * - No lobby dwell period
+ */
+export async function startContinuousRound(
+  sessionId: string,
+  config: {
+    roundDurationSeconds: number;
+    modeSelection: "random" | "weighted_standard" | "weighted_reverse";
+    categoryPool: string[];
+  },
+): Promise<CategoryBlitzRound> {
+  assertAdmin();
+
+  // Load session
+  const { data: sessionRow, error: sessionErr } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select(SESSION_COLS)
+    .eq("id", sessionId)
+    .maybeSingle<SessionRow>();
+
+  if (sessionErr || !sessionRow) {
+    throw new Error("Session not found.");
+  }
+  if (sessionRow.session_type !== "continuous") {
+    throw new Error("startContinuousRound can only be used with continuous sessions.");
+  }
+  if (!["lobby", "active"].includes(sessionRow.status)) {
+    throw new Error(`Cannot start round on a session with status '${sessionRow.status}'.`);
+  }
+
+  // Pure random selection - no tracking of used letters
+  const letter = pickRandomLetter();
+  const mode = pickRandomMode(config.modeSelection);
+  const categories = assembleRandomBoard(letter, config.categoryPool);
+
+  if (categories.length === 0) {
+    throw new Error(`Failed to assemble a category board for letter '${letter}'. Check category pool coverage.`);
+  }
+
+  const setIndex = LETTERS.indexOf(letter);
+  const endsAt = new Date(Date.now() + config.roundDurationSeconds * 1000).toISOString();
+
+  // Mark session active (in case it was in lobby)
+  if (sessionRow.status === "lobby") {
+    await supabaseAdmin!
+      .from("category_blitz_sessions")
+      .update({ status: "active" })
+      .eq("id", sessionId);
+  }
+
+  const { data: roundRow, error: roundErr } = await supabaseAdmin!
+    .from("category_blitz_rounds")
+    .insert({
+      session_id: sessionId,
+      venue_id: sessionRow.venue_id,
+      letter,
+      category_set_index: setIndex,
+      categories,
+      ends_at: endsAt,
+      status: "active",
+      mode,
+    })
+    .select(ROUND_COLS)
+    .single<RoundRow>();
+
+  if (roundErr || !roundRow) {
+    if (roundErr?.code === "23505") {
+      const winner = await getLatestRound(sessionId);
+      if (winner && (winner.status === "active" || winner.status === "scoring")) {
+        return toRound(winner);
+      }
+    }
+    throw new Error(roundErr?.message || "Failed to create continuous round.");
+  }
+
+  const round = toRound(roundRow);
+  await broadcastCategoryBlitz(sessionRow.venue_id, "round_started", {
+    round: {
+      id: round.id,
+      letter: round.letter,
+      categories: round.categories,
+      startedAt: round.startedAt,
+      endsAt: round.endsAt,
+      mode: round.mode,
+    },
+  });
+
+  return round;
+}
+
+/**
+ * Drive a venue's continuous Category Blitz session forward.
+ * This is the continuous mode equivalent of driveVenueCategoryBlitz.
+ *
+ * Key differences from scheduled mode:
+ * - No schedule windows or lobby dwell
+ * - Sessions never end naturally (run until explicitly stopped)
+ * - Pure random letter and mode selection
+ * - Configurable timing per venue
+ */
+export async function driveContinuousCategoryBlitz(
+  venueId: string,
+  now: Date = new Date(),
+): Promise<ContinuousSessionResult | null> {
+  // Check if continuous mode is enabled (override row or global default once
+  // the rollout flag is on). Null ⇒ scheduled path.
+  const config = await resolveContinuousConfig(venueId);
+  if (!config) {
+    debugLog(`[categoryBlitz] driveContinuousCategoryBlitz(${venueId}): continuous mode not enabled`);
+    return null;
+  }
+
+  // Score any expired rounds first
+  await scoreExpiredRoundForVenue(venueId, now);
+
+  // Get or create the continuous session
+  let session = await getContinuousSession(venueId);
+  let action: ContinuousSessionResult["action"] = "created";
+
+  if (!session) {
+    // Phase 4: before claiming the venue's single open-session slot, retire any
+    // scheduled session left open from before this venue switched to continuous.
+    // Otherwise createContinuousSession below would fail the shared partial
+    // unique index (23505). This is the continuous-side counterpart to
+    // standDownScheduledIfContinuous — it makes the transition robust even when
+    // the scheduled cron never revisits this venue (e.g. its schedule row was
+    // already deactivated in Phase 5).
+    await retireOpenScheduledSession(venueId);
+
+    try {
+      session = await createContinuousSession(venueId);
+      action = "created";
+      debugLog(`[categoryBlitz] driveContinuousCategoryBlitz(${venueId}): created new continuous session`);
+    } catch (error) {
+      // Lost the race - another caller created it
+      session = await getContinuousSession(venueId);
+      if (!session) throw error;
+    }
+  }
+
+  // Get the latest round to determine next action
+  const latestRound = await getLatestRound(session.id);
+
+  // No rounds yet - start the first one immediately
+  if (!latestRound) {
+    debugLog(`[categoryBlitz] driveContinuousCategoryBlitz(${venueId}): starting first round`);
+    const round = await startContinuousRound(session.id, {
+      roundDurationSeconds: config.roundDurationSeconds,
+      modeSelection: config.modeSelection,
+      categoryPool: config.categoryPool,
+    });
+    return { session: await withPlayerCount(session), round, action: "started_round" };
+  }
+
+  // Round in progress or scoring - don't interrupt
+  if (latestRound.status !== "complete") {
+    debugLog(`[categoryBlitz] driveContinuousCategoryBlitz(${venueId}): round ${latestRound.status} - no-op`);
+    return { session: await withPlayerCount(session), round: toRound(latestRound), action: "round_in_progress" };
+  }
+
+  // Round complete - check if intermission has elapsed
+  const intermissionEndMs = latestRound.scored_at
+    ? new Date(latestRound.scored_at).getTime() + config.intermissionSeconds * 1000
+    : new Date(latestRound.started_at).getTime() + (config.roundDurationSeconds + config.intermissionSeconds) * 1000;
+
+  if (now.getTime() < intermissionEndMs) {
+    debugLog(`[categoryBlitz] driveContinuousCategoryBlitz(${venueId}): intermission not elapsed yet`);
+    return { session: await withPlayerCount(session), round: toRound(latestRound), action: "waiting_intermission" };
+  }
+
+  // Start the next round
+  debugLog(`[categoryBlitz] driveContinuousCategoryBlitz(${venueId}): starting next round`);
+  const round = await startContinuousRound(session.id, {
+    roundDurationSeconds: config.roundDurationSeconds,
+    modeSelection: config.modeSelection,
+    categoryPool: config.categoryPool,
+  });
+
+  return { session: await withPlayerCount(session), round, action: "started_round" };
+}
+
+/**
+ * End a continuous session and mark it complete.
+ * This is the manual stop mechanism for continuous mode.
+ * Scores any active round before ending.
+ */
+export async function endContinuousSession(sessionId: string): Promise<void> {
+  assertAdmin();
+
+  const { data: sessionRow } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select("venue_id, session_type, status")
+    .eq("id", sessionId)
+    .maybeSingle<{ venue_id: string; session_type: string; status: string }>();
+
+  if (!sessionRow) {
+    throw new Error("Session not found.");
+  }
+  if (sessionRow.session_type !== "continuous") {
+    throw new Error("endContinuousSession can only be used with continuous sessions.");
+  }
+
+  // Score any active round before ending
+  const latest = await getLatestRound(sessionId);
+  if (latest && latest.status === "active") {
+    await scoreRound(latest.id).catch((err) => {
+      console.error(`[categoryBlitz] scoreRound failed while ending continuous session ${sessionId}:`, err instanceof Error ? err.message : err);
+    });
+  }
+
+  await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .update({ status: "complete", completed_at: new Date().toISOString() })
+    .eq("id", sessionId);
+
+  if (sessionRow.venue_id) {
+    await broadcastCategoryBlitz(sessionRow.venue_id, "continuous_session_ended", { sessionId });
+  }
+}
+
+/**
+ * Cron-compatible engine for continuous mode.
+ *
+ * Drives every venue that already has an open continuous session (status in
+ * lobby/active/scoring) — NOT every venue with continuous mode "enabled".
+ * Once "no override row" can also mean continuous is on (the global-default
+ * rollout, see `resolveContinuousConfig`), enabling is no longer a bounded
+ * set of config rows; a session only exists for a venue once a player has
+ * actually opened the game there (lazy creation via `driveContinuousCategoryBlitz`
+ * from the sessions route), so this keeps the cron's sweep scoped to venues
+ * that are actually in play instead of scanning the entire venues table.
+ */
+export async function runContinuousCategoryBlitzEngine(now: Date = new Date()): Promise<{
+  driven: string[];
+  started: string[];
+  errors: string[];
+}> {
+  assertAdmin();
+
+  const result = {
+    driven: [] as string[],
+    started: [] as string[],
+    errors: [] as string[],
+  };
+
+  // Find all venues with an open continuous session.
+  const { data: sessions, error } = await supabaseAdmin!
+    .from("category_blitz_sessions")
+    .select("venue_id")
+    .eq("session_type", "continuous")
+    .in("status", ["lobby", "active", "scoring"]);
+
+  if (error) {
+    throw new Error(error.message || "Failed to load open continuous sessions.");
+  }
+
+  const venueIds = [...new Set((sessions ?? []).map((s: { venue_id: string }) => s.venue_id))];
+
+  for (const venueId of venueIds) {
+    try {
+      const driveResult = await driveContinuousCategoryBlitz(venueId, now);
+      if (driveResult) {
+        result.driven.push(venueId);
+        if (driveResult.action === "started_round") {
+          result.started.push(venueId);
+        }
+      }
+    } catch (e) {
+      result.errors.push(`${venueId}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 

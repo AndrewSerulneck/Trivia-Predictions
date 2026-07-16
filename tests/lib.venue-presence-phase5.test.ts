@@ -125,7 +125,7 @@ describe("venue presence phase 5 QA matrix", () => {
       allowedDistanceMeters: 420,
       accuracyMeters: 25,
       lastVerifiedAt: "2026-07-13T16:00:00.000Z",
-      expiresAt: "2026-07-13T16:03:00.000Z",
+      expiresAt: "2026-07-13T16:15:00.000Z",
     });
     expect(writes).toHaveLength(1);
     expect(writes[0]).toMatchObject({
@@ -135,7 +135,7 @@ describe("venue presence phase 5 QA matrix", () => {
       source: "heartbeat",
       last_distance_meters: 0,
       last_accuracy_meters: 25,
-      expires_at: "2026-07-13T16:03:00.000Z",
+      expires_at: "2026-07-13T16:15:00.000Z",
     });
     expect(eventWrites).toHaveLength(1);
     expect(eventWrites[0]).toMatchObject({
@@ -231,7 +231,7 @@ describe("venue presence phase 5 QA matrix", () => {
     expect(second).toMatchObject({
       status: "active",
       lastVerifiedAt: "2026-07-13T16:01:00.000Z",
-      expiresAt: "2026-07-13T16:04:00.000Z",
+      expiresAt: "2026-07-13T16:16:00.000Z",
     });
     expect(writes.map((entry) => entry.status)).toEqual(["out_of_range", "active"]);
   });

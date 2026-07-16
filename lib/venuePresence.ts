@@ -8,7 +8,12 @@ import {
 } from "@/lib/geofence";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-export const VENUE_PRESENCE_TTL_MS = 3 * 60 * 1000;
+// Server-side presence lease lifetime. Must stay in sync with the client
+// re-check cadence (PRESENCE_CHECK_INTERVAL_MS in
+// components/venue/VenuePresenceBoundary.tsx). Raised from 3 min to 15 min to
+// cut battery/permission churn; see the TRADEOFF note there — a departed user
+// keeps access for up to one TTL. Lower both together to tighten enforcement.
+export const VENUE_PRESENCE_TTL_MS = 15 * 60 * 1000;
 export const VENUE_PRESENCE_FALSE_POSITIVE_WINDOW_MS = 5 * 60 * 1000;
 
 // God Mode accounts (Andrew, Marc — `accounts.god_mode`) may access any venue from

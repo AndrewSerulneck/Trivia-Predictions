@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { datetimeLocalValueToUtcIso, utcIsoToDatetimeLocalValue } from "@/lib/categoryBlitzScheduleTime";
-import { gameDurationMinutes, roundsFromWindowMinutes } from "@/lib/categoryBlitzShared";
+import { gameDurationMinutes, isContinuousDefaultEnabled, roundsFromWindowMinutes } from "@/lib/categoryBlitzShared";
 import type { Venue, CategoryBlitzSchedule, CategoryBlitzSession, CategoryBlitzRecurringType } from "@/types";
 
 const TIMEZONES = [
@@ -102,7 +102,32 @@ export function CategoryBlitzSection({ venues = [] }: { venues?: Venue[] }) {
       </div>
 
       <LiveSessionPanel venueId={selectedVenueId} />
-      <SchedulesPanel venueId={selectedVenueId} />
+      {isContinuousDefaultEnabled() ? (
+        <ContinuousDefaultNotice />
+      ) : (
+        <SchedulesPanel venueId={selectedVenueId} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Replaces the schedule builder once continuous mode is the universal
+ * default (see docs/CATEGORY_BLITZ_CONTINUOUS_DEFAULT_PLAN.md, Phase 3) — every
+ * venue now runs an endless randomized loop with no start/end time or round
+ * count to configure. Per-venue pacing overrides still live at
+ * /owner/category-blitz.
+ */
+function ContinuousDefaultNotice() {
+  return (
+    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
+      <p className="text-sm font-semibold text-slate-600">
+        Category Blitz now runs continuously at every venue — no schedule to set up.
+      </p>
+      <p className="mt-1 text-xs text-slate-400">
+        To customize pacing or the category pool for a specific venue, use the venue&apos;s Category Blitz
+        settings (Owner &rarr; Category Blitz).
+      </p>
     </div>
   );
 }

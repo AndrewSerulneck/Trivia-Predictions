@@ -4,6 +4,21 @@
 // keep it that way so both sides can import from one place instead of
 // hand-syncing duplicate copies.
 
+const truthy = (value: string | undefined): boolean => {
+  const v = (value ?? "").trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes" || v === "on";
+};
+
+/**
+ * Master flag for the "continuous is the default everywhere" rollout (see
+ * `docs/CATEGORY_BLITZ_CONTINUOUS_DEFAULT_PLAN.md`). Lives here (not
+ * `lib/categoryBlitzPool.ts`, which is `server-only`) so both the server
+ * engine and client-facing admin/owner UI can read the same flag to decide
+ * whether to still offer schedule-based Category Blitz creation.
+ */
+export const isContinuousDefaultEnabled = (): boolean =>
+  truthy(process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT);
+
 /** Seconds of active play per round. */
 export const ROUND_DURATION_SECONDS = 180;
 

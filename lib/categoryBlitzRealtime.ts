@@ -20,10 +20,31 @@ import type {
  * fall back to the legacy `startedAt + interval` estimate. Keeping this in sync
  * with the server keeps the "next round in" countdown honest.
  */
+/**
+ * Continuous mode uses per-venue timing (round duration + intermission) instead
+ * of the shared scheduled constants. When the current session is continuous, the
+ * hook passes this so the "next round in" countdown anchors on the venue's real
+ * cadence; scheduled sessions pass undefined and fall back to the constants.
+ */
+type ContinuousTiming = { roundDurationSeconds: number; intermissionSeconds: number };
+
 function nextRoundStartAtMs(
   round: Pick<CategoryBlitzRound, "scoredAt" | "startedAt">,
   testMode: boolean,
+  continuousTiming?: ContinuousTiming | null,
 ): number {
+  if (continuousTiming) {
+    // Mirror driveContinuousCategoryBlitz's server anchor: next round starts a
+    // full intermission after scoring, or roundDuration + intermission after
+    // start for a not-yet-scored round.
+    if (round.scoredAt) {
+      return new Date(round.scoredAt).getTime() + continuousTiming.intermissionSeconds * 1000;
+    }
+    return (
+      new Date(round.startedAt).getTime() +
+      (continuousTiming.roundDurationSeconds + continuousTiming.intermissionSeconds) * 1000
+    );
+  }
   if (round.scoredAt) {
     return new Date(round.scoredAt).getTime() + intermissionSeconds(testMode) * 1000;
   }
@@ -181,10 +202,27 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   const dismissedSessionIdRef = useRef<string | null>(null);
   const userIdRef         = useRef(userId);
   const loadResultsRef    = useRef<(roundId: string) => Promise<void>>(async () => {});
+  /** Per-venue continuous-mode timing (round + intermission seconds), or null
+   *  for scheduled sessions. Read synchronously inside the timing callbacks so
+   *  the "next round in" countdown uses the venue's real continuous cadence
+   *  without adding `session` to their dependency arrays. */
+  const continuousTimingRef = useRef<ContinuousTiming | null>(null);
 
   useEffect(() => {
     userIdRef.current = userId;
   }, [userId]);
+
+  useEffect(() => {
+    continuousTimingRef.current =
+      session?.sessionType === "continuous" &&
+      typeof session.roundDurationSeconds === "number" &&
+      typeof session.intermissionSeconds === "number"
+        ? {
+            roundDurationSeconds: session.roundDurationSeconds,
+            intermissionSeconds: session.intermissionSeconds,
+          }
+        : null;
+  }, [session]);
 
   useEffect(() => {
     phaseRef.current = phase;
@@ -353,7 +391,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       endsAtRef.current = endsAtMs;
 
       const remaining = Math.max(0, Math.round((endsAtMs - Date.now()) / 1000));
-      const nextStartAtMs = nextRoundStartAtMs(r, isCategoryBlitzTestModeEnabled());
+      const nextStartAtMs = nextRoundStartAtMs(r, isCategoryBlitzTestModeEnabled(), continuousTimingRef.current);
       const nextStartRemaining = Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000));
 
       if (r.status === "complete") {
@@ -546,7 +584,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       settlePhase(roundId, "results");
       endsAtRef.current = null;
       if (round?.startedAt) {
-        const nextStartAtMs = nextRoundStartAtMs(round, isCategoryBlitzTestModeEnabled());
+        const nextStartAtMs = nextRoundStartAtMs(round, isCategoryBlitzTestModeEnabled(), continuousTimingRef.current);
         setNextRoundStartsIn(Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
       }
     } catch {
@@ -579,7 +617,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
           enterResultsOrReveal(json.results.roundId);
           endsAtRef.current = null;
           if (round?.startedAt) {
-            const nextStartAtMs = nextRoundStartAtMs(round, isCategoryBlitzTestModeEnabled());
+            const nextStartAtMs = nextRoundStartAtMs(round, isCategoryBlitzTestModeEnabled(), continuousTimingRef.current);
             setNextRoundStartsIn(Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
           }
         } else {
@@ -636,7 +674,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       }
 
       if ((phase === "results" || phase === "scoring" || phase === "reveal") && round?.startedAt) {
-        const nextStartAtMs = nextRoundStartAtMs(round, isCategoryBlitzTestModeEnabled());
+        const nextStartAtMs = nextRoundStartAtMs(round, isCategoryBlitzTestModeEnabled(), continuousTimingRef.current);
         setNextRoundStartsIn(Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
       } else {
         setNextRoundStartsIn(null);
@@ -692,6 +730,19 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         // Usually a no-op (this tab typically already has the last round's
         // results from a prior round_scored broadcast) — but covers a tab
         // that reconnected right at the end and never saw that broadcast.
+        if (sessionIdRef.current) void loadFinalResults(sessionIdRef.current);
+      })
+      .on("broadcast", { event: "continuous_session_ended" }, () => {
+        // Admin manually stopped continuous mode (endContinuousSession). Same
+        // client outcome as a scheduled session ending: settle onto the Game
+        // Over screen with the final round's standings instead of waiting out
+        // the 15s fallback poll.
+        if (!active || !mountedRef.current) return;
+        setPhase("complete");
+        setViewerRole(null);
+        endsAtRef.current = null;
+        setNextRoundStartsIn(null);
+        pendingActiveRoundRef.current = null;
         if (sessionIdRef.current) void loadFinalResults(sessionIdRef.current);
       })
       .on("broadcast", { event: "session_abandoned" }, () => {

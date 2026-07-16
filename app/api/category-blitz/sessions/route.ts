@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
-import { createSession, driveVenueCategoryBlitz, registerSessionPresence } from "@/lib/categoryBlitz";
+import { createSession, driveContinuousCategoryBlitz, driveVenueCategoryBlitz, registerSessionPresence } from "@/lib/categoryBlitz";
+import { resolveContinuousConfig } from "@/lib/categoryBlitzPool";
 import { listSchedules, getNextScheduleOccurrence } from "@/lib/categoryBlitzSchedules";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
 
@@ -35,12 +36,38 @@ export async function GET(request: Request) {
     // docs/category-blitz-bugs-timing-fix.md).
     const probeTimestamp = now.toISOString();
 
-    const [session, schedules] = await Promise.all([
-      driveVenueCategoryBlitz(venueId, now, testMode),
-      listSchedules(venueId),
-    ]);
-    const nextOcc = getNextScheduleOccurrence(schedules, now);
-    const nextWindowAt: string | null = nextOcc ? nextOcc.windowStart.toISOString() : null;
+    // Continuous mode is driven by a separate engine and has no schedule
+    // windows. resolveContinuousConfig returns null unless continuous mode is
+    // active for this venue — either via an override row or, once the rollout
+    // flag is on, the global default — so scheduled venues (or explicit
+    // opt-outs) take the else branch exactly as before.
+    const continuousConfig = await resolveContinuousConfig(venueId);
+
+    let session: Awaited<ReturnType<typeof driveVenueCategoryBlitz>> = null;
+    let nextWindowAt: string | null = null;
+
+    if (continuousConfig) {
+      const continuous = await driveContinuousCategoryBlitz(venueId, now);
+      // Attach the venue's configured round/intermission timing so the client
+      // countdown ("next round in") anchors on the real continuous cadence
+      // rather than the shared scheduled defaults. These are transport-only
+      // fields — not persisted session columns.
+      session = continuous?.session
+        ? {
+            ...continuous.session,
+            roundDurationSeconds: continuousConfig.roundDurationSeconds,
+            intermissionSeconds: continuousConfig.intermissionSeconds,
+          }
+        : null;
+    } else {
+      const [scheduledSession, schedules] = await Promise.all([
+        driveVenueCategoryBlitz(venueId, now, testMode),
+        listSchedules(venueId),
+      ]);
+      session = scheduledSession;
+      const nextOcc = getNextScheduleOccurrence(schedules, now);
+      nextWindowAt = nextOcc ? nextOcc.windowStart.toISOString() : null;
+    }
 
     // Best-effort presence registration: the first time this user's client
     // observes any live session state (lobby onward) becomes their

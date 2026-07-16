@@ -411,6 +411,7 @@ function CompleteScreen({
   venuePointsBefore,
   venuePointsAfter,
   nextWindowInfo,
+  isContinuous,
 }: {
   results: CategoryBlitzRoundResults | null;
   userId: string;
@@ -423,6 +424,8 @@ function CompleteScreen({
   venuePointsAfter: number | null;
   /** Next scheduled window for this venue, or null while still loading. See NextGameStatus. */
   nextWindowInfo: { nextWindowAtMs: number | null } | null;
+  /** True for continuous mode — this screen only shows when an admin manually stops it; there's no schedule to count down to. */
+  isContinuous?: boolean;
 }) {
   const { displayTotal: totalPointsDisplay, pulsing: totalPointsPulsing } = useTotalPointsCountUp(
     venuePointsBefore,
@@ -436,11 +439,12 @@ function CompleteScreen({
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
         <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
-          <p className={TEXT_LABEL}>Game over</p>
+          <p className={TEXT_LABEL}>{isContinuous ? "Session ended" : "Game over"}</p>
           <p className="mt-3 text-xl font-black text-white">The session has ended.</p>
           <p className="mt-2 text-sm text-slate-400">Thanks for playing!</p>
         </div>
-        <NextGameStatus info={nextWindowInfo} />
+        {/* Continuous mode has no schedule to count down to — omit the scheduled "next game" card. */}
+        {!isContinuous && <NextGameStatus info={nextWindowInfo} />}
       </div>
     );
   }
@@ -476,7 +480,15 @@ function CompleteScreen({
           <span className="text-2xl leading-none">🏁</span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className={TEXT_LABEL}>{viewerRank === 0 ? "Game Over · Champion" : "Game Over"}</p>
+          <p className={TEXT_LABEL}>
+            {isContinuous
+              ? viewerRank === 0
+                ? "Session Complete · Champion"
+                : "Session Complete"
+              : viewerRank === 0
+              ? "Game Over · Champion"
+              : "Game Over"}
+          </p>
           <p className="truncate text-lg font-black leading-tight text-white">{viewerEntry?.username ?? "You"}</p>
         </div>
         <div className="shrink-0 text-right">
@@ -582,7 +594,7 @@ function CompleteScreen({
         />
       ) : null}
 
-      <NextGameStatus info={nextWindowInfo} />
+      {!isContinuous && <NextGameStatus info={nextWindowInfo} />}
 
       <p className="pb-2 text-center text-xs text-slate-500">Thanks for playing! Your points have been awarded.</p>
     </div>
@@ -1155,10 +1167,13 @@ function Header({
   phase,
   error,
   onBack,
+  isContinuous,
 }: {
   phase?: CategoryBlitzPhase;
   error?: string | null;
   onBack?: () => void;
+  /** True when the venue is running continuous (endless) mode — shows an "∞ Continuous" badge. */
+  isContinuous?: boolean;
 }) {
   return (
     <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950 px-4 py-3`}>
@@ -1185,8 +1200,14 @@ function Header({
           }`}
         />
         <p className={`text-[0.7rem] font-black uppercase tracking-[0.16em] ${TEXT_ACCENT}`}>
-          {phase === "lobby" ? "Lobby" : phase === "answering" ? "Round Active" : phase === "scoring" ? "Scoring" : phase === "reveal" ? "Revealing" : phase === "results" ? "Results" : phase === "complete" ? "Game Over" : "Category Blitz"}
+          {phase === "lobby" ? "Lobby" : phase === "answering" ? "Round Active" : phase === "scoring" ? "Scoring" : phase === "reveal" ? "Revealing" : phase === "results" ? "Results" : phase === "complete" ? (isContinuous ? "Session Complete" : "Game Over") : "Category Blitz"}
         </p>
+        {isContinuous && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-[0.12em] text-cyan-300">
+            <span aria-hidden="true" className="text-[0.7rem] leading-none">∞</span>
+            Continuous
+          </span>
+        )}
         {error && (
           <span className="ml-auto text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
             Reconnecting…
@@ -1222,6 +1243,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     isHydrated ? userId : ""
   );
   const { triggerAnimation } = useAnimationTrigger();
+  const isContinuous = session?.sessionType === "continuous";
 
   // Turning the toggle on force-converts the live auto session to test mode —
   // see the effect below (keyed on session.id), which handles both this and
@@ -1587,7 +1609,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         className="flex flex-col overflow-hidden bg-slate-950 text-white"
         style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
       >
-        <Header phase={phase} error={error} onBack={onBack} />
+        <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
           <div className="w-full max-w-sm rounded-2xl border border-rose-400/40 bg-slate-900 p-5 text-center">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-300">Connection error</p>
@@ -1617,7 +1639,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
       className={`relative flex flex-col overflow-hidden text-white transition-colors duration-700 ${pageTheme.pageBg}`}
       style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
     >
-      <Header phase={phase} error={error} onBack={onBack} />
+      <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} />
       <button
         type="button"
         onClick={toggleTestMode}
@@ -1726,6 +1748,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
                 ? { nextWindowAtMs: completeNextWindow.nextWindowAtMs }
                 : null
             }
+            isContinuous={isContinuous}
           />
         </>
       )}

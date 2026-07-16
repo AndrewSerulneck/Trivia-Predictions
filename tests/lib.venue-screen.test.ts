@@ -101,6 +101,7 @@ function makeCategorySession(overrides: Partial<CategoryBlitzSession> = {}): Cat
     venueId: "venue-1",
     status: "active",
     source: "auto",
+    sessionType: "scheduled",
     scheduledEndAt: "2026-07-02T21:00:00.000Z",
     startsAt: null,
     testMode: false,

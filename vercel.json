@@ -39,6 +39,10 @@
     {
       "path": "/api/cron/category-blitz-score",
       "schedule": "*/1 * * * *"
+    },
+    {
+      "path": "/api/cron/category-blitz-continuous",
+      "schedule": "*/1 * * * *"
     }
   ]
 }

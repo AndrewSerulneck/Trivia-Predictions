@@ -103,21 +103,31 @@ function installSupabaseMock() {
       return {
         select: vi.fn(() => {
           const filters: Record<string, unknown> = {};
-          return {
+          // getActiveSession now chains two .eq()s (venue_id, session_type)
+          // before .in("status", ...), and getRecentlyCompletedSession chains
+          // .eq().eq().eq().gte().order().limit(). Model .eq (and the pass-
+          // through filters) as fully chainable so the real query shape works.
+          const builder: Record<string, unknown> = {
             eq: vi.fn((column: string, value: unknown) => {
               filters[column] = value;
-              return {
-                in: vi.fn(() => ({
-                  maybeSingle: vi.fn(async () => {
-                    const venueId = String(filters.venue_id ?? "");
-                    const session = mocks.activeSessionsByVenue.get(venueId) ?? null;
-                    return { data: session, error: null };
-                  }),
-                  lte: vi.fn(async () => ({ data: mocks.closableRows, error: null })),
-                })),
-              };
+              return builder;
             }),
+            in: vi.fn(() => ({
+              maybeSingle: vi.fn(async () => {
+                const venueId = String(filters.venue_id ?? "");
+                const session = mocks.activeSessionsByVenue.get(venueId) ?? null;
+                return { data: session, error: null };
+              }),
+              lte: vi.fn(async () => ({ data: mocks.closableRows, error: null })),
+            })),
+            gte: vi.fn(() => builder),
+            order: vi.fn(() => builder),
+            limit: vi.fn(() => builder),
+            // getRecentlyCompletedSession terminal — no recently completed
+            // session in these fixtures, so the engine opens a fresh one.
+            maybeSingle: vi.fn(async () => ({ data: null, error: null })),
           };
+          return builder;
         }),
         insert: vi.fn((payload: Record<string, unknown>) => {
           mocks.insertedSessions.push(payload);

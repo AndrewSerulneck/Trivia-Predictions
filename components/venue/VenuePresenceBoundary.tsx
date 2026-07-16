@@ -27,8 +27,19 @@ import {
   type VenuePresenceClientFailure,
 } from "@/lib/venuePresenceClient";
 
-const HEARTBEAT_INTERVAL_MS = 45_000;
-const WATCH_HEARTBEAT_MIN_GAP_MS = 15_000;
+// How often the client re-verifies venue presence (browser geolocation +
+// server heartbeat). Deliberately coarse (15 min) — paired with the matching
+// server-side lease TTL (VENUE_PRESENCE_TTL_MS in lib/venuePresence.ts) — to
+// avoid the old continuous watchPosition()/45s-heartbeat battery drain and
+// repeated permission prompts.
+//
+// TRADEOFF (product sign-off): this widens the window in which a user who has
+// physically LEFT the venue retains access from ~1–3 min (the old TTL) to up to
+// 15 min. That is acceptable for the current casual-venue threat model; if
+// tighter geofence enforcement is ever required, lower this AND
+// VENUE_PRESENCE_TTL_MS together (they must stay in sync).
+const PRESENCE_CHECK_INTERVAL_MS = 15 * 60 * 1000;
+const PRESENCE_CHECK_STORAGE_PREFIX = "ht:venue-presence:last-check";
 const GEOLOCATION_PERMISSION_DENIED = 1;
 
 type VenuePresenceContextValue = {
@@ -66,6 +77,30 @@ function toHeartbeatLocation(location: Coordinates) {
   };
 }
 
+function getPresenceCheckStorageKey(userId: string, venueId: string): string {
+  return `${PRESENCE_CHECK_STORAGE_PREFIX}:${userId}:${venueId}`;
+}
+
+function readLastPresenceCheckAt(userId: string, venueId: string): number {
+  if (typeof window === "undefined") return 0;
+  const raw = window.sessionStorage.getItem(getPresenceCheckStorageKey(userId, venueId));
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function writeLastPresenceCheckAt(userId: string, venueId: string, checkedAt: number): void {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(getPresenceCheckStorageKey(userId, venueId), String(checkedAt));
+}
+
+function shouldShowVenueAccessOverlay(failure: VenuePresenceClientFailure): boolean {
+  return (
+    failure.code === "AUTH_REQUIRED" ||
+    failure.code === "VENUE_OUT_OF_RANGE" ||
+    failure.code === "VENUE_PROFILE_MISMATCH"
+  );
+}
+
 export function VenuePresenceBoundary({
   children,
   enabled = true,
@@ -86,18 +121,12 @@ export function VenuePresenceBoundary({
   const [overlay, setOverlay] = useState<VenueAccessOverlayContent | null>(null);
   const [lastFailure, setLastFailure] = useState<VenuePresenceClientFailure | null>(null);
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
-  const latestLocationRef = useRef<Coordinates | null>(null);
   const lastHeartbeatAtRef = useRef(0);
   const heartbeatInFlightRef = useRef<Promise<boolean> | null>(null);
   const locationErrorRef = useRef<unknown>(null);
-  const overlayRef = useRef<VenueAccessOverlayContent | null>(null);
   const activeVenueId = String(routeVenueId ?? storedVenueId ?? "").trim();
   const venueHomeHref = activeVenueId ? `/venue/${encodeURIComponent(activeVenueId)}` : "/";
   const showSecondaryAction = pathname !== venueHomeHref;
-
-  useEffect(() => {
-    overlayRef.current = overlay;
-  }, [overlay]);
 
   useEffect(() => {
     const syncSession = () => {
@@ -113,11 +142,14 @@ export function VenuePresenceBoundary({
   }, []);
 
   const applyFailure = useCallback((failure: VenuePresenceClientFailure) => {
-    const nextOverlay = mapVenuePresenceFailureToOverlay(failure, {
-      permissionDenied: isPermissionDeniedError(locationErrorRef.current),
-    });
     setLastFailure(failure);
-    setOverlay(nextOverlay);
+    if (shouldShowVenueAccessOverlay(failure)) {
+      setOverlay(
+        mapVenuePresenceFailureToOverlay(failure, {
+          permissionDenied: isPermissionDeniedError(locationErrorRef.current),
+        })
+      );
+    }
   }, []);
 
   const capturePresenceFailure = useCallback(
@@ -133,7 +165,7 @@ export function VenuePresenceBoundary({
   );
 
   const sendHeartbeat = useCallback(
-    async (location: Coordinates | null, options: { showChecking?: boolean } = {}) => {
+    async (location: Coordinates | null) => {
       if (!enabled || !userId || !activeVenueId) {
         return false;
       }
@@ -142,14 +174,6 @@ export function VenuePresenceBoundary({
       }
       if (heartbeatInFlightRef.current) {
         return heartbeatInFlightRef.current;
-      }
-
-      if (options.showChecking) {
-        setOverlay(
-          mapVenuePresenceFailureToOverlay(buildVenuePresenceFailure("VENUE_PRESENCE_UNAVAILABLE"), {
-            permissionDenied: false,
-          })
-        );
       }
 
       const request = (async () => {
@@ -174,6 +198,7 @@ export function VenuePresenceBoundary({
           setLastFailure(null);
           setOverlay(null);
           lastHeartbeatAtRef.current = Date.now();
+          writeLastPresenceCheckAt(userId, activeVenueId, lastHeartbeatAtRef.current);
           return true;
         } catch {
           applyFailure(buildVenuePresenceFailure("VENUE_PRESENCE_UNAVAILABLE"));
@@ -200,14 +225,16 @@ export function VenuePresenceBoundary({
     try {
       setIsCheckingAccess(true);
       const location = await getCurrentLocation();
-      latestLocationRef.current = location;
       locationErrorRef.current = null;
-      return await sendHeartbeat(location, { showChecking: true });
+      return await sendHeartbeat(location);
     } catch (error) {
       locationErrorRef.current = error;
-      applyFailure(buildVenuePresenceFailure("VENUE_LOCATION_UNAVAILABLE"));
+      const serverAllowed = await sendHeartbeat(null);
+      if (!serverAllowed) {
+        applyFailure(buildVenuePresenceFailure("VENUE_LOCATION_UNAVAILABLE"));
+      }
       setIsCheckingAccess(false);
-      return false;
+      return serverAllowed;
     }
   }, [activeVenueId, applyFailure, enabled, isGodMode, sendHeartbeat, userId]);
 
@@ -220,16 +247,24 @@ export function VenuePresenceBoundary({
     }
 
     let cancelled = false;
-    let intervalId: number | null = null;
-    let watchId: number | null = null;
+    let timeoutId: number | null = null;
 
-    const primeHeartbeat = async () => {
+    const scheduleNextCheck = (delayMs: number) => {
+      timeoutId = window.setTimeout(() => {
+        if (document.visibilityState === "hidden") {
+          scheduleNextCheck(PRESENCE_CHECK_INTERVAL_MS);
+          return;
+        }
+        void runPresenceCheck();
+      }, delayMs);
+    };
+
+    const runPresenceCheck = async () => {
       try {
         const location = await getCurrentLocation();
         if (cancelled) {
           return;
         }
-        latestLocationRef.current = location;
         locationErrorRef.current = null;
         await sendHeartbeat(location);
       } catch (error) {
@@ -237,58 +272,30 @@ export function VenuePresenceBoundary({
           return;
         }
         locationErrorRef.current = error;
-        applyFailure(buildVenuePresenceFailure("VENUE_LOCATION_UNAVAILABLE"));
+        await sendHeartbeat(null);
+      } finally {
+        if (!cancelled) {
+          scheduleNextCheck(PRESENCE_CHECK_INTERVAL_MS);
+        }
       }
     };
 
-    void primeHeartbeat();
-
-    if (navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const location: Coordinates = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            timestamp: position.timestamp,
-          };
-          latestLocationRef.current = location;
-          locationErrorRef.current = null;
-
-          const sinceLastHeartbeat = Date.now() - lastHeartbeatAtRef.current;
-          if (sinceLastHeartbeat >= WATCH_HEARTBEAT_MIN_GAP_MS || overlayRef.current) {
-            void sendHeartbeat(location, { showChecking: Boolean(overlayRef.current) });
-          }
-        },
-        (error) => {
-          if (cancelled) {
-            return;
-          }
-          locationErrorRef.current = error;
-          applyFailure(buildVenuePresenceFailure("VENUE_LOCATION_UNAVAILABLE"));
-        },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 15_000,
-          timeout: 12_000,
-        }
-      );
-    }
-
-    intervalId = window.setInterval(() => {
-      if (document.visibilityState === "hidden") {
-        return;
-      }
-      if (latestLocationRef.current) {
-        void sendHeartbeat(latestLocationRef.current, { showChecking: Boolean(overlayRef.current) });
-        return;
-      }
-      void recheckLocation();
-    }, HEARTBEAT_INTERVAL_MS);
+    const lastCheckAt = readLastPresenceCheckAt(userId, activeVenueId);
+    lastHeartbeatAtRef.current = lastCheckAt;
+    const msUntilNextCheck = Math.max(0, PRESENCE_CHECK_INTERVAL_MS - (Date.now() - lastCheckAt));
+    scheduleNextCheck(msUntilNextCheck);
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        void recheckLocation();
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+      const nextCheckAt = lastHeartbeatAtRef.current + PRESENCE_CHECK_INTERVAL_MS;
+      if (Date.now() >= nextCheckAt) {
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        void runPresenceCheck();
       }
     };
 
@@ -296,14 +303,11 @@ export function VenuePresenceBoundary({
     return () => {
       cancelled = true;
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      if (intervalId !== null) {
-        window.clearInterval(intervalId);
-      }
-      if (watchId !== null && navigator.geolocation) {
-        navigator.geolocation.clearWatch(watchId);
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
       }
     };
-  }, [activeVenueId, applyFailure, enabled, isGodMode, recheckLocation, sendHeartbeat, userId]);
+  }, [activeVenueId, enabled, isGodMode, sendHeartbeat, userId]);
 
   const contextValue = useMemo<VenuePresenceContextValue>(
     () => ({
@@ -317,7 +321,7 @@ export function VenuePresenceBoundary({
     [capturePresenceFailure, isCheckingAccess, isGodMode, lastFailure, overlay, recheckLocation]
   );
 
-  if (!enabled || isGodMode) {
+  if (!enabled) {
     return <>{children}</>;
   }
 

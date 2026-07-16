@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { datetimeLocalValueToUtcIso, utcIsoToDatetimeLocalValue } from "@/lib/categoryBlitzScheduleTime";
-import { gameDurationMinutes } from "@/lib/categoryBlitzShared";
+import { gameDurationMinutes, isContinuousDefaultEnabled } from "@/lib/categoryBlitzShared";
 import { liveTriviaDurationMinutes } from "@/lib/liveTriviaShared";
 import type { OwnerSchedule, OwnerScheduleGameType } from "@/types";
 
@@ -44,10 +44,19 @@ type GameTypeOption = {
   supported: boolean;
 };
 
-const GAME_TYPE_OPTIONS: GameTypeOption[] = [
+// Category Blitz now defaults to an always-on continuous loop rather than a
+// scheduled window (see docs/CATEGORY_BLITZ_CONTINUOUS_DEFAULT_PLAN.md), so
+// once that rollout flag is on it's dropped from the schedulable game types
+// entirely — there is no "number of rounds" to ask for anymore. Flag off
+// keeps the legacy picker exactly as it was, for rollback safety.
+const ALL_GAME_TYPE_OPTIONS: GameTypeOption[] = [
   { value: "category_blitz", label: "Category Blitz", glyph: "🔤", gradient: "bg-ht-game-blitz", supported: true },
   { value: "live_trivia", label: "Live Trivia", glyph: "🧠", gradient: "bg-ht-game-live", supported: true },
 ];
+
+const GAME_TYPE_OPTIONS: GameTypeOption[] = isContinuousDefaultEnabled()
+  ? ALL_GAME_TYPE_OPTIONS.filter((option) => option.value !== "category_blitz")
+  : ALL_GAME_TYPE_OPTIONS;
 
 function formatScheduleTime(iso: string, timeZone: string): string {
   try {
@@ -315,7 +324,7 @@ function ScheduleForm({
   onCreated: () => void;
   onCancel: () => void;
 }) {
-  const [gameType, setGameType] = useState<OwnerScheduleGameType>("category_blitz");
+  const [gameType, setGameType] = useState<OwnerScheduleGameType>(GAME_TYPE_OPTIONS[0]?.value ?? "live_trivia");
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("");
   const [rounds, setRounds] = useState(3);
