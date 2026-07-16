@@ -8,6 +8,9 @@ export default function RedeemPrizesPage() {
     <PageShell title="" showPageTitle={false}>
       <div className="space-y-3">
         <BackButton label="Back" venueHomeFallback />
+        <h1 className="ht-h1">
+          Redeem Prizes
+        </h1>
         <VenuePresenceBoundary>
           <PrizeWalletPanel />
         </VenuePresenceBoundary>

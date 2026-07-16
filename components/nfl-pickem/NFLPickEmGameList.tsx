@@ -281,7 +281,7 @@ export function NFLPickEmGameList({
             </h1>
           </div>
           <p className="mt-2 text-[13px] font-semibold leading-relaxed text-slate-400">
-            Pick winners for all NFL games each week. Picks lock at Thursday Night Football kickoff!
+            Pick winners for every NFL matchup each week. Correct picks are worth 10 points. Picks lock at kickoff. 
           </p>
         </section>
         
@@ -298,9 +298,9 @@ export function NFLPickEmGameList({
           />
         ) : (
           <section className="rounded-2xl border border-amber-300/30 bg-amber-950/20 px-4 py-5 text-center">
-            <h2 className="text-[15px] font-black text-amber-100">NFL weeks are not loaded yet</h2>
+            <h2 className="text-[15px] font-black text-amber-100">NFL weeks are not available yet</h2>
             <p className="mt-2 text-[12px] font-semibold leading-relaxed text-amber-100/70">
-              The schedule needs to be synced before Pick 'Em can open games for this season.
+              
             </p>
           </section>
         )}

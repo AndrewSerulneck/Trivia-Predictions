@@ -42,14 +42,19 @@ const SETTLE_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 const OPEN_GATE_DURATION_MS = 950;
 const RETURN_GATE_DURATION_MS = 2600;
 
+// Must mirror the destination game page's actual backdrop (GAME_CARD_BG_BY_KEY
+// in components/venue/GameIdentityPanel.tsx, or the page's own
+// playingBackgroundClassName override) — this gradient/color paints the
+// expanding card shell during the open-transition flip, so a mismatch here
+// causes a visible flash of the wrong color right before the game page loads.
 const FALLBACK_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
-  "speed-trivia": "linear-gradient(132deg,#0ea5e9 0%,#2563eb 42%,#7c3aed 100%)",
-  live_trivia: "linear-gradient(132deg,#0ea5e9 0%,#2563eb 42%,#7c3aed 100%)",
-  bingo: "linear-gradient(128deg,#f97316 0%,#ef4444 48%,#ec4899 100%)",
-  pickem: "linear-gradient(134deg,#2563eb 0%,#7c3aed 56%,#ec4899 100%)",
-  fantasy: "linear-gradient(134deg,#7c3aed 0%,#2563eb 48%,#06b6d4 100%)",
-  "category-blitz": "linear-gradient(132deg,#10b981 0%,#22c55e 50%,#14b8a6 100%)",
-  "nfl-pickem": "linear-gradient(132deg,#059669 0%,#10b981 50%,#34d399 100%)",
+  "speed-trivia": "#0a0a0f", // /trivia — tp-trivia-bg racing theme base
+  live_trivia: "#020617", // /trivia/live — bg-slate-950 page
+  bingo: "#020617", // /bingo — GAME_CARD_BG_BY_KEY radial layers on #020617
+  pickem: "#020617", // /pickem — playingBackgroundClassName bg-[#020617]
+  fantasy: "#0a3128", // /fantasy — GAME_CARD_BG_BY_KEY
+  "category-blitz": "linear-gradient(132deg,#a10d63 0%,#7c0a4a 50%,#4a052c 100%)", // /category-blitz/play
+  "nfl-pickem": "#020617", // /nfl-pickem — playingBackgroundClassName bg-[#020617]
 };
 
 function wait(ms: number): Promise<void> {

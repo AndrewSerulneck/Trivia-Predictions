@@ -25,7 +25,6 @@ import {
 } from "@/lib/venueHomeBootstrap";
 import { VENUE_GAME_CARD_BY_KEY, VENUE_HOME_GAME_KEYS, type VenueGameKey } from "@/lib/venueGameCards";
 import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
-import { hasRecentOnboarding } from "@/lib/gameOnboarding";
 import { VenueHubHeaderBar } from "@/components/venue/VenueHubHeaderBar";
 import { VenueGamesPanel } from "@/components/venue/VenueGamesPanel";
 import { CategoryBlitzOnboardingOverlay } from "@/components/venue/CategoryBlitzOnboardingOverlay";
@@ -344,7 +343,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     recurringDays: [],
   });
   const [categoryBlitzSessionActive, setCategoryBlitzSessionActive] = useState(false);
-  const [categoryBlitzNextWindowAtMs, setCategoryBlitzNextWindowAtMs] = useState<number | null>(null);
   const [liveCountdownNowMs, setLiveCountdownNowMs] = useState(() => Date.now());
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
@@ -1020,7 +1018,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const payload = await fetchJsonWithTimeout<{
         ok: boolean;
         session?: { status?: string } | null;
-        nextWindowAt?: string | null;
       }>(
         `/api/category-blitz/sessions?venueId=${encodeURIComponent(venue.id)}`,
         3600,
@@ -1030,8 +1027,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const status = payload?.session?.status ?? null;
       const active = status === "lobby" || status === "active" || status === "scoring";
       setCategoryBlitzSessionActive(active);
-      const nextWin = payload?.nextWindowAt ? new Date(payload.nextWindowAt).getTime() : null;
-      setCategoryBlitzNextWindowAtMs(nextWin);
     } catch {
       // Non-fatal — category-blitz card simply won't appear.
     } finally {
@@ -1327,7 +1322,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [categoryBlitzOnboardingOpen, setCategoryBlitzOnboardingOpen] = useState(false);
   const categoryBlitzSourceElementRef = useRef<HTMLElement | null>(null);
 
-  const enterCategoryBlitzLobby = useCallback(
+  const enterCategoryBlitzGame = useCallback(
     async (sourceElement: HTMLElement | null) => {
       triggerPulse();
       setPendingDestination("category-blitz");
@@ -1349,13 +1344,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     async (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
       if (dest === "category-blitz") {
         // Tutorial cards must never render on the lobby route itself — show
-        // them as an overlay here on the home screen (skipped entirely if the
-        // browser already completed onboarding for this venue recently), then
-        // land directly on the live game/waiting lobby.
-        if (hasRecentOnboarding("category-blitz")) {
-          await enterCategoryBlitzLobby(sourceElement);
-          return;
-        }
+        // them as an overlay here on the home screen, every time the player
+        // opens the game, then land directly on the live game.
         categoryBlitzSourceElementRef.current = sourceElement;
         setCategoryBlitzOnboardingOpen(true);
         return;
@@ -1378,7 +1368,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         setPendingDestination(null);
       }
     },
-  [enterCategoryBlitzLobby, router, triggerPulse, venue.id]
+  [router, triggerPulse, venue.id]
   );
 
   const closeCategoryBlitzOnboarding = useCallback(() => {
@@ -1390,8 +1380,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     setCategoryBlitzOnboardingOpen(false);
     const sourceElement = categoryBlitzSourceElementRef.current;
     categoryBlitzSourceElementRef.current = null;
-    void enterCategoryBlitzLobby(sourceElement);
-  }, [enterCategoryBlitzLobby]);
+    void enterCategoryBlitzGame(sourceElement);
+  }, [enterCategoryBlitzGame]);
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
   const currentUserId = useMemo(() => (getUserId() ?? "").trim(), []);
@@ -1427,10 +1417,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const nextLiveTriviaCountdownSeconds =
     liveTriviaStatus.nextStartAtMs != null
       ? Math.max(0, Math.floor((liveTriviaStatus.nextStartAtMs - liveCountdownNowMs) / 1000))
-      : null;
-  const categoryBlitzNextWindowSeconds =
-    !categoryBlitzSessionActive && categoryBlitzNextWindowAtMs != null
-      ? Math.max(0, Math.floor((categoryBlitzNextWindowAtMs - liveCountdownNowMs) / 1000))
       : null;
   const nextLiveTriviaCountdownLabel = liveTriviaStatus.live
     ? "Live Now"
@@ -1510,7 +1496,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           visibleBadgeByGame={visibleBadgeByGame}
           badgeError={badgeError}
           categoryBlitzSessionActive={categoryBlitzSessionActive}
-          categoryBlitzNextWindowSeconds={categoryBlitzNextWindowSeconds}
           onTriggerPulse={triggerPulse}
           onGoTo={handleGoTo}
           onRetryBadges={retryBadges}

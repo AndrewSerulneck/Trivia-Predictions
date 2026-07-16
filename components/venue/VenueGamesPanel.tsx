@@ -23,16 +23,6 @@ const WEEKDAY_LABELS: Record<string, string> = {
 
 const WEEKDAY_ORDER = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-function formatCategoryBlitzCountdown(seconds: number): string {
-  if (seconds <= 0) return "Starting soon";
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
-  if (m > 0) return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  return `0:${String(s).padStart(2, "0")}`;
-}
-
 function formatRecurringScheduleLabel(status: LiveTriviaStatus, nextStartAtMs: number | null): string | null {
   if (status.recurringType !== "weekly" && status.recurringType !== "daily") return null;
   const days = [...status.recurringDays].sort(
@@ -77,7 +67,6 @@ type VenueGamesPanelProps = {
   visibleBadgeByGame: Map<VenueGameKey, string>;
   badgeError: string;
   categoryBlitzSessionActive?: boolean;
-  categoryBlitzNextWindowSeconds?: number | null;
   onTriggerPulse: () => void;
   onGoTo: (dest: VenueGameKey, sourceElement: HTMLElement | null) => void;
   onRetryBadges: () => void;
@@ -98,7 +87,6 @@ function VenueGamesPanelInner({
   visibleBadgeByGame,
   badgeError,
   categoryBlitzSessionActive = false,
-  categoryBlitzNextWindowSeconds = null,
   onTriggerPulse,
   onGoTo,
   onRetryBadges,
@@ -178,61 +166,13 @@ function VenueGamesPanelInner({
             </div>
           </div>
 
-          {(categoryBlitzSessionActive || categoryBlitzNextWindowSeconds != null) && (
-            <div className="rounded-2xl border border-pink-400/60 bg-[linear-gradient(132deg,#a10d63_0%,#7c0a4a_50%,#4a052c_100%)] p-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
-              <div className="flex items-stretch gap-3">
-                <div className="min-w-0 flex-1">
-                  {categoryBlitzSessionActive ? (
-                    <>
-                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
-                        Live game in progress!
-                      </p>
-                      <p className="mt-1 font-black text-amber-100 text-[2.2rem] leading-none">
-                        Category Blitz
-                      </p>
-                      <p className="mt-1 text-xs font-semibold text-amber-50/70">
-                        One letter · 12 categories · 3 minutes
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
-                        Next Category Blitz In
-                      </p>
-                      <p className="mt-1 font-black tabular-nums text-amber-100 text-[2.2rem] leading-none">
-                        {categoryBlitzNextWindowSeconds != null
-                          ? formatCategoryBlitzCountdown(categoryBlitzNextWindowSeconds)
-                          : "—"}
-                      </p>
-                      <p className="mt-1 text-xs font-semibold text-amber-50/70">
-                        One letter · 12 categories · 3 minutes
-                      </p>
-                    </>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onMouseDown={onTriggerPulse}
-                  onClick={(event) => { onGoTo("category-blitz", event.currentTarget); }}
-                  disabled={pendingDestination !== null}
-                  className="tp-clean-button min-w-[7.2rem] rounded-[12px] border border-amber-400/60 bg-amber-500/20 px-4 py-2 text-lg font-black leading-tight text-amber-200 shadow-[0_0_0_1px_rgba(251,191,36,0.28)] transition-all disabled:opacity-60 hover:bg-amber-500/25"
-                >
-                  {categoryBlitzSessionActive ? (
-                    <>Join<br />now</>
-                  ) : (
-                    <>View<br />info</>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
           <div className="space-y-3">
             {orderedHomeCards.map((card) => {
               const isOpening = pendingDestination === card.key;
               const badge = visibleBadgeByGame.get(card.key);
               const isLiveTriviaCard = card.key === "live_trivia";
-              const statusLabel = isLiveTriviaCard && liveTriviaStatus.live ? "LIVE" : null;
+              const isCategoryBlitzLive = card.key === "category-blitz" && categoryBlitzSessionActive;
+              const statusLabel = (isLiveTriviaCard && liveTriviaStatus.live) || isCategoryBlitzLive ? "LIVE" : null;
               return (
                 <button
                   key={card.key}
@@ -269,9 +209,25 @@ function VenueGamesPanelInner({
                       ) : null}
                     </div>
 
-                    <div className="max-w-[92%] rounded-xl border border-white/40 bg-black/30 px-3 py-2 text-[12px] font-bold text-white/95">
-                      {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
-                    </div>
+                    {isCategoryBlitzLive ? (
+                      <div className="flex flex-col gap-2 rounded-xl border border-amber-300/60 bg-amber-500/20 px-3 py-2.5">
+                        <div>
+                          <p className="text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
+                            Live game in progress!
+                          </p>
+                          <p className="mt-1 text-[19px] font-semibold leading-snug text-amber-50/90">
+                            {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+                          </p>
+                        </div>
+                        <span className="self-start rounded-full border border-amber-200/70 bg-amber-400/25 px-2.5 py-1 text-[22px] font-black uppercase tracking-[0.06em] text-amber-100">
+                          Join now
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="max-w-[92%] rounded-xl border border-white/40 bg-black/30 px-3 py-2 text-[19px] font-bold leading-snug text-white/95">
+                        {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+                      </div>
+                    )}
 
                   </div>
 

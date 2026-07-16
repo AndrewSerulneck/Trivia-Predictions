@@ -67,7 +67,7 @@ export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
   "speed-trivia": "It's just you versus the clock. 15 seconds per question, 15 questions per round, and 3 rounds per hour. Good luck! ",
   bingo: "Bingo boards align with the games on TV. Watch the game, track your squares in real time, and earn points as the live action unfolds!",
   pickem: "Predict the winners of today's top matchups before the games start. Every correct call gets you one step closer to prizes and discounts!",
-  fantasy: "Draft the ultimate roster from the star athletes in today's games. The better they perform, the more points you earn! ",
+  fantasy: "Draft the ultimate roster of star athletes in today's games. The better they perform, the more points you earn! ",
   "category-blitz": "One letter. Twelve categories. Unique answers get points.",
   "nfl-pickem": "A weekly contest to see who can pick the most winners each week of the NFL season.",
 };

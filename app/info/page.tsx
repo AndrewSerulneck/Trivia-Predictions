@@ -155,7 +155,7 @@ const SEMANTIC_QA = [
   {
     question: "What games are there?",
     answer:
-      "Everything from classic bar trivia to live sports competitions like pick 'em leagues, fantasy sports, sports brackets, and much more. See below for a full list of products we offer. Use all of it to run promotions and drive engagement that increases revenue.",
+      "Everything from classic bar trivia to live sports competitions like pick 'em leagues, fantasy sports, sports brackets, and much more. See below for a partial slate of products we offer. Use all of it to run promotions and drive engagement that increases revenue.",
   },
   {
     question: "How does it work?",
@@ -434,7 +434,7 @@ export default function InfoPage() {
               What is Hightop Challenge?
             </h2>
             <p className="htm-reveal max-w-3xl text-slate-400 text-lg mb-12 leading-relaxed" data-reveal>
-              Hightop Challenge is an app for businesses to run games and competitions to keep guests engaged and coming back for more. 
+              Hightop Challenge is a digital gaming platform designed to drive repeat visits and increase business at our partner venues. 
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {SEMANTIC_QA.map((item) => (

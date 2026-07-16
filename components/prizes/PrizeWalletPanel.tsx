@@ -78,7 +78,7 @@ function WineCoupon({ win, onRedeem, large }: CouponCardProps) {
           <button
             type="button"
             onClick={() => onRedeem(win)}
-            className="tp-clean-button rounded-lg border border-rose-500/60 bg-rose-500/20 px-3 py-1.5 text-xs font-bold text-rose-200 hover:bg-rose-500/30"
+            className="tp-clean-button rounded-lg border border-rose-500/60 bg-rose-500/20 px-6 py-3 text-sm font-bold text-rose-200 hover:bg-rose-500/30"
           >
             Redeem
           </button>
@@ -116,7 +116,7 @@ function AppetizerCoupon({ win, onRedeem, large }: CouponCardProps) {
           <button
             type="button"
             onClick={() => onRedeem(win)}
-            className="tp-clean-button rounded-lg border border-emerald-500/60 bg-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-200 hover:bg-emerald-500/30"
+            className="tp-clean-button rounded-lg border border-emerald-500/60 bg-emerald-500/20 px-6 py-3 text-sm font-bold text-emerald-200 hover:bg-emerald-500/30"
           >
             Redeem
           </button>
@@ -160,7 +160,7 @@ function GiftCertificateCoupon({ win, onRedeem, large }: CouponCardProps) {
           <button
             type="button"
             onClick={() => onRedeem(win)}
-            className="tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-3 py-1.5 text-xs font-bold text-amber-200 hover:bg-amber-500/30"
+            className="tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-6 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
           >
             Redeem
           </button>
@@ -453,7 +453,7 @@ export function PrizeWalletPanel() {
             {/* Challenge prize coupons */}
             {activeChallengeWins.length > 0 && (
               <section className="space-y-3">
-                <h2 className="text-base font-semibold text-ht-fg-primary">Your Prize Coupons</h2>
+                <h2 className="text-base font-semibold text-ht-fg-primary">Click "Redeem" on your rewards </h2>
                 {activeChallengeWins.map((win) => (
                   <ChallengeCoupon key={win.challengeId} win={win} onRedeem={handleRedeemOpen} />
                 ))}

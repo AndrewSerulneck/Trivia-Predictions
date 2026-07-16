@@ -169,14 +169,54 @@ function RulesList() {
 }
 
 /**
+ * Continuous mode has no lobby: the game is always running, players click
+ * through the tutorial slides on the venue home screen (shown on every open —
+ * that's where the rules live now) and land straight in the game. The only
+ * pre-round moment a continuous session can surface is its brief "lobby"
+ * status window before a round starts, so this renders as a minimal
+ * intermission-style "Next round starts in" beat — no "Waiting for host"
+ * copy, no rules list, nothing that reads like a separate waiting room.
+ */
+function ContinuousWaitScreen({
+  lobbyCountdown,
+  playerCount,
+}: {
+  lobbyCountdown: number | null;
+  playerCount?: number;
+}) {
+  const isUrgent = lobbyCountdown != null && lobbyCountdown <= 10;
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto overscroll-contain px-4 py-6">
+      <InviteBanner playerCount={playerCount} />
+      <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-5 text-center`}>
+        <p className={TEXT_LABEL}>Next round starts in</p>
+        {lobbyCountdown != null ? (
+          <p
+            className={`mt-1 font-black tabular-nums text-[2.6rem] leading-none ${
+              isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
+            }`}
+          >
+            {formatMmSs(lobbyCountdown)}
+          </p>
+        ) : (
+          <p className={`mt-1 animate-pulse text-2xl font-black ${TEXT_ACCENT}`}>Loading categories…</p>
+        )}
+        <p className="mt-3 text-sm text-emerald-100/80">One letter · 12 categories · 3 minutes</p>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Combined pre-game screen for both the "idle" (no active session) and
- * "lobby" (session exists, waiting for host/countdown) phases — the ONLY
- * screen a player lands on before a round starts. Shows the rules as a quick
- * reference; the illustrated tutorial slides only run once, before this
- * lobby, as an overlay on the venue home screen (VenueHubClient) — they must
- * not reappear here. The status card up top reflects whichever of the three
- * pre-game states applies: no game scheduled, a scheduled game counting down
- * to its lobby window, or an open lobby counting down to round start.
+ * "lobby" (session exists, waiting for host/countdown) phases on the LEGACY
+ * SCHEDULED engine only — continuous sessions render ContinuousWaitScreen
+ * instead (see the phase-content render below). Shows the rules as a quick
+ * reference; the illustrated tutorial slides run before this lobby, as an
+ * overlay on the venue home screen (VenueHubClient) — they must not reappear
+ * here. The status card up top reflects whichever of the three pre-game
+ * states applies: no game scheduled, a scheduled game counting down to its
+ * lobby window, or an open lobby counting down to round start.
  */
 function LobbyScreen({
   phase,
@@ -1661,17 +1701,25 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
       )}
       {testMode && <DevAnimationPanel />}
 
-      {/* Phase content */}
-      {(phase === "idle" || phase === "lobby") && (
-        <LobbyScreen
-          phase={phase}
-          venueId={venueId}
-          username={username}
-          lobbyCountdown={lobbyCountdown}
-          playerCount={session?.playerCount}
-          testMode={testMode}
-        />
-      )}
+      {/* Phase content. Continuous sessions never show the scheduled engine's
+          LobbyScreen — the game is always running, so the only pre-round beat
+          is a brief intermission-style countdown (ContinuousWaitScreen). The
+          "idle" phase (no session at all) keeps LobbyScreen: scheduled venues
+          genuinely idle there, and for continuous venues it's a sub-second
+          transient while the first poll self-heals the session. */}
+      {(phase === "idle" || phase === "lobby") &&
+        (isContinuous ? (
+          <ContinuousWaitScreen lobbyCountdown={lobbyCountdown} playerCount={session?.playerCount} />
+        ) : (
+          <LobbyScreen
+            phase={phase}
+            venueId={venueId}
+            username={username}
+            lobbyCountdown={lobbyCountdown}
+            playerCount={session?.playerCount}
+            testMode={testMode}
+          />
+        ))}
       {phase === "answering" && round && (
         showReveal ? (
           <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto overscroll-contain">
