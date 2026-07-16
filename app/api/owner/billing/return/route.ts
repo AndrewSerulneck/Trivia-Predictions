@@ -17,7 +17,7 @@ function redirectToBilling(request: Request, query: string): Response {
   return NextResponse.redirect(`${base}/owner/billing?${query}`, { status: 302 });
 }
 
-const SUBSCRIPTION_DEFAULT_CENTS = 14000;
+const SUBSCRIPTION_DEFAULT_CENTS = 10000;
 
 /**
  * SlimCD redirects the user's browser here after they complete (or abandon) the

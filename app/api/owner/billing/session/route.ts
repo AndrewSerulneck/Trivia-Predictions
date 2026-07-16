@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as SessionBody;
   const venueId = (body.venueId ?? "").trim();
   const intentRaw = (body.intent ?? "subscribe").trim();
-  const amountCents = Number(body.amountCents ?? 14000);
+  const amountCents = Number(body.amountCents ?? 10000);
 
   if (!venueId) {
     return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });

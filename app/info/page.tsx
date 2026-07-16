@@ -598,10 +598,10 @@ export default function InfoPage() {
               <div className="text-center">
                 <div className="text-xs font-black uppercase tracking-widest text-cyan-400 mb-4">Monthly License</div>
                 <div className="flex items-end justify-center gap-2 mb-2">
-                  <span className="text-6xl font-black text-white">$140</span>
+                  <span className="text-6xl font-black text-white">$100</span>
                   <span className="text-slate-400 mb-2 text-lg">/mo</span>
                 </div>
-                <p className="text-slate-500 text-sm">That&apos;s just $35 per week.</p>
+                <p className="text-slate-500 text-sm">That&apos;s just $25 per week.</p>
               </div>
               <ul className="flex flex-col gap-4 text-sm text-slate-300">
                 {[

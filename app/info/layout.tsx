@@ -52,7 +52,7 @@ const WEB_APPLICATION_JSON_LD = {
   browserRequirements: "Requires JavaScript and a modern mobile or desktop web browser.",
   offers: {
     "@type": "Offer",
-    price: "140",
+    price: "100",
     priceCurrency: "USD",
   },
   audience: {

@@ -1320,7 +1320,9 @@ const mergeCumulativeSessionTotals = async (
  *   scores 1 pt per distinct player who gave the same normalized answer, uncapped
  *   (reverseRoundPoints). A fail-CLOSED safety moderator replaces the validity
  *   judge; unsafe answers score 0 and are suppressed from the reveal.
- * - Either way the <3-player gate zeroes the whole round.
+ * - Standard rounds need 3+ session participants to score; reverse rounds
+ *   only need 2+ (a two-player match is real consensus). Below the minimum,
+ *   the whole round is zeroed regardless of answer quality.
  * - Awards points to each user's row in the users table.
  * - Marks round 'complete' when done.
  * Returns the scored results.
@@ -1381,17 +1383,21 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
   }
   debugLog(`[categoryBlitz] scoreRound(${roundId}): claimed scoring lock`);
 
-  // Count unique session participants. If fewer than 3 players are present,
-  // no one scores any points this round regardless of answer quality — the
-  // minimum-player-count gate prevents trivial 1v0 or 1v1 scoring (Phase 1).
+  // Count unique session participants. If fewer than the mode's minimum are
+  // present, no one scores any points this round regardless of answer quality
+  // — the minimum-player-count gate prevents trivial 1v0 scoring (Phase 1).
+  // Standard ("Be Unique!") rounds need 3+ (uniqueness is meaningless 1v1).
+  // Reverse ("Majority Rules!") rounds only need 2+ — two players landing on
+  // the same answer is a real match and should score, even if the rest of the
+  // session hasn't joined yet.
   const { count: participantCount } = await supabaseAdmin!
     .from("category_blitz_session_participants")
     .select("user_id", { count: "exact", head: true })
     .eq("session_id", round.session_id);
-  // The <3-player gate prevents trivial 1v0 or 1v1 scoring in production.
-  // CATEGORY_BLITZ_ALLOW_SOLO_SCORING bypasses it so a solo tester can verify
+  // CATEGORY_BLITZ_ALLOW_SOLO_SCORING bypasses the gate so a solo tester can verify
   // grading/leaderboard end-to-end (Phase 2 — see docs/category-blitz-bugs-timing-fix.md).
-  const insufficientPlayers = (participantCount ?? 0) < 3 && !isCategoryBlitzSoloScoringEnabled();
+  const minPlayersToScore = round.mode === "reverse" ? 2 : 3;
+  const insufficientPlayers = (participantCount ?? 0) < minPlayersToScore && !isCategoryBlitzSoloScoringEnabled();
   debugLog(`[categoryBlitz] scoreRound(${roundId}): ${participantCount ?? 0} participant(s), insufficientPlayers=${insufficientPlayers}`);
 
   // Load all submissions for this round.
@@ -1494,8 +1500,8 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
       }
       const matchingPlayers = consensusByCategory.get(sub.category_index)?.get(sub.normalized_answer)?.size ?? 1;
       // In reverse rounds is_unique carries the inverted "matched the crowd" bit
-      // (≥2 players) — submissionReason reads it that way. Consensus is
-      // meaningless solo, so the <3-player gate still zeroes the whole round.
+      // (≥2 players) — submissionReason reads it that way. Below the 2-player
+      // session minimum, consensus is meaningless and the gate zeroes the round.
       const matched = matchingPlayers >= 2;
       const pts = insufficientPlayers ? 0 : reverseRoundPoints(matchingPlayers);
       updates.push({ id: sub.id, is_unique: matched, is_valid: true, invalid_reason: null, points_awarded: pts });
@@ -1634,7 +1640,8 @@ async function awardCategoryBlitzPoints(params: {
  * display. Derived from already-persisted columns plus the round's letter —
  * never stored, so it can't drift from the scoring logic above.
  *
- * When `playerCount` is provided and below 3, all reasons are overridden to
+ * When `playerCount` is below the mode's minimum (3 for standard, 2 for
+ * reverse — see scoreRound's minPlayersToScore), all reasons are overridden to
  * `"insufficient_players"` regardless of actual validity — the scoring gate
  * zeroed out points for the whole round because not enough players participated
  * (see Phase 1 / docs/category-blitz-scoring-and-bugfix-plan.md).
@@ -1644,10 +1651,11 @@ const submissionReason = (
   letter: string,
   mode: CategoryBlitzMode,
   playerCount?: number,
-  /** When true, the <3-player gate is bypassed — real reasons are shown even when alone. */
+  /** When true, the min-player gate is bypassed — real reasons are shown even when alone. */
   allowSoloScoring: boolean = false,
 ): CategoryBlitzAnswerReason => {
-  if (playerCount !== undefined && playerCount < 3 && !allowSoloScoring) return "insufficient_players";
+  const minPlayersToScore = mode === "reverse" ? 2 : 3;
+  if (playerCount !== undefined && playerCount < minPlayersToScore && !allowSoloScoring) return "insufficient_players";
   if (s.is_unique === null) return "pending"; // not yet scored
 
   if (mode === "reverse") {
@@ -1719,7 +1727,8 @@ async function buildResults(roundId: string, round: RoundRow): Promise<CategoryB
   const submissions: SubmissionRow[] = subRows ?? [];
 
   // Count unique session participants — used below to override all reasons to
-  // "insufficient_players" when < 3 players were present at scoring time.
+  // "insufficient_players" when fewer than the mode's minimum were present at
+  // scoring time (3 for standard, 2 for reverse — see submissionReason).
   const { count: sessionPlayerCount } = await supabaseAdmin!
     .from("category_blitz_session_participants")
     .select("user_id", { count: "exact", head: true })

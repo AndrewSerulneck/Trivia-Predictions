@@ -94,7 +94,7 @@ const OwnerBillingSetupPage = () => {
           <div className="rounded-2xl border border-indigo-400/40 bg-ht-surface p-6 shadow-ht-card">
             <p className="text-[11px] font-black uppercase tracking-wider text-ht-indigo-300">Venue Pro</p>
             <div className="mt-1 font-black text-ht-primary">
-              <span className="text-4xl">$140</span>
+              <span className="text-4xl">$100</span>
               <span className="text-base text-ht-muted"> /mo</span>
             </div>
             <p className="mt-4 text-sm font-semibold text-ht-muted">
@@ -106,7 +106,7 @@ const OwnerBillingSetupPage = () => {
               disabled={paying}
               className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-ht-cyan-500 px-4 font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px disabled:opacity-60"
             >
-              {paying ? "Redirecting to payment…" : "Subscribe — $140/mo"}
+              {paying ? "Redirecting to payment…" : "Subscribe — $100/mo"}
             </button>
           </div>
         )}

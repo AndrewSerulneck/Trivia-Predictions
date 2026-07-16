@@ -130,15 +130,16 @@ async function fetchCategoryBlitzNextWindowAt(venueId: string): Promise<number |
 /**
  * Amber-tinted banner shown when fewer than 3 players are registered for this
  * session. The game works fully (answers are validated, revealed, etc.) but
- * points are only awarded once 3+ players participate — see Phase 1 scoring gate.
+ * points need 3+ players in standard rounds — reverse ("Majority Rules!")
+ * rounds only need 2+ matching answers — see Phase 1 scoring gate.
  */
 function InviteBanner({ playerCount }: { playerCount?: number }) {
   if (playerCount === undefined || playerCount > 2) return null;
 
   const message =
     playerCount === 1
-      ? "Playing solo — game works fully, but you need 3+ players to score points. Invite a friend!"
-      : `Playing with ${playerCount} friends — game works fully, but you need 3+ players to score points. Invite a friend!`;
+      ? "Playing solo — game works fully, but you need 2+ players to score points. Invite a friend!"
+      : `Playing with ${playerCount} friends — you'll score in Majority Rules rounds by matching answers, but other rounds need 3+ players. Invite a friend!`;
 
   return (
     <div className="mx-auto w-full max-w-sm rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-center text-[0.65rem] font-semibold leading-snug text-amber-200/90">
@@ -1050,7 +1051,12 @@ export function AnsweringScreen({
             animate={{ opacity: 1 }}
             transition={CHROME_ENTRANCE_TRANSITION}
           >
-            <p className={theme.textLabel}>{MODE_CONFIG[mode].rule}</p>
+            <p className={`${theme.textLabel} leading-relaxed`}>
+              {(() => {
+                const parts = MODE_CONFIG[mode].rule.split(" — ");
+                return parts.length > 1 ? <>{parts[0]}<br />— {parts[1]}</> : MODE_CONFIG[mode].rule;
+              })()}
+            </p>
           </motion.div>
           {/* Timer */}
           <motion.div
@@ -1210,31 +1216,12 @@ function Header({
             type="button"
             onClick={onBack}
             aria-label="Back to venue"
-            className="tp-clean-button -ml-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-slate-300 transition-colors hover:text-white"
+            className="tp-clean-button -ml-1 inline-flex h-8 shrink-0 items-center gap-0.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 pl-1 pr-2.5 text-emerald-300 transition-colors hover:bg-emerald-500/20 hover:text-emerald-200"
           >
             <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+            <span className="text-[0.65rem] font-black uppercase tracking-[0.1em]">Back</span>
           </button>
         ) : null}
-        <div
-          className={`h-2 w-2 rounded-full ${
-            phase === "answering"
-              ? "animate-pulse bg-emerald-400"
-              : phase === "lobby"
-              ? "animate-pulse bg-amber-400"
-              : phase === "results" || phase === "scoring" || phase === "reveal"
-              ? "bg-cyan-400"
-              : "bg-slate-600"
-          }`}
-        />
-        <p className={`text-[0.7rem] font-black uppercase tracking-[0.16em] ${TEXT_ACCENT}`}>
-          {phase === "lobby" ? "Lobby" : phase === "answering" ? "Round Active" : phase === "scoring" ? "Scoring" : phase === "reveal" ? "Revealing" : phase === "results" ? "Results" : phase === "complete" ? (isContinuous ? "Session Complete" : "Game Over") : "Category Blitz"}
-        </p>
-        {isContinuous && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-[0.12em] text-cyan-300">
-            <span aria-hidden="true" className="text-[0.7rem] leading-none">∞</span>
-            Continuous
-          </span>
-        )}
         {error && (
           <span className="ml-auto text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
             Reconnecting…

@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     .maybeSingle<{ stripe_customer_id: string | null }>();
 
   if (!sub?.stripe_customer_id) {
-    return NextResponse.json({ ok: false, error: "No billing account found for this venue." }, { status: 404 });
+    return NextResponse.json({ ok: false, error: "Please subsribe to update payment method. " }, { status: 404 });
   }
 
   const origin = request.headers.get("origin") ?? new URL(request.url).origin;

@@ -37,7 +37,6 @@ const IntermissionStatus = ({ nextRoundStartsIn, compact = false }: Intermission
         >
           Loading categories…
         </p>
-        {!compact ? <p className="mt-2 text-xs text-emerald-100/70">Results stay visible until the next letter drops.</p> : null}
       </div>
     );
   }
@@ -54,7 +53,6 @@ const IntermissionStatus = ({ nextRoundStartsIn, compact = false }: Intermission
       >
         {formatMmSs(nextRoundStartsIn)}
       </p>
-      {!compact ? <p className="mt-2 text-xs text-emerald-100/70">Results stay visible until the next letter drops.</p> : null}
     </div>
   );
 };
