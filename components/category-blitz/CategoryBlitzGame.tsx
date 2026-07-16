@@ -1680,26 +1680,34 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
       style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
     >
       <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} />
-      <button
-        type="button"
-        onClick={toggleTestMode}
-        className={`fixed bottom-2 right-2 z-[999] rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${
-          testMode ? "bg-amber-400 text-slate-950" : "bg-slate-800/80 text-slate-400"
-        }`}
-      >
-        Test mode: {testMode ? "on" : "off"}
-      </button>
-      {canSkipRound && (
-        <button
-          type="button"
-          onClick={skipRound}
-          disabled={isSkippingRound}
-          className="fixed bottom-2 right-32 z-[999] rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-950 disabled:opacity-50"
-        >
-          {isSkippingRound ? "Skipping…" : "Skip round"}
-        </button>
+      {/* Dev-only test-mode UI: hidden on the live site (NODE_ENV === "production")
+          so real players never see it, but still fully functional when running
+          `npm run dev`. The testMode flag/localStorage plumbing itself is untouched
+          so this can be brought back for a given surface by relaxing this guard. */}
+      {process.env.NODE_ENV !== "production" && (
+        <>
+          <button
+            type="button"
+            onClick={toggleTestMode}
+            className={`fixed bottom-2 right-2 z-[999] rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${
+              testMode ? "bg-amber-400 text-slate-950" : "bg-slate-800/80 text-slate-400"
+            }`}
+          >
+            Test mode: {testMode ? "on" : "off"}
+          </button>
+          {canSkipRound && (
+            <button
+              type="button"
+              onClick={skipRound}
+              disabled={isSkippingRound}
+              className="fixed bottom-2 right-32 z-[999] rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-950 disabled:opacity-50"
+            >
+              {isSkippingRound ? "Skipping…" : "Skip round"}
+            </button>
+          )}
+          {testMode && <DevAnimationPanel />}
+        </>
       )}
-      {testMode && <DevAnimationPanel />}
 
       {/* Phase content. Continuous sessions never show the scheduled engine's
           LobbyScreen — the game is always running, so the only pre-round beat

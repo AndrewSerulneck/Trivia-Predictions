@@ -24,6 +24,13 @@ export function isCategoryBlitzTestModeEnabled(): boolean {
   if (normalizeBoolean(process.env.NEXT_PUBLIC_CATEGORY_BLITZ_TEST_MODE)) {
     return true;
   }
+  // The browser localStorage toggle only applies outside production so a stale
+  // "on" flag from earlier testing can never leave a live venue running dev
+  // timings; the toggle UI itself is also hidden in production (see
+  // CategoryBlitzGame.tsx), this is the belt-and-suspenders backstop.
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
   return readBrowserToggle();
 }
 
