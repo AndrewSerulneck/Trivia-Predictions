@@ -192,6 +192,57 @@ const SEMANTIC_QA = [
   },
 ];
 
+type CollapsibleSectionProps = {
+  id?: string;
+  eyebrow: string;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  defaultOpen?: boolean;
+  className?: string;
+  children: React.ReactNode;
+};
+
+function CollapsibleSection({ id, eyebrow, title, subtitle, defaultOpen = false, className = "", children }: CollapsibleSectionProps) {
+  const [open, setOpen] = useState(defaultOpen);
+  const panelId = `${id ?? eyebrow.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-panel`;
+
+  return (
+    <section id={id} className={`py-8 px-5 ${className}`}>
+      <div className="mx-auto max-w-6xl">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls={panelId}
+          className="htm-reveal group flex w-full items-center justify-between gap-6 rounded-2xl border border-white/8 bg-white/3 px-6 py-6 text-left transition-colors hover:border-cyan-400/30 sm:px-8 sm:py-7"
+          data-reveal
+        >
+          <span>
+            <span className="mb-2 block text-xs font-black uppercase tracking-widest text-cyan-400">{eyebrow}</span>
+            <span className="block text-2xl sm:text-3xl font-black leading-snug text-white">{title}</span>
+            {subtitle ? <span className="mt-2 block text-sm sm:text-base text-slate-400 leading-relaxed">{subtitle}</span> : null}
+          </span>
+          <span
+            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-400/10 text-cyan-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </span>
+        </button>
+        <div
+          id={panelId}
+          className={`grid transition-[grid-template-rows] duration-500 ease-in-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+        >
+          <div className="overflow-hidden">
+            <div className="pt-10 sm:pt-12">{children}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function InfoPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
@@ -398,18 +449,34 @@ export default function InfoPage() {
               <br />
               <span className="htm-grad">Game Nights</span>
             </h1>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10">
-              <Link
-                href={JOIN_HREF}
-                className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 px-10 py-5 text-lg font-black text-slate-950 htm-btn-glow shadow-lg shadow-cyan-400/25 hover:shadow-cyan-400/40 transition-all"
-              >
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-950/20">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-slate-950 ml-0.5">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                </span>
-                Play Hightop Challenge
-              </Link>
+            <div className="flex flex-col gap-4 justify-center items-center mb-10">
+              {/* Row 1: Play and Partner Login side by side */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link
+                  href={JOIN_HREF}
+                  className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 px-10 py-5 text-lg font-black text-slate-950 htm-btn-glow shadow-lg shadow-cyan-400/25 hover:shadow-cyan-400/40 transition-all"
+                >
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-950/20">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-slate-950 ml-0.5">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </span>
+                  Play Hightop Challenge
+                </Link>
+                <a
+                  href="/owner/login"
+                  className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-indigo-400 to-indigo-500 px-10 py-5 text-lg font-black text-slate-950 htm-btn-glow shadow-lg shadow-indigo-400/25 hover:shadow-indigo-400/40 transition-all"
+                >
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-950/20">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-950">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  </span>
+                  Partner Venue Login
+                </a>
+              </div>
+              {/* Row 2: See the Games below */}
               <a
                 href="#games"
                 className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-8 py-4 text-base font-black text-slate-950 htm-btn-glow shadow-lg shadow-amber-400/25 hover:shadow-amber-400/40 transition-all"
@@ -443,44 +510,45 @@ export default function InfoPage() {
         </section>
 
         {/* ── SEMANTIC QA ── */}
-        <section aria-labelledby="geo-faq" className="py-24 px-5 bg-slate-900/40">
-          <div className="mx-auto max-w-5xl">
-            <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
-              Overview
-            </div>
-            <h2 id="geo-faq" className="htm-reveal text-3xl sm:text-4xl font-black mb-4 max-w-3xl" data-reveal>
-              What is Hightop Challenge?
-            </h2>
-            <p className="htm-reveal max-w-3xl text-slate-400 text-lg mb-12 leading-relaxed" data-reveal>
-              Hightop Challenge is a digital gaming and rewards platform designed to drive repeat visits and increase business at our partner venues. 
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {SEMANTIC_QA.map((item) => (
-                <article
-                  key={item.question}
-                  className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/3 p-7"
-                  data-reveal
-                >
-                  <h3 className="text-xl font-black text-white mb-3">{item.question}</h3>
-                  <p className="text-base text-slate-400 leading-relaxed">{item.answer}</p>
-                </article>
-              ))}
-            </div>
+        <CollapsibleSection
+          id="overview"
+          eyebrow="Overview"
+          title="What is Hightop Challenge?"
+          subtitle="Hightop Challenge is a digital gaming and rewards platform designed to drive repeat visits and increase business at our partner venues."
+          defaultOpen
+          className="bg-slate-900/40"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {SEMANTIC_QA.map((item) => (
+              <article
+                key={item.question}
+                className="htm-card-hover rounded-2xl border border-white/8 bg-white/3 p-7"
+              >
+                <h3 className="text-xl font-black text-white mb-3">{item.question}</h3>
+                <p className="text-base text-slate-400 leading-relaxed">{item.answer}</p>
+              </article>
+            ))}
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* ── GAMES ── */}
-        <section id="games" className="py-24 px-5">
-          <div className="mx-auto max-w-6xl flex flex-col gap-20">
+        <CollapsibleSection
+          id="games"
+          eyebrow="Games"
+          title="See every game we offer."
+          subtitle="From bar trivia to live sports competitions — everything you need to keep guests engaged."
+          defaultOpen
+        >
+          <div className="flex flex-col gap-20">
 
             {/* Trivia sub-section */}
             <div>
-              <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
+              <div className="mb-4 text-xs font-black uppercase tracking-widest text-cyan-400">
                 Trivia
               </div>
-              <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>
+              <h3 className="text-2xl sm:text-3xl font-black mb-3">
                 Hosting a trivia night doesn&apos;t have to be hard or expensive. Hightop Challenge does all the work for you.
-              </h2>
+              </h3>
               {/* Trivia screenshots */}
               <div className="mt-16 flex flex-col gap-24">
                 {TRIVIA_SHOWCASES.map((game) => (
@@ -496,13 +564,13 @@ export default function InfoPage() {
 
             {/* Sports sub-section */}
             <div>
-              <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
+              <div className="mb-4 text-xs font-black uppercase tracking-widest text-cyan-400">
                 Sports
               </div>
-              <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>
+              <h3 className="text-2xl sm:text-3xl font-black mb-3">
                 Turn the sports you show on TV into a promotional tool for your bar.
-              </h2>
-              <p className="htm-reveal text-slate-400 text-lg" data-reveal>
+              </h3>
+              <p className="text-slate-400 text-lg">
                 Guests compete with each other for bragging rights and prizes. If users want to play, they have to come to your establishment.
               </p>
               {/* Sports screenshots */}
@@ -519,12 +587,11 @@ export default function InfoPage() {
 
               {/* More coming soon */}
               <div
-                className="htm-reveal htm-card-hover mt-16 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-                data-reveal
+                className="htm-card-hover mt-16 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
               >
                 <div>
                   <div className="text-4xl mb-4">🎮</div>
-                  <h3 className="text-lg font-black text-white mb-1">More coming soon</h3>
+                  <h4 className="text-lg font-black text-white mb-1">More coming soon</h4>
                   <p className="text-sm text-slate-400 leading-relaxed">New game formats are added regularly. Get in touch to learn what&apos;s next.</p>
                 </div>
                 <a href="#contact" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors flex-shrink-0">
@@ -534,67 +601,58 @@ export default function InfoPage() {
             </div>
 
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* ── WHY HIGHTOP ── */}
-        <section id="features" className="py-24 px-5 bg-slate-900/40">
-          <div className="mx-auto max-w-6xl">
-            <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
-              Why Bars Love Hightop Challenge
-            </div>
-            <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-16 max-w-2xl" data-reveal>
-              Everything you need to <span className="htm-grad">grow your venue.</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {FEATURES.map((f) => (
-                <div
-                  key={f.title}
-                  className="htm-reveal htm-card-hover rounded-2xl border border-white/8 bg-white/3 p-7 flex flex-col gap-3"
-                  data-reveal
-                >
-                  <span className="text-3xl">{f.icon}</span>
-                  <h3 className="text-base font-black text-white">{f.title}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{f.body}</p>
-                </div>
-              ))}
-            </div>
+        <CollapsibleSection
+          id="features"
+          eyebrow="Why Bars Love Hightop Challenge"
+          title={<>Everything you need to <span className="htm-grad">grow your venue.</span></>}
+          className="bg-slate-900/40"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {FEATURES.map((f) => (
+              <div
+                key={f.title}
+                className="htm-card-hover rounded-2xl border border-white/8 bg-white/3 p-7 flex flex-col gap-3"
+              >
+                <span className="text-3xl">{f.icon}</span>
+                <h3 className="text-base font-black text-white">{f.title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{f.body}</p>
+              </div>
+            ))}
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* ── HOW IT WORKS ── */}
-        <section id="how-it-works" className="py-24 px-5">
-          <div className="mx-auto max-w-4xl">
-            <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
-              How It Works
-            </div>
-            <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-16" data-reveal>
-              Up and running instantly.
-            </h2>
-            <div className="flex flex-col gap-6">
-              {HOW_IT_WORKS.map((item) => (
-                <div
-                  key={item.step}
-                  className="htm-reveal flex gap-6 items-start"
-                  data-reveal
-                >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 font-black text-lg">
-                    {item.step}
-                  </div>
-                  <div className="pt-1">
-                    <h3 className="text-lg font-black text-white mb-1">{item.title}</h3>
-                    <p className="text-sm text-slate-400 leading-relaxed">{item.body}</p>
-                  </div>
+        <CollapsibleSection
+          id="how-it-works"
+          eyebrow="How It Works"
+          title="Up and running instantly."
+        >
+          <div className="flex flex-col gap-6 max-w-4xl">
+            {HOW_IT_WORKS.map((item) => (
+              <div
+                key={item.step}
+                className="flex gap-6 items-start"
+              >
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 font-black text-lg">
+                  {item.step}
                 </div>
-              ))}
-            </div>
+                <div className="pt-1">
+                  <h3 className="text-lg font-black text-white mb-1">{item.title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">{item.body}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* ── QUOTE CALLOUT ── */}
         <section className="py-16 px-5 bg-slate-900/40">
           <div className="mx-auto max-w-3xl text-center">
             <blockquote className="htm-reveal text-2xl sm:text-3xl font-black leading-snug text-white" data-reveal>
-              &ldquo;Turn slow nights into{" "} 
+              &ldquo;Turn slow nights into{" "}
               <span className="htm-grad">game nights</span>{" "}
               with Hightop Challenge.&rdquo;
             </blockquote>
@@ -707,6 +765,7 @@ export default function InfoPage() {
                   {[
                     ["Live Trivia", "#live-trivia"],
                     ["Speed Trivia", "#speed-trivia"],
+                    ["Category Blitz", "#category-blitz"],
                     ["Prop Bingo", "#prop-bingo"],
                     ["Pick'Em", "#pick-em"],
                     ["Fantasy Sports", "#fantasy-sports"],
