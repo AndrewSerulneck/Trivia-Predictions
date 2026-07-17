@@ -204,40 +204,58 @@ type CollapsibleSectionProps = {
 
 function CollapsibleSection({ id, eyebrow, title, subtitle, defaultOpen = false, className = "", children }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const panelRef = useRef<HTMLDivElement>(null);
   const panelId = `${id ?? eyebrow.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-panel`;
 
+  // The page-level scroll observer only reveals [data-reveal] elements present at
+  // mount. Content toggled into the DOM here (e.g. re-opening a section) is never
+  // observed, so reveal it directly whenever this panel opens.
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current
+      ?.querySelectorAll<HTMLElement>("[data-reveal]")
+      .forEach((el) => el.classList.add("htm-visible"));
+  }, [open]);
+
   return (
-    <section id={id} className={`py-8 px-5 ${className}`}>
-      <div className="mx-auto max-w-6xl">
+    <section id={id} className={`py-6 px-5 ${className}`}>
+      <div className="mx-auto max-w-6xl rounded-2xl border border-white/8 bg-white/3">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls={panelId}
-          className="htm-reveal group flex w-full items-center justify-between gap-6 rounded-2xl border border-white/8 bg-white/3 px-6 py-6 text-left transition-colors hover:border-cyan-400/30 sm:px-8 sm:py-7"
-          data-reveal
+          className="group flex w-full flex-col items-start gap-5 px-6 py-6 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-8 sm:py-7"
         >
           <span>
             <span className="mb-2 block text-xs font-black uppercase tracking-widest text-cyan-400">{eyebrow}</span>
             <span className="block text-2xl sm:text-3xl font-black leading-snug text-white">{title}</span>
-            {subtitle ? <span className="mt-2 block text-sm sm:text-base text-slate-400 leading-relaxed">{subtitle}</span> : null}
+            {subtitle ? <span className="mt-2 block text-base sm:text-lg text-slate-400 leading-relaxed">{subtitle}</span> : null}
           </span>
-          <span
-            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-400/10 text-cyan-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+          <span className="flex flex-shrink-0 items-center gap-3 rounded-full border border-cyan-400/40 bg-cyan-400/10 py-2 pl-4 pr-2 text-cyan-300 transition-colors group-hover:bg-cyan-400/20">
+            <span className="text-sm font-black uppercase tracking-wide">
+              {open ? "Show less" : "Show more"}
+            </span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-400 text-slate-950">
+              {open ? (
+                // minus = collapse
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                  <path d="M5 12h14" />
+                </svg>
+              ) : (
+                // plus = expand
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              )}
+            </span>
           </span>
         </button>
-        <div
-          id={panelId}
-          className={`grid transition-[grid-template-rows] duration-500 ease-in-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
-        >
-          <div className="overflow-hidden">
-            <div className="pt-10 sm:pt-12">{children}</div>
+        {open && (
+          <div ref={panelRef} id={panelId} className="border-t border-white/8 px-6 pb-10 pt-10 sm:px-8 sm:pt-12">
+            {children}
           </div>
-        </div>
+        )}
       </div>
     </section>
   );
@@ -346,10 +364,11 @@ export default function InfoPage() {
         <header className="htm-nav-blur fixed top-0 left-0 right-0 z-50 border-b border-white/8 bg-slate-950/80">
           <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-4">
             <Link href="/info" className="flex-shrink-0">
-              <Image src="/brand/htc_logo_glow.svg" alt="Hightop Challenge" width={130} height={32} priority />
+              <Image src="/brand/htc_logo_glow.svg" alt="Hightop Challenge" width={80} height={48} priority className="h-12 w-auto" />
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
               <a href="#games" className="hover:text-white transition-colors">Games</a>
+              <a href="#sports-games" className="hover:text-white transition-colors">Sports</a>
               <a href="#features" className="hover:text-white transition-colors">Features</a>
               <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
               <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
@@ -402,6 +421,7 @@ export default function InfoPage() {
           {mobileMenuOpen && (
             <div className="md:hidden border-t border-white/8 bg-slate-950 px-5 py-6 flex flex-col gap-5 text-base font-medium">
               <a href="#games" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Games</a>
+              <a href="#sports-games" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Sports</a>
               <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Features</a>
               <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">How It Works</a>
               <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-slate-300 hover:text-white">Pricing</a>
@@ -524,82 +544,62 @@ export default function InfoPage() {
                 key={item.question}
                 className="htm-card-hover rounded-2xl border border-white/8 bg-white/3 p-7"
               >
-                <h3 className="text-xl font-black text-white mb-3">{item.question}</h3>
-                <p className="text-base text-slate-400 leading-relaxed">{item.answer}</p>
+                <h3 className="text-2xl font-black text-white mb-3">{item.question}</h3>
+                <p className="text-lg text-slate-400 leading-relaxed">{item.answer}</p>
               </article>
             ))}
           </div>
         </CollapsibleSection>
 
-        {/* ── GAMES ── */}
+        {/* ── GAMES: BAR TRIVIA & PARTY GAMES ── */}
         <CollapsibleSection
           id="games"
           eyebrow="Games"
-          title="See every game we offer."
-          subtitle="From bar trivia to live sports competitions — everything you need to keep guests engaged."
-          defaultOpen
+          title="Bar Trivia & Party Games"
+          subtitle="Hosting a trivia night doesn't have to be hard or expensive. Hightop Challenge does all the work for you."
         >
-          <div className="flex flex-col gap-20">
+          <div className="flex flex-col gap-24">
+            {TRIVIA_SHOWCASES.map((game) => (
+              <GameShowcaseBlock
+                key={game.name}
+                game={game}
+                descriptionSide="left"
+                id={game.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
+              />
+            ))}
+          </div>
+        </CollapsibleSection>
 
-            {/* Trivia sub-section */}
-            <div>
-              <div className="mb-4 text-xs font-black uppercase tracking-widest text-cyan-400">
-                Trivia
+        {/* ── GAMES: SPORTS PREDICTION GAMES ── */}
+        <CollapsibleSection
+          id="sports-games"
+          eyebrow="Games"
+          title="Sports Prediction Games"
+          subtitle="Turn the sports you show on TV into a promotional tool for your bar. Guests compete for bragging rights and prizes — and they have to be at your venue to play."
+        >
+          <div className="flex flex-col gap-24">
+            {SPORTS_SHOWCASES.map((game) => (
+              <GameShowcaseBlock
+                key={game.name}
+                game={game}
+                descriptionSide="left"
+                id={game.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
+              />
+            ))}
+
+            {/* More coming soon */}
+            <div
+              className="htm-card-hover rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+              <div>
+                <div className="text-4xl mb-4">🎮</div>
+                <h4 className="text-xl font-black text-white mb-1">More coming soon</h4>
+                <p className="text-base text-slate-400 leading-relaxed">New game formats are added regularly. Get in touch to learn what&apos;s next.</p>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black mb-3">
-                Hosting a trivia night doesn&apos;t have to be hard or expensive. Hightop Challenge does all the work for you.
-              </h3>
-              {/* Trivia screenshots */}
-              <div className="mt-16 flex flex-col gap-24">
-                {TRIVIA_SHOWCASES.map((game) => (
-                  <GameShowcaseBlock
-                    key={game.name}
-                    game={game}
-                    descriptionSide="left"
-                    id={game.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
-                  />
-                ))}
-              </div>
+              <a href="#contact" className="text-base font-bold text-cyan-400 hover:text-cyan-300 transition-colors flex-shrink-0">
+                Contact us →
+              </a>
             </div>
-
-            {/* Sports sub-section */}
-            <div>
-              <div className="mb-4 text-xs font-black uppercase tracking-widest text-cyan-400">
-                Sports
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-black mb-3">
-                Turn the sports you show on TV into a promotional tool for your bar.
-              </h3>
-              <p className="text-slate-400 text-lg">
-                Guests compete with each other for bragging rights and prizes. If users want to play, they have to come to your establishment.
-              </p>
-              {/* Sports screenshots */}
-              <div className="mt-16 flex flex-col gap-24">
-                {SPORTS_SHOWCASES.map((game) => (
-                  <GameShowcaseBlock
-                    key={game.name}
-                    game={game}
-                    descriptionSide="left"
-                    id={game.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
-                  />
-                ))}
-              </div>
-
-              {/* More coming soon */}
-              <div
-                className="htm-card-hover mt-16 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-              >
-                <div>
-                  <div className="text-4xl mb-4">🎮</div>
-                  <h4 className="text-lg font-black text-white mb-1">More coming soon</h4>
-                  <p className="text-sm text-slate-400 leading-relaxed">New game formats are added regularly. Get in touch to learn what&apos;s next.</p>
-                </div>
-                <a href="#contact" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors flex-shrink-0">
-                  Contact us →
-                </a>
-              </div>
-            </div>
-
           </div>
         </CollapsibleSection>
 
@@ -607,7 +607,7 @@ export default function InfoPage() {
         <CollapsibleSection
           id="features"
           eyebrow="Why Bars Love Hightop Challenge"
-          title={<>Everything you need to <span className="htm-grad">grow your venue.</span></>}
+          title={<>A customer loyalty program to <span className="htm-grad">grow your business.</span></>}
           className="bg-slate-900/40"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -617,8 +617,8 @@ export default function InfoPage() {
                 className="htm-card-hover rounded-2xl border border-white/8 bg-white/3 p-7 flex flex-col gap-3"
               >
                 <span className="text-3xl">{f.icon}</span>
-                <h3 className="text-base font-black text-white">{f.title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{f.body}</p>
+                <h3 className="text-xl font-black text-white">{f.title}</h3>
+                <p className="text-base text-slate-400 leading-relaxed">{f.body}</p>
               </div>
             ))}
           </div>
@@ -640,8 +640,8 @@ export default function InfoPage() {
                   {item.step}
                 </div>
                 <div className="pt-1">
-                  <h3 className="text-lg font-black text-white mb-1">{item.title}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{item.body}</p>
+                  <h3 className="text-xl font-black text-white mb-1">{item.title}</h3>
+                  <p className="text-base text-slate-400 leading-relaxed">{item.body}</p>
                 </div>
               </div>
             ))}
@@ -727,7 +727,7 @@ export default function InfoPage() {
           <div className="mx-auto max-w-6xl">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
               <div className="col-span-2 md:col-span-1">
-                <Image src="/brand/htc_logo_glow.svg" alt="Hightop Challenge" width={120} height={30} className="mb-4" />
+                <Image src="/brand/htc_logo_glow.svg" alt="Hightop Challenge" width={73} height={44} className="mb-4 h-11 w-auto" />
                 <p className="text-sm text-slate-500 leading-relaxed mb-6">
                   Venue-based social gaming for bars and restaurants.
                 </p>
