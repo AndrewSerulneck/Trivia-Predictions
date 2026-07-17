@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isVenueScreenPath } from "@/lib/venueScreenPaths";
-import { apexHost, decideDomainSplit, playHost } from "@/lib/domainSplit";
+import { apexHost, decideDomainSplit } from "@/lib/domainSplit";
 
 export { isVenueScreenPath };
 
@@ -79,10 +79,6 @@ function hasValidEntryHandoff(request: NextRequest, venueId: string): boolean {
   return Date.now() - entryAt <= 60_000;
 }
 
-function isPlayRootRequest(host: string, pathname: string): boolean {
-  return host.replace(/:\d+$/, "").toLowerCase() === playHost() && pathname === "/";
-}
-
 function isApexHost(host: string): boolean {
   const normalized = host.replace(/:\d+$/, "").toLowerCase();
   const apex = apexHost();
@@ -93,14 +89,9 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host") ?? request.nextUrl.host;
 
-  // Temporary placeholder for the play subdomain only. This does not require the
-  // broader domain split flag, so the rest of the website stays unchanged.
-  if (isPlayRootRequest(host, pathname)) {
-    const rewriteUrl = request.nextUrl.clone();
-    rewriteUrl.pathname = "/coming-soon";
-    return NextResponse.rewrite(rewriteUrl);
-  }
-
+  // The `play.` subdomain now serves the game directly (the temporary Coming Soon
+  // placeholder was retired at the domain-split cutover). The /coming-soon route
+  // still exists but must never surface on the marketing apex.
   if (pathname === "/coming-soon" && isApexHost(host)) {
     return NextResponse.redirect(new URL("/", request.url));
   }
