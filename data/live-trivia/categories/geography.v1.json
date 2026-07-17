@@ -956,6 +956,16 @@
       "imageCredit": "Map via Wikimedia Commons",
       "subcategory": "map-identification"
     },
+        {
+      "slug": "roman-ruins-what-modern-country-algeria",
+      "question": "Many of the most preserved ruins from the Roman Empire are actually not in Italy — including the Guelma Roman Theatre pictured here. What modern day country are these ruins located in?",
+      "answer": "Algeria",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ed/The_Roman_theatre_of_Guelma_02.jpg",
+      "imageCredit": "Image via Wikimedia Commons",
+      "subcategory": "map-identification"
+    },
     {
       "slug": "geography-map-florida",
       "question": "Which U.S. state is shown highlighted on this map?",

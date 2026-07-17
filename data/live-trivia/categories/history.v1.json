@@ -10,6 +10,16 @@
       "difficulty": "easy",
       "subcategory": "ancient-medieval"
     },
+        {
+      "slug": "modern-country-most-roman-ruins",
+      "question": "Outside of Italy, which modern country contains the most preserved Roman ruins?",
+      "answer": "Algeria",
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "cultural-social-history"
+    },
+
     {
       "slug": "magna-carta-signing-year",
       "question": "In what year was the Magna Carta signed?",
