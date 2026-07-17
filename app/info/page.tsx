@@ -61,6 +61,24 @@ const TRIVIA_SHOWCASES: GameShowcase[] = [
       },
     ],
   },
+  {
+    name: "Category Blitz",
+    description:
+      "A fast-paced word game that gets the whole bar involved. One letter, twelve categories, three minutes — guests race to name something in every category that starts with that letter, and only unique answers score points.",
+    shots: [
+      {
+        src: "/info/category-blitz.png",
+        alt: "Category Blitz round in progress",
+        width: 750,
+        height: 1484,
+        callouts: [
+          { x: 20, y: 6, label: "A new letter every round", description: "Each round there is a new letter and the goal is to fill all 12 categories with a word that starts with that letter. " },
+          { x: 82, y: 6, label: "Race the clock", description: "A countdown timer keeps every round high-energy — and rewards the users that think the fastest." },
+          { x: 50, y: 30, label: "Users join anytime", description: "This game runs constantly on loop — meaning guests can join anytime." },
+        ],
+      },
+    ],
+  },
 ];
 
 const SPORTS_SHOWCASES: GameShowcase[] = [
@@ -271,7 +289,7 @@ export default function InfoPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-slate-950 text-white font-sans overflow-x-hidden">
+      <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
 
         {/* ── NAV ── */}
         <header className="htm-nav-blur fixed top-0 left-0 right-0 z-50 border-b border-white/8 bg-slate-950/80">
@@ -434,7 +452,7 @@ export default function InfoPage() {
               What is Hightop Challenge?
             </h2>
             <p className="htm-reveal max-w-3xl text-slate-400 text-lg mb-12 leading-relaxed" data-reveal>
-              Hightop Challenge is a digital gaming platform designed to drive repeat visits and increase business at our partner venues. 
+              Hightop Challenge is a digital gaming and rewards platform designed to drive repeat visits and increase business at our partner venues. 
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {SEMANTIC_QA.map((item) => (
@@ -482,7 +500,7 @@ export default function InfoPage() {
                 Sports
               </div>
               <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>
-                Turn the games you show on TV into a promotional tool for your bar.
+                Turn the sports you show on TV into a promotional tool for your bar.
               </h2>
               <p className="htm-reveal text-slate-400 text-lg" data-reveal>
                 Guests compete with each other for bragging rights and prizes. If users want to play, they have to come to your establishment.

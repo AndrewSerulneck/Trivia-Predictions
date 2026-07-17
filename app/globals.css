@@ -921,7 +921,7 @@ textarea:focus {
 
 input::placeholder,
 textarea::placeholder {
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--ht-font-body);
   font-weight: 500;
   color: #64748b;
   opacity: 1;
@@ -930,9 +930,7 @@ textarea::placeholder {
 h1,
 h2,
 h3,
-h4,
-.font-black,
-.font-semibold {
+h4 {
   font-family: "Bree Serif", "Nunito", serif;
 }
 
@@ -1360,7 +1358,7 @@ h4,
 
 .admin-console button:not(:disabled),
 .admin-console a[role="button"] {
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--ht-font-body);
   font-size: 0.95rem;
   font-weight: 600;
   line-height: 1.2;
@@ -1482,7 +1480,7 @@ button[class*="text-xs"],
 a[role="button"][class*="text-xs"],
 button[class*="text-[11px]"],
 a[role="button"][class*="text-[11px]"] {
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--ht-font-body);
   font-weight: 500;
   line-height: 1.25;
   letter-spacing: 0;

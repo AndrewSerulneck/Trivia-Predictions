@@ -51,6 +51,16 @@ const useConnectors = (
 ) => {
   const [lines, setLines] = useState<Line[]>([]);
   const [box, setBox] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+  
+  // Use refs to avoid infinite loop - these don't change during re-renders
+  const calloutsRef = useRef(callouts);
+  const sideRef = useRef(side);
+  
+  // Keep refs in sync without triggering re-renders
+  useEffect(() => {
+    calloutsRef.current = callouts;
+    sideRef.current = side;
+  }, [callouts, side]);
 
   const measure = useCallback(() => {
     const row = rowRef.current;
@@ -68,7 +78,9 @@ const useConnectors = (
     setBox({ w: rb.width, h: rb.height });
 
     const next: Line[] = [];
-    callouts.forEach((c, i) => {
+    const currentCallouts = calloutsRef.current;
+    const currentSide = sideRef.current;
+    currentCallouts.forEach((c, i) => {
       const card = cardRefs.current?.[i];
       if (!card) return;
       const cb = card.getBoundingClientRect();
@@ -77,10 +89,10 @@ const useConnectors = (
 
       let anchorX: number;
       let anchorY: number;
-      if (side === "right") {
+      if (currentSide === "right") {
         anchorX = cb.left - rb.left;
         anchorY = cb.top - rb.top + cb.height / 2;
-      } else if (side === "left") {
+      } else if (currentSide === "left") {
         anchorX = cb.right - rb.left;
         anchorY = cb.top - rb.top + cb.height / 2;
       } else {
@@ -90,16 +102,17 @@ const useConnectors = (
       next.push({ x1: anchorX, y1: anchorY, x2: targetX, y2: targetY });
     });
     setLines(next);
-  }, [rowRef, frameRef, cardRefs, callouts, side]);
+  }, [rowRef, frameRef, cardRefs]);
 
   useEffect(() => {
-    const raf = requestAnimationFrame(measure);
+    // Initial measurement - delay slightly to ensure DOM is ready
+    const timeout = setTimeout(measure, 0);
     const ro = new ResizeObserver(measure);
     if (rowRef.current) ro.observe(rowRef.current);
     if (frameRef.current) ro.observe(frameRef.current);
     window.addEventListener("resize", measure);
     return () => {
-      cancelAnimationFrame(raf);
+      clearTimeout(timeout);
       ro.disconnect();
       window.removeEventListener("resize", measure);
     };
