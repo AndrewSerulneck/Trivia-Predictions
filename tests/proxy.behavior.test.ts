@@ -49,9 +49,11 @@ describe("proxy auth-gate (domain split off — default/production)", () => {
     }
   });
 
-  it("rewrites only the play subdomain root to the Coming Soon page", () => {
+  it("serves the play subdomain root as the game (Coming Soon placeholder retired)", () => {
+    // With the placeholder gone, play./ is just the public "/" → game login,
+    // pass-through on every host (the split flag is off in this describe block).
     const playRoot = proxy(makeRequest("/", { host: "play.hightopchallenge.com" }));
-    expect(playRoot.headers.get("x-middleware-rewrite")).toContain("/coming-soon");
+    expect(isPassThrough(playRoot)).toBe(true);
 
     const apexRoot = proxy(makeRequest("/", { host: "hightopchallenge.com" }));
     expect(isPassThrough(apexRoot)).toBe(true);
@@ -130,10 +132,12 @@ describe("proxy domain split (flag on) layers in front of the auth-gate", () => 
     expect(res.headers.get("x-middleware-rewrite")).toContain("/info");
   });
 
-  it("rewrites play / to the temporary Coming Soon page before the broader split", () => {
+  it("serves play / as the game (no Coming Soon rewrite) once the split is on", () => {
     enableSplit();
     const res = proxy(makeRequest("/", { host: "play.hightopchallenge.com" }));
-    expect(res.headers.get("x-middleware-rewrite")).toContain("/coming-soon");
+    // play. + "/" is a game route on the game host → no split action, and "/" is
+    // public → pass-through to the game login.
+    expect(isPassThrough(res)).toBe(true);
   });
 
   it("still applies the auth-gate to game routes served on the play host", () => {

@@ -43,7 +43,11 @@ Absolute-URL helpers (`gameUrl`, `gameHref`, `marketingHref` in `lib/domainSplit
    - `NEXT_PUBLIC_PLAY_URL=https://play.hightopchallenge.com`
    - `NEXT_PUBLIC_COOKIE_DOMAIN=.hightopchallenge.com` ← **critical for a seamless player session across hosts** (see §3).
    - Leave `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED=false` **for now.**
-3. **Deploy** with the split still OFF. Confirm the live site behaves exactly as before (it will — the flag is off). This proves the env/DNS changes alone are inert.
+3. **WebAuthn allow-list (REQUIRED — easy to miss).** Passkeys are bound by RP ID + origin (`lib/webauthn.ts`). The RP ID is already the parent domain `hightopchallenge.com` (`WEBAUTHN_RP_ID` empty → code default; `WEBAUTHN_ALLOWED_RP_IDS="hightopchallenge.com"`), which is valid on `play.` too — so **existing passkeys survive the move, no re-registration.** BUT `WEBAUTHN_ALLOWED_ORIGINS` must gain the play origin, or passkey login/registration on `play.` throws "Origin is not allowed." Set (Production + Preview):
+   - `WEBAUTHN_ALLOWED_ORIGINS=https://hightopchallenge.com,https://www.hightopchallenge.com,https://play.hightopchallenge.com`
+   - Adding the play origin now (while the flag is off) is harmless — it only widens the allow-list.
+4. **Apex ↔ `www` redirect direction.** The canonical marketing host is the **bare apex** (`NEXT_PUBLIC_SITE_URL=https://hightopchallenge.com`). Vercel currently has a domain-level redirect `hightopchallenge.com → www.hightopchallenge.com` (the wrong direction for a bare-apex canonical). Before/at cutover, remove that redirect or reverse it to `www → apex`, so the canonical URL does not itself 308 to `www`.
+5. **Deploy** with the split still OFF. Confirm the live site behaves exactly as before (it will — the flag is off). This proves the env/DNS changes alone are inert.
 
 ---
 
@@ -60,7 +64,9 @@ The player session (`tp_sess`, set by `lib/serverSession.ts`) and identity cooki
 
 Do this on a **preview deployment first** if you want a dry run with real hosts; otherwise straight to production is safe because reversal is one flag.
 
-1. Set `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED=true` and redeploy.
+> **⚠️ Not config-only anymore — one code change is required first.** `proxy.ts` contains a **temporary `play.` placeholder** (the `isPlayRootRequest(...)` block, ~lines 96–102) that rewrites `play./` → `/coming-soon`. It runs **before** `decideDomainSplit` and is **not** behind the flag, so flipping the flag alone leaves `play./` on the Coming Soon page. **Remove that placeholder block** (and the paired `"/coming-soon" && isApexHost` redirect, ~lines 104–106, if you no longer want the placeholder route) in the same PR that flips the flag. Once removed, reversal via the flag still works — `play./` would just serve the game login instead of Coming Soon while off, so land the code change and the flag flip together.
+
+1. Remove the `play.`→`/coming-soon` placeholder block from `proxy.ts` (see warning above), and confirm `WEBAUTHN_ALLOWED_ORIGINS` + the apex/`www` redirect direction from §2 steps 3–4 are done. Set `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED=true` and redeploy.
 2. **Smoke test both hosts:**
    - Apex `/` → shows marketing (`/info` content).
    - Apex `/venue/<id>` or `/join` → 308-redirects to `play.` same path.
