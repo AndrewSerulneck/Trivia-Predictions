@@ -179,12 +179,20 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-function isLocationPermissionDenied(error: unknown): boolean {
+// Code 1 (PERMISSION_DENIED) means the user said no to sharing location for this
+// site. Code 2 (POSITION_UNAVAILABLE) is what phones typically return when
+// Location Services are off at the OS level — a different problem with different
+// player-facing guidance, so we keep them distinct rather than collapsing both
+// into a single "denied" bucket.
+function getLocationFailureReason(error: unknown): LocationFailureReason {
   if (!error || typeof error !== "object") {
-    return false;
+    return null;
   }
   const maybeCode = (error as { code?: unknown }).code;
-  return maybeCode === 1;
+  if (maybeCode === 1) return "denied";
+  if (maybeCode === 2) return "unavailable";
+  if (maybeCode === 3) return "timeout";
+  return null;
 }
 
 // GeolocationPositionError codes are browser-native (e.g. Chromium's raw message
@@ -318,9 +326,11 @@ const LOADING_PHRASES = [
   "Game time...",
 ];
 
+type LocationFailureReason = "denied" | "unavailable" | "timeout" | null;
+
 type LocationResult = {
   coords: Coordinates | null;
-  permissionDenied: boolean;
+  failureReason: LocationFailureReason;
 };
 
 type VenueAccessResult = {
@@ -338,6 +348,21 @@ async function checkPermissionState(): Promise<PermissionState> {
   }
 }
 
+// Only called after geolocation has already failed with a permission-denied
+// error, so the browser genuinely won't cooperate right now regardless of what
+// this reports. checkPermissionState() falls back to "granted" both when the
+// Permissions API is unavailable and when querying "geolocation" throws (a
+// real WebKit/Safari gap) — neither of those is trustworthy evidence that a
+// retry can re-prompt the user. Only a positive "prompt" report justifies the
+// softer "tap to allow" UI; every other result (including that fallback) means
+// show the "re-enable in your browser settings" instructions instead, since a
+// retry that silently fails forever is worse than an instruction shown when
+// it wasn't strictly needed.
+async function resolveDeniedPermissionState(): Promise<PermissionState | null> {
+  const permissionState = await checkPermissionState();
+  return permissionState === "prompt" ? null : "denied";
+}
+
 async function getInitialLocation(): Promise<LocationResult> {
   try {
     let current = await getCurrentLocation();
@@ -348,10 +373,66 @@ async function getInitialLocation(): Promise<LocationResult> {
         desiredAccuracyMeters: 220,
       });
     }
-    return { coords: current, permissionDenied: false };
+    return { coords: current, failureReason: null };
   } catch (error) {
-    return { coords: null, permissionDenied: isLocationPermissionDenied(error) };
+    return { coords: null, failureReason: getLocationFailureReason(error) };
   }
+}
+
+function LocationReEnableSteps() {
+  return (
+    <ol className="list-inside list-decimal space-y-1 text-sm leading-relaxed text-rose-300/80">
+      <li>Tap the <strong className="text-rose-200">lock icon</strong> in your browser&apos;s address bar</li>
+      <li>Find <strong className="text-rose-200">Location</strong> and set it to <strong className="text-rose-200">Allow</strong></li>
+      <li>Reload the page, then tap <strong className="text-rose-200">Try Again</strong></li>
+    </ol>
+  );
+}
+
+type LocationStatusCardProps = {
+  tone: "rose" | "slate";
+  buttonTone: "cyan" | "slate";
+  heading: string;
+  body: string;
+  buttonLabel: string;
+  loadingLabel: string;
+  isLoading: boolean;
+  onRetry: () => void;
+  children?: React.ReactNode;
+};
+
+function LocationStatusCard({
+  tone,
+  buttonTone,
+  heading,
+  body,
+  buttonLabel,
+  loadingLabel,
+  isLoading,
+  onRetry,
+  children,
+}: LocationStatusCardProps) {
+  return (
+    <div
+      className={`space-y-3 rounded-xl border p-4 ${
+        tone === "rose" ? "border-rose-400/40 bg-rose-950/30" : "border-slate-700 bg-slate-800/50"
+      }`}
+    >
+      <p className="font-semibold text-white">{heading}</p>
+      <p className="text-sm text-ht-fg-muted">{body}</p>
+      {children}
+      <button
+        type="button"
+        onClick={onRetry}
+        disabled={isLoading}
+        className={`tp-clean-button inline-flex min-h-[42px] items-center rounded-xl px-4 py-2 text-sm disabled:opacity-50 ${
+          buttonTone === "cyan" ? "bg-cyan-400 font-black text-slate-950" : "bg-slate-700 font-semibold text-white"
+        }`}
+      >
+        {isLoading ? loadingLabel : buttonLabel}
+      </button>
+    </div>
+  );
 }
 
 function VenueListSkeleton() {
@@ -688,6 +769,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [locationVerified, setLocationVerified] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
+  const [locationFailureReason, setLocationFailureReason] = useState<LocationFailureReason>(null);
   const [locationPermissionState, setLocationPermissionState] = useState<PermissionState | null>(null);
   const [verifiedLocation, setVerifiedLocation] = useState<Coordinates | null>(null);
   const [lastLocationVerifiedAt, setLastLocationVerifiedAt] = useState<number | null>(null);
@@ -1042,7 +1124,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setVerifiedLocation(null);
         setLastLocationVerifiedAt(null);
         setLocationNotice("");
-        if (isLocationPermissionDenied(error)) {
+        if (getLocationFailureReason(error) === "denied") {
           setLocationPermissionState("denied");
           setActivePanel("location-permission");
         } else {
@@ -1078,7 +1160,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       setLocationLoading(true);
       setLocationNotice("Finding venues near you…");
-      const { coords, permissionDenied } = await getInitialLocation();
+      const { coords, failureReason } = await getInitialLocation();
       if (coords) {
         const nearbyVenues = venues
           .map((item) => ({
@@ -1098,15 +1180,25 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       } else {
         setVenueList([]);
         setVerifiedLocation(null);
+        setLocationFailureReason(failureReason);
+        if (failureReason === "denied") {
+          setLocationPermissionState(await resolveDeniedPermissionState());
+        }
         setLocationNotice(
-          permissionDenied
+          failureReason === "denied"
             ? "Location permission is off. Turn it on to see nearby venues."
             : "Location check unavailable right now. Retry to see nearby venues."
         );
       }
     } catch (error) {
+      // getInitialLocation() has its own internal try/catch and never throws, so
+      // anything caught here came from listVenues() or venue processing — not a
+      // geolocation error. Don't run it through getLocationFailureReason(), and
+      // clear any failure reason from a prior attempt so the venue-list UI
+      // doesn't show stale location-specific messaging for an unrelated failure.
       setVenueList([]);
       setVerifiedLocation(null);
+      setLocationFailureReason(null);
       setLocationNotice(getLocationErrorMessage(error, "Unable to load venues right now. Please try again."));
     } finally {
       setLocationLoading(false);
@@ -1164,18 +1256,25 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     }
   }, [welcomeSlide]);
 
-  const handleGrantLocation = useCallback(async () => {
+  // `intent` decides which of the two flows this retry belongs to — it must be
+  // passed explicitly by every caller rather than inferred from `venue` state,
+  // because `venue` can still be set (from an earlier deep-link init) even while
+  // the venue-list panel's own retry buttons are on screen. Branching on `venue`
+  // there previously sent authenticated venue-list users through the single-venue
+  // path and stranded them on auth-method-selection.
+  const handleGrantLocation = useCallback(async (intent: "venue-specific" | "venue-list") => {
     setLocationLoading(true);
     setLocationPermissionState(null);
-    const { coords, permissionDenied } = await getInitialLocation();
-    if (permissionDenied) {
-      setLocationPermissionState("denied");
+    const { coords, failureReason } = await getInitialLocation();
+    setLocationFailureReason(failureReason);
+    if (failureReason === "denied") {
+      setLocationPermissionState(await resolveDeniedPermissionState());
       setLocationLoading(false);
       return;
     }
     setLocationPermissionState("granted");
 
-    if (venue) {
+    if (intent === "venue-specific" && venue) {
       // venueParam case: verify distance to the specific venue
       if (coords) {
         const distance = calculateDistanceMeters(coords, {
@@ -1205,9 +1304,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       return;
     }
 
-    // No venueParam: filter stored venues by proximity
+    // No venueParam: re-fetch venues and filter by proximity (venueList may already
+    // be empty from the prior denied attempt, so it can't be trusted here).
     if (coords) {
-      const nearbyVenues = venueList
+      const venues = await listVenues();
+      const nearbyVenues = venues
         .map((item) => ({
           venue: item,
           distance: calculateDistanceMeters(coords, {
@@ -1244,7 +1345,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     } else {
       setActivePanel("auth-method-selection");
     }
-  }, [venue, venueList]);
+  }, [venue]);
 
   const navigateToResolvedVenue = useCallback(
     async (selectedVenue: Venue, user: User) => {
@@ -2657,15 +2758,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                       <div className="space-y-4">
                         <div className="space-y-2 rounded-xl border border-rose-400/40 bg-rose-950/30 p-4 text-left">
                           <p className="text-sm font-semibold text-rose-200">How to re-enable location:</p>
-                          <ol className="list-inside list-decimal space-y-1 text-sm leading-relaxed text-rose-300/80">
-                            <li>Tap the <strong className="text-rose-200">lock icon</strong> in your browser&apos;s address bar</li>
-                            <li>Find <strong className="text-rose-200">Location</strong> and set it to <strong className="text-rose-200">Allow</strong></li>
-                            <li>Reload the page, then tap <strong className="text-rose-200">Try Again</strong></li>
-                          </ol>
+                          <LocationReEnableSteps />
                         </div>
                         <button
                           type="button"
-                          onClick={() => void handleGrantLocation()}
+                          onClick={() => void handleGrantLocation("venue-specific")}
                           disabled={locationLoading}
                           className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
                         >
@@ -2675,7 +2772,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => void handleGrantLocation()}
+                        onClick={() => void handleGrantLocation("venue-specific")}
                         disabled={locationLoading}
                         className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
                       >
@@ -2974,12 +3071,61 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                       </div>
                     ) : status === "loading" ? (
                       <VenueListSkeleton />
+                    ) : locationLoading ? (
+                      <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+                        <p className="font-semibold text-white">Nearby venues only</p>
+                        <p className="text-sm text-ht-fg-muted">Checking your location to find venues in range...</p>
+                      </div>
+                    ) : locationFailureReason === "denied" && locationPermissionState === "denied" ? (
+                      <LocationStatusCard
+                        tone="rose"
+                        buttonTone="slate"
+                        heading="Location access is off"
+                        body="You chose not to share your location, so we can't show venues near you or check you're at one. Your browser won't ask again automatically — to continue, re-enable it yourself:"
+                        buttonLabel="Try Again"
+                        loadingLabel="Checking location..."
+                        isLoading={locationLoading}
+                        onRetry={() => void handleGrantLocation("venue-list")}
+                      >
+                        <LocationReEnableSteps />
+                      </LocationStatusCard>
+                    ) : locationFailureReason === "denied" ? (
+                      <LocationStatusCard
+                        tone="rose"
+                        buttonTone="cyan"
+                        heading="Location access is off"
+                        body="You chose not to share your location, so we can't show venues near you or check you're at one. If you've changed your mind, tap below to allow access."
+                        buttonLabel="Allow Location"
+                        loadingLabel="Checking location..."
+                        isLoading={locationLoading}
+                        onRetry={() => void handleGrantLocation("venue-list")}
+                      />
+                    ) : locationFailureReason === "unavailable" ? (
+                      <LocationStatusCard
+                        tone="rose"
+                        buttonTone="slate"
+                        heading="Location services are off"
+                        body="Your device's Location Services appear to be off, so we can't find venues near you. To play, please turn Location Services on in your phone's settings, then tap Retry."
+                        buttonLabel="Retry"
+                        loadingLabel="Checking location..."
+                        isLoading={locationLoading}
+                        onRetry={() => void handleGrantLocation("venue-list")}
+                      />
+                    ) : locationFailureReason === "timeout" ? (
+                      <LocationStatusCard
+                        tone="slate"
+                        buttonTone="slate"
+                        heading="Location took too long"
+                        body="We couldn't get your location in time. This can happen with a weak signal — please tap Retry to try again."
+                        buttonLabel="Retry"
+                        loadingLabel="Checking location..."
+                        isLoading={locationLoading}
+                        onRetry={() => void handleGrantLocation("venue-list")}
+                      />
                     ) : (
                       <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
                         <p className="font-semibold text-white">Nearby venues only</p>
-                        {locationLoading ? (
-                          <p className="text-sm text-ht-fg-muted">Checking your location to find venues in range...</p>
-                        ) : locationNotice ? (
+                        {locationNotice ? (
                           <p className="text-sm text-ht-fg-muted">{locationNotice}</p>
                         ) : (
                           <p className="text-sm text-ht-fg-muted">No venue is currently in range from your location.</p>
