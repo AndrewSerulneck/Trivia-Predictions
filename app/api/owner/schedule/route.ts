@@ -3,8 +3,10 @@ import { datetimeLocalValueToUtcIso } from "@/lib/categoryBlitzScheduleTime";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import {
   DEFAULT_OWNER_SCHEDULE_GAME_TYPE,
+  OWNER_SCHEDULE_INVALID_RECURRENCE_MESSAGE,
   OWNER_SCHEDULE_OVERLAP_MESSAGE,
   OWNER_SCHEDULE_UNSUPPORTED_GAME_MESSAGE,
+  OWNER_SCHEDULE_WEEKLY_DAYS_REQUIRED_MESSAGE,
   createOwnerSchedule,
   isKnownGameType,
   isSupportedGameType,
@@ -19,6 +21,19 @@ function isTimeValidationError(message: string): boolean {
     message === "A valid start and end date/time are required." ||
     message === "End date/time must be after the start date/time."
   );
+}
+
+function isRecurrenceValidationError(message: string): boolean {
+  return (
+    message === OWNER_SCHEDULE_WEEKLY_DAYS_REQUIRED_MESSAGE ||
+    message === OWNER_SCHEDULE_INVALID_RECURRENCE_MESSAGE
+  );
+}
+
+/** Coerce an untrusted body value into a clean string[] of weekday keys. */
+function parseRecurringDays(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((entry) => String(entry ?? "").trim().toLowerCase()).filter(Boolean);
 }
 
 /** GET /api/owner/schedule?venueId=...&gameType=... — list a venue's schedules (owner-scoped). */
@@ -79,6 +94,8 @@ export async function POST(request: Request) {
     timezone?: string;
     gameType?: string;
     rounds?: number;
+    recurringType?: string;
+    recurringDays?: unknown;
   };
 
   const venueId = String(body.venueId ?? "").trim();
@@ -88,6 +105,8 @@ export async function POST(request: Request) {
   const timezone = String(body.timezone ?? "America/New_York").trim() || "America/New_York";
   const gameTypeRaw = String(body.gameType ?? DEFAULT_OWNER_SCHEDULE_GAME_TYPE).trim();
   const rounds = Math.max(1, Math.floor(Number(body.rounds)) || 1);
+  const recurringType = String(body.recurringType ?? "none").trim().toLowerCase();
+  const recurringDays = parseRecurringDays(body.recurringDays);
 
   if (!venueId) return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });
   if (!title) return NextResponse.json({ ok: false, error: "title is required." }, { status: 400 });
@@ -120,6 +139,8 @@ export async function POST(request: Request) {
       timezone,
       gameType: gameTypeRaw,
       rounds,
+      recurringType,
+      recurringDays,
     });
     return NextResponse.json({ ok: true, schedule });
   } catch (error) {
@@ -129,7 +150,7 @@ export async function POST(request: Request) {
         ? 409
         : message === OWNER_SCHEDULE_UNSUPPORTED_GAME_MESSAGE
           ? 400
-          : isTimeValidationError(message)
+          : isTimeValidationError(message) || isRecurrenceValidationError(message)
             ? 400
             : 500;
     return NextResponse.json({ ok: false, error: message }, { status });

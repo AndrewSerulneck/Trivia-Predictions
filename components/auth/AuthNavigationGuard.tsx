@@ -85,6 +85,14 @@ export function AuthNavigationGuard() {
     if (currentPath.startsWith("/admin")) {
       return;
     }
+    // Owner Partner Dashboard is protected by its own auth (tp_owner_sess cookie),
+    // entirely separate from player auth. A player signing in on another tab
+    // updates the shared same-origin tp_user_id/tp_venue_id state this guard
+    // watches; without this exemption that would force-navigate an open Partner
+    // Dashboard tab to /venue/{venueId} even though the owner session is untouched.
+    if (currentPath.startsWith("/owner")) {
+      return;
+    }
     const query = searchParams?.toString() ?? "";
     const currentUrl = query ? `${currentPath}?${query}` : currentPath;
     if (lastRedirectRef.current === currentUrl) {

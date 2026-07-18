@@ -5,10 +5,14 @@ import type { MetadataRoute } from "next";
 // the sitemap (see app/robots.ts for the matching disallow list).
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hightopchallenge.com";
 
-const MARKETING_PATHS: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
-  { path: "/info", priority: 1, changeFrequency: "weekly" },
-  { path: "/faqs", priority: 0.6, changeFrequency: "monthly" },
-  { path: "/advertise", priority: 0.4, changeFrequency: "monthly" },
+const MARKETING_PATHS: {
+  path: string;
+  priority: number;
+  changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+}[] = [
+  { path: "/info", priority: 1.0, changeFrequency: "weekly" },
+  { path: "/faqs", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/advertise", priority: 0.5, changeFrequency: "monthly" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

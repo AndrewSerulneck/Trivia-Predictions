@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { Dropdown } from "@/components/ui/Dropdown";
 
 type Subscription = {
   venueId: string;
@@ -275,42 +276,45 @@ const OwnerDashboardPage = () => {
         <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
       ) : (
         <div className="space-y-5">
-          {/* Venue switcher — native select overlay for multi-venue owners */}
+          {/* Venue switcher — the card itself is the trigger for multi-venue owners */}
           {selectedVenue ? (
-            <div className="relative flex items-center gap-3 rounded-2xl border border-ht-hairline bg-ht-surface p-3 shadow-ht-card">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ht-game-live text-lg font-black text-slate-950">
-                {venueInitial}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-black text-ht-primary">{selectedVenue.name}</div>
-                {venues.length > 1 ? (
-                  <div className="text-[11px] font-black uppercase tracking-wider text-ht-muted">
-                    {venues.length} venues · tap to switch
-                  </div>
-                ) : null}
-              </div>
-              {venues.length > 1 ? (
-                <>
-                  <span className="text-ht-muted" aria-hidden>
-                    ▾
-                  </span>
-                  <label className="absolute inset-0 cursor-pointer">
-                    <span className="sr-only">Select venue</span>
-                    <select
-                      value={selectedVenueId}
-                      onChange={(e) => setSelectedVenueId(e.target.value)}
-                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            venues.length > 1 ? (
+              <Dropdown
+                value={selectedVenueId}
+                onChange={setSelectedVenueId}
+                options={venues.map((v) => ({ value: v.id, label: v.name }))}
+                ariaLabel="Select venue"
+                className="flex w-full items-center gap-3 rounded-2xl border border-ht-hairline bg-ht-surface p-3 text-left shadow-ht-card"
+                renderTrigger={(_selected, isOpen) => (
+                  <>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ht-game-live text-lg font-black text-slate-950">
+                      {venueInitial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-black text-ht-primary">{selectedVenue.name}</div>
+                      <div className="text-[11px] font-black uppercase tracking-wider text-ht-muted">
+                        {venues.length} venues · tap to switch
+                      </div>
+                    </div>
+                    <span
+                      className={`shrink-0 text-ht-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
+                      aria-hidden
                     >
-                      {venues.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </>
-              ) : null}
-            </div>
+                      ▾
+                    </span>
+                  </>
+                )}
+              />
+            ) : (
+              <div className="flex items-center gap-3 rounded-2xl border border-ht-hairline bg-ht-surface p-3 shadow-ht-card">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ht-game-live text-lg font-black text-slate-950">
+                  {venueInitial}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-black text-ht-primary">{selectedVenue.name}</div>
+                </div>
+              </div>
+            )
           ) : null}
 
           <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Run your room</p>

@@ -6,17 +6,29 @@ import {
   deleteSchedule,
   getSchedule,
   listSchedules,
+  updateSchedule,
 } from "@/lib/categoryBlitzSchedules";
 import {
   createAdminLiveShowdownSchedule,
   deleteAdminLiveShowdownSchedule,
   listAdminLiveShowdownSchedules,
+  updateAdminLiveShowdownSchedule,
   type AdminLiveShowdownSchedule,
 } from "@/lib/liveShowdownAdmin";
-import { utcIsoToDatetimeLocalValue } from "@/lib/categoryBlitzScheduleTime";
+import {
+  listScheduleWindowOccurrences,
+  utcIsoToDatetimeLocalValue,
+  type CategoryBlitzWindowOccurrence,
+} from "@/lib/categoryBlitzScheduleTime";
 import { liveTriviaDurationMinutes } from "@/lib/liveTriviaShared";
 import type { OwnerAuthContext } from "@/lib/requireOwnerAuth";
 import type { CategoryBlitzRecurringType, OwnerSchedule, OwnerScheduleGameType } from "@/types";
+
+/** The timing subset `listScheduleWindowOccurrences` needs — satisfied by OwnerSchedule and by the create/update candidate objects. */
+type ScheduleTiming = Pick<
+  OwnerSchedule,
+  "startTime" | "endTime" | "timezone" | "recurringType" | "recurringDays" | "windowMinutes"
+>;
 
 // ── Game-type contract ────────────────────────────────────────────────────────
 // The owner scheduling surface is game-type-agnostic so the UI is future-proof.
@@ -45,6 +57,47 @@ export const OWNER_SCHEDULE_OVERLAP_MESSAGE =
   "That time overlaps another scheduled game for this venue. Pick a different time.";
 export const OWNER_SCHEDULE_UNSUPPORTED_GAME_MESSAGE =
   "That game can't be scheduled yet — it's coming soon.";
+export const OWNER_SCHEDULE_WEEKLY_DAYS_REQUIRED_MESSAGE =
+  "Select at least one day for weekly recurring schedules.";
+export const OWNER_SCHEDULE_INVALID_RECURRENCE_MESSAGE =
+  "Recurrence must be none, daily, or weekly.";
+
+const OWNER_WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+
+/**
+ * Validate + normalize an owner recurrence request. Recurrence is a Live Trivia
+ * ONLY feature — Category Blitz owner schedules are always one-off (it's moving
+ * to always-on continuous mode), so any recurrence on a non–Live-Trivia game is
+ * coerced to "none". Weekly requires at least one weekday. Throws the tagged
+ * validation messages (mapped to 400 by the route layer) on invalid input.
+ */
+export function normalizeOwnerRecurrence(
+  gameType: OwnerScheduleGameType,
+  recurringTypeRaw: string | undefined,
+  recurringDaysRaw: string[] | undefined,
+): { recurringType: CategoryBlitzRecurringType; recurringDays: string[] } {
+  if (gameType !== "live_trivia") {
+    return { recurringType: "none", recurringDays: [] };
+  }
+  const type = String(recurringTypeRaw ?? "none").trim().toLowerCase();
+  if (type !== "none" && type !== "daily" && type !== "weekly") {
+    throw new Error(OWNER_SCHEDULE_INVALID_RECURRENCE_MESSAGE);
+  }
+  if (type !== "weekly") {
+    return { recurringType: type, recurringDays: [] };
+  }
+  const recurringDays = Array.from(
+    new Set(
+      (Array.isArray(recurringDaysRaw) ? recurringDaysRaw : [])
+        .map((day) => String(day ?? "").trim().toLowerCase())
+        .filter((day) => (OWNER_WEEKDAY_KEYS as readonly string[]).includes(day)),
+    ),
+  );
+  if (recurringDays.length === 0) {
+    throw new Error(OWNER_SCHEDULE_WEEKLY_DAYS_REQUIRED_MESSAGE);
+  }
+  return { recurringType: "weekly", recurringDays };
+}
 
 export function isKnownGameType(value: string): value is OwnerScheduleGameType {
   return (KNOWN_OWNER_SCHEDULE_GAME_TYPES as readonly string[]).includes(value);
@@ -76,6 +129,44 @@ export function rangesOverlap(
   const bE = Date.parse(bEnd);
   if (![aS, aE, bS, bE].every(Number.isFinite)) return false;
   return aS < bE && bS < aE;
+}
+
+/** Half-open overlap of two concrete occurrence windows (Date objects). */
+function occurrencesOverlap(
+  a: CategoryBlitzWindowOccurrence,
+  b: CategoryBlitzWindowOccurrence,
+): boolean {
+  return a.windowStart.getTime() < b.windowEnd.getTime() && b.windowStart.getTime() < a.windowEnd.getTime();
+}
+
+/**
+ * True when two schedules ever collide, accounting for recurrence. Both `daily`
+ * and `weekly` patterns are periodic with a 7-day period at a fixed time of day,
+ * so any real collision surfaces within the ~3-week (−7..+14 day) window that
+ * `listScheduleWindowOccurrences` enumerates around a given anchor. We anchor
+ * that enumeration at several reference points — `now`, plus each schedule's own
+ * base start — so a far-future one-off vs. a long-running weekly series is still
+ * compared in the right region (a one-off always yields its single fixed
+ * occurrence regardless of anchor; a recurring schedule yields the occurrences
+ * near whichever anchor lands inside its active range).
+ */
+function schedulesCollide(candidate: ScheduleTiming, existing: ScheduleTiming): boolean {
+  const anchors: Date[] = [new Date()];
+  const candBase = Date.parse(candidate.startTime);
+  const exBase = Date.parse(existing.startTime);
+  if (Number.isFinite(candBase)) anchors.push(new Date(candBase));
+  if (Number.isFinite(exBase)) anchors.push(new Date(exBase));
+
+  for (const anchor of anchors) {
+    const candOccurrences = listScheduleWindowOccurrences(candidate, anchor);
+    const exOccurrences = listScheduleWindowOccurrences(existing, anchor);
+    for (const c of candOccurrences) {
+      for (const e of exOccurrences) {
+        if (occurrencesOverlap(c, e)) return true;
+      }
+    }
+  }
+  return false;
 }
 
 // ── Live Trivia adapter ───────────────────────────────────────────────────────
@@ -183,6 +274,10 @@ export type CreateOwnerScheduleParams = {
   gameType: OwnerScheduleGameType;
   /** Live Trivia only: number of rounds (duration derives from this). Ignored for Category Blitz. */
   rounds?: number;
+  /** Live Trivia only recurrence (none|daily|weekly). Coerced to "none" for other games. */
+  recurringType?: string;
+  /** Weekday keys (sun..sat) for weekly recurrence. */
+  recurringDays?: string[];
 };
 
 /**
@@ -190,9 +285,10 @@ export type CreateOwnerScheduleParams = {
  * verified venue ownership. Enforces the plan's guardrail — no overlapping
  * schedules for the same venue, checked across BOTH game engines so a venue can
  * never double-book the same window (Live Trivia at 8pm is rejected if Category
- * Blitz already owns 8pm, and vice-versa). Throws
- * OWNER_SCHEDULE_UNSUPPORTED_GAME_MESSAGE for a known-but-unsupported game type
- * and OWNER_SCHEDULE_OVERLAP_MESSAGE on a time collision.
+ * Blitz already owns 8pm, and vice-versa). The overlap check is recurrence-aware
+ * (see `schedulesCollide`). Throws OWNER_SCHEDULE_UNSUPPORTED_GAME_MESSAGE for a
+ * known-but-unsupported game type, the recurrence validation messages for bad
+ * recurrence input, and OWNER_SCHEDULE_OVERLAP_MESSAGE on a time collision.
  */
 export async function createOwnerSchedule(
   params: CreateOwnerScheduleParams,
@@ -202,6 +298,12 @@ export async function createOwnerSchedule(
   if (!isSupportedGameType(gameType)) {
     throw new Error(OWNER_SCHEDULE_UNSUPPORTED_GAME_MESSAGE);
   }
+
+  const { recurringType, recurringDays } = normalizeOwnerRecurrence(
+    gameType,
+    params.recurringType,
+    params.recurringDays,
+  );
 
   // Validate the window here rather than relying on the engine, so the boundary
   // is self-contained (the message matches the admin route's validation set).
@@ -215,13 +317,18 @@ export async function createOwnerSchedule(
   }
 
   // Guardrail: reject a window that overlaps any existing active schedule for
-  // this venue, ACROSS BOTH ENGINES. Owner-created schedules are one-off ("none"
-  // recurring), so an absolute start/end range comparison is the right check.
+  // this venue, ACROSS BOTH ENGINES. The check is recurrence-aware, so a weekly
+  // series is compared occurrence-by-occurrence rather than by its first window.
+  const candidate: ScheduleTiming = {
+    startTime: startTimeIso,
+    endTime: endTimeIso,
+    timezone,
+    recurringType,
+    recurringDays,
+    windowMinutes: (endMs - startMs) / 60_000,
+  };
   const existing = await listOwnerSchedules(venueId);
-  const collides = existing.some((s) =>
-    rangesOverlap(startTimeIso, endTimeIso, s.startTime, s.endTime),
-  );
-  if (collides) {
+  if (existing.some((s) => schedulesCollide(candidate, s))) {
     throw new Error(OWNER_SCHEDULE_OVERLAP_MESSAGE);
   }
 
@@ -237,6 +344,8 @@ export async function createOwnerSchedule(
       targetDate,
       startTime: startClock,
       timezone,
+      recurringType,
+      recurringDays,
       numRounds: Math.max(1, Math.floor(Number(rounds)) || 1),
       venueId,
     });
@@ -249,6 +358,108 @@ export async function createOwnerSchedule(
     startTime: startTimeIso,
     endTime: endTimeIso,
     timezone,
+  });
+  return { ...schedule, gameType: "category_blitz" };
+}
+
+export type UpdateOwnerScheduleParams = {
+  id: string;
+  venueId: string;
+  title: string;
+  startTimeIso: string;
+  endTimeIso: string;
+  timezone: string;
+  /** Fixed by the caller from the existing row — an owner can't switch a schedule's engine mid-edit. */
+  gameType: OwnerScheduleGameType;
+  /** Live Trivia only: number of rounds (duration derives from this). Ignored for Category Blitz. */
+  rounds?: number;
+  /** Live Trivia only recurrence (none|daily|weekly). Coerced to "none" for other games. */
+  recurringType?: string;
+  /** Weekday keys (sun..sat) for weekly recurrence. */
+  recurringDays?: string[];
+};
+
+/**
+ * Update a schedule on behalf of an owner. Assumes the caller has already
+ * verified venue ownership and resolved `gameType` from the existing row (never
+ * from client input). Re-checks the recurrence-aware no-overlap guardrail across
+ * both engines, excluding the schedule being edited from the collision set. This
+ * surface edits title/date/time/timezone/rounds and (Live Trivia only)
+ * recurrence; the whole series is edited at once — occurrences are computed
+ * on-the-fly from this single row, so there is no per-occurrence edit. Per-
+ * schedule ad settings are read from the current row and passed through.
+ */
+export async function updateOwnerSchedule(
+  params: UpdateOwnerScheduleParams,
+): Promise<OwnerSchedule> {
+  const { id, venueId, title, startTimeIso, endTimeIso, timezone, gameType, rounds } = params;
+
+  if (!isSupportedGameType(gameType)) {
+    throw new Error(OWNER_SCHEDULE_UNSUPPORTED_GAME_MESSAGE);
+  }
+
+  const { recurringType, recurringDays } = normalizeOwnerRecurrence(
+    gameType,
+    params.recurringType,
+    params.recurringDays,
+  );
+
+  const startMs = Date.parse(startTimeIso);
+  const endMs = Date.parse(endTimeIso);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+    throw new Error("A valid start and end date/time are required.");
+  }
+  if (endMs <= startMs) {
+    throw new Error("End date/time must be after the start date/time.");
+  }
+
+  const candidate: ScheduleTiming = {
+    startTime: startTimeIso,
+    endTime: endTimeIso,
+    timezone,
+    recurringType,
+    recurringDays,
+    windowMinutes: (endMs - startMs) / 60_000,
+  };
+  const existing = await listOwnerSchedules(venueId);
+  if (existing.some((s) => s.id !== id && schedulesCollide(candidate, s))) {
+    throw new Error(OWNER_SCHEDULE_OVERLAP_MESSAGE);
+  }
+
+  if (gameType === "live_trivia") {
+    const current = (await listAdminLiveShowdownSchedules(LIVE_TRIVIA_LIST_LIMIT)).find(
+      (row) => row.id === id,
+    );
+    if (!current) throw new Error("Schedule not found.");
+
+    const local = utcIsoToDatetimeLocalValue(startTimeIso, timezone); // "YYYY-MM-DDTHH:MM"
+    const [targetDate, startClock] = local.split("T");
+    const updated = await updateAdminLiveShowdownSchedule({
+      id,
+      title,
+      targetDate,
+      startTime: startClock,
+      timezone,
+      recurringType,
+      recurringDays,
+      numRounds: Math.max(1, Math.floor(Number(rounds)) || 1),
+      venueId,
+      intermissionAdDelaySeconds: current.intermissionAdDelaySeconds,
+      lobbyAdEnabled: current.lobbyAdEnabled,
+    });
+    return adminLiveScheduleToOwnerSchedule(updated);
+  }
+
+  const current = await getSchedule(id);
+  if (!current) throw new Error("Schedule not found.");
+
+  const schedule = await updateSchedule(id, {
+    title,
+    startTime: startTimeIso,
+    endTime: endTimeIso,
+    timezone,
+    recurringType: current.recurringType,
+    recurringDays: current.recurringDays,
   });
   return { ...schedule, gameType: "category_blitz" };
 }

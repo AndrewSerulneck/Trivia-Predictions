@@ -40,6 +40,12 @@ const ORGANIZATION_JSON_LD = {
   name: "Hightop Challenge",
   url: SITE_URL,
   logo: `${SITE_URL}/brand/htc-logo.png`,
+  sameAs: ["https://www.instagram.com/thehightopchallenge"],
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "partnerships@hightopchallenge.com",
+    contactType: "sales",
+  },
 };
 
 const WEB_APPLICATION_JSON_LD = {

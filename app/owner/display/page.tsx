@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { gameUrl } from "@/lib/domainSplit";
 import { normalizePairingCode } from "@/lib/tvPairingShared";
 
@@ -116,17 +117,14 @@ const OwnerDisplayPage = () => {
           </Link>
 
           {venues.length > 1 ? (
-            <select
+            <Dropdown
               value={selectedVenueId}
-              onChange={(e) => setSelectedVenueId(e.target.value)}
+              onChange={setSelectedVenueId}
+              options={venues.map((v) => ({ value: v.id, label: v.name }))}
+              ariaLabel="Select venue"
+              size="sm"
               className="min-h-11 rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 text-sm font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-            >
-              {venues.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
+            />
           ) : null}
         </div>
 

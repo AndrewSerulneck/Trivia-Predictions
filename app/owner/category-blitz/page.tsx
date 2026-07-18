@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { CategoryBlitzContinuousSettings } from "@/components/category-blitz/CategoryBlitzContinuousSettings";
 import { CategoryPoolManager } from "@/components/category-blitz/CategoryPoolManager";
 import { LetterCoverageVisualizer } from "@/components/category-blitz/LetterCoverageVisualizer";
@@ -99,17 +100,14 @@ export default function OwnerCategoryBlitzPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Venue Selector */}
         <div className="flex items-center justify-end">
-          <select
+          <Dropdown
             value={selectedVenueId}
-            onChange={(e) => setSelectedVenueId(e.target.value)}
+            onChange={setSelectedVenueId}
+            options={venues.map((v) => ({ value: v.id, label: v.name }))}
+            ariaLabel="Select venue"
+            size="sm"
             className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-ht-cyan-500/50"
-          >
-            {venues.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         {/* Settings */}

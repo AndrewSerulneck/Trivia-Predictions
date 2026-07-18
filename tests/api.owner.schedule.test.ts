@@ -10,11 +10,13 @@ const mocks = vi.hoisted(() => ({
   listSchedules: vi.fn(),
   createSchedule: vi.fn(),
   getSchedule: vi.fn(),
+  updateSchedule: vi.fn(),
   deleteSchedule: vi.fn(),
   abandonVenueAutoSession: vi.fn(),
   // Live Trivia ("Live Showdown") engine — the second store the owner surface merges (Phase 4b).
   listAdminLiveShowdownSchedules: vi.fn(),
   createAdminLiveShowdownSchedule: vi.fn(),
+  updateAdminLiveShowdownSchedule: vi.fn(),
   deleteAdminLiveShowdownSchedule: vi.fn(),
 }));
 
@@ -23,6 +25,7 @@ vi.mock("@/lib/categoryBlitzSchedules", () => ({
   listSchedules: mocks.listSchedules,
   createSchedule: mocks.createSchedule,
   getSchedule: mocks.getSchedule,
+  updateSchedule: mocks.updateSchedule,
   deleteSchedule: mocks.deleteSchedule,
 }));
 vi.mock("@/lib/categoryBlitz", () => ({
@@ -31,11 +34,12 @@ vi.mock("@/lib/categoryBlitz", () => ({
 vi.mock("@/lib/liveShowdownAdmin", () => ({
   listAdminLiveShowdownSchedules: mocks.listAdminLiveShowdownSchedules,
   createAdminLiveShowdownSchedule: mocks.createAdminLiveShowdownSchedule,
+  updateAdminLiveShowdownSchedule: mocks.updateAdminLiveShowdownSchedule,
   deleteAdminLiveShowdownSchedule: mocks.deleteAdminLiveShowdownSchedule,
 }));
 
 import { GET, POST } from "@/app/api/owner/schedule/route";
-import { DELETE } from "@/app/api/owner/schedule/[id]/route";
+import { DELETE, PATCH } from "@/app/api/owner/schedule/[id]/route";
 import { rangesOverlap } from "@/lib/ownerSchedule";
 
 const OWNER = { ownerId: "owner-1", venueIds: ["venue-1", "venue-2"] };
@@ -110,18 +114,22 @@ beforeEach(() => {
   mocks.listSchedules.mockReset();
   mocks.createSchedule.mockReset();
   mocks.getSchedule.mockReset();
+  mocks.updateSchedule.mockReset();
   mocks.deleteSchedule.mockReset();
   mocks.abandonVenueAutoSession.mockReset();
   mocks.listAdminLiveShowdownSchedules.mockReset();
   mocks.createAdminLiveShowdownSchedule.mockReset();
+  mocks.updateAdminLiveShowdownSchedule.mockReset();
   mocks.deleteAdminLiveShowdownSchedule.mockReset();
 
   mocks.requireOwnerAuth.mockResolvedValue(OWNER);
   mocks.listSchedules.mockResolvedValue([]);
   mocks.createSchedule.mockResolvedValue(makeSchedule());
+  mocks.updateSchedule.mockResolvedValue(makeSchedule());
   // Default: no Live Trivia schedules in the store (tests opt in per-case).
   mocks.listAdminLiveShowdownSchedules.mockResolvedValue([]);
   mocks.createAdminLiveShowdownSchedule.mockResolvedValue(makeAdminLive());
+  mocks.updateAdminLiveShowdownSchedule.mockResolvedValue(makeAdminLive());
 });
 
 describe("rangesOverlap", () => {
@@ -376,5 +384,129 @@ describe("Phase 4b — Live Trivia scheduling", () => {
     );
     expect(res.status).toBe(403);
     expect(mocks.deleteAdminLiveShowdownSchedule).not.toHaveBeenCalled();
+  });
+});
+
+// ── Phase 3 — owner recurring Live Trivia ──────────────────────────────────────
+describe("Phase 3 — owner recurrence (create)", () => {
+  it("passes recurringType + recurringDays through to the Live Showdown engine", async () => {
+    const res = await POST(
+      postRequest({ ...validLiveBody, recurringType: "weekly", recurringDays: ["wed"] }),
+    );
+    expect(res.status).toBe(200);
+    const arg = mocks.createAdminLiveShowdownSchedule.mock.calls[0][0];
+    expect(arg).toMatchObject({ recurringType: "weekly", recurringDays: ["wed"] });
+  });
+
+  it("400s a weekly Live Trivia game with no selected days", async () => {
+    const res = await POST(
+      postRequest({ ...validLiveBody, recurringType: "weekly", recurringDays: [] }),
+    );
+    expect(res.status).toBe(400);
+    expect(mocks.createAdminLiveShowdownSchedule).not.toHaveBeenCalled();
+  });
+
+  it("400s an invalid recurringType for Live Trivia", async () => {
+    const res = await POST(postRequest({ ...validLiveBody, recurringType: "fortnightly" }));
+    expect(res.status).toBe(400);
+    expect(mocks.createAdminLiveShowdownSchedule).not.toHaveBeenCalled();
+  });
+
+  it("coerces recurrence to none for Category Blitz (never 400s on missing weekly days)", async () => {
+    const res = await POST(
+      postRequest({ ...validCreateBody, recurringType: "weekly", recurringDays: [] }),
+    );
+    expect(res.status).toBe(200);
+    expect(mocks.createSchedule).toHaveBeenCalledOnce();
+  });
+
+  it("409s a weekly game that collides with an existing weekly series on the same day/time", async () => {
+    // Existing weekly Live Trivia on Wednesdays at the same 8pm ET window.
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+      makeAdminLive({ id: "lt-wed", recurringType: "weekly", recurringDays: ["wed"] }),
+    ]);
+    const res = await POST(
+      postRequest({ ...validLiveBody, recurringType: "weekly", recurringDays: ["wed"] }),
+    );
+    expect(res.status).toBe(409);
+    expect(mocks.createAdminLiveShowdownSchedule).not.toHaveBeenCalled();
+  });
+
+  it("allows a weekly game on a different day than an existing weekly series", async () => {
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+      makeAdminLive({ id: "lt-wed", recurringType: "weekly", recurringDays: ["wed"] }),
+    ]);
+    const res = await POST(
+      postRequest({ ...validLiveBody, recurringType: "weekly", recurringDays: ["thu"] }),
+    );
+    expect(res.status).toBe(200);
+    expect(mocks.createAdminLiveShowdownSchedule).toHaveBeenCalledOnce();
+  });
+});
+
+describe("Phase 3 — owner recurrence (PATCH edit)", () => {
+  const paramsFor = (id: string) => ({ params: Promise.resolve({ id }) });
+
+  function patchRequest(id: string, body: Record<string, unknown>): Request {
+    return new Request(`http://localhost/api/owner/schedule/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+  }
+
+  const validPatchBody = {
+    title: "Weekly Live Trivia",
+    startTime: "2026-08-01T20:00",
+    endTime: "2026-08-01T21:22",
+    timezone: "America/New_York",
+    rounds: 3,
+  };
+
+  it("passes edited recurrence through to updateAdminLiveShowdownSchedule", async () => {
+    mocks.getSchedule.mockResolvedValue(null); // resolve as a Live Trivia id
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+      makeAdminLive({ id: "lt-1", venueId: "venue-1" }),
+    ]);
+
+    const res = await PATCH(
+      patchRequest("lt-1", { ...validPatchBody, recurringType: "weekly", recurringDays: ["sun", "mon", "tue"] }),
+      paramsFor("lt-1"),
+    );
+    expect(res.status).toBe(200);
+    const arg = mocks.updateAdminLiveShowdownSchedule.mock.calls[0][0];
+    expect(arg).toMatchObject({
+      id: "lt-1",
+      recurringType: "weekly",
+      recurringDays: ["sun", "mon", "tue"],
+    });
+  });
+
+  it("400s a weekly edit with no selected days", async () => {
+    mocks.getSchedule.mockResolvedValue(null);
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+      makeAdminLive({ id: "lt-1", venueId: "venue-1" }),
+    ]);
+
+    const res = await PATCH(
+      patchRequest("lt-1", { ...validPatchBody, recurringType: "weekly", recurringDays: [] }),
+      paramsFor("lt-1"),
+    );
+    expect(res.status).toBe(400);
+    expect(mocks.updateAdminLiveShowdownSchedule).not.toHaveBeenCalled();
+  });
+
+  it("does not count the edited schedule itself as an overlap", async () => {
+    // The only existing schedule is the one being edited — must not self-collide.
+    mocks.getSchedule.mockResolvedValue(null);
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+      makeAdminLive({ id: "lt-1", venueId: "venue-1", recurringType: "weekly", recurringDays: ["wed"] }),
+    ]);
+
+    const res = await PATCH(
+      patchRequest("lt-1", { ...validPatchBody, recurringType: "weekly", recurringDays: ["wed"] }),
+      paramsFor("lt-1"),
+    );
+    expect(res.status).toBe(200);
+    expect(mocks.updateAdminLiveShowdownSchedule).toHaveBeenCalledOnce();
   });
 });

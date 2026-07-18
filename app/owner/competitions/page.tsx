@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { getTimeZoneParts } from "@/lib/categoryBlitzScheduleTime";
 import { OWNER_COMPETITION_TEMPLATES, type OwnerCompetitionTemplate } from "@/lib/ownerCompetitionTemplates";
 import type { ChallengeCampaign, ChallengeLeaderboardEntry } from "@/types";
@@ -183,20 +184,17 @@ const OwnerCompetitionsPage = () => {
           </Link>
 
           {venues.length > 1 ? (
-            <select
+            <Dropdown
               value={selectedVenueId}
-              onChange={(e) => {
-                setSelectedVenueId(e.target.value);
+              onChange={(next) => {
+                setSelectedVenueId(next);
                 setShowForm(false);
               }}
+              options={venues.map((v) => ({ value: v.id, label: v.name }))}
+              ariaLabel="Select venue"
+              size="sm"
               className="min-h-11 rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 text-sm font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-            >
-              {venues.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
+            />
           ) : null}
         </div>
 
@@ -510,17 +508,13 @@ function CompetitionForm({
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-ht-muted">Timezone</label>
-            <select
+            <Dropdown
               value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
+              onChange={setTimezone}
+              options={TIMEZONES.map((tz) => ({ value: tz, label: tz }))}
+              ariaLabel="Timezone"
               className="w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-base font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-            >
-              {TIMEZONES.map((tz) => (
-                <option key={tz} value={tz}>
-                  {tz}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {summaryLabel ? (

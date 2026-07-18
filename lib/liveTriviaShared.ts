@@ -38,3 +38,9 @@ export const liveTriviaDurationMinutes = (rounds: number): number => {
   const safeRounds = clampLiveTriviaRounds(rounds);
   return (safeRounds * LIVE_TRIVIA_ROUND_MS) / 60_000;
 };
+
+/** Exact inverse of liveTriviaDurationMinutes, for prefilling the edit form from a stored window. */
+export const roundsFromLiveTriviaWindowMinutes = (windowMinutes: number): number => {
+  const rounds = (windowMinutes * 60_000) / LIVE_TRIVIA_ROUND_MS;
+  return clampLiveTriviaRounds(Math.round(rounds));
+};
