@@ -535,7 +535,6 @@ export default function InfoPage() {
           eyebrow="Overview"
           title="What is Hightop Challenge?"
           subtitle="Hightop Challenge is a digital gaming and rewards platform designed to drive repeat visits and increase business at our partner venues."
-          defaultOpen
           className="bg-slate-900/40"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
