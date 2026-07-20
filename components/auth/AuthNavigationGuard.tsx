@@ -30,7 +30,6 @@ function isInSessionGameRoute(pathname: string): boolean {
     pathname.startsWith("/redeem-prizes") ||
     pathname.startsWith("/faqs") ||
     pathname.startsWith("/activity") ||
-    pathname.startsWith("/leaderboard") ||
     pathname.startsWith("/advertise") ||
     pathname.startsWith("/coming-soon") ||
     pathname.startsWith("/info") ||

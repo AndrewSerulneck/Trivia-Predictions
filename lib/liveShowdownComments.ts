@@ -1,3 +1,5 @@
+import { fnv1aHash } from "@/lib/hash";
+
 export type LiveShowdownCommentTrigger =
   | "answer_correct"
   | "answer_incorrect"
@@ -250,14 +252,7 @@ function assertCommentBankIntegrity() {
 
 assertCommentBankIntegrity();
 
-function hashSeed(seed: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash ^= seed.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return Math.abs(hash >>> 0);
-}
+const hashSeed = fnv1aHash;
 
 function pickFromBank(bank: readonly string[], eventKey: string): string {
   if (bank.length === 0) return "";

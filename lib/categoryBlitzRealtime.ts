@@ -126,6 +126,14 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   const [isConnected,   setIsConnected]   = useState(false);
   const [error,         setError]         = useState<string | null>(null);
   const [errorEscalated, setErrorEscalated] = useState(false);
+  /** The live-events channel this client subscribes to, handed back by the
+   *  sessions API. The server derives it from the (possibly pooled) room, so
+   *  the shared-room mapping never lives in client code — this side only ever
+   *  sees an opaque channel string. Null until the first sessions response
+   *  lands; the realtime effect stays dormant until then (the fallback poll
+   *  covers that brief gap). With pooling off it equals this venue's own
+   *  channel, so behavior is unchanged. */
+  const [realtimeChannel, setRealtimeChannel] = useState<string | null>(null);
 
   const mountedRef        = useRef(true);
   const errorStreakRef    = useRef(0);       // consecutive loadSession failures
@@ -209,6 +217,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       setError(null);
       setErrorEscalated(false);
       setIsConnected(false);
+      setRealtimeChannel(null);
       endsAtRef.current = null;
       lobbyStartsAtRef.current = null;
       currentRoundIdRef.current = null;
@@ -451,7 +460,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       const userIdParam = userIdRef.current ? `&userId=${encodeURIComponent(userIdRef.current)}` : "";
       const testModeParam = isCategoryBlitzTestModeEnabled() ? "&testMode=1" : "";
       const res = await fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}${userIdParam}${testModeParam}`);
-      const json = (await res.json()) as { ok: boolean; session?: CategoryBlitzSession | null; error?: string };
+      const json = (await res.json()) as { ok: boolean; session?: CategoryBlitzSession | null; error?: string; realtimeChannel?: string };
       if (!mountedRef.current) return;
 
       if (!json.ok) {
@@ -460,6 +469,8 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setErrorEscalated(errorStreakRef.current >= ESCALATE_AFTER_FAILURES);
         return;
       }
+
+      if (json.realtimeChannel) setRealtimeChannel(json.realtimeChannel);
 
       errorStreakRef.current = 0;
       setError(null);
@@ -648,13 +659,13 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   // ── Realtime subscription ─────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!venueId || !supabase) return;
+    if (!realtimeChannel || !supabase) return;
 
     const client = supabase;
     let active = true;
 
     const channel = client
-      .channel(`category-blitz-session:${venueId}`)
+      .channel(realtimeChannel)
       .on("broadcast", { event: "round_started" }, (msg) => {
         if (!active || !mountedRef.current) return;
         const payload = msg.payload as RoundStartedPayload | null;
@@ -741,7 +752,10 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   // 15s and dropping it mid-handshake ("WebSocket is closed before the
   // connection is established"). loadCurrentRound/loadFinalResults are stable
   // (empty useCallback deps) so they're safe to depend on directly.
-  }, [venueId, loadCurrentRound, loadFinalResults]);
+  // Keyed on realtimeChannel (server-provided, stable per venue/room) rather
+  // than venueId: identical churn with pooling off, and the only correct
+  // subscription target with pooling on.
+  }, [realtimeChannel, loadCurrentRound, loadFinalResults]);
 
   // ── Initial load + fallback poll ──────────────────────────────────────────
 

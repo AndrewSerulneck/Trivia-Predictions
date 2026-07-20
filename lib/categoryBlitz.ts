@@ -1571,16 +1571,27 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
     )
   );
 
-  // Tally points per user and award.
+  // Tally points per user and award. Attribution uses each submission's OWN
+  // venue_id (the player's real venue, set at submit time from the client's
+  // page — see submitAnswer/the submit route) rather than round.venue_id. Under
+  // the Category Blitz global-room pool, round.venue_id is the shared hidden
+  // room, not any player's actual venue — using it here would misattribute
+  // every player's challenge-campaign progress to that hidden venue. A user's
+  // venue_id is the same across all their submissions in a round (they play
+  // from one venue), so grabbing it once per user is exact, not an average.
   const pointsByUser = new Map<string, number>();
+  const venueByUser = new Map<string, string>();
   for (const u of updates) {
     const sub = submissions.find((s) => s.id === u.id)!;
     pointsByUser.set(sub.user_id, (pointsByUser.get(sub.user_id) ?? 0) + u.points_awarded);
+    venueByUser.set(sub.user_id, sub.venue_id);
   }
 
   await Promise.all([
     ...Array.from(pointsByUser.entries()).map(([userId, pts]) =>
-      pts > 0 ? awardCategoryBlitzPoints({ userId, venueId: round.venue_id, points: pts }) : Promise.resolve()
+      pts > 0
+        ? awardCategoryBlitzPoints({ userId, venueId: venueByUser.get(userId) ?? round.venue_id, points: pts })
+        : Promise.resolve()
     ),
     mergeCumulativeSessionTotals(round.session_id, pointsByUser),
   ]);

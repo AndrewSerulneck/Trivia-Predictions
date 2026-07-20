@@ -27,6 +27,7 @@ function VenueLeaderboardPanelInner({
               initialEntries={initialEntries}
               isEnabled={isEnabled}
               defaultTimeframe="today"
+              showGameControl
               showTimeframeControl
               headerTitle="Leaderboard"
             />

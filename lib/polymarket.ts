@@ -1,3 +1,4 @@
+import { fnv1aHash } from "@/lib/hash";
 import type { Prediction } from "@/types";
 
 const GAMMA_API_URL = process.env.POLYMARKET_API_URL ?? "https://gamma-api.polymarket.com/markets";
@@ -925,14 +926,7 @@ function compareBySort(a: Prediction, b: Prediction, sort: PredictionSort): numb
   return +new Date(a.closesAt) - +new Date(b.closesAt);
 }
 
-function hashString(value: string): number {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
+const hashString = fnv1aHash;
 
 function compareBySeededRandom(a: Prediction, b: Prediction, seed: string): number {
   const left = hashString(`${seed}:${a.id}`);

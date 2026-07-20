@@ -9,7 +9,6 @@ const NAV_ITEMS = [
   { href: "/pickem", label: APP_PAGE_NAMES.sportsPickEm },
   { href: "/fantasy", label: APP_PAGE_NAMES.sportsFantasy },
   { href: "/bingo", label: APP_PAGE_NAMES.sportsBingo },
-  { href: "/leaderboard", label: "Leaders" },
 ];
 
 export function MobileBottomNav() {
@@ -25,7 +24,7 @@ export function MobileBottomNav() {
       aria-label="Mobile navigation"
       className="pointer-events-none fixed inset-x-0 bottom-0 z-40 border-t border-ht-border-hairline bg-ht-surface/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-6px_24px_rgba(0,0,0,0.45)] backdrop-blur md:hidden"
     >
-      <ul className="grid grid-cols-5 gap-1">
+      <ul className="grid grid-cols-4 gap-1">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CategoryBlitzSchedule } from "@/types";
+import { categoryBlitzChannelName } from "@/lib/categoryBlitzShared";
 
 const mocks = vi.hoisted(() => ({
   driveVenueCategoryBlitz: vi.fn(),
@@ -85,6 +86,7 @@ describe("GET /api/category-blitz/sessions", () => {
       ok: boolean;
       session: null;
       nextWindowAt: string | null;
+      realtimeChannel: string;
     };
 
     expect(response.status).toBe(200);
@@ -92,7 +94,13 @@ describe("GET /api/category-blitz/sessions", () => {
       ok: true,
       session: null,
       nextWindowAt: "2026-07-08T23:00:00.000Z",
+      // Global-room flag off ⇒ room resolves to the venue itself, so the
+      // client subscribes to that venue's channel.
+      realtimeChannel: categoryBlitzChannelName("venue-1"),
     });
+    // Concealment: the channel is a hash, so the raw venue id (and, under
+    // pooling, the room id) never appears verbatim in the payload.
+    expect(body.realtimeChannel).not.toContain("venue-1");
     expect(mocks.driveVenueCategoryBlitz).toHaveBeenCalledWith(
       "venue-1",
       new Date("2026-07-02T12:00:00.000Z"),

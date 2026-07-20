@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { NFLWeek } from "@/lib/nflPickEm";
 import {
+  buildNFLLeaderboardWeekOptions,
+  getNFLWeekDisplayLabel,
   isNFLWeekLocked,
+  isNFLWeekStarted,
   getLockStatus,
   determineWeekLockTime,
 } from "@/lib/nflPickEm";
@@ -16,6 +19,8 @@ function createMockWeek(overrides: Partial<NFLWeek> = {}): NFLWeek {
     id: "test-week-id",
     season: 2024,
     weekNumber: 1,
+    weekType: "regular",
+    displayLabel: null,
     weekStartDate: "2024-09-05",
     weekEndDate: "2024-09-09",
     thursdayKickoff: null,
@@ -25,6 +30,84 @@ function createMockWeek(overrides: Partial<NFLWeek> = {}): NFLWeek {
     ...overrides,
   };
 }
+
+describe("NFL leaderboard week options", () => {
+  it("uses display labels when available and falls back to Week N", () => {
+    expect(getNFLWeekDisplayLabel(createMockWeek({ weekNumber: 2, displayLabel: "Week 2" }))).toBe("Week 2");
+    expect(getNFLWeekDisplayLabel(createMockWeek({ weekNumber: 3, displayLabel: "" }))).toBe("Week 3");
+  });
+
+  it("only treats weeks as started once their local start date has arrived", () => {
+    const week = createMockWeek({ weekStartDate: "2024-09-05" });
+    expect(isNFLWeekStarted(week, { now: new Date("2024-09-04T23:59:00Z"), timeZone: "UTC" })).toBe(false);
+    expect(isNFLWeekStarted(week, { now: new Date("2024-09-05T00:00:00Z"), timeZone: "UTC" })).toBe(true);
+  });
+
+  it("filters out future weeks and defaults to the current started week", () => {
+    const weeks = [
+      createMockWeek({
+        id: "week-1",
+        weekNumber: 1,
+        displayLabel: "Week 1",
+        weekStartDate: "2024-09-05",
+        weekEndDate: "2024-09-09",
+      }),
+      createMockWeek({
+        id: "week-2",
+        weekNumber: 2,
+        displayLabel: "Week 2",
+        weekStartDate: "2024-09-12",
+        weekEndDate: "2024-09-16",
+      }),
+      createMockWeek({
+        id: "week-3",
+        weekNumber: 3,
+        displayLabel: "Week 3",
+        weekStartDate: "2024-09-19",
+        weekEndDate: "2024-09-23",
+      }),
+    ];
+
+    const options = buildNFLLeaderboardWeekOptions(weeks, {
+      now: new Date("2024-09-13T12:00:00Z"),
+      timeZone: "UTC",
+    });
+
+    expect(options.weeks.map((week) => week.id)).toEqual(["week-1", "week-2"]);
+    expect(options.currentWeekId).toBe("week-2");
+    expect(options.defaultWeekId).toBe("week-2");
+  });
+
+  it("defaults to the most recent started week when no week is current", () => {
+    const weeks = [
+      createMockWeek({ id: "week-1", weekNumber: 1, weekStartDate: "2024-09-05", weekEndDate: "2024-09-09" }),
+      createMockWeek({ id: "week-2", weekNumber: 2, weekStartDate: "2024-09-12", weekEndDate: "2024-09-16" }),
+    ];
+
+    const options = buildNFLLeaderboardWeekOptions(weeks, {
+      now: new Date("2024-09-18T12:00:00Z"),
+      timeZone: "UTC",
+    });
+
+    expect(options.currentWeekId).toBeNull();
+    expect(options.defaultWeekId).toBe("week-2");
+  });
+
+  it("returns an empty option set before the season starts", () => {
+    const weeks = [
+      createMockWeek({ id: "week-1", weekNumber: 1, weekStartDate: "2024-09-05", weekEndDate: "2024-09-09" }),
+    ];
+
+    const options = buildNFLLeaderboardWeekOptions(weeks, {
+      now: new Date("2024-09-04T12:00:00Z"),
+      timeZone: "UTC",
+    });
+
+    expect(options.weeks).toEqual([]);
+    expect(options.currentWeekId).toBeNull();
+    expect(options.defaultWeekId).toBeNull();
+  });
+});
 
 describe("isNFLWeekLocked", () => {
   it("returns true when lock time has passed", () => {

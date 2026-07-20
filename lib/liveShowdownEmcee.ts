@@ -1,3 +1,5 @@
+import { fnv1aHash } from "@/lib/hash";
+
 export type EmceePhase = "pregame" | "rest_warning" | "mid_game_break" | "post_game";
 
 const PREGAME_LINES = [
@@ -66,14 +68,7 @@ const FINAL_RESULTS_LINES = [
   "Game complete. The scoreboard doesn't lie.",
 ];
 
-function hashSeed(seed: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash ^= seed.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return Math.abs(hash >>> 0);
-}
+const hashSeed = fnv1aHash;
 
 function pickFrom(lines: string[], seed: string): string {
   if (lines.length === 0) return "";

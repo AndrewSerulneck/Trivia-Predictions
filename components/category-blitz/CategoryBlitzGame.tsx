@@ -8,7 +8,7 @@ import { useScheduleUpdatedFlash } from "@/lib/hooks/useScheduleUpdatedBroadcast
 import ScheduleUpdatedToast from "@/components/ui/ScheduleUpdatedToast";
 import { useCategoryBlitzSession, type CategoryBlitzPhase } from "@/lib/categoryBlitzRealtime";
 import { isCategoryBlitzTestModeEnabled, setCategoryBlitzTestMode } from "@/lib/categoryBlitzTestMode";
-import { answerStartsWithLetter, lobbyDwellSeconds } from "@/lib/categoryBlitzShared";
+import { answerStartsWithLetter, categoryBlitzChannelName, lobbyDwellSeconds } from "@/lib/categoryBlitzShared";
 import { CB_LETTER_BADGE_LAYOUT_ID, cbCategoryRowLayoutId } from "@/lib/categoryBlitzMotion";
 import { EASE_SNAP } from "@/lib/motionEasing";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
@@ -251,7 +251,7 @@ function LobbyScreen({
   // immediately instead of leaving this countdown stuck on whatever was
   // scheduled when this screen first mounted.
   const scheduleJustUpdated = useScheduleUpdatedFlash(
-    phase === "idle" && venueId ? `category-blitz-session:${venueId}` : null,
+    phase === "idle" && venueId ? categoryBlitzChannelName(venueId) : null,
     refetchNextWindow,
   );
 

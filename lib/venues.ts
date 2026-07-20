@@ -134,6 +134,7 @@ export async function listVenues(): Promise<Venue[]> {
         .from("venues")
         .select(VENUE_SELECT_WITH_PARSED_ADDRESS)
         .abortSignal(signal)
+        .or("hidden.is.null,hidden.eq.false")
         .order("name", { ascending: true });
     });
 
@@ -146,6 +147,7 @@ export async function listVenues(): Promise<Venue[]> {
           .from("venues")
           .select(VENUE_SELECT_LEGACY)
           .abortSignal(signal)
+          .or("hidden.is.null,hidden.eq.false")
           .order("name", { ascending: true });
       });
       data = (legacyResult.data as VenueRow[] | null) ?? null;

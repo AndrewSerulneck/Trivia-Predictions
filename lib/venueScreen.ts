@@ -3,6 +3,7 @@ import "server-only";
 import { driveContinuousCategoryBlitz, driveVenueCategoryBlitz, getRoundResults } from "@/lib/categoryBlitz";
 import { getNextScheduleOccurrence, listSchedules } from "@/lib/categoryBlitzSchedules";
 import { lobbyDwellSeconds, nextRoundStartAtMs } from "@/lib/categoryBlitzShared";
+import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
 import { getLiveShowdownState, type LiveShowdownState } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getVenueScreenPollIntervalMs } from "@/lib/venueScreenTiming";
@@ -333,10 +334,17 @@ async function getLatestCategoryBlitzRound(sessionId: string): Promise<CategoryB
 }
 
 async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueScreenCategoryBlitzInput> {
+  // Show the same game the venue's players are in: with pooling on, every
+  // venue's TV mirrors the shared room (matching phones in the room), so the
+  // board, timer, and leaderboard all agree. With pooling off this is the
+  // venue's own id — unchanged. The mapping is confined to the gameplay reads
+  // below; the surrounding screen still keys on the real venue elsewhere.
+  const roomId = resolveCategoryBlitzRoomId(venueId);
+
   // Continuous mode takes precedence and drives its own session/rounds with no
   // schedule windows. driveContinuousCategoryBlitz returns null when continuous
   // mode isn't enabled for the venue, so scheduled venues fall straight through.
-  const continuous = await driveContinuousCategoryBlitz(venueId, now).catch(() => null);
+  const continuous = await driveContinuousCategoryBlitz(roomId, now).catch(() => null);
   if (continuous?.session && continuous.session.status !== "complete") {
     const continuousSession = continuous.session;
     // driveContinuousCategoryBlitz already resolved the venue's continuous
@@ -372,8 +380,8 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
   }
 
   const [session, schedules] = await Promise.all([
-    driveVenueCategoryBlitz(venueId, now).catch(() => null),
-    listSchedules(venueId).catch(() => []),
+    driveVenueCategoryBlitz(roomId, now).catch(() => null),
+    listSchedules(roomId).catch(() => []),
   ]);
   const next = getNextScheduleOccurrence(schedules, now);
   // Round 1 actually fires `lobbyDwellSeconds` after the window opens (see

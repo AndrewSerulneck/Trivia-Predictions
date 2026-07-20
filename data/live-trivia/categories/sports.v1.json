@@ -10,6 +10,15 @@
       "difficulty": "easy",
       "subcategory": "historical-moments"
     },
+  {
+      "slug": "country-banned-most-world-cups-south-africa",
+      "question": "Which country has been banned from participating in the most FIFA World Cups?",
+      "answer": "South Africa",
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "historical-moments"
+    },
     {
       "slug": "country-failed-to-qualify-world-cup-22-consecutive-times",
       "question": "Which country has failed to qualify for the FIFA World Cup 22 consecutive times?",

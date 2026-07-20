@@ -4,6 +4,8 @@
 // keep it that way so both sides can import from one place instead of
 // hand-syncing duplicate copies.
 
+import { fnv1aHash } from "@/lib/hash";
+
 const truthy = (value: string | undefined): boolean => {
   const v = (value ?? "").trim().toLowerCase();
   return v === "1" || v === "true" || v === "yes" || v === "on";
@@ -18,6 +20,37 @@ const truthy = (value: string | undefined): boolean => {
  */
 export const isContinuousDefaultEnabled = (): boolean =>
   truthy(process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT);
+
+/**
+ * Master flag for pooling every venue's Category Blitz gameplay into one
+ * shared hidden room (see `docs/category-blitz-global-room-plan.md`). Off =
+ * today's per-venue-isolated behavior, fully inert. This flag is provisioned
+ * here in Phase 0 but not yet read by any gameplay path — Phase 1 wires the
+ * room-id resolver into the API routes. Never touches venue join, geofencing,
+ * or venue listing, which have no notion of "room" at all.
+ */
+export const isGlobalRoomEnabled = (): boolean =>
+  truthy(process.env.NEXT_PUBLIC_CATEGORY_BLITZ_GLOBAL_ROOM);
+
+/**
+ * Deterministic, non-reversible short hash (FNV-1a, base36) used only to build
+ * the realtime channel name below. Its whole job is to keep the raw id — a real
+ * venue id, or worse the hidden room id `hc-cbz-live` — out of any string that
+ * reaches a client. Same input always yields the same channel, so server
+ * broadcasts and client subscriptions still meet.
+ */
+const channelHash = (input: string): string => fnv1aHash(input).toString(36);
+
+/**
+ * Canonical realtime channel name for a Category Blitz room. Lives here (not the
+ * `server-only` broadcast module) so the server broadcaster, the sessions API,
+ * and the client's schedule-flash subscription all derive the identical name
+ * from one place. The id is hashed, never embedded verbatim, so a client that
+ * inspects its channel can't read back `hc-cbz-live` (or any real venue id) and
+ * infer the pooled room — the last place the shared-room fact could have leaked.
+ */
+export const categoryBlitzChannelName = (venueId: string): string =>
+  `category-blitz-session:${channelHash(venueId)}`;
 
 /** Seconds of active play per round. */
 export const ROUND_DURATION_SECONDS = 180;

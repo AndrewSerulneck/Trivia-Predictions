@@ -3,10 +3,33 @@
 import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { getUserId } from "@/lib/storage";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { AdSlot, LeaderboardEntry } from "@/types";
 
 type LeaderboardTimeframe = "today" | "week" | "month" | "year" | "all-time";
+type LeaderboardGameFilter =
+  | "all"
+  | "speed-trivia"
+  | "live-trivia"
+  | "category-blitz"
+  | "bingo"
+  | "fantasy"
+  | "pickem"
+  | "predictions"
+  | "nfl-pickem";
+
+type NFLWeekOption = {
+  id: string;
+  weekNumber: number;
+  label: string;
+  weekStartDate: string;
+  weekEndDate: string;
+  status: string;
+  isLocked: boolean;
+  isCurrent: boolean;
+  gamesCount: number;
+};
 
 type LeaderboardPayload = {
   ok: boolean;
@@ -14,6 +37,26 @@ type LeaderboardPayload = {
   currentUserRank?: number | null;
   error?: string;
 };
+
+type NFLWeeksPayload = {
+  ok: boolean;
+  weeks?: NFLWeekOption[];
+  currentWeekId?: string | null;
+  defaultWeekId?: string | null;
+  error?: string;
+};
+
+const LEADERBOARD_GAME_OPTIONS: Array<{ value: LeaderboardGameFilter; label: string }> = [
+  { value: "all", label: "All Games" },
+  { value: "speed-trivia", label: "Speed Trivia" },
+  { value: "live-trivia", label: "Hightop Live Trivia" },
+  { value: "category-blitz", label: "Category Blitz" },
+  { value: "bingo", label: "Prop Bingo" },
+  { value: "fantasy", label: "Hightop Fantasy Sports" },
+  { value: "pickem", label: "Hightop Pick 'Em" },
+  { value: "predictions", label: "Sports Predictions" },
+  { value: "nfl-pickem", label: "NFL Pick 'Em" },
+];
 
 const LEADERBOARD_TIMEFRAME_OPTIONS: Array<{ value: LeaderboardTimeframe; label: string }> = [
   { value: "today", label: "Today" },
@@ -63,6 +106,8 @@ export function LeaderboardTable({
   isEnabled = true,
   mobileBottomSpacer = false,
   defaultTimeframe = "all-time",
+  defaultGame = "all",
+  showGameControl = false,
   showTimeframeControl = false,
   headerTitle,
 }: {
@@ -71,23 +116,42 @@ export function LeaderboardTable({
   isEnabled?: boolean;
   mobileBottomSpacer?: boolean;
   defaultTimeframe?: LeaderboardTimeframe;
+  defaultGame?: LeaderboardGameFilter;
+  showGameControl?: boolean;
   showTimeframeControl?: boolean;
   headerTitle?: string;
 }) {
+  const [selectedGame, setSelectedGame] = useState<LeaderboardGameFilter>(defaultGame);
   const [selectedTimeframe, setSelectedTimeframe] = useState<LeaderboardTimeframe>(defaultTimeframe);
+  const [selectedNflWeekId, setSelectedNflWeekId] = useState("");
   const [isTimeframeMenuOpen, setIsTimeframeMenuOpen] = useState(false);
-  const [entries, setEntries] = useState<LeaderboardEntry[]>(defaultTimeframe === "all-time" ? initialEntries : []);
+  const [nflWeekOptions, setNflWeekOptions] = useState<NFLWeekOption[]>([]);
+  const [hasLoadedNflWeeks, setHasLoadedNflWeeks] = useState(false);
+  const [isLoadingNflWeeks, setIsLoadingNflWeeks] = useState(false);
+  const [entries, setEntries] = useState<LeaderboardEntry[]>(
+    defaultGame === "all" && defaultTimeframe === "all-time" ? initialEntries : []
+  );
   const [errorMessage, setErrorMessage] = useState("");
   const [currentUserId, setCurrentUserId] = useState("");
   const [resolvedCurrentUserRank, setResolvedCurrentUserRank] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(isEnabled && (defaultTimeframe !== "all-time" || initialEntries.length === 0));
+  const [isLoading, setIsLoading] = useState(
+    isEnabled && (defaultGame !== "all" || defaultTimeframe !== "all-time" || initialEntries.length === 0)
+  );
   const timeframeMenuId = useId();
+  const isNflPickEmSelected = selectedGame === "nfl-pickem";
   const selectedTimeframeLabel = LEADERBOARD_TIMEFRAME_OPTIONS.find((option) => option.value === selectedTimeframe)?.label ?? "Today";
+  const selectedNflWeekLabel = nflWeekOptions.find((option) => option.id === selectedNflWeekId)?.label ?? "";
+  const secondaryControlLabel = isNflPickEmSelected
+    ? isLoadingNflWeeks
+      ? "Loading..."
+      : selectedNflWeekLabel || "No Weeks"
+    : selectedTimeframeLabel;
   const hydratedKeyRef = useRef("");
-  const timeframeDropdownRef = useRef<HTMLDivElement | null>(null);
+  const controlsDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const load = useCallback(async (options?: { silent?: boolean }) => {
     if (!venueId) return;
+    if (isNflPickEmSelected && !selectedNflWeekId) return;
     const silent = Boolean(options?.silent);
     if (!silent) {
       setIsLoading(true);
@@ -95,7 +159,12 @@ export function LeaderboardTable({
 
     try {
       const params = new URLSearchParams({ venue: venueId });
-      params.set("timeframe", selectedTimeframe);
+      params.set("game", selectedGame);
+      if (isNflPickEmSelected) {
+        params.set("nflWeekId", selectedNflWeekId);
+      } else {
+        params.set("timeframe", selectedTimeframe);
+      }
       const safeUserId = (getUserId() ?? "").trim();
       if (safeUserId) {
         params.set("userId", safeUserId);
@@ -119,7 +188,7 @@ export function LeaderboardTable({
         setIsLoading(false);
       }
     }
-  }, [selectedTimeframe, venueId]);
+  }, [isNflPickEmSelected, selectedGame, selectedNflWeekId, selectedTimeframe, venueId]);
 
   useEffect(() => {
     setCurrentUserId(getUserId() ?? "");
@@ -132,7 +201,7 @@ export function LeaderboardTable({
 
     const closeOnOutsidePointer = (event: PointerEvent) => {
       const target = event.target;
-      if (target instanceof Node && timeframeDropdownRef.current?.contains(target)) {
+      if (target instanceof Node && controlsDropdownRef.current?.contains(target)) {
         return;
       }
       setIsTimeframeMenuOpen(false);
@@ -153,22 +222,77 @@ export function LeaderboardTable({
   }, [isTimeframeMenuOpen, showTimeframeControl]);
 
   useEffect(() => {
+    if (!isEnabled || !venueId || !isNflPickEmSelected) {
+      return;
+    }
+
+    let isCancelled = false;
+    setIsLoadingNflWeeks(true);
+    setHasLoadedNflWeeks(false);
+
+    async function loadNflWeeks() {
+      try {
+        const params = new URLSearchParams({ mode: "leaderboard", venue: venueId });
+        const response = await fetch(`/api/nfl-pickem/weeks?${params.toString()}`, {
+          cache: "no-store",
+        });
+        const payload = (await response.json()) as NFLWeeksPayload;
+        if (!payload.ok) {
+          throw new Error(payload.error ?? "Failed to load NFL weeks.");
+        }
+        if (isCancelled) {
+          return;
+        }
+
+        const weeks = payload.weeks ?? [];
+        const validWeekIds = new Set(weeks.map((week) => week.id));
+        const preferredWeekId = payload.defaultWeekId || weeks[weeks.length - 1]?.id || "";
+        setNflWeekOptions(weeks);
+        setSelectedNflWeekId((current) => (current && validWeekIds.has(current) ? current : preferredWeekId));
+        setErrorMessage("");
+      } catch (error) {
+        if (!isCancelled) {
+          setNflWeekOptions([]);
+          setSelectedNflWeekId("");
+          setErrorMessage(error instanceof Error ? error.message : "Failed to load NFL weeks.");
+        }
+      } finally {
+        if (!isCancelled) {
+          setHasLoadedNflWeeks(true);
+          setIsLoadingNflWeeks(false);
+        }
+      }
+    }
+
+    void loadNflWeeks();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isEnabled, isNflPickEmSelected, venueId]);
+
+  useEffect(() => {
     if (!isEnabled || !venueId) {
       return;
     }
-    const hydrationKey = `${venueId}:${selectedTimeframe}`;
+    const hydrationKey = `${venueId}:${selectedGame}:${selectedTimeframe}:${selectedNflWeekId}`;
     if (hydratedKeyRef.current !== hydrationKey) {
-      const nextEntries = selectedTimeframe === "all-time" ? initialEntries : [];
+      const canLoad = !isNflPickEmSelected || Boolean(selectedNflWeekId);
+      const nextEntries = selectedGame === "all" && selectedTimeframe === "all-time" ? initialEntries : [];
       hydratedKeyRef.current = hydrationKey;
       setEntries(nextEntries);
       setResolvedCurrentUserRank(null);
       setErrorMessage("");
-      setIsLoading(nextEntries.length === 0);
+      setIsLoading(canLoad && nextEntries.length === 0);
     }
-  }, [initialEntries, isEnabled, selectedTimeframe, venueId]);
+  }, [initialEntries, isEnabled, isNflPickEmSelected, selectedGame, selectedNflWeekId, selectedTimeframe, venueId]);
 
   useEffect(() => {
     if (!isEnabled) {
+      return;
+    }
+    if (isNflPickEmSelected && !selectedNflWeekId) {
+      setIsLoading(false);
       return;
     }
     void load({ silent: entries.length > 0 });
@@ -186,17 +310,25 @@ export function LeaderboardTable({
       window.clearInterval(interval);
       window.removeEventListener("tp:points-updated", refreshOnPointsUpdate as EventListener);
     };
-  }, [entries.length, isEnabled, load]);
+  }, [entries.length, isEnabled, isNflPickEmSelected, load, selectedNflWeekId]);
 
   const currentUserRank = useMemo(
     () => resolvedCurrentUserRank ?? entries.find((entry) => entry.userId === currentUserId)?.rank ?? null,
     [currentUserId, entries, resolvedCurrentUserRank]
   );
+  const emptyMessage = isNflPickEmSelected
+    ? hasLoadedNflWeeks && nflWeekOptions.length === 0
+      ? "NFL Pick 'Em weeks will appear once the season starts."
+      : "No NFL Pick 'Em scores for this week yet."
+    : selectedGame === "all"
+      ? "No users ranked yet for this venue."
+      : "No users ranked yet for this game and timeframe.";
+  const isNflWeeksLoading = isNflPickEmSelected && isLoadingNflWeeks;
 
   return (
     <div className="space-y-2">
-      {headerTitle || showTimeframeControl ? (
-        <div className="relative z-20 flex min-h-10 items-center justify-between gap-3">
+      {headerTitle || showTimeframeControl || showGameControl ? (
+        <div className="relative z-20 flex min-h-10 flex-wrap items-center justify-between gap-3">
           {headerTitle ? (
             <p className="min-w-0 truncate text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
               {headerTitle}
@@ -204,52 +336,107 @@ export function LeaderboardTable({
           ) : (
             <span aria-hidden="true" />
           )}
-          {showTimeframeControl ? (
-            <div ref={timeframeDropdownRef} className="relative shrink-0">
-              <button
-                type="button"
-                className="inline-flex h-10 min-w-[8.5rem] items-center justify-between gap-2 rounded-ht-pill border border-cyan-400/35 bg-ht-elevated px-4 text-sm font-black text-ht-fg-primary shadow-ht-card outline-none transition hover:border-cyan-300/70 hover:text-cyan-100 focus:border-cyan-300 focus:shadow-ht-glow-cyan"
-                aria-label="Leaderboard timeframe"
-                aria-haspopup="listbox"
-                aria-expanded={isTimeframeMenuOpen}
-                aria-controls={timeframeMenuId}
-                onClick={() => setIsTimeframeMenuOpen((isOpen) => !isOpen)}
-              >
-                <span>{selectedTimeframeLabel}</span>
-                <ChevronDown
-                  aria-hidden="true"
-                  className={`h-4 w-4 shrink-0 text-cyan-300 transition-transform ${isTimeframeMenuOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-              {isTimeframeMenuOpen ? (
-                <div
-                  id={timeframeMenuId}
-                  role="listbox"
-                  aria-label="Leaderboard timeframe"
-                  className="absolute right-0 top-full z-[1400] mt-2 w-44 overflow-hidden rounded-ht-md border border-cyan-400/35 bg-slate-950 p-1 shadow-ht-modal"
-                >
-                  {LEADERBOARD_TIMEFRAME_OPTIONS.map((option) => {
-                    const isSelected = option.value === selectedTimeframe;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        role="option"
-                        aria-selected={isSelected}
-                        className={`block w-full rounded-ht-sm px-3 py-2 text-left text-sm font-black transition ${
-                          isSelected
-                            ? "bg-cyan-400/15 text-cyan-200"
-                            : "text-ht-fg-secondary hover:bg-ht-elevated hover:text-ht-fg-primary"
-                        }`}
-                        onClick={() => {
-                          setSelectedTimeframe(option.value);
-                          setIsTimeframeMenuOpen(false);
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
+          {showTimeframeControl || showGameControl ? (
+            <div ref={controlsDropdownRef} className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
+              {showGameControl ? (
+                <div className="relative min-w-0 shrink">
+                  <Dropdown<LeaderboardGameFilter>
+                    value={selectedGame}
+                    options={LEADERBOARD_GAME_OPTIONS}
+                    onChange={(next) => {
+                      setSelectedGame(next);
+                      setIsTimeframeMenuOpen(false);
+                    }}
+                    ariaLabel="Leaderboard game"
+                    size="sm"
+                    className="inline-flex h-10 max-w-[11rem] items-center justify-between gap-2 rounded-ht-pill border border-cyan-400/35 bg-ht-elevated px-4 text-sm font-black text-ht-fg-primary shadow-ht-card outline-none transition hover:border-cyan-300/70 hover:text-cyan-100 focus:border-cyan-300 focus:shadow-ht-glow-cyan sm:max-w-[14rem]"
+                    renderTrigger={(selected, isOpen) => (
+                      <>
+                        <span className="truncate">{selected?.label ?? "All Games"}</span>
+                        <ChevronDown
+                          aria-hidden="true"
+                          className={`h-4 w-4 shrink-0 text-cyan-300 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                        />
+                      </>
+                    )}
+                  />
+                </div>
+              ) : null}
+
+              {showTimeframeControl ? (
+                <div className="relative min-w-0 shrink-0">
+                  <button
+                    type="button"
+                    className="inline-flex h-10 min-w-[8.5rem] max-w-[11rem] items-center justify-between gap-2 rounded-ht-pill border border-cyan-400/35 bg-ht-elevated px-4 text-sm font-black text-ht-fg-primary shadow-ht-card outline-none transition hover:border-cyan-300/70 hover:text-cyan-100 focus:border-cyan-300 focus:shadow-ht-glow-cyan disabled:cursor-not-allowed disabled:opacity-60 sm:max-w-[14rem]"
+                    aria-label={isNflPickEmSelected ? "NFL Pick 'Em week" : "Leaderboard timeframe"}
+                    aria-haspopup="listbox"
+                    aria-expanded={isTimeframeMenuOpen}
+                    aria-controls={timeframeMenuId}
+                    disabled={isNflPickEmSelected && (isLoadingNflWeeks || nflWeekOptions.length === 0)}
+                    onClick={() => {
+                      setIsTimeframeMenuOpen((isOpen) => !isOpen);
+                    }}
+                  >
+                    <span className="truncate">{secondaryControlLabel}</span>
+                    <ChevronDown
+                      aria-hidden="true"
+                      className={`h-4 w-4 shrink-0 text-cyan-300 transition-transform ${isTimeframeMenuOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {isTimeframeMenuOpen ? (
+                    <div
+                      id={timeframeMenuId}
+                      role="listbox"
+                      aria-label={isNflPickEmSelected ? "NFL Pick 'Em week" : "Leaderboard timeframe"}
+                      className="absolute right-0 top-full z-[1400] mt-2 w-44 overflow-hidden rounded-ht-md border border-cyan-400/35 bg-slate-950 p-1 shadow-ht-modal"
+                    >
+                      {isNflPickEmSelected
+                        ? nflWeekOptions.map((option) => {
+                            const isSelected = option.id === selectedNflWeekId;
+                            return (
+                              <button
+                                key={option.id}
+                                type="button"
+                                role="option"
+                                aria-selected={isSelected}
+                                className={`block w-full rounded-ht-sm px-3 py-2 text-left text-sm font-black transition ${
+                                  isSelected
+                                    ? "bg-cyan-400/15 text-cyan-200"
+                                    : "text-ht-fg-secondary hover:bg-ht-elevated hover:text-ht-fg-primary"
+                                }`}
+                                onClick={() => {
+                                  setSelectedNflWeekId(option.id);
+                                  setIsTimeframeMenuOpen(false);
+                                }}
+                              >
+                                {option.label}
+                              </button>
+                            );
+                          })
+                        : LEADERBOARD_TIMEFRAME_OPTIONS.map((option) => {
+                            const isSelected = option.value === selectedTimeframe;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                role="option"
+                                aria-selected={isSelected}
+                                className={`block w-full rounded-ht-sm px-3 py-2 text-left text-sm font-black transition ${
+                                  isSelected
+                                    ? "bg-cyan-400/15 text-cyan-200"
+                                    : "text-ht-fg-secondary hover:bg-ht-elevated hover:text-ht-fg-primary"
+                                }`}
+                                onClick={() => {
+                                  setSelectedTimeframe(option.value);
+                                  setIsTimeframeMenuOpen(false);
+                                }}
+                              >
+                                {option.label}
+                              </button>
+                            );
+                          })}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -268,13 +455,17 @@ export function LeaderboardTable({
           </button>
         </div>
       ) : null}
-      {isLoading && entries.length === 0 ? (
+      {isNflWeeksLoading ? (
+        <div className="rounded-ht-md border border-ht-border-hairline bg-ht-elevated p-4 text-sm text-ht-fg-muted">
+          Loading NFL weeks...
+        </div>
+      ) : isLoading && entries.length === 0 ? (
         <div className="rounded-ht-md border border-ht-border-hairline bg-ht-elevated p-4 text-sm text-ht-fg-muted">
           Loading leaderboard...
         </div>
       ) : entries.length === 0 ? (
         <div className="rounded-ht-md border border-ht-border-hairline bg-ht-elevated p-4 text-sm text-ht-fg-muted">
-          No users ranked yet for this venue.
+          {emptyMessage}
         </div>
       ) : (
         <>

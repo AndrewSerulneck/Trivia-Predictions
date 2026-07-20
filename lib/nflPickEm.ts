@@ -2,6 +2,7 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
+import { getLocalDateKey } from "@/lib/timezone";
 import { type PickEmPick, type PickEmGame } from "@/lib/pickem";
 
 // ============================================
@@ -22,6 +23,8 @@ export type NFLWeek = {
   id: string;
   season: number;
   weekNumber: number;
+  weekType: "preseason" | "regular" | "postseason";
+  displayLabel: string | null;
   weekStartDate: string; // YYYY-MM-DD (Thursday)
   weekEndDate: string;   // YYYY-MM-DD (Monday)
   thursdayKickoff: string | null; // ISO timestamp
@@ -57,6 +60,8 @@ export type NFLUserWeekSummary = {
 export type NFLWeekOption = {
   id: string;
   weekNumber: number;
+  weekType: NFLWeek["weekType"];
+  label: string;
   weekStartDate: string;
   weekEndDate: string;
   status: string;
@@ -70,6 +75,8 @@ export type NFLWeekOption = {
   id: string;
   season: number;
   week_number: number;
+  week_type?: string | null;
+  display_label?: string | null;
   week_start_date: string;
   week_end_date: string;
   thursday_kickoff: string | null;
@@ -160,6 +167,58 @@ export function isDateInWeek(date: string, week: NFLWeek): boolean {
   end.setDate(end.getDate() + 1); // Include the full Monday
   
   return d >= start && d < end;
+}
+
+function normalizeNFLWeekType(value: string | null | undefined): NFLWeek["weekType"] {
+  if (value === "preseason" || value === "postseason") {
+    return value;
+  }
+  return "regular";
+}
+
+export function getNFLWeekDisplayLabel(week: Pick<NFLWeek, "displayLabel" | "weekNumber">): string {
+  const label = String(week.displayLabel ?? "").trim();
+  return label || `Week ${week.weekNumber}`;
+}
+
+export function isNFLWeekStarted(
+  week: Pick<NFLWeek, "weekStartDate">,
+  options: { now?: Date; timeZone?: string } = {}
+): boolean {
+  const timeZone = String(options.timeZone ?? "America/New_York").trim() || "America/New_York";
+  return week.weekStartDate <= getLocalDateKey(options.now ?? new Date(), timeZone);
+}
+
+export function buildNFLLeaderboardWeekOptions(
+  weeks: NFLWeek[],
+  options: { now?: Date; timeZone?: string } = {}
+): {
+  weeks: NFLWeekOption[];
+  currentWeekId: string | null;
+  defaultWeekId: string | null;
+} {
+  const timeZone = String(options.timeZone ?? "America/New_York").trim() || "America/New_York";
+  const today = getLocalDateKey(options.now ?? new Date(), timeZone);
+  const startedWeeks = weeks.filter((week) => isNFLWeekStarted(week, { now: options.now, timeZone }));
+  const currentWeek = startedWeeks.find((week) => week.weekStartDate <= today && week.weekEndDate >= today) ?? null;
+  const defaultWeek = currentWeek ?? startedWeeks[startedWeeks.length - 1] ?? null;
+
+  return {
+    weeks: startedWeeks.map((week) => ({
+      id: week.id,
+      weekNumber: week.weekNumber,
+      weekType: week.weekType,
+      label: getNFLWeekDisplayLabel(week),
+      weekStartDate: week.weekStartDate,
+      weekEndDate: week.weekEndDate,
+      status: week.status,
+      isLocked: isNFLWeekLocked(week),
+      isCurrent: currentWeek?.id === week.id,
+      gamesCount: week.gamesCount,
+    })),
+    currentWeekId: currentWeek?.id ?? null,
+    defaultWeekId: defaultWeek?.id ?? null,
+  };
 }
 
 // ============================================
@@ -314,6 +373,8 @@ function mapNFLWeekRow(row: NFLWeekRow): NFLWeek {
     id: row.id,
     season: row.season,
     weekNumber: row.week_number,
+    weekType: normalizeNFLWeekType(row.week_type),
+    displayLabel: row.display_label ?? null,
     weekStartDate: row.week_start_date,
     weekEndDate: row.week_end_date,
     thursdayKickoff: row.thursday_kickoff,
