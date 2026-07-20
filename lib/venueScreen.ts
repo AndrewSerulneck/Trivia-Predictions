@@ -2,7 +2,7 @@ import "server-only";
 
 import { driveContinuousCategoryBlitz, driveVenueCategoryBlitz, getRoundResults } from "@/lib/categoryBlitz";
 import { getNextScheduleOccurrence, listSchedules } from "@/lib/categoryBlitzSchedules";
-import { lobbyDwellSeconds } from "@/lib/categoryBlitzShared";
+import { lobbyDwellSeconds, nextRoundStartAtMs } from "@/lib/categoryBlitzShared";
 import { getLiveShowdownState, type LiveShowdownState } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getVenueScreenPollIntervalMs } from "@/lib/venueScreenTiming";
@@ -36,12 +36,25 @@ export type VenueScreenState =
       mode: "live-trivia";
       venue: VenueScreenVenue;
       liveTrivia: {
-        phase: "question" | "intermission" | "final";
+        phase: "question" | "reveal" | "intermission" | "final";
+        // Stable identity for THIS occurrence of a Live Trivia game
+        // (`${scheduleId}:${occurrenceDate}`), constant across polls of the same
+        // game but distinct between two different games. The TV keys the
+        // final-standings celebration on it so a repeat champion in a
+        // back-to-back game still replays the reveal instead of being deduped by
+        // a bare roundNumber/champion collision.
+        gameId: string;
         roundNumber: number | null;
         totalRounds: number;
         category: string | null;
         question: string | null;
+        // Present ONLY when phase === "reveal" (answers locked server-side);
+        // null on every other phase. See selectVenueScreenState for the gate.
+        correctAnswer: string | null;
         secondsRemaining: number;
+        // ISO timestamp the reveal hold ends (next question). Non-null only on
+        // phase === "reveal", so the TV can interpolate a real hold countdown.
+        revealEndsAt: string | null;
         leaderboard: ScreenLeaderboardEntry[] | null;
       };
       categoryBlitz: null;
@@ -92,6 +105,10 @@ export type VenueScreenCategoryBlitzInput = {
   leaderboard: ScreenLeaderboardEntry[] | null;
   nextStartsAt: string | null;
   nextRecurringDays?: string[];
+  // When the NEXT round of the current active session starts (ISO). Drives the
+  // results/intermission "next letter in" countdown. Null when no active round
+  // to count down from (e.g. idle with only a scheduled preview).
+  nextRoundStartsAt: string | null;
 };
 
 export type VenueScreenSelectionInput = {
@@ -322,17 +339,35 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
   const continuous = await driveContinuousCategoryBlitz(venueId, now).catch(() => null);
   if (continuous?.session && continuous.session.status !== "complete") {
     const continuousSession = continuous.session;
+    // driveContinuousCategoryBlitz already resolved the venue's continuous
+    // config for its own pacing decisions and now returns it, so reuse that
+    // instead of issuing a second resolveContinuousConfig read per poll.
+    const continuousConfig = continuous.config;
     const continuousRound = await getLatestCategoryBlitzRound(continuousSession.id).catch(() => null);
     const continuousResults =
       continuousRound && (continuousRound.status === "complete" || continuousSession.status === "scoring")
         ? await getRoundResults(continuousRound.id).catch(() => null)
         : null;
+    // Continuous sessions pace on the venue's own config; the shared anchor
+    // computes when the next round begins so the results/intermission countdown
+    // is real instead of a hardcoded 0.
+    const continuousTiming = continuousConfig
+      ? {
+          roundDurationSeconds: continuousConfig.roundDurationSeconds,
+          intermissionSeconds: continuousConfig.intermissionSeconds,
+        }
+      : null;
     return {
       session: continuousSession,
       round: continuousRound,
       leaderboard: continuousResults ? toLeaderboard(continuousResults.totals) : null,
       nextStartsAt: null,
       nextRecurringDays: [],
+      nextRoundStartsAt: continuousRound
+        ? new Date(
+            nextRoundStartAtMs(continuousRound, continuousSession.testMode, continuousTiming),
+          ).toISOString()
+        : null,
     };
   }
 
@@ -356,6 +391,7 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
       leaderboard: null,
       nextStartsAt,
       nextRecurringDays: next?.schedule.recurringDays ?? [],
+      nextRoundStartsAt: null,
     };
   }
 
@@ -370,6 +406,10 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
     leaderboard: results ? toLeaderboard(results.totals) : null,
     nextStartsAt,
     nextRecurringDays: next?.schedule.recurringDays ?? [],
+    // Scheduled sessions use the shared pacing constants (null continuous timing).
+    nextRoundStartsAt: round
+      ? new Date(nextRoundStartAtMs(round, session.testMode, null)).toISOString()
+      : null,
   };
 }
 
@@ -378,11 +418,27 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
 
   if (liveTrivia.isGameActive) {
     const leaderboard = liveTrivia.leaderboard ? toLeaderboard(liveTrivia.leaderboard) : null;
+    // The engine's "answering" and "rest_warning" sub-phases both describe an
+    // in-flight question; we split them so the TV can play the answer-reveal
+    // beat during rest_warning (answers already locked) vs. the open question.
     const phase = liveTrivia.isFinalResultsWindow
       ? "final"
       : liveTrivia.activePhase === "mid_game_break"
       ? "intermission"
+      : liveTrivia.activePhase === "rest_warning"
+      ? "reveal"
       : "question";
+
+    const secondsRemaining = Math.max(0, Math.floor(Number(liveTrivia.secondsRemaining ?? 0)));
+    // Security gate: only surface the correct answer during the reveal beat.
+    // The engine already withholds `revealedAnswer` until answers lock
+    // (it's null while activePhase === "answering"), but we gate a SECOND time
+    // on phase === "reveal" so the answer never rides along on a "question",
+    // "intermission", or "final" payload — a devtools-open venue TV must not be
+    // able to read the answer before the room's answers are in.
+    const correctAnswer = phase === "reveal" ? (liveTrivia.revealedAnswer ?? null) : null;
+    const revealEndsAt =
+      phase === "reveal" ? new Date(updatedAt + secondsRemaining * 1000).toISOString() : null;
 
     return {
       ok: true,
@@ -393,11 +449,16 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
       },
       liveTrivia: {
         phase,
+        // isGameActive narrows liveTrivia to the active state here, so
+        // scheduleId/occurrenceDate are both present.
+        gameId: `${liveTrivia.scheduleId}:${liveTrivia.occurrenceDate}`,
         roundNumber: liveTrivia.currentRound,
         totalRounds: liveTrivia.totalRounds,
         category: liveTrivia.activeQuestion?.category ?? liveTrivia.currentRoundCategory ?? null,
         question: liveTrivia.activeQuestion?.question ?? null,
-        secondsRemaining: Math.max(0, Math.floor(Number(liveTrivia.secondsRemaining ?? 0))),
+        correctAnswer,
+        secondsRemaining,
+        revealEndsAt,
         leaderboard,
       },
       categoryBlitz: null,
@@ -421,7 +482,12 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
         roundId: round?.id ?? null,
         letter: round?.letter ?? null,
         categories: round?.categories ?? [],
-        secondsRemaining: roundIsActive ? secondsUntil(round?.endsAt, updatedAt) : 0,
+        // During a round, count down to its end; during results/intermission,
+        // count down to when the NEXT round starts (previously hardcoded 0, so
+        // the "next letter in" display was stuck at 0s).
+        secondsRemaining: roundIsActive
+          ? secondsUntil(round?.endsAt, updatedAt)
+          : secondsUntil(categoryBlitz.nextRoundStartsAt, updatedAt),
         leaderboard: categoryBlitz.leaderboard,
       },
       idle: null,

@@ -1,3 +1,4 @@
+import { TvIdleAttract, type NextGame } from "@/components/venue-screen/TvIdleAttract";
 import type { VenueScreenState } from "@/lib/venueScreen";
 
 type IdleVenueState = Extract<VenueScreenState, { mode: "idle" }>;
@@ -52,11 +53,7 @@ function formatScheduleDays(days: string[] | null | undefined, startsAt: string,
 
   const startMs = Date.parse(startsAt);
   if (!Number.isFinite(startMs)) return "";
-  const formatter = new Intl.DateTimeFormat(undefined, {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
+  const formatter = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "short", day: "numeric" });
   const date = formatter.format(new Date(startMs));
   const now = new Date(nowMs);
   const sameYear = new Date(startMs).getFullYear() === now.getFullYear();
@@ -78,78 +75,34 @@ export function getIdleGameDisplay(
   return { kind: "schedule", value: formatScheduleDays(recurringDays, startsAt, nowMs) };
 }
 
-type NextGameTileProps = {
-  venueName: string;
-  label: string;
-  accentClass: string;
-  startsAt: string | null;
-  recurringDays?: string[];
-  nowMs: number;
-};
-
-function NextGameTile({ venueName, label, accentClass, startsAt, recurringDays, nowMs }: NextGameTileProps) {
-  const display = getIdleGameDisplay(startsAt, nowMs, recurringDays);
-  if (!display) return null;
-
-  return (
-    <article className="flex min-h-[14rem] flex-col items-center justify-center gap-5 text-center">
-      <p className="max-w-[22ch] text-balance text-[clamp(2.8rem,5.4vw,6.8rem)] font-black leading-[0.98] text-white">
-        {venueName} <span className={accentClass}>{label}</span>{" "}
-        {display.kind === "countdown" ? "starts in" : "is scheduled on"}
-      </p>
-      {display.kind === "countdown" ? (
-        <p className="font-mono text-[clamp(4.5rem,10vw,11rem)] font-black leading-none text-white tabular-nums">
-          {display.value}
-        </p>
-      ) : (
-        <p className="max-w-[20ch] text-balance text-[clamp(3.4rem,7vw,8rem)] font-black leading-none text-white">
-          {display.value}
-        </p>
-      )}
-    </article>
-  );
-}
-
+// Idle / attract-mode screen (Prompt F, authored via Claude Web UI + wired
+// in). Replaces the previous side-by-side game tiles with a rotating
+// "Next up" carousel — all timing (drift, breathing wash, card rotation)
+// derives from the wall clock, so it survives being restarted or run on a
+// second TV in the same room without visibly resetting. Countdown/schedule
+// text is still computed by getIdleGameDisplay above, reused unchanged.
 export function IdleVenueScreen({ state, nowMs }: IdleVenueScreenProps) {
   const venueName = state.venue.displayName ?? state.venue.name;
-  const hasLiveTrivia = Boolean(state.idle.nextLiveTrivia?.startsAt);
-  const hasCategoryBlitz = Boolean(state.idle.nextCategoryBlitz?.startsAt);
-  const hasScheduledGames = hasLiveTrivia || hasCategoryBlitz;
 
-  return (
-    <section className="flex min-h-[100svh] flex-1 flex-col px-6 py-8 sm:px-10">
-      <div
-        className="flex min-h-0 flex-1 flex-col items-center justify-center gap-12 pb-12"
-      >
-        {hasScheduledGames ? (
-          <div className="flex w-full max-w-[92rem] flex-col items-center justify-center gap-12">
-            <NextGameTile
-              venueName={venueName}
-              label="Live Trivia"
-              accentClass="text-cyan-200"
-              startsAt={state.idle.nextLiveTrivia?.startsAt ?? null}
-              recurringDays={state.idle.nextLiveTrivia?.recurringDays}
-              nowMs={nowMs}
-            />
-            <NextGameTile
-              venueName={venueName}
-              label="Category Blitz"
-              accentClass="text-amber-200"
-              startsAt={state.idle.nextCategoryBlitz?.startsAt ?? null}
-              recurringDays={state.idle.nextCategoryBlitz?.recurringDays}
-              nowMs={nowMs}
-            />
-          </div>
-        ) : (
-          <p className="max-w-[18ch] text-center text-balance text-[clamp(3.4rem,7vw,8rem)] font-black leading-[0.96] text-white">
-            {venueName} Live Games will appear here.
-          </p>
-        )}
-      </div>
+  const nextGames: NextGame[] = [];
+  const liveTrivia = state.idle.nextLiveTrivia;
+  if (liveTrivia?.startsAt) {
+    const display = getIdleGameDisplay(liveTrivia.startsAt, nowMs, liveTrivia.recurringDays);
+    nextGames.push({
+      label: liveTrivia.title || "Live Trivia",
+      startsAt: liveTrivia.startsAt,
+      countdownText: display?.value,
+    });
+  }
+  const categoryBlitz = state.idle.nextCategoryBlitz;
+  if (categoryBlitz?.startsAt) {
+    const display = getIdleGameDisplay(categoryBlitz.startsAt, nowMs, categoryBlitz.recurringDays);
+    nextGames.push({
+      label: "Category Blitz",
+      startsAt: categoryBlitz.startsAt,
+      countdownText: display?.value,
+    });
+  }
 
-      <footer className="shrink-0 pb-1 text-center text-[clamp(1.4rem,2.2vw,2.4rem)] font-black text-white/72">
-        Brought to you by Hightop Challenge™
-      </footer>
-    </section>
-  );
+  return <TvIdleAttract venueName={venueName} nextGames={nextGames} nowMs={nowMs} />;
 }

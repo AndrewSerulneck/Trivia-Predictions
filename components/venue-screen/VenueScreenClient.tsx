@@ -5,8 +5,12 @@ import { CategoryBlitzIntermissionScreen } from "@/components/venue-screen/Categ
 import { CategoryBlitzScreen } from "@/components/venue-screen/CategoryBlitzScreen";
 import { IdleVenueScreen } from "@/components/venue-screen/IdleVenueScreen";
 import { LiveTriviaIntermissionScreen } from "@/components/venue-screen/LiveTriviaIntermissionScreen";
+import { LiveTriviaRevealScreen } from "@/components/venue-screen/LiveTriviaRevealScreen";
 import { LiveTriviaScreen } from "@/components/venue-screen/LiveTriviaScreen";
+import { ScreenTransition } from "@/components/venue-screen/ScreenTransition";
+import { TvGoLiveTakeover, type GameLabel } from "@/components/venue-screen/TvGoLiveTakeover";
 import { VenueScreenStatus } from "@/components/venue-screen/VenueScreenStatus";
+import { getVenueScreenTheme, type VenueScreenMode } from "@/lib/venueScreenBrand";
 import type { VenueScreenState } from "@/lib/venueScreen";
 import {
   getVenueScreenBurnInTransform,
@@ -23,46 +27,82 @@ type VenueScreenClientProps = {
 
 const VENUE_SCREEN_FETCH_TIMEOUT_MS = 10_000;
 
-function withHexAlpha(hexColor: string, alpha: string): string {
-  const normalized = /^#[0-9a-f]{3}$/i.test(hexColor)
-    ? `#${hexColor[1]}${hexColor[1]}${hexColor[2]}${hexColor[2]}${hexColor[3]}${hexColor[3]}`
-    : hexColor;
-  return /^#[0-9a-f]{6}$/i.test(normalized) ? `${normalized}${alpha}` : normalized;
-}
-
-function VenueTitle({ state }: { state: VenueScreenState }) {
+function VenueTitle({ state, accent }: { state: VenueScreenState; accent: string }) {
+  const modeLabel = state.mode === "live-trivia" ? "Live Trivia" : state.mode === "category-blitz" ? "Category Blitz" : state.mode;
   return (
     <header className="flex w-full items-center justify-between gap-8 px-8 py-6 lg:px-10">
-      <div>
-        <p className="text-xl font-black uppercase tracking-[0.18em] text-cyan-200/80 lg:text-2xl">
+      <div className="min-w-0">
+        <p
+          className="text-xl font-black uppercase tracking-[0.24em] lg:text-2xl"
+          style={{ color: accent, textShadow: `0 0 26px ${accent}66` }}
+        >
           Hightop Challenge
         </p>
-        <h1 className="mt-2 text-5xl font-black leading-none text-white lg:text-6xl">
+        <h1 className="mt-2 truncate text-5xl font-black leading-none text-white lg:text-6xl">
           {state.venue.displayName ?? state.venue.name}
         </h1>
       </div>
-      <div className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-xl font-black uppercase text-white/80 lg:px-5 lg:py-3 lg:text-2xl">
-        {state.mode.replace("-", " ")}
+      <div
+        className="shrink-0 rounded-2xl border px-5 py-3 text-xl font-black uppercase tracking-[0.12em] lg:text-2xl"
+        style={{ borderColor: `${accent}44`, background: `${accent}1f`, color: "#f8fafc" }}
+      >
+        {modeLabel}
       </div>
     </header>
   );
 }
 
-function LiveTriviaPanel({ state }: { state: Extract<VenueScreenState, { mode: "live-trivia" }> }) {
-  return state.liveTrivia.phase === "question" ? (
-    <LiveTriviaScreen state={state} />
+function LiveTriviaPanel({
+  state,
+  nowMs,
+}: {
+  state: Extract<VenueScreenState, { mode: "live-trivia" }>;
+  nowMs: number;
+}) {
+  const phase = state.liveTrivia.phase;
+  if (phase === "question") return <LiveTriviaScreen state={state} nowMs={nowMs} />;
+  if (phase === "reveal") return <LiveTriviaRevealScreen state={state} nowMs={nowMs} />;
+  return <LiveTriviaIntermissionScreen state={state} nowMs={nowMs} />;
+}
+
+function CategoryBlitzPanel({
+  state,
+  nowMs,
+}: {
+  state: Extract<VenueScreenState, { mode: "category-blitz" }>;
+  nowMs: number;
+}) {
+  const blitz = state.categoryBlitz;
+  return blitz.phase === "round" ? (
+    <CategoryBlitzScreen state={state} nowMs={nowMs} />
   ) : (
-    <LiveTriviaIntermissionScreen state={state} />
+    <CategoryBlitzIntermissionScreen state={state} nowMs={nowMs} />
   );
 }
 
-function CategoryBlitzPanel({ state }: { state: Extract<VenueScreenState, { mode: "category-blitz" }> }) {
-  const blitz = state.categoryBlitz;
-  return blitz.phase === "round" ? (
-    <CategoryBlitzScreen state={state} />
-  ) : (
-    <CategoryBlitzIntermissionScreen state={state} />
-  );
+// Identity of the current view for the phase-level cross-fade. Deliberately
+// EXCLUDES secondsRemaining so the once-per-second poll tick doesn't retrigger
+// the swap — only real phase/round changes do. Finer motion (question word
+// reveal, letter slam) is keyed inside each panel on its own identity.
+function getScreenTransitionKey(state: VenueScreenState): string {
+  if (state.mode === "live-trivia") {
+    // The final-standings beat has no roundNumber that distinguishes two
+    // back-to-back games (both can end on the same round), so key it on the
+    // stable per-game gameId; other phases stay keyed on roundNumber.
+    const identity =
+      state.liveTrivia.phase === "final" ? state.liveTrivia.gameId : state.liveTrivia.roundNumber ?? "x";
+    return `lt:${state.liveTrivia.phase}:${identity}`;
+  }
+  if (state.mode === "category-blitz") {
+    return `cb:${state.categoryBlitz.phase}:${state.categoryBlitz.roundId ?? "x"}`;
+  }
+  return "idle";
+}
+
+function modeToGameLabel(mode: VenueScreenState["mode"]): GameLabel | null {
+  if (mode === "live-trivia") return "Live Trivia";
+  if (mode === "category-blitz") return "Category Blitz";
+  return null;
 }
 
 function getRefreshErrorMessage(error: unknown): string {
@@ -79,6 +119,12 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
   const [failureCount, setFailureCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  // Fires the "We're live" takeover exactly when a poll observes a genuine
+  // idle → live transition (never on the initial mount/reload — see the
+  // detection logic in the polling effect below and the comment atop
+  // TvGoLiveTakeover for why that fully replaces the original design's
+  // Date.now()-based staleness guard).
+  const [liveTakeover, setLiveTakeover] = useState<{ key: number; gameLabel: GameLabel } | null>(null);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNowMs(Date.now()), 1_000);
@@ -93,6 +139,11 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
     let currentState = initialState;
     let failures = 0;
     let load: () => Promise<void>;
+    // Tracks mode across polls (plain closure variable, not React state — same
+    // pattern as `currentState`/`failures` above) so a genuine idle → live flip
+    // can be detected without ever firing on the very first poll of a fresh
+    // mount/reload, even if that reload lands mid-game.
+    let previousMode: VenueScreenState["mode"] = initialState.mode;
 
     const schedule = (delayMs: number) => {
       timeoutId = window.setTimeout(load, delayMs);
@@ -125,12 +176,18 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
         if (!response.ok) {
           throw new Error("Unable to refresh venue screen.");
         }
+        const flippedLive = previousMode === "idle" && modeToGameLabel(json.mode) !== null;
+        previousMode = json.mode;
         currentState = json;
         failures = 0;
         setState(json);
         setError(null);
         setFailureCount(0);
         setNowMs(Date.now());
+        if (flippedLive) {
+          const gameLabel = modeToGameLabel(json.mode);
+          if (gameLabel) setLiveTakeover({ key: json.updatedAt, gameLabel });
+        }
       } catch (loadError) {
         if (active) handleFailure(getRefreshErrorMessage(loadError));
       } finally {
@@ -161,30 +218,38 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
     };
   }, [debugMode, initialState, venueId]);
 
-  const brandPrimary = state.venue.screenBrandPrimary ?? "#22d3ee";
-  const brandSecondary = state.venue.screenBrandSecondary ?? "#fbbf24";
-  const primaryWash = withHexAlpha(brandPrimary, "33");
-  const secondaryWash = withHexAlpha(brandSecondary, "24");
+  const theme = getVenueScreenTheme(state.mode as VenueScreenMode, {
+    primary: state.venue.screenBrandPrimary,
+    secondary: state.venue.screenBrandSecondary,
+  });
+  const transitionKey = getScreenTransitionKey(state);
   const screenTransform =
     state.mode === "idle" ? getVenueScreenBurnInTransform(nowMs) : "translate3d(0, 0, 0)";
 
   return (
     <main className="min-h-[100svh] w-screen overflow-hidden bg-slate-950 text-white">
-      <div
-        className="flex min-h-[100svh] flex-col"
-        style={{
-          background: `radial-gradient(circle at top left, ${primaryWash}, transparent 38%), radial-gradient(circle at bottom right, ${secondaryWash}, transparent 34%), linear-gradient(135deg, #020617, #111827 52%, #020617)`,
-        }}
-      >
+      <div className="relative flex min-h-[100svh] flex-col" style={{ background: theme.stageGradient }}>
         <div
           className="flex min-h-[100svh] flex-col will-change-transform"
           style={{ transform: screenTransform }}
         >
-          {state.mode !== "idle" ? <VenueTitle state={state} /> : null}
-          {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} /> : null}
-          {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} /> : null}
+          {state.mode !== "idle" ? <VenueTitle state={state} accent={theme.accent} /> : null}
+          {state.mode === "live-trivia" || state.mode === "category-blitz" ? (
+            <ScreenTransition transitionKey={transitionKey} className="flex flex-1 flex-col">
+              {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} nowMs={nowMs} /> : null}
+              {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} nowMs={nowMs} /> : null}
+            </ScreenTransition>
+          ) : null}
           {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} /> : null}
         </div>
+        {liveTakeover ? (
+          <TvGoLiveTakeover
+            key={liveTakeover.key}
+            gameLabel={liveTakeover.gameLabel}
+            venueName={state.venue.displayName ?? state.venue.name}
+            onComplete={() => setLiveTakeover(null)}
+          />
+        ) : null}
         {error || debugMode ? (
           <VenueScreenStatus
             updatedAt={state.updatedAt}

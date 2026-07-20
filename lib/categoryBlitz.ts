@@ -14,6 +14,7 @@ import {
   pickRandomLetter,
   pickRandomMode,
   assembleRandomBoard,
+  type ResolvedContinuousConfig,
 } from "@/lib/categoryBlitzPool";
 import type {
   CategoryBlitzSession,
@@ -2015,6 +2016,10 @@ export type ContinuousSessionResult = {
   session: CategoryBlitzSession;
   round?: CategoryBlitzRound;
   action: "created" | "started_round" | "waiting_intermission" | "round_in_progress";
+  // The resolved continuous config this drive used. Surfaced so callers (e.g.
+  // the venue-screen selector) can reuse it for next-round pacing math instead
+  // of issuing a second resolveContinuousConfig read for the same venue/poll.
+  config: ResolvedContinuousConfig;
 };
 
 /**
@@ -2238,13 +2243,13 @@ export async function driveContinuousCategoryBlitz(
       modeSelection: config.modeSelection,
       categoryPool: config.categoryPool,
     });
-    return { session: await withPlayerCount(session), round, action: "started_round" };
+    return { session: await withPlayerCount(session), round, action: "started_round", config };
   }
 
   // Round in progress or scoring - don't interrupt
   if (latestRound.status !== "complete") {
     debugLog(`[categoryBlitz] driveContinuousCategoryBlitz(${venueId}): round ${latestRound.status} - no-op`);
-    return { session: await withPlayerCount(session), round: toRound(latestRound), action: "round_in_progress" };
+    return { session: await withPlayerCount(session), round: toRound(latestRound), action: "round_in_progress", config };
   }
 
   // Round complete - check if intermission has elapsed
@@ -2254,7 +2259,7 @@ export async function driveContinuousCategoryBlitz(
 
   if (now.getTime() < intermissionEndMs) {
     debugLog(`[categoryBlitz] driveContinuousCategoryBlitz(${venueId}): intermission not elapsed yet`);
-    return { session: await withPlayerCount(session), round: toRound(latestRound), action: "waiting_intermission" };
+    return { session: await withPlayerCount(session), round: toRound(latestRound), action: "waiting_intermission", config };
   }
 
   // Start the next round
@@ -2265,7 +2270,7 @@ export async function driveContinuousCategoryBlitz(
     categoryPool: config.categoryPool,
   });
 
-  return { session: await withPlayerCount(session), round, action: "started_round" };
+  return { session: await withPlayerCount(session), round, action: "started_round", config };
 }
 
 /**

@@ -17,7 +17,10 @@ export function parseVenueScreenDebugMode(value: unknown): VenueScreenDebugMode 
 
 export function getVenueScreenPollIntervalMs(state: VenueScreenState): number {
   if (state.mode === "live-trivia") {
-    return state.liveTrivia.phase === "question" ? 1_000 : 4_000;
+    // Question and reveal are both live, ticking beats — poll fast so the
+    // countdown stays smooth and the question→reveal→intermission handoffs
+    // land promptly. Intermission/final change slowly.
+    return state.liveTrivia.phase === "question" || state.liveTrivia.phase === "reveal" ? 1_000 : 4_000;
   }
   if (state.mode === "category-blitz") {
     return state.categoryBlitz.phase === "round" ? 1_000 : 4_000;

@@ -75,6 +75,42 @@ export const intermissionSeconds = (testMode: boolean): number =>
 export const lobbyDwellSeconds = (testMode: boolean): number =>
   testMode ? TEST_MODE_SECONDS : LOBBY_DWELL_SECONDS;
 
+/** Continuous-mode pacing for a venue (round length + intermission), in seconds. */
+export type CategoryBlitzContinuousTiming = {
+  roundDurationSeconds: number;
+  intermissionSeconds: number;
+};
+
+/**
+ * When the next round starts, in epoch ms. Mirrors the server engine's anchor
+ * (lib/categoryBlitz.ts → driveContinuousCategoryBlitz): once a round is scored,
+ * the next round starts a full intermission AFTER `scoredAt`, so grading latency
+ * never shortens the review window; before that (or a pre-migration round with
+ * no `scoredAt`) fall back to the `startedAt + interval` estimate. Continuous
+ * sessions pass their per-venue timing; scheduled sessions pass none and use the
+ * shared constants. Shared by the client "next round in" countdown
+ * (categoryBlitzRealtime) and the venue TV screen (lib/venueScreen) so the two
+ * can't drift.
+ */
+export const nextRoundStartAtMs = (
+  round: { scoredAt: string | null; startedAt: string },
+  testMode: boolean,
+  continuousTiming?: CategoryBlitzContinuousTiming | null,
+): number => {
+  // roundIntervalSeconds(testMode) === roundDurationSeconds(testMode) +
+  // intermissionSeconds(testMode) for the shared constants, so this collapse
+  // is lossless against the previous 4-branch version.
+  const timing = continuousTiming ?? {
+    roundDurationSeconds: roundDurationSeconds(testMode),
+    intermissionSeconds: intermissionSeconds(testMode),
+  };
+
+  if (round.scoredAt) {
+    return new Date(round.scoredAt).getTime() + timing.intermissionSeconds * 1000;
+  }
+  return new Date(round.startedAt).getTime() + (timing.roundDurationSeconds + timing.intermissionSeconds) * 1000;
+};
+
 /**
  * True when `answer` starts with `letter`, ignoring a leading "the"/"a"/"an"
  * and case. A bare article with nothing after it ("a", "the") is rejected

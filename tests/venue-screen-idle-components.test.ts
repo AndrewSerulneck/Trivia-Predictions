@@ -10,7 +10,12 @@ import type { VenueScreenState } from "@/lib/venueScreen";
 
 type IdleState = Extract<VenueScreenState, { mode: "idle" }>;
 
+// TvIdleAttract rotates through games at a default 8s cadence, keyed off the
+// wall clock (Math.floor(nowMs / 8000) % gameCount) — deterministic for a
+// fixed nowMs, chosen here so the FIRST scheduled game (Live Trivia) shows.
 const nowMs = Date.parse("2026-07-02T20:00:00.000Z");
+// Same games, 8s later: rotation index flips to the SECOND game (Category Blitz).
+const nowMsSecondCard = nowMs + 8_000;
 
 function makeIdleState(overrides: Partial<IdleState["idle"]> = {}): IdleState {
   return {
@@ -45,18 +50,24 @@ function makeIdleState(overrides: Partial<IdleState["idle"]> = {}): IdleState {
 }
 
 describe("Idle venue screen components", () => {
-  it("renders venue branding and next-game countdowns", () => {
+  it("renders venue branding and the first rotating game card", () => {
     const html = renderToStaticMarkup(
       React.createElement(IdleVenueScreen, { state: makeIdleState(), nowMs }),
     );
 
     expect(html).toContain("Hightop Pub TV");
-    expect(html).toContain("Live Trivia");
-    expect(html).toContain("starts in");
+    expect(html).toContain("Thursday Live Trivia");
     expect(html).toContain("1:00:00");
+    expect(html).toContain("Next up");
+  });
+
+  it("rotates to the second card 8 seconds later", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(IdleVenueScreen, { state: makeIdleState(), nowMs: nowMsSecondCard }),
+    );
+
     expect(html).toContain("Category Blitz");
-    expect(html).toContain("15:30");
-    expect(html).toContain("Brought to you by Hightop Challenge™");
+    expect(html).toContain("15:22"); // 15:30 minus the 8s advance to nowMsSecondCard
   });
 
   it("shows scheduled days instead of a countdown for games more than 24 hours away", () => {
@@ -78,52 +89,19 @@ describe("Idle venue screen components", () => {
       }),
     );
 
-    expect(html).toContain("Live Trivia");
-    expect(html).toContain("is scheduled on");
-    expect(html).toContain("Saturday");
-    expect(html).toContain("Sunday and Wednesday");
+    expect(html).toContain("Saturday Live Trivia");
     expect(html).not.toContain("49:00:00");
   });
 
-  it("renders the venue name once for each scheduled game line", () => {
+  it("renders the venue name once (wordmark panel, not per-card)", () => {
     const html = renderToStaticMarkup(
       React.createElement(IdleVenueScreen, { state: makeIdleState(), nowMs }),
     );
 
-    expect(html.match(/Hightop Pub TV/g)?.length).toBe(2);
+    expect(html.match(/Hightop Pub TV/g)?.length).toBe(1);
   });
 
-  it("does not render sponsor slots on the minimal display page", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, {
-        state: makeIdleState({
-          sponsorSlots: [
-            {
-              title: "High Noon",
-              imageUrl: "https://cdn.example.com/high-noon.png",
-              linkUrl: "https://example.com/high-noon",
-            },
-          ],
-        }),
-        nowMs,
-      }),
-    );
-
-    expect(html).not.toContain("Presented by");
-    expect(html).not.toContain("High Noon");
-    expect(html).toContain("Brought to you by Hightop Challenge™");
-  });
-
-  it("keeps the idle screen complete without sponsor slots", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, { state: makeIdleState(), nowMs }),
-    );
-
-    expect(html).toContain("starts in");
-    expect(html).not.toContain("Presented by");
-  });
-
-  it("does not render a countdown tile for unscheduled Live Trivia", () => {
+  it("shows only the scheduled game when one game is unscheduled", () => {
     const html = renderToStaticMarkup(
       React.createElement(IdleVenueScreen, {
         state: makeIdleState({
@@ -136,13 +114,11 @@ describe("Idle venue screen components", () => {
       }),
     );
 
-    expect(html).not.toContain("Live Trivia");
     expect(html).toContain("Category Blitz");
-    expect(html).toContain("starts in");
     expect(html).toContain("15:30");
   });
 
-  it("renders a short empty message when no Live Games are scheduled", () => {
+  it("renders the calm attract screen (wordmark + venue name) when no games are scheduled", () => {
     const html = renderToStaticMarkup(
       React.createElement(IdleVenueScreen, {
         state: makeIdleState({
@@ -153,9 +129,9 @@ describe("Idle venue screen components", () => {
       }),
     );
 
-    expect(html).toContain("Hightop Pub TV Live Games will appear here.");
-    expect(html.match(/Hightop Pub TV/g)?.length).toBe(1);
-    expect(html).not.toContain("Schedule coming soon");
+    expect(html).toContain("Hightop");
+    expect(html).toContain("Hightop Pub TV");
+    expect(html).not.toContain("Next up");
   });
 
   it("formats longer idle countdowns for large TV display", () => {

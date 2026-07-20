@@ -1,37 +1,48 @@
-import { ScreenCountdown } from "@/components/venue-screen/ScreenCountdown";
-import { ScreenLeaderboard } from "@/components/venue-screen/ScreenLeaderboard";
+import { TvFinalStandings } from "@/components/venue-screen/TvFinalStandings";
+import { TvRoundBreak } from "@/components/venue-screen/TvRoundBreak";
 import type { VenueScreenState } from "@/lib/venueScreen";
 
 type LiveTriviaState = Extract<VenueScreenState, { mode: "live-trivia" }>;
 
 type LiveTriviaIntermissionScreenProps = {
   state: LiveTriviaState;
+  /** Parent's ticking clock (VenueScreenClient), for pure countdown interpolation. */
+  nowMs: number;
 };
 
-export function LiveTriviaIntermissionScreen({ state }: LiveTriviaIntermissionScreenProps) {
+// Live Trivia round break (Prompt B) + final winners reveal (Prompt C),
+// authored via Claude Web UI and wired in. Venue name is already shown by
+// VenueScreenClient's shared header, so neither panel repeats it.
+export function LiveTriviaIntermissionScreen({ state, nowMs }: LiveTriviaIntermissionScreenProps) {
   const live = state.liveTrivia;
   const venueName = state.venue.displayName ?? state.venue.name;
-  const isFinal = live.phase === "final";
+
+  if (live.phase === "final") {
+    return (
+      <TvFinalStandings
+        leaderboard={(live.leaderboard ?? []).map((entry) => ({
+          id: entry.username,
+          name: entry.username,
+          score: entry.points,
+        }))}
+        venueName={venueName}
+        gameId={live.gameId}
+      />
+    );
+  }
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center gap-8 px-10 pb-12 text-center">
-      <div>
-        <p className="text-2xl font-black uppercase tracking-[0.18em] text-white/52">{venueName}</p>
-        <h2 className="mt-3 text-[clamp(4rem,7vw,8rem)] font-black leading-none text-white">
-          {isFinal ? "Final Standings" : "Round Break"}
-        </h2>
-        <p className="mt-4 text-3xl font-black uppercase tracking-[0.14em] text-amber-200">
-          {isFinal ? "Live Trivia Champion Board" : `Round ${live.roundNumber ?? "-"} Leaderboard`}
-        </p>
-      </div>
-
-      <ScreenLeaderboard entries={live.leaderboard} emptyLabel="No scores yet" maxRows={9} />
-
-      {!isFinal ? (
-        <div className="mt-2">
-          <ScreenCountdown seconds={live.secondsRemaining} label="Next Round" tone="amber" size="medium" />
-        </div>
-      ) : null}
-    </section>
+    <TvRoundBreak
+      roundNumber={live.roundNumber ?? 1}
+      totalRounds={live.totalRounds}
+      leaderboard={(live.leaderboard ?? []).map((entry) => ({
+        id: entry.username,
+        name: entry.username,
+        score: entry.points,
+      }))}
+      secondsRemaining={live.secondsRemaining}
+      nowMs={nowMs}
+      updatedAtMs={state.updatedAt}
+    />
   );
 }

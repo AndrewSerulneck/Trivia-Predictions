@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
+import { TvPairingDisplay } from "@/components/venue-screen/TvPairingDisplay";
 import { gameUrl, marketingUrl } from "@/lib/domainSplit";
 
 // This is the ONE page owners type on a TV remote (hightopchallenge.com/tv), so
@@ -15,17 +16,21 @@ const POLL_INTERVAL_MS = 3000;
 // Auto-resume waits this long before navigating away, so the "not your venue?"
 // escape hatch below is actually clickable instead of flashing off-screen.
 const AUTO_RESUME_DELAY_MS = 4000;
+// An expired code dead-ends an unattended TV with nobody around to tap "get a
+// new code" — so we auto-remint after a beat. The delay just lets the "Code
+// expired" flash register before the screen swaps to a fresh code.
+const EXPIRED_REMINT_DELAY_MS = 2500;
 
-type Phase = "resuming" | "minting" | "pending" | "claimed" | "expired" | "error";
-
-// Group "XK49PM" as "XK4-9PM" — purely cosmetic, easier to read/say across a room.
-function formatCodeForDisplay(code: string): string {
-  if (code.length !== 6) return code;
-  return `${code.slice(0, 3)}-${code.slice(3)}`;
-}
+// "booting" is the neutral first paint shown to EVERYONE for the single tick
+// before the mount effect decides whether this browser resumes a paired venue or
+// mints a fresh code. Without it, the initial state was "resuming", so a
+// first-time visitor briefly flashed "Resuming your venue screen…" (a screen that
+// never applied to them) before the pairing code appeared. The neutral splash
+// reads correctly for both outcomes, so there's no jarring content swap.
+type Phase = "booting" | "resuming" | "minting" | "pending" | "claimed" | "expired" | "error";
 
 const TvPairPage = () => {
-  const [phase, setPhase] = useState<Phase>("resuming");
+  const [phase, setPhase] = useState<Phase>("booting");
   const [code, setCode] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const pollTimeoutRef = useRef<number | null>(null);
@@ -120,6 +125,16 @@ const TvPairPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, []);
 
+  // An expired code has nobody around to tap the recovery link, so auto-remint
+  // a fresh one rather than dead-ending the polling loop.
+  useEffect(() => {
+    if (phase !== "expired") return;
+    const timeout = window.setTimeout(() => {
+      if (!cancelledRef.current) void mintCode();
+    }, EXPIRED_REMINT_DELAY_MS);
+    return () => window.clearTimeout(timeout);
+  }, [phase, mintCode]);
+
   const handleUnlink = () => {
     cancelledRef.current = true; // cancel any pending auto-resume redirect
     window.localStorage.removeItem(STORAGE_KEY);
@@ -132,15 +147,43 @@ const TvPairPage = () => {
   // route (lives on the apex even under the domain split).
   const claimDeepLink = code ? marketingUrl(`/owner/display?code=${encodeURIComponent(code)}`) : "";
 
+  if (phase === "pending" || phase === "claimed" || phase === "expired") {
+    return (
+      <div className="fixed inset-0 bg-ht-canvas">
+        <TvPairingDisplay
+          code={code}
+          qrValue={claimDeepLink}
+          phase={phase}
+          manualUrl="hightopchallenge.com/owner/display"
+          renderQr={(px) => <QRCodeSVG value={claimDeepLink} size={px} level="M" marginSize={0} />}
+        />
+        {phase !== "claimed" ? (
+          <button
+            type="button"
+            onClick={handleUnlink}
+            className="fixed bottom-6 right-6 text-xs font-semibold text-ht-muted underline underline-offset-2"
+          >
+            Not your venue? Get a new code
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-ht-canvas px-8 py-12 text-center">
       <ExplodingLogo width={260} />
 
-      {phase === "resuming" ? (
-        <p className="mt-10 text-2xl font-bold text-ht-muted">Resuming your venue screen…</p>
-      ) : phase === "minting" ? (
-        <p className="mt-10 text-2xl font-bold text-ht-muted">Loading…</p>
-      ) : phase === "error" ? (
+      {phase === "booting" || phase === "minting" ? (
+        <p className="mt-10 text-2xl font-bold text-ht-muted">Setting up this display…</p>
+      ) : phase === "resuming" ? (
+        <div className="mt-10 flex max-w-xl flex-col items-center gap-4">
+          <p className="text-2xl font-bold text-ht-cyan-300">Resuming this venue&apos;s display…</p>
+          <p className="text-base font-semibold text-ht-muted">
+            This TV was linked before, so it&apos;s reopening its venue screen.
+          </p>
+        </div>
+      ) : (
         <div className="mt-10 max-w-xl">
           <p className="text-2xl font-bold text-ht-rose-300">{errorMessage || "Something went wrong."}</p>
           <button
@@ -150,50 +193,6 @@ const TvPairPage = () => {
           >
             Try again
           </button>
-        </div>
-      ) : phase === "expired" ? (
-        <div className="mt-10 max-w-xl">
-          <p className="text-2xl font-bold text-ht-muted">This code expired.</p>
-          <button
-            type="button"
-            onClick={() => void mintCode()}
-            className="mt-6 rounded-2xl border border-ht-soft bg-ht-cyan-500 px-8 py-4 text-xl font-black text-slate-950"
-          >
-            Get a new code
-          </button>
-        </div>
-      ) : (
-        <div className="mt-10 flex max-w-3xl flex-col items-center gap-8">
-          <div>
-            <p className="text-xl font-bold uppercase tracking-[0.3em] text-ht-cyan-300">
-              Link this TV
-            </p>
-            <p
-              className="mt-4 font-black tracking-[0.15em] text-ht-primary"
-              style={{ fontSize: "clamp(3.5rem, 10vw, 7rem)" }}
-            >
-              {formatCodeForDisplay(code)}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-8">
-            <div className="rounded-2xl bg-white p-4">
-              <QRCodeSVG value={claimDeepLink} size={180} level="M" marginSize={0} />
-            </div>
-            <div className="max-w-sm text-left">
-              <p className="text-lg font-bold text-ht-secondary">
-                On your phone, open the Partner Dashboard → Venue Display, and enter this code —
-                or scan the QR code to jump straight there.
-              </p>
-              <p className="mt-3 text-sm font-semibold text-ht-muted">
-                This screen updates automatically once you link it.
-              </p>
-            </div>
-          </div>
-
-          {phase === "claimed" ? (
-            <p className="text-lg font-bold text-ht-emerald-300">Linked! Loading your venue screen…</p>
-          ) : null}
         </div>
       )}
 

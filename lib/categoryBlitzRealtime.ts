@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { roundIntervalSeconds, intermissionSeconds, SUBMISSION_GRACE_MS } from "@/lib/categoryBlitzShared";
+import {
+  SUBMISSION_GRACE_MS,
+  nextRoundStartAtMs,
+  type CategoryBlitzContinuousTiming,
+} from "@/lib/categoryBlitzShared";
 import { isCategoryBlitzTestModeEnabled } from "@/lib/categoryBlitzTestMode";
 import type {
   CategoryBlitzRound,
@@ -12,43 +16,11 @@ import type {
 } from "@/types";
 
 /**
- * Mirror of the server's next-round anchor (lib/categoryBlitz.ts →
- * nextRoundStartAtMs): once the round has been scored, the next round starts a
- * full intermission AFTER `scoredAt`, so grading latency never shortens the
- * review window; before that (or for pre-migration rounds without a scoredAt)
- * fall back to the legacy `startedAt + interval` estimate. Keeping this in sync
- * with the server keeps the "next round in" countdown honest.
+ * `nextRoundStartAtMs` (the server's next-round anchor) is shared from
+ * `lib/categoryBlitzShared` so the client "next round in" countdown and the
+ * venue TV screen stay in lockstep. Continuous sessions pass their per-venue
+ * timing; scheduled sessions pass null and fall back to the shared constants.
  */
-/**
- * Continuous mode uses per-venue timing (round duration + intermission) instead
- * of the shared scheduled constants. When the current session is continuous, the
- * hook passes this so the "next round in" countdown anchors on the venue's real
- * cadence; scheduled sessions pass undefined and fall back to the constants.
- */
-type ContinuousTiming = { roundDurationSeconds: number; intermissionSeconds: number };
-
-function nextRoundStartAtMs(
-  round: Pick<CategoryBlitzRound, "scoredAt" | "startedAt">,
-  testMode: boolean,
-  continuousTiming?: ContinuousTiming | null,
-): number {
-  if (continuousTiming) {
-    // Mirror driveContinuousCategoryBlitz's server anchor: next round starts a
-    // full intermission after scoring, or roundDuration + intermission after
-    // start for a not-yet-scored round.
-    if (round.scoredAt) {
-      return new Date(round.scoredAt).getTime() + continuousTiming.intermissionSeconds * 1000;
-    }
-    return (
-      new Date(round.startedAt).getTime() +
-      (continuousTiming.roundDurationSeconds + continuousTiming.intermissionSeconds) * 1000
-    );
-  }
-  if (round.scoredAt) {
-    return new Date(round.scoredAt).getTime() + intermissionSeconds(testMode) * 1000;
-  }
-  return new Date(round.startedAt).getTime() + roundIntervalSeconds(testMode) * 1000;
-}
 
 /**
  * Dev-only structured logging for tracing the reveal/scoring gate on the
@@ -202,7 +174,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
    *  for scheduled sessions. Read synchronously inside the timing callbacks so
    *  the "next round in" countdown uses the venue's real continuous cadence
    *  without adding `session` to their dependency arrays. */
-  const continuousTimingRef = useRef<ContinuousTiming | null>(null);
+  const continuousTimingRef = useRef<CategoryBlitzContinuousTiming | null>(null);
 
   useEffect(() => {
     userIdRef.current = userId;

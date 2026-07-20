@@ -1196,6 +1196,27 @@ h4 {
   will-change: transform, opacity;
 }
 
+/* Venue TV screen — final-seconds countdown urgency pulse (heartbeat). */
+@keyframes tp-countdown-critical {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.animate-tp-countdown-critical {
+  animation: tp-countdown-critical 1s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-tp-countdown-critical {
+    animation: none;
+  }
+}
+
 /* Live Trivia correct-answer reveal: single left-to-right shimmer sweep. */
 @keyframes tp-answer-shimmer {
   0% {

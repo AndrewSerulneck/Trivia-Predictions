@@ -1,0 +1,544 @@
+{
+  "categoryName": "Sports",
+  "questions": [
+    {
+      "slug": "basketball-hoop-diameter-inches",
+      "question": "What's the diameter of a basketball hoop in inches?",
+      "answer": "18 inches",
+      "acceptableAnswers": ["18", "eighteen", "eighteen inches"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "general",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "olympics-frequency-years",
+      "question": "The Olympics are held every how many years?",
+      "answer": "Four years",
+      "acceptableAnswers": ["4", "4 years", "four", "every 4 years", "every four years"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "olympics",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "bowler-three-strikes-turkey",
+      "question": "What do you call it when a bowler makes three strikes in a row?",
+      "answer": "Turkey",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "general",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "canada-national-summer-sport",
+      "question": "Canada has 2 official national sports. In winter, it's hockey. But what's Canada's national summer sport?",
+      "answer": "Lacrosse",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "general",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "summer-olympics-no-gold-medal",
+      "question": "What country has competed the most times in the Summer Olympics yet hasn't won a gold medal?",
+      "answer": "The Philippines",
+      "acceptableAnswers": ["Philippines"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "olympics",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "raging-bull-boxer-jake-lamotta",
+      "question": "The classic 1980 movie called Raging Bull starring Robert de Niro is about which real-life boxer?",
+      "answer": "Jake LaMotta",
+      "acceptableAnswers": ["LaMotta", "Jake La Motta", "La Motta"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "boxing",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "horse-racing-triple-crown",
+      "question": "What prestigious award is given to a horse that wins The Kentucky Derby, Preakness Stakes and the Belmont Stakes?",
+      "answer": "The Triple Crown",
+      "acceptableAnswers": ["Triple Crown"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "general",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "nadia-comaneci-country",
+      "question": "In the 1971 Olympics, Nadia Comaneci was the first gymnast to ever achieve a perfect score. What country was she representing?",
+      "answer": "Romania",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "olympics",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "williams-sisters-grand-slam",
+      "question": "Who has won more tennis Grand Slam titles, Venus Williams or Serena Williams?",
+      "answer": "Serena Williams",
+      "acceptableAnswers": ["Serena"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "tennis",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "2028-summer-olympics-location",
+      "question": "Where will the 2028 Summer Olympics be held?",
+      "answer": "Los Angeles",
+      "acceptableAnswers": ["LA", "L.A.", "Los Angeles, California", "California"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "olympics",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-boxer-defeat-muhammad-ali",
+      "question": "Which boxer was the first to defeat Muhammad Ali?",
+      "answer": "Joe Frazier",
+      "acceptableAnswers": ["Frazier", "Smokin Joe Frazier", "Smokin' Joe Frazier"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "boxing",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "tiger-woods-first-major-win",
+      "question": "Which golf tournament did Tiger Woods win by 12 strokes, cementing his first-ever major championship win?",
+      "answer": "The Masters",
+      "acceptableAnswers": ["Masters", "Masters Tournament", "The Masters Tournament"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "golf",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "golf-holes-standard-game",
+      "question": "How many holes are played in a standard game of golf?",
+      "answer": "18",
+      "acceptableAnswers": ["eighteen"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "golf",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "marathon-distance-miles",
+      "question": "How many miles is a marathon?",
+      "answer": "26.2 miles",
+      "acceptableAnswers": ["26.2", "26 miles 385 yards", "twenty-six point two"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "general",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "tennis-love-score",
+      "question": "In what game is 'love' a score?",
+      "answer": "Tennis",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "tennis",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "dartboard-number-right-of-20",
+      "question": "What number sits to the right of the number 20 on a standard dartboard?",
+      "answer": "One",
+      "acceptableAnswers": ["1", "the number one"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "general",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "sport-played-on-moon",
+      "question": "What is the only sport to be played on the moon?",
+      "answer": "Golf",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "general",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "snowboarding-terms-stale-fish",
+      "question": "In which winter sport are the terms 'stale fish' and 'mule kick' used?",
+      "answer": "Snowboarding",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "winter-sports",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-president-first-pitch",
+      "question": "Who was the first president to throw the ceremonial first pitch at a Major League Baseball game?",
+      "answer": "William Howard Taft",
+      "acceptableAnswers": ["Taft", "President Taft", "William Taft"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "baseball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "nfl-team-never-super-bowl",
+      "question": "What is the only team in the NFL to neither host nor play in the Super Bowl?",
+      "answer": "Cleveland Browns",
+      "acceptableAnswers": ["Browns"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "football",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "steelers-helmet-logo-one-side",
+      "question": "What is the only NFL team to have their logo printed on only one side of their helmets?",
+      "answer": "Pittsburgh Steelers",
+      "acceptableAnswers": ["Steelers", "Pittsburgh"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "football",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "oldest-nfl-franchise",
+      "question": "What NFL team is the oldest continuously running professional football franchise?",
+      "answer": "Arizona Cardinals",
+      "acceptableAnswers": ["Cardinals", "Phoenix Cardinals", "St. Louis Cardinals", "Chicago Cardinals"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "football",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "super-bowl-most-points-record",
+      "question": "Which NFL team has the record of scoring the most points in a single Super Bowl?",
+      "answer": "San Francisco 49ers",
+      "acceptableAnswers": ["49ers", "Forty Niners", "San Francisco", "Niners"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "football",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-nba-game-winner",
+      "question": "What NBA team won the very first NBA game in 1946?",
+      "answer": "New York Knicks",
+      "acceptableAnswers": ["Knicks", "NY Knicks", "New York"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "youngest-10000-points-nba",
+      "question": "Who was the youngest player to score 10,000 points in the NBA?",
+      "answer": "LeBron James",
+      "acceptableAnswers": ["LeBron", "Lebron James", "Lebron", "King James"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-wnba-playoff-dunk",
+      "question": "Who was the first WNBA player to dunk in a playoff game?",
+      "answer": "Brittney Griner",
+      "acceptableAnswers": ["Griner", "Britney Griner"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "nba-longest-winning-streak",
+      "question": "What team owns the longest winning streak in NBA history?",
+      "answer": "Los Angeles Lakers",
+      "acceptableAnswers": ["Lakers", "LA Lakers", "L.A. Lakers"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-shatter-backboard-nba",
+      "question": "Who was the first NBA player to shatter a backboard?",
+      "answer": "Chuck Connors",
+      "acceptableAnswers": ["Connors", "Chuck Conners"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "state-no-ncaa-basketball-alaska",
+      "question": "There are two states in the United States that have never had an NCAA basketball team. The first is Alaska. Who's the second?",
+      "answer": "Maine",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "state-no-ncaa-basketball-maine",
+      "question": "There are two states in the United States that have never had an NCAA basketball team. The first is Maine. Who's the second?",
+      "answer": "Alaska",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "female-pitcher-struck-out-babe-ruth",
+      "question": "What female pitcher once struck out both Babe Ruth and Lou Gehrig?",
+      "answer": "Jackie Mitchell",
+      "acceptableAnswers": ["Mitchell", "Jackie Mitchell"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "baseball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-baseball-player-wheaties",
+      "question": "Who was the first baseball player to appear on a Wheaties box?",
+      "answer": "Lou Gehrig",
+      "acceptableAnswers": ["Gehrig", "Iron Horse"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "baseball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "take-me-out-ballgame-inning",
+      "question": "During which inning is 'Take Me Out to the Ballgame' traditionally sung?",
+      "answer": "The 7th inning",
+      "acceptableAnswers": ["7th inning", "7th", "seventh inning", "the seventh inning", "7"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "baseball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "jordan-white-sox-tryout",
+      "question": "What retired basketball legend tried out for the Chicago White Sox in 1994?",
+      "answer": "Michael Jordan",
+      "acceptableAnswers": ["Jordan", "MJ", "Air Jordan"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "baseball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "most-stolen-base-baseball",
+      "question": "In baseball, which base is stolen most often?",
+      "answer": "Second base",
+      "acceptableAnswers": ["Second", "2nd base", "2nd", "second base"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "baseball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-african-world-cup-qualifier",
+      "question": "What African country was the first ever to qualify for a World Cup?",
+      "answer": "Egypt",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "soccer",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "david-beckham-four-countries",
+      "question": "Who was the first British player to win league titles in four countries?",
+      "answer": "David Beckham",
+      "acceptableAnswers": ["Beckham", "Becks"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "soccer",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-womens-world-cup-winner",
+      "question": "Which country won the first women's World Cup?",
+      "answer": "The United States",
+      "acceptableAnswers": ["United States", "USA", "US", "United States of America", "America", "USWNT"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "soccer",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-fifa-womens-player-year",
+      "question": "Who won the first two FIFA Women's World Player of the Year Awards?",
+      "answer": "Mia Hamm",
+      "acceptableAnswers": ["Hamm"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "soccer",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "country-every-world-cup",
+      "question": "What is the only country to have played in every single soccer World Cup?",
+      "answer": "Brazil",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "soccer",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "olympic-rings-meaning",
+      "question": "What do the five interlocking rings on the Olympic flag represent?",
+      "answer": "Inhabited continents",
+      "acceptableAnswers": ["Continents", "The continents", "Five continents"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "olympics",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-city-three-olympics",
+      "question": "What European capital was the first city to host the Olympics three times?",
+      "answer": "London",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "olympics",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "nba-titles-record-lakers",
+      "question": "What NBA team shares the record for the most NBA titles with the Los Angeles Lakers?",
+      "answer": "Boston Celtics",
+      "acceptableAnswers": ["Celtics", "Boston"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "nba-titles-record-celtics",
+      "question": "What NBA team shares the record for the most NBA titles with the Boston Celtics?",
+      "answer": "Los Angeles Lakers",
+      "acceptableAnswers": ["Lakers", "LA Lakers", "L.A. Lakers"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "bmx-stands-for",
+      "question": "What do the letters BMX stand for?",
+      "answer": "Bicycle Moto X",
+      "acceptableAnswers": ["Bicycle Motocross", "Bicycle Moto Cross", "Bike Moto X", "Bicycle Motorcross"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "general",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "bambino-nickname",
+      "question": "Which MLB player was better known as 'The Bambino'?",
+      "answer": "Babe Ruth",
+      "acceptableAnswers": ["Ruth", "George Herman Ruth", "George Ruth", "Sultan of Swat"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "baseball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "chargers-helmet-logo",
+      "question": "Which NFL team has a lightning bolt on the players' helmets?",
+      "answer": "Los Angeles Chargers",
+      "acceptableAnswers": ["Chargers", "LA Chargers", "L.A. Chargers", "San Diego Chargers"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "football",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "olympic-rings-count",
+      "question": "How many rings are on the Olympic flag?",
+      "answer": "Five",
+      "acceptableAnswers": ["5", "five"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "olympics",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "most-decorated-gymnast",
+      "question": "Who is the most decorated gymnast of all time, with 37 world and Olympic medals to her name?",
+      "answer": "Simone Biles",
+      "acceptableAnswers": ["Biles", "Simone"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "olympics",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "most-grand-slam-singles-female",
+      "question": "Which female tennis player holds the record for the most Grand Slam singles titles?",
+      "answer": "Margaret Court",
+      "acceptableAnswers": ["Court", "Margaret Court Smith"],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "tennis",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-black-woman-olympic-gold",
+      "question": "Who is the first Black woman to win an Olympic gold medal?",
+      "answer": "Alice Coachman",
+      "acceptableAnswers": ["Coachman", "Alice Coachman Davis"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "olympics",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "caitlin-clark-ncaa-record",
+      "question": "Which female basketball player broke Pete Maravich's record to become the all-time highest-scoring Division One NCAA player?",
+      "answer": "Caitlin Clark",
+      "acceptableAnswers": ["Clark", "Caitlin"],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "basketball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-woman-mens-baseball",
+      "question": "Who was the first woman to play in a men's professional baseball league, signing with the minor league team the Chattanooga Lookouts?",
+      "answer": "Jackie Mitchell",
+      "acceptableAnswers": ["Mitchell", "Virne Beatrice Mitchell Gilbert"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "baseball",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "womens-world-cup-top-scorer",
+      "question": "Who is the all-time leading goal scorer in FIFA Women's World Cup history?",
+      "answer": "Michelle Akers",
+      "acceptableAnswers": ["Akers", "Michelle"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "soccer",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-female-nfl-coach",
+      "question": "Who is the first woman to serve as a full-time NFL coach?",
+      "answer": "Kathryn Smith",
+      "acceptableAnswers": ["Smith", "Katie Smith", "Kathryn"],
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "football",
+      "answer_format": "write_in"
+    }
+  ]
+}

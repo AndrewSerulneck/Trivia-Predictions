@@ -134,7 +134,7 @@ describe("selectVenueScreenState", () => {
     const state = selectVenueScreenState({
       venue,
       liveTrivia: makeLiveQuestion(),
-      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null },
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
       updatedAt,
     });
 
@@ -143,7 +143,79 @@ describe("selectVenueScreenState", () => {
     expect(state.liveTrivia?.phase).toBe("question");
     expect(state.liveTrivia?.category).toBe("Sports");
     expect(state.liveTrivia?.question).toBe("Which city hosted the 1996 Summer Olympics?");
+    expect(state.liveTrivia?.correctAnswer).toBeNull();
+    expect(state.liveTrivia?.revealEndsAt).toBeNull();
+    expect(state.liveTrivia?.gameId).toBe("schedule-1:2026-07-02");
     expect(JSON.stringify(state)).not.toContain("Atlanta");
+  });
+
+  it("derives a per-game gameId that differs across occurrences with the same round/champion", () => {
+    // Two back-to-back final windows: identical roundNumber (the collision-prone
+    // key), but different occurrenceDate. The gameId must differ so the TV
+    // replays the final-standings celebration instead of deduping the second.
+    const base = {
+      activePhase: "mid_game_break" as const,
+      isFinalResultsWindow: true,
+      currentRound: 4,
+      leaderboard: [{ rank: 1, userId: "u1", username: "casey", roundPoints: {}, totalPoints: 100, pointsThisRound: 0 }],
+    };
+    const first = selectVenueScreenState({
+      venue,
+      liveTrivia: makeLiveQuestion({ ...base, occurrenceDate: "2026-07-02" }),
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
+      updatedAt,
+    });
+    const second = selectVenueScreenState({
+      venue,
+      liveTrivia: makeLiveQuestion({ ...base, occurrenceDate: "2026-07-09" }),
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
+      updatedAt,
+    });
+
+    expect(first.liveTrivia?.phase).toBe("final");
+    expect(second.liveTrivia?.phase).toBe("final");
+    expect(first.liveTrivia?.roundNumber).toBe(second.liveTrivia?.roundNumber);
+    expect(first.liveTrivia?.gameId).not.toBe(second.liveTrivia?.gameId);
+    expect(first.liveTrivia?.gameId).toBe("schedule-1:2026-07-02");
+    expect(second.liveTrivia?.gameId).toBe("schedule-1:2026-07-09");
+  });
+
+  it("surfaces the correct answer and a reveal deadline during the reveal beat", () => {
+    const state = selectVenueScreenState({
+      venue,
+      liveTrivia: makeLiveQuestion({
+        activePhase: "rest_warning",
+        secondsRemaining: 12,
+        revealedAnswer: "Atlanta",
+      }),
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
+      updatedAt,
+    });
+
+    expect(state.mode).toBe("live-trivia");
+    expect(state.liveTrivia?.phase).toBe("reveal");
+    expect(state.liveTrivia?.correctAnswer).toBe("Atlanta");
+    // revealEndsAt = updatedAt (20:00:00) + secondsRemaining (12s).
+    expect(state.liveTrivia?.revealEndsAt).toBe("2026-07-02T20:00:12.000Z");
+  });
+
+  it("never leaks the answer on a question payload even if the engine set revealedAnswer", () => {
+    // Defense in depth: the engine already withholds revealedAnswer while
+    // answering, but selectVenueScreenState must ALSO drop it for any non-reveal
+    // phase so a devtools-open venue TV can't read the answer early.
+    const state = selectVenueScreenState({
+      venue,
+      liveTrivia: makeLiveQuestion({
+        activePhase: "answering",
+        revealedAnswer: "LEAKED_ANSWER",
+      }),
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
+      updatedAt,
+    });
+
+    expect(state.liveTrivia?.phase).toBe("question");
+    expect(state.liveTrivia?.correctAnswer).toBeNull();
+    expect(JSON.stringify(state)).not.toContain("LEAKED_ANSWER");
   });
 
   it("prioritizes Live Trivia when Category Blitz overlaps", () => {
@@ -155,6 +227,7 @@ describe("selectVenueScreenState", () => {
         round: makeCategoryRound(),
         leaderboard: [{ rank: 1, username: "casey", points: 12 }],
         nextStartsAt: null,
+        nextRoundStartsAt: null,
       },
       updatedAt,
     });
@@ -172,6 +245,7 @@ describe("selectVenueScreenState", () => {
         round: makeCategoryRound(),
         leaderboard: null,
         nextStartsAt: null,
+        nextRoundStartsAt: null,
       },
       updatedAt,
     });
@@ -195,6 +269,9 @@ describe("selectVenueScreenState", () => {
         }),
         leaderboard: [{ rank: 1, username: "casey", points: 32 }],
         nextStartsAt: null,
+        // Next round three minutes out; the results countdown should reflect it
+        // rather than the old hardcoded 0.
+        nextRoundStartsAt: "2026-07-02T20:03:00.000Z",
       },
       updatedAt,
     });
@@ -202,7 +279,7 @@ describe("selectVenueScreenState", () => {
     expect(state.mode).toBe("category-blitz");
     expect(state.categoryBlitz?.phase).toBe("results");
     expect(state.categoryBlitz?.leaderboard).toEqual([{ rank: 1, username: "casey", points: 32 }]);
-    expect(state.categoryBlitz?.secondsRemaining).toBe(0);
+    expect(state.categoryBlitz?.secondsRemaining).toBe(180);
   });
 
   it("maps a non-active incomplete Category Blitz round to intermission mode", () => {
@@ -219,6 +296,8 @@ describe("selectVenueScreenState", () => {
         }),
         leaderboard: null,
         nextStartsAt: null,
+        // Next round two minutes out; intermission countdown reflects it.
+        nextRoundStartsAt: "2026-07-02T20:02:00.000Z",
       },
       updatedAt,
     });
@@ -227,7 +306,7 @@ describe("selectVenueScreenState", () => {
     expect(state.categoryBlitz?.phase).toBe("intermission");
     expect(state.categoryBlitz?.letter).toBe("R");
     expect(state.categoryBlitz?.categories).toEqual(["Rivers"]);
-    expect(state.categoryBlitz?.secondsRemaining).toBe(0);
+    expect(state.categoryBlitz?.secondsRemaining).toBe(120);
   });
 
   it("falls back to idle with upcoming schedule data when no game is active", () => {
@@ -261,6 +340,7 @@ describe("selectVenueScreenState", () => {
         leaderboard: null,
         nextStartsAt: "2026-07-03T01:00:00.000Z",
         nextRecurringDays: ["thu", "sat"],
+        nextRoundStartsAt: null,
       },
       idle: { sponsorSlots },
       updatedAt,

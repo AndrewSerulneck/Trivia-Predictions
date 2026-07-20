@@ -64,6 +64,7 @@
 - **Functions:** Prefer arrow functions for components and utilities.
 - **Imports:** Always use absolute path alias `@/` (e.g., `@/lib/supabase`, `@/components/ui/PageShell`). No relative imports (`../`).
 - **Styling:** Tailwind utility classes only. No custom CSS, no CSS modules, no inline `style={{}}`. Design tokens reside in `lib/themeTokens.ts`.
+  - **Exception — `components/venue-screen/*` (the venue TV display):** inline `style={{}}` is permitted for dynamic/animated values — framer-motion keyframes, computed gradients, per-rank/per-entry colors — that Tailwind utility classes genuinely can't express. `lib/venueScreenBrand.ts` is the intentional second token source for this feature area (mirrors `lib/themeTokens.ts`'s role but scoped to the TV surface). Static, non-dynamic styling on this surface should still prefer Tailwind classes where practical.
 
 ## Manual Testing & Auth Storage
 - **Dual-layer auth identity:** User identity (`tp_user_id`, `tp_venue_id`) and session (`tp_sess` when `SESSION_SECRET` is configured) are stored **both in cookies and localStorage** by the client.
