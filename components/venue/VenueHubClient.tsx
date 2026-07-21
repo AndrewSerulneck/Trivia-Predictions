@@ -1447,7 +1447,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const byKey = new Map(homeCards.map((card) => [card.key, card] as const));
     return VENUE_HUB_GAME_ORDER.map((key) => byKey.get(key)).filter((card): card is (typeof homeCards)[number] => Boolean(card));
   }, [homeCards]);
-  const challengeBadgeCount = challengeCards.filter((challenge) => Boolean(challenge.winnerUserId && challenge.winnerUserId === currentUserId && !challenge.prizeClaimedAt)).length;
+  const challengeBadgeCount = challengeCards.filter((challenge) => Boolean(challenge.viewerWon && !challenge.prizeClaimedAt)).length;
 
   const showFastPathSkeleton = arrivalInProgress && !arrivalCoreReady;
 

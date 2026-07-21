@@ -188,6 +188,20 @@ export interface ChallengeInvite {
 
 export type PrizeType = "wine_bottle" | "free_appetizer" | "gift_certificate";
 
+// ── Rewards prize model (Phase 2) ────────────────────────────────────────────
+// The new prize shape for Rewards. A reward prize is either a discounted menu
+// item or a gift card. Legacy PrizeType above is kept for pre-Rewards campaigns;
+// the mapping layer derives these fields from legacy values when prize_kind is null.
+export type RewardPrizeKind = "menu_item" | "gift_card";
+export type RewardMenuItem =
+  | "whole_order"
+  | "appetizer"
+  | "entree"
+  | "dessert"
+  | "wine_bottle"
+  | "other";
+export type RewardDiscountKind = "dollar" | "percent";
+
 export type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
 export type ChallengeScheduleType = "single_day" | "multi_day" | "recurring" | "one_time";
 export type ChallengeImageFitMode = "cover" | "contain";
@@ -245,9 +259,27 @@ export interface ChallengeCampaign {
   prizeClaimedAt?: string | null;
   prizeType?: PrizeType | null;
   prizeGiftCertificateAmount?: number | null;
+  // ── Rewards (Phase 2) ──
+  /** Winners awarded per cycle (one-time rewards: total). Defaults to 1. */
+  winnerQuota: number;
+  /** Which pre-set reward definition created this (e.g. "live_trivia_challenge"), or null. */
+  rewardDefinitionId?: string | null;
+  /** New prize model. Null on pre-Rewards campaigns unless derived from legacy prizeType. */
+  prizeKind?: RewardPrizeKind | null;
+  prizeMenuItem?: RewardMenuItem | null;
+  prizeMenuItemName?: string | null;
+  prizeDiscountKind?: RewardDiscountKind | null;
+  prizeDiscountValue?: number | null;
   isActive: boolean;
   /** Phase 9a: the venue owner who created this competition, or null for admin-created. */
   createdByOwnerId?: string | null;
+  // ── Rewards (Phase 6) ── current-cycle multi-winner state, viewer-scoped.
+  /** Usernames of winners for the CURRENT cycle, oldest-first, capped at winnerQuota. */
+  winnerUsernames?: string[];
+  /** winnerQuota minus current-cycle winner count (never negative). */
+  quotaRemaining?: number;
+  /** Whether the requesting viewer is among the current cycle's winners. */
+  viewerWon?: boolean;
 }
 
 export interface ChallengeCampaignWin {
@@ -263,6 +295,12 @@ export interface ChallengeCampaignWin {
   prizeGiftCertificateAmount?: number | null;
   prizeExpiresAt?: string | null;
   prizeRedeemedAt?: string | null;
+  // ── Rewards (Phase 2/6) ── new prize model, derived from legacy prizeType when null.
+  prizeKind?: RewardPrizeKind | null;
+  prizeMenuItem?: RewardMenuItem | null;
+  prizeMenuItemName?: string | null;
+  prizeDiscountKind?: RewardDiscountKind | null;
+  prizeDiscountValue?: number | null;
 }
 
 export interface ChallengeCampaignProgress {

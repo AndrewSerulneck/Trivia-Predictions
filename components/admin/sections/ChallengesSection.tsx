@@ -4,6 +4,11 @@ import React, { useCallback, useEffect, useState } from "react";
 import type { Venue } from "@/types";
 import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/AdminShell";
 import { adminField, adminLabel } from "@/lib/adminStyles";
+import {
+  CreateRewardWizard,
+  type CreateRewardSubmission,
+  type RewardCreationContextDTO,
+} from "@/components/rewards/CreateRewardWizard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -77,7 +82,10 @@ const PRIZE_TYPE_OPTIONS: Array<{ value: PrizeType | "none"; label: string }> = 
 ];
 const DAY_OPTIONS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const RECURRING_OPTIONS: CampaignRecurringType[] = ["none", "daily", "weekly", "monthly", "yearly"];
-const CHALLENGE_MODE_OPTIONS: ChallengeMode[] = ["progress", "leaderboard"];
+// Rewards are threshold/progress only going forward — leaderboard mode is retired from
+// creation. It's only offered here when editing a campaign that's already leaderboard
+// mode, so in-flight leaderboard campaigns can still be edited until they finish out.
+const CHALLENGE_MODE_OPTIONS: ChallengeMode[] = ["progress"];
 const LEADERBOARD_TIEBREAKER_OPTIONS: ChallengeLeaderboardTiebreaker[] = ["first_to_score", "latest_activity"];
 
 function gameTypeLabel(gameType: string): string {
@@ -411,6 +419,34 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     setMode("create");
   }
 
+  // ── Create Reward wizard wiring (Phase 5) ───────────────────────────────────
+  // The wizard itself is shared with the Partner Dashboard
+  // (components/rewards/CreateRewardWizard.tsx); only these two callbacks differ,
+  // pointed at /api/admin instead of /api/owner/rewards.
+  const fetchRewardContext = useCallback(
+    async (venueId: string, definitionId: string): Promise<RewardCreationContextDTO> => {
+      const res = await fetch(
+        `/api/admin?resource=reward-context&venueId=${encodeURIComponent(venueId)}&definitionId=${encodeURIComponent(definitionId)}`,
+        { cache: "no-store" }
+      );
+      const json = (await res.json()) as { ok: boolean; context?: RewardCreationContextDTO; error?: string };
+      if (!json.ok || !json.context) throw new Error(json.error ?? "Couldn't check that game's schedule.");
+      return json.context;
+    },
+    []
+  );
+
+  const submitReward = useCallback(async (submission: CreateRewardSubmission) => {
+    const res = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resource: "rewards", ...submission }),
+    });
+    const json = (await res.json()) as { ok: boolean; error?: string };
+    if (!json.ok) return { ok: false as const, error: json.error ?? "Couldn't create that reward." };
+    return { ok: true as const };
+  }, []);
+
   function beginEdit(campaign: AdminChallengeCampaign) {
     setEditingCampaignId(campaign.id);
     setFormName(campaign.name);
@@ -498,9 +534,42 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     }
   }
 
-  // ── Create form render ────────────────────────────────────────────────────
+  // ── Create Reward wizard render (Phase 5) ───────────────────────────────────
+  // New rewards go through the shared wizard; editing an existing (possibly
+  // legacy) campaign still uses the raw-field form below.
 
-  if (mode !== "list") {
+  if (mode === "create") {
+    return (
+      <div className="max-w-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-slate-900">New Reward</h2>
+        </div>
+        <CreateRewardWizard
+          variant="admin"
+          venues={venues}
+          defaultVenueId={selectedVenueId !== "all" ? selectedVenueId : undefined}
+          scheduleLinkHref="/admin/live-trivia"
+          fetchContext={fetchRewardContext}
+          onSubmit={submitReward}
+          onCreated={() => {
+            resetCreateForm();
+            setMode("list");
+            setStatusMessage("Reward created.");
+            fetchCampaigns(1);
+            setPage(1);
+          }}
+          onCancel={() => {
+            resetCreateForm();
+            setMode("list");
+          }}
+        />
+      </div>
+    );
+  }
+
+  // ── Edit form render ─────────────────────────────────────────────────────
+
+  if (mode === "edit") {
     const field = adminField;
     const lbl = adminLabel;
 
@@ -508,7 +577,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900">
-            {mode === "edit" ? "Edit Challenge Campaign" : "New Challenge Campaign"}
+            {mode === "edit" ? "Edit Reward" : "New Reward"}
           </h2>
           <button
             onClick={() => { resetCreateForm(); setMode("list"); }}
@@ -783,7 +852,10 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
               value={formChallengeMode}
               onChange={(e) => setFormChallengeMode(e.target.value as ChallengeMode)}
             >
-              {CHALLENGE_MODE_OPTIONS.map((mode) => (
+              {(formChallengeMode === "leaderboard"
+                ? [...CHALLENGE_MODE_OPTIONS, "leaderboard" as ChallengeMode]
+                : CHALLENGE_MODE_OPTIONS
+              ).map((mode) => (
                 <option key={mode} value={mode}>
                   {challengeModeLabel(mode)}
                 </option>
@@ -791,7 +863,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             </select>
             <p className="mt-1.5 text-xs text-slate-500">
               {formChallengeMode === "leaderboard"
-                ? "Users are ranked by eligible points earned during the challenge window. The user with the most points when the challenge closes wins."
+                ? "Legacy leaderboard reward — retired from creation. Users are ranked by eligible points earned during the window; switch to Progress Gauge to move this reward onto the current model."
                 : "Users fill a progress gauge by earning eligible points. The first user to reach the points target wins immediately."}
             </p>
           </div>
@@ -969,7 +1041,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Challenge Campaigns</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Rewards</h2>
             <p className="text-xs text-slate-500">
               {selectedVenueId === "all" ? `${total} total campaigns` : `${total} campaigns for selected venue`}
             </p>

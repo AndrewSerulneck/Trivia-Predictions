@@ -348,7 +348,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
       {/* ── Active campaign progress gauges ── */}
       {!loading && activeCampaigns.length > 0 && (
         <section className="rounded-2xl border border-cyan-700/60 bg-gradient-to-br from-cyan-950 to-slate-900 p-4 shadow-lg shadow-cyan-950/50">
-          <h2 className="text-base font-bold tracking-tight text-cyan-100">Active Challenges</h2>
+          <h2 className="text-base font-bold tracking-tight text-cyan-100">Active Rewards</h2>
           <p className="mt-0.5 text-xs text-cyan-400/80">Points update every 15 s</p>
 
           <ul className="mt-3 space-y-5">
@@ -361,8 +361,6 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                   : 0;
 
               const isLeaderboard = campaign.challengeMode === "leaderboard";
-              const leaderboardEntries = campaign.leaderboard?.topEntries ?? [];
-              const leaderboardViewer = campaign.leaderboard?.viewer ?? null;
 
               return (
                 <li key={campaign.id} className="space-y-2">
@@ -391,65 +389,9 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                   </div>
 
                   {isLeaderboard ? (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-400/80">
-                          Live Rankings
-                        </p>
-                        {leaderboardViewer && !leaderboardViewer.inTop && leaderboardViewer.rank ? (
-                          <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-[9px] font-black text-cyan-300">
-                            Your rank: #{leaderboardViewer.rank}
-                          </span>
-                        ) : null}
-                      </div>
-                      {leaderboardEntries.length === 0 ? (
-                        <p className="text-[11px] text-cyan-300/50">
-                          No one has scored yet — be the first!
-                        </p>
-                      ) : (
-                        <ol aria-label={`${campaign.name} leaderboard`} className="space-y-0.5">
-                          {leaderboardEntries.map((entry) => {
-                            const isViewer = entry.userId === userId;
-                            return (
-                              <li
-                                key={entry.userId}
-                                className={`flex items-center gap-2 rounded-md px-2 py-1 text-[11px] ${
-                                  isViewer ? "bg-cyan-500/15" : "bg-slate-900/40"
-                                }`}
-                              >
-                                <span className="w-5 shrink-0 text-center font-black tabular-nums text-slate-400">
-                                  {entry.rank}
-                                </span>
-                                <span className={`min-w-0 flex-1 truncate font-semibold ${isViewer ? "text-cyan-200" : "text-slate-200"}`}>
-                                  {entry.username}{isViewer ? " (you)" : ""}
-                                </span>
-                                <span className="shrink-0 font-black tabular-nums text-amber-200">
-                                  {entry.points.toLocaleString()} pts
-                                </span>
-                              </li>
-                            );
-                          })}
-                          {leaderboardViewer && !leaderboardViewer.inTop ? (
-                            <>
-                              <li aria-hidden className="py-0.5">
-                                <div className="border-t border-cyan-700/40" />
-                              </li>
-                              <li className="flex items-center gap-2 rounded-md bg-cyan-500/15 px-2 py-1 text-[11px]">
-                                <span className="w-5 shrink-0 text-center font-black tabular-nums text-slate-400">
-                                  {leaderboardViewer.rank ?? "—"}
-                                </span>
-                                <span className="min-w-0 flex-1 truncate font-semibold text-cyan-200">
-                                  {leaderboardViewer.username ?? "You"} (you)
-                                </span>
-                                <span className="shrink-0 font-black tabular-nums text-amber-200">
-                                  {leaderboardViewer.points.toLocaleString()} pts
-                                </span>
-                              </li>
-                            </>
-                          ) : null}
-                        </ol>
-                      )}
-                    </div>
+                    // Legacy leaderboard-mode reward — finishing out its current cycle.
+                    // Standings are never rendered here anymore (Rewards is progress-only).
+                    <p className="text-[11px] text-cyan-300/60">In progress — check back for results.</p>
                   ) : (
                     <GaugeBar
                       current={campaign.progressPoints}
@@ -472,7 +414,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
       <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
         <h2 className="text-lg font-semibold text-ht-fg-primary">Redeem Prize</h2>
         <p className="mt-1 text-sm text-ht-fg-muted">
-          Claim your challenge wins. Each prize can only be redeemed once.
+          Claim your reward wins. Each prize can only be redeemed once.
         </p>
 
         {loading ? (
@@ -482,7 +424,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
         ) : null}
 
         {!loading && wins.length === 0 ? (
-          <p className="mt-3 text-sm text-ht-fg-secondary">No redeemable challenge wins found for this venue.</p>
+          <p className="mt-3 text-sm text-ht-fg-secondary">No redeemable reward wins found for this venue.</p>
         ) : null}
 
         {unclaimedWins.length > 0 ? (

@@ -40,6 +40,11 @@ export type ChallengeCampaignCard = {
   winnerUsername?: string | null;
   prizeClaimedAt?: string | null;
   isActive: boolean;
+  // ── Rewards (Phase 6) ── current-cycle multi-winner state, viewer-scoped.
+  winnerQuota?: number;
+  winnerUsernames?: string[];
+  quotaRemaining?: number;
+  viewerWon?: boolean;
 };
 
 export const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {

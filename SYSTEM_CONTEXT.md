@@ -4,7 +4,7 @@
 - **Project Essence:**
   - A mobile-first, venue-based social gaming platform where users join a specific physical venue and compete in game experiences: Live Trivia, Speed Trivia, Sports Bingo, Pick'em, and Fantasy Sports.
   - Core value loop: shared, location-scoped competition → leaderboard progression → challenge wins → prizes (venue discounts/coupons) → users return to earn more → larger audience → higher ad revenue.
-  - Venue Home third panel is **Challenges** (campaign-style progression), while legacy **head-to-head user challenges** remain a separate subsystem.
+  - Venue Home third panel is **Rewards** (campaign-style progression toward venue-offered prizes), while legacy **head-to-head user challenges** remain a separate subsystem.
 
 ## 0. Strategic Direction (Next Few Weeks — READ FIRST)
 > This section describes where the product is deliberately heading. When making routing, navigation, or IA decisions, align with this direction even if the current code does not yet reflect it. The step-by-step build is tracked in **`docs/partner-dashboard-plan.md`** (canonical plan).
@@ -37,18 +37,25 @@
   - User chooses/arrives with venue context (`venueId`), profile is ensured via API (`/api/join/profile`, `/api/join/ensure-venue`).
 - Venue Selection -> Home Screen:
   - User lands at `/venue/[venueId]` (rendered by `VenueHubClient`), which is the venue home hub.
-  - Home includes game cards, user status, badges, leaderboard, and a Challenges panel with campaign cards/progress.
+  - Home includes game cards, user status, badges, leaderboard, and a Rewards panel with progress-gauge cards toward venue-offered prizes.
 - Home Screen -> Game Entry (Live Trivia / Speed Trivia / Bingo / Pick'Em / Fantasy):
   - Selecting a game card triggers an app-like transition (`runVenueGameOpenTransition`).
   - Game routes use `GameLandingExperience` as an intermediate rules/entry surface before full play state.
   - Inside game experience, Back to Venue uses coordinated return transitions (`runVenueGameReturnTransition`).
 - Resume behavior:
   - `GameLandingExperience` checks resumable sessions (`hasResumableSession`) and can auto-resume into active gameplay.
-- Prize flow:
-  - Users win prizes by completing challenges (point thresholds, ranked challenge wins, etc.).
-  - When a challenge is won, the challenge badge becomes clickable and routes to `/redeem-prizes`.
-  - Users also receive an in-app notification routed to `/redeem-prizes`.
-  - Prize delivery method (discount codes, in-app coupons, or POS integration) is TBD; infrastructure is not yet built.
+- Prize flow (Rewards system, `docs/rewards-system-plan.md`):
+  - Users win prizes by crossing a point threshold in a Reward (progress mode only —
+    leaderboard mode is retired from creation). Each Reward has a `winner_quota`: up to that
+    many users win per cycle, enforced atomically via the `award_cycle_winner` RPC against the
+    `challenge_cycle_winners` ledger.
+  - When a user wins, their Rewards card flips to a "check your Redeem Prizes page" state and
+    they receive an in-app notification routed to `/redeem-prizes`.
+  - Non-winners see a "quota exhausted, congrats to `<winners>`" message once the cycle's quota
+    fills.
+  - Prize delivery is in-app coupon + staff-taps-redeemed (no POS/gift-card-issuance
+    integration): the coupon (menu item discount or gift card) renders on `/redeem-prizes`
+    (`components/prizes/PrizeWalletPanel.tsx`) until staff mark it redeemed or it expires.
 
 ## 3. Component Architecture (UI Layering Model)
 - Root shell (`app/layout.tsx`):
@@ -187,11 +194,23 @@
 - The clickable challenge badge on a won challenge also routes to `/redeem-prizes`.
 - Lib: `lib/notifications.ts`, API: `/api/notifications`.
 
-## 8. Prizes (Upcoming — Not Yet Built)
-- Central to the monetization loop: venues offer prizes (discounts, coupons) to attract more players → more players → higher ad revenue.
-- Users win prizes by completing Challenge Campaign goals (point thresholds in a time window, ranked challenge wins, etc.).
-- Prize delivery method is undecided: options include emailed discount codes (requires future email collection), in-app coupon codes shown on `/redeem-prizes`, or direct POS integration.
-- `/redeem-prizes` page exists and is accessible from the hamburger menu; prize fulfillment infrastructure is not yet built.
+## 8. Prizes (Rewards system — built)
+- Central to the monetization loop: venues offer prizes (menu-item discounts, gift cards) to attract more players → more players → higher ad revenue.
+- Venues don't author prizes free-form — they run the **Create Reward wizard**
+  (`components/rewards/CreateRewardWizard.tsx`, shared by admin and the Partner Dashboard)
+  which picks a **reward definition** (registry: `lib/rewardDefinitions.ts`; today, the Live
+  Trivia Challenge), a cadence gated on the venue's existing Live Trivia schedule, a prize
+  (menu item + dollar/percent discount, or gift card), and a winner quantity per cycle.
+- Backend reuses `challenge_campaigns` (progress mode only) with Rewards-specific columns
+  (`winner_quota`, `reward_definition_id`, `prize_kind`, etc. — see the plan §3a) and a
+  count-guarded, atomically-capped multi-winner ledger (`challenge_cycle_winners` +
+  `award_cycle_winner` RPC — see the plan §3b).
+- Prize delivery is **in-app coupon + staff-taps-redeemed**: winners see a coupon on
+  `/redeem-prizes` (`components/prizes/PrizeWalletPanel.tsx`); staff visually verify and mark
+  it redeemed, or it expires. No POS or gift-card-issuance integration in scope.
+- Rollout flag: `NEXT_PUBLIC_REWARDS_ENABLED` (`lib/rewardsFlags.ts`) — off clamps every
+  reward to single-winner behavior (today's Challenges/Competitions parity), fully reversible.
+- `/redeem-prizes` page is accessible from the hamburger menu.
 
 ## 9. Admin Panel
 - Route: `/admin` and `/admin/[section]`.
@@ -201,12 +220,13 @@
   - **Venue Profiles** — venue configuration.
   - **Trivia Questions** — question bank management, create question, question review.
   - **Advertising** — manage ads, create ad, placement builder, ad analytics.
-  - **Challenges & Events** — challenge manager, Live Trivia schedules.
+  - **Rewards & Events** — Rewards manager (Create Reward wizard + list), Live Trivia schedules.
   - **Operations** — Pick'em settlement.
 - Venue-operator-facing dashboard: **now in active development** as the **Partner Dashboard** (`/owner/*`, reached via "Partner Login" on `/info`). See §0 Strategic Direction and `docs/partner-dashboard-plan.md`. Distinct from `/admin` (internal staff): the Partner Dashboard is owner-scoped (`requireOwnerAuth`, `venue_owner_venues`) and mobile-first, letting subscriber venues self-serve scheduling, the TV display URL, and billing for only their own venue(s).
 
 ### Partner / Owner surface (current state)
 - **Auth:** `venue_owners` + `venue_owner_venues` tables; guarded by `lib/requireOwnerAuth.ts`. Pages: `/owner/login`, `/owner/register`, `/owner/forgot-password`, `/owner/reset-password`, `/owner/dashboard`, `/owner/billing`, `/owner/billing/setup`. Shared shell: `components/owner/OwnerShell.tsx`.
+- **Rewards:** `/owner/competitions` (Rewards page) hosts the shared `CreateRewardWizard` (`variant="owner"`) in place of the old raw-field Competitions template gallery — see §8 and `docs/rewards-system-plan.md`.
 - **Billing (SlimCD today → Stripe this week):** `app/api/owner/billing/*` (`billing`, `subscription`, `session`, `return`, `card`; `subscribe` is a deprecated 410 stub). `lib/slimcd.ts` creates hosted-payment sessions; `billing_subscriptions` stores `slimcd_recurring_token`, status, period. The Stripe migration replaces the session/return/card flow and recurring-token model — see the plan.
 - **Live-game scheduling (to be owner-scoped):** `app/api/category-blitz/schedules/*` + `lib/categoryBlitzSchedules.ts` currently require **admin** auth. The Partner Dashboard needs owner-scoped create/list/delete restricted to the caller's `venue_owner_venues`.
 - **TV display URL:** public venue screen at `app/venue/[venueId]/screen` + `app/api/venue-screen/state`; surfaced (URL + QR) in `app/owner/display/page.tsx`. The URL is built with `gameUrl()` from `lib/domainSplit.ts`, so it automatically points at `play.` once the domain split is enabled.
@@ -277,7 +297,11 @@
   - `GameLandingExperience` is the canonical boundary between venue home and deep game view; keep resume checks, entry cards, and back behavior consistent across game types.
 - Challenge system separation contract:
   - **Head-to-head user challenges** remain on existing endpoints/modules (`/api/challenges`, `lib/competition.ts`, `PendingChallengesPanel`).
-  - **Campaign challenges** use separate modules/endpoints (`lib/challengeCampaigns.ts`, `/api/challenge-campaigns`, admin resource `challenge-campaigns`).
+  - **Campaign challenges (the Rewards system)** use separate modules/endpoints (`lib/challengeCampaigns.ts`, `/api/challenge-campaigns`, admin resource `challenge-campaigns`) plus the Rewards-specific layer on top (`lib/rewardDefinitions.ts`, `lib/rewards.ts`, `/api/owner/rewards`).
   - Do not merge or repurpose one model into the other without a deliberate migration plan.
+- Rewards system contract:
+  - Reward creation is registry-driven, not free-form — new reward types are added as one entry in `lib/rewardDefinitions.ts` (see `AGENTS.md`), never as a bespoke form.
+  - Leaderboard mode is retired from Reward creation; only progress (threshold+quantity) rewards are created going forward.
+  - Multi-winner quota enforcement must go through the `award_cycle_winner` RPC (atomic, advisory-locked) — never a plain count-then-insert in application code.
 - Supabase migration security contract:
   - For any Supabase-related task (new table, schema change, policy update, grants), agents must review and follow `supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md` before writing SQL migrations.

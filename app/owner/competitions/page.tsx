@@ -5,30 +5,17 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { Dropdown } from "@/components/ui/Dropdown";
-import { getTimeZoneParts } from "@/lib/categoryBlitzScheduleTime";
-import { OWNER_COMPETITION_TEMPLATES, type OwnerCompetitionTemplate } from "@/lib/ownerCompetitionTemplates";
+import {
+  CreateRewardWizard,
+  type CreateRewardSubmission,
+  type RewardCreationContextDTO,
+} from "@/components/rewards/CreateRewardWizard";
+import { OWNER_COMPETITION_TEMPLATES } from "@/lib/ownerCompetitionTemplates";
+import { getRewardDefinition } from "@/lib/rewardDefinitions";
 import type { ChallengeCampaign, ChallengeLeaderboardEntry } from "@/types";
-
-const TIMEZONES = [
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Phoenix",
-  "America/Anchorage",
-  "Pacific/Honolulu",
-];
 
 type Venue = { id: string; name: string };
 type Competition = ChallengeCampaign & { progressPoints: number };
-
-const TEMPLATE_ACCENT_CLASS: Record<string, string> = {
-  pickem: "bg-ht-game-pickem",
-  bingo: "bg-ht-game-bingo",
-  fantasy: "bg-ht-game-fantasy",
-  trivia: "bg-ht-game-trivia",
-  blitz: "bg-ht-game-blitz",
-};
 
 const TEMPLATE_GLYPH: Record<string, string> = {
   pickem_race: "🏈",
@@ -38,10 +25,15 @@ const TEMPLATE_GLYPH: Record<string, string> = {
   house_party: "🎉",
 };
 
-// A campaign doesn't store which template created it (templates are expanded at
-// creation, not kept as a FK) — recover a display glyph by matching gameTypes +
-// challengeMode back to the closest template. Falls back to a generic trophy.
+// Rewards (Phase 4+) stamp rewardDefinitionId directly — glyph comes straight
+// from the registry. Pre-Rewards owner Competitions never set that column
+// (templates were expanded at creation, not kept as a FK), so those fall back to
+// matching gameTypes + challengeMode against the retired OWNER_COMPETITION_TEMPLATES
+// registry, and anything unmatched gets a generic trophy.
 function glyphForCompetition(competition: Competition): string {
+  if (competition.rewardDefinitionId) {
+    return getRewardDefinition(competition.rewardDefinitionId)?.glyph ?? "🏆";
+  }
   const sortedTypes = [...competition.gameTypes].sort().join(",");
   const match = OWNER_COMPETITION_TEMPLATES.find(
     (t) => [...t.gameTypes].sort().join(",") === sortedTypes && t.challengeMode === competition.challengeMode,
@@ -66,35 +58,6 @@ const formatTimeLabel = (time: string | undefined): string => {
   const hour12 = h % 12 === 0 ? 12 : h % 12;
   return `${hour12}:${String(m ?? 0).padStart(2, "0")}${period}`;
 };
-
-// Default date/time windows for a template's `defaultWindow`, computed in the
-// venue's local timezone. "tonight" = today 6pm–11pm; "this_week" = the current
-// Mon–Sun (Monday 6pm start, Sunday 11pm end) containing today.
-function defaultWindowFor(shape: "tonight" | "this_week", timeZone: string) {
-  const now = new Date();
-  const parts = getTimeZoneParts(now, timeZone);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const toDateStr = (y: number, mo: number, d: number) => `${y}-${pad(mo)}-${pad(d)}`;
-
-  if (shape === "tonight") {
-    const today = toDateStr(parts.year, parts.month, parts.day);
-    return { startDate: today, startTime: "18:00", endDate: today, endTime: "23:00" };
-  }
-
-  // this_week: find this week's Monday (weekday: sun=0..sat=6 per getTimeZoneParts).
-  const weekdayIndex = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].indexOf(parts.weekday);
-  const daysSinceMonday = (weekdayIndex + 6) % 7; // mon=0, sun=6
-  const mondayMs = Date.UTC(parts.year, parts.month - 1, parts.day) - daysSinceMonday * 86400000;
-  const sundayMs = mondayMs + 6 * 86400000;
-  const mondayDate = new Date(mondayMs);
-  const sundayDate = new Date(sundayMs);
-  return {
-    startDate: toDateStr(mondayDate.getUTCFullYear(), mondayDate.getUTCMonth() + 1, mondayDate.getUTCDate()),
-    startTime: "18:00",
-    endDate: toDateStr(sundayDate.getUTCFullYear(), sundayDate.getUTCMonth() + 1, sundayDate.getUTCDate()),
-    endTime: "23:00",
-  };
-}
 
 const OwnerCompetitionsPage = () => {
   const router = useRouter();
@@ -154,6 +117,30 @@ const OwnerCompetitionsPage = () => {
   const ended = useMemo(() => competitions.filter((c) => !c.isActive || c.winnerUserId), [competitions]);
   const selectedVenue = venues.find((v) => v.id === selectedVenueId);
 
+  const fetchRewardContext = useCallback(
+    async (venueId: string, definitionId: string): Promise<RewardCreationContextDTO> => {
+      const res = await fetch(
+        `/api/owner/rewards/context?venueId=${encodeURIComponent(venueId)}&definitionId=${encodeURIComponent(definitionId)}`,
+        { cache: "no-store" },
+      );
+      const json = (await res.json()) as { ok: boolean; context?: RewardCreationContextDTO; error?: string };
+      if (!json.ok || !json.context) throw new Error(json.error ?? "Couldn't check that game's schedule.");
+      return json.context;
+    },
+    [],
+  );
+
+  const submitReward = useCallback(async (submission: CreateRewardSubmission) => {
+    const res = await fetch("/api/owner/rewards", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(submission),
+    });
+    const json = (await res.json()) as { ok: boolean; error?: string };
+    if (!json.ok) return { ok: false as const, error: json.error ?? "Couldn't create that reward." };
+    return { ok: true as const };
+  }, []);
+
   const handleDelete = async (id: string) => {
     if (
       !confirm(
@@ -173,7 +160,7 @@ const OwnerCompetitionsPage = () => {
   };
 
   return (
-    <OwnerShell title="Competitions" subtitle="Contests for the games your guests play anytime" maxWidth="lg" variant="dark">
+    <OwnerShell title="Rewards" subtitle="Loyalty challenges and prizes for your guests" maxWidth="lg" variant="dark">
       <div className="space-y-5">
         <div className="flex items-center justify-between gap-3">
           <Link
@@ -217,12 +204,17 @@ const OwnerCompetitionsPage = () => {
               onClick={() => setShowForm((v) => !v)}
               className="w-full rounded-xl border border-ht-soft bg-ht-cyan-500 px-4 py-3 text-sm font-black text-slate-950 transition active:translate-y-px"
             >
-              {showForm ? "Cancel" : "+ Start a competition"}
+              {showForm ? "Cancel" : "+ Create Reward"}
             </button>
 
             {showForm ? (
-              <CompetitionForm
-                venueId={selectedVenueId}
+              <CreateRewardWizard
+                variant="owner"
+                venues={[{ id: selectedVenueId, name: selectedVenue?.name ?? "This venue" }]}
+                defaultVenueId={selectedVenueId}
+                scheduleLinkHref="/owner/schedule"
+                fetchContext={fetchRewardContext}
+                onSubmit={submitReward}
                 onCreated={() => {
                   setShowForm(false);
                   void fetchCompetitions();
@@ -242,11 +234,10 @@ const OwnerCompetitionsPage = () => {
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ht-game-pickem text-2xl">
                   🏆
                 </div>
-                <p className="ht-h2 mt-4">No competitions running</p>
+                <p className="ht-h2 mt-4">No rewards running</p>
                 <p className="mt-2 text-sm font-semibold text-ht-muted">
-                  Start a Pick&apos;em Race, Prop Bingo Night, or another contest for{" "}
-                  {selectedVenue?.name ?? "your venue"} — pick a template and a window, and it&apos;ll appear
-                  here.
+                  Create a Live Trivia Challenge for {selectedVenue?.name ?? "your venue"} — pick a prize and a
+                  quantity, and it&apos;ll appear here.
                 </p>
               </div>
             ) : null}
@@ -336,266 +327,6 @@ function CompetitionList({
           </div>
         );
       })}
-    </div>
-  );
-}
-
-type PrizeChoice = "none" | "description" | "gift_certificate";
-
-function CompetitionForm({
-  venueId,
-  onCreated,
-  onCancel,
-}: {
-  venueId: string;
-  onCreated: () => void;
-  onCancel: () => void;
-}) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [template, setTemplate] = useState<OwnerCompetitionTemplate | null>(null);
-  const [title, setTitle] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [startTime, setStartTime] = useState("18:00");
-  const [endDate, setEndDate] = useState("");
-  const [endTime, setEndTime] = useState("23:00");
-  const [timezone, setTimezone] = useState("America/New_York");
-  const [prizeChoice, setPrizeChoice] = useState<PrizeChoice>("none");
-  const [prizeDescription, setPrizeDescription] = useState("");
-  const [prizeAmount, setPrizeAmount] = useState("25");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handlePickTemplate = (picked: OwnerCompetitionTemplate) => {
-    setTemplate(picked);
-    const defaults = defaultWindowFor(picked.defaultWindow, timezone);
-    setStartDate(defaults.startDate);
-    setStartTime(defaults.startTime);
-    setEndDate(defaults.endDate);
-    setEndTime(defaults.endTime);
-    setStep(2);
-  };
-
-  const summaryLabel = useMemo(() => {
-    if (!startDate || !endDate) return null;
-    return `Runs ${formatDateLabel(startDate, timezone)} ${formatTimeLabel(startTime)} → ${formatDateLabel(endDate, timezone)} ${formatTimeLabel(endTime)}`;
-  }, [startDate, startTime, endDate, endTime, timezone]);
-
-  const handleSave = async () => {
-    if (!template) return;
-    if (!startDate || !endDate) {
-      setError("A start and end date are required.");
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      const prize =
-        prizeChoice === "description"
-          ? { type: "description" as const, description: prizeDescription.trim() }
-          : prizeChoice === "gift_certificate"
-            ? { type: "gift_certificate" as const, amount: Math.max(0.01, Number(prizeAmount) || 0) }
-            : undefined;
-
-      const res = await fetch("/api/owner/competitions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          venueId,
-          templateId: template.id,
-          title: title.trim() || undefined,
-          startDate,
-          startTime,
-          endDate,
-          endTime,
-          timezone,
-          prize,
-        }),
-      });
-      const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!json.ok) throw new Error(json.error ?? "Couldn't start that competition.");
-      onCreated();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't start that competition.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="space-y-4 rounded-2xl border border-ht-hairline bg-ht-surface p-4 shadow-ht-card">
-      {step === 1 ? (
-        <div className="space-y-2">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Pick a competition</p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {OWNER_COMPETITION_TEMPLATES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => handlePickTemplate(t)}
-                className="flex items-start gap-3 rounded-xl border border-ht-hairline bg-ht-elevated/50 p-3 text-left transition hover:border-ht-cyan-400"
-              >
-                <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base ${TEMPLATE_ACCENT_CLASS[t.accent] ?? "bg-ht-game-pickem"}`}
-                >
-                  {TEMPLATE_GLYPH[t.id] ?? "🏆"}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-black text-ht-primary">{t.name}</div>
-                  <div className="mt-0.5 text-[11px] font-semibold text-ht-muted">{t.pitch}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-          <button type="button" onClick={onCancel} className="w-full py-2 text-center text-sm font-bold text-ht-muted">
-            Cancel
-          </button>
-        </div>
-      ) : step === 2 && template ? (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setStep(1)} className="text-sm font-bold text-ht-cyan-300">
-              ← {template.name}
-            </button>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-ht-muted">Name (optional)</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={template.name}
-              className="w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-base font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-ht-muted">Starts</label>
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-sm font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-                />
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-sm font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-ht-muted">Ends</label>
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-sm font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-                />
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-sm font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-ht-muted">Timezone</label>
-            <Dropdown
-              value={timezone}
-              onChange={setTimezone}
-              options={TIMEZONES.map((tz) => ({ value: tz, label: tz }))}
-              ariaLabel="Timezone"
-              className="w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-base font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-            />
-          </div>
-
-          {summaryLabel ? (
-            <div className="rounded-xl border border-ht-cyan-500/30 bg-ht-cyan-500/10 px-3 py-2 text-xs font-bold text-ht-cyan-300">
-              {summaryLabel}
-            </div>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={() => setStep(3)}
-            className="w-full rounded-xl border border-ht-soft bg-ht-cyan-500 px-4 py-2.5 text-sm font-black text-slate-950"
-          >
-            Next: Prize
-          </button>
-        </div>
-      ) : step === 3 && template ? (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setStep(2)} className="text-sm font-bold text-ht-cyan-300">
-              ← Back
-            </button>
-          </div>
-
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Prize (optional)</p>
-
-          <div className="grid grid-cols-3 gap-2">
-            {(["none", "description", "gift_certificate"] as PrizeChoice[]).map((choice) => (
-              <button
-                key={choice}
-                type="button"
-                onClick={() => setPrizeChoice(choice)}
-                className={`rounded-xl border p-2.5 text-xs font-black ${
-                  prizeChoice === choice ? "border-ht-cyan-400 bg-ht-elevated text-ht-primary" : "border-ht-hairline bg-ht-elevated/50 text-ht-muted"
-                }`}
-              >
-                {choice === "none" ? "None" : choice === "description" ? "Custom" : "Gift card"}
-              </button>
-            ))}
-          </div>
-
-          {prizeChoice === "description" ? (
-            <input
-              type="text"
-              value={prizeDescription}
-              onChange={(e) => setPrizeDescription(e.target.value)}
-              placeholder="e.g. Round of drinks for the table"
-              className="w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-base font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-            />
-          ) : null}
-
-          {prizeChoice === "gift_certificate" ? (
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-ht-muted">Amount ($)</label>
-              <input
-                type="number"
-                min={1}
-                step="0.01"
-                value={prizeAmount}
-                onChange={(e) => setPrizeAmount(e.target.value)}
-                className="w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-base font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-              />
-            </div>
-          ) : null}
-
-          {error ? (
-            <div className="rounded-xl border border-ht-rose-500/30 bg-ht-rose-500/10 px-3 py-2 text-xs font-bold text-ht-rose-300">
-              {error}
-            </div>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving}
-            className="w-full rounded-xl border border-ht-soft bg-ht-cyan-500 px-4 py-2.5 text-sm font-black text-slate-950 disabled:opacity-50"
-          >
-            {saving ? "Starting…" : "Start competition"}
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }

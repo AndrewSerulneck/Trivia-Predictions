@@ -53,6 +53,17 @@ import {
   listChallengeCycleWinners,
   updateChallengeCampaign,
 } from "@/lib/challengeCampaigns";
+import {
+  REWARD_INVALID_PRIZE_MESSAGE,
+  REWARD_INVALID_QUANTITY_MESSAGE,
+  REWARD_INVALID_THRESHOLD_MESSAGE,
+  REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE,
+  REWARD_UNKNOWN_DEFINITION_MESSAGE,
+  REWARD_UNSUPPORTED_CADENCE_MESSAGE,
+  createReward,
+  resolveRewardCreationContext,
+  type RewardPrizeInput,
+} from "@/lib/rewards";
 import { recordAdClick, recordAdImpression } from "@/lib/ads";
 import type {
   AdDisplayTrigger,
@@ -303,6 +314,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, prize });
     }
 
+    if (resource === "reward-context") {
+      const venueId = String(searchParams.get("venueId") ?? "").trim();
+      const definitionId = String(searchParams.get("definitionId") ?? "").trim();
+      if (!venueId) {
+        return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });
+      }
+      try {
+        const context = await resolveRewardCreationContext(venueId, definitionId);
+        return NextResponse.json({ ok: true, context });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to resolve reward context.";
+        const status = message === REWARD_UNKNOWN_DEFINITION_MESSAGE ? 400 : 500;
+        return NextResponse.json({ ok: false, error: message }, { status });
+      }
+    }
+
     if (resource === "session") {
       return NextResponse.json({ ok: true, isAdmin: true, scope: "join" });
     }
@@ -381,7 +408,7 @@ export async function GET(request: Request) {
       {
         ok: false,
         error:
-          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-geography, resource=ads-debug, resource=pickem-unsettled, resource=pickem-matchups, resource=predictions-pending, resource=challenge-campaigns, resource=venue-screen-sponsors, or resource=live-showdown-schedules.",
+          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-geography, resource=ads-debug, resource=pickem-unsettled, resource=pickem-matchups, resource=predictions-pending, resource=challenge-campaigns, resource=reward-context, resource=venue-screen-sponsors, or resource=live-showdown-schedules.",
       },
       { status: 400 }
     );
@@ -533,6 +560,15 @@ export async function POST(request: Request) {
           prizeType?: PrizeType | null;
           prizeGiftCertificateAmount?: number | null;
           isActive?: boolean;
+        }
+      | {
+          resource: "rewards";
+          venueId: string;
+          definitionId: string;
+          cadence?: CampaignRecurringType;
+          threshold?: number;
+          winnerQuota?: number;
+          prize?: RewardPrizeInput;
         }
       | {
           resource: "apply-placeholder-inline";
@@ -864,6 +900,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, item });
     }
 
+    if (body.resource === "rewards") {
+      try {
+        const item = await createReward({
+          venueId: body.venueId,
+          definitionId: body.definitionId,
+          cadence: body.cadence ?? "none",
+          threshold: Number(body.threshold),
+          winnerQuota: Number(body.winnerQuota),
+          prize: body.prize as RewardPrizeInput,
+          createdByOwnerId: null,
+        });
+        return NextResponse.json({ ok: true, item });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to create reward.";
+        const status =
+          message === REWARD_UNKNOWN_DEFINITION_MESSAGE ||
+          message === REWARD_UNSUPPORTED_CADENCE_MESSAGE ||
+          message === REWARD_INVALID_THRESHOLD_MESSAGE ||
+          message === REWARD_INVALID_QUANTITY_MESSAGE ||
+          message === REWARD_INVALID_PRIZE_MESSAGE ||
+          message === REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE
+            ? 400
+            : 500;
+        return NextResponse.json({ ok: false, error: message }, { status });
+      }
+    }
+
     if (body.resource === "live-showdown-schedules") {
       const item = await createAdminLiveShowdownSchedule({
         title: body.title,
@@ -904,7 +967,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "Unknown resource. Use trivia, ads, venues, ads-track, predictions-settle, predictions-auto-settle, pickem-settle, challenge-campaigns, or live-showdown-schedules.",
+          "Unknown resource. Use trivia, ads, venues, ads-track, predictions-settle, predictions-auto-settle, pickem-settle, challenge-campaigns, rewards, or live-showdown-schedules.",
       },
       { status: 400 }
     );

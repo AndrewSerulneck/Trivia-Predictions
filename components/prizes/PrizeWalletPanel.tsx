@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
-import type { ChallengeCampaignWin, PrizeType, PrizeWin } from "@/types";
+import type { ChallengeCampaignWin, PrizeType, PrizeWin, RewardMenuItem } from "@/types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -34,6 +34,32 @@ function prizeLabel(prizeType: PrizeType): string {
   if (prizeType === "wine_bottle") return "BOTTLE OF WINE";
   if (prizeType === "free_appetizer") return "FREE APPETIZER";
   return "GIFT CERTIFICATE";
+}
+
+// ── Rewards (Phase 2/6) prize-model display helpers ──────────────────────────
+
+const MENU_ITEM_LABEL: Record<RewardMenuItem, string> = {
+  whole_order: "Whole Order",
+  appetizer: "Appetizer",
+  entree: "Entrée",
+  dessert: "Dessert",
+  wine_bottle: "Bottle of Wine",
+  other: "Menu Item",
+};
+
+function menuItemLabel(win: ChallengeCampaignWin): string {
+  if (win.prizeMenuItem === "other") return win.prizeMenuItemName?.trim() || "Menu Item";
+  return win.prizeMenuItem ? MENU_ITEM_LABEL[win.prizeMenuItem] : "Menu Item";
+}
+
+function discountLabel(win: ChallengeCampaignWin): string {
+  if (win.prizeDiscountKind === "percent" && win.prizeDiscountValue != null) {
+    return win.prizeDiscountValue >= 100 ? "FREE" : `${win.prizeDiscountValue}% OFF`;
+  }
+  if (win.prizeDiscountKind === "dollar" && win.prizeDiscountValue != null) {
+    return `$${win.prizeDiscountValue.toFixed(2)} OFF`;
+  }
+  return "";
 }
 
 // ─── Coupon Cards ─────────────────────────────────────────────────────────────
@@ -170,7 +196,136 @@ function GiftCertificateCoupon({ win, onRedeem, large }: CouponCardProps) {
   );
 }
 
+function GiftCardCoupon({ win, onRedeem, large }: CouponCardProps) {
+  const expiry = win.prizeExpiresAt ? getExpiryInfo(win.prizeExpiresAt) : null;
+  const redeemed = Boolean(win.prizeRedeemedAt);
+  const amount = win.prizeGiftCertificateAmount;
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/60 bg-gradient-to-br from-amber-950 to-amber-900/80 p-4">
+      <div className="absolute inset-0 rounded-2xl border-4 border-double border-amber-500/30 m-1 pointer-events-none" />
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/70">Prize Coupon</p>
+      {amount != null && (
+        <p className={`font-black text-amber-300 ${large ? "text-4xl" : "text-3xl"}`}>
+          ${amount.toFixed(2)}
+        </p>
+      )}
+      <p className={`font-black tracking-wide text-amber-100 ${large ? "text-xl" : "text-lg"}`}>
+        GIFT CARD
+      </p>
+      <p className="mt-1 text-xs text-amber-300/80">Won from: {win.challengeName}</p>
+      <div className="my-3 border-t border-dashed border-amber-500/40" />
+      <div className="flex items-end justify-between">
+        <div className="space-y-0.5">
+          <p className="text-[11px] text-amber-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
+          {expiry && !redeemed && (
+            <p className={`text-[11px] ${expiry.className}`}>{expiry.label}</p>
+          )}
+        </div>
+        {redeemed ? (
+          <span className="rounded-full border border-amber-500/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-400/60">
+            Redeemed
+          </span>
+        ) : !large ? (
+          <button
+            type="button"
+            onClick={() => onRedeem(win)}
+            className="tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-6 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
+          >
+            Redeem
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function MenuItemCoupon({ win, onRedeem, large }: CouponCardProps) {
+  const expiry = win.prizeExpiresAt ? getExpiryInfo(win.prizeExpiresAt) : null;
+  const redeemed = Boolean(win.prizeRedeemedAt);
+  const isWineBottle = win.prizeMenuItem === "wine_bottle";
+  const isAppetizer = win.prizeMenuItem === "appetizer";
+  // Preserve the thematic wine/appetizer looks; everything else (entrée, dessert,
+  // whole order, other) shares a generic indigo theme.
+  const theme = isWineBottle
+    ? {
+        border: "border-rose-700/60",
+        gradient: "from-rose-950 to-rose-900/80",
+        eyebrow: "text-rose-400/70",
+        title: "text-rose-100",
+        sub: "text-rose-300/80",
+        divider: "border-rose-700/50",
+        awarded: "text-rose-400/70",
+        redeemedText: "border-rose-700/50 text-rose-400/60",
+        buttonBorder: "border-rose-500/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30",
+      }
+    : isAppetizer
+      ? {
+          border: "border-emerald-700/60",
+          gradient: "from-emerald-950 to-emerald-900/80",
+          eyebrow: "text-emerald-400/70",
+          title: "text-emerald-100",
+          sub: "text-emerald-300/80",
+          divider: "border-emerald-700/50",
+          awarded: "text-emerald-400/70",
+          redeemedText: "border-emerald-700/50 text-emerald-400/60",
+          buttonBorder: "border-emerald-500/60 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30",
+        }
+      : {
+          border: "border-indigo-600/60",
+          gradient: "from-indigo-950 to-indigo-900/80",
+          eyebrow: "text-indigo-400/70",
+          title: "text-indigo-100",
+          sub: "text-indigo-300/80",
+          divider: "border-indigo-700/50",
+          awarded: "text-indigo-400/70",
+          redeemedText: "border-indigo-700/50 text-indigo-400/60",
+          buttonBorder: "border-indigo-500/60 bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30",
+        };
+
+  const discount = discountLabel(win);
+
+  return (
+    <div className={`relative overflow-hidden rounded-2xl border-2 ${theme.border} bg-gradient-to-br ${theme.gradient} p-4`}>
+      <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${theme.eyebrow}`}>Prize Coupon</p>
+      {discount && (
+        <p className={`font-black text-amber-300 ${large ? "text-3xl" : "text-2xl"}`}>{discount}</p>
+      )}
+      <p className={`font-black tracking-wide ${theme.title} ${large ? "text-xl" : "text-lg"}`}>
+        {menuItemLabel(win).toUpperCase()}
+      </p>
+      <p className={`mt-1 text-xs ${theme.sub}`}>Won from: {win.challengeName}</p>
+      <div className={`my-3 border-t border-dashed ${theme.divider}`} />
+      <div className="flex items-end justify-between">
+        <div className="space-y-0.5">
+          <p className={`text-[11px] ${theme.awarded}`}>Awarded {formatDate(win.claimedAt ?? "")}</p>
+          {expiry && !redeemed && (
+            <p className={`text-[11px] ${expiry.className}`}>{expiry.label}</p>
+          )}
+        </div>
+        {redeemed ? (
+          <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${theme.redeemedText}`}>
+            Redeemed
+          </span>
+        ) : !large ? (
+          <button
+            type="button"
+            onClick={() => onRedeem(win)}
+            className={`tp-clean-button rounded-lg border px-6 py-3 text-sm font-bold ${theme.buttonBorder}`}
+          >
+            Redeem
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function ChallengeCoupon({ win, onRedeem, large }: CouponCardProps) {
+  // Rewards (Phase 2+) prize model takes precedence; the backend derives
+  // prizeKind from legacy prizeType when null, so this covers every row.
+  if (win.prizeKind === "gift_card") return <GiftCardCoupon win={win} onRedeem={onRedeem} large={large} />;
+  if (win.prizeKind === "menu_item") return <MenuItemCoupon win={win} onRedeem={onRedeem} large={large} />;
   if (win.prizeType === "wine_bottle") return <WineCoupon win={win} onRedeem={onRedeem} large={large} />;
   if (win.prizeType === "free_appetizer") return <AppetizerCoupon win={win} onRedeem={onRedeem} large={large} />;
   if (win.prizeType === "gift_certificate") return <GiftCertificateCoupon win={win} onRedeem={onRedeem} large={large} />;
@@ -307,11 +462,11 @@ export function PrizeWalletPanel() {
 
   useEffect(() => { void load(); }, [load]);
 
-  // Filter challenge wins: must have a prizeType and not be expired
+  // Filter challenge wins: must carry a prize (legacy prizeType or new prizeKind) and not be expired
   const activeChallengeWins = useMemo(() => {
     const now = Date.now();
     return challengeWins.filter((win) => {
-      if (!win.prizeType) return false;
+      if (!win.prizeType && !win.prizeKind) return false;
       if (win.prizeExpiresAt && new Date(win.prizeExpiresAt).getTime() < now) return false;
       return true;
     });

@@ -44,6 +44,33 @@
 - **Continuous mode is the universal default, flag-gated (`NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT`).** When on, every venue runs an endless randomized continuous loop with zero admin setup — no schedule, no start/end time, no "number of rounds." A `category_blitz_continuous_config` row is an optional **per-venue override** (custom pacing/pool, or `is_active = false` to explicitly opt a venue back onto the scheduled engine); "no row" now means "on with global defaults." The flag follows the same reversible convention as `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED`: off = today's legacy scheduled behavior, fully inert. Resolver: `resolveContinuousConfig` in `lib/categoryBlitzPool.ts`; the scheduled engine (`driveVenueCategoryBlitz` / `runCategoryBlitzEngine`) stands down for any continuous venue via `standDownScheduledIfContinuous`. Cron `/api/cron/category-blitz-continuous` advances rounds for venues with an open continuous session. Full plan: `docs/CATEGORY_BLITZ_CONTINUOUS_DEFAULT_PLAN.md`.
 - **Global room pooling exists, flag-gated off (`NEXT_PUBLIC_CATEGORY_BLITZ_GLOBAL_ROOM`).** When on, every venue's Category Blitz gameplay collapses onto one shared hidden room (`hc-cbz-live`, `venues.hidden = true`, never appears in any venue list) so sparse venues clear the 3-player/2-player scoring gate. Off = today's per-venue isolation, fully inert — same reversible convention as the flags above. Single indirection point: `resolveCategoryBlitzRoomId` in `lib/categoryBlitzShared.ts`, applied ONLY at gameplay boundaries (never venue join/geofencing/`users.venue_id`). Concealed from the frontend two ways: API responses remap `session.venueId` back to the caller's real venue, and the realtime channel name is hashed (`categoryBlitzChannelName`) so the raw room/venue id never reaches the client. Per-venue challenge-campaign points still attribute correctly under pooling (read from each submission's own `venue_id`, not the pooled room's). Full plan + cutover runbook: `docs/category-blitz-global-room-plan.md`.
 
+## Rewards System (venue-home Rewards panel, admin, Partner Dashboard)
+- **Rewards consolidates three prior concepts** — the venue-home Challenges panel, admin
+  Challenge Campaigns, and the Partner Dashboard Competitions gallery — into one
+  customer-loyalty system built on `challenge_campaigns` (reused, not rebuilt). Full design +
+  phase-by-phase as-built notes: `docs/rewards-system-plan.md`.
+- **Reward definitions are a registry, not free-form authoring.** Admins and partners pick
+  from a small slate of pre-built definitions (today: the Live Trivia Challenge) and fill in
+  cadence/prize/quantity. **Adding a new reward = one entry in `lib/rewardDefinitions.ts`** (+
+  a schedule lookup in `lib/rewards.ts` only if it gates on a live game with no existing
+  lookup). See `AGENTS.md` for the exact steps — do not hand-roll a new creation form.
+- **One shared wizard, two hosts.** `components/rewards/CreateRewardWizard.tsx` is used by
+  both the admin Rewards section (`components/admin/sections/ChallengesSection.tsx`) and the
+  Partner Dashboard (`app/owner/competitions/page.tsx`) via a `variant: "admin" | "owner"`
+  prop. Do not fork this component per host.
+- **Rewards are threshold+quantity (progress) only.** Leaderboard mode is retired from
+  creation; in-flight leaderboard campaigns finish their current cycle but no longer render
+  standings on the venue panel.
+- **Multi-winner quota is enforced atomically via `challenge_cycle_winners` + the
+  `award_cycle_winner` Postgres RPC** (count-guarded insert under a transaction-scoped
+  advisory lock), not in application code — never re-implement the quota check client-side or
+  in a plain `INSERT`.
+- **`NEXT_PUBLIC_REWARDS_ENABLED` is the reversible rollout flag** (same convention as
+  `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED`), read via `lib/rewardsFlags.ts`'s `isRewardsEnabled()`.
+  Off clamps `winner_quota` to 1, i.e. today's single-winner behavior — fully inert.
+- **Redemption = in-app coupon, staff-taps-redeemed.** No POS or gift-card-issuance
+  integration; winners see a coupon on `/redeem-prizes` (`components/prizes/PrizeWalletPanel.tsx`).
+
 ## Architecture & Database Patterns
 - **Client Queries:** Use `lib/supabase.ts` via `createClient(url, anonKey)`. Subject to RLS.
 - **Server/API Queries:** Use `lib/supabaseAdmin.ts` via `createClient(url, serviceRoleKey)`. Guarded by `"server-only"`, bypasses RLS. Used for server-side mutations inside API routes.
