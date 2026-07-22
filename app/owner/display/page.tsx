@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { QRCodeSVG } from "qrcode.react";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { gameUrl } from "@/lib/domainSplit";
@@ -26,6 +25,7 @@ const OwnerDisplayPage = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [showManualSetup, setShowManualSetup] = useState(false);
+  const [displayExpanded, setDisplayExpanded] = useState(false);
 
   // "Link a TV" claim form state — pre-filled from a `/tv` page's QR deep-link
   // (?code=XK49PM) so scanning it lands ready to tap once.
@@ -184,17 +184,20 @@ const OwnerDisplayPage = () => {
             <div className="overflow-hidden rounded-2xl border border-ht-hairline bg-ht-surface shadow-ht-card">
               <div className="flex items-center justify-between px-4 pt-4">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Preview</p>
-                <a
-                  href={displayUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-bold text-ht-cyan-300 underline underline-offset-2"
-                >
-                  Open full screen
-                </a>
+                <div className="flex items-center gap-3">
+                  <FullscreenExpander url={displayUrl} onExpandedChange={setDisplayExpanded} />
+                  <a
+                    href={displayUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-bold text-ht-cyan-300 underline underline-offset-2"
+                  >
+                    Open full screen
+                  </a>
+                </div>
               </div>
               <div className="mt-3">
-                <ScaledPreview url={displayUrl} />
+                <ScaledPreview url={displayUrl} paused={displayExpanded} />
               </div>
             </div>
 
@@ -215,11 +218,6 @@ const OwnerDisplayPage = () => {
 
               {showManualSetup ? (
                 <div className="space-y-4 border-t border-ht-hairline p-4 pt-4">
-                  {/* QR panel — the one intentional white surface (needs a clean quiet zone to scan across a room). */}
-                  <div className="flex justify-center rounded-[14px] bg-white p-3">
-                    <QRCodeSVG value={displayUrl} size={208} level="M" marginSize={0} />
-                  </div>
-
                   <div className="flex items-center gap-2 rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5">
                     <span
                       className="min-w-0 flex-1 truncate font-mono text-xs font-semibold text-ht-secondary"
@@ -237,9 +235,8 @@ const OwnerDisplayPage = () => {
                   </div>
 
                   <p className="text-sm font-semibold text-ht-secondary">
-                    Scan this QR code (or type the URL) directly into the TV&apos;s browser. No camera on the
-                    TV? Open the link on your phone first to confirm it looks right, then type it into the TV
-                    browser.
+                    Type this URL into the browser on your TV, or type this URL into a device that is paired
+                    with your TV.
                   </p>
                 </div>
               ) : null}
@@ -253,21 +250,256 @@ const OwnerDisplayPage = () => {
   );
 };
 
-function ScaledPreview({ url }: { url: string }) {
+// Vendor-prefixed Fullscreen API surfaces that lib.dom doesn't type (older
+// WebKit). Kept as a narrow local extension so we stay off `any`.
+type WebkitFullscreenElement = HTMLElement & {
+  webkitRequestFullscreen?: () => void;
+};
+type WebkitFullscreenDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => void;
+};
+
+// "Expand" gives the owner a full landscape TV view from their phone even while
+// it's held vertically. Preferred path (Android Chrome): real fullscreen on the
+// iframe wrapper + `screen.orientation.lock("landscape")`. iOS Safari blocks
+// both programmatic fullscreen on non-<video> elements and orientation lock, so
+// we fall back to a `fixed inset-0` overlay with the iframe CSS-rotated 90° and
+// its width/height swapped — the embedded venue screen's own fit-to-viewport
+// (ViewportFitCanvas) then measures a landscape window and scales correctly.
+// Embedding the screen in an iframe keeps the tap's user-gesture in this
+// document, which the Fullscreen API requires.
+// True only when the device is actually held portrait right now. The rotate
+// fallback exists to turn a portrait phone into a landscape TV view; a desktop
+// or Android screen that's already landscape (and where real fullscreen just
+// succeeded) must never be rotated, even if `orientation.lock()` is missing or
+// rejects. Prefer the Screen Orientation API's own label; fall back to the
+// visible viewport aspect ratio where it isn't exposed.
+const isDevicePortrait = (): boolean => {
+  const orientationType = screen.orientation?.type;
+  if (typeof orientationType === "string") {
+    return orientationType.startsWith("portrait");
+  }
+  return window.innerHeight > window.innerWidth;
+};
+
+function FullscreenExpander({
+  url,
+  onExpandedChange,
+}: {
+  url: string;
+  onExpandedChange: (expanded: boolean) => void;
+}) {
+  const fsRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [rotateFallback, setRotateFallback] = useState(false);
+  // True only when THIS component's requestFullscreen() succeeded and hasn't
+  // exited yet. `fullscreenchange` fires globally for any element on the page,
+  // so without this the teardown below would close this overlay and unlock
+  // orientation in reaction to unrelated fullscreen state elsewhere.
+  const enteredFullscreenRef = useRef(false);
+  // Measured pixel size of the `fixed inset-0` overlay itself, used to size the
+  // rotated iframe. On iOS Safari (the browser this fallback targets) `100vh`
+  // includes the collapsible-toolbar band and so overshoots the overlay's real
+  // visible height, clipping/off-centering the rotated content; the overlay's
+  // own bounding box is the exact target we want to fill.
+  const [overlayBox, setOverlayBox] = useState({ width: 0, height: 0 });
+
+  // Let the parent pause the background ScaledPreview iframe's polling while
+  // this overlay's own iframe is up, so /api/venue-screen/state isn't hit by
+  // two iframes at once.
+  useEffect(() => {
+    onExpandedChange(expanded);
+  }, [expanded, onExpandedChange]);
+
+  useEffect(() => {
+    const close = () => {
+      setExpanded(false);
+      setRotateFallback(false);
+      const orientation = screen.orientation as unknown as { unlock?: () => void } | undefined;
+      try {
+        orientation?.unlock?.();
+      } catch {
+        // Some browsers throw if nothing was locked — safe to ignore.
+      }
+    };
+    const onFullscreenChange = () => {
+      if (!enteredFullscreenRef.current) return;
+      const doc = document as WebkitFullscreenDocument;
+      const fsEl = document.fullscreenElement ?? doc.webkitFullscreenElement ?? null;
+      // Only react when *this* component's fsRef is the element that left
+      // fullscreen — not any other fullscreen state change on the page (e.g.
+      // some other component's video player exiting fullscreen shouldn't close
+      // this overlay or unlock orientation this component never locked).
+      if (fsEl === fsRef.current) return;
+      enteredFullscreenRef.current = false;
+      close();
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+    };
+  }, []);
+
+  // Measure the overlay's real rendered size while the rotate fallback is up, so
+  // the rotated iframe is sized from actual pixels (not viewport units). Layout
+  // effect + observer keeps it correct through iOS toolbar collapse and device
+  // rotation without a wrong-sized first paint.
+  useLayoutEffect(() => {
+    if (!rotateFallback) return;
+    const el = fsRef.current;
+    if (!el) return;
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      setOverlayBox({ width: rect.width, height: rect.height });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [rotateFallback]);
+
+  const handleExpand = async () => {
+    setExpanded(true);
+    // Let the overlay leave `display:none` first — the Fullscreen API refuses a
+    // request on an unrendered element. One frame keeps us well inside the
+    // transient-activation window the request also needs.
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+    const el = fsRef.current as WebkitFullscreenElement | null;
+    if (!el) return;
+    try {
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      enteredFullscreenRef.current = true;
+    } catch {
+      // Fullscreen refused (e.g. iOS Safari on a <div>) — the fixed overlay
+      // still covers the viewport, so continue on to the rotate fallback.
+    }
+
+    // `screen.orientation` itself is missing on some older Safari/iOS builds
+    // (not just `.lock`) — optional-chain the property access too, or this
+    // throws synchronously and skips the rotate fallback entirely.
+    const orientation = screen.orientation as unknown as
+      | { lock?: (o: "landscape") => Promise<void> }
+      | undefined;
+    if (orientation?.lock) {
+      try {
+        await orientation.lock("landscape");
+      } catch {
+        // Lock rejected — only rotate if we're genuinely portrait; a landscape
+        // desktop/Android screen is already showing the TV view correctly.
+        if (isDevicePortrait()) setRotateFallback(true);
+      }
+    } else if (isDevicePortrait()) {
+      setRotateFallback(true);
+    }
+  };
+
+  const handleClose = () => {
+    const doc = document as WebkitFullscreenDocument;
+    if (document.fullscreenElement && document.exitFullscreen) {
+      void document.exitFullscreen();
+    } else if (doc.webkitFullscreenElement && doc.webkitExitFullscreen) {
+      doc.webkitExitFullscreen();
+    } else {
+      // No real fullscreen was granted (iOS rotate fallback) — drop the overlay.
+      setExpanded(false);
+      setRotateFallback(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => void handleExpand()}
+        className="text-xs font-bold text-ht-cyan-300 underline underline-offset-2"
+      >
+        Expand
+      </button>
+
+      <div ref={fsRef} className={expanded ? "fixed inset-0 z-[60] bg-black" : "hidden"}>
+        {expanded ? (
+          <>
+            <iframe
+              src={url}
+              title="Venue display full screen"
+              className={
+                rotateFallback
+                  ? "absolute left-0 top-0 max-w-none border-0"
+                  : "absolute left-0 top-0 h-full w-full max-w-none border-0"
+              }
+              style={
+                rotateFallback
+                  ? {
+                      // Swap width/height and rotate 90° so a portrait phone shows
+                      // a landscape TV view. Width = overlay's height, height =
+                      // overlay's width (measured px; `dvh`/`dvw` covers the first
+                      // frame before measurement).
+                      // The `translate(0,-100%)` is % of the element's own height
+                      // (= overlay width), so the 90° math still lands the rotated
+                      // box exactly on the portrait overlay.
+                      width: overlayBox.height ? `${overlayBox.height}px` : "100dvh",
+                      height: overlayBox.width ? `${overlayBox.width}px` : "100dvw",
+                      transformOrigin: "top left",
+                      transform: "rotate(90deg) translate(0, -100%)",
+                    }
+                  : undefined
+              }
+            />
+            <button
+              type="button"
+              onClick={handleClose}
+              className={
+                // The content's rotate(90deg) maps its visual top-right (where
+                // Close normally sits) to the overlay's physical bottom-right
+                // corner — so the button moves there too, then gets the same
+                // 90deg rotation so it reads upright from the viewer's
+                // (rotated) point of view instead of sideways.
+                rotateFallback
+                  ? "absolute bottom-4 right-4 z-10 min-h-11 rounded-full border border-white/30 bg-black/60 px-4 text-sm font-black text-white"
+                  : "absolute right-4 top-4 z-10 min-h-11 rounded-full border border-white/30 bg-black/60 px-4 text-sm font-black text-white"
+              }
+              style={rotateFallback ? { transform: "rotate(90deg)" } : undefined}
+            >
+              Close ✕
+            </button>
+          </>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+function ScaledPreview({ url, paused }: { url: string; paused: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0);
+  const [box, setBox] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const updateScale = () => setScale(el.clientWidth / PREVIEW_SOURCE_WIDTH);
-    updateScale();
+    const updateBox = () => setBox({ width: el.clientWidth, height: el.clientHeight });
+    updateBox();
 
-    const observer = new ResizeObserver(updateScale);
+    const observer = new ResizeObserver(updateBox);
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  // Scale by whichever dimension is tighter so the 16:9 content always fits
+  // fully in the box, instead of assuming the container is already a perfect
+  // 16:9 (aspect-ratio CSS support/rounding can't be relied on for that).
+  const scale = Math.min(box.width / PREVIEW_SOURCE_WIDTH, box.height / PREVIEW_SOURCE_HEIGHT);
+  const left = (box.width - PREVIEW_SOURCE_WIDTH * scale) / 2;
+  const top = (box.height - PREVIEW_SOURCE_HEIGHT * scale) / 2;
 
   return (
     <div
@@ -275,13 +507,15 @@ function ScaledPreview({ url }: { url: string }) {
       className="relative w-full overflow-hidden bg-black"
       style={{ aspectRatio: `${PREVIEW_SOURCE_WIDTH} / ${PREVIEW_SOURCE_HEIGHT}` }}
     >
-      {scale > 0 ? (
+      {scale > 0 && !paused ? (
         <iframe
           src={url}
           title="Venue display preview"
           loading="lazy"
-          className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
+          className="pointer-events-none absolute origin-top-left border-0"
           style={{
+            left,
+            top,
             width: PREVIEW_SOURCE_WIDTH,
             height: PREVIEW_SOURCE_HEIGHT,
             // Override the global `iframe { max-width: 100% }` reset (app/globals.css)
