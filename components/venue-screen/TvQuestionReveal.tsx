@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { SCREEN_COLORS, SCREEN_EASE as ease } from "@/lib/venueScreenBrand";
 import { questionType } from "@/lib/tvType";
 
@@ -96,7 +97,7 @@ export function TvQuestionReveal({
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden"
+      className="relative h-full min-h-0 w-full overflow-hidden"
       style={{ color: "#f8fafc" }}
     >
       {/* Ambient depth. Static — never animated, so it survives remounts cheaply. */}
@@ -127,7 +128,7 @@ export function TvQuestionReveal({
         )}
       </div>
 
-      <div key={revealKey} className="relative flex h-full flex-col" style={{ padding: "78px 96px 64px" }}>
+      <AutoScaleToFit key={revealKey} className="relative flex flex-col" style={{ padding: "78px 96px 64px" }}>
         {/* ---- Header: category chip, round counter, countdown ring ---- */}
         <div className="flex items-start justify-between" style={{ gap: 64 }}>
           <div className="flex flex-col" style={{ gap: 28 }}>
@@ -252,7 +253,7 @@ export function TvQuestionReveal({
             />
           ))}
         </motion.div>
-      </div>
+      </AutoScaleToFit>
     </div>
   );
 }

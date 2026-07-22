@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 import { questionType } from "@/lib/tvType";
 
@@ -101,7 +102,7 @@ export function TvAnswerReveal({
   const T = { eyebrow: 0.32, answer: 0.46, underline: 0.78 };
 
   return (
-    <div key={revealKey} className="relative h-full w-full overflow-hidden" style={{ color: "#f8fafc" }}>
+    <div key={revealKey} className="relative h-full min-h-0 w-full overflow-hidden" style={{ color: "#f8fafc" }}>
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -112,7 +113,31 @@ export function TvAnswerReveal({
       />
       <div className="absolute inset-x-0 top-0" style={{ height: 10, background: GRADIENT }} />
 
-      <div className="relative flex h-full flex-col" style={{ padding: "64px 110px 92px" }}>
+      {/* One-shot bloom behind the answer that settles rather than pulsing.
+          Lives at the panel root, OUTSIDE AutoScaleToFit's measured content:
+          it is 700px tall and deliberately overhangs the answer row, so
+          measuring it would drag the auto-fit scale around for the ~1s it is
+          on screen. Here it is simply clipped by the root's overflow-hidden,
+          which is what it always looked like anyway. */}
+      {!settled && (
+        <motion.div
+          className="pointer-events-none absolute"
+          style={{
+            left: -70,
+            top: "50%",
+            width: 1200,
+            height: 700,
+            marginTop: -350,
+            borderRadius: 999,
+            background: "radial-gradient(closest-side, rgba(52,211,153,0.30), rgba(52,211,153,0) 72%)",
+          }}
+          initial={{ scale: 0.55, opacity: 0 }}
+          animate={{ scale: [0.55, 1.06, 1], opacity: [0, 0.9, 0.42] }}
+          transition={{ duration: 1.15, times: [0, 0.45, 1], ease: EASE, delay: T.answer }}
+        />
+      )}
+
+      <AutoScaleToFit className="relative flex flex-col" style={{ padding: "64px 110px 92px" }}>
         {/* ---- Header ---- */}
         <motion.div
           className="flex items-center justify-between"
@@ -150,25 +175,6 @@ export function TvAnswerReveal({
 
         {/* ---- Answer ---- */}
         <div className="relative flex flex-1 flex-col justify-center" style={{ marginTop: -20 }}>
-          {/* One-shot bloom that settles rather than pulsing. */}
-          {!settled && (
-            <motion.div
-              className="pointer-events-none absolute"
-              style={{
-                left: -180,
-                top: "50%",
-                width: 1200,
-                height: 700,
-                marginTop: -350,
-                borderRadius: 999,
-                background: "radial-gradient(closest-side, rgba(52,211,153,0.30), rgba(52,211,153,0) 72%)",
-              }}
-              initial={{ scale: 0.55, opacity: 0 }}
-              animate={{ scale: [0.55, 1.06, 1], opacity: [0, 0.9, 0.42] }}
-              transition={{ duration: 1.15, times: [0, 0.45, 1], ease: EASE, delay: T.answer }}
-            />
-          )}
-
           <motion.div
             className="relative flex items-center"
             style={{ gap: 20 }}
@@ -241,7 +247,7 @@ export function TvAnswerReveal({
             />
           </div>
         </motion.div>
-      </div>
+      </AutoScaleToFit>
     </div>
   );
 }

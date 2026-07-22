@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:god-mode-join": "vitest run tests/god-mode-join-contract.test.ts tests/lib.join-venue-entry.test.ts tests/api.join.venue-profile-with-account.test.ts tests/api.join.profile.test.ts tests/lib.venue-presence-god-mode.test.ts",
     "test:venue-fk-guard": "vitest run tests/lib.venue-fk-cascade-guard.test.ts",
+    "test:venue-screen-overflow": "node scripts/verify-venue-screen-overflow.mjs",
     "auth:smoke": "node scripts/auth-smoke.cjs",
     "category-blitz:build": "node --env-file=.env.local scripts/build-category-blitz-letter-index.cjs",
     "category-blitz:build:dry-run": "node --env-file=.env.local scripts/build-category-blitz-letter-index.cjs --dry-run",

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -109,7 +110,7 @@ export function TvLetterReveal({
   const CASCADE_AT = reduceMotion ? 0 : SLAM - 0.28;
 
   return (
-    <div key={revealKey} className="relative h-full w-full overflow-hidden" style={{ color: "#f8fafc" }}>
+    <div key={revealKey} className="relative h-full min-h-0 w-full overflow-hidden" style={{ color: "#f8fafc" }}>
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -171,7 +172,7 @@ export function TvLetterReveal({
         </div>
       )}
 
-      <div className="relative h-full" style={{ padding: "54px 96px 56px" }}>
+      <AutoScaleToFit className="relative" style={{ padding: "54px 96px 56px" }}>
         {/* ---- Header ---- */}
         <div className="flex items-start justify-between" style={{ gap: 48 }}>
           <motion.div
@@ -275,7 +276,18 @@ export function TvLetterReveal({
           {/* Category prompts */}
           <motion.ol
             className="grid flex-1"
-            style={{ gridTemplateColumns: "1fr 1fr", gap: 14, listStyle: "none", margin: 0, padding: 0 }}
+            // minmax(0, 1fr) rather than 1fr: a bare `1fr` track floors at the
+            // item's MIN-CONTENT width, so one long category name used to push
+            // the whole grid past the canvas (the originally reported clipping
+            // — see docs/venue-tv-display-content-fit-plan.md Phase 0). With the
+            // floor removed the cell can shrink and the name wraps instead.
+            style={{
+              gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+              gap: 14,
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+            }}
             initial={reduceMotion ? false : "hidden"}
             animate={reduceMotion ? undefined : "show"}
             variants={{ hidden: {}, show: { transition: { delayChildren: CASCADE_AT, staggerChildren: 0.055 } } }}
@@ -286,8 +298,8 @@ export function TvLetterReveal({
                 className="flex items-center"
                 style={{
                   gap: 22,
-                  padding: "0 26px",
-                  height: 92,
+                  padding: "14px 26px",
+                  minHeight: 92,
                   borderRadius: 16,
                   background: "rgba(15,23,42,0.6)",
                   border: "1px solid rgba(240,171,252,0.18)",
@@ -305,14 +317,26 @@ export function TvLetterReveal({
                 <span style={{ fontSize: 30, fontWeight: 900, color: BRAND.light, fontVariantNumeric: "tabular-nums", minWidth: 44 }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span className="truncate" style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.01em" }}>
+                <span
+                  style={{
+                    fontSize: 36,
+                    fontWeight: 700,
+                    letterSpacing: "-0.01em",
+                    lineHeight: 1.12,
+                    // Wrap long names (and break a single unbroken monster word)
+                    // instead of truncating them — a category the players can't
+                    // read is worse than a two-line row, and the extra height is
+                    // absorbed by AutoScaleToFit.
+                    overflowWrap: "anywhere",
+                  }}
+                >
                   {c}
                 </span>
               </motion.li>
             ))}
           </motion.ol>
         </div>
-      </div>
+      </AutoScaleToFit>
     </div>
   );
 }

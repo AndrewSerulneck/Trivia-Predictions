@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -132,7 +133,7 @@ export function TvBlitzResults({
   const showBoard = phase !== "scoring";
 
   return (
-    <div className="relative h-full w-full overflow-hidden" style={{ color: "#f8fafc" }}>
+    <div className="relative h-full min-h-0 w-full overflow-hidden" style={{ color: "#f8fafc" }}>
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -146,7 +147,7 @@ export function TvBlitzResults({
         style={{ height: 10, background: `linear-gradient(90deg, ${BRAND.deep}, ${BRAND.mid} 60%, ${BRAND.glow})` }}
       />
 
-      <div className="relative flex h-full flex-col" style={{ padding: "36px 96px 32px" }}>
+      <AutoScaleToFit className="relative flex flex-col" style={{ padding: "36px 96px 32px" }}>
         {/* ---- Header: letter recap, phase title, countdown ---- */}
         <div className="flex items-center justify-between" style={{ gap: 56 }}>
           <div className="flex items-center" style={{ gap: 40 }}>
@@ -382,7 +383,7 @@ export function TvBlitzResults({
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </AutoScaleToFit>
     </div>
   );
 }

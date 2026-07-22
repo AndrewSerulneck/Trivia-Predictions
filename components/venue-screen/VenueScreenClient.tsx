@@ -27,7 +27,7 @@ type VenueScreenClientProps = {
 
 const VENUE_SCREEN_FETCH_TIMEOUT_MS = 10_000;
 
-// The venue screen is authored for a fixed TV-like 1280×720 canvas. Rather than
+// The venue screen is authored for a fixed TV-like 16:9 canvas. Rather than
 // re-flow it responsively for every possible viewport, we render that fixed
 // canvas and transform-scale it to fit whatever viewport actually loaded the
 // route (a phone, a laptop window, or a true 16:9 TV), letterboxing the extra
@@ -35,8 +35,17 @@ const VENUE_SCREEN_FETCH_TIMEOUT_MS = 10_000;
 // ScaledPreview in app/owner/display/page.tsx). On a 16:9 viewport the fit is
 // exact (scale is uniform, no letterboxing); any other aspect ratio centers
 // with black bars instead of overflowing/clipping.
-const VENUE_SCREEN_CANVAS_WIDTH = 1280;
-const VENUE_SCREEN_CANVAS_HEIGHT = 720;
+//
+// 2304×1296 (not 1280×720): the `Tv*` panels are authored in hard-coded
+// pixels sized for a larger design space than 1280×720, and `overflow-hidden`
+// was silently clipping most of them (see docs/venue-tv-display-content-fit-plan.md
+// Phase 0 — worst measured case was 2194×1190, category-blitz round with the
+// longest real category names, with the live-trivia answer-reveal text
+// entirely below the fold). This is a 16:9 size with ~5–9% headroom over that
+// worst case; both dimensions are multiples of 16 for clean scale-factor math
+// against common TV resolutions (2304/1920 = 1296/1080 = 1.2).
+const VENUE_SCREEN_CANVAS_WIDTH = 2304;
+const VENUE_SCREEN_CANVAS_HEIGHT = 1296;
 
 // Measures the live viewport and renders the fixed-size venue-screen canvas
 // scaled to fit inside it, centered on a black backdrop. Fit-to-viewport is
@@ -287,9 +296,12 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
 
   return (
     <ViewportFitCanvas>
-      {/* Sizing is now relative to the fixed 1280×720 canvas (h-full/w-full),
-          not the raw viewport — ViewportFitCanvas handles fitting the canvas to
-          the actual device. */}
+      {/* Sizing is relative to the fixed canvas above (h-full/w-full), not the
+          raw viewport — ViewportFitCanvas handles fitting the canvas to the
+          actual device. The `min-h-0` further down the flex chain is load
+          bearing: without it a flex item's default `min-height: auto` lets the
+          column grow past the canvas instead of overflowing, which is what
+          AutoScaleToFit needs to see. */}
       <main className="h-full w-full overflow-hidden bg-slate-950 text-white">
         <div className="relative flex h-full flex-col" style={{ background: theme.stageGradient }}>
           <div
@@ -298,7 +310,7 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
           >
             {state.mode !== "idle" ? <VenueTitle state={state} accent={theme.accent} /> : null}
             {state.mode === "live-trivia" || state.mode === "category-blitz" ? (
-              <ScreenTransition transitionKey={transitionKey} className="flex flex-1 flex-col">
+              <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
                 {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} nowMs={nowMs} /> : null}
                 {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} nowMs={nowMs} /> : null}
               </ScreenTransition>

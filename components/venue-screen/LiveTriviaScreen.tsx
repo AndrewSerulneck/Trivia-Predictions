@@ -16,7 +16,7 @@ export function LiveTriviaScreen({ state, nowMs }: LiveTriviaScreenProps) {
   const live = state.liveTrivia;
 
   return (
-    <section className="flex flex-1 flex-col">
+    <section className="flex min-h-0 flex-1 flex-col">
       <TvQuestionReveal
         question={live.question ?? "Question loading…"}
         category={live.category ?? "Live Trivia"}

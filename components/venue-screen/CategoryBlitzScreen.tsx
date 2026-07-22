@@ -16,7 +16,7 @@ export function CategoryBlitzScreen({ state, nowMs }: CategoryBlitzScreenProps) 
   const blitz = state.categoryBlitz;
 
   return (
-    <section className="flex flex-1 flex-col">
+    <section className="flex min-h-0 flex-1 flex-col">
       <TvLetterReveal
         letter={blitz.letter ?? "-"}
         categories={blitz.categories}

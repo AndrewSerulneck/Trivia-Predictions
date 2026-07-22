@@ -33,7 +33,7 @@ export function LiveTriviaRevealScreen({ state, nowMs }: LiveTriviaRevealScreenP
   const updatedAtMs = hasDeadline ? nowMs : state.updatedAt;
 
   return (
-    <section className="flex flex-1 flex-col">
+    <section className="flex min-h-0 flex-1 flex-col">
       <TvAnswerReveal
         question={live.question ?? "Question loading…"}
         correctAnswer={live.correctAnswer ?? ""}

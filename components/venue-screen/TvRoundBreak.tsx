@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { SCREEN_COLORS, SCREEN_EASE as EASE, getPodiumAccent, withAlpha } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -104,7 +105,7 @@ export function TvRoundBreak({
   );
 
   return (
-    <div className="relative h-full w-full overflow-hidden" style={{ color: "#f8fafc" }}>
+    <div className="relative h-full min-h-0 w-full overflow-hidden" style={{ color: "#f8fafc" }}>
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -148,7 +149,7 @@ export function TvRoundBreak({
         />
       )}
 
-      <div className="relative flex h-full flex-col" style={{ padding: "40px 96px 36px" }}>
+      <AutoScaleToFit className="relative flex flex-col" style={{ padding: "40px 96px 36px" }}>
         {/* ---- Title + countdown ---- */}
         <div className="flex items-start justify-between" style={{ gap: 56 }}>
           <div key={`title-${roundNumber}`}>
@@ -317,7 +318,7 @@ export function TvRoundBreak({
             })}
           </AnimatePresence>
         </div>
-      </div>
+      </AutoScaleToFit>
     </div>
   );
 }
