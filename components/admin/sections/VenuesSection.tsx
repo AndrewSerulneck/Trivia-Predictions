@@ -989,6 +989,22 @@ type VenuesSectionProps = {
 
 type ViewMode = "list" | "create" | "edit";
 
+// Mirrors AdminVenueDeletionSummary in lib/admin.ts (server-only module — kept
+// as a local shape so this client component never imports server code).
+type VenueDeletionSummary = {
+  venueId: string;
+  venueName: string | null;
+  isPartnerVenue: boolean;
+  owner: { name: string; email: string } | null;
+  subscription: {
+    status: "active" | "past_due" | "cancelled";
+    amountCents: number;
+    planType: string;
+    hasStripeSubscription: boolean;
+  } | null;
+  userCount: number;
+};
+
 export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
   const [mode, setMode] = useState<ViewMode>("list");
   const [venueList, setVenueList] = useState<Venue[]>(venues);
@@ -999,6 +1015,16 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
   const [successMsg, setSuccessMsg] = useState("");
   const [sortBy, setSortBy] = useState<SortKey>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Delete-confirmation modal state.
+  const [deleteTarget, setDeleteTarget] = useState<Venue | null>(null);
+  const [deleteSummary, setDeleteSummary] = useState<VenueDeletionSummary | null>(null);
+  const [deleteSummaryLoading, setDeleteSummaryLoading] = useState(false);
+  const [deleteSummaryError, setDeleteSummaryError] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const deleteRequestIdRef = useRef(0);
 
   useEffect(() => {
     setVenueList(venues);
@@ -1167,9 +1193,51 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
     }
   }
 
-  async function handleDelete(venue: Venue) {
-    if (!confirm(`Delete venue "${venue.name}"? This action cannot be undone.`)) return;
-    setBusy(true);
+  function closeDeleteModal() {
+    if (deleteBusy) return;
+    deleteRequestIdRef.current += 1;
+    setDeleteTarget(null);
+    setDeleteSummary(null);
+    setDeleteSummaryError("");
+    setDeleteConfirmText("");
+    setDeleteSummaryLoading(false);
+    setDeleteError("");
+  }
+
+  async function openDeleteModal(venue: Venue) {
+    const requestId = ++deleteRequestIdRef.current;
+    setDeleteTarget(venue);
+    setDeleteSummary(null);
+    setDeleteSummaryError("");
+    setDeleteConfirmText("");
+    setDeleteSummaryLoading(true);
+    setDeleteError("");
+    setError("");
+    setSuccessMsg("");
+
+    try {
+      const response = await fetch(`/api/admin?resource=venue-deletion-summary&id=${encodeURIComponent(venue.id)}`);
+      const payload = (await response.json()) as { ok: boolean; error?: string; summary?: VenueDeletionSummary };
+      if (deleteRequestIdRef.current !== requestId) return;
+      if (!response.ok || !payload.ok || !payload.summary) {
+        throw new Error(payload.error ?? "Failed to load venue deletion details.");
+      }
+      setDeleteSummary(payload.summary);
+    } catch (err) {
+      if (deleteRequestIdRef.current !== requestId) return;
+      setDeleteSummaryError(err instanceof Error ? err.message : "Failed to load venue deletion details.");
+    } finally {
+      if (deleteRequestIdRef.current === requestId) {
+        setDeleteSummaryLoading(false);
+      }
+    }
+  }
+
+  async function confirmDelete() {
+    const venue = deleteTarget;
+    if (!venue) return;
+    setDeleteBusy(true);
+    setDeleteError("");
     setError("");
     setSuccessMsg("");
 
@@ -1177,17 +1245,25 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
       const response = await fetch(`/api/admin?resource=venues&id=${encodeURIComponent(venue.id)}`, {
         method: "DELETE",
       });
-      const payload = (await response.json()) as { ok: boolean; error?: string };
+      const payload = (await response.json()) as { ok: boolean; error?: string; subscriptionCancelled?: boolean };
       if (!response.ok || !payload.ok) {
         throw new Error(payload.error ?? "Failed to delete venue.");
       }
 
       setVenueList((prev) => prev.filter((entry) => entry.id !== venue.id));
-      setSuccessMsg(`Venue "${venue.name}" deleted.`);
+      setSuccessMsg(
+        payload.subscriptionCancelled
+          ? `Venue "${venue.name}" deleted and its Stripe subscription was cancelled.`
+          : `Venue "${venue.name}" deleted.`
+      );
+      deleteRequestIdRef.current += 1;
+      setDeleteTarget(null);
+      setDeleteSummary(null);
+      setDeleteConfirmText("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete venue.");
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete venue.");
     } finally {
-      setBusy(false);
+      setDeleteBusy(false);
     }
   }
 
@@ -1304,9 +1380,9 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
                         </button>
                         <button
                           onClick={() => {
-                            void handleDelete(venue);
+                            void openDeleteModal(venue);
                           }}
-                          disabled={busy}
+                          disabled={busy || deleteBusy}
                           className="min-h-[44px] rounded border border-red-200 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
                         >
                           Delete
@@ -1320,6 +1396,154 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
           </table>
         </div>
       </div>
+
+      {deleteTarget ? (
+        <DeleteVenueModal
+          deleteTarget={deleteTarget}
+          deleteSummary={deleteSummary}
+          deleteSummaryLoading={deleteSummaryLoading}
+          deleteSummaryError={deleteSummaryError}
+          deleteConfirmText={deleteConfirmText}
+          setDeleteConfirmText={setDeleteConfirmText}
+          deleteBusy={deleteBusy}
+          deleteError={deleteError}
+          closeDeleteModal={closeDeleteModal}
+          confirmDelete={confirmDelete}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function DeleteVenueModal({
+  deleteTarget,
+  deleteSummary,
+  deleteSummaryLoading,
+  deleteSummaryError,
+  deleteConfirmText,
+  setDeleteConfirmText,
+  deleteBusy,
+  deleteError,
+  closeDeleteModal,
+  confirmDelete,
+}: {
+  deleteTarget: Venue;
+  deleteSummary: VenueDeletionSummary | null;
+  deleteSummaryLoading: boolean;
+  deleteSummaryError: string;
+  deleteConfirmText: string;
+  setDeleteConfirmText: (value: string) => void;
+  deleteBusy: boolean;
+  deleteError: string;
+  closeDeleteModal: () => void;
+  confirmDelete: () => Promise<void>;
+}) {
+  const deleteTargetNameTrimmed = (deleteTarget.name ?? "").trim();
+  const deleteExpectedConfirmText = deleteTargetNameTrimmed || "DELETE";
+
+  return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
+            <div className="border-b border-slate-200 px-5 py-4">
+              <h3 className="text-sm font-semibold text-slate-900">Delete venue</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                {deleteTarget.name}
+              </p>
+            </div>
+
+            <div className="space-y-3 px-5 py-4 text-sm">
+              {deleteSummaryLoading ? (
+                <p className="text-slate-500">Loading deletion details…</p>
+              ) : deleteSummaryError ? (
+                <div className="rounded-lg bg-red-50 px-3 py-2 text-red-700">{deleteSummaryError}</div>
+              ) : deleteSummary ? (
+                <>
+                  <p className="text-slate-700">
+                    This permanently deletes the venue and cascades to all of its data. This cannot be undone.
+                  </p>
+
+                  <ul className="space-y-1 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                    <li>
+                      <span className="font-semibold text-slate-800">{deleteSummary.userCount}</span> venue-scoped user
+                      {deleteSummary.userCount === 1 ? "" : "s"} will be removed (global accounts are kept).
+                    </li>
+                  </ul>
+
+                  {deleteSummary.isPartnerVenue ? (
+                    <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
+                      <p className="text-xs font-semibold text-amber-900">⚠ This is a partner venue.</p>
+                      {deleteSummary.owner ? (
+                        <p className="text-xs text-amber-800">
+                          Owner: {deleteSummary.owner.name} ({deleteSummary.owner.email})
+                        </p>
+                      ) : null}
+                      {deleteSummary.subscription ? (
+                        <p className="text-xs text-amber-800">
+                          Billing: {deleteSummary.subscription.planType} · $
+                          {(deleteSummary.subscription.amountCents / 100).toFixed(2)} ·{" "}
+                          {deleteSummary.subscription.status}
+                          {deleteSummary.subscription.hasStripeSubscription
+                            ? " — the Stripe subscription will be cancelled immediately before deletion."
+                            : " — no Stripe subscription on file."}
+                        </p>
+                      ) : null}
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-amber-900">
+                          {deleteTargetNameTrimmed ? (
+                            <>
+                              Type the venue name <span className="font-semibold">{deleteTarget.name}</span> to
+                              confirm:
+                            </>
+                          ) : (
+                            <>
+                              This venue has no name on file. Type <span className="font-semibold">DELETE</span> to
+                              confirm:
+                            </>
+                          )}
+                        </label>
+                        <input
+                          type="text"
+                          value={deleteConfirmText}
+                          onChange={(e) => setDeleteConfirmText(e.target.value)}
+                          disabled={deleteBusy}
+                          className="w-full rounded-lg border border-amber-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
+                          placeholder={deleteTargetNameTrimmed || "DELETE"}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+
+              {deleteError ? (
+                <div className="rounded-lg bg-red-50 px-3 py-2 text-red-700">{deleteError}</div>
+              ) : null}
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4">
+              <button
+                onClick={closeDeleteModal}
+                disabled={deleteBusy}
+                className="min-h-[44px] rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  void confirmDelete();
+                }}
+                disabled={
+                  deleteBusy ||
+                  deleteSummaryLoading ||
+                  !deleteSummary ||
+                  (deleteSummary.isPartnerVenue && deleteConfirmText.trim() !== deleteExpectedConfirmText)
+                }
+                className="min-h-[44px] rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteBusy ? "Deleting…" : "Delete venue"}
+              </button>
+            </div>
+          </div>
+        </div>
   );
 }

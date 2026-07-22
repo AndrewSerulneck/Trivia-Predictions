@@ -7,6 +7,7 @@ import {
   createAdminVenueScreenSponsor,
   deleteAdminAccount,
   deleteAdminVenue,
+  getAdminVenueDeletionSummary,
   deleteAdminVenueScreenSponsor,
   createAdminVenue,
   autoSettleResolvedPredictionMarkets,
@@ -277,6 +278,22 @@ export async function GET(request: Request) {
       }
       const items = await listAdminVenueScreenSponsors(venueId);
       return NextResponse.json({ ok: true, items });
+    }
+
+    if (resource === "venue-deletion-summary") {
+      const venueId = String(searchParams.get("id") ?? "").trim();
+      if (!venueId) {
+        return NextResponse.json({ ok: false, error: "id is required." }, { status: 400 });
+      }
+      try {
+        const summary = await getAdminVenueDeletionSummary(venueId);
+        return NextResponse.json({ ok: true, summary });
+      } catch (error) {
+        if (error instanceof Error && error.message === "Venue not found.") {
+          return NextResponse.json({ ok: false, error: error.message }, { status: 404 });
+        }
+        throw error;
+      }
     }
 
     if (resource === "challenge-campaigns") {
@@ -1042,8 +1059,8 @@ export async function DELETE(request: Request) {
     }
 
     if (resource === "venues") {
-      await deleteAdminVenue(id);
-      return NextResponse.json({ ok: true });
+      const result = await deleteAdminVenue(id);
+      return NextResponse.json({ ok: true, ...result });
     }
 
     if (resource === "venue-screen-sponsors") {

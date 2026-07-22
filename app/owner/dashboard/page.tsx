@@ -255,7 +255,7 @@ const OwnerDashboardPage = () => {
     },
     {
       href: "/owner/competitions",
-      label: "Rewards",
+      label: "Offer Rewards",
       description: "Schedule contests and offer prizes to boost engagement.",
       gradient: "bg-ht-game-pickem",
       glyph: "🏆",

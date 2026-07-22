@@ -2,6 +2,7 @@ import { readFileSync, readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import { replaceSessionQuestion } from "@/lib/liveShowdownAdmin";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { stripe } from "@/lib/stripe";
 import { getInlineSlotRegistryEntries } from "@/lib/adSlotRegistry";
 import {
   isAdTypeSupportedForPage,
@@ -2320,17 +2321,156 @@ export async function deleteAdminVenueScreenSponsor(id: string): Promise<void> {
   }
 }
 
-export async function deleteAdminVenue(venueId: string): Promise<void> {
+export type AdminVenueDeletionSummary = {
+  venueId: string;
+  venueName: string | null;
+  isPartnerVenue: boolean;
+  owner: { name: string; email: string } | null;
+  subscription: {
+    status: "active" | "past_due" | "cancelled";
+    amountCents: number;
+    planType: string;
+    hasStripeSubscription: boolean;
+  } | null;
+  userCount: number;
+};
+
+export type AdminVenueDeletionResult = {
+  subscriptionCancelled: boolean;
+};
+
+function normalizeBillingStatus(raw: string | null | undefined): "active" | "past_due" | "cancelled" {
+  return raw === "past_due" || raw === "cancelled" ? raw : "active";
+}
+
+/**
+ * Impact preview for deleting a venue. Used by the admin UI to warn before a
+ * cascade delete — in particular to flag partner venues (owner-linked and/or
+ * with a billing subscription) so the operator knows billing will be cancelled
+ * and how many venue-scoped user rows will be removed.
+ */
+export async function getAdminVenueDeletionSummary(venueId: string): Promise<AdminVenueDeletionSummary> {
   assertAdminConfigured();
   const id = venueId.trim();
   if (!id) {
     throw new Error("Venue id is required.");
   }
 
+  const [venueResult, ownerLinkResult, subscriptionResult, userCountResult] = await Promise.all([
+    supabaseAdmin!.from("venues").select("id, name").eq("id", id).maybeSingle<{ id: string; name: string | null }>(),
+    supabaseAdmin!
+      .from("venue_owner_venues")
+      .select("owner_id, venue_owners(name, email)")
+      .eq("venue_id", id)
+      .maybeSingle<{ owner_id: string; venue_owners: { name: string; email: string } | null }>(),
+    supabaseAdmin!
+      .from("billing_subscriptions")
+      .select("status, amount_cents, plan_type, stripe_subscription_id")
+      .eq("venue_id", id)
+      .maybeSingle<{ status: string; amount_cents: number; plan_type: string; stripe_subscription_id: string | null }>(),
+    supabaseAdmin!.from("users").select("id", { count: "exact", head: true }).eq("venue_id", id),
+  ]);
+
+  if (venueResult.error) {
+    throw new Error(venueResult.error.message ?? "Failed to load venue.");
+  }
+  if (!venueResult.data) {
+    throw new Error("Venue not found.");
+  }
+  if (userCountResult.error) {
+    throw new Error(userCountResult.error.message ?? "Failed to count venue users.");
+  }
+
+  const owner: { name: string; email: string } | null = ownerLinkResult.data?.venue_owners
+    ? { name: ownerLinkResult.data.venue_owners.name, email: ownerLinkResult.data.venue_owners.email }
+    : null;
+
+  const subscription = subscriptionResult.data
+    ? {
+        status: normalizeBillingStatus(subscriptionResult.data.status),
+        amountCents: subscriptionResult.data.amount_cents,
+        planType: subscriptionResult.data.plan_type,
+        hasStripeSubscription: Boolean(subscriptionResult.data.stripe_subscription_id),
+      }
+    : null;
+
+  return {
+    venueId: id,
+    venueName: venueResult.data.name,
+    isPartnerVenue: Boolean(owner) || Boolean(subscription),
+    owner,
+    subscription,
+    userCount: userCountResult.count ?? 0,
+  };
+}
+
+export async function deleteAdminVenue(venueId: string): Promise<AdminVenueDeletionResult> {
+  assertAdminConfigured();
+  const id = venueId.trim();
+  if (!id) {
+    throw new Error("Venue id is required.");
+  }
+
+  // Cancel any live Stripe subscription BEFORE deleting the venue. The venue's
+  // billing_subscriptions row cascades away on delete, so cancelling afterward
+  // would be impossible — Stripe would keep billing a customer whose venue no
+  // longer exists. We cancel immediately (not at period end) because the venue
+  // is being removed entirely.
+  let subscriptionCancelled = false;
+  const { data: subscription } = await supabaseAdmin!
+    .from("billing_subscriptions")
+    .select("id, status, stripe_subscription_id")
+    .eq("venue_id", id)
+    .maybeSingle<{ id: string; status: string; stripe_subscription_id: string | null }>();
+
+  if (subscription?.stripe_subscription_id && subscription.status !== "cancelled") {
+    if (!stripe) {
+      throw new Error(
+        "This venue has an active Stripe subscription, but Stripe is not configured on the server so billing cannot be cancelled. Aborting delete to avoid orphaning a live subscription."
+      );
+    }
+    // Check Stripe's actual status first: if a webhook lagged, our local row
+    // can say "active" while Stripe already moved the subscription to a
+    // terminal `canceled` state. Calling cancel() on an already-canceled
+    // subscription fails with an error that does NOT match the "no such
+    // subscription" regex below, which would otherwise make the venue
+    // permanently undeletable.
+    let alreadyCanceledOnStripe = false;
+    try {
+      const retrieved = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
+      alreadyCanceledOnStripe = retrieved.status === "canceled";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const alreadyGone = /No such subscription|resource_missing/i.test(message);
+      if (!alreadyGone) {
+        throw new Error(`Failed to look up the venue's Stripe subscription: ${message}. Venue was not deleted.`);
+      }
+      alreadyCanceledOnStripe = true;
+    }
+
+    if (!alreadyCanceledOnStripe) {
+      try {
+        await stripe.subscriptions.cancel(subscription.stripe_subscription_id);
+        subscriptionCancelled = true;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        // If Stripe no longer knows this subscription, it is effectively already
+        // cancelled — proceed with the venue delete. Otherwise abort so we never
+        // orphan a live, billable subscription.
+        const alreadyGone = /No such subscription|resource_missing/i.test(message);
+        if (!alreadyGone) {
+          throw new Error(`Failed to cancel the venue's Stripe subscription: ${message}. Venue was not deleted.`);
+        }
+      }
+    }
+  }
+
   const { error } = await supabaseAdmin!.from("venues").delete().eq("id", id);
   if (error) {
     throw new Error(error.message ?? "Failed to delete venue.");
   }
+
+  return { subscriptionCancelled };
 }
 
 export async function bulkDeleteAdminAdvertisements(ids: string[]): Promise<number> {
