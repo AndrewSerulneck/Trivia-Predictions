@@ -21,7 +21,7 @@ import {
   type RewardDefinition,
 } from "@/lib/rewardDefinitions";
 import type { RewardPrizeInput } from "@/lib/rewards";
-import type { CampaignRecurringType, RewardDiscountKind, RewardMenuItem } from "@/types";
+import type { CampaignRecurringType, ChallengeWinCondition, RewardDiscountKind, RewardMenuItem } from "@/types";
 
 export type RewardCreationContextDTO = {
   scheduled: boolean;
@@ -35,6 +35,7 @@ export type CreateRewardSubmission = {
   venueId: string;
   definitionId: string;
   cadence: CampaignRecurringType;
+  winCondition: ChallengeWinCondition;
   threshold: number;
   winnerQuota: number;
   prize: RewardPrizeInput;
@@ -65,7 +66,7 @@ const MENU_ITEM_OPTIONS: Array<{ value: RewardMenuItem; label: string }> = [
 ];
 
 const CADENCE_LABEL: Record<string, string> = {
-  none: "One-off",
+  none: "Single Game",
   daily: "Daily",
   weekly: "Weekly",
   monthly: "Monthly",
@@ -155,8 +156,11 @@ export function CreateRewardWizard({
   const [contextError, setContextError] = useState<string | null>(null);
 
   const [cadence, setCadence] = useState<CampaignRecurringType>("none");
+  const [cadenceError, setCadenceError] = useState<string | null>(null);
+  const [winCondition, setWinCondition] = useState<ChallengeWinCondition>("points_threshold");
   const [threshold, setThreshold] = useState<number>(0);
   const [customThreshold, setCustomThreshold] = useState("");
+  const [thresholdError, setThresholdError] = useState<string | null>(null);
 
   const [prizeChoice, setPrizeChoice] = useState<PrizeChoice>("menu_item");
   const [menuItem, setMenuItem] = useState<RewardMenuItem>("appetizer");
@@ -178,6 +182,7 @@ export function CreateRewardWizard({
     setDefinition(picked);
     setThreshold(picked.defaultThreshold);
     setCustomThreshold("");
+    setWinCondition("points_threshold");
     setContext(null);
     setContextError(null);
     setContextLoading(true);
@@ -223,13 +228,17 @@ export function CreateRewardWizard({
 
   const cadenceOptions = context?.allowedCadences ?? [];
   const isRecurring = cadence !== "none";
+  const isGameWinner = winCondition === "game_winner";
 
   const handleSubmit = async () => {
     if (!definition) return;
-    const quota = parseInt(winnerQuota, 10);
-    if (!Number.isFinite(quota) || quota < 1) {
-      setSubmitError("Enter how many of this prize are available.");
-      return;
+    let quota = 1;
+    if (!isGameWinner) {
+      quota = parseInt(winnerQuota, 10);
+      if (!Number.isFinite(quota) || quota < 1) {
+        setSubmitError("Enter how many of this prize are available.");
+        return;
+      }
     }
     if (prize.prizeKind === "menu_item" && prize.menuItem === "other" && !prize.menuItemName) {
       setSubmitError("Enter a name for the menu item.");
@@ -242,6 +251,7 @@ export function CreateRewardWizard({
         venueId,
         definitionId: definition.id,
         cadence,
+        winCondition,
         threshold: effectiveThreshold,
         winnerQuota: quota,
         prize,
@@ -303,9 +313,6 @@ export function CreateRewardWizard({
                 <span className="text-lg">{def.glyph}</span>
                 <span className="min-w-0">
                   <span className="block font-black">{def.name}</span>
-                  <span className={`block ${s.helpText}`}>
-                    {renderRewardRequirement(def, def.defaultThreshold)}
-                  </span>
                 </span>
               </button>
             ))}
@@ -334,14 +341,23 @@ export function CreateRewardWizard({
           <div>
             <p className={s.label}>Competition</p>
             <div className="grid grid-cols-2 gap-2">
-              {cadenceOptions.map((c) => (
+              {(["none", "weekly"] as CampaignRecurringType[]).map((c) => (
                 <button
                   key={c}
                   type="button"
-                  onClick={() => setCadence(c)}
+                  onClick={() => {
+                    if (c !== "none" && !cadenceOptions.includes(c)) {
+                      setCadenceError(
+                        "You must schedule recurring Live Trivia games to offer a recurring Live Trivia reward.",
+                      );
+                      return;
+                    }
+                    setCadenceError(null);
+                    setCadence(c);
+                  }}
                   className={`${s.chip} ${cadence === c ? s.chipActive : ""}`}
                 >
-                  {CADENCE_LABEL[c] ?? c}
+                  {c === "none" ? "Single Game" : "Recurring"}
                 </button>
               ))}
             </div>
@@ -350,38 +366,90 @@ export function CreateRewardWizard({
                 ? "Winners are counted fresh each week — a prior winner can win again next cycle."
                 : "Runs once until the prize quota is filled."}
             </p>
+            {cadenceError ? (
+              <div className={`mt-1.5 ${s.error}`}>
+                {cadenceError} <a href={scheduleLinkHref} className="underline">Schedule Live Trivia</a>.
+              </div>
+            ) : null}
           </div>
 
-          <div>
-            <p className={s.label}>Points target</p>
-            <div className="grid grid-cols-4 gap-2">
-              {definition.thresholdOptions.map((opt) => (
+          {definition.supportsGameWinner ? (
+            <div>
+              <p className={s.label}>How is this reward won?</p>
+              <div className="grid grid-cols-2 gap-2">
                 <button
-                  key={opt}
                   type="button"
-                  onClick={() => {
-                    setThreshold(opt);
-                    setCustomThreshold("");
-                  }}
-                  className={`${s.chip} ${!customThreshold && threshold === opt ? s.chipActive : ""}`}
+                  onClick={() => setWinCondition("points_threshold")}
+                  className={`${s.chip} ${!isGameWinner ? s.chipActive : ""}`}
                 >
-                  {opt.toLocaleString("en-US")}
+                  Points target
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setWinCondition("game_winner")}
+                  className={`${s.chip} ${isGameWinner ? s.chipActive : ""}`}
+                >
+                  Winner of the game
+                </button>
+              </div>
+              <p className={`mt-1.5 ${s.helpText}`}>
+                {isGameWinner
+                  ? "Only whoever wins the Live Trivia game gets this prize — there's exactly one winner, so no quantity to set."
+                  : "Anyone who reaches the points target gets this prize, up to the quantity you set next."}
+              </p>
             </div>
-            <input
-              type="number"
-              min={1}
-              placeholder="Custom target"
-              value={customThreshold}
-              onChange={(e) => setCustomThreshold(e.target.value)}
-              className={`mt-2 ${s.input}`}
-            />
-            <p className={`mt-1.5 ${s.helpText}`}>{renderRewardRequirement(definition, effectiveThreshold)}</p>
-          </div>
+          ) : null}
 
-          <button type="button" onClick={() => setStep("prize")} className={s.primaryButton}>
-            Next: Prize
+          {isGameWinner ? null : (
+            <div>
+              <p className={s.label}>Points target</p>
+              <div className="grid grid-cols-4 gap-2">
+                {definition.thresholdOptions.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      setThreshold(opt);
+                      setCustomThreshold("");
+                    }}
+                    className={`${s.chip} ${!customThreshold && threshold === opt ? s.chipActive : ""}`}
+                  >
+                    {opt.toLocaleString("en-US")}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="number"
+                min={1}
+                placeholder="Custom target"
+                value={customThreshold}
+                onChange={(e) => {
+                  setCustomThreshold(e.target.value);
+                  setThresholdError(null);
+                }}
+                className={`mt-2 ${s.input}`}
+              />
+              <p className={`mt-1.5 ${s.helpText}`}>{renderRewardRequirement(definition, effectiveThreshold)}</p>
+              {thresholdError ? <div className={`mt-1.5 ${s.error}`}>{thresholdError}</div> : null}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!isGameWinner) {
+                const custom = parseInt(customThreshold, 10);
+                if (customThreshold.trim() && Number.isFinite(custom) && custom % 10 !== 0) {
+                  setThresholdError("Custom target must be a multiple of 10.");
+                  return;
+                }
+              }
+              setThresholdError(null);
+              setStep("prize");
+            }}
+            className={s.primaryButton}
+          >
+            Next: Offer a Prize
           </button>
         </div>
       ) : null}
@@ -476,19 +544,23 @@ export function CreateRewardWizard({
             </div>
           )}
 
-          <button type="button" onClick={() => setStep("quantity")} className={s.primaryButton}>
-            Next: Quantity
+          <button
+            type="button"
+            onClick={() => setStep(isGameWinner ? "confirm" : "quantity")}
+            className={s.primaryButton}
+          >
+            {isGameWinner ? "Next: Confirm" : "Next: Quantity"}
           </button>
         </div>
       ) : null}
 
-      {step === "quantity" && definition ? (
+      {step === "quantity" && definition && !isGameWinner ? (
         <div className="space-y-4">
           <BackButton to="prize" label="Back" />
           <p className={s.heading}>Quantity</p>
           <div>
             <label className={s.label}>
-              How many winners can claim this prize {isRecurring ? "each cycle" : "in total"}?
+              How many of these rewards do you want to make available{isRecurring ? " each cycle" : ""}?
             </label>
             <input
               type="number"
@@ -506,7 +578,7 @@ export function CreateRewardWizard({
 
       {step === "confirm" && definition ? (
         <div className="space-y-4">
-          <BackButton to="quantity" label="Back" />
+          <BackButton to={isGameWinner ? "prize" : "quantity"} label="Back" />
           <p className={s.heading}>Confirm</p>
 
           <div>
@@ -516,7 +588,7 @@ export function CreateRewardWizard({
             </div>
             <div className={s.summaryRow}>
               <span>Requirement</span>
-              <span className="font-bold">{renderRewardRequirement(definition, effectiveThreshold)}</span>
+              <span className="font-bold">{renderRewardRequirement(definition, effectiveThreshold, winCondition)}</span>
             </div>
             <div className={s.summaryRow}>
               <span>Cadence</span>
@@ -526,10 +598,12 @@ export function CreateRewardWizard({
               <span>Prize</span>
               <span className="font-bold">{prizeSummary}</span>
             </div>
-            <div className={s.summaryRow}>
-              <span>Winners {isRecurring ? "per cycle" : "total"}</span>
-              <span className="font-bold">{winnerQuota}</span>
-            </div>
+            {isGameWinner ? null : (
+              <div className={s.summaryRow}>
+                <span>Rewards available {isRecurring ? "per cycle" : "total"}</span>
+                <span className="font-bold">{winnerQuota}</span>
+              </div>
+            )}
           </div>
 
           {submitError ? <div className={s.error}>{submitError}</div> : null}

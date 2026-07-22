@@ -169,6 +169,13 @@ function VenueChallengesPanelInner({
                       // Legacy leaderboard-mode rewards finish out their current cycle, but
                       // standings are never rendered on this panel (Rewards is progress-only).
                       <p className="mt-3 text-base text-slate-500">In progress — check back for results.</p>
+                    ) : challenge.winCondition === "game_winner" ? (
+                      // No points target to bar-chart — the reward goes to whoever wins the
+                      // game, resolved by the resolve-live-trivia-winners cron after the game
+                      // ends.
+                      <p className="mt-3 text-base text-slate-500">
+                        Awarded to the winner of the Live Trivia game.
+                      </p>
                     ) : (
                       <div className="mt-3">
                         <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">

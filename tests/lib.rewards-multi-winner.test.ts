@@ -133,6 +133,7 @@ function makeCampaign(overrides: Partial<ChallengeCampaign> = {}): ChallengeCamp
     winnerUserId: null,
     prizeType: "free_appetizer",
     prizeGiftCertificateAmount: null,
+    winCondition: "points_threshold",
     winnerQuota: 1,
     isActive: true,
     ...overrides,

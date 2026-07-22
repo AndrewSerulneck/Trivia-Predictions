@@ -206,6 +206,14 @@ export type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "y
 export type ChallengeScheduleType = "single_day" | "multi_day" | "recurring" | "one_time";
 export type ChallengeImageFitMode = "cover" | "contain";
 export type ChallengeMode = "progress" | "leaderboard";
+
+/**
+ * How a reward is won. "points_threshold" is the historical (and default)
+ * behavior — cross pointsRequiredToWin. "game_winner" awards the top scorer(s)
+ * of a finished Live Trivia occurrence regardless of score; those campaigns are
+ * resolved by the resolve-live-trivia-winners cron, never by points accrual.
+ */
+export type ChallengeWinCondition = "points_threshold" | "game_winner";
 export type ChallengeLeaderboardTiebreaker = "first_to_score" | "latest_activity";
 export interface ChallengeLeaderboardEntry {
   rank: number;
@@ -260,6 +268,13 @@ export interface ChallengeCampaign {
   prizeType?: PrizeType | null;
   prizeGiftCertificateAmount?: number | null;
   // ── Rewards (Phase 2) ──
+  /**
+   * How this reward is won. "points_threshold" (default) resolves via points
+   * accrual against pointsRequiredToWin; "game_winner" is awarded to the top
+   * scorer(s) of a finished Live Trivia occurrence by the resolver cron and
+   * ignores pointsRequiredToWin entirely.
+   */
+  winCondition: ChallengeWinCondition;
   /** Winners awarded per cycle (one-time rewards: total). Defaults to 1. */
   winnerQuota: number;
   /** Which pre-set reward definition created this (e.g. "live_trivia_challenge"), or null. */

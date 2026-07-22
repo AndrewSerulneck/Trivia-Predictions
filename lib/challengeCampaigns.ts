@@ -15,6 +15,7 @@ import type {
   ChallengeLeaderboardTiebreaker,
   ChallengeLeaderboardViewer,
   ChallengeMode,
+  ChallengeWinCondition,
   PrizeType,
   RewardPrizeKind,
   RewardMenuItem,
@@ -54,6 +55,7 @@ type ChallengeCampaignRow = {
   // Phase 9a: the venue owner who created this campaign, or null for admin-created.
   created_by_owner_id: string | null;
   // Rewards Phase 2: quota + richer prize model (nullable on legacy rows).
+  win_condition: string | null;
   winner_quota: number | null;
   reward_definition_id: string | null;
   prize_kind: string | null;
@@ -66,7 +68,7 @@ type ChallengeCampaignRow = {
 // Single source of truth for the campaign SELECT list (was duplicated across the
 // list + create-insert queries). Includes created_by_owner_id (Phase 9a).
 const CAMPAIGN_SELECT_COLUMNS =
-  "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active, created_by_owner_id, winner_quota, reward_definition_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value";
+  "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active, created_by_owner_id, win_condition, winner_quota, reward_definition_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value";
 
 type ChallengeCampaignProgressRow = {
   id: string;
@@ -133,6 +135,13 @@ function normalizeDiscountKind(value: string | null | undefined): RewardDiscount
 function normalizeWinnerQuota(value: number | null | undefined): number {
   if (!Number.isFinite(value)) return 1;
   return Math.max(1, Math.round(Number(value)));
+}
+
+// Unknown/legacy/null values fall back to the historical points-threshold
+// behavior, so a row written before the win_condition column existed keeps
+// resolving exactly as it did.
+function normalizeWinCondition(value: string | null | undefined): ChallengeWinCondition {
+  return String(value ?? "").trim() === "game_winner" ? "game_winner" : "points_threshold";
 }
 
 // Coupons are minted for winners of any campaign that carries a prize. Rewards
@@ -377,6 +386,7 @@ function mapCampaignRow(
     prizeClaimedAt: prizeClaimedAt ?? null,
     prizeType: VALID_PRIZE_TYPES.includes(row.prize_type as PrizeType) ? (row.prize_type as PrizeType) : null,
     prizeGiftCertificateAmount: row.prize_gift_certificate_amount ?? null,
+    winCondition: normalizeWinCondition(row.win_condition),
     winnerQuota: normalizeWinnerQuota(row.winner_quota),
     rewardDefinitionId: row.reward_definition_id?.trim() || null,
     ...resolveRewardPrize(row),
@@ -1130,6 +1140,8 @@ export async function createChallengeCampaign(input: {
   isActive?: boolean;
   /** Phase 9a: stamp the creating owner (null/absent = admin-created). */
   createdByOwnerId?: string | null;
+  /** Rewards: "game_winner" resolves via the resolver cron, not points accrual. */
+  winCondition?: ChallengeWinCondition;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
   const name = String(input.name ?? "").trim();
@@ -1177,6 +1189,7 @@ export async function createChallengeCampaign(input: {
     display_order: input.displayOrder ?? null,
     prize_type: VALID_PRIZE_TYPES.includes(input.prizeType as PrizeType) ? input.prizeType : null,
     prize_gift_certificate_amount: giftCardAmount,
+    win_condition: normalizeWinCondition(input.winCondition),
     winner_quota: normalizeWinnerQuota(input.winnerQuota),
     reward_definition_id: String(input.rewardDefinitionId ?? "").trim() || null,
     prize_kind: prizeKind,
@@ -1703,7 +1716,18 @@ export async function applyChallengeCampaignPoints(params: {
     // we clamp the quota to 1, reproducing exactly today's single-winner behavior;
     // a one-time reward already resolved is inactive and never reaches here.
     const alreadyResolved = !isRewardsEnabled() && Boolean(campaign.winnerUserId);
-    if (campaign.challengeMode === "progress" && nextProgress >= campaign.pointsRequiredToWin && !alreadyResolved) {
+    // A "game_winner" reward is NOT won by accruing points — it is awarded to the
+    // top scorer(s) of a finished Live Trivia occurrence by the
+    // resolve-live-trivia-winners cron (lib/liveTriviaWinnerRewards.ts). Its
+    // points_required_to_win is a NOT NULL sentinel, so without this guard every
+    // such campaign would fire here on the player's very first point.
+    const resolvedByCron = campaign.winCondition === "game_winner";
+    if (
+      campaign.challengeMode === "progress" &&
+      !resolvedByCron &&
+      nextProgress >= campaign.pointsRequiredToWin &&
+      !alreadyResolved
+    ) {
       const isRecurring = Boolean(campaign.recurringType && campaign.recurringType !== "none");
       const effectiveQuota = isRewardsEnabled() ? campaign.winnerQuota : 1;
       // One-time rewards use the epoch-sentinel cycle_start; recurring use the

@@ -1521,6 +1521,87 @@ export async function findOccurrencesToSeed(
   return targets;
 }
 
+// How far back the winner-resolver sweep looks for games that have finished but
+// not yet been resolved. Generous relative to the cron's cadence so a few missed
+// runs (deploy, outage) still get picked up — resolution is idempotent, so
+// re-examining an already-resolved occurrence costs a no-op.
+const ENDED_OCCURRENCE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Identifies every occurrence that has FINISHED within the lookback window —
+ * the mirror of findOccurrencesToSeed, for the game-winner reward resolver
+ * (lib/liveTriviaWinnerRewards.ts). Derives occurrences from
+ * enumerateScheduleOccurrences so it can never disagree with the seeder or the
+ * live-state resolver about when a game ran or which occurrence_date keys it.
+ */
+export async function findEndedOccurrences(
+  nowMs: number,
+  lookbackMs = ENDED_OCCURRENCE_LOOKBACK_MS
+): Promise<LiveOccurrenceSeedTarget[]> {
+  const rows = await loadScheduleRows();
+  const targets: LiveOccurrenceSeedTarget[] = [];
+
+  for (const row of rows) {
+    const venueId = toSafeVenueId(String(row.venue_id ?? ""));
+    if (!venueId) continue;
+
+    const rounds = clampRounds(Number(row.num_rounds));
+    const seenOccurrenceDates = new Set<string>();
+
+    for (const occurrence of enumerateScheduleOccurrences(row, nowMs)) {
+      // Ended, and recently enough that we still care.
+      if (occurrence.endMs > nowMs) continue;
+      if (nowMs - occurrence.endMs > lookbackMs) continue;
+      if (seenOccurrenceDates.has(occurrence.occurrenceDate)) continue;
+      seenOccurrenceDates.add(occurrence.occurrenceDate);
+      targets.push({
+        scheduleId: row.id,
+        occurrenceDate: occurrence.occurrenceDate,
+        venueId,
+        numRounds: rounds,
+        startMs: occurrence.startMs,
+        endMs: occurrence.endMs,
+      });
+    }
+  }
+
+  return targets;
+}
+
+/**
+ * Final standings for a finished occurrence: every player who scored, ordered by
+ * total points descending. Unlike loadGameLeaderboard this is not viewer-scoped,
+ * not truncated to a display limit, and is safe to call after the game window
+ * closes — the winner resolver needs the complete field to detect ties for first.
+ */
+export async function loadOccurrenceFinalStandings(
+  scheduleId: string,
+  occurrenceDate: string
+): Promise<Array<{ userId: string; totalPoints: number }>> {
+  const admin = supabaseAdmin;
+  if (!admin) return [];
+
+  const { data, error } = await admin
+    .from("live_showdown_answers")
+    .select("user_id, points_awarded")
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate);
+  if (error) {
+    throw new Error(error.message || "Failed to load final standings.");
+  }
+
+  const totals = new Map<string, number>();
+  for (const raw of (data ?? []) as Array<{ user_id: string; points_awarded: number }>) {
+    const userId = String(raw.user_id ?? "").trim();
+    if (!userId) continue;
+    totals.set(userId, (totals.get(userId) ?? 0) + Math.max(0, Number(raw.points_awarded ?? 0)));
+  }
+
+  return Array.from(totals.entries())
+    .map(([userId, totalPoints]) => ({ userId, totalPoints }))
+    .sort((a, b) => b.totalPoints - a.totalPoints);
+}
+
 async function loadRecentVenueLiveTriviaCategories(
   venueId: string,
   occurrenceDate: string

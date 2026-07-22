@@ -67,6 +67,8 @@ type AdminChallengeCampaign = {
   prizeType?: PrizeType | null;
   prizeGiftCertificateAmount?: number | null;
   isActive: boolean;
+  // ── Rewards: game-winner win condition ──
+  winCondition?: "points_threshold" | "game_winner";
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -215,6 +217,11 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   const [formLeaderboardTiebreaker, setFormLeaderboardTiebreaker] = useState<ChallengeLeaderboardTiebreaker>("first_to_score");
   const [formMultiplier, setFormMultiplier] = useState("1");
   const [formPointsRequired, setFormPointsRequired] = useState("100");
+  // Set only while editing a wizard-created "winner of the game" reward — that
+  // reward ignores pointsRequiredToWin entirely (resolved by the
+  // resolve-live-trivia-winners cron, not points accrual), so the raw field
+  // below must not look editable for it.
+  const [editingWinCondition, setEditingWinCondition] = useState<"points_threshold" | "game_winner" | null>(null);
   const [formRecurring, setFormRecurring] = useState<CampaignRecurringType>("none");
   const [formActive, setFormActive] = useState(true);
   const [formPrizeType, setFormPrizeType] = useState<PrizeType | "none">("none");
@@ -411,6 +418,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     setFormPrizeAmount("");
     setCreateError("");
     setEditingCampaignId(null);
+    setEditingWinCondition(null);
   }
 
   function beginCreate() {
@@ -449,6 +457,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
 
   function beginEdit(campaign: AdminChallengeCampaign) {
     setEditingCampaignId(campaign.id);
+    setEditingWinCondition(campaign.winCondition ?? "points_threshold");
     setFormName(campaign.name);
     setFormRules(campaign.rules);
     setFormVenueIds(campaign.venueIds);
@@ -879,7 +888,16 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
               onChange={(e) => setFormMultiplier(e.target.value)}
             />
           </div>
-          {formChallengeMode === "progress" ? (
+          {formChallengeMode === "progress" && editingWinCondition === "game_winner" ? (
+            <div>
+              <label className={lbl}>Points Required to Win</label>
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800">
+                This reward is set to award the winner of the Live Trivia game, regardless of
+                score — it has no points target to edit. It&apos;s resolved automatically once
+                each game ends.
+              </p>
+            </div>
+          ) : formChallengeMode === "progress" ? (
             <div>
               <label className={lbl}>Points Required to Win</label>
               <input
@@ -1165,6 +1183,11 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                     </td>
                     <td className={TD}>
                       <span className="font-medium text-slate-900">{c.name}</span>
+                      {c.winCondition === "game_winner" ? (
+                        <span className="ml-2 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                          Game Winner
+                        </span>
+                      ) : null}
                       <div className="text-xs text-slate-400">
                         {new Date(c.createdAt).toLocaleDateString()}
                       </div>

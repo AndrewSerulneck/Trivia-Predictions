@@ -54,10 +54,12 @@ import {
   updateChallengeCampaign,
 } from "@/lib/challengeCampaigns";
 import {
+  REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE,
   REWARD_INVALID_PRIZE_MESSAGE,
   REWARD_INVALID_QUANTITY_MESSAGE,
   REWARD_INVALID_THRESHOLD_MESSAGE,
   REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE,
+  REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE,
   REWARD_UNKNOWN_DEFINITION_MESSAGE,
   REWARD_UNSUPPORTED_CADENCE_MESSAGE,
   createReward,
@@ -75,6 +77,7 @@ import type {
   ChallengeImageFitMode,
   ChallengeLeaderboardTiebreaker,
   ChallengeMode,
+  ChallengeWinCondition,
   PrizeType,
 } from "@/types";
 import {
@@ -566,6 +569,7 @@ export async function POST(request: Request) {
           venueId: string;
           definitionId: string;
           cadence?: CampaignRecurringType;
+          winCondition?: ChallengeWinCondition;
           threshold?: number;
           winnerQuota?: number;
           prize?: RewardPrizeInput;
@@ -906,6 +910,7 @@ export async function POST(request: Request) {
           venueId: body.venueId,
           definitionId: body.definitionId,
           cadence: body.cadence ?? "none",
+          winCondition: body.winCondition ?? "points_threshold",
           threshold: Number(body.threshold),
           winnerQuota: Number(body.winnerQuota),
           prize: body.prize as RewardPrizeInput,
@@ -918,9 +923,11 @@ export async function POST(request: Request) {
           message === REWARD_UNKNOWN_DEFINITION_MESSAGE ||
           message === REWARD_UNSUPPORTED_CADENCE_MESSAGE ||
           message === REWARD_INVALID_THRESHOLD_MESSAGE ||
+          message === REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE ||
           message === REWARD_INVALID_QUANTITY_MESSAGE ||
           message === REWARD_INVALID_PRIZE_MESSAGE ||
-          message === REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE
+          message === REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE ||
+          message === REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE
             ? 400
             : 500;
         return NextResponse.json({ ok: false, error: message }, { status });

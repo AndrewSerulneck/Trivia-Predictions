@@ -9,12 +9,14 @@ import { getTimeZoneParts } from "@/lib/categoryBlitzScheduleTime";
 import {
   getRewardDefinition,
   isSupportedRewardCadence,
+  isValidRewardThreshold,
   renderRewardRequirement,
   type RewardDefinitionId,
 } from "@/lib/rewardDefinitions";
 import type {
   CampaignRecurringType,
   ChallengeCampaign,
+  ChallengeWinCondition,
   RewardDiscountKind,
   RewardMenuItem,
   RewardPrizeKind,
@@ -66,6 +68,10 @@ export const REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE =
 export const REWARD_UNSUPPORTED_CADENCE_MESSAGE =
   "That competition cadence isn't available for this reward.";
 export const REWARD_INVALID_THRESHOLD_MESSAGE = "Enter a valid points target.";
+export const REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE =
+  "Custom target must be a multiple of 10.";
+export const REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE =
+  "This reward can't be offered to the winner of the game.";
 export const REWARD_INVALID_QUANTITY_MESSAGE =
   "Enter how many of this prize are available.";
 export const REWARD_INVALID_PRIZE_MESSAGE = "Choose a valid prize for this reward.";
@@ -229,7 +235,12 @@ export type CreateRewardParams = {
   definitionId: string;
   /** Must be one of the resolveRewardCreationContext allowedCadences for this venue. */
   cadence: CampaignRecurringType;
-  /** Points target to win. */
+  /**
+   * How the reward is won. "game_winner" awards the top scorer(s) of a finished
+   * Live Trivia game and ignores `threshold` / `winnerQuota` entirely.
+   */
+  winCondition?: ChallengeWinCondition;
+  /** Points target to win. Ignored when winCondition is "game_winner". */
   threshold: number;
   /** How many of this prize are available per cycle (the "quantity" step). */
   winnerQuota: number;
@@ -267,11 +278,29 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     throw new Error(REWARD_UNSUPPORTED_CADENCE_MESSAGE);
   }
 
-  const threshold = Math.round(Number(params.threshold));
-  if (!Number.isFinite(threshold) || threshold < 1) throw new Error(REWARD_INVALID_THRESHOLD_MESSAGE);
+  const winCondition: ChallengeWinCondition =
+    params.winCondition === "game_winner" ? "game_winner" : "points_threshold";
+  if (winCondition === "game_winner" && !definition.supportsGameWinner) {
+    throw new Error(REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE);
+  }
 
-  const winnerQuota = Math.round(Number(params.winnerQuota));
-  if (!Number.isFinite(winnerQuota) || winnerQuota < 1 || winnerQuota > WINNER_QUOTA_CAP) {
+  // A game-winner reward has no points target. points_required_to_win is NOT
+  // NULL, so we write the sentinel 1 — it is never evaluated, because
+  // recordChallengeProgress skips game_winner campaigns entirely and the
+  // resolver cron is the only thing that awards them.
+  const isGameWinner = winCondition === "game_winner";
+  const threshold = isGameWinner ? 1 : Math.round(Number(params.threshold));
+  if (!isGameWinner) {
+    if (!Number.isFinite(threshold) || threshold < 1) throw new Error(REWARD_INVALID_THRESHOLD_MESSAGE);
+    if (!isValidRewardThreshold(threshold)) throw new Error(REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE);
+  }
+
+  // A game has exactly one first place, so a game-winner reward is always
+  // quantity 1 — the wizard doesn't even ask. (Ties are handled at resolution
+  // time by lib/liveTriviaWinnerRewards.ts, which widens the quota to the tie
+  // count so co-winners are all honored.)
+  const winnerQuota = isGameWinner ? 1 : Math.round(Number(params.winnerQuota));
+  if (!isGameWinner && (!Number.isFinite(winnerQuota) || winnerQuota < 1 || winnerQuota > WINNER_QUOTA_CAP)) {
     throw new Error(REWARD_INVALID_QUANTITY_MESSAGE);
   }
 
@@ -287,7 +316,8 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
 
   return createChallengeCampaign({
     name: definition.name,
-    rules: renderRewardRequirement(definition, threshold),
+    rules: renderRewardRequirement(definition, threshold, winCondition),
+    winCondition,
     // CRITICAL: non-empty venue_ids so the reward is scoped to this venue. Empty
     // venue_ids would make the engine treat it as a global campaign (see
     // campaignMatchesVenue in lib/challengeCampaigns.ts).

@@ -13,6 +13,7 @@ import type {
   CampaignRecurringType,
   ChallengeGameType,
   ChallengeMode,
+  ChallengeWinCondition,
   OwnerScheduleGameType,
 } from "@/types";
 
@@ -34,6 +35,15 @@ export type RewardDefinition = {
   requiresScheduledGame: OwnerScheduleGameType | null;
   /** Player-facing requirement copy; `{threshold}` is substituted at expansion. */
   requirementTemplate: string;
+  /**
+   * Whether this reward can be offered to the winner of the game outright,
+   * ignoring any points target. Only meaningful for definitions backed by a
+   * live game that produces a per-occurrence winner (see
+   * lib/liveTriviaWinnerRewards.ts).
+   */
+  supportsGameWinner: boolean;
+  /** Requirement copy used when winCondition is "game_winner". */
+  gameWinnerRequirement: string;
   /** Suggested point targets the wizard offers (free entry is also allowed). */
   thresholdOptions: number[];
   /** Pre-selected threshold. */
@@ -52,6 +62,8 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
     challengeMode: "progress",
     requiresScheduledGame: "live_trivia",
     requirementTemplate: "Earn {threshold} points in Live Trivia",
+    supportsGameWinner: true,
+    gameWinnerRequirement: "Win the Live Trivia game",
     thresholdOptions: [300, 500, 750, 1000],
     defaultThreshold: 500,
     accent: "trivia",
@@ -63,10 +75,26 @@ export function getRewardDefinition(id: string): RewardDefinition | null {
   return REWARD_DEFINITIONS.find((definition) => definition.id === id) ?? null;
 }
 
-/** Substitute the chosen threshold into a definition's requirement copy. */
-export function renderRewardRequirement(definition: RewardDefinition, threshold: number): string {
+/**
+ * Substitute the chosen threshold into a definition's requirement copy. A
+ * "game_winner" reward has no threshold to substitute — it renders the
+ * definition's fixed game-winner copy instead.
+ */
+export function renderRewardRequirement(
+  definition: RewardDefinition,
+  threshold: number,
+  winCondition: ChallengeWinCondition = "points_threshold",
+): string {
+  if (winCondition === "game_winner") return definition.gameWinnerRequirement;
   const safeThreshold = Math.max(1, Math.round(Number(threshold)));
   return definition.requirementTemplate.replace("{threshold}", safeThreshold.toLocaleString("en-US"));
+}
+
+/** Live Trivia questions are worth 10 points, so every target must land on a multiple of 10. */
+export const REWARD_THRESHOLD_STEP = 10;
+
+export function isValidRewardThreshold(threshold: number): boolean {
+  return Number.isFinite(threshold) && threshold >= 1 && threshold % REWARD_THRESHOLD_STEP === 0;
 }
 
 // The cadences Rewards can express on the current challenge_campaigns engine.

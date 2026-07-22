@@ -47,6 +47,7 @@ function makeCampaign(overrides: Partial<ChallengeCampaign> = {}): ChallengeCamp
     pointMultiplier: 1,
     pointsRequiredToWin: 100,
     recurringType: "none",
+    winCondition: "points_threshold",
     winnerQuota: 1,
     isActive: true,
     createdByOwnerId: "owner-1",
