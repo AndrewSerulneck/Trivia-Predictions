@@ -655,7 +655,10 @@ function isCampaignEligibleAtTime(campaign: ChallengeCampaign, now: Date, gameTy
   return true;
 }
 
-function getCampaignCloseTimestampMs(campaign: ChallengeCampaign): number | null {
+// Exported for the game-winner resolver (lib/liveTriviaWinnerRewards.ts), which
+// needs the same close boundary to avoid awarding a game that ran after the
+// campaign's end date — kept here rather than copied so the two can't drift.
+export function getCampaignCloseTimestampMs(campaign: ChallengeCampaign): number | null {
   const isMultiDay = campaign.scheduleType === "multi_day" || campaign.scheduleType === "one_time";
   if (isMultiDay) {
     // Recurring multi-day campaigns have no fixed close — they repeat each period.
@@ -1033,6 +1036,14 @@ export async function listChallengeCampaigns(params: {
   // Phase 9a: owner-scoped listing filters to a single owner's campaigns.
   if (params.createdByOwnerId) {
     query = query.eq("created_by_owner_id", params.createdByOwnerId);
+  }
+  // Push the venue scope into the WHERE clause (not just the in-memory filter
+  // below) so the 200-row cap applies PER VENUE instead of globally — without
+  // this, a venue's campaign can be truncated by unrelated campaigns at other
+  // venues filling the cap first. venue_ids = '{}' means "global" (matches
+  // every venue), so it's kept alongside the overlap check.
+  if (params.venueId) {
+    query = query.or(`venue_ids.ov.{${params.venueId}},venue_ids.eq.{}`);
   }
 
   const { data, error } = await query.returns<ChallengeCampaignRow[]>();
@@ -1781,6 +1792,11 @@ export async function applyChallengeCampaignPoints(params: {
 // one usernames lookup: two queries total, independent of history depth or
 // campaign count. (prizeRedeemedAt is intentionally not resolved — the snapshot
 // never reads it; the caller resolves prizeClaimedAt separately from redemptions.)
+//
+// "game_winner" rewards are the one exception to the batched read — they have no
+// computable cycle anchor and cost one small bounded query each. That branch is
+// skipped entirely for venues with no such reward, so the two-query shape above
+// still describes the common path.
 async function resolveCurrentCycleWinnersForSnapshot(params: {
   campaigns: ChallengeCampaign[];
   venueTimezone: string;
@@ -1790,10 +1806,20 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
   const result = new Map<string, { cycleStartIso: string; winners: ChallengeCycleWinnerRecord[] }>();
   if (campaigns.length === 0) return result;
 
+  // A "game_winner" reward has NO computable cycle anchor. The resolver cron keys
+  // each award on the Live Trivia occurrence's own start instant (one game, one
+  // cycle — see lib/liveTriviaWinnerRewards.ts), which by design never equals the
+  // epoch sentinel or a computeCycleStart result. Resolving those campaigns the
+  // normal way therefore matches zero ledger rows and the winner is never shown
+  // as having won. They are resolved below from their most recent ledger row
+  // instead of from a computed anchor.
+  const cycleKeyedCampaigns = campaigns.filter((c) => c.winCondition !== "game_winner");
+  const gameWinnerCampaigns = campaigns.filter((c) => c.winCondition === "game_winner");
+
   // Per-campaign target cycle start (recurring: real cycle; one-time: epoch).
   const targetMsById = new Map<string, number>();
   const targetIsoById = new Map<string, string>();
-  for (const campaign of campaigns) {
+  for (const campaign of cycleKeyedCampaigns) {
     const isRecurring = Boolean(campaign.recurringType && campaign.recurringType !== "none");
     const cycleStartDate = isRecurring ? computeCycleStart(campaign, now, venueTimezone) : new Date(0);
     const iso = cycleStartDate.toISOString();
@@ -1802,24 +1828,72 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
     result.set(campaign.id, { cycleStartIso: iso, winners: [] });
   }
 
-  const challengeIds = campaigns.map((c) => c.id);
+  const challengeIds = cycleKeyedCampaigns.map((c) => c.id);
   const targetIsos = [...new Set(targetIsoById.values())];
+
+  type CycleWinnerRow = {
+    id: string; challenge_id: string; cycle_start: string; winner_user_id: string;
+    venue_id: string; points_earned: number; finalized_at: string; prize_type: string | null;
+  };
+  const CYCLE_WINNER_COLUMNS =
+    "id, challenge_id, cycle_start, winner_user_id, venue_id, points_earned, finalized_at, prize_type";
 
   // One batched read: only rows at one of the campaigns' current cycle starts.
   // The .in("cycle_start", …) matches by instant at the DB (timestamptz parses
   // each ISO string), so it never pulls prior cycles regardless of how the DB
   // renders the stored value.
-  const { data, error } = await supabaseAdmin!
-    .from("challenge_cycle_winners")
-    .select("id, challenge_id, cycle_start, winner_user_id, venue_id, points_earned, finalized_at, prize_type")
-    .in("challenge_id", challengeIds)
-    .in("cycle_start", targetIsos)
-    .returns<Array<{
-      id: string; challenge_id: string; cycle_start: string; winner_user_id: string;
-      venue_id: string; points_earned: number; finalized_at: string; prize_type: string | null;
-    }>>();
-  if (error) throw new Error(error.message ?? "Failed to load cycle winners.");
-  const rows = data ?? [];
+  let rows: CycleWinnerRow[] = [];
+  if (challengeIds.length > 0) {
+    const { data, error } = await supabaseAdmin!
+      .from("challenge_cycle_winners")
+      .select(CYCLE_WINNER_COLUMNS)
+      .in("challenge_id", challengeIds)
+      .in("cycle_start", targetIsos)
+      .returns<CycleWinnerRow[]>();
+    if (error) throw new Error(error.message ?? "Failed to load cycle winners.");
+    rows = data ?? [];
+  }
+
+  // Game-winner campaigns: one small bounded read each, resolving "current cycle"
+  // as the most recent game that produced a winner. This list is venue-scoped and
+  // in practice 0–2 entries, and the loop is skipped entirely when a venue has
+  // none — so the common path (and the venue-home hot path) is unchanged.
+  if (gameWinnerCampaigns.length > 0) {
+    const gameWinnerRowSets = await Promise.all(
+      gameWinnerCampaigns.map(async (campaign) => {
+        const { data, error } = await supabaseAdmin!
+          .from("challenge_cycle_winners")
+          .select(CYCLE_WINNER_COLUMNS)
+          .eq("challenge_id", campaign.id)
+          .order("cycle_start", { ascending: false })
+          // A single cycle holds at most GAME_WINNER_TIE_QUOTA_CAP winners, so the
+          // newest rows always contain the whole latest cycle well inside this cap.
+          .limit(50)
+          .returns<CycleWinnerRow[]>();
+        if (error) throw new Error(error.message ?? "Failed to load game-winner cycle winners.");
+        return { campaign, rows: data ?? [] };
+      })
+    );
+
+    for (const { campaign, rows: campaignRows } of gameWinnerRowSets) {
+      if (campaignRows.length === 0) {
+        // Never resolved yet — fall back to the epoch sentinel so quotaRemaining
+        // reads as "full" and viewerWon as false, exactly like a fresh campaign.
+        result.set(campaign.id, { cycleStartIso: new Date(0).toISOString(), winners: [] });
+        continue;
+      }
+      // Compare by instant, not string — same Postgres "+00:00" vs JS "...Z"
+      // reason noted throughout this file.
+      const latestMs = Math.max(...campaignRows.map((r) => new Date(r.cycle_start).getTime()));
+      const latestRows = campaignRows.filter((r) => new Date(r.cycle_start).getTime() === latestMs);
+      targetMsById.set(campaign.id, latestMs);
+      result.set(campaign.id, {
+        cycleStartIso: new Date(latestMs).toISOString(),
+        winners: [],
+      });
+      rows = rows.concat(latestRows);
+    }
+  }
 
   const userIds = [...new Set(rows.map((r) => r.winner_user_id))];
   let usernameById = new Map<string, string>();

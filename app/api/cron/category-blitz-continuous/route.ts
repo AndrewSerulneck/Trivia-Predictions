@@ -1,16 +1,6 @@
 import { NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/cronAuth";
 import { runContinuousCategoryBlitzEngine } from "@/lib/categoryBlitz";
-
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (secret) {
-    const bearer = request.headers.get("authorization") ?? "";
-    if (bearer.toLowerCase() === `bearer ${secret.toLowerCase()}`) return true;
-    const headerSecret = request.headers.get("x-cron-secret") ?? "";
-    return headerSecret === secret;
-  }
-  return false;
-}
 
 /**
  * Drives every venue with continuous Category Blitz mode enabled: scores expired
@@ -19,7 +9,7 @@ function isAuthorized(request: Request): boolean {
  * when no player is actively polling the sessions endpoint.
  */
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized cron request." }, { status: 401 });
   }
 

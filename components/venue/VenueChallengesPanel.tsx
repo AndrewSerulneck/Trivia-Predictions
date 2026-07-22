@@ -149,7 +149,10 @@ function VenueChallengesPanelInner({
                     {isWon && isWinner ? (
                       <div className="mt-3 inline-flex items-center rounded-full px-3 py-1.5 text-sm font-black uppercase tracking-[0.08em] text-amber-300"
                         style={{ border: "1px solid rgba(251,191,36,0.35)", background: "rgba(251,191,36,0.12)" }}>
-                        {isBusy ? "Opening…" : challenge.prizeClaimedAt ? "Prize Claimed" : "→ Tap to Claim Prize"}
+                        {/* prizeClaimedAt is the AWARD timestamp (challenge_campaign_redemptions.claimed_at
+                            defaults to now() on insert), not a redemption flag — it's always set the
+                            instant a winner is picked, so it can't distinguish claimed vs. unclaimed. */}
+                        {isBusy ? "Opening…" : "Prize won! Tap to Claim Reward."}
                       </div>
                     ) : isWon ? (
                       <p className="mt-3 text-base text-slate-500">

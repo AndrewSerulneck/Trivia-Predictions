@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/cronAuth";
 import {
   findOccurrencesToSeed,
   getOccurrenceReadiness,
@@ -8,19 +9,6 @@ import {
 // Narrow window: verify cron only checks games starting within 2 hours so it
 // doesn't do the nightly cron's job and mask nightly-cron failures.
 const VERIFY_LOOKAHEAD_MS = 2 * 60 * 60 * 1000;
-
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (secret) {
-    const bearer = request.headers.get("authorization") ?? "";
-    if (bearer.toLowerCase() === `bearer ${secret.toLowerCase()}`) {
-      return true;
-    }
-    const headerSecret = request.headers.get("x-cron-secret") ?? "";
-    return headerSecret === secret;
-  }
-  return Boolean(request.headers.get("x-vercel-cron"));
-}
 
 type OccurrenceVerifyReport = {
   scheduleId: string;
@@ -34,7 +22,7 @@ type OccurrenceVerifyReport = {
 };
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized cron request." }, { status: 401 });
   }
 

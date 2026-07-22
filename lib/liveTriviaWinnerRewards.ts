@@ -23,18 +23,36 @@ import "server-only";
 // (silently denying three legitimate co-winners) creates a worse problem at the
 // venue. Only players who actually scored above zero are eligible, so an empty
 // or all-zero game awards nobody.
+//
+// TIE CAP: "widen the quota to the tie count" is unbounded on its own — an easy
+// game where a dozen players answer everything correctly would mint a dozen real
+// gift cards from a reward the partner configured as one prize. The tie count is
+// therefore capped (GAME_WINNER_TIE_QUOTA_CAP). When the cap bites we award the
+// lowest user ids deterministically and flag `tieCapApplied` on the resolution so
+// the cron report shows it happened rather than swallowing it. Determinism
+// matters for more than fairness: standings order among equal scores comes from
+// DB row order, which is not stable across queries, so an unsorted subset could
+// award a DIFFERENT set of players on a re-sweep and blow past the cap.
 
 import {
   awardCycleWinner,
+  getCampaignCloseTimestampMs,
   listChallengeCampaigns,
+  updateChallengeCampaign,
 } from "@/lib/challengeCampaigns";
 import {
   findEndedOccurrences,
   loadOccurrenceFinalStandings,
 } from "@/lib/liveShowdownEngine";
 import { isRewardsEnabled } from "@/lib/rewardsFlags";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { ChallengeCampaign } from "@/types";
+
+/**
+ * Most co-winners a single game may mint prizes for. See the TIE CAP note above:
+ * without a ceiling, one unusually easy game turns a one-prize reward into an
+ * unbounded payout. Tune deliberately — every unit is a real coupon.
+ */
+export const GAME_WINNER_TIE_QUOTA_CAP = 5;
 
 export type GameWinnerResolution = {
   scheduleId: string;
@@ -47,6 +65,8 @@ export type GameWinnerResolution = {
   topPoints: number;
   /** How many players tied for first (>1 means co-winners). */
   tiedCount: number;
+  /** True when tiedCount exceeded GAME_WINNER_TIE_QUOTA_CAP and the field was trimmed. */
+  tieCapApplied: boolean;
 };
 
 export type ResolveGameWinnerRewardsReport = {
@@ -62,6 +82,40 @@ function campaignCoversVenue(campaign: ChallengeCampaign, venueId: string): bool
   // enforces this). An empty list would mean "global", which we deliberately do NOT
   // honor here — a global game-winner reward would fire at every venue at once.
   return campaign.venueIds.length > 0 && campaign.venueIds.includes(venueId);
+}
+
+/**
+ * Was this reward actually on offer for this game? The sweep's lookback window is
+ * deliberately wider than the cron interval so missed runs self-heal, which means
+ * it also reaches games that finished BEFORE the reward existed. Without this
+ * check a partner who creates a game-winner reward at 9:50pm immediately mints a
+ * prize for the 9:00pm game that just ended — a payout nobody announced and no
+ * player was playing for.
+ *
+ * The bar is "the reward existed when the game STARTED", not merely when it
+ * ended: a reward created mid-game was not on offer to the players who were
+ * already playing. Deliberately conservative, because the failure mode on the
+ * other side is spending real money.
+ */
+function campaignWasLiveForOccurrence(
+  campaign: ChallengeCampaign,
+  occurrence: { startMs: number; endMs: number },
+): boolean {
+  // Already resolved — matches isCampaignEligibleAtTime's first gate.
+  if (campaign.winnerUserId) return false;
+
+  const createdAtMs = Date.parse(String(campaign.createdAt ?? ""));
+  // An unparseable created_at is not a licence to award; fail closed.
+  if (!Number.isFinite(createdAtMs)) return false;
+  if (occurrence.startMs < createdAtMs) return false;
+
+  // A campaign past its end date must not keep awarding. createReward never sets
+  // endDate today, so this guards admin-edited rows (the raw edit form can set
+  // one on any campaign, including a wizard-created reward).
+  const closeAtMs = getCampaignCloseTimestampMs(campaign);
+  if (closeAtMs !== null && occurrence.endMs > closeAtMs) return false;
+
+  return true;
 }
 
 /**
@@ -82,24 +136,51 @@ export async function resolveGameWinnerRewards(
   };
 
   // With the Rewards flag off, multi-winner behavior is clamped elsewhere; a
-  // game-winner reward can't be created at all in that state, but an existing
-  // row must not be resolved by a flag-off deployment either.
+  // game-winner reward can't be created at all in that state (createReward
+  // rejects it — see REWARD_GAME_WINNER_DISABLED_MESSAGE in lib/rewards.ts),
+  // but an existing row must not be resolved by a flag-off deployment either.
   if (!isRewardsEnabled()) return report;
 
-  const occurrences = await findEndedOccurrences(nowMs);
+  // Oldest game first. A one-off reward can only be spent once, so which game
+  // claims it must be deterministic (the earliest eligible one) rather than a
+  // function of whatever order the schedule rows came back in.
+  const occurrences = (await findEndedOccurrences(nowMs)).sort((a, b) => a.startMs - b.startMs);
   report.occurrencesExamined = occurrences.length;
   if (occurrences.length === 0) return report;
 
-  const allCampaigns = await listChallengeCampaigns();
-  const gameWinnerCampaigns = allCampaigns.filter(
-    (campaign) => campaign.isActive && campaign.winCondition === "game_winner",
+  // Fetch per venue rather than one unscoped listChallengeCampaigns() call —
+  // that call caps at 200 rows globally, so a venue's game-winner campaign
+  // could be truncated by unrelated campaigns at OTHER venues filling the cap
+  // first. Scoping by venue pushes the cap to apply per venue instead (see
+  // listChallengeCampaigns's venue_ids overlap filter in challengeCampaigns.ts).
+  const venueIds = Array.from(new Set(occurrences.map((occurrence) => occurrence.venueId)));
+  const campaignsByVenue = await Promise.all(
+    venueIds.map((venueId) => listChallengeCampaigns({ venueId })),
   );
+  const gameWinnerCampaignById = new Map<string, ChallengeCampaign>();
+  for (const campaigns of campaignsByVenue) {
+    for (const campaign of campaigns) {
+      if (campaign.isActive && campaign.winCondition === "game_winner") {
+        gameWinnerCampaignById.set(campaign.id, campaign);
+      }
+    }
+  }
+  const gameWinnerCampaigns = Array.from(gameWinnerCampaignById.values());
   report.campaignsExamined = gameWinnerCampaigns.length;
   if (gameWinnerCampaigns.length === 0) return report;
 
+  // One-off rewards spent earlier in THIS sweep. gameWinnerCampaigns is captured
+  // once up front, so deactivating a campaign in the database does not remove it
+  // from this in-memory list — without this set, a venue whose 6pm and 9pm games
+  // both land in the lookback window would award the same one-off reward twice.
+  const spentCampaignIds = new Set<string>();
+
   for (const occurrence of occurrences) {
-    const campaigns = gameWinnerCampaigns.filter((campaign) =>
-      campaignCoversVenue(campaign, occurrence.venueId),
+    const campaigns = gameWinnerCampaigns.filter(
+      (campaign) =>
+        !spentCampaignIds.has(campaign.id) &&
+        campaignCoversVenue(campaign, occurrence.venueId) &&
+        campaignWasLiveForOccurrence(campaign, occurrence),
     );
     if (campaigns.length === 0) continue;
 
@@ -122,7 +203,14 @@ export async function resolveGameWinnerRewards(
     const topPoints = standings[0]?.totalPoints ?? 0;
     if (topPoints <= 0) continue;
 
-    const winners = standings.filter((entry) => entry.totalPoints === topPoints);
+    // Sorted by user id so the tied field is in a STABLE order across sweeps —
+    // see the TIE CAP note. Without this, a capped tie could award a different
+    // subset on each sweep and exceed the cap in aggregate.
+    const tiedForFirst = standings
+      .filter((entry) => entry.totalPoints === topPoints)
+      .sort((a, b) => a.userId.localeCompare(b.userId));
+    const tieCapApplied = tiedForFirst.length > GAME_WINNER_TIE_QUOTA_CAP;
+    const winners = tiedForFirst.slice(0, GAME_WINNER_TIE_QUOTA_CAP);
 
     // The occurrence's own start instant is the cycle key — one game, one cycle.
     // This is what makes re-running the sweep a no-op.
@@ -139,8 +227,8 @@ export async function resolveGameWinnerRewards(
             venueId: occurrence.venueId,
             cycleStart,
             pointsEarned: winner.totalPoints,
-            // Widen the quota to the tie count so every co-winner is honored.
-            // The RPC still enforces this cap atomically.
+            // Widen the quota to the (capped) tie count so every co-winner we
+            // honor is honored. The RPC still enforces this cap atomically.
             winnerQuota: winners.length,
             now,
           });
@@ -163,7 +251,8 @@ export async function resolveGameWinnerRewards(
           campaignName: campaign.name,
           awardedUserIds,
           topPoints,
-          tiedCount: winners.length,
+          tiedCount: tiedForFirst.length,
+          tieCapApplied,
         });
       }
 
@@ -172,6 +261,9 @@ export async function resolveGameWinnerRewards(
       // it again. Recurring rewards stay active and resolve every occurrence.
       const isRecurring = Boolean(campaign.recurringType && campaign.recurringType !== "none");
       if (!isRecurring && awardedUserIds.length > 0) {
+        // Mark it spent BEFORE the write: if the update fails we still must not
+        // award this reward again later in the same sweep.
+        spentCampaignIds.add(campaign.id);
         try {
           await deactivateResolvedReward(campaign, awardedUserIds[0]);
         } catch (error) {
@@ -196,10 +288,9 @@ async function deactivateResolvedReward(
   campaign: ChallengeCampaign,
   fallbackWinnerId: string,
 ): Promise<void> {
-  if (!supabaseAdmin) return;
-  const { error } = await supabaseAdmin
-    .from("challenge_campaigns")
-    .update({ is_active: false, winner_user_id: campaign.winnerUserId ?? fallbackWinnerId })
-    .eq("id", campaign.id);
-  if (error) throw new Error(error.message);
+  await updateChallengeCampaign({
+    id: campaign.id,
+    isActive: false,
+    winnerUserId: campaign.winnerUserId ?? fallbackWinnerId,
+  });
 }

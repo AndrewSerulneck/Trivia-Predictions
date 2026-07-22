@@ -1,16 +1,7 @@
 import { NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/cronAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notifications";
-
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (secret) {
-    const bearer = request.headers.get("authorization") ?? "";
-    if (bearer.toLowerCase() === `bearer ${secret.toLowerCase()}`) return true;
-    return (request.headers.get("x-cron-secret") ?? "") === secret;
-  }
-  return false;
-}
 
 type RedemptionWarningRow = {
   winner_user_id: string;
@@ -103,7 +94,7 @@ async function sendExpiryWarnings(): Promise<{ twoDayCount: number; oneDayCount:
 }
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized cron request." }, { status: 401 });
   }
   try {

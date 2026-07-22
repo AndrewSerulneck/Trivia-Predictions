@@ -36,6 +36,7 @@ const BLOCKED_LIVE_SHOWDOWN_CATEGORIES = new Set(["fantasy epics"]);
 const RECENT_CATEGORY_COOLDOWN_OCCURRENCES = 3;
 const RECENT_CATEGORY_SLOT_LOOKBACK_LIMIT = 360;
 const LIVE_TRIVIA_POOL_PAGE_SIZE = 1000;
+const FINAL_STANDINGS_PAGE_SIZE = 1000;
 
 export type LiveShowdownPhase = "answering" | "rest_warning" | "mid_game_break";
 
@@ -1581,20 +1582,25 @@ export async function loadOccurrenceFinalStandings(
   const admin = supabaseAdmin;
   if (!admin) return [];
 
-  const { data, error } = await admin
-    .from("live_showdown_answers")
-    .select("user_id, points_awarded")
-    .eq("schedule_id", scheduleId)
-    .eq("occurrence_date", occurrenceDate);
-  if (error) {
-    throw new Error(error.message || "Failed to load final standings.");
-  }
-
   const totals = new Map<string, number>();
-  for (const raw of (data ?? []) as Array<{ user_id: string; points_awarded: number }>) {
-    const userId = String(raw.user_id ?? "").trim();
-    if (!userId) continue;
-    totals.set(userId, (totals.get(userId) ?? 0) + Math.max(0, Number(raw.points_awarded ?? 0)));
+  for (let from = 0; ; from += FINAL_STANDINGS_PAGE_SIZE) {
+    const { data, error } = await admin
+      .from("live_showdown_answers")
+      .select("user_id, points_awarded")
+      .eq("schedule_id", scheduleId)
+      .eq("occurrence_date", occurrenceDate)
+      .range(from, from + FINAL_STANDINGS_PAGE_SIZE - 1);
+    if (error) {
+      throw new Error(error.message || "Failed to load final standings.");
+    }
+
+    const batch = (data ?? []) as Array<{ user_id: string; points_awarded: number }>;
+    for (const raw of batch) {
+      const userId = String(raw.user_id ?? "").trim();
+      if (!userId) continue;
+      totals.set(userId, (totals.get(userId) ?? 0) + Math.max(0, Number(raw.points_awarded ?? 0)));
+    }
+    if (batch.length < FINAL_STANDINGS_PAGE_SIZE) break;
   }
 
   return Array.from(totals.entries())

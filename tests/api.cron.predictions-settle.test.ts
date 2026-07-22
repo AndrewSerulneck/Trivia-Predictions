@@ -35,28 +35,21 @@ describe("/api/cron/predictions-settle", () => {
     expect(mocks.autoSettleResolvedPredictionMarkets).not.toHaveBeenCalled();
   });
 
-  it("allows Vercel cron header when CRON_SECRET is not configured", async () => {
-    mocks.autoSettleResolvedPredictionMarkets.mockResolvedValue({
-      scannedMarkets: 3,
-      settledMarkets: 2,
-      affectedPicks: 9,
-      winners: 4,
-      losers: 5,
-      canceled: 0,
-    });
-
+  it("rejects the Vercel cron header alone when CRON_SECRET is not configured", async () => {
+    // x-vercel-cron is attacker-settable on any request to the public route URL —
+    // it is not a Vercel-signed value — so it must never substitute for a real
+    // secret. No CRON_SECRET configured means the route fails closed.
     const response = await POST(
       new Request("http://localhost/api/cron/predictions-settle", {
         method: "POST",
         headers: { "x-vercel-cron": "*/5 * * * *" },
       })
     );
-    const body = (await response.json()) as { ok: boolean; result: { settledMarkets: number } };
+    const body = (await response.json()) as { ok: boolean; error: string };
 
-    expect(response.status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(body.result.settledMarkets).toBe(2);
-    expect(mocks.autoSettleResolvedPredictionMarkets).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(401);
+    expect(body).toEqual({ ok: false, error: "Unauthorized cron request." });
+    expect(mocks.autoSettleResolvedPredictionMarkets).not.toHaveBeenCalled();
   });
 
   it("accepts bearer auth when CRON_SECRET is configured", async () => {

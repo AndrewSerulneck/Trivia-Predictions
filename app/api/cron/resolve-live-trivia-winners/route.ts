@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/cronAuth";
 import { resolveGameWinnerRewards } from "@/lib/liveTriviaWinnerRewards";
 
 // Awards "winner of the game" rewards for Live Trivia occurrences that have
@@ -6,23 +7,8 @@ import { resolveGameWinnerRewards } from "@/lib/liveTriviaWinnerRewards";
 // a game. Resolution is idempotent (see lib/liveTriviaWinnerRewards.ts), so
 // running every minute is safe and a missed run self-heals on the next sweep.
 
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (secret) {
-    const bearer = request.headers.get("authorization") ?? "";
-    if (bearer.toLowerCase() === `bearer ${secret.toLowerCase()}`) {
-      return true;
-    }
-
-    const headerSecret = request.headers.get("x-cron-secret") ?? "";
-    return headerSecret === secret;
-  }
-
-  return Boolean(request.headers.get("x-vercel-cron"));
-}
-
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized cron request." }, { status: 401 });
   }
 

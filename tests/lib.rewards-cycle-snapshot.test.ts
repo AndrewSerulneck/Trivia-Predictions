@@ -38,6 +38,28 @@ function createFakeSupabase(store: Record<string, Row[]>) {
     limit(_n: number) {
       return this;
     }
+    // Minimal PostgREST `.or("col.op.val,col.op.val")` support — only the
+    // operators listChallengeCampaigns actually emits (array overlap `ov` and
+    // `eq`), just enough for the venue_ids-scoping test below.
+    or(expr: string) {
+      const clauses = expr.split(",").map((clause) => {
+        const [col, op, rawVal] = clause.split(".");
+        return (r: Row) => {
+          const arr = Array.isArray(r[col]) ? (r[col] as unknown[]) : [];
+          if (op === "ov") {
+            const val = rawVal.replace(/^\{|\}$/g, "");
+            return arr.includes(val);
+          }
+          if (op === "eq") {
+            const val = rawVal.replace(/^\{|\}$/g, "");
+            return val === "" ? arr.length === 0 : arr.length === 1 && arr[0] === val;
+          }
+          return false;
+        };
+      });
+      this.filters.push((r) => clauses.some((clause) => clause(r)));
+      return this;
+    }
     returns<T>() {
       return this as unknown as T;
     }
@@ -335,6 +357,127 @@ describe("getChallengeCampaignSnapshotForUser — multi-winner card state (Phase
     expect(card.viewerWon).toBe(false);
     expect(card.quotaRemaining).toBe(1);
     expect(card.winnerUsernames).toEqual([]);
+  });
+});
+
+describe("getChallengeCampaignSnapshotForUser — game-winner rewards", () => {
+  // A "game_winner" reward is keyed on the Live Trivia occurrence's own start
+  // instant by the resolver cron, never on a computed cycle anchor. Resolving it
+  // like a points-threshold reward matched zero rows, so a real winner's card sat
+  // on "In Progress" forever while their coupon existed in the database.
+  const GAME_START = "2026-07-19T23:00:00.000Z";
+  const EARLIER_GAME_START = "2026-07-18T23:00:00.000Z";
+
+  function gameWinnerRow(overrides: Row = {}): Row {
+    return campaignRow({
+      win_condition: "game_winner",
+      points_required_to_win: 1,
+      winner_quota: 1,
+      rules: "Win the Live Trivia game",
+      ...overrides,
+    });
+  }
+
+  it("recognizes the winner of the most recent game, despite the occurrence-keyed cycle", async () => {
+    store.challenge_campaigns = [gameWinnerRow()];
+    store.challenge_cycle_winners.push({
+      id: "w1",
+      challenge_id: "camp-1",
+      cycle_start: GAME_START,
+      winner_user_id: "u1",
+      venue_id: VENUE_ID,
+      points_earned: 120,
+      finalized_at: "2026-07-20T00:05:00.000Z",
+      prize_type: "free_appetizer",
+    });
+
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(card.viewerWon).toBe(true);
+    expect(card.quotaRemaining).toBe(0);
+    expect(card.winnerUsernames).toEqual(["alice"]);
+  });
+
+  it("shows a non-winner that the prize is claimed rather than still in progress", async () => {
+    store.challenge_campaigns = [gameWinnerRow()];
+    store.challenge_cycle_winners.push({
+      id: "w1",
+      challenge_id: "camp-1",
+      cycle_start: GAME_START,
+      winner_user_id: "u1",
+      venue_id: VENUE_ID,
+      points_earned: 120,
+      finalized_at: "2026-07-20T00:05:00.000Z",
+      prize_type: "free_appetizer",
+    });
+
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u3", venueId: VENUE_ID });
+
+    expect(card.viewerWon).toBe(false);
+    expect(card.quotaRemaining).toBe(0);
+    expect(card.winnerUsernames).toEqual(["alice"]);
+  });
+
+  it("resolves only the LATEST game's winners, not every game in history", async () => {
+    // A recurring game-winner reward accumulates one cycle per game played.
+    store.challenge_campaigns = [gameWinnerRow({ recurring_type: "weekly", active_days: ["mon"] })];
+    store.challenge_cycle_winners.push(
+      { id: "w-old", challenge_id: "camp-1", cycle_start: EARLIER_GAME_START, winner_user_id: "u2", venue_id: VENUE_ID, points_earned: 90, finalized_at: "2026-07-19T00:05:00.000Z", prize_type: "free_appetizer" },
+      { id: "w-new", challenge_id: "camp-1", cycle_start: GAME_START, winner_user_id: "u1", venue_id: VENUE_ID, points_earned: 120, finalized_at: "2026-07-20T00:05:00.000Z", prize_type: "free_appetizer" }
+    );
+
+    const winnerCard = (await getChallengeCampaignSnapshotForUser({ userId: "u1", venueId: VENUE_ID }))[0];
+    const priorWinnerCard = (await getChallengeCampaignSnapshotForUser({ userId: "u2", venueId: VENUE_ID }))[0];
+
+    expect(winnerCard.viewerWon).toBe(true);
+    expect(winnerCard.winnerUsernames).toEqual(["alice"]);
+    // Last week's winner does not still read as a winner this week.
+    expect(priorWinnerCard.viewerWon).toBe(false);
+  });
+
+  it("reads as a fresh, unwon reward before any game has resolved it", async () => {
+    store.challenge_campaigns = [gameWinnerRow()];
+
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(card.viewerWon).toBe(false);
+    expect(card.quotaRemaining).toBe(1);
+    expect(card.winnerUsernames).toEqual([]);
+  });
+
+  it("resolves the viewer's claimed-at for an occurrence-keyed redemption", async () => {
+    store.challenge_campaigns = [gameWinnerRow()];
+    store.challenge_cycle_winners.push({
+      id: "w1",
+      challenge_id: "camp-1",
+      cycle_start: GAME_START,
+      winner_user_id: "u1",
+      venue_id: VENUE_ID,
+      points_earned: 120,
+      finalized_at: "2026-07-20T00:05:00.000Z",
+      prize_type: "free_appetizer",
+    });
+    store.challenge_campaign_redemptions.push({
+      challenge_id: "camp-1",
+      winner_user_id: "u1",
+      venue_id: VENUE_ID,
+      cycle_start: GAME_START,
+      claimed_at: "2026-07-20T01:00:00.000Z",
+      prize_expires_at: "2026-07-27T00:00:00.000Z",
+      prize_redeemed_at: null,
+    });
+
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(card.prizeClaimedAt).toBe("2026-07-20T01:00:00.000Z");
+  });
+
+  it("leaves the batched read untouched for venues with no game-winner reward", async () => {
+    store.challenge_campaigns = [campaignRow({ id: "camp-1" }), campaignRow({ id: "camp-2" })];
+
+    await getChallengeCampaignSnapshotForUser({ userId: "u3", venueId: VENUE_ID });
+
+    expect(fromCallCounts.challenge_cycle_winners).toBe(1);
   });
 });
 

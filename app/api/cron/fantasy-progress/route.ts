@@ -1,23 +1,9 @@
 import { NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/cronAuth";
 import { refreshFantasyProgress } from "@/lib/fantasy";
 
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (secret) {
-    const bearer = request.headers.get("authorization") ?? "";
-    if (bearer.toLowerCase() === `bearer ${secret.toLowerCase()}`) {
-      return true;
-    }
-
-    const headerSecret = request.headers.get("x-cron-secret") ?? "";
-    return headerSecret === secret;
-  }
-
-  return false;
-}
-
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized cron request." }, { status: 401 });
   }
 

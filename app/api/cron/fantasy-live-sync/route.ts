@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/cronAuth";
 import { refreshSportsBingoProgress } from "@/lib/sportsBingo";
 
 type LiveStatsSyncResult = {
@@ -9,21 +10,6 @@ type LiveStatsSyncResult = {
   errors?: string[];
   skipped?: boolean;
 };
-
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (secret) {
-    const bearer = request.headers.get("authorization") ?? "";
-    if (bearer.toLowerCase() === `bearer ${secret.toLowerCase()}`) {
-      return true;
-    }
-
-    const headerSecret = request.headers.get("x-cron-secret") ?? "";
-    return headerSecret === secret;
-  }
-
-  return false;
-}
 
 function readPositiveIntEnv(name: string, fallback: number): number {
   const parsed = Number.parseInt(String(process.env[name] ?? "").trim(), 10);
@@ -85,7 +71,7 @@ async function triggerLiveStatsSyncFromCron(): Promise<LiveStatsSyncResult> {
 }
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized cron request." }, { status: 401 });
   }
 

@@ -361,6 +361,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                   : 0;
 
               const isLeaderboard = campaign.challengeMode === "leaderboard";
+              const isGameWinner = campaign.winCondition === "game_winner";
 
               return (
                 <li key={campaign.id} className="space-y-2">
@@ -368,7 +369,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                     <div>
                       <p className="text-sm font-semibold leading-tight text-white">{campaign.name}</p>
                       <p className="text-[11px] text-cyan-400/70">{gameTypeLabel(campaign.gameTypes)}</p>
-                      {!isLeaderboard && progressDelta > 0 ? (
+                      {!isLeaderboard && !isGameWinner && progressDelta > 0 ? (
                         <span className="mt-1 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-300 animate-pulse">
                           +{progressDelta.toLocaleString()} pts since last visit
                         </span>
@@ -392,6 +393,11 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                     // Legacy leaderboard-mode reward — finishing out its current cycle.
                     // Standings are never rendered here anymore (Rewards is progress-only).
                     <p className="text-[11px] text-cyan-300/60">In progress — check back for results.</p>
+                  ) : isGameWinner ? (
+                    // No points target to bar-chart — the reward goes to whoever wins the
+                    // game, resolved by the resolve-live-trivia-winners cron after the game
+                    // ends.
+                    <p className="text-[11px] text-cyan-300/60">Awarded to the winner of the Live Trivia game.</p>
                   ) : (
                     <GaugeBar
                       current={campaign.progressPoints}

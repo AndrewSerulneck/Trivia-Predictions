@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/cronAuth";
 import { syncNFLWeeks } from "@/lib/nflPickEm";
 
 export async function GET(request: Request) {
-  // Verify cron secret
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json(
       { ok: false, error: "Unauthorized" },
       { status: 401 }
     );
   }
-  
+
   try {
     const currentYear = new Date().getFullYear();
     const weeks = await syncNFLWeeks(currentYear);

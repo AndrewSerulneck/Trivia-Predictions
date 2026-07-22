@@ -1389,17 +1389,22 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     async (challengeId: string, sourceElement: HTMLElement | null) => {
       setPendingChallengeRedeemId(challengeId);
       try {
+        // Winners tap through to the coupon wallet (/redeem-prizes), the one
+        // canonical redemption surface — not the campaign-scoped
+        // /venue/[venueId]/redeem page, whose own "Redeem Prize" section reads
+        // a different (legacy) redemption model and doesn't reflect coupon
+        // redemption state.
         await runVenueGameOpenTransition({
           gameKey: "fantasy",
           sourceElement,
-          targetPath: `/venue/${encodeURIComponent(venue.id)}/redeem`,
-          navigate: () => router.push(`/venue/${encodeURIComponent(venue.id)}/redeem`),
+          targetPath: "/redeem-prizes",
+          navigate: () => router.push("/redeem-prizes"),
         });
       } catch {
         setPendingChallengeRedeemId(null);
       }
     },
-    [router, venue.id]
+    [router]
   );
   const retryBadges = useCallback(() => {
     void loadHomeBadges();
