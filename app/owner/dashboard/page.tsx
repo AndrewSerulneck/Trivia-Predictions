@@ -255,8 +255,8 @@ const OwnerDashboardPage = () => {
     },
     {
       href: "/owner/competitions",
-      label: "Competitions",
-      description: "Pick'em races, Bingo nights & other contests",
+      label: "Rewards",
+      description: "Schedule contests and offer prizes to boost engagement.",
       gradient: "bg-ht-game-pickem",
       glyph: "🏆",
       status:
