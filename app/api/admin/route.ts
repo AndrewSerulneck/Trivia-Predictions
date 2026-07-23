@@ -8,6 +8,9 @@ import {
   deleteAdminAccount,
   deleteAdminVenue,
   getAdminVenueDeletionSummary,
+  repairOrphanedVenueOwnerLink,
+  listOrphanedOwnerAccounts,
+  deleteOrphanedOwnerAccount,
   deleteAdminVenueScreenSponsor,
   createAdminVenue,
   autoSettleResolvedPredictionMarkets,
@@ -293,6 +296,11 @@ export async function GET(request: Request) {
         }
         throw error;
       }
+    }
+
+    if (resource === "orphaned-owner-accounts") {
+      const accounts = await listOrphanedOwnerAccounts();
+      return NextResponse.json({ ok: true, accounts });
     }
 
     if (resource === "challenge-campaigns") {
@@ -1061,6 +1069,28 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: true, ...result });
     }
 
+    if (resource === "orphaned-venue-owner-link") {
+      const result = await repairOrphanedVenueOwnerLink(id);
+      if (result.blocked) {
+        return NextResponse.json(
+          { ok: false, error: "Venue still exists — this link is not orphaned.", ...result },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json({ ok: true, ...result });
+    }
+
+    if (resource === "orphaned-owner-accounts") {
+      const result = await deleteOrphanedOwnerAccount(id);
+      if (result.blocked) {
+        return NextResponse.json(
+          { ok: false, error: "This owner still has a linked venue — not orphaned.", ...result },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json({ ok: true, ...result });
+    }
+
     if (resource === "venue-screen-sponsors") {
       await deleteAdminVenueScreenSponsor(id);
       return NextResponse.json({ ok: true });
@@ -1079,7 +1109,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: "Unknown resource. Use resource=trivia, resource=ads, resource=venues, resource=venue-screen-sponsors, resource=challenge-campaigns, or resource=live-showdown-schedules.",
+        error: "Unknown resource. Use resource=trivia, resource=ads, resource=venues, resource=orphaned-venue-owner-link, resource=orphaned-owner-accounts, resource=venue-screen-sponsors, resource=challenge-campaigns, or resource=live-showdown-schedules.",
       },
       { status: 400 }
     );

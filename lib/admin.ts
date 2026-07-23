@@ -2326,6 +2326,13 @@ export type AdminVenueDeletionSummary = {
   venueName: string | null;
   isPartnerVenue: boolean;
   owner: { name: string; email: string } | null;
+  /**
+   * True when the linked owner account owns ONLY this venue, so deleting the
+   * venue will also remove the owner account (and its login). Lets the admin
+   * modal warn that the partner's account itself is going away, not just the
+   * venue link.
+   */
+  ownerAccountWillBeDeleted: boolean;
   subscription: {
     status: "active" | "past_due" | "cancelled";
     amountCents: number;
@@ -2337,6 +2344,10 @@ export type AdminVenueDeletionSummary = {
 
 export type AdminVenueDeletionResult = {
   subscriptionCancelled: boolean;
+  /** True when the orphaned owner account row was removed as part of teardown. */
+  ownerAccountDeleted: boolean;
+  /** True when the owner's Supabase Auth login was removed as part of teardown. */
+  authUserDeleted: boolean;
 };
 
 function normalizeBillingStatus(raw: string | null | undefined): "active" | "past_due" | "cancelled" {
@@ -2385,6 +2396,21 @@ export async function getAdminVenueDeletionSummary(venueId: string): Promise<Adm
     ? { name: ownerLinkResult.data.venue_owners.name, email: ownerLinkResult.data.venue_owners.email }
     : null;
 
+  // If there's an owner, determine whether they own any OTHER venue. If not,
+  // deleting this venue will also remove their account (via teardown below).
+  let ownerAccountWillBeDeleted = false;
+  const ownerId = ownerLinkResult.data?.owner_id ?? null;
+  if (ownerId) {
+    const { count: ownerVenueCount, error: ownerVenueCountError } = await supabaseAdmin!
+      .from("venue_owner_venues")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", ownerId);
+    if (ownerVenueCountError) {
+      throw new Error(ownerVenueCountError.message ?? "Failed to count owner's venues.");
+    }
+    ownerAccountWillBeDeleted = (ownerVenueCount ?? 0) <= 1;
+  }
+
   const subscription = subscriptionResult.data
     ? {
         status: normalizeBillingStatus(subscriptionResult.data.status),
@@ -2399,6 +2425,7 @@ export async function getAdminVenueDeletionSummary(venueId: string): Promise<Adm
     venueName: venueResult.data.name,
     isPartnerVenue: Boolean(owner) || Boolean(subscription),
     owner,
+    ownerAccountWillBeDeleted,
     subscription,
     userCount: userCountResult.count ?? 0,
   };
@@ -2410,6 +2437,20 @@ export async function deleteAdminVenue(venueId: string): Promise<AdminVenueDelet
   if (!id) {
     throw new Error("Venue id is required.");
   }
+
+  // Capture the linked owner BEFORE deleting the venue. Deleting the venue
+  // cascades away the venue_owner_venues link row (ON DELETE CASCADE), but the
+  // venue_owners account row and its Supabase Auth login do NOT cascade — the
+  // owner FK cascade only fires when the OWNER is deleted, not the venue. Left
+  // alone they orphan: a login with no venue, plus (because venue ids are
+  // deterministic name-slugs) a stale owner link that makes recreating a
+  // same-named venue fail with "This venue already has an owner account". So we
+  // grab the owner's identity now and tear it down after the venue is gone.
+  const { data: ownerLink } = await supabaseAdmin!
+    .from("venue_owner_venues")
+    .select("owner_id, venue_owners(auth_id)")
+    .eq("venue_id", id)
+    .maybeSingle<{ owner_id: string; venue_owners: { auth_id: string | null } | null }>();
 
   // Cancel any live Stripe subscription BEFORE deleting the venue. The venue's
   // billing_subscriptions row cascades away on delete, so cancelling afterward
@@ -2470,7 +2511,301 @@ export async function deleteAdminVenue(venueId: string): Promise<AdminVenueDelet
     throw new Error(error.message ?? "Failed to delete venue.");
   }
 
-  return { subscriptionCancelled };
+  // Explicitly delete the owner link for this venue rather than trusting the
+  // ON DELETE CASCADE. This is deliberately NOT a no-op-after-cascade: the very
+  // bug this teardown fixes was a link row surviving a venue delete (FK cascade
+  // drift between migrations and the live DB). If we relied on the cascade and
+  // it silently failed, the link would re-orphan AND the "remaining links"
+  // check below would see that survivor and wrongly conclude the owner still
+  // has a venue — skipping the account teardown entirely. Deleting by venue_id
+  // is idempotent (0 rows if the cascade already handled it) and drift-proof.
+  let ownerAccountDeleted = false;
+  let authUserDeleted = false;
+  if (ownerLink?.owner_id) {
+    const { error: linkDeleteError } = await supabaseAdmin!
+      .from("venue_owner_venues")
+      .delete()
+      .eq("venue_id", id);
+    if (linkDeleteError) {
+      console.error(
+        `Venue ${id} deleted, but failed to delete its owner link (orphan left for cleanup):`,
+        linkDeleteError.message
+      );
+      // Don't attempt owner teardown if we couldn't guarantee the link is gone —
+      // the remaining-links check would be unreliable.
+      return { subscriptionCancelled, ownerAccountDeleted, authUserDeleted };
+    }
+
+    // Tear down the owner account too — but ONLY if it owned no other venue. An
+    // owner can be linked to multiple venues; deleting a shared account here
+    // would revoke the partner's access to venues we didn't touch. Best-effort:
+    // a failure to reap the orphaned account must not resurrect the venue or
+    // throw — it just leaves a harmless orphan that can be cleaned later.
+    const { data: remainingLinks, error: remainingError } = await supabaseAdmin!
+      .from("venue_owner_venues")
+      .select("id")
+      .eq("owner_id", ownerLink.owner_id)
+      .limit(1);
+
+    if (remainingError) {
+      console.error(
+        `Venue ${id} deleted, but failed to check owner ${ownerLink.owner_id} for other venues (orphan left for cleanup):`,
+        remainingError.message
+      );
+    } else if ((remainingLinks ?? []).length === 0) {
+      // Owner owns nothing else — remove the Supabase Auth login first, then the
+      // owner row. Auth deletion is best-effort so a stale/missing auth user
+      // doesn't block reaping the DB row.
+      const authId = ownerLink.venue_owners?.auth_id;
+      if (authId) {
+        try {
+          await supabaseAdmin!.auth.admin.deleteUser(authId);
+          authUserDeleted = true;
+        } catch (authError) {
+          console.error(
+            `Venue ${id} deleted, but failed to delete owner auth user ${authId} (orphan left for cleanup):`,
+            authError instanceof Error ? authError.message : String(authError)
+          );
+        }
+      }
+
+      const { error: ownerDeleteError } = await supabaseAdmin!
+        .from("venue_owners")
+        .delete()
+        .eq("id", ownerLink.owner_id);
+      if (ownerDeleteError) {
+        console.error(
+          `Venue ${id} deleted, but failed to delete owner row ${ownerLink.owner_id} (orphan left for cleanup):`,
+          ownerDeleteError.message
+        );
+      } else {
+        ownerAccountDeleted = true;
+      }
+    }
+  }
+
+  return { subscriptionCancelled, ownerAccountDeleted, authUserDeleted };
+}
+
+export type OrphanedVenueOwnerLinkResult = {
+  found: boolean;
+  /** True when a live `venues` row for this id blocked the repair — the link is NOT orphaned. */
+  blocked: boolean;
+  linkDeleted: boolean;
+  ownerAccountDeleted: boolean;
+  authUserDeleted: boolean;
+  ownerEmail: string | null;
+};
+
+/**
+ * Repairs a `venue_owner_venues` row left behind by an earlier venue delete
+ * that predates the teardown in `deleteAdminVenue` (or by any FK-cascade
+ * drift) — the row still points at `venueId` even though it belongs to no
+ * live registration flow. Because venue ids are deterministic name-slugs
+ * (see `createAdminVenue`), a stale link "reattaches" to any new venue that
+ * reclaims the same id and blocks owner registration with "This venue
+ * already has an owner account." This does NOT touch the `venues` row
+ * itself — only the stale link and, if orphaned, the owner account behind it.
+ *
+ * Contract: this function may ONLY act when the venue is actually gone. If a
+ * `venues` row still exists for this id, the link is not an orphan — it's a
+ * legitimate active registration — and this refuses unconditionally rather
+ * than deleting a live partner's account and auth login.
+ */
+export async function repairOrphanedVenueOwnerLink(venueId: string): Promise<OrphanedVenueOwnerLinkResult> {
+  assertAdminConfigured();
+  const id = venueId.trim();
+  if (!id) {
+    throw new Error("Venue id is required.");
+  }
+
+  const { data: venue, error: venueError } = await supabaseAdmin!
+    .from("venues")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle<{ id: string }>();
+  if (venueError) {
+    throw new Error(venueError.message ?? "Failed to check whether the venue still exists.");
+  }
+  if (venue) {
+    return {
+      found: false,
+      blocked: true,
+      linkDeleted: false,
+      ownerAccountDeleted: false,
+      authUserDeleted: false,
+      ownerEmail: null,
+    };
+  }
+
+  const { data: link, error: linkError } = await supabaseAdmin!
+    .from("venue_owner_venues")
+    .select("owner_id, venue_owners(auth_id, email)")
+    .eq("venue_id", id)
+    .maybeSingle<{ owner_id: string; venue_owners: { auth_id: string | null; email: string } | null }>();
+
+  if (linkError) {
+    throw new Error(linkError.message ?? "Failed to look up venue owner link.");
+  }
+  if (!link) {
+    return {
+      found: false,
+      blocked: false,
+      linkDeleted: false,
+      ownerAccountDeleted: false,
+      authUserDeleted: false,
+      ownerEmail: null,
+    };
+  }
+
+  const ownerEmail = link.venue_owners?.email ?? null;
+
+  const { error: deleteLinkError } = await supabaseAdmin!
+    .from("venue_owner_venues")
+    .delete()
+    .eq("venue_id", id)
+    .eq("owner_id", link.owner_id);
+  if (deleteLinkError) {
+    throw new Error(deleteLinkError.message ?? "Failed to delete venue owner link.");
+  }
+
+  let ownerAccountDeleted = false;
+  let authUserDeleted = false;
+
+  const { data: remainingLinks, error: remainingError } = await supabaseAdmin!
+    .from("venue_owner_venues")
+    .select("id")
+    .eq("owner_id", link.owner_id)
+    .limit(1);
+  if (remainingError) {
+    throw new Error(remainingError.message ?? "Failed to check owner's other venues.");
+  }
+
+  if ((remainingLinks ?? []).length === 0) {
+    const authId = link.venue_owners?.auth_id;
+    if (authId) {
+      try {
+        await supabaseAdmin!.auth.admin.deleteUser(authId);
+        authUserDeleted = true;
+      } catch (authError) {
+        console.error(
+          `Repaired orphaned link for venue ${id}, but failed to delete owner auth user ${authId}:`,
+          authError instanceof Error ? authError.message : String(authError)
+        );
+      }
+    }
+
+    const { error: ownerDeleteError } = await supabaseAdmin!.from("venue_owners").delete().eq("id", link.owner_id);
+    if (ownerDeleteError) {
+      throw new Error(ownerDeleteError.message ?? "Failed to delete owner row.");
+    }
+    ownerAccountDeleted = true;
+  }
+
+  return { found: true, blocked: false, linkDeleted: true, ownerAccountDeleted, authUserDeleted, ownerEmail };
+}
+
+export type OrphanedOwnerAccount = {
+  ownerId: string;
+  email: string;
+  name: string;
+  authId: string | null;
+};
+
+/**
+ * Finds `venue_owners` rows with zero `venue_owner_venues` links. Neither
+ * `deleteAdminVenue`'s teardown nor `repairOrphanedVenueOwnerLink` can catch
+ * this shape of orphan: both delete the auth login before the DB row (there is
+ * no true cross-system transaction between Supabase Auth and Postgres), so a
+ * failure on the second delete leaves a `venue_owners` row with a dangling
+ * (already-deleted) `auth_id` and, by then, no surviving link to key a repair
+ * off of. This surfaces those rows for manual review instead of leaving them
+ * invisible forever.
+ */
+export async function listOrphanedOwnerAccounts(): Promise<OrphanedOwnerAccount[]> {
+  assertAdminConfigured();
+
+  const { data: links, error: linksError } = await supabaseAdmin!
+    .from("venue_owner_venues")
+    .select("owner_id")
+    .returns<Array<{ owner_id: string }>>();
+  if (linksError) {
+    throw new Error(linksError.message ?? "Failed to load venue owner links.");
+  }
+  const linkedOwnerIds = new Set((links ?? []).map((l) => l.owner_id));
+
+  const { data: owners, error: ownersError } = await supabaseAdmin!
+    .from("venue_owners")
+    .select("id, email, name, auth_id")
+    .returns<Array<{ id: string; email: string; name: string; auth_id: string | null }>>();
+  if (ownersError) {
+    throw new Error(ownersError.message ?? "Failed to load owner accounts.");
+  }
+
+  return (owners ?? [])
+    .filter((owner) => !linkedOwnerIds.has(owner.id))
+    .map((owner) => ({ ownerId: owner.id, email: owner.email, name: owner.name, authId: owner.auth_id }));
+}
+
+export type DeleteOrphanedOwnerAccountResult = {
+  blocked: boolean;
+  ownerAccountDeleted: boolean;
+  authUserDeleted: boolean;
+};
+
+/**
+ * Deletes a single `venue_owners` row surfaced by `listOrphanedOwnerAccounts`.
+ * Re-checks for a surviving link before deleting (same live-guard spirit as
+ * `repairOrphanedVenueOwnerLink`) in case one was created between listing and
+ * this call.
+ */
+export async function deleteOrphanedOwnerAccount(ownerId: string): Promise<DeleteOrphanedOwnerAccountResult> {
+  assertAdminConfigured();
+  const id = ownerId.trim();
+  if (!id) {
+    throw new Error("Owner id is required.");
+  }
+
+  const { data: link, error: linkError } = await supabaseAdmin!
+    .from("venue_owner_venues")
+    .select("id")
+    .eq("owner_id", id)
+    .limit(1);
+  if (linkError) {
+    throw new Error(linkError.message ?? "Failed to check owner's venues.");
+  }
+  if ((link ?? []).length > 0) {
+    return { blocked: true, ownerAccountDeleted: false, authUserDeleted: false };
+  }
+
+  const { data: owner, error: ownerError } = await supabaseAdmin!
+    .from("venue_owners")
+    .select("auth_id")
+    .eq("id", id)
+    .maybeSingle<{ auth_id: string | null }>();
+  if (ownerError) {
+    throw new Error(ownerError.message ?? "Failed to load owner account.");
+  }
+
+  let authUserDeleted = false;
+  if (owner?.auth_id) {
+    try {
+      await supabaseAdmin!.auth.admin.deleteUser(owner.auth_id);
+      authUserDeleted = true;
+    } catch (authError) {
+      console.error(
+        `Failed to delete auth user ${owner.auth_id} for orphaned owner ${id}:`,
+        authError instanceof Error ? authError.message : String(authError)
+      );
+    }
+  }
+
+  const { error: deleteError } = await supabaseAdmin!.from("venue_owners").delete().eq("id", id);
+  if (deleteError) {
+    throw new Error(deleteError.message ?? "Failed to delete owner account.");
+  }
+
+  return { blocked: false, ownerAccountDeleted: true, authUserDeleted };
 }
 
 export async function bulkDeleteAdminAdvertisements(ids: string[]): Promise<number> {

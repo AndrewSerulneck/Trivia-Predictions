@@ -996,6 +996,7 @@ type VenueDeletionSummary = {
   venueName: string | null;
   isPartnerVenue: boolean;
   owner: { name: string; email: string } | null;
+  ownerAccountWillBeDeleted: boolean;
   subscription: {
     status: "active" | "past_due" | "cancelled";
     amountCents: number;
@@ -1245,17 +1246,25 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
       const response = await fetch(`/api/admin?resource=venues&id=${encodeURIComponent(venue.id)}`, {
         method: "DELETE",
       });
-      const payload = (await response.json()) as { ok: boolean; error?: string; subscriptionCancelled?: boolean };
+      const payload = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        subscriptionCancelled?: boolean;
+        ownerAccountDeleted?: boolean;
+      };
       if (!response.ok || !payload.ok) {
         throw new Error(payload.error ?? "Failed to delete venue.");
       }
 
       setVenueList((prev) => prev.filter((entry) => entry.id !== venue.id));
-      setSuccessMsg(
-        payload.subscriptionCancelled
-          ? `Venue "${venue.name}" deleted and its Stripe subscription was cancelled.`
-          : `Venue "${venue.name}" deleted.`
-      );
+      const parts = [`Venue "${venue.name}" deleted`];
+      if (payload.subscriptionCancelled) {
+        parts.push("its Stripe subscription was cancelled");
+      }
+      if (payload.ownerAccountDeleted) {
+        parts.push("the orphaned owner account was removed");
+      }
+      setSuccessMsg(`${parts.join(", ")}.`);
       deleteRequestIdRef.current += 1;
       setDeleteTarget(null);
       setDeleteSummary(null);
@@ -1475,6 +1484,9 @@ function DeleteVenueModal({
                       {deleteSummary.owner ? (
                         <p className="text-xs text-amber-800">
                           Owner: {deleteSummary.owner.name} ({deleteSummary.owner.email})
+                          {deleteSummary.ownerAccountWillBeDeleted
+                            ? " — this is their only venue, so the owner account and login will also be deleted."
+                            : " — the owner has other venues, so their account will be kept."}
                         </p>
                       ) : null}
                       {deleteSummary.subscription ? (
