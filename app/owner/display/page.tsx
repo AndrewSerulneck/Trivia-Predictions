@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
@@ -144,7 +144,12 @@ const OwnerDisplayPage = () => {
               </p>
               <p className="mt-2 text-sm font-semibold text-ht-secondary">
                 On the TV&apos;s browser, go to <span className="font-mono text-ht-primary">hightopchallenge.com/tv</span>.
-                It&apos;ll show a code — enter it below.
+                It&apos;ll show that TV&apos;s own one-time code — enter it below to link it to{" "}
+                {selectedVenue?.name ?? "your venue"}.
+              </p>
+              <p className="mt-1.5 text-xs font-semibold text-ht-muted">
+                Each device or browser needs its own one-time link. If you switch devices (e.g. Fire
+                Stick → Apple TV) or open a different browser, just repeat this step — nothing is lost.
               </p>
 
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -184,17 +189,7 @@ const OwnerDisplayPage = () => {
             <div className="overflow-hidden rounded-2xl border border-ht-hairline bg-ht-surface shadow-ht-card">
               <div className="flex items-center justify-between px-4 pt-4">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Preview</p>
-                <div className="flex items-center gap-3">
-                  <FullscreenExpander url={displayUrl} onExpandedChange={setDisplayExpanded} />
-                  <a
-                    href={displayUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs font-bold text-ht-cyan-300 underline underline-offset-2"
-                  >
-                    Open full screen
-                  </a>
-                </div>
+                <FullscreenExpander url={displayUrl} onExpandedChange={setDisplayExpanded} />
               </div>
               <div className="mt-3">
                 <ScaledPreview url={displayUrl} paused={displayExpanded} />
@@ -260,29 +255,18 @@ type WebkitFullscreenDocument = Document & {
   webkitExitFullscreen?: () => void;
 };
 
-// "Expand" gives the owner a full landscape TV view from their phone even while
-// it's held vertically. Preferred path (Android Chrome): real fullscreen on the
-// iframe wrapper + `screen.orientation.lock("landscape")`. iOS Safari blocks
-// both programmatic fullscreen on non-<video> elements and orientation lock, so
-// we fall back to a `fixed inset-0` overlay with the iframe CSS-rotated 90° and
-// its width/height swapped — the embedded venue screen's own fit-to-viewport
-// (ViewportFitCanvas) then measures a landscape window and scales correctly.
-// Embedding the screen in an iframe keeps the tap's user-gesture in this
-// document, which the Fullscreen API requires.
-// True only when the device is actually held portrait right now. The rotate
-// fallback exists to turn a portrait phone into a landscape TV view; a desktop
-// or Android screen that's already landscape (and where real fullscreen just
-// succeeded) must never be rotated, even if `orientation.lock()` is missing or
-// rejects. Prefer the Screen Orientation API's own label; fall back to the
-// visible viewport aspect ratio where it isn't exposed.
-const isDevicePortrait = (): boolean => {
-  const orientationType = screen.orientation?.type;
-  if (typeof orientationType === "string") {
-    return orientationType.startsWith("portrait");
-  }
-  return window.innerHeight > window.innerWidth;
-};
+// How long the Close control stays visible before it fades, and how long a tap
+// keeps it visible again — standard video-player "chrome" behavior.
+const CONTROLS_HIDE_DELAY_MS = 3_500;
 
+// "Expand" gives the owner an edge-to-edge TV view from their phone, in
+// whatever orientation the phone is physically held — vertical shows a
+// portrait-fit view, horizontal shows a full landscape view. No orientation
+// forcing/locking: the embedded venue screen's own fit-to-viewport
+// (ViewportFitCanvas) already scales correctly to whatever window it measures,
+// so this component just needs to give it a full-bleed window and get out of
+// the way. Embedding the screen in an iframe keeps the tap's user-gesture in
+// this document, which the Fullscreen API requires.
 function FullscreenExpander({
   url,
   onExpandedChange,
@@ -292,18 +276,15 @@ function FullscreenExpander({
 }) {
   const fsRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
-  const [rotateFallback, setRotateFallback] = useState(false);
   // True only when THIS component's requestFullscreen() succeeded and hasn't
   // exited yet. `fullscreenchange` fires globally for any element on the page,
-  // so without this the teardown below would close this overlay and unlock
-  // orientation in reaction to unrelated fullscreen state elsewhere.
+  // so without this the teardown below would close this overlay in reaction to
+  // unrelated fullscreen state elsewhere.
   const enteredFullscreenRef = useRef(false);
-  // Measured pixel size of the `fixed inset-0` overlay itself, used to size the
-  // rotated iframe. On iOS Safari (the browser this fallback targets) `100vh`
-  // includes the collapsible-toolbar band and so overshoots the overlay's real
-  // visible height, clipping/off-centering the rotated content; the overlay's
-  // own bounding box is the exact target we want to fill.
-  const [overlayBox, setOverlayBox] = useState({ width: 0, height: 0 });
+  // Close button starts visible on expand, fades after CONTROLS_HIDE_DELAY_MS,
+  // and reappears on any tap/pointer interaction with the overlay.
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const hideTimeoutRef = useRef<number | null>(null);
 
   // Let the parent pause the background ScaledPreview iframe's polling while
   // this overlay's own iframe is up, so /api/venue-screen/state isn't hit by
@@ -313,16 +294,6 @@ function FullscreenExpander({
   }, [expanded, onExpandedChange]);
 
   useEffect(() => {
-    const close = () => {
-      setExpanded(false);
-      setRotateFallback(false);
-      const orientation = screen.orientation as unknown as { unlock?: () => void } | undefined;
-      try {
-        orientation?.unlock?.();
-      } catch {
-        // Some browsers throw if nothing was locked — safe to ignore.
-      }
-    };
     const onFullscreenChange = () => {
       if (!enteredFullscreenRef.current) return;
       const doc = document as WebkitFullscreenDocument;
@@ -330,10 +301,10 @@ function FullscreenExpander({
       // Only react when *this* component's fsRef is the element that left
       // fullscreen — not any other fullscreen state change on the page (e.g.
       // some other component's video player exiting fullscreen shouldn't close
-      // this overlay or unlock orientation this component never locked).
+      // this overlay).
       if (fsEl === fsRef.current) return;
       enteredFullscreenRef.current = false;
-      close();
+      setExpanded(false);
     };
     document.addEventListener("fullscreenchange", onFullscreenChange);
     document.addEventListener("webkitfullscreenchange", onFullscreenChange);
@@ -343,30 +314,24 @@ function FullscreenExpander({
     };
   }, []);
 
-  // Measure the overlay's real rendered size while the rotate fallback is up, so
-  // the rotated iframe is sized from actual pixels (not viewport units). Layout
-  // effect + observer keeps it correct through iOS toolbar collapse and device
-  // rotation without a wrong-sized first paint.
-  useLayoutEffect(() => {
-    if (!rotateFallback) return;
-    const el = fsRef.current;
-    if (!el) return;
-    const measure = () => {
-      const rect = el.getBoundingClientRect();
-      setOverlayBox({ width: rect.width, height: rect.height });
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    window.addEventListener("resize", measure);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [rotateFallback]);
+  const scheduleControlsHide = useCallback(() => {
+    if (hideTimeoutRef.current !== null) window.clearTimeout(hideTimeoutRef.current);
+    hideTimeoutRef.current = window.setTimeout(() => setControlsVisible(false), CONTROLS_HIDE_DELAY_MS);
+  }, []);
+
+  const revealControls = useCallback(() => {
+    setControlsVisible(true);
+    scheduleControlsHide();
+  }, [scheduleControlsHide]);
+
+  useEffect(() => {
+    if (expanded) return;
+    if (hideTimeoutRef.current !== null) window.clearTimeout(hideTimeoutRef.current);
+  }, [expanded]);
 
   const handleExpand = async () => {
     setExpanded(true);
+    revealControls();
     // Let the overlay leave `display:none` first — the Fullscreen API refuses a
     // request on an unrendered element. One frame keeps us well inside the
     // transient-activation window the request also needs.
@@ -380,25 +345,8 @@ function FullscreenExpander({
       enteredFullscreenRef.current = true;
     } catch {
       // Fullscreen refused (e.g. iOS Safari on a <div>) — the fixed overlay
-      // still covers the viewport, so continue on to the rotate fallback.
-    }
-
-    // `screen.orientation` itself is missing on some older Safari/iOS builds
-    // (not just `.lock`) — optional-chain the property access too, or this
-    // throws synchronously and skips the rotate fallback entirely.
-    const orientation = screen.orientation as unknown as
-      | { lock?: (o: "landscape") => Promise<void> }
-      | undefined;
-    if (orientation?.lock) {
-      try {
-        await orientation.lock("landscape");
-      } catch {
-        // Lock rejected — only rotate if we're genuinely portrait; a landscape
-        // desktop/Android screen is already showing the TV view correctly.
-        if (isDevicePortrait()) setRotateFallback(true);
-      }
-    } else if (isDevicePortrait()) {
-      setRotateFallback(true);
+      // still covers the viewport, which is enough; no orientation forcing is
+      // needed either way.
     }
   };
 
@@ -409,9 +357,8 @@ function FullscreenExpander({
     } else if (doc.webkitFullscreenElement && doc.webkitExitFullscreen) {
       doc.webkitExitFullscreen();
     } else {
-      // No real fullscreen was granted (iOS rotate fallback) — drop the overlay.
+      // No real fullscreen was granted — just drop the overlay.
       setExpanded(false);
-      setRotateFallback(false);
     }
   };
 
@@ -425,51 +372,29 @@ function FullscreenExpander({
         Expand
       </button>
 
-      <div ref={fsRef} className={expanded ? "fixed inset-0 z-[60] bg-black" : "hidden"}>
+      <div
+        ref={fsRef}
+        className={expanded ? "fixed inset-0 z-[60] bg-black" : "hidden"}
+        onPointerDown={revealControls}
+      >
         {expanded ? (
           <>
+            {/* pointer-events-none: this is a passive display, not something the
+                owner interacts with — taps should reveal the Close control
+                (handled by the wrapper above), not be swallowed by the iframe. */}
             <iframe
               src={url}
               title="Venue display full screen"
-              className={
-                rotateFallback
-                  ? "absolute left-0 top-0 max-w-none border-0"
-                  : "absolute left-0 top-0 h-full w-full max-w-none border-0"
-              }
-              style={
-                rotateFallback
-                  ? {
-                      // Swap width/height and rotate 90° so a portrait phone shows
-                      // a landscape TV view. Width = overlay's height, height =
-                      // overlay's width (measured px; `dvh`/`dvw` covers the first
-                      // frame before measurement).
-                      // The `translate(0,-100%)` is % of the element's own height
-                      // (= overlay width), so the 90° math still lands the rotated
-                      // box exactly on the portrait overlay.
-                      width: overlayBox.height ? `${overlayBox.height}px` : "100dvh",
-                      height: overlayBox.width ? `${overlayBox.width}px` : "100dvw",
-                      transformOrigin: "top left",
-                      transform: "rotate(90deg) translate(0, -100%)",
-                    }
-                  : undefined
-              }
+              className="pointer-events-none absolute left-0 top-0 h-full w-full max-w-none border-0"
             />
             <button
               type="button"
               onClick={handleClose}
-              className={
-                // The content's rotate(90deg) maps its visual top-right (where
-                // Close normally sits) to the overlay's physical bottom-right
-                // corner — so the button moves there too, then gets the same
-                // 90deg rotation so it reads upright from the viewer's
-                // (rotated) point of view instead of sideways.
-                rotateFallback
-                  ? "absolute bottom-4 right-4 z-10 min-h-11 rounded-full border border-white/30 bg-black/60 px-4 text-sm font-black text-white"
-                  : "absolute right-4 top-4 z-10 min-h-11 rounded-full border border-white/30 bg-black/60 px-4 text-sm font-black text-white"
-              }
-              style={rotateFallback ? { transform: "rotate(90deg)" } : undefined}
+              className={`absolute right-5 top-5 z-10 flex min-h-12 items-center gap-2 rounded-full border-2 border-white/70 bg-black/80 px-5 text-base font-black text-white shadow-lg shadow-black/40 transition-opacity duration-300 ${
+                controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
+              }`}
             >
-              Close ✕
+              ✕ Close
             </button>
           </>
         ) : null}
