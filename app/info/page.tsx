@@ -179,7 +179,7 @@ const SEMANTIC_QA = [
   {
     question: "How does it work?",
     answer:
-      "Gameplay is geofenced to locations you desginate — it only works when users are physically at your establishment. Guests join from their phones by scanning a QR code. Players compete with the people around them for rewards and bragging rights.",
+      "Gameplay is geofenced to locations you desginate — it only works when users are physically at your establishment. Guests join from their phones by scanning a QR code.",
   },
       {
     question: "What games are there?",
@@ -189,7 +189,7 @@ const SEMANTIC_QA = [
   {
     question: "Is it complicated?",
     answer:
-      "Not at all. The platform is designed to be simple for both venue operators and guests. Players join by scanning a QR code, and the games run themselves. Once you subscribe, you're up and running instantly. You can schedule group games, set up challenges, and offer prizes — all from your phone.",
+      "Not at all. The platform is designed to be simple for both venue operators and guests. Once you subscribe, you're up and running instantly. You can schedule automated group games and offer prizes all from your phone.",
   },
 ];
 
