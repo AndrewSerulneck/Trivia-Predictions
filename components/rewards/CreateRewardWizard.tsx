@@ -321,11 +321,10 @@ export function CreateRewardWizard({
           {contextError ? <div className={s.error}>{contextError}</div> : null}
           {context && definition && !context.scheduled ? (
             <div className={s.block}>
-              This reward needs Live Trivia scheduled at this venue first.{" "}
               <a href={scheduleLinkHref} className="underline">
                 Schedule Live Trivia
-              </a>
-              .
+              </a>{" "}
+              to create a Live Trivia reward.
             </div>
           ) : null}
           <button type="button" onClick={onCancel} className={s.secondaryButton}>

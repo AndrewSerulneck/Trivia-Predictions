@@ -65,7 +65,7 @@ const VALID_MENU_ITEMS: readonly RewardMenuItem[] = [
 // OWNER_COMPETITION_* pattern in lib/ownerCompetitions.ts).
 export const REWARD_UNKNOWN_DEFINITION_MESSAGE = "Unknown reward type.";
 export const REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE =
-  "Schedule Live Trivia for this venue before creating a Live Trivia Challenge.";
+  "Schedule Live Trivia to create a Live Trivia reward.";
 export const REWARD_UNSUPPORTED_CADENCE_MESSAGE =
   "That competition cadence isn't available for this reward.";
 export const REWARD_INVALID_THRESHOLD_MESSAGE = "Enter a valid points target.";
