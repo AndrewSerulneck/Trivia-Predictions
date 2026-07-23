@@ -5,7 +5,9 @@ import {
   listAdminLiveShowdownSchedules,
   type AdminLiveShowdownSchedule,
 } from "@/lib/liveShowdownAdmin";
-import { getTimeZoneParts } from "@/lib/categoryBlitzScheduleTime";
+import { getCurrentOrNextScheduleWindow, getTimeZoneParts } from "@/lib/categoryBlitzScheduleTime";
+import { liveTriviaDurationMinutes } from "@/lib/liveTriviaShared";
+import { coerceRecurringType } from "@/lib/ownerSchedule";
 import {
   getRewardDefinition,
   isSupportedRewardCadence,
@@ -93,14 +95,49 @@ function scheduleWeekdays(schedule: AdminLiveShowdownSchedule): string[] {
   return [getTimeZoneParts(new Date(parsed), schedule.timezone).weekday];
 }
 
-/** All Live Trivia schedules for one venue (source of truth: trivia_schedules). */
+/**
+ * Whether a schedule has a game that is live right now or still has a future
+ * occurrence ahead of it. A one-off schedule is a single occurrence — once its
+ * window ends the game no longer exists, even though its `trivia_schedules` row
+ * is never deleted. Reuses the same occurrence-window math the owner schedule
+ * page uses to bucket a schedule as "Upcoming" vs. "Past"
+ * (getCurrentOrNextScheduleWindow), so "scheduled" here means the exact same
+ * thing it means to the partner looking at their own schedule.
+ */
+function hasLiveOrUpcomingOccurrence(schedule: AdminLiveShowdownSchedule, now: Date): boolean {
+  const startMs = Date.parse(schedule.startTime);
+  if (!Number.isFinite(startMs)) return false;
+  const windowMinutes = liveTriviaDurationMinutes(schedule.numRounds);
+  const endTime = new Date(startMs + windowMinutes * 60_000).toISOString();
+  const window = getCurrentOrNextScheduleWindow(
+    {
+      startTime: schedule.startTime,
+      endTime,
+      timezone: schedule.timezone,
+      recurringType: coerceRecurringType(schedule.recurringType),
+      recurringDays: schedule.recurringDays,
+      windowMinutes,
+    },
+    now,
+  );
+  return window !== null;
+}
+
+/**
+ * Live-or-upcoming Live Trivia schedules for one venue (source of truth:
+ * trivia_schedules, filtered to occurrences that haven't already ended — see
+ * hasLiveOrUpcomingOccurrence).
+ */
 export async function getVenueLiveTriviaSchedules(
   venueId: string,
+  now: Date = new Date(),
 ): Promise<AdminLiveShowdownSchedule[]> {
   const vid = String(venueId ?? "").trim();
   if (!vid) return [];
   const all = await listAdminLiveShowdownSchedules(LIVE_TRIVIA_SCHEDULE_FETCH_LIMIT);
-  return all.filter((schedule) => schedule.venueId === vid);
+  return all.filter(
+    (schedule) => schedule.venueId === vid && hasLiveOrUpcomingOccurrence(schedule, now),
+  );
 }
 
 export type RewardCreationContext = {

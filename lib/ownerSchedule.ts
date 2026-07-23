@@ -178,7 +178,7 @@ function schedulesCollide(candidate: ScheduleTiming, existing: ScheduleTiming): 
 // owner-created Live Trivia is always one-off ("none"); admin rows that happen to
 // be monthly/yearly collapse to "none" for display only (owners can't edit them).
 
-function coerceRecurringType(value: string): CategoryBlitzRecurringType {
+export function coerceRecurringType(value: string): CategoryBlitzRecurringType {
   return value === "daily" || value === "weekly" ? value : "none";
 }
 

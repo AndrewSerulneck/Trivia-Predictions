@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminLiveShowdownSchedule } from "@/lib/liveShowdownAdmin";
 
@@ -66,6 +66,15 @@ const APPETIZER_PRIZE: RewardPrizeInput = {
 beforeEach(() => {
   mocks.listAdminLiveShowdownSchedules.mockReset();
   mocks.createChallengeCampaign.mockClear();
+  // Fixtures below are anchored on 2026-07-21 (a Tuesday); freeze "now" the day
+  // before so that date reads as upcoming, not a stale past occurrence — see
+  // hasLiveOrUpcomingOccurrence in lib/rewards.ts.
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-07-20T12:00:00.000Z"));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("reward definition registry", () => {
@@ -122,18 +131,55 @@ describe("resolveRewardCreationContext", () => {
     expect(ctx.scheduled).toBe(false);
   });
 
-  it("does not offer weekly when a recurring schedule resolves to no weekday anchor", async () => {
-    // recurringDays empty AND an unparseable startTime — scheduleWeekdays()
-    // falls through to []. Without the gate, this would silently offer
-    // "weekly" and later expand into activeDays: [], which computeCycleStart
-    // treats as the epoch sentinel (quota never resets).
+  it("drops a schedule with an unparseable start_time entirely (can't tell if it's live/upcoming)", async () => {
     mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "weekly", recurringDays: [], startTime: "not-a-date" }),
     ]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
+    expect(ctx.scheduled).toBe(false);
+    expect(ctx.allowedCadences).toEqual([]);
+  });
+
+  it("blocks when the only schedule is a one-off game that has already ended", async () => {
+    // Same shape as a real "no Live Trivia scheduled" venue: a past one-off
+    // game whose trivia_schedules row was never deleted. This is the exact bug
+    // reported in production — a stale row must NOT count as "scheduled".
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+      makeSchedule({
+        recurringType: "none",
+        recurringDays: [],
+        startTime: "2026-07-10T23:00:00.000Z", // 10 days before frozen "now"
+      }),
+    ]);
+    const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
+    expect(ctx.scheduled).toBe(false);
+    expect(ctx.allowedCadences).toEqual([]);
+  });
+
+  it("allows a one-off game whose window is currently live (started before now, hasn't ended)", async () => {
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+      makeSchedule({
+        recurringType: "none",
+        recurringDays: [],
+        startTime: "2026-07-20T11:00:00.000Z", // 1 hour before frozen "now"; a 5-round game runs well past that
+      }),
+    ]);
+    const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
+    expect(ctx.scheduled).toBe(true);
+  });
+
+  it("allows a recurring schedule whose first occurrence was in the past but future occurrences remain", async () => {
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+      makeSchedule({
+        recurringType: "weekly",
+        recurringDays: ["tue"],
+        startTime: "2026-01-06T23:00:00.000Z", // first occurrence months before frozen "now"
+      }),
+    ]);
+    const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
+    expect(ctx.scheduled).toBe(true);
     expect(ctx.hasRecurringSchedule).toBe(true);
-    expect(ctx.scheduleDays).toEqual([]);
-    expect(ctx.allowedCadences).toEqual(["none"]);
+    expect(ctx.allowedCadences).toEqual(["none", "weekly"]);
   });
 });
 
@@ -229,6 +275,24 @@ describe("createReward — expansion + validation", () => {
     expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
   });
 
+  it("blocks creation when the only schedule is a past one-off game (regression: stale trivia_schedules row)", async () => {
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+      makeSchedule({ recurringType: "none", recurringDays: [], startTime: "2026-07-10T23:00:00.000Z" }),
+    ]);
+    await expect(
+      createReward({
+        venueId: "venue-1",
+        definitionId: "live_trivia_challenge",
+        cadence: "none",
+        winCondition: "game_winner",
+        threshold: 500,
+        winnerQuota: 1,
+        prize: APPETIZER_PRIZE,
+      }),
+    ).rejects.toThrow(REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
   it("rejects a weekly cadence when the venue's schedule is a one-off", async () => {
     mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "none", recurringDays: [] }),
@@ -245,7 +309,7 @@ describe("createReward — expansion + validation", () => {
     ).rejects.toThrow(REWARD_UNSUPPORTED_CADENCE_MESSAGE);
   });
 
-  it("rejects a weekly cadence when the recurring schedule has no resolvable weekday", async () => {
+  it("rejects a weekly cadence when the only schedule has an unparseable start_time (dropped as unscheduled)", async () => {
     mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "weekly", recurringDays: [], startTime: "not-a-date" }),
     ]);
@@ -258,7 +322,7 @@ describe("createReward — expansion + validation", () => {
         winnerQuota: 1,
         prize: APPETIZER_PRIZE,
       }),
-    ).rejects.toThrow(REWARD_UNSUPPORTED_CADENCE_MESSAGE);
+    ).rejects.toThrow(REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE);
     expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
   });
 
