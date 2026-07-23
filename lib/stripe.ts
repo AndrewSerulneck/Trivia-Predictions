@@ -30,6 +30,17 @@ export function getStripeWebhookSecret(): string {
   return process.env.STRIPE_WEBHOOK_SECRET?.trim() ?? "";
 }
 
+/**
+ * billing_subscriptions.billing_method domain. 'stripe' = card-billed via Stripe
+ * (the default); 'offline' = paid by check/other offline method and granted by an
+ * admin (see app/api/admin/billing). Offline rows carry NO Stripe or SlimCD token
+ * and are excluded by billing automation on this explicit dimension, so they can
+ * never be auto-billed or auto-cancelled even if a token is later attached.
+ */
+export type BillingMethod = "stripe" | "offline";
+
+export const OFFLINE_BILLING_METHOD: BillingMethod = "offline";
+
 /** Our billing_subscriptions.status domain. */
 export type BillingStatus = "active" | "past_due" | "cancelled";
 

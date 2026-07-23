@@ -155,6 +155,7 @@ export async function GET(request: Request) {
         owner_id: ownerId,
         slimcd_recurring_token: gateid,
         plan_type: "subscription",
+        billing_method: "stripe",
         amount_cents: amountCents,
         status: "active" as const,
         current_period_start: now.toISOString(),

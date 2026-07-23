@@ -48,6 +48,8 @@ export async function POST(request: Request) {
           typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
         if (subscriptionId) {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          // Checkout completion is an intentional new subscription — always apply
+          // (a card takeover of a previously-offline venue is legitimate).
           await upsertSubscription(sub);
           await maybeSendWelcomeEmail(sub);
         }
@@ -56,7 +58,14 @@ export async function POST(request: Request) {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
-        await upsertSubscription(sub, event.type === "customer.subscription.deleted");
+        // Guarded against stale events: only apply if sub.id still matches the
+        // venue's current stripe_subscription_id (see upsertSubscription). A
+        // late/retried event for an old, already-replaced subscription must not
+        // clobber a newer offline grant or a newer card subscription.
+        await upsertSubscription(sub, {
+          forceCancelled: event.type === "customer.subscription.deleted",
+          guardStaleSubscriptionId: true,
+        });
         break;
       }
       case "invoice.paid":
@@ -80,16 +89,54 @@ export async function POST(request: Request) {
   return NextResponse.json({ received: true });
 }
 
+type UpsertOptions = {
+  /** Force status='cancelled' (customer.subscription.deleted). */
+  forceCancelled?: boolean;
+  /**
+   * Only apply if sub.id matches the venue's current stripe_subscription_id.
+   * Set for customer.subscription.updated/.deleted so a stale/retried event for
+   * an old subscription can't overwrite a newer offline grant or card sub. Left
+   * off for checkout.session.completed, which is an intentional new subscription.
+   */
+  guardStaleSubscriptionId?: boolean;
+};
+
 /**
  * Upsert a billing_subscriptions row from a Stripe subscription. venueId/ownerId
  * ride on the subscription metadata (set at Checkout via subscription_data).
  */
-async function upsertSubscription(sub: Stripe.Subscription, forceCancelled = false): Promise<void> {
+async function upsertSubscription(sub: Stripe.Subscription, options: UpsertOptions = {}): Promise<void> {
   if (!supabaseAdmin) return;
+
+  const { forceCancelled = false, guardStaleSubscriptionId = false } = options;
 
   const venueId = sub.metadata?.venueId?.trim();
   const ownerId = sub.metadata?.ownerId?.trim();
   if (!venueId || !ownerId) return;
+
+  // Stale-event guard: a customer.subscription.updated/.deleted event only applies
+  // when it targets the venue's CURRENT subscription. Stripe retries for ~3 days,
+  // so a late event for an old, already-cancelled/replaced subscription can arrive
+  // after the venue has been re-granted offline access (stripe_subscription_id
+  // nulled) or moved to a new card subscription (different id). In either case the
+  // event is stale — ignore it (the caller returns 200 so Stripe stops retrying)
+  // rather than let it silently revoke the grant or revert status.
+  //
+  // Only skip on an actual MISMATCH (a row exists and references a different
+  // subscription) — not on absence. Every subscription created through this
+  // app's Checkout flow already carries venueId/ownerId metadata (required just
+  // to reach this point, see the guard above), so there's no reason to distrust
+  // an update/delete event just because checkout.session.completed hasn't
+  // landed yet (redelivery order isn't guaranteed) or was missed outright.
+  // Treating "no row yet" as stale would silently drop a legitimate first sync.
+  if (guardStaleSubscriptionId) {
+    const { data: existing } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("stripe_subscription_id")
+      .eq("venue_id", venueId)
+      .maybeSingle<{ stripe_subscription_id: string | null }>();
+    if (existing && existing.stripe_subscription_id !== sub.id) return;
+  }
 
   const item = sub.items.data[0];
   const price = item?.price;
@@ -107,6 +154,10 @@ async function upsertSubscription(sub: Stripe.Subscription, forceCancelled = fal
         stripe_subscription_id: sub.id,
         stripe_price_id: price?.id ?? null,
         plan_type: price?.nickname ?? "monthly",
+        // A real Stripe subscription always bills by card — reassert this even on
+        // conflict-update so a venue previously granted offline access that now
+        // subscribes by card is correctly reclassified as card-billed.
+        billing_method: "stripe",
         amount_cents: price?.unit_amount ?? 0,
         status,
         current_period_start: periodStartUnix ? new Date(periodStartUnix * 1000).toISOString() : null,

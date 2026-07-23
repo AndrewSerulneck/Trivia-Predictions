@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isCronAuthorized } from "@/lib/cronAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { chargeRecurring } from "@/lib/slimcd";
+import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
 
 type DueSubscription = {
   id: string;
@@ -24,10 +25,15 @@ export async function POST(request: Request) {
   const nowIso = new Date().toISOString();
 
   // Active subscriptions whose paid period has ended are due for rebilling.
+  // Offline/check subscriptions are explicitly excluded: they carry no recurring
+  // token and are billed by an admin re-granting access, never charged
+  // automatically. The tokenless guard below would already skip them, but the
+  // billing_method filter makes it impossible for a stray token to trigger a charge.
   const { data: due, error: dueError } = await supabaseAdmin
     .from("billing_subscriptions")
     .select("id, venue_id, plan_type, amount_cents, slimcd_recurring_token, current_period_end")
     .eq("status", "active")
+    .neq("billing_method", OFFLINE_BILLING_METHOD)
     .lte("current_period_end", nowIso)
     .returns<DueSubscription[]>();
 
@@ -100,7 +106,35 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, processed: (due ?? []).length, results });
+  // Expire offline/check grants whose paid-through date has passed. These rows
+  // carry no processor token, so nothing else ever flips them: the renewal loop
+  // above excludes billing_method='offline', and the Stripe webhook never fires
+  // for tokenless rows. Without this sweep an offline grant would stay
+  // status='active' forever, contradicting the admin copy "then reverts to no
+  // access." Setting status='cancelled' is already handled by the owner UI
+  // (shows "Access ends {date}", offers Resubscribe) and the dashboard tile;
+  // re-granting from the admin panel reactivates the row.
+  const { data: expired, error: expiredError } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .update({ status: "cancelled" })
+    .eq("billing_method", OFFLINE_BILLING_METHOD)
+    .eq("status", "active")
+    .lte("current_period_end", nowIso)
+    .select("id")
+    .returns<{ id: string }[]>();
+
+  if (expiredError) {
+    return NextResponse.json({ ok: false, error: expiredError.message }, { status: 500 });
+  }
+
+  const offlineExpired = expired?.length ?? 0;
+
+  return NextResponse.json({
+    ok: true,
+    processed: (due ?? []).length,
+    results,
+    offlineExpired,
+  });
 }
 
 export async function GET(request: Request) {

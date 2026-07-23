@@ -19,6 +19,7 @@ import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsS
 import { UsernameModerationSection } from "@/components/admin/sections/UsernameModerationSection";
 import { UsersSection } from "@/components/admin/sections/UsersSection";
 import { VenuesSection } from "@/components/admin/sections/VenuesSection";
+import { BillingSection } from "@/components/admin/sections/BillingSection";
 import LegacySectionPlaceholder from "@/components/admin/sections/LegacySectionPlaceholder";
 import type { Venue } from "@/types";
 
@@ -42,7 +43,8 @@ export type AdminSection =
   | "live-trivia-inventory"
   | "username-moderation"
   | "category-blitz"
-  | "llm-cost";
+  | "llm-cost"
+  | "partner-billing";
 
 export type AdminSectionOption = {
   id: AdminSection;
@@ -107,6 +109,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "pickem-settlement",     label: "Pick 'Em Settlement",   slug: "pickem-settlement",     status: { label: "Ready", tone: "live" }, component: PickEmSettlementSection },
   { id: "category-blitz",           label: "Category Blitz",        slug: "category-blitz",           status: { label: "Ready", tone: "live" }, component: CategoryBlitzSection },
   { id: "llm-cost",                 label: "LLM Cost",              slug: "llm-cost",                 status: { label: "Ready", tone: "live" }, component: LlmCostSection },
+  { id: "partner-billing",          label: "Partner Billing",       slug: "partner-billing",          status: { label: "Ready", tone: "live" }, component: BillingSection },
 ];
 
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
@@ -128,7 +131,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Operations",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["pickem-settlement", "llm-cost"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["pickem-settlement", "llm-cost", "partner-billing"].includes(opt.id)),
   },
 ];
 
@@ -152,6 +155,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "pickem-settlement",
   "category-blitz",
   "llm-cost",
+  "partner-billing",
 ]);
 
 export function getAdminSectionBySlug(slug: string): AdminSectionOption | null {

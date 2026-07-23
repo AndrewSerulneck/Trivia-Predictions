@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
+import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
 
 type SubscriptionRow = {
   id: string;
   venue_id: string;
   plan_type: string;
+  billing_method: string;
   amount_cents: number;
   status: string;
   current_period_start: string | null;
@@ -44,7 +46,7 @@ export async function GET(request: Request) {
   const { data: subscriptions, error: subError } = await supabaseAdmin
     .from("billing_subscriptions")
     .select(
-      "id, venue_id, plan_type, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, slimcd_recurring_token, created_at"
+      "id, venue_id, plan_type, billing_method, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, slimcd_recurring_token, created_at"
     )
     .in("venue_id", auth.venueIds)
     .returns<SubscriptionRow[]>();
@@ -78,6 +80,7 @@ export async function GET(request: Request) {
       currentPeriodEnd: s.current_period_end,
       cancelAtPeriodEnd: s.cancel_at_period_end,
       hasPaymentMethod: Boolean(s.slimcd_recurring_token),
+      isManual: s.billing_method === OFFLINE_BILLING_METHOD,
       createdAt: s.created_at,
     })),
     invoices: (invoices ?? []).map((i) => ({

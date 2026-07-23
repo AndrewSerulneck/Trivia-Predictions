@@ -12,6 +12,7 @@ type Subscription = {
   amountCents: number;
   status: "active" | "past_due" | "cancelled";
   currentPeriodEnd: string | null;
+  isManual: boolean;
 };
 
 type Venue = {
@@ -105,8 +106,11 @@ type TileStatus = { tone: PillTone; label: string; pulse?: boolean; trailing?: s
 
 const billingStatus = (sub: Subscription | undefined): TileStatus => {
   if (!sub) return { tone: "cyan", label: "Set up" };
-  if (sub.status === "active")
-    return { tone: "emerald", label: "Active", trailing: `Renews ${formatDate(sub.currentPeriodEnd)}` };
+  if (sub.status === "active") {
+    return sub.isManual
+      ? { tone: "amber", label: "Active — offline", trailing: `Paid through ${formatDate(sub.currentPeriodEnd)}` }
+      : { tone: "emerald", label: "Active", trailing: `Renews ${formatDate(sub.currentPeriodEnd)}` };
+  }
   if (sub.status === "past_due") return { tone: "rose", label: "Payment due" };
   return { tone: "slate", label: "Cancelled", trailing: `Ends ${formatDate(sub.currentPeriodEnd)}` };
 };

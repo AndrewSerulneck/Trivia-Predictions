@@ -14,6 +14,7 @@ type Subscription = {
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
   hasPaymentMethod: boolean;
+  isManual: boolean;
 };
 
 type Invoice = {
@@ -39,6 +40,8 @@ const subStatus: Record<Subscription["status"], { tone: string; dot: string; lab
   past_due: { tone: "bg-ht-rose-500/15 text-ht-rose-300", dot: "bg-ht-rose-400", label: "Payment due" },
   cancelled: { tone: "bg-ht-elevated text-ht-muted", dot: "bg-slate-500", label: "Cancelled" },
 };
+
+const manualSubStatus = { tone: "bg-ht-amber-500/15 text-ht-amber-300", dot: "bg-ht-amber-400", label: "Active — billed offline" };
 
 const displayStatus = (subscription: Subscription): Subscription["status"] =>
   subscription.cancelAtPeriodEnd ? "cancelled" : subscription.status;
@@ -201,10 +204,18 @@ const OwnerBillingPage = () => {
                   {subscription.planType}
                 </span>
                 <div className="flex flex-col items-end gap-2">
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[21px] font-black uppercase tracking-wider ${subStatus[displayStatus(subscription)].tone}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${subStatus[displayStatus(subscription)].dot}`} />
-                    {subStatus[displayStatus(subscription)].label}
-                  </span>
+                  {(() => {
+                    const badge =
+                      subscription.isManual && displayStatus(subscription) === "active"
+                        ? manualSubStatus
+                        : subStatus[displayStatus(subscription)];
+                    return (
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[21px] font-black uppercase tracking-wider ${badge.tone}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${badge.dot}`} />
+                        {badge.label}
+                      </span>
+                    );
+                  })()}
                   {subscription.status === "cancelled" || subscription.cancelAtPeriodEnd ? (
                     <Link
                       href="/owner/billing/setup"
@@ -223,13 +234,17 @@ const OwnerBillingPage = () => {
                   <dt className="text-ht-muted">
                     {subscription.status === "cancelled" || subscription.cancelAtPeriodEnd
                       ? "Access ends"
-                      : "Next billing date"}
+                      : subscription.isManual
+                        ? "Paid through"
+                        : "Next billing date"}
                   </dt>
                   <dd className="font-bold text-ht-primary">{formatDate(subscription.currentPeriodEnd)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-ht-muted">Billing cycle</dt>
-                  <dd className="font-bold text-ht-primary">Monthly Subscription</dd>
+                  <dd className="font-bold text-ht-primary">
+                    {subscription.isManual ? "Billed offline" : "Monthly Subscription"}
+                  </dd>
                 </div>
               </dl>
             </div>
@@ -241,17 +256,28 @@ const OwnerBillingPage = () => {
             <div className="flex items-center gap-3 rounded-2xl border border-ht-hairline bg-ht-surface p-4 shadow-ht-card">
               <div className="h-8 w-12 shrink-0 rounded-md bg-ht-elevated" />
               <span className="flex-1 text-sm font-bold text-ht-secondary">
-                {subscription.hasPaymentMethod ? "Card on file" : "No card on file"}
+                {subscription.isManual
+                  ? "Billed offline (check)"
+                  : subscription.hasPaymentMethod
+                    ? "Card on file"
+                    : "No card on file"}
               </span>
-              <button
-                type="button"
-                onClick={handleUpdateCard}
-                disabled={updatingCard}
-                className="text-sm font-black text-ht-cyan-300 transition hover:text-ht-cyan-200 disabled:opacity-50"
-              >
-                {updatingCard ? "Opening…" : "Update"}
-              </button>
+              {subscription.isManual ? null : (
+                <button
+                  type="button"
+                  onClick={handleUpdateCard}
+                  disabled={updatingCard}
+                  className="text-sm font-black text-ht-cyan-300 transition hover:text-ht-cyan-200 disabled:opacity-50"
+                >
+                  {updatingCard ? "Opening…" : "Update"}
+                </button>
+              )}
             </div>
+            {subscription.isManual ? (
+              <p className="mt-2 text-xs font-semibold text-ht-muted">
+                Contact us to update your payment or renew your access.
+              </p>
+            ) : null}
           </div>
 
           {/* Invoices */}
@@ -284,7 +310,7 @@ const OwnerBillingPage = () => {
             </div>
           </div>
 
-          {subscription.status !== "cancelled" && !subscription.cancelAtPeriodEnd ? (
+          {subscription.isManual ? null : subscription.status !== "cancelled" && !subscription.cancelAtPeriodEnd ? (
             <button
               type="button"
               onClick={handleCancel}
