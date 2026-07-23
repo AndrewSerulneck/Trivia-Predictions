@@ -55,7 +55,6 @@ import {
   updateChallengeCampaign,
 } from "@/lib/challengeCampaigns";
 import {
-  REWARD_GAME_WINNER_DISABLED_MESSAGE,
   REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE,
   REWARD_INVALID_PRIZE_MESSAGE,
   REWARD_INVALID_QUANTITY_MESSAGE,
@@ -945,8 +944,7 @@ export async function POST(request: Request) {
           message === REWARD_INVALID_QUANTITY_MESSAGE ||
           message === REWARD_INVALID_PRIZE_MESSAGE ||
           message === REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE ||
-          message === REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE ||
-          message === REWARD_GAME_WINNER_DISABLED_MESSAGE
+          message === REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE
             ? 400
             : 500;
         return NextResponse.json({ ok: false, error: message }, { status });

@@ -44,7 +44,6 @@ import {
   findEndedOccurrences,
   loadOccurrenceFinalStandings,
 } from "@/lib/liveShowdownEngine";
-import { isRewardsEnabled } from "@/lib/rewardsFlags";
 import type { ChallengeCampaign } from "@/types";
 
 /**
@@ -134,12 +133,6 @@ export async function resolveGameWinnerRewards(
     resolutions: [],
     errors: [],
   };
-
-  // With the Rewards flag off, multi-winner behavior is clamped elsewhere; a
-  // game-winner reward can't be created at all in that state (createReward
-  // rejects it — see REWARD_GAME_WINNER_DISABLED_MESSAGE in lib/rewards.ts),
-  // but an existing row must not be resolved by a flag-off deployment either.
-  if (!isRewardsEnabled()) return report;
 
   // Oldest game first. A one-off reward can only be spent once, so which game
   // claims it must be deterministic (the earliest eligible one) rather than a

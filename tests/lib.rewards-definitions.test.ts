@@ -10,7 +10,6 @@ import type { AdminLiveShowdownSchedule } from "@/lib/liveShowdownAdmin";
 const mocks = vi.hoisted(() => ({
   listAdminLiveShowdownSchedules: vi.fn(async (): Promise<AdminLiveShowdownSchedule[]> => []),
   createChallengeCampaign: vi.fn(async (input: Record<string, unknown>) => ({ id: "reward-1", ...input })),
-  isRewardsEnabled: vi.fn(() => true),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -19,9 +18,6 @@ vi.mock("@/lib/liveShowdownAdmin", () => ({
 }));
 vi.mock("@/lib/challengeCampaigns", () => ({
   createChallengeCampaign: mocks.createChallengeCampaign,
-}));
-vi.mock("@/lib/rewardsFlags", () => ({
-  isRewardsEnabled: mocks.isRewardsEnabled,
 }));
 
 import {
@@ -36,7 +32,6 @@ import {
   REWARD_UNSUPPORTED_CADENCE_MESSAGE,
   REWARD_INVALID_PRIZE_MESSAGE,
   REWARD_INVALID_QUANTITY_MESSAGE,
-  REWARD_GAME_WINNER_DISABLED_MESSAGE,
   createReward,
   resolveRewardCreationContext,
   type RewardPrizeInput,
@@ -71,8 +66,6 @@ const APPETIZER_PRIZE: RewardPrizeInput = {
 beforeEach(() => {
   mocks.listAdminLiveShowdownSchedules.mockReset();
   mocks.createChallengeCampaign.mockClear();
-  mocks.isRewardsEnabled.mockReset();
-  mocks.isRewardsEnabled.mockReturnValue(true);
 });
 
 describe("reward definition registry", () => {
@@ -297,25 +290,7 @@ describe("createReward — expansion + validation", () => {
     ).rejects.toThrow(REWARD_INVALID_PRIZE_MESSAGE);
   });
 
-  it("rejects a game_winner reward when the Rewards flag is off", async () => {
-    mocks.isRewardsEnabled.mockReturnValue(false);
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
-    await expect(
-      createReward({
-        venueId: "venue-1",
-        definitionId: "live_trivia_challenge",
-        cadence: "weekly",
-        winCondition: "game_winner",
-        threshold: 500,
-        winnerQuota: 1,
-        prize: APPETIZER_PRIZE,
-      }),
-    ).rejects.toThrow(REWARD_GAME_WINNER_DISABLED_MESSAGE);
-    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
-  });
-
-  it("allows a game_winner reward when the Rewards flag is on", async () => {
-    mocks.isRewardsEnabled.mockReturnValue(true);
+  it("allows a game_winner reward", async () => {
     mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     await createReward({
       venueId: "venue-1",

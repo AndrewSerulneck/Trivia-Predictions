@@ -2,7 +2,6 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notifications";
-import { isRewardsEnabled } from "@/lib/rewardsFlags";
 import type {
   ChallengeCampaign,
   ChallengeCampaignProgress,
@@ -1559,8 +1558,7 @@ type AwardCycleWinnerRpcRow = { won: boolean; exhausted: boolean };
  * real `cycleStart`, one-time passes the epoch sentinel (`new Date(0)`).
  *
  * `winnerQuota` is passed explicitly (not read off the campaign) so the caller
- * can clamp it — with NEXT_PUBLIC_REWARDS_ENABLED off, callers pass 1 to force
- * strictly single-winner behavior even if a quota>1 row somehow exists.
+ * controls the effective cap rather than trusting the row unconditionally.
  *
  * Returns `won` (did THIS user just win — false for a repeat crosser already in
  * the ledger, or an already-full cycle) and `exhausted` (the cycle has now
@@ -1723,10 +1721,8 @@ export async function applyChallengeCampaignPoints(params: {
     // The Phase-3 migration replaced the old unique(challenge_id, cycle_start)
     // ledger key with unique(challenge_id, cycle_start, winner_user_id), so the
     // pre-Rewards ON CONFLICT single-winner insert no longer caps a cycle — the
-    // RPC's count-guard is now the only cap. With NEXT_PUBLIC_REWARDS_ENABLED off
-    // we clamp the quota to 1, reproducing exactly today's single-winner behavior;
-    // a one-time reward already resolved is inactive and never reaches here.
-    const alreadyResolved = !isRewardsEnabled() && Boolean(campaign.winnerUserId);
+    // RPC's count-guard is now the only cap. A one-time reward already resolved
+    // is inactive and never reaches here.
     // A "game_winner" reward is NOT won by accruing points — it is awarded to the
     // top scorer(s) of a finished Live Trivia occurrence by the
     // resolve-live-trivia-winners cron (lib/liveTriviaWinnerRewards.ts). Its
@@ -1736,11 +1732,10 @@ export async function applyChallengeCampaignPoints(params: {
     if (
       campaign.challengeMode === "progress" &&
       !resolvedByCron &&
-      nextProgress >= campaign.pointsRequiredToWin &&
-      !alreadyResolved
+      nextProgress >= campaign.pointsRequiredToWin
     ) {
       const isRecurring = Boolean(campaign.recurringType && campaign.recurringType !== "none");
-      const effectiveQuota = isRewardsEnabled() ? campaign.winnerQuota : 1;
+      const effectiveQuota = campaign.winnerQuota;
       // One-time rewards use the epoch-sentinel cycle_start; recurring use the
       // real cycle (so the quota resets each cycle and prior winners may win again).
       const awardCycleStart = isRecurring ? cycleStart : new Date(0);

@@ -95,8 +95,6 @@ vi.mock("@/lib/liveShowdownEngine", () => ({
   ),
 }));
 
-vi.mock("@/lib/rewardsFlags", () => ({ isRewardsEnabled: () => true }));
-
 import {
   GAME_WINNER_TIE_QUOTA_CAP,
   resolveGameWinnerRewards,

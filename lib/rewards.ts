@@ -6,7 +6,6 @@ import {
   type AdminLiveShowdownSchedule,
 } from "@/lib/liveShowdownAdmin";
 import { getTimeZoneParts } from "@/lib/categoryBlitzScheduleTime";
-import { isRewardsEnabled } from "@/lib/rewardsFlags";
 import {
   getRewardDefinition,
   isSupportedRewardCadence,
@@ -73,8 +72,6 @@ export const REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE =
   "Custom target must be a multiple of 10.";
 export const REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE =
   "This reward can't be offered to the winner of the game.";
-export const REWARD_GAME_WINNER_DISABLED_MESSAGE =
-  "Winner-of-the-game rewards aren't available yet.";
 export const REWARD_INVALID_QUANTITY_MESSAGE =
   "Enter how many of this prize are available.";
 export const REWARD_INVALID_PRIZE_MESSAGE = "Choose a valid prize for this reward.";
@@ -285,9 +282,6 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     params.winCondition === "game_winner" ? "game_winner" : "points_threshold";
   if (winCondition === "game_winner" && !definition.supportsGameWinner) {
     throw new Error(REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE);
-  }
-  if (winCondition === "game_winner" && !isRewardsEnabled()) {
-    throw new Error(REWARD_GAME_WINNER_DISABLED_MESSAGE);
   }
 
   // A game-winner reward has no points target. points_required_to_win is NOT

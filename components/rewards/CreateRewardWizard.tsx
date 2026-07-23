@@ -155,6 +155,15 @@ export function CreateRewardWizard({
   const [contextLoading, setContextLoading] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
 
+  // ── Definition-step prefetch: which definitions are even choosable ──────────
+  // Resolved once the venue is known and the definition step is reached, so a
+  // reward whose required game isn't scheduled shows as disabled + blocked
+  // BEFORE the partner can click it, instead of failing after the click.
+  const [definitionContexts, setDefinitionContexts] = useState<
+    Record<string, RewardCreationContextDTO>
+  >({});
+  const [definitionContextsLoading, setDefinitionContextsLoading] = useState(false);
+
   const [cadence, setCadence] = useState<CampaignRecurringType>("none");
   const [cadenceError, setCadenceError] = useState<string | null>(null);
   const [winCondition, setWinCondition] = useState<ChallengeWinCondition>("points_threshold");
@@ -177,17 +186,63 @@ export function CreateRewardWizard({
   const needsVenueStep = venues.length > 1 && !defaultVenueId;
   const [step, setStep] = useState<Step>(needsVenueStep ? "venue" : "definition");
 
+  useEffect(() => {
+    if (step !== "definition" || !venueId) return;
+    let cancelled = false;
+    setDefinitionContextsLoading(true);
+    Promise.all(
+      REWARD_DEFINITIONS.map(async (def) => {
+        try {
+          return [def.id, await fetchContext(venueId, def.id)] as const;
+        } catch {
+          // Unknown status — leave the tile enabled; the post-click check
+          // (handlePickDefinition/createReward) still guards it.
+          return null;
+        }
+      }),
+    ).then((results) => {
+      if (cancelled) return;
+      const next: Record<string, RewardCreationContextDTO> = {};
+      for (const result of results) {
+        if (result) next[result[0]] = result[1];
+      }
+      setDefinitionContexts(next);
+      setDefinitionContextsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [step, venueId, fetchContext]);
+
   // ── Step: definition pick → resolve schedule/cadence context ────────────────
   const handlePickDefinition = async (picked: RewardDefinition) => {
     setDefinition(picked);
     setThreshold(picked.defaultThreshold);
     setCustomThreshold("");
     setWinCondition("points_threshold");
-    setContext(null);
     setContextError(null);
+
+    const cached = definitionContexts[picked.id];
+    if (cached) {
+      // The tile is disabled whenever a cached context is unscheduled, but guard
+      // anyway in case this ever runs from a stale render.
+      if (!cached.scheduled) return;
+      setContext(cached);
+      setCadence(cached.allowedCadences.includes("weekly") ? "weekly" : "none");
+      setStep("cadence");
+      return;
+    }
+
+    setContext(null);
     setContextLoading(true);
     try {
       const ctx = await fetchContext(venueId, picked.id);
+      // Feed the result back into the prefetch cache so a definition that was
+      // unreachable during the initial prefetch (e.g. a transient network
+      // error) still renders the "schedule it first" block instead of quietly
+      // advancing to the cadence step.
+      setDefinitionContexts((prev) => ({ ...prev, [picked.id]: ctx }));
+      if (!ctx.scheduled) return;
       setContext(ctx);
       setCadence(ctx.allowedCadences.includes("weekly") ? "weekly" : "none");
       setStep("cadence");
@@ -302,31 +357,40 @@ export function CreateRewardWizard({
         <div className="space-y-3">
           <p className={s.heading}>Create Reward</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {REWARD_DEFINITIONS.map((def) => (
-              <button
-                key={def.id}
-                type="button"
-                onClick={() => void handlePickDefinition(def)}
-                disabled={contextLoading}
-                className={`${s.optionCard} ${definition?.id === def.id ? s.optionCardActive : ""} disabled:opacity-60`}
-              >
-                <span className="text-lg">{def.glyph}</span>
-                <span className="min-w-0">
-                  <span className="block font-black">{def.name}</span>
-                </span>
-              </button>
-            ))}
+            {REWARD_DEFINITIONS.map((def) => {
+              const defContext = definitionContexts[def.id];
+              const blocked = defContext ? !defContext.scheduled : false;
+              return (
+                <button
+                  key={def.id}
+                  type="button"
+                  onClick={() => void handlePickDefinition(def)}
+                  disabled={contextLoading || definitionContextsLoading || blocked}
+                  className={`${s.optionCard} ${definition?.id === def.id ? s.optionCardActive : ""} disabled:opacity-60`}
+                >
+                  <span className="text-lg">{def.glyph}</span>
+                  <span className="min-w-0">
+                    <span className="block font-black">{def.name}</span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          {contextLoading ? <p className={s.helpText}>Checking the venue&apos;s schedule…</p> : null}
-          {contextError ? <div className={s.error}>{contextError}</div> : null}
-          {context && definition && !context.scheduled ? (
-            <div className={s.block}>
-              <a href={scheduleLinkHref} className="underline">
-                Schedule Live Trivia
-              </a>{" "}
-              to create a Live Trivia reward.
-            </div>
+          {definitionContextsLoading || contextLoading ? (
+            <p className={s.helpText}>Checking the venue&apos;s schedule…</p>
           ) : null}
+          {contextError ? <div className={s.error}>{contextError}</div> : null}
+          {!definitionContextsLoading &&
+            REWARD_DEFINITIONS.filter((def) => definitionContexts[def.id]?.scheduled === false).map(
+              (def) => (
+                <div key={def.id} className={s.block}>
+                  <a href={scheduleLinkHref} className="underline">
+                    Schedule Live Trivia
+                  </a>{" "}
+                  in order to create a reward for Live Trivia.
+                </div>
+              ),
+            )}
           <button type="button" onClick={onCancel} className={s.secondaryButton}>
             Cancel
           </button>
