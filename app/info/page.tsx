@@ -154,12 +154,13 @@ const SPORTS_SHOWCASES: GameShowcase[] = [
 ];
 
 const FEATURES = [
-  { icon: "📍", title: "Drives repeat visits", body: "Every game is geofenced to your venue — it only works in your bar! Players compete with the people around them. That shared competition creates a community and keeps them coming back." },
+  { icon: "📍", title: "Geofenced to your address", body: "Games only work in your bar! Players compete with the people around them." },
+  { icon: "🎯", title: "Use rewards to boost sales", body: "Offer up discounts to guests who score the most trivia points or make the best sports bracket to encourage repeat visits." },
   { icon: "🍺", title: "Longer stays, higher tabs", body: "Games keep guests engaged longer, encouraging additional food and beverage purchases with every round." },
-  { icon: "📱", title: "No hardware required", body: "Players use their own phones. No tablets, no installs, no devices to buy, replace, charge, or update. No app download required." },
-  { icon: "📅", title: "Schedule around your business", body: "Schedule group trivia or one of our other live community games whenever you need a boost. Target slow periods and turn them into your busiest nights." },
-  { icon: "💰", title: "Advertise with us!", body: "Subscribe and broadcast your ads to our growing network of partner venues at a big discount." },
-  { icon: "🎯", title: "Custom promotions & sponsorships", body: "Offer prizes to boost engagement, run sponsor integrations, or create custom challenges. Hightop gives you the tools — you set the stakes." },
+  { icon: "📱", title: "No hardware required", body: "Players use their own phones. No devices to buy or downloads required." },
+  { icon: "📅", title: "Schedule around your business", body: "Schedule live community games (like pub trivia) whenever you need a boost. Target slow periods and turn them into your busiest nights." },
+  { icon: "💰", title: "Advertise with us!", body: "Subscribe and broadcast your ads to our growing network of partner venues." },
+ 
 ];
 
 const HOW_IT_WORKS = [
@@ -170,25 +171,25 @@ const HOW_IT_WORKS = [
 ];
 
 const SEMANTIC_QA = [
-  {
-    question: "What games are there?",
+    {
+    question: "Why should I sign up?",
     answer:
-      "Everything from classic bar trivia to live sports competitions like pick 'em leagues, fantasy sports, sports brackets, and much more. See below for a partial slate of products we offer. Use all of it to run promotions and drive engagement that increases revenue.",
+      "There's lots of online games out there. We're more than that. We're a digital rewards and advertising platform built to increase dwell time and repeat visits.",
   },
   {
     question: "How does it work?",
     answer:
-      "Guests join from their phones by scanning a QR code. Gameplay is restricted to addresses you desginate — it only works when users are physically at your establishment. Players compete with the people around them for bragging rights and prizes.",
+      "Gameplay is geofenced to locations you desginate — it only works when users are physically at your establishment. Guests join from their phones by scanning a QR code. Players compete with the people around them for rewards and bragging rights.",
+  },
+      {
+    question: "What games are there?",
+    answer:
+      "Everything from classic bar trivia to live sports competitions like pick 'em leagues, fantasy sports, sports brackets, and much more. See below for a partial slate of products we offer.",
   },
   {
     question: "Is it complicated?",
     answer:
-      "Not at all.  The platform is designed to be simple for both venue operators and guests. Players join by scanning a QR code, and the games run themselves. Once you subscribe, you're up and running instantly. You can schedule group games, set up challenges, and offer prizes — all from your phone.",
-  },
-  {
-    question: "Why should I sign up?",
-    answer:
-      "The platform is built to increase dwell time and repeat visits. When guests are engaged in a game, they stay longer and order more. The shared experience and competitive nature of the games fosters community, creating a loyal customer base that comes back week after week.",
+      "Not at all. The platform is designed to be simple for both venue operators and guests. Players join by scanning a QR code, and the games run themselves. Once you subscribe, you're up and running instantly. You can schedule group games, set up challenges, and offer prizes — all from your phone.",
   },
 ];
 
@@ -460,7 +461,7 @@ export default function InfoPage() {
           />
           <div className="pointer-events-none absolute inset-0 bg-slate-950/70" />
 
-          <div className="relative mx-auto max-w-4xl px-5 py-24 text-center">
+          <div className="relative mx-auto max-w-4xl lg:max-w-6xl px-5 py-24 text-center">
             <div className="mb-6 inline-block rounded-full border border-cyan-400/30 bg-cyan-400/8 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-cyan-300">
               Venue Entertainment Platform
             </div>
@@ -629,7 +630,7 @@ export default function InfoPage() {
           eyebrow="How It Works"
           title="Up and running instantly."
         >
-          <div className="flex flex-col gap-6 max-w-4xl">
+          <div className="flex flex-col gap-6 max-w-4xl lg:max-w-6xl">
             {HOW_IT_WORKS.map((item) => (
               <div
                 key={item.step}
@@ -649,7 +650,7 @@ export default function InfoPage() {
 
         {/* ── QUOTE CALLOUT ── */}
         <section className="py-16 px-5 bg-slate-900/40">
-          <div className="mx-auto max-w-3xl text-center">
+          <div className="mx-auto max-w-3xl lg:max-w-5xl text-center">
             <blockquote className="htm-reveal text-2xl sm:text-3xl font-black leading-snug text-white" data-reveal>
               &ldquo;Turn slow nights into{" "}
               <span className="htm-grad">game nights</span>{" "}
@@ -660,7 +661,7 @@ export default function InfoPage() {
 
         {/* ── PRICING ── */}
         <section id="pricing" className="py-24 px-5">
-          <div className="mx-auto max-w-2xl">
+          <div className="mx-auto max-w-2xl lg:max-w-4xl">
             <div className="text-center mb-14">
               <div className="mb-4 text-xs font-black uppercase tracking-widest text-cyan-400">Pricing</div>
               <h2 className="htm-reveal text-3xl sm:text-4xl font-black mb-3" data-reveal>Simple, affordable pricing.</h2>
@@ -705,7 +706,7 @@ export default function InfoPage() {
 
         {/* ── CONTACT ── */}
         <section id="contact" className="py-24 px-5">
-          <div className="mx-auto max-w-3xl">
+          <div className="mx-auto max-w-3xl lg:max-w-5xl">
             <div className="htm-reveal mb-4 text-xs font-black uppercase tracking-widest text-cyan-400" data-reveal>
               Get in Touch
             </div>

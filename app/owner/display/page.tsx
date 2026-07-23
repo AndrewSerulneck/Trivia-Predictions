@@ -144,7 +144,7 @@ const OwnerDisplayPage = () => {
               </p>
               <p className="mt-2 text-sm font-semibold text-ht-secondary">
                 On the TV&apos;s browser, go to <span className="font-mono text-ht-primary">hightopchallenge.com/tv</span>.
-                It&apos;ll show that TV&apos;s own one-time code — enter it below to link it to{" "}
+              md   It&apos;ll show that TV&apos;s own one-time code — enter it below to link it to{" "}
                 {selectedVenue?.name ?? "your venue"}.
               </p>
               <p className="mt-1.5 text-xs font-semibold text-ht-muted">
