@@ -26,6 +26,7 @@ import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
 import { CategoryBlitzSection } from "@/components/admin/sections/CategoryBlitzSection";
+import { BillingSection } from "@/components/admin/sections/BillingSection";
 import { LiveTriviaInventorySection } from "@/components/admin/sections/LiveTriviaInventorySection";
 import { QuestionInventoryAlert } from "@/components/admin/sections/QuestionInventoryAlert";
 import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
@@ -543,6 +544,8 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         return <LiveTriviaInventorySection />;
       case "category-blitz":
         return <CategoryBlitzSection venues={venueList} />;
+      case "partner-billing":
+        return <BillingSection />;
       default:
         return currentSectionOption ? <LegacyPanel section={currentSectionOption} /> : null;
     }

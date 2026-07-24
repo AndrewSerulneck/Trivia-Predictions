@@ -35,7 +35,39 @@ export async function requireOwnerAuth(request: Request): Promise<OwnerAuthConte
     });
   }
 
-  const venueIds = (data ?? []).map((row) => row.venue_id as string);
+  const linkedVenueIds = (data ?? [])
+    .map((row) => String(row.venue_id ?? "").trim())
+    .filter(Boolean);
+
+  if (linkedVenueIds.length === 0) {
+    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const { data: liveVenues, error: liveVenueError } = await supabaseAdmin
+    .from("venues")
+    .select("id")
+    .in("id", linkedVenueIds);
+
+  if (liveVenueError) {
+    throw new Response(JSON.stringify({ error: "Failed to load owner venues" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const venueIds = (liveVenues ?? [])
+    .map((row) => String(row.id ?? "").trim())
+    .filter(Boolean);
+
+  if (venueIds.length === 0) {
+    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   return { ownerId, venueIds };
 }
