@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { marketingUrl } from "@/lib/domainSplit";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type Body = { email?: string };
@@ -15,8 +16,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Email is required." }, { status: 400 });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim() ?? "";
-  const redirectTo = baseUrl ? `${baseUrl}/owner/reset-password` : "/owner/reset-password";
+  const redirectTo = marketingUrl("/owner/reset-password");
 
   // Send reset email via Supabase — always return ok to avoid leaking whether email exists
   await supabaseAdmin.auth.resetPasswordForEmail(email, { redirectTo });

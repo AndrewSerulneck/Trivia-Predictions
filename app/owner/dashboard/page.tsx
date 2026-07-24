@@ -20,6 +20,12 @@ type Venue = {
   name: string;
 };
 
+type OwnerAccountSummary = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 type OwnerScheduleSummary = {
   id: string;
   title: string;
@@ -119,6 +125,7 @@ const OwnerDashboardPage = () => {
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [ownerAccount, setOwnerAccount] = useState<OwnerAccountSummary | null>(null);
   const [selectedVenueId, setSelectedVenueId] = useState<string>("");
   const [nextSchedule, setNextSchedule] = useState<OwnerScheduleSummary | null>(null);
   const [activeCompetitionCount, setActiveCompetitionCount] = useState<number | null>(null);
@@ -127,22 +134,25 @@ const OwnerDashboardPage = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [venuesRes, billingRes] = await Promise.all([
+        const [venuesRes, billingRes, accountRes] = await Promise.all([
           fetch("/api/owner/venues"),
           fetch("/api/owner/billing"),
+          fetch("/api/owner/account"),
         ]);
 
-        if (venuesRes.status === 401 || billingRes.status === 401) {
+        if (venuesRes.status === 401 || billingRes.status === 401 || accountRes.status === 401) {
           router.push("/owner/login");
           return;
         }
 
         const venuesData = (await venuesRes.json()) as { ok: boolean; venues?: Venue[] };
         const billingData = (await billingRes.json()) as { ok: boolean; subscriptions?: Subscription[] };
+        const accountData = (await accountRes.json()) as { ok: boolean; owner?: OwnerAccountSummary };
 
         const loadedVenues = venuesData.venues ?? [];
         setVenues(loadedVenues);
         setSubscriptions(billingData.subscriptions ?? []);
+        setOwnerAccount(accountData.owner ?? null);
         setSelectedVenueId((prev) => prev || loadedVenues[0]?.id || "");
       } finally {
         setLoading(false);
@@ -240,6 +250,19 @@ const OwnerDashboardPage = () => {
         : { tone: "slate", label: "No games scheduled" },
     },
     {
+      href: "/owner/competitions",
+      label: "Offer Rewards",
+      description: "Schedule contests and offer prizes to boost engagement.",
+      gradient: "bg-ht-game-pickem",
+      glyph: "🏆",
+      status:
+        activeCompetitionCount === null
+          ? { tone: "slate", label: "No data" }
+          : activeCompetitionCount > 0
+            ? { tone: "emerald", label: `${activeCompetitionCount} running` }
+            : { tone: "slate", label: "None running" },
+    },
+    {
       href: "/owner/display",
       label: "Venue Display",
       description: "QR + link for the TVs so the room can follow along",
@@ -258,18 +281,15 @@ const OwnerDashboardPage = () => {
       status: billingStatus(selectedSub),
     },
     {
-      href: "/owner/competitions",
-      label: "Offer Rewards",
-      description: "Schedule contests and offer prizes to boost engagement.",
-      gradient: "bg-ht-game-pickem",
-      glyph: "🏆",
-      status:
-        activeCompetitionCount === null
-          ? { tone: "slate", label: "No data" }
-          : activeCompetitionCount > 0
-            ? { tone: "emerald", label: `${activeCompetitionCount} running` }
-            : { tone: "slate", label: "None running" },
-    },
+      href: "/owner/account",
+      label: "Account Settings",
+      description: "Email address and password",
+      gradient: "bg-ht-game-fantasy",
+      glyph: "⚙️",
+      status: ownerAccount?.email
+        ? { tone: "cyan", label: ownerAccount.email }
+        : { tone: "slate", label: "Manage account" },
+    }
   ];
 
   const venueInitial = (selectedVenue?.name ?? "?").charAt(0).toUpperCase();

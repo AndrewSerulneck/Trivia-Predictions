@@ -491,6 +491,14 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
     setVenueList((prev) => [venue, ...prev]);
   }, []);
 
+  const handleVenueUpdated = useCallback((venue: Venue) => {
+    setVenueList((prev) => prev.map((entry) => (entry.id === venue.id ? venue : entry)));
+  }, []);
+
+  const handleVenueDeleted = useCallback((venueId: string) => {
+    setVenueList((prev) => prev.filter((entry) => entry.id !== venueId));
+  }, []);
+
   if (authState === "checking") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-900">
@@ -515,7 +523,14 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
       case "user-analytics":
         return <UserAnalyticsSection venues={venueList} />;
       case "venue-manage":
-        return <VenuesSection venues={venueList} onVenueCreated={handleVenueCreated} />;
+        return (
+          <VenuesSection
+            venues={venueList}
+            onVenueCreated={handleVenueCreated}
+            onVenueUpdated={handleVenueUpdated}
+            onVenueDeleted={handleVenueDeleted}
+          />
+        );
       case "challenge-campaigns":
         return <ChallengesSection venues={venueList} />;
       case "live-trivia":

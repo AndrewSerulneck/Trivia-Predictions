@@ -985,6 +985,8 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
 type VenuesSectionProps = {
   venues: Venue[];
   onVenueCreated: (venue: Venue) => void;
+  onVenueUpdated: (venue: Venue) => void;
+  onVenueDeleted: (venueId: string) => void;
 };
 
 type ViewMode = "list" | "create" | "edit";
@@ -1006,7 +1008,7 @@ type VenueDeletionSummary = {
   userCount: number;
 };
 
-export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
+export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueDeleted }: VenuesSectionProps) {
   const [mode, setMode] = useState<ViewMode>("list");
   const [venueList, setVenueList] = useState<Venue[]>(venues);
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
@@ -1032,7 +1034,14 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
   }, [venues]);
 
   const sortedVenues = useMemo(() => {
-    const list = [...venueList];
+    // Dedupe by id defensively — a duplicate id would otherwise collide as a
+    // React key and drop/duplicate table rows.
+    const seen = new Set<string>();
+    const list = venueList.filter((venue) => {
+      if (seen.has(venue.id)) return false;
+      seen.add(venue.id);
+      return true;
+    });
     list.sort((a, b) => {
       const getValue = (venue: Venue) => {
         if (sortBy === "name") return venue.name;
@@ -1184,6 +1193,7 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
       if (!payload.ok || !payload.item) throw new Error(payload.error ?? "Failed to update venue.");
 
       setVenueList((prev) => prev.map((venue) => (venue.id === payload.item!.id ? payload.item! : venue)));
+      onVenueUpdated(payload.item);
       setEditingVenue(payload.item);
       setSuccessMsg(`Venue "${payload.item.name}" updated.`);
       setMode("list");
@@ -1257,6 +1267,7 @@ export function VenuesSection({ venues, onVenueCreated }: VenuesSectionProps) {
       }
 
       setVenueList((prev) => prev.filter((entry) => entry.id !== venue.id));
+      onVenueDeleted(venue.id);
       const parts = [`Venue "${venue.name}" deleted`];
       if (payload.subscriptionCancelled) {
         parts.push("its Stripe subscription was cancelled");

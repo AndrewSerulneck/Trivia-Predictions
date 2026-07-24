@@ -69,11 +69,22 @@ function VenueUsersSection({ venues = [] }: { venues?: Venue[] }) {
 function VenueProfilesSection({
   venues = [],
   onVenueCreated,
+  onVenueUpdated,
+  onVenueDeleted,
 }: {
   venues?: Venue[];
   onVenueCreated?: (venue: Venue) => void;
+  onVenueUpdated?: (venue: Venue) => void;
+  onVenueDeleted?: (venueId: string) => void;
 }) {
-  return <VenuesSection venues={venues} onVenueCreated={onVenueCreated ?? (() => undefined)} />;
+  return (
+    <VenuesSection
+      venues={venues}
+      onVenueCreated={onVenueCreated ?? (() => undefined)}
+      onVenueUpdated={onVenueUpdated ?? (() => undefined)}
+      onVenueDeleted={onVenueDeleted ?? (() => undefined)}
+    />
+  );
 }
 
 function ChallengeManagerSection({ venues = [] }: { venues?: Venue[] }) {
