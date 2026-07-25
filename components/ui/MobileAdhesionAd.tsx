@@ -14,6 +14,21 @@ type SlotResponse = {
   error?: string;
 };
 
+// Keep in sync with the .animate-tp-popup-sheet-down duration in
+// app/globals.css — same class the popup ad sheet uses.
+const BANNER_EXIT_MS = 270;
+
+function resolveBannerExitMs(): number {
+  if (typeof window === "undefined") {
+    return 0;
+  }
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : BANNER_EXIT_MS;
+  } catch {
+    return BANNER_EXIT_MS;
+  }
+}
+
 function isAdminRoute(pathname: string | null): boolean {
   return Boolean(pathname?.startsWith("/admin"));
 }
@@ -64,6 +79,7 @@ export function MobileAdhesionAd() {
   const ownerId = useId();
   const [ad, setAd] = useState<Advertisement | null>(null);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
   const [showDismissButton, setShowDismissButton] = useState(false);
   const [hasPriority, setHasPriority] = useState(false);
   const [awaitingScrollTrigger, setAwaitingScrollTrigger] = useState(false);
@@ -71,8 +87,37 @@ export function MobileAdhesionAd() {
   const scrollTriggerFiredRef = useRef(false);
   const scrollRafRef = useRef<number | null>(null);
   const maxScrollTopRef = useRef(0);
+  const exitTimerRef = useRef<number | null>(null);
 
   const SCROLL_TRIGGER_PX = 120;
+
+  const clearExitTimer = useCallback(() => {
+    if (exitTimerRef.current !== null) {
+      window.clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+  }, []);
+
+  // Puts the banner back into its "fresh" state. Also cancels any pending
+  // delayed unmount so an in-flight exit can't dismiss a newly loaded banner.
+  const resetDismissState = useCallback(() => {
+    clearExitTimer();
+    setIsExiting(false);
+    setIsDismissed(false);
+    setShowDismissButton(false);
+  }, [clearExitTimer]);
+
+  const handleDismiss = useCallback(() => {
+    if (exitTimerRef.current !== null) {
+      return;
+    }
+    setIsExiting(true);
+    exitTimerRef.current = window.setTimeout(() => {
+      exitTimerRef.current = null;
+      setIsExiting(false);
+      setIsDismissed(true);
+    }, resolveBannerExitMs());
+  }, []);
 
   const loadAd = useCallback(async (
     venueId: string,
@@ -123,8 +168,7 @@ export function MobileAdhesionAd() {
       if (!normalizedRound) return;
       void loadAd(venueId, currentPageKey, "round-end", normalizedRound).then((nextAd) => {
         if (!nextAd) return;
-        setIsDismissed(false);
-        setShowDismissButton(false);
+        resetDismissState();
       });
     };
 
@@ -147,7 +191,7 @@ export function MobileAdhesionAd() {
       window.removeEventListener("tp:trivia-round-complete", onLegacyRoundComplete as EventListener);
       window.removeEventListener("tp:trivia-round-banner", onRoundBannerEvent as EventListener);
     };
-  }, [loadAd, pathname]);
+  }, [loadAd, pathname, resetDismissState]);
 
   useEffect(() => {
     if (typeof window === "undefined" || isAdminRoute(pathname)) {
@@ -166,8 +210,7 @@ export function MobileAdhesionAd() {
     maxScrollTopRef.current = 0;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- route changes should reset transient banner UI state.
     setAwaitingScrollTrigger(false);
-    setIsDismissed(false);
-    setShowDismissButton(false);
+    resetDismissState();
 
     void (async () => {
       const initialAd = await loadAd(venueId, pageKey, "on-load");
@@ -177,7 +220,7 @@ export function MobileAdhesionAd() {
       }
       setAwaitingScrollTrigger(true);
     })();
-  }, [loadAd, pathname]);
+  }, [loadAd, pathname, resetDismissState]);
 
   useEffect(() => {
     if (!awaitingScrollTrigger || isAdminRoute(pathname)) {
@@ -216,8 +259,7 @@ export function MobileAdhesionAd() {
         void (async () => {
           const nextAd = await loadAd(venueId, pageKey, "on-scroll");
           if (nextAd) {
-            setIsDismissed(false);
-            setShowDismissButton(false);
+            resetDismissState();
           }
           setAwaitingScrollTrigger(false);
         })();
@@ -243,7 +285,7 @@ export function MobileAdhesionAd() {
         scrollRafRef.current = null;
       }
     };
-  }, [awaitingScrollTrigger, loadAd, pathname]);
+  }, [awaitingScrollTrigger, loadAd, pathname, resetDismissState]);
 
   useEffect(() => {
     if (!ad) {
@@ -288,20 +330,30 @@ export function MobileAdhesionAd() {
     };
   }, [ad, isDismissed, ownerId, pathname]);
 
+  useEffect(() => {
+    return () => {
+      clearExitTimer();
+    };
+  }, [clearExitTimer]);
+
+  // isDismissed only flips true once the exit animation has finished, so the
+  // banner is still mounted (and sliding down) for the duration of the exit.
   if (!ad || isAdminRoute(pathname) || isDismissed || !hasPriority) {
     return null;
   }
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[1600] px-2 md:hidden"
+      className={`pointer-events-none fixed inset-x-0 bottom-0 z-[1600] px-2 md:hidden ${
+        isExiting ? "animate-tp-popup-sheet-down" : "animate-tp-popup-sheet-up"
+      }`}
       style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)" }}
     >
-      <div className="relative mx-auto w-full max-w-md pointer-events-auto">
+      <div className={`relative mx-auto w-full max-w-md ${isExiting ? "pointer-events-none" : "pointer-events-auto"}`}>
         {showDismissButton ? (
           <button
             type="button"
-            onClick={() => setIsDismissed(true)}
+            onClick={handleDismiss}
             className="tp-clean-button absolute -top-2 right-1 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-ht-border-soft bg-ht-elevated-2 text-sm font-semibold text-ht-fg-secondary shadow"
             aria-label="Close ad"
           >

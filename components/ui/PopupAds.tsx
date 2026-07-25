@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
 import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import { releaseAdTier, requestAdTier, setLandingPopupGate } from "@/components/ui/adPriority";
+import { setPopupPending, setPopupVisible } from "@/components/ui/popupBlocking";
 import { setScrollLock } from "@/lib/scrollLock";
 import { incrementAdCounter } from "@/lib/adFrequency";
 import { trackAdClick, trackAdView } from "@/lib/analytics";
@@ -30,6 +31,20 @@ type PopupGuaranteeMeta = {
 };
 
 const TRIVIA_ROUND_ENDED_ACTIVE_KEY = "tp:trivia:round-ended-active:v1";
+
+// Keep in sync with the .animate-tp-popup-sheet-down duration in app/globals.css.
+const SHEET_EXIT_MS = 270;
+
+function resolveSheetExitMs(): number {
+  if (typeof window === "undefined") {
+    return 0;
+  }
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : SHEET_EXIT_MS;
+  } catch {
+    return SHEET_EXIT_MS;
+  }
+}
 
 function isTriviaRoundEndedActive(): boolean {
   if (typeof window === "undefined") {
@@ -185,6 +200,7 @@ export function PopupAds() {
   const pathname = usePathname();
   const popupOwnerId = useId();
   const [popup, setPopup] = useState<PopupState | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
   const guaranteeMetaRef = useRef<PopupGuaranteeMeta>({ guaranteed: false });
   const scrollTriggeredRef = useRef<Record<string, boolean>>({});
   const dismissedByTriggerRef = useRef<Record<PopupTrigger, boolean>>({
@@ -198,10 +214,28 @@ export function PopupAds() {
   const pendingRoundPopupQueueRef = useRef<number[]>([]);
   const scrollRafRef = useRef<number | null>(null);
   const maxObservedScrollPxRef = useRef<Record<string, number>>({});
+  const isClosingRef = useRef(false);
+  const exitTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     popupOpenRef.current = Boolean(popup?.open);
   }, [popup?.open]);
+
+  const clearExitTimer = useCallback(() => {
+    if (exitTimerRef.current !== null) {
+      window.clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+  }, []);
+
+  // Publish "a popup is imminent" so consumers holding UI back (the Speed
+  // Trivia tally) keep holding across the slot fetch and the round-end retry
+  // queue, instead of releasing into the gap before the ad paints.
+  const syncPopupPending = useCallback(() => {
+    setPopupPending(
+      popupOpeningRef.current || popupOpenRef.current || pendingRoundPopupQueueRef.current.length > 0
+    );
+  }, []);
 
   const loadSlotAd = useCallback(async (slot: "popup-on-entry" | "popup-on-scroll", options: {
     pageKey: AdPageKey;
@@ -256,6 +290,7 @@ export function PopupAds() {
         return false;
       }
       popupOpeningRef.current = true;
+      syncPopupPending();
 
       try {
         const slot = trigger === "popup-on-scroll" ? "popup-on-scroll" : "popup-on-entry";
@@ -286,6 +321,11 @@ export function PopupAds() {
 
         writeLastShownAt(trigger, now, options.roundNumber);
         popupOpenRef.current = true;
+        // A previous sheet may still be playing its exit animation. Cancel the
+        // pending unmount so the incoming sheet replays the entrance cleanly.
+        clearExitTimer();
+        isClosingRef.current = false;
+        setIsClosing(false);
         setPopup({
           open: true,
           trigger,
@@ -296,9 +336,10 @@ export function PopupAds() {
         return false;
       } finally {
         popupOpeningRef.current = false;
+        syncPopupPending();
       }
     },
-    [loadSlotAd, popupOwnerId]
+    [clearExitTimer, loadSlotAd, popupOwnerId, syncPopupPending]
   );
 
   const closePopup = useCallback(() => {
@@ -324,7 +365,29 @@ export function PopupAds() {
     }
     guaranteeMetaRef.current = { guaranteed: false };
     setPopup((prev) => (prev ? { ...prev, open: false } : prev));
-  }, [popup, popupOwnerId]);
+    syncPopupPending();
+  }, [popup, popupOwnerId, syncPopupPending]);
+
+  // User-facing close. Runs every closePopup() side effect immediately
+  // (scroll lock, ad-tier release, round-end signalling, trigger suppression)
+  // and only defers the DOM unmount so the sheet can slide back down.
+  const beginClose = useCallback(() => {
+    if (isClosingRef.current) {
+      return;
+    }
+    isClosingRef.current = true;
+    setIsClosing(true);
+    closePopup();
+
+    const exitMs = resolveSheetExitMs();
+    clearExitTimer();
+    exitTimerRef.current = window.setTimeout(() => {
+      exitTimerRef.current = null;
+      isClosingRef.current = false;
+      setIsClosing(false);
+      setPopup(null);
+    }, exitMs);
+  }, [clearExitTimer, closePopup]);
 
   useEffect(() => {
     const resetTimer = window.setTimeout(() => {
@@ -336,9 +399,13 @@ export function PopupAds() {
       pageReadyRef.current = false;
       popupOpenRef.current = false;
       popupOpeningRef.current = false;
+      clearExitTimer();
+      isClosingRef.current = false;
+      setIsClosing(false);
       releaseAdTier(popupOwnerId);
       setLandingPopupGate(false);
       setPopup(null);
+      syncPopupPending();
     }, 0);
 
     const pageKey = resolvePageKey(pathname);
@@ -398,7 +465,7 @@ export function PopupAds() {
       window.clearTimeout(resetTimer);
       setLandingPopupGate(false);
     };
-  }, [pathname, popupOwnerId, showPopup]);
+  }, [clearExitTimer, pathname, popupOwnerId, showPopup, syncPopupPending]);
 
   useEffect(() => {
     const pageKey = resolvePageKey(pathname);
@@ -509,7 +576,13 @@ export function PopupAds() {
           if (requestedRound) {
             pendingRoundPopupQueueRef.current.push(requestedRound);
           }
-          // No ad is showing — signal that the round summary can appear.
+          // Re-publish pending BEFORE signalling, so a consumer reacting to
+          // this event sees a queued retry and keeps holding. Otherwise a
+          // popup that merely lost a race would read as "no ad at all".
+          syncPopupPending();
+          // No round-end ad opened — signal that the round summary may appear.
+          // Consumers still gate on isPopupBlocking(), so this is a release of
+          // *this* handshake, not a promise that the screen is clear.
           window.dispatchEvent(new CustomEvent("tp:round-end-ad-complete"));
         }
       });
@@ -519,7 +592,7 @@ export function PopupAds() {
     return () => {
       window.removeEventListener("tp:trivia-round-complete", onRoundComplete as EventListener);
     };
-  }, [pathname, showPopup]);
+  }, [pathname, showPopup, syncPopupPending]);
 
   useEffect(() => {
     const pageKey = resolvePageKey(pathname);
@@ -531,6 +604,7 @@ export function PopupAds() {
     const intervalId = window.setInterval(() => {
       if (!isTriviaRoundEndedActive()) {
         pendingRoundPopupQueueRef.current = [];
+        syncPopupPending();
         return;
       }
       if (popupOpenRef.current || popupOpeningRef.current || isVenueTransitionGateActive()) {
@@ -548,14 +622,16 @@ export function PopupAds() {
         if (!opened) {
           pendingRoundPopupQueueRef.current.push(nextRound);
         }
+        syncPopupPending();
       });
     }, 300);
 
     return () => {
       window.clearInterval(intervalId);
       pendingRoundPopupQueueRef.current = [];
+      syncPopupPending();
     };
-  }, [pathname, showPopup]);
+  }, [pathname, showPopup, syncPopupPending]);
 
   useEffect(() => {
     if (!popup?.open) {
@@ -564,7 +640,7 @@ export function PopupAds() {
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        closePopup();
+        beginClose();
       }
     };
 
@@ -572,7 +648,7 @@ export function PopupAds() {
     return () => {
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [closePopup, popup?.open]);
+  }, [beginClose, popup?.open]);
 
   useEffect(() => {
     setScrollLock(`popup-ad:${popupOwnerId}`, Boolean(popup?.open), "popup");
@@ -587,12 +663,35 @@ export function PopupAds() {
     };
   }, [popupOwnerId]);
 
+  // Mirrors the render guard below exactly, so "visible" can never drift from
+  // what is actually painted. Note this stays true for the whole exit
+  // animation (isClosing) and only clears once the sheet has finished sliding
+  // away — which is precisely when a held tally should be allowed to start.
+  useEffect(() => {
+    setPopupVisible(Boolean(popup && (popup.open || isClosing)));
+  }, [isClosing, popup]);
+
+  useEffect(() => {
+    return () => {
+      setPopupVisible(false);
+      setPopupPending(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearExitTimer();
+    };
+  }, [clearExitTimer]);
+
   useEffect(() => {
     if (!popup?.open) return;
     trackAdView({ adId: popup.ad.id, referrerPage: pathname ?? undefined });
   }, [pathname, popup?.ad.id, popup?.open]);
 
-  if (!popup?.open) {
+  // Stay mounted while the exit animation plays: closePopup() has already
+  // flipped `open` to false and fired every side effect by this point.
+  if (!popup || (!popup.open && !isClosing)) {
     return null;
   }
 
@@ -610,7 +709,9 @@ export function PopupAds() {
   return (
     <div
       data-tp-scroll-lock="active"
-      className="pointer-events-auto fixed inset-0 z-[5000] flex items-center justify-center bg-slate-900/30 p-2"
+      className={`fixed inset-0 z-[5000] flex items-center justify-center bg-slate-900/30 p-2 ${
+        isClosing ? "pointer-events-none animate-tp-fade-out" : "pointer-events-auto animate-tp-fade-in"
+      }`}
       style={{
         top: 0,
         left: 0,
@@ -622,7 +723,9 @@ export function PopupAds() {
       }}
     >
       <div
-        className="pointer-events-auto animate-tp-popup-sheet-up w-fit max-w-[calc(100vw-12px)] overflow-hidden rounded-ht-2xl border border-ht-border-soft bg-ht-elevated shadow-[0_20px_45px_rgba(0,0,0,0.55)]"
+        className={`tp-sheet-offset-screen w-fit max-w-[calc(100vw-12px)] overflow-hidden rounded-ht-2xl border border-ht-border-soft bg-ht-elevated shadow-[0_20px_45px_rgba(0,0,0,0.55)] ${
+          isClosing ? "pointer-events-none animate-tp-popup-sheet-down" : "pointer-events-auto animate-tp-popup-sheet-up"
+        }`}
         style={{ maxHeight: modalMaxHeight }}
       >
         <div className="flex items-center justify-between border-b border-ht-border-hairline bg-ht-surface px-3 py-2">
@@ -634,7 +737,7 @@ export function PopupAds() {
           </div>
           <button
             type="button"
-            onClick={closePopup}
+            onClick={beginClose}
             className="tp-clean-button inline-flex h-8 w-8 items-center justify-center rounded-full border border-ht-border-soft bg-ht-elevated-2 text-lg font-semibold text-ht-fg-secondary"
             aria-label="Close advertisement"
           >

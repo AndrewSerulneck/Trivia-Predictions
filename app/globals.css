@@ -1646,19 +1646,91 @@ a[role="button"][class*="text-[11px]"] {
   will-change: transform, opacity;
 }
 
+/* How far the sheet travels to be off-screen. `100%` is relative to the
+   element's own height, which is what a bottom-anchored sheet needs; the
+   extra 24px hides shadows and the adhesion banner's overhanging close
+   button. Override per-element with `--tp-sheet-offset`. */
 @keyframes tp-popup-sheet-up {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 48px, 0);
+  from {
+    transform: translateY(var(--tp-sheet-offset, calc(100% + 24px)));
   }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes tp-popup-sheet-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(var(--tp-sheet-offset, calc(100% + 24px)));
   }
 }
 
 .animate-tp-popup-sheet-up {
-  animation: tp-popup-sheet-up 340ms cubic-bezier(0.16, 0.84, 0.2, 1) both;
+  /* `both` matters: it holds the first frame before paint (no flash of the
+     sheet at rest) and the last frame after the exit finishes (no snap-back
+     during the few ms before React unmounts). */
+  animation: tp-popup-sheet-up 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform;
+}
+
+.animate-tp-popup-sheet-down {
+  /* 270ms here must match BANNER_EXIT_MS / SHEET_EXIT_MS in the TSX files. */
+  animation: tp-popup-sheet-down 270ms cubic-bezier(0.4, 0, 1, 1) both;
+  will-change: transform;
+}
+
+/* The popup sheet is vertically centred (flex items-center), so its own
+   height is not enough to clear the screen — it has to travel a full
+   viewport instead. Applied on the sheet in PopupAds.tsx. */
+.tp-sheet-offset-screen {
+  --tp-sheet-offset: 100vh;
+}
+
+@supports (height: 100lvh) {
+  .tp-sheet-offset-screen {
+    /* lvh ignores mobile browser-chrome collapse, so the sheet still clears
+       the screen when the URL bar is hidden. */
+    --tp-sheet-offset: 100lvh;
+  }
+}
+
+/* Backdrop fade for the popup overlay. */
+@keyframes tp-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tp-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-tp-fade-in {
+  animation: tp-fade-in 320ms ease-out both;
+}
+
+.animate-tp-fade-out {
+  animation: tp-fade-out 270ms ease-in both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-tp-popup-sheet-up,
+  .animate-tp-popup-sheet-down,
+  .animate-tp-fade-in,
+  .animate-tp-fade-out {
+    animation-duration: 1ms;
+  }
 }
 
 @keyframes bingo-pop {

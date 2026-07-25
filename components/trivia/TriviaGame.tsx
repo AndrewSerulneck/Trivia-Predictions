@@ -10,6 +10,7 @@ import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGa
 import { canAdvanceToNextTriviaQuestion } from "@/lib/triviaRoundProgress";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
+import { isPopupBlocking, isPopupVisible, subscribePopupBlockingChange } from "@/components/ui/popupBlocking";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
 import type { TriviaQuestion } from "@/types";
 
@@ -1253,26 +1254,78 @@ export function TriviaGame({
       setTotalCardPulsing(false);
       return;
     }
-    const onAdComplete = () => setRoundSummaryReady(true);
-    window.addEventListener("tp:round-end-ad-complete", onAdComplete);
-    // Fallback: show summary after 4s if no signal arrives (e.g. ad system
-    // silent). Cancelled immediately if an ad actually opens — in that case
-    // we wait indefinitely for the user to dismiss it.
-    let fallbackTimer: number | null = window.setTimeout(
-      () => setRoundSummaryReady(true),
-      4000,
-    );
+    // Two independent conditions must BOTH hold before the tally may run:
+    //   1. the round-end ad handshake resolved (an ad was dismissed, or none
+    //      is coming), and
+    //   2. nothing is currently covering the screen.
+    // Condition 2 is what makes this ad-agnostic. An on-entry/on-scroll popup
+    // that happened to be open when the round ended never participates in the
+    // handshake, but it hides the tally just as effectively — previously the
+    // handshake released immediately in that case and the count-up played
+    // behind the ad.
+    let handshakeCleared = false;
+    let released = false;
+
+    const releaseIfClear = () => {
+      if (released || !handshakeCleared || isPopupBlocking()) {
+        return;
+      }
+      released = true;
+      setRoundSummaryReady(true);
+    };
+
+    const onAdComplete = () => {
+      handshakeCleared = true;
+      releaseIfClear();
+    };
+    // Failsafe for a silent ad system. Cancelled the moment a round-end ad
+    // actually opens — from then on we wait for the player to dismiss it.
+    let fallbackTimer: number | null = window.setTimeout(() => {
+      fallbackTimer = null;
+      handshakeCleared = true;
+      releaseIfClear();
+      armHardStopIfStillBlocked();
+    }, 4000);
     const onAdShown = () => {
       if (fallbackTimer !== null) {
         clearTimeout(fallbackTimer);
         fallbackTimer = null;
       }
     };
+
+    // Belt-and-suspenders on top of popupBlocking's own 8s pending watchdog:
+    // if we're still blocked 2.5s after the fallback fires, force through
+    // UNLESS a popup is actually painted on screen right now. This guards
+    // against a hung ad-slot fetch (no request timeout exists today) without
+    // ever releasing the tally behind a real, visible ad — isPopupVisible()
+    // is the one check here that must stay true-only-when-painted.
+    let hardStopTimer: number | null = null;
+    const armHardStopIfStillBlocked = () => {
+      if (released || hardStopTimer !== null) {
+        return;
+      }
+      hardStopTimer = window.setTimeout(() => {
+        hardStopTimer = null;
+        if (released || isPopupVisible()) {
+          return;
+        }
+        released = true;
+        setRoundSummaryReady(true);
+      }, 2500);
+    };
+
+    window.addEventListener("tp:round-end-ad-complete", onAdComplete);
     window.addEventListener("tp:round-end-ad-shown", onAdShown);
+    // The handshake often clears well before the screen is actually free, so
+    // re-check on every popup open/close instead of only on handshake events.
+    const unsubscribePopupBlocking = subscribePopupBlockingChange(releaseIfClear);
+
     return () => {
       window.removeEventListener("tp:round-end-ad-complete", onAdComplete);
       window.removeEventListener("tp:round-end-ad-shown", onAdShown);
+      unsubscribePopupBlocking();
       if (fallbackTimer !== null) clearTimeout(fallbackTimer);
+      if (hardStopTimer !== null) clearTimeout(hardStopTimer);
     };
   }, [finished]);
 
