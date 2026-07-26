@@ -28,6 +28,19 @@ function createFakeSupabase(store: Record<string, Row[]>) {
       this.filters.push((r) => vals.includes(r[col]));
       return this;
     }
+    // Range operators compare by INSTANT, like timestamptz at the DB — the
+    // stored value and the bound can render differently ("+00:00" vs "...Z")
+    // and still be the same moment.
+    gte(col: string, val: string) {
+      const boundMs = new Date(val).getTime();
+      this.filters.push((r) => new Date(String(r[col])).getTime() >= boundMs);
+      return this;
+    }
+    lt(col: string, val: string) {
+      const boundMs = new Date(val).getTime();
+      this.filters.push((r) => new Date(String(r[col])).getTime() < boundMs);
+      return this;
+    }
     is(col: string, val: null) {
       this.filters.push((r) => (r[col] ?? null) === val);
       return this;
@@ -366,7 +379,6 @@ describe("getChallengeCampaignSnapshotForUser — game-winner rewards", () => {
   // like a points-threshold reward matched zero rows, so a real winner's card sat
   // on "In Progress" forever while their coupon existed in the database.
   const GAME_START = "2026-07-19T23:00:00.000Z";
-  const EARLIER_GAME_START = "2026-07-18T23:00:00.000Z";
 
   function gameWinnerRow(overrides: Row = {}): Row {
     return campaignRow({
@@ -418,12 +430,16 @@ describe("getChallengeCampaignSnapshotForUser — game-winner rewards", () => {
     expect(card.winnerUsernames).toEqual(["alice"]);
   });
 
-  it("resolves only the LATEST game's winners, not every game in history", async () => {
-    // A recurring game-winner reward accumulates one cycle per game played.
+  it("resolves only the CURRENT cycle's games, not every game in history", async () => {
+    // A recurring game-winner reward accumulates one ledger cycle per game
+    // played. Venue tz is America/New_York (EDT), so a Monday-anchored weekly
+    // reward's current cycle opened 2026-07-20T04:00:00Z.
+    const THIS_MONDAY_GAME = "2026-07-20T14:00:00.000Z";
+    const LAST_MONDAY_GAME = "2026-07-13T23:00:00.000Z";
     store.challenge_campaigns = [gameWinnerRow({ recurring_type: "weekly", active_days: ["mon"] })];
     store.challenge_cycle_winners.push(
-      { id: "w-old", challenge_id: "camp-1", cycle_start: EARLIER_GAME_START, winner_user_id: "u2", venue_id: VENUE_ID, points_earned: 90, finalized_at: "2026-07-19T00:05:00.000Z", prize_type: "free_appetizer" },
-      { id: "w-new", challenge_id: "camp-1", cycle_start: GAME_START, winner_user_id: "u1", venue_id: VENUE_ID, points_earned: 120, finalized_at: "2026-07-20T00:05:00.000Z", prize_type: "free_appetizer" }
+      { id: "w-old", challenge_id: "camp-1", cycle_start: LAST_MONDAY_GAME, winner_user_id: "u2", venue_id: VENUE_ID, points_earned: 90, finalized_at: "2026-07-14T00:05:00.000Z", prize_type: "free_appetizer" },
+      { id: "w-new", challenge_id: "camp-1", cycle_start: THIS_MONDAY_GAME, winner_user_id: "u1", venue_id: VENUE_ID, points_earned: 120, finalized_at: "2026-07-20T15:05:00.000Z", prize_type: "free_appetizer" }
     );
 
     const winnerCard = (await getChallengeCampaignSnapshotForUser({ userId: "u1", venueId: VENUE_ID }))[0];
@@ -435,6 +451,79 @@ describe("getChallengeCampaignSnapshotForUser — game-winner rewards", () => {
     expect(priorWinnerCard.viewerWon).toBe(false);
   });
 
+  // ── Per-PERIOD quota across several games in one cycle ─────────────────────
+  // "1 winner reward every week" at a Tue+Thu venue is stored as winner_quota 2
+  // (lib/rewardTerms.ts locks the count to the games in the period), and the
+  // resolver awards each game under its OWN occurrence instant. Resolving only
+  // the newest game's rows left quotaRemaining stuck at 1 forever, so the
+  // "All Claimed" state was unreachable no matter how many games were decided.
+  // Anchor is activeDays[0] = "tue" → cycle opened 2026-07-14T04:00:00Z (EDT).
+  const TUE_GAME = "2026-07-14T23:00:00.000Z";
+  const THU_GAME = "2026-07-16T23:00:00.000Z";
+  const PRIOR_TUE_GAME = "2026-07-07T23:00:00.000Z";
+
+  function tueThuRow(): Row {
+    return gameWinnerRow({
+      recurring_type: "weekly",
+      active_days: ["tue", "thu"],
+      winner_quota: 2,
+    });
+  }
+
+  it("counts EVERY game inside the current cycle toward the period quota", async () => {
+    store.challenge_campaigns = [tueThuRow()];
+    store.challenge_cycle_winners.push(
+      { id: "w-tue", challenge_id: "camp-1", cycle_start: TUE_GAME, winner_user_id: "u1", venue_id: VENUE_ID, points_earned: 120, finalized_at: "2026-07-15T00:05:00.000Z", prize_type: "free_appetizer" },
+      { id: "w-thu", challenge_id: "camp-1", cycle_start: THU_GAME, winner_user_id: "u2", venue_id: VENUE_ID, points_earned: 110, finalized_at: "2026-07-17T00:05:00.000Z", prize_type: "free_appetizer" },
+      // Prior cycle — must not leak into this week's count.
+      { id: "w-prior", challenge_id: "camp-1", cycle_start: PRIOR_TUE_GAME, winner_user_id: "u3", venue_id: VENUE_ID, points_earned: 100, finalized_at: "2026-07-08T00:05:00.000Z", prize_type: "free_appetizer" }
+    );
+
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u1", venueId: VENUE_ID });
+
+    // Both of the week's games are decided, so the reward reads as fully claimed.
+    expect(card.quotaRemaining).toBe(0);
+    expect(card.winnerUsernames).toEqual(["alice", "bob"]);
+    expect(card.viewerWon).toBe(true);
+  });
+
+  it("still shows quota remaining when only some of the cycle's games are decided", async () => {
+    store.challenge_campaigns = [tueThuRow()];
+    store.challenge_cycle_winners.push({
+      id: "w-tue", challenge_id: "camp-1", cycle_start: TUE_GAME, winner_user_id: "u1", venue_id: VENUE_ID, points_earned: 120, finalized_at: "2026-07-15T00:05:00.000Z", prize_type: "free_appetizer",
+    });
+
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u3", venueId: VENUE_ID });
+
+    // Tuesday's game is decided; Thursday's prize is still on offer.
+    expect(card.quotaRemaining).toBe(1);
+    expect(card.winnerUsernames).toEqual(["alice"]);
+    expect(card.viewerWon).toBe(false);
+  });
+
+  it("finds the coupon for a winner of an EARLIER game in the cycle", async () => {
+    // The redemption row is keyed on the occurrence instant its award_cycle_winner
+    // transaction ran for — Tuesday's game — not on the cycle anchor, and not on
+    // the newest game in the cycle.
+    store.challenge_campaigns = [tueThuRow()];
+    store.challenge_cycle_winners.push(
+      { id: "w-tue", challenge_id: "camp-1", cycle_start: TUE_GAME, winner_user_id: "u1", venue_id: VENUE_ID, points_earned: 120, finalized_at: "2026-07-15T00:05:00.000Z", prize_type: "free_appetizer" },
+      { id: "w-thu", challenge_id: "camp-1", cycle_start: THU_GAME, winner_user_id: "u2", venue_id: VENUE_ID, points_earned: 110, finalized_at: "2026-07-17T00:05:00.000Z", prize_type: "free_appetizer" }
+    );
+    store.challenge_campaign_redemptions.push({
+      challenge_id: "camp-1",
+      winner_user_id: "u1",
+      venue_id: VENUE_ID,
+      cycle_start: TUE_GAME,
+      claimed_at: "2026-07-15T01:00:00.000Z",
+      prize_expires_at: "2026-07-22T00:00:00.000Z",
+      prize_redeemed_at: null,
+    });
+
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u1", venueId: VENUE_ID });
+    expect(card.prizeClaimedAt).toBe("2026-07-15T01:00:00.000Z");
+  });
+
   it("reads as a fresh, unwon reward before any game has resolved it", async () => {
     store.challenge_campaigns = [gameWinnerRow()];
 
@@ -443,6 +532,22 @@ describe("getChallengeCampaignSnapshotForUser — game-winner rewards", () => {
     expect(card.viewerWon).toBe(false);
     expect(card.quotaRemaining).toBe(1);
     expect(card.winnerUsernames).toEqual([]);
+  });
+
+  it("falls back to the latest-row rule for a recurring reward with no resolvable weekday anchor", async () => {
+    // computeCycleStart returns the epoch sentinel for a "weekly" campaign whose
+    // activeDays[0] is missing — createReward refuses to create one this way, but
+    // an admin-edited row could still land here. It must not be mistaken for a
+    // real window starting at the epoch (which would just read as empty).
+    store.challenge_campaigns = [gameWinnerRow({ recurring_type: "weekly", active_days: [] })];
+    store.challenge_cycle_winners.push({
+      id: "w1", challenge_id: "camp-1", cycle_start: GAME_START, winner_user_id: "u1", venue_id: VENUE_ID, points_earned: 120, finalized_at: "2026-07-20T00:05:00.000Z", prize_type: "free_appetizer",
+    });
+
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(card.viewerWon).toBe(true);
+    expect(card.winnerUsernames).toEqual(["alice"]);
   });
 
   it("resolves the viewer's claimed-at for an occurrence-keyed redemption", async () => {

@@ -9,10 +9,15 @@ import {
   REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE,
   REWARD_UNKNOWN_DEFINITION_MESSAGE,
   REWARD_UNSUPPORTED_CADENCE_MESSAGE,
+  RewardTermsError,
   createReward,
   type RewardPrizeInput,
 } from "@/lib/rewards";
-import type { CampaignRecurringType, ChallengeWinCondition } from "@/types";
+import type {
+  CampaignRecurringType,
+  ChallengeGameWinnerSlot,
+  ChallengeWinCondition,
+} from "@/types";
 
 /** POST /api/owner/rewards — create a Reward for a venue the owner controls. */
 export async function POST(request: Request) {
@@ -30,6 +35,12 @@ export async function POST(request: Request) {
     winCondition?: ChallengeWinCondition;
     threshold?: number;
     winnerQuota?: number;
+    /**
+     * Game-winner rewards: the games the partner picked. When present it
+     * overrides `cadence`/`winnerQuota` — createReward derives both from the
+     * selection after re-validating it against the venue's real schedule.
+     */
+    gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
     prize?: RewardPrizeInput;
   };
 
@@ -52,12 +63,17 @@ export async function POST(request: Request) {
       winCondition: body.winCondition ?? "points_threshold",
       threshold: Number(body.threshold),
       winnerQuota: Number(body.winnerQuota),
+      gameWinnerSlots: Array.isArray(body.gameWinnerSlots) ? body.gameWinnerSlots : undefined,
       prize: body.prize as RewardPrizeInput,
       createdByOwnerId: auth.ownerId,
     });
     return NextResponse.json({ ok: true, reward });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create reward.";
+    // A terms violation is always the partner's input, never a server fault.
+    if (error instanceof RewardTermsError) {
+      return NextResponse.json({ ok: false, error: message }, { status: 400 });
+    }
     const status =
       message === REWARD_UNKNOWN_DEFINITION_MESSAGE ||
       message === REWARD_UNSUPPORTED_CADENCE_MESSAGE ||

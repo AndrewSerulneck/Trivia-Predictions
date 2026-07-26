@@ -11,7 +11,8 @@ import type { ChallengeCampaign } from "@/types";
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type ChallengeWin = {
-  challengeId: string;
+  /** Null when the reward this coupon came from has been deleted (detached history). */
+  challengeId: string | null;
   challengeName: string;
   challengeRules: string;
   cycleStart?: string | null;
@@ -270,12 +271,21 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
     });
   }, [router, venueId]);
 
+  // challengeId is null on a coupon whose reward was deleted (detached history).
+  // Several such rows can coexist and share a cycleStart (two rewards pinned to
+  // the same game), so the fallback also needs claimedAt to stay unique.
   const claimKey = (win: ChallengeWin) =>
-    win.cycleStart ? `${win.challengeId}:${win.cycleStart}` : win.challengeId;
+    win.challengeId
+      ? win.cycleStart
+        ? `${win.challengeId}:${win.cycleStart}`
+        : win.challengeId
+      : `detached:${win.cycleStart ?? ""}:${win.claimedAt ?? ""}`;
 
   const claim = useCallback(
     async (win: ChallengeWin, sourceRect: DOMRect) => {
       const key = claimKey(win);
+      // A coupon with no challengeId belongs to a deleted reward — it is already
+      // history and has nothing left to redeem against.
       if (!userId || !venueId || !win.challengeId || claimingId || win.claimedAt) return;
       if (venuePresence.isInteractionBlocked) return;
       setClaimingId(key);

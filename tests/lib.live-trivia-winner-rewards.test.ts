@@ -285,6 +285,63 @@ describe("resolveGameWinnerRewards", () => {
     expect(new Set(store.ledger.map((r) => r.cycleStart)).size).toBe(2);
   });
 
+  // ── Terms-sentence rebuild: a locked quota > 1 must not widen a single game ──
+  // A recurring game-winner reward now stores the venue's real games-per-period
+  // as winner_quota ("I want to give out 2 of these rewards every week" at a
+  // Tue+Thu venue). That number describes the PERIOD, not one game — the resolver
+  // must keep awarding exactly one winner per occurrence, or a quota of 2 would
+  // hand a prize to the runner-up of every game.
+
+  it("still awards only the top scorer when the reward's quota is greater than 1", async () => {
+    store.campaigns = [makeCampaign({ recurringType: "weekly", winnerQuota: 2 })];
+
+    const report = await resolveGameWinnerRewards(NOW);
+
+    expect(report.resolutions).toHaveLength(1);
+    expect(report.resolutions[0].awardedUserIds).toEqual(["user-win"]);
+    // user-2 scored 90 and must NOT be awarded — there was no tie for first.
+    expect(store.ledger.map((r) => r.userId)).toEqual(["user-win"]);
+    // The quota handed to the ledger is the tie count (1), never the campaign's.
+    expect(awardCycleWinner).toHaveBeenCalledWith(expect.objectContaining({ winnerQuota: 1 }));
+  });
+
+  it("spends a quota of 2 across two games, one winner each — not both at one game", async () => {
+    store.campaigns = [makeCampaign({ recurringType: "weekly", winnerQuota: 2 })];
+    const thursdayStart = GAME_START + 2 * 24 * 60 * 60 * 1000;
+    store.occurrences.push({
+      scheduleId: "sched-2",
+      occurrenceDate: "2026-07-22",
+      venueId: "venue-1",
+      numRounds: 4,
+      startMs: thursdayStart,
+      endMs: thursdayStart + 60 * 60 * 1000,
+    });
+    store.standings.set("sched-2@2026-07-22", [
+      { userId: "user-thu", totalPoints: 110 },
+      { userId: "user-2", totalPoints: 95 },
+    ]);
+
+    const report = await resolveGameWinnerRewards(thursdayStart + 2 * 60 * 60 * 1000);
+
+    // Two prizes a week, exactly as the sentence promised — one per game.
+    expect(report.resolutions).toHaveLength(2);
+    expect(store.ledger.map((r) => r.userId).sort()).toEqual(["user-thu", "user-win"]);
+    expect(new Set(store.ledger.map((r) => r.cycleStart)).size).toBe(2);
+  });
+
+  it("keys each award on the occurrence start instant, not a computed cycle boundary", async () => {
+    // Phase 1 gave daily/monthly/yearly campaigns real calendar cycle windows.
+    // Game-winner rewards must stay on the per-occurrence key regardless — that
+    // is what makes a re-sweep a no-op and what lets one reward pay out at every
+    // game in its period.
+    store.campaigns = [makeCampaign({ recurringType: "monthly", winnerQuota: 4 })];
+
+    await resolveGameWinnerRewards(NOW);
+
+    expect(store.ledger).toHaveLength(1);
+    expect(store.ledger[0].cycleStart).toBe(new Date(GAME_START).toISOString());
+  });
+
   // ── Review fixes: retroactive awards, one-off double-award, unbounded ties ──
 
   it("never awards a game that finished before the reward was created", async () => {
@@ -417,5 +474,85 @@ describe("resolveGameWinnerRewards", () => {
 
     expect(report.resolutions[0].awardedUserIds).toEqual(["user-a", "user-b"]);
     expect(report.resolutions[0].tieCapApplied).toBe(false);
+  });
+  // ── Slot pinning (docs/rewards-game-winner-picker-plan.md Phase 3) ─────────
+  // A reward may be offered at specific scheduled games only. The occurrences
+  // below are both on 2026-07-20, a Monday.
+  describe("pinned game slots", () => {
+    const addLateGame = () => {
+      const lateStart = GAME_START + 2 * 60 * 60 * 1000;
+      store.occurrences.push({
+        scheduleId: "sched-2",
+        occurrenceDate: "2026-07-20",
+        venueId: "venue-1",
+        numRounds: 4,
+        startMs: lateStart,
+        endMs: lateStart + 60 * 60 * 1000,
+      });
+      store.standings.set("sched-2@2026-07-20", [{ userId: "user-late", totalPoints: 200 }]);
+      return lateStart + 3 * 60 * 60 * 1000;
+    };
+
+    it("awards only at the game the reward was pinned to", async () => {
+      // The venue runs a 6pm and a 9pm game the same night; the partner offered
+      // the reward at the 6pm one only.
+      store.campaigns = [
+        makeCampaign({
+          recurringType: "weekly",
+          gameWinnerSlots: [{ scheduleId: "sched-1", weekday: "mon" }],
+        }),
+      ];
+      const now = addLateGame();
+
+      const report = await resolveGameWinnerRewards(now);
+
+      expect(report.resolutions).toHaveLength(1);
+      expect(report.resolutions[0].scheduleId).toBe("sched-1");
+      expect(store.ledger.map((row) => row.userId)).toEqual(["user-win"]);
+    });
+
+    it("still awards at every game when the reward has no pinned slots", async () => {
+      // The legacy value (null) is what every reward created before the picker
+      // carries — it must keep resolving exactly as it always did.
+      store.campaigns = [makeCampaign({ recurringType: "weekly", gameWinnerSlots: null })];
+      const now = addLateGame();
+
+      const report = await resolveGameWinnerRewards(now);
+
+      expect(report.resolutions).toHaveLength(2);
+    });
+
+    it("does not award on a weekday it was not pinned to", async () => {
+      // Same schedule, a different night of the week. Nothing about the campaign
+      // is wrong — this game simply isn't one of the games it was offered at.
+      store.campaigns = [
+        makeCampaign({
+          recurringType: "weekly",
+          gameWinnerSlots: [{ scheduleId: "sched-1", weekday: "tue" }],
+        }),
+      ];
+
+      const report = await resolveGameWinnerRewards(NOW);
+
+      expect(report.resolutions).toEqual([]);
+      expect(store.ledger).toEqual([]);
+    });
+
+    it("fails closed when the occurrence date can't be read", async () => {
+      // Not awarding a prize we can't prove was offered is recoverable; paying
+      // out at a game the partner excluded is not.
+      store.campaigns = [
+        makeCampaign({
+          recurringType: "weekly",
+          gameWinnerSlots: [{ scheduleId: "sched-1", weekday: "mon" }],
+        }),
+      ];
+      store.occurrences[0].occurrenceDate = "not-a-date";
+      store.standings.set("sched-1@not-a-date", [{ userId: "user-win", totalPoints: 120 }]);
+
+      const report = await resolveGameWinnerRewards(NOW);
+
+      expect(report.resolutions).toEqual([]);
+    });
   });
 });

@@ -530,7 +530,9 @@ export function PrizeWalletPanel() {
   }, []);
 
   const handleRedeemConfirm = useCallback(async () => {
-    if (!redeemingWin || !userId || !venueId) return;
+    // A coupon with no challengeId belongs to a reward the partner deleted; it is
+    // already-redeemed history and has nothing left to redeem against.
+    if (!redeemingWin?.challengeId || !userId || !venueId) return;
     setRedeemConfirming(true);
     setErrorMessage("");
     try {
@@ -610,7 +612,14 @@ export function PrizeWalletPanel() {
               <section className="space-y-3">
                 <h2 className="text-base font-semibold text-ht-fg-primary">Click "Redeem" on your rewards </h2>
                 {activeChallengeWins.map((win) => (
-                  <ChallengeCoupon key={win.challengeId} win={win} onRedeem={handleRedeemOpen} />
+                  // challengeId is null on a coupon whose reward was deleted, and
+                  // several such rows can coexist — fall back to the fields that
+                  // uniquely identify the win itself.
+                  <ChallengeCoupon
+                    key={win.challengeId ?? `detached:${win.cycleStart ?? ""}:${win.claimedAt ?? ""}`}
+                    win={win}
+                    onRedeem={handleRedeemOpen}
+                  />
                 ))}
               </section>
             )}

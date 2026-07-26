@@ -5,7 +5,10 @@ import {
   createChallengeCampaign,
   deleteChallengeCampaign,
   getChallengeCampaignOwnership,
+  getChallengeCampaignRedemptionCounts,
   listChallengeCampaigns,
+  type ChallengeCampaignRedemptionCounts,
+  type DeleteChallengeCampaignResult,
 } from "@/lib/challengeCampaigns";
 import { datetimeLocalValueToUtcIso } from "@/lib/categoryBlitzScheduleTime";
 import { getOwnerCompetitionTemplate } from "@/lib/ownerCompetitionTemplates";
@@ -185,7 +188,7 @@ export async function listOwnerCompetitions(
 }
 
 export type DeleteOwnerCompetitionResult =
-  | { ok: true }
+  | { ok: true; result: DeleteChallengeCampaignResult }
   | { ok: false; reason: "not_found" | "forbidden" };
 
 /**
@@ -193,15 +196,40 @@ export type DeleteOwnerCompetitionResult =
  * not_found (404); a campaign the caller didn't create OR whose venue they don't
  * control is forbidden (403) — mirrors the Phase 4 DELETE boundary. Deleting
  * mid-cycle voids the cycle (no winner recorded) — the UI warns before calling.
+ *
+ * `mode` is the partner's explicit choice between archiving (keep every coupon
+ * already awarded) and really deleting (voids unredeemed coupons; already-redeemed
+ * ones survive as detached history). The ownership check runs first for BOTH
+ * modes — delete must never be the looser path.
  */
 export async function deleteOwnerCompetition(
   id: string,
   auth: OwnerAuthContext,
+  mode: "archive" | "delete" = "archive",
 ): Promise<DeleteOwnerCompetitionResult> {
   const ownership = await getChallengeCampaignOwnership(id);
   if (!ownership) return { ok: false, reason: "not_found" };
   if (ownership.createdByOwnerId !== auth.ownerId) return { ok: false, reason: "forbidden" };
   if (!ownsAllVenues(auth, ownership.venueIds)) return { ok: false, reason: "forbidden" };
-  await deleteChallengeCampaign(id);
-  return { ok: true };
+  const result = await deleteChallengeCampaign(id, { mode });
+  return { ok: true, result };
+}
+
+/**
+ * The awarded/unredeemed counts behind the delete confirm, gated by the same
+ * ownership boundary as the delete itself so it can't be used to probe another
+ * venue's rewards.
+ */
+export async function getOwnerCompetitionRedemptionCounts(
+  id: string,
+  auth: OwnerAuthContext,
+): Promise<
+  | { ok: true; counts: ChallengeCampaignRedemptionCounts }
+  | { ok: false; reason: "not_found" | "forbidden" }
+> {
+  const ownership = await getChallengeCampaignOwnership(id);
+  if (!ownership) return { ok: false, reason: "not_found" };
+  if (ownership.createdByOwnerId !== auth.ownerId) return { ok: false, reason: "forbidden" };
+  if (!ownsAllVenues(auth, ownership.venueIds)) return { ok: false, reason: "forbidden" };
+  return { ok: true, counts: await getChallengeCampaignRedemptionCounts(id) };
 }

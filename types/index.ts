@@ -214,6 +214,14 @@ export type ChallengeMode = "progress" | "leaderboard";
  * resolved by the resolve-live-trivia-winners cron, never by points accrual.
  */
 export type ChallengeWinCondition = "points_threshold" | "game_winner";
+/**
+ * One scheduled game a game-winner reward is pinned to. The `{scheduleId,
+ * weekday}` PAIR is the identity — two schedules on the same weekday (a 6pm and
+ * a 9pm Tuesday game) stay independently selectable. Stored on
+ * `challenge_campaigns.game_winner_slots`; parsed/validated by
+ * lib/rewardGameSlots.ts.
+ */
+export type ChallengeGameWinnerSlot = { scheduleId: string; weekday: string };
 export type ChallengeLeaderboardTiebreaker = "first_to_score" | "latest_activity";
 export interface ChallengeLeaderboardEntry {
   rank: number;
@@ -277,6 +285,12 @@ export interface ChallengeCampaign {
   winCondition: ChallengeWinCondition;
   /** Winners awarded per cycle (one-time rewards: total). Defaults to 1. */
   winnerQuota: number;
+  /**
+   * Game-winner rewards only: the scheduled games this reward is pinned to.
+   * **null means "award at every game"** — the legacy behavior every reward
+   * created before the game picker still carries. See lib/rewardGameSlots.ts.
+   */
+  gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
   /** Which pre-set reward definition created this (e.g. "live_trivia_challenge"), or null. */
   rewardDefinitionId?: string | null;
   /** New prize model. Null on pre-Rewards campaigns unless derived from legacy prizeType. */
@@ -298,7 +312,14 @@ export interface ChallengeCampaign {
 }
 
 export interface ChallengeCampaignWin {
-  challengeId: string;
+  /**
+   * Null when the reward this coupon came from has been deleted by the partner.
+   * Such a coupon is always already-redeemed history (a hard delete voids the
+   * unredeemed ones), so it renders as a REDEEMED badge and is never the subject
+   * of a redeem call. Its name/prize come from the award-time snapshot on the
+   * redemption row — see redemptionPrizeSnapshot in lib/challengeCampaigns.ts.
+   */
+  challengeId: string | null;
   venueId: string;
   challengeName: string;
   challengeRules: string;

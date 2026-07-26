@@ -151,6 +151,13 @@ const OwnerSchedulePage = () => {
   const [schedules, setSchedules] = useState<OwnerSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  /**
+   * What an edit/cancel just did to rewards pinned to that game (retired,
+   * shrunk). Not an error — the partner's change succeeded — so it renders as an
+   * advisory the partner can dismiss by acting on it. Built server-side by
+   * describeCascadeReport so both hosts word it identically.
+   */
+  const [rewardNotice, setRewardNotice] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<OwnerSchedule | null>(null);
 
@@ -226,8 +233,11 @@ const OwnerSchedulePage = () => {
     if (!confirm("Cancel this game? Players will be returned to the lobby if it's live.")) return;
     try {
       const res = await fetch(`/api/owner/schedule/${scheduleId}`, { method: "DELETE" });
-      const json = (await res.json()) as { ok: boolean; error?: string };
+      const json = (await res.json()) as { ok: boolean; error?: string; rewardNotice?: string | null };
       if (!json.ok) throw new Error(json.error ?? "Couldn't cancel that game.");
+      // Cancelling a game retires the rewards pinned to it. Surfaced here because
+      // it is the only moment the partner is looking at the cause.
+      setRewardNotice(json.rewardNotice ?? null);
       await fetchSchedules();
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "Couldn't cancel that game.");
@@ -274,6 +284,25 @@ const OwnerSchedulePage = () => {
               </div>
             ) : null}
 
+            {rewardNotice ? (
+              <div className="flex items-start gap-2 rounded-xl border border-ht-amber-500/30 bg-ht-amber-500/10 px-3 py-2 text-xs font-bold text-ht-amber-200">
+                <span className="min-w-0 flex-1">
+                  {rewardNotice}{" "}
+                  <Link href="/owner/competitions" className="underline">
+                    View Rewards
+                  </Link>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setRewardNotice(null)}
+                  aria-label="Dismiss"
+                  className="shrink-0 px-1 font-black"
+                >
+                  ×
+                </button>
+              </div>
+            ) : null}
+
             <button
               type="button"
               onClick={() => {
@@ -289,9 +318,10 @@ const OwnerSchedulePage = () => {
               <ScheduleForm
                 venueId={selectedVenueId}
                 editingSchedule={editingSchedule}
-                onSaved={() => {
+                onSaved={(notice) => {
                   setShowForm(false);
                   setEditingSchedule(null);
+                  setRewardNotice(notice);
                   void fetchSchedules();
                 }}
                 onCancel={() => {
@@ -421,7 +451,7 @@ function ScheduleForm({
 }: {
   venueId: string;
   editingSchedule: OwnerSchedule | null;
-  onSaved: () => void;
+  onSaved: (rewardNotice: string | null) => void;
   onCancel: () => void;
 }) {
   const isEditing = editingSchedule !== null;
@@ -513,9 +543,15 @@ function ScheduleForm({
               recurringDays: outgoingRecurringDays,
             }),
           });
-      const json = (await res.json()) as { ok: boolean; error?: string };
+      const json = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        rewardNotice?: string | null;
+      };
       if (!json.ok) throw new Error(json.error ?? "Couldn't save that game.");
-      onSaved();
+      // An edit that changes the days or the recurrence retires/shrinks rewards
+      // pinned to this game; hand that up so the page can tell the partner.
+      onSaved(json.rewardNotice ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't save that game.");
     } finally {

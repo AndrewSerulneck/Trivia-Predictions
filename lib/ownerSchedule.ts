@@ -22,6 +22,7 @@ import {
 } from "@/lib/categoryBlitzScheduleTime";
 import { liveTriviaDurationMinutes } from "@/lib/liveTriviaShared";
 import type { OwnerAuthContext } from "@/lib/requireOwnerAuth";
+import type { GameSlotCascadeReport } from "@/lib/rewardGameSlotCascade";
 import type { CategoryBlitzRecurringType, OwnerSchedule, OwnerScheduleGameType } from "@/types";
 
 /** The timing subset `listScheduleWindowOccurrences` needs — satisfied by OwnerSchedule and by the create/update candidate objects. */
@@ -391,7 +392,7 @@ export type UpdateOwnerScheduleParams = {
  */
 export async function updateOwnerSchedule(
   params: UpdateOwnerScheduleParams,
-): Promise<OwnerSchedule> {
+): Promise<OwnerSchedule & { rewardCascade?: GameSlotCascadeReport }> {
   const { id, venueId, title, startTimeIso, endTimeIso, timezone, gameType, rounds } = params;
 
   if (!isSupportedGameType(gameType)) {
@@ -447,7 +448,10 @@ export async function updateOwnerSchedule(
       intermissionAdDelaySeconds: current.intermissionAdDelaySeconds,
       lobbyAdEnabled: current.lobbyAdEnabled,
     });
-    return adminLiveScheduleToOwnerSchedule(updated);
+    return {
+      ...adminLiveScheduleToOwnerSchedule(updated),
+      rewardCascade: updated.rewardCascade,
+    };
   }
 
   const current = await getSchedule(id);
@@ -472,14 +476,19 @@ export async function updateOwnerSchedule(
  * own delete already tears down its session questions/answers and broadcasts a
  * schedule_updated to the venue lobby, so no extra session handling is needed.
  */
-export async function deleteOwnerSchedule(schedule: OwnerSchedule): Promise<void> {
+export async function deleteOwnerSchedule(
+  schedule: OwnerSchedule,
+): Promise<{ rewardCascade?: GameSlotCascadeReport }> {
   if (schedule.gameType === "live_trivia") {
-    await deleteAdminLiveShowdownSchedule(schedule.id);
-    return;
+    const { rewardCascade } = await deleteAdminLiveShowdownSchedule(schedule.id);
+    return { rewardCascade };
   }
 
   const venueId = await deleteSchedule(schedule.id);
   if (venueId) {
     await abandonVenueAutoSession(venueId);
   }
+  // Category Blitz has no game-winner rewards pinned to it — the picker is Live
+  // Trivia only — so there is never a cascade to report here.
+  return {};
 }

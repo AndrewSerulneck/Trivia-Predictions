@@ -51,6 +51,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   createChallengeCampaign,
   deleteChallengeCampaign,
+  getChallengeCampaignRedemptionCounts,
   getChallengeFinalizedPrize,
   listChallengeCampaignProgress,
   listChallengeCampaigns,
@@ -66,6 +67,7 @@ import {
   REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE,
   REWARD_UNKNOWN_DEFINITION_MESSAGE,
   REWARD_UNSUPPORTED_CADENCE_MESSAGE,
+  RewardTermsError,
   createReward,
   resolveRewardCreationContext,
   type RewardPrizeInput,
@@ -79,6 +81,7 @@ import type {
   CampaignRecurringType,
   ChallengeScheduleType,
   ChallengeImageFitMode,
+  ChallengeGameWinnerSlot,
   ChallengeLeaderboardTiebreaker,
   ChallengeMode,
   ChallengeWinCondition,
@@ -98,6 +101,7 @@ import {
   updateAdminLiveShowdownSchedule,
   updateAdminLiveShowdownSessionQuestions,
 } from "@/lib/liveShowdownAdmin";
+import { describeCascadeReport } from "@/lib/rewardGameSlotCascade";
 
 export async function GET(request: Request) {
   try {
@@ -314,6 +318,17 @@ export async function GET(request: Request) {
       const from = (page - 1) * pageSize;
       const items = allItems.slice(from, from + pageSize);
       return NextResponse.json({ ok: true, items, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) });
+    }
+
+    // The prize counts behind the reward delete confirm, so an admin is told what
+    // a hard delete would cost before choosing it.
+    if (resource === "challenge-campaign-redemption-counts") {
+      const challengeId = String(searchParams.get("challengeId") ?? "").trim();
+      if (!challengeId) {
+        return NextResponse.json({ ok: false, error: "challengeId is required." }, { status: 400 });
+      }
+      const counts = await getChallengeCampaignRedemptionCounts(challengeId);
+      return NextResponse.json({ ok: true, counts });
     }
 
     if (resource === "challenge-campaign-progress") {
@@ -597,6 +612,9 @@ export async function POST(request: Request) {
           winCondition?: ChallengeWinCondition;
           threshold?: number;
           winnerQuota?: number;
+          // Game-winner rewards: the picked games. Present = cadence/quota are
+          // derived from the selection by createReward, not from the fields above.
+          gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
           prize?: RewardPrizeInput;
         }
       | {
@@ -938,12 +956,17 @@ export async function POST(request: Request) {
           winCondition: body.winCondition ?? "points_threshold",
           threshold: Number(body.threshold),
           winnerQuota: Number(body.winnerQuota),
+          gameWinnerSlots: Array.isArray(body.gameWinnerSlots) ? body.gameWinnerSlots : undefined,
           prize: body.prize as RewardPrizeInput,
           createdByOwnerId: null,
         });
         return NextResponse.json({ ok: true, item });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to create reward.";
+        // A terms violation is always bad input, never a server fault.
+        if (error instanceof RewardTermsError) {
+          return NextResponse.json({ ok: false, error: message }, { status: 400 });
+        }
         const status =
           message === REWARD_UNKNOWN_DEFINITION_MESSAGE ||
           message === REWARD_UNSUPPORTED_CADENCE_MESSAGE ||
@@ -1097,13 +1120,24 @@ export async function DELETE(request: Request) {
     }
 
     if (resource === "challenge-campaigns") {
-      await deleteChallengeCampaign(id);
-      return NextResponse.json({ ok: true });
+      // `?mode=delete` really deletes: unredeemed coupons are voided,
+      // already-redeemed ones survive as detached history. Anything else archives
+      // (is_active = false) and keeps every awarded coupon working — the default
+      // is the recoverable one on purpose.
+      const mode = searchParams.get("mode") === "delete" ? "delete" : "archive";
+      const result = await deleteChallengeCampaign(id, { mode });
+      return NextResponse.json({ ok: true, ...result });
     }
 
     if (resource === "live-showdown-schedules") {
       const result = await deleteAdminLiveShowdownSchedule(id);
-      return NextResponse.json({ ok: true, result });
+      // Same reward-cascade notice the Partner Dashboard shows — an admin
+      // deleting a venue's game retires the same rewards.
+      return NextResponse.json({
+        ok: true,
+        result,
+        rewardNotice: describeCascadeReport(result.rewardCascade),
+      });
     }
 
     return NextResponse.json(
@@ -1604,7 +1638,11 @@ export async function PATCH(request: Request) {
         intermissionAdDelaySeconds: body.intermissionAdDelaySeconds,
         lobbyAdEnabled: body.lobbyAdEnabled,
       });
-      return NextResponse.json({ ok: true, item });
+      return NextResponse.json({
+        ok: true,
+        item,
+        rewardNotice: describeCascadeReport(item.rewardCascade),
+      });
     }
 
     return NextResponse.json({ ok: false, error: "Unknown resource." }, { status: 400 });

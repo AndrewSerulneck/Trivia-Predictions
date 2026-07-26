@@ -1,5 +1,7 @@
 # AGENTS.md — Hightop Challenge
 
+**Be concise by default.** Keep responses short — direct answers, no restating the task, no trailing summaries unless asked.
+
 This file exists because some agent tools look for `AGENTS.md` by convention.
 The canonical project rules live in **`CLAUDE.md`** (hard boundaries, code
 style, naming rules) and **`SYSTEM_CONTEXT.md`** (architecture, product

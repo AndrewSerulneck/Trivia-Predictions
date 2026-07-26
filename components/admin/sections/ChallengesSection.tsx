@@ -84,6 +84,49 @@ const PRIZE_TYPE_OPTIONS: Array<{ value: PrizeType | "none"; label: string }> = 
 ];
 const DAY_OPTIONS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const RECURRING_OPTIONS: CampaignRecurringType[] = ["none", "daily", "weekly", "monthly", "yearly"];
+
+/**
+ * Archive-vs-delete for one campaign, with its real prize cost in the prompt.
+ *
+ * Archiving is the default answer whenever prizes exist: reaching a hard delete
+ * takes a second, separate confirmation that names how many unredeemed coupons it
+ * voids. (The partner-facing surface, app/owner/competitions/page.tsx, presents
+ * the same choice as two labelled buttons; this admin tool keeps to the
+ * confirm-based style used throughout the section.)
+ */
+async function promptRemoveMode(
+  name: string,
+  counts: { awarded: number; unredeemed: number; redeemed: number }
+): Promise<"archive" | "delete" | null> {
+  if (counts.awarded === 0) {
+    return confirm(
+      `Delete "${name}"?\n\nNo prizes have been awarded from it, so nothing players hold is affected. This cannot be undone.`
+    )
+      ? "delete"
+      : null;
+  }
+
+  const unredeemedNote = counts.unredeemed
+    ? `, ${counts.unredeemed} still unredeemed in players' wallets`
+    : " (all already redeemed)";
+  if (
+    confirm(
+      `"${name}" has awarded ${counts.awarded} prize(s)${unredeemedNote}.\n\nOK — Archive it: stops running, all awarded prizes keep working.\nCancel — see the permanent-delete option.`
+    )
+  ) {
+    return "archive";
+  }
+
+  return confirm(
+    `Permanently delete "${name}"?\n\n` +
+      (counts.unredeemed
+        ? `This VOIDS ${counts.unredeemed} unredeemed prize(s) players are still holding. `
+        : "") +
+      `Prizes already redeemed (${counts.redeemed}) are kept as records.\n\nThis cannot be undone.`
+  )
+    ? "delete"
+    : null;
+}
 // Rewards are threshold/progress only going forward — leaderboard mode is retired from
 // creation. It's only offered here when editing a campaign that's already leaderboard
 // mode, so in-flight leaderboard campaigns can still be edited until they finish out.
@@ -314,13 +357,25 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     }
   }
 
+  /**
+   * Bulk removal ARCHIVES rather than hard-deletes, and says so. A hard delete
+   * voids coupons players are holding; that is a per-reward decision made against
+   * that reward's own prize history (see deleteCampaign), not something to apply
+   * blind across a multi-select.
+   */
   async function bulkDelete() {
-    if (!confirm(`Delete ${selectedIds.size} campaign(s)? This cannot be undone.`)) return;
+    if (
+      !confirm(
+        `Archive ${selectedIds.size} campaign(s)?\n\nThey stop running, and every prize already awarded keeps working. To permanently delete one (voiding unredeemed prizes), remove it individually.`
+      )
+    ) {
+      return;
+    }
     setBulkBusy(true);
     try {
       await Promise.all(
         Array.from(selectedIds).map((id) =>
-          fetch(`/api/admin?resource=challenge-campaigns&id=${id}`, { method: "DELETE" })
+          fetch(`/api/admin?resource=challenge-campaigns&id=${id}&mode=archive`, { method: "DELETE" })
         )
       );
       setSelectedIds(new Set());
@@ -353,11 +408,50 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     }
   }
 
+  /**
+   * Remove a campaign, offering archive vs. hard delete once its prize history is
+   * known. Deleting voids coupons players are still holding, so the count goes in
+   * the prompt — the old flow said "this cannot be undone", then silently
+   * archived instead and left the row in the list (which fetches
+   * includeInactive=true), reporting success either way.
+   */
   async function deleteCampaign(id: string, name: string) {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    let counts = { awarded: 0, unredeemed: 0, redeemed: 0 };
     try {
-      await fetch(`/api/admin?resource=challenge-campaigns&id=${id}`, { method: "DELETE" });
-      setStatusMessage(`Campaign "${name}" deleted.`);
+      const res = await fetch(
+        `/api/admin?resource=challenge-campaign-redemption-counts&challengeId=${encodeURIComponent(id)}`,
+        { cache: "no-store" }
+      );
+      const json = (await res.json()) as {
+        ok: boolean;
+        counts?: { awarded: number; unredeemed: number; redeemed: number };
+      };
+      if (json.ok && json.counts) counts = json.counts;
+    } catch {
+      setError("Failed to check this campaign's prizes.");
+      return;
+    }
+
+    const mode = await promptRemoveMode(name, counts);
+    if (!mode) return;
+
+    try {
+      const res = await fetch(
+        `/api/admin?resource=challenge-campaigns&id=${id}&mode=${mode}`,
+        { method: "DELETE" }
+      );
+      const json = (await res.json()) as {
+        ok: boolean;
+        outcome?: "archived" | "deleted";
+        redeemedKept?: number;
+        error?: string;
+      };
+      if (!json.ok) throw new Error(json.error);
+      setStatusMessage(
+        json.outcome === "deleted"
+          ? `Campaign "${name}" deleted.${json.redeemedKept ? ` ${json.redeemedKept} redeemed prize record(s) kept.` : ""}`
+          : `Campaign "${name}" archived — prizes already awarded still work.`
+      );
       await fetchCampaigns(page);
     } catch {
       setError("Failed to delete campaign.");

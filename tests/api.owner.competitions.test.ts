@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   attachLeaderboardSnapshotsToCampaigns: vi.fn(),
   getChallengeCampaignOwnership: vi.fn(),
   deleteChallengeCampaign: vi.fn(),
+  getChallengeCampaignRedemptionCounts: vi.fn(),
 }));
 
 vi.mock("@/lib/requireOwnerAuth", () => ({ requireOwnerAuth: mocks.requireOwnerAuth }));
@@ -20,10 +21,11 @@ vi.mock("@/lib/challengeCampaigns", () => ({
   attachLeaderboardSnapshotsToCampaigns: mocks.attachLeaderboardSnapshotsToCampaigns,
   getChallengeCampaignOwnership: mocks.getChallengeCampaignOwnership,
   deleteChallengeCampaign: mocks.deleteChallengeCampaign,
+  getChallengeCampaignRedemptionCounts: mocks.getChallengeCampaignRedemptionCounts,
 }));
 
 import { GET, POST } from "@/app/api/owner/competitions/route";
-import { DELETE } from "@/app/api/owner/competitions/[id]/route";
+import { GET as GET_ONE, DELETE } from "@/app/api/owner/competitions/[id]/route";
 
 const OWNER = { ownerId: "owner-1", venueIds: ["venue-1", "venue-2"] };
 
@@ -78,7 +80,20 @@ beforeEach(() => {
   mocks.attachLeaderboardSnapshotsToCampaigns.mockReset();
   mocks.getChallengeCampaignOwnership.mockReset();
   mocks.deleteChallengeCampaign.mockReset();
+  mocks.getChallengeCampaignRedemptionCounts.mockReset();
 
+  mocks.deleteChallengeCampaign.mockResolvedValue({
+    outcome: "archived",
+    awarded: 0,
+    unredeemed: 0,
+    redeemed: 0,
+    redeemedKept: 0,
+  });
+  mocks.getChallengeCampaignRedemptionCounts.mockResolvedValue({
+    awarded: 0,
+    unredeemed: 0,
+    redeemed: 0,
+  });
   mocks.requireOwnerAuth.mockResolvedValue(OWNER);
   mocks.listChallengeCampaigns.mockResolvedValue([]); // no active competitions by default
   mocks.createChallengeCampaign.mockResolvedValue(makeCampaign());
@@ -206,7 +221,7 @@ describe("GET /api/owner/competitions", () => {
 });
 
 describe("DELETE /api/owner/competitions/[id]", () => {
-  it("deletes a competition the owner created", async () => {
+  it("archives by default, so a request with no mode can never destroy coupons", async () => {
     mocks.getChallengeCampaignOwnership.mockResolvedValue({
       id: "camp-1",
       createdByOwnerId: "owner-1",
@@ -217,7 +232,68 @@ describe("DELETE /api/owner/competitions/[id]", () => {
       paramsFor("camp-1"),
     );
     expect(res.status).toBe(200);
-    expect(mocks.deleteChallengeCampaign).toHaveBeenCalledWith("camp-1");
+    expect(mocks.deleteChallengeCampaign).toHaveBeenCalledWith("camp-1", { mode: "archive" });
+  });
+
+  it("hard-deletes only when ?mode=delete is asked for explicitly", async () => {
+    mocks.getChallengeCampaignOwnership.mockResolvedValue({
+      id: "camp-1",
+      createdByOwnerId: "owner-1",
+      venueIds: ["venue-1"],
+    });
+    mocks.deleteChallengeCampaign.mockResolvedValue({
+      outcome: "deleted",
+      awarded: 2,
+      unredeemed: 1,
+      redeemed: 1,
+      redeemedKept: 1,
+    });
+
+    const res = await DELETE(
+      new Request("http://localhost/api/owner/competitions/camp-1?mode=delete", {
+        method: "DELETE",
+      }),
+      paramsFor("camp-1"),
+    );
+
+    expect(res.status).toBe(200);
+    expect(mocks.deleteChallengeCampaign).toHaveBeenCalledWith("camp-1", { mode: "delete" });
+    // The outcome is reported, not inferred from the requested mode.
+    const body = (await res.json()) as { outcome: string; redeemedKept: number };
+    expect(body.outcome).toBe("deleted");
+    expect(body.redeemedKept).toBe(1);
+  });
+
+  it("treats an unrecognized mode as archive rather than guessing", async () => {
+    mocks.getChallengeCampaignOwnership.mockResolvedValue({
+      id: "camp-1",
+      createdByOwnerId: "owner-1",
+      venueIds: ["venue-1"],
+    });
+    await DELETE(
+      new Request("http://localhost/api/owner/competitions/camp-1?mode=DELETE%20EVERYTHING", {
+        method: "DELETE",
+      }),
+      paramsFor("camp-1"),
+    );
+    expect(mocks.deleteChallengeCampaign).toHaveBeenCalledWith("camp-1", { mode: "archive" });
+  });
+
+  it("enforces ownership before a hard delete, not just before an archive", async () => {
+    // Delete must never be the looser path.
+    mocks.getChallengeCampaignOwnership.mockResolvedValue({
+      id: "camp-1",
+      createdByOwnerId: "someone-else",
+      venueIds: ["venue-1"],
+    });
+    const res = await DELETE(
+      new Request("http://localhost/api/owner/competitions/camp-1?mode=delete", {
+        method: "DELETE",
+      }),
+      paramsFor("camp-1"),
+    );
+    expect(res.status).toBe(403);
+    expect(mocks.deleteChallengeCampaign).not.toHaveBeenCalled();
   });
 
   it("returns 404 for an unknown competition", async () => {
@@ -256,5 +332,54 @@ describe("DELETE /api/owner/competitions/[id]", () => {
     );
     expect(res.status).toBe(403);
     expect(mocks.deleteChallengeCampaign).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/owner/competitions/[id] — prize counts for the remove dialog", () => {
+  it("returns the counts for a competition the owner created", async () => {
+    mocks.getChallengeCampaignOwnership.mockResolvedValue({
+      id: "camp-1",
+      createdByOwnerId: "owner-1",
+      venueIds: ["venue-1"],
+    });
+    mocks.getChallengeCampaignRedemptionCounts.mockResolvedValue({
+      awarded: 3,
+      unredeemed: 1,
+      redeemed: 2,
+    });
+
+    const res = await GET_ONE(
+      new Request("http://localhost/api/owner/competitions/camp-1"),
+      paramsFor("camp-1"),
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { counts: { awarded: number; unredeemed: number } };
+    expect(body.counts).toEqual({ awarded: 3, unredeemed: 1, redeemed: 2 });
+  });
+
+  it("is gated by the same ownership boundary as the delete", async () => {
+    // Otherwise it would leak another venue's prize activity.
+    mocks.getChallengeCampaignOwnership.mockResolvedValue({
+      id: "camp-1",
+      createdByOwnerId: "owner-1",
+      venueIds: ["venue-999"],
+    });
+    const res = await GET_ONE(
+      new Request("http://localhost/api/owner/competitions/camp-1"),
+      paramsFor("camp-1"),
+    );
+    expect(res.status).toBe(403);
+    expect(mocks.getChallengeCampaignRedemptionCounts).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 for an unknown competition", async () => {
+    mocks.getChallengeCampaignOwnership.mockResolvedValue(null);
+    const res = await GET_ONE(
+      new Request("http://localhost/api/owner/competitions/missing"),
+      paramsFor("missing"),
+    );
+    expect(res.status).toBe(404);
+    expect(mocks.getChallengeCampaignRedemptionCounts).not.toHaveBeenCalled();
   });
 });

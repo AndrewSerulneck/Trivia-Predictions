@@ -97,12 +97,21 @@ export function isValidRewardThreshold(threshold: number): boolean {
   return Number.isFinite(threshold) && threshold >= 1 && threshold % REWARD_THRESHOLD_STEP === 0;
 }
 
-// The cadences Rewards can express on the current challenge_campaigns engine.
-// "weekly" is the flagship recurring cycle — computeCycleStart is weekly-anchored
-// on the reward's active day(s) — and "none" is a one-off. daily/monthly/yearly
-// await the computeCycleStart/computeCycleEnd extension noted in
-// docs/rewards-system-plan.md §7, so they are intentionally NOT offered yet.
-export const SUPPORTED_REWARD_CADENCES: readonly CampaignRecurringType[] = ["none", "weekly"];
+// The cadences Rewards can express on the challenge_campaigns engine. "none" is a
+// one-off (a single scheduled game); "weekly" is anchored on the reward's active
+// day(s); daily/monthly/yearly are calendar-anchored. All four recurrences have
+// real cycle windows as of the terms-sentence rebuild — see
+// computeCycleStart/computeCycleEnd in lib/challengeCampaigns.ts and
+// docs/rewards-terms-sentence-plan.md Phase 1. Which of these a given venue may
+// actually pick is a separate question answered by its Live Trivia schedule
+// (lib/rewardTerms.ts) — a venue with Tuesday-only trivia can't offer a daily reward.
+export const SUPPORTED_REWARD_CADENCES: readonly CampaignRecurringType[] = [
+  "none",
+  "daily",
+  "weekly",
+  "monthly",
+  "yearly",
+];
 
 export function isSupportedRewardCadence(value: string): value is CampaignRecurringType {
   return (SUPPORTED_REWARD_CADENCES as readonly string[]).includes(value);

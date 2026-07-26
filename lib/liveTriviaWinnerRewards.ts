@@ -24,6 +24,12 @@ import "server-only";
 // venue. Only players who actually scored above zero are eligible, so an empty
 // or all-zero game awards nobody.
 //
+// SLOTS: a reward may be pinned to specific scheduled games
+// (challenge_campaigns.game_winner_slots — see lib/rewardGameSlots.ts), in which
+// case only occurrences matching one of its {scheduleId, weekday} pairs resolve
+// it. A null selection means "every game", so every reward created before the
+// picker existed sweeps exactly as it always did.
+//
 // TIE CAP: "widen the quota to the tie count" is unbounded on its own — an easy
 // game where a dozen players answer everything correctly would mint a dozen real
 // gift cards from a reward the partner configured as one prize. The tie count is
@@ -44,6 +50,10 @@ import {
   findEndedOccurrences,
   loadOccurrenceFinalStandings,
 } from "@/lib/liveShowdownEngine";
+import {
+  occurrenceMatchesSlots,
+  weekdayForOccurrenceDate,
+} from "@/lib/rewardGameSlots";
 import type { ChallengeCampaign } from "@/types";
 
 /**
@@ -81,6 +91,28 @@ function campaignCoversVenue(campaign: ChallengeCampaign, venueId: string): bool
   // enforces this). An empty list would mean "global", which we deliberately do NOT
   // honor here — a global game-winner reward would fire at every venue at once.
   return campaign.venueIds.length > 0 && campaign.venueIds.includes(venueId);
+}
+
+/**
+ * Was this reward offered at THIS game specifically?
+ *
+ * A campaign with no pinned slots (`gameWinnerSlots === null`) awards at every
+ * game the venue runs — the behavior every reward created before the game picker
+ * still has, and the reason this filter is additive. A pinned campaign only
+ * resolves for the exact `{scheduleId, weekday}` pairs the partner chose, which
+ * is what makes a 6pm-only reward stay out of the 9pm game on the same night.
+ *
+ * An occurrence whose weekday couldn't be derived fails CLOSED against a pinned
+ * campaign (occurrenceMatchesSlots rejects a blank weekday): not awarding a prize
+ * we can't prove was offered is recoverable, spending the partner's money at a
+ * game they excluded is not.
+ */
+function campaignCoversOccurrenceSlot(
+  campaign: ChallengeCampaign,
+  scheduleId: string,
+  weekday: string,
+): boolean {
+  return occurrenceMatchesSlots(campaign.gameWinnerSlots, { scheduleId, weekday });
 }
 
 /**
@@ -169,11 +201,16 @@ export async function resolveGameWinnerRewards(
   const spentCampaignIds = new Set<string>();
 
   for (const occurrence of occurrences) {
+    // The weekday half of the slot identity. occurrenceDate is already formatted
+    // in the schedule's own timezone by findEndedOccurrences, so this is a plain
+    // calendar lookup — no second timezone conversion (see the helper's note).
+    const weekday = weekdayForOccurrenceDate(occurrence.occurrenceDate) ?? "";
     const campaigns = gameWinnerCampaigns.filter(
       (campaign) =>
         !spentCampaignIds.has(campaign.id) &&
         campaignCoversVenue(campaign, occurrence.venueId) &&
-        campaignWasLiveForOccurrence(campaign, occurrence),
+        campaignWasLiveForOccurrence(campaign, occurrence) &&
+        campaignCoversOccurrenceSlot(campaign, occurrence.scheduleId, weekday),
     );
     if (campaigns.length === 0) continue;
 

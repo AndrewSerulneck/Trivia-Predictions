@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { datetimeLocalValueToUtcIso } from "@/lib/categoryBlitzScheduleTime";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
+import { describeCascadeReport } from "@/lib/rewardGameSlotCascade";
 import {
   OWNER_SCHEDULE_INVALID_RECURRENCE_MESSAGE,
   OWNER_SCHEDULE_OVERLAP_MESSAGE,
@@ -57,8 +58,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       );
     }
 
-    await deleteOwnerSchedule(schedule);
-    return NextResponse.json({ ok: true });
+    const { rewardCascade } = await deleteOwnerSchedule(schedule);
+    // Deleting a game retires the rewards pinned to it. Returned so the partner
+    // is told rather than discovering a retired reward on their own later.
+    return NextResponse.json({
+      ok: true,
+      rewardNotice: rewardCascade ? describeCascadeReport(rewardCascade) : null,
+    });
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to delete schedule." },
@@ -127,7 +133,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       recurringType,
       recurringDays,
     });
-    return NextResponse.json({ ok: true, schedule: updated });
+    return NextResponse.json({
+      ok: true,
+      schedule: updated,
+      rewardNotice: updated.rewardCascade ? describeCascadeReport(updated.rewardCascade) : null,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to update schedule.";
     const status =

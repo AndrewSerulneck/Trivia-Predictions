@@ -1,18 +1,42 @@
 "use client";
 
-// Shared Create Reward wizard (Rewards Phase 5) — ONE component that drives the
-// canonical linear flow from docs/rewards-system-plan.md §2 (definition → cadence
-// → prize → quantity → confirm), used by BOTH the admin Rewards section
+// Shared Create Reward wizard — ONE component that drives the canonical linear
+// flow, used by BOTH the admin Rewards section
 // (components/admin/sections/ChallengesSection.tsx) and the Partner Dashboard
-// Rewards page (app/owner/competitions/page.tsx). It replaces the admin raw-field
-// create form and the owner CompetitionForm template gallery per decision #1.
+// Rewards page (app/owner/competitions/page.tsx).
 //
-// This component owns the step flow, validation, and prize-shape branching. It
-// does NOT know about /api/admin vs /api/owner/rewards — the host page supplies
-// `fetchContext` (resolveRewardCreationContext over its own auth) and `onSubmit`
-// (POSTs to its own route). The two hosts have different visual systems (admin =
-// plain slate/white Tailwind, owner/Partner Dashboard = dark ht-* design tokens),
-// so `variant` swaps a small class-token map rather than forking the component.
+// Flow (docs/rewards-terms-sentence-plan.md §1, superseding the original
+// definition → cadence → prize → quantity → confirm order):
+//
+//   definition → how it's won → points target → TERMS SENTENCE → prize → confirm
+//
+// "How is this reward won?" is asked FIRST because it decides whether the rest of
+// the questions even make sense, and the old Single Game / Recurring chips plus
+// the trailing Quantity step are replaced by one plain-English contract:
+//
+//   I want to make [number] of these rewards available every
+//   [day/week/month/year].
+//
+// That sentence (lib/rewardTerms.ts) is what a points-target reward always
+// shows. A game-winner reward shows it too UNLESS the game picker is enabled
+// (NEXT_PUBLIC_REWARD_GAME_PICKER_ENABLED, read via isGamePickerEnabled in
+// lib/rewardGameSlots.ts) — flag on replaces "how many, how often" with a
+// picker over the venue's actual scheduled games, because a game-winner's
+// count should be the games the partner actually picked, not a period's worth
+// of them (docs/rewards-game-winner-picker-plan.md). Flag off is the legacy
+// sentence, byte-for-byte, fully inert.
+//
+// Every option in either mode comes from a shared lib (rewardTerms.ts /
+// rewardGameSlots.ts), driven by the venue's REAL Live Trivia schedule — this
+// component computes none of those rules itself, so it cannot drift from the
+// server that re-validates them.
+//
+// This component owns the step flow and prize-shape branching. It does NOT know
+// about /api/admin vs /api/owner/rewards — the host page supplies `fetchContext`
+// (resolveRewardCreationContext over its own auth) and `onSubmit` (POSTs to its
+// own route). The two hosts have different visual systems (admin = plain
+// slate/white Tailwind, owner/Partner Dashboard = dark ht-* design tokens), so
+// `variant` swaps a small class-token map rather than forking the component.
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -20,8 +44,36 @@ import {
   renderRewardRequirement,
   type RewardDefinition,
 } from "@/lib/rewardDefinitions";
+import {
+  REWARD_PERIOD_NOUN,
+  REWARD_QUANTITY_OPTIONS,
+  REWARD_TERMS_NOT_SCHEDULED_MESSAGE,
+  allowedPeriodsFor,
+  cadenceForPeriod,
+  lockedQuantityFor,
+  renderTermsSentence,
+  summarizeRewardSchedules,
+  validateRewardTerms,
+  type RewardPeriod,
+  type RewardScheduleShape,
+} from "@/lib/rewardTerms";
+import {
+  REWARD_WEEKDAY_KEYS,
+  deriveGameWinnerTerms,
+  describeGameWinnerSlots,
+  isGamePickerEnabled,
+  selectAllRecurringSlots,
+  slotKey,
+  type RewardGameSlot,
+} from "@/lib/rewardGameSlots";
 import type { RewardPrizeInput } from "@/lib/rewards";
-import type { CampaignRecurringType, ChallengeWinCondition, RewardDiscountKind, RewardMenuItem } from "@/types";
+import type {
+  CampaignRecurringType,
+  ChallengeGameWinnerSlot,
+  ChallengeWinCondition,
+  RewardDiscountKind,
+  RewardMenuItem,
+} from "@/types";
 
 export type RewardCreationContextDTO = {
   scheduled: boolean;
@@ -29,6 +81,10 @@ export type RewardCreationContextDTO = {
   scheduleDays: string[];
   timezone: string | null;
   allowedCadences: CampaignRecurringType[];
+  /** The venue's schedules reduced to what lib/rewardTerms.ts needs. */
+  scheduleShapes: RewardScheduleShape[];
+  /** The individual games a game-winner reward can be pinned to (Phase 5's picker). */
+  gameSlots: RewardGameSlot[];
 };
 
 export type CreateRewardSubmission = {
@@ -39,6 +95,8 @@ export type CreateRewardSubmission = {
   threshold: number;
   winnerQuota: number;
   prize: RewardPrizeInput;
+  /** Game-winner picker (Phase 5), gated behind NEXT_PUBLIC_REWARD_GAME_PICKER_ENABLED. */
+  gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
 };
 
 export type CreateRewardWizardVenue = { id: string; name: string };
@@ -48,7 +106,7 @@ type CreateRewardWizardProps = {
   venues: CreateRewardWizardVenue[];
   /** Pre-selected venue (e.g. the host page's own venue filter). Skips the venue step when it's the only option. */
   defaultVenueId?: string;
-  /** Where the "schedule it first" block sends the user. */
+  /** Where the "schedule it first" message sends the user. */
   scheduleLinkHref: string;
   fetchContext: (venueId: string, definitionId: string) => Promise<RewardCreationContextDTO>;
   onSubmit: (submission: CreateRewardSubmission) => Promise<{ ok: true } | { ok: false; error: string }>;
@@ -65,20 +123,17 @@ const MENU_ITEM_OPTIONS: Array<{ value: RewardMenuItem; label: string }> = [
   { value: "other", label: "Other" },
 ];
 
-const CADENCE_LABEL: Record<string, string> = {
-  none: "Single Game",
-  daily: "Daily",
-  weekly: "Weekly",
-  monthly: "Monthly",
-  yearly: "Yearly",
-};
-
 type Styles = {
   card: string;
   heading: string;
   backLink: string;
   label: string;
   input: string;
+  /** Dropdown sized to sit inside a sentence rather than fill a row. */
+  inlineSelect: string;
+  /** A locked, non-editable value in the sentence (game-winner quantity). */
+  inlineLocked: string;
+  sentence: string;
   helpText: string;
   optionCard: string;
   optionCardActive: string;
@@ -99,6 +154,11 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
     label: "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600",
     input:
       "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200",
+    inlineSelect:
+      "mx-1 inline-block rounded-lg border border-indigo-300 bg-indigo-50 px-2 py-1 text-sm font-bold text-indigo-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200",
+    inlineLocked:
+      "mx-1 inline-block rounded-lg border border-slate-300 bg-slate-100 px-2 py-1 text-sm font-bold text-slate-700",
+    sentence: "text-base leading-8 text-slate-900",
     helpText: "text-xs text-slate-500",
     optionCard:
       "flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-left transition hover:border-indigo-400",
@@ -110,7 +170,7 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
     secondaryButton: "text-sm font-medium text-slate-500 hover:text-slate-700",
     error: "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700",
     block: "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800",
-    summaryRow: "flex items-center justify-between border-b border-slate-100 py-2 text-sm",
+    summaryRow: "flex items-center justify-between gap-4 border-b border-slate-100 py-2 text-sm",
   },
   owner: {
     card: "space-y-4 rounded-2xl border border-ht-hairline bg-ht-surface p-4 shadow-ht-card",
@@ -119,6 +179,11 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
     label: "mb-1 block text-xs font-semibold text-ht-muted",
     input:
       "w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-base font-bold text-ht-primary outline-none focus:border-ht-cyan-400",
+    inlineSelect:
+      "mx-1 inline-block rounded-xl border border-ht-cyan-400 bg-ht-elevated px-2 py-1 text-base font-black text-ht-cyan-300 outline-none focus:border-ht-cyan-300",
+    inlineLocked:
+      "mx-1 inline-block rounded-xl border border-ht-hairline bg-ht-elevated/60 px-2 py-1 text-base font-black text-ht-primary",
+    sentence: "text-base font-bold leading-9 text-ht-primary",
     helpText: "text-xs font-semibold text-ht-muted",
     optionCard:
       "flex items-start gap-3 rounded-xl border border-ht-hairline bg-ht-elevated/50 p-3 text-left transition hover:border-ht-cyan-400",
@@ -130,12 +195,15 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
     secondaryButton: "text-sm font-bold text-ht-muted",
     error: "rounded-xl border border-ht-rose-500/30 bg-ht-rose-500/10 px-3 py-2 text-xs font-bold text-ht-rose-300",
     block: "rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs font-bold text-amber-300",
-    summaryRow: "flex items-center justify-between border-b border-ht-hairline/60 py-2 text-sm",
+    summaryRow: "flex items-center justify-between gap-4 border-b border-ht-hairline/60 py-2 text-sm",
   },
 };
 
-type Step = "venue" | "definition" | "cadence" | "prize" | "quantity" | "confirm";
+type Step = "venue" | "definition" | "terms" | "prize" | "confirm";
 type PrizeChoice = "menu_item" | "gift_card";
+
+const EMPTY_SHAPES: RewardScheduleShape[] = [];
+const EMPTY_GAME_SLOTS: RewardGameSlot[] = [];
 
 export function CreateRewardWizard({
   variant,
@@ -154,22 +222,37 @@ export function CreateRewardWizard({
   const [context, setContext] = useState<RewardCreationContextDTO | null>(null);
   const [contextLoading, setContextLoading] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
+  /** Shown under the definition tiles when the picked reward's game isn't scheduled. */
+  const [notScheduledError, setNotScheduledError] = useState<string | null>(null);
 
-  // ── Definition-step prefetch: which definitions are even choosable ──────────
-  // Resolved once the venue is known and the definition step is reached, so a
-  // reward whose required game isn't scheduled shows as disabled + blocked
-  // BEFORE the partner can click it, instead of failing after the click.
+  // ── Definition-step prefetch ────────────────────────────────────────────────
+  // Resolved once the venue is known so picking a definition is instant. It no
+  // longer disables tiles: an unscheduled reward stays clickable and answers with
+  // the "schedule it first" message ON CLICK, rather than the wizard permanently
+  // displaying a block the partner never asked about.
   const [definitionContexts, setDefinitionContexts] = useState<
     Record<string, RewardCreationContextDTO>
   >({});
   const [definitionContextsLoading, setDefinitionContextsLoading] = useState(false);
 
-  const [cadence, setCadence] = useState<CampaignRecurringType>("none");
-  const [cadenceError, setCadenceError] = useState<string | null>(null);
   const [winCondition, setWinCondition] = useState<ChallengeWinCondition>("points_threshold");
   const [threshold, setThreshold] = useState<number>(0);
   const [customThreshold, setCustomThreshold] = useState("");
   const [thresholdError, setThresholdError] = useState<string | null>(null);
+
+  // ── The terms sentence ──────────────────────────────────────────────────────
+  // `period` null means the one-off form ("at my next Live Trivia game"), which
+  // maps to cadence "none". `quantity` is only consulted when the partner chooses
+  // it — a game-winner reward's number is locked to the venue's game count.
+  const [period, setPeriod] = useState<RewardPeriod | null>(null);
+  const [quantity, setQuantity] = useState(1);
+
+  // ── The game picker (Phase 5, flag-gated) ───────────────────────────────────
+  // Replaces the period-based sentence for game-winner rewards: the partner
+  // picks exact scheduled games instead of a count. Selection is a set of
+  // `scheduleId:weekday` keys — the same identity lib/rewardGameSlots.ts uses
+  // everywhere else.
+  const [selectedSlotKeys, setSelectedSlotKeys] = useState<Set<string>>(new Set());
 
   const [prizeChoice, setPrizeChoice] = useState<PrizeChoice>("menu_item");
   const [menuItem, setMenuItem] = useState<RewardMenuItem>("appetizer");
@@ -177,8 +260,6 @@ export function CreateRewardWizard({
   const [discountKind, setDiscountKind] = useState<RewardDiscountKind>("percent");
   const [discountValue, setDiscountValue] = useState("50");
   const [giftCardAmount, setGiftCardAmount] = useState("25");
-
-  const [winnerQuota, setWinnerQuota] = useState("1");
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -195,8 +276,7 @@ export function CreateRewardWizard({
         try {
           return [def.id, await fetchContext(venueId, def.id)] as const;
         } catch {
-          // Unknown status — leave the tile enabled; the post-click check
-          // (handlePickDefinition/createReward) still guards it.
+          // Unknown status — the post-click check still guards it.
           return null;
         }
       }),
@@ -214,22 +294,135 @@ export function CreateRewardWizard({
     };
   }, [step, venueId, fetchContext]);
 
-  // ── Step: definition pick → resolve schedule/cadence context ────────────────
+  // ── Terms rules, all derived from the venue's real schedule ─────────────────
+  const facts = useMemo(
+    () => summarizeRewardSchedules(context?.scheduleShapes ?? EMPTY_SHAPES),
+    [context],
+  );
+  const allowedPeriods = useMemo(
+    () => allowedPeriodsFor(facts, winCondition),
+    [facts, winCondition],
+  );
+  const lockedQuantity = useMemo(
+    () => lockedQuantityFor(facts, winCondition, period),
+    [facts, winCondition, period],
+  );
+  const effectiveQuantity = lockedQuantity ?? quantity;
+  const isGameWinner = winCondition === "game_winner";
+  // A venue with only a one-off game has no period to offer — the sentence
+  // collapses to "at my next Live Trivia game".
+  const isOneOffOnly = facts.isOneOffOnly;
+
+  // Game picker (Phase 5): flag-gated replacement for the game-winner sentence.
+  const useGamePicker = isGamePickerEnabled() && isGameWinner;
+  const gameSlots = context?.gameSlots ?? EMPTY_GAME_SLOTS;
+  const recurringSlots = useMemo(() => gameSlots.filter((slot) => slot.recurring), [gameSlots]);
+  const oneOffSlots = useMemo(() => gameSlots.filter((slot) => !slot.recurring), [gameSlots]);
+  const recurringKeySet = useMemo(() => new Set(recurringSlots.map(slotKey)), [recurringSlots]);
+  const anyGameKeySet = useMemo(
+    () => new Set(selectAllRecurringSlots(gameSlots).map(slotKey)),
+    [gameSlots],
+  );
+  const isAnyGameSelected =
+    selectedSlotKeys.size > 0 &&
+    selectedSlotKeys.size === anyGameKeySet.size &&
+    Array.from(selectedSlotKeys).every((key) => anyGameKeySet.has(key));
+  const selectedSlots = useMemo(
+    () => gameSlots.filter((slot) => selectedSlotKeys.has(slotKey(slot))),
+    [gameSlots, selectedSlotKeys],
+  );
+  const gameWinnerTerms = useMemo(() => deriveGameWinnerTerms(selectedSlots), [selectedSlots]);
+
+  // A stale selection from a different venue/definition/schedule fetch — or from
+  // the partner switching win conditions — must not silently carry forward.
+  useEffect(() => {
+    setSelectedSlotKeys(new Set());
+  }, [context, isGameWinner]);
+
+  const toggleGameSlot = (slot: RewardGameSlot) => {
+    const key = slotKey(slot);
+    setSelectedSlotKeys((prev) => {
+      if (slot.recurring) {
+        // Recurring and one-off are mutually exclusive (deriveGameWinnerTerms
+        // refuses a mix), so picking a recurring slot drops any one-off pick.
+        const next = new Set(Array.from(prev).filter((k) => recurringKeySet.has(k)));
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        return next;
+      }
+      // One-off games: only one at a time.
+      return prev.has(key) && prev.size === 1 ? new Set<string>() : new Set([key]);
+    });
+  };
+
+  const toggleAnyGame = () => {
+    setSelectedSlotKeys(isAnyGameSelected ? new Set<string>() : new Set(anyGameKeySet));
+  };
+
+  const termsError = useMemo(
+    () =>
+      context
+        ? validateRewardTerms(facts, { winCondition, period, quantity: effectiveQuantity })
+        : null,
+    [context, facts, winCondition, period, effectiveQuantity],
+  );
+
+  // Switching the win condition can invalidate the chosen period — a weekly venue
+  // may offer month/year for a points target but only "week" for a game-winner
+  // reward. Snap to the first period that's still on offer rather than leaving a
+  // stale selection the partner can't see is stale.
+  useEffect(() => {
+    if (!context) return;
+    if (isOneOffOnly || allowedPeriods.length === 0) {
+      setPeriod(null);
+      return;
+    }
+    setPeriod((current) =>
+      current !== null && allowedPeriods.includes(current)
+        ? current
+        : allowedPeriods.includes("weekly")
+          ? "weekly"
+          : allowedPeriods[0],
+    );
+  }, [context, allowedPeriods, isOneOffOnly]);
+
+  // A game-winner quantity is dictated by the schedule, so keep the partner's own
+  // number in sync — it becomes theirs again the moment they switch back.
+  useEffect(() => {
+    if (lockedQuantity !== null) setQuantity(lockedQuantity);
+  }, [lockedQuantity]);
+
+  // When a lock lifts (e.g. switching game_winner → points target), `quantity`
+  // can be left holding a locked value like 14 that isn't one of
+  // REWARD_QUANTITY_OPTIONS — the <select> would render blank while still
+  // submitting the stale number. Snap to the closest real option instead.
+  useEffect(() => {
+    if (lockedQuantity !== null) return;
+    if ((REWARD_QUANTITY_OPTIONS as readonly number[]).includes(quantity)) return;
+    setQuantity(
+      REWARD_QUANTITY_OPTIONS.reduce((closest, option) =>
+        Math.abs(option - quantity) < Math.abs(closest - quantity) ? option : closest,
+      ),
+    );
+  }, [lockedQuantity, quantity]);
+
+  // ── Step: definition pick → resolve schedule context ────────────────────────
   const handlePickDefinition = async (picked: RewardDefinition) => {
     setDefinition(picked);
     setThreshold(picked.defaultThreshold);
     setCustomThreshold("");
     setWinCondition("points_threshold");
     setContextError(null);
+    setNotScheduledError(null);
 
     const cached = definitionContexts[picked.id];
     if (cached) {
-      // The tile is disabled whenever a cached context is unscheduled, but guard
-      // anyway in case this ever runs from a stale render.
-      if (!cached.scheduled) return;
+      if (!cached.scheduled) {
+        setNotScheduledError(REWARD_TERMS_NOT_SCHEDULED_MESSAGE);
+        return;
+      }
       setContext(cached);
-      setCadence(cached.allowedCadences.includes("weekly") ? "weekly" : "none");
-      setStep("cadence");
+      setStep("terms");
       return;
     }
 
@@ -237,15 +430,13 @@ export function CreateRewardWizard({
     setContextLoading(true);
     try {
       const ctx = await fetchContext(venueId, picked.id);
-      // Feed the result back into the prefetch cache so a definition that was
-      // unreachable during the initial prefetch (e.g. a transient network
-      // error) still renders the "schedule it first" block instead of quietly
-      // advancing to the cadence step.
       setDefinitionContexts((prev) => ({ ...prev, [picked.id]: ctx }));
-      if (!ctx.scheduled) return;
+      if (!ctx.scheduled) {
+        setNotScheduledError(REWARD_TERMS_NOT_SCHEDULED_MESSAGE);
+        return;
+      }
       setContext(ctx);
-      setCadence(ctx.allowedCadences.includes("weekly") ? "weekly" : "none");
-      setStep("cadence");
+      setStep("terms");
     } catch (err) {
       setContextError(err instanceof Error ? err.message : "Couldn't check that game's schedule.");
     } finally {
@@ -281,19 +472,16 @@ export function CreateRewardWizard({
     return `${discountLabel} ${itemLabel}`;
   }, [prize]);
 
-  const cadenceOptions = context?.allowedCadences ?? [];
-  const isRecurring = cadence !== "none";
-  const isGameWinner = winCondition === "game_winner";
-
   const handleSubmit = async () => {
     if (!definition) return;
-    let quota = 1;
-    if (!isGameWinner) {
-      quota = parseInt(winnerQuota, 10);
-      if (!Number.isFinite(quota) || quota < 1) {
-        setSubmitError("Enter how many of this prize are available.");
+    if (useGamePicker) {
+      if (!gameWinnerTerms.ok) {
+        setSubmitError(gameWinnerTerms.message);
         return;
       }
+    } else if (termsError) {
+      setSubmitError(termsError);
+      return;
     }
     if (prize.prizeKind === "menu_item" && prize.menuItem === "other" && !prize.menuItemName) {
       setSubmitError("Enter a name for the menu item.");
@@ -305,11 +493,15 @@ export function CreateRewardWizard({
       const result = await onSubmit({
         venueId,
         definitionId: definition.id,
-        cadence,
+        cadence: useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms.cadence : cadenceForPeriod(period),
         winCondition,
         threshold: effectiveThreshold,
-        winnerQuota: quota,
+        winnerQuota: useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms.quota : effectiveQuantity,
         prize,
+        gameWinnerSlots:
+          useGamePicker && gameWinnerTerms.ok
+            ? selectedSlots.map((slot) => ({ scheduleId: slot.scheduleId, weekday: slot.weekday }))
+            : undefined,
       });
       if (!result.ok) {
         setSubmitError(result.error);
@@ -325,6 +517,12 @@ export function CreateRewardWizard({
     <button type="button" onClick={() => setStep(to)} className={s.backLink}>
       ← {label}
     </button>
+  );
+
+  const scheduleLink = (
+    <a href={scheduleLinkHref} className="underline">
+      Schedule Live Trivia
+    </a>
   );
 
   return (
@@ -357,85 +555,42 @@ export function CreateRewardWizard({
         <div className="space-y-3">
           <p className={s.heading}>Create Reward</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {REWARD_DEFINITIONS.map((def) => {
-              const defContext = definitionContexts[def.id];
-              const blocked = defContext ? !defContext.scheduled : false;
-              return (
-                <button
-                  key={def.id}
-                  type="button"
-                  onClick={() => void handlePickDefinition(def)}
-                  disabled={contextLoading || definitionContextsLoading || blocked}
-                  className={`${s.optionCard} ${definition?.id === def.id ? s.optionCardActive : ""} disabled:opacity-60`}
-                >
-                  <span className="text-lg">{def.glyph}</span>
-                  <span className="min-w-0">
-                    <span className="block font-black">{def.name}</span>
-                  </span>
-                </button>
-              );
-            })}
+            {REWARD_DEFINITIONS.map((def) => (
+              <button
+                key={def.id}
+                type="button"
+                onClick={() => void handlePickDefinition(def)}
+                disabled={contextLoading || definitionContextsLoading}
+                className={`${s.optionCard} ${definition?.id === def.id ? s.optionCardActive : ""} disabled:opacity-60`}
+              >
+                <span className="text-lg">{def.glyph}</span>
+                <span className="min-w-0">
+                  <span className="block font-black">{def.name}</span>
+                </span>
+              </button>
+            ))}
           </div>
           {definitionContextsLoading || contextLoading ? (
             <p className={s.helpText}>Checking the venue&apos;s schedule…</p>
           ) : null}
           {contextError ? <div className={s.error}>{contextError}</div> : null}
-          {!definitionContextsLoading &&
-            REWARD_DEFINITIONS.filter((def) => definitionContexts[def.id]?.scheduled === false).map(
-              (def) => (
-                <div key={def.id} className={s.block}>
-                  <a href={scheduleLinkHref} className="underline">
-                    Schedule Live Trivia
-                  </a>{" "}
-                  in order to create a reward for Live Trivia.
-                </div>
-              ),
-            )}
+          {/* Only after the partner picks a reward whose game isn't scheduled. */}
+          {notScheduledError ? (
+            <div className={s.block}>
+              {notScheduledError} {scheduleLink}.
+            </div>
+          ) : null}
           <button type="button" onClick={onCancel} className={s.secondaryButton}>
             Cancel
           </button>
         </div>
       ) : null}
 
-      {step === "cadence" && definition && context ? (
+      {step === "terms" && definition && context ? (
         <div className="space-y-4">
           <BackButton to="definition" label={definition.name} />
 
-          <div>
-            <p className={s.label}>Competition</p>
-            <div className="grid grid-cols-2 gap-2">
-              {(["none", "weekly"] as CampaignRecurringType[]).map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => {
-                    if (c !== "none" && !cadenceOptions.includes(c)) {
-                      setCadenceError(
-                        "You must schedule recurring Live Trivia games to offer a recurring Live Trivia reward.",
-                      );
-                      return;
-                    }
-                    setCadenceError(null);
-                    setCadence(c);
-                  }}
-                  className={`${s.chip} ${cadence === c ? s.chipActive : ""}`}
-                >
-                  {c === "none" ? "Single Game" : "Recurring"}
-                </button>
-              ))}
-            </div>
-            <p className={`mt-1.5 ${s.helpText}`}>
-              {isRecurring
-                ? "Winners are counted fresh each week — a prior winner can win again next cycle."
-                : "Runs once until the prize quota is filled."}
-            </p>
-            {cadenceError ? (
-              <div className={`mt-1.5 ${s.error}`}>
-                {cadenceError} <a href={scheduleLinkHref} className="underline">Schedule Live Trivia</a>.
-              </div>
-            ) : null}
-          </div>
-
+          {/* 1. The question that decides everything below it. */}
           {definition.supportsGameWinner ? (
             <div>
               <p className={s.label}>How is this reward won?</p>
@@ -457,12 +612,13 @@ export function CreateRewardWizard({
               </div>
               <p className={`mt-1.5 ${s.helpText}`}>
                 {isGameWinner
-                  ? "Only whoever wins the Live Trivia game gets this prize — there's exactly one winner, so no quantity to set."
-                  : "Anyone who reaches the points target gets this prize, up to the quantity you set next."}
+                  ? "Whoever wins the Live Trivia game gets this prize, whatever their score."
+                  : "Anyone who reaches the points target gets this prize."}
               </p>
             </div>
           ) : null}
 
+          {/* 2. Points target — only meaningful when that's how it's won. */}
           {isGameWinner ? null : (
             <div>
               <p className={s.label}>Points target</p>
@@ -497,8 +653,169 @@ export function CreateRewardWizard({
             </div>
           )}
 
+          {/* 3. The contract — either the game picker (Phase 5, flag-gated) or the
+              period-based sentence it replaces for game-winner rewards. */}
+          {useGamePicker ? (
+            <div>
+              <p className={s.label}>Which games?</p>
+              <label className="flex items-center gap-2 text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  checked={isAnyGameSelected}
+                  onChange={toggleAnyGame}
+                  className="h-4 w-4"
+                />
+                Offer this reward to the winner of any Live Trivia game
+              </label>
+
+              {recurringSlots.length === 0 && oneOffSlots.length === 0 ? (
+                <div className={`mt-2 ${s.block}`}>
+                  You don&apos;t have any Live Trivia games scheduled. {scheduleLink} to pick
+                  games for this reward.
+                </div>
+              ) : null}
+
+              {recurringSlots.length > 0 ? (
+                <div className="mt-2 grid grid-cols-7 gap-1">
+                  {REWARD_WEEKDAY_KEYS.map((day) => {
+                    const daySlots = recurringSlots.filter((slot) => slot.weekday === day);
+                    return (
+                      <div key={day} className="space-y-1 text-center">
+                        <p className={`${s.helpText} uppercase`}>{day}</p>
+                        {daySlots.map((slot) => (
+                          <button
+                            key={slotKey(slot)}
+                            type="button"
+                            onClick={() => toggleGameSlot(slot)}
+                            className={`${s.chip} block w-full ${selectedSlotKeys.has(slotKey(slot)) ? s.chipActive : ""}`}
+                          >
+                            {slot.timeLabel}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+
+              {oneOffSlots.length > 0 ? (
+                <div className="mt-2 space-y-2">
+                  <p className={s.helpText}>One-off game{oneOffSlots.length > 1 ? "s" : ""}</p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {oneOffSlots.map((slot) => (
+                      <button
+                        key={slotKey(slot)}
+                        type="button"
+                        onClick={() => toggleGameSlot(slot)}
+                        className={`${s.chip} text-left ${selectedSlotKeys.has(slotKey(slot)) ? s.chipActive : ""}`}
+                      >
+                        {slot.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {gameWinnerTerms.ok ? (
+                <p className={`mt-2 ${s.helpText}`}>{describeGameWinnerSlots(selectedSlots)}</p>
+              ) : (
+                <div className={`mt-2 ${s.error}`}>{gameWinnerTerms.message}</div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <p className={s.label}>How many, how often?</p>
+              {/* Explicit {" "} between the words and the controls: JSX strips the
+                  whitespace around an expression that sits on its own line, so
+                  without them the sentence reads "give out1of these rewards".
+                  Points-target rewards use "make ... available" — a promotion the
+                  partner is offering, not something being given away — while
+                  game-winner keeps "give out" here (this branch only renders when
+                  the game picker flag is off; see
+                  docs/rewards-game-winner-picker-plan.md). */}
+              <p className={s.sentence}>
+                {isGameWinner ? "I want to give out" : "I want to make"}{" "}
+                {lockedQuantity !== null ? (
+                  <span className={s.inlineLocked}>{lockedQuantity}</span>
+                ) : (
+                  <select
+                    aria-label="Number of rewards"
+                    value={String(quantity)}
+                    onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
+                    className={s.inlineSelect}
+                  >
+                    {REWARD_QUANTITY_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                )}{" "}
+                {isOneOffOnly || allowedPeriods.length === 0 ? (
+                  <span>
+                    {isGameWinner
+                      ? "of these rewards at my next Live Trivia game."
+                      : "of these rewards available at my next Live Trivia game."}
+                  </span>
+                ) : (
+                  <>
+                    {isGameWinner ? "of these rewards every" : "of these rewards available every"}{" "}
+                    <select
+                      aria-label="How often"
+                      value={period ?? allowedPeriods[0]}
+                      onChange={(e) => setPeriod(e.target.value as RewardPeriod)}
+                      className={s.inlineSelect}
+                    >
+                      {allowedPeriods.map((option) => (
+                        <option key={option} value={option}>
+                          {REWARD_PERIOD_NOUN[option]}
+                        </option>
+                      ))}
+                    </select>
+                    {"."}
+                  </>
+                )}
+              </p>
+
+              {isOneOffOnly ? (
+                <div className={`mt-2 ${s.block}`}>
+                  You only have a single Live Trivia game scheduled. {scheduleLink} on a
+                  repeating schedule to offer a recurring reward.
+                </div>
+              ) : allowedPeriods.length === 0 ? (
+                // Recurring games, but no period holds a FIXED number of them (e.g. a
+                // weekly schedule plus a monthly one). A game-winner reward's count is
+                // locked to the game count, so there's nothing honest to offer here.
+                <div className={`mt-2 ${s.block}`}>
+                  Your Live Trivia schedule doesn&apos;t run the same number of games in any
+                  fixed period, so a &quot;winner of the game&quot; reward can only be offered
+                  at your next game. Use a points target instead to offer it on a repeating
+                  schedule.
+                </div>
+              ) : null}
+
+              {lockedQuantity !== null && !isOneOffOnly && period ? (
+                <p className={`mt-1.5 ${s.helpText}`}>
+                  Each Live Trivia game has one winner, so this is set by how many games you
+                  run each {REWARD_PERIOD_NOUN[period]}.
+                </p>
+              ) : null}
+
+              {/* Terms messages already say what to do ("Schedule more Live Trivia
+                  games to offer more"), so only the ones that are actually about
+                  scheduling get the link appended. */}
+              {termsError ? (
+                <div className={`mt-2 ${s.error}`}>
+                  {termsError}
+                  {termsError.includes("Schedule") ? <> {scheduleLink}.</> : null}
+                </div>
+              ) : null}
+            </div>
+          )}
+
           <button
             type="button"
+            disabled={useGamePicker ? !gameWinnerTerms.ok : Boolean(termsError)}
             onClick={() => {
               if (!isGameWinner) {
                 const custom = parseInt(customThreshold, 10);
@@ -519,7 +836,7 @@ export function CreateRewardWizard({
 
       {step === "prize" && definition ? (
         <div className="space-y-4">
-          <BackButton to="cadence" label="Back" />
+          <BackButton to="terms" label="Back" />
           <p className={s.heading}>Prize</p>
 
           <div className="grid grid-cols-2 gap-2">
@@ -607,32 +924,6 @@ export function CreateRewardWizard({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => setStep(isGameWinner ? "confirm" : "quantity")}
-            className={s.primaryButton}
-          >
-            {isGameWinner ? "Next: Confirm" : "Next: Quantity"}
-          </button>
-        </div>
-      ) : null}
-
-      {step === "quantity" && definition && !isGameWinner ? (
-        <div className="space-y-4">
-          <BackButton to="prize" label="Back" />
-          <p className={s.heading}>Quantity</p>
-          <div>
-            <label className={s.label}>
-              How many of these rewards do you want to make available{isRecurring ? " each cycle" : ""}?
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={winnerQuota}
-              onChange={(e) => setWinnerQuota(e.target.value)}
-              className={s.input}
-            />
-          </div>
           <button type="button" onClick={() => setStep("confirm")} className={s.primaryButton}>
             Next: Confirm
           </button>
@@ -641,7 +932,7 @@ export function CreateRewardWizard({
 
       {step === "confirm" && definition ? (
         <div className="space-y-4">
-          <BackButton to={isGameWinner ? "prize" : "quantity"} label="Back" />
+          <BackButton to="prize" label="Back" />
           <p className={s.heading}>Confirm</p>
 
           <div>
@@ -654,20 +945,17 @@ export function CreateRewardWizard({
               <span className="font-bold">{renderRewardRequirement(definition, effectiveThreshold, winCondition)}</span>
             </div>
             <div className={s.summaryRow}>
-              <span>Cadence</span>
-              <span className="font-bold">{CADENCE_LABEL[cadence] ?? cadence}</span>
-            </div>
-            <div className={s.summaryRow}>
               <span>Prize</span>
               <span className="font-bold">{prizeSummary}</span>
             </div>
-            {isGameWinner ? null : (
-              <div className={s.summaryRow}>
-                <span>Rewards available {isRecurring ? "per cycle" : "total"}</span>
-                <span className="font-bold">{winnerQuota}</span>
-              </div>
-            )}
           </div>
+
+          {/* The terms the partner just agreed to, restated verbatim. */}
+          <p className={s.sentence}>
+            {useGamePicker && gameWinnerTerms.ok
+              ? describeGameWinnerSlots(selectedSlots)
+              : renderTermsSentence(effectiveQuantity, period, winCondition)}
+          </p>
 
           {submitError ? <div className={s.error}>{submitError}</div> : null}
 

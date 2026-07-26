@@ -1,5 +1,7 @@
 # CLAUDE.md — Hightop Challenge Project Rules
 
+> **Be concise by default.** Keep responses short — direct answers, no restating the task, no trailing summaries unless asked. Save exhaustive detail for when the user explicitly asks for it. This saves tokens and the user's time; don't wait to be told each time.
+>
 > **Read `SYSTEM_CONTEXT.md` before starting any task.**
 >
 > **Strategic direction (next few weeks):** `/info` is becoming the apex homepage; the player game login is moving to `play.hightopchallenge.com`; and the `/owner/*` payments surface is becoming the mobile-first **Partner Dashboard** (self-serve live-game scheduling, TV display URL, and Stripe billing). See `SYSTEM_CONTEXT.md` §0 and the canonical build plan in `docs/partner-dashboard-plan.md`.
@@ -65,9 +67,12 @@
   `award_cycle_winner` Postgres RPC** (count-guarded insert under a transaction-scoped
   advisory lock), not in application code — never re-implement the quota check client-side or
   in a plain `INSERT`.
-- **`NEXT_PUBLIC_REWARDS_ENABLED` is the reversible rollout flag** (same convention as
-  `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED`), read via `lib/rewardsFlags.ts`'s `isRewardsEnabled()`.
-  Off clamps `winner_quota` to 1, i.e. today's single-winner behavior — fully inert.
+- **`NEXT_PUBLIC_REWARDS_ENABLED` / `lib/rewardsFlags.ts` no longer exist** (deleted in commit
+  9abbb1b, 2026-07-22) — multi-winner Rewards is live unconditionally, not flag-gated. The only
+  live Rewards flag today is `NEXT_PUBLIC_REWARD_GAME_PICKER_ENABLED`
+  (`isGamePickerEnabled()` in `lib/rewardGameSlots.ts`), which gates ONLY the wizard's
+  game-picker UI branch — not cadence support, not the archive/delete split, not the slot
+  cascade. Don't describe other Rewards work as "inert until a flag flips."
 - **Redemption = in-app coupon, staff-taps-redeemed.** No POS or gift-card-issuance
   integration; winners see a coupon on `/redeem-prizes` (`components/prizes/PrizeWalletPanel.tsx`).
 

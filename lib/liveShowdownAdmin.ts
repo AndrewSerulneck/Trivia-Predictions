@@ -11,6 +11,12 @@ import {
 } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { broadcastLiveTrivia } from "@/lib/liveTriviaBroadcast";
+import {
+  cascadeScheduleChangeToRewards,
+  rewardCascadeRecurrence,
+  type GameSlotCascadeReport,
+} from "@/lib/rewardGameSlotCascade";
+import { scheduleRunWeekdays } from "@/lib/rewardGameSlots";
 
 const QUESTIONS_PER_ROUND = 15;
 
@@ -621,7 +627,10 @@ export async function updateAdminLiveShowdownSchedule(params: {
   venueId: string;
   intermissionAdDelaySeconds?: number;
   lobbyAdEnabled?: boolean;
-}): Promise<AdminLiveShowdownSchedule> {
+  // `rewardCascade` reports what this edit did to rewards pinned to the schedule.
+  // Returned rather than only logged so the partner can be told — a silently
+  // retired reward is one they are still advertising to players.
+}): Promise<AdminLiveShowdownSchedule & { rewardCascade: GameSlotCascadeReport }> {
   const admin = getAdminClient();
 
   const scheduleId = String(params.id ?? "").trim();
@@ -655,17 +664,20 @@ export async function updateAdminLiveShowdownSchedule(params: {
 
   const startTimeIso = zonedDateTimeToUtcIso(targetDate, startTime, timezone);
 
-  // Fetch the existing schedule to check if numRounds changed
+  // Fetch the existing schedule to check if numRounds changed. venue_id comes
+  // along so a schedule MOVED to another venue can retire the rewards the old
+  // venue pinned to it — from that venue's side the game is simply gone.
   const { data: existing, error: fetchError } = await admin
     .from("trivia_schedules")
-    .select("num_rounds")
+    .select("num_rounds, venue_id")
     .eq("id", scheduleId)
-    .maybeSingle<{ num_rounds: number }>();
+    .maybeSingle<{ num_rounds: number; venue_id: string | null }>();
 
   if (fetchError) {
     throw new Error(fetchError.message || "Failed to fetch existing schedule.");
   }
 
+  const previousVenueId = String(existing?.venue_id ?? "").trim() || null;
   const oldNumRounds = clampRounds(Number(existing?.num_rounds ?? 1));
   const roundsChanged = oldNumRounds !== numRounds;
 
@@ -753,19 +765,69 @@ export async function updateAdminLiveShowdownSchedule(params: {
     if (legacyUpdate.error || !legacyUpdate.data) {
       throw new Error(legacyUpdate.error?.message || "Failed to update Live Showdown schedule.");
     }
+    // No recurrence columns on this database: the schedule is a single dated
+    // game, so the only surviving slot is its own start weekday.
+    const legacyCascade = await cascadeScheduleChangeToRewards({
+      scheduleId,
+      venueId,
+      survivingWeekdays: scheduleRunWeekdays({
+        recurringType: "none",
+        recurringDays: [],
+        startTime: startTimeIso,
+        timezone,
+      }),
+      survivingRecurrence: "none",
+    });
     await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId });
-    return mapScheduleRow({ ...(legacyUpdate.data as TriviaScheduleRowLegacy), recurring_type: "none", recurring_days: null });
+    return {
+      ...mapScheduleRow({ ...(legacyUpdate.data as TriviaScheduleRowLegacy), recurring_type: "none", recurring_days: null }),
+      rewardCascade: legacyCascade,
+    };
   }
 
   if (updateResult.error || !updateResult.data) {
     throw new Error(updateResult.error?.message || "Failed to update Live Showdown schedule.");
   }
 
+  // An edit that drops weekdays (Tue+Thu → Tue) retires the games on the days it
+  // dropped, exactly like a partial delete. Growing the schedule is not a
+  // cascade: a reward pinned to Tuesday does not silently start covering a newly
+  // added Thursday game. A change to how the schedule RECURS retires the rewards
+  // pinned to it outright — see rule 3 in lib/rewardGameSlotCascade.ts.
+  const cascade = await cascadeScheduleChangeToRewards({
+    scheduleId,
+    venueId,
+    survivingWeekdays: scheduleRunWeekdays({
+      recurringType,
+      recurringDays,
+      startTime: startTimeIso,
+      timezone,
+    }),
+    survivingRecurrence: rewardCascadeRecurrence({ recurringType, recurringDays }),
+  });
+  if (previousVenueId && previousVenueId !== venueId) {
+    // The schedule left this venue entirely, so from its rewards' point of view
+    // the game is gone: no surviving weekdays, and no recurrence to compare
+    // against (null) — the weekday pruning alone retires them.
+    const transferCascade = await cascadeScheduleChangeToRewards({
+      scheduleId,
+      venueId: previousVenueId,
+      survivingWeekdays: [],
+      survivingRecurrence: null,
+    });
+    cascade.pruned.push(...transferCascade.pruned);
+    cascade.deactivated.push(...transferCascade.deactivated);
+    cascade.retiredForRecurrenceChange.push(...transferCascade.retiredForRecurrenceChange);
+    cascade.errors.push(...transferCascade.errors);
+  }
+
   await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId });
-  return mapScheduleRow(updateResult.data as TriviaScheduleRow);
+  return { ...mapScheduleRow(updateResult.data as TriviaScheduleRow), rewardCascade: cascade };
 }
 
-export async function deleteAdminLiveShowdownSchedule(scheduleIdRaw: string): Promise<{ deleted: boolean }> {
+export async function deleteAdminLiveShowdownSchedule(
+  scheduleIdRaw: string,
+): Promise<{ deleted: boolean; rewardCascade: GameSlotCascadeReport }> {
   const admin = getAdminClient();
   const scheduleId = String(scheduleIdRaw ?? "").trim();
   if (!scheduleId) {
@@ -808,9 +870,20 @@ export async function deleteAdminLiveShowdownSchedule(scheduleIdRaw: string): Pr
     throw new Error(deleteScheduleError.message || "Failed to delete Live Showdown schedule.");
   }
 
+  // Rewards pinned to this game lose their slot. A reward that covered other
+  // games survives with a smaller quota; one that covered only this game is
+  // DEACTIVATED, never deleted — see lib/rewardGameSlotCascade.ts rule 2. The
+  // schedule is gone, so there is no surviving recurrence to compare against.
+  const cascade = await cascadeScheduleChangeToRewards({
+    scheduleId,
+    venueId,
+    survivingWeekdays: [],
+    survivingRecurrence: null,
+  });
+
   if (venueId) await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId });
 
-  return { deleted: Array.isArray(data) && data.length > 0 };
+  return { deleted: Array.isArray(data) && data.length > 0, rewardCascade: cascade };
 }
 
 export async function forceAdvanceLiveShowdownToNextQuestion(scheduleIdRaw: string): Promise<{

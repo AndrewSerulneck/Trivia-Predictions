@@ -2,11 +2,16 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notifications";
+import {
+  normalizeGameWinnerSlots,
+  serializeGameWinnerSlots,
+} from "@/lib/rewardGameSlots";
 import type {
   ChallengeCampaign,
   ChallengeCampaignProgress,
   ChallengeCampaignWin,
   ChallengeGameType,
+  ChallengeGameWinnerSlot,
   CampaignRecurringType,
   ChallengeScheduleType,
   ChallengeImageFitMode,
@@ -56,6 +61,8 @@ type ChallengeCampaignRow = {
   // Rewards Phase 2: quota + richer prize model (nullable on legacy rows).
   win_condition: string | null;
   winner_quota: number | null;
+  // Game-winner slot pinning; null = award at every game (see lib/rewardGameSlots.ts).
+  game_winner_slots: unknown;
   reward_definition_id: string | null;
   prize_kind: string | null;
   prize_menu_item: string | null;
@@ -67,7 +74,7 @@ type ChallengeCampaignRow = {
 // Single source of truth for the campaign SELECT list (was duplicated across the
 // list + create-insert queries). Includes created_by_owner_id (Phase 9a).
 const CAMPAIGN_SELECT_COLUMNS =
-  "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active, created_by_owner_id, win_condition, winner_quota, reward_definition_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value";
+  "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active, created_by_owner_id, win_condition, winner_quota, game_winner_slots, reward_definition_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value";
 
 type ChallengeCampaignProgressRow = {
   id: string;
@@ -79,13 +86,30 @@ type ChallengeCampaignProgressRow = {
 };
 
 type ChallengeCampaignRedemptionRow = {
-  challenge_id: string;
+  /**
+   * Null once the reward this coupon came from has been deleted — the row is
+   * detached history, not a broken reference. See
+   * supabase/migrations/20260726120000_rewards_detachable_redemptions.sql.
+   */
+  challenge_id: string | null;
   winner_user_id: string;
   venue_id: string;
   claimed_at: string;
   prize_expires_at: string | null;
   prize_redeemed_at: string | null;
   cycle_start: string;
+};
+
+/** The award-time snapshot carried on a redemption row (see redemptionPrizeSnapshot). */
+type ChallengeCampaignRedemptionSnapshotRow = {
+  reward_name: string | null;
+  prize_type: string | null;
+  prize_gift_certificate_amount: number | null;
+  prize_kind: string | null;
+  prize_menu_item: string | null;
+  prize_menu_item_name: string | null;
+  prize_discount_kind: string | null;
+  prize_discount_value: number | null;
 };
 
 type ChallengeLeaderboardProgressRow = {
@@ -154,6 +178,44 @@ export function campaignHasPrize(
 }
 
 const PRIZE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * The reward's name/prize, snapshotted onto the coupon row at award time.
+ *
+ * A redeemed coupon can outlive its reward: `challenge_id` is nullable with
+ * `on delete set null` (supabase/migrations/20260726120000_…sql) so a partner
+ * can delete a reward without destroying the record of prizes players already
+ * redeemed. Without this snapshot a detached row loses its identity — the wallet
+ * fell back to the literal string "Challenge" with no prize at all.
+ *
+ * Written at award time, never reconstructed at delete time: by then the
+ * campaign may already be gone, and a reward edited between the win and the
+ * delete would misreport what the player was actually promised.
+ */
+export function redemptionPrizeSnapshot(
+  campaign: Pick<
+    ChallengeCampaign,
+    | "name"
+    | "prizeType"
+    | "prizeGiftCertificateAmount"
+    | "prizeKind"
+    | "prizeMenuItem"
+    | "prizeMenuItemName"
+    | "prizeDiscountKind"
+    | "prizeDiscountValue"
+  >,
+): Record<string, unknown> {
+  return {
+    reward_name: campaign.name ?? null,
+    prize_type: campaign.prizeType ?? null,
+    prize_gift_certificate_amount: campaign.prizeGiftCertificateAmount ?? null,
+    prize_kind: campaign.prizeKind ?? null,
+    prize_menu_item: campaign.prizeMenuItem ?? null,
+    prize_menu_item_name: campaign.prizeMenuItemName ?? null,
+    prize_discount_kind: campaign.prizeDiscountKind ?? null,
+    prize_discount_value: campaign.prizeDiscountValue ?? null,
+  };
+}
 
 /**
  * Resolve the new prize-model fields for a campaign row. New-model rows carry
@@ -387,6 +449,7 @@ function mapCampaignRow(
     prizeGiftCertificateAmount: row.prize_gift_certificate_amount ?? null,
     winCondition: normalizeWinCondition(row.win_condition),
     winnerQuota: normalizeWinnerQuota(row.winner_quota),
+    gameWinnerSlots: normalizeGameWinnerSlots(row.game_winner_slots),
     rewardDefinitionId: row.reward_definition_id?.trim() || null,
     ...resolveRewardPrize(row),
     isActive: Boolean(row.is_active),
@@ -451,6 +514,103 @@ function getWeekdayKey(date: Date, timezone: string): string {
   return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][dow] ?? "sun";
 }
 
+/** The local calendar date an instant falls on. `month` is 1-based. */
+function toLocalCalendar(date: Date, timezone: string): { year: number; month: number; day: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "1";
+  return {
+    year: parseInt(get("year"), 10),
+    month: parseInt(get("month"), 10),
+    day: parseInt(get("day"), 10),
+  };
+}
+
+function parseHhMm(value: string | null | undefined, fallback: string): [number, number] {
+  const [h, m] = String(value ?? "").trim().split(":").map(Number);
+  if (Number.isFinite(h) && Number.isFinite(m)) return [h, m];
+  const [fh, fm] = fallback.split(":").map(Number);
+  return [fh, fm];
+}
+
+// ── Calendar-anchored recurrence (daily / monthly / yearly) ─────────────────
+// "weekly" is anchored on the campaign's own activeDays[0] (see computeCycleStart)
+// because a weekly reward exists to track the night its game runs. The other three
+// are anchored to the CALENDAR instead — a partner who promises "2 rewards every
+// month" means the month on the wall, not "every 30 days from whenever I clicked
+// create". Boundaries are local wall-clock at the campaign's startTime (00:00 for
+// wizard-created rewards, which never set one), so DST days are still exactly one
+// calendar day long.
+type CalendarRecurrence = "daily" | "monthly" | "yearly";
+
+function calendarRecurrenceOf(campaign: ChallengeCampaign): CalendarRecurrence | null {
+  const type = campaign.recurringType;
+  return type === "daily" || type === "monthly" || type === "yearly" ? type : null;
+}
+
+/** The local-calendar boundary of the `offset`-th period relative to the one containing `from`. */
+function calendarBoundary(
+  from: { year: number; month: number; day: number },
+  period: CalendarRecurrence,
+  offset: number,
+  startH: number,
+  startM: number,
+  timezone: string,
+): Date {
+  // Date.UTC normalizes out-of-range day/month values (day 0 → last day of the
+  // previous month, month 12 → January of the next year), so stepping by ±1
+  // period never needs its own overflow arithmetic.
+  if (period === "daily") {
+    return localDateTimeToUtc(from.year, from.month - 1, from.day + offset, startH, startM, timezone);
+  }
+  if (period === "monthly") {
+    return localDateTimeToUtc(from.year, from.month - 1 + offset, 1, startH, startM, timezone);
+  }
+  return localDateTimeToUtc(from.year + offset, 0, 1, startH, startM, timezone);
+}
+
+function computeCalendarCycleStart(
+  campaign: ChallengeCampaign,
+  now: Date,
+  timezone: string,
+  period: CalendarRecurrence,
+): Date {
+  const [startH, startM] = parseHhMm(campaign.startTime, "00:00");
+  const local = toLocalCalendar(now, timezone);
+  const current = calendarBoundary(local, period, 0, startH, startM, timezone);
+  // A campaign with a startTime later than the current wall clock hasn't reached
+  // this period's boundary yet — it's still inside the previous one.
+  if (current.getTime() > now.getTime()) {
+    return calendarBoundary(local, period, -1, startH, startM, timezone);
+  }
+  return current;
+}
+
+/**
+ * The instant the cycle AFTER the one starting at `cycleStart` begins. For
+ * calendar recurrences this is the true next boundary (28/29/30/31-day months and
+ * leap years included); weekly and one-off keep the flat 7-day step they've always
+ * used.
+ */
+function computeNextCycleStart(campaign: ChallengeCampaign, cycleStart: Date, timezone: string): Date {
+  const period = calendarRecurrenceOf(campaign);
+  if (!period) return new Date(cycleStart.getTime() + 7 * 86400000);
+  const [startH, startM] = parseHhMm(campaign.startTime, "00:00");
+  return calendarBoundary(toLocalCalendar(cycleStart, timezone), period, 1, startH, startM, timezone);
+}
+
+/** The instant the cycle BEFORE the one starting at `cycleStart` begins. */
+function computePreviousCycleStart(campaign: ChallengeCampaign, cycleStart: Date, timezone: string): Date {
+  const period = calendarRecurrenceOf(campaign);
+  if (!period) return new Date(cycleStart.getTime() - 7 * 86400000);
+  const [startH, startM] = parseHhMm(campaign.startTime, "00:00");
+  return calendarBoundary(toLocalCalendar(cycleStart, timezone), period, -1, startH, startM, timezone);
+}
+
 // Convert a local wall-clock date/time to its UTC equivalent using a probe+offset approach.
 // Accurate for all but the ambiguous DST hour (acceptable for cycle boundary math).
 function localDateTimeToUtc(year: number, month: number, day: number, hour: number, minute: number, timezone: string): Date {
@@ -463,9 +623,13 @@ function localDateTimeToUtc(year: number, month: number, day: number, hour: numb
 }
 
 // Return the canonical UTC start timestamp of the recurrence cycle that `now` falls in.
-// For recurring challenges this is the most recent activeDays[0] at startTime in local time.
+// For weekly challenges this is the most recent activeDays[0] at startTime in local time;
+// for daily/monthly/yearly it is the current local calendar day/month/year boundary.
 // For one-time challenges it is always startDate + startTime.
-function computeCycleStart(campaign: ChallengeCampaign, now: Date, timezone: string): Date {
+// Exported for tests/lib.challenge-cycle-periods.test.ts — cycle boundaries are the
+// hinge every reward's quota reset turns on, so they are asserted directly rather
+// than inferred through a fully-mocked snapshot read.
+export function computeCycleStart(campaign: ChallengeCampaign, now: Date, timezone: string): Date {
   const isRecurring = campaign.recurringType && campaign.recurringType !== "none";
   if (!isRecurring) {
     if (campaign.startDate) {
@@ -475,6 +639,9 @@ function computeCycleStart(campaign: ChallengeCampaign, now: Date, timezone: str
     }
     return new Date(0);
   }
+
+  const calendarPeriod = calendarRecurrenceOf(campaign);
+  if (calendarPeriod) return computeCalendarCycleStart(campaign, now, timezone, calendarPeriod);
 
   const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const startDayKey = campaign.activeDays[0];
@@ -503,7 +670,8 @@ function computeCycleStart(campaign: ChallengeCampaign, now: Date, timezone: str
 }
 
 // Returns the UTC timestamp when the cycle that started at cycleStart ends.
-function computeCycleEnd(campaign: ChallengeCampaign, cycleStart: Date, timezone: string): Date {
+// Exported alongside computeCycleStart for the cycle-boundary tests.
+export function computeCycleEnd(campaign: ChallengeCampaign, cycleStart: Date, timezone: string): Date {
   const isRecurring = campaign.recurringType && campaign.recurringType !== "none";
   if (!isRecurring) {
     if (campaign.endDate) {
@@ -513,6 +681,12 @@ function computeCycleEnd(campaign: ChallengeCampaign, cycleStart: Date, timezone
     }
     return new Date(8640000000000000);
   }
+
+  // Calendar recurrences own the whole period: the cycle runs right up to the next
+  // calendar boundary, so a monthly reward's quota resets on the 1st rather than
+  // after the campaign's daily time window closes.
+  const calendarPeriod = calendarRecurrenceOf(campaign);
+  if (calendarPeriod) return computeNextCycleStart(campaign, cycleStart, timezone);
 
   const [startH, startM] = (campaign.startTime ?? "00:00").split(":").map(Number);
   const [endH, endM] = (campaign.endTime ?? "23:59").split(":").map(Number);
@@ -821,10 +995,7 @@ async function getLeaderboardSnapshotForCampaign(params: {
   if (isRecurring) {
     const cycleEnd = computeCycleEnd(params.campaign, cycleStart, venueTimezone);
     if (effectiveNow.getTime() > cycleEnd.getTime()) {
-      const periodMs = params.campaign.recurringType === "daily" ? 86400000
-        : params.campaign.recurringType === "monthly" ? 30 * 86400000
-        : 7 * 86400000;
-      const nextCycleStart = new Date(cycleStart.getTime() + periodMs);
+      const nextCycleStart = computeNextCycleStart(params.campaign, cycleStart, venueTimezone);
       const prevRpc = await getLeaderboardSnapshotViaRpc({
         challengeId: params.campaign.id,
         venueId: params.venueId,
@@ -890,7 +1061,14 @@ async function finalizeClosedLeaderboardCampaigns(
         await supabaseAdmin!
           .from("challenge_campaign_redemptions")
           .upsert(
-            { challenge_id: campaign.id, winner_user_id: winner.userId, venue_id: winner.venueId, cycle_start: new Date(0).toISOString(), prize_expires_at: prizeExpiresAt },
+            {
+              challenge_id: campaign.id,
+              winner_user_id: winner.userId,
+              venue_id: winner.venueId,
+              cycle_start: new Date(0).toISOString(),
+              prize_expires_at: prizeExpiresAt,
+              ...redemptionPrizeSnapshot(campaign),
+            },
             { onConflict: "challenge_id,winner_user_id,cycle_start", ignoreDuplicates: true }
           );
         await createNotification({
@@ -920,8 +1098,6 @@ async function finalizeClosedRecurringCycles(campaigns: ChallengeCampaign[], now
   );
   if (candidates.length === 0) return;
 
-  const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
   for (const campaign of candidates) {
     const venueIds = campaign.venueIds ?? [];
     if (venueIds.length === 0) continue;
@@ -937,8 +1113,9 @@ async function finalizeClosedRecurringCycles(campaigns: ChallengeCampaign[], now
       const cycleEnd = computeCycleEnd(campaign, probe, timezone);
 
       if (now.getTime() <= cycleEnd.getTime()) {
-        // Cycle still open — step back one week
-        probe = new Date(probe.getTime() - ONE_WEEK_MS);
+        // Cycle still open — step back one period (a calendar day/month/year for
+        // calendar recurrences, one week otherwise).
+        probe = computePreviousCycleStart(campaign, probe, timezone);
         continue;
       }
 
@@ -985,6 +1162,7 @@ async function finalizeClosedRecurringCycles(campaigns: ChallengeCampaign[], now
                 venue_id: winner.venueId,
                 cycle_start: cycleStartIso,
                 prize_expires_at: prizeExpiresAt,
+                ...redemptionPrizeSnapshot(campaign),
               },
               { onConflict: "challenge_id,winner_user_id,cycle_start", ignoreDuplicates: true }
             );
@@ -997,7 +1175,7 @@ async function finalizeClosedRecurringCycles(campaigns: ChallengeCampaign[], now
         }
       }
 
-      probe = new Date(probe.getTime() - ONE_WEEK_MS);
+      probe = computePreviousCycleStart(campaign, probe, timezone);
     }
   }
 }
@@ -1152,6 +1330,13 @@ export async function createChallengeCampaign(input: {
   createdByOwnerId?: string | null;
   /** Rewards: "game_winner" resolves via the resolver cron, not points accrual. */
   winCondition?: ChallengeWinCondition;
+  /**
+   * Game-winner rewards: the scheduled games this reward is pinned to. Omit (or
+   * null) to keep the legacy "award at every game" behavior. Callers must have
+   * validated the selection against the venue's real schedule first —
+   * validateGameWinnerSlots in lib/rewardGameSlots.ts is the gate.
+   */
+  gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
   const name = String(input.name ?? "").trim();
@@ -1201,6 +1386,7 @@ export async function createChallengeCampaign(input: {
     prize_gift_certificate_amount: giftCardAmount,
     win_condition: normalizeWinCondition(input.winCondition),
     winner_quota: normalizeWinnerQuota(input.winnerQuota),
+    game_winner_slots: serializeGameWinnerSlots(input.gameWinnerSlots),
     reward_definition_id: String(input.rewardDefinitionId ?? "").trim() || null,
     prize_kind: prizeKind,
     prize_menu_item: prizeKind === "menu_item" ? normalizeMenuItem(input.prizeMenuItem) : null,
@@ -1264,6 +1450,12 @@ export async function updateChallengeCampaign(input: {
   prizeMenuItemName?: string | null;
   prizeDiscountKind?: RewardDiscountKind | null;
   prizeDiscountValue?: number | null;
+  /**
+   * Game-winner slot pinning. Pass the surviving slots when a schedule change
+   * shrinks a reward; pass null to fall back to "award at every game". Absent
+   * leaves the column untouched.
+   */
+  gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
   isActive?: boolean;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
@@ -1319,6 +1511,9 @@ export async function updateChallengeCampaign(input: {
   if (input.winnerQuota !== undefined && Number.isFinite(input.winnerQuota)) {
     update.winner_quota = normalizeWinnerQuota(input.winnerQuota);
   }
+  if (input.gameWinnerSlots !== undefined) {
+    update.game_winner_slots = serializeGameWinnerSlots(input.gameWinnerSlots);
+  }
   if (input.rewardDefinitionId !== undefined) {
     update.reward_definition_id = String(input.rewardDefinitionId ?? "").trim() || null;
   }
@@ -1363,12 +1558,118 @@ export async function updateChallengeCampaign(input: {
   return mapCampaignRow(data, winnerUsername);
 }
 
-export async function deleteChallengeCampaign(id: string): Promise<void> {
+/** What a reward's redemption history looks like before deciding how to remove it. */
+export type ChallengeCampaignRedemptionCounts = {
+  /** Coupons ever awarded from this reward. */
+  awarded: number;
+  /** Of those, still sitting unredeemed in a player's wallet. */
+  unredeemed: number;
+  /** Of those, already walked up and redeemed at the venue. */
+  redeemed: number;
+};
+
+/**
+ * How many prizes a reward has paid out, so the partner can be told the real
+ * consequence BEFORE choosing archive vs. delete. Read separately from the
+ * delete itself because the confirm dialog needs it while the partner is still
+ * deciding.
+ */
+export async function getChallengeCampaignRedemptionCounts(
+  id: string,
+): Promise<ChallengeCampaignRedemptionCounts> {
   assertConfigured();
   const challengeId = String(id ?? "").trim();
   if (!challengeId) throw new Error("Challenge id is required.");
+
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaign_redemptions")
+    .select("prize_redeemed_at")
+    .eq("challenge_id", challengeId)
+    .returns<Array<{ prize_redeemed_at: string | null }>>();
+  if (error) throw new Error(error.message ?? "Failed to check redemption history.");
+
+  const rows = data ?? [];
+  const redeemed = rows.filter((row) => Boolean(row.prize_redeemed_at)).length;
+  return { awarded: rows.length, unredeemed: rows.length - redeemed, redeemed };
+}
+
+export type DeleteChallengeCampaignResult = ChallengeCampaignRedemptionCounts & {
+  /** What actually happened — never inferred by the caller. */
+  outcome: "archived" | "deleted";
+  /** Redeemed coupons kept as detached history by a hard delete. */
+  redeemedKept: number;
+};
+
+/**
+ * Remove a reward, in one of two explicitly chosen ways.
+ *
+ *  - `mode: "archive"` — `is_active = false`. The reward stops running and every
+ *    coupon it ever awarded keeps working. The safe default.
+ *  - `mode: "delete"`  — a real DELETE. UNREDEEMED coupons are voided along with
+ *    it (that is what the partner is choosing), while ALREADY-REDEEMED coupons
+ *    survive as detached history: `challenge_id` is nullable with
+ *    `on delete set null` and each row carries an award-time snapshot of the
+ *    reward's name/prize (supabase/migrations/20260726120000_…sql), so the record
+ *    of what the venue handed out is not destroyed. `challenge_cycle_winners`
+ *    still cascades — the multi-winner quota ledger is meaningless without the
+ *    campaign it guards.
+ *
+ * This function no longer decides FOR the partner. It used to silently downgrade
+ * a delete to a deactivate whenever any redemption existed while returning
+ * `void`, so the API answered `ok: true` and the reward was still sitting in the
+ * list after a "this cannot be undone" confirm. The mode is now the caller's, and
+ * the returned outcome always states what really happened.
+ */
+export async function deleteChallengeCampaign(
+  id: string,
+  options: { mode: "archive" | "delete" } = { mode: "archive" },
+): Promise<DeleteChallengeCampaignResult> {
+  assertConfigured();
+  const challengeId = String(id ?? "").trim();
+  if (!challengeId) throw new Error("Challenge id is required.");
+
+  const counts = await getChallengeCampaignRedemptionCounts(challengeId);
+
+  if (options.mode === "archive") {
+    const { error } = await supabaseAdmin!
+      .from("challenge_campaigns")
+      .update({ is_active: false })
+      .eq("id", challengeId);
+    if (error) throw new Error(error.message ?? "Failed to deactivate challenge campaign.");
+    return { ...counts, outcome: "archived", redeemedKept: counts.redeemed };
+  }
+
+  // Capture the unredeemed row ids BEFORE deleting the campaign: once the
+  // campaign is gone, `on delete set null` detaches these rows and
+  // `.eq("challenge_id", challengeId)` can no longer find them to void.
+  const { data: unredeemedRows, error: unredeemedError } = await supabaseAdmin!
+    .from("challenge_campaign_redemptions")
+    .select("id")
+    .eq("challenge_id", challengeId)
+    .is("prize_redeemed_at", null)
+    .returns<Array<{ id: string }>>();
+  if (unredeemedError) throw new Error(unredeemedError.message ?? "Failed to check unredeemed prizes.");
+  const unredeemedIds = (unredeemedRows ?? []).map((row) => row.id);
+
+  // Delete the campaign FIRST. If this succeeds but the cleanup below fails, the
+  // worst case is a handful of leftover (harmless, detached) redemption rows —
+  // never an active reward that keeps minting coupons after a failed delete.
   const { error } = await supabaseAdmin!.from("challenge_campaigns").delete().eq("id", challengeId);
   if (error) throw new Error(error.message ?? "Failed to delete challenge campaign.");
+
+  // Void the unredeemed coupons explicitly rather than leaning on the cascade:
+  // the FK is `on delete set null` now, so without this they would survive as
+  // detached rows and keep showing up in players' wallets as claimable prizes
+  // for a reward that no longer exists.
+  if (unredeemedIds.length > 0) {
+    const { error: voidError } = await supabaseAdmin!
+      .from("challenge_campaign_redemptions")
+      .delete()
+      .in("id", unredeemedIds);
+    if (voidError) throw new Error(voidError.message ?? "Failed to void unredeemed prizes.");
+  }
+
+  return { ...counts, outcome: "deleted", redeemedKept: counts.redeemed };
 }
 
 /**
@@ -1792,6 +2093,14 @@ export async function applyChallengeCampaignPoints(params: {
 // computable cycle anchor and cost one small bounded query each. That branch is
 // skipped entirely for venues with no such reward, so the two-query shape above
 // still describes the common path.
+/**
+ * Row ceiling for one game-winner campaign's current-cycle ledger read. A cycle
+ * holds at most one row per game per tied co-winner (GAME_WINNER_TIE_QUOTA_CAP
+ * in lib/liveTriviaWinnerRewards.ts), so this sits far above the widest window a
+ * reward can be created for while still bounding an admin-edited outlier.
+ */
+const GAME_WINNER_CYCLE_ROW_CAP = 200;
+
 async function resolveCurrentCycleWinnersForSnapshot(params: {
   campaigns: ChallengeCampaign[];
   venueTimezone: string;
@@ -1837,7 +2146,7 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
   // The .in("cycle_start", …) matches by instant at the DB (timestamptz parses
   // each ISO string), so it never pulls prior cycles regardless of how the DB
   // renders the stored value.
-  let rows: CycleWinnerRow[] = [];
+  const rows: CycleWinnerRow[] = [];
   if (challengeIds.length > 0) {
     const { data, error } = await supabaseAdmin!
       .from("challenge_cycle_winners")
@@ -1846,51 +2155,102 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
       .in("cycle_start", targetIsos)
       .returns<CycleWinnerRow[]>();
     if (error) throw new Error(error.message ?? "Failed to load cycle winners.");
-    rows = data ?? [];
+    rows.push(...(data ?? []));
   }
 
-  // Game-winner campaigns: one small bounded read each, resolving "current cycle"
-  // as the most recent game that produced a winner. This list is venue-scoped and
-  // in practice 0–2 entries, and the loop is skipped entirely when a venue has
+  // Game-winner campaigns: one small bounded read each. This list is venue-scoped
+  // and in practice 0–2 entries, and the loop is skipped entirely when a venue has
   // none — so the common path (and the venue-home hot path) is unchanged.
+  //
+  //  - RECURRING: read EVERY occurrence inside the campaign's current cycle
+  //    window. winner_quota is a per-PERIOD promise ("2 winner rewards every
+  //    week" at a Tue+Thu venue), so resolving only the newest game's rows left
+  //    quotaRemaining stuck at 1 and the "All Claimed" state unreachable no
+  //    matter how many of the week's games had been decided.
+  //  - ONE-OFF: there is no window to aggregate — computeCycleStart returns the
+  //    epoch sentinel, which is unrelated to the game's own instant — so resolve
+  //    "current cycle" as the most recent game that produced a winner, as before.
+  const gameWinnerResolved: Array<{
+    campaignId: string;
+    cycleStartIso: string;
+    rows: CycleWinnerRow[];
+  }> = [];
   if (gameWinnerCampaigns.length > 0) {
     const gameWinnerRowSets = await Promise.all(
       gameWinnerCampaigns.map(async (campaign) => {
-        const { data, error } = await supabaseAdmin!
+        const isRecurring = Boolean(campaign.recurringType && campaign.recurringType !== "none");
+        const computedCycleStart = isRecurring ? computeCycleStart(campaign, now, venueTimezone) : null;
+        // computeCycleStart falls back to the epoch sentinel for a "weekly" campaign
+        // missing activeDays[0] (createReward's own defense-in-depth check refuses
+        // this at creation time, but an admin-edited row could still hit it) — the
+        // same sentinel a genuine one-off uses. Treat it as "no computable window"
+        // rather than querying [epoch, epoch+7d), which would just read as empty.
+        const cycleStart =
+          computedCycleStart !== null && computedCycleStart.getTime() !== 0 ? computedCycleStart : null;
+        const base = supabaseAdmin!
           .from("challenge_cycle_winners")
           .select(CYCLE_WINNER_COLUMNS)
-          .eq("challenge_id", campaign.id)
+          .eq("challenge_id", campaign.id);
+        // computeNextCycleStart, not computeCycleEnd: for a weekly campaign
+        // computeCycleEnd returns the end of that day's time window, whereas the
+        // quota spans the whole week up to the next cycle boundary.
+        const scoped =
+          cycleStart !== null
+            ? base
+                .gte("cycle_start", cycleStart.toISOString())
+                .lt(
+                  "cycle_start",
+                  computeNextCycleStart(campaign, cycleStart, venueTimezone).toISOString()
+                )
+            : base;
+        const { data, error } = await scoped
           .order("cycle_start", { ascending: false })
-          // A single cycle holds at most GAME_WINNER_TIE_QUOTA_CAP winners, so the
-          // newest rows always contain the whole latest cycle well inside this cap.
-          .limit(50)
+          // A cycle holds at most one row per game per tied co-winner
+          // (GAME_WINNER_TIE_QUOTA_CAP), so this clears the widest window a
+          // reward can actually be created for — a weekly one at a daily venue,
+          // 7 games × 5 — many times over.
+          .limit(GAME_WINNER_CYCLE_ROW_CAP)
           .returns<CycleWinnerRow[]>();
         if (error) throw new Error(error.message ?? "Failed to load game-winner cycle winners.");
-        return { campaign, rows: data ?? [] };
+        return { campaign, cycleStart, rows: data ?? [] };
       })
     );
 
-    for (const { campaign, rows: campaignRows } of gameWinnerRowSets) {
+    for (const { campaign, cycleStart, rows: campaignRows } of gameWinnerRowSets) {
+      if (cycleStart !== null) {
+        // Already scoped to the current cycle by the query — every row counts
+        // toward this period's quota, whichever game it came from.
+        gameWinnerResolved.push({
+          campaignId: campaign.id,
+          cycleStartIso: cycleStart.toISOString(),
+          rows: campaignRows,
+        });
+        continue;
+      }
       if (campaignRows.length === 0) {
         // Never resolved yet — fall back to the epoch sentinel so quotaRemaining
         // reads as "full" and viewerWon as false, exactly like a fresh campaign.
-        result.set(campaign.id, { cycleStartIso: new Date(0).toISOString(), winners: [] });
+        gameWinnerResolved.push({
+          campaignId: campaign.id,
+          cycleStartIso: new Date(0).toISOString(),
+          rows: [],
+        });
         continue;
       }
       // Compare by instant, not string — same Postgres "+00:00" vs JS "...Z"
       // reason noted throughout this file.
       const latestMs = Math.max(...campaignRows.map((r) => new Date(r.cycle_start).getTime()));
-      const latestRows = campaignRows.filter((r) => new Date(r.cycle_start).getTime() === latestMs);
-      targetMsById.set(campaign.id, latestMs);
-      result.set(campaign.id, {
+      gameWinnerResolved.push({
+        campaignId: campaign.id,
         cycleStartIso: new Date(latestMs).toISOString(),
-        winners: [],
+        rows: campaignRows.filter((r) => new Date(r.cycle_start).getTime() === latestMs),
       });
-      rows = rows.concat(latestRows);
     }
   }
 
-  const userIds = [...new Set(rows.map((r) => r.winner_user_id))];
+  // One username read across BOTH paths.
+  const allRows = [...rows, ...gameWinnerResolved.flatMap((entry) => entry.rows)];
+  const userIds = [...new Set(allRows.map((r) => r.winner_user_id))];
   let usernameById = new Map<string, string>();
   if (userIds.length > 0) {
     const { data: users } = await supabaseAdmin!
@@ -1901,6 +2261,19 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
     usernameById = new Map((users ?? []).map((u) => [u.id, u.username]));
   }
 
+  const toWinnerRecord = (r: CycleWinnerRow): ChallengeCycleWinnerRecord => ({
+    id: r.id,
+    challengeId: r.challenge_id,
+    cycleStart: r.cycle_start,
+    winnerUserId: r.winner_user_id,
+    winnerUsername: usernameById.get(r.winner_user_id) ?? null,
+    venueId: r.venue_id,
+    pointsEarned: r.points_earned,
+    finalizedAt: r.finalized_at,
+    prizeType: r.prize_type,
+    prizeRedeemedAt: null, // not consumed by the snapshot (see fn header)
+  });
+
   // Bucket each row to its OWN campaign's current cycle. A one-time reward and a
   // recurring reward can share the epoch/other cycle_start value, so match on the
   // row's own challenge_id target — and compare by instant, not string equality,
@@ -1909,17 +2282,14 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
     const targetMs = targetMsById.get(r.challenge_id);
     if (targetMs === undefined) continue;
     if (new Date(r.cycle_start).getTime() !== targetMs) continue;
-    result.get(r.challenge_id)!.winners.push({
-      id: r.id,
-      challengeId: r.challenge_id,
-      cycleStart: r.cycle_start,
-      winnerUserId: r.winner_user_id,
-      winnerUsername: usernameById.get(r.winner_user_id) ?? null,
-      venueId: r.venue_id,
-      pointsEarned: r.points_earned,
-      finalizedAt: r.finalized_at,
-      prizeType: r.prize_type,
-      prizeRedeemedAt: null, // not consumed by the snapshot (see fn header)
+    result.get(r.challenge_id)!.winners.push(toWinnerRecord(r));
+  }
+
+  // Game-winner campaigns were scoped by their own query, so no further matching.
+  for (const entry of gameWinnerResolved) {
+    result.set(entry.campaignId, {
+      cycleStartIso: entry.cycleStartIso,
+      winners: entry.rows.map(toWinnerRecord),
     });
   }
 
@@ -1983,9 +2353,15 @@ export async function getChallengeCampaignSnapshotForUser(params: {
   const baseCampaigns = campaigns.map((campaign) => {
     const cycleState = cycleStateById.get(campaign.id);
     const winners = cycleState?.winners ?? [];
-    const viewerWon = winners.some((winner) => winner.winnerUserId === userId);
-    const prizeClaimedAt = cycleState
-      ? claimedAtByKey.get(`${campaign.id}:${new Date(cycleState.cycleStartIso).getTime()}`) ?? null
+    const viewerWin = winners.find((winner) => winner.winnerUserId === userId) ?? null;
+    // Key the coupon lookup on the viewer's OWN winning row, not the campaign's
+    // cycle anchor: a game-winner reward's ledger row — and the redemption row
+    // the same award_cycle_winner transaction mints — is keyed on the Live
+    // Trivia occurrence's instant, which for a recurring reward is one of
+    // SEVERAL instants inside the current cycle. For every other reward the two
+    // are the same value, so this is a strict generalization.
+    const prizeClaimedAt = viewerWin
+      ? claimedAtByKey.get(`${campaign.id}:${new Date(viewerWin.cycleStart).getTime()}`) ?? null
       : null;
     return {
       ...campaign,
@@ -1993,7 +2369,7 @@ export async function getChallengeCampaignSnapshotForUser(params: {
       prizeClaimedAt,
       winnerUsernames: winners.map((winner) => winner.winnerUsername ?? "Champion"),
       quotaRemaining: Math.max(0, campaign.winnerQuota - winners.length),
-      viewerWon,
+      viewerWon: viewerWin !== null,
     };
   });
 
@@ -2042,18 +2418,27 @@ export async function listChallengeCampaignWinsForUser(params: {
   if (!userId || !venueId) return [];
 
   // Read directly from redemptions — covers both one-time and per-cycle recurring prizes.
+  // The award-time snapshot columns come along so a coupon whose reward has since
+  // been deleted (challenge_id = null) still shows what was won.
   const { data: redemptionRows, error: redemptionError } = await supabaseAdmin!
     .from("challenge_campaign_redemptions")
-    .select("challenge_id, winner_user_id, venue_id, claimed_at, prize_expires_at, prize_redeemed_at, cycle_start")
+    .select(
+      "challenge_id, winner_user_id, venue_id, claimed_at, prize_expires_at, prize_redeemed_at, cycle_start, reward_name, prize_type, prize_gift_certificate_amount, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value"
+    )
     .eq("winner_user_id", userId)
     .eq("venue_id", venueId)
     .order("cycle_start", { ascending: false })
-    .returns<ChallengeCampaignRedemptionRow[]>();
+    .returns<Array<ChallengeCampaignRedemptionRow & ChallengeCampaignRedemptionSnapshotRow>>();
 
   if (redemptionError) throw new Error(redemptionError.message ?? "Failed to load challenge wins.");
   if (!redemptionRows || redemptionRows.length === 0) return [];
 
-  const challengeIds = Array.from(new Set(redemptionRows.map((r) => r.challenge_id)));
+  // Detached rows carry no challenge_id; filtering them out keeps a `null` from
+  // reaching the `in(...)` filter, and their snapshot supplies everything the
+  // campaign lookup would have.
+  const challengeIds = Array.from(
+    new Set(redemptionRows.map((r) => r.challenge_id).filter((id): id is string => Boolean(id)))
+  );
   const { data: campaignRows } = await supabaseAdmin!
     .from("challenge_campaigns")
     .select(
@@ -2075,27 +2460,39 @@ export async function listChallengeCampaignWinsForUser(params: {
   const campaignById = new Map((campaignRows ?? []).map((c) => [c.id, c]));
 
   return redemptionRows.map((row) => {
-    const campaign = campaignById.get(row.challenge_id);
+    const campaign = row.challenge_id ? campaignById.get(row.challenge_id) : undefined;
     // Compare by instant, not string equality: Postgres/PostgREST renders
     // timestamptz as "+00:00"-offset text, which never string-equals a JS
     // Date's toISOString() ("...Z", millisecond-padded) even for the same instant.
     const cycleStart = !row.cycle_start || new Date(row.cycle_start).getTime() === 0 ? null : row.cycle_start;
-    const rewardPrize = campaign
-      ? resolveRewardPrize(campaign)
-      : { prizeKind: null, prizeMenuItem: null, prizeMenuItemName: null, prizeDiscountKind: null, prizeDiscountValue: null };
+    // The live campaign wins where it still exists (it reflects any later edit the
+    // player would see on the Rewards panel); the award-time snapshot is what
+    // keeps a coupon readable after its reward is deleted. Older rows predate the
+    // snapshot columns, so every field still falls back to null rather than
+    // assuming one of the two sources is populated.
+    const prizeSource: RewardPrizeSourceRow = campaign ?? {
+      prize_type: row.prize_type,
+      prize_kind: row.prize_kind,
+      prize_menu_item: row.prize_menu_item,
+      prize_menu_item_name: row.prize_menu_item_name,
+      prize_discount_kind: row.prize_discount_kind,
+      prize_discount_value: row.prize_discount_value,
+    };
+    const prizeType = campaign?.prize_type ?? row.prize_type;
     return {
       challengeId: row.challenge_id,
       venueId: row.venue_id,
-      challengeName: campaign?.name ?? "Challenge",
+      challengeName: campaign?.name ?? row.reward_name ?? "Challenge",
       challengeRules: campaign?.rules ?? "",
       winnerUserId: userId,
       cycleStart,
       claimedAt: row.claimed_at ?? null,
-      prizeType: VALID_PRIZE_TYPES.includes(campaign?.prize_type as PrizeType) ? (campaign?.prize_type as PrizeType) : null,
-      prizeGiftCertificateAmount: campaign?.prize_gift_certificate_amount ?? null,
+      prizeType: VALID_PRIZE_TYPES.includes(prizeType as PrizeType) ? (prizeType as PrizeType) : null,
+      prizeGiftCertificateAmount:
+        campaign?.prize_gift_certificate_amount ?? row.prize_gift_certificate_amount ?? null,
       prizeExpiresAt: row.prize_expires_at ?? null,
       prizeRedeemedAt: row.prize_redeemed_at ?? null,
-      ...rewardPrize,
+      ...resolveRewardPrize(prizeSource),
     };
   });
 }
