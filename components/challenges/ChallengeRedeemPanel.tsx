@@ -157,6 +157,7 @@ function gameTypeLabel(gameTypes: string[]): string {
   return gameTypes
     .map((g) => {
       if (g === "pickem") return "Pick 'Em";
+      if (g === "nfl-pickem") return "NFL Pick 'Em";
       if (g === "fantasy") return "Fantasy";
       if (g === "speed-trivia" || g === "trivia") return "Speed Trivia";
       if (g === "live-trivia" || g === "live_trivia") return "Live Trivia";
@@ -338,7 +339,6 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
         setClaimingId((prev) => (prev === key ? "" : prev));
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [claimingId, load, userId, venueId, venuePresence]
   );
 
@@ -404,10 +404,10 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                     // Standings are never rendered here anymore (Rewards is progress-only).
                     <p className="text-[11px] text-cyan-300/60">In progress — check back for results.</p>
                   ) : isGameWinner ? (
-                    // No points target to bar-chart — the reward goes to whoever wins the
-                    // game, resolved by the resolve-live-trivia-winners cron after the game
-                    // ends.
-                    <p className="text-[11px] text-cyan-300/60">Awarded to the winner of the Live Trivia game.</p>
+                    // No points target to bar-chart — the reward goes to whoever wins,
+                    // resolved by the winner-rewards cron once the contest ends. Which
+                    // game/contest is already named in campaign.rules, rendered below.
+                    <p className="text-[11px] text-cyan-300/60">Awarded to the winner.</p>
                   ) : (
                     <GaugeBar
                       current={campaign.progressPoints}

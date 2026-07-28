@@ -46,6 +46,18 @@ export type ChallengeCampaignCard = {
   winnerUsernames?: string[];
   quotaRemaining?: number;
   viewerWon?: boolean;
+  // ── Rewards (Phase 8) ── which pre-set definition created this, for reliably
+  // telling e.g. an NFL Pick 'Em reward apart from a regular Pick 'Em one —
+  // see inferChallengeGameType.
+  rewardDefinitionId?: string | null;
+  /**
+   * YYYY-MM-DD the reward's first NFL week begins — present ONLY while that
+   * date is still in the future (attachNFLRewardUpcomingState, lib/rewards.ts).
+   * Its presence is the "upcoming" signal: an NFL reward created before the
+   * season has live weekly cycles running immediately, so without this the
+   * panel would show "In Progress · 0 / N pts" for weeks.
+   */
+  upcomingStartDate?: string | null;
 };
 
 export const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
@@ -160,6 +172,16 @@ function SpeedTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
   );
 }
 
+function NFLPickEmGlyph({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <ellipse cx="32" cy="32" rx="22" ry="14" fill="#6b1a4e" stroke="#0f172a" strokeWidth="4" />
+      <path d="M14 32h36" stroke="#fde68a" strokeWidth="3" opacity="0.85" />
+      <path d="M24 27v10M28 25v14M36 25v14M40 27v10" stroke="#fde68a" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function LiveTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
@@ -175,14 +197,24 @@ function LiveTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
   );
 }
 
-export type ChallengeGameType = "live_trivia" | "speed-trivia" | "bingo" | "pickem" | "fantasy" | "unknown";
+export type ChallengeGameType = "live_trivia" | "speed-trivia" | "bingo" | "pickem" | "fantasy" | "nfl-pickem" | "unknown";
 
-export function inferChallengeGameType(name: string): ChallengeGameType {
+/**
+ * `rewardDefinitionId` (when present) decides this deterministically — it's
+ * how the reward was actually created, unlike a substring match on its
+ * display name. Needed because "NFL Pick 'Em Challenge" contains "pick" and
+ * would otherwise collapse onto the same icon/badge as a regular Pick 'Em
+ * challenge (see docs/nfl-pickem-reward-phase8.md item 2).
+ */
+export function inferChallengeGameType(name: string, rewardDefinitionId?: string | null): ChallengeGameType {
+  if (rewardDefinitionId === "nfl_pickem_challenge") return "nfl-pickem";
   const lower = name.toLowerCase();
   if (lower.includes("live trivia") || lower.includes("live showdown") || lower.includes("showdown")) return "live_trivia";
   if (lower.includes("speed trivia") || lower.includes("trivia")) return "speed-trivia";
   if (lower.includes("bingo")) return "bingo";
-  if (lower.includes("pick") || lower.includes("pick 'em") || lower.includes("pickem")) return "pickem";
+  if (lower.includes("nfl") || lower.includes("pick 'em") || lower.includes("pickem") || lower.includes("pick")) {
+    return lower.includes("nfl") ? "nfl-pickem" : "pickem";
+  }
   if (lower.includes("fantasy")) return "fantasy";
   return "unknown";
 }
@@ -226,6 +258,13 @@ export const CHALLENGE_ICON_STYLE: Record<
     barGradient: "linear-gradient(90deg, #7c3aed, #8b5cf6, #10b981)",
     cardAccent: "rgba(109,40,217,0.25)",
   },
+  // Navy/magenta badge matching the NFL Pick 'Em game screen's own palette.
+  "nfl-pickem": {
+    badgeBg: "linear-gradient(145deg, #1a2f72, #4a1a52, #6b1a4e)",
+    borderColor: "rgba(253,230,138,0.45)",
+    barGradient: "linear-gradient(90deg, #fde68a, #f59e0b)",
+    cardAccent: "rgba(253,230,138,0.2)",
+  },
   unknown: {
     badgeBg: "linear-gradient(145deg, #0f766e, #0891b2, #22d3ee)",
     borderColor: "rgba(34,211,238,0.45)",
@@ -246,6 +285,7 @@ export function ChallengeIconBadge({ gameType }: { gameType: ChallengeGameType }
       {gameType === "bingo" ? <BingoGlyph className="h-8 w-8" /> : null}
       {gameType === "pickem" ? <PickEmGlyph className="h-8 w-8" /> : null}
       {gameType === "fantasy" ? <FantasyGlyph className="h-8 w-8" /> : null}
+      {gameType === "nfl-pickem" ? <NFLPickEmGlyph className="h-8 w-8" /> : null}
       {gameType === "unknown" ? <TrophyGlyph className="h-8 w-8" /> : null}
     </div>
   );

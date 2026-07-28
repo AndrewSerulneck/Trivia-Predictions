@@ -30,12 +30,8 @@ export const metadata: Metadata = {
   },
   description:
     "Browser-based venue gaming for bars and restaurants with live trivia, speed trivia, sports bingo, pick'em, fantasy sports, and venue-scoped challenges.",
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
-    url: "/",
     siteName: "Hightop Challenge",
     title: "Hightop Challenge",
     description:

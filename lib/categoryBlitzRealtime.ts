@@ -612,6 +612,9 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
 
   // ── Timer tick ─────────────────────────────────────────────────────────────
 
+  const timerRoundStartedAt = round?.startedAt ?? null;
+  const timerRoundScoredAt = round?.scoredAt ?? null;
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (endsAtRef.current === null) {
@@ -645,8 +648,12 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setLobbyCountdown(null);
       }
 
-      if ((phase === "results" || phase === "scoring" || phase === "reveal") && round?.startedAt) {
-        const nextStartAtMs = nextRoundStartAtMs(round, isCategoryBlitzTestModeEnabled(), continuousTimingRef.current);
+      if ((phase === "results" || phase === "scoring" || phase === "reveal") && timerRoundStartedAt) {
+        const nextStartAtMs = nextRoundStartAtMs(
+          { startedAt: timerRoundStartedAt, scoredAt: timerRoundScoredAt },
+          isCategoryBlitzTestModeEnabled(),
+          continuousTimingRef.current,
+        );
         setNextRoundStartsIn(Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
       } else {
         setNextRoundStartsIn(null);
@@ -654,7 +661,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
     }, TIMER_TICK_MS);
 
     return () => clearInterval(interval);
-  }, [phase, round?.startedAt]);
+  }, [phase, timerRoundStartedAt, timerRoundScoredAt]);
 
   // ── Realtime subscription ─────────────────────────────────────────────────
 

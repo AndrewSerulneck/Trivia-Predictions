@@ -7,7 +7,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
 };
-const INFO_CANONICAL_PATH = "/info";
+const INFO_CANONICAL_PATH = "/";
 
 export const metadata: Metadata = {
   title: "Venue Gaming Platform for Bars and Restaurants",
@@ -58,7 +58,7 @@ const WEB_APPLICATION_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: "Hightop Challenge",
-  url: `${SITE_URL}${INFO_CANONICAL_PATH}`,
+  url: SITE_URL,
   applicationCategory: "EntertainmentApplication",
   operatingSystem: "Any",
   browserRequirements: "Requires JavaScript and a modern mobile or desktop web browser.",

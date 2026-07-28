@@ -29,6 +29,40 @@ export function createSessionCookie(userId: string): string {
   return `${COOKIE_NAME}=${encodeURIComponent(value)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${MAX_AGE}${secure}${domainAttr}`;
 }
 
+/**
+ * Resolve the acting user for a request that also carries a client-supplied
+ * `userId` (query param or body field).
+ *
+ * A raw `userId` param is an unauthenticated claim — every `/api/*` path is
+ * public in `proxy.ts`, so anything that widens a response based on it (e.g.
+ * un-hiding a player's un-kicked-off picks) is spoofable by definition. When
+ * sessions are enforced the signed `tp_sess` cookie is the ONLY source of
+ * truth here; a mismatched or unbacked claim is rejected rather than honoured.
+ * With no `SESSION_SECRET` (local dev) there is nothing to verify against, so
+ * the claim passes through as-is — same degradation as the rest of the app.
+ */
+export function resolveRequestUserId(
+  request: Request,
+  claimedUserId: string | null | undefined
+): { userId: string | null; forbidden: boolean } {
+  const claimed = String(claimedUserId ?? "").trim();
+
+  if (!isSessionEnforced()) {
+    return { userId: claimed || null, forbidden: false };
+  }
+
+  const sessionUserId = readSession(request);
+  if (!sessionUserId) {
+    // No claim + no session is a legitimate anonymous read; a claim without a
+    // session is someone asserting an identity they can't prove.
+    return { userId: null, forbidden: claimed.length > 0 };
+  }
+  if (claimed && claimed !== sessionUserId) {
+    return { userId: null, forbidden: true };
+  }
+  return { userId: sessionUserId, forbidden: false };
+}
+
 export function readSession(request: Request): string | null {
   const s = secret();
   if (!s) return null;

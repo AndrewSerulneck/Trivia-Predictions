@@ -364,7 +364,7 @@ export default function InfoPage() {
         {/* ── NAV ── */}
         <header className="htm-nav-blur fixed top-0 left-0 right-0 z-50 border-b border-white/8 bg-slate-950/80">
           <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-4">
-            <Link href="/info" className="flex-shrink-0">
+            <Link href="/" className="flex-shrink-0">
               <Image src="/brand/htc_logo_glow.svg" alt="Hightop Challenge" width={80} height={48} priority className="h-12 w-auto" />
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">

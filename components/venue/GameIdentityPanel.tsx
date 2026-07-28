@@ -1162,7 +1162,7 @@ function CategoryBlitzIllustration({ stepIndex }: { stepIndex: number }) {
       {/* Example */}
       <div className="rounded-lg border border-pink-300/25 bg-pink-900/15 px-3 py-2.5">
         <div className="mb-2 text-center text-[0.6rem] font-bold uppercase tracking-wider text-pink-200/80">
-          Think: "What will others write?"
+          Think: &quot;What will others write?&quot;
         </div>
         <div className="flex items-center justify-center gap-2">
           <div className="flex flex-col items-center rounded-lg border border-white/15 bg-black/30 px-3 py-2">
@@ -1176,7 +1176,7 @@ function CategoryBlitzIllustration({ stepIndex }: { stepIndex: number }) {
           </div>
         </div>
         <div className="mt-2 text-center text-[0.55rem] text-white/50">
-          If 5+ players say "Alligator" → You get points!
+          If 5+ players say &quot;Alligator&quot; → You get points!
         </div>
       </div>
     </div>

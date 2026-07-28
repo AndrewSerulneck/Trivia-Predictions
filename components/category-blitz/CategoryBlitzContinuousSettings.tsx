@@ -197,7 +197,7 @@ export function CategoryBlitzContinuousSettings({ venueId }: CategoryBlitzContin
               ))}
             </select>
             <p className="text-xs text-slate-500 mt-1">
-              How often "Blend In!" (reverse) rounds appear
+              How often &quot;Blend In!&quot; (reverse) rounds appear
             </p>
           </div>
 

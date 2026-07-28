@@ -610,7 +610,7 @@ export function PrizeWalletPanel() {
             {/* Challenge prize coupons */}
             {activeChallengeWins.length > 0 && (
               <section className="space-y-3">
-                <h2 className="text-base font-semibold text-ht-fg-primary">Click "Redeem" on your rewards </h2>
+                <h2 className="text-base font-semibold text-ht-fg-primary">Click &quot;Redeem&quot; on your rewards </h2>
                 {activeChallengeWins.map((win) => (
                   // challengeId is null on a coupon whose reward was deleted, and
                   // several such rows can coexist — fall back to the fields that

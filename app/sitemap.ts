@@ -10,7 +10,7 @@ const MARKETING_PATHS: {
   priority: number;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
 }[] = [
-  { path: "/info", priority: 1.0, changeFrequency: "weekly" },
+  { path: "/", priority: 1.0, changeFrequency: "weekly" },
   { path: "/faqs", priority: 0.5, changeFrequency: "monthly" },
   { path: "/advertise", priority: 0.5, changeFrequency: "monthly" },
 ];

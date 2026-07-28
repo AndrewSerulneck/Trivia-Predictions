@@ -13,6 +13,7 @@ import {
   isSupportedRewardCadence,
   isValidRewardThreshold,
   renderRewardRequirement,
+  rewardThresholdStepMessage,
   type RewardDefinitionId,
 } from "@/lib/rewardDefinitions";
 import {
@@ -31,6 +32,18 @@ import {
   type RewardGameScheduleShape,
   type RewardGameSlot,
 } from "@/lib/rewardGameSlots";
+import {
+  NFL_WEEK_SCOPE_INVALID_MESSAGE,
+  REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
+  deriveNFLWeekScopeTerms,
+  normalizeNFLWeekScope,
+  resolveNFLRewardStartDate,
+  type NFLRewardSeasonContext,
+  type NFLRewardWeekScope,
+  type NFLWeekScopeTerms,
+} from "@/lib/nflPickEmRewardWeeks";
+import { getSeasonFirstWeekStartDate, listNFLWeeks } from "@/lib/nflPickEm";
+import { getLocalDateKey } from "@/lib/timezone";
 import type {
   CampaignRecurringType,
   ChallengeCampaign,
@@ -54,6 +67,15 @@ import type {
 // lib/liveShowdownAdmin.listAdminLiveShowdownSchedules). The venue's schedule
 // also drives which cadence options are offered and the weekday anchor a weekly
 // reward's cycle math needs.
+//
+// The NFL Pick 'Em Challenge is the second gate shape: it hangs off the NFL
+// season calendar (`nfl_pickem_weeks`), which no venue controls. It therefore
+// takes NONE of the schedule-shaped machinery above — no schedule shapes, no
+// terms sentence, no game slots. Its cadence, quota, activeDays and date bounds
+// are derived from a week SCOPE by lib/nflPickEmRewardWeeks.ts, exactly the way a
+// slot selection derives them for a Live Trivia game-winner reward. The two paths
+// meet again only at the shared prize normalization + createChallengeCampaign
+// call at the bottom of createReward.
 
 export {
   REWARD_DEFINITIONS,
@@ -64,6 +86,8 @@ export {
   type RewardDefinition,
   type RewardDefinitionId,
 } from "@/lib/rewardDefinitions";
+
+export { REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE };
 
 // Live Trivia admin schedules are read across ALL venues then filtered here (a
 // venue won't have hundreds of upcoming schedules). Mirrors lib/ownerSchedule.ts.
@@ -84,11 +108,17 @@ const VALID_MENU_ITEMS: readonly RewardMenuItem[] = [
 export const REWARD_UNKNOWN_DEFINITION_MESSAGE = "Unknown reward type.";
 export const REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE =
   "Schedule Live Trivia to create a Live Trivia reward.";
+// REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE (the NFL equivalent, mapped to 409 by
+// the routes) now lives in lib/nflPickEmRewardWeeks.ts and is re-exported above
+// — that module is client-safe, so the wizard's "not available" block can use
+// the exact same string.
 export const REWARD_UNSUPPORTED_CADENCE_MESSAGE =
   "That competition cadence isn't available for this reward.";
 export const REWARD_INVALID_THRESHOLD_MESSAGE = "Enter a valid points target.";
-export const REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE =
-  "Custom target must be a multiple of 10.";
+// A threshold that misses the definition's step is no longer one fixed string —
+// the step is per-definition (10 for Live Trivia points, 1 for NFL correct
+// picks), so the message is composed by rewardThresholdStepMessage and raised as
+// a RewardTermsError, which every route already maps to 400 by TYPE.
 export const REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE =
   "This reward can't be offered to the winner of the game.";
 export const REWARD_INVALID_QUANTITY_MESSAGE =
@@ -212,7 +242,111 @@ export type RewardCreationContext = {
    * against. Empty for a venue with no live-or-upcoming game.
    */
   gameSlots: RewardGameSlot[];
+  /**
+   * Present only for definitions whose gate is the NFL season rather than a venue
+   * schedule (today: nfl_pickem_challenge). null for every other definition, and
+   * for an NFL reward when the season has no current-or-future weeks loaded.
+   */
+  nflSeason: NFLRewardSeasonContext | null;
 };
+
+/** The reward definition whose gate is the NFL season calendar, not a venue schedule. */
+const NFL_REWARD_DEFINITION_ID = "nfl_pickem_challenge";
+
+/**
+ * The NFL calendar is published in US Eastern time and the leaderboard's week
+ * list is still built in that zone (isNFLWeekStarted), so "which week are we in"
+ * has to be asked in the same zone or a reward created late on a Wednesday night
+ * would start a week early. (The PICKING surface no longer consults a timezone —
+ * it rolls over at a fixed Tue 05:00 UTC; see nflWeekSpanMs in lib/nflPickEm.ts.)
+ */
+const NFL_SEASON_TIMEZONE = "America/New_York";
+
+/**
+ * What a reward creator needs to know about the season: which week it would start
+ * from and where the season ends.
+ *
+ * The season number matches how the rest of NFL Pick 'Em resolves it
+ * (app/api/nfl-pickem/weeks/route.ts) — the calendar year — so a reward can never
+ * be pinned to a different season than the one the game page is showing.
+ *
+ * "Current, else next" falls straight out of `weekEndDate >= today`: a week that
+ * hasn't ended yet is either the one being played or a future one, and the weeks
+ * come back ordered by week_number.
+ */
+async function resolveNFLSeasonContext(now: Date): Promise<NFLRewardSeasonContext | null> {
+  const season = now.getFullYear();
+  // includeComplete: true — a finished week still has to count toward the
+  // season's end date, and dropping them would make the LAST week of the season
+  // look like the end of the calendar the moment it finals.
+  const weeks = await listNFLWeeks(season, true);
+  if (weeks.length === 0) return null;
+
+  const today = getLocalDateKey(now, NFL_SEASON_TIMEZONE);
+  const remaining = weeks.filter((week) => week.weekEndDate >= today);
+  if (remaining.length === 0) return null;
+
+  const fromWeek = remaining[0];
+  const seasonEndDate = weeks.reduce(
+    (latest, week) => (week.weekEndDate > latest ? week.weekEndDate : latest),
+    weeks[0].weekEndDate,
+  );
+
+  return {
+    season,
+    fromWeek: fromWeek.weekNumber,
+    fromWeekStartDate: fromWeek.weekStartDate,
+    seasonEndDate,
+    weeksRemaining: remaining.length,
+  };
+}
+
+/**
+ * Attach `upcomingStartDate` to any NFL Pick 'Em reward whose first covered NFL
+ * week has not started yet, so the venue Rewards panel can say "Starts Sept 10"
+ * instead of rendering a live-looking progress bar on something unwinnable for
+ * weeks (docs/nfl-pickem-week1-early-access-plan.md, locked decisions).
+ *
+ * Set ONLY when the date is genuinely in the future — a campaign already in
+ * season, or any non-NFL reward, comes back untouched. Costs zero queries when
+ * the venue has no NFL rewards, and one cheap indexed read per distinct season
+ * otherwise (never listNFLWeeks, which writes via update_nfl_week_status).
+ */
+export async function attachNFLRewardUpcomingState<
+  T extends Pick<ChallengeCampaign, "nflWeekScope" | "startDate">,
+>(campaigns: T[], now: Date = new Date()): Promise<Array<T & { upcomingStartDate?: string }>> {
+  const nflCampaigns = campaigns.filter((campaign) => normalizeNFLWeekScope(campaign.nflWeekScope));
+  if (nflCampaigns.length === 0) return campaigns;
+
+  const seasons = new Set<number>();
+  for (const campaign of nflCampaigns) {
+    const scope = normalizeNFLWeekScope(campaign.nflWeekScope);
+    if (scope) seasons.add(scope.season);
+  }
+
+  const firstWeekBySeason = new Map<number, string | null>();
+  await Promise.all(
+    [...seasons].map(async (season) => {
+      firstWeekBySeason.set(season, await getSeasonFirstWeekStartDate(season));
+    }),
+  );
+
+  const today = getLocalDateKey(now, NFL_SEASON_TIMEZONE);
+
+  return campaigns.map((campaign) => {
+    const scope = normalizeNFLWeekScope(campaign.nflWeekScope);
+    if (!scope) return campaign;
+
+    const startDate = resolveNFLRewardStartDate(scope, {
+      campaignStartDate: campaign.startDate ?? null,
+      seasonFirstWeekStartDate: firstWeekBySeason.get(scope.season) ?? null,
+    });
+
+    // Calendar-date strings compare correctly lexicographically in YYYY-MM-DD.
+    if (!startDate || startDate <= today) return campaign;
+    return { ...campaign, upcomingStartDate: startDate };
+  });
+}
 
 /**
  * How a schedule really recurs, for reward purposes.
@@ -297,6 +431,29 @@ export async function resolveRewardCreationContext(
   const definition = getRewardDefinition(definitionId);
   if (!definition) throw new Error(REWARD_UNKNOWN_DEFINITION_MESSAGE);
 
+  // ── NFL branch ────────────────────────────────────────────────────────────
+  // Gated on the season calendar, so none of the venue-schedule fields below
+  // apply: no shapes for the terms sentence (the scope replaces it), no game
+  // slots (there is no venue-scheduled game to pin to), no schedule timezone.
+  // scheduleDays stays empty on purpose — a weekly NFL reward's activeDays come
+  // from NFL_REWARD_ACTIVE_DAYS via deriveNFLWeekScopeTerms, never from here.
+  if (definition.id === NFL_REWARD_DEFINITION_ID) {
+    const nflSeason = await resolveNFLSeasonContext(new Date());
+    return {
+      definitionId: definition.id,
+      scheduled: nflSeason !== null,
+      // The NFL season itself is the recurrence — every week is another contest.
+      hasRecurringSchedule: nflSeason !== null,
+      scheduleDays: [],
+      timezone: null,
+      // Exactly the two week-scope shapes: "weekly" and season-long ("none").
+      allowedCadences: nflSeason ? ["none", "weekly"] : [],
+      scheduleShapes: [],
+      gameSlots: [],
+      nflSeason,
+    };
+  }
+
   const schedules =
     definition.requiresScheduledGame === "live_trivia"
       ? await getVenueLiveTriviaSchedules(venueId)
@@ -340,6 +497,7 @@ export async function resolveRewardCreationContext(
       : [],
     scheduleShapes,
     gameSlots: enumerateGameSlots(toGameScheduleShapes(schedules)),
+    nflSeason: null,
   };
 }
 
@@ -439,6 +597,14 @@ export type CreateRewardParams = {
    * keeps the legacy period-based path, where the reward awards at every game.
    */
   gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
+  /**
+   * NFL Pick 'Em rewards: whether the reward runs every NFL week or once for the
+   * rest of the season. Like `gameWinnerSlots`, it REPLACES `cadence` (and, for a
+   * week winner, `winnerQuota`). Only its `kind` is honored — the season and
+   * `fromWeek` are re-derived from the server's own reading of nfl_pickem_weeks,
+   * so a client can't backdate the reward over weeks that already played.
+   */
+  nflWeekScope?: NFLRewardWeekScope | null;
   /** Stamp the creating owner (null/absent = admin-created). */
   createdByOwnerId?: string | null;
 };
@@ -464,11 +630,18 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   const definition = getRewardDefinition(params.definitionId);
   if (!definition) throw new Error(REWARD_UNKNOWN_DEFINITION_MESSAGE);
 
+  // Which "you can't create this yet" message applies — see
+  // REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE for why they must stay distinct.
+  const isNFLReward = definition.id === NFL_REWARD_DEFINITION_ID;
+  const unavailableMessage = isNFLReward
+    ? REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE
+    : REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE;
+
   const venueId = String(params.venueId ?? "").trim();
-  if (!venueId) throw new Error(REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE);
+  if (!venueId) throw new Error(unavailableMessage);
 
   const context = await resolveRewardCreationContext(venueId, definition.id);
-  if (!context.scheduled) throw new Error(REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE);
+  if (!context.scheduled) throw new Error(unavailableMessage);
 
   const winCondition: ChallengeWinCondition =
     params.winCondition === "game_winner" ? "game_winner" : "points_threshold";
@@ -484,13 +657,48 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // (docs/rewards-game-winner-picker-plan.md Phase 3). A selection is only
   // honored for game_winner; a points-target reward keeps the terms sentence.
   const slotSelection =
-    winCondition === "game_winner" && params.gameWinnerSlots !== undefined && params.gameWinnerSlots !== null
+    !isNFLReward &&
+    winCondition === "game_winner" &&
+    params.gameWinnerSlots !== undefined &&
+    params.gameWinnerSlots !== null
       ? validateGameWinnerSlots(context.gameSlots, params.gameWinnerSlots)
       : null;
   if (slotSelection && !slotSelection.ok) throw new RewardTermsError(slotSelection.message);
   const slots = slotSelection?.ok ? slotSelection.value : null;
 
-  const cadence = slots ? slots.terms.cadence : params.cadence ?? "none";
+  // ── NFL week-scoped rewards ───────────────────────────────────────────────
+  // The scope IS the terms, the same way a slot selection is above. The client
+  // picks only the SHAPE ("every week" vs "the rest of the season"); the season
+  // and the starting week are re-read from context.nflSeason, because a
+  // client-supplied fromWeek in the past would let a partner backdate a reward
+  // over already-played weeks and mint prizes for contests nobody knew were
+  // running. The dates handed to the derivation are the server's too — the whole
+  // point of deriveNFLWeekScopeTerms refusing a dateless season scope is that
+  // recurringType "none" with no startDate never closes.
+  let nflTerms: NFLWeekScopeTerms | null = null;
+  let nflWeekScope: NFLRewardWeekScope | null = null;
+  if (isNFLReward) {
+    const requested = normalizeNFLWeekScope(params.nflWeekScope);
+    if (!requested) throw new RewardTermsError(NFL_WEEK_SCOPE_INVALID_MESSAGE);
+    const season = context.nflSeason;
+    if (!season) throw new Error(REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE);
+
+    nflWeekScope =
+      requested.kind === "weekly"
+        ? { kind: "weekly", season: season.season }
+        : { kind: "season", season: season.season, fromWeek: season.fromWeek };
+
+    const derived = deriveNFLWeekScopeTerms(nflWeekScope, {
+      winCondition,
+      quantity: Math.round(Number(params.winnerQuota)),
+      startDate: season.fromWeekStartDate,
+      endDate: season.seasonEndDate,
+    });
+    if (!derived.ok) throw new RewardTermsError(derived.message);
+    nflTerms = derived.terms;
+  }
+
+  const cadence = nflTerms ? nflTerms.cadence : slots ? slots.terms.cadence : params.cadence ?? "none";
   if (!isSupportedRewardCadence(cadence)) {
     throw new Error(REWARD_UNSUPPORTED_CADENCE_MESSAGE);
   }
@@ -503,7 +711,9 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   const threshold = isGameWinner ? 1 : Math.round(Number(params.threshold));
   if (!isGameWinner) {
     if (!Number.isFinite(threshold) || threshold < 1) throw new Error(REWARD_INVALID_THRESHOLD_MESSAGE);
-    if (!isValidRewardThreshold(threshold)) throw new Error(REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE);
+    if (!isValidRewardThreshold(threshold, definition)) {
+      throw new RewardTermsError(rewardThresholdStepMessage(definition));
+    }
   }
 
   // ── The terms sentence is the contract ────────────────────────────────────
@@ -519,8 +729,18 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // A slot-pinned reward skips the sentence entirely — its selection already
   // answers "how many, how often", and the period rules it would be judged
   // against (exactGameCountForPeriod) are exactly what the picker replaces.
-  const winnerQuota = slots ? slots.terms.quota : Math.round(Number(params.winnerQuota));
-  if (!slots) {
+  //
+  // An NFL reward skips it for a stronger reason still: validateRewardTerms
+  // judges a proposal against the venue's LIVE TRIVIA schedule, and an NFL reward
+  // has none. Its quota is already range-checked inside deriveNFLWeekScopeTerms
+  // (1…REWARD_MAX_QUANTITY for a picks target, exactly 1 for a week winner —
+  // refused, never clamped).
+  const winnerQuota = nflTerms
+    ? nflTerms.quota
+    : slots
+      ? slots.terms.quota
+      : Math.round(Number(params.winnerQuota));
+  if (!slots && !nflTerms) {
     const termsError = validateRewardTerms(rewardScheduleFacts(context), {
       winCondition,
       period: periodForCadence(cadence),
@@ -538,7 +758,17 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // weekday the venue runs a game, which is what context.scheduleDays would say.
   // These become activeDays, the accrual/eligibility gate, so widening them here
   // would re-open the games the partner deliberately left out.
-  const activeDays = isRecurring ? (slots ? slots.terms.weekdays : context.scheduleDays) : [];
+  //
+  // An NFL reward's days come from the scope for BOTH cadences, including the
+  // season-long one ("none"): activeDays is also the accrual gate, and an NFL
+  // week settles Thu/Sun/Mon, so all seven days must be present either way.
+  const activeDays = nflTerms
+    ? nflTerms.activeDays
+    : isRecurring
+      ? slots
+        ? slots.terms.weekdays
+        : context.scheduleDays
+      : [];
 
   // Defense in depth: a WEEKLY reward must never expand with activeDays: [] —
   // computeCycleStart anchors the weekly cycle on activeDays[0] and silently
@@ -566,8 +796,17 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     // week; one-off rewards need no day restriction.
     activeDays,
     winnerQuota,
+    // A season-long NFL reward needs real bounds: with recurringType "none" and
+    // no startDate, computeCycleStart returns the epoch sentinel and
+    // getCampaignCloseTimestampMs returns null — the reward would never close and
+    // never award. A weekly scope leaves both null so the weekly cycle math owns
+    // the boundaries (deriveNFLWeekScopeTerms drops any dates for that kind).
+    ...(nflTerms?.startDate ? { startDate: nflTerms.startDate } : {}),
+    ...(nflTerms?.endDate ? { endDate: nflTerms.endDate } : {}),
     // null (absent selection) keeps the legacy "award at every game" behavior.
     gameWinnerSlots: slots ? slots.slots : null,
+    // Read back by Phase 7's resolver to know which weeks this reward covers.
+    nflWeekScope,
     rewardDefinitionId: definition.id,
     prizeKind: prize.prizeKind,
     prizeMenuItem: prize.prizeMenuItem,

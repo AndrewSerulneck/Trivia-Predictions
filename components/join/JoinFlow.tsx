@@ -1,5 +1,6 @@
 "use client";
 
+import { House } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -68,6 +69,7 @@ import { resolveVenueProfileServerFirst } from "@/lib/joinVenueEntry";
 import { normalizePin } from "@/lib/pin";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 import { markJoinWelcomeSeen, shouldShowJoinWelcome } from "@/lib/joinWelcome";
+import { marketingHref } from "@/lib/domainSplit";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel =
@@ -3234,10 +3236,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           </div>
           <div className="mx-auto mt-4 w-full max-w-md px-1">
             <Link
-              href="/info"
-              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl border border-cyan-300/50 bg-cyan-400/10 px-5 py-3 text-center text-2xl font-black text-cyan-100 shadow-lg shadow-cyan-950/20 transition-colors hover:bg-cyan-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+              href={marketingHref("/info")}
+              className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-400/10 px-5 py-3 text-center text-2xl font-black text-cyan-100 shadow-lg shadow-cyan-950/20 transition-colors hover:bg-cyan-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
             >
-              Click here to return to the home page.
+              <House className="h-6 w-6 shrink-0" aria-hidden="true" />
+              Home
             </Link>
           </div>
         </div>

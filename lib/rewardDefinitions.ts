@@ -15,9 +15,12 @@ import type {
   ChallengeMode,
   ChallengeWinCondition,
   OwnerScheduleGameType,
+  RewardDiscountKind,
+  RewardMenuItem,
+  RewardPrizeKind,
 } from "@/types";
 
-export type RewardDefinitionId = "live_trivia_challenge";
+export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge";
 
 export type RewardDefinition = {
   id: RewardDefinitionId;
@@ -48,6 +51,13 @@ export type RewardDefinition = {
   thresholdOptions: number[];
   /** Pre-selected threshold. */
   defaultThreshold: number;
+  /**
+   * Granularity a custom threshold must land on. Live Trivia questions are worth
+   * 10 points, so its targets step by 10; NFL Pick 'Em counts correct PICKS, so
+   * "get 25 picks right" must be expressible and its step is 1. Read only through
+   * isValidRewardThreshold / rewardThresholdStepMessage.
+   */
+  thresholdStep: number;
   /** Semantic accent key the UI maps to an `ht-game-*` token. */
   accent: string;
   /** Glyph shown on the reward card / definition tile. */
@@ -66,8 +76,27 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
     gameWinnerRequirement: "Win the Live Trivia game",
     thresholdOptions: [300, 500, 750, 1000],
     defaultThreshold: 500,
+    thresholdStep: 10,
     accent: "trivia",
     glyph: "🧠",
+  },
+  {
+    id: "nfl_pickem_challenge",
+    name: "NFL Pick 'Em Challenge",
+    gameType: "nfl-pickem",
+    challengeMode: "progress",
+    // Gates on the NFL season calendar (nfl_pickem_weeks), not on anything the
+    // venue schedules — see docs/nfl-pickem-reward-plan.md finding #3. The week
+    // scope that replaces the schedule lookup lives in lib/nflPickEmRewardWeeks.ts.
+    requiresScheduledGame: null,
+    requirementTemplate: "Get {threshold} NFL picks right",
+    supportsGameWinner: true,
+    gameWinnerRequirement: "Get the most NFL picks right at this venue",
+    thresholdOptions: [5, 10, 25, 50],
+    defaultThreshold: 10,
+    thresholdStep: 1,
+    accent: "pickem",
+    glyph: "🏈",
   },
 ] as const;
 
@@ -90,11 +119,33 @@ export function renderRewardRequirement(
   return definition.requirementTemplate.replace("{threshold}", safeThreshold.toLocaleString("en-US"));
 }
 
-/** Live Trivia questions are worth 10 points, so every target must land on a multiple of 10. */
+/**
+ * Default granularity for a definition that doesn't state one — Live Trivia
+ * questions are worth 10 points, so its targets land on multiples of 10. A
+ * definition whose unit is a COUNT (NFL correct picks) sets thresholdStep: 1;
+ * the step is per-definition rather than global for exactly that reason.
+ */
 export const REWARD_THRESHOLD_STEP = 10;
 
-export function isValidRewardThreshold(threshold: number): boolean {
-  return Number.isFinite(threshold) && threshold >= 1 && threshold % REWARD_THRESHOLD_STEP === 0;
+export function rewardThresholdStep(definition: RewardDefinition): number {
+  const step = Math.round(Number(definition.thresholdStep));
+  return Number.isFinite(step) && step >= 1 ? step : REWARD_THRESHOLD_STEP;
+}
+
+export function isValidRewardThreshold(threshold: number, definition: RewardDefinition): boolean {
+  return Number.isFinite(threshold) && threshold >= 1 && threshold % rewardThresholdStep(definition) === 0;
+}
+
+/**
+ * The refusal copy for a threshold that misses the definition's step. Lives here
+ * rather than in lib/rewards.ts so the wizard (client) and createReward (server)
+ * say the same thing, and so it names the definition's real step instead of a
+ * hardcoded 10.
+ */
+export function rewardThresholdStepMessage(definition: RewardDefinition): string {
+  const step = rewardThresholdStep(definition);
+  if (step === 1) return "Enter a whole-number target.";
+  return `Custom target must be a multiple of ${step}.`;
 }
 
 // The cadences Rewards can express on the challenge_campaigns engine. "none" is a
@@ -115,4 +166,52 @@ export const SUPPORTED_REWARD_CADENCES: readonly CampaignRecurringType[] = [
 
 export function isSupportedRewardCadence(value: string): value is CampaignRecurringType {
   return (SUPPORTED_REWARD_CADENCES as readonly string[]).includes(value);
+}
+
+const REWARD_MENU_ITEM_LABEL: Record<RewardMenuItem, string> = {
+  whole_order: "Whole Order",
+  appetizer: "Appetizer",
+  entree: "Entrée",
+  dessert: "Dessert",
+  wine_bottle: "Bottle of Wine",
+  other: "Menu Item",
+};
+
+export type RewardPrizeSummaryInput = {
+  prizeKind?: RewardPrizeKind | null;
+  prizeMenuItem?: RewardMenuItem | null;
+  prizeMenuItemName?: string | null;
+  prizeDiscountKind?: RewardDiscountKind | null;
+  prizeDiscountValue?: number | null;
+  prizeGiftCertificateAmount?: number | null;
+};
+
+/**
+ * Player-facing prize copy for a not-yet-won reward. Mirrors the wording
+ * PrizeWalletPanel uses for already-won coupons (same field names, same rules)
+ * so a guest sees consistent language before and after winning; kept here
+ * rather than imported from that component since it renders a different
+ * (post-win) record shape.
+ */
+export function describeRewardPrize(prize: RewardPrizeSummaryInput): string {
+  if (prize.prizeKind === "gift_card") {
+    const amount = Number(prize.prizeGiftCertificateAmount ?? 0);
+    return amount > 0 ? `$${amount.toFixed(2)} gift card` : "Gift card";
+  }
+  if (prize.prizeKind === "menu_item") {
+    const itemLabel =
+      prize.prizeMenuItem === "other"
+        ? prize.prizeMenuItemName?.trim() || "Menu Item"
+        : prize.prizeMenuItem
+          ? REWARD_MENU_ITEM_LABEL[prize.prizeMenuItem]
+          : "Menu Item";
+    if (prize.prizeDiscountKind === "percent" && prize.prizeDiscountValue != null) {
+      return prize.prizeDiscountValue >= 100 ? `Free ${itemLabel}` : `${prize.prizeDiscountValue}% off ${itemLabel}`;
+    }
+    if (prize.prizeDiscountKind === "dollar" && prize.prizeDiscountValue != null) {
+      return `$${prize.prizeDiscountValue.toFixed(2)} off ${itemLabel}`;
+    }
+    return itemLabel;
+  }
+  return "";
 }

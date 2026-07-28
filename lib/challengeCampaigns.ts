@@ -20,6 +20,7 @@ import type {
   ChallengeLeaderboardViewer,
   ChallengeMode,
   ChallengeWinCondition,
+  NFLWeekScope,
   PrizeType,
   RewardPrizeKind,
   RewardMenuItem,
@@ -63,6 +64,8 @@ type ChallengeCampaignRow = {
   winner_quota: number | null;
   // Game-winner slot pinning; null = award at every game (see lib/rewardGameSlots.ts).
   game_winner_slots: unknown;
+  // NFL Pick 'Em week scope; null = not an NFL Pick 'Em reward (see docs/nfl-pickem-reward-plan.md).
+  nfl_week_scope: unknown;
   reward_definition_id: string | null;
   prize_kind: string | null;
   prize_menu_item: string | null;
@@ -74,7 +77,7 @@ type ChallengeCampaignRow = {
 // Single source of truth for the campaign SELECT list (was duplicated across the
 // list + create-insert queries). Includes created_by_owner_id (Phase 9a).
 const CAMPAIGN_SELECT_COLUMNS =
-  "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active, created_by_owner_id, win_condition, winner_quota, game_winner_slots, reward_definition_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value";
+  "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active, created_by_owner_id, win_condition, winner_quota, game_winner_slots, nfl_week_scope, reward_definition_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value";
 
 type ChallengeCampaignProgressRow = {
   id: string;
@@ -271,6 +274,7 @@ const VALID_GAME_TYPES: Array<Exclude<ChallengeGameType, "trivia">> = [
   "speed-trivia",
   "live-trivia",
   "bingo",
+  "nfl-pickem",
 ];
 const VALID_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const VALID_IMAGE_FITS: ChallengeImageFitMode[] = ["cover", "contain"];
@@ -395,6 +399,31 @@ export function pickLeaderboardWinner(
   return ordered[0] ?? null;
 }
 
+/**
+ * Round-trip only — no business validation. The DB check constraint
+ * (`challenge_campaigns_nfl_week_scope_shape`) already rejects malformed
+ * jsonb; Phase 3 (lib/nflPickEmRewardWeeks.ts) owns validating season/fromWeek
+ * against the real NFL calendar. A shape that fails to narrow here reads as
+ * null rather than throwing, matching how gameWinnerSlots fails open.
+ */
+function normalizeNFLWeekScope(value: unknown): NFLWeekScope | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const season = Number(record.season);
+  if (!Number.isFinite(season)) return null;
+  if (record.kind === "weekly") return { kind: "weekly", season };
+  if (record.kind === "season") {
+    const fromWeek = Number(record.fromWeek);
+    if (!Number.isFinite(fromWeek)) return null;
+    return { kind: "season", season, fromWeek };
+  }
+  return null;
+}
+
+function serializeNFLWeekScope(value: NFLWeekScope | null | undefined): NFLWeekScope | null {
+  return normalizeNFLWeekScope(value ?? null);
+}
+
 function normalizeGameTypeAlias(value: string): ChallengeGameType {
   const normalized = String(value ?? "").trim().toLowerCase();
   if (normalized === "trivia") return "speed-trivia";
@@ -450,6 +479,7 @@ function mapCampaignRow(
     winCondition: normalizeWinCondition(row.win_condition),
     winnerQuota: normalizeWinnerQuota(row.winner_quota),
     gameWinnerSlots: normalizeGameWinnerSlots(row.game_winner_slots),
+    nflWeekScope: normalizeNFLWeekScope(row.nfl_week_scope),
     rewardDefinitionId: row.reward_definition_id?.trim() || null,
     ...resolveRewardPrize(row),
     isActive: Boolean(row.is_active),
@@ -826,6 +856,18 @@ function isCampaignEligibleAtTime(campaign: ChallengeCampaign, now: Date, gameTy
     return false;
   }
   return true;
+}
+
+/**
+ * Did this campaign already exist at `occurredAt`? Used only by callers passing
+ * `requireCampaignCreatedBeforeOccurrence` to applyChallengeCampaignPoints (see
+ * the note there). An unparseable created_at is not a licence to award — fail
+ * closed, matching campaignWasLiveForOccurrence.
+ */
+function campaignExistedAt(campaign: ChallengeCampaign, occurredAt: Date): boolean {
+  const createdAtMs = Date.parse(String(campaign.createdAt ?? ""));
+  if (!Number.isFinite(createdAtMs)) return false;
+  return occurredAt.getTime() >= createdAtMs;
 }
 
 // Exported for the game-winner resolver (lib/liveTriviaWinnerRewards.ts), which
@@ -1337,6 +1379,11 @@ export async function createChallengeCampaign(input: {
    * validateGameWinnerSlots in lib/rewardGameSlots.ts is the gate.
    */
   gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
+  /**
+   * NFL Pick 'Em rewards only: which weeks the campaign covers. Omit (or null)
+   * for every non-NFL reward. See `NFLWeekScope` in types/index.ts.
+   */
+  nflWeekScope?: NFLWeekScope | null;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
   const name = String(input.name ?? "").trim();
@@ -1387,6 +1434,7 @@ export async function createChallengeCampaign(input: {
     win_condition: normalizeWinCondition(input.winCondition),
     winner_quota: normalizeWinnerQuota(input.winnerQuota),
     game_winner_slots: serializeGameWinnerSlots(input.gameWinnerSlots),
+    nfl_week_scope: serializeNFLWeekScope(input.nflWeekScope),
     reward_definition_id: String(input.rewardDefinitionId ?? "").trim() || null,
     prize_kind: prizeKind,
     prize_menu_item: prizeKind === "menu_item" ? normalizeMenuItem(input.prizeMenuItem) : null,
@@ -1456,6 +1504,8 @@ export async function updateChallengeCampaign(input: {
    * leaves the column untouched.
    */
   gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
+  /** NFL Pick 'Em rewards only. Pass null to clear. Absent leaves the column untouched. */
+  nflWeekScope?: NFLWeekScope | null;
   isActive?: boolean;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
@@ -1513,6 +1563,9 @@ export async function updateChallengeCampaign(input: {
   }
   if (input.gameWinnerSlots !== undefined) {
     update.game_winner_slots = serializeGameWinnerSlots(input.gameWinnerSlots);
+  }
+  if (input.nflWeekScope !== undefined) {
+    update.nfl_week_scope = serializeNFLWeekScope(input.nflWeekScope);
   }
   if (input.rewardDefinitionId !== undefined) {
     update.reward_definition_id = String(input.rewardDefinitionId ?? "").trim() || null;
@@ -1953,12 +2006,28 @@ async function notifyPrizeWinBestEffort(params: {
   }
 }
 
+/**
+ * `requireCampaignCreatedBeforeOccurrence` (NFL Pick 'Em accrual, Phase 6):
+ * drop campaigns created AFTER `occurredAt`. Default (undefined/false) is
+ * today's behavior for every other caller — those accrue at the moment the
+ * player acts, so "now" is always after the campaign's creation and the check
+ * would be a no-op anyway.
+ *
+ * It matters for a retro-accruing sweep: NFL picks settle hours after kickoff,
+ * so a partner creating a points-target reward mid-week would otherwise
+ * instantly credit guests for games that finished before the reward existed.
+ * Same bar (and same reasoning) as campaignWasLiveForOccurrence in
+ * lib/liveTriviaWinnerRewards.ts — the reward had to exist when the game
+ * STARTED. Conservative on purpose: the failure mode on the other side is
+ * spending real money.
+ */
 export async function applyChallengeCampaignPoints(params: {
   userId: string;
   venueId: string;
   gameType: ChallengeGameType;
   basePoints: number;
   occurredAt?: Date;
+  requireCampaignCreatedBeforeOccurrence?: boolean;
 }): Promise<{ finalPoints: number; multiplierApplied: number; campaignUpdates: Array<{ challengeId: string; progress: number; won: boolean }> }> {
   assertConfigured();
   const userId = String(params.userId ?? "").trim();
@@ -1975,7 +2044,11 @@ export async function applyChallengeCampaignPoints(params: {
     getVenueTimezone(venueId),
   ]);
 
-  const eligible = campaigns.filter((campaign) => isCampaignEligibleAtTime(campaign, now, gameType, venueTimezone));
+  const eligible = campaigns.filter(
+    (campaign) =>
+      isCampaignEligibleAtTime(campaign, now, gameType, venueTimezone) &&
+      (!params.requireCampaignCreatedBeforeOccurrence || campaignExistedAt(campaign, now))
+  );
   if (eligible.length === 0) {
     return { finalPoints: basePoints, multiplierApplied: 1, campaignUpdates: [] };
   }

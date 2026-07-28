@@ -160,7 +160,8 @@ export type ChallengeGameType =
   | "speed-trivia"
   | "live-trivia"
   | "trivia"
-  | "bingo";
+  | "bingo"
+  | "nfl-pickem";
 export type ChallengeStatus =
   | "pending"
   | "accepted"
@@ -222,6 +223,17 @@ export type ChallengeWinCondition = "points_threshold" | "game_winner";
  * lib/rewardGameSlots.ts.
  */
 export type ChallengeGameWinnerSlot = { scheduleId: string; weekday: string };
+/**
+ * NFL Pick 'Em reward week scope. Stored on `challenge_campaigns.nfl_week_scope`;
+ * NULL means "not an NFL Pick 'Em reward" — only `reward_definition_id =
+ * 'nfl_pickem_challenge'` campaigns ever read it. "weekly" repeats every NFL week
+ * the reward is active (one contest + one winner per week). "season" is a single
+ * cumulative contest from `fromWeek` (the current/next week at creation time)
+ * through the season's last week. See lib/nflPickEmRewardWeeks.ts (Phase 3).
+ */
+export type NFLWeekScope =
+  | { kind: "weekly"; season: number }
+  | { kind: "season"; season: number; fromWeek: number };
 export type ChallengeLeaderboardTiebreaker = "first_to_score" | "latest_activity";
 export interface ChallengeLeaderboardEntry {
   rank: number;
@@ -291,6 +303,11 @@ export interface ChallengeCampaign {
    * created before the game picker still carries. See lib/rewardGameSlots.ts.
    */
   gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
+  /**
+   * NFL Pick 'Em reward week scope. Null for every non-NFL reward. See
+   * `NFLWeekScope` for shape; only ever set on `nfl_pickem_challenge` campaigns.
+   */
+  nflWeekScope?: NFLWeekScope | null;
   /** Which pre-set reward definition created this (e.g. "live_trivia_challenge"), or null. */
   rewardDefinitionId?: string | null;
   /** New prize model. Null on pre-Rewards campaigns unless derived from legacy prizeType. */

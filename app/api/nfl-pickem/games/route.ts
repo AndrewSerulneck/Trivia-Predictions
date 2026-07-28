@@ -1,20 +1,60 @@
 import { NextResponse } from "next/server";
-import { listNFLPickEmGames, isNFLWeekLocked } from "@/lib/nflPickEm";
+import {
+  getNFLWeekById,
+  isNFLWeekLocked,
+  isNFLWeekOpenForPicks,
+  isPreseasonPreviewWeek,
+  listNFLPickEmGames,
+  listNFLWeeks,
+} from "@/lib/nflPickEm";
+import { resolveRequestUserId } from "@/lib/serverSession";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const weekId = searchParams.get("weekId");
-    const userId = searchParams.get("userId") || undefined;
     const venueId = searchParams.get("venueId") || undefined;
-    
+
+    // Picks are attached for this user, so it must be the session's user —
+    // otherwise anyone can read a victim's pre-kickoff pick off this endpoint.
+    const viewer = resolveRequestUserId(request, searchParams.get("userId"));
+    if (viewer.forbidden) {
+      return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
+    }
+    const userId = viewer.userId ?? undefined;
+
     if (!weekId) {
       return NextResponse.json(
         { ok: false, error: "weekId is required" },
         { status: 400 }
       );
     }
-    
+
+    // Future weeks are never selectable — see docs/nfl-pickem-improvements-plan.md.
+    // A client-only filter isn't enough since ?week=/?weekId= is user-controllable.
+    const requestedWeek = await getNFLWeekById(weekId);
+    if (!requestedWeek) {
+      return NextResponse.json(
+        { ok: false, error: "NFL Week not found" },
+        { status: 404 }
+      );
+    }
+    // isNFLWeekOpenForPicks is the same predicate buildNFLGameWeekOptions uses
+    // for the client's week list, so this gate and that list cannot disagree.
+    if (!isNFLWeekOpenForPicks(requestedWeek)) {
+      // Preseason exception (see buildNFLGameWeekOptions): before any week is
+      // open, the single earliest upcoming week is still readable/pickable
+      // as a preview. Re-derived server-side — weekId is user-controllable, so
+      // "the client's week list included this one" is never sufficient alone.
+      const seasonWeeks = await listNFLWeeks(requestedWeek.season, true);
+      if (!isPreseasonPreviewWeek(requestedWeek, seasonWeeks)) {
+        return NextResponse.json(
+          { ok: false, error: "This week has not started yet" },
+          { status: 400 }
+        );
+      }
+    }
+
     const result = await listNFLPickEmGames({ weekId, userId, venueId });
     
     return NextResponse.json({

@@ -35,6 +35,13 @@ export function getLocalDateKey(date: Date, timeZone: string): string {
   ].join("-");
 }
 
+/** Day of week as read in `timeZone`, 0 = Sunday … 6 = Saturday (matching Date#getUTCDay's numbering). */
+export function getEasternDayOfWeek(date: Date, timeZone: string = "America/New_York"): number {
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short" }).format(date);
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return days.indexOf(weekday);
+}
+
 export function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
   const parts = getTimeZoneParts(date, timeZone);
   const localAsUtcMs = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);

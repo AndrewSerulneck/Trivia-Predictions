@@ -320,7 +320,7 @@ const OwnerBillingPage = () => {
             </button>
           ) : subscription.cancelAtPeriodEnd ? (
             <p className="text-center text-sm font-semibold text-ht-muted">
-              You'll keep access until {formatDate(subscription.currentPeriodEnd)}.
+              You&apos;ll keep access until {formatDate(subscription.currentPeriodEnd)}.
             </p>
           ) : null}
         </div>

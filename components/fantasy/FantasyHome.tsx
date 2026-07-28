@@ -1777,10 +1777,12 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       )
       .subscribe();
 
+    const prevStatsSnapshot = prevStatsSnapshotRef.current;
+
     return () => {
       active = false;
       void client.removeChannel(channel);
-      prevStatsSnapshotRef.current.clear();
+      prevStatsSnapshot.clear();
     };
   }, [markPlayersAsHot, pushStatFlash, triggerAnimation, triggerPlayerScorePop, triggerTotalScorePop, trackedEntryId, trackedEntrySportKey]);
 

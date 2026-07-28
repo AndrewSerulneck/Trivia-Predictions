@@ -24,7 +24,6 @@ export default async function NFLPickEmPage({
       gameKey="nfl-pickem"
       playLabel="Make your picks"
       autoResume={false}
-      showPlayingBackButton={false}
       showShellUserStatus={false}
       showShellAlerts={false}
       playingBackgroundClassName="bg-[#020617]"

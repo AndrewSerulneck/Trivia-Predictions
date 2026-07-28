@@ -5,14 +5,15 @@ import {
   REWARD_INVALID_PRIZE_MESSAGE,
   REWARD_INVALID_QUANTITY_MESSAGE,
   REWARD_INVALID_THRESHOLD_MESSAGE,
+  REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
   REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE,
-  REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE,
   REWARD_UNKNOWN_DEFINITION_MESSAGE,
   REWARD_UNSUPPORTED_CADENCE_MESSAGE,
   RewardTermsError,
   createReward,
   type RewardPrizeInput,
 } from "@/lib/rewards";
+import type { NFLRewardWeekScope } from "@/lib/nflPickEmRewardWeeks";
 import type {
   CampaignRecurringType,
   ChallengeGameWinnerSlot,
@@ -41,6 +42,12 @@ export async function POST(request: Request) {
      * selection after re-validating it against the venue's real schedule.
      */
     gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
+    /**
+     * NFL Pick 'Em rewards: "every week" vs "the rest of the season". Only the
+     * kind is honored — createReward re-derives the season and starting week from
+     * nfl_pickem_weeks so a stale or hand-edited body can't backdate the reward.
+     */
+    nflWeekScope?: NFLRewardWeekScope | null;
     prize?: RewardPrizeInput;
   };
 
@@ -64,6 +71,7 @@ export async function POST(request: Request) {
       threshold: Number(body.threshold),
       winnerQuota: Number(body.winnerQuota),
       gameWinnerSlots: Array.isArray(body.gameWinnerSlots) ? body.gameWinnerSlots : undefined,
+      nflWeekScope: body.nflWeekScope ?? null,
       prize: body.prize as RewardPrizeInput,
       createdByOwnerId: auth.ownerId,
     });
@@ -74,11 +82,15 @@ export async function POST(request: Request) {
     if (error instanceof RewardTermsError) {
       return NextResponse.json({ ok: false, error: message }, { status: 400 });
     }
+    // The NFL season not being loaded is a state conflict, not bad input — there
+    // is nothing the partner could have sent that would have worked.
+    if (message === REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE) {
+      return NextResponse.json({ ok: false, error: message }, { status: 409 });
+    }
     const status =
       message === REWARD_UNKNOWN_DEFINITION_MESSAGE ||
       message === REWARD_UNSUPPORTED_CADENCE_MESSAGE ||
       message === REWARD_INVALID_THRESHOLD_MESSAGE ||
-      message === REWARD_THRESHOLD_NOT_MULTIPLE_OF_TEN_MESSAGE ||
       message === REWARD_INVALID_QUANTITY_MESSAGE ||
       message === REWARD_INVALID_PRIZE_MESSAGE ||
       message === REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE ||

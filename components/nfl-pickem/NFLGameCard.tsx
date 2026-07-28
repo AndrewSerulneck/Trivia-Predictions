@@ -17,7 +17,9 @@ export type NFLGame = {
   isThursdayGame: boolean;
   isSundayGame?: boolean;
   isMondayGame?: boolean;
-  isSubmitting?: boolean;
+  dayGroupKey: string;
+  dayGroupLabel: string;
+  isThursdayNightSection: boolean;
 };
 
 export function NFLGameCard({
@@ -29,12 +31,17 @@ export function NFLGameCard({
   onPick: (game: NFLGame, team: string) => void;
   isLocked: boolean;
 }) {
+  // Pinned to Eastern so this always agrees with the day-section heading
+  // above it (server-computed in ET) — a viewer's local clock can put a
+  // Thursday-night ET kickoff on a different weekday. See
+  // docs/nfl-pickem-chronological-order-plan.md.
   const formatTime = (iso: string) => {
-    return new Date(iso).toLocaleTimeString(undefined, {
+    const time = new Date(iso).toLocaleTimeString("en-US", {
+      timeZone: "America/New_York",
       hour: "numeric",
       minute: "2-digit",
-      weekday: "short",
     });
+    return `${time} ET`;
   };
   
   const awaySelected = game.userPickTeam === game.awayTeam;
@@ -52,36 +59,37 @@ export function NFLGameCard({
         <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
           {game.isThursdayGame ? "🏈 Thursday Night" : "NFL"}
         </span>
-        <span className={`text-[11px] font-extrabold ${
-          game.status === "live" ? "text-emerald-300" : "text-slate-300"
-        }`}>
-          {game.status === "final" ? "Final" : 
-           game.status === "live" ? "● Live" :
-           formatTime(game.startsAt)}
+        <span className="flex items-center gap-1.5">
+          {isLocked && game.status !== "final" && (
+            <span className="text-[10px] text-slate-400" title="Picks locked at kickoff">
+              🔒
+            </span>
+          )}
+          <span className={`text-[11px] font-extrabold ${
+            game.status === "live" ? "text-emerald-300" : "text-slate-300"
+          }`}>
+            {game.status === "final" ? "Final" :
+             game.status === "live" ? "● Live" :
+             formatTime(game.startsAt)}
+          </span>
         </span>
       </div>
-      
+
       {/* Teams */}
       <div className="flex overflow-hidden bg-[#020617]/45">
         {/* Away Team */}
         <button
           type="button"
-          disabled={isLocked || game.isSubmitting}
+          disabled={isLocked}
           onClick={() => onPick(game, game.awayTeam)}
           className={`tp-clean-button relative flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center transition-colors ${
             isLocked ? "cursor-not-allowed opacity-50" : "hover:bg-white/5"
           } ${awaySelected ? "bg-[#fde68a]/15" : ""}`}
         >
-          {game.isSubmitting && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#fde68a] border-t-transparent" />
-            </div>
-          )}
-          
-          <span className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black transition-all ${
+          <span className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black transition-all duration-150 ease-out ${
             awaySelected
-              ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
-              : "border border-[#fde68a]/45 text-transparent"
+              ? "rotate-[-7deg] scale-110 border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
+              : "scale-100 border border-[#fde68a]/45 text-transparent"
           }`}>
             ✓
           </span>
@@ -104,22 +112,16 @@ export function NFLGameCard({
         {/* Home Team */}
         <button
           type="button"
-          disabled={isLocked || game.isSubmitting}
+          disabled={isLocked}
           onClick={() => onPick(game, game.homeTeam)}
           className={`tp-clean-button relative flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center transition-colors ${
             isLocked ? "cursor-not-allowed opacity-50" : "hover:bg-white/5"
           } ${homeSelected ? "bg-[#fde68a]/15" : ""}`}
         >
-          {game.isSubmitting && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#fde68a] border-t-transparent" />
-            </div>
-          )}
-          
-          <span className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black transition-all ${
+          <span className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black transition-all duration-150 ease-out ${
             homeSelected
-              ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
-              : "border border-[#fde68a]/45 text-transparent"
+              ? "rotate-[-7deg] scale-110 border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
+              : "scale-100 border border-[#fde68a]/45 text-transparent"
           }`}>
             ✓
           </span>

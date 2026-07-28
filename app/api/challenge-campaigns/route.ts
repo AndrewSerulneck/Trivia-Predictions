@@ -4,6 +4,7 @@ import {
   getChallengeCampaignSnapshotForUser,
   listChallengeCampaigns,
 } from "@/lib/challengeCampaigns";
+import { attachNFLRewardUpcomingState } from "@/lib/rewards";
 
 function toClientErrorStatus(message: string): number {
   const normalized = message.toLowerCase();
@@ -45,7 +46,9 @@ export async function GET(request: Request) {
         if (!includeResolved && campaign.winnerUserId) return false;
         return true;
       });
-      return NextResponse.json({ ok: true, campaigns: filtered });
+      // An NFL reward whose first week hasn't started yet reads as "Starts
+      // <date>" rather than a live progress bar — see lib/rewards.ts.
+      return NextResponse.json({ ok: true, campaigns: await attachNFLRewardUpcomingState(filtered) });
     }
 
     const campaigns = await listChallengeCampaigns({
@@ -59,7 +62,10 @@ export async function GET(request: Request) {
       campaigns: snapshots,
       venueId,
     });
-    return NextResponse.json({ ok: true, campaigns: withLeaderboard });
+    return NextResponse.json({
+      ok: true,
+      campaigns: await attachNFLRewardUpcomingState(withLeaderboard),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load challenge campaigns.";
     return NextResponse.json({ ok: false, error: message }, { status: toClientErrorStatus(message) });

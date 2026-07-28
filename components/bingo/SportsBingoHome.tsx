@@ -1136,8 +1136,6 @@ export function SportsBingoHome({
       }
       return {};
     },
-    // currentCardsRef is a stable ref — no dep needed; reads .current inside callback
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -1484,14 +1482,25 @@ export function SportsBingoHome({
 
   // Channel 3 (live stats): subscribe to sport-keyed broadcast channels from Phase 3.
   // gameIdSet is kept current via ref so we don't re-subscribe on every card state update.
+  //
+  // Depends on subscribedSportKeysKey ONLY, not subscribedSportKeys itself: that
+  // array is rebuilt by useMemo(..., [cards]) with a new identity on every card
+  // poll (even when the sport-key set is unchanged), so keeping it in the dep
+  // array tore the channel down and rebuilt it every poll — dropping
+  // liveStatsPrevByPlayerRef's delta-tracking state each time and starving
+  // classifyLiveDeltaEvent of the "previous" reading it needs to detect a stat
+  // change. The sport-key list to subscribe to is re-derived from the key
+  // string itself, exactly like subscribedGameIdsKey does for channels 1 & 2.
   useEffect(() => {
-    if (!supabase || subscribedSportKeys.length === 0) {
+    const sportKeys = subscribedSportKeysKey ? subscribedSportKeysKey.split(",") : [];
+    if (!supabase || sportKeys.length === 0) {
       return;
     }
     const client = supabase;
     let active = true;
+    const liveStatsPrevByPlayer = liveStatsPrevByPlayerRef.current;
 
-    const channels = subscribedSportKeys.map((sportKey) =>
+    const channels = sportKeys.map((sportKey) =>
       client
         .channel(`live-stats:${sportKey}`)
         .on("broadcast", { event: "stat_update" }, (payload) => {
@@ -1527,11 +1536,10 @@ export function SportsBingoHome({
 
     return () => {
       active = false;
-      liveStatsPrevByPlayerRef.current.clear();
+      liveStatsPrevByPlayer.clear();
       channels.forEach((ch) => void client.removeChannel(ch));
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queueVisualEvents, subscribedSportKeysKey]);
+  }, [findRelevantSquareForEvent, queueVisualEvents, subscribedSportKeysKey]);
 
   const onSwipeTouchStart = useCallback((event: ReactTouchEvent<HTMLDivElement>) => {
     const touch = event.touches[0];

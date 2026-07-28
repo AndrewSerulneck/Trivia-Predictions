@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell, ownerInputClass, ownerLabelClass, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
+import { marketingHref } from "@/lib/domainSplit";
 
 const EyeIcon = ({ open }: { open: boolean }) =>
   open ? (
@@ -99,7 +100,7 @@ const OwnerLoginPage = () => {
       </p>
       <div className="mt-6 border-t border-slate-200 pt-5">
         <Link
-          href="/info"
+          href={marketingHref("/")}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900"
         >
           ← Back to Home Page

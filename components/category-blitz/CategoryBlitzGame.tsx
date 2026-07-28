@@ -1429,19 +1429,12 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   // Round start reveal: play the letter drop + category cascade once per round
   // when we enter the answering phase, then transition to the answer input.
   //
-  // A page reload remounts this component from scratch: `revealedRoundId`
-  // resets to null, so without the elapsed-time check below, a round that's
-  // already been running a while would replay RoundStartReveal from the top
-  // — burning more of the round's already-ticking clock and re-arming
-  // markRevealDone's completion gate from scratch every time a frustrated
-  // player reloads mid-round (Root Cause 4 in
-  // docs/category-blitz-no-grading-analysis.md). Comparing against
-  // ROUND_START_REVEAL_MAX_MS on every render (rather than a one-shot
-  // mount check) also generalizes to any other way this tab could end up
-  // "still answering, reveal never shown" long after a round actually
-  // started — a freshly-started round always has ~0 elapsed time here, so
-  // this never cuts off a reveal that's genuinely still playing.
-  const [revealedRoundId, setRevealedRoundId] = useState<string | null>(null);
+  // A page reload remounts this component from scratch: `finishedRevealRoundId`
+  // resets to null, but `round.startedAt` is server-anchored. If the round has
+  // already been running long enough that a continuous tab would have finished
+  // the reveal, skip it and show the board immediately.
+  const [finishedRevealRoundId, setFinishedRevealRoundId] = useState<string | null>(null);
+  const fallbackMarkedRevealRoundIdRef = useRef<string | null>(null);
   // Render bodies can't call Date.now() directly (impure) — mirror it into
   // state via its own tick instead, same pattern as IdleScreen's countdown.
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
@@ -1449,38 +1442,38 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     const id = window.setInterval(() => setNowMs(Date.now()), 250);
     return () => window.clearInterval(id);
   }, []);
+  const answeringRoundId = round?.id ?? null;
+  const answeringRoundStartedAt = round?.startedAt ?? null;
+  const revealElapsedMs = answeringRoundStartedAt ? nowMs - new Date(answeringRoundStartedAt).getTime() : 0;
   const showReveal =
     phase === "answering" &&
     !!round &&
-    round.id !== revealedRoundId &&
-    nowMs - new Date(round.startedAt).getTime() <= ROUND_START_REVEAL_MAX_MS;
+    round.id !== finishedRevealRoundId &&
+    revealElapsedMs <= ROUND_START_REVEAL_MAX_MS;
 
   // The case above (elapsed time already past the reveal's max duration)
   // never mounts RoundStartReveal, so its onDone/markRevealDone callback
   // never fires on its own — without this, the auto-scoring timer gate
   // (revealDoneRef, lib/categoryBlitzRealtime.ts) would stay blocked for
   // the rest of the round. Mirrors the visibility-resync forceReveal path
-  // in the hook; safe to call every render since markRevealDone is
-  // idempotent per round ID.
+  // in the hook. The ref is a one-shot guard so this fallback marks each round
+  // once without using state from inside the effect.
   useEffect(() => {
     if (
       phase === "answering" &&
-      round &&
-      round.id !== revealedRoundId &&
-      nowMs - new Date(round.startedAt).getTime() > ROUND_START_REVEAL_MAX_MS
+      answeringRoundId &&
+      answeringRoundId !== finishedRevealRoundId &&
+      answeringRoundStartedAt &&
+      revealElapsedMs > ROUND_START_REVEAL_MAX_MS &&
+      fallbackMarkedRevealRoundIdRef.current !== answeringRoundId
     ) {
+      fallbackMarkedRevealRoundIdRef.current = answeringRoundId;
       if (process.env.NODE_ENV !== "production") {
-        console.debug(`[CategoryBlitzGame] round ${round.id}: reveal never mounted, marking done via elapsed-time fallback`);
+        console.debug(`[CategoryBlitzGame] round ${answeringRoundId}: reveal never mounted, marking done via elapsed-time fallback`);
       }
-      markRevealDone(round.id);
-      // Latch this round as "revealed" so the fallback fires once, not on
-      // every nowMs tick. Without this, `round.id !== revealedRoundId` stays
-      // true forever and re-runs markRevealDone (+ the debug log) ~4x/sec for
-      // the rest of the round. Mirrors what mounting RoundStartReveal does via
-      // setRevealedRoundId when the reveal actually plays.
-      setRevealedRoundId(round.id);
+      markRevealDone(answeringRoundId);
     }
-  }, [phase, round, revealedRoundId, nowMs, markRevealDone]);
+  }, [phase, answeringRoundId, answeringRoundStartedAt, finishedRevealRoundId, revealElapsedMs, markRevealDone]);
 
   // The viewer's OWN answers, one row per category they answered — the
   // emotionally relevant set to watch get graded. Memoized so the ~4x/sec
@@ -1709,7 +1702,8 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
               letter={round.letter}
               categories={round.categories}
               onDone={() => {
-                setRevealedRoundId(round.id);
+                fallbackMarkedRevealRoundIdRef.current = round.id;
+                setFinishedRevealRoundId(round.id);
                 markRevealDone(round.id);
               }}
             />

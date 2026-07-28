@@ -23,7 +23,7 @@
 
 ## Do Not Touch (Hard Boundaries)
 - `.env.local`: Never read, modify, or expose.
-- `supabase/migrations/`: Read-only historical reference. Never write or alter SQL migration files directly.
+- `supabase/migrations/`: **Creating new timestamped migration files is allowed and expected.** Existing migration files are read-only history — never edit, overwrite, or delete one.
 - `lib/supabaseAdmin.ts`: Security boundary. Do not modify without explicit instruction.
 - `vercel.json`: Cron configurations. Do not alter without instruction.
 
@@ -75,6 +75,18 @@
   cascade. Don't describe other Rewards work as "inert until a flag flips."
 - **Redemption = in-app coupon, staff-taps-redeemed.** No POS or gift-card-issuance
   integration; winners see a coupon on `/redeem-prizes` (`components/prizes/PrizeWalletPanel.tsx`).
+- **The NFL Pick 'Em Challenge is the one reward that does NOT gate on a venue schedule.**
+  It gates on the NFL season calendar (`nfl_pickem_weeks`), so it takes none of the Live
+  Trivia schedule machinery: a partner picks a **week scope** — `weekly` or `season`, and
+  only those two; arbitrary week ranges are explicitly rejected — and
+  `lib/nflPickEmRewardWeeks.ts` derives cadence, quota, `activeDays` (all seven days,
+  **`"thu"` first**, or the cycle anchor and accrual gate both break) and date bounds from
+  it. "Most picks right" is locked to **1 winner** (refused server-side, not clamped) and
+  needs **3+ pickers** at the venue or nobody wins; ties are broken by a per-week tiebreaker
+  question (`lib/nflPickEmTiebreaker.ts`). Accrual is **1 point per correct pick, not 10**
+  (`lib/nflPickEmRewardAccrual.ts`, a separate sweep — daily Pick 'Em's settlement path is
+  untouched). Full as-built record, deviations and remaining work:
+  `docs/nfl-pickem-reward-plan.md`.
 
 ## Architecture & Database Patterns
 - **Client Queries:** Use `lib/supabase.ts` via `createClient(url, anonKey)`. Subject to RLS.

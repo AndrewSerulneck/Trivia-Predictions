@@ -41,7 +41,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   REWARD_DEFINITIONS,
+  isValidRewardThreshold,
   renderRewardRequirement,
+  rewardThresholdStepMessage,
   type RewardDefinition,
 } from "@/lib/rewardDefinitions";
 import {
@@ -67,6 +69,16 @@ import {
   type RewardGameSlot,
 } from "@/lib/rewardGameSlots";
 import type { RewardPrizeInput } from "@/lib/rewards";
+import {
+  NFL_REWARD_MIN_PICKERS,
+  NFL_WEEK_SCOPE_INVALID_MESSAGE,
+  REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
+  deriveNFLWeekScopeTerms,
+  describeNFLWeekScope,
+  type NFLRewardSeasonContext,
+  type NFLRewardWeekScope,
+  type NFLRewardWeekScopeKind,
+} from "@/lib/nflPickEmRewardWeeks";
 import type {
   CampaignRecurringType,
   ChallengeGameWinnerSlot,
@@ -85,6 +97,12 @@ export type RewardCreationContextDTO = {
   scheduleShapes: RewardScheduleShape[];
   /** The individual games a game-winner reward can be pinned to (Phase 5's picker). */
   gameSlots: RewardGameSlot[];
+  /**
+   * NFL Pick 'Em rewards only: the season the reward would run in and how much of
+   * it is left. null for every schedule-gated definition. Optional so an older
+   * cached context response still type-checks.
+   */
+  nflSeason?: NFLRewardSeasonContext | null;
 };
 
 export type CreateRewardSubmission = {
@@ -97,6 +115,8 @@ export type CreateRewardSubmission = {
   prize: RewardPrizeInput;
   /** Game-winner picker (Phase 5), gated behind NEXT_PUBLIC_REWARD_GAME_PICKER_ENABLED. */
   gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
+  /** NFL rewards: the chosen week scope. The server honors only its `kind`. */
+  nflWeekScope?: NFLRewardWeekScope | null;
 };
 
 export type CreateRewardWizardVenue = { id: string; name: string };
@@ -113,6 +133,10 @@ type CreateRewardWizardProps = {
   onCreated: () => void;
   onCancel: () => void;
 };
+
+/** The one definition whose terms step replaces the period sentence with a
+ *  week-scope picker. Every NFL-specific branch below is gated on this id. */
+const NFL_PICKEM_DEFINITION_ID = "nfl_pickem_challenge";
 
 const MENU_ITEM_OPTIONS: Array<{ value: RewardMenuItem; label: string }> = [
   { value: "whole_order", label: "Whole Order" },
@@ -143,6 +167,9 @@ type Styles = {
   secondaryButton: string;
   error: string;
   block: string;
+  /** An informational callout — states a rule (e.g. the 3-player minimum),
+   *  not a warning about a disabled/impossible option. */
+  notice: string;
   summaryRow: string;
 };
 
@@ -170,6 +197,7 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
     secondaryButton: "text-sm font-medium text-slate-500 hover:text-slate-700",
     error: "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700",
     block: "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800",
+    notice: "rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-xs font-medium text-sky-800",
     summaryRow: "flex items-center justify-between gap-4 border-b border-slate-100 py-2 text-sm",
   },
   owner: {
@@ -195,6 +223,7 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
     secondaryButton: "text-sm font-bold text-ht-muted",
     error: "rounded-xl border border-ht-rose-500/30 bg-ht-rose-500/10 px-3 py-2 text-xs font-bold text-ht-rose-300",
     block: "rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs font-bold text-amber-300",
+    notice: "rounded-xl border border-sky-400/30 bg-sky-500/10 px-3 py-2.5 text-xs font-bold text-sky-200",
     summaryRow: "flex items-center justify-between gap-4 border-b border-ht-hairline/60 py-2 text-sm",
   },
 };
@@ -224,6 +253,9 @@ export function CreateRewardWizard({
   const [contextError, setContextError] = useState<string | null>(null);
   /** Shown under the definition tiles when the picked reward's game isn't scheduled. */
   const [notScheduledError, setNotScheduledError] = useState<string | null>(null);
+  /** True when notScheduledError is the NFL season message — that block has no
+   *  "schedule it" link, since there's nothing the partner can schedule. */
+  const [notScheduledIsNFL, setNotScheduledIsNFL] = useState(false);
 
   // ── Definition-step prefetch ────────────────────────────────────────────────
   // Resolved once the venue is known so picking a definition is instant. It no
@@ -246,6 +278,12 @@ export function CreateRewardWizard({
   // it — a game-winner reward's number is locked to the venue's game count.
   const [period, setPeriod] = useState<RewardPeriod | null>(null);
   const [quantity, setQuantity] = useState(1);
+
+  // ── NFL week scope (Phase 5) ─────────────────────────────────────────────
+  // Replaces `period` entirely for the NFL definition: gated on the NFL season
+  // calendar rather than a venue schedule, it offers exactly two shapes — see
+  // lib/nflPickEmRewardWeeks.ts.
+  const [nflScopeKind, setNflScopeKind] = useState<NFLRewardWeekScopeKind>("weekly");
 
   // ── The game picker (Phase 5, flag-gated) ───────────────────────────────────
   // Replaces the period-based sentence for game-winner rewards: the partner
@@ -313,8 +351,39 @@ export function CreateRewardWizard({
   // collapses to "at my next Live Trivia game".
   const isOneOffOnly = facts.isOneOffOnly;
 
+  const isNFLDefinition = definition?.id === NFL_PICKEM_DEFINITION_ID;
+  const nflSeason = context?.nflSeason ?? null;
+
+  // The partner only ever picks the SHAPE ("weekly" vs "season") — the season
+  // number and starting week are read back from the server's own context, never
+  // authored by the client (a stale/backdated fromWeek would let a partner mint
+  // prizes for weeks that already played; see lib/rewards.ts).
+  const nflScope: NFLRewardWeekScope | null = useMemo(() => {
+    if (!isNFLDefinition || !nflSeason) return null;
+    return nflScopeKind === "weekly"
+      ? { kind: "weekly", season: nflSeason.season }
+      : { kind: "season", season: nflSeason.season, fromWeek: nflSeason.fromWeek };
+  }, [isNFLDefinition, nflSeason, nflScopeKind]);
+
+  // The engine mapping — cadence/quota/activeDays/dates — mirrors what the
+  // server re-derives in createReward. Computed here only to gate the "Next"
+  // button and to send a sane cadence/winnerQuota; the server recomputes its
+  // own copy from its own dates and never trusts these values.
+  const nflTermsResult = useMemo(() => {
+    if (!isNFLDefinition || !nflScope) return null;
+    return deriveNFLWeekScopeTerms(nflScope, {
+      winCondition,
+      // A week winner is always exactly 1 — there's no quantity control to read.
+      quantity: isGameWinner ? 1 : quantity,
+      startDate: nflSeason?.fromWeekStartDate ?? null,
+      endDate: nflSeason?.seasonEndDate ?? null,
+    });
+  }, [isNFLDefinition, nflScope, winCondition, isGameWinner, quantity, nflSeason]);
+
   // Game picker (Phase 5): flag-gated replacement for the game-winner sentence.
-  const useGamePicker = isGamePickerEnabled() && isGameWinner;
+  // Never for NFL — it has no venue-scheduled games to pin to; its own
+  // week-scope picker replaces the sentence instead.
+  const useGamePicker = !isNFLDefinition && isGamePickerEnabled() && isGameWinner;
   const gameSlots = context?.gameSlots ?? EMPTY_GAME_SLOTS;
   const recurringSlots = useMemo(() => gameSlots.filter((slot) => slot.recurring), [gameSlots]);
   const oneOffSlots = useMemo(() => gameSlots.filter((slot) => !slot.recurring), [gameSlots]);
@@ -408,17 +477,27 @@ export function CreateRewardWizard({
 
   // ── Step: definition pick → resolve schedule context ────────────────────────
   const handlePickDefinition = async (picked: RewardDefinition) => {
+    const isNFLPick = picked.id === NFL_PICKEM_DEFINITION_ID;
+    // requiresScheduledGame is null for the NFL definition (it gates on the NFL
+    // season calendar, not anything a venue schedules), so the "not available"
+    // copy — and whether a "schedule it" link even makes sense — differs.
+    const unavailableMessage = isNFLPick
+      ? REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE
+      : REWARD_TERMS_NOT_SCHEDULED_MESSAGE;
+
     setDefinition(picked);
     setThreshold(picked.defaultThreshold);
     setCustomThreshold("");
     setWinCondition("points_threshold");
+    setNflScopeKind("weekly");
     setContextError(null);
     setNotScheduledError(null);
+    setNotScheduledIsNFL(isNFLPick);
 
     const cached = definitionContexts[picked.id];
     if (cached) {
       if (!cached.scheduled) {
-        setNotScheduledError(REWARD_TERMS_NOT_SCHEDULED_MESSAGE);
+        setNotScheduledError(unavailableMessage);
         return;
       }
       setContext(cached);
@@ -432,7 +511,7 @@ export function CreateRewardWizard({
       const ctx = await fetchContext(venueId, picked.id);
       setDefinitionContexts((prev) => ({ ...prev, [picked.id]: ctx }));
       if (!ctx.scheduled) {
-        setNotScheduledError(REWARD_TERMS_NOT_SCHEDULED_MESSAGE);
+        setNotScheduledError(unavailableMessage);
         return;
       }
       setContext(ctx);
@@ -474,7 +553,12 @@ export function CreateRewardWizard({
 
   const handleSubmit = async () => {
     if (!definition) return;
-    if (useGamePicker) {
+    if (isNFLDefinition) {
+      if (!nflTermsResult || !nflTermsResult.ok) {
+        setSubmitError(nflTermsResult?.message ?? NFL_WEEK_SCOPE_INVALID_MESSAGE);
+        return;
+      }
+    } else if (useGamePicker) {
       if (!gameWinnerTerms.ok) {
         setSubmitError(gameWinnerTerms.message);
         return;
@@ -493,15 +577,28 @@ export function CreateRewardWizard({
       const result = await onSubmit({
         venueId,
         definitionId: definition.id,
-        cadence: useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms.cadence : cadenceForPeriod(period),
+        cadence:
+          isNFLDefinition && nflTermsResult?.ok
+            ? nflTermsResult.terms.cadence
+            : useGamePicker && gameWinnerTerms.ok
+              ? gameWinnerTerms.terms.cadence
+              : cadenceForPeriod(period),
         winCondition,
         threshold: effectiveThreshold,
-        winnerQuota: useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms.quota : effectiveQuantity,
+        winnerQuota:
+          isNFLDefinition && nflTermsResult?.ok
+            ? nflTermsResult.terms.quota
+            : useGamePicker && gameWinnerTerms.ok
+              ? gameWinnerTerms.terms.quota
+              : effectiveQuantity,
         prize,
         gameWinnerSlots:
-          useGamePicker && gameWinnerTerms.ok
+          !isNFLDefinition && useGamePicker && gameWinnerTerms.ok
             ? selectedSlots.map((slot) => ({ scheduleId: slot.scheduleId, weekday: slot.weekday }))
             : undefined,
+        // The server only honors `kind` — season/fromWeek are re-derived from
+        // its own reading of nfl_pickem_weeks (see lib/rewards.ts).
+        nflWeekScope: isNFLDefinition ? nflScope : undefined,
       });
       if (!result.ok) {
         setSubmitError(result.error);
@@ -574,10 +671,13 @@ export function CreateRewardWizard({
             <p className={s.helpText}>Checking the venue&apos;s schedule…</p>
           ) : null}
           {contextError ? <div className={s.error}>{contextError}</div> : null}
-          {/* Only after the partner picks a reward whose game isn't scheduled. */}
+          {/* Only after the partner picks a reward whose game isn't scheduled.
+              The NFL message has nowhere to send a link — there's nothing the
+              partner can schedule to fix it. */}
           {notScheduledError ? (
             <div className={s.block}>
-              {notScheduledError} {scheduleLink}.
+              {notScheduledError}
+              {notScheduledIsNFL ? null : <> {scheduleLink}.</>}
             </div>
           ) : null}
           <button type="button" onClick={onCancel} className={s.secondaryButton}>
@@ -607,19 +707,25 @@ export function CreateRewardWizard({
                   onClick={() => setWinCondition("game_winner")}
                   className={`${s.chip} ${isGameWinner ? s.chipActive : ""}`}
                 >
-                  Winner of the game
+                  {isNFLDefinition ? "Most picks right" : "Winner of the game"}
                 </button>
               </div>
               <p className={`mt-1.5 ${s.helpText}`}>
-                {isGameWinner
-                  ? "Whoever wins the Live Trivia game gets this prize, whatever their score."
-                  : "Anyone who reaches the points target gets this prize."}
+                {isNFLDefinition
+                  ? isGameWinner
+                    ? "The guest with the most correct picks wins."
+                    : "Guests win by getting a set number of picks right."
+                  : isGameWinner
+                    ? "Whoever wins the Live Trivia game gets this prize, whatever their score."
+                    : "Anyone who reaches the points target gets this prize."}
               </p>
             </div>
           ) : null}
 
-          {/* 2. Points target — only meaningful when that's how it's won. */}
-          {isGameWinner ? null : (
+          {/* 2. Points target — only meaningful when that's how it's won. NFL
+              renders its own copy of this below the week-scope picker (§3),
+              matching the phase doc's win-condition → scope → target order. */}
+          {isGameWinner || isNFLDefinition ? null : (
             <div>
               <p className={s.label}>Points target</p>
               <div className="grid grid-cols-4 gap-2">
@@ -653,9 +759,120 @@ export function CreateRewardWizard({
             </div>
           )}
 
-          {/* 3. The contract — either the game picker (Phase 5, flag-gated) or the
-              period-based sentence it replaces for game-winner rewards. */}
-          {useGamePicker ? (
+          {/* 3. The contract — the NFL week-scope picker, the game picker
+              (Phase 5, flag-gated), or the period-based sentence the game
+              picker replaces for game-winner rewards. */}
+          {isNFLDefinition ? (
+            <div className="space-y-4">
+              {nflSeason ? (
+                <div>
+                  <p className={s.label}>How long it runs</p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => setNflScopeKind("weekly")}
+                      className={`${s.optionCard} ${nflScopeKind === "weekly" ? s.optionCardActive : ""}`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block font-black">Every week</span>
+                        <span className={`block ${s.helpText}`}>
+                          A new contest every NFL week. {nflSeason.weeksRemaining}{" "}
+                          {nflSeason.weeksRemaining === 1 ? "week" : "weeks"} left this season.
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNflScopeKind("season")}
+                      className={`${s.optionCard} ${nflScopeKind === "season" ? s.optionCardActive : ""}`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block font-black">Whole season</span>
+                        <span className={`block ${s.helpText}`}>
+                          One contest, decided at the end of the season. Runs Week {nflSeason.fromWeek}{" "}
+                          through the end of the season.
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {isGameWinner ? (
+                <div>
+                  <p className={s.label}>Winners</p>
+                  <p className={s.sentence}>
+                    1 winner {nflScopeKind === "weekly" ? "per week" : "for the season"}.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <p className={s.label}>Points target</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {definition.thresholdOptions.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => {
+                            setThreshold(opt);
+                            setCustomThreshold("");
+                          }}
+                          className={`${s.chip} ${!customThreshold && threshold === opt ? s.chipActive : ""}`}
+                        >
+                          {opt.toLocaleString("en-US")}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="number"
+                      min={1}
+                      placeholder="Custom target"
+                      value={customThreshold}
+                      onChange={(e) => {
+                        setCustomThreshold(e.target.value);
+                        setThresholdError(null);
+                      }}
+                      className={`mt-2 ${s.input}`}
+                    />
+                    <p className={`mt-1.5 ${s.helpText}`}>
+                      {renderRewardRequirement(definition, effectiveThreshold)}
+                    </p>
+                    {thresholdError ? <div className={`mt-1.5 ${s.error}`}>{thresholdError}</div> : null}
+                  </div>
+                  <div>
+                    <p className={s.label}>How many winners?</p>
+                    <select
+                      aria-label="Number of winners"
+                      value={String(quantity)}
+                      onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
+                      className={s.inlineSelect}
+                    >
+                      {REWARD_QUANTITY_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {/* Style as a rule, not a disabled-state warning — see
+                  docs/nfl-pickem-reward-phase5.md. */}
+              {isGameWinner ? (
+                <div className={s.notice}>
+                  <strong>At least {NFL_REWARD_MIN_PICKERS} guests must make picks</strong> at your venue
+                  that {nflScopeKind === "weekly" ? "week" : "season"} for a winner to be crowned. If fewer
+                  than {NFL_REWARD_MIN_PICKERS} play, no reward is given out.
+                </div>
+              ) : null}
+
+              {nflTermsResult && !nflTermsResult.ok ? (
+                <div className={s.error}>{nflTermsResult.message}</div>
+              ) : null}
+            </div>
+          ) : useGamePicker ? (
             <div>
               <p className={s.label}>Which games?</p>
               <label className="flex items-center gap-2 text-sm font-semibold">
@@ -815,12 +1032,25 @@ export function CreateRewardWizard({
 
           <button
             type="button"
-            disabled={useGamePicker ? !gameWinnerTerms.ok : Boolean(termsError)}
+            disabled={
+              isNFLDefinition
+                ? !(nflTermsResult?.ok ?? false)
+                : useGamePicker
+                  ? !gameWinnerTerms.ok
+                  : Boolean(termsError)
+            }
             onClick={() => {
               if (!isGameWinner) {
+                // The step is the definition's, not a fixed 10: Live Trivia
+                // targets are points (step 10), NFL targets are correct picks
+                // (step 1). Same rule the server re-checks in createReward.
                 const custom = parseInt(customThreshold, 10);
-                if (customThreshold.trim() && Number.isFinite(custom) && custom % 10 !== 0) {
-                  setThresholdError("Custom target must be a multiple of 10.");
+                if (
+                  customThreshold.trim() &&
+                  Number.isFinite(custom) &&
+                  !isValidRewardThreshold(custom, definition)
+                ) {
+                  setThresholdError(rewardThresholdStepMessage(definition));
                   return;
                 }
               }
@@ -952,10 +1182,22 @@ export function CreateRewardWizard({
 
           {/* The terms the partner just agreed to, restated verbatim. */}
           <p className={s.sentence}>
-            {useGamePicker && gameWinnerTerms.ok
-              ? describeGameWinnerSlots(selectedSlots)
-              : renderTermsSentence(effectiveQuantity, period, winCondition)}
+            {isNFLDefinition
+              ? describeNFLWeekScope(nflScope, winCondition, { quantity, threshold: effectiveThreshold })
+              : useGamePicker && gameWinnerTerms.ok
+                ? describeGameWinnerSlots(selectedSlots)
+                : renderTermsSentence(effectiveQuantity, period, winCondition)}
           </p>
+
+          {/* The 3-player rule stays visible through to the moment of creation,
+              not just while shopping the terms step. */}
+          {isNFLDefinition && isGameWinner ? (
+            <div className={s.notice}>
+              <strong>At least {NFL_REWARD_MIN_PICKERS} guests must make picks</strong> at your venue that{" "}
+              {nflScopeKind === "weekly" ? "week" : "season"} for a winner to be crowned. If fewer than{" "}
+              {NFL_REWARD_MIN_PICKERS} play, no reward is given out.
+            </div>
+          ) : null}
 
           {submitError ? <div className={s.error}>{submitError}</div> : null}
 

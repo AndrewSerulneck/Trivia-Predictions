@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   try {
     const currentYear = new Date().getFullYear();
     const weeks = await syncNFLWeeks(currentYear);
-    
+
     return NextResponse.json({
       ok: true,
       weeksSynced: weeks.length,
@@ -27,9 +27,9 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("[NFL Pick 'Em] Week sync failed:", error);
     return NextResponse.json(
-      { 
-        ok: false, 
-        error: error instanceof Error ? error.message : "Week sync failed" 
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : "Week sync failed"
       },
       { status: 500 }
     );

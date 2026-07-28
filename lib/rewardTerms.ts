@@ -16,6 +16,17 @@
 
 import type { CampaignRecurringType, ChallengeWinCondition } from "@/types";
 
+/**
+ * The game a sentence/refusal names. Every string below takes it as a trailing
+ * argument defaulting to "Live Trivia", so existing callers and copy are
+ * unchanged while a second definition (NFL Pick 'Em, docs/nfl-pickem-reward-plan.md)
+ * can render the same wording for its own game. Only the COPY is parameterized —
+ * every rule here still judges a venue's Live Trivia schedule, and NFL rewards
+ * don't route through validateRewardTerms at all (they gate on the NFL season
+ * calendar, not on a venue schedule).
+ */
+export const DEFAULT_REWARD_GAME_LABEL = "Live Trivia";
+
 /** The recurring periods a reward's sentence can name. */
 export type RewardPeriod = "daily" | "weekly" | "monthly" | "yearly";
 
@@ -210,16 +221,17 @@ export function renderTermsSentence(
   quantity: number,
   period: RewardPeriod | null,
   winCondition: ChallengeWinCondition = "points_threshold",
+  gameLabel: string = DEFAULT_REWARD_GAME_LABEL,
 ): string {
   const count = Math.max(1, Math.round(quantity));
   if (winCondition === "game_winner") {
     if (period === null) {
-      return `I want to give out ${count} of these rewards at my next Live Trivia game.`;
+      return `I want to give out ${count} of these rewards at my next ${gameLabel} game.`;
     }
     return `I want to give out ${count} of these rewards every ${REWARD_PERIOD_NOUN[period]}.`;
   }
   if (period === null) {
-    return `I want to make ${count} of these rewards available at my next Live Trivia game.`;
+    return `I want to make ${count} of these rewards available at my next ${gameLabel} game.`;
   }
   return `I want to make ${count} of these rewards available every ${REWARD_PERIOD_NOUN[period]}.`;
 }
@@ -228,27 +240,50 @@ export function renderTermsSentence(
 // Trivia" link right after this (CreateRewardWizard.tsx), so the message
 // itself must not restate that CTA or the two run together as a duplicate
 // ("Schedule Live Trivia ... Schedule Live Trivia.").
-export const REWARD_TERMS_NOT_SCHEDULED_MESSAGE =
-  "Live Trivia isn't scheduled at this venue yet.";
-export const REWARD_TERMS_ONE_OFF_ONLY_MESSAGE =
-  "You only have a single Live Trivia game scheduled. Schedule recurring Live Trivia to offer a recurring reward.";
-
-export function periodHasNoGameMessage(period: RewardPeriod): string {
-  const noun = REWARD_PERIOD_NOUN[period];
-  return `You don't run Live Trivia every ${noun}. Choose a longer period, or schedule Live Trivia every ${noun}.`;
+export function notScheduledMessage(gameLabel: string = DEFAULT_REWARD_GAME_LABEL): string {
+  return `${gameLabel} isn't scheduled at this venue yet.`;
 }
 
-export function tooManyWinnerRewardsMessage(period: RewardPeriod, available: number): string {
+export function oneOffOnlyMessage(gameLabel: string = DEFAULT_REWARD_GAME_LABEL): string {
+  return `You only have a single ${gameLabel} game scheduled. Schedule recurring ${gameLabel} to offer a recurring reward.`;
+}
+
+export const REWARD_TERMS_NOT_SCHEDULED_MESSAGE = notScheduledMessage();
+export const REWARD_TERMS_ONE_OFF_ONLY_MESSAGE = oneOffOnlyMessage();
+
+export function periodHasNoGameMessage(
+  period: RewardPeriod,
+  gameLabel: string = DEFAULT_REWARD_GAME_LABEL,
+): string {
+  const noun = REWARD_PERIOD_NOUN[period];
+  return `You don't run ${gameLabel} every ${noun}. Choose a longer period, or schedule ${gameLabel} every ${noun}.`;
+}
+
+export function tooManyWinnerRewardsMessage(
+  period: RewardPeriod,
+  available: number,
+  gameLabel: string = DEFAULT_REWARD_GAME_LABEL,
+): string {
   const noun = REWARD_PERIOD_NOUN[period];
   if (available < 1) {
-    return `You don't run the same number of Live Trivia games every ${noun}, so you can't promise a fixed number of "winner of the game" rewards per ${noun}. Choose a different period.`;
+    return `You don't run the same number of ${gameLabel} games every ${noun}, so you can't promise a fixed number of "winner of the game" rewards per ${noun}. Choose a different period.`;
   }
-  return `You run ${available} Live Trivia ${plural(available, "game")} each ${noun}, and each game has one winner — so you can offer at most ${available} "winner of the game" ${plural(available, "reward")} per ${noun}. Schedule more Live Trivia games to offer more.`;
+  return `You run ${available} ${gameLabel} ${plural(available, "game")} each ${noun}, and each game has one winner — so you can offer at most ${available} "winner of the game" ${plural(available, "reward")} per ${noun}. Schedule more ${gameLabel} games to offer more.`;
 }
 
-export function fixedWinnerRewardsMessage(period: RewardPeriod, available: number): string {
+export function fixedWinnerRewardsMessage(
+  period: RewardPeriod,
+  available: number,
+  gameLabel: string = DEFAULT_REWARD_GAME_LABEL,
+): string {
   const noun = REWARD_PERIOD_NOUN[period];
-  return `Every Live Trivia game has a winner, and you run ${available} ${plural(available, "game")} each ${noun} — so this reward gives out exactly ${available} per ${noun}. To hand out fewer, use a points target instead.`;
+  return `Every ${gameLabel} game has a winner, and you run ${available} ${plural(available, "game")} each ${noun} — so this reward gives out exactly ${available} per ${noun}. To hand out fewer, use a points target instead.`;
+}
+
+export function singleGameWinnerQuantityMessage(
+  gameLabel: string = DEFAULT_REWARD_GAME_LABEL,
+): string {
+  return `A single ${gameLabel} game has one winner, so a "winner of the game" reward for one game is worth exactly 1 prize.`;
 }
 
 export function quantityOutOfRangeMessage(): string {
@@ -272,8 +307,9 @@ export type RewardTermsInput = {
 export function validateRewardTerms(
   facts: RewardScheduleFacts,
   input: RewardTermsInput,
+  gameLabel: string = DEFAULT_REWARD_GAME_LABEL,
 ): string | null {
-  if (!facts.scheduled) return REWARD_TERMS_NOT_SCHEDULED_MESSAGE;
+  if (!facts.scheduled) return notScheduledMessage(gameLabel);
 
   const quantity = Math.round(Number(input.quantity));
   if (!Number.isFinite(quantity) || quantity < 1 || quantity > REWARD_MAX_QUANTITY) {
@@ -284,27 +320,29 @@ export function validateRewardTerms(
     // One-off reward. A game has a single winner, so a game-winner reward can
     // only be worth one prize at one game.
     if (input.winCondition === "game_winner" && quantity !== 1) {
-      return 'A single Live Trivia game has one winner, so a "winner of the game" reward for one game is worth exactly 1 prize.';
+      return singleGameWinnerQuantityMessage(gameLabel);
     }
     return null;
   }
 
-  if (facts.isOneOffOnly) return REWARD_TERMS_ONE_OFF_ONLY_MESSAGE;
+  if (facts.isOneOffOnly) return oneOffOnlyMessage(gameLabel);
 
   if (input.winCondition === "game_winner") {
     const exact = exactGameCountForPeriod(facts.schedules, input.period);
-    if (exact === null || exact < 1) return tooManyWinnerRewardsMessage(input.period, exact ?? 0);
+    if (exact === null || exact < 1) {
+      return tooManyWinnerRewardsMessage(input.period, exact ?? 0, gameLabel);
+    }
     // The quantity is LOCKED to the game count, not merely capped by it. Every
     // finished game resolves its own winner (lib/liveTriviaWinnerRewards.ts keys
     // each award on the occurrence, and never consults winner_quota), so a venue
     // that stored "1 per week" while running two games would quietly hand out
     // two. Storing a number the resolver won't honor is worse than refusing it.
-    if (quantity > exact) return tooManyWinnerRewardsMessage(input.period, exact);
-    if (quantity < exact) return fixedWinnerRewardsMessage(input.period, exact);
+    if (quantity > exact) return tooManyWinnerRewardsMessage(input.period, exact, gameLabel);
+    if (quantity < exact) return fixedWinnerRewardsMessage(input.period, exact, gameLabel);
     return null;
   }
 
-  if (facts.counts[input.period] < 1) return periodHasNoGameMessage(input.period);
+  if (facts.counts[input.period] < 1) return periodHasNoGameMessage(input.period, gameLabel);
   return null;
 }
 

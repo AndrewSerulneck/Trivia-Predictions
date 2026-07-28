@@ -47,6 +47,14 @@
     {
       "path": "/api/cron/category-blitz-continuous",
       "schedule": "*/1 * * * *"
+    },
+    {
+      "path": "/api/cron/resolve-nfl-pickem-winners",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/nfl-week-sync",
+      "schedule": "0 6 * * *"
     }
   ]
 }

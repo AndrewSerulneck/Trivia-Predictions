@@ -7,6 +7,7 @@ import {
   inferChallengeGameType,
   type ChallengeCampaignCard,
 } from "@/components/venue/venueHubShared";
+import { formatCalendarDate as formatUpcomingDate } from "@/lib/formatCalendarDate";
 
 type VenueChallengesPanelProps = {
   contentReady: boolean;
@@ -78,10 +79,16 @@ function VenueChallengesPanelInner({
                 const isExhausted = quotaRemaining <= 0;
                 const winnerUsernames = challenge.winnerUsernames ?? [];
                 const isWon = isWinner || isExhausted;
+                // An NFL reward whose first week is still in the future: real
+                // cycles are already running, but nothing can be earned yet, so
+                // it must not read as live. Rules stay openable — seeing the
+                // terms early is the point of creating it before the season.
+                const upcomingStartDate = !isWon ? challenge.upcomingStartDate ?? null : null;
+                const isUpcoming = Boolean(upcomingStartDate);
                 const canOpenRules = !isWon;
                 const canOpenRedeem = isWinner;
                 const isBusy = pendingChallengeRedeemId === challenge.id;
-                const gameType = inferChallengeGameType(challenge.name);
+                const gameType = inferChallengeGameType(challenge.name, challenge.rewardDefinitionId);
                 const iconStyle = CHALLENGE_ICON_STYLE[gameType];
                 return (
                   <button
@@ -122,6 +129,11 @@ function VenueChallengesPanelInner({
                           <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-slate-400"
                             style={{ background: "rgba(51,65,85,0.5)", border: "1px solid rgba(71,85,105,0.5)" }}>
                             All Claimed
+                          </span>
+                        ) : isUpcoming ? (
+                          <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-amber-300"
+                            style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)" }}>
+                            Upcoming
                           </span>
                         ) : (
                           <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-cyan-400"
@@ -168,17 +180,19 @@ function VenueChallengesPanelInner({
                           "All prizes for this cycle have been claimed."
                         )}
                       </p>
+                    ) : isUpcoming && upcomingStartDate ? (
+                      <p className="mt-3 text-base text-amber-300/80">
+                        Starts {formatUpcomingDate(upcomingStartDate)} — get your picks in early.
+                      </p>
                     ) : challenge.challengeMode === "leaderboard" ? (
                       // Legacy leaderboard-mode rewards finish out their current cycle, but
                       // standings are never rendered on this panel (Rewards is progress-only).
                       <p className="mt-3 text-base text-slate-500">In progress — check back for results.</p>
                     ) : challenge.winCondition === "game_winner" ? (
-                      // No points target to bar-chart — the reward goes to whoever wins the
-                      // game, resolved by the resolve-live-trivia-winners cron after the game
-                      // ends.
-                      <p className="mt-3 text-base text-slate-500">
-                        Awarded to the winner of the Live Trivia game.
-                      </p>
+                      // No points target to bar-chart — the reward goes to whoever wins,
+                      // resolved by the winner-rewards cron once the contest ends. Which
+                      // game/contest is already named in the rules text rendered above.
+                      <p className="mt-3 text-base text-slate-500">Awarded to the winner.</p>
                     ) : (
                       <div className="mt-3">
                         <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildNFLLeaderboardWeekOptions, getNFLWeekDisplayLabel, listNFLWeeks, getCurrentNFLWeek, isNFLWeekLocked } from "@/lib/nflPickEm";
+import { buildNFLGameWeekOptions, buildNFLLeaderboardWeekOptions, listNFLWeeks } from "@/lib/nflPickEm";
 import { getVenueTimezone } from "@/lib/timezone";
 
 export async function GET(request: Request) {
@@ -28,26 +28,15 @@ export async function GET(request: Request) {
       });
     }
 
-    const currentWeek = await getCurrentNFLWeek(season);
-    
-    // Transform to options format
-    const weekOptions = weeks.map(week => ({
-      id: week.id,
-      weekNumber: week.weekNumber,
-      weekType: week.weekType,
-      label: getNFLWeekDisplayLabel(week),
-      weekStartDate: week.weekStartDate,
-      weekEndDate: week.weekEndDate,
-      status: week.status,
-      isLocked: isNFLWeekLocked(week),
-      isCurrent: currentWeek?.id === week.id,
-      gamesCount: week.gamesCount,
-    }));
-    
+    // Game mode takes no timezone: week visibility is the fixed Tue 05:00 UTC
+    // rollover (isNFLWeekOpenForPicks), the same rule /api/nfl-pickem/games
+    // gates on. Only leaderboard mode still resolves a venue zone, above.
+    const gameOptions = buildNFLGameWeekOptions(weeks);
+
     return NextResponse.json({
       ok: true,
-      weeks: weekOptions,
-      currentWeekId: currentWeek?.id || null,
+      weeks: gameOptions.weeks,
+      currentWeekId: gameOptions.currentWeekId,
       season,
     });
   } catch (error) {

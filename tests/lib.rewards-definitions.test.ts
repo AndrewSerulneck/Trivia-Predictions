@@ -1,20 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminLiveShowdownSchedule } from "@/lib/liveShowdownAdmin";
+import type { NFLWeek } from "@/lib/nflPickEm";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 // rewards.ts is server-only and leans on two module boundaries: the schedule
 // reader (listAdminLiveShowdownSchedules) and the engine (createChallengeCampaign).
 // We stub both — the schedule reader returns fixtures, and createChallengeCampaign
 // captures the expansion input so we can assert the engine field mapping without a DB.
+// The NFL Pick 'Em Challenge adds a THIRD boundary: the season calendar
+// (listNFLWeeks over nfl_pickem_weeks). Stubbed the same way, so the NFL branch
+// is asserted without a DB and without the update_nfl_week_status RPC.
 const mocks = vi.hoisted(() => ({
   listAdminLiveShowdownSchedules: vi.fn(async (): Promise<AdminLiveShowdownSchedule[]> => []),
   createChallengeCampaign: vi.fn(async (input: Record<string, unknown>) => ({ id: "reward-1", ...input })),
+  listNFLWeeks: vi.fn(async (): Promise<NFLWeek[]> => []),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/liveShowdownAdmin", () => ({
   listAdminLiveShowdownSchedules: mocks.listAdminLiveShowdownSchedules,
+}));
+vi.mock("@/lib/nflPickEm", () => ({
+  listNFLWeeks: mocks.listNFLWeeks,
 }));
 vi.mock("@/lib/challengeCampaigns", () => ({
   createChallengeCampaign: mocks.createChallengeCampaign,
@@ -27,6 +35,7 @@ import {
   renderRewardRequirement,
 } from "@/lib/rewardDefinitions";
 import {
+  REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
   REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE,
   REWARD_UNKNOWN_DEFINITION_MESSAGE,
   REWARD_INVALID_PRIZE_MESSAGE,
@@ -38,6 +47,12 @@ import {
   REWARD_TERMS_ONE_OFF_ONLY_MESSAGE,
   quantityOutOfRangeMessage,
 } from "@/lib/rewardTerms";
+import {
+  NFL_WEEK_SCOPE_INVALID_MESSAGE,
+  NFL_WEEK_WINNER_QUANTITY_MESSAGE,
+  type NFLRewardWeekScope,
+} from "@/lib/nflPickEmRewardWeeks";
+import type { ChallengeWinCondition } from "@/types";
 
 function makeSchedule(overrides: Partial<AdminLiveShowdownSchedule> = {}): AdminLiveShowdownSchedule {
   return {
@@ -68,6 +83,8 @@ const APPETIZER_PRIZE: RewardPrizeInput = {
 beforeEach(() => {
   mocks.listAdminLiveShowdownSchedules.mockReset();
   mocks.createChallengeCampaign.mockClear();
+  mocks.listNFLWeeks.mockReset();
+  mocks.listNFLWeeks.mockResolvedValue([]);
   // Fixtures below are anchored on 2026-07-21 (a Tuesday); freeze "now" the day
   // before so that date reads as upcoming, not a stale past occurrence — see
   // hasLiveOrUpcomingOccurrence in lib/rewards.ts.
@@ -740,5 +757,215 @@ describe("createReward — game-winner slots", () => {
     expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
       expect.objectContaining({ gameWinnerSlots: null, winnerQuota: 3, activeDays: ["tue", "thu"] }),
     );
+  });
+});
+
+// ── NFL Pick 'Em Challenge (Phase 4) ─────────────────────────────────────────
+// This definition gates on the NFL season calendar rather than a venue schedule,
+// so it takes NONE of the terms-sentence machinery above. Everything the engine
+// receives — cadence, quota, activeDays, date bounds — is DERIVED from the week
+// scope on the server; the client supplies only the shape.
+
+/**
+ * Four Thu→Wed weeks around the frozen clock (2026-07-20). Week 3 is the current
+ * one (its weekEndDate hasn't passed), so "current, else next" must resolve to it
+ * and the season must end on week 4's weekEndDate.
+ */
+const NFL_WEEKS: NFLWeek[] = [
+  ["2026-07-02", "2026-07-08"],
+  ["2026-07-09", "2026-07-15"],
+  ["2026-07-16", "2026-07-22"],
+  ["2026-07-23", "2026-07-29"],
+].map(([weekStartDate, weekEndDate], index) => ({
+  id: `week-${index + 1}`,
+  season: 2026,
+  weekNumber: index + 1,
+  weekType: "regular",
+  displayLabel: null,
+  weekStartDate,
+  weekEndDate,
+  thursdayKickoff: `${weekStartDate}T20:15:00.000Z`,
+  status: "upcoming",
+  gamesCount: 16,
+  syncedAt: null,
+}));
+
+const ALL_SEVEN_THURSDAY_FIRST = ["thu", "fri", "sat", "sun", "mon", "tue", "wed"];
+
+type NFLCreateOverrides = {
+  winCondition?: ChallengeWinCondition;
+  winnerQuota?: number;
+  threshold?: number;
+  nflWeekScope?: NFLRewardWeekScope | null;
+};
+
+const createNFLReward = (overrides: NFLCreateOverrides = {}) =>
+  createReward({
+    venueId: "venue-1",
+    definitionId: "nfl_pickem_challenge",
+    // Deliberately a cadence the scope must OVERRIDE, never honor.
+    cadence: "monthly",
+    winCondition: overrides.winCondition ?? "game_winner",
+    threshold: overrides.threshold ?? 1,
+    winnerQuota: overrides.winnerQuota ?? 1,
+    nflWeekScope:
+      overrides.nflWeekScope === undefined
+        ? { kind: "weekly", season: 2026 }
+        : overrides.nflWeekScope,
+    prize: APPETIZER_PRIZE,
+  });
+
+describe("resolveRewardCreationContext — NFL season gate", () => {
+  it("reads the current-or-next week and the season's end out of nfl_pickem_weeks", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+    const ctx = await resolveRewardCreationContext("venue-1", "nfl_pickem_challenge");
+
+    expect(ctx.scheduled).toBe(true);
+    // Exactly the two week-scope shapes — never the terms sentence's periods.
+    expect(ctx.allowedCadences).toEqual(["none", "weekly"]);
+    expect(ctx.scheduleShapes).toEqual([]);
+    expect(ctx.gameSlots).toEqual([]);
+    expect(ctx.nflSeason).toEqual({
+      season: 2026,
+      fromWeek: 3,
+      fromWeekStartDate: "2026-07-16",
+      seasonEndDate: "2026-07-29",
+      weeksRemaining: 2,
+    });
+    // The venue's Live Trivia schedule is irrelevant here and must not be read.
+    expect(mocks.listAdminLiveShowdownSchedules).not.toHaveBeenCalled();
+  });
+
+  it("blocks when the season has no weeks left", async () => {
+    // Both remaining fixtures ended before the frozen clock.
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS.slice(0, 2));
+    const ctx = await resolveRewardCreationContext("venue-1", "nfl_pickem_challenge");
+    expect(ctx.scheduled).toBe(false);
+    expect(ctx.allowedCadences).toEqual([]);
+    expect(ctx.nflSeason).toBeNull();
+  });
+
+  it("leaves nflSeason null for a schedule-gated definition", async () => {
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
+    expect(ctx.nflSeason).toBeNull();
+    expect(mocks.listNFLWeeks).not.toHaveBeenCalled();
+  });
+});
+
+describe("createReward — NFL Pick 'Em Challenge", () => {
+  beforeEach(() => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+  });
+
+  it("expands a weekly week-winner reward with all seven days, Thursday first", async () => {
+    await createNFLReward({ nflWeekScope: { kind: "weekly", season: 2026 } });
+
+    expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        venueIds: ["venue-1"],
+        gameTypes: ["nfl-pickem"],
+        scheduleType: "single_day",
+        recurringType: "weekly",
+        winnerQuota: 1,
+        gameWinnerSlots: null,
+        nflWeekScope: { kind: "weekly", season: 2026 },
+      }),
+    );
+    const input = mocks.createChallengeCampaign.mock.calls[0][0];
+    // Order matters twice over: computeCycleStart anchors on activeDays[0] (an
+    // NFL week runs Thu→Wed) and isCampaignEligibleAtTime blocks accrual on any
+    // day missing from the list (NFL games settle Thu/Sun/Mon).
+    expect(input.activeDays).toEqual(ALL_SEVEN_THURSDAY_FIRST);
+    // A weekly reward's boundaries belong to the weekly cycle math, not to dates.
+    expect(input.startDate).toBeUndefined();
+    expect(input.endDate).toBeUndefined();
+  });
+
+  it("expands a season-long reward into a closed one-off with real date bounds", async () => {
+    await createNFLReward({ nflWeekScope: { kind: "season", season: 2026, fromWeek: 3 } });
+
+    expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recurringType: "none",
+        winnerQuota: 1,
+        // Drawn from the server's own week rows: week 3's start, the season's end.
+        // Without both, computeCycleStart returns the epoch sentinel and
+        // getCampaignCloseTimestampMs returns null — the reward never closes.
+        startDate: "2026-07-16",
+        endDate: "2026-07-29",
+        nflWeekScope: { kind: "season", season: 2026, fromWeek: 3 },
+      }),
+    );
+    // Still all seven days: activeDays is the accrual gate for a season reward too.
+    expect(mocks.createChallengeCampaign.mock.calls[0][0].activeDays).toEqual(
+      ALL_SEVEN_THURSDAY_FIRST,
+    );
+  });
+
+  it("refuses a week-winner quantity other than 1 instead of clamping it", async () => {
+    await expect(createNFLReward({ winnerQuota: 5 })).rejects.toThrow(
+      NFL_WEEK_WINNER_QUANTITY_MESSAGE,
+    );
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("takes the picks target's quantity but still range-checks it", async () => {
+    await createNFLReward({ winCondition: "points_threshold", threshold: 25, winnerQuota: 3 });
+    expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        winCondition: "points_threshold",
+        // thresholdStep 1 — correct PICKS, not Live Trivia's multiples of 10.
+        pointsRequiredToWin: 25,
+        winnerQuota: 3,
+      }),
+    );
+
+    mocks.createChallengeCampaign.mockClear();
+    await expect(
+      createNFLReward({ winCondition: "points_threshold", threshold: 25, winnerQuota: 999 }),
+    ).rejects.toThrow(quantityOutOfRangeMessage());
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("overrides a client-supplied past fromWeek with the server's own", async () => {
+    // Backdating to week 1 would mint prizes for weeks that already played.
+    await createNFLReward({ nflWeekScope: { kind: "season", season: 1999, fromWeek: 1 } });
+    expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nflWeekScope: { kind: "season", season: 2026, fromWeek: 3 },
+        startDate: "2026-07-16",
+      }),
+    );
+  });
+
+  it("drops a smuggled week list — there is no third scope shape", async () => {
+    const smuggled = {
+      kind: "season",
+      season: 2026,
+      fromWeek: 3,
+      weekNumbers: [12, 13, 14],
+    } as unknown as NFLRewardWeekScope;
+    await createNFLReward({ nflWeekScope: smuggled });
+    expect(mocks.createChallengeCampaign.mock.calls[0][0].nflWeekScope).toEqual({
+      kind: "season",
+      season: 2026,
+      fromWeek: 3,
+    });
+  });
+
+  it("refuses a missing or malformed scope rather than guessing one", async () => {
+    await expect(createNFLReward({ nflWeekScope: null })).rejects.toThrow(
+      NFL_WEEK_SCOPE_INVALID_MESSAGE,
+    );
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("refuses creation when the season has no weeks left, with its own message", async () => {
+    // Not REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE: no amount of Live Trivia
+    // scheduling would fix this, so the copy must not send the partner there.
+    mocks.listNFLWeeks.mockResolvedValue([]);
+    await expect(createNFLReward()).rejects.toThrow(REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
   });
 });
