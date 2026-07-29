@@ -5,22 +5,13 @@ import Image from "next/image";
 import type { VenueGameCardConfig, VenueGameKey } from "@/lib/venueGameCards";
 import {
   formatBadgeCount,
+  GAME_CARD_ICON_BY_KEY,
   GAME_TITLE_LINES_BY_KEY,
   VENUE_HUB_TILE_GRADIENT_BY_KEY,
   VENUE_HUB_TILE_SUBTITLE_BY_KEY,
   type LiveTriviaStatus,
   type VenueArrivalStage,
 } from "@/components/venue/venueHubShared";
-
-const GAME_CARD_ICON_BY_KEY: Partial<Record<VenueGameKey, { src: string; width: number; height: number }>> = {
-  "nfl-pickem": { src: "/brand/nfl-pickem-icon.png", width: 500, height: 500 },
-  bingo: { src: "/brand/prop-bet-bingo-icon.png", width: 512, height: 512 },
-  live_trivia: { src: "/brand/live-trivia-icon.png", width: 500, height: 500 },
-  "speed-trivia": { src: "/brand/speed-trivia-icon.png", width: 500, height: 500 },
-  "category-blitz": { src: "/brand/category-blitz-icon.png", width: 500, height: 500 },
-  pickem: { src: "/brand/pickem-icon.png", width: 500, height: 500 },
-  fantasy: { src: "/brand/fantasy-icon.png", width: 500, height: 500 },
-};
 
 const WEEKDAY_LABELS: Record<string, string> = {
   sun: "Sunday",
@@ -220,23 +211,16 @@ function VenueGamesPanelInner({
                             Live game in progress!
                           </p>
                           <p className="mt-1 text-[19px] font-semibold leading-snug text-amber-50/90">
-                            {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key].map((line, i) => (
-                              <React.Fragment key={i}>
-                                {i > 0 && <br />}
-                                {line}
-                              </React.Fragment>
-                            ))}
+                            {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
                           </p>
                         </div>
                       </div>
                     ) : (
-                      <div className="max-w-[92%] text-[19px] font-bold leading-snug text-white/95">
-                        {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key].map((line, i) => (
-                          <React.Fragment key={i}>
-                            {i > 0 && <br />}
-                            {line}
-                          </React.Fragment>
-                        ))}
+                      <div className="text-[19px] font-bold leading-snug text-white/95">
+                        {/* Floated spacer covering the corner icon's footprint: only the lines
+                            that would run under the icon wrap early, the rest use full width. */}
+                        <span aria-hidden="true" className="float-right h-10 w-[5.5rem]" />
+                        {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
                       </div>
                     )}
 

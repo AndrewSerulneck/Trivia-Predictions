@@ -61,7 +61,6 @@ export function PendingChallengesPanel() {
     if (!userId) return;
     setLoading(true);
     loadChallenges(userId, venueId).finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, venueId]);
 
   async function sendChallenge() {
@@ -186,7 +185,7 @@ export function PendingChallengesPanel() {
             onChange={(event) => setGameType(event.target.value as ChallengeGameType)}
             className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-secondary hover:opacity-80 transition-opacity"
           >
-            <option value="pickem">Pick 'Em</option>
+            <option value="pickem">Pick &apos;Em</option>
             <option value="fantasy">Fantasy Sports</option>
             <option value="speed-trivia">Speed Trivia</option>
             <option value="live-trivia">Live Trivia</option>

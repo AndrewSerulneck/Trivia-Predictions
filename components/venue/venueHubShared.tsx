@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import type { VenueGameKey } from "@/lib/venueGameCards";
 import type { LiveTriviaPayloadFailureReason } from "@/lib/liveTriviaClientState";
 
@@ -80,14 +81,28 @@ export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
   "nfl-pickem": "#1a2f72",
 };
 
-export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string[]> = {
-  live_trivia: ["Classic bar trivia the whole room", "plays together."],
-  "speed-trivia": ["Rapid fire, multiple choice.", "Play anytime."],
-  bingo: ["Track your squares as you watch", "today's games on TV."],
-  pickem: ["Predict the winners of today's", "matchups across every major sport."],
-  fantasy: ["Draft the ultimate roster. The better", "they perform, the more points you earn."],
-  "category-blitz": ["Only unique answers get points."],
-  "nfl-pickem": ["Pick the most winners each week."],
+// Plain sentences, not pre-split lines — the tile lets these wrap naturally so
+// each line fills the available width (and clears the corner icon).
+export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
+  live_trivia: "Classic bar trivia the whole venue plays together.",
+  "speed-trivia": "Rapid fire, multiple choice. Play anytime.",
+  bingo: "Track your squares as you watch today's games on TV.",
+  pickem: "Predict the winners of today's matchups across every major sport.",
+  fantasy: "Draft the ultimate roster. The better they perform, the more points you earn.",
+  "category-blitz": "Only unique answers get points.",
+  "nfl-pickem": "Pick the most winners each week.",
+};
+
+// Shared with the venue-home game buttons (VenueGamesPanel) so a reward's icon
+// always matches the icon on the game button it's tied to.
+export const GAME_CARD_ICON_BY_KEY: Partial<Record<VenueGameKey, { src: string; width: number; height: number }>> = {
+  "nfl-pickem": { src: "/brand/nfl-pickem-icon.png", width: 500, height: 500 },
+  bingo: { src: "/brand/prop-bet-bingo-icon.png", width: 512, height: 512 },
+  live_trivia: { src: "/brand/live-trivia-icon.png", width: 500, height: 500 },
+  "speed-trivia": { src: "/brand/speed-trivia-icon.png", width: 500, height: 500 },
+  "category-blitz": { src: "/brand/category-blitz-icon.png", width: 500, height: 500 },
+  pickem: { src: "/brand/pickem-icon.png", width: 500, height: 500 },
+  fantasy: { src: "/brand/fantasy-icon.png", width: 500, height: 500 },
 };
 
 export function formatCountdown(seconds: number): string {
@@ -105,38 +120,6 @@ export function formatBadgeCount(value: number): string {
   return String(safeCount);
 }
 
-function BingoGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <circle cx="32" cy="32" r="24" fill="#fb923c" stroke="#0f172a" strokeWidth="4" />
-      <path d="M10 32h44M32 10v44" stroke="#0f172a" strokeWidth="3" opacity="0.28" />
-      <path d="M16 20c10 8 22 17 32 24" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-      <path d="M16 44c10-8 22-17 32-24" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function PickEmGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <path d="M19 14h26v8l-5 8H24l-5-8z" fill="#fde68a" stroke="#0f172a" strokeWidth="4" strokeLinejoin="round" />
-      <path d="M22 30h20v6c0 6-4 12-10 12s-10-6-10-12z" fill="#facc15" stroke="#0f172a" strokeWidth="4" />
-      <path d="M15 18c-3 0-6 2-6 5 0 4 3 8 8 8" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-      <path d="M49 18c3 0 6 2 6 5 0 4-3 8-8 8" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-      <path d="m26 36 4 4 8-9" fill="none" stroke="#1d4ed8" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function FantasyGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <path d="M32 8 50 16v14c0 12-7 21-18 26C21 51 14 42 14 30V16z" fill="#34d399" stroke="#0f172a" strokeWidth="4" strokeLinejoin="round" />
-      <path d="m32 20 3.8 7.6 8.4 1.2-6.1 5.9 1.4 8.3-7.5-3.9-7.5 3.9 1.4-8.3-6.1-5.9 8.4-1.2z" fill="#fef08a" stroke="#0f172a" strokeWidth="3" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function TrophyGlyph({ className = "h-10 w-10" }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
@@ -146,53 +129,6 @@ function TrophyGlyph({ className = "h-10 w-10" }: { className?: string }) {
       <path d="M44 14h8c0 7-4 12-10 13" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
       <path d="M20 14h-8c0 7 4 12 10 13" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
       <circle cx="32" cy="21" r="4" fill="#fef9c3" stroke="#0f172a" strokeWidth="3" />
-    </svg>
-  );
-}
-
-function SpeedTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <polygon
-        points="38,4 16,36 30,36 26,60 48,28 34,28"
-        fill="#fbbf24"
-        stroke="#78350f"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <polygon
-        points="38,4 16,36 30,36 26,60 48,28 34,28"
-        fill="none"
-        stroke="#fef08a"
-        strokeWidth="1"
-        strokeLinejoin="round"
-        opacity="0.6"
-      />
-    </svg>
-  );
-}
-
-function NFLPickEmGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <ellipse cx="32" cy="32" rx="22" ry="14" fill="#6b1a4e" stroke="#0f172a" strokeWidth="4" />
-      <path d="M14 32h36" stroke="#fde68a" strokeWidth="3" opacity="0.85" />
-      <path d="M24 27v10M28 25v14M36 25v14M40 27v10" stroke="#fde68a" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function LiveTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <path
-        d="M32 18c7 0 12 4.5 12 10 0 3.5-2.5 6.5-5.5 8.5-2.5 1.5-3.5 3-3.5 6.5"
-        stroke="white"
-        strokeWidth="5.5"
-        fill="none"
-        strokeLinecap="round"
-      />
-      <circle cx="35" cy="49.5" r="3.5" fill="white" />
     </svg>
   );
 }
@@ -273,20 +209,34 @@ export const CHALLENGE_ICON_STYLE: Record<
   },
 };
 
+// ChallengeGameType and VenueGameKey are separately-maintained enums (the
+// former has no "category-blitz", the latter has no "unknown") — this maps
+// the subset they share so a reward's badge can reuse the exact PNG icon
+// shown on that game's button (GAME_CARD_ICON_BY_KEY).
+const CHALLENGE_GAME_TYPE_TO_VENUE_GAME_KEY: Record<ChallengeGameType, VenueGameKey | null> = {
+  live_trivia: "live_trivia",
+  "speed-trivia": "speed-trivia",
+  bingo: "bingo",
+  pickem: "pickem",
+  fantasy: "fantasy",
+  "nfl-pickem": "nfl-pickem",
+  unknown: null,
+};
+
 export function ChallengeIconBadge({ gameType }: { gameType: ChallengeGameType }) {
   const s = CHALLENGE_ICON_STYLE[gameType];
+  const venueGameKey = CHALLENGE_GAME_TYPE_TO_VENUE_GAME_KEY[gameType];
+  const icon = venueGameKey ? GAME_CARD_ICON_BY_KEY[venueGameKey] : undefined;
   return (
     <div
       className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-lg"
       style={{ background: s.badgeBg, border: `2px solid ${s.borderColor}` }}
     >
-      {gameType === "live_trivia" ? <LiveTriviaGlyph className="h-8 w-8" /> : null}
-      {gameType === "speed-trivia" ? <SpeedTriviaGlyph className="h-8 w-8" /> : null}
-      {gameType === "bingo" ? <BingoGlyph className="h-8 w-8" /> : null}
-      {gameType === "pickem" ? <PickEmGlyph className="h-8 w-8" /> : null}
-      {gameType === "fantasy" ? <FantasyGlyph className="h-8 w-8" /> : null}
-      {gameType === "nfl-pickem" ? <NFLPickEmGlyph className="h-8 w-8" /> : null}
-      {gameType === "unknown" ? <TrophyGlyph className="h-8 w-8" /> : null}
+      {icon ? (
+        <Image src={icon.src} alt="" width={icon.width} height={icon.height} className="h-10 w-10 object-contain" />
+      ) : (
+        <TrophyGlyph className="h-8 w-8" />
+      )}
     </div>
   );
 }
