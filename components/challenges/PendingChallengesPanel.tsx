@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import type { ChallengeGameType, ChallengeInvite } from "@/types";
-import { useUser } from "@/hooks/useUser";
-import { useVenueUser } from "@/hooks/useVenueUser";
+import { getUserId, getVenueId } from "@/lib/storage";
 
 const MAX_RECEIVED = 5;
 
@@ -29,23 +28,14 @@ function gameTypeLabel(gameType: ChallengeGameType): string {
   return "Prop Bingo";
 }
 
-function statusStyle(status: ChallengeInvite["status"]): string {
-  if (status === "accepted") return "bg-emerald-500/15 text-emerald-400";
-  if (status === "declined") return "bg-rose-500/15 text-rose-400";
-  if (status === "completed") return "bg-sky-500/15 text-sky-400";
-  return "bg-amber-500/15 text-amber-400";
-}
-
 export function PendingChallengesPanel() {
-  const { user } = useUser();
-  const { venueUser } = useVenueUser();
-  const venueUserId = venueUser?.id;
+  const [userId, setUserId] = useState<string | null>(null);
+  const [venueId, setVenueId] = useState<string | null>(null);
   const [gameType, setGameType] = useState<ChallengeGameType>("pickem");
   const [receiverUsername, setReceiverUsername] = useState("");
   const [challengeDetails, setChallengeDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [sentInvites, setSentInvites] = useState<ChallengeInvite[]>([]);
-  const [pendingReceived, setPendingReceived] = useState<ChallengeInvite[]>([]);
+  const [challenges, setChallenges] = useState<ChallengeInvite[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,27 +43,29 @@ export function PendingChallengesPanel() {
   const [canceling, setCanceling] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!venueUserId) return;
+    setUserId(getUserId());
+    setVenueId(getVenueId());
+  }, []);
+
+  const loadChallenges = async (forUserId: string, forVenueId: string | null) => {
+    const params = new URLSearchParams({ userId: forUserId });
+    if (forVenueId) params.set("venueId", forVenueId);
+    const res = await fetch(`/api/challenges?${params.toString()}`);
+    const data = await res.json();
+    if (data.ok) {
+      setChallenges(data.challenges ?? []);
+    }
+  };
+
+  useEffect(() => {
+    if (!userId) return;
     setLoading(true);
-    fetch(`/api/challenges?venueUserId=${venueUserId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.ok) {
-          const invites: ChallengeInvite[] = data.invites ?? [];
-          const sent = invites.filter((i) => i.senderUserId === venueUserId && i.status === "pending");
-          const received = invites
-            .filter((i) => i.receiverUserId === venueUserId && i.status === "pending")
-            .slice(0, MAX_RECEIVED);
-          setSentInvites(sent);
-          setPendingReceived(received);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [venueUserId]);
+    loadChallenges(userId, venueId).finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, venueId]);
 
   async function sendChallenge() {
-    if (!user || !venueUserId) return;
+    if (!userId) return;
     setSubmitting(true);
     setErrorMessage(null);
     setStatusMessage(null);
@@ -82,6 +74,9 @@ export function PendingChallengesPanel() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          action: "create",
+          senderUserId: userId,
+          venueId: venueId ?? undefined,
           gameType,
           receiverUsername: receiverUsername.trim(),
           challengeDetails: challengeDetails.trim() || undefined,
@@ -92,13 +87,7 @@ export function PendingChallengesPanel() {
         setReceiverUsername("");
         setChallengeDetails("");
         setStatusMessage("Challenge sent!");
-        // refresh
-        const refresh = await fetch(`/api/challenges?venueUserId=${venueUserId}`);
-        const data = await refresh.json();
-        if (data.ok) {
-          const invites: ChallengeInvite[] = data.invites ?? [];
-          setSentInvites(invites.filter((i) => i.senderUserId === venueUserId && i.status === "pending"));
-        }
+        await loadChallenges(userId, venueId);
       } else {
         setErrorMessage(body.error ?? "Failed to send challenge.");
       }
@@ -109,19 +98,19 @@ export function PendingChallengesPanel() {
     }
   }
 
-  async function respondToChallenge(inviteId: string, status: "accepted" | "declined") {
-    if (!venueUserId) return;
-    const setter = status === "declined" ? setDeclining : setCanceling;
-    setter(inviteId);
+  async function respondToChallenge(challengeId: string, response: "accept" | "decline") {
+    if (!userId) return;
+    const setter = response === "decline" ? setDeclining : setCanceling;
+    setter(challengeId);
     try {
-      const res = await fetch(`/api/challenges/${inviteId}`, {
-        method: "PATCH",
+      const res = await fetch("/api/challenges", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, venueUserId }),
+        body: JSON.stringify({ action: "respond", userId, challengeId, response }),
       });
       const body = await res.json();
       if (body.ok) {
-        setPendingReceived((prev) => prev.filter((i) => i.id !== inviteId));
+        await loadChallenges(userId, venueId);
       }
     } catch {
       // noop
@@ -130,9 +119,13 @@ export function PendingChallengesPanel() {
     }
   }
 
-  if (!venueUserId) return null;
+  if (!userId) return null;
 
-  const pendingSent = sentInvites;
+  const sentInvites = challenges.filter((i) => i.senderUserId === userId);
+  const pendingReceived = challenges
+    .filter((i) => i.receiverUserId === userId && i.status === "pending")
+    .slice(0, MAX_RECEIVED);
+  const pendingSent = sentInvites.filter((i) => i.status === "pending");
   const accepted = sentInvites.filter((i) => i.status === "accepted");
   const completed = sentInvites.filter((i) => i.status === "completed");
 
@@ -242,7 +235,7 @@ export function PendingChallengesPanel() {
                   <div className="flex shrink-0 flex-col gap-1.5">
                     <button
                       type="button"
-                      onClick={() => void respondToChallenge(challenge.id, "accepted")}
+                      onClick={() => void respondToChallenge(challenge.id, "accept")}
                       disabled={declining === challenge.id || canceling === challenge.id}
                       className="tp-clean-button rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-50"
                     >
@@ -250,7 +243,7 @@ export function PendingChallengesPanel() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void respondToChallenge(challenge.id, "declined")}
+                      onClick={() => void respondToChallenge(challenge.id, "decline")}
                       disabled={declining === challenge.id || canceling === challenge.id}
                       className="tp-clean-button rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-400 transition-colors hover:bg-rose-500/20 disabled:opacity-50"
                     >
