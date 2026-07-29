@@ -84,7 +84,7 @@ export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
 // Plain sentences, not pre-split lines — the tile lets these wrap naturally so
 // each line fills the available width (and clears the corner icon).
 export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
-  live_trivia: "Classic bar trivia the whole venue plays together.",
+  live_trivia: "Classic bar trivia the whole room plays together.",
   "speed-trivia": "Rapid fire, multiple choice. Play anytime.",
   bingo: "Track your squares as you watch today's games on TV.",
   pickem: "Predict the winners of today's matchups across every major sport.",
