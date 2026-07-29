@@ -49,11 +49,11 @@ type NFLWeeksPayload = {
 const LEADERBOARD_GAME_OPTIONS: Array<{ value: LeaderboardGameFilter; label: string }> = [
   { value: "all", label: "All Games" },
   { value: "speed-trivia", label: "Speed Trivia" },
-  { value: "live-trivia", label: "Hightop Live Trivia" },
+  { value: "live-trivia", label: "Live Trivia" },
   { value: "category-blitz", label: "Category Blitz" },
   { value: "bingo", label: "Prop Bingo" },
-  { value: "fantasy", label: "Hightop Fantasy Sports" },
-  { value: "pickem", label: "Hightop Pick 'Em" },
+  { value: "fantasy", label: "Fantasy Sports" },
+  { value: "pickem", label: "Pick 'Em" },
   { value: "predictions", label: "Sports Predictions" },
   { value: "nfl-pickem", label: "NFL Pick 'Em" },
 ];

@@ -121,9 +121,9 @@ export function getCurrentWeekStartDate(now: Date = new Date()): string {
 }
 
 function getGameTypeLabel(gameType: ChallengeGameType): string {
-  if (gameType === "pickem") return "Hightop Pick 'Em";
-  if (gameType === "fantasy") return "Hightop Fantasy Sports";
-  if (gameType === "live-trivia") return "Hightop Live Trivia";
+  if (gameType === "pickem") return "Pick 'Em";
+  if (gameType === "fantasy") return "Fantasy Sports";
+  if (gameType === "live-trivia") return "Live Trivia";
   if (gameType === "speed-trivia") return "Speed Trivia";
   if (gameType === "trivia") return "Speed Trivia";
   return "Prop Bingo";

@@ -64,8 +64,17 @@ function VenueHubHeaderBarInner({
               <button
                 type="button"
                 onClick={() => onGoToScreen(1)}
-                className={`tp-clean-button relative rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                className={`tp-clean-button rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
                   activeScreen === 1 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
+                }`}
+              >
+                Leaderboard
+              </button>
+              <button
+                type="button"
+                onClick={() => onGoToScreen(2)}
+                className={`tp-clean-button relative rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                  activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
                 }`}
               >
                 Rewards
@@ -74,15 +83,6 @@ function VenueHubHeaderBarInner({
                     {formatBadgeCount(challengeBadgeCount)}
                   </span>
                 ) : null}
-              </button>
-              <button
-                type="button"
-                onClick={() => onGoToScreen(2)}
-                className={`tp-clean-button rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
-                  activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
-                }`}
-              >
-                Leaderboard
               </button>
             </div>
           </div>

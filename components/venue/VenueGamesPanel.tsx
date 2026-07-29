@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import type { VenueGameCardConfig, VenueGameKey } from "@/lib/venueGameCards";
 import {
   formatBadgeCount,
@@ -10,6 +11,16 @@ import {
   type LiveTriviaStatus,
   type VenueArrivalStage,
 } from "@/components/venue/venueHubShared";
+
+const GAME_CARD_ICON_BY_KEY: Partial<Record<VenueGameKey, { src: string; width: number; height: number }>> = {
+  "nfl-pickem": { src: "/brand/nfl-pickem-icon.png", width: 500, height: 500 },
+  bingo: { src: "/brand/prop-bet-bingo-icon.png", width: 512, height: 512 },
+  live_trivia: { src: "/brand/live-trivia-icon.png", width: 500, height: 500 },
+  "speed-trivia": { src: "/brand/speed-trivia-icon.png", width: 500, height: 500 },
+  "category-blitz": { src: "/brand/category-blitz-icon.png", width: 500, height: 500 },
+  pickem: { src: "/brand/pickem-icon.png", width: 500, height: 500 },
+  fantasy: { src: "/brand/fantasy-icon.png", width: 500, height: 500 },
+};
 
 const WEEKDAY_LABELS: Record<string, string> = {
   sun: "Sunday",
@@ -184,9 +195,8 @@ function VenueGamesPanelInner({
                   disabled={pendingDestination !== null}
                   data-venue-game-card={card.key}
                   className={`tp-clean-button tp-game-card-btn group relative w-full overflow-hidden rounded-[22px] border border-white/75 text-left shadow-[0_12px_26px_rgba(15,23,42,0.5)] ${isOpening ? "is-opening" : ""}`}
-                  style={{ backgroundImage: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }}
+                  style={{ background: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }}
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_14%,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0.12)_40%,rgba(255,255,255,0)_72%)]" />
                   <div className="relative flex min-h-[190px] flex-col gap-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div
@@ -194,42 +204,64 @@ function VenueGamesPanelInner({
                         style={{
                           fontFamily: "'Bree Serif', 'Nunito', serif",
                           letterSpacing: "0.045em",
-                          textShadow: "0 1px 0 rgba(12,18,28,.8), 0 3px 0 rgba(12,18,28,.58), 0 0 12px rgba(255,255,255,.5)",
+                          textShadow: "0 1px 0 rgba(12,18,28,.8), 0 3px 0 rgba(12,18,28,.58)",
                         }}
                       >
                         {GAME_TITLE_LINES_BY_KEY[card.key][0]}
                         <br />
                         {GAME_TITLE_LINES_BY_KEY[card.key][1]}
                       </div>
-                      {statusLabel ? (
-                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-rose-200">
-                          <span className="h-[7px] w-[7px] rounded-full bg-rose-500" />
-                          {statusLabel}
-                        </span>
-                      ) : null}
                     </div>
 
                     {isCategoryBlitzLive ? (
-                      <div className="flex flex-col gap-2 rounded-xl border border-amber-300/60 bg-amber-500/20 px-3 py-2.5">
+                      <div className="flex flex-col gap-2">
                         <div>
                           <p className="text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
                             Live game in progress!
                           </p>
                           <p className="mt-1 text-[19px] font-semibold leading-snug text-amber-50/90">
-                            {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+                            {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key].map((line, i) => (
+                              <React.Fragment key={i}>
+                                {i > 0 && <br />}
+                                {line}
+                              </React.Fragment>
+                            ))}
                           </p>
                         </div>
-                        <span className="self-start rounded-full border border-amber-200/70 bg-amber-400/25 px-2.5 py-1 text-[22px] font-black uppercase tracking-[0.06em] text-amber-100">
-                          Join now
-                        </span>
                       </div>
                     ) : (
-                      <div className="max-w-[92%] rounded-xl border border-white/40 bg-black/30 px-3 py-2 text-[19px] font-bold leading-snug text-white/95">
-                        {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+                      <div className="max-w-[92%] text-[19px] font-bold leading-snug text-white/95">
+                        {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key].map((line, i) => (
+                          <React.Fragment key={i}>
+                            {i > 0 && <br />}
+                            {line}
+                          </React.Fragment>
+                        ))}
                       </div>
                     )}
 
+                  {(() => {
+                    const icon = GAME_CARD_ICON_BY_KEY[card.key];
+                    if (!icon) return null;
+                    return (
+                      <Image
+                        src={icon.src}
+                        alt=""
+                        width={icon.width}
+                        height={icon.height}
+                        className="pointer-events-none absolute right-2 top-2 h-[5.5rem] w-[5.5rem] object-contain drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]"
+                      />
+                    );
+                  })()}
+
                   </div>
+
+                  {statusLabel ? (
+                    <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-rose-200">
+                      <span className="h-[7px] w-[7px] rounded-full bg-rose-500" />
+                      {statusLabel}
+                    </span>
+                  ) : null}
 
                   {badge ? (
                     <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">

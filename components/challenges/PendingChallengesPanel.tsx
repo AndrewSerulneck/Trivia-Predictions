@@ -1,23 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { getUserId, getVenueId } from "@/lib/storage";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
-import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
+import React, { useEffect, useState } from "react";
 import type { ChallengeGameType, ChallengeInvite } from "@/types";
+import { useUser } from "@/hooks/useUser";
+import { useVenueUser } from "@/hooks/useVenueUser";
 
-type ChallengePayload = {
-  ok: boolean;
-  challenges?: ChallengeInvite[];
-  error?: string;
-};
+const MAX_RECEIVED = 5;
 
 function formatLocalDateTime(iso: string): string {
-  const parsed = new Date(iso);
-  if (!Number.isFinite(parsed.getTime())) {
-    return "Unknown time";
-  }
-  return parsed.toLocaleString(undefined, {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  // e.g. "Mon, Jan 5 at 3:30 PM"
+  return d.toLocaleDateString("en-US", {
+    weekday: "short",
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -26,9 +21,9 @@ function formatLocalDateTime(iso: string): string {
 }
 
 function gameTypeLabel(gameType: ChallengeGameType): string {
-  if (gameType === "pickem") return "Hightop Pick 'Em";
-  if (gameType === "fantasy") return "Hightop Fantasy Sports";
-  if (gameType === "live-trivia") return "Hightop Live Trivia";
+  if (gameType === "pickem") return "Pick 'Em";
+  if (gameType === "fantasy") return "Fantasy Sports";
+  if (gameType === "live-trivia") return "Live Trivia";
   if (gameType === "speed-trivia") return "Speed Trivia";
   if (gameType === "trivia") return "Speed Trivia";
   return "Prop Bingo";
@@ -37,196 +32,126 @@ function gameTypeLabel(gameType: ChallengeGameType): string {
 function statusStyle(status: ChallengeInvite["status"]): string {
   if (status === "accepted") return "bg-emerald-500/15 text-emerald-400";
   if (status === "declined") return "bg-rose-500/15 text-rose-400";
-  if (status === "completed") return "bg-sky-500/15 text-sky-300";
-  if (status === "canceled") return "bg-ht-elevated text-ht-fg-secondary";
-  if (status === "expired") return "bg-amber-500/15 text-amber-300";
-  return "bg-amber-500/10 text-amber-300";
+  if (status === "completed") return "bg-sky-500/15 text-sky-400";
+  return "bg-amber-500/15 text-amber-400";
 }
 
 export function PendingChallengesPanel() {
-  const [userId, setUserId] = useState("");
-  const [venueId, setVenueId] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [challenges, setChallenges] = useState<ChallengeInvite[]>([]);
-  const [receiverUsername, setReceiverUsername] = useState("");
+  const { user } = useUser();
+  const { venueUser } = useVenueUser();
+  const venueUserId = venueUser?.id;
   const [gameType, setGameType] = useState<ChallengeGameType>("pickem");
+  const [receiverUsername, setReceiverUsername] = useState("");
   const [challengeDetails, setChallengeDetails] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [sentInvites, setSentInvites] = useState<ChallengeInvite[]>([]);
+  const [pendingReceived, setPendingReceived] = useState<ChallengeInvite[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [declining, setDeclining] = useState<string | null>(null);
+  const [canceling, setCanceling] = useState<string | null>(null);
 
   useEffect(() => {
-    setUserId(getUserId() ?? "");
-    setVenueId(getVenueId() ?? "");
-  }, []);
-
-  const load = useCallback(async () => {
-    if (!userId) {
-      setLoading(false);
-      setChallenges([]);
-      return;
-    }
+    if (!venueUserId) return;
     setLoading(true);
-    setErrorMessage("");
-    try {
-      const params = new URLSearchParams({
-        userId,
-        includeResolved: "true",
-      });
-      if (venueId) {
-        params.set("venueId", venueId);
-      }
-      const response = await fetch(`/api/challenges?${params.toString()}`, { cache: "no-store" });
-      const payload = (await response.json()) as ChallengePayload;
-      if (!payload.ok) {
-        throw new Error(payload.error ?? "Failed to load challenges.");
-      }
-      setChallenges(payload.challenges ?? []);
-    } catch (error) {
-      setChallenges([]);
-      setErrorMessage(error instanceof Error ? error.message : "Failed to load challenges.");
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, venueId]);
+    fetch(`/api/challenges?venueUserId=${venueUserId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok) {
+          const invites: ChallengeInvite[] = data.invites ?? [];
+          const sent = invites.filter((i) => i.senderUserId === venueUserId && i.status === "pending");
+          const received = invites
+            .filter((i) => i.receiverUserId === venueUserId && i.status === "pending")
+            .slice(0, MAX_RECEIVED);
+          setSentInvites(sent);
+          setPendingReceived(received);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [venueUserId]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  const pendingReceived = useMemo(
-    () =>
-      challenges.filter(
-        (challenge) => challenge.status === "pending" && challenge.receiverUserId === userId
-      ),
-    [challenges, userId]
-  );
-  const pendingSent = useMemo(
-    () =>
-      challenges.filter(
-        (challenge) => challenge.status === "pending" && challenge.senderUserId === userId
-      ),
-    [challenges, userId]
-  );
-  const accepted = useMemo(
-    () => challenges.filter((challenge) => challenge.status === "accepted"),
-    [challenges]
-  );
-  const completed = useMemo(
-    () => challenges.filter((challenge) => challenge.status === "completed"),
-    [challenges]
-  );
-
-  const sendChallenge = useCallback(async () => {
-    if (!userId || !venueId || submitting) {
-      return;
-    }
-    const target = receiverUsername.trim();
-    if (!target) {
-      setStatusMessage("Enter a username to send a challenge.");
-      return;
-    }
+  async function sendChallenge() {
+    if (!user || !venueUserId) return;
     setSubmitting(true);
-    setStatusMessage("");
-    setErrorMessage("");
+    setErrorMessage(null);
+    setStatusMessage(null);
     try {
-      const response = await fetch("/api/challenges", {
+      const res = await fetch("/api/challenges", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "create",
-          senderUserId: userId,
-          venueId,
-          receiverUsername: target,
           gameType,
+          receiverUsername: receiverUsername.trim(),
           challengeDetails: challengeDetails.trim() || undefined,
         }),
       });
-      const payload = (await response.json()) as { ok: boolean; error?: string };
-      if (!payload.ok) {
-        throw new Error(payload.error ?? "Failed to send challenge.");
+      const body = await res.json();
+      if (body.ok) {
+        setReceiverUsername("");
+        setChallengeDetails("");
+        setStatusMessage("Challenge sent!");
+        // refresh
+        const refresh = await fetch(`/api/challenges?venueUserId=${venueUserId}`);
+        const data = await refresh.json();
+        if (data.ok) {
+          const invites: ChallengeInvite[] = data.invites ?? [];
+          setSentInvites(invites.filter((i) => i.senderUserId === venueUserId && i.status === "pending"));
+        }
+      } else {
+        setErrorMessage(body.error ?? "Failed to send challenge.");
       }
-      setReceiverUsername("");
-      setChallengeDetails("");
-      setStatusMessage("Challenge sent.");
-      await load();
-    } catch (error) {
-      setStatusMessage("");
-      setErrorMessage(error instanceof Error ? error.message : "Failed to send challenge.");
+    } catch {
+      setErrorMessage("Network error.");
     } finally {
       setSubmitting(false);
     }
-  }, [challengeDetails, gameType, load, receiverUsername, submitting, userId, venueId]);
+  }
 
-  const respondToChallenge = useCallback(
-    async (
-      challengeId: string,
-      responseType: "accept" | "decline" | "cancel" | "complete",
-      successMessage: string
-    ) => {
-      if (!userId || submitting) {
-        return;
+  async function respondToChallenge(inviteId: string, status: "accepted" | "declined") {
+    if (!venueUserId) return;
+    const setter = status === "declined" ? setDeclining : setCanceling;
+    setter(inviteId);
+    try {
+      const res = await fetch(`/api/challenges/${inviteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, venueUserId }),
+      });
+      const body = await res.json();
+      if (body.ok) {
+        setPendingReceived((prev) => prev.filter((i) => i.id !== inviteId));
       }
-      setSubmitting(true);
-      setStatusMessage("");
-      setErrorMessage("");
-      try {
-        const response = await fetch("/api/challenges", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "respond",
-            userId,
-            challengeId,
-            response: responseType,
-          }),
-        });
-        const payload = (await response.json()) as { ok: boolean; error?: string };
-        if (!payload.ok) {
-          throw new Error(payload.error ?? "Failed to update challenge.");
-        }
-        setStatusMessage(successMessage);
-        await load();
-      } catch (error) {
-        setStatusMessage("");
-        setErrorMessage(error instanceof Error ? error.message : "Failed to update challenge.");
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [load, submitting, userId]
-  );
+    } catch {
+      // noop
+    } finally {
+      setter(null);
+    }
+  }
 
-  if (!userId || !venueId) {
+  if (!venueUserId) return null;
+
+  const pendingSent = sentInvites;
+  const accepted = sentInvites.filter((i) => i.status === "accepted");
+  const completed = sentInvites.filter((i) => i.status === "completed");
+
+  if (loading) {
     return (
-      <div className="rounded-ht-2xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-300">
-        Join a venue to send and manage challenges.
-      </div>
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Challenges</h3>
+        <p className="mt-2 text-sm text-ht-fg-muted">Loading...</p>
+      </section>
     );
   }
 
-  if (loading) {
-    return <BouncingBallLoader size="sm" label="Loading challenges..." />;
-  }
-
   return (
-    <div className="space-y-4">
-      <VenueEntryRulesPanel
-        gameKey="fantasy"
-        shouldDisplay={pendingReceived.length + pendingSent.length === 0}
-      />
+    <div className="space-y-3">
       <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
-        <h2 className="text-lg font-semibold text-ht-fg-primary">Challenge Center</h2>
-        <p className="mt-1 text-sm text-ht-fg-secondary">
-          Send and manage head-to-head challenges for this week.
-        </p>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Your Challenge Activity</h3>
+        <div className="mt-3 grid grid-cols-3 gap-3">
           <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface px-2 py-2">
-            <div className="font-semibold text-ht-fg-primary">Received Pending</div>
-            <div className="mt-1 text-base font-black text-ht-fg-primary">{pendingReceived.length}</div>
-          </div>
-          <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface px-2 py-2">
-            <div className="font-semibold text-ht-fg-primary">Sent Pending</div>
+            <div className="font-semibold text-ht-fg-primary">Pending</div>
             <div className="mt-1 text-base font-black text-ht-fg-primary">{pendingSent.length}</div>
           </div>
           <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface px-2 py-2">
@@ -268,10 +193,10 @@ export function PendingChallengesPanel() {
             onChange={(event) => setGameType(event.target.value as ChallengeGameType)}
             className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-secondary hover:opacity-80 transition-opacity"
           >
-            <option value="pickem">Hightop Pick &apos;Em</option>
-            <option value="fantasy">Hightop Fantasy Sports</option>
+            <option value="pickem">Pick 'Em</option>
+            <option value="fantasy">Fantasy Sports</option>
             <option value="speed-trivia">Speed Trivia</option>
-            <option value="live-trivia">Hightop Live Trivia</option>
+            <option value="live-trivia">Live Trivia</option>
             <option value="bingo">Prop Bingo</option>
           </select>
         </div>
@@ -314,101 +239,27 @@ export function PendingChallengesPanel() {
                       Sent {formatLocalDateTime(challenge.createdAt)}
                     </p>
                   </div>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusStyle(challenge.status)}`}>
-                    {challenge.status}
-                  </span>
-                </div>
-                <div className="mt-2 flex gap-2">
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={() =>
-                      void respondToChallenge(challenge.id, "accept", "Challenge accepted.")
-                    }
-                    className="rounded-ht-md border border-emerald-500/50 bg-emerald-500/15 px-2 py-1 text-xs font-semibold text-emerald-400 disabled:opacity-60"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={() =>
-                      void respondToChallenge(challenge.id, "decline", "Challenge declined.")
-                    }
-                    className="rounded-ht-md border border-rose-500/50 bg-rose-500/15 px-2 py-1 text-xs font-semibold text-rose-400 disabled:opacity-60"
-                  >
-                    Decline
-                  </button>
+                  <div className="flex shrink-0 flex-col gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => void respondToChallenge(challenge.id, "accepted")}
+                      disabled={declining === challenge.id || canceling === challenge.id}
+                      className="tp-clean-button rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-50"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void respondToChallenge(challenge.id, "declined")}
+                      disabled={declining === challenge.id || canceling === challenge.id}
+                      className="tp-clean-button rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-400 transition-colors hover:bg-rose-500/20 disabled:opacity-50"
+                    >
+                      Decline
+                    </button>
+                  </div>
                 </div>
               </li>
             ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
-        <h3 className="text-base font-semibold text-ht-fg-primary">Sent Challenges</h3>
-        {pendingSent.length === 0 ? (
-          <p className="mt-2 text-sm text-ht-fg-muted">No outgoing pending challenges.</p>
-        ) : (
-          <ul className="mt-3 space-y-2">
-            {pendingSent.map((challenge) => (
-              <li key={challenge.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-semibold text-ht-fg-primary">{challenge.challengeTitle}</p>
-                    <p className="text-xs text-ht-fg-muted">
-                      To <span className="font-semibold">{challenge.receiverUsername}</span> ·{" "}
-                      {gameTypeLabel(challenge.gameType)}
-                    </p>
-                    {challenge.challengeDetails ? (
-                      <p className="mt-1 text-xs text-ht-fg-secondary">{challenge.challengeDetails}</p>
-                    ) : null}
-                    <p className="mt-1 text-[11px] text-ht-fg-muted">
-                      Sent {formatLocalDateTime(challenge.createdAt)}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={() =>
-                      void respondToChallenge(challenge.id, "cancel", "Challenge canceled.")
-                    }
-                    className="rounded-ht-md border border-ht-border-soft bg-ht-elevated px-2 py-1 text-xs font-semibold text-ht-fg-muted disabled:opacity-60"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
-        <h3 className="text-base font-semibold text-ht-fg-primary">Recent Challenge Results</h3>
-        {accepted.length + completed.length === 0 ? (
-          <p className="mt-2 text-sm text-ht-fg-muted">No resolved challenges yet.</p>
-        ) : (
-          <ul className="mt-3 space-y-2">
-            {[...accepted, ...completed]
-              .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
-              .slice(0, 10)
-              .map((challenge) => (
-                <li key={challenge.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold text-ht-fg-primary">{challenge.challengeTitle}</p>
-                      <p className="text-xs text-ht-fg-muted">
-                        {challenge.senderUsername} vs {challenge.receiverUsername} · {gameTypeLabel(challenge.gameType)}
-                      </p>
-                    </div>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusStyle(challenge.status)}`}>
-                      {challenge.status}
-                    </span>
-                  </div>
-                </li>
-              ))}
           </ul>
         )}
       </section>

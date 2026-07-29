@@ -49,7 +49,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
   },
   {
     key: "live_trivia",
-    title: "Hightop Live Trivia",
+    title: "Live Trivia",
     path: "/trivia/live",
     cardClassName: "bg-blue-700 text-white",
     visibleOnVenueHome: true,
@@ -79,7 +79,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
   },
   {
     key: "fantasy",
-    title: "Hightop Fantasy Sports",
+    title: "Fantasy Sports",
     path: "/fantasy",
     cardClassName: "bg-slate-800 text-white",
     visibleOnVenueHome: true,
@@ -108,7 +108,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
   },
   {
     key: "pickem",
-    title: "Hightop Pick 'Em™",
+    title: "Pick 'Em™",
     path: "/pickem",
     cardClassName: "bg-indigo-600 text-white",
     visibleOnVenueHome: true,

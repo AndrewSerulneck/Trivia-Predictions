@@ -1506,6 +1506,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           onRetryBadges={retryBadges}
         />
 
+        <VenueLeaderboardPanel
+          contentReady={contentReady}
+          venueId={venue.id}
+          initialEntries={leaderboardInitialEntries}
+          isEnabled={homeRevealComplete}
+        />
+
         <VenueChallengesPanel
           contentReady={contentReady}
           isChallengesLoading={isChallengesLoading}
@@ -1516,13 +1523,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           onSelectChallenge={setSelectedChallengeId}
           onGoToChallengeRedeem={goToChallengeRedeem}
           onRetryChallenges={retryChallenges}
-        />
-
-        <VenueLeaderboardPanel
-          contentReady={contentReady}
-          venueId={venue.id}
-          initialEntries={leaderboardInitialEntries}
-          isEnabled={homeRevealComplete}
         />
         </div>
       </div>
