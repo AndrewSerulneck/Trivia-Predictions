@@ -256,6 +256,16 @@ body.tp-bingo-landscape-active {
   scrollbar-gutter: auto !important;
 }
 
+html.tp-category-blitz-game-active,
+body.tp-category-blitz-game-active {
+  height: 100svh !important;
+  min-height: 100svh !important;
+  max-height: 100svh !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  scrollbar-gutter: auto !important;
+}
+
 .tp-bingo-landscape-shell {
   top: var(--bingo-landscape-top, 0px);
   left: var(--bingo-landscape-left, 0px);

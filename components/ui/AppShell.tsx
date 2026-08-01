@@ -12,6 +12,7 @@ type AppShellProps = {
 // All routes that should fill the full viewport with zero AppShell padding or footer.
 const FULLSCREEN_PATHS = [
   "/trivia",
+  "/category-blitz",
   "/bingo",
   "/pickem",
   "/fantasy",
@@ -29,6 +30,7 @@ const FULLSCREEN_PATHS = [
 // it sits on the body's natural background and sets its own surface colors.
 const GAME_SCREEN_PATHS = [
   "/trivia",
+  "/category-blitz",
   "/bingo",
   "/pickem",
   "/fantasy",
@@ -40,8 +42,18 @@ const GAME_SCREEN_PATHS = [
 export function AppShell({ children, legalNotice }: AppShellProps) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
+  const isVenueHome = /^\/venue\/[^/]+\/?$/.test(pathname ?? "");
   const isFullscreen = !isAdmin && FULLSCREEN_PATHS.some((p) => pathname?.startsWith(p));
   const isGameScreen = !isAdmin && GAME_SCREEN_PATHS.some((p) => pathname?.startsWith(p));
+  const showShellDecor = !isAdmin && !isFullscreen;
+  const showLegalNotice = !isAdmin && isVenueHome;
+  const mainClassName = isAdmin
+    ? "h-full min-h-0"
+    : isGameScreen
+    ? "h-full min-h-0 overflow-hidden p-0"
+    : isFullscreen
+    ? "min-h-0 p-0"
+    : "flex-1 pb-24";
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -70,14 +82,14 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
         isAdmin
           ? "fixed inset-0 h-screen w-screen max-w-full p-0 m-0 gap-0 overflow-hidden"
           : isGameScreen
-          ? "bg-slate-950"
+          ? "h-[100svh] min-h-[100svh] max-h-[100svh] overflow-hidden bg-slate-950"
           : isFullscreen
           ? ""
           : "mx-auto flex flex-col max-w-[720px] box-border overflow-x-hidden overflow-y-visible"
       }`}
       style={isAdmin || isFullscreen ? undefined : { minHeight: "100lvh" }}
     >
-      {!isAdmin && !isFullscreen ? (
+      {showShellDecor ? (
         <>
           <div className="pointer-events-none absolute -top-20 right-0 h-52 w-52 rounded-full bg-cyan-500/8 blur-3xl" />
           <div className="pointer-events-none absolute top-24 left-0 h-44 w-44 rounded-full bg-violet-500/6 blur-3xl" />
@@ -85,9 +97,9 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
       ) : null}
 
       <Suspense fallback={null}>
-        <main className={isAdmin ? "h-full min-h-0" : "flex-1 pb-24"}>{children}</main>
+        <main className={mainClassName}>{children}</main>
       </Suspense>
-      {!isAdmin && !isFullscreen ? (
+      {showLegalNotice ? (
         <footer className="relative z-10 border-t border-ht-border-hairline bg-ht-surface px-3 py-2 text-center text-xs leading-relaxed text-ht-fg-muted break-words">
           {legalNotice}
         </footer>

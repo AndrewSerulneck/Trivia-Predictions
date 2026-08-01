@@ -894,40 +894,112 @@ export function AnsweringScreen({
     };
   }, []);
 
-  // On-screen keyboards resize the visual viewport (--tp-vh, ViewportHeightSync)
-  // rather than push content up, so a focused input near the bottom of the
-  // list can end up hidden behind the keyboard even though the game
-  // container itself shrank correctly. Wait for that resize (or a fallback
-  // timeout, for keyboards that don't fire visualViewport resize) and then
-  // scroll the field into view within its own scroll container.
+  // On-screen keyboards should only affect the answer list. Keep the game
+  // shell fixed, add inset space to the list, then scroll that list directly
+  // so the browser never tries to move the whole page.
   const scrollFocusCleanupRef = useRef<(() => void) | null>(null);
+  const focusedAnswerInputRef = useRef<HTMLInputElement | null>(null);
+  const stableViewportHeightRef = useRef(0);
+
+  const updateKeyboardInset = useCallback(() => {
+    const root = document.documentElement;
+    const focusedInput = focusedAnswerInputRef.current;
+    if (!focusedInput || document.activeElement !== focusedInput) {
+      stableViewportHeightRef.current = Math.max(
+        stableViewportHeightRef.current,
+        window.innerHeight,
+        window.visualViewport?.height ?? 0
+      );
+      root.style.setProperty("--cbz-keyboard-inset", "0px");
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    if (!viewport) {
+      root.style.setProperty("--cbz-keyboard-inset", "0px");
+      return;
+    }
+
+    const baseline = Math.max(stableViewportHeightRef.current, window.innerHeight, viewport.height + viewport.offsetTop);
+    const inset = Math.max(0, Math.round(baseline - viewport.height - viewport.offsetTop));
+    root.style.setProperty("--cbz-keyboard-inset", `${inset}px`);
+  }, []);
+
+  const scrollAnswerIntoView = useCallback((target: HTMLInputElement, behavior: ScrollBehavior) => {
+    const list = target.closest<HTMLElement>("[data-category-blitz-answer-list]");
+    const row = target.closest<HTMLElement>("[data-category-blitz-answer-row]") ?? target;
+    if (!list) return;
+
+    const viewport = window.visualViewport;
+    const viewportTop = viewport?.offsetTop ?? 0;
+    const viewportBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+    const listRect = list.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    const visibleTop = Math.max(listRect.top, viewportTop) + 12;
+    const visibleBottom = Math.min(listRect.bottom, viewportBottom) - 16;
+
+    let delta = 0;
+    if (rowRect.bottom > visibleBottom) {
+      delta = rowRect.bottom - visibleBottom;
+    } else if (rowRect.top < visibleTop) {
+      delta = rowRect.top - visibleTop;
+    }
+
+    if (Math.abs(delta) < 1) return;
+    list.scrollBy({ top: delta, behavior });
+  }, []);
 
   const handleAnswerInputFocus = useCallback((event: FocusEvent<HTMLInputElement>) => {
     scrollFocusCleanupRef.current?.();
 
     const target = event.currentTarget;
-    let settled = false;
-    const scrollIntoView = () => {
-      if (settled) return;
-      settled = true;
-      target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    focusedAnswerInputRef.current = target;
+    updateKeyboardInset();
+
+    const scrollIntoView = (behavior: ScrollBehavior) => {
+      updateKeyboardInset();
+      scrollAnswerIntoView(target, behavior);
     };
 
     const viewport = window.visualViewport;
     const onViewportResize = () => {
-      // ViewportHeightSync debounces --tp-vh updates ~120ms behind the
-      // resize event — wait for that so the scroll container has already
-      // taken on its new (keyboard-adjusted) height before we scroll it.
-      window.setTimeout(scrollIntoView, 150);
+      window.setTimeout(() => scrollIntoView("smooth"), 90);
+      window.setTimeout(() => scrollIntoView("smooth"), 220);
     };
     viewport?.addEventListener("resize", onViewportResize, { once: true });
-    const fallbackTimer = window.setTimeout(scrollIntoView, 400);
+    const immediateTimer = window.setTimeout(() => scrollIntoView("auto"), 0);
+    const fallbackTimer = window.setTimeout(() => scrollIntoView("smooth"), 420);
 
     scrollFocusCleanupRef.current = () => {
       viewport?.removeEventListener("resize", onViewportResize);
+      window.clearTimeout(immediateTimer);
       window.clearTimeout(fallbackTimer);
     };
-  }, []);
+  }, [scrollAnswerIntoView, updateKeyboardInset]);
+
+  const handleAnswerInputBlur = useCallback((event: FocusEvent<HTMLInputElement>) => {
+    const target = event.currentTarget;
+    window.setTimeout(() => {
+      if (focusedAnswerInputRef.current !== target) return;
+      if (document.activeElement instanceof HTMLInputElement && document.activeElement.closest("[data-category-blitz-answer-list]")) return;
+      focusedAnswerInputRef.current = null;
+      updateKeyboardInset();
+    }, 80);
+  }, [updateKeyboardInset]);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    stableViewportHeightRef.current = Math.max(window.innerHeight, viewport?.height ?? 0);
+    viewport?.addEventListener("resize", updateKeyboardInset, { passive: true });
+    viewport?.addEventListener("scroll", updateKeyboardInset, { passive: true });
+    window.addEventListener("resize", updateKeyboardInset, { passive: true });
+    return () => {
+      viewport?.removeEventListener("resize", updateKeyboardInset);
+      viewport?.removeEventListener("scroll", updateKeyboardInset);
+      window.removeEventListener("resize", updateKeyboardInset);
+      document.documentElement.style.setProperty("--cbz-keyboard-inset", "0px");
+    };
+  }, [updateKeyboardInset]);
 
   useEffect(() => {
     return () => {
@@ -1086,13 +1158,17 @@ export function AnsweringScreen({
       </div>
 
       {/* Categories grid */}
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+      <div
+        data-category-blitz-answer-list
+        className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 pb-[calc(var(--cbz-keyboard-inset,0px)+0.75rem)] pt-3 [scroll-padding-bottom:calc(var(--cbz-keyboard-inset,0px)+1rem)] [scroll-padding-top:0.75rem]"
+      >
         <div className="space-y-2">
           {categories.map((category, i) => {
             const filled = answers[i].trim().length > 0;
             const wrongLetter = filled && !answerStartsWithLetter(answers[i], letter);
             const inputRow = (
               <div
+                data-category-blitz-answer-row
                 className={`relative flex items-center gap-2 rounded-xl border ${
                   wrongLetter
                     ? "border-rose-500/70 bg-rose-950/30"
@@ -1130,6 +1206,7 @@ export function AnsweringScreen({
                       }, AUTOSAVE_DEBOUNCE_MS);
                     }}
                     onFocus={handleAnswerInputFocus}
+                    onBlur={handleAnswerInputBlur}
                     placeholder={`${letter}…`}
                     className={`mt-0.5 w-full bg-transparent text-sm font-bold outline-none placeholder:text-slate-600 ${
                       wrongLetter ? "text-rose-300" : filled ? theme.filledText : "text-white"
@@ -1240,6 +1317,16 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   const [username, setUsername] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
   const [testMode, setTestMode] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.classList.add("tp-category-blitz-game-active");
+    document.body.classList.add("tp-category-blitz-game-active");
+    return () => {
+      document.documentElement.classList.remove("tp-category-blitz-game-active");
+      document.body.classList.remove("tp-category-blitz-game-active");
+      document.documentElement.style.setProperty("--cbz-keyboard-inset", "0px");
+    };
+  }, []);
 
   useEffect(() => {
     const hydrateId = window.setTimeout(() => {
@@ -1575,10 +1662,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   if (!isHydrated) {
     return (
-      <div
-        className="flex flex-col overflow-hidden bg-slate-950 text-white"
-        style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
-      >
+      <div className="flex h-[100svh] min-h-[100svh] max-h-[100svh] flex-col overflow-hidden bg-slate-950 text-white">
         <Header onBack={onBack} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
           <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
@@ -1592,10 +1676,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   if (!venueId) {
     return (
-      <div
-        className="flex flex-col overflow-hidden bg-slate-950 text-white"
-        style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
-      >
+      <div className="flex h-[100svh] min-h-[100svh] max-h-[100svh] flex-col overflow-hidden bg-slate-950 text-white">
         <Header onBack={onBack} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
           <p className="text-sm text-slate-400">No venue session. Return to your venue page.</p>
@@ -1612,10 +1693,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   // intermission for no reason.
   if (error && (phase === "idle" || errorEscalated)) {
     return (
-      <div
-        className="flex flex-col overflow-hidden bg-slate-950 text-white"
-        style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
-      >
+      <div className="flex h-[100svh] min-h-[100svh] max-h-[100svh] flex-col overflow-hidden bg-slate-950 text-white">
         <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
           <div className="w-full max-w-sm rounded-2xl border border-rose-400/40 bg-slate-900 p-5 text-center">
@@ -1643,8 +1721,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   return (
     <div
-      className={`relative flex flex-col overflow-hidden text-white transition-colors duration-700 ${pageTheme.pageBg}`}
-      style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
+      className={`relative flex h-[100svh] min-h-[100svh] max-h-[100svh] flex-col overflow-hidden text-white transition-colors duration-700 ${pageTheme.pageBg}`}
     >
       <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} />
       {/* Dev-only test-mode UI: hidden on the live site (NODE_ENV === "production")
