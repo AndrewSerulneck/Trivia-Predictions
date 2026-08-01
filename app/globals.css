@@ -258,9 +258,9 @@ body.tp-bingo-landscape-active {
 
 html.tp-category-blitz-game-active,
 body.tp-category-blitz-game-active {
-  height: 100svh !important;
-  min-height: 100svh !important;
-  max-height: 100svh !important;
+  height: var(--cbz-layout-height, 100lvh) !important;
+  min-height: var(--cbz-layout-height, 100lvh) !important;
+  max-height: var(--cbz-layout-height, 100lvh) !important;
   overflow: hidden !important;
   overscroll-behavior: none !important;
   scrollbar-gutter: auto !important;

@@ -52,18 +52,20 @@ describe("Category Blitz mobile shell contract", () => {
       ") : ("
     );
 
-    expect(categoryBranch).toContain("h-[100svh]");
+    expect(gameLandingSource).toContain("data-category-blitz-route-shell={isCategoryBlitzGame ? \"\" : undefined}");
+    expect(categoryBranch).toContain("h-[var(--cbz-layout-height,100lvh)]");
     expect(categoryBranch).toContain("overflow-hidden");
     expect(categoryBranch).not.toContain("var(--tp-vh");
     expect(categoryBlitzSource).toContain("const VIEWPORT_FRAME_CLASS");
-    expect(categoryBlitzSource).toContain("top-[var(--cbz-vv-top,0px)]");
-    expect(categoryBlitzSource).toContain("h-[var(--cbz-vv-height,100svh)]");
-    expect(categoryBlitzSource).toContain("w-[var(--cbz-vv-width,100vw)]");
+    expect(categoryBlitzSource).toContain("fixed inset-x-0 top-0");
+    expect(categoryBlitzSource).toContain("h-[var(--cbz-layout-height,100lvh)]");
+    expect(categoryBlitzSource).toContain("w-screen");
     expect(categoryBlitzSource).toContain("function useCategoryBlitzViewportFrame");
-    expect(categoryBlitzSource).toContain("--cbz-vv-stable-height");
+    expect(categoryBlitzSource).toContain("--cbz-layout-height");
     expect(categoryBlitzSource).toContain("applyCategoryBlitzViewportFrame({ resetStableFrame: true })");
     expect(categoryBlitzSource).toContain("window.visualViewport?.addEventListener(\"resize\", scheduleCurrent");
     expect(categoryBlitzSource).toContain("window.visualViewport?.addEventListener(\"scroll\", scheduleCurrent");
+    expect(categoryBlitzSource).not.toContain("--cbz-vv-top");
   });
 
   it("uses one fixed keyboard-capture input instead of native inputs in answer rows", () => {
@@ -78,6 +80,8 @@ describe("Category Blitz mobile shell contract", () => {
     expect(categoryBlitzSource).toContain("data-category-blitz-keyboard-input");
     expect(categoryBlitzSource).toContain("focus({ preventScroll: true })");
     expect(categoryBlitzSource).not.toContain("disabled={isExpired || submitState !== \"idle\" || activeAnswerIndex === null}");
+    expect(categoryBlitzSource).toContain("h-11 w-[calc(100vw-2rem)]");
+    expect(categoryBlitzSource).toContain("caret-transparent text-base");
     expect(answerGridSource).toContain("onPointerDown={(event) => {");
     expect(answerGridSource).toContain("event.preventDefault();");
     expect(answerGridSource).not.toContain("<input");
@@ -96,17 +100,21 @@ describe("Category Blitz mobile shell contract", () => {
     expect(categoryBlitzSource).toContain("tp-category-blitz-game-active");
     expect(globalsSource).toContain("html.tp-category-blitz-game-active");
     expect(globalsSource).toContain("body.tp-category-blitz-game-active");
+    expect(globalsSource).toContain("height: var(--cbz-layout-height, 100lvh) !important;");
     expect(globalsSource).toContain("overflow: hidden !important;");
   });
 
   it("provides an opt-in layout diagnostic for real-device keyboard debugging", () => {
-    expect(categoryBlitzSource).toContain("const LAYOUT_DEBUG_VERSION = \"cbz-stable-frame-v5\";");
+    expect(categoryBlitzSource).toContain("const LAYOUT_DEBUG_VERSION = \"cbz-locked-layout-v6\";");
     expect(categoryBlitzSource).toContain("data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}");
+    expect(categoryBlitzSource).toContain("data-category-blitz-game-root");
     expect(categoryBlitzSource).toContain("function CategoryBlitzLayoutDebugPanel");
     expect(categoryBlitzSource).toContain("params.get(\"cbzDebug\") === \"1\"");
     expect(categoryBlitzSource).toContain("data-category-blitz-layout-debug");
     expect(categoryBlitzSource).toContain("answerListInputCount");
     expect(categoryBlitzSource).toContain("visualOffsetTop");
     expect(categoryBlitzSource).toContain("viewportFrame");
+    expect(categoryBlitzSource).toContain("routeRect");
+    expect(categoryBlitzSource).toContain("rootRect");
   });
 });

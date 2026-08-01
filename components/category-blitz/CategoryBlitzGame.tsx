@@ -48,9 +48,9 @@ const LAYOUT_MORPH_TRANSITION = { duration: 0.45, ease: EASE_SNAP } as const;
  *  header label, timer, progress bar) — delayed so it settles in just behind
  *  the badge/row morph instead of popping in the instant the reveal ends. */
 const CHROME_ENTRANCE_TRANSITION = { duration: 0.3, ease: EASE_SNAP, delay: 0.12 } as const;
-const LAYOUT_DEBUG_VERSION = "cbz-stable-frame-v5";
+const LAYOUT_DEBUG_VERSION = "cbz-locked-layout-v6";
 const VIEWPORT_FRAME_CLASS =
-  "fixed left-[var(--cbz-vv-left,0px)] top-[var(--cbz-vv-top,0px)] z-[80] h-[var(--cbz-vv-height,100svh)] min-h-0 w-[var(--cbz-vv-width,100vw)] max-w-[100vw] overflow-hidden";
+  "fixed inset-x-0 top-0 z-[80] h-[var(--cbz-layout-height,100lvh)] min-h-0 w-screen max-w-[100vw] overflow-hidden";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -78,6 +78,10 @@ type LayoutDebugSnapshot = {
   htmlOverflow: string;
   bodyScrollHeight: number;
   viewportFrame: string;
+  appShellRect: string;
+  mainRect: string;
+  routeRect: string;
+  rootRect: string;
   gameRect: string;
   answerListRect: string;
 };
@@ -115,7 +119,11 @@ function readLayoutDebugSnapshot(phase: string): LayoutDebugSnapshot {
     bodyOverflow: window.getComputedStyle(document.body).overflow,
     htmlOverflow: window.getComputedStyle(document.documentElement).overflow,
     bodyScrollHeight: document.body.scrollHeight,
-    viewportFrame: `${root.style.getPropertyValue("--cbz-vv-top") || "?"}:${root.style.getPropertyValue("--cbz-vv-height") || "?"}`,
+    viewportFrame: `${root.style.getPropertyValue("--cbz-layout-height") || "?"}:${root.style.getPropertyValue("--cbz-keyboard-inset") || "?"}`,
+    appShellRect: formatRect(document.querySelector(".tp-app-shell")),
+    mainRect: formatRect(document.querySelector("main")),
+    routeRect: formatRect(document.querySelector("[data-category-blitz-route-shell]")),
+    rootRect: formatRect(document.querySelector("[data-category-blitz-game-root]")),
     gameRect: formatRect(document.querySelector("[data-venue-game-surface]")),
     answerListRect: formatRect(document.querySelector("[data-category-blitz-answer-list]")),
   };
@@ -137,33 +145,17 @@ function readLayoutDebugEnabled(): boolean {
 function applyCategoryBlitzViewportFrame(options: { resetStableFrame?: boolean } = {}): void {
   const root = document.documentElement;
   const viewport = window.visualViewport;
-  const top = Math.max(0, Math.round(viewport?.offsetTop ?? 0));
-  const left = Math.max(0, Math.round(viewport?.offsetLeft ?? 0));
   const previousHeight = options.resetStableFrame
     ? 0
-    : Number.parseFloat(root.style.getPropertyValue("--cbz-vv-stable-height")) || 0;
-  const previousWidth = options.resetStableFrame
-    ? 0
-    : Number.parseFloat(root.style.getPropertyValue("--cbz-vv-stable-width")) || 0;
+    : Number.parseFloat(root.style.getPropertyValue("--cbz-layout-height")) || 0;
   const height = Math.max(previousHeight, Math.round(window.innerHeight), Math.round(viewport?.height ?? 0));
-  const width = Math.max(previousWidth, Math.round(window.innerWidth), Math.round(viewport?.width ?? 0));
 
-  root.style.setProperty("--cbz-vv-top", `${top}px`);
-  root.style.setProperty("--cbz-vv-left", `${left}px`);
-  root.style.setProperty("--cbz-vv-stable-height", `${height}px`);
-  root.style.setProperty("--cbz-vv-stable-width", `${width}px`);
-  root.style.setProperty("--cbz-vv-height", `${height}px`);
-  root.style.setProperty("--cbz-vv-width", `${width}px`);
+  root.style.setProperty("--cbz-layout-height", `${height}px`);
 }
 
 function clearCategoryBlitzViewportFrame(): void {
   const root = document.documentElement;
-  root.style.removeProperty("--cbz-vv-top");
-  root.style.removeProperty("--cbz-vv-left");
-  root.style.removeProperty("--cbz-vv-stable-height");
-  root.style.removeProperty("--cbz-vv-stable-width");
-  root.style.removeProperty("--cbz-vv-height");
-  root.style.removeProperty("--cbz-vv-width");
+  root.style.removeProperty("--cbz-layout-height");
 }
 
 function useCategoryBlitzViewportFrame(): void {
@@ -245,6 +237,10 @@ function CategoryBlitzLayoutDebugPanel({ phase }: { phase?: CategoryBlitzPhase }
       <p>innerH {snapshot.innerHeight} vvH {snapshot.visualHeight ?? "n/a"} vvTop {snapshot.visualOffsetTop ?? "n/a"}</p>
       <p>overflow h/b {snapshot.htmlOverflow}/{snapshot.bodyOverflow}</p>
       <p>frame {snapshot.viewportFrame}</p>
+      <p>shell {snapshot.appShellRect}</p>
+      <p>main {snapshot.mainRect}</p>
+      <p>route {snapshot.routeRect}</p>
+      <p>root {snapshot.rootRect}</p>
       <p>game {snapshot.gameRect}</p>
       <p>list {snapshot.answerListRect}</p>
     </div>
@@ -1341,7 +1337,7 @@ export function AnsweringScreen({
           focusNextAnswer();
         }}
         onBlur={handleKeyboardInputBlur}
-        className="pointer-events-none fixed left-2 top-[max(env(safe-area-inset-top),0.5rem)] z-[1] h-px w-px opacity-0"
+        className="pointer-events-none fixed left-4 top-[max(env(safe-area-inset-top),1rem)] z-[1] h-11 w-[calc(100vw-2rem)] opacity-0 caret-transparent text-base"
         aria-label={activeAnswerIndex === null ? "Category Blitz answer" : `Answer ${activeAnswerIndex + 1}`}
         autoComplete="off"
         autoCorrect="off"
@@ -1918,6 +1914,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   if (!isHydrated) {
     return (
       <div
+        data-category-blitz-game-root
         data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
         className={`${VIEWPORT_FRAME_CLASS} flex flex-col bg-slate-950 text-white`}
       >
@@ -1936,6 +1933,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   if (!venueId) {
     return (
       <div
+        data-category-blitz-game-root
         data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
         className={`${VIEWPORT_FRAME_CLASS} flex flex-col bg-slate-950 text-white`}
       >
@@ -1957,6 +1955,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   if (error && (phase === "idle" || errorEscalated)) {
     return (
       <div
+        data-category-blitz-game-root
         data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
         className={`${VIEWPORT_FRAME_CLASS} flex flex-col bg-slate-950 text-white`}
       >
@@ -1988,6 +1987,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   return (
     <div
+      data-category-blitz-game-root
       data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
       className={`${VIEWPORT_FRAME_CLASS} flex flex-col text-white transition-colors duration-700 ${pageTheme.pageBg}`}
     >
