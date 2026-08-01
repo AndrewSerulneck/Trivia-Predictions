@@ -45,7 +45,7 @@ describe("Category Blitz mobile shell contract", () => {
     expect(appShellSource).toContain("{showLegalNotice ? (");
   });
 
-  it("locks Category Blitz to a stable viewport shell instead of the shrinking visual viewport variable", () => {
+  it("pins Category Blitz to an explicit visual viewport frame", () => {
     const categoryBranch = sourceBetween(
       gameLandingSource,
       "gameKey === \"category-blitz\" ? (",
@@ -55,7 +55,15 @@ describe("Category Blitz mobile shell contract", () => {
     expect(categoryBranch).toContain("h-[100svh]");
     expect(categoryBranch).toContain("overflow-hidden");
     expect(categoryBranch).not.toContain("var(--tp-vh");
-    expect(categoryBlitzSource).toContain("h-[100svh] min-h-[100svh] max-h-[100svh]");
+    expect(categoryBlitzSource).toContain("const VIEWPORT_FRAME_CLASS");
+    expect(categoryBlitzSource).toContain("top-[var(--cbz-vv-top,0px)]");
+    expect(categoryBlitzSource).toContain("h-[var(--cbz-vv-height,100svh)]");
+    expect(categoryBlitzSource).toContain("w-[var(--cbz-vv-width,100vw)]");
+    expect(categoryBlitzSource).toContain("function useCategoryBlitzViewportFrame");
+    expect(categoryBlitzSource).toContain("--cbz-vv-stable-height");
+    expect(categoryBlitzSource).toContain("applyCategoryBlitzViewportFrame({ resetStableFrame: true })");
+    expect(categoryBlitzSource).toContain("window.visualViewport?.addEventListener(\"resize\", scheduleCurrent");
+    expect(categoryBlitzSource).toContain("window.visualViewport?.addEventListener(\"scroll\", scheduleCurrent");
   });
 
   it("uses one fixed keyboard-capture input instead of native inputs in answer rows", () => {
@@ -66,8 +74,12 @@ describe("Category Blitz mobile shell contract", () => {
     );
 
     expect(categoryBlitzSource).toContain("keyboardInputRef");
+    expect(categoryBlitzSource).toContain("activeAnswerIndexRef");
     expect(categoryBlitzSource).toContain("data-category-blitz-keyboard-input");
     expect(categoryBlitzSource).toContain("focus({ preventScroll: true })");
+    expect(categoryBlitzSource).not.toContain("disabled={isExpired || submitState !== \"idle\" || activeAnswerIndex === null}");
+    expect(answerGridSource).toContain("onPointerDown={(event) => {");
+    expect(answerGridSource).toContain("event.preventDefault();");
     expect(answerGridSource).not.toContain("<input");
   });
 
@@ -85,5 +97,16 @@ describe("Category Blitz mobile shell contract", () => {
     expect(globalsSource).toContain("html.tp-category-blitz-game-active");
     expect(globalsSource).toContain("body.tp-category-blitz-game-active");
     expect(globalsSource).toContain("overflow: hidden !important;");
+  });
+
+  it("provides an opt-in layout diagnostic for real-device keyboard debugging", () => {
+    expect(categoryBlitzSource).toContain("const LAYOUT_DEBUG_VERSION = \"cbz-stable-frame-v5\";");
+    expect(categoryBlitzSource).toContain("data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}");
+    expect(categoryBlitzSource).toContain("function CategoryBlitzLayoutDebugPanel");
+    expect(categoryBlitzSource).toContain("params.get(\"cbzDebug\") === \"1\"");
+    expect(categoryBlitzSource).toContain("data-category-blitz-layout-debug");
+    expect(categoryBlitzSource).toContain("answerListInputCount");
+    expect(categoryBlitzSource).toContain("visualOffsetTop");
+    expect(categoryBlitzSource).toContain("viewportFrame");
   });
 });

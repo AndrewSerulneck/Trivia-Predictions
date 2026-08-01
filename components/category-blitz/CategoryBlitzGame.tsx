@@ -48,6 +48,9 @@ const LAYOUT_MORPH_TRANSITION = { duration: 0.45, ease: EASE_SNAP } as const;
  *  header label, timer, progress bar) — delayed so it settles in just behind
  *  the badge/row morph instead of popping in the instant the reveal ends. */
 const CHROME_ENTRANCE_TRANSITION = { duration: 0.3, ease: EASE_SNAP, delay: 0.12 } as const;
+const LAYOUT_DEBUG_VERSION = "cbz-stable-frame-v5";
+const VIEWPORT_FRAME_CLASS =
+  "fixed left-[var(--cbz-vv-left,0px)] top-[var(--cbz-vv-top,0px)] z-[80] h-[var(--cbz-vv-height,100svh)] min-h-0 w-[var(--cbz-vv-width,100vw)] max-w-[100vw] overflow-hidden";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -56,6 +59,196 @@ function formatMmSs(seconds: number): string {
   const m = Math.floor(safe / 60);
   const s = safe % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+type LayoutDebugSnapshot = {
+  version: string;
+  phase: string;
+  url: string;
+  activeElement: string;
+  activeMarker: string;
+  keyboardProxyCount: number;
+  answerListInputCount: number;
+  answerRowCount: number;
+  scrollY: number;
+  innerHeight: number;
+  visualHeight: number | null;
+  visualOffsetTop: number | null;
+  bodyOverflow: string;
+  htmlOverflow: string;
+  bodyScrollHeight: number;
+  viewportFrame: string;
+  gameRect: string;
+  answerListRect: string;
+};
+
+function formatRect(element: Element | null): string {
+  if (!element) return "missing";
+  const rect = element.getBoundingClientRect();
+  return `${Math.round(rect.top)}:${Math.round(rect.height)}:${Math.round(rect.bottom)}`;
+}
+
+function readLayoutDebugSnapshot(phase: string): LayoutDebugSnapshot {
+  const root = document.documentElement;
+  const active = document.activeElement as HTMLElement | null;
+  const viewport = window.visualViewport;
+  const activeMarker =
+    active?.hasAttribute("data-category-blitz-keyboard-input")
+      ? "keyboard-proxy"
+      : active?.closest("[data-category-blitz-answer-list]")
+      ? "answer-list-descendant"
+      : active?.tagName.toLowerCase() ?? "none";
+
+  return {
+    version: LAYOUT_DEBUG_VERSION,
+    phase,
+    url: window.location.href,
+    activeElement: active?.tagName.toLowerCase() ?? "none",
+    activeMarker,
+    keyboardProxyCount: document.querySelectorAll("[data-category-blitz-keyboard-input]").length,
+    answerListInputCount: document.querySelectorAll("[data-category-blitz-answer-list] input").length,
+    answerRowCount: document.querySelectorAll("[data-category-blitz-answer-row]").length,
+    scrollY: Math.round(window.scrollY),
+    innerHeight: Math.round(window.innerHeight),
+    visualHeight: viewport ? Math.round(viewport.height) : null,
+    visualOffsetTop: viewport ? Math.round(viewport.offsetTop) : null,
+    bodyOverflow: window.getComputedStyle(document.body).overflow,
+    htmlOverflow: window.getComputedStyle(document.documentElement).overflow,
+    bodyScrollHeight: document.body.scrollHeight,
+    viewportFrame: `${root.style.getPropertyValue("--cbz-vv-top") || "?"}:${root.style.getPropertyValue("--cbz-vv-height") || "?"}`,
+    gameRect: formatRect(document.querySelector("[data-venue-game-surface]")),
+    answerListRect: formatRect(document.querySelector("[data-category-blitz-answer-list]")),
+  };
+}
+
+function readLayoutDebugEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return (
+      params.get("cbzDebug") === "1" ||
+      window.localStorage.getItem("tp:category-blitz-layout-debug") === "1"
+    );
+  } catch {
+    return false;
+  }
+}
+
+function applyCategoryBlitzViewportFrame(options: { resetStableFrame?: boolean } = {}): void {
+  const root = document.documentElement;
+  const viewport = window.visualViewport;
+  const top = Math.max(0, Math.round(viewport?.offsetTop ?? 0));
+  const left = Math.max(0, Math.round(viewport?.offsetLeft ?? 0));
+  const previousHeight = options.resetStableFrame
+    ? 0
+    : Number.parseFloat(root.style.getPropertyValue("--cbz-vv-stable-height")) || 0;
+  const previousWidth = options.resetStableFrame
+    ? 0
+    : Number.parseFloat(root.style.getPropertyValue("--cbz-vv-stable-width")) || 0;
+  const height = Math.max(previousHeight, Math.round(window.innerHeight), Math.round(viewport?.height ?? 0));
+  const width = Math.max(previousWidth, Math.round(window.innerWidth), Math.round(viewport?.width ?? 0));
+
+  root.style.setProperty("--cbz-vv-top", `${top}px`);
+  root.style.setProperty("--cbz-vv-left", `${left}px`);
+  root.style.setProperty("--cbz-vv-stable-height", `${height}px`);
+  root.style.setProperty("--cbz-vv-stable-width", `${width}px`);
+  root.style.setProperty("--cbz-vv-height", `${height}px`);
+  root.style.setProperty("--cbz-vv-width", `${width}px`);
+}
+
+function clearCategoryBlitzViewportFrame(): void {
+  const root = document.documentElement;
+  root.style.removeProperty("--cbz-vv-top");
+  root.style.removeProperty("--cbz-vv-left");
+  root.style.removeProperty("--cbz-vv-stable-height");
+  root.style.removeProperty("--cbz-vv-stable-width");
+  root.style.removeProperty("--cbz-vv-height");
+  root.style.removeProperty("--cbz-vv-width");
+}
+
+function useCategoryBlitzViewportFrame(): void {
+  useEffect(() => {
+    let rafId: number | null = null;
+
+    const schedule = (resetStableFrame = false) => {
+      if (rafId !== null) {
+        return;
+      }
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        applyCategoryBlitzViewportFrame({ resetStableFrame });
+      });
+    };
+    const scheduleCurrent = () => schedule(false);
+    const scheduleStableReset = () => schedule(true);
+
+    applyCategoryBlitzViewportFrame({ resetStableFrame: true });
+    window.addEventListener("resize", scheduleCurrent, { passive: true });
+    window.addEventListener("orientationchange", scheduleStableReset, { passive: true });
+    window.visualViewport?.addEventListener("resize", scheduleCurrent, { passive: true });
+    window.visualViewport?.addEventListener("scroll", scheduleCurrent, { passive: true });
+
+    return () => {
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+      window.removeEventListener("resize", scheduleCurrent);
+      window.removeEventListener("orientationchange", scheduleStableReset);
+      window.visualViewport?.removeEventListener("resize", scheduleCurrent);
+      window.visualViewport?.removeEventListener("scroll", scheduleCurrent);
+      clearCategoryBlitzViewportFrame();
+    };
+  }, []);
+}
+
+function CategoryBlitzLayoutDebugPanel({ phase }: { phase?: CategoryBlitzPhase }) {
+  const [enabled] = useState(() => readLayoutDebugEnabled());
+  const [snapshot, setSnapshot] = useState<LayoutDebugSnapshot | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const update = () => setSnapshot(readLayoutDebugSnapshot(phase ?? "unknown"));
+    update();
+
+    const intervalId = window.setInterval(update, 500);
+    window.addEventListener("resize", update, { passive: true });
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("focusin", update);
+    window.addEventListener("focusout", update);
+    window.visualViewport?.addEventListener("resize", update, { passive: true });
+    window.visualViewport?.addEventListener("scroll", update, { passive: true });
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("focusin", update);
+      window.removeEventListener("focusout", update);
+      window.visualViewport?.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("scroll", update);
+    };
+  }, [enabled, phase]);
+
+  if (!enabled || !snapshot) return null;
+
+  return (
+    <div
+      data-category-blitz-layout-debug
+      className="fixed right-2 top-[max(env(safe-area-inset-top),0.5rem)] z-[99999] max-w-[18rem] rounded-lg border border-cyan-300/50 bg-slate-950/90 px-2 py-2 font-mono text-[10px] leading-tight text-cyan-100 shadow-2xl"
+    >
+      <p>v {snapshot.version}</p>
+      <p>phase {snapshot.phase}</p>
+      <p>active {snapshot.activeElement}:{snapshot.activeMarker}</p>
+      <p>proxy {snapshot.keyboardProxyCount} rowInputs {snapshot.answerListInputCount} rows {snapshot.answerRowCount}</p>
+      <p>scrollY {snapshot.scrollY} bodyH {snapshot.bodyScrollHeight}</p>
+      <p>innerH {snapshot.innerHeight} vvH {snapshot.visualHeight ?? "n/a"} vvTop {snapshot.visualOffsetTop ?? "n/a"}</p>
+      <p>overflow h/b {snapshot.htmlOverflow}/{snapshot.bodyOverflow}</p>
+      <p>frame {snapshot.viewportFrame}</p>
+      <p>game {snapshot.gameRect}</p>
+      <p>list {snapshot.answerListRect}</p>
+    </div>
+  );
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -858,6 +1051,7 @@ export function AnsweringScreen({
   const [errorMsg, setErrorMsg] = useState("");
   const submittedRef = useRef(false);
   const timerWasZeroRef = useRef(false);
+  const activeAnswerIndexRef = useRef<number | null>(null);
   const keyboardInputRef = useRef<HTMLInputElement | null>(null);
   const answerListRef = useRef<HTMLDivElement | null>(null);
   // Per-category debounce timers + last-autosaved value, so a slow network or
@@ -870,7 +1064,6 @@ export function AnsweringScreen({
   const isExpired = timeRemaining <= 0;
   const isUrgent = timeRemaining > 0 && timeRemaining <= 30;
   const totalFilled = answers.filter((a) => a.trim().length > 0).length;
-  const activeAnswerValue = activeAnswerIndex === null ? "" : answers[activeAnswerIndex] ?? "";
 
   const autosaveAnswer = useCallback(
     (categoryIndex: number, answer: string) => {
@@ -978,7 +1171,18 @@ export function AnsweringScreen({
     if (isExpired || submitState !== "idle") return;
     scrollFocusCleanupRef.current?.();
 
+    activeAnswerIndexRef.current = categoryIndex;
     setActiveAnswerIndex(categoryIndex);
+    const keyboardInput = keyboardInputRef.current;
+    if (keyboardInput) {
+      keyboardInput.value = answers[categoryIndex] ?? "";
+      keyboardInput.focus({ preventScroll: true });
+      try {
+        keyboardInput.setSelectionRange(keyboardInput.value.length, keyboardInput.value.length);
+      } catch {
+        // Some mobile browsers can reject selection updates during focus handoff.
+      }
+    }
     updateKeyboardInset();
 
     const scrollIntoView = (behavior: ScrollBehavior) => {
@@ -992,35 +1196,32 @@ export function AnsweringScreen({
       window.setTimeout(() => scrollIntoView("smooth"), 220);
     };
     viewport?.addEventListener("resize", onViewportResize, { once: true });
-    const focusTimer = window.setTimeout(() => {
-      keyboardInputRef.current?.focus({ preventScroll: true });
-      updateKeyboardInset();
-    }, 0);
     const immediateTimer = window.setTimeout(() => scrollIntoView("auto"), 0);
     const fallbackTimer = window.setTimeout(() => scrollIntoView("smooth"), 420);
 
     scrollFocusCleanupRef.current = () => {
       viewport?.removeEventListener("resize", onViewportResize);
-      window.clearTimeout(focusTimer);
       window.clearTimeout(immediateTimer);
       window.clearTimeout(fallbackTimer);
     };
-  }, [isExpired, scrollAnswerIntoView, submitState, updateKeyboardInset]);
+  }, [answers, isExpired, scrollAnswerIntoView, submitState, updateKeyboardInset]);
 
   const handleKeyboardInputBlur = useCallback(() => {
     window.setTimeout(() => {
       if (document.activeElement === keyboardInputRef.current) return;
+      activeAnswerIndexRef.current = null;
       setActiveAnswerIndex(null);
       updateKeyboardInset();
     }, 80);
   }, [updateKeyboardInset]);
 
   const focusNextAnswer = useCallback(() => {
-    if (activeAnswerIndex === null) return;
-    const nextIndex = Math.min(categories.length - 1, activeAnswerIndex + 1);
-    if (nextIndex === activeAnswerIndex) return;
+    const currentIndex = activeAnswerIndexRef.current;
+    if (currentIndex === null) return;
+    const nextIndex = Math.min(categories.length - 1, currentIndex + 1);
+    if (nextIndex === currentIndex) return;
     focusAnswerRow(nextIndex);
-  }, [activeAnswerIndex, categories.length, focusAnswerRow]);
+  }, [categories.length, focusAnswerRow]);
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -1129,11 +1330,10 @@ export function AnsweringScreen({
         ref={keyboardInputRef}
         data-category-blitz-keyboard-input
         type="text"
-        value={activeAnswerValue}
-        disabled={isExpired || submitState !== "idle" || activeAnswerIndex === null}
         onChange={(event) => {
-          if (activeAnswerIndex === null) return;
-          updateAnswer(activeAnswerIndex, event.target.value);
+          const currentIndex = activeAnswerIndexRef.current;
+          if (currentIndex === null) return;
+          updateAnswer(currentIndex, event.target.value);
         }}
         onKeyDown={(event) => {
           if (event.key !== "Enter") return;
@@ -1233,6 +1433,10 @@ export function AnsweringScreen({
                 type="button"
                 data-category-blitz-answer-row={i}
                 disabled={isExpired || submitState !== "idle"}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  focusAnswerRow(i);
+                }}
                 onClick={() => focusAnswerRow(i)}
                 className={`tp-clean-button relative flex w-full items-center gap-2 rounded-xl border text-left transition-colors ${
                   wrongLetter
@@ -1366,6 +1570,8 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   const [username, setUsername] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
   const [testMode, setTestMode] = useState(false);
+
+  useCategoryBlitzViewportFrame();
 
   useEffect(() => {
     document.documentElement.classList.add("tp-category-blitz-game-active");
@@ -1711,8 +1917,12 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   if (!isHydrated) {
     return (
-      <div className="flex h-[100svh] min-h-[100svh] max-h-[100svh] flex-col overflow-hidden bg-slate-950 text-white">
+      <div
+        data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
+        className={`${VIEWPORT_FRAME_CLASS} flex flex-col bg-slate-950 text-white`}
+      >
         <Header onBack={onBack} />
+        <CategoryBlitzLayoutDebugPanel phase={phase} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
           <div className={`w-full max-w-sm rounded-2xl border ${BORDER_CARD} bg-slate-900/70 p-6 text-center`}>
             <p className={TEXT_LABEL}>Loading game status</p>
@@ -1725,8 +1935,12 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   if (!venueId) {
     return (
-      <div className="flex h-[100svh] min-h-[100svh] max-h-[100svh] flex-col overflow-hidden bg-slate-950 text-white">
+      <div
+        data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
+        className={`${VIEWPORT_FRAME_CLASS} flex flex-col bg-slate-950 text-white`}
+      >
         <Header onBack={onBack} />
+        <CategoryBlitzLayoutDebugPanel phase={phase} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
           <p className="text-sm text-slate-400">No venue session. Return to your venue page.</p>
         </div>
@@ -1742,8 +1956,12 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   // intermission for no reason.
   if (error && (phase === "idle" || errorEscalated)) {
     return (
-      <div className="flex h-[100svh] min-h-[100svh] max-h-[100svh] flex-col overflow-hidden bg-slate-950 text-white">
+      <div
+        data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
+        className={`${VIEWPORT_FRAME_CLASS} flex flex-col bg-slate-950 text-white`}
+      >
         <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} />
+        <CategoryBlitzLayoutDebugPanel phase={phase} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
           <div className="w-full max-w-sm rounded-2xl border border-rose-400/40 bg-slate-900 p-5 text-center">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-300">Connection error</p>
@@ -1770,9 +1988,11 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   return (
     <div
-      className={`relative flex h-[100svh] min-h-[100svh] max-h-[100svh] flex-col overflow-hidden text-white transition-colors duration-700 ${pageTheme.pageBg}`}
+      data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
+      className={`${VIEWPORT_FRAME_CLASS} flex flex-col text-white transition-colors duration-700 ${pageTheme.pageBg}`}
     >
       <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} />
+      <CategoryBlitzLayoutDebugPanel phase={phase} />
       {/* Dev-only test-mode UI: hidden on the live site (NODE_ENV === "production")
           so real players never see it, but still fully functional when running
           `npm run dev`. The testMode flag/localStorage plumbing itself is untouched
