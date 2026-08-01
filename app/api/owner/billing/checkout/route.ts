@@ -1,10 +1,23 @@
 import { NextResponse } from "next/server";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { stripe, getStripePriceId } from "@/lib/stripe";
+import { getStripePriceId, OFFLINE_BILLING_METHOD, stripe } from "@/lib/stripe";
+import { CLEARED_MIRROR } from "@/lib/billingDiscounts";
+import {
+  classifyBillingRow,
+  readStripeTruth,
+  type BillingRowState,
+  type ClassifiableBillingRow,
+} from "@/lib/billing";
 
 type CheckoutBody = {
   venueId?: string;
+};
+
+type ExistingBillingRow = ClassifiableBillingRow & {
+  stripe_customer_id: string | null;
+  cancel_at_period_end: boolean;
+  billing_method: string;
 };
 
 /**
@@ -42,18 +55,123 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "You do not have access to this venue." }, { status: 403 });
   }
 
-  // Guard against a duplicate active subscription for this venue.
+  // Guard against minting a SECOND Stripe subscription on the same customer.
+  // The question is not "is our status 'active'?" but "is anything live at
+  // Stripe right now?" — `past_due` is live too (card declined, Stripe still
+  // retrying), so it must refuse Checkout as well. See classifyBillingRow.
   const { data: existing } = await supabaseAdmin
     .from("billing_subscriptions")
-    .select("status, stripe_customer_id")
+    .select("status, stripe_customer_id, stripe_subscription_id, cancel_at_period_end, billing_method")
     .eq("venue_id", venueId)
-    .maybeSingle<{ status: string; stripe_customer_id: string | null }>();
+    .maybeSingle<ExistingBillingRow>();
 
-  if (existing?.status === "active") {
-    return NextResponse.json(
-      { ok: false, error: "This venue already has an active subscription." },
-      { status: 409 }
-    );
+  if (existing) {
+    // Offline/check-payer rows are tokenless by design (grant-manual nulls every
+    // processor id), so classifyBillingRow reads them as `no_stripe_object` —
+    // "nothing at Stripe, safe to check out" — and would let a partner who is
+    // already paying by check open a SECOND, card-billed subscription on top of
+    // the admin grant. Nothing at Stripe can catch that: there is no customer to
+    // collide with. So this is decided on billing_method alone, ahead of the
+    // Stripe-truth logic below, which has no bearing on a tokenless row.
+    //
+    // Only a still-billing offline row is blocked. `cancelled` falls through on
+    // purpose: that is what the cron expiry sweep sets once the paid-through date
+    // lapses, and converting to self-serve card billing is exactly the right move
+    // then (it is the same Resubscribe path the owner UI already offers).
+    if (existing.billing_method === OFFLINE_BILLING_METHOD && existing.status !== "cancelled") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "This venue is billed offline. Contact support to switch to card billing.",
+          code: "offline_billing",
+        },
+        { status: 409 }
+      );
+    }
+
+    let rowState: BillingRowState = classifyBillingRow(existing);
+
+    if (rowState.live && existing.stripe_subscription_id) {
+      // About to refuse. If the mirror is stale and the subscription is really
+      // dead at Stripe, refusing would lock a paying-again owner out forever.
+      const truth = await readStripeTruth(existing.stripe_subscription_id);
+
+      if (truth === "dead") {
+        // Authoritative: Stripe handed back a terminal status, so correct the
+        // mirror. Also clear cancel_at_period_end — nothing is left to schedule
+        // against once the subscription is truly dead at Stripe, and leaving a
+        // stale `true` here would make a cancelled row masquerade as
+        // "cancellation scheduled" in the owner UI (Phase 5's Part A guard).
+        // The discount mirror dies with the subscription for the same reason:
+        // the owner UI renders the discount block whenever it is populated, so
+        // a leftover coupon would price a dead subscription next to
+        // "Resubscribe". Same clear the deleted-subscription webhook does.
+        await supabaseAdmin
+          .from("billing_subscriptions")
+          .update({ status: "cancelled", cancel_at_period_end: false, ...CLEARED_MIRROR })
+          .eq("venue_id", venueId);
+        rowState = { live: false, reason: "cancelled" };
+      } else if (truth === "missing") {
+        // `resource_missing` also fires on a wrong-mode id (a test id read with
+        // a live key), so it is NOT proof the subscription is gone. Let it
+        // unblock this one request — the owner would otherwise be locked out —
+        // but never write it back: overwriting a genuinely live row to
+        // 'cancelled' would then invite a real duplicate-billing resubscribe.
+        rowState = { live: false, reason: "cancelled" };
+      }
+    } else if (rowState.reason === "cancelled" && existing.stripe_subscription_id) {
+      // About to allow, but a Stripe object is on record. This is the `paused`
+      // case: alive at Stripe, `cancelled` here. Allowing would double-bill.
+      const truth = await readStripeTruth(existing.stripe_subscription_id);
+
+      // Fail CLOSED on `unknown`: during a Stripe outage we cannot rule out
+      // that this subscription is still live, and the cost of guessing wrong
+      // here is a second real subscription on the same customer.
+      if (truth === "live" || truth === "unknown") {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              truth === "live"
+                ? "This venue's subscription is still live at Stripe. Please contact support before starting a new one."
+                : "We couldn't reach Stripe to confirm this venue has no live subscription. Please try again in a few minutes.",
+            code: truth === "live" ? "stripe_live" : "stripe_unreachable",
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    if (rowState.live && existing.cancel_at_period_end) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "This venue has an active subscription scheduled to cancel. Resume it instead of starting a new checkout.",
+          code: "resume_instead",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (rowState.live && rowState.reason === "past_due") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Your last payment failed. Update your card to keep this subscription — starting a new one would bill you twice.",
+          code: "fix_payment",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (rowState.live) {
+      return NextResponse.json(
+        { ok: false, error: "This venue already has an active subscription." },
+        { status: 409 }
+      );
+    }
   }
 
   const origin = request.headers.get("origin") ?? new URL(request.url).origin;
@@ -66,6 +184,12 @@ export async function POST(request: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
+      // Lets a partner redeem a Stripe Promotion Code (e.g. LAUNCH50) right in
+      // Checkout's own UI at signup — Stripe matches it to its coupon and
+      // applies it; no redemption code path needed on our side. New signups
+      // only (docs/billing-discount-phase7.md) — applying a discount to an
+      // existing subscriber is the admin-grant path (lib/billingDiscounts.ts).
+      allow_promotion_codes: true,
       customer: customerId,
       client_reference_id: venueId,
       subscription_data: {

@@ -5,6 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 
+type Discount = {
+  label: string;
+  percentOff: number | null;
+  amountOffCents: number | null;
+  endsAt: string | null;
+};
+
 type Subscription = {
   id: string;
   venueId: string;
@@ -15,6 +22,7 @@ type Subscription = {
   cancelAtPeriodEnd: boolean;
   hasPaymentMethod: boolean;
   isManual: boolean;
+  discount: Discount | null;
 };
 
 type Invoice = {
@@ -26,6 +34,31 @@ type Invoice = {
 };
 
 const formatAmount = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+/**
+ * Headline price. Whole dollars for a round rate, cents once a discount makes it
+ * not — rounding $89.10 to "$89" would print a number nobody is charged.
+ */
+const formatPrice = (cents: number) => (cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents));
+
+const discountedAmountCents = (amountCents: number, discount: Discount) =>
+  discount.percentOff != null
+    ? Math.round(amountCents * (1 - discount.percentOff / 100))
+    : discount.amountOffCents != null
+      ? Math.max(0, amountCents - discount.amountOffCents)
+      : amountCents;
+
+/**
+ * What this partner actually pays per cycle. Offline and card rows compute the
+ * same way on purpose: lib/billingDiscounts.ts's offline path is mirror-only and
+ * leaves amount_cents at the list rate, so there is one rule for both. (An
+ * earlier version of that path wrote the net back into amount_cents, which made
+ * this recompute double-count it.)
+ */
+const effectiveAmountCents = (subscription: Subscription): number =>
+  subscription.discount
+    ? discountedAmountCents(subscription.amountCents, subscription.discount)
+    : subscription.amountCents;
 const formatDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—";
 
@@ -44,7 +77,11 @@ const subStatus: Record<Subscription["status"], { tone: string; dot: string; lab
 const manualSubStatus = { tone: "bg-ht-amber-500/15 text-ht-amber-300", dot: "bg-ht-amber-400", label: "Active — billed offline" };
 
 const displayStatus = (subscription: Subscription): Subscription["status"] =>
-  subscription.cancelAtPeriodEnd ? "cancelled" : subscription.status;
+  subscription.status === "past_due"
+    ? "past_due"
+    : subscription.cancelAtPeriodEnd
+      ? "cancelled"
+      : subscription.status;
 
 function bannerFromParams(
   success: string | null,
@@ -85,8 +122,19 @@ const OwnerBillingPage = () => {
   const [loading, setLoading] = useState(true);
   const [updatingCard, setUpdatingCard] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [resuming, setResuming] = useState(false);
+  const [urlBanner, setUrlBanner] = useState<ReturnType<typeof bannerFromParams>>(null);
 
-  const banner = bannerFromParams(searchParams.get("success"), searchParams.get("error"));
+  useEffect(() => {
+    const parsed = bannerFromParams(searchParams.get("success"), searchParams.get("error"));
+    if (parsed) {
+      setUrlBanner(parsed);
+      // Strip ?success=/?error= once captured so a later action's own message
+      // can't be silently swallowed by a stale banner resurfacing on re-render.
+      router.replace("/owner/billing", { scroll: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- capture once from the params the page was loaded with
+  }, []);
 
   const refresh = useCallback(async () => {
     const response = await fetch("/api/owner/billing");
@@ -159,6 +207,32 @@ const OwnerBillingPage = () => {
     await refresh();
   };
 
+  const handleResume = async () => {
+    if (!subscription) return;
+    setResuming(true);
+    setActionMessage(null);
+    try {
+      const response = await fetch("/api/owner/billing/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ venueId: subscription.venueId }),
+      });
+      const data = (await response.json()) as { ok: boolean; error?: string };
+      if (!response.ok || !data.ok) {
+        setActionMessage(data.error ?? "Failed to resume subscription.");
+        setResuming(false);
+        return;
+      }
+      setActionMessage("Subscription resumed. You'll keep billing on your existing date.");
+      setSubscription((prev) => (prev ? { ...prev, cancelAtPeriodEnd: false } : prev));
+      await refresh();
+    } catch {
+      setActionMessage("Network error. Please try again.");
+    } finally {
+      setResuming(false);
+    }
+  };
+
   return (
     <OwnerShell title="Billing" subtitle="Subscription, payment & invoices" maxWidth="lg" variant="dark">
       {loading ? (
@@ -166,8 +240,8 @@ const OwnerBillingPage = () => {
       ) : !subscription ? (
         <div className="space-y-5">
           <ExitPill />
-          {banner ? (
-            <div className={`rounded-xl px-4 py-3 text-sm font-bold ${bannerStyles[banner.kind]}`}>{banner.text}</div>
+          {urlBanner ? (
+            <div className={`rounded-xl px-4 py-3 text-sm font-bold ${bannerStyles[urlBanner.kind]}`}>{urlBanner.text}</div>
           ) : null}
           <div className="rounded-2xl border border-ht-hairline bg-ht-surface p-8 text-center shadow-ht-card">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ht-game-billing text-2xl">
@@ -189,18 +263,18 @@ const OwnerBillingPage = () => {
         <div className="space-y-5">
           <ExitPill />
 
-          {banner ? (
-            <div className={`rounded-xl px-4 py-3 text-sm font-bold ${bannerStyles[banner.kind]}`}>{banner.text}</div>
-          ) : actionMessage ? (
+          {actionMessage ? (
             <div className="rounded-xl bg-ht-cyan-500/15 px-4 py-3 text-sm font-bold text-ht-cyan-300">{actionMessage}</div>
+          ) : urlBanner ? (
+            <div className={`rounded-xl px-4 py-3 text-sm font-bold ${bannerStyles[urlBanner.kind]}`}>{urlBanner.text}</div>
           ) : null}
 
           {/* Subscription card — indigo glow */}
           <div className="relative overflow-hidden rounded-2xl border border-indigo-400/40 bg-ht-surface p-5 shadow-ht-card">
             <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-ht-game-billing opacity-20 blur-2xl" />
             <div className="relative">
-              <div className="mb-2 flex items-start justify-between">
-                <span className="text-[22px] font-black uppercase tracking-wider text-ht-indigo-300">
+              <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+                <span className="text-sm font-black uppercase tracking-wider text-ht-indigo-300">
                   {subscription.planType}
                 </span>
                 <div className="flex flex-col items-end gap-2">
@@ -210,25 +284,53 @@ const OwnerBillingPage = () => {
                         ? manualSubStatus
                         : subStatus[displayStatus(subscription)];
                     return (
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[21px] font-black uppercase tracking-wider ${badge.tone}`}>
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-black uppercase tracking-wider ${badge.tone}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${badge.dot}`} />
                         {badge.label}
                       </span>
                     );
                   })()}
-                  {subscription.status === "cancelled" || subscription.cancelAtPeriodEnd ? (
+                  {subscription.status === "cancelled" ? (
                     <Link
                       href="/owner/billing/setup"
-                      className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ht-cyan-500 px-3 py-1 text-[24px] font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px"
+                      className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ht-cyan-500 px-3 py-1 text-sm font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px"
                     >
                       Resubscribe
                     </Link>
+                  ) : subscription.cancelAtPeriodEnd && !subscription.isManual ? (
+                    <button
+                      type="button"
+                      onClick={handleResume}
+                      disabled={resuming}
+                      className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ht-cyan-500 px-3 py-1 text-sm font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px disabled:opacity-60"
+                    >
+                      {resuming ? "Resuming…" : "Resume subscription"}
+                    </button>
                   ) : null}
                 </div>
               </div>
-              <div className="font-black text-ht-primary">
-                <span className="text-4xl">{`$${Math.round(subscription.amountCents / 100)}`}</span>
-              </div>
+              {(() => {
+                const effective = effectiveAmountCents(subscription);
+                return (
+                  <div className="font-black text-ht-primary">
+                    <span className="text-4xl">{formatPrice(effective)}</span>
+                    {/* Only strike the list price when it genuinely differs — a
+                        discount whose coupon couldn't be resolved mirrors a label
+                        with no percent/amount, and "$100 $100" reads as a bug. */}
+                    {effective !== subscription.amountCents ? (
+                      <span className="ml-2 text-base font-bold text-ht-muted line-through">
+                        {formatPrice(subscription.amountCents)}
+                      </span>
+                    ) : null}
+                  </div>
+                );
+              })()}
+              {subscription.discount ? (
+                <p className="mt-1 text-xs font-bold text-ht-emerald-300">
+                  {subscription.discount.label}
+                  {subscription.discount.endsAt ? ` · ends ${formatDate(subscription.discount.endsAt)}` : null}
+                </p>
+              ) : null}
               <dl className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-ht-muted">

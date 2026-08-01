@@ -26,6 +26,86 @@ export type CancelableSubscriptionRow = {
   stripe_subscription_id: string | null;
 };
 
+export type BillingRowState =
+  | { live: true; reason: "active" | "past_due" }
+  | { live: false; reason: "cancelled" | "no_stripe_object" };
+
+export type ClassifiableBillingRow = {
+  status: string;
+  stripe_subscription_id: string | null;
+};
+
+/**
+ * Every existing billing guard was written against `status === "active"`, but
+ * `past_due` (card declined, Stripe still retrying) is ALSO live at Stripe and
+ * slips through those guards. This is the one place that predicate is defined
+ * so later call sites share it instead of re-deriving it and drifting.
+ */
+export function classifyBillingRow(row: ClassifiableBillingRow): BillingRowState {
+  if (!row.stripe_subscription_id) {
+    return { live: false, reason: "no_stripe_object" };
+  }
+
+  if (row.status === "active") {
+    return { live: true, reason: "active" };
+  }
+
+  if (row.status === "past_due") {
+    return { live: true, reason: "past_due" };
+  }
+
+  return { live: false, reason: "cancelled" };
+}
+
+/**
+ * Stripe statuses that mean the subscription object is genuinely finished and
+ * can never bill again. Everything else — including `paused`, which
+ * `mapStripeSubscriptionStatus` folds into our local `cancelled` — is still a
+ * live object on the customer and would be duplicated by a new Checkout.
+ */
+const DEAD_STRIPE_STATUSES = new Set(["canceled", "incomplete_expired"]);
+
+/** Stripe throws this code for a deleted object OR a wrong-mode id (test id vs. live key). */
+const isResourceMissing = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  (error as { code?: unknown }).code === "resource_missing";
+
+/**
+ * What Stripe itself says about a subscription id, kept deliberately four-way
+ * because the two "not live" answers carry different amounts of authority:
+ *
+ * - `live`    — the object exists and can still bill.
+ * - `dead`    — the object exists and is terminally finished. Authoritative:
+ *               safe to write back to our mirror.
+ * - `missing` — `resource_missing`, which Stripe throws for a genuinely deleted
+ *               object AND for a wrong-mode id (a test id read with a live key,
+ *               or vice versa). NOT authoritative: it may only mean "this key
+ *               can't see that object", so it must never overwrite the mirror.
+ * - `unknown` — Stripe was unreachable. Keep whatever the mirror said.
+ */
+export type StripeTruth = "live" | "dead" | "missing" | "unknown";
+
+/**
+ * Our billing_subscriptions row is only a MIRROR of Stripe, kept current by the
+ * webhook. When a webhook is missed — or someone acts in the Stripe dashboard —
+ * the mirror can be wrong in either direction, so ask Stripe before a wrong
+ * answer costs money (a duplicate subscription) or wrongly locks an owner out
+ * of Checkout.
+ */
+export async function readStripeTruth(subscriptionId: string): Promise<StripeTruth> {
+  if (!stripe) {
+    return "unknown";
+  }
+  try {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    return DEAD_STRIPE_STATUSES.has(subscription.status) ? "dead" : "live";
+  } catch (error) {
+    return isResourceMissing(error) ? "missing" : "unknown";
+  }
+}
+
 export type CancelResult =
   | { ok: true; mode: "stripe" | "db" }
   | { ok: false; status: number; error: string };
@@ -74,4 +154,49 @@ export async function cancelSubscription(
   }
 
   return { ok: true, mode: "db" };
+}
+
+/**
+ * Reverses a scheduled cancel_at_period_end before the current paid period
+ * ends — the "still active, just not renewing" case. This must never create a
+ * new Stripe subscription: the existing one is still live, so the only correct
+ * action is to un-schedule its cancellation. A tokenless offline/legacy row has
+ * no `cancel_at_period_end` concept at the processor and is not resumable here
+ * (an admin re-grant is what reactivates it).
+ */
+export async function resumeSubscription(
+  subscription: CancelableSubscriptionRow
+): Promise<CancelResult> {
+  if (!supabaseAdmin) {
+    return { ok: false, status: 500, error: "Server configuration error." };
+  }
+
+  if (!subscription.stripe_subscription_id || !stripe) {
+    return {
+      ok: false,
+      status: 400,
+      error: "This subscription can't be resumed here. Please contact support.",
+    };
+  }
+
+  try {
+    await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+      cancel_at_period_end: false,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: 502,
+      error: error instanceof Error ? error.message : "Failed to resume subscription.",
+    };
+  }
+
+  await supabaseAdmin
+    .from("billing_subscriptions")
+    .update({ cancel_at_period_end: false })
+    .eq("id", subscription.id);
+  // Stripe is already authoritative; the sync-back webhook will catch up the
+  // mirror write. Don't fail the request over the local write.
+
+  return { ok: true, mode: "stripe" };
 }

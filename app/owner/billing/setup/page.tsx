@@ -8,7 +8,7 @@ import { OwnerShell } from "@/components/owner/OwnerShell";
 type BillingResponse = {
   ok: boolean;
   venueIds?: string[];
-  subscriptions?: Array<{ venueId: string; status: string }>;
+  subscriptions?: Array<{ venueId: string; status: string; cancelAtPeriodEnd: boolean }>;
   error?: string;
 };
 
@@ -32,9 +32,15 @@ const OwnerBillingSetupPage = () => {
           setError("Could not load your account.");
           return;
         }
-        const active = data.subscriptions?.find((s) => s.status === "active");
-        if (active) {
+        const isLive = (s: { status: string }) => s.status === "active" || s.status === "past_due";
+        const activeNotScheduled = data.subscriptions?.find((s) => s.status === "active" && !s.cancelAtPeriodEnd);
+        if (activeNotScheduled) {
           router.push("/owner/dashboard");
+          return;
+        }
+        const liveNeedsAction = data.subscriptions?.find((s) => isLive(s) && (s.cancelAtPeriodEnd || s.status === "past_due"));
+        if (liveNeedsAction) {
+          router.push("/owner/billing");
           return;
         }
         const firstVenue = data.subscriptions?.[0]?.venueId ?? data.venueIds?.[0] ?? null;
