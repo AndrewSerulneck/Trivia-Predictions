@@ -747,3 +747,145 @@ expected to find there (`lib.cjs`, `probe.cjs`, `stripe-test-env.sh`).
 All three "not browser-verified" flags (D, and the two GUARD Ph5 Part
 B/C sub-items folded into it, plus E) are now closed. Next: Phase 5 (clean
 junk + chunked commits), then the manual-runbook Phases 6/7.
+
+## GUARD Phase 8 (verification) — Item F
+
+Live against **real Stripe test mode**, 2026-08-01. Harness: dev server on
+:3100 under `scripts/stripe-test-env.sh` (test key from the Stripe CLI config;
+`@next/env` never overwrites an already-set var, so `.env.local`'s LIVE key
+could not win — asserted at startup and re-asserted by `hc.cjs`, which exits
+non-zero on a non-`sk_test_` key). `stripe listen` forwarded to :3100; every
+Checkout session minted was `cs_test_…` and every Stripe object `livemode:false`.
+
+**Blocker hit first:** Next 16 holds an exclusive `.next/dev` lock, so a second
+`next dev` cannot start. The already-running :3000 server was started the normal
+way — i.e. on the **live** key — so it could neither be reused for mutations nor
+coexist. Resolved by stopping it for the run and restarting it afterward
+(user-approved). Phase 4 got away with reusing it only because it made zero
+Stripe mutations.
+
+Throwaway seed: one owner + three `hidden = true` venues
+(`zz-billing-verify-20260801-v{1,2,3}`), forged HMAC `tp_owner_sess` /
+`admin_session` cookies. Venue 1 was rebuilt onto a **Stripe test clock** —
+required, see Check 1.
+
+- **Check 1 — `past_due` blocks Checkout: PASS.** 409 `fix_payment`; customer
+  subscription count 1 → 1.
+  *Method note:* the runbook's implied approach (attach `tok_chargeCustomerFail`,
+  re-anchor the billing cycle) **does not work** — `billing_cycle_anchor: 'now'`
+  with `proration_behavior: 'none'` just moves the period, it never issues an
+  invoice, so nothing fails and the subscription stays `active`. A **test clock**
+  advanced past period end is the only reliable way to reach `past_due`.
+- **Check 2 — `past_due` + scheduled cancel: PASS.** Checkout → 409
+  `resume_instead` (confirming `resume_instead` is ordered ahead of `past_due`),
+  count 1 → 1; resume → 200, Stripe `cancel_at_period_end: false`, still exactly
+  1 subscription. Browser at 320px showed badge **"PAYMENT DUE"**, not
+  "Cancelled", with a working Resume button — GUARD Ph5 Part B now verified
+  against real Stripe state, not seeded rows.
+- **Check 3 — `paused` / `stripe_live`: PASS, with a corrected premise.**
+  `pause_collection: {behavior: 'void'}` does **not** produce Stripe status
+  `paused` (status stayed `past_due`; `paused` comes from the trial-end
+  `missing_payment_method` path, not `pause_collection`). The runbook's stated
+  mechanism is wrong. The guard itself was verified by constructing the state it
+  actually defends — mirror `cancelled` while Stripe is live: 409 `stripe_live`,
+  row **byte-identical** before/after, count 1 → 1.
+- **Check 4 — `stripe_unreachable` fail-closed: PASS.** Dev server restarted
+  with a syntactically valid but dead `sk_test_…` key (no `/etc/hosts` edit
+  needed: `readStripeTruth` maps every non-`resource_missing` error to
+  `unknown`). 409 `stripe_unreachable`, row byte-identical, and re-checked with
+  the real key that no subscription was created.
+- **Check 5 — self-heal in the safe direction: PASS.** Subscription cancelled
+  directly at Stripe, mirror hand-forced back to `active` +
+  `cancel_at_period_end: true` + a populated discount mirror. Checkout → 200 with
+  a `cs_test_` session, and the row self-corrected to `status='cancelled'`,
+  `cancel_at_period_end=false`, all five discount-mirror columns cleared.
+- **Check 6 — `resource_missing` must NOT write back: PASS.** `active` row
+  pointed at `sub_doesnotexist` → Checkout allowed (200), row **byte-identical**
+  afterward, still `active`.
+
+## DISCOUNT Phase 10 (verification) — Items G + H
+
+Same harness. Venues 1 and 2 on one shared test clock (so one advance invoices
+both); venue 3 reserved for the signup-time promo path.
+
+- **Check 1 — 100%-off / 2 free months really invoices $0: PASS.** Renewal
+  invoice `subtotal=10000, total=0, amount_due=0`. Mirror: `amount_cents` left at
+  the list rate 10000, `discount_percent_off=100`, label "2 free months",
+  `discount_ends_at` set. `billing_discount_grants` row had
+  `granted_by='marc'`, `free_months=2`, all other value columns null.
+  `/owner/billing` at 320px: **"$0"** struck against "$100", "2 free months ·
+  ends Nov 1, 2026".
+- **Check 2 — percent-off on an already-active subscription: PASS.** 25%
+  forever → next invoice `total=7500`. Mirror `discount_percent_off=25`,
+  `discount_ends_at` null, `amount_cents` **untouched at 10000** (Phase 3b Item L
+  holding). Owner page rendered "$75/$100 · 25% off forever" with **no "ends"
+  text**. Checkout against the discounted active row still refused (409) —
+  Phase-10-doc Check 4.
+- **Check 3 — removal and expiry: PASS (both halves).** Admin Remove → Stripe
+  discount count 0 and all five mirror columns null (the `discounts: ""` removal
+  semantics from Ph2 note 1 hold in practice). Separately, a discount deleted
+  **directly at Stripe** was cleared from the mirror by the webhook alone. Bonus:
+  the 2-month coupon from Check 1 **expired naturally** when the clock advanced
+  two months, and the mirror cleared itself correctly.
+- **Check 4 (Item H) — real payload shape: PASS, as designed for.** A live
+  `customer.subscription.updated` carries the coupon at
+  **`discount.source.coupon`** (`{"source":{"coupon":"hc-free-2mo","type":"coupon"}}`),
+  exactly what `discountCouponRef`/`resolveDiscountCoupon` expect — DISCOUNT Ph6
+  note 1 confirmed against a real event, not just types. The
+  "unreadable → omit columns, don't clear" branch was proven with a hand-signed
+  webhook built from a real subscription object with `discounts` **and**
+  `discount` stripped: 200, mirror **preserved** intact.
+- **Check 5 — replace, don't stack: PASS.** $20-off applied over a live 25%-off
+  → Stripe discount count stayed **1**, mirror swapped to
+  `discount_amount_off_cents=2000` with `discount_percent_off` back to null.
+- **Check 6 — custom price swap: PASS (positive + all four negatives).** Swap to
+  a negotiated $65 recurring USD price: subscription item moved, **no proration
+  invoice** (invoice count 3 → 3), upcoming-invoice preview `total=6500`, mirror
+  `amount_cents=6500`, grant row `discount_type='custom_price'`,
+  `custom_price_cents=6500`. Refused, each 400 with the right message: archived
+  price ("That price is archived at Stripe."), one-time price ("A subscription
+  needs a recurring price."), non-USD price ("That price is not in USD."), and an
+  offline-billed row ("…billed offline … Set their rate with Grant offline /
+  Extend instead.").
+- **Check 7 — promo codes end to end: PASS.** Created `ZZVERIFY50` (50% off
+  forever) via the admin API; it appeared in the list with `couponId`
+  correctly resolved (this SDK's `pc.promotion.coupon` shape). A **fresh
+  Checkout** for venue 3 exposed the promo field (`allow_promotion_codes: true`),
+  and the code applied in Stripe's hosted UI: $100.00 → −$50.00 → **$50.00 due**.
+  After paying with `4242…`, the webhook mirrored the **signup-time** discount —
+  `stripe_coupon_id='hc-pct-50-forever'`, `discount_percent_off=50` — which is
+  the path the run log flagged as "otherwise completely untested". Deactivated the
+  code; a new Checkout rejected it with **"This code is invalid."** and the total
+  stayed $100.
+
+### Defect found (pre-existing, NOT from this work, NOT fixed)
+
+**`billing_invoices` is never written for Stripe-billed partners, so every
+partner's Invoices panel permanently reads "No invoices yet."**
+
+`invoiceSubscriptionId` (`app/api/webhooks/stripe/route.ts`) reads only
+`invoice.subscription`. Under the API version this account is on
+(**2026-06-24.dahlia**) that field is **`undefined`** — the id moved to
+`invoice.parent.subscription_details.subscription`. So `recordInvoice`
+early-returns on every `invoice.paid` / `invoice.payment_failed` event. Verified
+directly against a live invoice payload, and confirmed by zero
+`billing_invoices` rows after ~8 genuinely paid test invoices (the webhooks all
+returned 200, which is why nothing ever surfaced).
+
+Pre-existing on `main` since commit `3b7b85a` (2026-07-14); untouched by the
+guard/discount work. Fix is one function — read
+`invoice.parent?.subscription_details?.subscription` with the existing
+`invoice.subscription` kept as a fallback for older API versions. Left alone
+here because it is outside Items F/G/H.
+
+### Cleanup
+
+Test clock deleted (taking its customers and subscriptions), venue 3's
+Checkout-created customer deleted, all six `hc-…` coupons deleted, the four
+negotiated prices and their product archived, `ZZVERIFY50` deactivated (promotion
+codes cannot be deleted). All Supabase rows removed — grants, subscriptions,
+owner links, owner, the three hidden venues, the auth user; `billing_subscriptions`
+is back to exactly its prior two real rows. `next-env.d.ts` reverted; `git status`
+shows only the two unrelated advertising PNGs. The :3000 dev server was restarted.
+
+**Status: Items F, G and H closed. All 13 checks passed.**

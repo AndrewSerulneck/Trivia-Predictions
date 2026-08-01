@@ -380,10 +380,26 @@ async function recordInvoice(invoice: Stripe.Invoice, status: "paid" | "failed")
   if (error) throw new Error(`recordInvoice failed: ${error.message}`);
 }
 
-/** Read the subscription id off an invoice across SDK field-shape variations. */
+/**
+ * Read the subscription id off an invoice across SDK field-shape variations.
+ * As of API version 2026-06-24 the id lives at `invoice.parent.subscription_details.subscription`
+ * — `invoice.subscription` is `undefined` on this account, which silently
+ * dropped every invoice.paid/invoice.payment_failed event (verified against a
+ * live payload; billing-run-log.md's DISCOUNT Phase 10 section). Older API
+ * versions are kept as a fallback.
+ */
 function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
-  const parent = (invoice as unknown as { subscription?: string | { id: string } | null }).subscription;
-  if (typeof parent === "string") return parent;
-  if (parent && typeof parent === "object") return parent.id;
+  const nested = (
+    invoice as unknown as {
+      parent?: { subscription_details?: { subscription?: string | { id: string } | null } | null } | null;
+    }
+  ).parent?.subscription_details?.subscription;
+  if (typeof nested === "string") return nested;
+  if (nested && typeof nested === "object") return nested.id;
+
+  const legacy = (invoice as unknown as { subscription?: string | { id: string } | null }).subscription;
+  if (typeof legacy === "string") return legacy;
+  if (legacy && typeof legacy === "object") return legacy.id;
+
   return null;
 }
