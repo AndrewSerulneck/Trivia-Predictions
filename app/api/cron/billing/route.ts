@@ -114,9 +114,20 @@ export async function POST(request: Request) {
   // access." Setting status='cancelled' is already handled by the owner UI
   // (shows "Access ends {date}", offers Resubscribe) and the dashboard tile;
   // re-granting from the admin panel reactivates the row.
+  // The discount mirror is cleared in the same write because nothing else can:
+  // the Stripe webhook never fires for a tokenless row, and the admin's Discount
+  // control is hidden once a row is cancelled — so a stale "25% off" would sit on
+  // the partner's billing page next to a Cancelled badge with no way to remove it.
   const { data: expired, error: expiredError } = await supabaseAdmin
     .from("billing_subscriptions")
-    .update({ status: "cancelled" })
+    .update({
+      status: "cancelled",
+      stripe_coupon_id: null,
+      discount_label: null,
+      discount_percent_off: null,
+      discount_amount_off_cents: null,
+      discount_ends_at: null,
+    })
     .eq("billing_method", OFFLINE_BILLING_METHOD)
     .eq("status", "active")
     .lte("current_period_end", nowIso)

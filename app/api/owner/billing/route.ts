@@ -15,6 +15,10 @@ type SubscriptionRow = {
   cancel_at_period_end: boolean;
   slimcd_recurring_token: string | null;
   created_at: string;
+  discount_label: string | null;
+  discount_percent_off: number | null;
+  discount_amount_off_cents: number | null;
+  discount_ends_at: string | null;
 };
 
 type InvoiceRow = {
@@ -46,7 +50,7 @@ export async function GET(request: Request) {
   const { data: subscriptions, error: subError } = await supabaseAdmin
     .from("billing_subscriptions")
     .select(
-      "id, venue_id, plan_type, billing_method, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, slimcd_recurring_token, created_at"
+      "id, venue_id, plan_type, billing_method, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, slimcd_recurring_token, created_at, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
     )
     .in("venue_id", auth.venueIds)
     .returns<SubscriptionRow[]>();
@@ -82,6 +86,14 @@ export async function GET(request: Request) {
       hasPaymentMethod: Boolean(s.slimcd_recurring_token),
       isManual: s.billing_method === OFFLINE_BILLING_METHOD,
       createdAt: s.created_at,
+      discount: s.discount_label
+        ? {
+            label: s.discount_label,
+            percentOff: s.discount_percent_off,
+            amountOffCents: s.discount_amount_off_cents,
+            endsAt: s.discount_ends_at,
+          }
+        : null,
     })),
     invoices: (invoices ?? []).map((i) => ({
       id: i.id,

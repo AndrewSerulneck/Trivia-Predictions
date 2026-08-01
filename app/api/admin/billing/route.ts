@@ -3,6 +3,13 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
 import { cancelSubscription } from "@/lib/billing";
+import {
+  applyDiscountToSubscription,
+  removeDiscountFromSubscription,
+  type DiscountSpec,
+  type DiscountableSubscriptionRow,
+} from "@/lib/billingDiscounts";
+import { setCustomPrice, type CustomPriceRow } from "@/lib/billingCustomPrice";
 
 /**
  * Admin-only manual billing controls (Phase 1 of the check/offline-payment plan).
@@ -39,6 +46,11 @@ type SubscriptionRow = {
   stripe_subscription_id: string | null;
   slimcd_recurring_token: string | null;
   cancel_at_period_end: boolean | null;
+  stripe_coupon_id: string | null;
+  discount_label: string | null;
+  discount_percent_off: number | null;
+  discount_amount_off_cents: number | null;
+  discount_ends_at: string | null;
 };
 
 /**
@@ -75,7 +87,7 @@ export async function GET(request: Request) {
     const { data: subs, error: subError } = await supabaseAdmin
       .from("billing_subscriptions")
       .select(
-        "venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, slimcd_recurring_token, cancel_at_period_end"
+        "venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, slimcd_recurring_token, cancel_at_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
       )
       .in("venue_id", venueIds)
       .returns<SubscriptionRow[]>();
@@ -105,6 +117,14 @@ export async function GET(request: Request) {
               isManual: sub.billing_method === OFFLINE_BILLING_METHOD,
               isStripe: Boolean(sub.stripe_subscription_id) || Boolean(sub.slimcd_recurring_token),
               cancelAtPeriodEnd: Boolean(sub.cancel_at_period_end),
+              discount: sub.discount_label
+                ? {
+                    label: sub.discount_label,
+                    percentOff: sub.discount_percent_off,
+                    amountOffCents: sub.discount_amount_off_cents,
+                    endsAt: sub.discount_ends_at,
+                  }
+                : null,
             }
           : null,
       };
@@ -123,12 +143,20 @@ export async function GET(request: Request) {
 }
 
 type PostBody = {
-  action?: "grant-manual" | "revoke";
+  action?: "grant-manual" | "revoke" | "apply-discount" | "remove-discount" | "set-custom-price";
   venueId?: string;
   paidThroughDate?: string; // YYYY-MM-DD, inclusive; access ends end-of-day
   amountDollars?: number;
   memo?: string;
   force?: boolean;
+  discountType?: "free_months" | "percent_off" | "amount_off";
+  months?: number;
+  percentOff?: number;
+  amountOffCents?: number;
+  duration?: "once" | "repeating" | "forever";
+  durationInMonths?: number;
+  reason?: string;
+  stripePriceId?: string;
 };
 
 /**
@@ -137,6 +165,9 @@ type PostBody = {
  *   action: "grant-manual" — upsert an active manual subscription (paid through
  *            the given date) and record a paid invoice for the audit trail.
  *   action: "revoke"       — mark the subscription cancelled.
+ *   action: "apply-discount" / "remove-discount" — coupon-backed discounts.
+ *   action: "set-custom-price" — negotiated permanent rate (a Price swap, not a
+ *            discount; see lib/billingCustomPrice.ts).
  */
 export async function POST(request: Request) {
   const auth = await requireAdminAuth(request);
@@ -172,6 +203,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
     }
     return NextResponse.json({ ok: true });
+  }
+
+  if (body.action === "apply-discount") {
+    return handleApplyDiscount(venueId, body, auth.adminUsername);
+  }
+
+  if (body.action === "remove-discount") {
+    return handleRemoveDiscount(venueId);
+  }
+
+  if (body.action === "set-custom-price") {
+    return handleSetCustomPrice(venueId, body, auth.adminUsername);
   }
 
   if (body.action !== "grant-manual") {
@@ -286,4 +329,187 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+/**
+ * action: "apply-discount" — validates the request server-side (the real
+ * safety net against a fat-fingered "1000% off"; lib/billingDiscounts.ts
+ * trusts its caller), applies it via lib/billingDiscounts.ts, and records the
+ * grant in billing_discount_grants for the audit trail.
+ */
+async function handleApplyDiscount(
+  venueId: string,
+  body: PostBody,
+  adminUsername: string
+): Promise<NextResponse> {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ ok: false, error: "Server configuration error." }, { status: 500 });
+  }
+
+  const discountType = body.discountType;
+  if (discountType !== "free_months" && discountType !== "percent_off" && discountType !== "amount_off") {
+    return NextResponse.json({ ok: false, error: "A valid discount type is required." }, { status: 400 });
+  }
+
+  let spec: DiscountSpec;
+  if (discountType === "free_months") {
+    const months = Number(body.months);
+    if (!(Number.isInteger(months) && months > 0)) {
+      return NextResponse.json(
+        { ok: false, error: "Free months must be a positive whole number." },
+        { status: 400 }
+      );
+    }
+    spec = { type: "free_months", months };
+  } else {
+    const duration = body.duration;
+    if (duration !== "once" && duration !== "repeating" && duration !== "forever") {
+      return NextResponse.json({ ok: false, error: "A valid discount duration is required." }, { status: 400 });
+    }
+    if (duration === "repeating" && !(Number.isInteger(body.durationInMonths) && (body.durationInMonths as number) > 0)) {
+      return NextResponse.json(
+        { ok: false, error: "A repeating discount needs a whole number of months." },
+        { status: 400 }
+      );
+    }
+    const durationInMonths = duration === "repeating" ? (body.durationInMonths as number) : null;
+    if (discountType === "percent_off") {
+      const percentOff = Number(body.percentOff);
+      if (!(percentOff > 0) || percentOff > 100) {
+        return NextResponse.json(
+          { ok: false, error: "Percent off must be greater than 0 and no more than 100." },
+          { status: 400 }
+        );
+      }
+      spec = { type: "percent_off", percentOff, duration, durationInMonths };
+    } else {
+      const amountOffCents = Number(body.amountOffCents);
+      if (!(Number.isInteger(amountOffCents) && amountOffCents > 0)) {
+        return NextResponse.json(
+          { ok: false, error: "Amount off must be a positive whole number of cents." },
+          { status: 400 }
+        );
+      }
+      spec = { type: "amount_off", amountOffCents, duration, durationInMonths };
+    }
+  }
+
+  const { data: row, error: rowError } = await supabaseAdmin
+    .from("billing_subscriptions")
+    // billing_method decides the offline path (see DiscountableSubscriptionRow) —
+    // dropping it here would route every row down the Stripe branch.
+    .select("id, billing_method, stripe_subscription_id, amount_cents, current_period_end")
+    .eq("venue_id", venueId)
+    .maybeSingle<DiscountableSubscriptionRow>();
+
+  if (rowError || !row) {
+    return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
+  }
+
+  const result = await applyDiscountToSubscription(row, spec);
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
+  }
+
+  const grantRow: Record<string, unknown> = {
+    venue_id: venueId,
+    subscription_id: row.id,
+    granted_by: adminUsername,
+    discount_type: discountType,
+    reason: (body.reason ?? "").trim() || null,
+  };
+  if (spec.type === "free_months") grantRow.free_months = spec.months;
+  if (spec.type === "percent_off") grantRow.percent_off = spec.percentOff;
+  if (spec.type === "amount_off") grantRow.amount_off_cents = spec.amountOffCents;
+
+  const { error: grantError } = await supabaseAdmin.from("billing_discount_grants").insert(grantRow);
+  if (grantError) {
+    // The discount is already live (Stripe or local mirror); the grant row is
+    // only the audit record. Report success but note the bookkeeping gap.
+    return NextResponse.json({ ...result, ok: true, warning: "Discount applied, but the audit record failed to save." });
+  }
+
+  return NextResponse.json({ ...result, ok: true });
+}
+
+/** action: "remove-discount" — clears the active discount for a venue. */
+async function handleRemoveDiscount(venueId: string): Promise<NextResponse> {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ ok: false, error: "Server configuration error." }, { status: 500 });
+  }
+
+  const { data: row, error: rowError } = await supabaseAdmin
+    .from("billing_subscriptions")
+    // billing_method decides the offline path (see DiscountableSubscriptionRow) —
+    // dropping it here would route every row down the Stripe branch.
+    .select("id, billing_method, stripe_subscription_id, amount_cents, current_period_end")
+    .eq("venue_id", venueId)
+    .maybeSingle<DiscountableSubscriptionRow>();
+
+  if (rowError || !row) {
+    return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
+  }
+
+  const result = await removeDiscountFromSubscription(row);
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
+  }
+
+  return NextResponse.json({ ...result, ok: true });
+}
+
+/**
+ * action: "set-custom-price" — put this venue on a negotiated permanent rate by
+ * swapping a Stripe Price onto their subscription item. NOT a discount (see
+ * lib/billingCustomPrice.ts); it is recorded in the same audit table under
+ * discount_type 'custom_price' so all money-given-away lives in one trail.
+ */
+async function handleSetCustomPrice(
+  venueId: string,
+  body: PostBody,
+  adminUsername: string
+): Promise<NextResponse> {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ ok: false, error: "Server configuration error." }, { status: 500 });
+  }
+
+  const priceId = (body.stripePriceId ?? "").trim();
+  if (!priceId) {
+    return NextResponse.json({ ok: false, error: "A Stripe price id is required." }, { status: 400 });
+  }
+
+  const { data: row, error: rowError } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("id, stripe_subscription_id, amount_cents")
+    .eq("venue_id", venueId)
+    .maybeSingle<CustomPriceRow>();
+
+  if (rowError || !row) {
+    return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
+  }
+
+  const result = await setCustomPrice(row, priceId);
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
+  }
+
+  const { error: grantError } = await supabaseAdmin.from("billing_discount_grants").insert({
+    venue_id: venueId,
+    subscription_id: row.id,
+    granted_by: adminUsername,
+    discount_type: "custom_price",
+    custom_price_cents: result.amountCents,
+    reason: (body.reason ?? "").trim() || null,
+  });
+  if (grantError) {
+    // The price is already swapped at Stripe; the grant row is only the audit
+    // record. Same non-fatal treatment as apply-discount above.
+    return NextResponse.json({
+      ...result,
+      ok: true,
+      warning: result.warning ?? "Rate changed, but the audit record failed to save.",
+    });
+  }
+
+  return NextResponse.json({ ...result, ok: true });
 }

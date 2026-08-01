@@ -3,6 +3,12 @@ import type Stripe from "stripe";
 import { stripe, getStripeWebhookSecret, mapStripeSubscriptionStatus } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendWelcomeEmail } from "@/lib/email/sendWelcomeEmail";
+import {
+  CLEARED_MIRROR,
+  discountMirrorFromStripe,
+  resolveDiscountCoupon,
+  type DiscountMirror,
+} from "@/lib/billingDiscounts";
 
 // Stripe requires the raw request body to verify the signature — force the
 // Node.js runtime so the body is not transformed.
@@ -66,6 +72,17 @@ export async function POST(request: Request) {
           forceCancelled: event.type === "customer.subscription.deleted",
           guardStaleSubscriptionId: true,
         });
+        break;
+      }
+      case "customer.discount.created":
+      case "customer.discount.updated":
+      case "customer.discount.deleted": {
+        // Stripe emits these when a coupon is attached, changes, expires on its
+        // own, or is detached — including from the Stripe Dashboard, which never
+        // touches our admin route. Without them the mirror keeps advertising a
+        // discount that no longer exists.
+        const discount = event.data.object as Stripe.Discount;
+        await syncDiscountFromEvent(discount, event.type === "customer.discount.deleted");
         break;
       }
       case "invoice.paid":
@@ -138,6 +155,12 @@ async function upsertSubscription(sub: Stripe.Subscription, options: UpsertOptio
     if (existing && existing.stripe_subscription_id !== sub.id) return;
   }
 
+  // Read the discount off THIS event's subscription object rather than trusting
+  // whatever our last admin action wrote — this path is exactly what catches
+  // drift (a repeating coupon that ran out, or a dashboard edit). A cancelled
+  // subscription has no live discount, so force-clear on the delete event.
+  const discountMirror = forceCancelled ? { ...CLEARED_MIRROR } : await resolveDiscountMirror(sub);
+
   const item = sub.items.data[0];
   const price = item?.price;
   const status = forceCancelled ? "cancelled" : mapStripeSubscriptionStatus(sub.status);
@@ -169,12 +192,107 @@ async function upsertSubscription(sub: Stripe.Subscription, options: UpsertOptio
         // Clear the welcome-email flag on cancellation so a later resubscribe (a fresh
         // Stripe subscription id) is treated as first-time activation again, not skipped.
         ...(forceCancelled ? { welcome_email_sent_at: null } : {}),
+        // Omitted entirely when Stripe's discount state couldn't be determined, so
+        // an unreadable payload leaves the mirror as-is instead of wrongly clearing it.
+        ...(discountMirror ?? {}),
       },
       { onConflict: "venue_id" }
     );
   // Surfaced (not swallowed) so a schema/DB problem 500s and Stripe retries,
   // instead of silently leaving billing_subscriptions out of sync.
   if (error) throw new Error(`upsertSubscription failed: ${error.message}`);
+}
+
+/**
+ * The discounts carried on a subscription payload, normalized across shapes:
+ * the current `discounts` array (of ids when unexpanded, objects when expanded)
+ * and the legacy singular `discount` field. Returns null when the payload says
+ * nothing at all about discounts — "unknown", which callers must not read as
+ * "none", or a webhook from an older API version would silently wipe a live
+ * discount out of the mirror.
+ */
+function subscriptionDiscountEntries(
+  sub: Stripe.Subscription
+): Array<string | Stripe.Discount> | null {
+  if (Array.isArray(sub.discounts)) return sub.discounts;
+  const legacy = (sub as unknown as { discount?: Stripe.Discount | null }).discount;
+  if (legacy !== undefined) return legacy ? [legacy] : [];
+  return null;
+}
+
+/**
+ * Resolve a subscription's current discount into the mirror columns, or null to
+ * mean "leave the mirror alone". Only one discount can be attached to a
+ * subscription (see lib/billingDiscounts.ts), so the first entry is the truth.
+ */
+async function resolveDiscountMirror(sub: Stripe.Subscription): Promise<DiscountMirror | null> {
+  const entries = subscriptionDiscountEntries(sub);
+  if (entries === null) return null;
+  if (entries.length === 0) return { ...CLEARED_MIRROR };
+
+  const first = entries[0];
+  if (typeof first !== "string") {
+    return discountMirrorFromStripe(first, await resolveDiscountCoupon(first));
+  }
+
+  // Unexpanded — the payload gives discount ids only, and the coupon
+  // amounts/end date live on the object. One retrieve, only when a discount
+  // actually exists.
+  if (!stripe) return null;
+  try {
+    const expanded = await stripe.subscriptions.retrieve(sub.id, {
+      expand: ["discounts.source.coupon"],
+    });
+    const discount = expanded.discounts?.[0];
+    if (!discount) return { ...CLEARED_MIRROR };
+    if (typeof discount === "string") return null;
+    return discountMirrorFromStripe(discount, await resolveDiscountCoupon(discount));
+  } catch {
+    // Stripe unreachable — keep the existing mirror rather than guessing.
+    return null;
+  }
+}
+
+/**
+ * Sync the mirror from a customer.discount.* event. These arrive without the
+ * subscription object, so the row is resolved by the discount's own subscription
+ * id (falling back to the customer id for a customer-level discount).
+ */
+async function syncDiscountFromEvent(discount: Stripe.Discount, removed: boolean): Promise<void> {
+  if (!supabaseAdmin) return;
+
+  const subscriptionId = discount.subscription;
+  const customerId =
+    typeof discount.customer === "string" ? discount.customer : discount.customer?.id ?? null;
+  if (!subscriptionId && !customerId) return;
+
+  const mirror = removed
+    ? { ...CLEARED_MIRROR }
+    : discountMirrorFromStripe(discount, await resolveDiscountCoupon(discount));
+  const update = supabaseAdmin.from("billing_subscriptions").update(mirror);
+
+  if (subscriptionId) {
+    // Matching on stripe_subscription_id is itself the stale/ownership guard: an
+    // offline row (token null) or a venue that has since moved to a different
+    // subscription simply doesn't match, so nothing is touched.
+    const { error } = await update.eq("stripe_subscription_id", subscriptionId);
+    if (error) throw new Error(`syncDiscountFromEvent failed: ${error.message}`);
+    return;
+  }
+
+  // Customer-level discount. Checkout scopes a Stripe customer to one venue, so
+  // this should resolve to exactly one row — but the write is unfiltered by
+  // subscription, so confirm that before letting it fan out across every venue
+  // sharing a customer and overwrite a sibling's own subscription-level mirror.
+  const { data: matches } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("id")
+    .eq("stripe_customer_id", customerId as string)
+    .returns<{ id: string }[]>();
+  if ((matches ?? []).length !== 1) return;
+
+  const { error } = await update.eq("id", matches![0].id);
+  if (error) throw new Error(`syncDiscountFromEvent failed: ${error.message}`);
 }
 
 /**

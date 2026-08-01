@@ -113,7 +113,17 @@ describe("/api/cron/billing — offline expiry sweep", () => {
     // Find the sweep chain: the one that issued an update.
     const sweep = mocks.calls.find((c) => c.update);
     expect(sweep).toBeDefined();
-    expect(sweep?.update).toEqual({ status: "cancelled" });
+    // The mirror clears in the same write: nothing else can reach a cancelled
+    // offline row (no Stripe webhook, and the admin's Discount control is hidden
+    // once cancelled), so a stale discount would sit there permanently.
+    expect(sweep?.update).toEqual({
+      status: "cancelled",
+      stripe_coupon_id: null,
+      discount_label: null,
+      discount_percent_off: null,
+      discount_amount_off_cents: null,
+      discount_ends_at: null,
+    });
     expect(sweep?.eq).toEqual(
       expect.arrayContaining([
         ["billing_method", "offline"],
