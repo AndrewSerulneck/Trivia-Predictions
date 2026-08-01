@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FocusEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
@@ -849,12 +849,17 @@ export function AnsweringScreen({
   mode?: CategoryBlitzMode;
 }) {
   const theme = GAME_THEME[MODE_CONFIG[mode].themeKey];
+  const activeRingClass = mode === "reverse" ? "ring-fuchsia-300/55" : "ring-emerald-300/55";
+  const activeCaretClass = mode === "reverse" ? "bg-fuchsia-200" : "bg-emerald-200";
   const venuePresence = useVenuePresence();
   const [answers, setAnswers] = useState<string[]>(() => Array(12).fill(""));
+  const [activeAnswerIndex, setActiveAnswerIndex] = useState<number | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const submittedRef = useRef(false);
   const timerWasZeroRef = useRef(false);
+  const keyboardInputRef = useRef<HTMLInputElement | null>(null);
+  const answerListRef = useRef<HTMLDivElement | null>(null);
   // Per-category debounce timers + last-autosaved value, so a slow network or
   // dropped tab doesn't lose an answer that was typed but never manually
   // submitted — each field autosaves shortly after the user stops typing,
@@ -865,6 +870,7 @@ export function AnsweringScreen({
   const isExpired = timeRemaining <= 0;
   const isUrgent = timeRemaining > 0 && timeRemaining <= 30;
   const totalFilled = answers.filter((a) => a.trim().length > 0).length;
+  const activeAnswerValue = activeAnswerIndex === null ? "" : answers[activeAnswerIndex] ?? "";
 
   const autosaveAnswer = useCallback(
     (categoryIndex: number, answer: string) => {
@@ -894,16 +900,34 @@ export function AnsweringScreen({
     };
   }, []);
 
-  // On-screen keyboards should only affect the answer list. Keep the game
-  // shell fixed, add inset space to the list, then scroll that list directly
-  // so the browser never tries to move the whole page.
+  const updateAnswer = useCallback(
+    (categoryIndex: number, value: string) => {
+      setAnswers((current) => {
+        const next = [...current];
+        next[categoryIndex] = value;
+        return next;
+      });
+
+      const timers = autosaveTimersRef.current;
+      if (timers[categoryIndex] !== null) window.clearTimeout(timers[categoryIndex]!);
+      const trimmed = value.trim();
+      timers[categoryIndex] = window.setTimeout(() => {
+        timers[categoryIndex] = null;
+        autosaveAnswer(categoryIndex, trimmed);
+      }, AUTOSAVE_DEBOUNCE_MS);
+    },
+    [autosaveAnswer]
+  );
+
+  // Mobile browsers may pan the whole layout to reveal a focused native input.
+  // The visible answer rows are therefore display controls; one fixed, tiny
+  // keyboard-capture input owns focus and writes into the active row.
   const scrollFocusCleanupRef = useRef<(() => void) | null>(null);
-  const focusedAnswerInputRef = useRef<HTMLInputElement | null>(null);
   const stableViewportHeightRef = useRef(0);
 
   const updateKeyboardInset = useCallback(() => {
     const root = document.documentElement;
-    const focusedInput = focusedAnswerInputRef.current;
+    const focusedInput = keyboardInputRef.current;
     if (!focusedInput || document.activeElement !== focusedInput) {
       stableViewportHeightRef.current = Math.max(
         stableViewportHeightRef.current,
@@ -925,10 +949,11 @@ export function AnsweringScreen({
     root.style.setProperty("--cbz-keyboard-inset", `${inset}px`);
   }, []);
 
-  const scrollAnswerIntoView = useCallback((target: HTMLInputElement, behavior: ScrollBehavior) => {
-    const list = target.closest<HTMLElement>("[data-category-blitz-answer-list]");
-    const row = target.closest<HTMLElement>("[data-category-blitz-answer-row]") ?? target;
+  const scrollAnswerIntoView = useCallback((categoryIndex: number, behavior: ScrollBehavior) => {
+    const list = answerListRef.current;
+    const row = list?.querySelector<HTMLElement>(`[data-category-blitz-answer-row="${categoryIndex}"]`);
     if (!list) return;
+    if (!row) return;
 
     const viewport = window.visualViewport;
     const viewportTop = viewport?.offsetTop ?? 0;
@@ -949,16 +974,16 @@ export function AnsweringScreen({
     list.scrollBy({ top: delta, behavior });
   }, []);
 
-  const handleAnswerInputFocus = useCallback((event: FocusEvent<HTMLInputElement>) => {
+  const focusAnswerRow = useCallback((categoryIndex: number) => {
+    if (isExpired || submitState !== "idle") return;
     scrollFocusCleanupRef.current?.();
 
-    const target = event.currentTarget;
-    focusedAnswerInputRef.current = target;
+    setActiveAnswerIndex(categoryIndex);
     updateKeyboardInset();
 
     const scrollIntoView = (behavior: ScrollBehavior) => {
       updateKeyboardInset();
-      scrollAnswerIntoView(target, behavior);
+      scrollAnswerIntoView(categoryIndex, behavior);
     };
 
     const viewport = window.visualViewport;
@@ -967,25 +992,35 @@ export function AnsweringScreen({
       window.setTimeout(() => scrollIntoView("smooth"), 220);
     };
     viewport?.addEventListener("resize", onViewportResize, { once: true });
+    const focusTimer = window.setTimeout(() => {
+      keyboardInputRef.current?.focus({ preventScroll: true });
+      updateKeyboardInset();
+    }, 0);
     const immediateTimer = window.setTimeout(() => scrollIntoView("auto"), 0);
     const fallbackTimer = window.setTimeout(() => scrollIntoView("smooth"), 420);
 
     scrollFocusCleanupRef.current = () => {
       viewport?.removeEventListener("resize", onViewportResize);
+      window.clearTimeout(focusTimer);
       window.clearTimeout(immediateTimer);
       window.clearTimeout(fallbackTimer);
     };
-  }, [scrollAnswerIntoView, updateKeyboardInset]);
+  }, [isExpired, scrollAnswerIntoView, submitState, updateKeyboardInset]);
 
-  const handleAnswerInputBlur = useCallback((event: FocusEvent<HTMLInputElement>) => {
-    const target = event.currentTarget;
+  const handleKeyboardInputBlur = useCallback(() => {
     window.setTimeout(() => {
-      if (focusedAnswerInputRef.current !== target) return;
-      if (document.activeElement instanceof HTMLInputElement && document.activeElement.closest("[data-category-blitz-answer-list]")) return;
-      focusedAnswerInputRef.current = null;
+      if (document.activeElement === keyboardInputRef.current) return;
+      setActiveAnswerIndex(null);
       updateKeyboardInset();
     }, 80);
   }, [updateKeyboardInset]);
+
+  const focusNextAnswer = useCallback(() => {
+    if (activeAnswerIndex === null) return;
+    const nextIndex = Math.min(categories.length - 1, activeAnswerIndex + 1);
+    if (nextIndex === activeAnswerIndex) return;
+    focusAnswerRow(nextIndex);
+  }, [activeAnswerIndex, categories.length, focusAnswerRow]);
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -1063,6 +1098,7 @@ export function AnsweringScreen({
   useEffect(() => {
     if (!isExpired || timerWasZeroRef.current || submitState !== "idle" || venuePresence.isInteractionBlocked) return;
     timerWasZeroRef.current = true;
+    keyboardInputRef.current?.blur();
     const t = window.setTimeout(() => { void submitAnswersRef.current(); }, 0);
     return () => window.clearTimeout(t);
   }, [isExpired, submitState, venuePresence.isInteractionBlocked]);
@@ -1089,6 +1125,30 @@ export function AnsweringScreen({
       {submitState === "submitting" && (
         <SubmitLockAnimation answersCount={totalFilled} />
       )}
+      <input
+        ref={keyboardInputRef}
+        data-category-blitz-keyboard-input
+        type="text"
+        value={activeAnswerValue}
+        disabled={isExpired || submitState !== "idle" || activeAnswerIndex === null}
+        onChange={(event) => {
+          if (activeAnswerIndex === null) return;
+          updateAnswer(activeAnswerIndex, event.target.value);
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          focusNextAnswer();
+        }}
+        onBlur={handleKeyboardInputBlur}
+        className="pointer-events-none fixed left-2 top-[max(env(safe-area-inset-top),0.5rem)] z-[1] h-px w-px opacity-0"
+        aria-label={activeAnswerIndex === null ? "Category Blitz answer" : `Answer ${activeAnswerIndex + 1}`}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="words"
+        enterKeyHint={activeAnswerIndex === null || activeAnswerIndex >= categories.length - 1 ? "done" : "next"}
+        spellCheck={false}
+      />
       <motion.div
         className="shrink-0 px-4 pt-2"
         initial={{ opacity: 0 }}
@@ -1159,6 +1219,7 @@ export function AnsweringScreen({
 
       {/* Categories grid */}
       <div
+        ref={answerListRef}
         data-category-blitz-answer-list
         className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 pb-[calc(var(--cbz-keyboard-inset,0px)+0.75rem)] pt-3 [scroll-padding-bottom:calc(var(--cbz-keyboard-inset,0px)+1rem)] [scroll-padding-top:0.75rem]"
       >
@@ -1166,16 +1227,22 @@ export function AnsweringScreen({
           {categories.map((category, i) => {
             const filled = answers[i].trim().length > 0;
             const wrongLetter = filled && !answerStartsWithLetter(answers[i], letter);
+            const isActive = activeAnswerIndex === i && submitState === "idle" && !isExpired;
             const inputRow = (
-              <div
-                data-category-blitz-answer-row
-                className={`relative flex items-center gap-2 rounded-xl border ${
+              <button
+                type="button"
+                data-category-blitz-answer-row={i}
+                disabled={isExpired || submitState !== "idle"}
+                onClick={() => focusAnswerRow(i)}
+                className={`tp-clean-button relative flex w-full items-center gap-2 rounded-xl border text-left transition-colors ${
                   wrongLetter
                     ? "border-rose-500/70 bg-rose-950/30"
+                    : isActive
+                    ? `${theme.filledBorder} ${theme.filledBg} ring-2 ${activeRingClass}`
                     : filled
                     ? `${theme.filledBorder} ${theme.filledBg}`
                     : "border-slate-700/60 bg-slate-900/40"
-                } px-3 py-2.5`}
+                } px-3 py-2.5 disabled:opacity-60`}
               >
                 {/* Valid answer glow + checkmark pop feedback */}
                 {!wrongLetter && filled ? (
@@ -1188,41 +1255,23 @@ export function AnsweringScreen({
                   <p className="text-[0.68rem] font-black uppercase tracking-widest text-slate-400">
                     {category}
                   </p>
-                  <input
-                    type="text"
-                    value={answers[i]}
-                    disabled={isExpired || submitState !== "idle"}
-                    onChange={(e) => {
-                      const next = [...answers];
-                      next[i] = e.target.value;
-                      setAnswers(next);
-
-                      const timers = autosaveTimersRef.current;
-                      if (timers[i] !== null) window.clearTimeout(timers[i]!);
-                      const trimmed = e.target.value.trim();
-                      timers[i] = window.setTimeout(() => {
-                        timers[i] = null;
-                        autosaveAnswer(i, trimmed);
-                      }, AUTOSAVE_DEBOUNCE_MS);
-                    }}
-                    onFocus={handleAnswerInputFocus}
-                    onBlur={handleAnswerInputBlur}
-                    placeholder={`${letter}…`}
-                    className={`mt-0.5 w-full bg-transparent text-sm font-bold outline-none placeholder:text-slate-600 ${
+                  <p
+                    className={`mt-0.5 min-h-[1.25rem] w-full truncate text-sm font-bold ${
                       wrongLetter ? "text-rose-300" : filled ? theme.filledText : "text-white"
-                    } disabled:opacity-50`}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="words"
-                    spellCheck={false}
-                  />
+                    }`}
+                  >
+                    {filled ? answers[i] : <span className="text-slate-600">{letter}...</span>}
+                    {isActive ? (
+                      <span className={`ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-pulse ${wrongLetter ? "bg-rose-300" : activeCaretClass}`} />
+                    ) : null}
+                  </p>
                 </div>
                 {wrongLetter && (
                   <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
                     wrong letter
                   </span>
                 )}
-              </div>
+              </button>
             );
             return (
               <motion.div

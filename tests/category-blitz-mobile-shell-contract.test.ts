@@ -58,9 +58,22 @@ describe("Category Blitz mobile shell contract", () => {
     expect(categoryBlitzSource).toContain("h-[100svh] min-h-[100svh] max-h-[100svh]");
   });
 
-  it("scrolls focused answers inside the answer list instead of the page", () => {
+  it("uses one fixed keyboard-capture input instead of native inputs in answer rows", () => {
+    const answerGridSource = sourceBetween(
+      categoryBlitzSource,
+      "{/* Categories grid */}",
+      "{/* Autosave footnote"
+    );
+
+    expect(categoryBlitzSource).toContain("keyboardInputRef");
+    expect(categoryBlitzSource).toContain("data-category-blitz-keyboard-input");
+    expect(categoryBlitzSource).toContain("focus({ preventScroll: true })");
+    expect(answerGridSource).not.toContain("<input");
+  });
+
+  it("scrolls active answers inside the answer list instead of the page", () => {
     expect(categoryBlitzSource).toContain("const scrollAnswerIntoView = useCallback");
-    expect(categoryBlitzSource).toContain("target.closest<HTMLElement>(\"[data-category-blitz-answer-list]\")");
+    expect(categoryBlitzSource).toContain("answerListRef");
     expect(categoryBlitzSource).toContain("data-category-blitz-answer-list");
     expect(categoryBlitzSource).toContain("data-category-blitz-answer-row");
     expect(categoryBlitzSource).toContain("list.scrollBy({ top: delta, behavior });");
