@@ -68,7 +68,7 @@ describe("Category Blitz mobile shell contract", () => {
     expect(categoryBlitzSource).not.toContain("--cbz-vv-top");
   });
 
-  it("uses one fixed keyboard-capture input instead of native inputs in answer rows", () => {
+  it("uses one pinned keyboard editor instead of native inputs in answer rows", () => {
     const answerGridSource = sourceBetween(
       categoryBlitzSource,
       "{/* Categories grid */}",
@@ -78,10 +78,14 @@ describe("Category Blitz mobile shell contract", () => {
     expect(categoryBlitzSource).toContain("keyboardInputRef");
     expect(categoryBlitzSource).toContain("activeAnswerIndexRef");
     expect(categoryBlitzSource).toContain("data-category-blitz-keyboard-input");
+    expect(categoryBlitzSource).toContain("data-category-blitz-pinned-editor");
+    expect(categoryBlitzSource).toContain("data-category-blitz-keyboard-shield");
+    expect(categoryBlitzSource).toContain("data-category-blitz-keyboard-mode");
+    expect(categoryBlitzSource).toContain("function useCategoryBlitzKeyboardState");
     expect(categoryBlitzSource).toContain("focus({ preventScroll: true })");
     expect(categoryBlitzSource).not.toContain("disabled={isExpired || submitState !== \"idle\" || activeAnswerIndex === null}");
-    expect(categoryBlitzSource).toContain("h-11 w-[calc(100vw-2rem)]");
-    expect(categoryBlitzSource).toContain("caret-transparent text-base");
+    expect(categoryBlitzSource).toContain("bottom-[calc(var(--cbz-keyboard-inset,0px)+max(env(safe-area-inset-bottom),0.75rem))]");
+    expect(categoryBlitzSource).toContain("value={activeAnswerValue}");
     expect(answerGridSource).toContain("onPointerDown={(event) => {");
     expect(answerGridSource).toContain("event.preventDefault();");
     expect(answerGridSource).not.toContain("<input");
@@ -105,7 +109,7 @@ describe("Category Blitz mobile shell contract", () => {
   });
 
   it("provides an opt-in layout diagnostic for real-device keyboard debugging", () => {
-    expect(categoryBlitzSource).toContain("const LAYOUT_DEBUG_VERSION = \"cbz-locked-layout-v6\";");
+    expect(categoryBlitzSource).toContain("const LAYOUT_DEBUG_VERSION = \"cbz-keyboard-mode-v7\";");
     expect(categoryBlitzSource).toContain("data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}");
     expect(categoryBlitzSource).toContain("data-category-blitz-game-root");
     expect(categoryBlitzSource).toContain("function CategoryBlitzLayoutDebugPanel");
@@ -116,5 +120,7 @@ describe("Category Blitz mobile shell contract", () => {
     expect(categoryBlitzSource).toContain("viewportFrame");
     expect(categoryBlitzSource).toContain("routeRect");
     expect(categoryBlitzSource).toContain("rootRect");
+    expect(categoryBlitzSource).toContain("pinnedEditorRect");
+    expect(categoryBlitzSource).toContain("keyboardShieldRect");
   });
 });

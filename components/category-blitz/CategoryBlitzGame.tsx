@@ -48,7 +48,7 @@ const LAYOUT_MORPH_TRANSITION = { duration: 0.45, ease: EASE_SNAP } as const;
  *  header label, timer, progress bar) — delayed so it settles in just behind
  *  the badge/row morph instead of popping in the instant the reveal ends. */
 const CHROME_ENTRANCE_TRANSITION = { duration: 0.3, ease: EASE_SNAP, delay: 0.12 } as const;
-const LAYOUT_DEBUG_VERSION = "cbz-locked-layout-v6";
+const LAYOUT_DEBUG_VERSION = "cbz-keyboard-mode-v7";
 const VIEWPORT_FRAME_CLASS =
   "fixed inset-x-0 top-0 z-[80] h-[var(--cbz-layout-height,100lvh)] min-h-0 w-screen max-w-[100vw] overflow-hidden";
 
@@ -82,6 +82,8 @@ type LayoutDebugSnapshot = {
   mainRect: string;
   routeRect: string;
   rootRect: string;
+  pinnedEditorRect: string;
+  keyboardShieldRect: string;
   gameRect: string;
   answerListRect: string;
 };
@@ -124,6 +126,8 @@ function readLayoutDebugSnapshot(phase: string): LayoutDebugSnapshot {
     mainRect: formatRect(document.querySelector("main")),
     routeRect: formatRect(document.querySelector("[data-category-blitz-route-shell]")),
     rootRect: formatRect(document.querySelector("[data-category-blitz-game-root]")),
+    pinnedEditorRect: formatRect(document.querySelector("[data-category-blitz-pinned-editor]")),
+    keyboardShieldRect: formatRect(document.querySelector("[data-category-blitz-keyboard-shield]")),
     gameRect: formatRect(document.querySelector("[data-venue-game-surface]")),
     answerListRect: formatRect(document.querySelector("[data-category-blitz-answer-list]")),
   };
@@ -241,10 +245,89 @@ function CategoryBlitzLayoutDebugPanel({ phase }: { phase?: CategoryBlitzPhase }
       <p>main {snapshot.mainRect}</p>
       <p>route {snapshot.routeRect}</p>
       <p>root {snapshot.rootRect}</p>
+      <p>editor {snapshot.pinnedEditorRect}</p>
+      <p>shield {snapshot.keyboardShieldRect}</p>
       <p>game {snapshot.gameRect}</p>
       <p>list {snapshot.answerListRect}</p>
     </div>
   );
+}
+
+type CategoryBlitzKeyboardState = {
+  isOpen: boolean;
+  inset: number;
+  visualHeight: number;
+};
+
+function useCategoryBlitzKeyboardState(isTextEntryActive: boolean): {
+  keyboardState: CategoryBlitzKeyboardState;
+  refreshKeyboardState: () => void;
+} {
+  const baselineHeightRef = useRef(0);
+  const [keyboardState, setKeyboardState] = useState<CategoryBlitzKeyboardState>(() => ({
+    isOpen: false,
+    inset: 0,
+    visualHeight: 0,
+  }));
+
+  const refreshKeyboardState = useCallback(() => {
+    const viewport = window.visualViewport;
+    const viewportHeight = Math.round(viewport?.height ?? window.innerHeight);
+    const availableHeight = Math.round(viewport ? viewport.height + viewport.offsetTop : window.innerHeight);
+    baselineHeightRef.current = Math.max(baselineHeightRef.current, window.innerHeight, viewportHeight, availableHeight);
+
+    const inset = isTextEntryActive
+      ? Math.max(0, Math.round(baselineHeightRef.current - availableHeight))
+      : 0;
+    const nextState = {
+      isOpen: isTextEntryActive && inset > 80,
+      inset,
+      visualHeight: viewportHeight,
+    };
+
+    document.documentElement.style.setProperty("--cbz-keyboard-inset", `${inset}px`);
+    document.documentElement.style.setProperty("--cbz-visual-height", `${viewportHeight}px`);
+    setKeyboardState((current) =>
+      current.isOpen === nextState.isOpen &&
+      current.inset === nextState.inset &&
+      current.visualHeight === nextState.visualHeight
+        ? current
+        : nextState
+    );
+  }, [isTextEntryActive]);
+
+  useEffect(() => {
+    let rafId: number | null = null;
+    const schedule = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        refreshKeyboardState();
+      });
+    };
+    const resetBaseline = () => {
+      baselineHeightRef.current = 0;
+      schedule();
+    };
+
+    schedule();
+    window.addEventListener("resize", schedule, { passive: true });
+    window.addEventListener("orientationchange", resetBaseline, { passive: true });
+    window.visualViewport?.addEventListener("resize", schedule, { passive: true });
+    window.visualViewport?.addEventListener("scroll", schedule, { passive: true });
+
+    return () => {
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("orientationchange", resetBaseline);
+      window.visualViewport?.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("scroll", schedule);
+      document.documentElement.style.setProperty("--cbz-keyboard-inset", "0px");
+      document.documentElement.style.removeProperty("--cbz-visual-height");
+    };
+  }, [refreshKeyboardState]);
+
+  return { keyboardState, refreshKeyboardState };
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -1060,6 +1143,11 @@ export function AnsweringScreen({
   const isExpired = timeRemaining <= 0;
   const isUrgent = timeRemaining > 0 && timeRemaining <= 30;
   const totalFilled = answers.filter((a) => a.trim().length > 0).length;
+  const activeAnswerValue = activeAnswerIndex === null ? "" : answers[activeAnswerIndex] ?? "";
+  const activeCategory = activeAnswerIndex === null ? "" : categories[activeAnswerIndex] ?? "";
+  const activeWrongLetter = activeAnswerValue.trim().length > 0 && !answerStartsWithLetter(activeAnswerValue, letter);
+  const { keyboardState, refreshKeyboardState } = useCategoryBlitzKeyboardState(activeAnswerIndex !== null);
+  const isKeyboardMode = activeAnswerIndex !== null && keyboardState.isOpen;
 
   const autosaveAnswer = useCallback(
     (categoryIndex: number, answer: string) => {
@@ -1108,35 +1196,10 @@ export function AnsweringScreen({
     [autosaveAnswer]
   );
 
-  // Mobile browsers may pan the whole layout to reveal a focused native input.
-  // The visible answer rows are therefore display controls; one fixed, tiny
-  // keyboard-capture input owns focus and writes into the active row.
+  // Mobile Safari is most reliable when the active text control is a normal,
+  // visible field already pinned above the keyboard. The rows below remain
+  // display controls; this single editor owns text entry for whichever row is active.
   const scrollFocusCleanupRef = useRef<(() => void) | null>(null);
-  const stableViewportHeightRef = useRef(0);
-
-  const updateKeyboardInset = useCallback(() => {
-    const root = document.documentElement;
-    const focusedInput = keyboardInputRef.current;
-    if (!focusedInput || document.activeElement !== focusedInput) {
-      stableViewportHeightRef.current = Math.max(
-        stableViewportHeightRef.current,
-        window.innerHeight,
-        window.visualViewport?.height ?? 0
-      );
-      root.style.setProperty("--cbz-keyboard-inset", "0px");
-      return;
-    }
-
-    const viewport = window.visualViewport;
-    if (!viewport) {
-      root.style.setProperty("--cbz-keyboard-inset", "0px");
-      return;
-    }
-
-    const baseline = Math.max(stableViewportHeightRef.current, window.innerHeight, viewport.height + viewport.offsetTop);
-    const inset = Math.max(0, Math.round(baseline - viewport.height - viewport.offsetTop));
-    root.style.setProperty("--cbz-keyboard-inset", `${inset}px`);
-  }, []);
 
   const scrollAnswerIntoView = useCallback((categoryIndex: number, behavior: ScrollBehavior) => {
     const list = answerListRef.current;
@@ -1179,10 +1242,10 @@ export function AnsweringScreen({
         // Some mobile browsers can reject selection updates during focus handoff.
       }
     }
-    updateKeyboardInset();
+    refreshKeyboardState();
 
     const scrollIntoView = (behavior: ScrollBehavior) => {
-      updateKeyboardInset();
+      refreshKeyboardState();
       scrollAnswerIntoView(categoryIndex, behavior);
     };
 
@@ -1200,16 +1263,16 @@ export function AnsweringScreen({
       window.clearTimeout(immediateTimer);
       window.clearTimeout(fallbackTimer);
     };
-  }, [answers, isExpired, scrollAnswerIntoView, submitState, updateKeyboardInset]);
+  }, [answers, isExpired, refreshKeyboardState, scrollAnswerIntoView, submitState]);
 
   const handleKeyboardInputBlur = useCallback(() => {
     window.setTimeout(() => {
       if (document.activeElement === keyboardInputRef.current) return;
       activeAnswerIndexRef.current = null;
       setActiveAnswerIndex(null);
-      updateKeyboardInset();
+      refreshKeyboardState();
     }, 80);
-  }, [updateKeyboardInset]);
+  }, [refreshKeyboardState]);
 
   const focusNextAnswer = useCallback(() => {
     const currentIndex = activeAnswerIndexRef.current;
@@ -1218,20 +1281,6 @@ export function AnsweringScreen({
     if (nextIndex === currentIndex) return;
     focusAnswerRow(nextIndex);
   }, [categories.length, focusAnswerRow]);
-
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    stableViewportHeightRef.current = Math.max(window.innerHeight, viewport?.height ?? 0);
-    viewport?.addEventListener("resize", updateKeyboardInset, { passive: true });
-    viewport?.addEventListener("scroll", updateKeyboardInset, { passive: true });
-    window.addEventListener("resize", updateKeyboardInset, { passive: true });
-    return () => {
-      viewport?.removeEventListener("resize", updateKeyboardInset);
-      viewport?.removeEventListener("scroll", updateKeyboardInset);
-      window.removeEventListener("resize", updateKeyboardInset);
-      document.documentElement.style.setProperty("--cbz-keyboard-inset", "0px");
-    };
-  }, [updateKeyboardInset]);
 
   useEffect(() => {
     return () => {
@@ -1322,29 +1371,64 @@ export function AnsweringScreen({
       {submitState === "submitting" && (
         <SubmitLockAnimation answersCount={totalFilled} />
       )}
-      <input
-        ref={keyboardInputRef}
-        data-category-blitz-keyboard-input
-        type="text"
-        onChange={(event) => {
-          const currentIndex = activeAnswerIndexRef.current;
-          if (currentIndex === null) return;
-          updateAnswer(currentIndex, event.target.value);
-        }}
-        onKeyDown={(event) => {
-          if (event.key !== "Enter") return;
-          event.preventDefault();
-          focusNextAnswer();
-        }}
-        onBlur={handleKeyboardInputBlur}
-        className="pointer-events-none fixed left-4 top-[max(env(safe-area-inset-top),1rem)] z-[1] h-11 w-[calc(100vw-2rem)] opacity-0 caret-transparent text-base"
-        aria-label={activeAnswerIndex === null ? "Category Blitz answer" : `Answer ${activeAnswerIndex + 1}`}
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="words"
-        enterKeyHint={activeAnswerIndex === null || activeAnswerIndex >= categories.length - 1 ? "done" : "next"}
-        spellCheck={false}
-      />
+      {activeAnswerIndex !== null ? (
+        <div
+          data-category-blitz-keyboard-shield
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-[85] h-[calc(var(--cbz-keyboard-inset,0px)+8rem)] bg-slate-950"
+        />
+      ) : null}
+      <div
+        data-category-blitz-pinned-editor
+        data-category-blitz-keyboard-mode={isKeyboardMode ? "open" : "pending"}
+        className={`fixed inset-x-0 z-[95] px-4 transition-opacity duration-150 bottom-[calc(var(--cbz-keyboard-inset,0px)+max(env(safe-area-inset-bottom),0.75rem))] ${
+          activeAnswerIndex === null ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100"
+        }`}
+      >
+        <div
+          className={`flex items-center gap-2 rounded-2xl border-2 bg-slate-950 px-3 py-2 shadow-2xl ${
+            activeWrongLetter ? "border-rose-400" : `${theme.filledBorder} ring-2 ${activeRingClass}`
+          }`}
+        >
+          <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
+            {activeAnswerIndex === null ? "" : activeAnswerIndex + 1}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[0.66rem] font-black uppercase tracking-widest text-slate-400">
+              {activeCategory}
+            </p>
+            <input
+              ref={keyboardInputRef}
+              data-category-blitz-keyboard-input
+              type="text"
+              value={activeAnswerValue}
+              onChange={(event) => {
+                const currentIndex = activeAnswerIndexRef.current;
+                if (currentIndex === null) return;
+                updateAnswer(currentIndex, event.target.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
+                event.preventDefault();
+                focusNextAnswer();
+              }}
+              onBlur={handleKeyboardInputBlur}
+              className="w-full bg-transparent text-base font-black text-white outline-none placeholder:text-slate-600"
+              aria-label={activeAnswerIndex === null ? "Category Blitz answer" : `Answer ${activeAnswerIndex + 1}`}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="words"
+              enterKeyHint={activeAnswerIndex === null || activeAnswerIndex >= categories.length - 1 ? "done" : "next"}
+              placeholder={`${letter}...`}
+              spellCheck={false}
+            />
+          </div>
+          {activeWrongLetter ? (
+            <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
+              wrong letter
+            </span>
+          ) : null}
+        </div>
+      </div>
       <motion.div
         className="shrink-0 px-4 pt-2"
         initial={{ opacity: 0 }}
@@ -1417,7 +1501,11 @@ export function AnsweringScreen({
       <div
         ref={answerListRef}
         data-category-blitz-answer-list
-        className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 pb-[calc(var(--cbz-keyboard-inset,0px)+0.75rem)] pt-3 [scroll-padding-bottom:calc(var(--cbz-keyboard-inset,0px)+1rem)] [scroll-padding-top:0.75rem]"
+        className={`min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 pt-3 [scroll-padding-top:0.75rem] ${
+          activeAnswerIndex === null
+            ? "pb-3 [scroll-padding-bottom:1rem]"
+            : "pb-[calc(var(--cbz-keyboard-inset,0px)+8.75rem)] [scroll-padding-bottom:calc(var(--cbz-keyboard-inset,0px)+9rem)]"
+        }`}
       >
         <div className="space-y-2">
           {categories.map((category, i) => {
