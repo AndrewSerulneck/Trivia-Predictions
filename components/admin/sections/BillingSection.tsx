@@ -83,7 +83,14 @@ export function BillingSection() {
 
   const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
   const [paidThroughDate, setPaidThroughDate] = useState("");
+  // The venue's list rate (what the subscription is billed at before any
+  // discount) and what the partner actually handed over on this occasion. They
+  // differ whenever a discount is in play; see the grant modal's help text.
   const [amountDollars, setAmountDollars] = useState("100");
+  const [amountReceivedDollars, setAmountReceivedDollars] = useState("100");
+  // False until the admin types in the "amount received" box; while false that
+  // box tracks the rate box, so the common no-discount case stays one keystroke.
+  const [receivedEdited, setReceivedEdited] = useState(false);
   const [memo, setMemo] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState("");
@@ -163,9 +170,12 @@ export function BillingSection() {
     setForceGrant(needsForceCancel);
     setActiveVenueId(partner.venueId);
     setPaidThroughDate(partner.subscription?.currentPeriodEnd?.slice(0, 10) || defaultPaidThrough);
-    setAmountDollars(
-      partner.subscription ? String(Math.round(partner.subscription.amountCents / 100)) : "100"
-    );
+    const rate = partner.subscription
+      ? String(Math.round(partner.subscription.amountCents / 100))
+      : "100";
+    setAmountDollars(rate);
+    setAmountReceivedDollars(rate);
+    setReceivedEdited(false);
     setMemo("");
     setNotice("");
   };
@@ -189,6 +199,7 @@ export function BillingSection() {
           venueId: activeVenueId,
           paidThroughDate,
           amountDollars: Number(amountDollars),
+          amountReceivedDollars: Number(amountReceivedDollars),
           memo,
           force: forceGrant,
         }),
@@ -624,15 +635,40 @@ export function BillingSection() {
                 </p>
               </div>
               <div>
-                <label className={adminLabel}>Amount received (USD)</label>
+                <label className={adminLabel}>Monthly rate before discount (USD)</label>
                 <input
                   type="number"
                   min="0"
                   step="1"
                   className={adminField}
                   value={amountDollars}
-                  onChange={(e) => setAmountDollars(e.target.value)}
+                  onChange={(e) => {
+                    setAmountDollars(e.target.value);
+                    if (!receivedEdited) setAmountReceivedDollars(e.target.value);
+                  }}
                 />
+                <p className="mt-1 text-xs text-slate-500">
+                  The venue&apos;s full list rate. Record any discount separately with the Discount
+                  button — the partner sees the discounted total on their billing page.
+                </p>
+              </div>
+              <div>
+                <label className={adminLabel}>Amount received on this payment (USD)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  className={adminField}
+                  value={amountReceivedDollars}
+                  onChange={(e) => {
+                    setReceivedEdited(true);
+                    setAmountReceivedDollars(e.target.value);
+                  }}
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  What the check was actually for. Shows in the partner&apos;s payment history.
+                  Leave it matching the rate above if there&apos;s no discount.
+                </p>
               </div>
               <div>
                 <label className={adminLabel}>Memo (check #, note)</label>

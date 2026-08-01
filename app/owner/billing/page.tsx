@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { effectiveAmountCents } from "@/lib/billingDisplay";
 
 type Discount = {
   label: string;
@@ -41,24 +42,6 @@ const formatAmount = (cents: number) => `$${(cents / 100).toFixed(2)}`;
  */
 const formatPrice = (cents: number) => (cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents));
 
-const discountedAmountCents = (amountCents: number, discount: Discount) =>
-  discount.percentOff != null
-    ? Math.round(amountCents * (1 - discount.percentOff / 100))
-    : discount.amountOffCents != null
-      ? Math.max(0, amountCents - discount.amountOffCents)
-      : amountCents;
-
-/**
- * What this partner actually pays per cycle. Offline and card rows compute the
- * same way on purpose: lib/billingDiscounts.ts's offline path is mirror-only and
- * leaves amount_cents at the list rate, so there is one rule for both. (An
- * earlier version of that path wrote the net back into amount_cents, which made
- * this recompute double-count it.)
- */
-const effectiveAmountCents = (subscription: Subscription): number =>
-  subscription.discount
-    ? discountedAmountCents(subscription.amountCents, subscription.discount)
-    : subscription.amountCents;
 const formatDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—";
 

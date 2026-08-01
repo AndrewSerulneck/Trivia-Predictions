@@ -146,7 +146,18 @@ type PostBody = {
   action?: "grant-manual" | "revoke" | "apply-discount" | "remove-discount" | "set-custom-price";
   venueId?: string;
   paidThroughDate?: string; // YYYY-MM-DD, inclusive; access ends end-of-day
+  /**
+   * The venue's LIST rate — the recurring rate before any discount — NOT the
+   * amount on the check. See the grant-manual handler for why the two are
+   * separate fields.
+   */
   amountDollars?: number;
+  /**
+   * What the partner actually paid on this occasion, for the invoice/audit
+   * record only. Defaults to amountDollars when the two are the same (no
+   * discount in play).
+   */
+  amountReceivedDollars?: number;
   memo?: string;
   force?: boolean;
   discountType?: "free_months" | "percent_off" | "amount_off";
@@ -282,7 +293,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Paid-through date must be in the future." }, { status: 400 });
   }
 
+  // TWO DIFFERENT NUMBERS, ON PURPOSE.
+  //
+  // `amount_cents` on the subscription is the venue's LIST rate — what they are
+  // billed per cycle before any discount. Every reader of that column (notably
+  // the owner page's effectiveAmountCents) subtracts the discount mirror from
+  // it to get the net, exactly as it does for a card row. Writing an
+  // already-discounted number here makes the owner page discount it a second
+  // time ($100 received + 25% off rendered as "$75 was $100").
+  //
+  // The invoice, by contrast, is a record of a payment that really happened, and
+  // the partner sees it in their payment history. That one gets what the check
+  // was actually for. When there's no discount the two are equal, and the admin
+  // UI pre-fills the second box from the first so it stays one keystroke.
   const amountCents = Math.round(Math.max(0, Number(body.amountDollars ?? 0)) * 100);
+  const receivedCents =
+    body.amountReceivedDollars == null
+      ? amountCents
+      : Math.round(Math.max(0, Number(body.amountReceivedDollars)) * 100);
   const memo = (body.memo ?? "").trim() || "Manual/check payment";
   const now = new Date();
 
@@ -294,6 +322,7 @@ export async function POST(request: Request) {
         owner_id: link.owner_id,
         plan_type: "subscription",
         billing_method: OFFLINE_BILLING_METHOD,
+        // List rate, not the check amount — see the comment above.
         amount_cents: amountCents,
         status: "active" as const,
         current_period_start: now.toISOString(),
@@ -319,7 +348,9 @@ export async function POST(request: Request) {
     subscription_id: subscription.id,
     venue_id: venueId,
     description: `Offline payment — ${memo} (paid through ${dateStr})`,
-    amount_cents: amountCents,
+    // What was actually collected, which is what the partner should see in
+    // their payment history — not the list rate above.
+    amount_cents: receivedCents,
     status: "paid",
   });
   if (invoiceError) {
