@@ -330,7 +330,9 @@ export function NFLPickEmGameList({
       picksCount += 1;
       if (game.userPickStatus === "won") correctPicks += 1;
       else if (game.userPickStatus === "lost") incorrectPicks += 1;
-      else if (game.userPickStatus !== "push") pendingPicks += 1;
+      // Push and canceled are settled outcomes that score nothing — counting
+      // either as pending would keep the week from ever reading complete.
+      else if (game.userPickStatus !== "push" && game.userPickStatus !== "canceled") pendingPicks += 1;
     }
 
     return {

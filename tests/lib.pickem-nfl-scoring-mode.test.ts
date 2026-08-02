@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NFLPickEmScoringMode } from "@/lib/venueGameSettings";
 
 vi.mock("server-only", () => ({}));
@@ -151,7 +151,7 @@ const makePick = (overrides: MockRow = {}): MockRow => ({
   ...overrides,
 });
 
-const mockFinalScore = (homeScore: number, awayScore: number) => {
+const mockFinalScore = (homeScore: number | null, awayScore: number | null) => {
   store.fetchBallDontLieList.mockResolvedValue([
     {
       id: "nfl-game-1",
@@ -209,10 +209,18 @@ const expectStoredLine = (overrides: MockRow) => {
   });
 };
 
+// The sweep's staleness window (lib/pickem.ts staleFinalizeMs) is 4h past kickoff.
+const kickoffPlusHours = (hours: number) => new Date(Date.parse(startsAt) + hours * 60 * 60 * 1000);
+
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useRealTimers();
   store.tables = { pickem_picks: [], notifications: [], nfl_pickem_game_lines: [] };
   store.modes = new Map([["venue-1", "standard"]]);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("settlePendingPickEmPicks NFL scoring modes", () => {
@@ -256,7 +264,9 @@ describe("settlePendingPickEmPicks NFL scoring modes", () => {
     });
   });
 
-  it("keeps spread NFL picks pending when no pre-existing line row exists", async () => {
+  it("keeps spread NFL picks pending inside the staleness window when no line row exists", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(kickoffPlusHours(1));
     store.tables.pickem_picks = [makePick()];
     store.modes.set("venue-1", "spread");
     mockFinalScore(21, 20);
@@ -271,6 +281,74 @@ describe("settlePendingPickEmPicks NFL scoring modes", () => {
       home_spread: null,
       away_spread: null,
       resolved_at: null,
+    });
+  });
+
+  it("voids a spread NFL pick past the staleness window when no line row was ever recorded", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(kickoffPlusHours(5));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    store.tables.pickem_picks = [makePick()];
+    store.modes.set("venue-1", "spread");
+    mockFinalScore(21, 20);
+
+    const result = await settlePendingPickEmPicks();
+
+    // Terminal, but neither a win nor a loss nor a push: nobody gains or loses
+    // points on a game we could not grade.
+    expect(result).toMatchObject({ settledCount: 1, won: 0, lost: 0, push: 0 });
+    expect(store.tables.nfl_pickem_game_lines).toEqual([]);
+    expect(store.tables.pickem_picks[0]).toMatchObject({
+      status: "canceled",
+      winning_team_id: null,
+      scoring_mode: "spread",
+      home_spread: null,
+      away_spread: null,
+    });
+    expect(store.tables.pickem_picks[0].resolved_at).not.toBeNull();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("a locked spread line"));
+    warn.mockRestore();
+  });
+
+  it("voids a stale spread NFL pick when the provider never reported final scores", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(kickoffPlusHours(5));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    store.tables.pickem_picks = [makePick()];
+    store.modes.set("venue-1", "spread");
+    mockFinalScore(null, null);
+    mockLockedLine(-2.5, 2.5);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 0, lost: 0, push: 0 });
+    expect(store.tables.pickem_picks[0]).toMatchObject({
+      status: "canceled",
+      winning_team_id: null,
+      scoring_mode: "spread",
+      home_spread: null,
+      away_spread: null,
+    });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("final scores"));
+    warn.mockRestore();
+  });
+
+  it("does not void a spread NFL pick that can still be graded", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(kickoffPlusHours(5));
+    store.tables.pickem_picks = [makePick()];
+    store.modes.set("venue-1", "spread");
+    mockFinalScore(21, 20);
+    mockLockedLine(-2.5, 2.5);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 1, lost: 0, push: 0 });
+    expect(store.tables.pickem_picks[0]).toMatchObject({
+      status: "won",
+      scoring_mode: "spread",
+      home_spread: -2.5,
+      away_spread: 2.5,
     });
   });
 

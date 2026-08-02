@@ -15,7 +15,10 @@ export type NFLGame = {
   awayScore: number | null;
   winnerTeam: string | null;
   userPickTeam?: string;
-  userPickStatus?: "pending" | "won" | "lost" | "push";
+  // `canceled` = settled but ungradeable (the settlement sweep voids a spread
+  // pick whose locked line or final scores never arrived). It renders neutral,
+  // like a push, and must never be counted as still pending.
+  userPickStatus?: "pending" | "won" | "lost" | "push" | "canceled";
   isThursdayGame: boolean;
   isSundayGame?: boolean;
   isMondayGame?: boolean;

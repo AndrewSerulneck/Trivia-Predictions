@@ -216,11 +216,15 @@ describe("accrueNFLPickEmChallengePoints", () => {
     expect(store.picks[0].challenge_accrued_at).toBeNull();
   });
 
-  it("ignores lost, pending and push picks", async () => {
+  // `canceled` is the terminal status the settlement sweep writes for a spread
+  // pick it could not grade (no locked line / no final scores past the staleness
+  // window). A voided pick must never accrue toward a real prize.
+  it("ignores lost, pending, push and canceled picks", async () => {
     seedPicks(
       { id: "lost", status: "lost" },
       { id: "pending", status: "pending" },
-      { id: "push", status: "push" }
+      { id: "push", status: "push" },
+      { id: "canceled", status: "canceled" }
     );
 
     const report = await accrueNFLPickEmChallengePoints();

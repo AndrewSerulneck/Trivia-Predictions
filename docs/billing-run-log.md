@@ -2101,3 +2101,109 @@ non-fatal for the games-list route. Two things worth knowing going in:
    type. If Phase 4 or later work adds another caller that wants truncation
    visibility, follow that same shape rather than introducing a second
    convention.
+
+**Phase 4 — spread picks must not stall `pending` forever, `lib/pickem.ts:2427-2492`.**
+PASS.
+
+- **Decision: void as `canceled` after the existing staleness window**, the
+  plan's recommendation, confirmed against the schema before committing to it.
+  `pickem_picks_status_valid` (migration `20260427113000_add_pickem_tables.sql`)
+  already allows `canceled`, and the standard path already writes it
+  (`resolveStandardPickEmSettlement` defaults to `canceled` when it cannot
+  determine a winner) — so this is an existing terminal status reused, not a new
+  one invented, and no migration is needed.
+- **Both `continue`s are gone, merged into one branch.** The spread branch now
+  reads the line only when both scores are present, then handles
+  "no scores OR no line" as one case: inside the staleness window it still
+  `continue`s (a transient provider gap must still be gradeable on a later run);
+  past it, the pick is written `status: "canceled"`, `scoring_mode: "spread"`,
+  `winning_team_id: null`, spreads null, `resolved_at` stamped.
+- **Why `canceled` and not straight-up grading:** a player who picked *against*
+  the spread would be graded by a rule they never played by. Voiding is
+  symmetric across every player on that game and awards nothing either way.
+- **Why the window is safe on the missing-scores half:** to reach the spread
+  branch at all the sweep has already passed the gate at `lib/pickem.ts:2418`,
+  which requires the provider to call the game final (or name a winner). A null
+  score there is a provider data gap, not a game still in progress — so
+  `staleFinalizeMs` (4h past kickoff) is not racing a live game.
+- **Why retrying past the window is futile on the missing-line half:** a
+  `nfl_pickem_game_lines` row is only ever created *before* kickoff —
+  `refreshNFLPickEmGameLines` (`lib/nflPickEm.ts:1189-1191`) `continue`s on any
+  kicked-off game with no existing row, and
+  `getLockedNFLPickEmGameLineForSettlement` returns `null` rather than creating
+  one. Verified in code, not assumed.
+- **Reused `staleFinalizeMs`; did not add a second clock**, per the plan.
+- **Observability.** Two `console.warn`s: one per stalled *game* (deduped via a
+  `spreadStallWarned` Set, so a 10-pick game logs once) while it is still inside
+  the window, and one per *pick* when it is actually voided, naming what was
+  missing ("final scores" vs "a locked spread line") and the game/pick id.
+- **Reward-accrual path checked, per plan item 4.** `accrueNFLPickEmChallengePoints`
+  (`lib/nflPickEmRewardAccrual.ts:134`) selects `.eq("status", "won")`, and the
+  `claim_pickem_points` RPC pays only `status = 'won'` rows — a voided pick
+  accrues and pays nothing. **Bonus:** the same RPC clears `multiplier_eligible`
+  permanently while *any* pick is pending, so the old forever-pending behaviour
+  was also silently killing the player's daily multiplier; voiding releases it.
+- **UI follow-through (found while checking consumers).** A `canceled` NFL pick
+  was counted as **pending** by the week-summary reducer
+  (`components/nfl-pickem/NFLPickEmGameList.tsx:333`), so `isComplete` would
+  never flip — the same stall, one layer up. Fixed, and widened
+  `NFLGame["userPickStatus"]` in `components/nfl-pickem/NFLGameCard.tsx:18` to
+  include `canceled` (the server already sends it today via the standard path's
+  default, so the narrow union was simply wrong). `NFLGameCard` renders a
+  canceled pick neutrally (neither `isCorrect` nor `isWrong`) with no change
+  needed; `NFLPickEmLeaderboard` and `PickEmRecentPicks` already handled the
+  status, and `deriveWinnerTeam` (`lib/nflPickEm.ts:1959`) already returns null
+  for it.
+- **Tests.** `tests/lib.pickem-nfl-scoring-mode.test.ts` 5 → 8 tests. The file
+  previously relied on the real clock with a fixed 2026-01-01 kickoff (already
+  stale), so the pre-existing "keeps spread NFL picks pending when no
+  pre-existing line row exists" test would have flipped to `canceled` under this
+  change. Replaced the ambient clock with `vi.useFakeTimers({ toFake: ["Date"] })`
+  + `vi.setSystemTime(kickoffPlusHours(n))`:
+  1. **kickoff+1h, no line row** → stays `pending`, `settledCount: 0` (the retry
+     must survive).
+  2. **kickoff+5h, no line row** → `canceled`, `settledCount: 1`, `won/lost/push`
+     all 0, `resolved_at` set, warn mentions "a locked spread line".
+  3. **kickoff+5h, line present but provider scores null** → `canceled`, warn
+     mentions "final scores".
+  4. **kickoff+5h, line and scores both present** → unchanged happy path
+     (`won`, spreads recorded) — proves the void branch is not swallowing
+     gradeable picks.
+  `tests/lib.nfl-pickem-reward-accrual.test.ts`: extended "ignores lost, pending
+  and push picks" to include a `canceled` row (same 12 tests, one more seeded
+  row).
+- `npx tsc --noEmit`, `npm run lint`, full `npm run test` all green:
+  **154 files / 1279 passed / 13 skipped** (+3 from Phase 3's 1276, 0
+  regressions, no new test files).
+
+**Handoff to Phase 5** (`customer.discount.deleted` must verify which discount
+died, Opus 5):
+
+1. **Phase 5 is independent of the 1→2→3→4 NFL chain** — different files
+   (`app/api/webhooks/stripe/route.ts`), no shared state. Nothing from Phases
+   1–4 constrains it. The plan says 5, 6, 7 can run in parallel worktrees; if
+   you stay in this one, just keep them as separate commits.
+2. **Nothing in Phases 1–4 touched billing code**, so the round-2 guard matrix
+   (`classifyBillingRow` / `readStripeTruth`) and the discount mirror are exactly
+   as round 2 left them. Read `docs/billing-open-issues-plan.md`'s DISCOUNT Ph2
+   note 5 before writing code — it is the source of the
+   "`stripe_coupon_id === null` means a locally-applied offline discount"
+   invariant that Phase 5 item 2 depends on.
+3. **Phase 8 close-out still owes the NFL findings a home.** Phases 1–4 are
+   recorded here in the run log only; per the plan's Phase 8 item 6 they belong
+   in `docs/nfl-pickem-spread-line-settlement-locking-fix-plan.md`, not the
+   billing inventory. That file has **not** been updated yet — do not assume it
+   reflects rounds 1–4.
+4. **Phase 8's browser pass (item 4) now has a concrete thing to check for
+   Phase 4:** a spread-mode venue whose game has no `nfl_pickem_game_lines` row
+   should show the pick as **Canceled**, not stuck pending, once >4h past
+   kickoff, and the week summary should read complete. Seeding that means
+   creating a pending NFL pick with a >4h-old `starts_at` and **no** matching
+   line row, then running the settlement sweep.
+5. **Known gap, deliberately not fixed here:** the `continue` at
+   `lib/pickem.ts:2423` (`row.sport_slug === "nfl" && !nflScoringMode`) also
+   skips forever if `getVenueNFLPickEmScoringMode` keeps failing for a venue.
+   It is a different shape from Phase 4's finding — a transient infra failure,
+   where defaulting to a scoring mode would *mis-grade* rather than
+   under-grade — so it retries by design. Worth an item in the NFL doc if
+   anyone wants a bound on it, but it is not the same defect.

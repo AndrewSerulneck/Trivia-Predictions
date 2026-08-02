@@ -2381,6 +2381,8 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   let lost = 0;
   let push = 0;
   const winGroups = new Map<string, PickEmWinGroup>();
+  // One warning per stalled game, not per pick on it.
+  const spreadStallWarned = new Set<string>();
   const staleFinalizeMs = 4 * 60 * 60 * 1000;
   const nowMs = Date.now();
 
@@ -2426,22 +2428,68 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
 
     let settlement: PickEmSettlementResult;
     if (nflScoringMode === "spread") {
-      if (homeScore === null || awayScore === null) {
-        continue;
+      const line = homeScore !== null && awayScore !== null ? await getLockedNFLLine(row.game_id) : null;
+      if (homeScore === null || awayScore === null || !line) {
+        // A spread pick needs BOTH final scores and the line that was locked at
+        // kickoff, and either can be permanently absent:
+        //
+        //  - The line row is only ever written *before* kickoff
+        //    (refreshNFLPickEmGameLines skips games that have already started),
+        //    so if nobody loaded that week's games page in time — or the odds
+        //    provider had no spread for that game at that moment — no later
+        //    sweep can create it. Retrying is futile.
+        //  - Scores can be permanently missing too: we only get here when the
+        //    provider already calls the game final (or names a winner), so a
+        //    null score at this point is a provider data gap, not a game still
+        //    in progress.
+        //
+        // Skipping unconditionally (the old behaviour) left the pick `pending`
+        // forever with no error anywhere — and a permanently-pending pick also
+        // blocks the player's daily multiplier for good (claim_pickem_points
+        // clears multiplier_eligible while any pick is pending).
+        //
+        // Policy: keep retrying while the game is fresh, so a transient gap
+        // that closes on its own still grades correctly; once past
+        // staleFinalizeMs, void the pick as `canceled` — the same terminal
+        // status the standard path already writes when it cannot determine a
+        // winner. Voiding is honest (we cannot grade against a line we never
+        // recorded), symmetric across every player on that game, and awards
+        // nothing either way: reward accrual and the claim RPC both key on
+        // `won` only. Grading it straight-up instead would score a player who
+        // picked against the spread by a rule they never played by.
+        const missing = homeScore === null || awayScore === null ? "final scores" : "a locked spread line";
+        if (!isStale) {
+          if (!spreadStallWarned.has(row.game_id)) {
+            spreadStallWarned.add(row.game_id);
+            console.warn(
+              `[Pick 'Em] Spread game ${row.game_id} is missing ${missing}; leaving picks pending until the staleness window passes.`
+            );
+          }
+          continue;
+        }
+        console.warn(
+          `[Pick 'Em] Voiding spread pick ${row.id} (game ${row.game_id}): ${missing} never arrived within the staleness window.`
+        );
+        settlement = {
+          status: "canceled",
+          // No winner is recorded: we could not apply the spread, so naming a
+          // straight-up winner here would imply a grade that never happened.
+          winningTeamId: null,
+          scoringMode: "spread",
+          homeSpread: null,
+          awaySpread: null,
+        };
+      } else {
+        settlement = resolveSpreadPickEmSettlement({
+          row,
+          scoreEvent,
+          homeScore,
+          awayScore,
+          providerWinnerTeamId,
+          providerWinnerTeamName,
+          line,
+        });
       }
-      const line = await getLockedNFLLine(row.game_id);
-      if (!line) {
-        continue;
-      }
-      settlement = resolveSpreadPickEmSettlement({
-        row,
-        scoreEvent,
-        homeScore,
-        awayScore,
-        providerWinnerTeamId,
-        providerWinnerTeamName,
-        line,
-      });
     } else {
       settlement = resolveStandardPickEmSettlement({
         row,

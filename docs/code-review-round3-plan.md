@@ -24,7 +24,7 @@ found.
 | 1 | Kickoff line-lock race 500s the games API | Sonnet 5 | Low | 0 | ✅ done |
 | 2 | Line refresh takes down standard-mode venues | **Opus 5** | Medium | 1 | ✅ done |
 | 3 | Odds query truncates later games | Sonnet 5 | Low-Medium | 2 | ✅ done |
-| 4 | Spread picks stall `pending` forever | **Opus 5** | Medium-High | 3 | ⬜ not started |
+| 4 | Spread picks stall `pending` forever | **Opus 5** | Medium-High | 3 | ✅ done |
 | 5 | `customer.discount.deleted` wipes a live discount | **Opus 5** | Medium | 0 | ⬜ not started |
 | 6 | Abandoned-signup sweep misses past 100 | Sonnet 5 | Low | 0 | ⬜ not started |
 | 7 | Legal notice silently dropped from most routes | Sonnet 5 | Low | 0 (+ a user decision) | ⬜ not started |
