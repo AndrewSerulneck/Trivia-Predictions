@@ -1654,3 +1654,45 @@ stubbed out.
 **Checks:** `npx tsc --noEmit` clean · `npm run lint` clean · `npm run test`
 **1225 passed / 13 skipped, 146 files** (+7 over the Phase 0 baseline of 1218).
 No live Stripe needed — the mocked-SDK tests cover this phase, per the plan.
+
+## REVIEW ROUND 2 Phase 3 (setCustomPrice must reject a non-monthly interval) — Item W
+
+**The bug.** `setCustomPrice` validated `active`, `type === 'recurring'`,
+`currency === usd` and a numeric `unit_amount` — but never
+`price.recurring.interval`. A pasted **yearly** `price_…` passed every guard,
+flipped the subscription to yearly billing at Stripe, and wrote the yearly figure
+into `amount_cents` — the column the owner page and admin partner list both render
+as the per-cycle (monthly) rate. A $1,200/yr price displayed as $1,200/mo.
+
+**Fix.** A fifth guard in the same row as the other four, in the same style, with
+a comment stating the consequence rather than the rule. It checks **both**
+`interval === 'month'` **and** `(interval_count ?? 1) === 1` — an interval-only
+check would still admit an "every 3 months" price and mis-state the rate by 3x.
+
+**Constant placement.** Grepped first: `lib/stripe.ts` has no interval constant,
+so `PRICE_INTERVAL` / `PRICE_INTERVAL_COUNT` were defined next to `PRICE_CURRENCY`
+in `lib/billingCustomPrice.ts` — both are the same kind of assumption baked into
+`amount_cents`, and they now sit together with the reason monthly is load-bearing
+(offline `paidThroughDate`, the `free_months` mechanism, the welcome email's
+`planAmountCents`).
+
+**Admin-facing message names the actual cadence** via a small `describeCadence`
+helper: "That price bills yearly — the Partner Dashboard is monthly-only.",
+"…bills every 3 months — …". Matches the neighbours' tone and is actionable.
+
+**`STRIPE_PRICE_ID` (plan step 4): comment, no runtime check.** It is read only
+through `getStripePriceId()` and is an env var an operator sets once, so a check
+would sit on the Checkout hot path to catch a misconfiguration that would surface
+on the first signup anyway. `lib/stripe.ts`'s env block now states the
+month/`interval_count:1` requirement, why it matters, and that the admin-pasted
+equivalent *is* checked in `setCustomPrice`.
+
+**Tests** (`tests/lib.billingCustomPrice.test.ts`, now 17 cases): yearly →
+400 + no `subscriptions.update`; weekly → 400; `interval_count: 3` monthly → 400;
+the error text names the cadence (proving the *new* guard rejected it, not an
+older one); explicit `interval_count: 1` monthly → still succeeds and still
+swaps. The pre-existing positive cases are untouched and green.
+
+**Checks:** `npx tsc --noEmit` clean · `npm run lint` clean · `npm run test`
+**1230 passed / 13 skipped, 146 files** (+5 over Phase 1's 1225). No live Stripe
+needed for this phase, per the plan.

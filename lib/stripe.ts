@@ -15,7 +15,15 @@ import Stripe from "stripe";
  * Required env (added to .env.local + Vercel by the operator — never by tooling):
  *   STRIPE_SECRET_KEY      — sk_live_… / sk_test_…
  *   STRIPE_WEBHOOK_SECRET  — whsec_… (from the webhook endpoint / `stripe listen`)
- *   STRIPE_PRICE_ID        — price_… for the monthly subscription
+ *   STRIPE_PRICE_ID        — price_… for the monthly subscription. It MUST be a
+ *                            month/interval_count:1 recurring price: amount_cents
+ *                            is rendered everywhere as the per-cycle rate, and the
+ *                            offline paidThroughDate, free_months discounts and
+ *                            the welcome email all compute in months. Not checked
+ *                            at runtime — it is set once by an operator, and this
+ *                            is the Checkout hot path. The admin-pasted equivalent
+ *                            IS checked; see setCustomPrice in
+ *                            lib/billingCustomPrice.ts.
  */
 
 const secretKey = process.env.STRIPE_SECRET_KEY?.trim() ?? "";

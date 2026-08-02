@@ -123,6 +123,14 @@ describe("setCustomPrice", () => {
     ["one-time", okPrice({ type: "one_time", recurring: null })],
     ["non-USD", okPrice({ currency: "eur" })],
     ["tiered (no unit_amount)", okPrice({ unit_amount: null })],
+    // Round-2 review finding 3: a yearly price passed every other guard, flipped
+    // the subscription to yearly at Stripe, and wrote the yearly figure into
+    // amount_cents — which every surface renders as the MONTHLY rate.
+    ["yearly", okPrice({ recurring: { interval: "year" } })],
+    ["weekly", okPrice({ recurring: { interval: "week" } })],
+    // A month-interval price that still isn't monthly — an interval-only check
+    // would let this through and mis-state the rate by 3x.
+    ["quarterly (interval_count 3)", okPrice({ recurring: { interval: "month", interval_count: 3 } })],
   ])("refuses a %s price without swapping", async (_label, price) => {
     mocks.priceRetrieve.mockResolvedValue(price);
 
@@ -131,6 +139,24 @@ describe("setCustomPrice", () => {
     expect(result).toMatchObject({ ok: false, status: 400 });
     expect(mocks.subUpdate).not.toHaveBeenCalled();
     expect(mocks.dbUpdate).not.toHaveBeenCalled();
+  });
+
+  it("names the offending cadence so the admin knows what went wrong", async () => {
+    mocks.priceRetrieve.mockResolvedValue(okPrice({ recurring: { interval: "year" } }));
+
+    const result = await setCustomPrice(row, "price_new");
+
+    expect(result).toMatchObject({ ok: false, status: 400 });
+    expect((result as { error: string }).error).toMatch(/yearly/i);
+  });
+
+  it("accepts an explicit interval_count of 1 — the positive case must not regress", async () => {
+    mocks.priceRetrieve.mockResolvedValue(okPrice({ recurring: { interval: "month", interval_count: 1 } }));
+
+    const result = await setCustomPrice(row, "price_new");
+
+    expect(result).toMatchObject({ ok: true, amountCents: 7500 });
+    expect(mocks.subUpdate).toHaveBeenCalled();
   });
 
   it("refuses a multi-item subscription rather than guessing which item to swap", async () => {

@@ -40,6 +40,30 @@ export const CUSTOM_PRICE_PRORATION_BEHAVIOR: Stripe.SubscriptionUpdateParams.Pr
 /** The currency every amount_cents in this app is denominated in. */
 const PRICE_CURRENCY = "usd";
 
+/**
+ * The billing cadence the whole product assumes, kept next to PRICE_CURRENCY
+ * because they are the same kind of assumption: both are baked into
+ * `amount_cents`, which every surface renders as the per-cycle rate.
+ *
+ * Monthly is not a preference — the offline path's paidThroughDate, the
+ * free_months discount mechanism and the welcome email's planAmountCents all
+ * compute in months.
+ */
+const PRICE_INTERVAL: Stripe.Price.Recurring.Interval = "month";
+const PRICE_INTERVAL_COUNT = 1;
+
+/** "monthly", "yearly", "every 3 months" — for an error the admin can act on. */
+const describeCadence = (interval: string, count: number): string => {
+  if (count !== 1) return `every ${count} ${interval}s`;
+  const named: Record<string, string> = {
+    day: "daily",
+    week: "weekly",
+    month: "monthly",
+    year: "yearly",
+  };
+  return named[interval] ?? `every ${interval}`;
+};
+
 /** Only the columns this helper reads. */
 export type CustomPriceRow = {
   id: string;
@@ -119,6 +143,23 @@ export async function setCustomPrice(
   }
   if (price.currency !== PRICE_CURRENCY) {
     return { ok: false, status: 400, error: "That price is not in USD." };
+  }
+  if (
+    price.recurring.interval !== PRICE_INTERVAL ||
+    (price.recurring.interval_count ?? 1) !== PRICE_INTERVAL_COUNT
+  ) {
+    // A yearly price passes every other check, flips the subscription to yearly
+    // at Stripe, and writes the yearly figure into amount_cents — which the
+    // owner page and the admin partner list both render as the MONTHLY rate.
+    // interval_count matters just as much: "every 3 months" is a month-interval
+    // price that would slip past an interval-only check and mis-state the rate
+    // by 3x. See PRICE_INTERVAL above for why monthly is load-bearing.
+    const cadence = describeCadence(price.recurring.interval, price.recurring.interval_count ?? 1);
+    return {
+      ok: false,
+      status: 400,
+      error: `That price bills ${cadence} — the Partner Dashboard is monthly-only.`,
+    };
   }
   if (typeof price.unit_amount !== "number") {
     // Tiered/metered prices have no single unit_amount, so amount_cents — the
