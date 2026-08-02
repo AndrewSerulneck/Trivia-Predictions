@@ -258,12 +258,19 @@ body.tp-bingo-landscape-active {
 
 html.tp-category-blitz-game-active,
 body.tp-category-blitz-game-active {
-  height: var(--cbz-layout-height, 100lvh) !important;
-  min-height: var(--cbz-layout-height, 100lvh) !important;
-  max-height: var(--cbz-layout-height, 100lvh) !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
   overflow: hidden !important;
   overscroll-behavior: none !important;
   scrollbar-gutter: auto !important;
+  background-color: #020617 !important;
+  background-image: none !important;
+}
+
+body.tp-category-blitz-game-active {
+  position: fixed !important;
+  inset: 0 !important;
 }
 
 .tp-bingo-landscape-shell {

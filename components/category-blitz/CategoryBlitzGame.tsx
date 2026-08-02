@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
@@ -48,9 +49,9 @@ const LAYOUT_MORPH_TRANSITION = { duration: 0.45, ease: EASE_SNAP } as const;
  *  header label, timer, progress bar) — delayed so it settles in just behind
  *  the badge/row morph instead of popping in the instant the reveal ends. */
 const CHROME_ENTRANCE_TRANSITION = { duration: 0.3, ease: EASE_SNAP, delay: 0.12 } as const;
-const LAYOUT_DEBUG_VERSION = "cbz-keyboard-mode-v7";
+const LAYOUT_DEBUG_VERSION = "cbz-portal-visual-frame-v8";
 const VIEWPORT_FRAME_CLASS =
-  "fixed inset-x-0 top-0 z-[80] h-[var(--cbz-layout-height,100lvh)] min-h-0 w-screen max-w-[100vw] overflow-hidden";
+  "fixed z-[100] min-h-0 max-w-[100vw] overflow-hidden overscroll-none bg-slate-950 [left:var(--cbz-visible-left,0px)] [top:var(--cbz-visible-top,0px)] h-[var(--cbz-visible-height,100svh)] w-[var(--cbz-visible-width,100vw)]";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -67,23 +68,26 @@ type LayoutDebugSnapshot = {
   url: string;
   activeElement: string;
   activeMarker: string;
-  keyboardProxyCount: number;
+  editorInputCount: number;
   answerListInputCount: number;
   answerRowCount: number;
   scrollY: number;
   innerHeight: number;
+  visualWidth: number | null;
   visualHeight: number | null;
+  visualOffsetLeft: number | null;
   visualOffsetTop: number | null;
   bodyOverflow: string;
   htmlOverflow: string;
   bodyScrollHeight: number;
   viewportFrame: string;
+  bodyBackground: string;
+  shellBackground: string;
   appShellRect: string;
   mainRect: string;
   routeRect: string;
   rootRect: string;
-  pinnedEditorRect: string;
-  keyboardShieldRect: string;
+  editorRect: string;
   gameRect: string;
   answerListRect: string;
 };
@@ -99,11 +103,12 @@ function readLayoutDebugSnapshot(phase: string): LayoutDebugSnapshot {
   const active = document.activeElement as HTMLElement | null;
   const viewport = window.visualViewport;
   const activeMarker =
-    active?.hasAttribute("data-category-blitz-keyboard-input")
-      ? "keyboard-proxy"
+    active?.hasAttribute("data-category-blitz-editor-input")
+      ? "editor-input"
       : active?.closest("[data-category-blitz-answer-list]")
       ? "answer-list-descendant"
       : active?.tagName.toLowerCase() ?? "none";
+  const appShell = document.querySelector(".tp-app-shell");
 
   return {
     version: LAYOUT_DEBUG_VERSION,
@@ -111,23 +116,26 @@ function readLayoutDebugSnapshot(phase: string): LayoutDebugSnapshot {
     url: window.location.href,
     activeElement: active?.tagName.toLowerCase() ?? "none",
     activeMarker,
-    keyboardProxyCount: document.querySelectorAll("[data-category-blitz-keyboard-input]").length,
+    editorInputCount: document.querySelectorAll("[data-category-blitz-editor-input]").length,
     answerListInputCount: document.querySelectorAll("[data-category-blitz-answer-list] input").length,
     answerRowCount: document.querySelectorAll("[data-category-blitz-answer-row]").length,
     scrollY: Math.round(window.scrollY),
     innerHeight: Math.round(window.innerHeight),
+    visualWidth: viewport ? Math.round(viewport.width) : null,
     visualHeight: viewport ? Math.round(viewport.height) : null,
+    visualOffsetLeft: viewport ? Math.round(viewport.offsetLeft) : null,
     visualOffsetTop: viewport ? Math.round(viewport.offsetTop) : null,
     bodyOverflow: window.getComputedStyle(document.body).overflow,
     htmlOverflow: window.getComputedStyle(document.documentElement).overflow,
     bodyScrollHeight: document.body.scrollHeight,
-    viewportFrame: `${root.style.getPropertyValue("--cbz-layout-height") || "?"}:${root.style.getPropertyValue("--cbz-keyboard-inset") || "?"}`,
-    appShellRect: formatRect(document.querySelector(".tp-app-shell")),
+    viewportFrame: `${root.style.getPropertyValue("--cbz-visible-left") || "?"}:${root.style.getPropertyValue("--cbz-visible-top") || "?"}:${root.style.getPropertyValue("--cbz-visible-width") || "?"}:${root.style.getPropertyValue("--cbz-visible-height") || "?"}`,
+    bodyBackground: window.getComputedStyle(document.body).backgroundColor,
+    shellBackground: appShell ? window.getComputedStyle(appShell).backgroundColor : "missing",
+    appShellRect: formatRect(appShell),
     mainRect: formatRect(document.querySelector("main")),
     routeRect: formatRect(document.querySelector("[data-category-blitz-route-shell]")),
     rootRect: formatRect(document.querySelector("[data-category-blitz-game-root]")),
-    pinnedEditorRect: formatRect(document.querySelector("[data-category-blitz-pinned-editor]")),
-    keyboardShieldRect: formatRect(document.querySelector("[data-category-blitz-keyboard-shield]")),
+    editorRect: formatRect(document.querySelector("[data-category-blitz-editor]")),
     gameRect: formatRect(document.querySelector("[data-venue-game-surface]")),
     answerListRect: formatRect(document.querySelector("[data-category-blitz-answer-list]")),
   };
@@ -146,53 +154,57 @@ function readLayoutDebugEnabled(): boolean {
   }
 }
 
-function applyCategoryBlitzViewportFrame(options: { resetStableFrame?: boolean } = {}): void {
+function applyCategoryBlitzVisibleViewportFrame(): void {
   const root = document.documentElement;
   const viewport = window.visualViewport;
-  const previousHeight = options.resetStableFrame
-    ? 0
-    : Number.parseFloat(root.style.getPropertyValue("--cbz-layout-height")) || 0;
-  const height = Math.max(previousHeight, Math.round(window.innerHeight), Math.round(viewport?.height ?? 0));
+  const left = Math.round(viewport?.offsetLeft ?? 0);
+  const top = Math.round(viewport?.offsetTop ?? 0);
+  const width = Math.round(viewport?.width ?? window.innerWidth);
+  const height = Math.round(viewport?.height ?? window.innerHeight);
 
-  root.style.setProperty("--cbz-layout-height", `${height}px`);
+  root.style.setProperty("--cbz-visible-left", `${left}px`);
+  root.style.setProperty("--cbz-visible-top", `${top}px`);
+  root.style.setProperty("--cbz-visible-width", `${width}px`);
+  root.style.setProperty("--cbz-visible-height", `${height}px`);
 }
 
-function clearCategoryBlitzViewportFrame(): void {
+function clearCategoryBlitzVisibleViewportFrame(): void {
   const root = document.documentElement;
-  root.style.removeProperty("--cbz-layout-height");
+  root.style.removeProperty("--cbz-visible-left");
+  root.style.removeProperty("--cbz-visible-top");
+  root.style.removeProperty("--cbz-visible-width");
+  root.style.removeProperty("--cbz-visible-height");
 }
 
-function useCategoryBlitzViewportFrame(): void {
+function useCategoryBlitzVisibleViewportFrame(): void {
   useEffect(() => {
     let rafId: number | null = null;
 
-    const schedule = (resetStableFrame = false) => {
+    const schedule = () => {
       if (rafId !== null) {
         return;
       }
       rafId = window.requestAnimationFrame(() => {
         rafId = null;
-        applyCategoryBlitzViewportFrame({ resetStableFrame });
+        applyCategoryBlitzVisibleViewportFrame();
       });
     };
-    const scheduleCurrent = () => schedule(false);
-    const scheduleStableReset = () => schedule(true);
 
-    applyCategoryBlitzViewportFrame({ resetStableFrame: true });
-    window.addEventListener("resize", scheduleCurrent, { passive: true });
-    window.addEventListener("orientationchange", scheduleStableReset, { passive: true });
-    window.visualViewport?.addEventListener("resize", scheduleCurrent, { passive: true });
-    window.visualViewport?.addEventListener("scroll", scheduleCurrent, { passive: true });
+    applyCategoryBlitzVisibleViewportFrame();
+    window.addEventListener("resize", schedule, { passive: true });
+    window.addEventListener("orientationchange", schedule, { passive: true });
+    window.visualViewport?.addEventListener("resize", schedule, { passive: true });
+    window.visualViewport?.addEventListener("scroll", schedule, { passive: true });
 
     return () => {
       if (rafId !== null) {
         window.cancelAnimationFrame(rafId);
       }
-      window.removeEventListener("resize", scheduleCurrent);
-      window.removeEventListener("orientationchange", scheduleStableReset);
-      window.visualViewport?.removeEventListener("resize", scheduleCurrent);
-      window.visualViewport?.removeEventListener("scroll", scheduleCurrent);
-      clearCategoryBlitzViewportFrame();
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("orientationchange", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("scroll", schedule);
+      clearCategoryBlitzVisibleViewportFrame();
     };
   }, []);
 }
@@ -236,98 +248,22 @@ function CategoryBlitzLayoutDebugPanel({ phase }: { phase?: CategoryBlitzPhase }
       <p>v {snapshot.version}</p>
       <p>phase {snapshot.phase}</p>
       <p>active {snapshot.activeElement}:{snapshot.activeMarker}</p>
-      <p>proxy {snapshot.keyboardProxyCount} rowInputs {snapshot.answerListInputCount} rows {snapshot.answerRowCount}</p>
+      <p>editorInputs {snapshot.editorInputCount} rowInputs {snapshot.answerListInputCount} rows {snapshot.answerRowCount}</p>
       <p>scrollY {snapshot.scrollY} bodyH {snapshot.bodyScrollHeight}</p>
-      <p>innerH {snapshot.innerHeight} vvH {snapshot.visualHeight ?? "n/a"} vvTop {snapshot.visualOffsetTop ?? "n/a"}</p>
+      <p>innerH {snapshot.innerHeight} vv {snapshot.visualWidth ?? "n/a"}x{snapshot.visualHeight ?? "n/a"}</p>
+      <p>vv xy {snapshot.visualOffsetLeft ?? "n/a"},{snapshot.visualOffsetTop ?? "n/a"}</p>
       <p>overflow h/b {snapshot.htmlOverflow}/{snapshot.bodyOverflow}</p>
       <p>frame {snapshot.viewportFrame}</p>
+      <p>bg b/s {snapshot.bodyBackground}/{snapshot.shellBackground}</p>
       <p>shell {snapshot.appShellRect}</p>
       <p>main {snapshot.mainRect}</p>
       <p>route {snapshot.routeRect}</p>
       <p>root {snapshot.rootRect}</p>
-      <p>editor {snapshot.pinnedEditorRect}</p>
-      <p>shield {snapshot.keyboardShieldRect}</p>
+      <p>editor {snapshot.editorRect}</p>
       <p>game {snapshot.gameRect}</p>
       <p>list {snapshot.answerListRect}</p>
     </div>
   );
-}
-
-type CategoryBlitzKeyboardState = {
-  isOpen: boolean;
-  inset: number;
-  visualHeight: number;
-};
-
-function useCategoryBlitzKeyboardState(isTextEntryActive: boolean): {
-  keyboardState: CategoryBlitzKeyboardState;
-  refreshKeyboardState: () => void;
-} {
-  const baselineHeightRef = useRef(0);
-  const [keyboardState, setKeyboardState] = useState<CategoryBlitzKeyboardState>(() => ({
-    isOpen: false,
-    inset: 0,
-    visualHeight: 0,
-  }));
-
-  const refreshKeyboardState = useCallback(() => {
-    const viewport = window.visualViewport;
-    const viewportHeight = Math.round(viewport?.height ?? window.innerHeight);
-    const availableHeight = Math.round(viewport ? viewport.height + viewport.offsetTop : window.innerHeight);
-    baselineHeightRef.current = Math.max(baselineHeightRef.current, window.innerHeight, viewportHeight, availableHeight);
-
-    const inset = isTextEntryActive
-      ? Math.max(0, Math.round(baselineHeightRef.current - availableHeight))
-      : 0;
-    const nextState = {
-      isOpen: isTextEntryActive && inset > 80,
-      inset,
-      visualHeight: viewportHeight,
-    };
-
-    document.documentElement.style.setProperty("--cbz-keyboard-inset", `${inset}px`);
-    document.documentElement.style.setProperty("--cbz-visual-height", `${viewportHeight}px`);
-    setKeyboardState((current) =>
-      current.isOpen === nextState.isOpen &&
-      current.inset === nextState.inset &&
-      current.visualHeight === nextState.visualHeight
-        ? current
-        : nextState
-    );
-  }, [isTextEntryActive]);
-
-  useEffect(() => {
-    let rafId: number | null = null;
-    const schedule = () => {
-      if (rafId !== null) return;
-      rafId = window.requestAnimationFrame(() => {
-        rafId = null;
-        refreshKeyboardState();
-      });
-    };
-    const resetBaseline = () => {
-      baselineHeightRef.current = 0;
-      schedule();
-    };
-
-    schedule();
-    window.addEventListener("resize", schedule, { passive: true });
-    window.addEventListener("orientationchange", resetBaseline, { passive: true });
-    window.visualViewport?.addEventListener("resize", schedule, { passive: true });
-    window.visualViewport?.addEventListener("scroll", schedule, { passive: true });
-
-    return () => {
-      if (rafId !== null) window.cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", schedule);
-      window.removeEventListener("orientationchange", resetBaseline);
-      window.visualViewport?.removeEventListener("resize", schedule);
-      window.visualViewport?.removeEventListener("scroll", schedule);
-      document.documentElement.style.setProperty("--cbz-keyboard-inset", "0px");
-      document.documentElement.style.removeProperty("--cbz-visual-height");
-    };
-  }, [refreshKeyboardState]);
-
-  return { keyboardState, refreshKeyboardState };
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -1131,7 +1067,7 @@ export function AnsweringScreen({
   const submittedRef = useRef(false);
   const timerWasZeroRef = useRef(false);
   const activeAnswerIndexRef = useRef<number | null>(null);
-  const keyboardInputRef = useRef<HTMLInputElement | null>(null);
+  const editorInputRef = useRef<HTMLInputElement | null>(null);
   const answerListRef = useRef<HTMLDivElement | null>(null);
   // Per-category debounce timers + last-autosaved value, so a slow network or
   // dropped tab doesn't lose an answer that was typed but never manually
@@ -1146,8 +1082,6 @@ export function AnsweringScreen({
   const activeAnswerValue = activeAnswerIndex === null ? "" : answers[activeAnswerIndex] ?? "";
   const activeCategory = activeAnswerIndex === null ? "" : categories[activeAnswerIndex] ?? "";
   const activeWrongLetter = activeAnswerValue.trim().length > 0 && !answerStartsWithLetter(activeAnswerValue, letter);
-  const { keyboardState, refreshKeyboardState } = useCategoryBlitzKeyboardState(activeAnswerIndex !== null);
-  const isKeyboardMode = activeAnswerIndex !== null && keyboardState.isOpen;
 
   const autosaveAnswer = useCallback(
     (categoryIndex: number, answer: string) => {
@@ -1197,8 +1131,9 @@ export function AnsweringScreen({
   );
 
   // Mobile Safari is most reliable when the active text control is a normal,
-  // visible field already pinned above the keyboard. The rows below remain
-  // display controls; this single editor owns text entry for whichever row is active.
+  // visible field in the same layout flow as the answer list. The rows below
+  // remain display controls; this single editor owns text entry for whichever
+  // row is active.
   const scrollFocusCleanupRef = useRef<(() => void) | null>(null);
 
   const scrollAnswerIntoView = useCallback((categoryIndex: number, behavior: ScrollBehavior) => {
@@ -1232,21 +1167,20 @@ export function AnsweringScreen({
 
     activeAnswerIndexRef.current = categoryIndex;
     setActiveAnswerIndex(categoryIndex);
-    const keyboardInput = keyboardInputRef.current;
-    if (keyboardInput) {
-      keyboardInput.value = answers[categoryIndex] ?? "";
-      keyboardInput.focus({ preventScroll: true });
+
+    const scrollIntoView = (behavior: ScrollBehavior) => {
+      scrollAnswerIntoView(categoryIndex, behavior);
+    };
+    const focusEditor = () => {
+      const editorInput = editorInputRef.current;
+      if (!editorInput) return;
+      editorInput.focus({ preventScroll: true });
       try {
-        keyboardInput.setSelectionRange(keyboardInput.value.length, keyboardInput.value.length);
+        const valueLength = editorInput.value.length;
+        editorInput.setSelectionRange(valueLength, valueLength);
       } catch {
         // Some mobile browsers can reject selection updates during focus handoff.
       }
-    }
-    refreshKeyboardState();
-
-    const scrollIntoView = (behavior: ScrollBehavior) => {
-      refreshKeyboardState();
-      scrollAnswerIntoView(categoryIndex, behavior);
     };
 
     const viewport = window.visualViewport;
@@ -1255,24 +1189,25 @@ export function AnsweringScreen({
       window.setTimeout(() => scrollIntoView("smooth"), 220);
     };
     viewport?.addEventListener("resize", onViewportResize, { once: true });
-    const immediateTimer = window.setTimeout(() => scrollIntoView("auto"), 0);
+    const focusTimer = window.setTimeout(focusEditor, 0);
+    const immediateTimer = window.setTimeout(() => scrollIntoView("auto"), 40);
     const fallbackTimer = window.setTimeout(() => scrollIntoView("smooth"), 420);
 
     scrollFocusCleanupRef.current = () => {
       viewport?.removeEventListener("resize", onViewportResize);
+      window.clearTimeout(focusTimer);
       window.clearTimeout(immediateTimer);
       window.clearTimeout(fallbackTimer);
     };
-  }, [answers, isExpired, refreshKeyboardState, scrollAnswerIntoView, submitState]);
+  }, [isExpired, scrollAnswerIntoView, submitState]);
 
   const handleKeyboardInputBlur = useCallback(() => {
     window.setTimeout(() => {
-      if (document.activeElement === keyboardInputRef.current) return;
+      if (document.activeElement === editorInputRef.current) return;
       activeAnswerIndexRef.current = null;
       setActiveAnswerIndex(null);
-      refreshKeyboardState();
     }, 80);
-  }, [refreshKeyboardState]);
+  }, []);
 
   const focusNextAnswer = useCallback(() => {
     const currentIndex = activeAnswerIndexRef.current;
@@ -1344,7 +1279,7 @@ export function AnsweringScreen({
   useEffect(() => {
     if (!isExpired || timerWasZeroRef.current || submitState !== "idle" || venuePresence.isInteractionBlocked) return;
     timerWasZeroRef.current = true;
-    keyboardInputRef.current?.blur();
+    editorInputRef.current?.blur();
     const t = window.setTimeout(() => { void submitAnswersRef.current(); }, 0);
     return () => window.clearTimeout(t);
   }, [isExpired, submitState, venuePresence.isInteractionBlocked]);
@@ -1367,68 +1302,10 @@ export function AnsweringScreen({
   }
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="relative grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden">
       {submitState === "submitting" && (
         <SubmitLockAnimation answersCount={totalFilled} />
       )}
-      {activeAnswerIndex !== null ? (
-        <div
-          data-category-blitz-keyboard-shield
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-[85] h-[calc(var(--cbz-keyboard-inset,0px)+8rem)] bg-slate-950"
-        />
-      ) : null}
-      <div
-        data-category-blitz-pinned-editor
-        data-category-blitz-keyboard-mode={isKeyboardMode ? "open" : "pending"}
-        className={`fixed inset-x-0 z-[95] px-4 transition-opacity duration-150 bottom-[calc(var(--cbz-keyboard-inset,0px)+max(env(safe-area-inset-bottom),0.75rem))] ${
-          activeAnswerIndex === null ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100"
-        }`}
-      >
-        <div
-          className={`flex items-center gap-2 rounded-2xl border-2 bg-slate-950 px-3 py-2 shadow-2xl ${
-            activeWrongLetter ? "border-rose-400" : `${theme.filledBorder} ring-2 ${activeRingClass}`
-          }`}
-        >
-          <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
-            {activeAnswerIndex === null ? "" : activeAnswerIndex + 1}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[0.66rem] font-black uppercase tracking-widest text-slate-400">
-              {activeCategory}
-            </p>
-            <input
-              ref={keyboardInputRef}
-              data-category-blitz-keyboard-input
-              type="text"
-              value={activeAnswerValue}
-              onChange={(event) => {
-                const currentIndex = activeAnswerIndexRef.current;
-                if (currentIndex === null) return;
-                updateAnswer(currentIndex, event.target.value);
-              }}
-              onKeyDown={(event) => {
-                if (event.key !== "Enter") return;
-                event.preventDefault();
-                focusNextAnswer();
-              }}
-              onBlur={handleKeyboardInputBlur}
-              className="w-full bg-transparent text-base font-black text-white outline-none placeholder:text-slate-600"
-              aria-label={activeAnswerIndex === null ? "Category Blitz answer" : `Answer ${activeAnswerIndex + 1}`}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="words"
-              enterKeyHint={activeAnswerIndex === null || activeAnswerIndex >= categories.length - 1 ? "done" : "next"}
-              placeholder={`${letter}...`}
-              spellCheck={false}
-            />
-          </div>
-          {activeWrongLetter ? (
-            <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
-              wrong letter
-            </span>
-          ) : null}
-        </div>
-      </div>
       <motion.div
         className="shrink-0 px-4 pt-2"
         initial={{ opacity: 0 }}
@@ -1501,11 +1378,7 @@ export function AnsweringScreen({
       <div
         ref={answerListRef}
         data-category-blitz-answer-list
-        className={`min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 pt-3 [scroll-padding-top:0.75rem] ${
-          activeAnswerIndex === null
-            ? "pb-3 [scroll-padding-bottom:1rem]"
-            : "pb-[calc(var(--cbz-keyboard-inset,0px)+8.75rem)] [scroll-padding-bottom:calc(var(--cbz-keyboard-inset,0px)+9rem)]"
-        }`}
+        className="min-h-0 touch-pan-y overflow-y-auto overscroll-contain px-4 pb-3 pt-3 [scroll-padding-bottom:1rem] [scroll-padding-top:0.75rem]"
       >
         <div className="space-y-2">
           {categories.map((category, i) => {
@@ -1576,34 +1449,83 @@ export function AnsweringScreen({
         </div>
       </div>
 
-      {/* Autosave footnote — answers save as you type and are graded automatically when the timer ends. */}
-      {submitState === "idle" && !isExpired && (
-        <div className={`shrink-0 border-t ${theme.borderSoft} px-4 py-3`}>
-          {errorMsg && (
-            <p className="mb-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
-          )}
-          <p className={`text-center text-xs font-semibold uppercase tracking-[0.1em] ${theme.textAccentSoft}`}>
+      <div
+        data-category-blitz-editor
+        className={`shrink-0 border-t bg-slate-950 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 ${submitState === "error" ? "border-rose-400/20" : theme.borderSoft}`}
+      >
+        <div
+          className={`flex min-h-[4.25rem] items-center gap-2 rounded-2xl border-2 bg-slate-950 px-3 py-2 ${
+            activeWrongLetter
+              ? "border-rose-400"
+              : activeAnswerIndex !== null
+              ? `${theme.filledBorder} ring-2 ${activeRingClass}`
+              : theme.borderSoft
+          }`}
+        >
+          <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
+            {activeAnswerIndex === null ? "" : activeAnswerIndex + 1}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[0.66rem] font-black uppercase tracking-widest text-slate-400">
+              {activeAnswerIndex === null ? "Tap a category" : activeCategory}
+            </p>
+            <input
+              ref={editorInputRef}
+              data-category-blitz-editor-input
+              type="text"
+              value={activeAnswerValue}
+              onChange={(event) => {
+                const currentIndex = activeAnswerIndexRef.current;
+                if (currentIndex === null) return;
+                updateAnswer(currentIndex, event.target.value);
+              }}
+              onFocus={() => {
+                if (activeAnswerIndexRef.current !== null) return;
+                focusAnswerRow(0);
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
+                event.preventDefault();
+                focusNextAnswer();
+              }}
+              onBlur={handleKeyboardInputBlur}
+              className="w-full bg-transparent text-base font-black text-white outline-none placeholder:text-slate-600"
+              aria-label={activeAnswerIndex === null ? "Category Blitz answer" : `Answer ${activeAnswerIndex + 1}`}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="words"
+              enterKeyHint={activeAnswerIndex === null || activeAnswerIndex >= categories.length - 1 ? "done" : "next"}
+              placeholder={activeAnswerIndex === null ? `${letter}...` : `${letter}...`}
+              spellCheck={false}
+            />
+          </div>
+          {activeWrongLetter ? (
+            <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
+              wrong letter
+            </span>
+          ) : null}
+        </div>
+        {submitState === "error" ? (
+          <>
+            <p className="mb-2 mt-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
+            <button
+              type="button"
+              onClick={() => {
+                submittedRef.current = false;
+                setSubmitState("idle");
+                void submitAnswers();
+              }}
+              className="w-full rounded-xl border border-rose-400/50 bg-rose-500/20 py-3 text-sm font-black text-rose-300"
+            >
+              Retry
+            </button>
+          </>
+        ) : submitState === "idle" && !isExpired ? (
+          <p className={`mt-2 text-center text-xs font-semibold uppercase tracking-[0.1em] ${theme.textAccentSoft}`}>
             Answers save automatically — graded when the timer runs out
           </p>
-        </div>
-      )}
-
-      {submitState === "error" && (
-        <div className="shrink-0 border-t border-rose-400/20 px-4 py-3">
-          <p className="mb-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
-          <button
-            type="button"
-            onClick={() => {
-              submittedRef.current = false;
-              setSubmitState("idle");
-              void submitAnswers();
-            }}
-            className="w-full rounded-xl border border-rose-400/50 bg-rose-500/20 py-3 text-sm font-black text-rose-300"
-          >
-            Retry
-          </button>
-        </div>
-      )}
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -1655,7 +1577,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   const [userId, setUserId] = useState("");
   const [testMode, setTestMode] = useState(false);
 
-  useCategoryBlitzViewportFrame();
+  useCategoryBlitzVisibleViewportFrame();
 
   useEffect(() => {
     document.documentElement.classList.add("tp-category-blitz-game-active");
@@ -1663,7 +1585,6 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     return () => {
       document.documentElement.classList.remove("tp-category-blitz-game-active");
       document.body.classList.remove("tp-category-blitz-game-active");
-      document.documentElement.style.setProperty("--cbz-keyboard-inset", "0px");
     };
   }, []);
 
@@ -1998,9 +1919,11 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   // above instead — CompleteScreen renders underneath either way.
   const [fireworksDoneSessionId, setFireworksDoneSessionId] = useState<string | null>(null);
   const fireworksDone = fireworksDoneSessionId === session?.id;
+  const renderGamePortal = (content: ReactNode): ReactNode =>
+    isHydrated && typeof document !== "undefined" ? createPortal(content, document.body) : content;
 
   if (!isHydrated) {
-    return (
+    return renderGamePortal(
       <div
         data-category-blitz-game-root
         data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
@@ -2019,7 +1942,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   }
 
   if (!venueId) {
-    return (
+    return renderGamePortal(
       <div
         data-category-blitz-game-root
         data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
@@ -2041,7 +1964,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   // dropped poll would wipe answers and scoring reasons off the screen during
   // intermission for no reason.
   if (error && (phase === "idle" || errorEscalated)) {
-    return (
+    return renderGamePortal(
       <div
         data-category-blitz-game-root
         data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
@@ -2073,7 +1996,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     );
   }
 
-  return (
+  return renderGamePortal(
     <div
       data-category-blitz-game-root
       data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}

@@ -303,13 +303,15 @@ export function GameLandingExperience({
       data-category-blitz-route-shell={isCategoryBlitzGame ? "" : undefined}
       className={`tp-game-page relative z-[70] w-full overflow-x-hidden ${
         isCategoryBlitzGame
-          ? "h-[var(--cbz-layout-height,100lvh)] min-h-[var(--cbz-layout-height,100lvh)] !max-h-[var(--cbz-layout-height,100lvh)] overflow-hidden bg-slate-950"
+          ? "min-h-[100svh] overflow-hidden bg-slate-950"
           : "min-h-[100dvh]"
       }`}
     >
       <div
         aria-hidden
-        className={`pointer-events-none fixed inset-0 z-0 ${playingBackgroundClassName ?? GAME_CARD_BG_BY_KEY[gameKey]}`}
+        className={`pointer-events-none fixed inset-0 z-0 ${
+          isCategoryBlitzGame && isPlaying ? "bg-slate-950" : playingBackgroundClassName ?? GAME_CARD_BG_BY_KEY[gameKey]
+        }`}
       />
       <div className="relative z-10">
         <PageShell
@@ -318,20 +320,17 @@ export function GameLandingExperience({
           showUserStatus={isPlaying && playingHidesShellNav ? false : showShellUserStatus}
           showAlerts={isPlaying && playingHidesShellNav ? false : showShellAlerts}
           noContainer
-          shellClassName={isPlaying ? `!gap-0${isCategoryBlitzGame ? " !h-[var(--cbz-layout-height,100lvh)] !min-h-[var(--cbz-layout-height,100lvh)] !max-h-[var(--cbz-layout-height,100lvh)] !overflow-hidden" : ""}` : undefined}
+          shellClassName={isPlaying ? `!gap-0${isCategoryBlitzGame ? " !h-[100svh] !min-h-[100svh] !max-h-[100svh] !overflow-hidden !bg-slate-950" : ""}` : undefined}
           mainClassName={isPlaying ? `pt-0!${isCategoryBlitzGame ? " !overflow-hidden" : ""}` : undefined}
         >
           {isPlaying ? (
-            // Category Blitz pins its own root to a stable small viewport and manages its
-            // own internal scroll regions — a second, independently scrollable/
-            // growable wrapper here lets iOS's elastic overscroll drag the whole
-            // "fixed" game off screen when a nested list hits its scroll limit.
-            // Give it a single, non-scrolling height boundary instead; every
-            // other game keeps the original grow-and-scroll wrapper.
+            // Category Blitz renders active gameplay through a body-level portal.
+            // This wrapper stays dark and inert so the route shell never exposes
+            // the branded background under the iOS keyboard.
             gameKey === "category-blitz" ? (
               <div
                 data-venue-game-scroll
-                className={`animate-tp-surface-enter relative z-10 flex h-[var(--cbz-layout-height,100lvh)] min-h-0 max-h-[var(--cbz-layout-height,100lvh)] flex-col overflow-hidden overscroll-none bg-slate-950 ${playingContainerClassName ?? "px-2 py-2 sm:px-3 sm:py-3"}`}
+                className={`animate-tp-surface-enter relative z-10 flex h-[100svh] min-h-0 max-h-[100svh] flex-col overflow-hidden overscroll-none bg-slate-950 ${playingContainerClassName ?? "p-0"}`}
               >
                 <VenuePresenceBoundary enabled={isPlaying}>{playingChild}</VenuePresenceBoundary>
               </div>

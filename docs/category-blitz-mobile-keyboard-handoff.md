@@ -251,288 +251,97 @@ Important caveat:
 - Browser automation on desktop cannot faithfully reproduce iOS Safari keyboard behavior.
 - The user’s real device is the source of truth for this bug.
 
+## Latest Pass: `cbz-portal-visual-frame-v8`
+
+This pass follows the recommendations from the 5.6 Sol review and intentionally abandons the v6/v7 "preserve the keyboard-closed height and lift an editor above the keyboard" strategy.
+
+Architectural changes:
+
+- Active Category Blitz gameplay now renders through a React body-level portal (`createPortal(content, document.body)`), while the normal route wrapper remains a dark inert host.
+- The game root is sized to the current `visualViewport`, not the largest observed/keyboard-closed viewport:
+  - `--cbz-visible-left`
+  - `--cbz-visible-top`
+  - `--cbz-visible-width`
+  - `--cbz-visible-height`
+- The old `--cbz-layout-height` and `--cbz-keyboard-inset` approach was removed from active gameplay.
+- The fixed pinned editor and keyboard shield were removed.
+- Answer rows remain buttons/display rows. There is still only one native text input, but it now lives in normal CSS grid flow as the final row of the answering screen.
+- The answering screen uses a grid shape:
+  - invite/status row
+  - header/timer row
+  - internally scrollable answers row
+  - normal-flow editor row
+- Category Blitz active route backgrounds are forced to slate/dark so the magenta branded layer should not be visible underneath gameplay if Safari pans or composites the viewport.
+- `html/body.tp-category-blitz-game-active` now lock scrolling and paint a dark background, but no longer lock their height to `--cbz-layout-height`.
+
+Expected real-device behavior:
+
+- With the keyboard open, the Category Blitz root should shrink to the visible viewport instead of preserving the full pre-keyboard layout.
+- The editor should remain visible as the bottom row of the game grid.
+- The answer list should be the only scrolling gameplay region.
+- No magenta band should appear above the keyboard.
+
+Debug marker:
+
+- `cbz-portal-visual-frame-v8`
+
+Recommended test URL:
+
+- Add `?cbzDebug=1` while testing on iPhone Safari.
+
+Useful debug expectations:
+
+- `rootRect` height should be close to `visualViewport.height` while the keyboard is open.
+- `editorRect` should be inside `rootRect`.
+- `scrollY` should stay near `0`.
+- `editorInputs` should be `1`.
+- `rowInputs` should be `0`.
+- `bodyBackground` and `shellBackground` should be dark, not magenta.
+
 ## Important Current Behavior To Inspect
 
-In `CategoryBlitzGame.tsx`, current architecture is:
+In `CategoryBlitzGame.tsx`, current architecture is now:
 
-- Top-level Category Blitz root is `fixed` and sized by CSS variables from `useCategoryBlitzViewportFrame`.
+- Active gameplay renders through a body-level portal.
+- Top-level Category Blitz root is `fixed` and sized by current `visualViewport` variables.
 - `html` and `body` get `tp-category-blitz-game-active` while the game is mounted.
-- `html/body` are locked to `var(--cbz-layout-height, 100lvh)` and `overflow: hidden`.
-- A hidden fixed input receives keyboard focus.
+- `html/body` are scroll-locked and painted dark, but are not height-locked to the keyboard-closed viewport.
 - Visible answer rows are buttons, not inputs.
+- One normal-flow editor input receives text entry.
 - The answer list is the only intended scroll container.
 
-Despite this, iOS still shows the magenta background gap after `cbz-locked-layout-v6`.
+## If `cbz-portal-visual-frame-v8` Still Fails
 
-Current untested follow-up:
+Ask for a real iPhone Safari screenshot with `?cbzDebug=1` and keyboard open. The most important values are:
 
-- `cbz-keyboard-mode-v7` changes the strategy from hidden keyboard proxy to deliberate keyboard mode.
-- The active answer is edited in a normal pinned native input above the keyboard.
-- A fixed slate keyboard shield covers the lower page while editing so parent/background layers cannot show through.
-
-## Strong Suspicions / Next Debugging Targets
-
-### 1. The magenta gap may be from a layer outside the Category Blitz fixed root
-
-`GameLandingExperience.tsx` and `AppShell.tsx` still provide route-level wrappers around Category Blitz. The magenta may be the game landing background or page background showing after a child frame shrinks/moves.
-
-Important: v6 already gave the known Category Blitz wrappers `--cbz-layout-height`, so if the gap remains, the visible magenta may come from:
-
-- the fixed `playingBackgroundClassName` layer in `GameLandingExperience.tsx`
-- the `GAME_CARD_BG_BY_KEY["category-blitz"]` background
-- the route still rendering the previous background behind the fixed root
-- a browser compositing issue where the fixed child is clipped by an ancestor despite CSS height locks
-
-Next experiment:
-
-- Temporarily remove or neutralize the Category Blitz fixed magenta background layer while testing.
-- Set the route shell, page shell, game root, answering screen, and answer list to clearly different solid debug colors.
-- Use a `?cbzDebug=1` real-device screenshot to identify which exact layer is visible in the gap.
-- Consider rendering Category Blitz through a top-level portal into `document.body`, outside `GameLandingExperience` and `PageShell`, while gameplay is active.
-
-### 2. The current hidden input strategy may still let iOS Safari reserve/pan viewport space
-
-Even after v6 made the proxy input normal-sized and invisible, the gap remained.
-
-This suggests the issue may be caused by iOS Safari's handling of any focused text-editing element inside a browser page, not by the exact proxy dimensions.
-
-Next experiments:
-
-- Replace the invisible `<input>` proxy with a `contentEditable` keyboard receiver.
-- Alternatively, use visible native inputs again but place the entire game inside a keyboard-aware `visualViewport` layout that intentionally resizes only the answer list.
-- Test whether iOS still creates the magenta gap if the keyboard opens from a simple standalone fixed input page with the same parent wrappers. This can isolate app shell vs. Category Blitz logic.
-
-### 3. A bottom sheet / keyboard-mode layout may be more reliable than fighting the keyboard
-
-The previous attempts tried to keep the whole game visually fixed while the iOS keyboard opens. Safari may not allow that reliably in normal browser mode.
-
-Next experiment:
-
-- When an answer row is active and `visualViewport.height` drops, switch to a deliberate keyboard mode:
-  - Header remains pinned at top.
-  - Active answer row is pinned just above the keyboard/accessory area.
-  - Other rows collapse or become an internal scroll list above the active row.
-  - The magenta/background gap is covered by a fixed solid game-colored panel.
-- This would be an intentional mobile keyboard layout instead of trying to preserve the exact no-keyboard layout.
-
-### 4. Fullscreen/PWA install mode may be the only way to fully avoid browser chrome behavior
-
-If the product requirement is literally "app feel" with no Safari keyboard/browser chrome effects, normal Safari tabs may continue to fight the layout.
-
-Next experiment:
-
-- Test the route as an iOS Home Screen web app with `viewport-fit=cover` and standalone display.
-- This may not be acceptable as the only solution, but it helps determine whether Safari tab chrome is the main source of the gap.
-
-### 5. The URL/accessory bar may be the visual gap, not the web page
-
-The supplied screenshot shows a Safari URL/accessory area above the keyboard. Some of the visible magenta may be browser-controlled space or the page background exposed behind Safari's accessory controls.
-
-Next experiment:
-
-- In a debug build, set `html`, `body`, `AppShell`, route shell, and Category Blitz root all to the same dark `slate-950` while preserving gameplay content.
-- If the magenta disappears but layout is still compressed, the problem is background bleed rather than content positioning.
-- If a dark gap remains, the issue is keyboard obstruction/compression rather than magenta background specifically.
-
-## Updated Recommended Next Agent Plan
-
-The prior viewport-lock plan has already been executed and failed as `12bab8c` / `cbz-locked-layout-v6`. Do not repeat it.
-
-The current untested attempt is `cbz-keyboard-mode-v7`. Test that first.
-
-### Phase 1: Get a new debug screenshot from the v7 build
-
-Use the live URL with `?cbzDebug=1`, tap the first answer, and screenshot with the keyboard open.
-
-Record:
-
-- `v`, should be `cbz-keyboard-mode-v7`
-- `active`, should be `input:keyboard-proxy`
-- `proxy`, should be `1`
-- `rowInputs`, should be `0`
+- `v`: should be `cbz-portal-visual-frame-v8`
+- `active`: should be `input:editor-input`
+- `editorInputs`: should be `1`
+- `rowInputs`: should be `0`
 - `scrollY`
 - `innerH`
-- `vvH`
-- `vvTop`
+- visual viewport size and offsets
 - `frame`
-- `shell`
-- `main`
 - `route`
 - `root`
-- `game`
+- `editor`
 - `list`
+- `bodyBackground`
+- `shellBackground`
 
-This is now essential. Without the debug values, future attempts are guessing.
+Interpretation:
 
-If v7 succeeds, the likely root cause was the old hidden-proxy input combined with inadequate lower-page shielding.
-
-If v7 fails, continue below.
-
-### Phase 2: Identify the visible magenta layer
-
-Make a temporary diagnostic branch or local patch:
-
-- Set `html/body` background to black only while `tp-category-blitz-game-active`.
-- Set `GameLandingExperience` Category Blitz route shell background to red.
-- Set the fixed playing background layer to blue or hide it.
-- Set `CategoryBlitzGame` root background to green.
-- Set `AnsweringScreen` root background to slate/black.
-
-Ask Andrew for one more keyboard-open screenshot.
-
-Outcome:
-
-- If the gap is red/blue/magenta, the parent/background layer is exposed.
-- If the gap is green/black but content is missing, the root covers the gap but internal layout is compressed/clipped.
-- If browser accessory controls cover everything regardless of colors, the issue may be browser UI rather than DOM background.
-
-### Phase 3: Try a body-level portal for gameplay
-
-If parent/background layers are exposed:
-
-- Render active Category Blitz gameplay through `createPortal(..., document.body)`.
-- Keep the normal route wrapper mounted only as a placeholder.
-- Portal root should be:
-  - `position: fixed`
-  - `inset: 0`
-  - `height: var(--cbz-layout-height, 100lvh)`
-  - `background: slate-950`
-  - `z-index` above app shell and route backgrounds
-
-This tests whether ancestor clipping/compositing is the cause.
-
-### Phase 4: Try a deliberate keyboard-mode layout
-
-If the portal still fails:
-
-- Stop trying to keep all rows visible in the same layout.
-- On keyboard open, use `visualViewport.height` as the available content height.
-- Keep the header visible.
-- Pin the active answer row in a fixed strip above the keyboard.
-- Scroll/collapse the remaining rows within the available top area.
-- Cover the entire area behind the keyboard accessory zone with a solid game background.
-
-### Phase 5: Replace the proxy input only after layout layers are identified
-
-If the debug colors prove the DOM layers are stable but Safari still pans/compresses:
-
-- Test a `contentEditable` proxy.
-- Test a single visible native input in a pinned keyboard strip.
-- Compare both on real iPhone Safari.
+- If `rootRect` is not close to the visual viewport height, the viewport-frame hook is not matching iOS Safari's live viewport values.
+- If `rootRect` is correct but `editorRect` sits below it, the grid/editor sizing is wrong.
+- If `rootRect` and `editorRect` are correct but magenta still appears, another fixed layer above or outside the portal is painting over the game.
+- If all web layers report dark backgrounds and magenta still appears, the visible band may be Safari accessory/browser UI using the page theme color or a cached screenshot layer.
 
 ## Guardrails
 
-- Do not bring back native inputs inside the answer rows unless deliberately testing a throwaway branch.
+- Do not restore `--cbz-layout-height` for active gameplay.
+- Do not restore the fixed pinned editor or keyboard shield without a separate throwaway experiment.
+- Do not bring back native inputs inside the answer rows.
 - Do not show the legal footer on any game route.
 - Do not use page-level scrolling to keep answers visible.
 - Keep scrolling confined to the answer list.
 - Do not stage/commit unrelated billing/docs/assets work currently dirty in the worktree.
-
-## Current Dirty Worktree Warning
-
-At the time this handoff was created, the repo contained many unrelated dirty files for billing/docs/assets work. The Category Blitz work already pushed is clean in:
-
-- `components/category-blitz/CategoryBlitzGame.tsx`
-- `tests/category-blitz-mobile-shell-contract.test.ts`
-
-Any future commit for this issue should stage only relevant Category Blitz/mobile shell files.
-
-## Follow-Up Self-Execution: `cbz-locked-layout-v6`
-
-After this handoff was first written, the recommended plan was executed locally in a new pass.
-
-Files changed in that pass:
-
-- `app/globals.css`
-- `components/category-blitz/CategoryBlitzGame.tsx`
-- `components/venue/GameLandingExperience.tsx`
-- `tests/category-blitz-mobile-shell-contract.test.ts`
-
-What changed:
-
-- The Category Blitz root frame no longer uses `visualViewport.offsetTop`.
-- The root frame is now fixed at `top: 0` via:
-  - `fixed inset-x-0 top-0`
-  - `h-[var(--cbz-layout-height,100lvh)]`
-- The frame height is now a locked `--cbz-layout-height` value captured from the largest available `window.innerHeight` / `visualViewport.height` and reset only on orientation-style reset.
-- `html.tp-category-blitz-game-active` and `body.tp-category-blitz-game-active` now use `var(--cbz-layout-height, 100lvh)` instead of `100svh`.
-- Category Blitz-specific wrappers in `GameLandingExperience.tsx` now also use `--cbz-layout-height` instead of `100svh`.
-- The route wrapper now has `data-category-blitz-route-shell` so the debug panel can identify its rect.
-- The game root now has `data-category-blitz-game-root`.
-- Debug version changed to `cbz-locked-layout-v6`.
-- Debug panel now reports:
-  - app shell rect
-  - main rect
-  - route wrapper rect
-  - game root rect
-  - keyboard inset
-  - locked layout height
-- The invisible keyboard proxy input is no longer 1px. It is now a normal-sized invisible input:
-  - `h-11`
-  - `w-[calc(100vw-2rem)]`
-  - `text-base`
-  - `caret-transparent`
-  - fixed near the top safe area
-
-Why:
-
-- The v5 implementation may have made the gap worse by combining a stable full height with a non-zero `visualViewport.offsetTop`.
-- Parent wrappers still using `100svh` could also clip the game and reveal the magenta background.
-- A 1px hidden input may trigger odd iOS Safari focus/zoom/pan behavior.
-
-Verification passed after this pass:
-
-- `npx vitest run tests/category-blitz-mobile-shell-contract.test.ts`
-- `npx tsc --noEmit`
-- `npm run lint`
-
-Confirmed after push:
-
-- Andrew tested `cbz-locked-layout-v6` on a real mobile device and the magenta gap still appeared.
-- The next required evidence is a `?cbzDebug=1` screenshot from the v7 build, with the debug panel visible while the keyboard is open.
-
-## Current Follow-Up Attempt: `cbz-keyboard-mode-v7`
-
-This pass changes the core strategy.
-
-Files changed:
-
-- `components/category-blitz/CategoryBlitzGame.tsx`
-- `tests/category-blitz-mobile-shell-contract.test.ts`
-- this handoff doc
-
-What changed:
-
-- Added `useCategoryBlitzKeyboardState()`.
-- Tracks keyboard-open state from `visualViewport`.
-- Writes:
-  - `--cbz-keyboard-inset`
-  - `--cbz-visual-height`
-- Replaced the hidden/invisible proxy input behavior with a normal pinned native input.
-- The pinned editor is marked with `data-category-blitz-pinned-editor`.
-- The input is still the only native text input and is marked with `data-category-blitz-keyboard-input`.
-- The answer rows remain buttons/display controls; there are still no native inputs inside the answer list.
-- Added a fixed lower-page shield marked `data-category-blitz-keyboard-shield`.
-- The shield height is `calc(var(--cbz-keyboard-inset,0px)+8rem)` and uses `bg-slate-950`.
-- The pinned editor sits above the keyboard using:
-  - `bottom-[calc(var(--cbz-keyboard-inset,0px)+max(env(safe-area-inset-bottom),0.75rem))]`
-- Debug marker changed to `cbz-keyboard-mode-v7`.
-- Debug now reports:
-  - `pinnedEditorRect`
-  - `keyboardShieldRect`
-
-Why:
-
-- The previous fixed-root/hidden-proxy strategy kept failing on real iOS Safari.
-- v7 gives Safari a normal focused input in a visible, stable place and covers the area where magenta previously leaked through.
-
-Verification completed locally:
-
-- `npx vitest run tests/category-blitz-mobile-shell-contract.test.ts`
-- `npx tsc --noEmit`
-- `npm run lint`
-
-Still needed before trusting it:
-
-- Commit/push
-- Real iPhone Safari test

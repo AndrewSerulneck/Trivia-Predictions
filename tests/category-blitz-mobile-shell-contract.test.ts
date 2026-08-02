@@ -45,7 +45,7 @@ describe("Category Blitz mobile shell contract", () => {
     expect(appShellSource).toContain("{showLegalNotice ? (");
   });
 
-  it("pins Category Blitz to an explicit visual viewport frame", () => {
+  it("renders Category Blitz gameplay through a dark inert route shell and body portal", () => {
     const categoryBranch = sourceBetween(
       gameLandingSource,
       "gameKey === \"category-blitz\" ? (",
@@ -53,39 +53,57 @@ describe("Category Blitz mobile shell contract", () => {
     );
 
     expect(gameLandingSource).toContain("data-category-blitz-route-shell={isCategoryBlitzGame ? \"\" : undefined}");
-    expect(categoryBranch).toContain("h-[var(--cbz-layout-height,100lvh)]");
+    expect(gameLandingSource).toContain("isCategoryBlitzGame && isPlaying ? \"bg-slate-950\"");
+    expect(categoryBranch).toContain("h-[100svh]");
     expect(categoryBranch).toContain("overflow-hidden");
+    expect(categoryBranch).toContain("bg-slate-950");
+    expect(categoryBranch).not.toContain("var(--cbz-layout-height");
     expect(categoryBranch).not.toContain("var(--tp-vh");
-    expect(categoryBlitzSource).toContain("const VIEWPORT_FRAME_CLASS");
-    expect(categoryBlitzSource).toContain("fixed inset-x-0 top-0");
-    expect(categoryBlitzSource).toContain("h-[var(--cbz-layout-height,100lvh)]");
-    expect(categoryBlitzSource).toContain("w-screen");
-    expect(categoryBlitzSource).toContain("function useCategoryBlitzViewportFrame");
-    expect(categoryBlitzSource).toContain("--cbz-layout-height");
-    expect(categoryBlitzSource).toContain("applyCategoryBlitzViewportFrame({ resetStableFrame: true })");
-    expect(categoryBlitzSource).toContain("window.visualViewport?.addEventListener(\"resize\", scheduleCurrent");
-    expect(categoryBlitzSource).toContain("window.visualViewport?.addEventListener(\"scroll\", scheduleCurrent");
-    expect(categoryBlitzSource).not.toContain("--cbz-vv-top");
+    expect(categoryBlitzSource).toContain("import { createPortal } from \"react-dom\";");
+    expect(categoryBlitzSource).toContain("const renderGamePortal = (content: ReactNode): ReactNode =>");
+    expect(categoryBlitzSource).toContain("createPortal(content, document.body)");
   });
 
-  it("uses one pinned keyboard editor instead of native inputs in answer rows", () => {
+  it("sizes Category Blitz to the current visual viewport instead of preserving keyboard-closed height", () => {
+    expect(categoryBlitzSource).toContain("const VIEWPORT_FRAME_CLASS");
+    expect(categoryBlitzSource).toContain("[top:var(--cbz-visible-top,0px)]");
+    expect(categoryBlitzSource).toContain("[left:var(--cbz-visible-left,0px)]");
+    expect(categoryBlitzSource).toContain("h-[var(--cbz-visible-height,100svh)]");
+    expect(categoryBlitzSource).toContain("w-[var(--cbz-visible-width,100vw)]");
+    expect(categoryBlitzSource).toContain("function useCategoryBlitzVisibleViewportFrame");
+    expect(categoryBlitzSource).toContain("root.style.setProperty(\"--cbz-visible-height\"");
+    expect(categoryBlitzSource).toContain("window.visualViewport?.addEventListener(\"resize\", schedule");
+    expect(categoryBlitzSource).toContain("window.visualViewport?.addEventListener(\"scroll\", schedule");
+    expect(categoryBlitzSource).not.toContain("--cbz-layout-height");
+    expect(categoryBlitzSource).not.toContain("resetStableFrame");
+  });
+
+  it("uses one normal-flow editor input instead of native inputs in answer rows", () => {
     const answerGridSource = sourceBetween(
       categoryBlitzSource,
       "{/* Categories grid */}",
-      "{/* Autosave footnote"
+      "<div\n        data-category-blitz-editor"
+    );
+    const answeringRootSource = sourceBetween(
+      categoryBlitzSource,
+      "return (\n    <div className=\"relative grid",
+      "{/* Categories grid */}"
     );
 
-    expect(categoryBlitzSource).toContain("keyboardInputRef");
+    expect(categoryBlitzSource).toContain("editorInputRef");
     expect(categoryBlitzSource).toContain("activeAnswerIndexRef");
-    expect(categoryBlitzSource).toContain("data-category-blitz-keyboard-input");
-    expect(categoryBlitzSource).toContain("data-category-blitz-pinned-editor");
-    expect(categoryBlitzSource).toContain("data-category-blitz-keyboard-shield");
-    expect(categoryBlitzSource).toContain("data-category-blitz-keyboard-mode");
-    expect(categoryBlitzSource).toContain("function useCategoryBlitzKeyboardState");
+    expect(categoryBlitzSource).toContain("grid-rows-[auto_auto_minmax(0,1fr)_auto]");
+    expect(categoryBlitzSource).toContain("data-category-blitz-editor");
+    expect(categoryBlitzSource).toContain("data-category-blitz-editor-input");
     expect(categoryBlitzSource).toContain("focus({ preventScroll: true })");
-    expect(categoryBlitzSource).not.toContain("disabled={isExpired || submitState !== \"idle\" || activeAnswerIndex === null}");
-    expect(categoryBlitzSource).toContain("bottom-[calc(var(--cbz-keyboard-inset,0px)+max(env(safe-area-inset-bottom),0.75rem))]");
     expect(categoryBlitzSource).toContain("value={activeAnswerValue}");
+    expect(answeringRootSource).not.toContain("fixed inset-x-0");
+    expect(categoryBlitzSource).not.toContain("data-category-blitz-keyboard-input");
+    expect(categoryBlitzSource).not.toContain("data-category-blitz-pinned-editor");
+    expect(categoryBlitzSource).not.toContain("data-category-blitz-keyboard-shield");
+    expect(categoryBlitzSource).not.toContain("data-category-blitz-keyboard-mode");
+    expect(categoryBlitzSource).not.toContain("function useCategoryBlitzKeyboardState");
+    expect(categoryBlitzSource).not.toContain("--cbz-keyboard-inset");
     expect(answerGridSource).toContain("onPointerDown={(event) => {");
     expect(answerGridSource).toContain("event.preventDefault();");
     expect(answerGridSource).not.toContain("<input");
@@ -104,23 +122,29 @@ describe("Category Blitz mobile shell contract", () => {
     expect(categoryBlitzSource).toContain("tp-category-blitz-game-active");
     expect(globalsSource).toContain("html.tp-category-blitz-game-active");
     expect(globalsSource).toContain("body.tp-category-blitz-game-active");
-    expect(globalsSource).toContain("height: var(--cbz-layout-height, 100lvh) !important;");
+    expect(globalsSource).toContain("background-color: #020617 !important;");
+    expect(globalsSource).toContain("body.tp-category-blitz-game-active");
+    expect(globalsSource).toContain("position: fixed !important;");
     expect(globalsSource).toContain("overflow: hidden !important;");
+    expect(globalsSource).not.toContain("height: var(--cbz-layout-height");
   });
 
   it("provides an opt-in layout diagnostic for real-device keyboard debugging", () => {
-    expect(categoryBlitzSource).toContain("const LAYOUT_DEBUG_VERSION = \"cbz-keyboard-mode-v7\";");
+    expect(categoryBlitzSource).toContain("const LAYOUT_DEBUG_VERSION = \"cbz-portal-visual-frame-v8\";");
     expect(categoryBlitzSource).toContain("data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}");
     expect(categoryBlitzSource).toContain("data-category-blitz-game-root");
     expect(categoryBlitzSource).toContain("function CategoryBlitzLayoutDebugPanel");
     expect(categoryBlitzSource).toContain("params.get(\"cbzDebug\") === \"1\"");
     expect(categoryBlitzSource).toContain("data-category-blitz-layout-debug");
     expect(categoryBlitzSource).toContain("answerListInputCount");
+    expect(categoryBlitzSource).toContain("editorInputCount");
+    expect(categoryBlitzSource).toContain("visualOffsetLeft");
     expect(categoryBlitzSource).toContain("visualOffsetTop");
     expect(categoryBlitzSource).toContain("viewportFrame");
+    expect(categoryBlitzSource).toContain("bodyBackground");
+    expect(categoryBlitzSource).toContain("shellBackground");
     expect(categoryBlitzSource).toContain("routeRect");
     expect(categoryBlitzSource).toContain("rootRect");
-    expect(categoryBlitzSource).toContain("pinnedEditorRect");
-    expect(categoryBlitzSource).toContain("keyboardShieldRect");
+    expect(categoryBlitzSource).toContain("editorRect");
   });
 });
