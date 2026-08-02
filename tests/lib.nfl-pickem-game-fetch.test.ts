@@ -19,6 +19,11 @@ type MockRow = Record<string, unknown>;
 
 const db = vi.hoisted(() => ({
   tables: {} as Record<string, MockRow[]>,
+  // When set, the next update().eq("game_id", raceGameId).is("locked_at", null)
+  // chain simulates a concurrent writer winning the compare-and-set: it mutates
+  // the underlying row directly (as the "other" writer would) and reports zero
+  // matched rows to *this* caller, exactly like Postgres would under a real race.
+  raceGameId: null as string | null,
 }));
 
 vi.mock("@/lib/supabaseAdmin", () => {
@@ -27,6 +32,7 @@ vi.mock("@/lib/supabaseAdmin", () => {
     let result = [...rows];
     let pendingUpdate: MockRow | null = null;
     let updateTargets: MockRow[] | null = null;
+    let updateGameId: unknown = undefined;
 
     const applyPendingUpdate = () => {
       if (!pendingUpdate || !updateTargets) return;
@@ -42,6 +48,7 @@ vi.mock("@/lib/supabaseAdmin", () => {
       select: () => builder,
       eq: (column: string, value: unknown) => {
         if (pendingUpdate) {
+          if (column === "game_id") updateGameId = value;
           updateTargets = (updateTargets ?? db.tables[table] ?? []).filter((row) => row[column] === value);
         } else {
           result = result.filter((row) => row[column] === value);
@@ -50,7 +57,21 @@ vi.mock("@/lib/supabaseAdmin", () => {
       },
       is: (column: string, value: unknown) => {
         if (pendingUpdate) {
-          updateTargets = (updateTargets ?? db.tables[table] ?? []).filter((row) => row[column] === value);
+          if (
+            column === "locked_at" &&
+            value === null &&
+            db.raceGameId !== null &&
+            updateGameId === db.raceGameId
+          ) {
+            // Simulate the concurrent writer: it wins the compare-and-set and
+            // stamps the row directly, before this caller's own update lands.
+            const raced = (db.tables[table] ?? []).find((row) => row.game_id === db.raceGameId);
+            if (raced) Object.assign(raced, pendingUpdate);
+            db.raceGameId = null;
+            updateTargets = [];
+          } else {
+            updateTargets = (updateTargets ?? db.tables[table] ?? []).filter((row) => row[column] === value);
+          }
         } else {
           result = result.filter((row) => row[column] === value);
         }
@@ -100,7 +121,13 @@ vi.mock("@/lib/supabaseAdmin", () => {
               : { data: null, error: { message: "not found" } };
           })()
         ),
-      maybeSingle: () => Promise.resolve({ data: result[0] ?? null, error: null }),
+      maybeSingle: () =>
+        Promise.resolve(
+          (() => {
+            applyPendingUpdate();
+            return { data: result[0] ?? null, error: null };
+          })()
+        ),
     };
     return builder;
   };
@@ -281,6 +308,76 @@ describe("listNFLPickEmGames game fetching", () => {
     expect(db.tables.nfl_pickem_game_lines).toEqual([]);
     const oddsCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/odds");
     expect(oddsCalls).toHaveLength(0);
+    nowSpy.mockRestore();
+  });
+
+  it("resolves to the already-locked row instead of throwing when the kickoff lock loses the race", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-09-16T12:00:00.000Z"));
+    const gameId = "1__2026-09-10T00:20:00.000Z__New England Patriots__Seattle Seahawks";
+    db.tables.nfl_pickem_game_lines = [
+      {
+        game_id: gameId,
+        starts_at: "2026-09-10T00:20:00.000Z",
+        home_team: "Seattle Seahawks",
+        away_team: "New England Patriots",
+        home_spread: -7,
+        away_spread: 7,
+        provider: "balldontlie:draftkings",
+        fetched_at: "2026-09-09T09:00:00.000Z",
+        locked_at: null,
+      },
+    ];
+    db.raceGameId = gameId;
+
+    await expect(listNFLPickEmGames({ weekId: "week-1" })).resolves.toBeDefined();
+
+    // The race must have actually been exercised (and consumed) rather than
+    // this test passing because nothing hit the raced branch at all.
+    expect(db.raceGameId).toBeNull();
+    expect(db.tables.nfl_pickem_game_lines[0]).toMatchObject({
+      locked_at: "2026-09-10T00:20:00.000Z",
+    });
+    nowSpy.mockRestore();
+  });
+
+  it("still throws on a genuine DB error while locking at kickoff", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-09-16T12:00:00.000Z"));
+    db.tables.nfl_pickem_game_lines = [
+      {
+        game_id: "1__2026-09-10T00:20:00.000Z__New England Patriots__Seattle Seahawks",
+        starts_at: "2026-09-10T00:20:00.000Z",
+        home_team: "Seattle Seahawks",
+        away_team: "New England Patriots",
+        home_spread: -7,
+        away_spread: 7,
+        provider: "balldontlie:draftkings",
+        fetched_at: "2026-09-09T09:00:00.000Z",
+        locked_at: null,
+      },
+    ];
+
+    const { supabaseAdmin: admin } = await import("@/lib/supabaseAdmin");
+    if (!admin) throw new Error("supabaseAdmin mock is not configured.");
+    const originalFrom = admin.from.bind(admin);
+    const fromSpy = vi.spyOn(admin, "from").mockImplementation((table: string) => {
+      const real = originalFrom(table) as ReturnType<typeof admin.from>;
+      if (table !== "nfl_pickem_game_lines") return real;
+      return {
+        ...real,
+        update: () => ({
+          eq: () => ({
+            is: () => ({
+              select: () => ({
+                maybeSingle: () => Promise.resolve({ data: null, error: { message: "connection reset" } }),
+              }),
+            }),
+          }),
+        }),
+      } as unknown as ReturnType<typeof admin.from>;
+    });
+
+    await expect(listNFLPickEmGames({ weekId: "week-1" })).rejects.toThrow("connection reset");
+    fromSpy.mockRestore();
     nowSpy.mockRestore();
   });
 

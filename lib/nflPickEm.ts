@@ -1102,18 +1102,31 @@ async function refreshNFLPickEmGameLines(
     const hasKickedOff = Number.isFinite(startsAtMs) && nowMs >= startsAtMs;
     if (hasKickedOff && existing) {
       const lockedAt = new Date(startsAtMs).toISOString();
+      // Deliberately parallel to getLockedNFLPickEmGameLineForSettlement above:
+      // .is("locked_at", null) makes this a compare-and-set, so a concurrent
+      // request can lose the race and match zero rows. That's success by
+      // another writer, not a failure — only a genuine DB error should throw.
       const { data, error } = await supabaseAdmin
         .from("nfl_pickem_game_lines")
         .update({ locked_at: lockedAt })
         .eq("game_id", gameId)
         .is("locked_at", null)
         .select("game_id, starts_at, home_team, away_team, home_spread, away_spread, provider, fetched_at, locked_at")
-        .single<NFLPickEmGameLineRow>();
+        .maybeSingle<NFLPickEmGameLineRow>();
 
-      if (error || !data) {
-        throw new Error(error?.message ?? "Failed to lock NFL Pick 'Em game line.");
+      if (error) {
+        throw new Error(error.message ?? "Failed to lock NFL Pick 'Em game line.");
       }
-      linesByGameId.set(gameId, mapGameLineRow(data));
+
+      if (data) {
+        linesByGameId.set(gameId, mapGameLineRow(data));
+        continue;
+      }
+
+      const reloaded = await getNFLPickEmGameLine(gameId);
+      if (reloaded?.lockedAt) {
+        linesByGameId.set(gameId, reloaded);
+      }
       continue;
     }
 
