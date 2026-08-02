@@ -91,6 +91,42 @@ export async function POST(request: Request) {
 
     let rowState: BillingRowState = classifyBillingRow(existing);
 
+    // Re-bound as consts: the null checks above don't survive into a closure.
+    const stripeClient = stripe;
+    const db = supabaseAdmin;
+
+    /**
+     * Void an abandoned first Checkout (Stripe status `incomplete`) so this
+     * request can start a clean one. Cancelling is what makes it safe to allow:
+     * an untouched incomplete subscription can still complete inside Stripe's
+     * ~23h window, which would leave the partner paying twice. Returns false if
+     * Stripe refused — the caller must then refuse the request rather than
+     * proceed on an assumption.
+     */
+    const voidIncompleteSubscription = async (subscriptionId: string): Promise<boolean> => {
+      try {
+        await stripeClient.subscriptions.cancel(subscriptionId);
+      } catch {
+        return false;
+      }
+      // Now authoritatively dead — same mirror correction the `dead` branch makes.
+      await db
+        .from("billing_subscriptions")
+        .update({ status: "cancelled", cancel_at_period_end: false, ...CLEARED_MIRROR })
+        .eq("venue_id", venueId);
+      return true;
+    };
+
+    const incompleteRetryResponse = () =>
+      NextResponse.json(
+        {
+          ok: false,
+          error: "Your previous payment didn't finish. Please try again in a few minutes.",
+          code: "incomplete_retry",
+        },
+        { status: 409 }
+      );
+
     if (rowState.live && existing.stripe_subscription_id) {
       // About to refuse. If the mirror is stale and the subscription is really
       // dead at Stripe, refusing would lock a paying-again owner out forever.
@@ -118,11 +154,31 @@ export async function POST(request: Request) {
         // but never write it back: overwriting a genuinely live row to
         // 'cancelled' would then invite a real duplicate-billing resubscribe.
         rowState = { live: false, reason: "cancelled" };
+      } else if (truth === "incomplete") {
+        // A first Checkout whose payment never completed: Stripe says
+        // `incomplete`, which mapStripeSubscriptionStatus mirrors as `past_due`.
+        // Refusing here (the `fix_payment` branch below) would tell the partner
+        // to "update your card" for ~23h when there is no card on file and no
+        // action behind the message. Instead void the abandoned subscription and
+        // let them start over — the cancel is what rules out a double bill.
+        if (!(await voidIncompleteSubscription(existing.stripe_subscription_id))) {
+          return incompleteRetryResponse();
+        }
+        rowState = { live: false, reason: "cancelled" };
       }
     } else if (rowState.reason === "cancelled" && existing.stripe_subscription_id) {
       // About to allow, but a Stripe object is on record. This is the `paused`
       // case: alive at Stripe, `cancelled` here. Allowing would double-bill.
       const truth = await readStripeTruth(existing.stripe_subscription_id);
+
+      // Mirror says cancelled, Stripe says incomplete — the same abandoned-first-
+      // payment object, reached from the other direction. Allowing without
+      // cancelling would let it complete later on top of the new subscription.
+      if (truth === "incomplete") {
+        if (!(await voidIncompleteSubscription(existing.stripe_subscription_id))) {
+          return incompleteRetryResponse();
+        }
+      }
 
       // Fail CLOSED on `unknown`: during a Stripe outage we cannot rule out
       // that this subscription is still live, and the cost of guessing wrong

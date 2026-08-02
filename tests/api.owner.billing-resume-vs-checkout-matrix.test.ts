@@ -40,6 +40,7 @@ const state = vi.hoisted(() => ({ row: null as SubRow | null }));
 const mocks = vi.hoisted(() => ({
   stripeUpdate: vi.fn(),
   stripeRetrieve: vi.fn(),
+  stripeCancel: vi.fn(),
   checkoutCreate: vi.fn(),
   dbUpdate: vi.fn((_payload: Record<string, unknown>) => undefined),
 }));
@@ -50,7 +51,11 @@ vi.mock("@/lib/requireOwnerAuth", () => ({
 
 vi.mock("@/lib/stripe", () => ({
   stripe: {
-    subscriptions: { update: mocks.stripeUpdate, retrieve: mocks.stripeRetrieve },
+    subscriptions: {
+      update: mocks.stripeUpdate,
+      retrieve: mocks.stripeRetrieve,
+      cancel: mocks.stripeCancel,
+    },
     checkout: { sessions: { create: mocks.checkoutCreate } },
   },
   getStripePriceId: () => "price_test_123",
@@ -106,6 +111,7 @@ describe("owner billing — resume vs. checkout state matrix", () => {
     mocks.stripeRetrieve
       .mockReset()
       .mockImplementation(async () => ({ status: state.row?.status === "cancelled" ? "canceled" : "active" }));
+    mocks.stripeCancel.mockReset().mockResolvedValue({ status: "canceled" });
     mocks.checkoutCreate.mockReset().mockResolvedValue({ url: "https://checkout.stripe.test/session" });
     mocks.dbUpdate.mockReset();
   });
@@ -389,6 +395,90 @@ describe("owner billing — resume vs. checkout state matrix", () => {
 
       expect(response.status).toBe(200);
       expect(mocks.stripeRetrieve).not.toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * Phase 5 of docs/billing-code-review-fixes-plan.md.
+   *
+   * Stripe's `incomplete` (a first Checkout whose payment never completed) maps
+   * to our `past_due`, which the guard above reads as live → `fix_payment`,
+   * "update your card". But there IS no card on file, so for ~23h the partner
+   * sees an instruction with no action behind it. `incomplete` is therefore its
+   * own StripeTruth: not live (the partner may proceed) and not dead (the object
+   * must be cancelled first, or it could still complete and double-bill).
+   */
+  describe("stripe status: incomplete (first payment never finished)", () => {
+    it("voids the abandoned subscription and allows a fresh checkout", async () => {
+      state.row = PAST_DUE;
+      mocks.stripeRetrieve.mockResolvedValue({ status: "incomplete" });
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(response.status).toBe(200);
+      // The cancel is what makes allowing safe — without it Stripe could still
+      // complete the old subscription on top of the new one.
+      expect(mocks.stripeCancel).toHaveBeenCalledWith("sub_stripe_1");
+      expect(mocks.dbUpdate).toHaveBeenCalledWith({
+        status: "cancelled",
+        cancel_at_period_end: false,
+        stripe_coupon_id: null,
+        discount_label: null,
+        discount_percent_off: null,
+        discount_amount_off_cents: null,
+        discount_ends_at: null,
+      });
+      expect(mocks.checkoutCreate).toHaveBeenCalled();
+    });
+
+    it("does not fall through to the 'fix_payment' message", async () => {
+      state.row = PAST_DUE;
+      mocks.stripeRetrieve.mockResolvedValue({ status: "incomplete" });
+
+      const body = await readJson(await checkout(post("/api/owner/billing/checkout")));
+
+      expect(body.code).not.toBe("fix_payment");
+    });
+
+    it("refuses with 'incomplete_retry' when the cancel fails — never checks out on an assumption", async () => {
+      state.row = PAST_DUE;
+      mocks.stripeRetrieve.mockResolvedValue({ status: "incomplete" });
+      mocks.stripeCancel.mockRejectedValue(new Error("connection error"));
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+      const body = await readJson(response);
+
+      expect(response.status).toBe(409);
+      expect(body.code).toBe("incomplete_retry");
+      expect(mocks.checkoutCreate).not.toHaveBeenCalled();
+      expect(mocks.dbUpdate).not.toHaveBeenCalled();
+    });
+
+    it("also voids it when reached from a 'cancelled' mirror", async () => {
+      // Same abandoned object, other direction: mirror says cancelled, Stripe
+      // says incomplete. Allowing without cancelling would leave it able to
+      // complete later on top of the new subscription.
+      state.row = CANCELLED;
+      mocks.stripeRetrieve.mockResolvedValue({ status: "incomplete" });
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(response.status).toBe(200);
+      expect(mocks.stripeCancel).toHaveBeenCalledWith("sub_stripe_1");
+      expect(mocks.checkoutCreate).toHaveBeenCalled();
+    });
+
+    it("still refuses resume — incomplete is live at Stripe, so resume stays fail-closed", async () => {
+      state.row = SCHEDULED_CANCEL;
+      mocks.stripeRetrieve.mockResolvedValue({ status: "incomplete" });
+
+      const response = await resume(post("/api/owner/billing/subscription"));
+      const body = await readJson(response);
+
+      // Not routed to 'checkout_instead' — that is the answer for a DEAD object.
+      expect(body.code).not.toBe("checkout_instead");
+      expect(response.status).toBe(200);
+      expect(mocks.stripeCancel).not.toHaveBeenCalled();
     });
   });
 

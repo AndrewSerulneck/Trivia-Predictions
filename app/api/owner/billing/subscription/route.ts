@@ -116,6 +116,11 @@ export async function POST(request: Request) {
   // Stripe and route the owner to Checkout with the friendly message instead.
   // `unknown` (Stripe unreachable) falls through and fails naturally — there is
   // nothing safe to conclude, and no DB write happens on any of these paths.
+  // `incomplete` deliberately falls through too, i.e. it is treated like `live`:
+  // the object still exists at Stripe, so routing the owner to a fresh Checkout
+  // from HERE would be the double-billing move. Voiding an incomplete
+  // subscription is the checkout route's job (it cancels first, then allows) —
+  // resume must stay fail-closed.
   if (subscription.stripe_subscription_id) {
     const truth = await readStripeTruth(subscription.stripe_subscription_id);
     if (truth === "dead" || truth === "missing") {

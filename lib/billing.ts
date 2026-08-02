@@ -73,19 +73,28 @@ const isResourceMissing = (error: unknown): boolean =>
   (error as { code?: unknown }).code === "resource_missing";
 
 /**
- * What Stripe itself says about a subscription id, kept deliberately four-way
- * because the two "not live" answers carry different amounts of authority:
+ * What Stripe itself says about a subscription id, kept deliberately five-way
+ * because the answers carry different amounts of authority:
  *
- * - `live`    — the object exists and can still bill.
- * - `dead`    — the object exists and is terminally finished. Authoritative:
- *               safe to write back to our mirror.
- * - `missing` — `resource_missing`, which Stripe throws for a genuinely deleted
- *               object AND for a wrong-mode id (a test id read with a live key,
- *               or vice versa). NOT authoritative: it may only mean "this key
- *               can't see that object", so it must never overwrite the mirror.
- * - `unknown` — Stripe was unreachable. Keep whatever the mirror said.
+ * - `live`       — the object exists and can still bill.
+ * - `incomplete` — the object exists but its FIRST payment never completed.
+ *                  Deliberately NOT folded into either `live` or `dead`: it is
+ *                  not dead (Stripe can still complete it inside its ~23h
+ *                  window, so treating it as dead invites a genuine double
+ *                  subscription), but it is also not something the partner can
+ *                  act on — there is no card on file to "update". A caller that
+ *                  wants to let the partner start over must first void it
+ *                  (`subscriptions.cancel`) so it can never complete later.
+ * - `dead`       — the object exists and is terminally finished. Authoritative:
+ *                  safe to write back to our mirror.
+ * - `missing`    — `resource_missing`, which Stripe throws for a genuinely
+ *                  deleted object AND for a wrong-mode id (a test id read with a
+ *                  live key, or vice versa). NOT authoritative: it may only mean
+ *                  "this key can't see that object", so it must never overwrite
+ *                  the mirror.
+ * - `unknown`    — Stripe was unreachable. Keep whatever the mirror said.
  */
-export type StripeTruth = "live" | "dead" | "missing" | "unknown";
+export type StripeTruth = "live" | "incomplete" | "dead" | "missing" | "unknown";
 
 /**
  * Our billing_subscriptions row is only a MIRROR of Stripe, kept current by the
@@ -100,7 +109,17 @@ export async function readStripeTruth(subscriptionId: string): Promise<StripeTru
   }
   try {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    return DEAD_STRIPE_STATUSES.has(subscription.status) ? "dead" : "live";
+    if (DEAD_STRIPE_STATUSES.has(subscription.status)) {
+      return "dead";
+    }
+    // `incomplete` is reported separately rather than as `live` — see StripeTruth.
+    // Note it is NOT added to DEAD_STRIPE_STATUSES: that set means "authoritatively
+    // finished, safe to overwrite the mirror", and an incomplete subscription can
+    // still succeed on its own.
+    if (subscription.status === "incomplete") {
+      return "incomplete";
+    }
+    return "live";
   } catch (error) {
     return isResourceMissing(error) ? "missing" : "unknown";
   }
