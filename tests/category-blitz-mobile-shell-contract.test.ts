@@ -39,9 +39,15 @@ describe("Category Blitz mobile shell contract", () => {
     expect(gameScreenMainBranch).not.toContain("pb-24");
   });
 
-  it("keeps the legal notice venue-home-only and out of fullscreen game routes", () => {
-    expect(appShellSource).toContain("const isVenueHome = /^\\/venue\\/[^/]+\\/?$/.test(pathname ?? \"\");");
-    expect(appShellSource).toContain("const showLegalNotice = !isAdmin && isVenueHome;");
+  it("keeps the legal notice out of fullscreen game routes but shows it everywhere else non-admin", () => {
+    // Code review round 3 phase 7: the prior version of this test locked in a
+    // regression (commit 35115fc narrowed the notice to venue-home-only by
+    // accident). Confirmed with the user that the narrowing was unintended;
+    // the notice must render on every non-admin, non-fullscreen route.
+    expect(appShellSource).toContain(
+      "export function shouldShowLegalNotice(pathname: string | null | undefined): boolean {"
+    );
+    expect(appShellSource).toContain("const showLegalNotice = shouldShowLegalNotice(pathname);");
     expect(appShellSource).toContain("{showLegalNotice ? (");
   });
 

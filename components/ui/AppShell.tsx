@@ -39,14 +39,28 @@ const GAME_SCREEN_PATHS = [
   "/pending-challenges",
 ];
 
+// Legal/geofence/commercial-license notice must render on every non-admin,
+// non-fullscreen route (e.g. /info, /join, /owner/*), not just the venue
+// home page. Commit 35115fc narrowed this to venue-home-only by accident
+// (bundled into an unrelated layout refactor); code-review round 3 phase 7
+// confirmed with the user that the narrowing was unintended and restored
+// the original scope. Do not narrow this again without an explicit,
+// separately-verified compliance decision. Exported as a pure function so
+// the invariant is testable without a DOM-rendering harness (this project
+// has none).
+export function shouldShowLegalNotice(pathname: string | null | undefined): boolean {
+  const isAdmin = pathname?.startsWith("/admin");
+  const isFullscreen = !isAdmin && FULLSCREEN_PATHS.some((p) => pathname?.startsWith(p));
+  return !isAdmin && !isFullscreen;
+}
+
 export function AppShell({ children, legalNotice }: AppShellProps) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
-  const isVenueHome = /^\/venue\/[^/]+\/?$/.test(pathname ?? "");
   const isFullscreen = !isAdmin && FULLSCREEN_PATHS.some((p) => pathname?.startsWith(p));
   const isGameScreen = !isAdmin && GAME_SCREEN_PATHS.some((p) => pathname?.startsWith(p));
   const showShellDecor = !isAdmin && !isFullscreen;
-  const showLegalNotice = !isAdmin && isVenueHome;
+  const showLegalNotice = shouldShowLegalNotice(pathname);
   const mainClassName = isAdmin
     ? "h-full min-h-0"
     : isGameScreen
