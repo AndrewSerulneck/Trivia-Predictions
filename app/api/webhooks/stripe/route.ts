@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendWelcomeEmail } from "@/lib/email/sendWelcomeEmail";
 import {
   CLEARED_MIRROR,
+  discountCouponRef,
   discountMirrorFromStripe,
   resolveDiscountCoupon,
   type DiscountMirror,
@@ -334,10 +335,51 @@ async function resolveDiscountMirror(sub: Stripe.Subscription): Promise<Discount
   }
 }
 
+/** The mirror columns a discount event needs to read back before it writes. */
+const DISCOUNT_MIRROR_SELECT =
+  "id, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at";
+
+type DiscountMirrorRow = DiscountMirror & { id: string };
+
+/**
+ * May a `customer.discount.deleted` event clear this row's mirror?
+ *
+ * Only if the coupon that died is the one we are mirroring. Stripe retries
+ * webhooks for ~3 days, and applying a discount over an existing one REPLACES it
+ * (lib/billingDiscounts.ts — one discount per subscription), emitting a delete
+ * for the old coupon alongside a create for the new. A retried or reordered
+ * delete for the *replaced* coupon must not wipe the *replacement*, or the
+ * partner's page shows full price against a discounted invoice.
+ *
+ * The two ambiguous cases, decided explicitly rather than by omission:
+ *
+ * - **The row mirrors no coupon id.** Either there is nothing to clear, or it is
+ *   a locally-applied offline discount — `stripe_coupon_id === null` with a label
+ *   is exactly what marks one (see docs/billing-open-issues-plan.md, DISCOUNT Ph2
+ *   note 5). A Stripe delete has no authority over a discount Stripe never held,
+ *   so both readings say "don't touch it".
+ * - **The event's own coupon is unresolvable** (no `source.coupon`, no legacy
+ *   `coupon`). We cannot prove the mirrored coupon is the one that died, so we
+ *   leave the mirror alone. This direction is self-repairing: the accompanying
+ *   `customer.subscription.updated` re-syncs the mirror from the subscription's
+ *   own discount state, which is authoritative. Clearing on a guess is not
+ *   self-repairing — nothing re-creates a discount we blanked.
+ */
+function deletedCouponOwnsMirror(row: DiscountMirrorRow, deletedCouponId: string | null): boolean {
+  if (!deletedCouponId) return false;
+  if (!row.stripe_coupon_id) return false;
+  return row.stripe_coupon_id === deletedCouponId;
+}
+
 /**
  * Sync the mirror from a customer.discount.* event. These arrive without the
  * subscription object, so the row is resolved by the discount's own subscription
  * id (falling back to the customer id for a customer-level discount).
+ *
+ * Matching on stripe_subscription_id is the ownership guard: an offline row
+ * (token null) or a venue that has since moved to a different subscription simply
+ * doesn't match, so nothing is touched. A `deleted` event adds a SECOND condition
+ * on top of it — the coupon identity check above — it does not replace it.
  */
 async function syncDiscountFromEvent(discount: Stripe.Discount, removed: boolean): Promise<void> {
   if (!supabaseAdmin) return;
@@ -347,33 +389,51 @@ async function syncDiscountFromEvent(discount: Stripe.Discount, removed: boolean
     typeof discount.customer === "string" ? discount.customer : discount.customer?.id ?? null;
   if (!subscriptionId && !customerId) return;
 
-  const mirror = removed
-    ? { ...CLEARED_MIRROR }
-    : discountMirrorFromStripe(discount, await resolveDiscountCoupon(discount));
-  const update = supabaseAdmin.from("billing_subscriptions").update(mirror);
-
-  if (subscriptionId) {
-    // Matching on stripe_subscription_id is itself the stale/ownership guard: an
-    // offline row (token null) or a venue that has since moved to a different
-    // subscription simply doesn't match, so nothing is touched.
-    const { error } = await update.eq("stripe_subscription_id", subscriptionId);
-    if (error) throw new Error(`syncDiscountFromEvent failed: ${error.message}`);
-    return;
-  }
+  // Resolve the target row(s) first. A delete has to compare coupons before it
+  // wipes anything, and running both paths through the same resolution keeps the
+  // subscription-keyed and customer-keyed cases from drifting apart.
+  const select = supabaseAdmin.from("billing_subscriptions").select(DISCOUNT_MIRROR_SELECT);
+  const { data: matched } = subscriptionId
+    ? await select.eq("stripe_subscription_id", subscriptionId).returns<DiscountMirrorRow[]>()
+    : await select.eq("stripe_customer_id", customerId as string).returns<DiscountMirrorRow[]>();
+  let rows = matched ?? [];
 
   // Customer-level discount. Checkout scopes a Stripe customer to one venue, so
   // this should resolve to exactly one row — but the write is unfiltered by
   // subscription, so confirm that before letting it fan out across every venue
   // sharing a customer and overwrite a sibling's own subscription-level mirror.
-  const { data: matches } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("id")
-    .eq("stripe_customer_id", customerId as string)
-    .returns<{ id: string }[]>();
-  if ((matches ?? []).length !== 1) return;
+  if (!subscriptionId && rows.length !== 1) return;
+  if (rows.length === 0) return;
 
-  const { error } = await update.eq("id", matches![0].id);
-  if (error) throw new Error(`syncDiscountFromEvent failed: ${error.message}`);
+  if (removed) {
+    // The id is enough for the identity check, and the ref carries it whether the
+    // payload expanded the coupon or not — so no retrieve, and a Stripe outage
+    // can't turn "which coupon died" into "unknown" and cause a wrong clear.
+    const ref = discountCouponRef(discount);
+    const deletedCouponId = typeof ref === "string" ? ref : ref?.id ?? null;
+    const stale = rows.filter((row) => !deletedCouponOwnsMirror(row, deletedCouponId));
+    for (const row of stale) {
+      // A stale delete arriving at all is worth seeing — it means Stripe replayed
+      // an event for a coupon we have already moved past.
+      console.warn(
+        `[stripe-webhook] ignoring customer.discount.deleted for coupon ${deletedCouponId ?? "unknown"}: row ${row.id} mirrors ${row.stripe_coupon_id ?? "no Stripe coupon"}`
+      );
+    }
+    rows = rows.filter((row) => deletedCouponOwnsMirror(row, deletedCouponId));
+    if (rows.length === 0) return;
+  }
+
+  const mirror = removed
+    ? { ...CLEARED_MIRROR }
+    : discountMirrorFromStripe(discount, await resolveDiscountCoupon(discount));
+
+  for (const row of rows) {
+    const { error } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .update(mirror)
+      .eq("id", row.id);
+    if (error) throw new Error(`syncDiscountFromEvent failed: ${error.message}`);
+  }
 }
 
 /**

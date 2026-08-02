@@ -25,7 +25,7 @@ found.
 | 2 | Line refresh takes down standard-mode venues | **Opus 5** | Medium | 1 | ✅ done |
 | 3 | Odds query truncates later games | Sonnet 5 | Low-Medium | 2 | ✅ done |
 | 4 | Spread picks stall `pending` forever | **Opus 5** | Medium-High | 3 | ✅ done |
-| 5 | `customer.discount.deleted` wipes a live discount | **Opus 5** | Medium | 0 | ⬜ not started |
+| 5 | `customer.discount.deleted` wipes a live discount | **Opus 5** | Medium | 0 | ✅ done |
 | 6 | Abandoned-signup sweep misses past 100 | Sonnet 5 | Low | 0 | ⬜ not started |
 | 7 | Legal notice silently dropped from most routes | Sonnet 5 | Low | 0 (+ a user decision) | ⬜ not started |
 | 8 | Verification + close-out | Sonnet 5 | Medium | 1–7 | ⬜ not started |
@@ -331,6 +331,38 @@ for coupon A when the mirror holds coupon B leaves the mirror **untouched**; a
 round-1/round-2 behaviour must not regress); a `deleted` against an offline
 (`stripe_coupon_id === null`) row is a no-op. Verify the replace-then-retry
 sequence end to end, since that is the real-world trigger.
+
+### ✅ As-built (2026-08-02)
+
+All four work items done; full record in `docs/billing-run-log.md` under
+**"Code Review Round 3 — Phase 5"**. The shape:
+
+- `syncDiscountFromEvent` now **reads its target row(s) before writing** on both
+  branches (it previously wrote blind on the subscription branch) and writes
+  **by row id**. New `deletedCouponOwnsMirror` gates a clear on
+  `row.stripe_coupon_id === <the deleted event's coupon id>`; the
+  subscription-id match stays as the ownership guard underneath it (item 4).
+  The customer-level fallback goes through the same check (item 3).
+- The deleted coupon's id is read straight off `discountCouponRef` — no
+  `resolveDiscountCoupon` retrieve — so a Stripe outage can't turn "which coupon
+  died" into `null` and cause a wrong clear.
+- Both ambiguous cases resolve to **don't clear**, commented on the helper
+  (item 2): a null `stripe_coupon_id` (nothing to clear, or an offline discount
+  Stripe has no authority over) and an unresolvable event coupon ref. The
+  asymmetry justifying that default: a stale mirror is self-repaired by the
+  accompanying `customer.subscription.updated`; a wrongly-blanked one is not.
+- A skipped clear logs a `warn` naming both coupons.
+- `tests/api.webhooks.stripe-discount-sync.test.ts` 9 → 14 tests, including the
+  replace-then-retry sequence end to end. Suite: **154 files / 1284 passed /
+  13 skipped**, tsc + lint clean.
+
+**For Phase 6/7:** both remain independent of everything done so far — Phase 6
+touches only `app/api/owner/billing/checkout/route.ts`, and **Phase 7 is still
+blocked on the user decision** in its item 1; ask before writing code for it.
+Phase 8 still owes: the NFL findings written into
+`docs/nfl-pickem-spread-line-settlement-locking-fix-plan.md` (not started), and
+inventory items **X** (this phase) and **Y** (Phase 6) added to
+`docs/billing-open-issues-plan.md` (not started).
 
 ---
 

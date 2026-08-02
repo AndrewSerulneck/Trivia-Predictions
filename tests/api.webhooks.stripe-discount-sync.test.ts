@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type Stripe from "stripe";
 
 /**
@@ -17,8 +17,12 @@ const mocks = vi.hoisted(() => ({
   retrieveSubscription: vi.fn(),
   retrieveCoupon: vi.fn(),
   existingRow: null as { stripe_subscription_id: string | null } | null,
-  /** Rows a customer-level discount event resolves to via stripe_customer_id. */
-  customerRows: [] as { id: string }[],
+  /**
+   * Rows a customer.discount.* event resolves to — by stripe_subscription_id, or
+   * by stripe_customer_id for a customer-level discount. The handler reads the
+   * mirror back before writing so a `deleted` event can check which coupon died.
+   */
+  mirrorRows: [] as Array<{ id: string; stripe_coupon_id: string | null; discount_label: string | null }>,
 }));
 
 vi.mock("@/lib/stripe", async (importActual) => {
@@ -44,8 +48,8 @@ vi.mock("@/lib/supabaseAdmin", () => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
           maybeSingle: vi.fn(() => Promise.resolve({ data: mocks.existingRow })),
-          // The customer-level discount fallback resolves matching rows first.
-          returns: vi.fn(() => Promise.resolve({ data: mocks.customerRows })),
+          // Discount events resolve their target row(s) first.
+          returns: vi.fn(() => Promise.resolve({ data: mocks.mirrorRows })),
         })),
       })),
       upsert: vi.fn((...args: unknown[]) => {
@@ -128,6 +132,8 @@ type MirrorPayload = {
 };
 
 describe("POST /api/webhooks/stripe — discount mirror sync", () => {
+  let warn: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
     mocks.constructEvent.mockReset();
     mocks.upsert.mockReset();
@@ -136,7 +142,14 @@ describe("POST /api/webhooks/stripe — discount mirror sync", () => {
     mocks.retrieveSubscription.mockReset();
     mocks.retrieveCoupon.mockReset();
     mocks.existingRow = { stripe_subscription_id: "sub_current" };
-    mocks.customerRows = [{ id: "row-1" }];
+    mocks.mirrorRows = [
+      { id: "row-1", stripe_coupon_id: "hc-pct-25-forever", discount_label: "25% off forever" },
+    ];
+    warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warn.mockRestore();
   });
 
   it("applies a customer-level discount to the one row that customer owns", async () => {
@@ -154,7 +167,10 @@ describe("POST /api/webhooks/stripe — discount mirror sync", () => {
   it("writes nothing when a customer-level discount matches more than one venue", async () => {
     // The update is unfiltered by subscription, so fanning out would overwrite a
     // sibling venue's own subscription-level discount with this one.
-    mocks.customerRows = [{ id: "row-1" }, { id: "row-2" }];
+    mocks.mirrorRows = [
+      { id: "row-1", stripe_coupon_id: null, discount_label: null },
+      { id: "row-2", stripe_coupon_id: null, discount_label: null },
+    ];
     mocks.constructEvent.mockReturnValue({
       type: "customer.discount.created",
       data: { object: discount(coupon(), { subscription: null }) },
@@ -265,7 +281,7 @@ describe("POST /api/webhooks/stripe — discount mirror sync", () => {
     expect(payload.discount_label).toBeNull();
   });
 
-  it("clears the mirror on customer.discount.deleted, keyed by subscription id", async () => {
+  it("clears the mirror on customer.discount.deleted for the coupon it actually holds", async () => {
     mocks.constructEvent.mockReturnValue({
       type: "customer.discount.deleted",
       data: { object: discount(coupon()) },
@@ -281,8 +297,94 @@ describe("POST /api/webhooks/stripe — discount mirror sync", () => {
       discount_amount_off_cents: null,
       discount_ends_at: null,
     });
-    expect(mocks.updateEq).toHaveBeenCalledWith("stripe_subscription_id", "sub_current");
+    expect(mocks.updateEq).toHaveBeenCalledWith("id", "row-1");
     expect(mocks.upsert).not.toHaveBeenCalled();
+  });
+
+  it("ignores a customer.discount.deleted for a coupon the mirror no longer holds", async () => {
+    // Stripe replaces (not stacks) a discount, so swapping coupon A for B emits a
+    // delete for A. Retried ~3 days later, that delete must not wipe B.
+    mocks.mirrorRows = [
+      { id: "row-1", stripe_coupon_id: "hc-free-3mo", discount_label: "3 free months" },
+    ];
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.deleted",
+      data: { object: discount(coupon({ id: "hc-pct-25-forever" })) },
+    });
+
+    const response = await POST(webhookRequest());
+
+    expect(response.status).toBe(200);
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("hc-pct-25-forever"));
+  });
+
+  it("survives the real replace-then-retry sequence", async () => {
+    // 1. Coupon B replaces the mirrored coupon A.
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.created",
+      data: { object: discount(coupon({ id: "hc-free-3mo", name: "3 free months", percent_off: 100 })) },
+    });
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.update).toHaveBeenCalledWith(
+      expect.objectContaining({ stripe_coupon_id: "hc-free-3mo" })
+    );
+
+    // 2. The mirror now holds B, and Stripe redelivers the delete for A.
+    mocks.mirrorRows = [
+      { id: "row-1", stripe_coupon_id: "hc-free-3mo", discount_label: "3 free months" },
+    ];
+    mocks.update.mockClear();
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.deleted",
+      data: { object: discount(coupon({ id: "hc-pct-25-forever" })) },
+    });
+    expect((await POST(webhookRequest())).status).toBe(200);
+
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it("never clears a locally-applied offline discount (stripe_coupon_id null)", async () => {
+    mocks.mirrorRows = [
+      { id: "row-1", stripe_coupon_id: null, discount_label: "25% off forever" },
+    ];
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.deleted",
+      data: { object: discount(coupon()) },
+    });
+
+    const response = await POST(webhookRequest());
+
+    expect(response.status).toBe(200);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it("leaves the mirror alone when the deleted event's own coupon is unresolvable", async () => {
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.deleted",
+      // No source.coupon and no legacy `coupon` field: which coupon died is unknowable.
+      data: { object: { ...discount(coupon()), source: null } as unknown as Stripe.Discount },
+    });
+
+    const response = await POST(webhookRequest());
+
+    expect(response.status).toBe(200);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it("applies the coupon identity check to the customer-level fallback too", async () => {
+    mocks.mirrorRows = [
+      { id: "row-1", stripe_coupon_id: "hc-free-3mo", discount_label: "3 free months" },
+    ];
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.deleted",
+      data: { object: discount(coupon({ id: "hc-pct-25-forever" }), { subscription: null }) },
+    });
+
+    const response = await POST(webhookRequest());
+
+    expect(response.status).toBe(200);
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 
   it("writes the new coupon on customer.discount.created, retrieving a bare coupon id", async () => {
@@ -303,6 +405,6 @@ describe("POST /api/webhooks/stripe — discount mirror sync", () => {
         discount_percent_off: 50,
       })
     );
-    expect(mocks.updateEq).toHaveBeenCalledWith("stripe_subscription_id", "sub_current");
+    expect(mocks.updateEq).toHaveBeenCalledWith("id", "row-1");
   });
 });

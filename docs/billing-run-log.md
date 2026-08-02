@@ -2207,3 +2207,101 @@ died, Opus 5):
    where defaulting to a scoring mode would *mis-grade* rather than
    under-grade — so it retries by design. Worth an item in the NFL doc if
    anyone wants a bound on it, but it is not the same defect.
+
+---
+
+## Code Review Round 3 — Phase 5 (`customer.discount.deleted` must verify which discount died)
+
+**Plan:** `docs/code-review-round3-plan.md` Phase 5. Independent of the 1→2→3→4
+NFL chain; done in the same worktree as a separate commit. PASS.
+
+**The change** — `app/api/webhooks/stripe/route.ts`, `syncDiscountFromEvent`:
+
+- **The handler now resolves its target row(s) before it writes**, for both
+  branches. Previously the subscription branch fired a blind
+  `update(mirror).eq("stripe_subscription_id", …)`; only the customer-level
+  fallback read first. Both now read the mirror columns
+  (`DISCOUNT_MIRROR_SELECT`) and write **by row id**. The customer-level
+  "exactly one match or write nothing" rule is unchanged, and still applies only
+  to that branch (a subscription id is already specific).
+- **New `deletedCouponOwnsMirror(row, deletedCouponId)`** gates the clear on a
+  `deleted` event: clear only when `row.stripe_coupon_id` equals the coupon
+  carried by the event. The subscription-id match remains the ownership guard;
+  this is a second condition on top of it, per the plan's item 4.
+- **The event's coupon id comes from `discountCouponRef` directly, not
+  `resolveDiscountCoupon`.** The ref carries the id whether or not the payload
+  expanded the coupon, so the identity check needs no network call — and a
+  Stripe outage can't degrade "which coupon died" into `null` and cause a wrong
+  clear. `resolveDiscountCoupon` is still used on the create/update path, where
+  the full coupon (name, percent_off, amount_off) is actually needed.
+- **The two ambiguous cases are decided in a comment on the helper, not left
+  implicit:**
+  - `row.stripe_coupon_id === null` → **never clear.** Either there is nothing
+    to clear, or it is a locally-applied offline discount (DISCOUNT Ph2 note 5:
+    a null coupon id with a label is exactly what marks one). Both readings say
+    don't touch it.
+  - the event's coupon ref is unresolvable → **never clear.** We can't prove the
+    mirrored coupon is the one that died. Documented asymmetry: leaving a stale
+    mirror is self-repairing (the accompanying `customer.subscription.updated`
+    re-syncs from the subscription's own discount state, which is
+    authoritative), whereas blanking on a guess is not — nothing re-creates a
+    discount we wiped.
+- **A skipped clear logs a `console.warn`** naming the event's coupon and what
+  the row actually mirrors. A stale delete arriving at all is worth seeing.
+
+**Tests** — `tests/api.webhooks.stripe-discount-sync.test.ts`, 9 → 14 tests. The
+file's Supabase mock gained `mocks.mirrorRows` (replacing `customerRows`), which
+now serves both branches' read-back. Two existing assertions changed from
+`updateEq("stripe_subscription_id", "sub_current")` to `updateEq("id", "row-1")`
+— that is the write-by-row-id change, not a behaviour regression. New cases:
+
+1. **delete for coupon A while the mirror holds B → mirror untouched**, and the
+   warn fires naming A.
+2. **the real replace-then-retry sequence, end to end** — a `created` for B
+   writes B, then a redelivered `deleted` for A writes nothing.
+3. **delete against an offline row (`stripe_coupon_id === null`) → no-op.**
+4. **delete whose own coupon ref is unresolvable (`source: null`, no legacy
+   `coupon`) → no-op.**
+5. **the same identity check on the customer-level fallback** (`subscription:
+   null`) → no-op on a mismatch.
+
+The round-1/round-2 behaviour is pinned by the retitled
+**"clears the mirror on customer.discount.deleted for the coupon it actually
+holds"** — a matching delete still clears.
+
+**Checks:** `npx tsc --noEmit` clean, `npm run lint` clean, `npm run test`
+**154 files / 1284 passed / 13 skipped** (Phase 4 left 1279 passed / 1292 total;
+this adds 5 tests → 1297 total, 0 regressions). Note: one full-suite run on the
+*pre-change* tree showed a single flaky failure that did not reproduce on a
+second baseline run or on any run of the changed tree — not caused by this
+phase, but worth knowing it exists.
+
+**Handoff to Phase 6** (the abandoned-signup sweep must page, Sonnet 5):
+
+1. **Phase 6 is independent of Phase 5** — different file
+   (`app/api/owner/billing/checkout/route.ts`), no shared helpers. Nothing here
+   constrains it. Phase 7 is likewise independent and still **blocked on a user
+   decision** (was the `AppShell` legal-notice narrowing intentional?) — ask
+   before writing code for it.
+2. **The sibling to copy is `app/api/admin/billing/promo-codes/route.ts`**'s
+   `.list({ limit: 100, … }).autoPagingToArray({ limit: 1000 })`, per the plan.
+   Keep `sweepAbandonedIncompleteSubscriptions`'s existing log-and-proceed
+   failure policy — Phase 2 of this round cites that header as its own
+   precedent, so tightening it here would strand that reference.
+3. **Phase 5 changed no billing helper** (`lib/billingDiscounts.ts`,
+   `lib/billing.ts`, `classifyBillingRow` / `readStripeTruth` untouched); the
+   whole diff is inside the webhook route and its one test file.
+4. **Phase 8 close-out still owes two things** carried forward from Phase 4:
+   the NFL findings (Phases 1–4) belong in
+   `docs/nfl-pickem-spread-line-settlement-locking-fix-plan.md`, which has
+   **not** been updated yet; and this phase is inventory item **X**
+   (`customer.discount.deleted` identity check) for
+   `docs/billing-open-issues-plan.md` — also **not** yet written, since the
+   plan puts that in Phase 8 item 6 alongside item **Y** (Phase 6's paging).
+5. **No live Stripe pass was run**, per the plan's Phase 8 item 3 — the
+   behaviour is fully pinned by the mocked-SDK tests above, and the permission
+   classifier still blocks `node --env-file=.env.local …`, so a live pass would
+   be entirely hand-run. If someone wants one anyway, the sequence to reproduce
+   by hand is: apply coupon A to a test subscription, apply coupon B over it,
+   then redeliver the `customer.discount.deleted` event for A from the Stripe
+   dashboard and confirm the mirror still shows B.
