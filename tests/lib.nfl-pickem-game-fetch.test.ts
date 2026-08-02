@@ -256,6 +256,48 @@ describe("listNFLPickEmGames game fetching", () => {
     expect(oddsCalls[0][1].get("week")).toBe("1");
   });
 
+  it("pages the odds fetch well past the old 4-page cap, which truncated a full week", async () => {
+    await listNFLPickEmGames({ weekId: "week-1" });
+
+    const oddsCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/odds");
+    const maxPages = oddsCalls[0][2];
+    // 16 games/week x 20+ sportsbooks can exceed 4 pages at per_page=100;
+    // the exact bound is documented next to NFL_SPREAD_LINES_MAX_PAGES.
+    expect(maxPages).toBeGreaterThan(4);
+  });
+
+  it("warns and still returns games when the odds fetch hits the page cap", async () => {
+    vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query, _maxPages, truncation) => {
+      if (path === "/nfl/v1/odds") {
+        if (truncation) truncation.truncated = true;
+        return WEEK_1_GAMES.map((game, index) => ({
+          id: 1000 + index,
+          game_id: game.id,
+          vendor: "fanduel",
+          spread_home_value: "-3.5",
+          spread_away_value: "3.5",
+          updated_at: "2026-09-09T12:00:00.000Z",
+        }));
+      }
+
+      const date = query.get("dates[]");
+      if (date) return WEEK_1_GAMES.filter((game) => game.date.slice(0, 10) === date);
+      const week = query.get("weeks[]");
+      if (week) return WEEK_1_GAMES.filter((game) => String(game.week) === week);
+      return WEEK_1_GAMES;
+    });
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const { games } = await listNFLPickEmGames({ weekId: "week-1" });
+
+      expect(games).toHaveLength(3);
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("season 2026 week 1"));
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
   it("upserts unlocked spread lines using the stored Pick 'Em game id", async () => {
     await listNFLPickEmGames({ weekId: "week-1" });
 

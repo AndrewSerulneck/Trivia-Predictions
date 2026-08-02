@@ -2023,3 +2023,81 @@ non-fatal for the games-list route. Two things worth knowing going in:
    `listNFLPickEmGames`, because that is where the venue context lives; the
    refresh function itself is venue-agnostic and should stay that way (lines are
    keyed by `game_id`, globally, not per venue).
+
+**Phase 3 — odds query truncation, `lib/nflPickEm.ts:975-1010`,
+`lib/balldontlie.ts`.** PASS.
+
+- **Checked the "narrow instead of page harder" option first, per the plan.**
+  Fetched BDL's own NFL docs (`https://nfl.balldontlie.io/`): `/nfl/v1/odds`
+  accepts only `season`+`week` or `game_ids[]`, plus `cursor`/`per_page` (max
+  100) — no vendor/book/market filter. So server-side narrowing isn't
+  available; `pickBetterSpreadLine` remains the only place vendors get
+  discarded, client-side, after the fetch. Documented at the call site instead
+  of silently dropping the idea.
+- **Raised the page bound with the arithmetic shown, not a round number.**
+  New `NFL_SPREAD_LINES_MAX_PAGES = 8` (was a hardcoded `4`) — comment derives
+  it: 16 games/week x 20+ sportsbooks can exceed 16*20=320 rows; at
+  `per_page=100` that's >3 pages, so 8 pages (800 rows headroom) covers a full
+  week with room to spare while still bounding the request against a paid
+  provider API on a hot read path.
+- **Added truncation detection instead of absorbing it, at the shared level.**
+  `fetchBallDontLieList` (`lib/balldontlie.ts`) gained an optional 4th param,
+  `truncation?: { truncated: boolean }` — set `true` only when the page cap is
+  hit *while the provider still had more pages to give* (a `next_cursor`
+  present on the last page fetched), not merely "returned fewer than
+  `maxPages` pages." This is additive and backward-compatible: every other
+  existing call site (there are ~25 across `lib/pickem.ts`, `lib/fantasy.ts`,
+  `lib/sportsBingo.ts`, `lib/nflPickEm.ts`'s own games/players fetches) omits
+  the 4th arg and is unaffected.
+  `fetchNFLSpreadLinesFromBDL` passes a tracker and, when it flips, logs a
+  `console.warn` naming the season+week (or the requested game ids, for the
+  no-season-context call shape) so a real-world truncation is visible instead
+  of silently dropping games — the same "silent truncation is what hid this"
+  reasoning as the finding itself.
+- **Tests.**
+  - New `tests/lib.balldontlie.test.ts` (3 tests) exercises the real paging
+    implementation directly (mocks `fetch`, not `fetchBallDontLieList`):
+    aggregates rows across multiple pages including one landing on the last
+    page within the cap; sets `truncation.truncated = true` when the cap is
+    hit with a `next_cursor` still present; leaves it `false` when the last
+    page fetched has no `next_cursor`.
+  - `tests/lib.nfl-pickem-game-fetch.test.ts` (+2 tests, wiring-level since
+    `fetchBallDontLieList` is mocked at the module boundary in this file):
+    asserts the odds call's `maxPages` argument is `> 4`; asserts that when
+    the mock flips the `truncation` ref the caller passed, `listNFLPickEmGames`
+    still resolves with the full games list **and** `console.warn` fires with
+    the season/week in the message.
+- `npx tsc --noEmit`, `npm run lint`, full `npm run test` all green:
+  **154 files / 1276 passed / 13 skipped** (+5 net from Phase 2's 1271, 0
+  regressions; +2 test files: `tests/lib.balldontlie.test.ts` is new).
+- Not yet committed as of this write-up — commit message will be "Review
+  round 3 Phase 3: the odds query must not truncate later games", matching the
+  Phase 1/Phase 2 naming convention (`be26341`, and Phase 2's commit — check
+  `git log` for its hash before citing it elsewhere).
+
+**Handoff to Phase 4** (spread picks must not stall `pending` forever, Opus 5):
+
+1. **Phase 3 does not by itself fix any pick that's already stuck.** It only
+   makes new truncation visible and less likely going forward (8 pages instead
+   of 4). A game whose spread line never got created for any reason — provider
+   had no odds, truncation still happens at extreme volume, no spread venue
+   loaded the week before kickoff — is still exactly Phase 4's problem;
+   nothing about Phase 3 narrows Phase 4's scope.
+2. **The truncation warning is a `console.warn`, not a metric or an alert.**
+   If Phase 4's staleness-window fallback wants to distinguish "line never
+   existed because of a provider gap" from "line never existed because we
+   truncated it away," that signal is not currently plumbed anywhere
+   queryable — it only reaches server logs. Flag this as a gap rather than
+   assuming Phase 4 can correlate the two.
+3. **`NFL_SPREAD_LINES_MAX_PAGES` is a module-private const in
+   `lib/nflPickEm.ts`**, not exported. If Phase 4's tests need to reason about
+   the page cap directly, they'll need either a new export or to keep testing
+   it indirectly via the `fetchBallDontLieList` mock's 3rd positional arg, the
+   same way Phase 3's own wiring test does.
+4. **`fetchBallDontLieList`'s new `truncation` param is positional (4th arg),
+   optional, and by-reference-mutation** (the caller passes an object, the
+   function mutates its `.truncated` field rather than returning a tuple) —
+   chosen specifically so it wouldn't touch the ~25 existing call sites' return
+   type. If Phase 4 or later work adds another caller that wants truncation
+   visibility, follow that same shape rather than introducing a second
+   convention.

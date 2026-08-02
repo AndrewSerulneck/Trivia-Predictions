@@ -45,7 +45,20 @@ export async function fetchBallDontLieJson(path: string, query?: URLSearchParams
   return response.json();
 }
 
-export async function fetchBallDontLieList<T>(path: string, baseQuery: URLSearchParams, maxPages = 4): Promise<T[]> {
+/**
+ * `truncation`, if passed, is set to `truncated: true` when the page cap is
+ * hit while the provider still had more pages to give (i.e. paging stopped
+ * because of `maxPages`, not because the data ran out). Callers on a path
+ * where a truncated result is a real data-loss risk (not just "fetched a
+ * little less than the full catalog") should pass this and log on it rather
+ * than absorb the truncation silently.
+ */
+export async function fetchBallDontLieList<T>(
+  path: string,
+  baseQuery: URLSearchParams,
+  maxPages = 4,
+  truncation?: { truncated: boolean }
+): Promise<T[]> {
   const rows: T[] = [];
   let cursor: string | null = null;
 
@@ -61,9 +74,14 @@ export async function fetchBallDontLieList<T>(path: string, baseQuery: URLSearch
 
     const nextCursorRaw = payload.meta?.next_cursor;
     if (nextCursorRaw === null || nextCursorRaw === undefined || String(nextCursorRaw).trim() === "") {
+      cursor = null;
       break;
     }
     cursor = String(nextCursorRaw).trim();
+
+    if (i === maxPages - 1 && truncation) {
+      truncation.truncated = true;
+    }
   }
 
   return rows;

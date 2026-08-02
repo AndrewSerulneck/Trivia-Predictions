@@ -914,6 +914,9 @@ function parseSpreadValue(value: number | string | null | undefined): number | n
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+// See the arithmetic in fetchNFLSpreadLinesFromBDL for why 8.
+const NFL_SPREAD_LINES_MAX_PAGES = 8;
+
 const NFL_SPREAD_VENDOR_PRIORITY = [
   "fanduel",
   "draftkings",
@@ -975,6 +978,10 @@ async function fetchNFLSpreadLinesFromBDL(params: {
 }): Promise<Map<string, NormalizedNFLSpreadLine>> {
   if (params.providerGameIds.length === 0) return new Map();
 
+  // BDL's /nfl/v1/odds does not accept a vendor/book/market filter — only
+  // season+week, game_ids[], cursor and per_page. So we can't narrow the
+  // request server-side; pickBetterSpreadLine below is what discards the
+  // vendors we don't want, client-side, after the fetch.
   const query = new URLSearchParams({ per_page: "100" });
   if (params.seasonWeek) {
     query.set("season", String(params.seasonWeek.season));
@@ -985,7 +992,29 @@ async function fetchNFLSpreadLinesFromBDL(params: {
     }
   }
 
-  const rows = await fetchBallDontLieList<BDLNFLOdds>("/nfl/v1/odds", query, 4);
+  // The odds feed returns one row per game per sportsbook, not one row per
+  // game. A full week is up to 16 games; BDL fans out to 20+ sportsbooks per
+  // game, so a week can run well past 16 * 20 = 320 rows. At per_page 100,
+  // NFL_SPREAD_LINES_MAX_PAGES=8 covers up to 800 rows (~50 books/game at a
+  // full 16-game week) with headroom, while still capping the request so a
+  // malformed/huge response can't loop unbounded against a paid provider API
+  // on a hot read path.
+  const truncation = { truncated: false };
+  const rows = await fetchBallDontLieList<BDLNFLOdds>(
+    "/nfl/v1/odds",
+    query,
+    NFL_SPREAD_LINES_MAX_PAGES,
+    truncation
+  );
+  if (truncation.truncated) {
+    console.warn(
+      `[nflPickEm] Odds fetch hit the ${NFL_SPREAD_LINES_MAX_PAGES}-page cap` +
+        (params.seasonWeek
+          ? ` for season ${params.seasonWeek.season} week ${params.seasonWeek.weekNumber}`
+          : ` for ${params.providerGameIds.length} requested game id(s)`) +
+        " — some spread lines may be missing."
+    );
+  }
   const byProviderGameId = new Map<string, NormalizedNFLSpreadLine>();
 
   for (const row of rows) {

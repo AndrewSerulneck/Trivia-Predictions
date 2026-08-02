@@ -23,7 +23,7 @@ found.
 | 0 | Baseline | Haiku 4.5 | Low | — | ✅ done |
 | 1 | Kickoff line-lock race 500s the games API | Sonnet 5 | Low | 0 | ✅ done |
 | 2 | Line refresh takes down standard-mode venues | **Opus 5** | Medium | 1 | ✅ done |
-| 3 | Odds query truncates later games | Sonnet 5 | Low-Medium | 2 | ⬜ not started |
+| 3 | Odds query truncates later games | Sonnet 5 | Low-Medium | 2 | ✅ done |
 | 4 | Spread picks stall `pending` forever | **Opus 5** | Medium-High | 3 | ⬜ not started |
 | 5 | `customer.discount.deleted` wipes a live discount | **Opus 5** | Medium | 0 | ⬜ not started |
 | 6 | Abandoned-signup sweep misses past 100 | Sonnet 5 | Low | 0 | ⬜ not started |
