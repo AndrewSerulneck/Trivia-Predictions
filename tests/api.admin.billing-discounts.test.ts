@@ -120,6 +120,52 @@ describe("POST /api/admin/billing — apply-discount / remove-discount", () => {
     expect(mocks.removeDiscountFromSubscription).not.toHaveBeenCalled();
   });
 
+  it("accepts a fractional percent_off and passes it through to the helper", async () => {
+    mocks.applyDiscountToSubscription.mockResolvedValue({
+      ok: true,
+      mode: "stripe",
+      couponId: "hc-pct-12-5-forever",
+      label: "12.5% off forever",
+      endsAt: null,
+    });
+
+    const response = await POST(
+      postRequest({
+        action: "apply-discount",
+        venueId: "venue-1",
+        discountType: "percent_off",
+        percentOff: 12.5,
+        duration: "forever",
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.applyDiscountToSubscription).toHaveBeenCalledWith(
+      state.row,
+      { type: "percent_off", percentOff: 12.5, duration: "forever", durationInMonths: null }
+    );
+    expect(mocks.insertGrant).toHaveBeenCalledWith(
+      expect.objectContaining({ percent_off: 12.5 })
+    );
+  });
+
+  it("rejects a percent_off with more than 2 decimal places before calling the helper", async () => {
+    const response = await POST(
+      postRequest({
+        action: "apply-discount",
+        venueId: "venue-1",
+        discountType: "percent_off",
+        percentOff: 33.333,
+        duration: "forever",
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error: string };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/2 decimal places/);
+    expect(mocks.applyDiscountToSubscription).not.toHaveBeenCalled();
+  });
+
   it("rejects percent_off over 100 before calling the helper", async () => {
     const response = await POST(
       postRequest({

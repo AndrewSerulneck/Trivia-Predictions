@@ -171,6 +171,27 @@ describe("validateDiscountSpec", () => {
       })
     ).toBeNull();
   });
+
+  it("accepts a fractional percent_off with up to 2 decimal places", () => {
+    expect(
+      validateDiscountSpec({ type: "percent_off", percentOff: 12.5, duration: "forever" })
+    ).toBeNull();
+    expect(
+      validateDiscountSpec({ type: "percent_off", percentOff: 12.34, duration: "forever" })
+    ).toBeNull();
+  });
+
+  it("rejects a percent_off with more than 2 decimal places", () => {
+    expect(
+      validateDiscountSpec({ type: "percent_off", percentOff: 33.333, duration: "forever" })
+    ).toMatch(/2 decimal places/);
+  });
+
+  it("rejects percent_off just over 100 even with legal precision", () => {
+    expect(
+      validateDiscountSpec({ type: "percent_off", percentOff: 100.01, duration: "forever" })
+    ).toMatch(/no more than 100/);
+  });
 });
 
 describe("createOrReuseCoupon", () => {

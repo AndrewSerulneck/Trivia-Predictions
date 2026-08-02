@@ -96,6 +96,9 @@ const MAX_FREE_MONTHS = 36;
 
 const isPositiveInt = (value: number): boolean => Number.isInteger(value) && value > 0;
 
+/** `discount_percent_off`/`percent_off` are `numeric(5,2)` — reject anything Postgres would silently round. */
+export const hasAtMostTwoDecimals = (value: number): boolean => Math.round(value * 100) / 100 === value;
+
 /**
  * Returns an error string, or null when the spec is legal. Exported so the admin
  * route (Phase 3) can reject bad input with the same rules the helpers enforce,
@@ -112,6 +115,9 @@ export function validateDiscountSpec(spec: DiscountSpec): string | null {
   if (spec.type === "percent_off") {
     if (!(spec.percentOff > 0) || spec.percentOff > 100) {
       return "Percent off must be greater than 0 and no more than 100.";
+    }
+    if (!hasAtMostTwoDecimals(spec.percentOff)) {
+      return "Percent off allows at most 2 decimal places.";
     }
   } else {
     if (!isPositiveInt(spec.amountOffCents)) {

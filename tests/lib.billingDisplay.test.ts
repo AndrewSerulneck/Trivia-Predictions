@@ -56,4 +56,24 @@ describe("effectiveAmountCents — one rule for card and offline rows", () => {
   it("treats a 100% discount as free", () => {
     expect(effectiveAmountCents({ amountCents: 10000, discount: { percentOff: 100, amountOffCents: null } })).toBe(0);
   });
+
+  /**
+   * Phase 3 — discount_percent_off widened from integer to numeric(5,2) so a
+   * 12.5% grant no longer fails to write. Pin the arithmetic down for a
+   * fractional value.
+   */
+  it("applies a fractional percent discount", () => {
+    expect(discountedAmountCents(10000, { percentOff: 12.5, amountOffCents: null })).toBe(8750);
+  });
+
+  /**
+   * supabase-js can return a `numeric` column as a string. The API routes
+   * coerce with Number(...) before this ever runs, but the arithmetic itself
+   * must not silently misbehave if a stringly-typed value slips through.
+   */
+  it("still computes correctly if percentOff arrives as a numeric string", () => {
+    expect(
+      discountedAmountCents(10000, { percentOff: "12.5" as unknown as number, amountOffCents: null })
+    ).toBe(8750);
+  });
 });

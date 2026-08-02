@@ -777,7 +777,7 @@ export function BillingSection() {
                       <input
                         type="number"
                         min="0"
-                        step={discountType === "percent_off" ? "1" : "0.01"}
+                        step="0.01"
                         className={adminField}
                         value={discountType === "percent_off" ? discountPercentOff : discountAmountOffDollars}
                         onChange={(e) =>
@@ -1039,7 +1039,7 @@ export function BillingSection() {
                   <input
                     type="number"
                     min="0"
-                    step={promoDiscountType === "percent_off" ? "1" : "0.01"}
+                    step="0.01"
                     className={adminField}
                     value={promoDiscountType === "percent_off" ? promoPercentOff : promoAmountOffDollars}
                     onChange={(e) =>

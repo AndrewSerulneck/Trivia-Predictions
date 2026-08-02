@@ -16,7 +16,9 @@ type SubscriptionRow = {
   slimcd_recurring_token: string | null;
   created_at: string;
   discount_label: string | null;
-  discount_percent_off: number | null;
+  // numeric(5,2) at the DB — supabase-js can return this as a string; coerce
+  // at the read site below, never pass it through raw.
+  discount_percent_off: number | string | null;
   discount_amount_off_cents: number | null;
   discount_ends_at: string | null;
 };
@@ -89,7 +91,7 @@ export async function GET(request: Request) {
       discount: s.discount_label
         ? {
             label: s.discount_label,
-            percentOff: s.discount_percent_off,
+            percentOff: s.discount_percent_off == null ? null : Number(s.discount_percent_off),
             amountOffCents: s.discount_amount_off_cents,
             endsAt: s.discount_ends_at,
           }

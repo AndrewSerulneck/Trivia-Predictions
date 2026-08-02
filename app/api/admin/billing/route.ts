@@ -7,6 +7,7 @@ import {
   applyDiscountToSubscription,
   removeDiscountFromSubscription,
   CLEARED_MIRROR,
+  hasAtMostTwoDecimals,
   type DiscountSpec,
   type DiscountableSubscriptionRow,
 } from "@/lib/billingDiscounts";
@@ -49,7 +50,9 @@ type SubscriptionRow = {
   cancel_at_period_end: boolean | null;
   stripe_coupon_id: string | null;
   discount_label: string | null;
-  discount_percent_off: number | null;
+  // numeric(5,2) at the DB — supabase-js can return this as a string; coerce
+  // at the read site below, never pass it through raw.
+  discount_percent_off: number | string | null;
   discount_amount_off_cents: number | null;
   discount_ends_at: string | null;
 };
@@ -121,7 +124,7 @@ export async function GET(request: Request) {
               discount: sub.discount_label
                 ? {
                     label: sub.discount_label,
-                    percentOff: sub.discount_percent_off,
+                    percentOff: sub.discount_percent_off == null ? null : Number(sub.discount_percent_off),
                     amountOffCents: sub.discount_amount_off_cents,
                     endsAt: sub.discount_ends_at,
                   }
@@ -434,6 +437,12 @@ async function handleApplyDiscount(
       if (!(percentOff > 0) || percentOff > 100) {
         return NextResponse.json(
           { ok: false, error: "Percent off must be greater than 0 and no more than 100." },
+          { status: 400 }
+        );
+      }
+      if (!hasAtMostTwoDecimals(percentOff)) {
+        return NextResponse.json(
+          { ok: false, error: "Percent off allows at most 2 decimal places." },
           { status: 400 }
         );
       }
