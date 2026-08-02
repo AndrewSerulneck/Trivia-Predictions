@@ -46,7 +46,6 @@ type SubscriptionRow = {
   current_period_start: string | null;
   current_period_end: string | null;
   stripe_subscription_id: string | null;
-  slimcd_recurring_token: string | null;
   cancel_at_period_end: boolean | null;
   stripe_coupon_id: string | null;
   discount_label: string | null;
@@ -91,7 +90,7 @@ export async function GET(request: Request) {
     const { data: subs, error: subError } = await supabaseAdmin
       .from("billing_subscriptions")
       .select(
-        "venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, slimcd_recurring_token, cancel_at_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
+        "venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, cancel_at_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
       )
       .in("venue_id", venueIds)
       .returns<SubscriptionRow[]>();
@@ -119,7 +118,7 @@ export async function GET(request: Request) {
               currentPeriodStart: sub.current_period_start,
               currentPeriodEnd: sub.current_period_end,
               isManual: sub.billing_method === OFFLINE_BILLING_METHOD,
-              isStripe: Boolean(sub.stripe_subscription_id) || Boolean(sub.slimcd_recurring_token),
+              isStripe: Boolean(sub.stripe_subscription_id),
               cancelAtPeriodEnd: Boolean(sub.cancel_at_period_end),
               discount: sub.discount_label
                 ? {
@@ -352,9 +351,8 @@ export async function POST(request: Request) {
         current_period_start: now.toISOString(),
         current_period_end: periodEnd.toISOString(),
         cancel_at_period_end: false,
-        // Explicitly clear any processor tokens so this row stays inert to the
-        // Stripe webhook and the renewal cron even if it previously had them.
-        slimcd_recurring_token: null,
+        // Explicitly clear any processor ids so this row stays inert to the
+        // Stripe webhook even if it previously had them.
         stripe_customer_id: null,
         stripe_subscription_id: null,
         stripe_price_id: null,

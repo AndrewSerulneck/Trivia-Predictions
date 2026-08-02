@@ -23,7 +23,6 @@ type SubRow = {
   current_period_start: string | null;
   current_period_end: string | null;
   stripe_subscription_id: string | null;
-  slimcd_recurring_token: string | null;
   cancel_at_period_end: boolean | null;
 };
 
@@ -46,7 +45,6 @@ vi.mock("@/lib/supabaseAdmin", () => {
       current_period_start: "2026-06-01T00:00:00.000Z",
       current_period_end: "2026-07-01T00:00:00.000Z",
       stripe_subscription_id: "sub_stripe_1",
-      slimcd_recurring_token: null,
       cancel_at_period_end: true,
     },
   ];

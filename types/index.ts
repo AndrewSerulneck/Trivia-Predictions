@@ -684,6 +684,5 @@ export interface BillingInvoice {
   description: string;
   amountCents: number;
   status: 'paid' | 'failed' | 'pending';
-  slimcdTicket?: string;
   chargedAt: string;
 }

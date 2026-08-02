@@ -4,9 +4,13 @@ import Stripe from "stripe";
 /**
  * Server-side Stripe integration for the Partner Dashboard billing surface.
  *
- * Migrated from SlimCD (see lib/slimcd.ts — deprecated). Stripe is the source of
- * truth for subscription status; the webhook at /api/webhooks/stripe keeps our
- * billing_subscriptions / billing_invoices tables in sync.
+ * Stripe is the only payment processor: the pre-launch SlimCD integration was
+ * removed wholesale (lib/slimcd.ts, the hosted-page session/return routes, and
+ * the cron charge loop). Stripe is the source of truth for subscription status;
+ * the webhook at /api/webhooks/stripe keeps our billing_subscriptions /
+ * billing_invoices tables in sync. The `slimcd_recurring_token` and
+ * `slimcd_ticket` columns survive in the schema as dead weight — nothing reads
+ * or writes them.
  *
  * Required env (added to .env.local + Vercel by the operator — never by tooling):
  *   STRIPE_SECRET_KEY      — sk_live_… / sk_test_…
@@ -33,9 +37,9 @@ export function getStripeWebhookSecret(): string {
 /**
  * billing_subscriptions.billing_method domain. 'stripe' = card-billed via Stripe
  * (the default); 'offline' = paid by check/other offline method and granted by an
- * admin (see app/api/admin/billing). Offline rows carry NO Stripe or SlimCD token
- * and are excluded by billing automation on this explicit dimension, so they can
- * never be auto-billed or auto-cancelled even if a token is later attached.
+ * admin (see app/api/admin/billing). Offline rows carry NO Stripe ids and are
+ * excluded by billing automation on this explicit dimension, so they can never
+ * be auto-billed or auto-cancelled even if an id is later attached.
  */
 export type BillingMethod = "stripe" | "offline";
 

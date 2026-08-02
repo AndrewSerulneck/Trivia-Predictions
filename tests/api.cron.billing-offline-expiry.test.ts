@@ -9,28 +9,27 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
  *
  * The mock records every query-builder chain so we can assert the sweep's
  * filters (billing_method='offline', status='active', current_period_end <= now)
- * and its status='cancelled' write, while the unrelated rebilling due-query is
- * driven empty.
+ * and its status='cancelled' write.
+ *
+ * Since the SlimCD teardown (Phase 4 of docs/billing-code-review-fixes-plan.md)
+ * this sweep is the cron's ONLY job — the rebilling due-query and charge loop
+ * are gone, and card renewals are Stripe's own recurring billing.
  */
 
 type Call = {
   update?: Record<string, unknown>;
+  insert?: Record<string, unknown>;
   eq: Array<[string, unknown]>;
   lte: Array<[string, unknown]>;
   neq: Array<[string, unknown]>;
 };
 
 const mocks = vi.hoisted(() => ({
-  chargeRecurring: vi.fn(),
   calls: [] as Call[],
-  // Resolver for a read chain (the due query — no .update()).
+  // Resolver for a read chain (no .update()).
   dueResult: { data: [] as unknown[], error: null as unknown },
   // Resolver for the expiry write chain (has .update()).
   expiryResult: { data: [] as unknown[], error: null as unknown },
-}));
-
-vi.mock("@/lib/slimcd", () => ({
-  chargeRecurring: mocks.chargeRecurring,
 }));
 
 vi.mock("@/lib/supabaseAdmin", () => {
@@ -56,7 +55,10 @@ vi.mock("@/lib/supabaseAdmin", () => {
       call.update = payload;
       return builder;
     });
-    builder.insert = vi.fn(() => Promise.resolve({ error: null }));
+    builder.insert = vi.fn((payload: Record<string, unknown>) => {
+      call.insert = payload;
+      return Promise.resolve({ error: null });
+    });
     builder.returns = vi.fn(() =>
       Promise.resolve(call.update ? mocks.expiryResult : mocks.dueResult)
     );
@@ -84,7 +86,6 @@ const authedRequest = () =>
 
 describe("/api/cron/billing — offline expiry sweep", () => {
   beforeEach(() => {
-    mocks.chargeRecurring.mockReset();
     mocks.calls.length = 0;
     mocks.dueResult = { data: [], error: null };
     mocks.expiryResult = { data: [], error: null };
@@ -144,5 +145,20 @@ describe("/api/cron/billing — offline expiry sweep", () => {
 
     expect(response.status).toBe(200);
     expect(body.offlineExpired).toBe(0);
+  });
+
+  /**
+   * Phase 4 (SlimCD teardown) regression: this cron used to charge stored
+   * recurring tokens and book the resulting invoices itself. That path is gone —
+   * Stripe drives card renewals and its webhook books the invoices. If a charge
+   * loop is ever reintroduced here it will show up as an invoice insert.
+   */
+  it("issues no charge and books no invoice — the sweep is the cron's only write", async () => {
+    mocks.expiryResult = { data: [{ id: "sub-offline-expired" }], error: null };
+
+    await POST(authedRequest());
+
+    expect(mocks.calls.some((c) => c.insert)).toBe(false);
+    expect(mocks.calls.filter((c) => c.update)).toHaveLength(1);
   });
 });

@@ -12,7 +12,7 @@ A **subscriber venue** ("partner") pays for our geofenced platform so their gues
 
 1. **Schedule live games** — the whole venue plays together at the same time (Live Trivia, Category Blitz, future live games). Self-serve, scoped to only the partner's own venue(s).
 2. **Cast the TV display URL** — put our public "follow-along" venue screen on their TVs so guests who aren't on their phones can watch and get enticed to join. (Screen already exists; native TV apps do not — we're browser-only today.)
-3. **Manage billing** — subscribe and pay (migrating from SlimCD → **Stripe** this week), update card, view invoices.
+3. **Manage billing** — subscribe and pay (**Stripe**), update card, view invoices.
 
 Alongside this, two IA moves happen over the next few weeks:
 - **`/info` becomes the apex homepage** (the page Google indexes and new visitors land on).
@@ -34,8 +34,7 @@ You are **not** starting from zero. Inventory:
 | Owner shell | Shared layout + input/button class tokens | `components/owner/OwnerShell.tsx` |
 | Auth guard | Owner auth scoped to `venue_owner_venues` | `lib/requireOwnerAuth.ts` |
 | Owner→venue model | `venue_owners` + `venue_owner_venues` tables | (see `register`, `requireOwnerAuth`) |
-| Billing (SlimCD) | Hosted-payment sessions, return handler, card update, invoices list | `app/api/owner/billing/{route,subscription,session,return,card}.ts`, `lib/slimcd.ts`, `billing_subscriptions` table (has `slimcd_recurring_token`) |
-| Billing (deprecated) | Old subscribe endpoint returns 410 | `app/api/owner/billing/subscribe/route.ts` |
+| Billing (Stripe) | Checkout, Billing Portal, cancel/resume, invoices list, webhook sync-back | `app/api/owner/billing/{route,subscription,checkout,portal}.ts`, `app/api/webhooks/stripe/route.ts`, `lib/stripe.ts`, `lib/billing.ts`, `billing_subscriptions` table |
 | Live-game scheduling | **Admin-only** create/list/delete | `app/api/category-blitz/schedules/{route,[id]}.ts`, `lib/categoryBlitzSchedules.ts`, `lib/categoryBlitzScheduleTime.ts` |
 | Sessions | Category Blitz session lifecycle | `app/api/category-blitz/sessions/*`, `lib/categoryBlitzRealtime.ts` |
 | TV display screen | Public venue "follow-along" screen + state API | `app/venue/[venueId]/screen/`, `app/api/venue-screen/state/` |
@@ -43,7 +42,7 @@ You are **not** starting from zero. Inventory:
 
 **Key gaps to close:**
 - Scheduling is admin-gated, not owner-scoped.
-- Billing is SlimCD, not Stripe.
+- ~~Billing is SlimCD, not Stripe.~~ Closed by Phase 3; SlimCD removed entirely 2026-08-01.
 - No dashboard "home hub" tying the three pillars together in a mobile-first layout.
 - No TV-URL/QR surface for partners.
 - Domain split (apex vs `play.`) is not yet enforced.
@@ -160,7 +159,7 @@ Effort key: **S** = small/contained, low risk of surprises. **M** = moderate, to
 4. **Webhook.** New `app/api/webhooks/stripe/route.ts` (public, signature-verified with `STRIPE_WEBHOOK_SECRET`, `runtime = "nodejs"`, raw body). Handle: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`. Upsert `billing_subscriptions` (status active/past_due/cancelled, period end) and insert invoice rows. This is the source of truth for status — mirror how the SlimCD `return` handler updated state, but driven by webhook.
 5. **Update card / manage.** Add a Stripe Billing Portal session route (`app/api/owner/billing/portal/route.ts`) and point "Update payment method" / "Manage billing" at it. This replaces `card/route.ts`'s SlimCD update-card intent.
 6. **Rewire the UI.** In `app/owner/billing/` and `app/owner/billing/setup/`, swap the SlimCD `POST /api/owner/billing/session` calls for the new checkout/portal routes. The dashboard read path (`GET /api/owner/billing`) stays the same shape so `app/owner/dashboard/page.tsx` needs no change.
-7. **Decommission SlimCD (staged).** Leave `lib/slimcd.ts` + `session`/`return`/`card` routes in place but stop calling them; add a code comment marking them deprecated pending removal once no active SlimCD subscriptions remain. Do **not** delete `vercel.json` cron entries without instruction.
+7. ~~**Decommission SlimCD (staged).** Leave `lib/slimcd.ts` + `session`/`return`/`card` routes in place but stop calling them; add a code comment marking them deprecated pending removal once no active SlimCD subscriptions remain.~~ **DONE 2026-08-01** — the staged deprecation is over: `lib/slimcd.ts`, the hosted form, the `session`/`return`/`card`/`subscribe` routes and the cron charge loop were deleted outright (Phase 4 of `docs/billing-code-review-fixes-plan.md`; zero rows ever carried a token). The two DB columns remain as dead weight, commented as such in `supabase/migrations/20260801130000_slimcd_columns_dead.sql`, and `tests/billing-slimcd-removed.test.ts` is the tripwire. The `vercel.json` cron entry stays — `/api/cron/billing` still runs the offline-grant expiry sweep.
 8. **Test.** Add Vitest coverage for webhook signature verification and the status-mapping logic. Manually verify with Stripe test cards + `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
 
 **Files:** new `lib/stripe.ts`, `app/api/owner/billing/checkout/route.ts`, `app/api/owner/billing/portal/route.ts`, `app/api/webhooks/stripe/route.ts`, new migration under `supabase/migrations/`, edits in `app/owner/billing/*`.
