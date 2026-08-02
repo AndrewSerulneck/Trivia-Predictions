@@ -37,13 +37,13 @@ inventory — items B, L, M overlap with Phases 1/3/4 here),
 
 | # | Phase | Model | Effort | Depends on | Status |
 |---|-------|-------|--------|-----------|--------|
-| 0 | Baseline + branch hygiene | Haiku 4.5 | Low | — | ⚠️ **partly done** — per-phase commits never happened |
+| 0 | Baseline + branch hygiene | Haiku 4.5 | Low | — | ✅ done — baseline (`f3490ac`) + per-phase commits (`9293db3`, `0f0b1d2`, `e8a081f`, `f8f1a07`, `9fd2535`) |
 | 1 | Offline discount double-count (list-rate semantics) | Opus 5 | **High** | 0 | ⚠️ **code done** (`2080cca`) — no run-log entry, data audit never run |
-| 2 | `grant-manual` must clear the discount mirror | Sonnet 5 | Medium | 1 | ✅ done (uncommitted) |
-| 3 | Fractional percent-off: migration + validation + writes | Sonnet 5 | Medium | 0 | ✅ done (uncommitted), migration applied |
-| 4 | SlimCD teardown | Opus 5 | Medium-High | 0 | ⚠️ **code done** (uncommitted) — Vercel `SLIMCD_*` env vars still owed |
-| 5 | `incomplete` subscriptions must not lock out Checkout | Opus 5 | Medium | 0 | ✅ server side done + verified; UI half → Phase 8 |
-| 6 | Stripe test-mode + browser verification | Opus 5 | **High** | 1–5 | ✅ done 2026-08-01, 68/68 assertions |
+| 2 | `grant-manual` must clear the discount mirror | Sonnet 5 | Medium | 1 | ✅ done (`9293db3`) |
+| 3 | Fractional percent-off: migration + validation + writes | Sonnet 5 | Medium | 0 | ✅ done (`0f0b1d2`), migration applied |
+| 4 | SlimCD teardown | Opus 5 | Medium-High | 0 | ⚠️ **code done** (`e8a081f`) — Vercel `SLIMCD_*` env vars still owed |
+| 5 | `incomplete` subscriptions must not lock out Checkout | Opus 5 | Medium | 0 | ✅ server side done + verified (`f8f1a07`); UI half → Phase 8 |
+| 6 | Stripe test-mode + browser verification | Opus 5 | **High** | 1–5 | ✅ done 2026-08-01, 68/68 assertions (`9fd2535`) |
 | 8 | **Unfinished signups leave no trace** (supersedes Phase 5's UI half) | Opus 5 | Medium-High | 6 | ⬜ **not started** |
 | 7 | Run-log + doc close-out | Haiku 4.5 | Low | 6, 8 | ⬜ **not started** (must be last) |
 
@@ -57,13 +57,17 @@ parallel worktrees.
 
 Everything below is what's left. Execute in this order.
 
-### 1. Phase 0 revisit — chunk the branch into commits
+### 1. ~~Phase 0 revisit — chunk the branch into commits~~ DONE
 
-Phases **2, 3, 4, 5 and the Phase 6 run log are all uncommitted** — ~35 dirty
-paths in one undifferentiated diff (also open item K). Phase 0 required one
-revertible commit per phase. Do this first so later work isn't stacked on an
-unreviewable blob. Note `git status` also carries unrelated Category Blitz work
-and two advertising PNGs — don't sweep those in.
+Split into five revertible commits: `9293db3` (Phase 2), `0f0b1d2` (Phase 3),
+`e8a081f` (Phase 4), `f8f1a07` (Phase 5), `9fd2535` (Phase 6 run log + this
+doc's tracking). Two files (`app/api/admin/billing/route.ts`,
+`app/api/owner/billing/route.ts`) had hunks from multiple phases interleaved
+in the same lines; each was reconstructed phase-by-phase from HEAD rather than
+patch-split. Typecheck + full test suite (1202 tests) verified green after
+recommitting, and the resulting working tree diffed byte-identical to the
+pre-split state. The two advertising PNGs and no other unrelated files were
+swept in.
 
 ### 2. Phase 1 revisit — two loose ends
 
