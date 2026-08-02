@@ -38,7 +38,7 @@ inventory — items B, L, M overlap with Phases 1/3/4 here),
 | # | Phase | Model | Effort | Depends on | Status |
 |---|-------|-------|--------|-----------|--------|
 | 0 | Baseline + branch hygiene | Haiku 4.5 | Low | — | ✅ done — baseline (`f3490ac`) + per-phase commits (`9293db3`, `0f0b1d2`, `e8a081f`, `f8f1a07`, `9fd2535`) |
-| 1 | Offline discount double-count (list-rate semantics) | Opus 5 | **High** | 0 | ⚠️ **code done** (`2080cca`) — no run-log entry, data audit never run |
+| 1 | Offline discount double-count (list-rate semantics) | Opus 5 | **High** | 0 | ✅ done (`2080cca`) — run-log section written, data audit run 2026-08-02: **0 affected rows** |
 | 2 | `grant-manual` must clear the discount mirror | Sonnet 5 | Medium | 1 | ✅ done (`9293db3`) |
 | 3 | Fractional percent-off: migration + validation + writes | Sonnet 5 | Medium | 0 | ✅ done (`0f0b1d2`), migration applied |
 | 4 | SlimCD teardown | Opus 5 | Medium-High | 0 | ⚠️ **code done** (`e8a081f`) — Vercel `SLIMCD_*` env vars still owed |
@@ -69,17 +69,16 @@ recommitting, and the resulting working tree diffed byte-identical to the
 pre-split state. The two advertising PNGs and no other unrelated files were
 swept in.
 
-### 2. Phase 1 revisit — two loose ends
+### 2. ~~Phase 1 revisit — two loose ends~~ DONE
 
-- **No run-log section exists for Phase 1.** Every other phase has one; the log
-  jumps straight from the open-issues work to Phase 2. Write it from `2080cca`.
-- **Step 3's data audit was never run.** List every `billing_method='offline'`
-  row with a populated discount mirror — those were entered under the OLD
-  "amount received" meaning and now under-report to the partner. Phase 1's own
-  stated risk was "surface that list before merging." There is one live offline
-  row today (`venue-garden-state-bar`); if it carries a discount, its
-  `amount_cents` must be re-entered by hand as the list rate. **Do not
-  auto-migrate** — a list rate can't be inferred from a net amount.
+- **Run-log section written** (2026-08-02) from `2080cca`, filed as
+  "REVIEWFIX Phase 1" ahead of Phase 2 in `docs/billing-run-log.md`.
+- **Step 3's data audit ran read-only on 2026-08-02: 0 affected rows.**
+  Production `billing_subscriptions` is 2 rows; the single offline row
+  (`venue-garden-state-bar`, $100.00) carries **no** discount mirror, and
+  `billing_discount_grants` has no row for any offline venue. Nothing needs
+  `amount_cents` re-entered by hand, so **Phase 1's stated risk is closed**, not
+  merely unquantified. Nothing was auto-migrated.
 
 ### 3. Phase 8 — the main remaining build
 
@@ -186,13 +185,14 @@ path "mirror-only — `amount_cents` stays the list rate." But
 those partners' pages under-report until step 3's list is corrected. Surface
 that list before merging.
 
-> **⚠️ OUTSTANDING (2026-08-02).** The code shipped as `2080cca` and Phase 6
-> verified the new semantics end to end (7/7). Two things were skipped:
-> **(a)** this phase has no `docs/billing-run-log.md` section — write one;
-> **(b)** **step 3's audit was never run**, so the risk above is still live and
-> unquantified. One live offline row exists (`venue-garden-state-bar`). Run the
-> read-only query, report it, and let the user re-enter any affected
-> `amount_cents` by hand.
+> **✅ DONE (2026-08-02).** The code shipped as `2080cca` and Phase 6 verified
+> the new semantics end to end (7/7). The two skipped items are now closed:
+> **(a)** a run-log section exists (`docs/billing-run-log.md`, "REVIEWFIX
+> Phase 1"); **(b)** step 3's audit ran read-only and found **0 affected rows** —
+> the one live offline row (`venue-garden-state-bar`, $100.00) carries no
+> discount mirror, and no discount was ever granted to an offline venue. The
+> risk above is closed; no `amount_cents` needed re-entry and nothing was
+> auto-migrated.
 
 ---
 

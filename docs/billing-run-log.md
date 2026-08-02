@@ -890,6 +890,84 @@ shows only the two unrelated advertising PNGs. The :3000 dev server was restarte
 
 **Status: Items F, G and H closed. All 13 checks passed.**
 
+## REVIEWFIX Phase 1 (offline discount double-count — list-rate semantics)
+
+Shipped as commit `2080cca` on 2026-08-01. This section was written after the
+fact (2026-08-02) — the phase was committed without a run-log entry, which is
+why it is out of order here.
+
+**The finding.** `app/owner/billing/page.tsx`'s `effectiveAmountCents`
+subtracted the discount mirror from `amount_cents` for every row. For an offline
+row that column held the *amount received* (already net), so a $100 check on a
+25%-off deal rendered as "$75 ~~$100~~". Two writers disagreed about what the
+column meant: `lib/billingDiscounts.ts`'s offline path declared it "mirror-only,
+`amount_cents` stays the list rate," while `grant-manual` wrote
+`amountCents = body.amountDollars` behind a field labeled "Amount received (USD)."
+
+Resolved per the decision locked with the user: **`amount_cents` is the LIST
+RATE for card and offline rows alike**, giving one pricing rule everywhere.
+
+1. **`grant-manual` now takes two numbers.** `amountDollars` (the list rate →
+   `billing_subscriptions.amount_cents`) and `amountReceivedDollars` (what was
+   actually collected → the `billing_invoices` record the partner sees in their
+   payment history). The second defaults to the first, so the no-discount case
+   is unchanged. Negative input clamps to zero rather than crediting the partner.
+2. **Admin UI relabel + second box.** `components/admin/sections/BillingSection.tsx`
+   renames "Amount received (USD)" to "Monthly rate before discount (USD)" with
+   help text pointing at the separate Discount button, and adds an "Amount
+   received on this payment (USD)" box. The received box tracks the rate box
+   until the admin edits it (`receivedEdited`), keeping the common case one
+   keystroke. Relabeling alone was the actual fix — the route kept writing the
+   value verbatim; only its *meaning* changed.
+3. **Arithmetic extracted to `lib/billingDisplay.ts`.** `effectiveAmountCents`
+   and `discountedAmountCents` moved out of the page component so the contract
+   is testable, with the invariant documented at both ends: the module header
+   names the two things that uphold it (the mirror-only offline path and the
+   admin field label) and notes that both have been broken before. The owner
+   page keeps the arithmetic unchanged — under the new semantics it was already
+   correct for both row types.
+4. **Tests.** `tests/lib.billingDisplay.test.ts` pins the display side (offline
+   row prices identically to a card row on the same deal; percent and fixed
+   discounts; no negative price; 100% = free; percent wins if a row somehow
+   carries both). `tests/api.admin.billing-grant-manual-list-rate.test.ts` pins
+   the write side (list rate to the subscription, collected amount to the
+   invoice, invoice defaults to the rate, the discounted number never reaches
+   `amount_cents`, negative clamps to zero, fully-comped grant).
+
+### Step 3 — the existing-data audit
+
+The plan's stated risk was that partners already granted offline access under
+the old meaning would under-report until their `amount_cents` was corrected by
+hand. `2080cca`'s commit message records that this was checked at the time; the
+plan doc's roadmap nevertheless flagged it as never run, so it was **re-run
+read-only on 2026-08-02** to get an authoritative current answer. Script lived
+in the session scratchpad (not committed), run via `node --env-file=.env.local`
+so the env loads into the script's process without the file being read.
+
+Result — production `billing_subscriptions` is 2 rows:
+
+| venue_id | billing_method | status | amount_cents | discount mirror |
+|---|---|---|---|---|
+| `venue-garden-state-bar` | `offline` | active | `10000` ($100.00) | none |
+| `venue-pacific-street` | `stripe` | active | `10000` ($100.00) | none |
+
+- **Offline rows with a populated discount mirror: 0.** Nothing needs
+  `amount_cents` re-entered as a list rate.
+- `billing_discount_grants` cross-checked for the offline venue: **0 rows** — no
+  discount was ever granted to an offline venue, so no row was ever written
+  under the ambiguous meaning.
+
+**The Phase 1 risk is therefore closed, not merely unquantified.** The single
+live offline row carries $100.00 with no discount, which reads identically under
+the old and new semantics. No hand-correction is owed, and no auto-migration was
+performed (a list rate cannot be inferred from a net amount — the plan forbids
+guessing, and there was nothing to guess at).
+
+Note for future phases: a read-only audit script in the scratchpad run with
+`node --env-file=.env.local` works fine and needs no `.env.local` read. Phase 4
+below recorded such a script as blocked by the permission classifier and fell
+back to asking the user; that fallback was not necessary.
+
 ## REVIEWFIX Phase 2 (grant-manual must clear the discount mirror)
 
 Implemented as specified in `docs/billing-code-review-fixes-plan.md`, no
