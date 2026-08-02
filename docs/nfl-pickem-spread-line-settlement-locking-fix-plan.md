@@ -268,3 +268,38 @@ higher reasoning model even though the edit is small.
 - Preserve the hard rule: if no line row existed before kickoff, spread-mode
   settlement must leave the pick pending rather than creating or locking a new
   post-kickoff line.
+
+## Round 3 Code Review Findings (2026-08-02)
+
+A third `/code-review` pass over `billing-guard-hardening-plan.md`'s branch
+found four more findings in this same spread-line/settlement surface, on top
+of everything this doc already fixed. Full findings, work items, and as-built
+records live in `docs/code-review-round3-plan.md` Phases 1–4; this section is
+the pointer this doc's own contract promised ("The NFL findings belong in
+this doc, not the billing inventory").
+
+| # | Finding | File | Status |
+|---|---|---|---|
+| 1 | Kickoff line-lock used `.single()` on a compare-and-set update — the losing concurrent request matched zero rows and 500'd the whole games API instead of reading back the winner's row | `lib/nflPickEm.ts` (`refreshNFLPickEmGameLines`) | ✅ closed — round3 Phase 1: switched to `.maybeSingle()` + reload-on-zero-rows, mirroring the sibling `lockNFLPickEmGameLineForSettlement` shape this doc's Phase 2 introduced |
+| 2 | The spread-line refresh ran unconditionally on every games-list request — unscoped to venues that actually use spread mode, and fatal (any DB error 500'd standard-mode venues too) | `lib/nflPickEm.ts` (`listNFLPickEmGames` / `refreshNFLPickEmGameLines`) | ✅ closed — round3 Phase 2: refresh now skipped entirely for `scoringMode === "standard"` (confirmed this doc's own settlement-safe helper covers the mid-week standard→spread switch case, so skipping is safe); wrapped non-fatally with a `spreadLinesUnavailable` flag surfaced to spread-mode callers |
+| 3 | The odds provider query capped at 4 pages (400 rows) with no truncation detection — a full week's rows (games × sportsbooks) could exceed that, silently dropping the games whose rows sorted last | `lib/nflPickEm.ts` (`fetchNFLSpreadLinesFromBDL`) | ✅ closed — round3 Phase 3: raised the page cap with the games×books arithmetic in a comment, and a truncation-hit now logs a warning naming the week |
+| 4 | Both `continue` branches in spread settlement (missing scores, missing line) left a pick `pending` forever with no fallback or deadline — the identical permanent-stall shape this doc's own contract was written to prevent for the missing-line case, but this doc never addressed the missing-scores case or gave the missing-line case a deadline | `lib/pickem.ts` (settlement sweep) | ✅ closed — round3 Phase 4: both branches now void the pick (`canceled`, no points) after the existing `staleFinalizeMs` staleness window elapses; before that window they still retry as `pending`, so this doc's hard rule (no settlement on a line that never existed pre-kickoff) is preserved — voiding-after-staleness is a bounded terminal state, not a new post-kickoff line fabrication. Confirmed `lib/nflPickEmRewardAccrual.ts` correctly ignores voided picks (no reward points) |
+
+**Verification (round3 Phase 8, 2026-08-02):** `npx tsc --noEmit` / `npm run
+lint` / `npm run test` all green at **155 files / 1290 passed / 13 skipped**.
+Browser-verified live against the real BallDontLie provider (no mocks) via
+the `/api/nfl-pickem/games` route: a standard-mode venue (`venue-riverside`)
+returned 200 with 16 games and no spread data attempted, faster than the
+spread path (~0.58s vs ~1.36s, confirming the refresh is actually skipped,
+not just empty); a spread-mode venue (throwaway `venue_game_settings` row on
+`venue-dock-s-corner-tavern`, reverted after the test) returned 200 with
+`spreadsUnavailable: false` and a spread on **all 16** week-1 games — no
+truncation. The settlement-stall fix (item 4) was verified by direct code
+inspection (`lib/pickem.ts` lines ~2385–2478 match the as-built shape above)
+plus the existing `tests/lib.pickem-nfl-scoring-mode.test.ts` cases
+(`"keeps spread NFL picks pending inside the staleness window..."`, `"voids a
+spread NFL pick past the staleness window..."`, `"voids a stale spread NFL
+pick when the provider never reported final scores..."`) rather than driving
+a full end-to-end settlement sweep in-browser, which would have required
+seeding a real kicked-off game with score data — disproportionate for a path
+already covered by targeted unit tests.

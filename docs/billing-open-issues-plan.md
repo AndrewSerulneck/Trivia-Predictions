@@ -11,27 +11,51 @@ Supabase — that gates most of the verification.
 
 ## Inventory of open items
 
-| # | Item | Source |
-|---|---|---|
-| A | Migration `20260731120000_billing_discounts.sql` never applied | DISCOUNT Ph1 |
-| B | Offline/check row with `status='active'` now *permits* Checkout (server-side); only the UI hides Subscribe | GUARD Ph2 note 2 |
-| C | DISCOUNT Phase 5 (partner-facing discount display) shipped code but **wrote no run-log entry** — never reviewed | run log gap between DISCOUNT Ph4 and Ph8 |
-| D | GUARD Phase 5 could not browser-verify at 320px (sandbox denied localhost) | GUARD Ph5 |
-| E | Admin discount modal (Ph4), promo-code panel (Ph7), custom-rate modal (Ph8) never clicked through | DISCOUNT Ph4/7/8 |
-| F | GUARD Phase 8 — live Stripe test-mode verification of `past_due` / `paused` / outage paths never run | GUARD Ph3, Ph7, code-review §4 |
-| G | DISCOUNT Phase 10 — live Stripe test-mode verification of discounts, promo codes, price swap never run | DISCOUNT Ph2/4/6/7/8 |
-| H | Real Stripe `discounts` payload shape (`discount.source.coupon`) confirmed only against types, never a live event | DISCOUNT Ph6 note 1 |
-| I | DISCOUNT run never logged a code-review pass (GUARD did) | script has a review step; log has only a GUARD review section |
-| J | Junk in tree: `.tmp_full_diff.txt`, `scripts/tmp-billing-verify/` | `git status` |
-| K | Whole feature is one giant uncommitted diff | `git status` |
-| L | **Offline discounts are structurally wrong**: `applyOfflineDiscount` rewrites `amount_cents`, so `duration` is silently ignored, repeat applies compound, removal can't restore, and the next `grant-manual` clobbers the discount | Phase 3 review |
-| M | The "is this row offline?" predicate disagrees across the feature (`stripe_subscription_id == null` vs `billing_method`) | Phase 3 review |
-| N | The discount mirror survives on a cancelled offline row — the cron expiry sweep doesn't clear it and the admin's Discount button is hidden for cancelled rows | Phase 3 review |
-| O | Admin discount modal has **no replace path** (only Remove), yet its other branch advertises "applying this will replace any existing discount" | Phase 3 review |
-| P | `couponMatchesSpec` ignores `name`, so a same-math/different-name coupon at one of our deterministic ids is reused and the webhook later relabels the mirror | Phase 3 review |
-| Q | `promo-codes` GET lists `limit: 100` with no pagination — codes past 100 are invisible and undeactivatable | Phase 3 review |
-| R | `PatchBody.active` is declared and never read; PATCH hardcodes `active: false` | Phase 3 review |
-| S | `handleApplyDiscount` doesn't inline-validate `free_months`, contradicting DISCOUNT Ph3's note 2 | Phase 3 review |
+> **Status as of 2026-08-02 (billing-code-review-fixes-plan.md Phase 7 close-out):**
+> Items **B, D, F, G, L, M, N** are closed — see the "Closed" column and the
+> linked run-log sections. **T** (new) is also closed. Everything else in this
+> table remains open/unquantified as of the last time it was reviewed.
+>
+> **Status as of 2026-08-02 (billing-review-round2-plan.md Phase 4 close-out):**
+> Items **U, V, W** (new, from the second `/code-review` pass) are closed — see
+> the "Closed" column and `docs/billing-review-round2-plan.md`.
+>
+> **Status as of 2026-08-02 (code-review-round3-plan.md Phase 8 close-out):**
+> Items **X, Y** (new, from the third `/code-review` pass) are closed — see
+> the "Closed" column and `docs/code-review-round3-plan.md`. The round's other
+> five findings (NFL Pick 'Em spread-line/settlement fixes, the `AppShell`
+> legal-notice restoration) are recorded in
+> `docs/nfl-pickem-spread-line-settlement-locking-fix-plan.md` and this doc's
+> Phase 7 as-built respectively — not in this inventory table, which is
+> billing-scoped.
+
+| # | Item | Source | Closed |
+|---|---|---|---|
+| A | Migration `20260731120000_billing_discounts.sql` never applied | DISCOUNT Ph1 | — applied, see Phase 1 above |
+| B | Offline/check row with `status='active'` now *permits* Checkout (server-side); only the UI hides Subscribe | GUARD Ph2 note 2 | ✅ fixed by Phase 2 above (`offline_billing` 409 guard); re-verified in REVIEWFIX Phase 6 Scenario 5 |
+| C | DISCOUNT Phase 5 (partner-facing discount display) shipped code but **wrote no run-log entry** — never reviewed | run log gap between DISCOUNT Ph4 and Ph8 | open |
+| D | GUARD Phase 5 could not browser-verify at 320px (sandbox denied localhost) | GUARD Ph5 | ✅ closed — REVIEWFIX Phase 6 Scenario 6 (320px pass) and Phase 8's 8.6 (320px on the empty state) both ran in a real browser |
+| E | Admin discount modal (Ph4), promo-code panel (Ph7), custom-rate modal (Ph8) never clicked through | DISCOUNT Ph4/7/8 | open |
+| F | GUARD Phase 8 — live Stripe test-mode verification of `past_due` / `paused` / outage paths never run | GUARD Ph3, Ph7, code-review §4 | ✅ closed — REVIEWFIX Phase 6 Scenario 5 (23/23) + REVIEWFIX Phase 8's 8.6 Scenario 5 re-ran the same matrix unchanged (18/18 + 3/3) |
+| G | DISCOUNT Phase 10 — live Stripe test-mode verification of discounts, promo codes, price swap never run | DISCOUNT Ph2/4/6/7/8 | ✅ closed — REVIEWFIX Phase 6 Scenarios 1–3 (offline list-rate, mirror-clear, fractional percent-off) verified against real Stripe test mode |
+| H | Real Stripe `discounts` payload shape (`discount.source.coupon`) confirmed only against types, never a live event | DISCOUNT Ph6 note 1 | open |
+| I | DISCOUNT run never logged a code-review pass (GUARD did) | script has a review step; log has only a GUARD review section | open |
+| J | Junk in tree: `.tmp_full_diff.txt`, `scripts/tmp-billing-verify/` | `git status` | open |
+| K | Whole feature is one giant uncommitted diff | `git status` | open — superseded in spirit by `billing-code-review-fixes-plan.md`'s per-phase commits |
+| L | **Offline discounts are structurally wrong**: `applyOfflineDiscount` rewrites `amount_cents`, so `duration` is silently ignored, repeat applies compound, removal can't restore, and the next `grant-manual` clobbers the discount | Phase 3 review | ✅ closed — `billing-code-review-fixes-plan.md` Phase 1 fixed the double-count at the source (offline `amount_cents` = list rate, mirror carries the discount) and Phase 2 made `grant-manual` clear the mirror, closing the clobber path described here |
+| M | The "is this row offline?" predicate disagrees across the feature (`stripe_subscription_id == null` vs `billing_method`) | Phase 3 review | ✅ closed — Phase 2's checkout guard and Phase 1/2's offline-path code all route on `billing_method`, matching this item's recommended fix |
+| N | The discount mirror survives on a cancelled offline row — the cron expiry sweep doesn't clear it and the admin's Discount button is hidden for cancelled rows | Phase 3 review | ✅ closed — Phase 2 (`grant-manual` clears `discount_*` alongside processor ids) plus the cron sweep now going through the same cleared-mirror path; re-verified in REVIEWFIX Phase 6 |
+| O | Admin discount modal has **no replace path** (only Remove), yet its other branch advertises "applying this will replace any existing discount" | Phase 3 review | open |
+| P | `couponMatchesSpec` ignores `name`, so a same-math/different-name coupon at one of our deterministic ids is reused and the webhook later relabels the mirror | Phase 3 review | open |
+| Q | `promo-codes` GET lists `limit: 100` with no pagination — codes past 100 are invisible and undeactivatable | Phase 3 review | open |
+| R | `PatchBody.active` is declared and never read; PATCH hardcodes `active: false` | Phase 3 review | open |
+| S | `handleApplyDiscount` doesn't inline-validate `free_months`, contradicting DISCOUNT Ph3's note 2 | Phase 3 review | open |
+| T | `billing_invoices` table was never written by any webhook handler (dead write path) | DISCOUNT Phase 10 review | ✅ closed — fixed by `f3490ac` (the Phase 0 baseline commit on `billing-code-review-fixes-plan.md`), confirmed against live webhooks in REVIEWFIX Phase 6 |
+| U | `grant-manual` unconditionally detached a Stripe coupon before taking a card row offline, 502ing on a churned (`cancelled`) row that Stripe refuses to update | second `/code-review` pass, finding 1 | ✅ closed — `billing-review-round2-plan.md` Phase 1: detach skipped when the mirror has nothing to detach or the row is already `cancelled`; the live-subscription path stays fail-closed. Mocked-SDK tests only, per the plan |
+| V | The 3-D-Secure recovery path (`checkout.session.completed` incomplete → `customer.subscription.updated` active) never sent the welcome email and permanently dropped the first `invoice.paid` | second `/code-review` pass, finding 2 | ✅ closed — `billing-review-round2-plan.md` Phase 2: welcome email now hangs off `isFirstSyncForSubscription` from both webhook entry points; first invoice backfilled at row-creation time. Row-creation timing + invoice backfill (2.2) confirmed live in Phase 4 against real Stripe test mode (3DS card `4000002500003155`); the email send itself (2.1) is closed on unit-test coverage — the live run's send outcome was inconclusive (no Resend send attempt logged despite `RESEND_API_KEY` present; see Phase 4's run-log entry) and was not pursued further given the cost of a second full signup cycle. Not reopened as its own item since nothing here implicates the billing code |
+| W | `setCustomPrice` accepted a yearly (or non-1x-monthly) Stripe price, silently flipping a subscription to yearly billing and mis-stating the rate everywhere `amount_cents` renders | second `/code-review` pass, finding 3 | ✅ closed — `billing-review-round2-plan.md` Phase 3: fifth guard requires `interval === 'month' && interval_count === 1`. Mocked-SDK tests only, per the plan |
+| X | `customer.discount.deleted` cleared the **entire** discount mirror matched only on `stripe_subscription_id`, with no check of *which* coupon died — a retried/reordered delete for a replaced coupon wiped out the replacement while Stripe kept billing it | third `/code-review` pass, finding 5 | ✅ closed — `code-review-round3-plan.md` Phase 5: `syncDiscountFromEvent` now reads the target row(s) before writing and gates the clear on `row.stripe_coupon_id` matching the deleted event's coupon id (`deletedCouponOwnsMirror`), on both the subscription and customer-level branches. A null `stripe_coupon_id` (offline discount) or an unresolvable event coupon ref both resolve to "don't clear." Mocked-SDK tests only (`tests/api.webhooks.stripe-discount-sync.test.ts`, 9→14 cases incl. the replace-then-retry sequence end to end); live Stripe pass considered optional per Phase 8 (round-2 Phase 4's live-harness cost note still applies) |
+| Y | `sweepAbandonedIncompleteSubscriptions` listed account-wide incomplete subscriptions with a flat `limit: 100` and no paging — past 100 account-wide incompletes, this venue's own abandoned subscription could fall outside the page and be missed, reopening the double-bill window the sweep exists to close | third `/code-review` pass, finding 6 | ✅ closed — `code-review-round3-plan.md` Phase 6: switched to `.list(...).autoPagingToArray({ limit: 1000 })`, matching the promo-codes route's existing shape; log-and-proceed failure policy unchanged; hitting the 1000-item cap now logs a warning naming the venue. Mocked-SDK tests only (`tests/api.owner.billing-resume-vs-checkout-matrix.test.ts`, new case: match sitting behind 100 filler subscriptions) |
 
 ---
 

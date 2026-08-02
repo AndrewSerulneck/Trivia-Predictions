@@ -41,11 +41,11 @@ inventory — items B, L, M overlap with Phases 1/3/4 here),
 | 1 | Offline discount double-count (list-rate semantics) | Opus 5 | **High** | 0 | ✅ done (`2080cca`) — run-log section written, data audit run 2026-08-02: **0 affected rows** |
 | 2 | `grant-manual` must clear the discount mirror | Sonnet 5 | Medium | 1 | ✅ done (`9293db3`) |
 | 3 | Fractional percent-off: migration + validation + writes | Sonnet 5 | Medium | 0 | ✅ done (`0f0b1d2`), migration applied |
-| 4 | SlimCD teardown | Opus 5 | Medium-High | 0 | ⚠️ **code done** (`e8a081f`) — Vercel `SLIMCD_*` env vars still owed |
+| 4 | SlimCD teardown | Opus 5 | Medium-High | 0 | ⚠️ **code done** (`e8a081f`) — Vercel `SLIMCD_*` env var removal handed to the user 2026-08-02 (blocked by the auto-mode classifier even for scoped `vercel env rm`); commands provided, awaiting confirmation |
 | 5 | `incomplete` subscriptions must not lock out Checkout | Opus 5 | Medium | 0 | ✅ server side done + verified (`f8f1a07`); UI half → Phase 8 |
 | 6 | Stripe test-mode + browser verification | Opus 5 | **High** | 1–5 | ✅ done 2026-08-01, 68/68 assertions (`9fd2535`) |
 | 8 | **Unfinished signups leave no trace** (supersedes Phase 5's UI half) | Opus 5 | Medium-High | 6 | ✅ done (`58e558f`) — 8.4 audit **0 rows**, 8.6 verified vs real Stripe 2026-08-02 (77 assertions) |
-| 7 | Run-log + doc close-out | Haiku 4.5 | Low | 6, 8 | ⬜ **not started** (must be last) |
+| 7 | Run-log + doc close-out | Haiku 4.5 | Low | 6, 8 | ✅ done 2026-08-02 — `billing-open-issues-plan.md` items B/D/F/G/L/M/N closed + new item T added/closed; `SYSTEM_CONTEXT.md` Phase 8 invariant recorded; run-log already had per-phase sections through Phase 8. `/code-review` re-run is user-invoked only — ask the user to run it |
 
 Phases 1→2 are ordered (2 depends on 1's semantics). Phases 3, 4, 5 are
 independent of each other and of 1/2 — they can run in any order or in

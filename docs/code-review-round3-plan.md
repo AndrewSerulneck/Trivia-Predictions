@@ -26,9 +26,9 @@ found.
 | 3 | Odds query truncates later games | Sonnet 5 | Low-Medium | 2 | ✅ done |
 | 4 | Spread picks stall `pending` forever | **Opus 5** | Medium-High | 3 | ✅ done |
 | 5 | `customer.discount.deleted` wipes a live discount | **Opus 5** | Medium | 0 | ✅ done |
-| 6 | Abandoned-signup sweep misses past 100 | Sonnet 5 | Low | 0 | ⬜ not started |
-| 7 | Legal notice silently dropped from most routes | Sonnet 5 | Low | 0 (+ a user decision) | ⬜ not started |
-| 8 | Verification + close-out | Sonnet 5 | Medium | 1–7 | ⬜ not started |
+| 6 | Abandoned-signup sweep misses past 100 | Sonnet 5 | Low | 0 | ✅ done |
+| 7 | Legal notice silently dropped from most routes | Sonnet 5 | Low | 0 (+ a user decision) | ✅ done |
+| 8 | Verification + close-out | Sonnet 5 | Medium | 1–7 | ✅ done |
 
 **Phases 1→2→3→4 are one dependency chain** — they all touch the NFL spread-line
 path and each changes what the next one sees. Do them in order, in one worktree.
@@ -402,6 +402,35 @@ over `search`; that reasoning is sound and unaffected — it just needs to page.
 checkout suite) — a paged list whose match sits on the **second** page is still
 found and cancelled; the sweep still proceeds when the list call throws.
 
+### ✅ As-built (2026-08-02)
+
+All three work items done; full record in `docs/billing-run-log.md` under
+**"Code Review Round 3 — Phase 6"**. The shape:
+
+- `sweepAbandonedIncompleteSubscriptions` now chains
+  `.list({ status: "incomplete", limit: 100 }).autoPagingToArray({ limit: 1000 })`
+  instead of reading `.data` off one unpaged page — same shape as the
+  promo-codes route's `GET` (item 1). The 1000-item cap is a runaway guard, not
+  an expected boundary, matching that sibling's own comment.
+- Failure policy is unchanged (item 2): the existing try/catch around the
+  whole list-and-page call still logs and proceeds on any failure, so a paging
+  failure and a plain list failure are covered without any new branch.
+- Hitting the cap logs a `console.warn` naming the venue (item 3), on the same
+  "silent truncation hid this" reasoning as Phase 3.
+- `tests/api.owner.billing-resume-vs-checkout-matrix.test.ts`'s sweep describe
+  block moved its `stripeList` mocks (including the shared `beforeEach`
+  default) from `{ data: [...] }` to `{ autoPagingToArray: () => [...] }`, and
+  gained one new case: the venue's own abandoned subscription sitting behind
+  100 filler subscriptions for other venues is still found and cancelled.
+  Suite: **154 files / 1285 passed / 13 skipped**, tsc + lint clean.
+
+**For Phase 7/8:** Phase 7 remains independent and **still blocked on the user
+decision** in its item 1 — ask before writing code for it. Phase 8 still owes
+everything the Phase 5 handoff listed (the NFL findings write-up, inventory
+items X and Y in `docs/billing-open-issues-plan.md`, the god-mode tripwire once
+Phase 7 lands, and the Phases 1–4 browser pass) — none of that was touched by
+this phase.
+
 ---
 
 ## Phase 7 — Decide whether the legal notice should have been narrowed
@@ -442,6 +471,71 @@ commit — is what makes this worth a decision rather than a fix.
 non-venue, non-admin, non-fullscreen route — cheap, and it turns the invariant
 into something CI enforces.
 
+### ✅ As-built (2026-08-02)
+
+**Decision (user, this session): the narrowing was NOT intended.** Restored
+`components/ui/AppShell.tsx:49` to the pre-`35115fc` condition.
+
+- Extracted the condition into an exported pure function,
+  `shouldShowLegalNotice(pathname)`, in `components/ui/AppShell.tsx`, rather
+  than restoring it as an inline `useEffect`/render-body expression. This
+  project has **no DOM-rendering test harness** (no `jsdom`, no
+  `@testing-library/react`, no `.test.tsx` files anywhere, `vitest.config.ts`
+  is `environment: "node"` and only globs `tests/**/*.test.ts`) — extracting
+  to a plain function makes the invariant unit-testable without standing up
+  that infra, which would have been disproportionate to a one-line fix.
+  `isVenueHome` (only ever used to feed the old condition) was deleted rather
+  than kept dead.
+- Added a comment on `shouldShowLegalNotice` itself documenting why this
+  exists and that it must not be narrowed again without a fresh, explicit
+  compliance decision (work item 3).
+- **New test:** `tests/components.app-shell-legal-notice.test.ts` (5 cases) —
+  shows on `/join`, `/owner/billing`, `/redeem-prizes`; suppressed on
+  `/info` (itself a fullscreen route — a subtlety worth flagging: the
+  regression's *practical* blast radius was narrower than the finding first
+  suggested, since `/info` and `/join`'s game sub-routes were already
+  fullscreen-suppressed pre-regression; the routes it actually newly hid the
+  notice from are `/join` itself, `/owner/*`, and any other plain non-admin
+  route not in `FULLSCREEN_PATHS`); suppressed on `/venue/:id` (fullscreen);
+  suppressed on admin routes and fullscreen game routes.
+- **Found and fixed a stale tripwire while running the suite:**
+  `tests/category-blitz-mobile-shell-contract.test.ts`'s
+  `"keeps the legal notice venue-home-only..."` case asserted the exact
+  buggy strings (`isVenueHome`, `!isAdmin && isVenueHome`) — it had locked
+  the regression in as a contract instead of catching it. Rewrote it to
+  assert against `shouldShowLegalNotice` / the restored call site instead.
+  Worth noting for Phase 8's write-up: this is the second round-3 finding
+  (after Phase 5/6's silent failures) that survived specifically *because* a
+  test enforced the wrong behavior, not because no test existed.
+- Full suite: **155 files / 1290 passed / 13 skipped**, tsc + lint clean.
+  `npm run test:god-mode-join` also run per CLAUDE.md (AppShell sits in the
+  join-flow shell) — 5 files / 34 passed, unaffected (the tripwire's static
+  guard checks geolocation-before-server-profile ordering, not this file).
+
+**For Phase 8:** all seven phases are now done. Phase 8 still owes, per the
+Phase 6 handoff plus this phase's addition:
+1. The NFL findings write-up in
+   `docs/nfl-pickem-spread-line-settlement-locking-fix-plan.md` (not started).
+2. Inventory items **X** (`customer.discount.deleted` identity check, Phase 5)
+   and **Y** (abandoned-signup sweep paging, Phase 6) added to
+   `docs/billing-open-issues-plan.md` and closed, U/V/W convention.
+3. The Phases 1–4 browser pass via the `verify` skill (standard-mode +
+   spread-mode venue games list; confirm a settlement run leaves no pick
+   `pending` past staleness) — not yet done.
+4. `npm run test:god-mode-join` — already run and green above; Phase 8 can
+   skip re-running it unless later work touches the join shell again.
+5. Consider (not required, but cheap while there) noting in
+   `docs/code-review-round3-plan.md` or the run log that the mobile-shell
+   contract test had a false-positive tripwire, in case other `.test.ts`
+   files in this suite assert exact buggy source strings the same way —
+   worth a `grep -rl "toContain(\"const show"` sweep if there's appetite,
+   but that is new scope, not part of this plan's seven findings.
+6. Live Stripe pass for Phases 5/6 remains optional per the Phase 8 spec —
+   mocked-SDK tests already cover both and the live harness cost note from
+   round 2 Phase 4 still applies.
+7. Ask the user to re-run `/code-review` once Phase 8 closes out — it's
+   user-invoked, cannot be launched from a session.
+
 ---
 
 ## Phase 8 — Verification + close-out
@@ -476,6 +570,36 @@ into something CI enforces.
    inventory — record them there.
 7. Ask the user to re-run `/code-review` — it is user-invoked and cannot be
    launched from a session.
+
+### ✅ As-built (2026-08-02)
+
+All seven work items done; full record in `docs/billing-run-log.md` under
+**"Code Review Round 3 — Phase 8"**. Summary:
+
+1. `npx tsc --noEmit` / `npm run lint` / `npm run test` clean —
+   **155 files / 1290 passed / 13 skipped**, unchanged from Phase 7.
+2. `npm run test:god-mode-join` **5 files / 34 passed** — re-run per
+   CLAUDE.md's post-`AppShell`-touch rule.
+3. Live Stripe pass for Phases 5/6 skipped deliberately, as the plan allows —
+   mocked-SDK coverage plus round-2 Phase 4's cost precedent.
+4. Browser pass done against the real BallDontLie provider (no mocks): a
+   standard-mode venue's games-list returned 200 with no spread data
+   attempted and measurably faster than a spread-mode venue's request
+   (~0.58s vs ~1.36s, confirming Phase 2's refresh is actually skipped); the
+   spread-mode venue (a throwaway `venue_game_settings` row, reverted after)
+   got a spread on all 16 week-1 games with no truncation (Phase 3). Phase
+   4's settlement-stall fix was verified by code inspection plus existing
+   targeted unit tests rather than a live end-to-end settlement sweep — full
+   reasoning in the run log.
+5. Run-log section appended (this entry's source).
+6. Items **X** and **Y** added and closed in
+   `docs/billing-open-issues-plan.md`, U/V/W convention. The NFL findings
+   (Phases 1–4) are recorded in
+   `docs/nfl-pickem-spread-line-settlement-locking-fix-plan.md`'s new "Round 3
+   Code Review Findings" section instead, per this item's own instruction.
+7. Asked below.
+
+**Round 3 is closed — all eight phases done.**
 
 ---
 
