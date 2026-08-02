@@ -1932,3 +1932,94 @@ non-fatal for the games-list route. Two things worth knowing going in:
 3. The venue scoring-mode resolver the plan references is
    `lib/venueGameSettings.ts` — not yet inspected as part of Phase 1; Phase 2
    is the first phase in this plan to touch it.
+
+**Phase 2 — spread-line refresh scoping + failure policy, `lib/nflPickEm.ts`,
+`app/api/nfl-pickem/games/route.ts`.** PASS.
+
+- **Scoped the refresh.** `listNFLPickEmGames` takes a new optional
+  `scoringMode` param. Resolution order (new helper
+  `resolveScoringModeForLineRefresh`): explicit param → `venueId` looked up via
+  `getVenueNFLPickEmScoringMode` → `undefined` when there is no venue context.
+  The refresh runs unless the mode resolves to exactly `"standard"`. A failed
+  settings read resolves to `undefined` (= refresh anyway), because the safe
+  default is the expensive branch — skipping the refresh for a venue that is
+  actually on spread is what leaves picks ungradeable.
+  - The games route passes the mode it already resolved, so there is no second
+    settings read on the hot path.
+  - `submitNFLPickEmPick` passes `venueId` only, so it now resolves the mode
+    itself and a standard venue skips the refresh there too.
+  - Callers with no venue context (`lib/nflPickEmTiebreaker.ts`,
+    `lib/nflPickEmWinnerRewards.ts`, and the internal call) keep refreshing —
+    unchanged behaviour, and they are exactly the settlement-adjacent paths that
+    want lines and the lazy kickoff lock kept running.
+- **The mid-week standard→spread question, answered rather than assumed.**
+  Confirmed the lazy lock is real: settlement's `getLockedNFLLine`
+  (`lib/pickem.ts:2369`) delegates to `getLockedNFLPickEmGameLineForSettlement`,
+  which stamps `locked_at = kickoff` on its own. So skipping the refresh for a
+  standard venue **cannot** strand an existing-but-unlocked row. The residual
+  case is a line row that was *never created* because no spread venue loaded the
+  week before kickoff — that failure already exists independently (the row is
+  equally absent when balldontlie had no odds) and belongs to Phase 4's
+  settlement fallback. Written into the comment at the call site, not left
+  implicit.
+- **Made it non-fatal.** The refresh call is wrapped: a throw degrades to "no
+  lines this request", logs at `warn` with season + week + the error, and the
+  games list still renders. Reasoning stated at the site in its own terms (the
+  line is an enrichment of the games list, not the games list; failing the
+  request means nobody can make *any* pick because an odds feed hiccuped)
+  rather than copying `sweepAbandonedIncompleteSubscriptions`' header.
+- **Did not silently swallow it for spread venues.** `listNFLPickEmGames` now
+  returns `spreadLinesUnavailable: boolean` (true only when a refresh was
+  attempted and failed), and the route surfaces it as `spreadsUnavailable` —
+  `undefined` for standard venues, which never asked for lines. **Follow-up, not
+  done here:** no client currently reads `spreadsUnavailable`; the NFL Pick 'Em
+  UI still renders a spread game with no line as if it simply had no line.
+- **Tests.** `tests/lib.nfl-pickem-game-fetch.test.ts` — new describe block
+  (5 tests): standard venue makes **no** odds fetch and writes **no** lines;
+  an explicitly-passed `scoringMode: "standard"` is honoured without a settings
+  read; a spread venue still gets all 3 lines and `spreadLinesUnavailable ===
+  false`; a throwing refresh returns the full games list with
+  `spreadLinesUnavailable === true` and logs; no venue context still refreshes.
+  `tests/api.nfl-pickem-games-route.test.ts` — 3 new tests: the route passes
+  `scoringMode` down; `spreadsUnavailable` is reported (200, not 500) to a
+  spread venue on failure; it is omitted for a standard venue.
+- **Rewrote one Phase 1 test.** "still throws on a genuine DB error while
+  locking at kickoff" asserted `listNFLPickEmGames` *rejects* — which Phase 2
+  deliberately makes false. The invariant it was protecting (a DB error is not
+  "success by another writer") now asserts observably instead: the call resolves
+  with `spreadLinesUnavailable === true`, warns, and **leaves the row
+  `locked_at: null`** — a lost race locks it, a DB error must not. Also wrapped
+  both `supabaseAdmin.from` spies in `try/finally`; an un-restored spy in this
+  file recurses into itself on the next test and cascades a stack overflow
+  through the whole suite.
+- `npx tsc --noEmit`, `npm run lint`, full `npm run test` all green:
+  **152 files / 1271 passed / 13 skipped** (+8 net from Phase 1's 1263, 0
+  regressions).
+
+**Handoff to Phase 3** (odds query truncation, Sonnet 5) **and Phase 4**:
+
+1. **Phase 3's target is unchanged by Phase 2.** `fetchNFLSpreadLinesFromBDL`
+   and its `per_page: 100` / 4-page cap are untouched. What changed is *who*
+   reaches it: only spread venues and no-venue callers. That makes the
+   truncation rarer to trigger in dev, not less real.
+2. **The test harness Phase 3 needs is already in place.** The odds mock in
+   `tests/lib.nfl-pickem-game-fetch.test.ts`'s `beforeEach` returns a flat array
+   for `/nfl/v1/odds` regardless of page; a paging test will need to make
+   `fetchBallDontLieList` page-aware (it is mocked at the module level, so the
+   page cap is an argument to it — assert on the 3rd positional arg rather than
+   trying to simulate real paging).
+3. **Phase 4's fallback question now has one more input.** With Phase 2 in,
+   "no line row exists" gets *slightly* more likely for a venue that switched
+   standard→spread mid-week, since standard venues no longer create rows as a
+   side effect. Phase 4's staleness-window void is the intended backstop; the
+   call-site comment in `listNFLPickEmGames` explicitly defers to it. If Phase 4
+   chooses a different policy, update that comment — it names Phase 4 by number.
+4. **`spreadLinesUnavailable` is a required field** on `listNFLPickEmGames`'s
+   return type. Any new caller must destructure or ignore it explicitly; the
+   three existing non-route callers use `const { games } = …` and were
+   unaffected.
+5. **Do not "fix" the standard-venue skip by resolving the mode inside
+   `refreshNFLPickEmGameLines`.** The scoping decision belongs one level up, at
+   `listNFLPickEmGames`, because that is where the venue context lives; the
+   refresh function itself is venue-agnostic and should stay that way (lines are
+   keyed by `game_id`, globally, not per venue).

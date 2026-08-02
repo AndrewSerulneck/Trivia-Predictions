@@ -59,11 +59,18 @@ export async function GET(request: Request) {
       }
     }
 
-    const result = await listNFLPickEmGames({ weekId, userId, venueId });
-    
+    // Pass the mode we already resolved: it saves listNFLPickEmGames a second
+    // settings read, and it is what lets a standard-mode venue skip the
+    // spread-line refresh entirely.
+    const result = await listNFLPickEmGames({ weekId, userId, venueId, scoringMode });
+
     return NextResponse.json({
       ok: true,
       scoringMode,
+      // Only meaningful under spread scoring — a standard venue never asked for
+      // lines, so their absence is not a degradation to report.
+      spreadsUnavailable:
+        scoringMode === "spread" ? result.spreadLinesUnavailable : undefined,
       week: {
         id: result.week.id,
         weekNumber: result.week.weekNumber,

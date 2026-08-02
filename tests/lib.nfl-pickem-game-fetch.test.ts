@@ -376,9 +376,22 @@ describe("listNFLPickEmGames game fetching", () => {
       } as unknown as ReturnType<typeof admin.from>;
     });
 
-    await expect(listNFLPickEmGames({ weekId: "week-1" })).rejects.toThrow("connection reset");
-    fromSpy.mockRestore();
-    nowSpy.mockRestore();
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      // The genuine DB error still fails the refresh — it is NOT treated as
+      // "success by another writer" — but since Phase 2 the failure degrades to
+      // "no lines this request" instead of taking the whole games list down.
+      const result = await listNFLPickEmGames({ weekId: "week-1" });
+
+      expect(result.spreadLinesUnavailable).toBe(true);
+      expect(warnSpy).toHaveBeenCalled();
+      // The row must stay unlocked: a lost race locks it, a DB error must not.
+      expect(db.tables.nfl_pickem_game_lines[0]).toMatchObject({ locked_at: null });
+    } finally {
+      warnSpy.mockRestore();
+      fromSpy.mockRestore();
+      nowSpy.mockRestore();
+    }
   });
 
   it("does not overwrite an already locked line", async () => {
@@ -404,6 +417,86 @@ describe("listNFLPickEmGames game fetching", () => {
       provider: "balldontlie:draftkings",
       locked_at: "2026-09-10T00:20:00.000Z",
     });
+  });
+});
+
+// A spread-line problem must not take down venues that never opted into
+// spread scoring, and must not take down spread venues either — the games list
+// is the product, the line is an enrichment of it.
+describe("listNFLPickEmGames spread-line refresh scoping and failure policy", () => {
+  it("skips the odds fetch and all line writes for a standard-mode venue", async () => {
+    db.tables.venue_game_settings = [{ venue_id: "venue-standard", nfl_pickem_scoring_mode: "standard" }];
+
+    const { games } = await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-standard" });
+
+    expect(games).toHaveLength(3);
+    const oddsCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/odds");
+    expect(oddsCalls).toHaveLength(0);
+    expect(db.tables.nfl_pickem_game_lines).toEqual([]);
+  });
+
+  it("skips the refresh when the caller passes the mode directly, without re-reading settings", async () => {
+    // The games route resolves the mode itself; passing it must be honoured
+    // even with no venue_game_settings row present to read back.
+    const { games } = await listNFLPickEmGames({
+      weekId: "week-1",
+      venueId: "venue-standard",
+      scoringMode: "standard",
+    });
+
+    expect(games).toHaveLength(3);
+    expect(db.tables.nfl_pickem_game_lines).toEqual([]);
+  });
+
+  it("still refreshes lines for a spread-mode venue", async () => {
+    db.tables.venue_game_settings = [{ venue_id: "venue-spread", nfl_pickem_scoring_mode: "spread" }];
+
+    const result = await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-spread" });
+
+    const oddsCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/odds");
+    expect(oddsCalls).toHaveLength(1);
+    expect(db.tables.nfl_pickem_game_lines).toHaveLength(3);
+    expect(result.spreadLinesUnavailable).toBe(false);
+  });
+
+  it("returns the games list without spreads instead of throwing when the refresh fails", async () => {
+    const { supabaseAdmin: admin } = await import("@/lib/supabaseAdmin");
+    if (!admin) throw new Error("supabaseAdmin mock is not configured.");
+    const originalFrom = admin.from.bind(admin);
+    const fromSpy = vi.spyOn(admin, "from").mockImplementation((table: string) => {
+      const real = originalFrom(table) as ReturnType<typeof admin.from>;
+      if (table !== "nfl_pickem_game_lines") return real;
+      return {
+        ...real,
+        select: () => ({
+          in: () => ({
+            returns: () => Promise.resolve({ data: null, error: { message: "connection reset" } }),
+          }),
+        }),
+      } as unknown as ReturnType<typeof admin.from>;
+    });
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    try {
+      const result = await listNFLPickEmGames({ weekId: "week-1", scoringMode: "spread" });
+
+      expect(result.games).toHaveLength(3);
+      expect(result.games.every((game) => game.homeSpread === null || game.homeSpread === undefined)).toBe(true);
+      expect(result.spreadLinesUnavailable).toBe(true);
+      expect(warnSpy).toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
+      fromSpy.mockRestore();
+    }
+  });
+
+  it("refreshes lines when there is no venue context at all", async () => {
+    // Settlement-adjacent callers pass no venueId; they must keep lines current
+    // (and keep the lazy kickoff lock running) for whichever venues are spread.
+    await listNFLPickEmGames({ weekId: "week-1" });
+
+    const oddsCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/odds");
+    expect(oddsCalls).toHaveLength(1);
   });
 });
 

@@ -86,6 +86,7 @@ describe("NFL Pick 'Em games route scoring mode", () => {
         },
       ],
       userSummary: undefined,
+      spreadLinesUnavailable: false,
     });
   });
 
@@ -141,5 +142,54 @@ describe("NFL Pick 'Em games route scoring mode", () => {
     expect(body.games[0].homeSpread).toBeUndefined();
     expect(body.games[0].awaySpread).toBeUndefined();
     expect(mocks.getVenueNFLPickEmScoringMode).toHaveBeenCalledWith("venue-1");
+  });
+
+  it("passes the resolved scoring mode down so a standard venue can skip the spread-line refresh", async () => {
+    mocks.getVenueNFLPickEmScoringMode.mockResolvedValue("standard");
+
+    await GET(new Request("http://localhost/api/nfl-pickem/games?weekId=week-1&venueId=venue-1"));
+
+    expect(mocks.listNFLPickEmGames).toHaveBeenCalledWith(
+      expect.objectContaining({ venueId: "venue-1", scoringMode: "standard" }),
+    );
+  });
+
+  it("reports spreadsUnavailable to a spread venue when the line refresh failed", async () => {
+    mocks.getVenueNFLPickEmScoringMode.mockResolvedValue("spread");
+    mocks.listNFLPickEmGames.mockResolvedValue({
+      week: {
+        id: "week-1",
+        weekNumber: 1,
+        weekStartDate: "2026-09-10",
+        weekEndDate: "2026-09-14",
+        thursdayKickoff: "2026-09-10T20:20:00.000Z",
+        status: "open",
+      },
+      games: [],
+      userSummary: undefined,
+      spreadLinesUnavailable: true,
+    });
+
+    const response = await GET(
+      new Request("http://localhost/api/nfl-pickem/games?weekId=week-1&venueId=venue-1"),
+    );
+    const body = (await response.json()) as { ok: boolean; spreadsUnavailable?: boolean };
+
+    // Still a 200 with a rendered week — a spread-line failure degrades the
+    // page, it does not take NFL Pick 'Em down.
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.spreadsUnavailable).toBe(true);
+  });
+
+  it("omits spreadsUnavailable for a standard venue, which never asked for lines", async () => {
+    mocks.getVenueNFLPickEmScoringMode.mockResolvedValue("standard");
+
+    const response = await GET(
+      new Request("http://localhost/api/nfl-pickem/games?weekId=week-1&venueId=venue-1"),
+    );
+    const body = (await response.json()) as { spreadsUnavailable?: boolean };
+
+    expect(body.spreadsUnavailable).toBeUndefined();
   });
 });

@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
 import { getLocalDateKey, getEasternDayOfWeek } from "@/lib/timezone";
 import { type PickEmPick, type PickEmGame } from "@/lib/pickem";
+import { getVenueNFLPickEmScoringMode, type NFLPickEmScoringMode } from "@/lib/venueGameSettings";
 
 // DEV-ONLY TEST DATA SEED: when scripts/seed-nfl-pickem-test-data.cjs has
 // created this flag file, fetchNFLGamesFromBDL returns fake games instead of
@@ -1057,6 +1058,32 @@ export async function getLockedNFLPickEmGameLineForSettlement(
   return reloaded?.lockedAt ? reloaded : null;
 }
 
+/**
+ * Which scoring mode should decide whether the spread-line refresh runs.
+ *
+ * A failed settings read resolves to `undefined` (= refresh), not "standard":
+ * the expensive-but-correct branch is the safe default, since skipping the
+ * refresh for a venue that is actually on spread is what leaves picks
+ * ungradeable later.
+ */
+async function resolveScoringModeForLineRefresh(params: {
+  venueId?: string;
+  scoringMode?: NFLPickEmScoringMode;
+}): Promise<NFLPickEmScoringMode | undefined> {
+  if (params.scoringMode) return params.scoringMode;
+  if (!params.venueId) return undefined;
+
+  try {
+    return await getVenueNFLPickEmScoringMode(params.venueId);
+  } catch (error) {
+    console.warn(
+      `[NFL Pick 'Em] Could not resolve scoring mode for venue ${params.venueId}; refreshing spread lines anyway.`,
+      error
+    );
+    return undefined;
+  }
+}
+
 async function refreshNFLPickEmGameLines(
   games: NFLGameFetchResult[],
   seasonWeek?: { season: number; weekNumber: number }
@@ -1241,27 +1268,79 @@ export async function listNFLPickEmGames(params: {
   weekId: string;
   userId?: string;
   venueId?: string;
+  /**
+   * The venue's NFL Pick 'Em scoring mode, when the caller already resolved it
+   * (the games route does). Omitted + a venueId means we resolve it here;
+   * omitted + no venueId means "no venue context" and the spread-line refresh
+   * runs, because such callers (settlement sweeps, tiebreaker, winner rewards)
+   * are exactly the paths that want lines kept current for whichever venues
+   * *are* on spread.
+   */
+  scoringMode?: NFLPickEmScoringMode;
 }): Promise<{
   week: NFLWeek;
   games: NFLPickEmGame[];
   userSummary?: NFLUserWeekSummary;
+  /**
+   * True only when a spread-line refresh was attempted and failed. The games
+   * list still renders; spreads are simply absent. Callers that display
+   * spreads should surface this rather than showing a spread game as if it
+   * had no line.
+   */
+  spreadLinesUnavailable: boolean;
 }> {
   const week = await getNFLWeekById(params.weekId);
   if (!week) {
     throw new Error("NFL Week not found");
   }
-  
+
   // Fetch games from balldontlie across the FULL week range (Thursday to Monday)
   // FIX: Use week range instead of single date to get all games
   const games = await fetchNFLGamesFromBDL(week.weekStartDate, week.weekEndDate, {
     season: week.season,
     weekNumber: week.weekNumber,
   });
-  const gameLines = await refreshNFLPickEmGameLines(games, {
-    season: week.season,
-    weekNumber: week.weekNumber,
-  });
-  
+
+  const scoringMode = await resolveScoringModeForLineRefresh(params);
+
+  // Standard (straight-up) venues never read a spread line, so the refresh —
+  // a provider fetch plus up to ~16 sequential writes on a path every player
+  // hits on every games-list load — is pure cost for them, and (before this
+  // guard) a spread-line failure took NFL Pick 'Em down for venues that never
+  // opted into the feature.
+  //
+  // Mid-week standard→spread switch, deliberately reasoned through rather than
+  // assumed: (a) a line row that already exists but is still unlocked is locked
+  // lazily at settlement by getLockedNFLPickEmGameLineForSettlement, which
+  // stamps locked_at = kickoff on its own — skipping the refresh here cannot
+  // strand it. (b) A line row that was never created (no spread venue loaded
+  // this week's games before kickoff) leaves the switched venue's spread picks
+  // with no line at all. That failure already exists independently — the row
+  // is also absent when balldontlie simply had no odds for the game — and the
+  // fix belongs in the settlement fallback (round-3 Phase 4), not in making a
+  // standard venue pay for a line it will never read.
+  let gameLines = new Map<string, NFLPickEmGameLine>();
+  let spreadLinesUnavailable = false;
+  if (scoringMode !== "standard") {
+    try {
+      gameLines = await refreshNFLPickEmGameLines(games, {
+        season: week.season,
+        weekNumber: week.weekNumber,
+      });
+    } catch (error) {
+      // Log and proceed, same policy as sweepAbandonedIncompleteSubscriptions:
+      // the spread line is an enrichment of the games list, not the games list.
+      // Failing the whole request means a player cannot see or make *any* pick
+      // because a third-party odds feed hiccuped — strictly worse than
+      // rendering the week without spreads and retrying on the next load.
+      spreadLinesUnavailable = true;
+      console.warn(
+        `[NFL Pick 'Em] Spread-line refresh failed for season ${week.season} week ${week.weekNumber}; rendering games without lines.`,
+        error
+      );
+    }
+  }
+
   // Transform to NFLPickEmGame format
   const gameDates = games.map(game => new Date(game.startsAt));
   const dayGroupKeys = gameDates.map(gameDate => getLocalDateKey(gameDate, EASTERN_TZ));
@@ -1361,7 +1440,7 @@ export async function listNFLPickEmGames(params: {
     userSummary = await getUserNFLWeekSummary(params.userId, params.venueId, week.id);
   }
   
-  return { week, games: nflGames, userSummary };
+  return { week, games: nflGames, userSummary, spreadLinesUnavailable };
 }
 
 // ============================================
