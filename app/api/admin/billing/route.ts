@@ -6,6 +6,7 @@ import { cancelSubscription } from "@/lib/billing";
 import {
   applyDiscountToSubscription,
   removeDiscountFromSubscription,
+  CLEARED_MIRROR,
   type DiscountSpec,
   type DiscountableSubscriptionRow,
 } from "@/lib/billingDiscounts";
@@ -258,9 +259,16 @@ export async function POST(request: Request) {
   // force:true to cancel-then-convert in one call).
   const { data: existingSub } = await supabaseAdmin
     .from("billing_subscriptions")
-    .select("id, stripe_subscription_id, status")
+    .select("id, billing_method, stripe_subscription_id, status, amount_cents, current_period_end")
     .eq("venue_id", venueId)
-    .maybeSingle<{ id: string; stripe_subscription_id: string | null; status: string }>();
+    .maybeSingle<{
+      id: string;
+      billing_method: string;
+      stripe_subscription_id: string | null;
+      status: string;
+      amount_cents: number;
+      current_period_end: string | null;
+    }>();
 
   if (
     existingSub?.stripe_subscription_id &&
@@ -279,6 +287,19 @@ export async function POST(request: Request) {
     const cancelResult = await cancelSubscription(existingSub);
     if (!cancelResult.ok) {
       return NextResponse.json({ ok: false, error: cancelResult.error }, { status: cancelResult.status });
+    }
+  }
+
+  // Detach any live Stripe coupon before the row goes tokenless below — otherwise
+  // a card partner's discount label/percent survives the conversion to offline
+  // and keeps mispricing the owner page (the discount mirror is about to be
+  // cleared in our DB either way, but only this call actually removes it at
+  // Stripe). cancel_at_period_end above does NOT do this: the subscription
+  // stays active with its coupon attached until the period ends.
+  if (existingSub?.stripe_subscription_id) {
+    const removeResult = await removeDiscountFromSubscription(existingSub);
+    if (!removeResult.ok) {
+      return NextResponse.json({ ok: false, error: removeResult.error }, { status: removeResult.status });
     }
   }
 
@@ -334,6 +355,10 @@ export async function POST(request: Request) {
         stripe_customer_id: null,
         stripe_subscription_id: null,
         stripe_price_id: null,
+        // A discount mirror from a prior card subscription must not survive the
+        // conversion — the coupon it referenced is gone (detached above) and
+        // amount_cents already carries the offline list rate verbatim.
+        ...CLEARED_MIRROR,
       },
       { onConflict: "venue_id" }
     )

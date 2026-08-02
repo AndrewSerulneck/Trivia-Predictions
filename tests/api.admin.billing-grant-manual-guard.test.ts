@@ -11,9 +11,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * server guard is the real fix.
  */
 
+type RemoveDiscountResult =
+  | { ok: true; mode: "stripe" | "local" }
+  | { ok: false; status: number; error: string };
+
 const mocks = vi.hoisted(() => ({
   upsert: vi.fn(),
   cancelSubscription: vi.fn(),
+  removeDiscountFromSubscription: vi.fn<() => Promise<RemoveDiscountResult>>(async () => ({
+    ok: true,
+    mode: "stripe",
+  })),
 }));
 
 vi.mock("@/lib/adminAuth", () => ({
@@ -24,7 +32,25 @@ vi.mock("@/lib/billing", () => ({
   cancelSubscription: mocks.cancelSubscription,
 }));
 
-type ExistingSub = { id: string; stripe_subscription_id: string | null; status: string };
+vi.mock("@/lib/billingDiscounts", () => ({
+  removeDiscountFromSubscription: mocks.removeDiscountFromSubscription,
+  CLEARED_MIRROR: {
+    stripe_coupon_id: null,
+    discount_label: null,
+    discount_percent_off: null,
+    discount_amount_off_cents: null,
+    discount_ends_at: null,
+  },
+}));
+
+type ExistingSub = {
+  id: string;
+  billing_method?: string;
+  stripe_subscription_id: string | null;
+  status: string;
+  amount_cents?: number;
+  current_period_end?: string | null;
+};
 
 vi.mock("@/lib/supabaseAdmin", () => {
   let existingSub: ExistingSub | null = null;
@@ -96,6 +122,8 @@ describe("POST /api/admin/billing — grant-manual Stripe-orphan guard", () => {
   beforeEach(() => {
     mocks.upsert.mockReset();
     mocks.cancelSubscription.mockReset();
+    mocks.removeDiscountFromSubscription.mockReset();
+    mocks.removeDiscountFromSubscription.mockResolvedValue({ ok: true, mode: "stripe" });
   });
 
   it("refuses with 409 for a past_due Stripe row, without mutating the DB", async () => {
@@ -174,6 +202,36 @@ describe("POST /api/admin/billing — grant-manual Stripe-orphan guard", () => {
       stripe_subscription_id: "sub_stripe_4",
       status: "past_due",
     });
+    expect(mocks.removeDiscountFromSubscription).toHaveBeenCalledWith({
+      id: "sub-4",
+      stripe_subscription_id: "sub_stripe_4",
+      status: "past_due",
+    });
     expect(mocks.upsert).toHaveBeenCalled();
+  });
+
+  it("refuses with 502 if detaching the Stripe coupon fails, without mutating the DB", async () => {
+    setExistingSub({ id: "sub-5", stripe_subscription_id: "sub_stripe_5", status: "past_due" });
+    mocks.cancelSubscription.mockResolvedValue({ ok: true, mode: "stripe" });
+    mocks.removeDiscountFromSubscription.mockResolvedValue({
+      ok: false,
+      status: 502,
+      error: "Failed to remove discount.",
+    });
+
+    const response = await POST(
+      grantRequest({
+        action: "grant-manual",
+        venueId: "venue-5",
+        paidThroughDate: futureDate(),
+        amountDollars: 100,
+        force: true,
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error: string };
+
+    expect(response.status).toBe(502);
+    expect(body.ok).toBe(false);
+    expect(mocks.upsert).not.toHaveBeenCalled();
   });
 });
