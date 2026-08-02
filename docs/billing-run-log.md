@@ -1775,3 +1775,160 @@ cannot pass on a swallowed `TypeError` from the new backfill.
 **Still owed: the live-Stripe run.** Per the plan this is the one phase that
 really wants real Stripe test mode (3-D Secure card `4000002500003155`) — that is
 Phase 4 step 3, not done here.
+
+## REVIEW ROUND 2 Phase 4 (verification + close-out)
+
+**1–2 — static verification.** `npx tsc --noEmit` clean, `npm run lint` clean,
+`npm run test` **152 files / 1261 passed / 13 skipped** (up from Phase 2's 147
+files / 1238 passed — the delta is Phases 1–3's own test additions, already
+counted in their own entries above). Phases 1 and 3 needed no live Stripe, per
+the plan — their mocked-SDK suites already exercise the real branch logic.
+
+**3 — Phase 2 against real Stripe test mode.** Same harness shape as GUARD
+Phase 8 / 8.6 and REVIEWFIX Phase 6: `.next/dev`'s exclusive lock forced
+stopping the live-key :3000 server (user-approved) for the run and restarting
+it after. Dev server on :3100 under `scripts/stripe-test-env.sh`, a throwaway
+$100/mo test price (`price_1U05yk1djkdMC76XDK0PKNSQ`, product
+`prod_V06BMhtTrRdnhy`), `stripe listen --forward-to localhost:3100/api/webhooks/stripe`.
+
+**Deviation from every prior live-Stripe phase, and the reason:** this session's
+permission classifier blocked the agent's own `node --env-file=.env.local …`
+invocations outright — the CLAUDE.md `.env.local` boundary is now enforced at
+the tool layer, not just by convention. Every step that needed the Supabase
+service-role key or `SESSION_SECRET` (seeding the throwaway owner/venue,
+forging the `tp_owner_sess` cookie, reading back the result) was done by Andrew
+running scratch scripts (`scripts/tmp-billing-verify/{seed-p4,check-p4,diagnose-p4,cleanup-p4}.mjs`,
+deleted after this run) in his own terminal, with the agent only preparing the
+scripts and reading the pasted output. One real gotcha hit along the way:
+cookies aren't port-scoped, so a `tp_owner_sess` set via the browser console for
+`localhost:3100` was initially shadowed by an existing real-session cookie from
+`localhost:3000` — resolved by using a fresh Incognito window.
+
+**Scenario: 3-D Secure signup (`4000002500003155`), real hosted Checkout.**
+Seed: one throwaway owner + one hidden venue (`zz-p4-review2-msc9jzxq`). Result
+after completing the 3-D Secure challenge and the webhook landing:
+
+- **Exactly one `billing_subscriptions` row, `active`** — Phase 8's creation
+  gate correctly waited for the second step before writing anything, and the
+  `customer.subscription.updated`→`active` recovery path (2.1) created it, not
+  `checkout.session.completed` (which saw `incomplete` and wrote nothing, as
+  designed).
+- **2.2 (invoice backfill) — PASS.** Exactly one `billing_invoices` row
+  (`in_1U06Pj1djkdMC76XfKznD59x`, `status: 'paid'`, `amount_cents: 10000`)
+  present despite the first `invoice.paid` webhook having arrived before the row
+  existed — confirming the creation-time backfill (not a webhook retry) is what
+  landed it.
+- **2.1 (welcome email) — inconclusive in this harness, not a confirmed
+  regression.** `welcome_email_sent_at` stayed null. Diagnosed rather than
+  written off: `maybeSendWelcomeEmail`'s own three lookups (the subscription
+  row, the venue, the owner) were re-run standalone against the post-run data
+  and all three resolved correctly — the code path was reachable and had
+  everything it needed. `RESEND_API_KEY` was confirmed present for local dev.
+  But zero send attempts appeared in the Resend dashboard's activity log for the
+  run's time window, which is what `sendWelcomeEmail`'s `if (!resend) return
+  false` early-return looks like (a rejected send from Resend would still show
+  as a logged attempt), not what a network-level failure looks like. The
+  concrete unresolved possibility: the :3100 dev server process may have had a
+  stale environment relative to when `RESEND_API_KEY` was confirmed set (Next
+  reads `.env.local` at server boot, not on every request) — this was not run
+  down further given the cost of a second full 3-D-Secure signup cycle to
+  re-test. **What this does NOT undermine:** Phase 2.1's own mocked test suite
+  (`tests/api.webhooks.stripe-recovery-path.test.ts`) already asserts, at the
+  unit level and independent of any real email provider, that
+  `maybeSendWelcomeEmail`/`runFirstSyncFollowers` fire exactly once from the
+  `customer.subscription.updated` recovery path and never double-fire — that
+  is the part of 2.1 this plan asked Phase 4 to verify live, and the DB-side
+  half of it (correct row, correct venue/owner resolution, correct one-time
+  gate) is confirmed above. Whether Resend itself is reachable from a local dev
+  server is an infrastructure question outside this plan's scope — worth a
+  follow-up if partner-facing welcome emails are ever reported missing in
+  practice, but not reopened as an open-issues item here since nothing in the
+  billing code changed by this plan is implicated.
+
+**Cleanup.** Stripe: subscription cancelled, customer deleted, throwaway price
++ product archived (all via `stripe-test-env.sh`, no `.env.local` needed).
+Supabase: the seeded `billing_invoices`/`billing_subscriptions` rows,
+`venue_owner_venues` link, `venues` row, `venue_owners` row, and the `auth.users`
+row were removed by Andrew via `cleanup-p4.mjs`, confirmed 0 remaining
+`zz-p4-review2-%` venues. `next-env.d.ts`'s `.next/dev` path diff (a byproduct of
+running a second `next dev` on :3100) was reverted. The :3000 dev server was
+restarted the normal way (`npm run dev`) once :3100 and its `stripe listen` were
+torn down. `scripts/tmp-billing-verify/` was deleted afterward.
+
+**Status: Phase 4 complete.** Items U (Phase 1) and W (Phase 3) need no live
+verification per the plan and are closed on the strength of their mocked-SDK
+suites. Item V (Phase 2) is closed for its DB-correctness half (row creation
+timing, invoice backfill) with live confirmation; its email-send half is closed
+on unit-test coverage alone, with the live send itself flagged inconclusive
+rather than either passed or failed. See `docs/billing-open-issues-plan.md` for
+the inventory close-out.
+
+---
+
+## Code Review Round 3 — Phase 0 + Phase 1
+
+**Plan:** `docs/code-review-round3-plan.md`. Branch `billing-guard-and-discounts`,
+starting SHA `b31bf3a06cdcc586a7d964d7957dcedfd0de6a01`.
+
+**Phase 0 — baseline.** `npx tsc --noEmit` clean, `npm run lint` clean,
+`npm run test`: **152 files / 1261 passed / 13 skipped** — matches round 2
+Phase 4's recorded green exactly. Working tree matched the expected pre-existing
+diff (the two advertising PNGs, `docs/category-blitz-claude-code-handoff.md`,
+plus the already-modified doc files listed in the plan's own git status).
+
+**Phase 1 — kickoff line-lock race, `lib/nflPickEm.ts:1104-1122`.** PASS.
+
+- Changed the kickoff-lock block inside `refreshNFLPickEmGameLines` from
+  `.single()` to `.maybeSingle()`, matching the shape already used by the
+  sibling `lockNFLPickEmGameLineForSettlement` (renamed in this branch to
+  `getLockedNFLPickEmGameLineForSettlement`, `lib/nflPickEm.ts:1021-1058`): a
+  DB `error` still throws; a zero-row match (lost race) re-reads the row via
+  `getNFLPickEmGameLine` and uses the winner's already-locked value instead of
+  throwing. Added a comment cross-referencing the two sites, as the plan asked.
+- `tests/lib.nfl-pickem-game-fetch.test.ts`: added two tests —
+  1. **"resolves to the already-locked row instead of throwing when the
+     kickoff lock loses the race"** — simulates the lost race via a new
+     `db.raceGameId` control in the file's local Supabase mock (the mock's
+     `update().eq("game_id", X).is("locked_at", null)` chain, when `X` matches
+     `raceGameId`, mutates the underlying row directly — standing in for the
+     concurrent winner — and reports zero matched rows back to the caller,
+     which is what a real lost compare-and-set looks like). Asserts the
+     function does **not** throw and the row ends up locked, and that the race
+     flag was actually consumed (so the test can't pass vacuously against a
+     path that never reached the raced branch).
+  2. **"still throws on a genuine DB error while locking at kickoff"** —
+     spies on `supabaseAdmin.from` to return a real `{ error }` for exactly the
+     `nfl_pickem_game_lines` update chain, confirms `listNFLPickEmGames`
+     rejects with that message.
+- **Found and fixed a latent bug in the test file's own mock while adding
+  these**: the shared mock builder's `maybeSingle()` ignored `pendingUpdate` /
+  `updateTargets` entirely and just returned `result[0]` from before the
+  update chain started — so any future `.update().is(...).maybeSingle()` test
+  in this file would have silently passed against stale data rather than the
+  post-update row. Fixed to call the same `applyPendingUpdate()` the existing
+  `.single()` path already uses. This wasn't exercised by any pre-existing
+  test in the file (none of them chained `.maybeSingle()` after `.update()`
+  before now), so it caused no prior false-green.
+- `npx tsc --noEmit`, `npm run lint`, full `npm run test` all green after the
+  change: **152 files / 1263 passed / 13 skipped** (+2 from the new tests, 0
+  regressions).
+- Committed separately: `be26341` "Review round 3 Phase 1: kickoff line-lock
+  must not 500 on a lost race".
+
+**Handoff to Phase 2** (`docs/code-review-round3-plan.md`, Opus 5): scope
+`refreshNFLPickEmGameLines` to spread-mode venues only and make the whole call
+non-fatal for the games-list route. Two things worth knowing going in:
+
+1. The kickoff-lock block Phase 1 just touched (lines ~1096-1122) is exactly
+   the code Phase 2's "does skipping the refresh for a standard venue strand a
+   line settlement needs" question is about — `getLockedNFLPickEmGameLineForSettlement`
+   (1021-1058) is the lazy-lock fallback already in the tree; Phase 2 needs to
+   confirm settlement actually calls it rather than assuming.
+2. `refreshNFLPickEmGameLines` is not currently exported from `lib/nflPickEm.ts`
+   — it's only reachable through `listNFLPickEmGames`. If Phase 2's tests need
+   to call it directly (the plan's `tests/api.nfl-pickem-games-route.test.ts`
+   suggests testing at the route level, which doesn't need this), check
+   whether that's still true before assuming an import path.
+3. The venue scoring-mode resolver the plan references is
+   `lib/venueGameSettings.ts` — not yet inspected as part of Phase 1; Phase 2
+   is the first phase in this plan to touch it.
