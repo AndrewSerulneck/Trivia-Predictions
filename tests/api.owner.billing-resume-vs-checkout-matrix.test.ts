@@ -41,6 +41,7 @@ const mocks = vi.hoisted(() => ({
   stripeUpdate: vi.fn(),
   stripeRetrieve: vi.fn(),
   stripeCancel: vi.fn(),
+  stripeList: vi.fn(),
   checkoutCreate: vi.fn(),
   dbUpdate: vi.fn((_payload: Record<string, unknown>) => undefined),
 }));
@@ -55,6 +56,7 @@ vi.mock("@/lib/stripe", () => ({
       update: mocks.stripeUpdate,
       retrieve: mocks.stripeRetrieve,
       cancel: mocks.stripeCancel,
+      list: mocks.stripeList,
     },
     checkout: { sessions: { create: mocks.checkoutCreate } },
   },
@@ -112,6 +114,8 @@ describe("owner billing — resume vs. checkout state matrix", () => {
       .mockReset()
       .mockImplementation(async () => ({ status: state.row?.status === "cancelled" ? "canceled" : "active" }));
     mocks.stripeCancel.mockReset().mockResolvedValue({ status: "canceled" });
+    // Phase 8's pre-checkout sweep: nothing abandoned at Stripe by default.
+    mocks.stripeList.mockReset().mockResolvedValue({ data: [] });
     mocks.checkoutCreate.mockReset().mockResolvedValue({ url: "https://checkout.stripe.test/session" });
     mocks.dbUpdate.mockReset();
   });
@@ -500,6 +504,69 @@ describe("owner billing — resume vs. checkout state matrix", () => {
 
       expect(response.status).toBe(409);
       expect(mocks.checkoutCreate).not.toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * Phase 8 of docs/billing-code-review-fixes-plan.md: an unfinished signup now
+   * writes NO billing_subscriptions row, so an abandoned `incomplete`
+   * subscription can't be voided through the mirror the way the block above
+   * does — there is no stored id. It is found at Stripe by the venueId every
+   * subscription this app creates carries in its metadata, and cancelled before
+   * a new Checkout opens, so a stale Checkout tab can never complete on top of
+   * the fresh subscription.
+   */
+  describe("pre-checkout sweep of abandoned incomplete subscriptions", () => {
+    const abandoned = (id: string, venueId: string) => ({ id, metadata: { venueId } });
+
+    it("cancels an untracked incomplete subscription for this venue before checking out", async () => {
+      mocks.stripeList.mockResolvedValue({ data: [abandoned("sub_abandoned", "venue-1")] });
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(mocks.stripeList).toHaveBeenCalledWith({ status: "incomplete", limit: 100 });
+      expect(mocks.stripeCancel).toHaveBeenCalledWith("sub_abandoned");
+      expect(response.status).toBe(200);
+      expect(mocks.checkoutCreate).toHaveBeenCalled();
+    });
+
+    it("leaves another venue's incomplete subscription alone", async () => {
+      mocks.stripeList.mockResolvedValue({ data: [abandoned("sub_other_venue", "venue-2")] });
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(mocks.stripeCancel).not.toHaveBeenCalled();
+      expect(response.status).toBe(200);
+    });
+
+    it("proceeds when the cancel fails — a safety net must not block a paying partner", async () => {
+      mocks.stripeList.mockResolvedValue({ data: [abandoned("sub_abandoned", "venue-1")] });
+      mocks.stripeCancel.mockRejectedValue(new Error("connection error"));
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(response.status).toBe(200);
+      expect(mocks.checkoutCreate).toHaveBeenCalled();
+    });
+
+    it("proceeds when the list call itself fails", async () => {
+      mocks.stripeList.mockRejectedValue(new Error("connection error"));
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(response.status).toBe(200);
+      expect(mocks.checkoutCreate).toHaveBeenCalled();
+    });
+
+    it("does not run when checkout is refused — nothing is swept on a 409", async () => {
+      state.row = ACTIVE;
+      mocks.stripeList.mockResolvedValue({ data: [abandoned("sub_abandoned", "venue-1")] });
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(response.status).toBe(409);
+      expect(mocks.stripeList).not.toHaveBeenCalled();
+      expect(mocks.stripeCancel).not.toHaveBeenCalled();
     });
   });
 

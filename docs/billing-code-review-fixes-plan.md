@@ -44,7 +44,7 @@ inventory — items B, L, M overlap with Phases 1/3/4 here),
 | 4 | SlimCD teardown | Opus 5 | Medium-High | 0 | ⚠️ **code done** (`e8a081f`) — Vercel `SLIMCD_*` env vars still owed |
 | 5 | `incomplete` subscriptions must not lock out Checkout | Opus 5 | Medium | 0 | ✅ server side done + verified (`f8f1a07`); UI half → Phase 8 |
 | 6 | Stripe test-mode + browser verification | Opus 5 | **High** | 1–5 | ✅ done 2026-08-01, 68/68 assertions (`9fd2535`) |
-| 8 | **Unfinished signups leave no trace** (supersedes Phase 5's UI half) | Opus 5 | Medium-High | 6 | ⬜ **not started** |
+| 8 | **Unfinished signups leave no trace** (supersedes Phase 5's UI half) | Opus 5 | Medium-High | 6 | ⚠️ **code done** (8.1–8.3, 8.5) — 8.4 audit + 8.6 Stripe verification blocked, see below |
 | 7 | Run-log + doc close-out | Haiku 4.5 | Low | 6, 8 | ⬜ **not started** (must be last) |
 
 Phases 1→2 are ordered (2 depends on 1's semantics). Phases 3, 4, 5 are
@@ -80,10 +80,23 @@ swept in.
   `amount_cents` re-entered by hand, so **Phase 1's stated risk is closed**, not
   merely unquantified. Nothing was auto-migrated.
 
-### 3. Phase 8 — the main remaining build
+### 3. ~~Phase 8 — the main remaining build~~ CODE DONE, two steps outstanding
 
-Unfinished signups leave no trace. Full breakdown in the Phase 8 section below
-(8.1–8.6). This is what closes the defect Phase 6 found.
+Unfinished signups leave no trace. **8.1 (creation gate), 8.2 (pre-checkout
+sweep), 8.3 (accept the empty Stripe customers) and 8.5 (tests) shipped
+2026-08-02** — full write-up in `docs/billing-run-log.md`, "REVIEWFIX Phase 8".
+Typecheck clean, `npm run test` 1218 passed / 13 skipped (145 files). Still owed:
+
+- **8.4 — the read-only `past_due` + `stripe` audit.** Both ways of reading
+  production were refused by the permission classifier this session
+  (`node --env-file=.env.local <script>` and `supabase db dump --linked
+  --data-only --table billing_subscriptions`), so it needs the user to allow one
+  of them. Expected to be **empty**: the Phase 1 audit on the same day showed
+  production `billing_subscriptions` is 2 rows, both `active`
+  (`venue-garden-state-bar` offline, `venue-pacific-street` stripe). Confirm
+  before concluding; report the list to the user before deleting anything.
+- **8.6 — verification against real Stripe test mode.** Needs the :3000 dev
+  server stopped (Next 16's exclusive `.next/dev` lock) — ask first.
 
 ### 4. Phase 4 revisit — `SLIMCD_*` env vars (needs the user)
 

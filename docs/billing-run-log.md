@@ -1309,7 +1309,7 @@ DISCOUNT Phase 10 is fixed by commit `f3490ac`'s `invoice.parent.
 subscription_details.subscription` fallback, verified here against live webhooks
 rather than reasoning.
 
-### Defect found — Phase 5's fix is unreachable from the owner UI (NOT fixed)
+### Defect found — Phase 5's fix is unreachable from the owner UI (FIXED in Phase 8)
 
 **The server side is correct; the client never offers the door.** With an
 abandoned `incomplete` first Checkout the mirror is `past_due`, and:
@@ -1335,3 +1335,132 @@ Checkout is the right action) from "past_due because a live subscription's card
 declined" (where Phase 5 argues Checkout must stay refused with `fix_payment`).
 Closing the gap needs a product decision about which one the UI is allowed to
 assume, not a mechanical edit. Left for the user.
+
+**Resolved by REVIEWFIX Phase 8 (below), by removing the state rather than by
+adding a button.** The user's decision was that an unfinished signup should leave
+no trace at all, so the ambiguous `past_due` row is never created. The partner
+returns to the ordinary "No subscription yet" screen — which already existed and
+needed no new UI — and `past_due` is left meaning exactly one thing.
+
+## REVIEWFIX Phase 8 (an unfinished signup leaves no trace)
+
+Supersedes the UI half of Phase 5. Phase 6 found that Phase 5's server-side fix
+is unreachable from the owner UI, and that the UI *cannot* be fixed as designed
+because the mirror stores "first payment never finished" and "existing
+subscriber's card declined" identically as `past_due`. Rather than teach the
+system to tell them apart, this phase stops creating the ambiguous row at all.
+
+**The rule now:** a `billing_subscriptions` row means a partner who **pays us**.
+It may only be CREATED for a subscription Stripe reports as paid-for. `past_due`
+therefore comes to mean exactly one thing — an established subscriber whose card
+failed — and every existing screen that already assumed that becomes correct.
+
+### 8.1 — creation gate in the webhook
+
+One predicate, `ESTABLISHED_STRIPE_STATUSES = {active, trialing}`, consulted in
+`upsertSubscription` (`app/api/webhooks/stripe/route.ts`) so the rule lives in a
+single place instead of being duplicated per event type. The existing-row lookup
+moved out of the `guardStaleSubscriptionId` branch (it is now needed on every
+path) and the gate reads:
+
+```
+alreadyTracked = existing?.stripe_subscription_id === sub.id
+if (!alreadyTracked && !ESTABLISHED_STRIPE_STATUSES.has(sub.status)) return false
+```
+
+Three things follow from keying on `alreadyTracked` rather than on "does a row
+exist":
+
+- **Updates are never gated.** Once the row tracks this subscription id, every
+  later state change is mirrored verbatim — a renewal going `past_due` still
+  lands, so dunning is untouched.
+- **The missed-`checkout.session.completed` case still works.** The comment block
+  at the stale guard deliberately allows a first sync to arrive as
+  `customer.subscription.updated`; such a subscription is `active`, so it still
+  creates the row. What is refused is only an unpaid attempt. That comment was
+  rewritten to state the new rule and why it does not reintroduce the bug it was
+  originally guarding.
+- **An unpaid attempt can no longer clobber an existing row it doesn't own** — an
+  offline grant, or a still-live card subscription, survives an abandoned
+  Checkout for the same venue. That was reachable before (this path had no stale
+  guard) and is now closed as a side effect.
+
+`upsertSubscription` returns `boolean` (did it write) so
+`checkout.session.completed` can gate the welcome email on a write that really
+happened: **`maybeSendWelcomeEmail` can no longer fire for an unpaid attempt.**
+That is a strict improvement; no separate change was needed. A session that
+completes with `payment_status: 'unpaid'` (async payment methods) writes nothing
+now and creates the row later, off the `active` subscription event.
+
+`customer.subscription.deleted` for a subscription we never tracked is refused
+by the same gate (status `canceled` is not established) — no cancelled row is
+invented from thin air.
+
+### 8.2 — the abandoned object at Stripe
+
+With nothing stored there is no id to void the way Phase 5's branches do, so the
+sweep moved to the moment a new Checkout begins:
+`sweepAbandonedIncompleteSubscriptions` in
+`app/api/owner/billing/checkout/route.ts` cancels any `incomplete` subscription
+carrying this `venueId` in its metadata, immediately before
+`checkout.sessions.create`. Every subscription this app creates sets
+`subscription_data.metadata.venueId`, so no stored state is needed.
+
+**`list`, not `search`.** `subscriptions.search` does support
+`metadata['venueId']` on this SDK (v22.3.1), but Stripe documents its index as
+lagging up to a minute and explicitly unsafe for read-after-write flows — which
+is exactly this one (abandon, then immediately retry). `subscriptions.list({
+status: "incomplete", limit: 100 })` is strongly consistent, and `incomplete`
+subscriptions are a small, self-expiring (~23h) population account-wide.
+
+**Failure policy: log and proceed**, stated in the code comment so it doesn't
+read as an oversight. Unlike Phase 5's void — where the abandoned object was the
+*same* subscription about to be replaced, making a blind proceed a known
+double-bill — this is a safety net on top of Stripe's own expiry. Blocking a
+paying partner's signup over a failed sweep would trade a certain harm for an
+unlikely one. It runs only after every guard has already allowed the checkout, so
+a 409 sweeps nothing.
+
+### 8.3 — the Stripe customer question: accepted, not fixed
+
+With no row there is no `stripe_customer_id` to reuse, so each abandoned attempt
+leaves an empty Stripe customer behind. **This is deliberate.** Empty customers
+cost nothing and carry no billing state; reusing one would mean storing exactly
+the trace this phase exists to eliminate. Recorded here so the sprawl is not
+mistaken for a bug later. If it ever becomes untidy the fix is a lookup by email
+at Checkout time, not a stored id.
+
+### No new UI — confirmed, not rebuilt
+
+- `app/owner/billing/page.tsx:233` already renders "No subscription yet" + "Set
+  up subscription".
+- `app/owner/billing/setup/page.tsx:46` already falls back to
+  `data.venueIds?.[0]` when there is no row.
+- The `liveNeedsAction` redirect at `setup/page.tsx:41-45` that bounces
+  `past_due` back to `/owner/billing` is **left alone on purpose**: under this
+  design `past_due` really is a subscriber who should update their card.
+
+Both empty-state paths were verified working in Phase 6 (Scenario 6).
+
+### 8.5 — tests
+
+New file `tests/api.webhooks.stripe-unfinished-signup.test.ts` (10 cases):
+`checkout.session.completed` with an `incomplete` subscription → no row, no
+welcome email; with `active` → row + email; an unpaid attempt on top of an
+existing offline grant → grant untouched; `customer.subscription.updated`
+`incomplete` / `incomplete_expired` with no row → no row; `active` with no row →
+**row created** (the missed-webhook case, must not regress); `trialing` → row
+created; `past_due` on an established row → mirrored; `.deleted` on an
+established row → mirrored as `cancelled`; `.deleted` for an untracked
+subscription → nothing invented.
+
+Five sweep cases added to
+`tests/api.owner.billing-resume-vs-checkout-matrix.test.ts` (whose Stripe mock
+grew `subscriptions.list`): cancels this venue's abandoned subscription and
+proceeds; leaves another venue's alone; proceeds when the cancel fails; proceeds
+when the list call fails; sweeps nothing when checkout is refused. Every existing
+Phase 5 case stays green — that logic is retained for rows that already exist
+(legacy rows, and a resubscribe on top of a previously-cancelled subscription).
+
+`npx tsc --noEmit` clean; `npm run test` **1218 passed / 13 skipped (145 files)**,
+up from 1202/143 at the Phase 6 baseline.

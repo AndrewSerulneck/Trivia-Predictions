@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getStripePriceId, OFFLINE_BILLING_METHOD, stripe } from "@/lib/stripe";
@@ -19,6 +20,57 @@ type ExistingBillingRow = ClassifiableBillingRow & {
   cancel_at_period_end: boolean;
   billing_method: string;
 };
+
+/**
+ * Cancel any `incomplete` Stripe subscription still carrying this venueId in its
+ * metadata, before a fresh Checkout is started.
+ *
+ * Since Phase 8 an unfinished signup writes NO billing_subscriptions row (see
+ * app/api/webhooks/stripe/route.ts), so there is no stored id to void the way the
+ * mirrored branches in POST do. Stripe expires an `incomplete` subscription by
+ * itself in ~23h, but inside that window a partner could return to a stale
+ * Checkout tab and complete it AFTER paying through a fresh one — billed twice.
+ * Every subscription this app creates sets subscription_data.metadata.venueId, so
+ * the abandoned object is findable with nothing stored on our side.
+ *
+ * `subscriptions.search` does support `metadata['venueId']`, but its index lags up
+ * to a minute and Stripe documents it as unsafe for read-after-write flows — which
+ * is exactly this one (abandon, then immediately retry). `list` is strongly
+ * consistent, and `incomplete` subscriptions are a small, self-expiring population
+ * account-wide.
+ *
+ * Failure policy: log and proceed. Unlike the void inside POST — where the
+ * abandoned object was the SAME subscription we were about to replace, so
+ * proceeding blind would have been a known double-bill — this is a safety net on
+ * top of Stripe's own expiry. Blocking a paying partner's signup because a sweep
+ * call failed would trade a certain harm for an unlikely one. This is deliberate,
+ * not an unhandled error.
+ */
+async function sweepAbandonedIncompleteSubscriptions(
+  client: Stripe,
+  venueId: string
+): Promise<void> {
+  try {
+    const incomplete = await client.subscriptions.list({ status: "incomplete", limit: 100 });
+    for (const sub of incomplete.data) {
+      if (sub.metadata?.venueId?.trim() !== venueId) continue;
+      try {
+        await client.subscriptions.cancel(sub.id);
+      } catch (error) {
+        console.warn("Could not cancel an abandoned incomplete subscription before checkout.", {
+          venueId,
+          subscriptionId: sub.id,
+          error: error instanceof Error ? error.message : "unknown",
+        });
+      }
+    }
+  } catch (error) {
+    console.warn("Could not list incomplete subscriptions before checkout.", {
+      venueId,
+      error: error instanceof Error ? error.message : "unknown",
+    });
+  }
+}
 
 /**
  * POST /api/owner/billing/checkout — start a Stripe Checkout Session (subscription
@@ -231,6 +283,10 @@ export async function POST(request: Request) {
   }
 
   const origin = request.headers.get("origin") ?? new URL(request.url).origin;
+
+  // No row is written for an unfinished signup any more, so an abandoned attempt
+  // can only be found at Stripe. Close it before opening a new one.
+  await sweepAbandonedIncompleteSubscriptions(stripe, venueId);
 
   try {
     // Reuse an existing Stripe customer if we have one for this venue; otherwise
