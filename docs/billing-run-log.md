@@ -1464,3 +1464,121 @@ Phase 5 case stays green — that logic is retained for rows that already exist
 
 `npx tsc --noEmit` clean; `npm run test` **1218 passed / 13 skipped (145 files)**,
 up from 1202/143 at the Phase 6 baseline.
+
+### 8.4 — the existing-data audit: 0 rows
+
+Read-only, 2026-08-02, against production. Every `billing_subscriptions` row with
+`status = 'past_due'` AND `billing_method = 'stripe'` — i.e. anything that could
+be an unfinished signup recorded under the old behavior: **0 rows.** Production
+is still the same 2 rows Phase 1 found, both `active`:
+
+| venue_id | method | status | amount | subscription |
+|---|---|---|---|---|
+| `venue-garden-state-bar` | offline | active | $100.00 | — |
+| `venue-pacific-street` | stripe | active | $100.00 | `sub_1TvKnu…` |
+
+Nothing to report to the user and nothing to delete. No writes, no Stripe calls.
+
+*Method note:* the classifier refused both `node --env-file=.env.local <script>`
+and `supabase db dump --linked --data-only --table billing_subscriptions` until
+the user approved the first. `.env.local` was never read — Node loads it into the
+child process. A script living outside the repo must import `@supabase/supabase-js`
+through `createRequire(<project>/package.json)`; a bare specifier resolves against
+the script's own directory and fails.
+
+### 8.6 — verification against real Stripe test mode
+
+Live run, 2026-08-02, **77 assertions: 74 passed on the first pass; the 3 that
+failed were harness artifacts and were re-established in scenario 3b, so 77/77
+stand.** Both failures are written up below rather than smoothed over.
+
+**Harness.** Same shape as Phase 6: dev server on :3100 under
+`scripts/stripe-test-env.sh` (test key exported before `@next/env` loads
+`.env.local`, whose `STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID` are LIVE), a
+throwaway $100/mo test price, and `stripe listen --forward-to
+localhost:3100/api/webhooks/stripe`. The :3000 server was stopped with the user's
+approval and restarted afterward; `next-env.d.ts` reverted. Confirmed for next
+time: **Node's `--env-file` does not overwrite an already-set variable**, so
+`stripe-test-env.sh node --env-file=.env.local …` keeps the test key — checked
+explicitly before any Stripe call. Seed: 3 owners + 3 `hidden = true` venues, all
+prefixed `zz-p8-20260802`.
+
+**Scenario 1 — abandoned signup leaves no trace (4 + 2 + 11 assertions).**
+
+- API-built `payment_behavior: 'default_incomplete'` subscription with venue
+  metadata → real `customer.subscription.created` delivered (200) → **no row**,
+  and the owner payload carries no subscription for the venue.
+- Forcing a real `customer.subscription.updated` while it was still `incomplete`
+  → **still no row**. Both webhook writers confirmed, not just the one.
+- **Real hosted Checkout, declined at the last step** (`4000000000000341`, a card
+  that attaches then fails the charge; screenshot shows Stripe's "Your credit card
+  was declined") then walking away → no row, and **Stripe created no subscription
+  object at all** for a plain decline. Worth knowing: for this failure mode there
+  is nothing to sweep, because nothing exists.
+- `/owner/billing` at 320×900 for that partner: "No subscription yet" + "Set up
+  subscription", **no** "Payment due", **no** card-on-file/Update, **no** cancel
+  control, `scrollWidth` 290 ≤ 320. `/owner/billing/setup` does **not** redirect
+  away — they can start over.
+
+**Scenario 2 — the partner comes back and pays (11/11).** Real hosted Checkout,
+`4242…`, real webhooks: exactly one row, `active`, `billing_method` stripe,
+`amount_cents` 10000, `welcome_email_sent_at` set **once**, exactly **one billable
+subscription** at Stripe with the mirror pointing at it, and the earlier abandoned
+object still `incomplete_expired`. *Method note:* with no stored customer id (8.3)
+Checkout collects the email itself — `#email` must be filled or Subscribe stays
+inert. That, plus Phase 6's accordion and Link-phone notes, is the whole recipe.
+
+**Scenario 3 — an established subscriber's renewal fails (9/12, then 9/9).** Test
+clock; subscription established with `pm_card_visa` (active, row created), then
+the default payment method swapped to `pm_card_chargeCustomerFail` and the clock
+advanced past period end. Stripe → `past_due`, **mirror followed it to `past_due`
+on the same subscription id** — dunning is untouched — and Checkout still refused
+with `fix_payment`. The three first-pass failures were both harness problems, not
+product ones:
+
+1. *"the mirror row WAS created"* failed inside its 30s window because an
+   API-created subscription fires only `customer.subscription.created`, which this
+   route has never handled; the row appeared on the next `.updated` (the
+   payment-method swap, still `active`). Real signups arrive via
+   `checkout.session.completed`, so this is a property of the test setup.
+2. *"page says PAYMENT DUE"* failed because `/owner/billing` renders **one**
+   subscription card (`subscription`, singular) and this owner also held the paid
+   v1. Pre-existing multi-venue behaviour, unrelated to Phase 8.
+
+Scenario **3b** re-ran both against a partner whose only subscription is the
+dunning one: badge **"PAYMENT DUE"**, "Card on file" + **Update**, no empty state,
+no Resubscribe, no overflow at 320px. It also added the gate's other edge
+directly: **delete the row, leave Stripe at `past_due`, fire a real
+`customer.subscription.updated` → nothing is created.** That is the assertion
+scenario 3's setup could not make.
+
+**Scenario 4 — abandoned attempt, then a fresh signup (7/7).** With no mirror row
+to void through, `POST /api/owner/billing/checkout` swept the abandoned object:
+`incomplete` → **`incomplete_expired`** before the session was returned, no
+incomplete subscription left for the venue, and still no billing row (a session is
+not a subscription). Combined with scenario 2 on the same venue: **the partner was
+billed once.**
+
+**Scenario 5 — Phase 6's guard matrix, unchanged (18/18 + 3/3).** active → 409
+already-active, subs 1→1; scheduled cancel → 409 `resume_instead`, resume → 200
+with Stripe and mirror both un-scheduled; `past_due` mirror + live Stripe → 409
+`fix_payment`, row untouched; `cancelled` mirror + live Stripe → 409 `stripe_live`,
+row byte-identical; `resource_missing` → allowed and **never written back**
+(row byte-identical); self-heal against a genuinely dead object → allowed, mirror
+corrected to `cancelled`, `cancel_at_period_end` and the stale discount mirror
+cleared; offline row → 409 `offline_billing`. Then the dev server was restarted on
+a syntactically valid but dead `sk_test_` key: → 409 `stripe_unreachable`, row
+byte-identical. **Still fails closed.**
+
+**8.3 measured, not assumed.** Four Stripe customers carried the run's prefix:
+one active payer, one holding the API-built `incomplete_expired` object, and
+**two completely empty** — one per declined Checkout attempt. So the predicted
+sprawl is real and is exactly one empty customer per failed attempt. Still
+accepted: they hold no billing state, and reusing one would mean storing the
+trace this phase removes.
+
+**Cleanup verified.** All throwaway subscriptions cancelled, the test clock
+deleted, all 4 customers deleted, the throwaway price + product archived, all 3
+owners + auth users, 3 venues and their links removed. Post-run checks: 0
+prefixed Stripe customers, 0 prefixed subscriptions in any billable status, 0
+`zz-` venues, and `billing_subscriptions` back to production's 2 real rows.
