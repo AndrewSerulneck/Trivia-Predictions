@@ -198,6 +198,8 @@ export type NFLWeek = {
 export type NFLPickEmGame = PickEmGame & {
   nflWeekId: string;
   weekNumber: number;
+  homeSpread?: number | null;
+  awaySpread?: number | null;
   isThursdayGame: boolean;
   isSundayGame: boolean;
   isMondayGame: boolean;
@@ -207,6 +209,18 @@ export type NFLPickEmGame = PickEmGame & {
   dayGroupLabel: string;
   /** True only when this game IS the lone Thursday-night primetime slot — drives the 🏈/amber section styling. Not derived from dayGroupLabel text so client styling can't silently drift from it. */
   isThursdayNightSection: boolean;
+};
+
+export type NFLPickEmGameLine = {
+  gameId: string;
+  startsAt: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeSpread: number;
+  awaySpread: number;
+  provider: string;
+  fetchedAt: string | null;
+  lockedAt: string | null;
 };
 
 export type NFLUserWeekSummary = {
@@ -826,6 +840,36 @@ type NFLGameFetchResult = {
   status: string;
 };
 
+type NFLPickEmGameLineRow = {
+  game_id: string;
+  starts_at: string;
+  home_team: string;
+  away_team: string;
+  home_spread: number | string;
+  away_spread: number | string;
+  provider: string;
+  fetched_at: string | null;
+  locked_at: string | null;
+};
+
+type BDLNFLOdds = {
+  game_id?: number | string | null;
+  vendor?: string | null;
+  spread_home_value?: number | string | null;
+  spread_away_value?: number | string | null;
+  updated_at?: string | null;
+};
+
+type NormalizedNFLSpreadLine = {
+  providerGameId: string;
+  homeSpread: number;
+  awaySpread: number;
+  provider: string;
+  fetchedAt: string | null;
+  updatedAtMs: number;
+  priority: number;
+};
+
 function mapBDLGame(game: BDLGame): NFLGameFetchResult {
   const homeTeam = game.home_team?.full_name || game.home_team?.name || "";
   const awayTeam = game.visitor_team?.full_name || game.visitor_team?.name || "";
@@ -843,6 +887,270 @@ function mapBDLGame(game: BDLGame): NFLGameFetchResult {
     winnerTeam: game.winner_team?.full_name ?? null,
     status: game.status,
   };
+}
+
+function toNFLPickEmGameId(game: Pick<NFLGameFetchResult, "id" | "startsAt" | "awayTeam" | "homeTeam">): string {
+  return `${game.id}__${game.startsAt}__${game.awayTeam}__${game.homeTeam}`;
+}
+
+function mapGameLineRow(row: NFLPickEmGameLineRow): NFLPickEmGameLine {
+  return {
+    gameId: row.game_id,
+    startsAt: row.starts_at,
+    homeTeam: row.home_team,
+    awayTeam: row.away_team,
+    homeSpread: Number(row.home_spread),
+    awaySpread: Number(row.away_spread),
+    provider: row.provider,
+    fetchedAt: row.fetched_at,
+    lockedAt: row.locked_at,
+  };
+}
+
+function parseSpreadValue(value: number | string | null | undefined): number | null {
+  if (value === null || value === undefined) return null;
+  const parsed = Number.parseFloat(String(value));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+const NFL_SPREAD_VENDOR_PRIORITY = [
+  "fanduel",
+  "draftkings",
+  "betmgm",
+  "caesars",
+  "bet365",
+  "fanatics",
+  "betrivers",
+  "betparx",
+  "ballybet",
+  "betway",
+];
+
+function getSpreadVendorPriority(vendor: string): number {
+  const index = NFL_SPREAD_VENDOR_PRIORITY.indexOf(vendor.toLowerCase());
+  return index >= 0 ? index : NFL_SPREAD_VENDOR_PRIORITY.length;
+}
+
+function normalizeBDLNFLSpread(row: BDLNFLOdds): NormalizedNFLSpreadLine | null {
+  const providerGameId = String(row.game_id ?? "").trim();
+  if (!providerGameId) return null;
+
+  const rawHomeSpread = parseSpreadValue(row.spread_home_value);
+  const rawAwaySpread = parseSpreadValue(row.spread_away_value);
+  if (rawHomeSpread === null && rawAwaySpread === null) return null;
+
+  const homeSpread = rawHomeSpread ?? -rawAwaySpread!;
+  const awaySpread = rawAwaySpread ?? -homeSpread;
+  if (!Number.isFinite(homeSpread) || !Number.isFinite(awaySpread)) return null;
+
+  const vendor = String(row.vendor ?? "unknown").trim() || "unknown";
+  const updatedAtMs = Date.parse(String(row.updated_at ?? ""));
+
+  return {
+    providerGameId,
+    homeSpread,
+    awaySpread,
+    provider: `balldontlie:${vendor}`,
+    fetchedAt: row.updated_at ?? null,
+    updatedAtMs: Number.isFinite(updatedAtMs) ? updatedAtMs : 0,
+    priority: getSpreadVendorPriority(vendor),
+  };
+}
+
+function pickBetterSpreadLine(
+  current: NormalizedNFLSpreadLine | undefined,
+  next: NormalizedNFLSpreadLine
+): NormalizedNFLSpreadLine {
+  if (!current) return next;
+  if (next.priority !== current.priority) {
+    return next.priority < current.priority ? next : current;
+  }
+  return next.updatedAtMs > current.updatedAtMs ? next : current;
+}
+
+async function fetchNFLSpreadLinesFromBDL(params: {
+  seasonWeek?: { season: number; weekNumber: number };
+  providerGameIds: string[];
+}): Promise<Map<string, NormalizedNFLSpreadLine>> {
+  if (params.providerGameIds.length === 0) return new Map();
+
+  const query = new URLSearchParams({ per_page: "100" });
+  if (params.seasonWeek) {
+    query.set("season", String(params.seasonWeek.season));
+    query.set("week", String(params.seasonWeek.weekNumber));
+  } else {
+    for (const gameId of params.providerGameIds) {
+      query.append("game_ids[]", gameId);
+    }
+  }
+
+  const rows = await fetchBallDontLieList<BDLNFLOdds>("/nfl/v1/odds", query, 4);
+  const byProviderGameId = new Map<string, NormalizedNFLSpreadLine>();
+
+  for (const row of rows) {
+    const line = normalizeBDLNFLSpread(row);
+    if (!line) continue;
+    if (!params.providerGameIds.includes(line.providerGameId)) continue;
+    byProviderGameId.set(
+      line.providerGameId,
+      pickBetterSpreadLine(byProviderGameId.get(line.providerGameId), line)
+    );
+  }
+
+  return byProviderGameId;
+}
+
+export async function getNFLPickEmGameLine(gameId: string): Promise<NFLPickEmGameLine | null> {
+  if (!supabaseAdmin) {
+    throw new Error("Supabase admin client is not configured.");
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("nfl_pickem_game_lines")
+    .select("game_id, starts_at, home_team, away_team, home_spread, away_spread, provider, fetched_at, locked_at")
+    .eq("game_id", gameId)
+    .maybeSingle<NFLPickEmGameLineRow>();
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to load NFL Pick 'Em game line.");
+  }
+
+  return data ? mapGameLineRow(data) : null;
+}
+
+export async function getLockedNFLPickEmGameLineForSettlement(
+  gameId: string,
+  now = new Date()
+): Promise<NFLPickEmGameLine | null> {
+  if (!supabaseAdmin) {
+    throw new Error("Supabase admin client is not configured.");
+  }
+
+  const existing = await getNFLPickEmGameLine(gameId);
+  if (!existing) return null;
+  if (existing.lockedAt) return existing;
+
+  const startsAtMs = Date.parse(existing.startsAt);
+  const nowMs = now.getTime();
+  if (!Number.isFinite(startsAtMs) || !Number.isFinite(nowMs) || startsAtMs > nowMs) {
+    return null;
+  }
+
+  const lockedAt = new Date(startsAtMs).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("nfl_pickem_game_lines")
+    .update({ locked_at: lockedAt })
+    .eq("game_id", gameId)
+    .is("locked_at", null)
+    .select("game_id, starts_at, home_team, away_team, home_spread, away_spread, provider, fetched_at, locked_at")
+    .maybeSingle<NFLPickEmGameLineRow>();
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to lock NFL Pick 'Em game line for settlement.");
+  }
+
+  if (data) {
+    return mapGameLineRow(data);
+  }
+
+  const reloaded = await getNFLPickEmGameLine(gameId);
+  return reloaded?.lockedAt ? reloaded : null;
+}
+
+async function refreshNFLPickEmGameLines(
+  games: NFLGameFetchResult[],
+  seasonWeek?: { season: number; weekNumber: number }
+): Promise<Map<string, NFLPickEmGameLine>> {
+  if (!supabaseAdmin || games.length === 0) return new Map();
+
+  const gameIds = games.map(toNFLPickEmGameId);
+  const { data: existingRows, error: existingError } = await supabaseAdmin
+    .from("nfl_pickem_game_lines")
+    .select("game_id, starts_at, home_team, away_team, home_spread, away_spread, provider, fetched_at, locked_at")
+    .in("game_id", gameIds)
+    .returns<NFLPickEmGameLineRow[]>();
+
+  if (existingError) {
+    throw new Error(existingError.message ?? "Failed to load NFL Pick 'Em game lines.");
+  }
+
+  const existingByGameId = new Map((existingRows ?? []).map((row) => [row.game_id, mapGameLineRow(row)]));
+  const linesByGameId = new Map(existingByGameId);
+  const nowMs = Date.now();
+  const stampIso = new Date(nowMs).toISOString();
+  const unlockableGames = games.filter((game) => {
+    const existing = existingByGameId.get(toNFLPickEmGameId(game));
+    if (existing?.lockedAt) return false;
+
+    const startsAtMs = Date.parse(game.startsAt);
+    return !Number.isFinite(startsAtMs) || nowMs < startsAtMs;
+  });
+  const providerLines =
+    unlockableGames.length > 0
+      ? await fetchNFLSpreadLinesFromBDL({
+          seasonWeek,
+          providerGameIds: unlockableGames.map((game) => game.id),
+        })
+      : new Map<string, NormalizedNFLSpreadLine>();
+
+  for (const game of games) {
+    const gameId = toNFLPickEmGameId(game);
+    const existing = existingByGameId.get(gameId);
+    if (existing?.lockedAt) continue;
+
+    const startsAtMs = Date.parse(game.startsAt);
+    const hasKickedOff = Number.isFinite(startsAtMs) && nowMs >= startsAtMs;
+    if (hasKickedOff && existing) {
+      const lockedAt = new Date(startsAtMs).toISOString();
+      const { data, error } = await supabaseAdmin
+        .from("nfl_pickem_game_lines")
+        .update({ locked_at: lockedAt })
+        .eq("game_id", gameId)
+        .is("locked_at", null)
+        .select("game_id, starts_at, home_team, away_team, home_spread, away_spread, provider, fetched_at, locked_at")
+        .single<NFLPickEmGameLineRow>();
+
+      if (error || !data) {
+        throw new Error(error?.message ?? "Failed to lock NFL Pick 'Em game line.");
+      }
+      linesByGameId.set(gameId, mapGameLineRow(data));
+      continue;
+    }
+
+    if (hasKickedOff) {
+      continue;
+    }
+
+    const providerLine = providerLines.get(game.id);
+    if (!providerLine) continue;
+
+    const fetchedAt = providerLine.fetchedAt ?? stampIso;
+    const { data, error } = await supabaseAdmin
+      .from("nfl_pickem_game_lines")
+      .upsert(
+        {
+          game_id: gameId,
+          starts_at: game.startsAt,
+          home_team: game.homeTeam,
+          away_team: game.awayTeam,
+          home_spread: providerLine.homeSpread,
+          away_spread: providerLine.awaySpread,
+          provider: providerLine.provider,
+          fetched_at: fetchedAt,
+          locked_at: null,
+        },
+        { onConflict: "game_id" }
+      )
+      .select("game_id, starts_at, home_team, away_team, home_spread, away_spread, provider, fetched_at, locked_at")
+      .single<NFLPickEmGameLineRow>();
+
+    if (error || !data) {
+      throw new Error(error?.message ?? "Failed to save NFL Pick 'Em game line.");
+    }
+    linesByGameId.set(gameId, mapGameLineRow(data));
+  }
+
+  return linesByGameId;
 }
 
 /**
@@ -936,6 +1244,10 @@ export async function listNFLPickEmGames(params: {
     season: week.season,
     weekNumber: week.weekNumber,
   });
+  const gameLines = await refreshNFLPickEmGameLines(games, {
+    season: week.season,
+    weekNumber: week.weekNumber,
+  });
   
   // Transform to NFLPickEmGame format
   const gameDates = games.map(game => new Date(game.startsAt));
@@ -947,6 +1259,8 @@ export async function listNFLPickEmGames(params: {
 
   const nflGames: NFLPickEmGame[] = games.map((game, index) => {
     const gameDate = gameDates[index];
+    const gameId = toNFLPickEmGameId(game);
+    const gameLine = gameLines.get(gameId);
     const dayOfWeek = getEasternDayOfWeek(gameDate);
     const dayGroupKey = dayGroupKeys[index];
 
@@ -979,6 +1293,8 @@ export async function listNFLPickEmGames(params: {
       homeScore: game.homeScore,
       awayScore: game.awayScore,
       winnerTeam: game.winnerTeam,
+      homeSpread: gameLine?.homeSpread ?? null,
+      awaySpread: gameLine?.awaySpread ?? null,
       periodLabel: null,
       nflWeekId: week.id,
       weekNumber: week.weekNumber,

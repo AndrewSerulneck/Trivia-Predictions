@@ -8,6 +8,7 @@ import {
   listNFLWeeks,
 } from "@/lib/nflPickEm";
 import { resolveRequestUserId } from "@/lib/serverSession";
+import { getVenueNFLPickEmScoringMode, type NFLPickEmScoringMode } from "@/lib/venueGameSettings";
 
 export async function GET(request: Request) {
   try {
@@ -22,6 +23,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
     }
     const userId = viewer.userId ?? undefined;
+    const scoringMode: NFLPickEmScoringMode = venueId
+      ? await getVenueNFLPickEmScoringMode(venueId)
+      : "standard";
 
     if (!weekId) {
       return NextResponse.json(
@@ -59,6 +63,7 @@ export async function GET(request: Request) {
     
     return NextResponse.json({
       ok: true,
+      scoringMode,
       week: {
         id: result.week.id,
         weekNumber: result.week.weekNumber,
@@ -68,7 +73,11 @@ export async function GET(request: Request) {
         status: result.week.status,
         isLocked: isNFLWeekLocked(result.week),
       },
-      games: result.games,
+      games: result.games.map((game) => ({
+        ...game,
+        homeSpread: scoringMode === "spread" ? game.homeSpread ?? null : undefined,
+        awaySpread: scoringMode === "spread" ? game.awaySpread ?? null : undefined,
+      })),
       userSummary: result.userSummary,
     });
   } catch (error) {

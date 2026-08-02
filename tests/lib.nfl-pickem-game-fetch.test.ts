@@ -22,20 +22,83 @@ const db = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/supabaseAdmin", () => {
-  const createBuilder = (rows: MockRow[]) => {
+  const createBuilder = (table: string) => {
+    const rows = db.tables[table] ?? [];
     let result = [...rows];
+    let pendingUpdate: MockRow | null = null;
+    let updateTargets: MockRow[] | null = null;
+
+    const applyPendingUpdate = () => {
+      if (!pendingUpdate || !updateTargets) return;
+      for (const row of updateTargets) {
+        Object.assign(row, pendingUpdate);
+      }
+      result = [...updateTargets];
+      pendingUpdate = null;
+      updateTargets = null;
+    };
+
     const builder = {
       select: () => builder,
       eq: (column: string, value: unknown) => {
-        result = result.filter((row) => row[column] === value);
+        if (pendingUpdate) {
+          updateTargets = (updateTargets ?? db.tables[table] ?? []).filter((row) => row[column] === value);
+        } else {
+          result = result.filter((row) => row[column] === value);
+        }
+        return builder;
+      },
+      is: (column: string, value: unknown) => {
+        if (pendingUpdate) {
+          updateTargets = (updateTargets ?? db.tables[table] ?? []).filter((row) => row[column] === value);
+        } else {
+          result = result.filter((row) => row[column] === value);
+        }
+        return builder;
+      },
+      in: (column: string, values: unknown[]) => {
+        result = result.filter((row) => values.includes(row[column]));
         return builder;
       },
       order: () => builder,
       limit: () => builder,
-      returns: () => Promise.resolve({ data: result, error: null }),
+      update: (patch: MockRow) => {
+        pendingUpdate = patch;
+        updateTargets = db.tables[table] ?? [];
+        return builder;
+      },
+      upsert: (payload: MockRow | MockRow[], options?: { onConflict?: string }) => {
+        const tableRows = db.tables[table] ?? [];
+        db.tables[table] = tableRows;
+        const payloadRows = Array.isArray(payload) ? payload : [payload];
+        const conflictColumns = (options?.onConflict ?? "id").split(",").map((column) => column.trim());
+
+        result = payloadRows.map((payloadRow) => {
+          const existing = tableRows.find((row) =>
+            conflictColumns.every((column) => row[column] === payloadRow[column])
+          );
+          if (existing) {
+            Object.assign(existing, payloadRow);
+            return existing;
+          }
+          const inserted = { ...payloadRow };
+          tableRows.push(inserted);
+          return inserted;
+        });
+        return builder;
+      },
+      returns: () => {
+        applyPendingUpdate();
+        return Promise.resolve({ data: result, error: null });
+      },
       single: () =>
         Promise.resolve(
-          result.length > 0 ? { data: result[0], error: null } : { data: null, error: { message: "not found" } }
+          (() => {
+            applyPendingUpdate();
+            return result.length > 0
+              ? { data: result[0], error: null }
+              : { data: null, error: { message: "not found" } };
+          })()
         ),
       maybeSingle: () => Promise.resolve({ data: result[0] ?? null, error: null }),
     };
@@ -44,7 +107,7 @@ vi.mock("@/lib/supabaseAdmin", () => {
 
   return {
     supabaseAdmin: {
-      from: (table: string) => createBuilder(db.tables[table] ?? []),
+      from: (table: string) => createBuilder(table),
       rpc: () => Promise.resolve({ data: null, error: null }),
     },
   };
@@ -87,13 +150,24 @@ const WEEK_1_GAMES = [
 
 beforeEach(() => {
   vi.clearAllMocks();
-  db.tables = { nfl_pickem_weeks: [WEEK_ROW] };
+  db.tables = { nfl_pickem_weeks: [WEEK_ROW], nfl_pickem_game_lines: [] };
 
   // Behave like the real endpoint rather than returning everything regardless:
   // a `dates[]` query returns only games on that UTC date, which is precisely
   // how the Monday-nighter used to go missing. Without this the MNF assertion
   // below would pass even against the old date-range implementation.
-  vi.mocked(fetchBallDontLieList).mockImplementation(async (_path, query) => {
+  vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query) => {
+    if (path === "/nfl/v1/odds") {
+      return WEEK_1_GAMES.map((game, index) => ({
+        id: 1000 + index,
+        game_id: game.id,
+        vendor: "fanduel",
+        spread_home_value: index % 2 === 0 ? "-3.5" : "2.5",
+        spread_away_value: index % 2 === 0 ? "3.5" : "-2.5",
+        updated_at: "2026-09-09T12:00:00.000Z",
+      }));
+    }
+
     const date = query.get("dates[]");
     if (date) return WEEK_1_GAMES.filter((game) => game.date.slice(0, 10) === date);
 
@@ -108,8 +182,9 @@ describe("listNFLPickEmGames game fetching", () => {
   it("asks balldontlie for the season+week, not a date range", async () => {
     await listNFLPickEmGames({ weekId: "week-1" });
 
-    expect(fetchBallDontLieList).toHaveBeenCalledTimes(1);
-    const query = vi.mocked(fetchBallDontLieList).mock.calls[0][1];
+    const gameCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/games");
+    expect(gameCalls).toHaveLength(1);
+    const query = gameCalls[0][1];
 
     expect(query.get("seasons[]")).toBe("2026");
     expect(query.get("weeks[]")).toBe("1");
@@ -120,7 +195,8 @@ describe("listNFLPickEmGames game fetching", () => {
   it("uses bracket-style array params, which is what balldontlie actually matches on", async () => {
     await listNFLPickEmGames({ weekId: "week-1" });
 
-    const query = vi.mocked(fetchBallDontLieList).mock.calls[0][1];
+    const gameCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/games");
+    const query = gameCalls[0][1];
     // The unbracketed keys silently match zero games — the same class of bug
     // that left nfl_pickem_weeks empty in production.
     expect(query.has("seasons")).toBe(false);
@@ -140,7 +216,97 @@ describe("listNFLPickEmGames game fetching", () => {
     await listNFLPickEmGames({ weekId: "week-1" });
 
     // The old date-range path made five calls for a Thu-Mon week.
-    expect(fetchBallDontLieList).toHaveBeenCalledTimes(1);
+    const gameCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/games");
+    expect(gameCalls).toHaveLength(1);
+  });
+
+  it("fetches BallDontLie NFL spreads by season and week", async () => {
+    await listNFLPickEmGames({ weekId: "week-1" });
+
+    const oddsCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/odds");
+    expect(oddsCalls).toHaveLength(1);
+    expect(oddsCalls[0][1].get("season")).toBe("2026");
+    expect(oddsCalls[0][1].get("week")).toBe("1");
+  });
+
+  it("upserts unlocked spread lines using the stored Pick 'Em game id", async () => {
+    await listNFLPickEmGames({ weekId: "week-1" });
+
+    expect(db.tables.nfl_pickem_game_lines).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          game_id:
+            "2__2026-09-13T17:00:00.000Z__Miami Dolphins__Buffalo Bills",
+          home_spread: 2.5,
+          away_spread: -2.5,
+          provider: "balldontlie:fanduel",
+          locked_at: null,
+        }),
+      ])
+    );
+  });
+
+  it("locks existing lines at kickoff without overwriting the stored spread", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-09-16T12:00:00.000Z"));
+    db.tables.nfl_pickem_game_lines = [
+      {
+        game_id: "1__2026-09-10T00:20:00.000Z__New England Patriots__Seattle Seahawks",
+        starts_at: "2026-09-10T00:20:00.000Z",
+        home_team: "Seattle Seahawks",
+        away_team: "New England Patriots",
+        home_spread: -7,
+        away_spread: 7,
+        provider: "balldontlie:draftkings",
+        fetched_at: "2026-09-09T09:00:00.000Z",
+        locked_at: null,
+      },
+    ];
+
+    await listNFLPickEmGames({ weekId: "week-1" });
+
+    expect(db.tables.nfl_pickem_game_lines[0]).toMatchObject({
+      home_spread: -7,
+      away_spread: 7,
+      provider: "balldontlie:draftkings",
+      locked_at: "2026-09-10T00:20:00.000Z",
+    });
+    nowSpy.mockRestore();
+  });
+
+  it("does not create a brand-new locked line after kickoff", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-09-16T12:00:00.000Z"));
+
+    await listNFLPickEmGames({ weekId: "week-1" });
+
+    expect(db.tables.nfl_pickem_game_lines).toEqual([]);
+    const oddsCalls = vi.mocked(fetchBallDontLieList).mock.calls.filter(([path]) => path === "/nfl/v1/odds");
+    expect(oddsCalls).toHaveLength(0);
+    nowSpy.mockRestore();
+  });
+
+  it("does not overwrite an already locked line", async () => {
+    db.tables.nfl_pickem_game_lines = [
+      {
+        game_id: "1__2026-09-10T00:20:00.000Z__New England Patriots__Seattle Seahawks",
+        starts_at: "2026-09-10T00:20:00.000Z",
+        home_team: "Seattle Seahawks",
+        away_team: "New England Patriots",
+        home_spread: -10,
+        away_spread: 10,
+        provider: "balldontlie:draftkings",
+        fetched_at: "2026-09-09T09:00:00.000Z",
+        locked_at: "2026-09-10T00:20:00.000Z",
+      },
+    ];
+
+    await listNFLPickEmGames({ weekId: "week-1" });
+
+    expect(db.tables.nfl_pickem_game_lines[0]).toMatchObject({
+      home_spread: -10,
+      away_spread: 10,
+      provider: "balldontlie:draftkings",
+      locked_at: "2026-09-10T00:20:00.000Z",
+    });
   });
 });
 
@@ -165,8 +331,9 @@ describe("listNFLPickEmGames day-of-week classification (Eastern, not UTC)", () 
   ];
 
   beforeEach(() => {
-    db.tables = { nfl_pickem_weeks: [CLASSIFICATION_WEEK_ROW] };
-    vi.mocked(fetchBallDontLieList).mockImplementation(async (_path, query) => {
+    db.tables = { nfl_pickem_weeks: [CLASSIFICATION_WEEK_ROW], nfl_pickem_game_lines: [] };
+    vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query) => {
+      if (path === "/nfl/v1/odds") return [];
       const week = query.get("weeks[]");
       if (week) return CLASSIFICATION_GAMES.filter((game) => String(game.week) === week);
       return CLASSIFICATION_GAMES;
@@ -222,8 +389,9 @@ describe("listNFLPickEmGames day-of-week classification across the DST boundary"
   ];
 
   beforeEach(() => {
-    db.tables = { nfl_pickem_weeks: [DST_WEEK_ROW] };
-    vi.mocked(fetchBallDontLieList).mockImplementation(async (_path, query) => {
+    db.tables = { nfl_pickem_weeks: [DST_WEEK_ROW], nfl_pickem_game_lines: [] };
+    vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query) => {
+      if (path === "/nfl/v1/odds") return [];
       const week = query.get("weeks[]");
       if (week) return DST_WEEK_GAMES.filter((game) => String(game.week) === week);
       return DST_WEEK_GAMES;
@@ -264,8 +432,9 @@ describe("listNFLPickEmGames chronological ordering + day-group labels", () => {
   ];
 
   beforeEach(() => {
-    db.tables = { nfl_pickem_weeks: [ORDER_WEEK_ROW] };
-    vi.mocked(fetchBallDontLieList).mockImplementation(async (_path, query) => {
+    db.tables = { nfl_pickem_weeks: [ORDER_WEEK_ROW], nfl_pickem_game_lines: [] };
+    vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query) => {
+      if (path === "/nfl/v1/odds") return [];
       const week = query.get("weeks[]");
       if (week) return ORDER_GAMES.filter((game) => String(game.week) === week);
       return ORDER_GAMES;
@@ -333,8 +502,9 @@ describe("listNFLPickEmGames chronological ordering + day-group labels", () => {
       bdlGame(31, "2026-11-26T21:30:00.000Z", "Dallas Cowboys", "Cincinnati Bengals"), // 4:30pm ET
       bdlGame(32, "2026-11-27T01:20:00.000Z", "Baltimore Ravens", "Green Bay Packers"), // 8:20pm ET, still Thu in ET
     ];
-    db.tables = { nfl_pickem_weeks: [THANKSGIVING_WEEK_ROW] };
-    vi.mocked(fetchBallDontLieList).mockImplementation(async (_path, query) => {
+    db.tables = { nfl_pickem_weeks: [THANKSGIVING_WEEK_ROW], nfl_pickem_game_lines: [] };
+    vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query) => {
+      if (path === "/nfl/v1/odds") return [];
       const week = query.get("weeks[]");
       if (week) return THANKSGIVING_GAMES.filter((game) => String(game.week) === week);
       return THANKSGIVING_GAMES;

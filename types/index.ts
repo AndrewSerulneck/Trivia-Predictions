@@ -488,6 +488,27 @@ export interface PickEmGame {
   start_time: string;
 }
 
+export type NFLPickEmScoringMode = "standard" | "spread";
+
+export interface VenueGameSettings {
+  venueId: string;
+  nflPickEmScoringMode: NFLPickEmScoringMode;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface NFLPickEmGameLine {
+  gameId: string;
+  startsAt: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeSpread: number;
+  awaySpread: number;
+  provider: string;
+  fetchedAt: string;
+  lockedAt?: string | null;
+}
+
 export interface VenueOwner {
   id: string;
   authId: string;

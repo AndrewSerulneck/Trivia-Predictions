@@ -14,6 +14,8 @@ import { NFLPickEmLeaderboard } from "@/components/nfl-pickem/NFLPickEmLeaderboa
 import { NFLPickEmRewardBanner } from "@/components/nfl-pickem/NFLPickEmRewardBanner";
 import { NFLTiebreakerCard } from "@/components/nfl-pickem/NFLTiebreakerCard";
 
+type NFLPickEmScoringMode = "standard" | "spread";
+
 // Types matching API
 type NFLWeekOption = {
   id: string;
@@ -70,6 +72,7 @@ export function NFLPickEmGameList({
       status: string;
       isLocked: boolean;
     };
+    scoringMode: NFLPickEmScoringMode;
     games: NFLGame[];
     userSummary?: UserSummary;
   } | null>(null);
@@ -189,6 +192,7 @@ export function NFLPickEmGameList({
         if (!controller.signal.aborted) {
           setWeekData({
             week: data.week,
+            scoringMode: data.scoringMode === "spread" ? "spread" : "standard",
             games: data.games,
             userSummary: data.userSummary,
           });
@@ -483,6 +487,7 @@ export function NFLPickEmGameList({
                       game={game}
                       onPick={submitPick}
                       isLocked={game.isLocked}
+                      scoringMode={weekData.scoringMode}
                     />
                   ))}
                 </div>

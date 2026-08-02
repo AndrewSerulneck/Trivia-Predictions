@@ -25,6 +25,7 @@ import { AdAnalyticsDashboard } from "@/components/admin/AdAnalyticsDashboard";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
+import { GameSettingsSection } from "@/components/admin/sections/GameSettingsSection";
 import { CategoryBlitzSection } from "@/components/admin/sections/CategoryBlitzSection";
 import { BillingSection } from "@/components/admin/sections/BillingSection";
 import { LiveTriviaInventorySection } from "@/components/admin/sections/LiveTriviaInventorySection";
@@ -555,6 +556,8 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         return <AdsCreateSection venues={venueList} />;
       case "pickem-settlement":
         return <PickEmSettlementSection />;
+      case "game-settings":
+        return <GameSettingsSection venues={venueList} />;
       case "live-trivia-inventory":
         return <LiveTriviaInventorySection />;
       case "category-blitz":

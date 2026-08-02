@@ -3,6 +3,8 @@ import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
+import { getLockedNFLPickEmGameLineForSettlement, type NFLPickEmGameLine } from "@/lib/nflPickEm";
+import { getVenueNFLPickEmScoringMode, type NFLPickEmScoringMode } from "@/lib/venueGameSettings";
 
 export type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma" | "tennis";
 type PickEmPickStatus = "pending" | "won" | "lost" | "push" | "canceled";
@@ -1582,6 +1584,126 @@ type PickEmWinGroup = {
   sportSlug: PickEmSportSlug;
 };
 
+type PickEmSettlementResult = {
+  status: PickEmPickStatus;
+  winningTeamId: string | null;
+  scoringMode: NFLPickEmScoringMode | null;
+  homeSpread: number | null;
+  awaySpread: number | null;
+};
+
+function resolveOutrightWinningTeamId(
+  row: PickEmPickRow,
+  scoreEvent: BallDontLieScoreEvent,
+  providerWinnerTeamId: string,
+  providerWinnerTeamName: string
+): string | null {
+  if (providerWinnerTeamId) {
+    if (row.home_team_id && providerWinnerTeamId === row.home_team_id) {
+      return row.home_team_id;
+    }
+    if (row.away_team_id && providerWinnerTeamId === row.away_team_id) {
+      return row.away_team_id;
+    }
+    if (row.home_team_id && providerWinnerTeamId === String(scoreEvent.home_team_id ?? "").trim()) {
+      return row.home_team_id;
+    }
+    if (row.away_team_id && providerWinnerTeamId === String(scoreEvent.away_team_id ?? "").trim()) {
+      return row.away_team_id;
+    }
+  }
+
+  if (providerWinnerTeamName) {
+    const winnerKey = normalizeTeamKey(providerWinnerTeamName);
+    if (winnerKey && winnerKey === normalizeTeamKey(row.home_team)) {
+      return row.home_team_id;
+    }
+    if (winnerKey && winnerKey === normalizeTeamKey(row.away_team)) {
+      return row.away_team_id;
+    }
+  }
+
+  return null;
+}
+
+function resolveStandardPickEmSettlement(params: {
+  row: PickEmPickRow;
+  scoreEvent: BallDontLieScoreEvent;
+  homeScore: number | null;
+  awayScore: number | null;
+  providerWinnerTeamId: string;
+  providerWinnerTeamName: string;
+  scoringMode: NFLPickEmScoringMode | null;
+}): PickEmSettlementResult {
+  const { row, scoreEvent, homeScore, awayScore, providerWinnerTeamId, providerWinnerTeamName, scoringMode } = params;
+  let status: PickEmPickStatus = "canceled";
+  let winningTeamId = resolveOutrightWinningTeamId(row, scoreEvent, providerWinnerTeamId, providerWinnerTeamName);
+
+  if (winningTeamId || providerWinnerTeamName) {
+    const selectedTeamId = String(row.selected_team_id ?? "").trim() || null;
+    if (selectedTeamId && winningTeamId) {
+      status = selectedTeamId === winningTeamId ? "won" : "lost";
+    } else if (providerWinnerTeamName) {
+      status = normalizeTeamKey(providerWinnerTeamName) === normalizeTeamKey(row.selected_team) ? "won" : "lost";
+    } else {
+      status = "canceled";
+    }
+  } else if (homeScore !== null && awayScore !== null) {
+    const winner = resolveWinner(row.home_team, row.away_team, homeScore, awayScore);
+    if (winner === "tie") {
+      status = "push";
+    } else if (winner) {
+      winningTeamId = winner === row.home_team ? row.home_team_id : row.away_team_id;
+      const selectedTeamId = String(row.selected_team_id ?? "").trim() || null;
+      if (selectedTeamId && winningTeamId) {
+        status = selectedTeamId === winningTeamId ? "won" : "lost";
+      } else {
+        status = winner === row.selected_team ? "won" : "lost";
+      }
+    }
+  }
+
+  return {
+    status,
+    winningTeamId,
+    scoringMode,
+    homeSpread: null,
+    awaySpread: null,
+  };
+}
+
+function resolveSpreadPickEmSettlement(params: {
+  row: PickEmPickRow;
+  scoreEvent: BallDontLieScoreEvent;
+  homeScore: number;
+  awayScore: number;
+  providerWinnerTeamId: string;
+  providerWinnerTeamName: string;
+  line: NFLPickEmGameLine;
+}): PickEmSettlementResult {
+  const { row, scoreEvent, homeScore, awayScore, providerWinnerTeamId, providerWinnerTeamName, line } = params;
+  const winningTeamId =
+    resolveOutrightWinningTeamId(row, scoreEvent, providerWinnerTeamId, providerWinnerTeamName) ??
+    (homeScore > awayScore ? row.home_team_id : awayScore > homeScore ? row.away_team_id : null);
+  const homeAdjusted = homeScore + line.homeSpread;
+  const awayAdjusted = awayScore + line.awaySpread;
+  let status: PickEmPickStatus = "push";
+
+  if (homeAdjusted !== awayAdjusted) {
+    const selectedSide = row.selected_side;
+    const adjustedWinnerSide = homeAdjusted > awayAdjusted ? "home" : "away";
+    status = selectedSide === adjustedWinnerSide ? "won" : "lost";
+  }
+
+  return {
+    status,
+    winningTeamId,
+    scoringMode: "spread",
+    homeSpread: line.homeSpread,
+    awaySpread: line.awaySpread,
+  };
+}
+
 async function insertPickEmWinGroupNotifications(groups: Map<string, PickEmWinGroup>): Promise<void> {
   if (!supabaseAdmin || groups.size === 0) {
     return;
@@ -2229,6 +2351,31 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     }
   }
 
+  const nflVenueIds = Array.from(
+    new Set(pending.filter((row) => row.sport_slug === "nfl").map((row) => row.venue_id).filter(Boolean))
+  );
+  const nflScoringModes = new Map<string, NFLPickEmScoringMode>();
+  const nflModeResults = await Promise.allSettled(
+    nflVenueIds.map((venueId) => getVenueNFLPickEmScoringMode(venueId))
+  );
+  for (let i = 0; i < nflModeResults.length; i += 1) {
+    const result = nflModeResults[i];
+    if (result.status === "fulfilled") {
+      nflScoringModes.set(nflVenueIds[i], result.value);
+    }
+  }
+
+  const nflLineCache = new Map<string, Promise<NFLPickEmGameLine | null>>();
+  const getLockedNFLLine = async (gameId: string): Promise<NFLPickEmGameLine | null> => {
+    if (!nflLineCache.has(gameId)) {
+      nflLineCache.set(
+        gameId,
+        getLockedNFLPickEmGameLineForSettlement(gameId).catch(() => null)
+      );
+    }
+    return nflLineCache.get(gameId)!;
+  };
+
   let settledCount = 0;
   let won = 0;
   let lost = 0;
@@ -2272,70 +2419,51 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
       continue;
     }
 
-    let status: PickEmPickStatus = "canceled";
-    let winningTeamId: string | null = null;
-    if (providerWinnerTeamId) {
-      if (row.home_team_id && providerWinnerTeamId === row.home_team_id) {
-        winningTeamId = row.home_team_id;
-      } else if (row.away_team_id && providerWinnerTeamId === row.away_team_id) {
-        winningTeamId = row.away_team_id;
-      } else if (row.home_team_id && providerWinnerTeamId === String(scoreEvent.home_team_id ?? "").trim()) {
-        winningTeamId = row.home_team_id;
-      } else if (row.away_team_id && providerWinnerTeamId === String(scoreEvent.away_team_id ?? "").trim()) {
-        winningTeamId = row.away_team_id;
-      }
-    }
-    if (!winningTeamId && providerWinnerTeamName) {
-      const winnerKey = normalizeTeamKey(providerWinnerTeamName);
-      if (winnerKey && winnerKey === normalizeTeamKey(row.home_team)) {
-        winningTeamId = row.home_team_id;
-      } else if (winnerKey && winnerKey === normalizeTeamKey(row.away_team)) {
-        winningTeamId = row.away_team_id;
-      }
+    const nflScoringMode = row.sport_slug === "nfl" ? nflScoringModes.get(row.venue_id) ?? null : null;
+    if (row.sport_slug === "nfl" && !nflScoringMode) {
+      continue;
     }
 
-    if (winningTeamId || providerWinnerTeamName) {
-      const selectedTeamId = String(row.selected_team_id ?? "").trim() || null;
-      if (selectedTeamId && winningTeamId) {
-        status = selectedTeamId === winningTeamId ? "won" : "lost";
-      } else if (providerWinnerTeamName) {
-        status = normalizeTeamKey(providerWinnerTeamName) === normalizeTeamKey(row.selected_team) ? "won" : "lost";
-      } else {
-        status = "canceled";
+    let settlement: PickEmSettlementResult;
+    if (nflScoringMode === "spread") {
+      if (homeScore === null || awayScore === null) {
+        continue;
       }
-      if (status === "won") {
-        won += 1;
-      } else if (status === "lost") {
-        lost += 1;
+      const line = await getLockedNFLLine(row.game_id);
+      if (!line) {
+        continue;
       }
-    } else if (homeScore !== null && awayScore !== null) {
-      const winner = resolveWinner(row.home_team, row.away_team, homeScore, awayScore);
-      if (winner === "tie") {
-        status = "push";
-        push += 1;
-      } else if (winner) {
-        winningTeamId = winner === row.home_team ? row.home_team_id : row.away_team_id;
-        const selectedTeamId = String(row.selected_team_id ?? "").trim() || null;
-        if (selectedTeamId && winningTeamId) {
-          status = selectedTeamId === winningTeamId ? "won" : "lost";
-        } else {
-          status = winner === row.selected_team ? "won" : "lost";
-        }
-        if (status === "won") {
-          won += 1;
-        } else {
-          lost += 1;
-        }
-      }
+      settlement = resolveSpreadPickEmSettlement({
+        row,
+        scoreEvent,
+        homeScore,
+        awayScore,
+        providerWinnerTeamId,
+        providerWinnerTeamName,
+        line,
+      });
+    } else {
+      settlement = resolveStandardPickEmSettlement({
+        row,
+        scoreEvent,
+        homeScore,
+        awayScore,
+        providerWinnerTeamId,
+        providerWinnerTeamName,
+        scoringMode: nflScoringMode,
+      });
     }
 
     const { error: updateError } = await supabaseAdmin
       .from("pickem_picks")
       .update({
-        status,
+        status: settlement.status,
         home_score: homeScore,
         away_score: awayScore,
-        winning_team_id: winningTeamId,
+        winning_team_id: settlement.winningTeamId,
+        scoring_mode: settlement.scoringMode,
+        home_spread: settlement.homeSpread,
+        away_spread: settlement.awaySpread,
         resolved_at: new Date().toISOString(),
         reward_points: PICKEM_REWARD_POINTS,
       })
@@ -2346,7 +2474,8 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
       continue;
     }
 
-    if (status === "won") {
+    if (settlement.status === "won") {
+      won += 1;
       const localDate = row.starts_at.slice(0, 10);
       const groupKey = `${row.user_id}:${localDate}:${row.sport_slug}`;
       const existing = winGroups.get(groupKey);
@@ -2362,6 +2491,10 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
           sportSlug: row.sport_slug,
         });
       }
+    } else if (settlement.status === "lost") {
+      lost += 1;
+    } else if (settlement.status === "push") {
+      push += 1;
     }
 
     settledCount += 1;

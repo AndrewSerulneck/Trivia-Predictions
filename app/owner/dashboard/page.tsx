@@ -41,6 +41,11 @@ type CompetitionSummary = {
   winnerUserId?: string | null;
 };
 
+type VenueGameSettingsSummary = {
+  venueId: string;
+  nflPickEmScoringMode: "standard" | "spread";
+};
+
 type VenuePresenceDiagnostics = {
   ok: boolean;
   windowMinutes?: number;
@@ -129,6 +134,7 @@ const OwnerDashboardPage = () => {
   const [selectedVenueId, setSelectedVenueId] = useState<string>("");
   const [nextSchedule, setNextSchedule] = useState<OwnerScheduleSummary | null>(null);
   const [activeCompetitionCount, setActiveCompetitionCount] = useState<number | null>(null);
+  const [gameSettings, setGameSettings] = useState<VenueGameSettingsSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -216,6 +222,34 @@ const OwnerDashboardPage = () => {
     };
   }, [selectedVenueId]);
 
+  useEffect(() => {
+    if (!selectedVenueId) {
+      setGameSettings(null);
+      return;
+    }
+    let cancelled = false;
+    const loadGameSettings = async () => {
+      try {
+        const res = await fetch(
+          `/api/owner/game-settings?venueId=${encodeURIComponent(selectedVenueId)}`,
+          { cache: "no-store" },
+        );
+        const json = (await res.json()) as {
+          ok: boolean;
+          settings?: VenueGameSettingsSummary;
+        };
+        if (cancelled) return;
+        setGameSettings(json.ok ? (json.settings ?? null) : null);
+      } catch {
+        if (!cancelled) setGameSettings(null);
+      }
+    };
+    void loadGameSettings();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedVenueId]);
+
   const selectedVenue = useMemo(() => venues.find((v) => v.id === selectedVenueId), [venues, selectedVenueId]);
   const selectedSub = useMemo(
     () => subscriptions.find((s) => s.venueId === selectedVenueId),
@@ -261,6 +295,17 @@ const OwnerDashboardPage = () => {
           : activeCompetitionCount > 0
             ? { tone: "emerald", label: `${activeCompetitionCount} running` }
             : { tone: "slate", label: "None running" },
+    },
+    {
+      href: "/owner/game-settings",
+      label: "Game Settings",
+      description: "Choose how NFL Pick 'Em is scored at this venue",
+      gradient: "bg-ht-game-pickem",
+      glyph: "🏈",
+      status:
+        gameSettings?.nflPickEmScoringMode === "spread"
+          ? { tone: "amber", label: "Spread mode" }
+          : { tone: "cyan", label: "Standard mode" },
     },
     {
       href: "/owner/display",

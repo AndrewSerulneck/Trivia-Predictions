@@ -7,6 +7,8 @@ export type NFLGame = {
   homeTeam: string;
   awayTeam: string;
   startsAt: string;
+  homeSpread?: number | null;
+  awaySpread?: number | null;
   isLocked: boolean;
   status: "scheduled" | "live" | "final";
   homeScore: number | null;
@@ -22,14 +24,22 @@ export type NFLGame = {
   isThursdayNightSection: boolean;
 };
 
+const formatSpread = (spread: number | null | undefined): string | null => {
+  if (spread === null || spread === undefined || !Number.isFinite(spread)) return null;
+  if (spread === 0) return "PK";
+  return spread > 0 ? `+${spread}` : String(spread);
+};
+
 export function NFLGameCard({
   game,
   onPick,
   isLocked,
+  scoringMode,
 }: {
   game: NFLGame;
   onPick: (game: NFLGame, team: string) => void;
   isLocked: boolean;
+  scoringMode: "standard" | "spread";
 }) {
   // Pinned to Eastern so this always agrees with the day-section heading
   // above it (server-computed in ET) — a viewer's local clock can put a
@@ -48,6 +58,9 @@ export function NFLGameCard({
   const homeSelected = game.userPickTeam === game.homeTeam;
   const isCorrect = game.userPickStatus === "won";
   const isWrong = game.userPickStatus === "lost";
+  const showSpread = scoringMode === "spread";
+  const awaySpreadLabel = showSpread ? formatSpread(game.awaySpread) : null;
+  const homeSpreadLabel = showSpread ? formatSpread(game.homeSpread) : null;
   
   return (
     <motion.div
@@ -97,6 +110,11 @@ export function NFLGameCard({
           <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-white">
             {game.awayTeam}
           </span>
+          {awaySpreadLabel && (
+            <span className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[#fde68a]">
+              {awaySpreadLabel}
+            </span>
+          )}
           
           {game.status === "final" && (
             <span className={`text-[18px] font-black tabular-nums ${
@@ -129,6 +147,11 @@ export function NFLGameCard({
           <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-white">
             {game.homeTeam}
           </span>
+          {homeSpreadLabel && (
+            <span className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[#fde68a]">
+              {homeSpreadLabel}
+            </span>
+          )}
           
           {game.status === "final" && (
             <span className={`text-[18px] font-black tabular-nums ${

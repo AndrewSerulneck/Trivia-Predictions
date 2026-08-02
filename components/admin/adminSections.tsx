@@ -5,6 +5,7 @@ import { AccountsSection } from "@/components/admin/sections/AccountsSection";
 import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { ChallengesSection } from "@/components/admin/sections/ChallengesSection";
+import { GameSettingsSection } from "@/components/admin/sections/GameSettingsSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
 import { SchedulesSection } from "@/components/admin/sections/SchedulesSection";
 import { TriviaCreateSection } from "@/components/admin/sections/TriviaCreateSection";
@@ -41,6 +42,7 @@ export type AdminSection =
   | "challenge-campaigns"
   | "live-trivia"
   | "live-trivia-inventory"
+  | "game-settings"
   | "username-moderation"
   | "category-blitz"
   | "llm-cost"
@@ -117,6 +119,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "challenge-campaigns",   label: "Rewards Manager",       slug: "challenge-campaigns",   component: ChallengeManagerSection },
   { id: "live-trivia",           label: "Live Trivia Schedules", slug: "live-trivia",           component: LiveTriviaSchedulesSection },
   { id: "live-trivia-inventory", label: "Question Inventory",    slug: "live-trivia-inventory", status: { label: "Ready", tone: "live" }, component: LiveTriviaInventorySection },
+  { id: "game-settings",         label: "Game Settings",         slug: "game-settings",         status: { label: "Ready", tone: "live" }, component: GameSettingsSection },
   { id: "pickem-settlement",     label: "Pick 'Em Settlement",   slug: "pickem-settlement",     status: { label: "Ready", tone: "live" }, component: PickEmSettlementSection },
   { id: "category-blitz",           label: "Category Blitz",        slug: "category-blitz",           status: { label: "Ready", tone: "live" }, component: CategoryBlitzSection },
   { id: "llm-cost",                 label: "LLM Cost",              slug: "llm-cost",                 status: { label: "Ready", tone: "live" }, component: LlmCostSection },
@@ -142,7 +145,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Operations",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["pickem-settlement", "llm-cost", "partner-billing"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["game-settings", "pickem-settlement", "llm-cost", "partner-billing"].includes(opt.id)),
   },
 ];
 
@@ -159,6 +162,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "challenge-campaigns",
   "live-trivia",
   "live-trivia-inventory",
+  "game-settings",
   "ad-placement",
   "ad-debug",
   "ads-list",
