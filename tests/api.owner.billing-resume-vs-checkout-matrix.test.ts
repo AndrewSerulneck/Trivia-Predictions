@@ -115,7 +115,7 @@ describe("owner billing — resume vs. checkout state matrix", () => {
       .mockImplementation(async () => ({ status: state.row?.status === "cancelled" ? "canceled" : "active" }));
     mocks.stripeCancel.mockReset().mockResolvedValue({ status: "canceled" });
     // Phase 8's pre-checkout sweep: nothing abandoned at Stripe by default.
-    mocks.stripeList.mockReset().mockResolvedValue({ data: [] });
+    mocks.stripeList.mockReset().mockReturnValue({ autoPagingToArray: vi.fn().mockResolvedValue([]) });
     mocks.checkoutCreate.mockReset().mockResolvedValue({ url: "https://checkout.stripe.test/session" });
     mocks.dbUpdate.mockReset();
   });
@@ -519,8 +519,12 @@ describe("owner billing — resume vs. checkout state matrix", () => {
   describe("pre-checkout sweep of abandoned incomplete subscriptions", () => {
     const abandoned = (id: string, venueId: string) => ({ id, metadata: { venueId } });
 
+    const pagedList = (subs: Array<{ id: string; metadata: { venueId: string } }>) => ({
+      autoPagingToArray: vi.fn().mockResolvedValue(subs),
+    });
+
     it("cancels an untracked incomplete subscription for this venue before checking out", async () => {
-      mocks.stripeList.mockResolvedValue({ data: [abandoned("sub_abandoned", "venue-1")] });
+      mocks.stripeList.mockReturnValue(pagedList([abandoned("sub_abandoned", "venue-1")]));
 
       const response = await checkout(post("/api/owner/billing/checkout"));
 
@@ -530,8 +534,20 @@ describe("owner billing — resume vs. checkout state matrix", () => {
       expect(mocks.checkoutCreate).toHaveBeenCalled();
     });
 
+    it("cancels this venue's abandoned subscription even when it sits past the first page", async () => {
+      const filler = Array.from({ length: 100 }, (_, i) => abandoned(`sub_filler_${i}`, "venue-2"));
+      mocks.stripeList.mockReturnValue(
+        pagedList([...filler, abandoned("sub_abandoned_page2", "venue-1")])
+      );
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(mocks.stripeCancel).toHaveBeenCalledWith("sub_abandoned_page2");
+      expect(response.status).toBe(200);
+    });
+
     it("leaves another venue's incomplete subscription alone", async () => {
-      mocks.stripeList.mockResolvedValue({ data: [abandoned("sub_other_venue", "venue-2")] });
+      mocks.stripeList.mockReturnValue(pagedList([abandoned("sub_other_venue", "venue-2")]));
 
       const response = await checkout(post("/api/owner/billing/checkout"));
 
@@ -540,7 +556,7 @@ describe("owner billing — resume vs. checkout state matrix", () => {
     });
 
     it("proceeds when the cancel fails — a safety net must not block a paying partner", async () => {
-      mocks.stripeList.mockResolvedValue({ data: [abandoned("sub_abandoned", "venue-1")] });
+      mocks.stripeList.mockReturnValue(pagedList([abandoned("sub_abandoned", "venue-1")]));
       mocks.stripeCancel.mockRejectedValue(new Error("connection error"));
 
       const response = await checkout(post("/api/owner/billing/checkout"));
@@ -550,7 +566,9 @@ describe("owner billing — resume vs. checkout state matrix", () => {
     });
 
     it("proceeds when the list call itself fails", async () => {
-      mocks.stripeList.mockRejectedValue(new Error("connection error"));
+      mocks.stripeList.mockReturnValue({
+        autoPagingToArray: vi.fn().mockRejectedValue(new Error("connection error")),
+      });
 
       const response = await checkout(post("/api/owner/billing/checkout"));
 
@@ -560,7 +578,7 @@ describe("owner billing — resume vs. checkout state matrix", () => {
 
     it("does not run when checkout is refused — nothing is swept on a 409", async () => {
       state.row = ACTIVE;
-      mocks.stripeList.mockResolvedValue({ data: [abandoned("sub_abandoned", "venue-1")] });
+      mocks.stripeList.mockReturnValue(pagedList([abandoned("sub_abandoned", "venue-1")]));
 
       const response = await checkout(post("/api/owner/billing/checkout"));
 

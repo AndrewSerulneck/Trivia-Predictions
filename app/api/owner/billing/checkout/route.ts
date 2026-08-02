@@ -51,8 +51,20 @@ async function sweepAbandonedIncompleteSubscriptions(
   venueId: string
 ): Promise<void> {
   try {
-    const incomplete = await client.subscriptions.list({ status: "incomplete", limit: 100 });
-    for (const sub of incomplete.data) {
+    // Auto-paged rather than a flat limit: this venue's abandoned subscription
+    // could sit past the first 100 account-wide incompletes and be missed,
+    // reopening the double-bill window this sweep exists to close. Mirrors
+    // app/api/admin/billing/promo-codes/route.ts's GET. The cap is a runaway
+    // guard, not an expected boundary — hitting it is logged below.
+    const incomplete = await client.subscriptions
+      .list({ status: "incomplete", limit: 100 })
+      .autoPagingToArray({ limit: 1000 });
+    if (incomplete.length === 1000) {
+      console.warn("Abandoned-subscription sweep hit its paging cap; some incompletes may be unswept.", {
+        venueId,
+      });
+    }
+    for (const sub of incomplete) {
       if (sub.metadata?.venueId?.trim() !== venueId) continue;
       try {
         await client.subscriptions.cancel(sub.id);
