@@ -889,3 +889,371 @@ is back to exactly its prior two real rows. `next-env.d.ts` reverted; `git statu
 shows only the two unrelated advertising PNGs. The :3000 dev server was restarted.
 
 **Status: Items F, G and H closed. All 13 checks passed.**
+
+## REVIEWFIX Phase 2 (grant-manual must clear the discount mirror)
+
+Implemented as specified in `docs/billing-code-review-fixes-plan.md`, no
+deviation. `app/api/admin/billing/route.ts`'s `grant-manual` upsert already
+nulled every processor id when converting a venue to offline, but left
+`discount_*` populated — a Stripe coupon's label/percent survived the
+conversion and kept mispricing the owner page via `effectiveAmountCents`.
+
+1. **Detach before convert, not just clear the mirror.** Before the upsert,
+   if the existing row still has `stripe_subscription_id`, call
+   `removeDiscountFromSubscription` (the same helper `remove-discount` already
+   uses) so the coupon is actually detached at Stripe, not just forgotten
+   locally. If that call fails, the whole grant fails (502) rather than
+   silently orphaning a live coupon — matches the plan's recommendation.
+   Confirmed this is NOT redundant with the existing `cancelSubscription`
+   call in the force path: `cancelSubscription` only sets
+   `cancel_at_period_end: true` at Stripe, it does not touch the discount, so
+   the coupon stays attached and billing at the old (discounted) rate until
+   the period actually ends.
+2. **Spread `CLEARED_MIRROR`** (imported from `lib/billingDiscounts.ts`,
+   reused rather than re-declared) into the upsert payload alongside the
+   existing processor-id nulls, so the mirror is cleared in our DB even on
+   the (rare) path where there was nothing to detach at Stripe.
+3. **Existing test file needed a new mock.** `tests/api.admin.billing-grant-manual-guard.test.ts`
+   didn't mock `@/lib/billingDiscounts` at all — its force-conversion test
+   started failing (500) once the route began calling the real
+   `removeDiscountFromSubscription`, which hits `stripe`/`supabaseAdmin` for
+   real in a test env with no Stripe key configured. Added the mock, widened
+   `ExistingSub` to carry `billing_method`/`amount_cents`/`current_period_end`,
+   and added a new case asserting a 502 (no DB mutation) when the detach call
+   fails.
+4. **New test file** `tests/api.admin.billing-grant-manual-clears-discount.test.ts`
+   covers the actual finding: a card row with a live discount → `grant-manual`
+   → every `discount_*` column (and `stripe_coupon_id`) is null on the upsert,
+   the removal helper is called with the pre-conversion row, and — separately —
+   the removal helper is never called when there's no existing Stripe
+   subscription to detach from.
+
+`npx tsc --noEmit` and the full suite (`npm run test`) both pass after this
+phase.
+
+## REVIEWFIX Phase 3 (fractional percent-off)
+
+Implemented as specified, no deviation from the locked decision (widen the
+columns rather than forbid fractions).
+
+1. **New migration** `supabase/migrations/20260801120000_billing_discount_fractional_percent.sql`
+   widens `billing_subscriptions.discount_percent_off` and
+   `billing_discount_grants.percent_off` from `integer` to `numeric(5,2)`.
+   Applied to the linked Supabase project via `supabase db push` — confirmed
+   in `supabase migration list` as the new head migration. Both are widening
+   conversions; no existing data at risk.
+2. **Precision cap.** Added `hasAtMostTwoDecimals` (exported) to
+   `lib/billingDiscounts.ts` and wired it into `validateDiscountSpec` for
+   `percent_off` — `33.333` is now rejected with "Percent off allows at most
+   2 decimal places" instead of silently rounding at the DB. The admin route's
+   own inline pre-check (it duplicates the base 0–100 bound before ever
+   calling the helper, same pattern as the rest of that function) got the same
+   check for symmetry, importing the shared helper rather than re-deriving it.
+3. **Numeric-string coercion audit.** Grepped every read of
+   `discount_percent_off`/`percent_off`. The only two read sites that hand a
+   DB value to a JSON response are `app/api/owner/billing/route.ts` (feeds
+   `lib/billingDisplay.ts`'s `effectiveAmountCents`, the exact function the
+   plan called out) and `app/api/admin/billing/route.ts`'s GET listing. Both
+   now widen their row type to `number | string | null` and coerce with
+   `Number(...)` before it leaves the route. `billing_discount_grants` is
+   write-only (audit trail, never read back), so it needed no coercion.
+   `types/index.ts` has no discount-shaped type today — the discount types are
+   local to `lib/billingDisplay.ts` and the two route files, so there was
+   nothing to update there.
+4. **Admin UI end-to-end.** `components/admin/sections/BillingSection.tsx` had
+   `step="1"` on the percent-off input for both the discount form and the
+   promo-code form, which blocked an admin from ever typing `12.5` in the
+   first place. Changed both to `step="0.01"` — without this the DB/validation
+   work alone wouldn't have made fractional percent-off actually reachable.
+5. **Tests:** `validateDiscountSpec` accepts `12.5`/`12.34`, rejects `33.333`
+   and `100.01`; `discountedAmountCents(10000, {percentOff: 12.5})` → `8750`,
+   plus a same-answer case feeding a stringly-typed `"12.5"` through the
+   arithmetic to document that JS's implicit coercion happens to save it (the
+   route-level `Number()` coercion is still the real fix, this just pins the
+   arithmetic itself); `POST /api/admin/billing` `apply-discount` accepts
+   `12.5` end-to-end (passes to the helper, writes `percent_off: 12.5` to the
+   audit grant) and rejects `33.333` before ever calling the helper; and a new
+   `tests/api.billing-discount-percent-off-numeric-coercion.test.ts` mocks a
+   `"12.50"` string coming back from `billing_subscriptions` and asserts the
+   owner GET endpoint's JSON has a real `number` `12.5`, not the string.
+
+`npx tsc --noEmit` and `npm run test` (1194 tests) both pass after this phase.
+The two advertising PNGs under `Advertising Images/` remain the only
+untracked files — unrelated to this work.
+
+## REVIEWFIX Phase 4 (SlimCD teardown)
+
+**Gate first.** The plan required confirming zero rows carry a SlimCD token
+before deleting anything. The read-only audit script was blocked by the
+permission classifier (it loads `.env.local`); the user confirmed directly that
+SlimCD was abandoned before launch and never charged a partner, which is the
+same answer the query would have given. Proceeded on that.
+
+**Deleted outright** — `lib/slimcd.ts`, `slimcd-payment-form-hightop.html`, and
+four routes: `app/api/owner/billing/{session,return,card,subscribe}/route.ts`.
+`session` and `return` were the live hosted-page flow; `card` and `subscribe`
+were 410 stubs whose error text pointed callers at `session`. Nothing in `app/`,
+`components/`, `lib/` or `tests/` referenced any of them (grepped for the route
+paths before deleting). The production build now lists exactly four billing
+routes: `/api/owner/billing`, `/checkout`, `/portal`, `/subscription`.
+
+**`/api/cron/billing` lost its charge loop.** The due-query
+(`status='active' AND billing_method != 'offline' AND current_period_end <= now`),
+the `chargeRecurring` call, the period-advance write and both invoice inserts
+are gone. The route's only remaining job is the offline-grant expiry sweep, and
+the response shrank from `{ ok, processed, results, offlineExpired }` to
+`{ ok, offlineExpired }`. The `vercel.json` cron entry stays — the sweep still
+needs to run daily. Card renewals were already Stripe's own recurring billing;
+nothing here ever drove them.
+
+**Two live reads had to be re-pointed, not just deleted:**
+1. `app/api/owner/billing/route.ts` derived `hasPaymentMethod` from
+   `slimcd_recurring_token`. Deleting the read alone would have shown "No card
+   on file" to every card partner on `/owner/billing`. Now
+   `Boolean(stripe_subscription_id)` — Checkout cannot produce a subscription
+   without collecting a payment method.
+2. `app/api/admin/billing/route.ts` had
+   `isStripe: Boolean(stripe_subscription_id) || Boolean(slimcd_recurring_token)`,
+   now just the Stripe id. Its `grant-manual` upsert also stopped writing
+   `slimcd_recurring_token: null` alongside the Stripe-id nulls.
+
+Also removed `BillingInvoice.slimcdTicket` from `types/index.ts` (no consumers)
+and rewrote the stale SlimCD prose in `lib/stripe.ts`, `SYSTEM_CONTEXT.md` §0 +
+the Partner/Owner surface section, and `docs/partner-dashboard-plan.md`
+(current-state table, key-gaps list, and Phase 3 step 7 marked done).
+
+**Columns kept.** `billing_subscriptions.slimcd_recurring_token` and
+`billing_invoices.slimcd_ticket` stay in the schema — dropping a column is
+irreversible and buys nothing. New migration
+`supabase/migrations/20260801130000_slimcd_columns_dead.sql` is comment-only
+(`comment on column ...`), marking both dead and naming their replacements.
+Historical migrations were not touched.
+
+**Tests.** `tests/api.cron.billing-manual-guard.test.ts` was deleted: its whole
+subject (the charge loop) is gone, and its assertions mocked `@/lib/slimcd`.
+Its intent is now covered more strictly in
+`tests/api.cron.billing-offline-expiry.test.ts` by a new case asserting the cron
+issues **no** invoice insert at all and exactly one update — a reintroduced
+charge loop would fail it. New `tests/billing-slimcd-removed.test.ts` is a
+static tripwire: it sweeps `app/`, `lib/`, `components/`, `types/` for any
+SlimCD reference in executable code, and asserts the checkout route still
+classifies on `billing_method` + `readStripeTruth` only (the third axis — a
+stored processor token — was the review's bypass). It strips comments before
+matching, so prose explaining why SlimCD is gone doesn't fail it.
+
+**Still owed by the operator (not done by tooling):** the `SLIMCD_*` env vars in
+Vercel and `.env.local`. Per the local-env safety rule these were left alone —
+remove them by hand with scoped `vercel env rm`, never `vercel env pull`. They
+are inert either way now: nothing reads them.
+
+## REVIEWFIX Phase 5 (`incomplete` must not lock a partner out)
+
+**The bug.** Stripe's `incomplete` (a first Checkout whose payment never
+finished) maps to our `past_due`, which `classifyBillingRow` reads as live. The
+checkout route then refused with `fix_payment` — "update your card to keep this
+subscription" — for the ~23h before Stripe expires it. There is no card on file
+at that point and no action behind the message.
+
+**Not fixed by adding `incomplete` to `DEAD_STRIPE_STATUSES`.** That set means
+"authoritatively finished, safe to overwrite the mirror." An incomplete
+subscription can still complete on its own, so calling it dead invites a real
+double subscription. Instead `StripeTruth` grew a fifth member, `"incomplete"`,
+returned by `readStripeTruth` ahead of the `live` fallthrough. The existing
+`unknown` (outage) fail-closed behaviour is untouched — the review cleared it.
+
+**Checkout treats it as allow-after-cleanup.** A local
+`voidIncompleteSubscription` helper calls `stripe.subscriptions.cancel` first —
+that cancel is the entire reason allowing is safe — then corrects the mirror
+with the same `{ status: 'cancelled', cancel_at_period_end: false,
+...CLEARED_MIRROR }` write the `dead` branch already made, and Checkout
+proceeds. If Stripe refuses the cancel, the request 409s with a new
+`incomplete_retry` code and copy that names the actual situation ("your previous
+payment didn't finish — try again in a few minutes") rather than proceeding on
+an assumption. Both directions are handled: the `past_due` mirror path and the
+`cancelled`-mirror path (where Stripe says incomplete but we recorded cancelled)
+route through the same helper.
+
+The two closure-captured consts (`stripeClient`, `db`) exist because the route's
+top-level null checks on `stripe`/`supabaseAdmin` don't narrow inside an arrow
+function.
+
+**Resume stays fail-closed.** `app/api/owner/billing/subscription/route.ts`
+already fell through on anything that isn't `dead`/`missing`, which is the right
+behaviour — the object still exists at Stripe, so routing the owner to a fresh
+Checkout from there would be the double-billing move. Made that explicit in the
+comment rather than changing the logic; voiding is the checkout route's job.
+
+**Tests** (5 new cases in
+`tests/api.owner.billing-resume-vs-checkout-matrix.test.ts`, whose Stripe mock
+grew a `subscriptions.cancel`): incomplete + `past_due` mirror → cancel called,
+mirror corrected, Checkout allowed; the response is not `fix_payment`;
+cancel-fails → 409 `incomplete_retry` with no checkout and no DB write;
+incomplete reached from a `cancelled` mirror → also voided; resume with
+incomplete → not routed to `checkout_instead`.
+
+`npx tsc --noEmit`, `npm run build` and `npm run test` (1201 tests, 143 files)
+all pass after Phases 4 and 5. `npm run lint` reports one error in
+`components/category-blitz/CategoryBlitzGame.tsx:129`
+(`react-hooks/set-state-in-effect`) — pre-existing, from the uncommitted
+Category Blitz mobile-shell work, unrelated to billing.
+
+## REVIEWFIX Phase 6 (Stripe test-mode + browser verification) — Items F/G re-closed
+
+Live against **real Stripe test mode**, 2026-08-01. Baseline before starting:
+`npx tsc --noEmit` clean, `npm run test` 1202 passed / 13 skipped (143 files).
+
+**Harness.** Dev server on :3100 started under `scripts/stripe-test-env.sh`,
+which pulls the test key out of the Stripe CLI config and exports it *before*
+`@next/env` loads `.env.local` (whose `STRIPE_SECRET_KEY` is LIVE; `loadEnvConfig`
+never overwrites an already-set var). The startup wrapper asserts the key matches
+`sk_test_`/`rk_test_` and refuses to boot otherwise; every helper script
+re-asserts the same thing. `.env.local` was never read or modified.
+`stripe listen --forward-to localhost:3100/api/webhooks/stripe` supplied the
+webhook signing secret (exported as `STRIPE_WEBHOOK_SECRET` at startup, same
+mechanism). Every object created was `livemode:false`.
+
+Two setup facts worth recording for next time:
+
+1. **`.env.local`'s `STRIPE_PRICE_ID` is a LIVE price** — `prices.retrieve` on it
+   with the test key throws `resource_missing`, so Checkout cannot work in test
+   mode without an override. A throwaway `$100/mo` USD test price + product was
+   created and exported as `STRIPE_PRICE_ID` at dev-server startup (archived in
+   cleanup).
+2. **Next 16's exclusive `.next/dev` lock still blocks a second `next dev`.** The
+   :3000 server (started the normal way, i.e. on the LIVE key) was stopped for the
+   run with the user's approval and restarted afterward.
+
+Throwaway seed: one owner + three `hidden = true` venues
+(`zz-reviewfix-20260801-v{1,2,3}`), forged HMAC `tp_owner_sess` / `admin_session`
+cookies mirroring `lib/ownerSession.ts` / `lib/adminSession.ts`.
+
+### Scenario 1 (Phase 1) — offline list-rate semantics: PASS, 7/7
+
+`grant-manual` with `amountDollars: 100` (list rate) + `amountReceivedDollars: 75`
+(the check), then a 25%-off mirror-only grant. `amount_cents` stored **10000**,
+the invoice row stored **7500**, no invoice at the list rate, `stripe_coupon_id`
+null (offline path made no Stripe call). Owner payload: `amountCents: 10000` with
+`discount.percentOff: 25` → net **$75**, not the old double-discounted $56.25.
+
+### Scenario 2 (Phase 2) — grant-manual clears the mirror: PASS, 15/15
+
+Real card subscription + a real 25% coupon (`hc-pct-25-forever`, Stripe discount
+count 1), then `grant-manual` with `force: true`. After: all five discount mirror
+columns **null**, all three processor ids **null**, `billing_method` offline,
+`amount_cents` the offline list rate, owner payload `discount: null`, and the
+**Stripe discount count back to 0** — the coupon was genuinely detached, not just
+forgotten locally.
+
+*Observed state worth knowing:* the Stripe subscription itself is left `active`
+with `cancel_at_period_end: true` (that is `cancelSubscription`'s deliberate
+period-end policy). Which is exactly why the explicit detach matters — without it
+the coupon would stay attached to a still-live object for the rest of the period.
+
+### Scenario 3 (Phase 3) — fractional percent-off: PASS, 11/11
+
+`33.333` refused with "Percent off allows at most 2 decimal places". `12.5`
+accepted: coupon `hc-pct-12-5-forever` carries `percent_off: 12.5`, exactly one
+discount attached, **upcoming invoice preview `subtotal 10000 → total 8750`**.
+Mirror stored `12.5` (the `numeric(5,2)` migration is live in the linked project —
+an `integer` column would have rounded), `amount_cents` untouched at 10000, audit
+grant row `percent_off: 12.5`. Owner JSON returns `percentOff` as a **number**
+`12.5`, not the string `"12.50"` — the `Number(...)` coercion holds against real
+supabase-js output.
+
+### Scenario 4 (Phase 5) — `incomplete` must not lock a partner out: PASS, 12/12
+
+Built with `payment_behavior: 'default_incomplete'` (a genuine never-completed
+first Checkout), in both mirror directions:
+
+- **past_due mirror:** Checkout returned **200** with a `cs_test_` session (not
+  `fix_payment`), the abandoned subscription went terminal at Stripe, subscription
+  count on the customer 1 → 1, mirror corrected to `cancelled` +
+  `cancel_at_period_end: false` with the discount mirror cleared.
+- **cancelled mirror:** same void, same allow — the other direction works.
+- **resume:** stayed fail-closed — no `checkout_instead`, and it did **not** void
+  the subscription (that is the checkout route's job).
+
+**Corrected premise:** cancelling an `incomplete` subscription moves it to
+**`incomplete_expired`**, not `canceled`. Both are in `DEAD_STRIPE_STATUSES`, so
+`readStripeTruth` reads it as `dead` either way and it can never bill — but a test
+asserting `status === 'canceled'` will fail against real Stripe.
+
+**Retry completed end to end** (real hosted Checkout, `4242…`, real webhooks):
+mirror back to `active`, banner "Subscription activated. Welcome aboard!", the
+abandoned object still `incomplete_expired`, and **exactly one billable
+subscription** on the paying customer with the mirror pointing at it.
+
+*Method note for the hosted page:* this Stripe account has several payment
+methods enabled, so Checkout renders a payment-method accordion. Ordinary clicks
+on the Card row are swallowed by an overlay button —
+`locator('#payment-method-accordion-item-title-card').check({ force: true })` is
+what expands it. Link's pre-checked "Save my information" also makes Phone
+required and silently blocks Subscribe; uncheck `#enableStripePass`.
+
+### Scenario 5 — guard-matrix regression sweep: PASS, 23/23
+
+A genuine `past_due` was reached with a **Stripe test clock** advanced past period
+end against `tok_chargeCustomerFail` (GUARD Phase 8's finding that re-anchoring
+the billing cycle never issues an invoice still holds). Stripe and the mirror both
+read `past_due` via the webhook.
+
+- **past_due** → 409 `fix_payment`, subs 1 → 1, row untouched. The new
+  `incomplete` branch does **not** swallow a real dunning `past_due`.
+- **past_due + cancel_at_period_end** → 409 `resume_instead` (ordered ahead of
+  `fix_payment`); resume → 200, Stripe and mirror both un-scheduled, still one sub.
+- **stale mirror (mirror `cancelled`, Stripe live)** → 409 `stripe_live`, row
+  byte-identical.
+- **`resource_missing`** (`active` row → `sub_doesnotexist000000`) → allowed (200),
+  row **byte-identical**, still `active` — never written back.
+- **self-heal** (mirror `active` + `cancel_at_period_end` + stale discount, Stripe
+  cancelled) → allowed, mirror corrected to `cancelled`, `cancel_at_period_end`
+  cleared, all discount columns cleared.
+- **offline row** → 409 `offline_billing`; **active card row** → 409 already-active.
+- **Stripe outage** → dev server restarted on a syntactically valid but dead
+  `sk_test_` key so every call errors non-`resource_missing`: 409
+  `stripe_unreachable`, row byte-identical. **Fails closed, as designed.**
+
+### Scenario 6 — browser pass at 320px: PASS
+
+`/owner/billing` at 320×900, three states, each screenshotted with a programmatic
+overflow probe (`documentElement.scrollWidth` 290 ≤ `innerWidth` 320, widest
+element right edge 308.5 — **no horizontal overflow** in any state):
+
+1. **offline + 25% off** — "ACTIVE — BILLED OFFLINE", **$75** struck against
+   $100, "25% off forever", "Billed offline (check)".
+2. **cancelled card row** — "CANCELLED" + Resubscribe, $100, "Access ends".
+3. **card + 12.5% off** — "ACTIVE", **$87.50** struck against $100, "12.5% off
+   forever". Fractional percent renders to the cent; nothing truncates at 320px.
+
+Also confirmed incidentally: `billing_invoices` now records real Stripe invoices
+(paid **and** failed) for card partners — the defect logged at the end of
+DISCOUNT Phase 10 is fixed by commit `f3490ac`'s `invoice.parent.
+subscription_details.subscription` fallback, verified here against live webhooks
+rather than reasoning.
+
+### Defect found — Phase 5's fix is unreachable from the owner UI (NOT fixed)
+
+**The server side is correct; the client never offers the door.** With an
+abandoned `incomplete` first Checkout the mirror is `past_due`, and:
+
+- `/owner/billing` renders only **"Update"** (Stripe billing portal) and
+  **"Cancel subscription"**. The Resubscribe control is gated on
+  `subscription.status === "cancelled"` (`app/owner/billing/page.tsx`), so a
+  `past_due` row never shows it.
+- `/owner/billing/setup` — the page that actually calls the fixed checkout
+  endpoint — **actively bounces `past_due` back to `/owner/billing`** via its
+  `liveNeedsAction` redirect. Direct navigation was verified: it lands on
+  `/owner/billing`.
+- `POST /api/owner/billing/checkout` for that same row returns **200 with a
+  `cs_test_` session**, and the portal call returns a live portal URL.
+
+So the partner sees "PAYMENT DUE" and an "Update your card" affordance for a
+subscription that has no card and no completed payment — the exact dead end
+Phase 5 set out to remove — while the working path exists only below the UI.
+
+**Why this was not fixed here:** the owner payload carries no signal
+distinguishing "past_due because the first payment never completed" (where a new
+Checkout is the right action) from "past_due because a live subscription's card
+declined" (where Phase 5 argues Checkout must stay refused with `fix_payment`).
+Closing the gap needs a product decision about which one the UI is allowed to
+assume, not a mechanical edit. Left for the user.

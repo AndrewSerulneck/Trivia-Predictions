@@ -23,23 +23,96 @@ inventory — items B, L, M overlap with Phases 1/3/4 here),
    wanted. Remove the code paths rather than guarding them.
 4. **Scope = all five findings + a real verification phase** (Stripe test mode
    and browser), closing open items F and G in `billing-open-issues-plan.md`.
+5. **(2026-08-02, after Phase 6) An unfinished signup must leave NO trace.** Phase
+   6 found that Phase 5's server-side fix is unreachable from the owner UI, and
+   that the UI cannot be fixed because our mirror cannot tell "first payment never
+   finished" apart from "existing subscriber's card declined" — both are stored as
+   `past_due`. Rather than teach the system to tell them apart, **stop creating the
+   ambiguous row at all.** A partner who starts Checkout and doesn't finish is
+   simply not a subscriber; the next visit shows the normal "No subscription yet"
+   screen and they start over. See **Phase 8**, which supersedes the UI half of
+   Phase 5.
 
 ## Phase table
 
-| # | Phase | Model | Effort | Depends on |
-|---|-------|-------|--------|-----------|
-| 0 | Baseline + branch hygiene | Haiku 4.5 | Low | — |
-| 1 | Offline discount double-count (list-rate semantics) | Opus 5 | **High** | 0 |
-| 2 | `grant-manual` must clear the discount mirror | Sonnet 5 | Medium | 1 |
-| 3 | Fractional percent-off: migration + validation + writes | Sonnet 5 | Medium | 0 |
-| 4 | SlimCD teardown | Opus 5 | Medium-High | 0 |
-| 5 | `incomplete` subscriptions must not lock out Checkout | Opus 5 | Medium | 0 |
-| 6 | Stripe test-mode + browser verification | Opus 5 | **High** | 1–5 |
-| 7 | Run-log + doc close-out | Haiku 4.5 | Low | 6 |
+| # | Phase | Model | Effort | Depends on | Status |
+|---|-------|-------|--------|-----------|--------|
+| 0 | Baseline + branch hygiene | Haiku 4.5 | Low | — | ⚠️ **partly done** — per-phase commits never happened |
+| 1 | Offline discount double-count (list-rate semantics) | Opus 5 | **High** | 0 | ⚠️ **code done** (`2080cca`) — no run-log entry, data audit never run |
+| 2 | `grant-manual` must clear the discount mirror | Sonnet 5 | Medium | 1 | ✅ done (uncommitted) |
+| 3 | Fractional percent-off: migration + validation + writes | Sonnet 5 | Medium | 0 | ✅ done (uncommitted), migration applied |
+| 4 | SlimCD teardown | Opus 5 | Medium-High | 0 | ⚠️ **code done** (uncommitted) — Vercel `SLIMCD_*` env vars still owed |
+| 5 | `incomplete` subscriptions must not lock out Checkout | Opus 5 | Medium | 0 | ✅ server side done + verified; UI half → Phase 8 |
+| 6 | Stripe test-mode + browser verification | Opus 5 | **High** | 1–5 | ✅ done 2026-08-01, 68/68 assertions |
+| 8 | **Unfinished signups leave no trace** (supersedes Phase 5's UI half) | Opus 5 | Medium-High | 6 | ⬜ **not started** |
+| 7 | Run-log + doc close-out | Haiku 4.5 | Low | 6, 8 | ⬜ **not started** (must be last) |
 
 Phases 1→2 are ordered (2 depends on 1's semantics). Phases 3, 4, 5 are
 independent of each other and of 1/2 — they can run in any order or in
 parallel worktrees.
+
+---
+
+## ▶ START HERE — remaining roadmap (as of 2026-08-02)
+
+Everything below is what's left. Execute in this order.
+
+### 1. Phase 0 revisit — chunk the branch into commits
+
+Phases **2, 3, 4, 5 and the Phase 6 run log are all uncommitted** — ~35 dirty
+paths in one undifferentiated diff (also open item K). Phase 0 required one
+revertible commit per phase. Do this first so later work isn't stacked on an
+unreviewable blob. Note `git status` also carries unrelated Category Blitz work
+and two advertising PNGs — don't sweep those in.
+
+### 2. Phase 1 revisit — two loose ends
+
+- **No run-log section exists for Phase 1.** Every other phase has one; the log
+  jumps straight from the open-issues work to Phase 2. Write it from `2080cca`.
+- **Step 3's data audit was never run.** List every `billing_method='offline'`
+  row with a populated discount mirror — those were entered under the OLD
+  "amount received" meaning and now under-report to the partner. Phase 1's own
+  stated risk was "surface that list before merging." There is one live offline
+  row today (`venue-garden-state-bar`); if it carries a discount, its
+  `amount_cents` must be re-entered by hand as the list rate. **Do not
+  auto-migrate** — a list rate can't be inferred from a net amount.
+
+### 3. Phase 8 — the main remaining build
+
+Unfinished signups leave no trace. Full breakdown in the Phase 8 section below
+(8.1–8.6). This is what closes the defect Phase 6 found.
+
+### 4. Phase 4 revisit — `SLIMCD_*` env vars (needs the user)
+
+Logged as "still owed by the operator." They exist in Vercel and `.env.local`,
+nothing reads them, so they are inert — but these are live-environment changes.
+**Ask before touching env**, use scoped `vercel env rm`, never `vercel env pull`
+(it silently clobbers the local file).
+
+### 5. Phase 7 — close-out, last
+
+---
+
+### Context a fresh session needs
+
+- **`.env.local`'s `STRIPE_SECRET_KEY` is LIVE.** Never read or modify that file.
+  All Stripe work goes through `scripts/stripe-test-env.sh`, which pulls the
+  test-mode key from the Stripe CLI config and refuses to run without it.
+- **`.env.local`'s `STRIPE_PRICE_ID` is also LIVE** — it does not resolve with a
+  test key, so Checkout in test mode needs a throwaway test price exported as
+  `STRIPE_PRICE_ID` at dev-server startup.
+- **Next 16 holds an exclusive `.next/dev` lock** — a second `next dev` cannot
+  start, so verification means stopping the :3000 server (ask first) and
+  restarting it afterward. Revert `next-env.d.ts` after; the dev server rewrites it.
+- **The Phase 6 run-log section** (`docs/billing-run-log.md`) documents the whole
+  verification harness, including the Stripe Checkout gotchas (payment-method
+  accordion needs `check({force:true})`; Link's pre-checked "save my information"
+  makes Phone required and silently blocks Subscribe) and the corrected premise
+  that voiding an `incomplete` subscription yields `incomplete_expired`, not
+  `canceled`. Read it before rebuilding any harness.
+- Phase 6's throwaway scripts lived in that session's scratchpad
+  (`…/348e693e-…/scratchpad/hv/`) and may have been cleaned up; the run log has
+  enough to rebuild them.
 
 ---
 
@@ -57,6 +130,11 @@ parallel worktrees.
 
 **Done when:** typecheck + tests green, working tree clean apart from the two new
 advertising PNGs.
+
+> **⚠️ OUTSTANDING (2026-08-02).** The baseline and the webhook commit happened
+> (`f3490ac`), but the "separate, revertible commit per phase" requirement did
+> not: Phases 2–5 and the Phase 6 run log are still one uncommitted blob. That is
+> item 1 of the roadmap above.
 
 ---
 
@@ -103,6 +181,14 @@ path "mirror-only — `amount_cents` stays the list rate." But
 **Risk:** if the user has already granted offline access using the old meaning,
 those partners' pages under-report until step 3's list is corrected. Surface
 that list before merging.
+
+> **⚠️ OUTSTANDING (2026-08-02).** The code shipped as `2080cca` and Phase 6
+> verified the new semantics end to end (7/7). Two things were skipped:
+> **(a)** this phase has no `docs/billing-run-log.md` section — write one;
+> **(b)** **step 3's audit was never run**, so the risk above is still live and
+> unquantified. One live offline row exists (`venue-garden-state-bar`). Run the
+> read-only query, report it, and let the user re-enter any affected
+> `amount_cents` by hand.
 
 ---
 
@@ -216,6 +302,13 @@ docs.
    SlimCD-shaped bypass — i.e. classification depends only on
    `billing_method` + Stripe truth.
 
+> **⚠️ OUTSTANDING (2026-08-02).** Steps 1–5 and 7 are done (see the run log):
+> code deleted, columns kept and commented as dead, tests replaced with a static
+> tripwire. **Step 6 is still owed** — the `SLIMCD_*` env vars remain in Vercel
+> and `.env.local`. Nothing reads them, so they are inert; removing them is a
+> live-environment change that needs the user's go-ahead and scoped
+> `vercel env rm`.
+
 ---
 
 ## Phase 5 — `incomplete` must not lock a partner out
@@ -255,6 +348,14 @@ window, and treating it as dead invites a genuine double subscription.
 **Guardrail:** do not change `readStripeTruth`'s existing `unknown` (outage)
 fail-closed behavior. The review explicitly cleared that logic.
 
+> **Status after Phase 6 (2026-08-02): shipped and verified, but half-reachable.**
+> Everything above works and is proven against real Stripe. What Phase 6 found is
+> that the owner UI never offers the partner a way to *reach* it (see the Phase 6
+> run-log section). **Phase 8 supersedes the UI half of this problem** by removing
+> the state entirely. Keep every line of Phase 5's server-side work: it stays the
+> correct handling for a row that already exists — legacy rows, and a resubscribe
+> attempt on top of a previously-cancelled subscription.
+
 ---
 
 ## Phase 6 — Stripe test-mode + browser verification
@@ -284,24 +385,177 @@ Stripe CLI's test-mode key for all of this. Never read or modify `.env.local`.
 **Done when:** every scenario is logged with its observed Stripe object state in
 `docs/billing-run-log.md`.
 
+> **✅ DONE 2026-08-01** — all six scenarios run against real Stripe test mode,
+> **68/68 assertions passed**, full write-up in the Phase 6 section of
+> `docs/billing-run-log.md`. All throwaway Stripe + Supabase data cleaned up and
+> verified. It also turned up the defect that Phase 8 now exists to fix, and
+> confirmed the `billing_invoices` never-written defect is resolved by `f3490ac`.
+
+---
+
+## Phase 8 — An unfinished signup leaves no trace
+
+**Model: Opus 5 · Effort: Medium-High** — small diff, but it changes when the
+billing mirror comes into existence, which is the record everything else reads.
+
+**The principle.** `billing_subscriptions` is a record of a partner who **pays
+us**. It should not be created by someone merely *attempting* to pay. If a signup
+is interrupted — card declined at the last step, tab closed, 3-D Secure
+abandoned, phone died — the system acts as if it never happened. The partner
+returns to `/owner/billing`, sees the normal "No subscription yet" screen, and
+starts over from the beginning.
+
+**Why this replaces the UI work Phase 5 implied.** The unreachable-fix problem
+exists only because an unfinished signup and a real dunning failure are both
+stored as `past_due`, so no screen can tell the partner which one they are. Delete
+the first case and the ambiguity is gone: **`past_due` comes to mean exactly one
+thing — an established subscriber whose card failed** — and every existing screen
+that assumes that becomes correct, including `/owner/billing/setup`'s redirect,
+which is right under this design and should be left alone.
+
+**No new UI is needed.** `/owner/billing` already renders the "No subscription
+yet" + "Set up subscription" empty state (`app/owner/billing/page.tsx`), and
+`/owner/billing/setup` already falls back to `venueIds[0]` when there is no row.
+Both were verified working in Phase 6. Confirm, don't rebuild.
+
+---
+
+### 8.1 — Gate row CREATION on payment having actually succeeded
+
+**The one rule:** a `billing_subscriptions` row may be **created** only for a
+subscription Stripe reports as paid-for (`active` or `trialing`). Rows that
+already exist keep updating exactly as they do today — a renewal that goes
+`past_due` must still be mirrored, so **only creation is gated, never updates.**
+
+Both writers in `app/api/webhooks/stripe/route.ts` need it, because a row can
+appear from either:
+
+1. **`checkout.session.completed`** (line ~51) upserts unconditionally today. A
+   session can complete with `payment_status: 'unpaid'` and an `incomplete`
+   subscription behind it. Ignore the event unless the payment really succeeded.
+2. **`customer.subscription.updated` / `.deleted`** (line ~64) currently creates a
+   row when none exists — a deliberate choice documented at lines ~143–156, to
+   survive a missed or out-of-order `checkout.session.completed`. **That intent
+   must be preserved, not reverted:** gating on "is the subscription paid-for"
+   rather than "did checkout.session.completed arrive" keeps the legitimate first
+   sync working while refusing to invent a row for an unpaid attempt.
+
+Implement as one predicate in `upsertSubscription` (an `allowCreate`/
+`isEstablished` check consulted only when no row exists), so the rule lives in a
+single place instead of being duplicated per event type. Rewrite the comment
+block at lines ~143–156 to state the new rule and why it does not reintroduce
+the missed-webhook bug it was originally guarding.
+
+**Also verify:** the welcome email (`maybeSendWelcomeEmail`) now cannot fire for
+an unpaid attempt. That is a strict improvement — note it, no change needed.
+
+### 8.2 — Don't leave a chargeable orphan at Stripe
+
+Once we stop tracking the abandoned subscription, we can no longer void it the
+way Phase 5 does. Stripe expires an `incomplete` subscription on its own in ~23h,
+but inside that window a partner could complete the stale Checkout tab *after*
+starting a fresh signup and end up billed twice.
+
+Close it at the moment a new Checkout begins: in
+`app/api/owner/billing/checkout/route.ts`, before creating the session, cancel
+any `incomplete` subscription already carrying this `venueId` in its metadata.
+Every subscription this app creates sets `subscription_data.metadata.venueId`, so
+this needs no stored state — confirm whether `stripe.subscriptions.search`
+supports the metadata query on the pinned API version; if not, fall back to
+listing recent `incomplete` subscriptions and filtering by metadata.
+
+**Failure policy:** if the sweep call itself fails, log and proceed. Unlike Phase
+5's void — where the abandoned object was the *same* subscription we were about
+to replace — this is belt-and-braces on top of Stripe's own 23h expiry, and
+blocking a paying partner's signup over it would trade a certain harm for an
+unlikely one. State this explicitly in the code comment so it doesn't read as an
+oversight.
+
+### 8.3 — Decide the Stripe customer question
+
+With nothing stored, `checkout.sessions.create` has no `stripe_customer_id` to
+reuse, so each abandoned attempt leaves an empty Stripe customer behind.
+
+**Recommendation: accept it.** Empty customers cost nothing, carry no billing
+state, and reusing one would mean storing exactly the trace this phase exists to
+eliminate. Note it in the run log so the sprawl isn't mistaken later for a bug.
+If it ever becomes untidy, the fix is a lookup by email at Checkout time, not a
+stored id — but don't build that now.
+
+### 8.4 — Clean up rows already in the ambiguous state
+
+Read-only audit first (scratchpad, not committed): every row with
+`status = 'past_due'` and `billing_method = 'stripe'`, cross-checked against
+Stripe for `incomplete` / `incomplete_expired`. Any hit is an unfinished signup
+recorded under the old behavior.
+
+**Report the list to the user before touching anything.** The correct repair is
+to delete the row (the partner is not a subscriber and should get the clean
+signup screen), but deleting billing rows is not something to do unattended —
+and a genuine dunning `past_due` must never be caught by it.
+
+### 8.5 — Tests
+
+- `checkout.session.completed` with `payment_status: 'unpaid'` → **no row
+  written**, no welcome email.
+- `customer.subscription.updated` for an `incomplete` subscription with **no
+  existing row** → no row written.
+- `customer.subscription.updated` for an `active` subscription with no existing
+  row → row **is** created (the missed-`checkout.session.completed` case that
+  lines ~143–156 protect — this must not regress).
+- `customer.subscription.updated` to `past_due` for an **existing** row → still
+  mirrored (renewal dunning is untouched).
+- Checkout start cancels a pre-existing `incomplete` subscription for the venue;
+  and still proceeds when that cancel fails.
+- Keep every existing Phase 5 test green — that logic is retained.
+
+### 8.6 — Verify against real Stripe
+
+Reuse the Phase 6 harness (`scripts/stripe-test-env.sh` + the scratchpad scripts;
+the setup notes in the Phase 6 run-log section — LIVE `STRIPE_PRICE_ID`, the
+`.next/dev` lock, the Checkout accordion and Link-phone gotchas — will save an
+hour).
+
+1. Real Checkout, abandon at the payment step → **zero** `billing_subscriptions`
+   rows for the venue, and `/owner/billing` shows "No subscription yet" at 320px.
+2. Same partner returns and pays → exactly one row, `active`, one subscription at
+   Stripe, welcome email path fires once.
+3. Established subscriber's renewal fails (test clock, as in Phase 6) → row still
+   goes `past_due` and the page still says "Payment due" with "Update".
+4. Abandoned attempt, then a fresh signup → the abandoned subscription is
+   terminal at Stripe and the partner is billed once.
+5. Re-run the Phase 6 guard sweep unchanged — all 23 assertions must still pass.
+
+**Done when:** every scenario is logged with observed Stripe state in
+`docs/billing-run-log.md`, and the Phase 6 "Defect found" section is updated to
+record that the defect was resolved by removing the state rather than by adding
+a button.
+
 ---
 
 ## Phase 7 — Close-out
 
 **Model: Haiku 4.5 · Effort: Low**
 
-- Append a run-log section covering all six phases with the review findings
-  marked resolved.
+- Append a run-log section covering all phases with the review findings marked
+  resolved.
 - Update `docs/billing-open-issues-plan.md`: close items B, D, F, G, L, M, N;
-  restate anything still open.
+  restate anything still open. Also add and close the `billing_invoices`
+  never-written defect (found in DISCOUNT Phase 10, fixed by `f3490ac`, confirmed
+  against live webhooks in Phase 6) — it was never in that doc's inventory table.
+- Record in `SYSTEM_CONTEXT.md` the one-line rule Phase 8 establishes: **a
+  `billing_subscriptions` row means a partner who paid; an unfinished signup
+  leaves nothing behind.** It is the kind of invariant that gets re-broken by
+  someone "helpfully" persisting an in-progress checkout.
 - Re-run `/code-review` on the branch and confirm the five findings are gone.
 
 ---
 
 ## Model/effort summary
 
-Use **Opus 5** for Phases 1, 4, 5, 6 — each involves either money semantics on
-existing rows, a multi-file teardown, or the fail-closed guard logic where a
-wrong call means double-billing a real partner. **Sonnet 5** is sufficient for
-Phases 2 and 3: both are well-specified, single-surface changes with an obvious
-correct shape. **Haiku 4.5** handles Phases 0 and 7 (mechanical bookkeeping).
+Use **Opus 5** for Phases 1, 4, 5, 6, 8 — each involves either money semantics on
+existing rows, a multi-file teardown, the fail-closed guard logic where a wrong
+call means double-billing a real partner, or (Phase 8) changing when the billing
+record comes into existence at all. **Sonnet 5** is sufficient for Phases 2 and
+3: both are well-specified, single-surface changes with an obvious correct shape.
+**Haiku 4.5** handles Phases 0 and 7 (mechanical bookkeeping).
