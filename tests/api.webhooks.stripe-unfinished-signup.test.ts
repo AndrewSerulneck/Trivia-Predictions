@@ -35,6 +35,7 @@ const mocks = vi.hoisted(() => ({
   retrieve: vi.fn(),
   upsert: vi.fn(),
   sendWelcomeEmail: vi.fn(),
+  invoicesList: vi.fn(),
 }));
 
 vi.mock("@/lib/stripe", async (importActual) => {
@@ -44,6 +45,10 @@ vi.mock("@/lib/stripe", async (importActual) => {
     stripe: {
       webhooks: { constructEvent: mocks.constructEvent },
       subscriptions: { retrieve: mocks.retrieve },
+      // Mocked explicitly (rather than left undefined) so these assertions can't
+      // pass by accident on a swallowed TypeError from the first-sync invoice
+      // backfill. That path has its own suite: stripe-recovery-path.test.ts.
+      invoices: { list: mocks.invoicesList },
     },
     getStripeWebhookSecret: () => "whsec_test",
   };
@@ -129,6 +134,7 @@ describe("POST /api/webhooks/stripe — an unfinished signup leaves no trace", (
     mocks.retrieve.mockReset();
     mocks.upsert.mockReset();
     mocks.sendWelcomeEmail.mockReset().mockResolvedValue(true);
+    mocks.invoicesList.mockReset().mockResolvedValue({ data: [] });
   });
 
   describe("checkout.session.completed", () => {

@@ -1696,3 +1696,82 @@ swaps. The pre-existing positive cases are untouched and green.
 **Checks:** `npx tsc --noEmit` clean · `npm run lint` clean · `npm run test`
 **1230 passed / 13 skipped, 146 files** (+5 over Phase 1's 1225). No live Stripe
 needed for this phase, per the plan.
+
+## REVIEW ROUND 2 Phase 2 (welcome email + first invoice on the recovery path) — Item V
+
+**The bug.** Phase 8's creation gate is right — an unpaid attempt writes nothing —
+but the recovery path it deliberately preserves was one-sided. For a card that
+needs 3-D Secure: `checkout.session.completed` arrives `incomplete` → no row, no
+email (correct); `invoice.paid` may arrive next → `recordInvoice` resolves rows
+**by `stripe_subscription_id`**, finds none, returns, and Stripe never replays it;
+`customer.subscription.updated` arrives `active` → the row is created (the
+intended recovery), but `maybeSendWelcomeEmail` was wired to
+`checkout.session.completed` alone. Net result for a partner who completed 3-D
+Secure: a correct `active` row, **no welcome email ever**, and a payment history
+permanently missing its first charge. Both silent.
+
+**The key design decision: NOT "was the row created".** The plan suggested
+reporting created-vs-updated. Following that literally would have introduced a new
+silent bug: the `customer.subscription.deleted` branch clears
+`welcome_email_sent_at` on purpose so a **resubscriber** is welcomed again — and a
+resubscriber's row already exists, so a creation gate would have silenced their
+email. The signal shipped instead is `isFirstSyncForSubscription` = *the venue's
+row now points at THIS subscription for the first time* (`!alreadyTracked`), which
+covers row creation, resubscribe, and a card takeover of an offline venue alike.
+It is also exactly the window in which an earlier `invoice.paid` could have found
+no row — so both followers hang off one moment. A regression test pins the
+resubscriber case specifically.
+
+**2.1 — welcome email follows the write, not the event type.** `upsertSubscription`
+now returns `{ applied, isFirstSyncForSubscription }` instead of `boolean`, and a
+single `runFirstSyncFollowers()` runs from **both** entry points.
+`customer.subscription.deleted` shares a `case` with `.updated`, so it is excluded
+by an explicit `isDeleted` check — a cancellation is not an activation.
+`maybeSendWelcomeEmail`'s existing `welcome_email_sent_at` guard was **verified,
+not rebuilt** (plan's instruction): it is what makes calling from two places safe.
+
+**2.2 — invoice backfill at first sync (option (a), as recommended).**
+`backfillSubscriptionInvoices()` lists the subscription's invoices
+(`limit: 10` — a safety rail against an imported history, not a page size) and
+records the settled ones. `recordInvoice` upserts on `stripe_invoice_id`, so
+re-recording what the live event already landed is a no-op. A Stripe failure is
+swallowed (best-effort — the billing row is already correct and must not be
+retried); a **DB** failure still throws → 500 → Stripe retries, preserving this
+route's convention that 500 means transient DB trouble. Option (b) was rejected as
+the plan reasoned. `recordInvoice`'s `if (!row) return` is kept, with its comment
+rewritten to say the backfill is what covers the race.
+
+**Tests** — new `tests/api.webhooks.stripe-recovery-path.test.ts` (8 cases). Its
+Supabase mock **honours the `.eq()` filter**, because both halves of this fix turn
+on *which* lookup finds the row (welcome email by `venue_id`, invoice by
+`stripe_subscription_id`); a mock returning the row unconditionally would have
+passed before the fix.
+
+| case | result |
+|---|---|
+| `incomplete` checkout, then `updated`→`active`: row created, welcome email **exactly once** | ✅ |
+| normal path: email once, **not** re-sent by a following `customer.subscription.updated` | ✅ |
+| `customer.subscription.deleted` never welcomes (even with the flag already cleared) | ✅ |
+| `invoice.paid` **before** the row, then row created → invoice lands in `billing_invoices` | ✅ |
+| backfill records only settled invoices, and is bounded (`limit: 10`) | ✅ |
+| `invoice.paid` for a subscription we track nothing about → 200, no write, no retry storm | ✅ |
+| Stripe unreachable during backfill → still 200, row + email intact | ✅ |
+| **resubscriber** (row already exists) is still welcomed | ✅ |
+
+**Negative control run.** The suite was re-run against a temporarily reverted
+route (followers removed from the `.updated` branch, backfill removed): **3 of the
+8 failed** — the two 3-D Secure recovery cases and the bounded-backfill case — and
+the other 5 (which pin behaviour that must NOT change) stayed green. The tests
+therefore prove the fix rather than describing it. The route was restored from a
+scratchpad copy and re-verified.
+
+**Phase 8's own suite is untouched and green** (10/10) — the creation gate did not
+move. Its Stripe mock now declares `invoices.list` explicitly so those assertions
+cannot pass on a swallowed `TypeError` from the new backfill.
+
+**Checks:** `npx tsc --noEmit` clean · `npm run lint` clean · `npm run test`
+**1238 passed / 13 skipped, 147 files** (+8 over Phase 3's 1230).
+
+**Still owed: the live-Stripe run.** Per the plan this is the one phase that
+really wants real Stripe test mode (3-D Secure card `4000002500003155`) — that is
+Phase 4 step 3, not done here.

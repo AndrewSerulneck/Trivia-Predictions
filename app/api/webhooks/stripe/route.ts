@@ -59,23 +59,35 @@ export async function POST(request: Request) {
           // legitimate. But a session can complete with the payment NOT actually
           // settled (`payment_status: 'unpaid'`, subscription still `incomplete`),
           // and that must not mint a billing row. upsertSubscription decides;
-          // the welcome email only follows a write that really happened.
-          const applied = await upsertSubscription(sub);
-          if (applied) await maybeSendWelcomeEmail(sub);
+          // the followers only run after a write that really happened.
+          const result = await upsertSubscription(sub);
+          await runFirstSyncFollowers(result, sub);
         }
         break;
       }
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
+        const isDeleted = event.type === "customer.subscription.deleted";
         // Guarded against stale events: only apply if sub.id still matches the
         // venue's current stripe_subscription_id (see upsertSubscription). A
         // late/retried event for an old, already-replaced subscription must not
         // clobber a newer offline grant or a newer card subscription.
-        await upsertSubscription(sub, {
-          forceCancelled: event.type === "customer.subscription.deleted",
+        const result = await upsertSubscription(sub, {
+          forceCancelled: isDeleted,
           guardStaleSubscriptionId: true,
         });
+        // This branch is the OTHER way a venue's row can first come to track a
+        // paid subscription: when a signup needs a second step (3-D Secure, or
+        // any card that settles after the session closes),
+        // checkout.session.completed arrives while the subscription is still
+        // `incomplete` and the creation gate correctly writes nothing — the row
+        // is born here instead. Before this, the welcome email was wired to the
+        // checkout event alone, so a partner who completed 3-D Secure got a
+        // correct billing row and no email, ever, silently.
+        //
+        // Never on the deleted branch: a cancellation is not an activation.
+        if (!isDeleted) await runFirstSyncFollowers(result, sub);
         break;
       }
       case "customer.discount.created":
@@ -132,21 +144,50 @@ type UpsertOptions = {
  */
 const ESTABLISHED_STRIPE_STATUSES = new Set(["active", "trialing"]);
 
+type UpsertResult = {
+  /** The mirror was actually written, as opposed to a deliberately-skipped event. */
+  applied: boolean;
+  /**
+   * The write is the first time this venue's row has pointed at THIS Stripe
+   * subscription — either the row was created, or it was re-pointed from an
+   * older subscription (a resubscribe, or a card takeover of an offline venue).
+   *
+   * This, not "the row was created", is the moment the followers hang off:
+   *   - The welcome email must still fire for a RESUBSCRIBER, whose row already
+   *     exists (the delete branch clears welcome_email_sent_at on purpose so
+   *     they are welcomed again). Gating on creation alone would silence it.
+   *   - recordInvoice resolves rows BY stripe_subscription_id, so this is
+   *     exactly the window in which an earlier invoice.paid for this
+   *     subscription found no row and was dropped.
+   *
+   * Implies the subscription is `active`/`trialing`: the creation gate below
+   * refuses any first sync that isn't.
+   */
+  isFirstSyncForSubscription: boolean;
+};
+
+/** Nothing was written, so no follower should run. */
+const SKIPPED: UpsertResult = { applied: false, isFirstSyncForSubscription: false };
+
 /**
  * Upsert a billing_subscriptions row from a Stripe subscription. venueId/ownerId
  * ride on the subscription metadata (set at Checkout via subscription_data).
  *
- * Returns whether the mirror was actually written, so the caller can tell a real
- * sync apart from a deliberately-skipped event.
+ * Returns whether the mirror was actually written (so the caller can tell a real
+ * sync apart from a deliberately-skipped event) and whether that write was this
+ * subscription's first — see UpsertResult.
  */
-async function upsertSubscription(sub: Stripe.Subscription, options: UpsertOptions = {}): Promise<boolean> {
-  if (!supabaseAdmin) return false;
+async function upsertSubscription(
+  sub: Stripe.Subscription,
+  options: UpsertOptions = {}
+): Promise<UpsertResult> {
+  if (!supabaseAdmin) return SKIPPED;
 
   const { forceCancelled = false, guardStaleSubscriptionId = false } = options;
 
   const venueId = sub.metadata?.venueId?.trim();
   const ownerId = sub.metadata?.ownerId?.trim();
-  if (!venueId || !ownerId) return false;
+  if (!venueId || !ownerId) return SKIPPED;
 
   const { data: existing } = await supabaseAdmin
     .from("billing_subscriptions")
@@ -169,7 +210,7 @@ async function upsertSubscription(sub: Stripe.Subscription, options: UpsertOptio
   // an update/delete event just because checkout.session.completed hasn't
   // landed yet (redelivery order isn't guaranteed) or was missed outright.
   // Treating "no row yet" as stale would silently drop a legitimate first sync.
-  if (guardStaleSubscriptionId && existing && existing.stripe_subscription_id !== sub.id) return false;
+  if (guardStaleSubscriptionId && existing && existing.stripe_subscription_id !== sub.id) return SKIPPED;
 
   // CREATION GATE (docs/billing-code-review-fixes-plan.md Phase 8). A
   // billing_subscriptions row is the record of a partner who PAYS us, so it may
@@ -192,7 +233,7 @@ async function upsertSubscription(sub: Stripe.Subscription, options: UpsertOptio
   // never wanted. The same test covers both (see
   // tests/api.webhooks.stripe-unfinished-signup.test.ts).
   const alreadyTracked = Boolean(existing) && existing?.stripe_subscription_id === sub.id;
-  if (!alreadyTracked && !ESTABLISHED_STRIPE_STATUSES.has(sub.status)) return false;
+  if (!alreadyTracked && !ESTABLISHED_STRIPE_STATUSES.has(sub.status)) return SKIPPED;
 
   // Read the discount off THIS event's subscription object rather than trusting
   // whatever our last admin action wrote — this path is exactly what catches
@@ -240,7 +281,7 @@ async function upsertSubscription(sub: Stripe.Subscription, options: UpsertOptio
   // Surfaced (not swallowed) so a schema/DB problem 500s and Stripe retries,
   // instead of silently leaving billing_subscriptions out of sync.
   if (error) throw new Error(`upsertSubscription failed: ${error.message}`);
-  return true;
+  return { applied: true, isFirstSyncForSubscription: !alreadyTracked };
 }
 
 /**
@@ -336,12 +377,27 @@ async function syncDiscountFromEvent(discount: Stripe.Discount, removed: boolean
 }
 
 /**
+ * The two things that must happen the moment a venue's row first comes to track a
+ * paid Stripe subscription, wherever that write happened — checkout.session.completed
+ * on a card that settled immediately, or customer.subscription.updated on one that
+ * needed 3-D Secure. Wiring either of these to a single event type is what made
+ * them one-sided; hanging both off the write itself is what keeps them symmetric.
+ */
+async function runFirstSyncFollowers(result: UpsertResult, sub: Stripe.Subscription): Promise<void> {
+  if (!result.applied || !result.isFirstSyncForSubscription) return;
+  await maybeSendWelcomeEmail(sub);
+  await backfillSubscriptionInvoices(sub);
+}
+
+/**
  * Send the one-time partner welcome email on first-time subscription activation.
- * Only called from checkout.session.completed (not customer.subscription.updated),
- * and only when upsertSubscription actually wrote — so an unfinished signup, which
- * now writes no row at all, can no longer welcome someone who never paid. It is
- * additionally guarded by welcome_email_sent_at (and by the row lookup below, which
- * finds nothing when there is no row) so a Stripe webhook retry never re-sends it.
+ * Only called for a write that really happened AND is this subscription's first
+ * sync — so an unfinished signup, which now writes no row at all, can no longer
+ * welcome someone who never paid, and a later state change on an established row
+ * can't re-trigger it. It is additionally guarded by welcome_email_sent_at (and by
+ * the row lookup below, which finds nothing when there is no row) so a Stripe
+ * webhook retry never re-sends it — that idempotency is what makes it safe to call
+ * this from both webhook entry points.
  * Never throws — an email failure must not fail the webhook or block billing sync.
  */
 async function maybeSendWelcomeEmail(sub: Stripe.Subscription): Promise<void> {
@@ -387,6 +443,51 @@ async function maybeSendWelcomeEmail(sub: Stripe.Subscription): Promise<void> {
 }
 
 /**
+ * Hard cap on the backfill below. At first sync a subscription has one invoice
+ * (two if Stripe already retried), so this is a safety rail, not a page size —
+ * it exists so a subscription with a long history imported from elsewhere can
+ * never turn this into an unbounded replay on a webhook request.
+ */
+const INVOICE_BACKFILL_LIMIT = 10;
+
+/**
+ * Record any invoice that was already paid before the row existed.
+ *
+ * recordInvoice resolves its row BY stripe_subscription_id, so an invoice.paid
+ * arriving in the window between "signup started" and "row created" — which is
+ * exactly what happens when a card needs 3-D Secure — found nothing and returned.
+ * Stripe never replays it, so that first charge was permanently missing from the
+ * partner's payment history. Reading it back at first sync self-heals that, at
+ * the cost of one API call on a rare path.
+ *
+ * The alternative (500 so Stripe retries recordInvoice) was rejected: it would
+ * make a legitimately-unmatchable invoice retry for three days, and 500 in this
+ * route means "transient DB failure", which that is not.
+ *
+ * recordInvoice upserts on stripe_invoice_id, so re-recording the invoice the
+ * live event already landed is a no-op rather than a duplicate.
+ */
+async function backfillSubscriptionInvoices(sub: Stripe.Subscription): Promise<void> {
+  if (!stripe) return;
+
+  let invoices: Stripe.ApiList<Stripe.Invoice>;
+  try {
+    invoices = await stripe.invoices.list({ subscription: sub.id, limit: INVOICE_BACKFILL_LIMIT });
+  } catch {
+    // Best-effort: Stripe being unreachable must not fail the webhook, or the
+    // billing row we just wrote correctly gets retried for no reason.
+    return;
+  }
+
+  // Only settled invoices. A failed/open invoice on a subscription that is now
+  // established is noise, and the live invoice.payment_failed event covers the
+  // case where it matters.
+  for (const invoice of invoices.data) {
+    if (invoice.status === "paid") await recordInvoice(invoice, "paid");
+  }
+}
+
+/**
  * Record a Stripe invoice into billing_invoices, deduped by stripe_invoice_id.
  * Resolves the owning subscription row by its Stripe subscription id.
  */
@@ -403,6 +504,12 @@ async function recordInvoice(invoice: Stripe.Invoice, status: "paid" | "failed")
     .eq("stripe_subscription_id", subscriptionId)
     .maybeSingle<{ id: string; venue_id: string }>();
 
+  // No row for this subscription: either we track nothing about it at all, or
+  // the row hasn't been created yet (an unfinished signup, or one still in
+  // 3-D Secure). Dropping it is right for the first case and safe for the
+  // second — backfillSubscriptionInvoices re-reads it from Stripe the moment
+  // the row comes into existence. Returning 500 to force a Stripe retry would
+  // make the genuinely-untracked case retry for three days.
   if (!row) return;
 
   const amountCents = status === "paid" ? invoice.amount_paid : invoice.amount_due;

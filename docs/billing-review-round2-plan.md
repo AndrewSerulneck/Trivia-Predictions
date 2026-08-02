@@ -19,7 +19,7 @@ items U, V, W to it), `docs/billing-run-log.md`.
 |---|-------|-------|--------|-----------|--------|
 | 0 | Baseline | Haiku 4.5 | Low | — | ✅ done 2026-08-02 |
 | 1 | `grant-manual` 502s on a churned card row (finding 1) | **Opus 5** | Medium | 0 | ✅ done 2026-08-02 |
-| 2 | Welcome email + first invoice lost on the recovery path (finding 2) | **Opus 5** | Medium-High | 0 | ⬜ not started |
+| 2 | Welcome email + first invoice lost on the recovery path (finding 2) | **Opus 5** | Medium-High | 0 | ✅ code done 2026-08-02 (live-Stripe run is Phase 4.3) |
 | 3 | Custom price accepts a yearly interval (finding 3) | Sonnet 5 | Low-Medium | 0 | ✅ done 2026-08-02 |
 | 4 | Verification + close-out | Sonnet 5 | Medium | 1–3 | ⬜ not started |
 
