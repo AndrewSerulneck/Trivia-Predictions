@@ -8,6 +8,8 @@ import {
   removeDiscountFromSubscription,
   CLEARED_MIRROR,
   hasAtMostTwoDecimals,
+  hasDiscountMirror,
+  removalIsMootAtStripe,
   type DiscountSpec,
   type DiscountableSubscriptionRow,
 } from "@/lib/billingDiscounts";
@@ -259,9 +261,15 @@ export async function POST(request: Request) {
   // that's still in dunning — Stripe would keep collecting and the app could no
   // longer cancel or reconcile it. Require the admin to cancel it first (or pass
   // force:true to cancel-then-convert in one call).
+  // The discount_* columns are NOT decorative here: hasDiscountMirror() below
+  // reads them to decide whether the detach is worth attempting at all. Drop
+  // them from this select and every row reads as "no discount", making the skip
+  // unconditional and re-arming the orphaned-coupon bug the detach exists for.
   const { data: existingSub } = await supabaseAdmin
     .from("billing_subscriptions")
-    .select("id, billing_method, stripe_subscription_id, status, amount_cents, current_period_end")
+    .select(
+      "id, billing_method, stripe_subscription_id, status, amount_cents, current_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
+    )
     .eq("venue_id", venueId)
     .maybeSingle<{
       id: string;
@@ -270,6 +278,11 @@ export async function POST(request: Request) {
       status: string;
       amount_cents: number;
       current_period_end: string | null;
+      stripe_coupon_id: string | null;
+      discount_label: string | null;
+      discount_percent_off: number | null;
+      discount_amount_off_cents: number | null;
+      discount_ends_at: string | null;
     }>();
 
   if (
@@ -298,9 +311,32 @@ export async function POST(request: Request) {
   // cleared in our DB either way, but only this call actually removes it at
   // Stripe). cancel_at_period_end above does NOT do this: the subscription
   // stays active with its coupon attached until the period ends.
-  if (existingSub?.stripe_subscription_id) {
+  //
+  // Two rows are skipped outright, because for them the detach cannot prevent
+  // anything and can only fail:
+  //
+  //   - No discount recorded. Nothing to orphan. (This is most rows — the
+  //     detach used to run unconditionally, so a plain churned card partner
+  //     with no discount at all could not be converted to check billing.)
+  //   - status === 'cancelled'. cancelSubscription() retains
+  //     stripe_subscription_id on purpose so the mirror stays reconcilable, so
+  //     this row still looks Stripe-backed — but Stripe rejects any update on a
+  //     canceled subscription, and a canceled subscription bills nothing, so an
+  //     attached coupon is inert. Note the force-cancel branch above does NOT
+  //     land here: it schedules cancel_at_period_end, leaving the subscription
+  //     active with its coupon live, which is precisely the case to detach.
+  if (
+    existingSub?.stripe_subscription_id &&
+    existingSub.status !== "cancelled" &&
+    hasDiscountMirror(existingSub)
+  ) {
     const removeResult = await removeDiscountFromSubscription(existingSub);
-    if (!removeResult.ok) {
+    // Fail closed on a real Stripe error — leaving a live coupon attached to a
+    // subscription we're about to stop tracking is the failure this guards.
+    // The exception is a failure that proves there is nothing left to orphan
+    // (subscription already gone or already canceled at Stripe); blocking the
+    // admin on that would strand the venue with no way to convert it.
+    if (!removeResult.ok && !removalIsMootAtStripe(removeResult)) {
       return NextResponse.json({ ok: false, error: removeResult.error }, { status: removeResult.status });
     }
   }

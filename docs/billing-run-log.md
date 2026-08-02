@@ -1582,3 +1582,75 @@ deleted, all 4 customers deleted, the throwaway price + product archived, all 3
 owners + auth users, 3 venues and their links removed. Post-run checks: 0
 prefixed Stripe customers, 0 prefixed subscriptions in any billable status, 0
 `zz-` venues, and `billing_subscriptions` back to production's 2 real rows.
+
+## REVIEW ROUND 2 Phase 0 (baseline) — 2026-08-02
+
+Starting SHA: `3630bdd882537bdab23b012345edc90bb4411b98` (branch
+`billing-guard-and-discounts`, 1 commit ahead of `origin/billing-guard-and-discounts`).
+
+- `npx tsc --noEmit` — clean, no output.
+- `npm run test` — **1218 passed / 13 skipped, 145 files** (144 passed + 1
+  fully-skipped file). Matches the last known green baseline exactly.
+- Working tree: modified `SYSTEM_CONTEXT.md`, `docs/billing-code-review-fixes-plan.md`,
+  `docs/billing-open-issues-plan.md`; untracked `docs/billing-review-round2-plan.md`
+  and the two advertising PNGs — matches what Phase 0 expected to find, nothing
+  unaccounted for.
+
+Ready for Phases 1–3 (independent, any order/parallel worktrees), then Phase 4.
+
+## REVIEW ROUND 2 Phase 1 (grant-manual must not 502 on a churned card row) — Item U
+
+**The bug, restated from the code.** `app/api/admin/billing/route.ts` detached the
+Stripe coupon on *any* row still holding a `stripe_subscription_id`.
+`cancelSubscription()` retains that id deliberately (so the mirror stays
+reconcilable), and the admin UI's `hasLiveCard` only disables "Grant offline" for
+a **non-cancelled** Stripe row — so "card partner churns → admin converts them to
+check billing" reached an unconditional `stripe.subscriptions.update()` on a
+canceled subscription, which Stripe rejects, which the helper turns into a hard
+502. It fired even for a row carrying **no discount at all**.
+
+**Fix, three parts.**
+
+1. **`hasDiscountMirror(row)`** (new, `lib/billingDiscounts.ts`, next to
+   `CLEARED_MIRROR`): any one populated mirror column counts. The route's
+   `select()` now reads all five mirror columns, with a comment stating that
+   dropping them makes every row read as "no discount" and re-arms the bug.
+2. **`status === 'cancelled'` is skipped** — Stripe refuses updates on a canceled
+   subscription and a canceled subscription bills nothing, so its coupon is inert.
+   The `force` branch is explicitly *not* affected: it schedules
+   `cancel_at_period_end`, leaving the subscription active with a live coupon,
+   which is exactly the case the detach exists for.
+3. **Failure policy, live rows: still fails closed**, with two exceptions that
+   prove there is nothing left to orphan — `resource_missing` (by error code) and
+   Stripe's "cannot update a canceled subscription" (message match; Stripe gives
+   no distinct `code` for it). `removeDiscountFromSubscription` now surfaces
+   `stripeCode` on failure so the call site can tell those apart, and
+   `removalIsMootAtStripe()` encodes the predicate.
+
+**Deliberately NOT changed:** the helper itself stays strict. An admin clicking
+"Remove discount" should still hear about a Stripe failure — only callers
+detaching as a side effect of another operation swallow these codes.
+
+**Tests.** New `tests/api.admin.billing-grant-manual-churned-card.test.ts` (7
+cases) does **not** mock `@/lib/billingDiscounts` — it mocks the Stripe SDK
+underneath, so the real detach path and its real failure modes run (the gap that
+let this ship: the existing suite stubbed the helper `{ ok: true }`):
+
+| case | expected | result |
+|---|---|---|
+| cancelled row, no discount | 200, zero Stripe calls | ✅ |
+| cancelled row, discount mirror present | 200, zero Stripe calls, mirror still cleared in the upsert | ✅ |
+| live (`past_due`) row, no discount | 200, no detach attempted | ✅ |
+| live row **with** discount | detach still attempted (`{ discounts: "" }`) | ✅ |
+| live discounted row, genuine Stripe error | **502, nothing written** — the round-1 guardrail, unregressed | ✅ |
+| live discounted row, `resource_missing` | 200, conversion proceeds | ✅ |
+| live discounted row, "cannot update … canceled" | 200, conversion proceeds | ✅ |
+
+The two pre-existing suites were updated to keep testing what their names claim:
+their fixture rows now carry mirror columns (a row without them now correctly
+skips the detach), and they spread the real module so the pure predicates aren't
+stubbed out.
+
+**Checks:** `npx tsc --noEmit` clean · `npm run lint` clean · `npm run test`
+**1225 passed / 13 skipped, 146 files** (+7 over the Phase 0 baseline of 1218).
+No live Stripe needed — the mocked-SDK tests cover this phase, per the plan.

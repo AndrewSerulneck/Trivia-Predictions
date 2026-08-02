@@ -83,7 +83,10 @@ export type ApplyDiscountResult =
 
 export type RemoveDiscountResult =
   | { ok: true; mode: "stripe" | "local" }
-  | { ok: false; status: number; error: string };
+  // `stripeCode` is Stripe's error code when the failure came from the API, so a
+  // caller can tell "the subscription is already gone" from a real failure
+  // without re-throwing. Null for our own failures (config, DB).
+  | { ok: false; status: number; error: string; stripeCode?: string | null };
 
 const COUPON_CURRENCY = "usd";
 
@@ -314,6 +317,40 @@ export const CLEARED_MIRROR: DiscountMirror = {
   discount_amount_off_cents: null,
   discount_ends_at: null,
 };
+
+/**
+ * Is there any discount recorded for this row? Any one populated column counts:
+ * a partially-written mirror still means "a coupon may be attached at Stripe",
+ * and the only cost of being wrong in that direction is one redundant API call.
+ *
+ * Callers use this to skip a detach that has nothing to detach — a Stripe
+ * `subscriptions.update` on a dead subscription throws, and a caller that is
+ * merely tidying up (rather than acting on an admin's explicit "Remove
+ * discount") should not be failed by it. Passing a row that simply didn't
+ * SELECT the mirror columns reads as "no discount" — select them, or the skip
+ * is silently unconditional.
+ */
+export const hasDiscountMirror = (row: Partial<DiscountMirror>): boolean =>
+  (Object.keys(CLEARED_MIRROR) as (keyof DiscountMirror)[]).some((column) => row[column] != null);
+
+/**
+ * Did a failed `removeDiscountFromSubscription` fail because there is nothing
+ * left at Stripe to detach? Both cases below mean the coupon cannot still be
+ * billing anybody, which is the only thing the detach exists to prevent:
+ *
+ * - `resource_missing` — the subscription (or its discount) is gone entirely.
+ * - a canceled subscription — Stripe refuses updates on one, and it bills
+ *   nothing, so an attached coupon is inert. There is no error `code` for this,
+ *   only the message, hence the text match.
+ *
+ * This is deliberately NOT applied inside the helper: an admin who clicks
+ * "Remove discount" should still hear about any Stripe failure. Only callers
+ * detaching as a side effect of another operation should swallow these.
+ */
+export const removalIsMootAtStripe = (failure: { error: string; stripeCode?: string | null }): boolean =>
+  failure.stripeCode === "resource_missing" ||
+  /cannot update a (?:subscription|canceled)/i.test(failure.error) ||
+  /subscription.*(?:is |has been )?cancell?ed/i.test(failure.error);
 
 /**
  * The coupon behind a Discount, as carried in the payload. In this API version it
@@ -584,6 +621,7 @@ export async function removeDiscountFromSubscription(
         ok: false,
         status: 502,
         error: error instanceof Error ? error.message : "Failed to remove discount.",
+        stripeCode: stripeErrorCode(error),
       };
     }
   }

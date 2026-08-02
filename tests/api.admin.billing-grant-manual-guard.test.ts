@@ -32,7 +32,10 @@ vi.mock("@/lib/billing", () => ({
   cancelSubscription: mocks.cancelSubscription,
 }));
 
-vi.mock("@/lib/billingDiscounts", () => ({
+vi.mock("@/lib/billingDiscounts", async (importOriginal) => ({
+  // Keep the real pure predicates (hasDiscountMirror, removalIsMootAtStripe);
+  // only the Stripe-touching removal helper is stubbed.
+  ...(await importOriginal<typeof import("@/lib/billingDiscounts")>()),
   removeDiscountFromSubscription: mocks.removeDiscountFromSubscription,
   CLEARED_MIRROR: {
     stripe_coupon_id: null,
@@ -50,7 +53,15 @@ type ExistingSub = {
   status: string;
   amount_cents?: number;
   current_period_end?: string | null;
+  stripe_coupon_id?: string | null;
+  discount_label?: string | null;
+  discount_percent_off?: number | null;
+  discount_amount_off_cents?: number | null;
+  discount_ends_at?: string | null;
 };
+
+/** The route only attempts a detach for a row that actually records a discount. */
+const A_DISCOUNT = { stripe_coupon_id: "hc-pct-25-forever", discount_percent_off: 25 } as const;
 
 vi.mock("@/lib/supabaseAdmin", () => {
   let existingSub: ExistingSub | null = null;
@@ -181,7 +192,7 @@ describe("POST /api/admin/billing — grant-manual Stripe-orphan guard", () => {
   });
 
   it("with force:true, cancels the Stripe subscription then converts to offline", async () => {
-    setExistingSub({ id: "sub-4", stripe_subscription_id: "sub_stripe_4", status: "past_due" });
+    setExistingSub({ id: "sub-4", stripe_subscription_id: "sub_stripe_4", status: "past_due", ...A_DISCOUNT });
     mocks.cancelSubscription.mockResolvedValue({ ok: true, mode: "stripe" });
 
     const response = await POST(
@@ -201,17 +212,19 @@ describe("POST /api/admin/billing — grant-manual Stripe-orphan guard", () => {
       id: "sub-4",
       stripe_subscription_id: "sub_stripe_4",
       status: "past_due",
+      ...A_DISCOUNT,
     });
     expect(mocks.removeDiscountFromSubscription).toHaveBeenCalledWith({
       id: "sub-4",
       stripe_subscription_id: "sub_stripe_4",
       status: "past_due",
+      ...A_DISCOUNT,
     });
     expect(mocks.upsert).toHaveBeenCalled();
   });
 
   it("refuses with 502 if detaching the Stripe coupon fails, without mutating the DB", async () => {
-    setExistingSub({ id: "sub-5", stripe_subscription_id: "sub_stripe_5", status: "past_due" });
+    setExistingSub({ id: "sub-5", stripe_subscription_id: "sub_stripe_5", status: "past_due", ...A_DISCOUNT });
     mocks.cancelSubscription.mockResolvedValue({ ok: true, mode: "stripe" });
     mocks.removeDiscountFromSubscription.mockResolvedValue({
       ok: false,

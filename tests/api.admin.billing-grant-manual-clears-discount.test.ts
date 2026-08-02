@@ -23,7 +23,10 @@ vi.mock("@/lib/billing", () => ({
   cancelSubscription: mocks.cancelSubscription,
 }));
 
-vi.mock("@/lib/billingDiscounts", () => ({
+vi.mock("@/lib/billingDiscounts", async (importOriginal) => ({
+  // hasDiscountMirror/removalIsMootAtStripe are pure predicates — use the real
+  // ones so this suite exercises the same skip logic the route ships with.
+  ...(await importOriginal<typeof import("@/lib/billingDiscounts")>()),
   removeDiscountFromSubscription: mocks.removeDiscountFromSubscription,
   CLEARED_MIRROR: {
     stripe_coupon_id: null,
@@ -41,7 +44,23 @@ type ExistingSub = {
   status: string;
   amount_cents: number;
   current_period_end: string | null;
+  // Round-2 finding 1: the route now reads the mirror to decide whether the
+  // detach is worth attempting, so a row without these is a row with no
+  // discount — and correctly skips the Stripe call these tests assert on.
+  stripe_coupon_id: string | null;
+  discount_label: string | null;
+  discount_percent_off: number | null;
+  discount_amount_off_cents: number | null;
+  discount_ends_at: string | null;
 };
+
+const A_DISCOUNT = {
+  stripe_coupon_id: "hc-pct-25-forever",
+  discount_label: "25% off",
+  discount_percent_off: 25,
+  discount_amount_off_cents: null,
+  discount_ends_at: null,
+} as const;
 
 vi.mock("@/lib/supabaseAdmin", () => {
   let existingSub: ExistingSub | null = null;
@@ -133,6 +152,7 @@ describe("POST /api/admin/billing — grant-manual clears the discount mirror", 
       status: "past_due",
       amount_cents: 10000,
       current_period_end: null,
+      ...A_DISCOUNT,
     };
     setExistingSub(existing);
     mocks.cancelSubscription.mockResolvedValue({ ok: true, mode: "stripe" });
@@ -160,7 +180,7 @@ describe("POST /api/admin/billing — grant-manual clears the discount mirror", 
     expect(row.stripe_coupon_id).toBeNull();
   });
 
-  it("still clears the mirror in the upsert even though the Stripe row has no discount to detach", async () => {
+  it("still clears the mirror in the upsert for a row with no discount to detach", async () => {
     const existing: ExistingSub = {
       id: "sub-2",
       billing_method: "stripe",
@@ -168,6 +188,11 @@ describe("POST /api/admin/billing — grant-manual clears the discount mirror", 
       status: "past_due",
       amount_cents: 10000,
       current_period_end: null,
+      stripe_coupon_id: null,
+      discount_label: null,
+      discount_percent_off: null,
+      discount_amount_off_cents: null,
+      discount_ends_at: null,
     };
     setExistingSub(existing);
     mocks.cancelSubscription.mockResolvedValue({ ok: true, mode: "stripe" });
@@ -182,6 +207,9 @@ describe("POST /api/admin/billing — grant-manual clears the discount mirror", 
       })
     );
 
+    // Nothing to detach, so the helper is skipped — but the upsert still nulls
+    // the mirror, which is what this half of the round-1 fix guarantees.
+    expect(mocks.removeDiscountFromSubscription).not.toHaveBeenCalled();
     const row = upsertedRow();
     expect(row.discount_label).toBeNull();
     expect(row.discount_percent_off).toBeNull();

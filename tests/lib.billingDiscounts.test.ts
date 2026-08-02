@@ -509,7 +509,9 @@ describe("removeDiscountFromSubscription", () => {
 
     const result = await removeDiscountFromSubscription(STRIPE_ROW);
 
-    expect(result).toEqual({ ok: false, status: 502, error: "stripe down" });
+    // stripeCode is surfaced so a caller detaching as a side effect can tell an
+    // already-gone subscription from a real failure (see removalIsMootAtStripe).
+    expect(result).toEqual({ ok: false, status: 502, error: "stripe down", stripeCode: null });
     expect(mocks.dbUpdate).not.toHaveBeenCalled();
   });
 });
