@@ -407,4 +407,87 @@ describe("POST /api/webhooks/stripe — discount mirror sync", () => {
     );
     expect(mocks.updateEq).toHaveBeenCalledWith("id", "row-1");
   });
+
+  /**
+   * Round 4 Phase 6. A created/updated discount whose coupon can't be retrieved
+   * must leave the mirror alone rather than write a valueless one — see the
+   * comment at the write in syncDiscountFromEvent for the asymmetry.
+   */
+  it("leaves the mirror untouched when the created discount's coupon can't be retrieved", async () => {
+    mocks.retrieveCoupon.mockRejectedValue(new Error("Stripe is down"));
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.created",
+      data: { object: discount("hc-pct-50-once") },
+    });
+
+    const response = await POST(webhookRequest());
+
+    expect(response.status).toBe(200);
+    expect(mocks.retrieveCoupon).toHaveBeenCalledWith("hc-pct-50-once");
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("hc-pct-50-once"));
+  });
+
+  it("leaves the mirror untouched when an updated discount's coupon can't be retrieved", async () => {
+    mocks.retrieveCoupon.mockRejectedValue(new Error("rate limited"));
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.updated",
+      data: { object: discount("hc-free-3mo") },
+    });
+
+    const response = await POST(webhookRequest());
+
+    expect(response.status).toBe(200);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  // The expanded-coupon payload has no retrieve and therefore no failure mode —
+  // the new suppression must not catch these perfectly good writes.
+  it("still writes when the coupon arrives expanded in the payload", async () => {
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.created",
+      data: { object: discount(coupon({ id: "hc-pct-25-forever" })) },
+    });
+
+    const response = await POST(webhookRequest());
+
+    expect(response.status).toBe(200);
+    expect(mocks.retrieveCoupon).not.toHaveBeenCalled();
+    expect(mocks.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stripe_coupon_id: "hc-pct-25-forever",
+        discount_label: "25% off forever",
+        discount_percent_off: 25,
+      })
+    );
+  });
+
+  // "No coupon reference at all" is a different thing from "resolution failed",
+  // and keeps writing exactly as it did before this phase.
+  it("still writes a discount that carries no coupon reference at all", async () => {
+    mocks.constructEvent.mockReturnValue({
+      type: "customer.discount.created",
+      data: {
+        object: {
+          ...discount(coupon()),
+          source: null,
+          end: 1_702_600_000,
+        } as unknown as Stripe.Discount,
+      },
+    });
+
+    const response = await POST(webhookRequest());
+
+    expect(response.status).toBe(200);
+    expect(mocks.retrieveCoupon).not.toHaveBeenCalled();
+    expect(mocks.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stripe_coupon_id: null,
+        discount_label: null,
+        discount_percent_off: null,
+        discount_amount_off_cents: null,
+        discount_ends_at: new Date(1_702_600_000 * 1000).toISOString(),
+      })
+    );
+  });
 });

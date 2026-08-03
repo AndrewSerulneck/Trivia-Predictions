@@ -285,6 +285,20 @@ export async function POST(request: Request) {
       discount_ends_at: string | null;
     }>();
 
+  // Everything below this line can mutate Stripe (force-cancel, discount
+  // detach); nothing below it may return 400 for bad input. Validate
+  // paidThroughDate here, before either mutation, so a malformed/past date
+  // never leaves a partner's subscription force-cancelled or their coupon
+  // detached with no way to retry back to the original state.
+  const dateStr = (body.paidThroughDate ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return NextResponse.json({ ok: false, error: "A valid paid-through date is required." }, { status: 400 });
+  }
+  const periodEnd = new Date(`${dateStr}T23:59:59.000Z`);
+  if (Number.isNaN(periodEnd.getTime()) || periodEnd.getTime() <= Date.now()) {
+    return NextResponse.json({ ok: false, error: "Paid-through date must be in the future." }, { status: 400 });
+  }
+
   if (
     existingSub?.stripe_subscription_id &&
     (existingSub.status === "active" || existingSub.status === "past_due")
@@ -339,17 +353,6 @@ export async function POST(request: Request) {
     if (!removeResult.ok && !removalIsMootAtStripe(removeResult)) {
       return NextResponse.json({ ok: false, error: removeResult.error }, { status: removeResult.status });
     }
-  }
-
-  // Paid-through date → end of that day (local-agnostic: 23:59:59 UTC keeps the
-  // partner active for the entire calendar day they've paid through).
-  const dateStr = (body.paidThroughDate ?? "").trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return NextResponse.json({ ok: false, error: "A valid paid-through date is required." }, { status: 400 });
-  }
-  const periodEnd = new Date(`${dateStr}T23:59:59.000Z`);
-  if (Number.isNaN(periodEnd.getTime()) || periodEnd.getTime() <= Date.now()) {
-    return NextResponse.json({ ok: false, error: "Paid-through date must be in the future." }, { status: 400 });
   }
 
   // TWO DIFFERENT NUMBERS, ON PURPOSE.

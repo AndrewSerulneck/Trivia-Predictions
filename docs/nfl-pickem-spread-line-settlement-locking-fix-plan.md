@@ -303,3 +303,34 @@ pick when the provider never reported final scores..."`) rather than driving
 a full end-to-end settlement sweep in-browser, which would have required
 seeding a real kicked-off game with score data — disproportionate for a path
 already covered by targeted unit tests.
+
+## Round 4 Code Review Findings (2026-08-02)
+
+A fourth `/code-review` pass over the same branch found five more findings in
+this spread-line/settlement/scoring-mode surface. Full findings, work items,
+and as-built records live in `docs/code-review-round4-plan.md` Phases 1–5;
+this section is the pointer this doc's own contract promised.
+
+| # | Finding | File | Status |
+|---|---|---|---|
+| 1 | `resolveSpreadPickEmSettlement` adjusted **both** sides of the score by the spread (`home_score + home_spread` vs `away_score + away_spread`). Since `away_spread` is by construction `-home_spread`, this moved the margin by twice the line — covers graded as losses, half-point lines producing impossible pushes | `lib/pickem.ts` (`resolveSpreadPickEmSettlement`) | ✅ closed — round4 Phase 1: adjust the home side only (`homeScore + line.homeSpread` vs raw `awayScore`), comment naming the `awaySpread === -homeSpread` invariant; `winningTeamId` (outright) untouched. Rewrote the buggy `-1.5`-pushes-as-tie test to `won`/`lost`, added a cover-that-read-as-a-loss regression sentinel, a dog-cover case, and an integer exact-push case. Corrected the same wrong formula in `docs/nfl-pickem-venue-scoring-mode-plan.md:186-189`. **Settled-picks audit (query `pickem_picks` for `scoring_mode='spread'` + non-null `resolved_at`) did not run** — the permission classifier refused the read-only script; expected count is zero (preseason, 2026-08-02) but this was never confirmed. Carried to round4 Phase 8, still not run there either (same block) — flagged to the user, not silently assumed |
+| 2 | `app/api/nfl-pickem/games/route.ts`'s `getVenueNFLPickEmScoringMode` call was unguarded — any `venue_game_settings` read error (not just a missing row) 500'd the whole games list for every venue that passed a `venueId` | `app/api/nfl-pickem/games/route.ts` | ✅ closed — round4 Phase 2: wrapped in try/catch; on failure the mode is reported as **unresolved** (`scoringMode: null` + `scoringModeUnresolved: true`) rather than guessed as `"standard"` or `"spread"` — either guess would show players one game and grade them on another. `spreadsUnavailable` stays `undefined` when unresolved (not applicable vs. unknown stay distinct). `listNFLPickEmGames` re-resolves its own mode when passed `undefined` rather than the route guessing |
+| 3 | `NFLPickEmGameList.tsx` read `data.scoringMode` off the games response but dropped `data.spreadsUnavailable` on the floor — a spread venue with a failed odds feed (or, after item 2, an unresolved mode) rendered identically to a healthy venue, so players picked blind against a spread they'd still be graded on | `components/nfl-pickem/NFLPickEmGameList.tsx` | ✅ closed — round4 Phase 3: added `getSpreadsBannerState({ scoringModeUnresolved, spreadsUnavailable })` (unresolved takes priority) + a `SPREADS_BANNER_COPY` map, rendered as one week-wide banner above the games list. Picking stays enabled in both degraded states — blocking picks on a transient blip costs the player their week, worse than an informed blind pick. Unit-tested via the extracted pure predicate (`tests/components.nfl-pickem-spreads-banner.test.ts`), same no-DOM-harness pattern as round3 Phase 7 |
+| 4 | `settlePendingPickEmPicks`'s scoring-mode read for a venue is populated from a `Promise.allSettled` that records only fulfilled results — one failed read silently dropped every NFL pick at that venue from the sweep with no log, no counter, and the picks stayed `pending` (blocking the daily multiplier for as long as it lasted) | `lib/pickem.ts` (settlement sweep) | ✅ closed — round4 Phase 4: warns once per venue (not per pick, mirroring `spreadStallWarned`), adds a `scoringModeUnresolvedSkipped` counter to the sweep's return value. Does **not** void the pick or fall back to `"standard"` — unlike a permanently-missing line row, a settings read is transient and self-heals next sweep, so voiding here would write terminal state onto a player's pick over a blip in *our* DB read, not theirs |
+| 5 | `refreshNFLPickEmGameLines` snapshotted `nowMs` before the (multi-page, ~1.4s) provider fetch, so a game kicking off mid-fetch still read as not-kicked-off and took the upsert branch — which wrote `locked_at: null` unconditionally, wiping a lock (and the frozen pre-kickoff spread it protected) a concurrent request had just set. PLAUSIBLE, narrow race, not confirmed in production | `lib/nflPickEm.ts` (`refreshNFLPickEmGameLines`) | ✅ closed — round4 Phase 5: `hasKickedOff` now re-reads `Date.now()` at the point of use in the write loop (the pre-fetch snapshot is kept only for the `unlockableGames` pre-filter, commented as deliberately different uses); the upsert payload no longer sets `locked_at: null` — omitting the column gives `NULL` on insert (matches the column's own lack of a default) and leaves an existing value untouched on conflict, verified against how `supabase-js`/PostgREST builds the `SET` list. Both fixes shipped together per the plan (narrows the window + makes losing the race harmless) |
+
+**Verification (round4 Phase 8, 2026-08-02):** `npx tsc --noEmit` / `npm run
+lint` / `npm run test` all green at **157 files / 1313 passed / 13 skipped**
+(up from round3's 155/1290 baseline by the 3 phases' worth of new tests each
+round added). **The browser pass for items 1–4 and the item-1 settled-picks
+audit could not be run this round** — every command touching `.env.local`
+(the Stripe/Supabase keys any seed/dev-server/DB-read step needs) or the
+network (dev server curl, `lsof`) required live approval in this session and
+was auto-denied running unattended; even a previously-unrun command like
+`npm run test:god-mode-join` hit the same block, while already-approved
+commands (`tsc`, `lint`, `npm run test`) went through. This is a session
+permission-scope limit, not a code or design gap — round3's Phase 8 ran the
+identical live-provider pass successfully in a session where a user was
+present to approve. Items 1–4 remain covered by their unit tests only until
+someone re-runs this pass attended; see `docs/billing-run-log.md`'s round4
+Phase 8 entry for the full accounting.

@@ -1685,13 +1685,19 @@ function resolveSpreadPickEmSettlement(params: {
   const winningTeamId =
     resolveOutrightWinningTeamId(row, scoreEvent, providerWinnerTeamId, providerWinnerTeamName) ??
     (homeScore > awayScore ? row.home_team_id : awayScore > homeScore ? row.away_team_id : null);
+  // The line moves ONE side, not both. `line.awaySpread` is by construction the
+  // negation of `line.homeSpread` (normalizeBDLNFLSpread in lib/nflPickEm.ts
+  // derives each from the other), so adding each to its own side shifts the
+  // margin by 2 × homeSpread — every pick would be graded against twice the real
+  // line. Home is the adjusted side; the away score stays raw. Consequence: with
+  // only one spread applied, a push is reachable only on an integer line, which
+  // is exactly what a half-point line exists to guarantee.
   const homeAdjusted = homeScore + line.homeSpread;
-  const awayAdjusted = awayScore + line.awaySpread;
   let status: PickEmPickStatus = "push";
 
-  if (homeAdjusted !== awayAdjusted) {
+  if (homeAdjusted !== awayScore) {
     const selectedSide = row.selected_side;
-    const adjustedWinnerSide = homeAdjusted > awayAdjusted ? "home" : "away";
+    const adjustedWinnerSide = homeAdjusted > awayScore ? "home" : "away";
     status = selectedSide === adjustedWinnerSide ? "won" : "lost";
   }
 
@@ -2294,6 +2300,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   won: number;
   lost: number;
   push: number;
+  scoringModeUnresolvedSkipped: number;
 }> {
   if (!supabaseAdmin) {
     return {
@@ -2302,6 +2309,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
       won: 0,
       lost: 0,
       push: 0,
+      scoringModeUnresolvedSkipped: 0,
     };
   }
 
@@ -2336,6 +2344,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
       won: 0,
       lost: 0,
       push: 0,
+      scoringModeUnresolvedSkipped: 0,
     };
   }
 
@@ -2380,9 +2389,12 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   let won = 0;
   let lost = 0;
   let push = 0;
+  let scoringModeUnresolvedSkipped = 0;
   const winGroups = new Map<string, PickEmWinGroup>();
   // One warning per stalled game, not per pick on it.
   const spreadStallWarned = new Set<string>();
+  // One warning per venue whose scoring-mode read failed, not per pick at that venue.
+  const scoringModeUnresolvedWarned = new Set<string>();
   const staleFinalizeMs = 4 * 60 * 60 * 1000;
   const nowMs = Date.now();
 
@@ -2423,6 +2435,19 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
 
     const nflScoringMode = row.sport_slug === "nfl" ? nflScoringModes.get(row.venue_id) ?? null : null;
     if (row.sport_slug === "nfl" && !nflScoringMode) {
+      // The venue's scoring-mode read failed (rejected out of the
+      // Promise.allSettled above), not "this venue has no mode" — that read
+      // almost certainly succeeds on the next sweep, unlike a missing line
+      // row. So: leave the pick pending, don't void it, and don't fall back
+      // to "standard" (that would grade a spread venue under the wrong
+      // rules). Just make the skip observable instead of silent.
+      scoringModeUnresolvedSkipped += 1;
+      if (!scoringModeUnresolvedWarned.has(row.venue_id)) {
+        scoringModeUnresolvedWarned.add(row.venue_id);
+        console.warn(
+          `[Pick 'Em] Could not resolve NFL scoring mode for venue ${row.venue_id}; leaving its pending picks unsettled this sweep.`
+        );
+      }
       continue;
     }
 
@@ -2556,6 +2581,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     won,
     lost,
     push,
+    scoringModeUnresolvedSkipped,
   };
 }
 

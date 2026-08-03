@@ -8,6 +8,7 @@ import {
   discountCouponRef,
   discountMirrorFromStripe,
   resolveDiscountCoupon,
+  resolveDiscountCouponResult,
   type DiscountMirror,
 } from "@/lib/billingDiscounts";
 
@@ -423,9 +424,37 @@ async function syncDiscountFromEvent(discount: Stripe.Discount, removed: boolean
     if (rows.length === 0) return;
   }
 
-  const mirror = removed
-    ? { ...CLEARED_MIRROR }
-    : discountMirrorFromStripe(discount, await resolveDiscountCoupon(discount));
+  let mirror: DiscountMirror;
+  if (removed) {
+    mirror = { ...CLEARED_MIRROR };
+  } else {
+    // A created/updated discount whose coupon we can't resolve must not be
+    // written: discountMirrorFromStripe would happily produce a full mirror with
+    // both amount columns null, i.e. "discounted by nothing" — the partner sees
+    // list price while Stripe keeps discounting the invoice. Same contract as
+    // resolveDiscountMirror above: null means "leave the mirror alone".
+    //
+    // The asymmetry that makes "don't write" the right call (as in the deleted
+    // branch, round 3): a stale mirror is self-repairing — the accompanying
+    // customer.subscription.updated re-syncs from the subscription's own
+    // discount state — whereas a wrongly-blanked one is not, because nothing
+    // re-creates a discount we erased.
+    //
+    // Only a *failed resolution* suppresses the write. A discount that carries
+    // no coupon reference at all, and one whose Coupon arrived expanded in the
+    // payload (no retrieve, so no failure mode), both write exactly as before.
+    const resolution = await resolveDiscountCouponResult(discount);
+    if (resolution.status === "unresolved") {
+      console.warn(
+        `[stripe-webhook] skipping discount mirror write for subscription ${subscriptionId ?? "(customer-level)"}: coupon ${resolution.couponRef} could not be resolved at Stripe`
+      );
+      return;
+    }
+    mirror = discountMirrorFromStripe(
+      discount,
+      resolution.status === "resolved" ? resolution.coupon : null
+    );
+  }
 
   for (const row of rows) {
     const { error } = await supabaseAdmin

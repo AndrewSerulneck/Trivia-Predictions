@@ -1132,6 +1132,9 @@ async function refreshNFLPickEmGameLines(
 
   const existingByGameId = new Map((existingRows ?? []).map((row) => [row.game_id, mapGameLineRow(row)]));
   const linesByGameId = new Map(existingByGameId);
+  // Pre-fetch snapshot: only used to decide what's worth *fetching* from the
+  // provider, so a slightly stale clock here is harmless — worst case we ask
+  // for a game that kicks off a moment later and get back nothing useful.
   const nowMs = Date.now();
   const stampIso = new Date(nowMs).toISOString();
   const unlockableGames = games.filter((game) => {
@@ -1155,7 +1158,12 @@ async function refreshNFLPickEmGameLines(
     if (existing?.lockedAt) continue;
 
     const startsAtMs = Date.parse(game.startsAt);
-    const hasKickedOff = Number.isFinite(startsAtMs) && nowMs >= startsAtMs;
+    // Fresh clock here (not the pre-fetch nowMs snapshot above): the provider
+    // fetch is a multi-page network call, and a game that kicks off during it
+    // must still take the lock branch below rather than the upsert branch,
+    // which would otherwise clobber a lock a concurrent request set in the
+    // meantime.
+    const hasKickedOff = Number.isFinite(startsAtMs) && Date.now() >= startsAtMs;
     if (hasKickedOff && existing) {
       const lockedAt = new Date(startsAtMs).toISOString();
       // Deliberately parallel to getLockedNFLPickEmGameLineForSettlement above:
@@ -1194,6 +1202,11 @@ async function refreshNFLPickEmGameLines(
     if (!providerLine) continue;
 
     const fetchedAt = providerLine.fetchedAt ?? stampIso;
+    // locked_at is deliberately omitted: it has no NOT NULL/default, so this
+    // gives null on insert and — because the onConflict list only sets the
+    // columns actually supplied — leaves an existing value untouched on
+    // conflict. A lock, once set by a concurrent request, must never be
+    // un-set by a refresh.
     const { data, error } = await supabaseAdmin
       .from("nfl_pickem_game_lines")
       .upsert(
@@ -1206,7 +1219,6 @@ async function refreshNFLPickEmGameLines(
           away_spread: providerLine.awaySpread,
           provider: providerLine.provider,
           fetched_at: fetchedAt,
-          locked_at: null,
         },
         { onConflict: "game_id" }
       )

@@ -28,3 +28,5 @@ tmp/
 
 # Pre-resync week snapshots (scripts/resync-nfl-weeks.cjs)
 nfl-weeks-*-before.json
+# Kimi project memory
+.kimi-memory/

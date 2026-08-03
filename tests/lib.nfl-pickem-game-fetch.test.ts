@@ -99,10 +99,17 @@ vi.mock("@/lib/supabaseAdmin", () => {
             conflictColumns.every((column) => row[column] === payloadRow[column])
           );
           if (existing) {
+            // Mirrors real Postgres upsert semantics: ON CONFLICT DO UPDATE SET
+            // only touches the columns actually supplied in the payload, so an
+            // omitted locked_at leaves whatever value the row already has.
             Object.assign(existing, payloadRow);
             return existing;
           }
-          const inserted = { ...payloadRow };
+          // locked_at has no NOT NULL/default in the schema, so an insert that
+          // omits it gets a genuine NULL — mirror that rather than leaving the
+          // key entirely absent, which would make objectContaining({ locked_at: null })
+          // assertions fail for the wrong reason.
+          const inserted: MockRow = { locked_at: null, ...payloadRow };
           tableRows.push(inserted);
           return inserted;
         });
@@ -436,6 +443,62 @@ describe("listNFLPickEmGames game fetching", () => {
     }
   });
 
+  it("takes the lock path, not the upsert path, for a game that kicks off during the odds fetch", async () => {
+    // Simulate the provider fetch being slow enough that the clock crosses
+    // kickoff while it's in flight: nowMs is pre-kickoff at snapshot time
+    // (so the game is still eligible to fetch), but by the time the write
+    // loop re-reads the clock, kickoff has passed.
+    const beforeKickoff = Date.parse("2026-09-10T00:00:00.000Z");
+    const afterKickoff = Date.parse("2026-09-10T00:30:00.000Z");
+    let kickedOff = false;
+    const nowSpy = vi.spyOn(Date, "now").mockImplementation(() => (kickedOff ? afterKickoff : beforeKickoff));
+
+    db.tables.nfl_pickem_game_lines = [
+      {
+        game_id: "1__2026-09-10T00:20:00.000Z__New England Patriots__Seattle Seahawks",
+        starts_at: "2026-09-10T00:20:00.000Z",
+        home_team: "Seattle Seahawks",
+        away_team: "New England Patriots",
+        home_spread: -7,
+        away_spread: 7,
+        provider: "balldontlie:draftkings",
+        fetched_at: "2026-09-09T09:00:00.000Z",
+        locked_at: null,
+      },
+    ];
+
+    vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query) => {
+      if (path === "/nfl/v1/odds") {
+        kickedOff = true;
+        return WEEK_1_GAMES.map((game, index) => ({
+          id: 1000 + index,
+          game_id: game.id,
+          vendor: "fanduel",
+          spread_home_value: "-3.5",
+          spread_away_value: "3.5",
+          updated_at: "2026-09-09T12:00:00.000Z",
+        }));
+      }
+      const date = query.get("dates[]");
+      if (date) return WEEK_1_GAMES.filter((game) => game.date.slice(0, 10) === date);
+      const week = query.get("weeks[]");
+      if (week) return WEEK_1_GAMES.filter((game) => String(game.week) === week);
+      return WEEK_1_GAMES;
+    });
+
+    await listNFLPickEmGames({ weekId: "week-1" });
+
+    // Locked at kickoff with the original spread preserved, not clobbered by
+    // an upsert built from a stale pre-fetch clock.
+    expect(db.tables.nfl_pickem_game_lines[0]).toMatchObject({
+      home_spread: -7,
+      away_spread: 7,
+      provider: "balldontlie:draftkings",
+      locked_at: "2026-09-10T00:20:00.000Z",
+    });
+    nowSpy.mockRestore();
+  });
+
   it("does not overwrite an already locked line", async () => {
     db.tables.nfl_pickem_game_lines = [
       {
@@ -457,6 +520,53 @@ describe("listNFLPickEmGames game fetching", () => {
       home_spread: -10,
       away_spread: 10,
       provider: "balldontlie:draftkings",
+      locked_at: "2026-09-10T00:20:00.000Z",
+    });
+  });
+
+  it("does not null out locked_at when the upsert lands against a row a concurrent writer just locked", async () => {
+    // This process's own existingByGameId snapshot still shows the row
+    // unlocked (that's captured before the fetch), but a concurrent writer
+    // locks it for real while the odds fetch is in flight. The upsert's
+    // onConflict must not blank the lock it doesn't know about.
+    const gameId = "1__2026-09-10T00:20:00.000Z__New England Patriots__Seattle Seahawks";
+    db.tables.nfl_pickem_game_lines = [
+      {
+        game_id: gameId,
+        starts_at: "2026-09-10T00:20:00.000Z",
+        home_team: "Seattle Seahawks",
+        away_team: "New England Patriots",
+        home_spread: -7,
+        away_spread: 7,
+        provider: "balldontlie:draftkings",
+        fetched_at: "2026-09-09T09:00:00.000Z",
+        locked_at: null,
+      },
+    ];
+
+    vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query) => {
+      if (path === "/nfl/v1/odds") {
+        const row = db.tables.nfl_pickem_game_lines.find((r) => r.game_id === gameId);
+        if (row) row.locked_at = "2026-09-10T00:20:00.000Z";
+        return WEEK_1_GAMES.map((game, index) => ({
+          id: 1000 + index,
+          game_id: game.id,
+          vendor: "fanduel",
+          spread_home_value: "-3.5",
+          spread_away_value: "3.5",
+          updated_at: "2026-09-09T12:00:00.000Z",
+        }));
+      }
+      const date = query.get("dates[]");
+      if (date) return WEEK_1_GAMES.filter((game) => game.date.slice(0, 10) === date);
+      const week = query.get("weeks[]");
+      if (week) return WEEK_1_GAMES.filter((game) => String(game.week) === week);
+      return WEEK_1_GAMES;
+    });
+
+    await listNFLPickEmGames({ weekId: "week-1" });
+
+    expect(db.tables.nfl_pickem_game_lines[0]).toMatchObject({
       locked_at: "2026-09-10T00:20:00.000Z",
     });
   });

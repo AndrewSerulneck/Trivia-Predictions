@@ -192,4 +192,61 @@ describe("NFL Pick 'Em games route scoring mode", () => {
 
     expect(body.spreadsUnavailable).toBeUndefined();
   });
+
+  it("still serves the games list when the scoring-mode read throws", async () => {
+    mocks.getVenueNFLPickEmScoringMode.mockRejectedValue(new Error("settings table gone"));
+
+    const response = await GET(
+      new Request("http://localhost/api/nfl-pickem/games?weekId=week-1&venueId=venue-1"),
+    );
+    const body = (await response.json()) as {
+      ok: boolean;
+      scoringMode: string | null;
+      scoringModeUnresolved?: boolean;
+      spreadsUnavailable?: boolean;
+      games: Array<{ homeSpread?: number | null; awaySpread?: number | null }>;
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.games).toHaveLength(1);
+    // Unresolved, not guessed: claiming "standard" would show a spread venue's
+    // players a game they are then graded on against the spread.
+    expect(body.scoringMode).toBeNull();
+    expect(body.scoringModeUnresolved).toBe(true);
+    // "Unknown mode" is not the same value as "spread venue, no lines".
+    expect(body.spreadsUnavailable).toBeUndefined();
+    // Spreads stay hidden while the mode is unknown.
+    expect(body.games[0].homeSpread).toBeUndefined();
+    expect(body.games[0].awaySpread).toBeUndefined();
+  });
+
+  it("lets the lib re-resolve the mode when the route's read throws", async () => {
+    mocks.getVenueNFLPickEmScoringMode.mockRejectedValue(new Error("settings table gone"));
+
+    await GET(new Request("http://localhost/api/nfl-pickem/games?weekId=week-1&venueId=venue-1"));
+
+    // scoringMode omitted (not null, not a guess) so listNFLPickEmGames applies
+    // its own degradation and refreshes spread lines anyway.
+    expect(mocks.listNFLPickEmGames).toHaveBeenCalledWith(
+      expect.objectContaining({ venueId: "venue-1", scoringMode: undefined }),
+    );
+  });
+
+  it("leaves both happy paths free of the unresolved marker", async () => {
+    for (const mode of ["standard", "spread"] as const) {
+      mocks.getVenueNFLPickEmScoringMode.mockResolvedValue(mode);
+
+      const response = await GET(
+        new Request("http://localhost/api/nfl-pickem/games?weekId=week-1&venueId=venue-1"),
+      );
+      const body = (await response.json()) as {
+        scoringMode: string | null;
+        scoringModeUnresolved?: boolean;
+      };
+
+      expect(body.scoringMode).toBe(mode);
+      expect(body.scoringModeUnresolved).toBeUndefined();
+    }
+  });
 });

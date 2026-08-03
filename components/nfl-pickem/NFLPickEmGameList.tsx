@@ -43,6 +43,35 @@ type UserSummary = {
   isComplete: boolean;
 };
 
+// Distinguishes the two degraded states the games route can report — see
+// app/api/nfl-pickem/games/route.ts. "unresolved" takes priority: with no
+// confirmed mode we can't even say whether spreads are applicable, so it is
+// never collapsed into (or shown alongside) "unavailable".
+type SpreadsBannerState = "unresolved" | "unavailable" | null;
+
+// Exported as a pure function per round 3 Phase 7's precedent — this project
+// has no DOM-rendering test harness (vitest.config.ts is environment: "node",
+// no .test.tsx files), so the banner condition is unit-tested here instead of
+// rendered in a browser.
+export function getSpreadsBannerState(params: {
+  scoringModeUnresolved: boolean | undefined;
+  spreadsUnavailable: boolean | undefined;
+}): SpreadsBannerState {
+  if (params.scoringModeUnresolved) return "unresolved";
+  if (params.spreadsUnavailable) return "unavailable";
+  return null;
+}
+
+// Picking stays enabled in both states (round 4 Phase 3, item 3): blocking
+// picks on a transient odds-feed blip or an unresolved settings read costs the
+// player their entry for the week, which is worse than an informed blind pick.
+const SPREADS_BANNER_COPY: Record<Exclude<SpreadsBannerState, null>, string> = {
+  unavailable:
+    "Spreads are temporarily unavailable — your picks will still be scored against the spread.",
+  unresolved:
+    "We couldn't confirm this venue's scoring rules — spreads are hidden until we do, but your picks are still being saved.",
+};
+
 export function NFLPickEmGameList({
   initialWeekId,
   onBack,
@@ -73,6 +102,11 @@ export function NFLPickEmGameList({
       isLocked: boolean;
     };
     scoringMode: NFLPickEmScoringMode;
+    // Both undefined for standard-mode venues on a healthy read — see
+    // app/api/nfl-pickem/games/route.ts for why these are kept distinct
+    // rather than collapsed into one flag.
+    scoringModeUnresolved: boolean | undefined;
+    spreadsUnavailable: boolean | undefined;
     games: NFLGame[];
     userSummary?: UserSummary;
   } | null>(null);
@@ -193,6 +227,8 @@ export function NFLPickEmGameList({
           setWeekData({
             week: data.week,
             scoringMode: data.scoringMode === "spread" ? "spread" : "standard",
+            scoringModeUnresolved: data.scoringModeUnresolved === true ? true : undefined,
+            spreadsUnavailable: data.spreadsUnavailable === true ? true : undefined,
             games: data.games,
             userSummary: data.userSummary,
           });
@@ -345,6 +381,15 @@ export function NFLPickEmGameList({
     };
   }, [weekData?.userSummary, gamesWithOptimistic]);
   
+  const spreadsBannerState = useMemo(
+    () =>
+      getSpreadsBannerState({
+        scoringModeUnresolved: weekData?.scoringModeUnresolved,
+        spreadsUnavailable: weekData?.spreadsUnavailable,
+      }),
+    [weekData?.scoringModeUnresolved, weekData?.spreadsUnavailable]
+  );
+
   // The preseason preview week (see buildNFLGameWeekOptions) — at most one
   // entry ever carries this flag, and only before any NFL week has started.
   const previewWeek = useMemo(() => weeks.find((week) => week.isUpcomingPreview), [weeks]);
@@ -470,6 +515,15 @@ export function NFLPickEmGameList({
           </div>
         )}
         
+        {/* Degraded scoring-mode/spread-line surface — week-wide, not per-card */}
+        {weekData && spreadsBannerState && (
+          <section className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-3">
+            <p className="text-[12px] font-semibold leading-relaxed text-amber-200">
+              {SPREADS_BANNER_COPY[spreadsBannerState]}
+            </p>
+          </section>
+        )}
+
         {/* Games List — one section per day, in chronological order */}
         {weekData && (
           <div className="space-y-4">

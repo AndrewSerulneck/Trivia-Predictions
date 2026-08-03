@@ -8,6 +8,7 @@ type MockRow = Record<string, unknown>;
 const store = vi.hoisted(() => ({
   tables: {} as Record<string, MockRow[]>,
   modes: new Map<string, NFLPickEmScoringMode>(),
+  modeErrors: new Set<string>(),
   fetchBallDontLieList: vi.fn(),
 }));
 
@@ -17,7 +18,9 @@ vi.mock("@/lib/balldontlie", () => ({
 
 vi.mock("@/lib/venueGameSettings", () => ({
   getVenueNFLPickEmScoringMode: vi.fn((venueId: string) =>
-    Promise.resolve(store.modes.get(venueId) ?? "standard")
+    store.modeErrors.has(venueId)
+      ? Promise.reject(new Error("venue_game_settings read failed"))
+      : Promise.resolve(store.modes.get(venueId) ?? "standard")
   ),
 }));
 
@@ -217,6 +220,7 @@ beforeEach(() => {
   vi.useRealTimers();
   store.tables = { pickem_picks: [], notifications: [], nfl_pickem_game_lines: [] };
   store.modes = new Map([["venue-1", "standard"]]);
+  store.modeErrors = new Set();
 });
 
 afterEach(() => {
@@ -240,6 +244,10 @@ describe("settlePendingPickEmPicks NFL scoring modes", () => {
     });
   });
 
+  // NOTE: -2.5 with a 21-20 home win grades the same whether the line is applied
+  // to one side or (wrongly) to both, so this case is coverage of the locking
+  // path only — it says nothing about the double-applied-line bug. The sentinels
+  // for that are the -3 / half-point cases at the bottom of this file.
   it("locks an existing pre-kickoff line and settles spread NFL picks by the stored adjusted score", async () => {
     store.tables.pickem_picks = [makePick()];
     store.modes.set("venue-1", "spread");
@@ -333,6 +341,7 @@ describe("settlePendingPickEmPicks NFL scoring modes", () => {
     warn.mockRestore();
   });
 
+  // Same -2.5 / 21-20 caveat as above: graded identically either way.
   it("does not void a spread NFL pick that can still be graded", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(kickoffPlusHours(5));
@@ -352,11 +361,75 @@ describe("settlePendingPickEmPicks NFL scoring modes", () => {
     });
   });
 
-  it("settles spread NFL adjusted ties as push", async () => {
+  // A half-point line can never push: 24 - 1.5 = 22.5 > 21, so the home favourite
+  // covers and this away pick loses. (This case previously asserted `push`, which
+  // was only reachable because the line was applied to both sides at once.)
+  it("never pushes a spread NFL pick on a half-point line", async () => {
     store.tables.pickem_picks = [makePick()];
     store.modes.set("venue-1", "spread");
     mockFinalScore(24, 21);
     mockLockedLine(-1.5, 1.5);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 0, lost: 1, push: 0 });
+    expect(store.tables.pickem_picks[0]).toMatchObject({
+      status: "lost",
+      winning_team_id: "home-id",
+      scoring_mode: "spread",
+      home_spread: -1.5,
+      away_spread: 1.5,
+    });
+  });
+
+  // Regression sentinel for the double-applied line: a 3-point home favourite
+  // winning by 4 covers (24 - 3 = 21 > 20). Applying the spread to both sides
+  // graded this as 21 vs 23 — a loss for a pick that plainly won.
+  it("settles a home favourite that covers as won", async () => {
+    store.tables.pickem_picks = [
+      makePick({ selected_side: "home", selected_team_id: "home-id", selected_team: "Home Team" }),
+    ];
+    store.modes.set("venue-1", "spread");
+    mockFinalScore(24, 20);
+    mockLockedLine(-3, 3);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 1, lost: 0, push: 0 });
+    expect(store.tables.pickem_picks[0]).toMatchObject({
+      status: "won",
+      winning_team_id: "home-id",
+      scoring_mode: "spread",
+      home_spread: -3,
+      away_spread: 3,
+    });
+  });
+
+  // The dog covers by losing small: +7 against a 3-point loss (24 - 7 = 17 < 21).
+  it("settles an underdog that covers while losing outright as won", async () => {
+    store.tables.pickem_picks = [makePick()];
+    store.modes.set("venue-1", "spread");
+    mockFinalScore(24, 21);
+    mockLockedLine(-7, 7);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 1, lost: 0, push: 0 });
+    expect(store.tables.pickem_picks[0]).toMatchObject({
+      status: "won",
+      winning_team_id: "home-id",
+      scoring_mode: "spread",
+      home_spread: -7,
+      away_spread: 7,
+    });
+  });
+
+  // An integer line is the only line that can push: won by exactly the spread.
+  it("settles a margin equal to an integer spread as push", async () => {
+    store.tables.pickem_picks = [makePick()];
+    store.modes.set("venue-1", "spread");
+    mockFinalScore(24, 21);
+    mockLockedLine(-3, 3);
 
     const result = await settlePendingPickEmPicks();
 
@@ -365,8 +438,8 @@ describe("settlePendingPickEmPicks NFL scoring modes", () => {
       status: "push",
       winning_team_id: "home-id",
       scoring_mode: "spread",
-      home_spread: -1.5,
-      away_spread: 1.5,
+      home_spread: -3,
+      away_spread: 3,
     });
   });
 
@@ -392,5 +465,58 @@ describe("settlePendingPickEmPicks NFL scoring modes", () => {
       home_spread: null,
       away_spread: null,
     });
+  });
+
+  it("leaves a venue's picks pending and counted when its scoring-mode read fails", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    store.tables.pickem_picks = [makePick()];
+    store.modeErrors.add("venue-1");
+    mockFinalScore(21, 24);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 0, won: 0, lost: 0, push: 0, scoringModeUnresolvedSkipped: 1 });
+    expect(store.tables.pickem_picks[0]).toMatchObject({
+      status: "pending",
+      scoring_mode: null,
+      resolved_at: null,
+    });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("venue-1"));
+    warn.mockRestore();
+  });
+
+  it("warns once per venue with a failed scoring-mode read, not once per pick", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    store.tables.pickem_picks = [
+      makePick({ id: "pick-1" }),
+      makePick({ id: "pick-2", user_id: "user-2" }),
+    ];
+    store.modeErrors.add("venue-1");
+    mockFinalScore(21, 24);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 0, scoringModeUnresolvedSkipped: 2 });
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
+  it("does not let one venue's failed scoring-mode read block another venue's settlement", async () => {
+    store.tables.pickem_picks = [
+      makePick({ id: "pick-1", venue_id: "venue-1" }),
+      makePick({ id: "pick-2", venue_id: "venue-2", user_id: "user-2" }),
+    ];
+    store.modes.set("venue-2", "standard");
+    store.modeErrors.add("venue-1");
+    mockFinalScore(21, 24);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 1, scoringModeUnresolvedSkipped: 1 });
+    const venue1Pick = store.tables.pickem_picks.find((row) => row.venue_id === "venue-1");
+    const venue2Pick = store.tables.pickem_picks.find((row) => row.venue_id === "venue-2");
+    expect(venue1Pick).toMatchObject({ status: "pending" });
+    expect(venue2Pick).toMatchObject({ status: "won" });
   });
 });

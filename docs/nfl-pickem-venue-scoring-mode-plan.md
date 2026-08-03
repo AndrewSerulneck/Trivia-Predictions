@@ -183,11 +183,14 @@ For NFL picks:
 1. Load venue scoring modes for pending NFL pick venue IDs.
 2. If mode is `standard`, use existing winner logic.
 3. If mode is `spread`, load locked line for `game_id`.
-4. Compute adjusted result:
+4. Compute adjusted result. **Apply the line to one side only** — `away_spread`
+   is by construction `-home_spread`, so adjusting both sides moves the margin by
+   twice the line and mis-grades every pick (corrected 2026-08-02; see round 4
+   Phase 1 in `docs/code-review-round4-plan.md`):
    - home adjusted = `home_score + home_spread`
-   - away adjusted = `away_score + away_spread`
-   - selected side wins if its adjusted score is greater
-   - equal adjusted score = `push`
+   - away adjusted = `away_score` (raw, unadjusted)
+   - selected side wins if its score is greater
+   - equal scores = `push`, which is reachable only on an integer spread
 5. Update `pickem_picks` with:
    - `status`
    - final scores

@@ -2527,3 +2527,71 @@ own as-built section above; neither is billing-scoped.
 
 **7. Round 3 is closed.** Ask the user to re-run `/code-review` — it is
 user-invoked and cannot be launched from a session.
+
+## Code Review Round 4 — Phase 8 (Verification + close-out)
+
+All seven Round 4 findings (Phases 1–7) are done, each its own commit-ready
+diff per `docs/code-review-round4-run-log.md`. This phase is verification and
+paperwork only — no code changes.
+
+**1. Full suite:** `npx tsc --noEmit` clean, `npm run lint` clean, `npm run
+test` **157 files / 1313 passed / 13 skipped** — matches Phase 7's checkpoint
+exactly, no regressions since.
+
+**2. Browser pass for Phases 1–4:** **not run this session.** Every command
+that would touch `.env.local` (needed for the dev server's Supabase/Stripe
+keys, or for a standalone Node script reading `SUPABASE_SERVICE_ROLE_KEY`
+directly) or the network (`curl` against a local dev server, `lsof` to check
+if one was already running) required live approval and was auto-denied
+running unattended — including `npm run test:god-mode-join`, a command not
+previously approved this session, while already-approved commands (`tsc`,
+`lint`, `npm run test`) went through untouched. This is a session
+permission-scope limit, not a gap in the fix: round 3's identical Phase 8
+browser pass (real BallDontLie provider, throwaway `venue_game_settings`
+row, reverted after) succeeded in a session where a user was present to
+approve each step. Phases 1–4 remain covered by their unit tests only until
+this is re-run attended.
+
+**2a. Phase 1's settled-picks audit** (query `pickem_picks` for
+`scoring_mode='spread'` + non-null `resolved_at`, expected zero on
+2026-08-02/preseason) also could not run — same block Phase 1 itself hit
+(`node --env-file=.env.local ...`) and flagged as a Phase 8 carry-forward.
+Still not run. **Needs the user to either run it by hand (a Supabase SQL
+editor query is simplest) or grant approval for the equivalent script in an
+attended session** before treating Phase 1's fix as fully closed on
+already-graded data — today's date makes zero the overwhelmingly likely
+answer, but the plan is explicit that this must be confirmed, not assumed.
+
+**3. Live Stripe pass for Phases 6/7:** correctly not needed — both are
+covered by mocked-SDK tests per the plan, and would have hit the same
+`.env.local` block regardless.
+
+**4. `npm run test:god-mode-join`:** not run (see item 2's block); not
+required either way — none of this round's seven phases touched `AppShell`
+or the join/geofence shell, confirmed against `git diff --stat` (only
+`app/api/admin/billing/route.ts`, `app/api/nfl-pickem/games/route.ts`,
+`app/api/webhooks/stripe/route.ts`, `components/nfl-pickem/NFLPickEmGameList.tsx`,
+`lib/billingDiscounts.ts`, `lib/nflPickEm.ts`, `lib/pickem.ts`, plus tests and
+two doc files changed).
+
+**5. This run-log section** is item 5 of the close-out itself.
+
+**6. Billing inventory:** added and closed items **Z** (discount
+create/update blanking the mirror on an unresolvable coupon, Phase 6) and
+**AA** (`grant-manual` mutating Stripe before validating its input, Phase 7)
+to `docs/billing-open-issues-plan.md`'s table, U–Y convention. The NFL
+findings (Phases 1–5) went to
+`docs/nfl-pickem-spread-line-settlement-locking-fix-plan.md`'s new "Round 4
+Code Review Findings" section, not this table, which is billing-scoped.
+
+**7. `docs/nfl-pickem-venue-scoring-mode-plan.md:186-189`:** already
+corrected by Phase 1 itself (confirmed by reading the current file — the
+spec now states "apply the line to one side only" with the round-4-Phase-1
+pointer). Nothing further needed here.
+
+**8. Round 4 is closed**, with two open items needing the user directly
+rather than another automated pass: the Phase 1 settled-picks audit (item 2a
+above) and the Phases 1–4 browser pass (item 2 above), both blocked on this
+session's permission scope, not on any remaining code work. Ask the user to
+re-run `/code-review` — it is user-invoked and cannot be launched from a
+session.

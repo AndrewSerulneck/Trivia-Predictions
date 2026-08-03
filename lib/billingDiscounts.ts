@@ -366,20 +366,52 @@ export function discountCouponRef(discount: Stripe.Discount): string | Stripe.Co
 }
 
 /**
+ * The three genuinely different outcomes of resolving a Discount's coupon, kept
+ * apart because `null` conflates two of them and a caller writing money-facing
+ * columns has to tell them apart:
+ *
+ * - `absent` — the payload carries no coupon reference at all. A real, if
+ *   unusual, coupon-less discount; safe to mirror as-is.
+ * - `resolved` — we have the full Coupon (expanded in the payload, or retrieved).
+ * - `unresolved` — there IS a reference but we could not turn it into a Coupon
+ *   (Stripe unreachable, rate-limited, or not configured). We know a discount
+ *   exists and know nothing about its value, so a mirror built from this would
+ *   claim "discount with no amount off", i.e. list price.
+ */
+export type DiscountCouponResolution =
+  | { status: "absent" }
+  | { status: "resolved"; coupon: Stripe.Coupon }
+  | { status: "unresolved"; couponRef: string };
+
+/**
+ * Resolve a Discount's coupon reference, retrieving it only when the payload
+ * carried a bare id. See DiscountCouponResolution for why the failure case is
+ * distinguished from the no-reference case.
+ */
+export async function resolveDiscountCouponResult(
+  discount: Stripe.Discount
+): Promise<DiscountCouponResolution> {
+  const ref = discountCouponRef(discount);
+  if (!ref) return { status: "absent" };
+  if (typeof ref !== "string") return { status: "resolved", coupon: ref };
+  if (!stripe) return { status: "unresolved", couponRef: ref };
+  try {
+    return { status: "resolved", coupon: await stripe.coupons.retrieve(ref) };
+  } catch {
+    return { status: "unresolved", couponRef: ref };
+  }
+}
+
+/**
  * Resolve that reference to a full Coupon, retrieving it only when the payload
  * carried an id. Returns null if it can't be resolved — callers then keep the
- * ids/dates they do have rather than dropping the discount entirely.
+ * ids/dates they do have rather than dropping the discount entirely. Callers
+ * that write the mirror should prefer resolveDiscountCouponResult, which does
+ * not collapse "no coupon reference" into "couldn't reach Stripe".
  */
 export async function resolveDiscountCoupon(discount: Stripe.Discount): Promise<Stripe.Coupon | null> {
-  const ref = discountCouponRef(discount);
-  if (!ref) return null;
-  if (typeof ref !== "string") return ref;
-  if (!stripe) return null;
-  try {
-    return await stripe.coupons.retrieve(ref);
-  } catch {
-    return null;
-  }
+  const resolution = await resolveDiscountCouponResult(discount);
+  return resolution.status === "resolved" ? resolution.coupon : null;
 }
 
 /**
