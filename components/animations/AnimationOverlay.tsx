@@ -14,6 +14,7 @@ export function AnimationOverlay() {
 
   return (
     <div
+      data-animation-overlay
       className="pointer-events-none fixed inset-0 z-[1200] overflow-hidden"
       aria-hidden="true"
     >

@@ -256,6 +256,14 @@ body.tp-bingo-landscape-active {
   scrollbar-gutter: auto !important;
 }
 
+/* Page lock while Category Blitz gameplay is mounted. `overflow: hidden` plus a
+ * `height: 100%` document is the whole lock — there is deliberately NO
+ * `body { position: fixed; inset: 0 }` here any more (dropped in Phase 4 of
+ * docs/category-blitz-app-feel-plan.md, "Suspicion C"). Taking body out of flow
+ * bought nothing the overflow lock doesn't already provide, and the game frame is
+ * `position: fixed` against the layout viewport regardless of how body is
+ * positioned. The background color matters as much as the scroll lock: it is the
+ * last thing visible if any layer above it ever fails to cover the screen. */
 html.tp-category-blitz-game-active,
 body.tp-category-blitz-game-active {
   width: 100% !important;
@@ -268,9 +276,35 @@ body.tp-category-blitz-game-active {
   background-image: none !important;
 }
 
-body.tp-category-blitz-game-active {
-  position: fixed !important;
-  inset: 0 !important;
+/* Category Blitz gameplay frame — docs/category-blitz-app-feel-plan.md, Phase 4.
+ *
+ * The game renders as two stacked elements, deliberately:
+ *
+ *  1. `[data-category-blitz-game-root]` — a `position: fixed; inset: 0` backdrop that
+ *     always covers the WHOLE layout viewport. iOS does not shrink the layout viewport
+ *     for the keyboard, so this is the guarantee that no sizing gap can expose a
+ *     non-game color: anything the visible frame fails to cover is this element's
+ *     `bg-slate-950`, the same `#020617` html/body are pinned to above. That is
+ *     Finding F's "make the frame's dark background provably always reach at least to
+ *     window.innerHeight, no matter which value lags".
+ *
+ *  2. `.tp-cbz-visible-frame` — the element that tracks the VISUAL viewport (the area
+ *     the keyboard leaves behind) and holds the game's flex column. It is offset with
+ *     `translate3d`, not `top`/`left`: on iOS a transform update is composited on the
+ *     GPU and lands on the same frame as the keyboard animation, while `top` on a
+ *     fixed element is a layout property that lands a frame or more late — which is a
+ *     torn frame by itself. Height still has to be a layout property (the flex column
+ *     needs a resolved height), but a late height now only means content settles a
+ *     frame late over the dark backdrop, instead of opening a hole in the page.
+ *
+ * `100%` fallbacks resolve against the backdrop, i.e. the layout viewport — a better
+ * pre-hydration guess than `100svh`, which is the *small* viewport and undershoots.
+ */
+.tp-cbz-visible-frame {
+  width: var(--cbz-visible-width, 100%);
+  height: var(--cbz-visible-height, 100%);
+  transform: translate3d(var(--cbz-visible-left, 0px), var(--cbz-visible-top, 0px), 0);
+  will-change: transform;
 }
 
 .tp-bingo-landscape-shell {

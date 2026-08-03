@@ -58,6 +58,16 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Pins Safari's own chrome (URL bar, keyboard accessory strip) to the app's
+  // dark base instead of letting it sample page content color — see Finding F
+  // in docs/category-blitz-app-feel-plan.md, where an untinted accessory bar
+  // was the last non-DOM source of the reported magenta band.
+  themeColor: "#020617",
+  // Android Chrome's default (resizes-visual) leaves the layout viewport full
+  // height when the keyboard opens, so fixed-position frames sized off
+  // visualViewport never see it shrink. This makes Android match the iOS
+  // visualViewport-driven behavior the frame code already assumes.
+  interactiveWidget: "resizes-content",
 };
 
 export default async function RootLayout({

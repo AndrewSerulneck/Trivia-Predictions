@@ -108,6 +108,13 @@ const Row = ({ entry, rank, isMe, reduce, exiting, settled = false }: RowProps) 
 
   return (
     <motion.li
+      // Same footgun as AnsweringScreen's rows (app-feel plan, Finding A): a
+      // live `layout` prop keeps a projection node that Framer re-measures on
+      // every viewport resize. Kept here deliberately — this list only renders
+      // in the reveal/results/complete phases, which have no text input, so the
+      // keyboard can't resize the viewport underneath it, and the projection is
+      // what animates rank changes between rounds. If a leaderboard ever gains
+      // an input (or renders during "answering"), scope this the same way.
       layout={!exiting}
       variants={rowV}
       initial={settled ? "show" : "hidden"}

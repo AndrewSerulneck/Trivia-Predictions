@@ -33,6 +33,16 @@ function isAdminRoute(pathname: string | null): boolean {
   return Boolean(pathname?.startsWith("/admin"));
 }
 
+// Category Blitz has no per-round ad wiring (unlike trivia's round-end
+// banners) and its continuous keyboard-open gameplay is exactly the surface
+// this plan's magenta-band fix targets — an untargeted "global" on-load
+// banner mounting z-[1600] over the keyboard would reopen that. Scoped to
+// this route only; the other game routes' ad behavior is deliberate and
+// unchanged (see docs/category-blitz-app-feel-plan.md Phase 5).
+function isAdExcludedRoute(pathname: string | null): boolean {
+  return Boolean(pathname?.startsWith("/category-blitz"));
+}
+
 function resolvePageKey(pathname: string | null): AdPageKey {
   if (!pathname || pathname === "/" || pathname === "/join") {
     return "join";
@@ -153,7 +163,7 @@ export function MobileAdhesionAd() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || isAdminRoute(pathname)) {
+    if (typeof window === "undefined" || isAdminRoute(pathname) || isAdExcludedRoute(pathname)) {
       return;
     }
 
@@ -194,7 +204,7 @@ export function MobileAdhesionAd() {
   }, [loadAd, pathname, resetDismissState]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || isAdminRoute(pathname)) {
+    if (typeof window === "undefined" || isAdminRoute(pathname) || isAdExcludedRoute(pathname)) {
       return;
     }
 
@@ -223,7 +233,7 @@ export function MobileAdhesionAd() {
   }, [loadAd, pathname, resetDismissState]);
 
   useEffect(() => {
-    if (!awaitingScrollTrigger || isAdminRoute(pathname)) {
+    if (!awaitingScrollTrigger || isAdminRoute(pathname) || isAdExcludedRoute(pathname)) {
       return;
     }
     const venueId = getVenueId() ?? "";
@@ -304,7 +314,7 @@ export function MobileAdhesionAd() {
   }, [ad]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !ad || isDismissed || isAdminRoute(pathname)) {
+    if (typeof window === "undefined" || !ad || isDismissed || isAdminRoute(pathname) || isAdExcludedRoute(pathname)) {
       releaseAdTier(ownerId);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting local priority state when this ad is ineligible.
       setHasPriority(false);
@@ -338,7 +348,7 @@ export function MobileAdhesionAd() {
 
   // isDismissed only flips true once the exit animation has finished, so the
   // banner is still mounted (and sliding down) for the duration of the exit.
-  if (!ad || isAdminRoute(pathname) || isDismissed || !hasPriority) {
+  if (!ad || isAdminRoute(pathname) || isAdExcludedRoute(pathname) || isDismissed || !hasPriority) {
     return null;
   }
 

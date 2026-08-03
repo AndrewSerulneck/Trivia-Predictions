@@ -105,6 +105,24 @@ export function isVenueTransitionGateActive(): boolean {
   }
 }
 
+/**
+ * `runVenueGameOpenTransition`'s `finally` block already removes its
+ * `[data-venue-transition]` overlay unconditionally (the shared-element clone
+ * painted in `FALLBACK_CARD_BG_BY_KEY`, e.g. Category Blitz's magenta), so a
+ * normal or rejected client-side navigation can't leak it. This is a second,
+ * defensive line against a scenario that check can't cover: bfcache restore
+ * or a re-entrant transition mounting the destination game before the prior
+ * overlay's `finally` has run. Call once on a game route's mount.
+ */
+export function sweepOrphanedVenueTransitionOverlays(): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+  document.querySelectorAll("[data-venue-transition]").forEach((node) => {
+    node.remove();
+  });
+}
+
 function parseRadiusValue(input: string): number | null {
   const parsed = Number.parseFloat(input);
   if (!Number.isFinite(parsed)) {

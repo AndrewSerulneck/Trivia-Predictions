@@ -291,7 +291,6 @@ export function GameLandingExperience({
     router.push("/");
   }, [gameKey, router]);
 
-  const isCategoryBlitzGame = gameKey === "category-blitz";
   const playingChild =
     showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
       ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
@@ -300,18 +299,11 @@ export function GameLandingExperience({
   return (
     <div
       data-venue-game-surface
-      data-category-blitz-route-shell={isCategoryBlitzGame ? "" : undefined}
-      className={`tp-game-page relative z-[70] w-full overflow-x-hidden ${
-        isCategoryBlitzGame
-          ? "min-h-[100svh] overflow-hidden bg-slate-950"
-          : "min-h-[100dvh]"
-      }`}
+      className="tp-game-page relative z-[70] min-h-[100dvh] w-full overflow-x-hidden"
     >
       <div
         aria-hidden
-        className={`pointer-events-none fixed inset-0 z-0 ${
-          isCategoryBlitzGame && isPlaying ? "bg-slate-950" : playingBackgroundClassName ?? GAME_CARD_BG_BY_KEY[gameKey]
-        }`}
+        className={`pointer-events-none fixed inset-0 z-0 ${playingBackgroundClassName ?? GAME_CARD_BG_BY_KEY[gameKey]}`}
       />
       <div className="relative z-10">
         <PageShell
@@ -320,21 +312,10 @@ export function GameLandingExperience({
           showUserStatus={isPlaying && playingHidesShellNav ? false : showShellUserStatus}
           showAlerts={isPlaying && playingHidesShellNav ? false : showShellAlerts}
           noContainer
-          shellClassName={isPlaying ? `!gap-0${isCategoryBlitzGame ? " !h-[100svh] !min-h-[100svh] !max-h-[100svh] !overflow-hidden !bg-slate-950" : ""}` : undefined}
-          mainClassName={isPlaying ? `pt-0!${isCategoryBlitzGame ? " !overflow-hidden" : ""}` : undefined}
+          shellClassName={isPlaying ? "!gap-0" : undefined}
+          mainClassName={isPlaying ? "pt-0!" : undefined}
         >
           {isPlaying ? (
-            // Category Blitz renders active gameplay through a body-level portal.
-            // This wrapper stays dark and inert so the route shell never exposes
-            // the branded background under the iOS keyboard.
-            gameKey === "category-blitz" ? (
-              <div
-                data-venue-game-scroll
-                className={`animate-tp-surface-enter relative z-10 flex h-[100svh] min-h-0 max-h-[100svh] flex-col overflow-hidden overscroll-none bg-slate-950 ${playingContainerClassName ?? "p-0"}`}
-              >
-                <VenuePresenceBoundary enabled={isPlaying}>{playingChild}</VenuePresenceBoundary>
-              </div>
-            ) : (
             <div
               data-venue-game-scroll
               className={`animate-tp-surface-enter relative z-10 flex min-h-[100dvh] flex-col overflow-y-auto touch-pan-y ${playingContainerClassName ?? "px-2 py-2 sm:px-3 sm:py-3"}`}
@@ -348,7 +329,6 @@ export function GameLandingExperience({
               </VenuePresenceBoundary>
             )}
             </div>
-            )
           ) : isResumeCheckPending ? (
             <div className="flex h-full min-h-[60dvh] items-center justify-center px-4">
               <div className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-4 py-3 text-sm font-semibold text-ht-fg-muted">

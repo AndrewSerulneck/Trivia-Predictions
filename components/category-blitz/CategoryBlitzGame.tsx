@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
@@ -30,7 +29,7 @@ import { RankBadge } from "@/components/trivia/RankBadge";
 import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
 import { buildCategoryBlitzStorySharePayload } from "@/lib/socialShare/storyPayloads";
 import { GAME_THEME } from "@/lib/themeTokens";
-import { MODE_CONFIG, getModeFlipTakeoverVariant } from "@/lib/categoryBlitzModes";
+import { MODE_CONFIG, getModeFlipTakeoverVariant, type CategoryBlitzThemeKey } from "@/lib/categoryBlitzModes";
 import type { CategoryBlitzRoundResults, CategoryBlitzMode } from "@/types";
 
 
@@ -45,13 +44,81 @@ const TEXT_LABEL = "text-emerald-300 tracking-[0.14em] uppercase font-black text
  *  uses the same branded easing on both ends of the reveal → gameplay morph. */
 const LAYOUT_MORPH_TRANSITION = { duration: 0.45, ease: EASE_SNAP } as const;
 
+/** How long AnsweringScreen keeps its layout-projection nodes alive after
+ *  mounting out of the reveal: the morph's own duration plus a buffer for the
+ *  frame(s) Framer spends measuring before it starts animating. After this the
+ *  rows and badge render as plain elements — see `morphActive` in
+ *  AnsweringScreen for why they must not stay projected for the whole round. */
+const LAYOUT_MORPH_SETTLE_MS = LAYOUT_MORPH_TRANSITION.duration * 1000 + 120;
+
 /** Fade-in for gameplay chrome that has no reveal counterpart (invite banner,
  *  header label, timer, progress bar) — delayed so it settles in just behind
  *  the badge/row morph instead of popping in the instant the reveal ends. */
 const CHROME_ENTRANCE_TRANSITION = { duration: 0.3, ease: EASE_SNAP, delay: 0.12 } as const;
-const LAYOUT_DEBUG_VERSION = "cbz-portal-visual-frame-v8";
-const VIEWPORT_FRAME_CLASS =
-  "fixed z-[100] min-h-0 max-w-[100vw] overflow-hidden overscroll-none bg-slate-950 [left:var(--cbz-visible-left,0px)] [top:var(--cbz-visible-top,0px)] h-[var(--cbz-visible-height,100svh)] w-[var(--cbz-visible-width,100vw)]";
+const LAYOUT_DEBUG_VERSION = "cbz-p4-keyboard-contract";
+
+/**
+ * The backdrop: `position: fixed; inset: 0`, so it covers the entire LAYOUT viewport
+ * at all times. iOS never shrinks the layout viewport for the keyboard, so this
+ * element's dark fill is the guarantee that a keyboard-open (or sub-pixel, or lagging)
+ * sizing gap can't expose anything — whatever the visible frame misses is `#020617`,
+ * the same color html/body are pinned to. See Finding F in
+ * docs/category-blitz-app-feel-plan.md; the paint guarantee is deliberately decoupled
+ * from the frame's live measurement so it cannot lag behind the keyboard animation.
+ *
+ * `z-[100]` resolves in the root stacking context (the play shell deliberately creates
+ * none), which keeps VenueAccessOverlay (`z-[140]`) and the body-level overlays
+ * (AnimationOverlay `z-[1200]`, venueGameTransition `z-2100`) above gameplay.
+ *
+ * Full app-wide z-index ladder (lowest to highest), recorded here because
+ * nothing else does and a stray layer at any of these numbers going
+ * unnoticed is exactly how six prior debugging rounds on this game missed
+ * Finding B/C — see docs/category-blitz-app-feel-plan.md Phase 5:
+ *   100   — this game portal (CategoryBlitzFrame backdrop)
+ *   140   — VenueAccessOverlay (components/venue/VenueAccessOverlay.tsx)
+ *   1000  — PageShell's fixed header (inert on this route, gone in Phase 3)
+ *   1200  — AnimationOverlay (components/animations/AnimationOverlay.tsx)
+ *   1600  — MobileAdhesionAd (components/ui/MobileAdhesionAd.tsx) — excluded
+ *           from /category-blitz as of Phase 5, see isAdExcludedRoute there
+ *   2100  — venueGameTransition's shared-element open/return overlay
+ *   5000  — PopupAds (components/ui/PopupAds.tsx)
+ *   6500  — GlobalTransitionOverlay (components/ui/GlobalTransitionOverlay.tsx)
+ */
+const BACKDROP_CLASS = "fixed inset-0 z-[100] overflow-hidden overscroll-none bg-slate-950";
+
+/**
+ * The visible frame: absolutely positioned inside the backdrop and sized/offset to the
+ * VISUAL viewport via the `--cbz-visible-*` vars. Geometry lives in
+ * `.tp-cbz-visible-frame` (app/globals.css) because the offset is applied with
+ * `translate3d` rather than `top`/`left` — a transform is composited on the GPU and
+ * updates on the same frame as the iOS keyboard animation, where `top` on a fixed
+ * element is a layout property that lands a frame or more late.
+ */
+const VISIBLE_FRAME_CLASS =
+  "tp-cbz-visible-frame absolute left-0 top-0 min-h-0 overflow-hidden overscroll-none";
+
+/**
+ * Every render branch of CategoryBlitzGame is wrapped in this pair. Keep them together:
+ * the backdrop without the frame would ignore the keyboard, and the frame without the
+ * backdrop is exactly the single-layer arrangement that let a sizing gap show whatever
+ * was underneath (the magenta band, Findings F/G).
+ *
+ * `className` styles the visible frame — that is the element that owns the game's flex
+ * column and its per-phase background (`pageTheme.pageBg`).
+ */
+function CategoryBlitzFrame({ className, children }: { className: string; children: ReactNode }) {
+  return (
+    <div
+      data-category-blitz-game-root
+      data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
+      className={BACKDROP_CLASS}
+    >
+      <div data-category-blitz-visible-frame className={`${VISIBLE_FRAME_CLASS} ${className}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -72,6 +139,7 @@ type LayoutDebugSnapshot = {
   answerListInputCount: number;
   answerRowCount: number;
   scrollY: number;
+  innerWidth: number;
   innerHeight: number;
   visualWidth: number | null;
   visualHeight: number | null;
@@ -83,13 +151,43 @@ type LayoutDebugSnapshot = {
   viewportFrame: string;
   bodyBackground: string;
   shellBackground: string;
+  htmlBackground: string;
   appShellRect: string;
   mainRect: string;
   routeRect: string;
   rootRect: string;
+  rootRectFull: string;
+  frameRectFull: string;
+  frameTransform: string;
   editorRect: string;
   gameRect: string;
   answerListRect: string;
+  /** Finding F: does the visible frame's live rendered height reach visualViewport.height? */
+  frameHeightGap: number | null;
+  /** Finding G: does the visible frame's live rendered width reach visualViewport.width, at rest? */
+  frameWidthGap: number | null;
+  /** Phase 4: the backdrop must cover the whole LAYOUT viewport — `innerHeight/Width`
+   *  minus its rect. Both must be 0 in every keyboard state; a non-zero value is a strip
+   *  of screen the game does not paint, which is what any band ultimately shows through. */
+  backdropHeightGap: number | null;
+  backdropWidthGap: number | null;
+  /** Finding A: non-"none" here means Framer Motion's layout projection is applying a transform
+   *  to a row/badge outside the 450ms reveal morph window — i.e. still contributing, even if not
+   *  the dominant symptom in the screenshots. */
+  row0Transform: string;
+  row0WrapTransform: string;
+  letterBadgeTransform: string;
+  /** Finding A / Phase 2: how many answer rows still carry a live layout-projection node.
+   *  Must be 0 outside the reveal morph window — 12 means the projection scoping regressed. */
+  projectedRowCount: number;
+  /** Finding B: a stray venue-transition overlay (z-2100, magenta shell) that failed to unmount. */
+  venueTransitionOverlayCount: number;
+  /** Findings F/G / Phase 3: elements still painting `#a10d63`. Must be 0 during gameplay. */
+  brandMagentaLayerCount: number;
+  /** Findings B/C/F: every position:fixed element whose rect intersects the bottom 40% of the
+   *  visual viewport, sorted by z-index descending — a stray overlay or the exposed magenta
+   *  layer both show up here. */
+  fixedOverlaysNearBottom: string[];
 };
 
 function formatRect(element: Element | null): string {
@@ -98,17 +196,95 @@ function formatRect(element: Element | null): string {
   return `${Math.round(rect.top)}:${Math.round(rect.height)}:${Math.round(rect.bottom)}`;
 }
 
+function formatRectFull(element: Element | null): string {
+  if (!element) return "missing";
+  const rect = element.getBoundingClientRect();
+  return `l${Math.round(rect.left)}:t${Math.round(rect.top)}:w${Math.round(rect.width)}:h${Math.round(rect.height)}`;
+}
+
+function readTransform(selector: string): string {
+  const el = document.querySelector<HTMLElement>(selector);
+  if (!el) return "missing";
+  return window.getComputedStyle(el).transform;
+}
+
+/**
+ * Findings B/C/F: every position:fixed element in the document whose rect intersects the bottom
+ * 40% of the visual viewport, with its z-index and background — a stray ad/transition overlay or
+ * the exposed magenta layer beneath a short-rendered game frame both show up here. Capped and
+ * sorted by z-index descending since this is a full-document scan, gated behind ?cbzDebug=1.
+ */
+function listFixedOverlaysNearBottom(): string[] {
+  const viewport = window.visualViewport;
+  const viewportHeight = viewport?.height ?? window.innerHeight;
+  const viewportTop = viewport?.offsetTop ?? 0;
+  const zoneTop = viewportTop + viewportHeight * 0.6;
+  const zoneBottom = viewportTop + viewportHeight;
+
+  const matches: { z: number; label: string }[] = [];
+  const all = document.querySelectorAll<HTMLElement>("*");
+  for (const el of all) {
+    const style = window.getComputedStyle(el);
+    if (style.position !== "fixed") continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) continue;
+    if (rect.bottom < zoneTop || rect.top > zoneBottom) continue;
+    const z = Number.parseInt(style.zIndex, 10);
+    const idSuffix = el.id ? `#${el.id}` : "";
+    const dataAttr = el.getAttribute("data-venue-transition");
+    const dataSuffix = dataAttr !== null ? `[data-venue-transition=${dataAttr}]` : "";
+    matches.push({
+      z: Number.isFinite(z) ? z : -1,
+      label: `${el.tagName.toLowerCase()}${idSuffix}${dataSuffix} z=${Number.isFinite(z) ? z : "auto"} rect=${Math.round(rect.top)}:${Math.round(rect.height)} bg=${style.backgroundColor}`,
+    });
+  }
+  matches.sort((a, b) => b.z - a.z);
+  return matches.slice(0, 8).map((m) => m.label);
+}
+
+/**
+ * Findings F/G, Phase 3: how many elements anywhere in the document still paint the
+ * Category Blitz brand magenta (`#a10d63` → `rgb(161, 13, 99)`, in either a background
+ * color or a gradient). Phase 3 deleted the only such layer on this route
+ * (GameLandingExperience's fixed branded background), so this must read 0 during
+ * gameplay — if it ever reads non-zero, a magenta band on device has a DOM source and
+ * this names it, rather than leaving "no DOM layer explains it" as the conclusion again.
+ *
+ * The reverse-mode ("Majority Rules!") takeover legitimately paints this exact magenta
+ * full-screen, so anything inside the AnimationOverlay subtree is excluded — otherwise
+ * every reverse round would read as a false positive.
+ */
+function countBrandMagentaLayers(): number {
+  const animationOverlay = document.querySelector("[data-animation-overlay]");
+  let count = 0;
+  for (const el of document.querySelectorAll<HTMLElement>("*")) {
+    if (animationOverlay?.contains(el)) continue;
+    const style = window.getComputedStyle(el);
+    if (
+      style.backgroundColor.includes("161, 13, 99") ||
+      style.backgroundImage.includes("161, 13, 99")
+    ) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
 function readLayoutDebugSnapshot(phase: string): LayoutDebugSnapshot {
   const root = document.documentElement;
   const active = document.activeElement as HTMLElement | null;
   const viewport = window.visualViewport;
   const activeMarker =
-    active?.hasAttribute("data-category-blitz-editor-input")
-      ? "editor-input"
+    active?.hasAttribute("data-category-blitz-answer-input")
+      ? `row-input-${active.getAttribute("data-category-blitz-answer-input")}`
       : active?.closest("[data-category-blitz-answer-list]")
       ? "answer-list-descendant"
       : active?.tagName.toLowerCase() ?? "none";
   const appShell = document.querySelector(".tp-app-shell");
+  const gameRootEl = document.querySelector<HTMLElement>("[data-category-blitz-game-root]");
+  const gameRootRect = gameRootEl?.getBoundingClientRect() ?? null;
+  const visibleFrameEl = document.querySelector<HTMLElement>("[data-category-blitz-visible-frame]");
+  const visibleFrameRect = visibleFrameEl?.getBoundingClientRect() ?? null;
 
   return {
     version: LAYOUT_DEBUG_VERSION,
@@ -120,6 +296,7 @@ function readLayoutDebugSnapshot(phase: string): LayoutDebugSnapshot {
     answerListInputCount: document.querySelectorAll("[data-category-blitz-answer-list] input").length,
     answerRowCount: document.querySelectorAll("[data-category-blitz-answer-row]").length,
     scrollY: Math.round(window.scrollY),
+    innerWidth: Math.round(window.innerWidth),
     innerHeight: Math.round(window.innerHeight),
     visualWidth: viewport ? Math.round(viewport.width) : null,
     visualHeight: viewport ? Math.round(viewport.height) : null,
@@ -131,13 +308,30 @@ function readLayoutDebugSnapshot(phase: string): LayoutDebugSnapshot {
     viewportFrame: `${root.style.getPropertyValue("--cbz-visible-left") || "?"}:${root.style.getPropertyValue("--cbz-visible-top") || "?"}:${root.style.getPropertyValue("--cbz-visible-width") || "?"}:${root.style.getPropertyValue("--cbz-visible-height") || "?"}`,
     bodyBackground: window.getComputedStyle(document.body).backgroundColor,
     shellBackground: appShell ? window.getComputedStyle(appShell).backgroundColor : "missing",
+    htmlBackground: window.getComputedStyle(document.documentElement).backgroundColor,
     appShellRect: formatRect(appShell),
     mainRect: formatRect(document.querySelector("main")),
-    routeRect: formatRect(document.querySelector("[data-category-blitz-route-shell]")),
-    rootRect: formatRect(document.querySelector("[data-category-blitz-game-root]")),
-    editorRect: formatRect(document.querySelector("[data-category-blitz-editor]")),
+    routeRect: formatRect(document.querySelector("[data-category-blitz-play-shell]")),
+    rootRect: formatRect(gameRootEl),
+    rootRectFull: formatRectFull(gameRootEl),
+    frameRectFull: formatRectFull(visibleFrameEl),
+    frameTransform: visibleFrameEl ? window.getComputedStyle(visibleFrameEl).transform : "missing",
+    editorRect: formatRect(document.querySelector("[data-category-blitz-footer]")),
     gameRect: formatRect(document.querySelector("[data-venue-game-surface]")),
     answerListRect: formatRect(document.querySelector("[data-category-blitz-answer-list]")),
+    frameHeightGap:
+      visibleFrameRect && viewport ? Math.round(viewport.height - visibleFrameRect.height) : null,
+    frameWidthGap:
+      visibleFrameRect && viewport ? Math.round(viewport.width - visibleFrameRect.width) : null,
+    backdropHeightGap: gameRootRect ? Math.round(window.innerHeight - gameRootRect.height) : null,
+    backdropWidthGap: gameRootRect ? Math.round(window.innerWidth - gameRootRect.width) : null,
+    row0Transform: readTransform('[data-category-blitz-answer-row="0"]'),
+    row0WrapTransform: readTransform('[data-category-blitz-answer-row-wrap="0"]'),
+    letterBadgeTransform: readTransform("[data-category-blitz-letter-badge]"),
+    projectedRowCount: document.querySelectorAll("[data-category-blitz-row-projected]").length,
+    venueTransitionOverlayCount: document.querySelectorAll("[data-venue-transition]").length,
+    brandMagentaLayerCount: countBrandMagentaLayers(),
+    fixedOverlaysNearBottom: listFixedOverlaysNearBottom(),
   };
 }
 
@@ -154,6 +348,11 @@ function readLayoutDebugEnabled(): boolean {
   }
 }
 
+/** Last written frame geometry, so a `visualViewport scroll`/`resize` burst that
+ *  reports the same numbers doesn't invalidate the frame's style (and with it the
+ *  height, a layout property) once per event during the keyboard animation. */
+let lastVisibleFrameSignature = "";
+
 function applyCategoryBlitzVisibleViewportFrame(): void {
   const root = document.documentElement;
   const viewport = window.visualViewport;
@@ -161,6 +360,10 @@ function applyCategoryBlitzVisibleViewportFrame(): void {
   const top = Math.round(viewport?.offsetTop ?? 0);
   const width = Math.round(viewport?.width ?? window.innerWidth);
   const height = Math.round(viewport?.height ?? window.innerHeight);
+
+  const signature = `${left}:${top}:${width}:${height}`;
+  if (signature === lastVisibleFrameSignature) return;
+  lastVisibleFrameSignature = signature;
 
   root.style.setProperty("--cbz-visible-left", `${left}px`);
   root.style.setProperty("--cbz-visible-top", `${top}px`);
@@ -170,6 +373,7 @@ function applyCategoryBlitzVisibleViewportFrame(): void {
 
 function clearCategoryBlitzVisibleViewportFrame(): void {
   const root = document.documentElement;
+  lastVisibleFrameSignature = "";
   root.style.removeProperty("--cbz-visible-left");
   root.style.removeProperty("--cbz-visible-top");
   root.style.removeProperty("--cbz-visible-width");
@@ -250,18 +454,54 @@ function CategoryBlitzLayoutDebugPanel({ phase }: { phase?: CategoryBlitzPhase }
       <p>active {snapshot.activeElement}:{snapshot.activeMarker}</p>
       <p>editorInputs {snapshot.editorInputCount} rowInputs {snapshot.answerListInputCount} rows {snapshot.answerRowCount}</p>
       <p>scrollY {snapshot.scrollY} bodyH {snapshot.bodyScrollHeight}</p>
-      <p>innerH {snapshot.innerHeight} vv {snapshot.visualWidth ?? "n/a"}x{snapshot.visualHeight ?? "n/a"}</p>
+      <p>innerWH {snapshot.innerWidth}x{snapshot.innerHeight} vv {snapshot.visualWidth ?? "n/a"}x{snapshot.visualHeight ?? "n/a"}</p>
       <p>vv xy {snapshot.visualOffsetLeft ?? "n/a"},{snapshot.visualOffsetTop ?? "n/a"}</p>
+      {/* Finding F/G: vv minus the VISIBLE FRAME's live rect. A positive heightGap is how
+          far the frame stops short of the keyboard; a positive widthGap is a side strip. */}
+      <p className={snapshot.frameHeightGap ? "text-rose-300" : undefined}>
+        heightGap {snapshot.frameHeightGap ?? "n/a"} widthGap {snapshot.frameWidthGap ?? "n/a"}
+      </p>
+      {/* Phase 4: innerWH minus the BACKDROP's rect. Unlike the two above, these must be 0
+          in EVERY keyboard state — the backdrop is what guarantees a gap shows game-dark
+          rather than whatever is beneath the page. Non-zero = the paint guarantee is broken. */}
+      <p className={snapshot.backdropHeightGap || snapshot.backdropWidthGap ? "text-rose-300" : undefined}>
+        backdropGap h{snapshot.backdropHeightGap ?? "n/a"} w{snapshot.backdropWidthGap ?? "n/a"}
+      </p>
       <p>overflow h/b {snapshot.htmlOverflow}/{snapshot.bodyOverflow}</p>
       <p>frame {snapshot.viewportFrame}</p>
-      <p>bg b/s {snapshot.bodyBackground}/{snapshot.shellBackground}</p>
+      <p>bg h/b/s {snapshot.htmlBackground}/{snapshot.bodyBackground}/{snapshot.shellBackground}</p>
       <p>shell {snapshot.appShellRect}</p>
       <p>main {snapshot.mainRect}</p>
       <p>route {snapshot.routeRect}</p>
       <p>root {snapshot.rootRect}</p>
+      <p>rootFull {snapshot.rootRectFull}</p>
+      <p>frameFull {snapshot.frameRectFull}</p>
+      {/* Phase 4: must be a matrix/matrix3d, never "none" — "none" means the frame fell
+          back to layout positioning and is no longer GPU-composited with the keyboard. */}
+      <p>frame xf {snapshot.frameTransform}</p>
       <p>editor {snapshot.editorRect}</p>
       <p>game {snapshot.gameRect}</p>
       <p>list {snapshot.answerListRect}</p>
+      {/* Finding A: non-"none" transforms here mean Framer Motion's layout projection is
+          actively displacing a row/badge outside the reveal morph window. */}
+      <p>row0 xf {snapshot.row0Transform}</p>
+      <p>row0Wrap xf {snapshot.row0WrapTransform}</p>
+      <p>badge xf {snapshot.letterBadgeTransform}</p>
+      {/* Phase 2: 0 outside the 450ms reveal morph; 12 means projection is live all round. */}
+      <p>projectedRows {snapshot.projectedRowCount}</p>
+      <p>venueTransitionOverlays {snapshot.venueTransitionOverlayCount}</p>
+      {/* Phase 3: must be 0 — any non-zero value is a live #a10d63 layer on this route. */}
+      <p className={snapshot.brandMagentaLayerCount ? "text-rose-300" : undefined}>
+        magentaLayers {snapshot.brandMagentaLayerCount}
+      </p>
+      {snapshot.fixedOverlaysNearBottom.length > 0 ? (
+        <div className="mt-1 border-t border-cyan-300/20 pt-1">
+          <p>fixed@bottom:</p>
+          {snapshot.fixedOverlaysNearBottom.map((label, i) => (
+            <p key={i} className="truncate">{label}</p>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1034,16 +1274,185 @@ type SubmitState = "idle" | "submitting" | "done" | "error";
 /** Debounce delay before an in-progress answer is autosaved to the server. */
 const AUTOSAVE_DEBOUNCE_MS = 600;
 
-export function AnsweringScreen({
+/** How long `visualViewport` must be quiet before the answer-list scroll correction is
+ *  considered safe to run. The iOS keyboard animates in over ~250 ms and fires `resize`
+ *  throughout; correcting on each one is what produced the pre-Phase-4 stack of up to six
+ *  overlapping `smooth` scrolls per tap. One correction, once the viewport stops moving. */
+const VIEWPORT_SETTLE_MS = 120;
+
+/** Fallback deadline for that correction when no `visualViewport resize` ever arrives —
+ *  the keyboard was already open, the platform has no software keyboard, or iOS refused
+ *  the focus. Long enough that a slow keyboard's first resize still pre-empts it. */
+const VIEWPORT_SETTLE_FALLBACK_MS = 400;
+
+type AnswerRowTheme = (typeof GAME_THEME)[CategoryBlitzThemeKey];
+
+interface AnswerRowProps {
+  index: number;
+  category: string;
+  letter: string;
+  answer: string;
+  isActive: boolean;
+  disabled: boolean;
+  theme: AnswerRowTheme;
+  activeRingClass: string;
+  /** True for the last row — drives the keyboard's Return key hint (done vs next). */
+  isLast: boolean;
+  /** Row input gained focus. Records the active row; does NOT re-focus (that
+   *  would loop through this same handler). */
+  onActivate: (index: number) => void;
+  /** Row input lost focus. Debounced by the parent, since moving between two
+   *  row inputs blurs one before focusing the next. */
+  onDeactivate: () => void;
+  onChange: (index: number, value: string) => void;
+  /** Return/Enter pressed — advance to the next row, or dismiss on the last. */
+  onSubmitRow: (index: number) => void;
+}
+
+/**
+ * A single answer row, split out of `AnsweringScreen` and memoized so a
+ * once-a-second `timeRemaining` tick (or the root's 4 Hz reveal-timing tick,
+ * see `AnsweringScreen`'s own memo wrapper below) re-renders the header, not
+ * all twelve rows. `answer`/`isActive`/`disabled` are the only things that
+ * ever change per row; `theme`/`onActivate` are stable references across a
+ * round (see the app-feel plan, Phase 6).
+ */
+const AnswerRow = memo(function AnswerRow({
+  index,
+  category,
   letter,
-  categories,
-  roundId,
-  timeRemaining,
-  venueId,
-  userId,
-  playerCount,
-  mode = "standard",
-}: {
+  answer,
+  isActive,
+  disabled,
+  theme,
+  activeRingClass,
+  isLast,
+  onActivate,
+  onDeactivate,
+  onChange,
+  onSubmitRow,
+}: AnswerRowProps) {
+  const filled = answer.trim().length > 0;
+  const wrongLetter = filled && !answerStartsWithLetter(answer, letter);
+  const isValid = filled && !wrongLetter;
+
+  // ValidAnswerGlow used to be `key={answer}`, remounting its checkmark-pop
+  // animation on every keystroke while the row stayed valid. Replay it only
+  // on the transition INTO a valid state instead. Adjusted directly during
+  // render (React's documented "storing information from previous renders"
+  // pattern) rather than in an effect, so the token bump and the render it
+  // affects land in the same commit instead of triggering an extra one.
+  const [glowToken, setGlowToken] = useState(0);
+  const [prevIsValid, setPrevIsValid] = useState(isValid);
+  if (isValid !== prevIsValid) {
+    setPrevIsValid(isValid);
+    if (isValid) setGlowToken((t) => t + 1);
+  }
+
+  // Same fix for WrongLetterReject's shake: it used to replay on every
+  // keystroke that kept the answer wrong-letter (shakeToken was the raw,
+  // ever-changing answer string). Fire it once on the transition INTO
+  // wrong-letter instead.
+  const [wrongToken, setWrongToken] = useState(0);
+  const [prevWrongLetter, setPrevWrongLetter] = useState(wrongLetter);
+  if (wrongLetter !== prevWrongLetter) {
+    setPrevWrongLetter(wrongLetter);
+    if (wrongLetter) setWrongToken((t) => t + 1);
+  }
+
+  const inputRow = (
+    // A <label>, not a <button>: the row owns a real <input>, and a label
+    // forwards the tap to its own control natively and synchronously inside the
+    // gesture — which is exactly what iOS requires to open the keyboard (the
+    // rule Phase 4 established). No `onPointerDown`/`preventDefault` here: that
+    // pair existed to stop a tap from blurring the old shared editor, and it
+    // would now cancel the native focus we actually want.
+    <label
+      data-category-blitz-answer-row={index}
+      className={`relative flex w-full items-center gap-2 rounded-xl border text-left transition-colors ${
+        disabled ? "opacity-60" : "cursor-text"
+      } ${
+        wrongLetter
+          ? "border-rose-500/70 bg-rose-950/30"
+          : isActive
+          ? `${theme.filledBorder} ${theme.filledBg} ring-2 ${activeRingClass}`
+          : filled
+          ? `${theme.filledBorder} ${theme.filledBg}`
+          : "border-slate-700/60 bg-slate-900/40"
+      } px-3 py-2`}
+    >
+      {/* Valid answer glow + checkmark pop feedback */}
+      {isValid ? <ValidAnswerGlow key={glowToken} /> : null}
+      <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
+        {index + 1}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[0.68rem] font-black uppercase tracking-widest text-slate-400">
+          {category}
+        </p>
+        <input
+          data-category-blitz-answer-input={index}
+          type="text"
+          value={answer}
+          disabled={disabled}
+          onChange={(event) => onChange(index, event.target.value)}
+          onFocus={() => onActivate(index)}
+          onBlur={onDeactivate}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            onSubmitRow(index);
+          }}
+          // `text-base` = 16px. Do not shrink this: iOS Safari zooms the whole
+          // page in on focus for any text input under 16px, which would look
+          // exactly like the layout corruption this plan spent six rounds
+          // chasing (docs/category-blitz-app-feel-plan.md, Phase 6). The old
+          // display <p> was `text-sm` (14px) and could afford to be — a real
+          // input here cannot.
+          // The `!` overrides are load-bearing, not stylistic. Two GLOBAL rules
+          // in app/globals.css apply to every `input` in the app with
+          // `!important`: a `min-height: 36px` inside the mobile media query,
+          // and a `1px solid #334155` border + `border-radius: 12px`. Both are
+          // right for a normal form field and wrong for twelve of them stacked
+          // in a keyboard-open game board — the min-height alone costs 12px per
+          // row (two whole answer rows of visible list), and the border draws a
+          // second box inside the row's own border. Overridden here only, on
+          // this input; the global rules are untouched for the rest of the app.
+          // `h-6 leading-6 p-0` then pins the box to exactly its 24px line box.
+          // `focus:!shadow-none` kills a third global rule — the app-wide cyan
+          // focus ring on `input:focus`. The ROW already shows focus (its own
+          // `ring-2` + border), so the input's ring drew a second rounded box
+          // nested inside the row: visually the very "duplicate field" this
+          // change exists to remove.
+          className={`mt-0.5 h-6 !min-h-0 w-full truncate !border-0 bg-transparent p-0 text-base font-bold leading-6 outline-none placeholder:text-slate-600 focus:!shadow-none ${
+            wrongLetter ? "text-rose-300" : filled ? theme.filledText : "text-white"
+          }`}
+          placeholder={`${letter}...`}
+          aria-label={`${category} — answer starting with ${letter}`}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="words"
+          spellCheck={false}
+          enterKeyHint={isLast ? "done" : "next"}
+        />
+      </div>
+      {wrongLetter && (
+        <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
+          wrong letter
+        </span>
+      )}
+    </label>
+  );
+
+  return (
+    <WrongLetterReject shakeToken={wrongLetter ? String(wrongToken) : null}>
+      {inputRow}
+    </WrongLetterReject>
+  );
+});
+AnswerRow.displayName = "AnswerRow";
+
+interface AnsweringScreenProps {
   letter: string;
   categories: string[];
   roundId: string;
@@ -1055,10 +1464,39 @@ export function AnsweringScreen({
    *  color world for the round's duration. Defaults to "standard" so callers
    *  mid-migration (or a round with no mode yet) render the familiar look. */
   mode?: CategoryBlitzMode;
-}) {
+  /** True when this screen is mounting directly out of RoundStartReveal, i.e.
+   *  there are live `layoutId` partners on screen to FLIP from. Only then does
+   *  the board render with layout projection at all (see `morphActive`).
+   *  Defaults to false: a mid-round reload never showed the reveal, so it has
+   *  nothing to morph from and should go straight to plain rows. */
+  morphFromReveal?: boolean;
+  /** Called with `true` while a row is being typed into, so the root can drop
+   *  its own chrome (the Back bar) for the duration. See `compactChrome`. */
+  onEditingChange?: (editing: boolean) => void;
+}
+
+/**
+ * Memoized so the root's 4 Hz reveal-timing tick and the per-second
+ * `timeRemaining` tick don't rebuild this screen (and its 12 rows) unless a
+ * prop it actually cares about changed — see AnswerRow above and the app-feel
+ * plan, Phase 6. `categories`/`round.mode` are stable references from
+ * `useCategoryBlitzSession` (only replaced by an actual round change), so the
+ * default shallow prop comparison is sufficient; no custom comparator needed.
+ */
+export const AnsweringScreen = memo(function AnsweringScreen({
+  letter,
+  categories,
+  roundId,
+  timeRemaining,
+  venueId,
+  userId,
+  playerCount,
+  mode = "standard",
+  morphFromReveal = false,
+  onEditingChange,
+}: AnsweringScreenProps) {
   const theme = GAME_THEME[MODE_CONFIG[mode].themeKey];
   const activeRingClass = mode === "reverse" ? "ring-fuchsia-300/55" : "ring-emerald-300/55";
-  const activeCaretClass = mode === "reverse" ? "bg-fuchsia-200" : "bg-emerald-200";
   const venuePresence = useVenuePresence();
   const [answers, setAnswers] = useState<string[]>(() => Array(12).fill(""));
   const [activeAnswerIndex, setActiveAnswerIndex] = useState<number | null>(null);
@@ -1067,7 +1505,6 @@ export function AnsweringScreen({
   const submittedRef = useRef(false);
   const timerWasZeroRef = useRef(false);
   const activeAnswerIndexRef = useRef<number | null>(null);
-  const editorInputRef = useRef<HTMLInputElement | null>(null);
   const answerListRef = useRef<HTMLDivElement | null>(null);
   // Per-category debounce timers + last-autosaved value, so a slow network or
   // dropped tab doesn't lose an answer that was typed but never manually
@@ -1076,12 +1513,52 @@ export function AnsweringScreen({
   const autosaveTimersRef = useRef<Array<number | null>>(Array(12).fill(null));
   const lastAutosavedRef = useRef<string[]>(Array(12).fill(""));
 
+  // Framer Motion layout projection is only needed for the 450 ms reveal →
+  // gameplay FLIP. Left in place it costs the entire round: every element with
+  // a `layoutId` keeps a live projection node that Framer re-measures and
+  // animates — with per-node translate AND scale correction — on ANY viewport
+  // resize. The iOS keyboard opening IS a viewport resize, so twelve rows plus
+  // the header badge were re-projecting on every single tap of an answer row,
+  // mid-round, for three minutes (docs/category-blitz-app-feel-plan.md,
+  // Finding A). Scope it to the window it was designed for: `morphActive` is
+  // true only from mount until the morph settles, then permanently false, and
+  // while false the rows/badge render as plain elements with no projection
+  // node at all. Never flips back on — a round only morphs in once.
+  const [morphActive, setMorphActive] = useState(morphFromReveal);
+  useEffect(() => {
+    if (!morphActive) return;
+    const id = window.setTimeout(() => setMorphActive(false), LAYOUT_MORPH_SETTLE_MS);
+    return () => window.clearTimeout(id);
+  }, [morphActive]);
+
+  // With the iOS keyboard open the visible viewport is roughly half the screen
+  // (~410 CSS px on an iPhone 16 Pro). Phase 8's device capture showed the
+  // chrome above and below the answer list eating ~180 px of that, leaving only
+  // 2–3 answer rows visible against an acceptance target of 5+. While a row is
+  // actually being typed into, none of that chrome is what the player is
+  // looking at: `compactChrome` yields it to the list — the Back bar and the
+  // invite banner unmount, the header keeps only the letter + timer + progress,
+  // and the editor drops its helper line and slims its padding. Everything
+  // comes straight back when the keyboard closes.
+  //
+  // Gated on `!morphActive` so the round-start FLIP always measures the letter
+  // badge at its full size: the badge is a shared-layoutId morph target, and
+  // resizing it mid-projection is exactly the kind of stale-rect tear Phase 2
+  // scoped the projection away from. In practice the two never overlap (nothing
+  // is focused during the 570 ms morph window), so this is belt-and-suspenders.
+  const compactChrome = activeAnswerIndex !== null && !morphActive;
+
+  // The Back bar lives in the root component, above this screen, so it needs to
+  // be told. Reset on unmount so leaving the answering phase mid-type (round
+  // expiry, a reveal cutting in) can never strand the root without its chrome.
+  useEffect(() => {
+    onEditingChange?.(compactChrome);
+  }, [compactChrome, onEditingChange]);
+  useEffect(() => () => onEditingChange?.(false), [onEditingChange]);
+
   const isExpired = timeRemaining <= 0;
   const isUrgent = timeRemaining > 0 && timeRemaining <= 30;
   const totalFilled = answers.filter((a) => a.trim().length > 0).length;
-  const activeAnswerValue = activeAnswerIndex === null ? "" : answers[activeAnswerIndex] ?? "";
-  const activeCategory = activeAnswerIndex === null ? "" : categories[activeAnswerIndex] ?? "";
-  const activeWrongLetter = activeAnswerValue.trim().length > 0 && !answerStartsWithLetter(activeAnswerValue, letter);
 
   const autosaveAnswer = useCallback(
     (categoryIndex: number, answer: string) => {
@@ -1161,59 +1638,118 @@ export function AnsweringScreen({
     list.scrollBy({ top: delta, behavior });
   }, []);
 
-  const focusAnswerRow = useCallback((categoryIndex: number) => {
-    if (isExpired || submitState !== "idle") return;
-    scrollFocusCleanupRef.current?.();
+  /**
+   * Bring `categoryIndex` into view inside the answer list with EXACTLY ONE scroll,
+   * and return a canceller. Pre-Phase-4 this was a stack of four timers (0/40/220/420 ms)
+   * plus a one-shot `visualViewport resize` listener that scheduled two more `smooth`
+   * scrolls — up to six overlapping animated scrolls per tap, all running straight through
+   * the keyboard's own animation. Competing smooth scrolls during a keyboard animation
+   * cannot look like an app.
+   *
+   * `keyboardAlreadyOpen` splits the two real cases: taps 2..12 of a round change nothing
+   * about the viewport, so waiting would just feel laggy — correct immediately. The first
+   * tap opens the keyboard, so wait for `visualViewport` to stop moving and correct once
+   * against the geometry the user will actually see. `behavior: "auto"` throughout, on
+   * purpose.
+   */
+  const scheduleAnswerScroll = useCallback(
+    (categoryIndex: number, keyboardAlreadyOpen: boolean): (() => void) => {
+      const viewport = window.visualViewport;
+      let timer: number | null = null;
+      let resizeHandler: (() => void) | null = null;
 
+      const stop = () => {
+        if (timer !== null) {
+          window.clearTimeout(timer);
+          timer = null;
+        }
+        if (resizeHandler) {
+          viewport?.removeEventListener("resize", resizeHandler);
+          resizeHandler = null;
+        }
+      };
+      const correctNow = () => {
+        stop();
+        scrollAnswerIntoView(categoryIndex, "auto");
+      };
+
+      // Each resize during the keyboard's open animation pushes the correction out; it
+      // lands once the viewport has held still for VIEWPORT_SETTLE_MS.
+      resizeHandler = () => {
+        if (timer !== null) window.clearTimeout(timer);
+        timer = window.setTimeout(correctNow, VIEWPORT_SETTLE_MS);
+      };
+      viewport?.addEventListener("resize", resizeHandler, { passive: true });
+
+      if (keyboardAlreadyOpen) {
+        scrollAnswerIntoView(categoryIndex, "auto");
+        // Keep listening briefly anyway: the keyboard can still change height under us
+        // (autocorrect bar, emoji keyboard, a hardware keyboard attaching), which would
+        // move the row we just brought into view.
+        timer = window.setTimeout(stop, VIEWPORT_SETTLE_FALLBACK_MS);
+      } else {
+        timer = window.setTimeout(correctNow, VIEWPORT_SETTLE_FALLBACK_MS);
+      }
+
+      return stop;
+    },
+    [scrollAnswerIntoView]
+  );
+
+  /**
+   * A row input reported focus. Every path into an active row lands here — a tap
+   * (which the <label> forwards to its own input natively, synchronously inside
+   * the gesture, exactly as Phase 4 requires) and the programmatic Return-key
+   * advance below alike. It must NOT call `.focus()` itself: it runs *from* the
+   * focus event, so doing so would loop.
+   */
+  const handleRowFocus = useCallback((categoryIndex: number) => {
+    scrollFocusCleanupRef.current?.();
+    const keyboardAlreadyOpen = activeAnswerIndexRef.current !== null;
     activeAnswerIndexRef.current = categoryIndex;
     setActiveAnswerIndex(categoryIndex);
+    scrollFocusCleanupRef.current = scheduleAnswerScroll(categoryIndex, keyboardAlreadyOpen);
+  }, [scheduleAnswerScroll]);
 
-    const scrollIntoView = (behavior: ScrollBehavior) => {
-      scrollAnswerIntoView(categoryIndex, behavior);
-    };
-    const focusEditor = () => {
-      const editorInput = editorInputRef.current;
-      if (!editorInput) return;
-      editorInput.focus({ preventScroll: true });
-      try {
-        const valueLength = editorInput.value.length;
-        editorInput.setSelectionRange(valueLength, valueLength);
-      } catch {
-        // Some mobile browsers can reject selection updates during focus handoff.
-      }
-    };
-
-    const viewport = window.visualViewport;
-    const onViewportResize = () => {
-      window.setTimeout(() => scrollIntoView("smooth"), 90);
-      window.setTimeout(() => scrollIntoView("smooth"), 220);
-    };
-    viewport?.addEventListener("resize", onViewportResize, { once: true });
-    const focusTimer = window.setTimeout(focusEditor, 0);
-    const immediateTimer = window.setTimeout(() => scrollIntoView("auto"), 40);
-    const fallbackTimer = window.setTimeout(() => scrollIntoView("smooth"), 420);
-
-    scrollFocusCleanupRef.current = () => {
-      viewport?.removeEventListener("resize", onViewportResize);
-      window.clearTimeout(focusTimer);
-      window.clearTimeout(immediateTimer);
-      window.clearTimeout(fallbackTimer);
-    };
-  }, [isExpired, scrollAnswerIntoView, submitState]);
-
-  const handleKeyboardInputBlur = useCallback(() => {
+  /**
+   * Debounced: moving between two rows blurs the old input before focusing the
+   * new one, so an undebounced blur would flicker the chrome back open (and,
+   * pre-`compactChrome`, resize the whole board) between every pair of taps.
+   */
+  const handleRowBlur = useCallback(() => {
     window.setTimeout(() => {
-      if (document.activeElement === editorInputRef.current) return;
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && active.hasAttribute("data-category-blitz-answer-input")) {
+        return;
+      }
       activeAnswerIndexRef.current = null;
       setActiveAnswerIndex(null);
     }, 80);
   }, []);
 
-  const focusNextAnswer = useCallback(() => {
-    const currentIndex = activeAnswerIndexRef.current;
-    if (currentIndex === null) return;
-    const nextIndex = Math.min(categories.length - 1, currentIndex + 1);
-    if (nextIndex === currentIndex) return;
+  /** Programmatic focus, by row index — the Return-key advance. Queries the DOM
+   *  rather than threading twelve refs through a memoized row component. */
+  const focusAnswerRow = useCallback((categoryIndex: number) => {
+    if (isExpired || submitState !== "idle") return;
+    const input = answerListRef.current?.querySelector<HTMLInputElement>(
+      `[data-category-blitz-answer-input="${categoryIndex}"]`
+    );
+    // `preventScroll` keeps Safari from running its own scroll-into-view — the
+    // answer list owns that, and the page must never scroll.
+    input?.focus({ preventScroll: true });
+  }, [isExpired, submitState]);
+
+  /** Return/Enter on a row: advance to the next one, or close the keyboard on
+   *  the last (matching the `enterKeyHint` the row advertises). */
+  const handleRowSubmit = useCallback((categoryIndex: number) => {
+    const nextIndex = categoryIndex + 1;
+    if (nextIndex >= categories.length) {
+      const input = answerListRef.current?.querySelector<HTMLInputElement>(
+        `[data-category-blitz-answer-input="${categoryIndex}"]`
+      );
+      input?.blur();
+      return;
+    }
     focusAnswerRow(nextIndex);
   }, [categories.length, focusAnswerRow]);
 
@@ -1279,7 +1815,11 @@ export function AnsweringScreen({
   useEffect(() => {
     if (!isExpired || timerWasZeroRef.current || submitState !== "idle" || venuePresence.isInteractionBlocked) return;
     timerWasZeroRef.current = true;
-    editorInputRef.current?.blur();
+    // Close the keyboard on expiry, whichever row currently owns it.
+    const focused = document.activeElement;
+    if (focused instanceof HTMLElement && focused.hasAttribute("data-category-blitz-answer-input")) {
+      focused.blur();
+    }
     const t = window.setTimeout(() => { void submitAnswersRef.current(); }, 0);
     return () => window.clearTimeout(t);
   }, [isExpired, submitState, venuePresence.isInteractionBlocked]);
@@ -1301,52 +1841,96 @@ export function AnsweringScreen({
     );
   }
 
+  // Badge markup is shared between the projected (morphing) and plain forms so
+  // the swap at the end of the morph window is a pure element-type change with
+  // identical geometry — nothing moves when the projection node goes away.
+  const letterBadgeClassName = `flex shrink-0 items-center justify-center rounded-2xl ${
+    compactChrome ? "h-9 w-9" : "h-14 w-14"
+  } ${theme.letterGradient} ${theme.letterGlow}`;
+  const letterBadgeGlyph = (
+    <span
+      className={`font-['Bree_Serif',_Nunito,_serif] font-black leading-none text-slate-950 ${
+        compactChrome ? "text-2xl" : "text-4xl"
+      }`}
+    >
+      {letter}
+    </span>
+  );
+
   return (
-    <div className="relative grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden">
+    <div
+      className="relative grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden"
+      // Present only while the keyboard-open chrome reduction is active, so the
+      // mobile-shell harness can assert both states directly instead of
+      // inferring them from rects.
+      data-category-blitz-compact-chrome={compactChrome ? "" : undefined}
+    >
       {submitState === "submitting" && (
         <SubmitLockAnimation answersCount={totalFilled} />
       )}
-      <motion.div
-        className="shrink-0 px-4 pt-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={CHROME_ENTRANCE_TRANSITION}
-      >
-        <InviteBanner playerCount={playerCount} />
-      </motion.div>
+      {compactChrome ? null : (
+        <motion.div
+          className="shrink-0 px-4 pt-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={CHROME_ENTRANCE_TRANSITION}
+        >
+          <InviteBanner playerCount={playerCount} />
+        </motion.div>
+      )}
       {/* Sticky header — its bar (border/background/position) stays static so
           it doesn't shift the badge's projected target mid-morph; only the
           content INSIDE it (label, timer, progress) fades in, staggered
           slightly behind the badge/row morph so the handoff reads as one
           sequenced beat rather than shared elements morphing while
           everything else pops in instantly. */}
-      <div className={`shrink-0 border-b ${theme.borderActive} bg-slate-950/90 px-4 py-3`}>
+      <div
+        className={`shrink-0 border-b ${theme.borderActive} bg-slate-950/90 px-4 ${
+          compactChrome ? "py-1.5" : "py-3"
+        }`}
+      >
         <div className="flex items-center gap-3">
-          {/* Letter badge — shares layoutId with the reveal badge so the
-              round-start reveal morphs its big centered badge down into this
-              header slot instead of cutting. */}
-          <motion.div
-            layoutId={CB_LETTER_BADGE_LAYOUT_ID}
-            transition={{ layout: LAYOUT_MORPH_TRANSITION }}
-            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${theme.letterGradient} ${theme.letterGlow}`}
-          >
-            <span className="font-['Bree_Serif',_Nunito,_serif] text-4xl font-black leading-none text-slate-950">
-              {letter}
-            </span>
-          </motion.div>
-          <motion.div
-            className="min-w-0 flex-1"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={CHROME_ENTRANCE_TRANSITION}
-          >
-            <p className={`${theme.textLabel} leading-relaxed`}>
-              {(() => {
-                const parts = MODE_CONFIG[mode].rule.split(" — ");
-                return parts.length > 1 ? <>{parts[0]}<br />— {parts[1]}</> : MODE_CONFIG[mode].rule;
-              })()}
-            </p>
-          </motion.div>
+          {/* Letter badge — during the morph window it shares layoutId with the
+              reveal badge so the round-start reveal morphs its big centered
+              badge down into this header slot instead of cutting. Once the
+              morph settles it drops to a plain div (no projection node), so a
+              keyboard-driven viewport resize can never re-project it. */}
+          {morphActive ? (
+            <motion.div
+              layoutId={CB_LETTER_BADGE_LAYOUT_ID}
+              transition={{ layout: LAYOUT_MORPH_TRANSITION }}
+              data-category-blitz-letter-badge
+              className={letterBadgeClassName}
+            >
+              {letterBadgeGlyph}
+            </motion.div>
+          ) : (
+            <div data-category-blitz-letter-badge className={letterBadgeClassName}>
+              {letterBadgeGlyph}
+            </div>
+          )}
+          {/* The mode rule is a two-line reminder that has already done its job
+              by the time someone is typing an answer — it is the single
+              largest reclaimable block in this bar, so it yields to the answer
+              list while the keyboard is open (`compactChrome`). The empty
+              flex-1 spacer keeps the timer pinned right either way. */}
+          {compactChrome ? (
+            <div className="min-w-0 flex-1" />
+          ) : (
+            <motion.div
+              className="min-w-0 flex-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={CHROME_ENTRANCE_TRANSITION}
+            >
+              <p className={`${theme.textLabel} leading-relaxed`}>
+                {(() => {
+                  const parts = MODE_CONFIG[mode].rule.split(" — ");
+                  return parts.length > 1 ? <>{parts[0]}<br />— {parts[1]}</> : MODE_CONFIG[mode].rule;
+                })()}
+              </p>
+            </motion.div>
+          )}
           {/* Timer */}
           <motion.div
             className="shrink-0 text-right"
@@ -1360,7 +1944,7 @@ export function AnsweringScreen({
         </div>
         {/* Progress bar */}
         <motion.div
-          className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-800"
+          className={`h-1 w-full overflow-hidden rounded-full bg-slate-800 ${compactChrome ? "mt-1" : "mt-2"}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={CHROME_ENTRANCE_TRANSITION}
@@ -1382,153 +1966,90 @@ export function AnsweringScreen({
       >
         <div className="space-y-2">
           {categories.map((category, i) => {
-            const filled = answers[i].trim().length > 0;
-            const wrongLetter = filled && !answerStartsWithLetter(answers[i], letter);
             const isActive = activeAnswerIndex === i && submitState === "idle" && !isExpired;
-            const inputRow = (
-              <button
-                type="button"
-                data-category-blitz-answer-row={i}
+            // AnswerRow is memoized (Phase 6): a timer tick that only changes
+            // `timeRemaining`/`nowMs` re-renders this list's parent, but not
+            // the eleven rows whose `answer`/`isActive`/`disabled` didn't change.
+            const rowBody = (
+              <AnswerRow
+                index={i}
+                category={category}
+                letter={letter}
+                answer={answers[i]}
+                isActive={isActive}
                 disabled={isExpired || submitState !== "idle"}
-                onPointerDown={(event) => {
-                  event.preventDefault();
-                  focusAnswerRow(i);
-                }}
-                onClick={() => focusAnswerRow(i)}
-                className={`tp-clean-button relative flex w-full items-center gap-2 rounded-xl border text-left transition-colors ${
-                  wrongLetter
-                    ? "border-rose-500/70 bg-rose-950/30"
-                    : isActive
-                    ? `${theme.filledBorder} ${theme.filledBg} ring-2 ${activeRingClass}`
-                    : filled
-                    ? `${theme.filledBorder} ${theme.filledBg}`
-                    : "border-slate-700/60 bg-slate-900/40"
-                } px-3 py-2.5 disabled:opacity-60`}
-              >
-                {/* Valid answer glow + checkmark pop feedback */}
-                {!wrongLetter && filled ? (
-                  <ValidAnswerGlow key={answers[i]} />
-                ) : null}
-                <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
-                  {i + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[0.68rem] font-black uppercase tracking-widest text-slate-400">
-                    {category}
-                  </p>
-                  <p
-                    className={`mt-0.5 min-h-[1.25rem] w-full truncate text-sm font-bold ${
-                      wrongLetter ? "text-rose-300" : filled ? theme.filledText : "text-white"
-                    }`}
-                  >
-                    {filled ? answers[i] : <span className="text-slate-600">{letter}...</span>}
-                    {isActive ? (
-                      <span className={`ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-pulse ${wrongLetter ? "bg-rose-300" : activeCaretClass}`} />
-                    ) : null}
-                  </p>
-                </div>
-                {wrongLetter && (
-                  <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
-                    wrong letter
-                  </span>
-                )}
-              </button>
+                theme={theme}
+                activeRingClass={activeRingClass}
+                isLast={i === categories.length - 1}
+                onActivate={handleRowFocus}
+                onDeactivate={handleRowBlur}
+                onChange={updateAnswer}
+                onSubmitRow={handleRowSubmit}
+              />
             );
-            return (
+            // Projected only while the reveal morph is running; a plain div for
+            // the rest of the round so the keyboard's viewport resize has no
+            // projection nodes to re-measure. See `morphActive` above.
+            return morphActive ? (
               <motion.div
                 key={i}
                 layoutId={cbCategoryRowLayoutId(i)}
                 transition={{ layout: LAYOUT_MORPH_TRANSITION }}
+                data-category-blitz-answer-row-wrap={i}
+                // Present ONLY while this row carries a live layout-projection
+                // node, so a test (or the ?cbzDebug=1 panel) can assert the
+                // board is unprojected for the rest of the round.
+                data-category-blitz-row-projected=""
               >
-                <WrongLetterReject shakeToken={wrongLetter ? answers[i] : null}>
-                  {inputRow}
-                </WrongLetterReject>
+                {rowBody}
               </motion.div>
+            ) : (
+              <div key={i} data-category-blitz-answer-row-wrap={i}>
+                {rowBody}
+              </div>
             );
           })}
         </div>
       </div>
 
-      <div
-        data-category-blitz-editor
-        className={`shrink-0 border-t bg-slate-950 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 ${submitState === "error" ? "border-rose-400/20" : theme.borderSoft}`}
-      >
+      {/* Footer. This used to be the pinned editor — a second copy of the
+          active row's category and answer, sitting above the keyboard. The
+          rows now own real inputs (see AnswerRow), so the duplicate is gone
+          and nothing is left here but submit-error recovery and the autosave
+          reassurance line. It renders NOTHING while a row is being typed into,
+          handing its full height to the answer list. */}
+      {submitState === "error" ? (
         <div
-          className={`flex min-h-[4.25rem] items-center gap-2 rounded-2xl border-2 bg-slate-950 px-3 py-2 ${
-            activeWrongLetter
-              ? "border-rose-400"
-              : activeAnswerIndex !== null
-              ? `${theme.filledBorder} ring-2 ${activeRingClass}`
-              : theme.borderSoft
-          }`}
+          data-category-blitz-footer
+          className="shrink-0 border-t border-rose-400/20 bg-slate-950 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3"
         >
-          <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
-            {activeAnswerIndex === null ? "" : activeAnswerIndex + 1}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[0.66rem] font-black uppercase tracking-widest text-slate-400">
-              {activeAnswerIndex === null ? "Tap a category" : activeCategory}
-            </p>
-            <input
-              ref={editorInputRef}
-              data-category-blitz-editor-input
-              type="text"
-              value={activeAnswerValue}
-              onChange={(event) => {
-                const currentIndex = activeAnswerIndexRef.current;
-                if (currentIndex === null) return;
-                updateAnswer(currentIndex, event.target.value);
-              }}
-              onFocus={() => {
-                if (activeAnswerIndexRef.current !== null) return;
-                focusAnswerRow(0);
-              }}
-              onKeyDown={(event) => {
-                if (event.key !== "Enter") return;
-                event.preventDefault();
-                focusNextAnswer();
-              }}
-              onBlur={handleKeyboardInputBlur}
-              className="w-full bg-transparent text-base font-black text-white outline-none placeholder:text-slate-600"
-              aria-label={activeAnswerIndex === null ? "Category Blitz answer" : `Answer ${activeAnswerIndex + 1}`}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="words"
-              enterKeyHint={activeAnswerIndex === null || activeAnswerIndex >= categories.length - 1 ? "done" : "next"}
-              placeholder={activeAnswerIndex === null ? `${letter}...` : `${letter}...`}
-              spellCheck={false}
-            />
-          </div>
-          {activeWrongLetter ? (
-            <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
-              wrong letter
-            </span>
-          ) : null}
+          <p className="mb-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
+          <button
+            type="button"
+            onClick={() => {
+              submittedRef.current = false;
+              setSubmitState("idle");
+              void submitAnswers();
+            }}
+            className="w-full rounded-xl border border-rose-400/50 bg-rose-500/20 py-3 text-sm font-black text-rose-300"
+          >
+            Retry
+          </button>
         </div>
-        {submitState === "error" ? (
-          <>
-            <p className="mb-2 mt-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
-            <button
-              type="button"
-              onClick={() => {
-                submittedRef.current = false;
-                setSubmitState("idle");
-                void submitAnswers();
-              }}
-              className="w-full rounded-xl border border-rose-400/50 bg-rose-500/20 py-3 text-sm font-black text-rose-300"
-            >
-              Retry
-            </button>
-          </>
-        ) : submitState === "idle" && !isExpired ? (
-          <p className={`mt-2 text-center text-xs font-semibold uppercase tracking-[0.1em] ${theme.textAccentSoft}`}>
+      ) : submitState === "idle" && !isExpired && !compactChrome ? (
+        <div
+          data-category-blitz-footer
+          className={`shrink-0 border-t ${theme.borderSoft} bg-slate-950 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3`}
+        >
+          <p className={`text-center text-xs font-semibold uppercase tracking-[0.1em] ${theme.textAccentSoft}`}>
             Answers save automatically — graded when the timer runs out
           </p>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
-}
+});
+AnsweringScreen.displayName = "AnsweringScreen";
 
 // ── Header ────────────────────────────────────────────────────────────────────
 
@@ -1537,13 +2058,21 @@ function Header({
   error,
   onBack,
   isContinuous,
+  compact = false,
 }: {
   phase?: CategoryBlitzPhase;
   error?: string | null;
   onBack?: () => void;
   /** True when the venue is running continuous (endless) mode — shows an "∞ Continuous" badge. */
   isContinuous?: boolean;
+  /** True while a player is typing into an answer row. The iOS keyboard leaves
+   *  roughly half the screen, and this bar costs ~57px of it for an affordance
+   *  nobody reaches for mid-answer — so it yields its space to the answer list
+   *  and comes back the moment the keyboard closes. See `compactChrome` in
+   *  AnsweringScreen (docs/category-blitz-app-feel-plan.md, Phase 8). */
+  compact?: boolean;
 }) {
+  if (compact) return null;
   return (
     <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950 px-4 py-3`}>
       <div className="flex items-center gap-2">
@@ -1576,6 +2105,12 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   const [username, setUsername] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
   const [testMode, setTestMode] = useState(false);
+  // Set by AnsweringScreen while a row is being typed into. The only thing the
+  // root owns that competes with the answer list for keyboard-open space is the
+  // Back bar, so this hides exactly that. `setAnswerEditing` is passed straight
+  // through as the callback: a `useState` setter is referentially stable, which
+  // keeps AnsweringScreen's `memo` from re-rendering on every root tick.
+  const [answerEditing, setAnswerEditing] = useState(false);
 
   useCategoryBlitzVisibleViewportFrame();
 
@@ -1798,6 +2333,15 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     round.id !== finishedRevealRoundId &&
     revealElapsedMs <= ROUND_START_REVEAL_MAX_MS;
 
+  // AnsweringScreen only has shared-layoutId partners to FLIP from when it is
+  // replacing a reveal that just finished on screen, which is exactly
+  // `finishedRevealRoundId === round.id` (set by RoundStartReveal's onDone).
+  // Every other way of reaching the board — a mid-round reload, or the
+  // elapsed-time cutoff below — never had a reveal to morph from, so the board
+  // mounts with no layout projection at all. See AnsweringScreen's
+  // `morphActive`.
+  const morphFromReveal = !!round && finishedRevealRoundId === round.id;
+
   // The case above (elapsed time already past the reveal's max duration)
   // never mounts RoundStartReveal, so its onDone/markRevealDone callback
   // never fires on its own — without this, the auto-scoring timer gate
@@ -1919,16 +2463,10 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   // above instead — CompleteScreen renders underneath either way.
   const [fireworksDoneSessionId, setFireworksDoneSessionId] = useState<string | null>(null);
   const fireworksDone = fireworksDoneSessionId === session?.id;
-  const renderGamePortal = (content: ReactNode): ReactNode =>
-    isHydrated && typeof document !== "undefined" ? createPortal(content, document.body) : content;
 
   if (!isHydrated) {
-    return renderGamePortal(
-      <div
-        data-category-blitz-game-root
-        data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
-        className={`${VIEWPORT_FRAME_CLASS} flex flex-col bg-slate-950 text-white`}
-      >
+    return (
+      <CategoryBlitzFrame className="flex flex-col bg-slate-950 text-white">
         <Header onBack={onBack} />
         <CategoryBlitzLayoutDebugPanel phase={phase} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
@@ -1937,23 +2475,19 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
             <p className="mt-3 text-sm text-slate-400">Checking your venue session and current schedule…</p>
           </div>
         </div>
-      </div>
+      </CategoryBlitzFrame>
     );
   }
 
   if (!venueId) {
-    return renderGamePortal(
-      <div
-        data-category-blitz-game-root
-        data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
-        className={`${VIEWPORT_FRAME_CLASS} flex flex-col bg-slate-950 text-white`}
-      >
+    return (
+      <CategoryBlitzFrame className="flex flex-col bg-slate-950 text-white">
         <Header onBack={onBack} />
         <CategoryBlitzLayoutDebugPanel phase={phase} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
           <p className="text-sm text-slate-400">No venue session. Return to your venue page.</p>
         </div>
-      </div>
+      </CategoryBlitzFrame>
     );
   }
 
@@ -1964,12 +2498,8 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   // dropped poll would wipe answers and scoring reasons off the screen during
   // intermission for no reason.
   if (error && (phase === "idle" || errorEscalated)) {
-    return renderGamePortal(
-      <div
-        data-category-blitz-game-root
-        data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
-        className={`${VIEWPORT_FRAME_CLASS} flex flex-col bg-slate-950 text-white`}
-      >
+    return (
+      <CategoryBlitzFrame className="flex flex-col bg-slate-950 text-white">
         <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} />
         <CategoryBlitzLayoutDebugPanel phase={phase} />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
@@ -1992,17 +2522,15 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
             )}
           </div>
         </div>
-      </div>
+      </CategoryBlitzFrame>
     );
   }
 
-  return renderGamePortal(
-    <div
-      data-category-blitz-game-root
-      data-category-blitz-layout-version={LAYOUT_DEBUG_VERSION}
-      className={`${VIEWPORT_FRAME_CLASS} flex flex-col text-white transition-colors duration-700 ${pageTheme.pageBg}`}
+  return (
+    <CategoryBlitzFrame
+      className={`flex flex-col text-white transition-colors duration-700 ${pageTheme.pageBg}`}
     >
-      <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} />
+      <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} compact={answerEditing} />
       <CategoryBlitzLayoutDebugPanel phase={phase} />
       {/* Dev-only test-mode UI: hidden on the live site (NODE_ENV === "production")
           so real players never see it, but still fully functional when running
@@ -2012,6 +2540,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         <>
           <button
             type="button"
+            data-category-blitz-dev-only
             onClick={toggleTestMode}
             className={`fixed bottom-2 right-2 z-[999] rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${
               testMode ? "bg-amber-400 text-slate-950" : "bg-slate-800/80 text-slate-400"
@@ -2022,6 +2551,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
           {canSkipRound && (
             <button
               type="button"
+              data-category-blitz-dev-only
               onClick={skipRound}
               disabled={isSkippingRound}
               className="fixed bottom-2 right-32 z-[999] rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-950 disabled:opacity-50"
@@ -2075,6 +2605,8 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
             userId={userId}
             playerCount={session?.playerCount}
             mode={round.mode}
+            morphFromReveal={morphFromReveal}
+            onEditingChange={setAnswerEditing}
           />
         )
       )}
@@ -2132,6 +2664,6 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
           />
         </>
       )}
-    </div>
+    </CategoryBlitzFrame>
   );
 }

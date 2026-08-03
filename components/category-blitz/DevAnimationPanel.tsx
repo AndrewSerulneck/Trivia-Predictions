@@ -106,6 +106,7 @@ const RevealMorphDemo = () => {
           venueId="demo-venue"
           userId="demo-user"
           playerCount={3}
+          morphFromReveal
         />
       )}
     </LayoutGroup>
@@ -122,7 +123,10 @@ const DevAnimationPanel = () => {
 
   return (
     <>
-      <div className="fixed bottom-12 right-2 z-[999] flex max-h-[70vh] w-56 flex-col overflow-hidden rounded-lg border border-amber-400/40 bg-slate-900/95 text-xs text-white shadow-xl">
+      <div
+        data-category-blitz-dev-only
+        className="fixed bottom-12 right-2 z-[999] flex max-h-[70vh] w-56 flex-col overflow-hidden rounded-lg border border-amber-400/40 bg-slate-900/95 text-xs text-white shadow-xl"
+      >
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
