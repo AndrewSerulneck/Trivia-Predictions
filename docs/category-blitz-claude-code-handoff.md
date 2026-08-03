@@ -397,10 +397,35 @@ Interpretation:
 - If web backgrounds are dark but magenta remains, inspect theme color/browser UI/cached compositing.
 - If `scrollY` changes significantly, Safari is still page-panning despite the portal.
 
+## Outcome (2026-08-03) — resolved by `docs/category-blitz-app-feel-plan.md`
+
+The magenta band and the edge strips are **fixed**, confirmed by a real iPhone 16 Pro capture
+(`After-Fixes.png`, alongside the original three screenshots). The cause was **not** frame sizing,
+which is what all six attempts below assumed. It was that a `position: fixed`, full-viewport,
+never-shrinking `#a10d63` layer sat underneath the game (`GameLandingExperience`), so *any* gap —
+including the zone Safari's own URL pill and keyboard accessory bar occupy, which is outside
+`visualViewport` and cannot be filled by any frame height — painted magenta. Fixed by Phase 3
+(dedicated play shell, magenta layer deleted), Phase 4 (a `fixed inset-0` dark backdrop under a
+transform-positioned frame, so a late measurement costs a dark gap rather than a colored one), and
+Phase 5 (`theme-color: #020617`, stopping Safari sampling page color for its chrome).
+
+**Attempt #2's conclusion below was wrong and has been reversed.** Removing the native inputs from
+the answer rows never fixed anything (attempt #2 failed on device too) — it was collateral to a
+misdiagnosis, and it cost the UI a duplicate copy of the active row pinned above the keyboard. As
+of Phase 8 round 2 the rows own real inputs again, each row is a `<label>` (native, synchronous,
+in-gesture focus), and the pinned editor is gone. The page-pan risk that motivated #2 is now
+handled structurally — locked `html`/`body`, a fixed backdrop + frame, `preventScroll: true` — and
+regression-tested by `scripts/verify-category-blitz-mobile-shell.cjs`.
+
+Still open at the time of writing: acceptance criterion 5 (typing feel) has never been reported on
+from a device, and the round-1/round-2 Phase 8 changes have not themselves been seen on a device.
+
 ## Guardrails
 
 - Do not repeat the old `--cbz-layout-height` strategy.
 - Do not repeat the hidden input proxy strategy.
 - Do not repeat the fixed pinned editor plus keyboard shield strategy without a deliberately isolated experiment.
+  (The **pinned editor** half is now retired outright — see Outcome above. This guardrail stands
+  only against reintroducing the *keyboard-shield* + fixed-editor combination.)
 - Do not show the legal footer in games.
 - Do not stage unrelated billing/ad work.
