@@ -24,6 +24,12 @@ export interface AnimationPayload {
    *  (docs/category-blitz-mode-b-plan.md §4b) — dev-selectable via
    *  lib/categoryBlitzModes.ts until one variant is picked as the shipped default. */
   modeFlipVariant?: "card" | "splitFlap" | "overspin";
+  /** Which way the mode-flip takeover is turning: "toReverse" (standard →
+   *  Majority Rules, magenta landing face) or "toStandard" (Majority Rules →
+   *  standard, green landing face). Defaults to "toReverse" when omitted so
+   *  every existing trigger site keeps its current behavior untouched. See
+   *  docs/category-blitz-mode-flip-reverse-transition-plan.md. */
+  modeFlipDirection?: "toReverse" | "toStandard";
 }
 
 export type GameplayAnimationProps = {

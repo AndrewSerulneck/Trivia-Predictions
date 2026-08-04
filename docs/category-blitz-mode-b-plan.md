@@ -96,6 +96,12 @@ color world — never off a name:
   sees they're in a different mode.
 - All colors flow through `lib/themeTokens.ts` per the brand-centralization rule — **no
   hardcoded colors in components.**
+- The full-screen takeover (§4b) fires on both mode transitions, not just entering "Blend
+  In!" — standard → reverse lands on the magenta face, reverse → standard lands on a mirror
+  green face (see `docs/category-blitz-mode-flip-reverse-transition-plan.md`). Both
+  directions' dev-preview demo buttons live side by side in
+  `components/category-blitz/DevAnimationPanel.tsx` (3 `→ reverse` + 3 `→ standard`) — there
+  is no separate component for the return trip.
 
 ## 5. Changeability contract (do this so copy tweaks are painless)
 

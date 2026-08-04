@@ -18,6 +18,7 @@ import {
   MODE_FLIP_VARIANTS,
   getModeFlipTakeoverVariant,
   setModeFlipTakeoverVariant,
+  type ModeFlipDirection,
   type ModeFlipVariant,
 } from "@/lib/categoryBlitzModes";
 
@@ -41,7 +42,10 @@ type DemoKey =
   | "wrongVerdict"
   | "modeFlipCard"
   | "modeFlipSplitFlap"
-  | "modeFlipOverspin";
+  | "modeFlipOverspin"
+  | "modeFlipCardStandard"
+  | "modeFlipSplitFlapStandard"
+  | "modeFlipOverspinStandard";
 
 const DEMO_LABELS: Record<DemoKey, string> = {
   reveal: "Round start reveal",
@@ -55,15 +59,27 @@ const DEMO_LABELS: Record<DemoKey, string> = {
   wrongLetter: "Wrong letter reject",
   correctBurst: "Correct burst",
   wrongVerdict: "Wrong verdict",
-  modeFlipCard: "Mode flip — card turn",
-  modeFlipSplitFlap: "Mode flip — split-flap",
-  modeFlipOverspin: "Mode flip — overspin",
+  modeFlipCard: "Mode flip — card turn (→ reverse)",
+  modeFlipSplitFlap: "Mode flip — split-flap (→ reverse)",
+  modeFlipOverspin: "Mode flip — overspin (→ reverse)",
+  modeFlipCardStandard: "Mode flip — card turn (→ standard)",
+  modeFlipSplitFlapStandard: "Mode flip — split-flap (→ standard)",
+  modeFlipOverspinStandard: "Mode flip — overspin (→ standard)",
 };
 
 const DEMO_KEY_TO_MODE_FLIP_VARIANT: Partial<Record<DemoKey, ModeFlipVariant>> = {
   modeFlipCard: "card",
   modeFlipSplitFlap: "splitFlap",
   modeFlipOverspin: "overspin",
+  modeFlipCardStandard: "card",
+  modeFlipSplitFlapStandard: "splitFlap",
+  modeFlipOverspinStandard: "overspin",
+};
+
+const DEMO_KEY_TO_MODE_FLIP_DIRECTION: Partial<Record<DemoKey, ModeFlipDirection>> = {
+  modeFlipCardStandard: "toStandard",
+  modeFlipSplitFlapStandard: "toStandard",
+  modeFlipOverspinStandard: "toStandard",
 };
 
 const MOCK_GRADING_ANSWERS: GradingAnswer[] = [
@@ -259,7 +275,10 @@ const DevAnimationPanel = () => {
 
           {DEMO_KEY_TO_MODE_FLIP_VARIANT[demo] && (
             <CategoryBlitzModeFlipTakeover
-              payload={{ modeFlipVariant: DEMO_KEY_TO_MODE_FLIP_VARIANT[demo] }}
+              payload={{
+                modeFlipVariant: DEMO_KEY_TO_MODE_FLIP_VARIANT[demo],
+                modeFlipDirection: DEMO_KEY_TO_MODE_FLIP_DIRECTION[demo],
+              }}
               onComplete={() => setDemo(null)}
             />
           )}

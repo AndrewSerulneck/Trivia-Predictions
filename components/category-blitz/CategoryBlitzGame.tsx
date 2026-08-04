@@ -2443,16 +2443,43 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   // "Blend In!" mode-flip takeover (docs/category-blitz-mode-b-plan.md §4b):
   // fires exactly once per round, the moment a freshly-started reverse round
-  // is detected (the same `showReveal` window RoundStartReveal uses) — never
-  // for the reverse → standard reversion, which relies on the ModeSign flip +
-  // ambient board theme shift alone. Keyed on round.id so a reload mid-round
-  // (showReveal already false by then) never replays it.
+  // is detected (the same `showReveal` window RoundStartReveal uses). Keyed
+  // on round.id so a reload mid-round (showReveal already false by then)
+  // never replays it.
   const modeFlipFiredRoundRef = useRef<string | null>(null);
   useEffect(() => {
     if (!showReveal || !round || round.mode !== "reverse") return;
     if (modeFlipFiredRoundRef.current === round.id) return;
     modeFlipFiredRoundRef.current = round.id;
     triggerAnimation("CATEGORY_BLITZ_MODE_FLIP", { modeFlipVariant: getModeFlipTakeoverVariant() });
+  }, [showReveal, round, triggerAnimation]);
+
+  // Mirror-image green takeover for the reverse → standard reversion
+  // (docs/category-blitz-mode-flip-reverse-transition-plan.md, Phase 2).
+  // Supersedes the old plan of relying on the ModeSign flip + ambient board
+  // theme shift alone. Needs the *previous* round's mode (not just the
+  // current one) to tell "returning from reverse" apart from "the session's
+  // very first standard round", so it tracks that separately from the
+  // dedupe-by-round-id ref above — the two direction trackers must not
+  // collide, since a single round transition should only ever fire one of
+  // the two colors.
+  const prevRoundModeRef = useRef<CategoryBlitzMode | null>(null);
+  const modeFlipStandardFiredRoundRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!round) return;
+    if (
+      showReveal &&
+      round.mode === "standard" &&
+      prevRoundModeRef.current === "reverse" &&
+      modeFlipStandardFiredRoundRef.current !== round.id
+    ) {
+      modeFlipStandardFiredRoundRef.current = round.id;
+      triggerAnimation("CATEGORY_BLITZ_MODE_FLIP", {
+        modeFlipVariant: getModeFlipTakeoverVariant(),
+        modeFlipDirection: "toStandard",
+      });
+    }
+    prevRoundModeRef.current = round.mode;
   }, [showReveal, round, triggerAnimation]);
 
   // Game-over celebration: SessionCompleteFireworks holds itself on screen

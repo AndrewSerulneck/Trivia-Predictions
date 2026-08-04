@@ -30,6 +30,12 @@ export const reverseRoundPoints = (matchingPlayerCount: number): number => match
 // a standalone prototype. Stored the same way categoryBlitzTestMode.ts stores its
 // toggle — localStorage only, dev/testing convenience, never read server-side.
 export type ModeFlipVariant = "card" | "splitFlap" | "overspin";
+
+// Which way the full-screen takeover is turning — see
+// docs/category-blitz-mode-flip-reverse-transition-plan.md. "toReverse" is the
+// original standard→Majority Rules flip (magenta landing face); "toStandard"
+// is the reverse→standard return flip (green landing face).
+export type ModeFlipDirection = "toReverse" | "toStandard";
 export const MODE_FLIP_VARIANTS: ModeFlipVariant[] = ["card", "splitFlap", "overspin"];
 export const DEFAULT_MODE_FLIP_VARIANT: ModeFlipVariant = "card";
 

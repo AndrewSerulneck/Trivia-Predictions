@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { animate, motion, useMotionTemplate, useMotionValue, useReducedMotion, useTransform, type Easing, type MotionValue } from "framer-motion";
-import { MODE_CONFIG, DEFAULT_MODE_FLIP_VARIANT, type ModeFlipVariant } from "@/lib/categoryBlitzModes";
+import { MODE_CONFIG, DEFAULT_MODE_FLIP_VARIANT, type ModeFlipVariant, type ModeFlipDirection } from "@/lib/categoryBlitzModes";
 import type { GameplayAnimationProps } from "@/types/animation";
 
 /**
@@ -11,10 +11,13 @@ import type { GameplayAnimationProps } from "@/types/animation";
  * treatments ship at once behind a dev-selectable variant (lib/categoryBlitzModes.ts)
  * so the winner can be picked by feel in the live app.
  *
- * Only ever plays for the standard → reverse transition (see the trigger site in
- * CategoryBlitzGame.tsx) — reverting to standard scoring relies on the ModeSign
- * flip + ambient board theme shift alone, so players aren't hit with a second
- * full-screen takeover every single round.
+ * Plays for both mode transitions (see the trigger sites in CategoryBlitzGame.tsx):
+ * standard → reverse (`direction: "toReverse"`, lands on the magenta "Majority
+ * Rules!" face) and reverse → standard (`direction: "toStandard"`, lands on the
+ * green "Be Unique!" face, matching the blitzStandard emerald theme token in
+ * lib/themeTokens.ts). Both directions share the same rotation math and variant
+ * treatments below — only which face is the start/landing face, and the
+ * accent color of the landing flash / dissolve bloom, change with direction.
  *
  * The hero text is always MODE_CONFIG[...].puckLabel — never an invented mode
  * name — per the plan's "no player-facing mode names" rule.
@@ -23,8 +26,8 @@ import type { GameplayAnimationProps } from "@/types/animation";
  * flip runs on the shared `.tp-3d-*` primitives — a `filter` never sits on a
  * `preserve-3d` node, the rotating layer is a direct child of its perspective
  * host, and faces carry real `translateZ` depth + prefixed backface hiding. All
- * three variants land flat on the reverse "Blend In!" face (rotation ≡ 180° mod
- * 360°), so the backface never flashes.
+ * three variants land flat on the `toSide` face (rotation ≡ 180° mod 360°), so
+ * the backface never flashes.
  */
 const HOLD_MS = 3500;
 const DISSOLVE_MS = 650;
@@ -95,22 +98,22 @@ const Face = ({ side }: { side: "standard" | "reverse" }) => {
       className={`flex h-full w-full flex-col items-center justify-center gap-4 px-8 text-center ${
         isReverse
           ? "bg-[radial-gradient(125%_95%_at_50%_6%,#ff5cb1_0%,#ff2d95_26%,#a10d63_52%,#2c0018_84%,#12000a_100%)]"
-          : "bg-[radial-gradient(125%_95%_at_50%_8%,#2b5fd4_0%,#16337f_34%,#071233_68%,#020617_100%)]"
+          : "bg-[radial-gradient(125%_95%_at_50%_8%,#34d399_0%,#0f766e_34%,#052e2b_68%,#020617_100%)]"
       }`}
     >
-      <p className={`font-mono text-xs uppercase tracking-[0.3em] ${isReverse ? "text-amber-300" : "text-sky-300"}`}>
+      <p className={`font-mono text-xs uppercase tracking-[0.3em] ${isReverse ? "text-amber-300" : "text-emerald-300"}`}>
         {isReverse ? "Reverse Round!" : "This round"}
       </p>
       <h1
         className={`font-['Bree_Serif',_Georgia,_serif] text-[13vw] font-normal leading-[0.92] sm:text-6xl ${
           isReverse
             ? "text-amber-50 drop-shadow-[0_0_60px_rgba(255,197,61,0.55)]"
-            : "text-blue-50 drop-shadow-[0_0_44px_rgba(59,130,246,0.55)]"
+            : "text-emerald-50 drop-shadow-[0_0_44px_rgba(16,185,129,0.55)]"
         }`}
       >
         {MODE_CONFIG[side].puckLabel}
       </h1>
-      <p className={`max-w-[40ch] text-sm sm:text-base ${isReverse ? "text-amber-50/90" : "text-sky-100/80"}`}>
+      <p className={`max-w-[40ch] text-sm sm:text-base ${isReverse ? "text-amber-50/90" : "text-emerald-100/80"}`}>
         {MODE_CONFIG[side].rule}
       </p>
     </div>
@@ -138,15 +141,25 @@ const EdgeWall = ({ side }: { side: "left" | "right" }) => (
  *  `preserve-3d`; the rotating `.tp-3d-layer` is a DIRECT child of the
  *  `.tp-3d-scene`; faces are pushed out on Z with `.tp-backface-hidden` and the
  *  two EdgeWalls close the slab. */
-const FlipCard = ({ rotateY, filter }: { rotateY: MotionValue<number>; filter: MotionValue<string> }) => (
+const FlipCard = ({
+  rotateY,
+  filter,
+  fromSide,
+  toSide,
+}: {
+  rotateY: MotionValue<number>;
+  filter: MotionValue<string>;
+  fromSide: "standard" | "reverse";
+  toSide: "standard" | "reverse";
+}) => (
   <motion.div className="absolute inset-0" style={{ filter }}>
     <div className="tp-3d-scene absolute inset-0">
       <motion.div className="tp-3d-layer relative h-full w-full" style={{ rotateY }}>
         <div className="tp-backface-hidden absolute inset-0" style={{ transform: `translateZ(${FACE_DEPTH_PX}px)` }}>
-          <Face side="standard" />
+          <Face side={fromSide} />
         </div>
         <div className="tp-backface-hidden absolute inset-0" style={{ transform: `rotateY(180deg) translateZ(${FACE_DEPTH_PX}px)` }}>
-          <Face side="reverse" />
+          <Face side={toSide} />
         </div>
         <EdgeWall side="left" />
         <EdgeWall side="right" />
@@ -160,18 +173,36 @@ const FlipCard = ({ rotateY, filter }: { rotateY: MotionValue<number>; filter: M
  *  Each slat shows its own vertical slice of the full-screen Face (offset via a
  *  per-index inline `left` — the one thing Tailwind genuinely cannot express,
  *  the same pattern SubmitLockAnimation/CorrectBurst use for per-item values). */
-const SplitFlap = ({ progress }: { progress: MotionValue<number> }) => {
+const SplitFlap = ({
+  progress,
+  fromSide,
+  toSide,
+}: {
+  progress: MotionValue<number>;
+  fromSide: "standard" | "reverse";
+  toSide: "standard" | "reverse";
+}) => {
   const slats = useMemo(() => Array.from({ length: SLAT_COUNT }, (_, i) => i), []);
   return (
     <div className="absolute inset-0 flex">
       {slats.map((i) => (
-        <SplitFlapSlat key={i} index={i} progress={progress} />
+        <SplitFlapSlat key={i} index={i} progress={progress} fromSide={fromSide} toSide={toSide} />
       ))}
     </div>
   );
 };
 
-const SplitFlapSlat = ({ index, progress }: { index: number; progress: MotionValue<number> }) => {
+const SplitFlapSlat = ({
+  index,
+  progress,
+  fromSide,
+  toSide,
+}: {
+  index: number;
+  progress: MotionValue<number>;
+  fromSide: "standard" | "reverse";
+  toSide: "standard" | "reverse";
+}) => {
   const offset = (index / SLAT_COUNT) * SPLITFLAP_STAGGER_DEG;
   // This slat's own 0→180 turn, delayed by its stagger offset and clamped so it
   // always lands flat on the reverse face even though the shared driver runs past 180.
@@ -215,13 +246,13 @@ const SplitFlapSlat = ({ index, progress }: { index: number; progress: MotionVal
           }}
         >
           <div className="tp-backface-hidden absolute inset-0" style={{ transform: `translateZ(${FACE_DEPTH_PX}px)` }}>
-            <Face side="standard" />
+            <Face side={fromSide} />
           </div>
           <div
             className="tp-backface-hidden absolute inset-0"
             style={{ transform: `rotateY(180deg) translateZ(${FACE_DEPTH_PX}px)`, transformOrigin: backfaceOrigin }}
           >
-            <Face side="reverse" />
+            <Face side={toSide} />
           </div>
         </motion.div>
       </div>
@@ -233,6 +264,13 @@ const CategoryBlitzModeFlipTakeover = ({ onComplete, payload }: GameplayAnimatio
   const reduce = useReducedMotion() ?? false;
   const variant: ModeFlipVariant = payload?.modeFlipVariant ?? DEFAULT_MODE_FLIP_VARIANT;
   const anim = VARIANT_ANIM[variant];
+  const direction: ModeFlipDirection = payload?.modeFlipDirection ?? "toReverse";
+  const fromSide: "standard" | "reverse" = direction === "toReverse" ? "standard" : "reverse";
+  const toSide: "standard" | "reverse" = direction === "toReverse" ? "reverse" : "standard";
+  // Landing flash / dissolve bloom tint follows the landing face: amber-gold
+  // for the magenta "Majority Rules!" face, emerald for the green "Be Unique!"
+  // face (matches lib/themeTokens.ts blitzReverse.letterGlow / blitzStandard.letterGlow).
+  const accentRgb = toSide === "reverse" ? "255,197,61" : "16,185,129";
 
   const progress = useMotionValue(0);
   // Bell-curve motion-blur peaking at the fast mid-spin — only visibly non-zero
@@ -330,11 +368,11 @@ const CategoryBlitzModeFlipTakeover = ({ onComplete, payload }: GameplayAnimatio
       aria-hidden
     >
       {reduce ? (
-        <Face side="reverse" />
+        <Face side={toSide} />
       ) : variant === "splitFlap" ? (
-        <SplitFlap progress={progress} />
+        <SplitFlap progress={progress} fromSide={fromSide} toSide={toSide} />
       ) : (
-        <FlipCard rotateY={progress} filter={filter} />
+        <FlipCard rotateY={progress} filter={filter} fromSide={fromSide} toSide={toSide} />
       )}
 
       {/* Sheen sweep — a single specular glint travelling across the card as it
@@ -351,7 +389,10 @@ const CategoryBlitzModeFlipTakeover = ({ onComplete, payload }: GameplayAnimatio
       {/* Landing flash — a quick bloom on impact, most noticeable on overspin. */}
       {landed && !reduce && (
         <motion.div
-          className="absolute inset-0 bg-[radial-gradient(60%_40%_at_50%_44%,rgba(255,248,225,0.9),rgba(255,197,61,0.3)_45%,transparent_72%)]"
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(60% 40% at 50% 44%, rgba(255,248,225,0.9), rgba(${accentRgb},0.3) 45%, transparent 72%)`,
+          }}
           initial={{ opacity: 0.85 }}
           animate={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
@@ -362,7 +403,10 @@ const CategoryBlitzModeFlipTakeover = ({ onComplete, payload }: GameplayAnimatio
           panel swells + fades, so the announcement clears into light. */}
       {dissolving && !reduce && variant === "card" && (
         <motion.div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.9),rgba(255,197,61,0.25)_40%,transparent_70%)]"
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at 50% 45%, rgba(255,255,255,0.9), rgba(${accentRgb},0.25) 40%, transparent 70%)`,
+          }}
           initial={{ opacity: 0, scale: 0.6 }}
           animate={{ opacity: [0, 0.8, 0], scale: 1.9 }}
           transition={{ duration: DISSOLVE_MS / 1000, ease: "easeOut" }}
