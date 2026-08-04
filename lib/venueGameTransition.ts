@@ -22,6 +22,15 @@ type OpenTransitionArgs = {
   sourceElement: HTMLElement | null;
   targetPath: string;
   navigate: () => void | Promise<void>;
+  /**
+   * Whether `sourceElement`'s rect becomes the persisted card-viewport snapshot
+   * that the *return* transition shrinks back into. Default `true` — correct for
+   * the venue-home tiles, which are exactly where the back transition should
+   * land. Pass `false` when the tap originates somewhere transient (a modal
+   * button), so the open animation still starts where the user tapped but the
+   * back transition keeps aiming at the home card.
+   */
+  persistCardSnapshot?: boolean;
 };
 
 type ReturnTransitionArgs = {
@@ -466,6 +475,7 @@ export async function runVenueGameOpenTransition({
   sourceElement,
   targetPath,
   navigate,
+  persistCardSnapshot = true,
 }: OpenTransitionArgs): Promise<void> {
   saveEntrySnapshot(gameKey);
   setVenueTransitionGate(OPEN_GATE_DURATION_MS);
@@ -480,7 +490,9 @@ export async function runVenueGameOpenTransition({
     return;
   }
 
-  saveCardViewportSnapshot(gameKey, sourceElement);
+  if (persistCardSnapshot) {
+    saveCardViewportSnapshot(gameKey, sourceElement);
+  }
 
   const firstRect = sourceElement.getBoundingClientRect();
   if (firstRect.width <= 0 || firstRect.height <= 0) {

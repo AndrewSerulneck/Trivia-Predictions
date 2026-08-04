@@ -1,10 +1,13 @@
 "use client";
 
 import React from "react";
+import { RewardProgressGauge } from "@/components/venue/RewardProgressGauge";
 import {
   CHALLENGE_ICON_STYLE,
   ChallengeIconBadge,
   inferChallengeGameType,
+  rewardGameLabel,
+  rewardHeadline,
   type ChallengeCampaignCard,
 } from "@/components/venue/venueHubShared";
 import { formatCalendarDate as formatUpcomingDate } from "@/lib/formatCalendarDate";
@@ -67,7 +70,6 @@ function VenueChallengesPanelInner({
               {challengeCards.map((challenge) => {
                 const progress = Math.max(0, Number(challenge.progressPoints ?? 0));
                 const target = Math.max(1, Number(challenge.pointsRequiredToWin ?? 1));
-                const percent = Math.min(100, Math.round((progress / target) * 100));
                 // Multi-winner (Phase 6): win/exhausted state comes from the current
                 // cycle's ledger snapshot, not the legacy campaign-level winnerUserId
                 // (which no longer identifies "the winner" once winnerQuota > 1).
@@ -90,6 +92,11 @@ function VenueChallengesPanelInner({
                 const isBusy = pendingChallengeRedeemId === challenge.id;
                 const gameType = inferChallengeGameType(challenge.name, challenge.rewardDefinitionId);
                 const iconStyle = CHALLENGE_ICON_STYLE[gameType];
+                // Prize-first: the prize is the headline, the game name demotes to
+                // an eyebrow. rewardHeadline falls back to challenge.name for legacy
+                // pre-Rewards rows with no structured prize (not a designed state).
+                const headline = rewardHeadline(challenge);
+                const gameLabel = rewardGameLabel(gameType);
                 return (
                   <button
                     key={challenge.id}
@@ -113,40 +120,59 @@ function VenueChallengesPanelInner({
                       border: `1.5px solid ${isWinner ? "rgba(251,191,36,0.4)" : iconStyle.cardAccent}`,
                     }}
                   >
-                    {/* Header row: icon + name + status chip */}
-                    <div className="flex items-center gap-3">
+                    {/* Header row: icon + game eyebrow + prize headline + status chip */}
+                    <div className="flex items-start gap-3">
                       <ChallengeIconBadge gameType={gameType} />
                       <div className="min-w-0 flex-1">
-                        <div className="text-xl font-black leading-snug text-slate-100">
-                          {challenge.name}
+                        {gameLabel ? (
+                          <div className="text-[11px] font-black uppercase leading-tight tracking-[0.14em] text-slate-400">
+                            {gameLabel}
+                          </div>
+                        ) : null}
+                        <div className="mt-0.5 break-words text-xl font-black leading-snug text-slate-100">
+                          {headline}
                         </div>
-                        {isWon && isWinner ? (
-                          <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-amber-300"
-                            style={{ background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.3)" }}>
-                            You Won
-                          </span>
-                        ) : isWon ? (
-                          <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-slate-400"
-                            style={{ background: "rgba(51,65,85,0.5)", border: "1px solid rgba(71,85,105,0.5)" }}>
-                            All Claimed
-                          </span>
-                        ) : isUpcoming ? (
-                          <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-amber-300"
-                            style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)" }}>
-                            Upcoming
-                          </span>
-                        ) : (
-                          <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-cyan-400"
-                            style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.2)" }}>
-                            In Progress
-                          </span>
-                        )}
+                        {/* Status chip and the Details affordance share a row *under* the
+                            headline so the prize copy gets the card's full width — prize
+                            strings run long ("$25.00 off Whole Order") and were wrapping
+                            to three lines when Details sat beside them. */}
+                        <div className="mt-1 flex items-center justify-between gap-2">
+                          {isWon && isWinner ? (
+                            <span
+                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-amber-300"
+                              style={{ background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.3)" }}
+                            >
+                              You Won
+                            </span>
+                          ) : isWon ? (
+                            <span
+                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-slate-400"
+                              style={{ background: "rgba(51,65,85,0.5)", border: "1px solid rgba(71,85,105,0.5)" }}
+                            >
+                              All Claimed
+                            </span>
+                          ) : isUpcoming ? (
+                            <span
+                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-amber-300"
+                              style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)" }}
+                            >
+                              Upcoming
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-cyan-400"
+                              style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.2)" }}
+                            >
+                              In Progress
+                            </span>
+                          )}
+                          {canOpenRules && (
+                            <span className="shrink-0 text-xs font-black uppercase tracking-[0.08em] text-slate-500">
+                              Details ›
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      {canOpenRules && (
-                        <span className="shrink-0 text-xs font-black uppercase tracking-[0.08em] text-slate-500">
-                          Rules ›
-                        </span>
-                      )}
                     </div>
 
                     {/* Rules */}
@@ -195,15 +221,7 @@ function VenueChallengesPanelInner({
                       <p className="mt-3 text-base text-slate-500">Awarded to the winner.</p>
                     ) : (
                       <div className="mt-3">
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${percent}%`, background: iconStyle.barGradient }}
-                          />
-                        </div>
-                        <div className="mt-1.5 text-sm font-semibold tabular-nums text-slate-500">
-                          {progress.toLocaleString()} / {target.toLocaleString()} pts
-                        </div>
+                        <RewardProgressGauge progress={progress} target={target} barGradient={iconStyle.barGradient} />
                       </div>
                     )}
                   </button>

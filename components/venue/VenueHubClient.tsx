@@ -31,12 +31,21 @@ import { CategoryBlitzOnboardingOverlay } from "@/components/venue/CategoryBlitz
 import { VenueChallengesPanel } from "@/components/venue/VenueChallengesPanel";
 import { VenueLeaderboardPanel } from "@/components/venue/VenueLeaderboardPanel";
 import {
+  CHALLENGE_ICON_STYLE,
+  ChallengeIconBadge,
   formatBadgeCount,
+  inferChallengeGameType,
+  rewardGameLabel,
+  rewardPlayVenueGameKey,
+  rewardHeadline,
+  rewardQuotaLine,
   type ChallengeCampaignCard,
   type HomeScreenIndex,
   type LiveTriviaStatus,
   type VenueArrivalStage,
 } from "@/components/venue/venueHubShared";
+import { RewardProgressGauge } from "@/components/venue/RewardProgressGauge";
+import { formatCalendarDate } from "@/lib/formatCalendarDate";
 
 type BingoBadgePayload = {
   ok: boolean;
@@ -1321,9 +1330,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
 
   const [categoryBlitzOnboardingOpen, setCategoryBlitzOnboardingOpen] = useState(false);
   const categoryBlitzSourceElementRef = useRef<HTMLElement | null>(null);
+  const categoryBlitzPersistSnapshotRef = useRef(true);
 
   const enterCategoryBlitzGame = useCallback(
-    async (sourceElement: HTMLElement | null) => {
+    async (sourceElement: HTMLElement | null, persistCardSnapshot = true) => {
       triggerPulse();
       setPendingDestination("category-blitz");
       try {
@@ -1332,6 +1342,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           sourceElement,
           targetPath: "/category-blitz/play",
           navigate: () => router.push("/category-blitz/play"),
+          persistCardSnapshot,
         });
       } catch {
         setPendingDestination(null);
@@ -1341,12 +1352,17 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   );
 
   const goTo = useCallback(
-    async (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
+    async (
+      dest: VenueGameKey,
+      sourceElement: HTMLElement | null,
+      options?: { persistCardSnapshot?: boolean }
+    ) => {
       if (dest === "category-blitz") {
         // Tutorial cards must never render on the lobby route itself — show
         // them as an overlay here on the home screen, every time the player
         // opens the game, then land directly on the live game.
         categoryBlitzSourceElementRef.current = sourceElement;
+        categoryBlitzPersistSnapshotRef.current = options?.persistCardSnapshot ?? true;
         setCategoryBlitzOnboardingOpen(true);
         return;
       }
@@ -1363,6 +1379,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           sourceElement,
           targetPath,
           navigate: () => router.push(targetPath),
+          persistCardSnapshot: options?.persistCardSnapshot ?? true,
         });
       } catch {
         setPendingDestination(null);
@@ -1373,14 +1390,17 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
 
   const closeCategoryBlitzOnboarding = useCallback(() => {
     categoryBlitzSourceElementRef.current = null;
+    categoryBlitzPersistSnapshotRef.current = true;
     setCategoryBlitzOnboardingOpen(false);
   }, []);
 
   const joinCategoryBlitzFromOnboarding = useCallback(() => {
     setCategoryBlitzOnboardingOpen(false);
     const sourceElement = categoryBlitzSourceElementRef.current;
+    const persistCardSnapshot = categoryBlitzPersistSnapshotRef.current;
     categoryBlitzSourceElementRef.current = null;
-    void enterCategoryBlitzGame(sourceElement);
+    categoryBlitzPersistSnapshotRef.current = true;
+    void enterCategoryBlitzGame(sourceElement, persistCardSnapshot);
   }, [enterCategoryBlitzGame]);
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
@@ -1447,6 +1467,51 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const selectedChallenge = useMemo(
     () => challengeCards.find((card) => card.id === selectedChallengeId) ?? null,
     [challengeCards, selectedChallengeId]
+  );
+  // Prize-first reward detail (Phase 3, docs/rewards-panel-prize-first-plan.md):
+  // everything the modal renders, derived once from the selected card.
+  const selectedChallengeDetail = useMemo(() => {
+    if (!selectedChallenge) return null;
+    const gameType = inferChallengeGameType(selectedChallenge.name, selectedChallenge.rewardDefinitionId);
+    const upcomingStartDate = selectedChallenge.upcomingStartDate ?? null;
+    return {
+      gameType,
+      iconStyle: CHALLENGE_ICON_STYLE[gameType],
+      gameLabel: rewardGameLabel(gameType),
+      headline: rewardHeadline(selectedChallenge),
+      // Navigation refuses to guess: null (no Play Now button) unless the
+      // reward's definition id identified the game — see rewardPlayVenueGameKey.
+      venueGameKey: rewardPlayVenueGameKey(selectedChallenge.name, selectedChallenge.rewardDefinitionId),
+      quotaLine: rewardQuotaLine(selectedChallenge.winnerQuota, selectedChallenge.quotaRemaining),
+      progress: Math.max(0, Number(selectedChallenge.progressPoints ?? 0)),
+      target: Math.max(1, Number(selectedChallenge.pointsRequiredToWin ?? 1)),
+      upcomingStartDate,
+      // A points gauge only says something for a points-threshold reward that is
+      // actually accruing: game_winner has no target, legacy leaderboard rows
+      // carry no per-viewer progress, and an upcoming NFL reward sits at 0 until
+      // its first week opens (which would read as "you're losing", not "not yet").
+      showGauge:
+        selectedChallenge.winCondition !== "game_winner" &&
+        selectedChallenge.challengeMode !== "leaderboard" &&
+        !upcomingStartDate,
+    };
+  }, [selectedChallenge]);
+  // Hoisted out of the JSX so the null-check narrows inside the button's onClick
+  // closure (property narrowing wouldn't survive the callback boundary).
+  const selectedChallengePlayKey = selectedChallengeDetail?.venueGameKey ?? null;
+  // Play Now: close the modal, then hand off to the same open-transition path the
+  // home tiles use. goTo reads the source element synchronously, so passing the
+  // button here is safe even though it is about to unmount.
+  // `persistCardSnapshot: false` keeps the open animation starting at the modal
+  // button without letting that transient rect overwrite the home card's
+  // snapshot — otherwise backing out of the game would shrink into a mid-screen
+  // rect where the (now-unmounted) button used to be.
+  const playChallengeGame = useCallback(
+    (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
+      setSelectedChallengeId(null);
+      void goTo(dest, sourceElement, { persistCardSnapshot: false });
+    },
+    [goTo]
   );
   const orderedHomeCards = useMemo(() => {
     const byKey = new Map(homeCards.map((card) => [card.key, card] as const));
@@ -1650,7 +1715,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       </div>
 
       <AnimatePresence>
-        {selectedChallenge ? (
+        {selectedChallenge && selectedChallengeDetail ? (
           <motion.div
             className="fixed inset-0 z-[99999] flex items-start justify-center bg-black/45 px-3 pb-4 pt-16"
             initial={{ opacity: 0 }}
@@ -1671,12 +1736,66 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 style={{ border: "1px solid rgba(255,255,255,0.12)" }}
                 className="tp-clean-button absolute right-3 top-3 inline-flex h-10 min-w-[4.5rem] items-center justify-center rounded-full bg-slate-800 px-4 text-sm font-semibold text-slate-300"
                 onClick={() => setSelectedChallengeId(null)}
-                aria-label="Close challenge rules"
+                aria-label="Close reward details"
               >
                 Close
               </button>
-              <h4 className="mt-2 w-[min(92vw,24rem)] pr-24 text-3xl font-black leading-9 text-white">{selectedChallenge.name}</h4>
-              <p className="mt-7 w-[min(92vw,24rem)] pb-1 text-[1.65rem] leading-[2.35rem] text-slate-300">{selectedChallenge.rules}</p>
+              {/* Badge + game eyebrow share the close button's row (short copy, so
+                  pr-24 costs nothing); the prize headline gets the full width below. */}
+              <div className="flex w-[min(92vw,24rem)] items-center gap-3 pr-24">
+                <ChallengeIconBadge gameType={selectedChallengeDetail.gameType} />
+                {selectedChallengeDetail.gameLabel ? (
+                  <span className="min-w-0 flex-1 text-[11px] font-black uppercase leading-tight tracking-[0.14em] text-slate-400">
+                    {selectedChallengeDetail.gameLabel}
+                  </span>
+                ) : null}
+              </div>
+              <h4 className="mt-3 w-[min(92vw,24rem)] break-words text-3xl font-black leading-9 text-white">
+                {selectedChallengeDetail.headline}
+              </h4>
+              {selectedChallenge.rules ? (
+                <p className="mt-4 w-[min(92vw,24rem)] text-xl leading-8 text-slate-300">{selectedChallenge.rules}</p>
+              ) : null}
+
+              {selectedChallengeDetail.showGauge ? (
+                <div className="mt-5 w-[min(92vw,24rem)]">
+                  <RewardProgressGauge
+                    progress={selectedChallengeDetail.progress}
+                    target={selectedChallengeDetail.target}
+                    barGradient={selectedChallengeDetail.iconStyle.barGradient}
+                    size="modal"
+                  />
+                </div>
+              ) : selectedChallenge.winCondition === "game_winner" ? (
+                <p className="mt-5 w-[min(92vw,24rem)] text-lg text-slate-500">Awarded to the winner.</p>
+              ) : selectedChallengeDetail.upcomingStartDate ? (
+                <p className="mt-5 w-[min(92vw,24rem)] text-lg text-amber-300/80">
+                  Starts {formatCalendarDate(selectedChallengeDetail.upcomingStartDate)} — get your picks in early.
+                </p>
+              ) : (
+                <p className="mt-5 w-[min(92vw,24rem)] text-lg text-slate-500">In progress — check back for results.</p>
+              )}
+
+              {selectedChallengeDetail.quotaLine ? (
+                <p className="mt-3 w-[min(92vw,24rem)] text-base font-black uppercase tracking-[0.1em] text-cyan-300">
+                  {selectedChallengeDetail.quotaLine}
+                </p>
+              ) : null}
+
+              {selectedChallengePlayKey ? (
+                <button
+                  type="button"
+                  onClick={(event) => playChallengeGame(selectedChallengePlayKey, event.currentTarget)}
+                  className="mt-6 w-[min(92vw,24rem)] rounded-2xl px-5 py-4 text-xl font-black uppercase tracking-[0.08em] shadow-lg"
+                  style={{
+                    background: selectedChallengeDetail.iconStyle.barGradient,
+                    border: `1px solid ${selectedChallengeDetail.iconStyle.borderColor}`,
+                    color: selectedChallengeDetail.iconStyle.ctaTextColor,
+                  }}
+                >
+                  Play Now!
+                </button>
+              ) : null}
             </motion.div>
           </motion.div>
         ) : null}
