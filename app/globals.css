@@ -256,6 +256,22 @@ body.tp-bingo-landscape-active {
   scrollbar-gutter: auto !important;
 }
 
+/* While the Bingo landscape board is up, no other app chrome may occupy or
+ * overlay the display. The landscape shell is a body-level fixed portal at
+ * z-[1300], so everything below that z-index already costs zero painted pixels —
+ * but MobileAdhesionAd sits at z-[1600] and its `md:hidden` only spares phones
+ * ≥768px wide, so it lands on top of the board on SE-class hardware. Suppressed
+ * here (one class, one block, trivially revertible) rather than by threading a
+ * route/orientation prop through the ad tree. AppShell's `pb-24` paints nothing
+ * but still lengthens the document behind the portal; zeroed for the same reason. */
+html.tp-bingo-landscape-active .tp-mobile-adhesion-ad {
+  display: none !important;
+}
+
+html.tp-bingo-landscape-active .tp-app-shell > main {
+  padding-bottom: 0 !important;
+}
+
 /* Page lock while Category Blitz gameplay is mounted. `overflow: hidden` plus a
  * `height: 100%` document is the whole lock — there is deliberately NO
  * `body { position: fixed; inset: 0 }` here any more (dropped in Phase 4 of
@@ -274,6 +290,30 @@ body.tp-category-blitz-game-active {
   scrollbar-gutter: auto !important;
   background-color: #020617 !important;
   background-image: none !important;
+}
+
+/* Installed PWA safe areas — docs/bingo-fullscreen-pwa-phase4.md, item 4.
+ *
+ * `apple-mobile-web-app-status-bar-style: black-translucent` + `viewportFit: cover`
+ * mean the standalone window extends *under* the iOS status bar and home
+ * indicator; in a browser tab those strips belong to Safari's own chrome and the
+ * app never sees them. Routes that render through PageShell, VenueHubHeaderBar,
+ * AppBar or the Bingo landscape shell already pad for the insets on every
+ * surface. The plain AppShell routes — the join flow at `/`, `/redeem-prizes`,
+ * `/owner/*` — do not, because until now nothing could ever draw there. Scoped to
+ * `html.tp-standalone` so a normal tab is bit-for-bit unchanged. */
+html.tp-standalone .tp-app-shell-safe-area {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Top inset only where nothing above already pays it. PageShell's compact header
+ * is `position: fixed`, pads itself with the inset, and reserves an in-flow
+ * spacer that also includes the inset — padding the shell too would double-count
+ * and leave a band of dead space under the header on /activity, /redeem-prizes,
+ * /faqs, /advertise. The join flow at `/` renders PageShell with no header at
+ * all (showUserStatus/showPageTitle false), so it is the case that needs this. */
+html.tp-standalone .tp-app-shell-safe-area:not(:has(.tp-page-header)) {
+  padding-top: env(safe-area-inset-top);
 }
 
 /* Category Blitz gameplay frame — docs/category-blitz-app-feel-plan.md, Phase 4.
@@ -307,7 +347,27 @@ body.tp-category-blitz-game-active {
   will-change: transform;
 }
 
+/* Bingo landscape shell — the layout tokens below are the single source of truth
+ * for how much of the display is NOT board. Every band the board competes with is
+ * a custom property here, and the board stage is sized by subtracting exactly those
+ * properties (never a hand-copied magic constant, which is how the old `5.7rem` /
+ * `4.85rem` clamps drifted out of sync with the chrome they encoded). Responsive
+ * blocks below retune the tokens; they must not restate the board-stage formula.
+ * See docs/bingo-fullscreen-pwa-phase0-findings.md for the pixel budget. */
 .tp-bingo-landscape-shell {
+  --bingo-landscape-pad-top: max(env(safe-area-inset-top), 0.35rem);
+  --bingo-landscape-pad-bottom: 0.35rem;
+  --bingo-landscape-pad-left: max(env(safe-area-inset-left), 0.6rem);
+  --bingo-landscape-pad-right: max(env(safe-area-inset-right), 0.6rem);
+  --bingo-landscape-arrow: 2.75rem;
+  --bingo-landscape-col-gap: 0.5rem;
+  /* Percentage taken off `--bingo-landscape-vw`, not `vw`. Every other term in the
+   * board-stage formula below is measured from visualViewport, and the two diverge under
+   * pinch-zoom or a raised keyboard — a `24vw` aside subtracted from a visualViewport
+   * width can be wider than the space that actually exists, and the board overflows the
+   * stage. Same measurement in, same measurement out. */
+  --bingo-landscape-aside: clamp(12rem, calc(var(--bingo-landscape-vw, 100vw) * 0.24), 17rem);
+
   top: var(--bingo-landscape-top, 0px);
   left: var(--bingo-landscape-left, 0px);
   width: var(--bingo-landscape-vw, 100vw);
@@ -318,10 +378,39 @@ body.tp-category-blitz-game-active {
   touch-action: pan-x;
 }
 
-.tp-game-page .tp-page-main .tp-bingo-landscape-shell .text-xs { font-size: 0.75rem !important; }
-.tp-game-page .tp-page-main .tp-bingo-landscape-shell .text-sm { font-size: 0.875rem !important; }
-.tp-game-page .tp-page-main .tp-bingo-landscape-shell .text-base { font-size: 1rem !important; }
-.tp-game-page .tp-page-main .tp-bingo-landscape-shell .text-lg { font-size: 1.125rem !important; }
+/* The home-indicator inset is only worth paying when the app owns the bottom of
+ * the physical display. In Safari the shell is already inset above Safari's own
+ * bottom toolbar, which covers that strip — so the inset buys nothing there and
+ * costs ~21px of board. It becomes load-bearing the moment we are fullscreen or
+ * installed, hence conditional rather than deleted. */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .tp-bingo-landscape-shell {
+    --bingo-landscape-pad-bottom: max(env(safe-area-inset-bottom), 0.35rem);
+  }
+}
+
+/* Same condition, reached the other way. iOS only reports `display-mode:
+ * standalone` to the media query on recent versions, but `navigator.standalone`
+ * has always been accurate there — StandalonePwaRuntime checks both and marks
+ * the root, so this selector covers the installed iPhones the query misses. */
+html.tp-standalone .tp-bingo-landscape-shell {
+  --bingo-landscape-pad-bottom: max(env(safe-area-inset-bottom), 0.35rem);
+}
+
+.tp-bingo-landscape-shell:fullscreen {
+  --bingo-landscape-pad-bottom: max(env(safe-area-inset-bottom), 0.35rem);
+}
+
+.tp-bingo-landscape-shell:-webkit-full-screen {
+  --bingo-landscape-pad-bottom: max(env(safe-area-inset-bottom), 0.35rem);
+}
+
+.tp-bingo-landscape-shell .tp-bingo-landscape-main {
+  padding-top: var(--bingo-landscape-pad-top);
+  padding-bottom: var(--bingo-landscape-pad-bottom);
+  padding-left: var(--bingo-landscape-pad-left);
+  padding-right: var(--bingo-landscape-pad-right);
+}
 
 .tp-bingo-landscape-shell .tp-bingo-landscape-board {
   min-width: 0;
@@ -329,17 +418,36 @@ body.tp-category-blitz-game-active {
 }
 
 .tp-bingo-landscape-shell .tp-bingo-landscape-content {
-  grid-template-columns: 2.75rem minmax(0, 1fr) clamp(12rem, 24vw, 17rem) 2.75rem;
+  gap: var(--bingo-landscape-col-gap);
+  grid-template-columns:
+    var(--bingo-landscape-arrow)
+    minmax(0, 1fr)
+    var(--bingo-landscape-aside)
+    var(--bingo-landscape-arrow);
 }
 
+/* Board stage: fills the full landscape column rather than being capped to a
+ * square. With the header row gone (Phase 1) height resolves to nearly the full
+ * visual viewport, and height is what binds on a landscape phone — so the old
+ * `min(h, w)` square cap left the leftover horizontal space unused and forced
+ * prop-bet text to truncate. Cells are free to be wider than they are tall; the
+ * grid inside is `grid-cols-5 grid-rows-5` with `flex-1`, so each cell simply
+ * takes its share of whatever the stage resolves to. */
 .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
-  max-height: min(calc(var(--bingo-landscape-vh, 100svh) - 5.7rem), calc(var(--bingo-landscape-vw, 100vw) - clamp(19rem, 35vw, 24rem)));
-  max-width: min(calc(var(--bingo-landscape-vh, 100svh) - 5.7rem), calc(var(--bingo-landscape-vw, 100vw) - clamp(19rem, 35vw, 24rem)));
+  --bingo-landscape-board-h: calc(
+    var(--bingo-landscape-vh, 100svh) - var(--bingo-landscape-pad-top) - var(--bingo-landscape-pad-bottom)
+  );
+  --bingo-landscape-board-w: calc(
+    var(--bingo-landscape-vw, 100vw) - var(--bingo-landscape-pad-left) - var(--bingo-landscape-pad-right) -
+      (2 * var(--bingo-landscape-arrow)) - (3 * var(--bingo-landscape-col-gap)) - var(--bingo-landscape-aside)
+  );
+  max-height: var(--bingo-landscape-board-h);
+  max-width: var(--bingo-landscape-board-w);
 }
 
 .tp-bingo-landscape-shell .tp-bingo-landscape-arrow {
-  height: 2.75rem;
-  width: 2.75rem;
+  height: var(--bingo-landscape-arrow);
+  width: var(--bingo-landscape-arrow);
   justify-self: center;
 }
 
@@ -348,18 +456,18 @@ body.tp-category-blitz-game-active {
 }
 
 @media (orientation: landscape) and (max-height: 430px) {
-  .tp-bingo-landscape-shell .tp-bingo-landscape-main {
-    gap: 0.4rem;
-    padding-top: max(env(safe-area-inset-top), 0.35rem);
-    padding-bottom: max(env(safe-area-inset-bottom), 0.35rem);
+  .tp-bingo-landscape-shell {
+    --bingo-landscape-arrow: 2.25rem;
+    --bingo-landscape-col-gap: 0.4rem;
+    --bingo-landscape-aside: 13rem;
   }
 
-  .tp-bingo-landscape-shell .tp-bingo-landscape-header {
+  .tp-bingo-landscape-shell .tp-bingo-landscape-headline {
     border-radius: 12px;
     padding: 0.35rem 0.5rem;
   }
 
-  .tp-bingo-landscape-shell .tp-bingo-landscape-header h1 {
+  .tp-bingo-landscape-shell .tp-bingo-landscape-headline h1 {
     font-size: 15px;
     line-height: 1;
   }
@@ -368,52 +476,56 @@ body.tp-category-blitz-game-active {
     gap: 0.3rem;
   }
 
+  /* Icon-only tabs on a short display, so the whole control row stays one line
+   * inside the aside. Both buttons carry an aria-label, so the accessible name
+   * survives the hidden text (the max-width:700px block below does the same). */
+  .tp-bingo-landscape-shell .tp-bingo-landscape-control-label {
+    display: none;
+  }
+
+  /* The panel below has to fit the Collect button on a won board; this line only
+   * restates BingoProgressRing's own "N to bingo" subtitle. */
+  .tp-bingo-landscape-shell .tp-bingo-landscape-to-bingo {
+    display: none;
+  }
+
   .tp-bingo-landscape-shell .tp-bingo-landscape-tab,
   .tp-bingo-landscape-shell .tp-bingo-landscape-status {
-    height: 1.8rem;
-    padding-left: 0.55rem;
-    padding-right: 0.55rem;
+    height: 1.7rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-fullscreen {
-    height: 2.25rem;
-    width: 2.25rem;
-  }
-
-  .tp-bingo-landscape-shell .tp-bingo-landscape-fullscreen-unavailable {
-    height: 1.8rem;
-    max-width: 9rem;
-    font-size: 8px;
-  }
-
-  .tp-bingo-landscape-shell .tp-bingo-landscape-content {
-    gap: 0.4rem;
-    grid-template-columns: 2.25rem minmax(0, 1fr) minmax(9.8rem, 10.8rem) 2.25rem;
-  }
-
-  .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
-    max-height: calc(var(--bingo-landscape-vh, 100svh) - 4.85rem);
-    max-width: calc(var(--bingo-landscape-vw, 100vw) - 16rem);
-  }
-
-  .tp-bingo-landscape-shell .tp-bingo-landscape-arrow {
-    height: 2.25rem;
-    width: 2.25rem;
+    height: 1.7rem;
+    width: 1.7rem;
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-board {
     border-radius: 14px;
-    padding: 0.4rem;
+    padding: 0.3rem;
   }
 
+  /* Board-internal chrome: the B-I-N-G-O rail and the inter-square gutters cost
+   * ~18% of the board on a phone. Trimmed here (never in portrait) so the pixels
+   * land in the squares, which is where the prop-bet text lives. */
   .tp-bingo-landscape-shell .tp-bingo-landscape-board > div:first-of-type {
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
+    gap: 0.2rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-board > div:first-of-type > div {
+    font-size: 13px;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-board > div:last-of-type {
+    gap: 0.2rem;
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-board [data-bingo-square-key] {
-    font-size: 8px;
-    line-height: 1.05;
-    padding: 0.2rem;
+    font-size: 11px;
+    line-height: 1.1;
+    padding: 0.15rem;
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-aside {
@@ -448,39 +560,29 @@ body.tp-category-blitz-game-active {
 }
 
 @media (orientation: landscape) and (max-width: 700px) {
+  .tp-bingo-landscape-shell {
+    --bingo-landscape-arrow: 2.15rem;
+    --bingo-landscape-aside: 10.5rem;
+  }
+
   .tp-bingo-landscape-shell .tp-bingo-landscape-control-label {
     display: none;
-  }
-
-  .tp-bingo-landscape-shell .tp-bingo-landscape-content {
-    grid-template-columns: 2.15rem minmax(0, 1fr) minmax(9.25rem, 10rem) 2.15rem;
-  }
-
-  .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
-    max-width: calc(var(--bingo-landscape-vw, 100vw) - 15.25rem);
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-status {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
   }
-
-  .tp-bingo-landscape-shell .tp-bingo-landscape-fullscreen-unavailable {
-    display: none;
-  }
 }
 
 @media (orientation: landscape) and (max-width: 600px) {
+  .tp-bingo-landscape-shell {
+    --bingo-landscape-arrow: 2rem;
+    --bingo-landscape-aside: 9rem;
+  }
+
   .tp-bingo-landscape-shell .tp-bingo-landscape-status {
     display: none;
-  }
-
-  .tp-bingo-landscape-shell .tp-bingo-landscape-content {
-    grid-template-columns: 2rem minmax(0, 1fr) minmax(8.4rem, 9rem) 2rem;
-  }
-
-  .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
-    max-width: calc(var(--bingo-landscape-vw, 100vw) - 13.75rem);
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-empty {

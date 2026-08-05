@@ -115,7 +115,7 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
           ? "bg-slate-950"
           : isFullscreen
           ? ""
-          : "mx-auto flex flex-col max-w-[720px] box-border overflow-x-hidden overflow-y-visible"
+          : "tp-app-shell-safe-area mx-auto flex flex-col max-w-[720px] box-border overflow-x-hidden overflow-y-visible"
       }`}
       style={isAdmin || isFullscreen ? undefined : { minHeight: "100lvh" }}
     >

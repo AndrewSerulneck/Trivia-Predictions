@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { AdBanner } from "@/components/ui/AdBanner";
 import { isLandingPopupGateActive, releaseAdTier, requestAdTier, subscribeAdTierChange } from "@/components/ui/adPriority";
@@ -41,6 +41,35 @@ function isAdminRoute(pathname: string | null): boolean {
 // unchanged (see docs/category-blitz-app-feel-plan.md Phase 5).
 function isAdExcludedRoute(pathname: string | null): boolean {
   return Boolean(pathname?.startsWith("/category-blitz"));
+}
+
+// The Bingo landscape board is a body-level portal that owns the whole display, and
+// `html.tp-bingo-landscape-active .tp-mobile-adhesion-ad { display: none }` in globals.css
+// keeps this banner off it. Hiding is not sufficient on its own: AdBanner POSTs
+// /api/ads/impression from a mount effect, so a display:none banner still bills the
+// advertiser for an impression no player can see — and it holds the ad-tier lock while it
+// does. So we unmount too. The CSS stays as the paint-level guarantee; this is the
+// billing-level one.
+function isBingoLandscapeActive(): boolean {
+  if (typeof document === "undefined") {
+    return false;
+  }
+  return document.documentElement.classList.contains("tp-bingo-landscape-active");
+}
+
+function subscribeToBingoLandscape(onChange: () => void): () => void {
+  if (typeof document === "undefined" || typeof MutationObserver === "undefined") {
+    return () => {};
+  }
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => {
+    observer.disconnect();
+  };
+}
+
+function useIsBingoLandscapeActive(): boolean {
+  return useSyncExternalStore(subscribeToBingoLandscape, isBingoLandscapeActive, () => false);
 }
 
 function resolvePageKey(pathname: string | null): AdPageKey {
@@ -87,6 +116,7 @@ function normalizeRoundVariant(pageKey: AdPageKey, roundNumber?: number): number
 export function MobileAdhesionAd() {
   const pathname = usePathname();
   const ownerId = useId();
+  const bingoLandscapeActive = useIsBingoLandscapeActive();
   const [ad, setAd] = useState<Advertisement | null>(null);
   const [isDismissed, setIsDismissed] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -314,7 +344,14 @@ export function MobileAdhesionAd() {
   }, [ad]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !ad || isDismissed || isAdminRoute(pathname) || isAdExcludedRoute(pathname)) {
+    if (
+      typeof window === "undefined" ||
+      !ad ||
+      isDismissed ||
+      bingoLandscapeActive ||
+      isAdminRoute(pathname) ||
+      isAdExcludedRoute(pathname)
+    ) {
       releaseAdTier(ownerId);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting local priority state when this ad is ineligible.
       setHasPriority(false);
@@ -338,7 +375,7 @@ export function MobileAdhesionAd() {
       releaseAdTier(ownerId);
       setHasPriority(false);
     };
-  }, [ad, isDismissed, ownerId, pathname]);
+  }, [ad, bingoLandscapeActive, isDismissed, ownerId, pathname]);
 
   useEffect(() => {
     return () => {
@@ -348,13 +385,20 @@ export function MobileAdhesionAd() {
 
   // isDismissed only flips true once the exit animation has finished, so the
   // banner is still mounted (and sliding down) for the duration of the exit.
-  if (!ad || isAdminRoute(pathname) || isAdExcludedRoute(pathname) || isDismissed || !hasPriority) {
+  if (
+    !ad ||
+    bingoLandscapeActive ||
+    isAdminRoute(pathname) ||
+    isAdExcludedRoute(pathname) ||
+    isDismissed ||
+    !hasPriority
+  ) {
     return null;
   }
 
   return (
     <div
-      className={`pointer-events-none fixed inset-x-0 bottom-0 z-[1600] px-2 md:hidden ${
+      className={`tp-mobile-adhesion-ad pointer-events-none fixed inset-x-0 bottom-0 z-[1600] px-2 md:hidden ${
         isExiting ? "animate-tp-popup-sheet-down" : "animate-tp-popup-sheet-up"
       }`}
       style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)" }}

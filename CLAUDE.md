@@ -104,6 +104,16 @@
 - **`venueListBuiltRef` must be reset** whenever the user returns to `auth-method-selection` (sign-out, back navigation) so the next login rebuilds the list fresh. It must NOT be reset by in-session back-navigation to the venue list itself (e.g. from a venue-login sub-screen) — that should reuse the already-built list, not re-prompt location.
 - **Full history/rationale:** `docs/join-flow-location-error-plan.md`.
 
+## PWA / Bingo Landscape Fullscreen
+- **The PWA is for PLAYERS ONLY.** `/owner/*` and `/admin` stay an ordinary website — they are better with an address bar, tabs and a real keyboard. No install promotion on those surfaces.
+- **NO SERVICE WORKER, in any phase.** Do not add `next-pwa`, `workbox`, or any caching library. Offline caching is what breaks Next.js apps (stale HTML, cached auth redirects, mismatched RSC payloads); iOS does not need one to install.
+- **`start_url`/`scope` in `app/manifest.ts` must stay `/`, and `orientation` must stay absent.** An installed app has its own cookie jar, so it cold-launches with no cookies and `proxy.ts` bounces any gated route; `/` (the join flow) is the only route that survives. `start_url` is baked into every install at install time — a bad value is unfixable for users who already installed. An `orientation` lock would kill the landscape board outright.
+- **Install *promotion* is gated by `NEXT_PUBLIC_PWA_INSTALL_PROMPT_ENABLED`** (`isInstallPromptEnabled()` in `lib/pwa.ts`, its one reader). Off = no prompt UX anywhere. **Must not be flipped before the domain split** — see `docs/pwa-install-rollout-runbook.md`.
+- **Installability itself is NOT flag-gated.** `app/manifest.ts` and the `apple-mobile-web-app-capable` meta in `app/layout.tsx` ship on every deploy, so a player can Add to Home Screen from the apex today and bake the apex `start_url` in permanently. That standing exposure is accepted (nothing advertises it; the domain split closes it) — don't describe the PWA track as "fully inert."
+- **Headless browsers cannot verify this surface.** They have no browser chrome at all, so a headless pass reports success on a bug that is still there. Automated coverage stops at build/typecheck/lint/tests + `npm run test:pwa-contract`; everything visual goes on `docs/bingo-fullscreen-pwa-device-checklist.md`, which only Andrew can close.
+- **Run `npm run test:pwa-contract` after touching the manifest, `lib/pwa.ts`, `StandalonePwaRuntime`, or the `.tp-bingo-landscape-*` CSS.** It also guards Phase 1's landscape CSS against leaking into portrait — the same failure mode as commit 35115fc.
+- **Full plan and as-built notes:** `docs/bingo-fullscreen-pwa-plan.md` + `docs/bingo-fullscreen-pwa-run-log.md`.
+
 ## Code Style & Constraints
 - **TypeScript:** Strict mode enabled. Absolutely no `any`. Use explicit types imported from `@/types`.
 - **Functions:** Prefer arrow functions for components and utilities.

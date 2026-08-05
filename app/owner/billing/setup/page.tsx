@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
@@ -19,40 +19,72 @@ const OwnerBillingSetupPage = () => {
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const response = await fetch("/api/owner/billing");
-        if (response.status === 401) {
-          router.push("/owner/login");
-          return;
-        }
-        const data = (await response.json()) as BillingResponse;
-        if (!data.ok) {
-          setError("Could not load your account.");
-          return;
-        }
-        const isLive = (s: { status: string }) => s.status === "active" || s.status === "past_due";
-        const activeNotScheduled = data.subscriptions?.find((s) => s.status === "active" && !s.cancelAtPeriodEnd);
-        if (activeNotScheduled) {
-          router.push("/owner/dashboard");
-          return;
-        }
-        const liveNeedsAction = data.subscriptions?.find((s) => isLive(s) && (s.cancelAtPeriodEnd || s.status === "past_due"));
-        if (liveNeedsAction) {
-          router.push("/owner/billing");
-          return;
-        }
-        const firstVenue = data.subscriptions?.[0]?.venueId ?? data.venueIds?.[0] ?? null;
-        setVenueId(firstVenue);
-      } catch {
-        setError("Something went wrong loading your account.");
-      } finally {
-        setLoading(false);
+  const load = useCallback(async () => {
+    try {
+      const response = await fetch("/api/owner/billing");
+      if (response.status === 401) {
+        router.push("/owner/login");
+        return;
       }
-    };
-    void load();
+      const data = (await response.json()) as BillingResponse;
+      if (!data.ok) {
+        setError("Could not load your account.");
+        return;
+      }
+      const isLive = (s: { status: string }) => s.status === "active" || s.status === "past_due";
+      const activeNotScheduled = data.subscriptions?.find((s) => s.status === "active" && !s.cancelAtPeriodEnd);
+      if (activeNotScheduled) {
+        router.push("/owner/dashboard");
+        return;
+      }
+      const liveNeedsAction = data.subscriptions?.find((s) => isLive(s) && (s.cancelAtPeriodEnd || s.status === "past_due"));
+      if (liveNeedsAction) {
+        router.push("/owner/billing");
+        return;
+      }
+      const firstVenue = data.subscriptions?.[0]?.venueId ?? data.venueIds?.[0] ?? null;
+      setVenueId(firstVenue);
+    } catch {
+      setError("Something went wrong loading your account.");
+    } finally {
+      setLoading(false);
+    }
   }, [router]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  // Checkout is an out-of-scope navigation, and bfcache can restore this page in
+  // its pre-redirect state — including the disabled "Redirecting to payment…"
+  // button, which would otherwise be a dead end with no reload affordance in an
+  // installed app. Re-read the webhook-driven truth on return; if it now shows a
+  // live subscription, load() routes onward on its own.
+  //
+  // `paying` is cleared ONLY on a genuine bfcache restore (`pageshow` with
+  // `persisted`), never on a bare visibility gain. A visibility gain also happens
+  // while the Checkout redirect is still in flight — an app switch, a notification
+  // shade, iOS re-showing the page for a beat before the sheet takes over — and
+  // re-enabling the button there lets a second tap open a second Checkout session.
+  // `pageshow` is filtered for the same reason it is filtered on /owner/billing:
+  // unfiltered, it also fires on ordinary initial load and duplicates the mount load().
+  useEffect(() => {
+    const reconcile = () => {
+      if (document.visibilityState !== "visible") return;
+      void load();
+    };
+    const reconcileOnRestore = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      setPaying(false);
+      void load();
+    };
+    document.addEventListener("visibilitychange", reconcile);
+    window.addEventListener("pageshow", reconcileOnRestore);
+    return () => {
+      document.removeEventListener("visibilitychange", reconcile);
+      window.removeEventListener("pageshow", reconcileOnRestore);
+    };
+  }, [load]);
 
   const handlePay = async () => {
     if (!venueId) return;

@@ -91,6 +91,17 @@ export function BackButton({
     }
 
     if (typeof window !== "undefined") {
+      // Installed-PWA hardening: a standalone launch starts with a fresh
+      // history stack and no browser back button, so at the entry point
+      // `history.back()` is a no-op and the player has nothing to fall back
+      // on. When there is demonstrably no entry to go back to, route to the
+      // parent instead of burning 150ms waiting for a navigation that will
+      // never happen. Browser behaviour with real history is unchanged.
+      if (window.history.length <= 1) {
+        router.push(getInternalReferrerPath() || fallbackHref);
+        return;
+      }
+
       const currentUrl = window.location.href;
       window.history.back();
 

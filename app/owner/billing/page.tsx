@@ -147,6 +147,34 @@ const OwnerBillingPage = () => {
     return () => { cancelled = true; };
   }, [router]);
 
+  // Stripe Checkout / the billing portal are out-of-scope navigations: the tab
+  // (or, in an installed PWA, a modal browser sheet) leaves and comes back, and
+  // bfcache can restore this page exactly as it was before the redirect. Billing
+  // truth is webhook-driven and always has been, so re-read it on return rather
+  // than trusting anything the redirect carried back. Defence in depth — partners
+  // are not expected to install (master plan §2) — and harmless in a plain tab.
+  //
+  // Two listeners, not three: `focus` fires alongside `visibilitychange` on essentially
+  // every return, so keeping it only bought a duplicate refetch. And `pageshow` fires on
+  // ordinary initial load too, so it is filtered to `persisted` — a genuine bfcache
+  // restore, the one case `visibilitychange` can miss.
+  useEffect(() => {
+    const reconcile = () => {
+      if (document.visibilityState !== "visible") return;
+      void refresh();
+    };
+    const reconcileOnRestore = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      reconcile();
+    };
+    document.addEventListener("visibilitychange", reconcile);
+    window.addEventListener("pageshow", reconcileOnRestore);
+    return () => {
+      document.removeEventListener("visibilitychange", reconcile);
+      window.removeEventListener("pageshow", reconcileOnRestore);
+    };
+  }, [refresh]);
+
   const handleUpdateCard = async () => {
     if (!subscription) return;
     setUpdatingCard(true);

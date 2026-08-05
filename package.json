@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:god-mode-join": "vitest run tests/god-mode-join-contract.test.ts tests/lib.join-venue-entry.test.ts tests/api.join.venue-profile-with-account.test.ts tests/api.join.profile.test.ts tests/lib.venue-presence-god-mode.test.ts",
     "test:venue-fk-guard": "vitest run tests/lib.venue-fk-cascade-guard.test.ts",
+    "test:pwa-contract": "vitest run tests/pwa-contract.test.ts",
     "test:venue-screen-overflow": "node scripts/verify-venue-screen-overflow.mjs",
     "category-blitz:verify-mobile-shell": "node --env-file=.env.local --conditions react-server --import tsx scripts/verify-category-blitz-mobile-shell.cjs",
     "auth:smoke": "node scripts/auth-smoke.cjs",
@@ -45,7 +46,8 @@
     "landmark:images": "node --env-file=.env.local scripts/enrich-landmark-images.cjs",
     "rewards:audit-legacy-cadences": "node --env-file=.env.local scripts/audit-legacy-recurring-cadences.cjs",
     "landmark:images:dry-run": "node --env-file=.env.local scripts/enrich-landmark-images.cjs --dry-run",
-    "landmark:review": "node scripts/review-trivia-images.cjs"
+    "landmark:review": "node scripts/review-trivia-images.cjs",
+    "pwa:icons": "node scripts/generate-pwa-icons.cjs"
   },
   "repository": {
     "type": "git",
@@ -87,6 +89,7 @@
     "eslint-config-next": "^16.1.6",
     "playwright": "^1.61.1",
     "postcss": "^8.5.6",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.17",
     "topojson-client": "^3.1.0",
     "ts-node": "^10.9.2",

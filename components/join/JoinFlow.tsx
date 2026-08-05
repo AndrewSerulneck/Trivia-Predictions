@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { browserSupportsWebAuthn, startAuthentication, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import { PageShell } from "@/components/ui/PageShell";
+import { useIsRunningAsInstalledPwa } from "@/lib/pwa";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import {
   createOrLoginAccount,
@@ -381,7 +382,26 @@ async function getInitialLocation(): Promise<LocationResult> {
   }
 }
 
+// The browser-settings route out of a hard denial goes through the address bar,
+// which an installed app does not have — following these steps there is a dead
+// end. Standalone gets the device-settings route instead. Resolved in an effect,
+// not at render, so the server and first client render agree.
 function LocationReEnableSteps() {
+  const isStandalone = useIsRunningAsInstalledPwa();
+
+  if (isStandalone) {
+    return (
+      <ol className="list-inside list-decimal space-y-1 text-sm leading-relaxed text-rose-300/80">
+        <li>Open your device&apos;s <strong className="text-rose-200">Settings</strong> app</li>
+        <li>
+          Find <strong className="text-rose-200">Hightop</strong> in the app list (on iPhone:{" "}
+          <strong className="text-rose-200">Privacy &amp; Security → Location Services</strong>)
+        </li>
+        <li>Set <strong className="text-rose-200">Location</strong> to <strong className="text-rose-200">Allow</strong>, then come back and tap <strong className="text-rose-200">Try Again</strong></li>
+      </ol>
+    );
+  }
+
   return (
     <ol className="list-inside list-decimal space-y-1 text-sm leading-relaxed text-rose-300/80">
       <li>Tap the <strong className="text-rose-200">lock icon</strong> in your browser&apos;s address bar</li>

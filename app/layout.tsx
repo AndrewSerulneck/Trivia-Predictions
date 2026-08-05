@@ -5,6 +5,7 @@ import { MobileAdhesionAd } from "@/components/ui/MobileAdhesionAd";
 import { GlobalTransitionOverlay } from "@/components/ui/GlobalTransitionOverlay";
 import { ScrollRecoverySentinel } from "@/components/ui/ScrollRecoverySentinel";
 import { ScrollRescueGuard } from "@/components/ui/ScrollRescueGuard";
+import { StandalonePwaRuntime } from "@/components/ui/StandalonePwaRuntime";
 import { ViewportHeightSync } from "@/components/ui/ViewportHeightSync";
 import { AuthSessionProvider } from "@/components/auth/AuthSessionProvider";
 import { AuthNavigationGuard } from "@/components/auth/AuthNavigationGuard";
@@ -52,6 +53,19 @@ export const metadata: Metadata = {
       "Browser-based venue gaming for bars and restaurants with live trivia, speed trivia, sports bingo, pick'em, fantasy sports, and venue-scoped challenges.",
     images: ["/brand/hero-poster.jpg"],
   },
+  // iOS ignores the manifest's icons for the home screen and needs this
+  // link tag; omitting it produces a screenshot-of-the-page icon.
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
+  // `apple-mobile-web-app-capable`, not the manifest, is what gives iOS a
+  // chromeless standalone window. `black-translucent` extends the app under
+  // the status bar, pairing with the existing viewportFit: "cover" below.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Hightop",
+  },
 };
 
 export const viewport: Viewport = {
@@ -83,6 +97,11 @@ export default async function RootLayout({
     <html lang="en" className="m-0 p-0">
       <head>
         <link rel="preload" href="/brand/hightop-logo.svg" as="image" fetchPriority="high" />
+        {/* Next's `appleWebApp` metadata only emits the modern unprefixed
+            `mobile-web-app-capable`, which WebKit only honors from iOS
+            17.4+. Pre-17.4 iOS needs this legacy name to get the chromeless
+            standalone window. */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className="touch-manipulation m-0 p-0 min-h-screen w-full">
         <AuthSessionProvider>
@@ -95,6 +114,7 @@ export default async function RootLayout({
             <LoginStuckStateBreaker />
             <ScrollRecoverySentinel />
             <ScrollRescueGuard />
+            <StandalonePwaRuntime />
             <ViewportHeightSync />
             <AnimationOverlay />
             <GlobalTransitionOverlay />

@@ -30,3 +30,7 @@ tmp/
 nfl-weeks-*-before.json
 # Kimi project memory
 .kimi-memory/
+
+# Unattended phase-runner artifacts (docs/bingo-fullscreen-pwa-run-phases.sh)
+docs/.*-run-state/
+docs/*-run-console.log

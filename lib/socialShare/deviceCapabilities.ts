@@ -1,3 +1,4 @@
+import { isRunningAsInstalledPwa } from "@/lib/pwa";
 import type { CameraPermissionState, StoryShareCapabilitySnapshot } from "./contracts";
 
 type NavigatorWithStandalone = Navigator & {
@@ -58,10 +59,6 @@ function canUseFileShare(nav: Navigator | null): boolean {
   }
 }
 
-function hasStandaloneNavigatorFlag(nav: NavigatorWithStandalone | null): boolean {
-  return nav?.standalone === true;
-}
-
 export function isIOSBrowser(source: BrowserDetectionSource = getBrowserDetectionSource()): boolean {
   const userAgent = normalize(source.userAgent);
   const platform = normalize(source.platform);
@@ -78,20 +75,7 @@ export function isAndroidBrowser(source: BrowserDetectionSource = getBrowserDete
 }
 
 export function isStandaloneDisplayMode(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  const nav = getNavigator();
-  if (hasStandaloneNavigatorFlag(nav)) {
-    return true;
-  }
-
-  if (typeof window.matchMedia !== "function") {
-    return false;
-  }
-
-  return window.matchMedia("(display-mode: standalone)").matches;
+  return isRunningAsInstalledPwa();
 }
 
 export async function getCameraPermissionState(): Promise<CameraPermissionState> {

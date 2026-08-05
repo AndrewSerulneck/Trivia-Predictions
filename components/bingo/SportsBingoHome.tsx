@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, ListChecks, Maximize2, Minimize2, Plus, Trophy } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Download, ListChecks, Maximize2, Minimize2, Plus, Share, Trophy, X } from "lucide-react";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import type { CSSProperties, TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
+import { isInstallPromptEnabled, isIOSSafari, useIsRunningAsInstalledPwa, usePwaInstallPrompt } from "@/lib/pwa";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
@@ -133,6 +134,7 @@ const DEFAULT_LANDSCAPE_VIEWPORT_STYLE = {
   "--bingo-landscape-top": "0px",
 } as CSSProperties;
 const FULLSCREEN_HINT_STORAGE_KEY = "hightop-bingo-fullscreen-hint-seen";
+const INSTALL_COACH_CARD_STORAGE_KEY = "hightop-bingo-install-coach-seen";
 
 function getFullscreenElement(): Element | null {
   const fullscreenDocument = document as FullscreenCapableDocument;
@@ -181,6 +183,17 @@ function formatLocalDateTime(iso: string): string {
     minute: "2-digit",
   });
 }
+
+// Landscape squares only. Phase 1 grew each square and raised the square font; the
+// board stage then dropped its square aspect cap and now fills the full landscape
+// column, so cells are wider than they are tall and have several lines of room.
+// The whole premise of the landscape view is that it shows the prop bet in full, so
+// there is deliberately NO character cap here any more — `shortenLabel`'s ellipsis
+// was the last thing truncating text that the box could actually fit. The `line-clamp-4`
+// on the label span remains the only limit, and it clamps by real rendered lines
+// rather than by a guessed character count. Portrait squares are far smaller and keep
+// `shortenLabel`'s own default; do not reuse this behavior there.
+const LANDSCAPE_SQUARE_LABEL_MAX_LENGTH = Number.POSITIVE_INFINITY;
 
 function shortenLabel(label: string, maxLength = 18): string {
   const trimmed = label.trim();
@@ -763,7 +776,9 @@ function renderLandscapeGrid(
                 style={{ willChange: "transform, opacity" }}
               />
               {renderSquareStatusGlyph(square)}
-              <span className="relative z-[1] line-clamp-3">{isFree ? "FREE" : shortenLabel(square.label, 16)}</span>
+              <span className="relative z-[1] line-clamp-4">
+                {isFree ? "FREE" : shortenLabel(square.label, LANDSCAPE_SQUARE_LABEL_MAX_LENGTH)}
+              </span>
               {progressText ? (
                 <span className="absolute bottom-0.5 left-1/2 z-[2] -translate-x-1/2 rounded bg-slate-950/55 px-1 text-[8px] font-black text-sky-200/90">
                   {progressText}
@@ -826,15 +841,19 @@ export function SportsBingoHome({
   const [isLandscapeGameView, setIsLandscapeGameView] = useState(false);
   const [landscapeViewportStyle, setLandscapeViewportStyle] = useState<CSSProperties>(DEFAULT_LANDSCAPE_VIEWPORT_STYLE);
   const [isFullscreenSupported, setIsFullscreenSupported] = useState(false);
-  const [hasCheckedFullscreenSupport, setHasCheckedFullscreenSupport] = useState(false);
   const [isLandscapeFullscreen, setIsLandscapeFullscreen] = useState(false);
   const [fullscreenFeedback, setFullscreenFeedback] = useState("");
   const [showFullscreenHint, setShowFullscreenHint] = useState(false);
+  const [showInstallCoachCard, setShowInstallCoachCard] = useState(false);
   const [landscapeBoardMode, setLandscapeBoardMode] = useState<LandscapeBoardMode>("active");
   const [landscapeActiveBoardIndex, setLandscapeActiveBoardIndex] = useState(0);
   const [landscapeScoredBoardIndex, setLandscapeScoredBoardIndex] = useState(0);
   const [landscapeActiveCardId, setLandscapeActiveCardId] = useState("");
   const [landscapeScoredCardId, setLandscapeScoredCardId] = useState("");
+  const isLandscapeGameViewRef = useRef(false);
+  const wasLandscapeFullscreenRef = useRef(false);
+  const userExitedLandscapeFullscreenRef = useRef(false);
+  const fullscreenRequestInFlightRef = useRef(false);
   const prefetchUsedRef = useRef(false);
   const clearSquarePopTimerRef = useRef<number | null>(null);
   const kickoffRefreshTimerRef = useRef<number | null>(null);
@@ -851,6 +870,8 @@ export function SportsBingoHome({
   const touchStartYRef = useRef<number | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "scored">("active");
   const [selectedActiveBoardId, setSelectedActiveBoardId] = useState("");
+  const isInstalledPwa = useIsRunningAsInstalledPwa();
+  const { canInstallOnDevice, promptInstall } = usePwaInstallPrompt();
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -1000,13 +1021,25 @@ export function SportsBingoHome({
   }, [isLandscapeGameView]);
 
   useEffect(() => {
+    isLandscapeGameViewRef.current = isLandscapeGameView;
+  }, [isLandscapeGameView]);
+
+  useEffect(() => {
     const updateFullscreenState = () => {
+      const nowFullscreen = Boolean(getFullscreenElement());
       setIsFullscreenSupported(isFullscreenAvailable(rootRef.current ?? document.documentElement));
-      setHasCheckedFullscreenSupport(true);
-      setIsLandscapeFullscreen(Boolean(getFullscreenElement()));
-      if (!getFullscreenElement()) {
+      setIsLandscapeFullscreen(nowFullscreen);
+      if (!nowFullscreen) {
         setFullscreenFeedback("");
+        // Fullscreen only ever ends here without us leaving landscape first when the
+        // player closed it themselves (button tap, swipe-up, Android back). That's a
+        // deliberate opt-out — don't re-arm the tap-to-fullscreen listener and nag them
+        // again for the rest of this landscape session.
+        if (wasLandscapeFullscreenRef.current && isLandscapeGameViewRef.current) {
+          userExitedLandscapeFullscreenRef.current = true;
+        }
       }
+      wasLandscapeFullscreenRef.current = nowFullscreen;
     };
 
     updateFullscreenState();
@@ -1042,6 +1075,34 @@ export function SportsBingoHome({
       window.clearTimeout(timeoutId);
     };
   }, [isFullscreenSupported, isLandscapeFullscreen, isLandscapeGameView]);
+
+  // This is exactly the slot the fullscreen button leaves empty on iPhone
+  // (Fullscreen API absent, see `isFullscreenSupported` above) — the single
+  // most persuasive moment to offer the PWA install path. Flag-gated inert;
+  // see docs/bingo-fullscreen-pwa-phase5.md.
+  useEffect(() => {
+    if (
+      !isLandscapeGameView ||
+      isFullscreenSupported ||
+      isInstalledPwa ||
+      !isInstallPromptEnabled() ||
+      !isIOSSafari()
+    ) {
+      setShowInstallCoachCard(false);
+      return;
+    }
+
+    try {
+      if (window.localStorage.getItem(INSTALL_COACH_CARD_STORAGE_KEY) === "true") {
+        return;
+      }
+      window.localStorage.setItem(INSTALL_COACH_CARD_STORAGE_KEY, "true");
+    } catch {
+      // Storage can be unavailable in private browsing; the card still works for this session.
+    }
+
+    setShowInstallCoachCard(true);
+  }, [isFullscreenSupported, isInstalledPwa, isLandscapeGameView]);
 
   useEffect(() => {
     if (isLandscapeGameView || !isLandscapeFullscreen) {
@@ -1754,29 +1815,88 @@ export function SportsBingoHome({
     };
   }, [goToLandscapeBoard, isLandscapeGameView, landscapeCards.length]);
 
-  const toggleLandscapeFullscreen = useCallback(async () => {
-    if (!isLandscapeGameView) {
+  // Enter-only. Kept separate from the toggle because the tap-to-arm listener below must
+  // never be able to *exit*: it fires on `pointerdown`, before the fullscreen button's own
+  // `onClick`, so a toggle there would enter and then immediately exit — and the exit would
+  // latch `userExitedLandscapeFullscreenRef`, killing one-tap fullscreen for the session.
+  const enterLandscapeFullscreen = useCallback(async () => {
+    if (!isLandscapeGameView || fullscreenRequestInFlightRef.current || getFullscreenElement()) {
       return;
     }
 
+    fullscreenRequestInFlightRef.current = true;
     try {
-      if (getFullscreenElement()) {
-        await exitDocumentFullscreen();
-        setFullscreenFeedback("");
-        setShowFullscreenHint(false);
-        return;
-      }
-
       await requestElementFullscreen(rootRef.current ?? document.documentElement);
       setFullscreenFeedback("");
       setShowFullscreenHint(false);
     } catch {
       setIsFullscreenSupported(isFullscreenAvailable(rootRef.current ?? document.documentElement));
-      setHasCheckedFullscreenSupport(true);
       setFullscreenFeedback("Fullscreen unavailable in this browser.");
       setShowFullscreenHint(false);
+    } finally {
+      fullscreenRequestInFlightRef.current = false;
     }
   }, [isLandscapeGameView]);
+
+  const toggleLandscapeFullscreen = useCallback(async () => {
+    if (!isLandscapeGameView) {
+      return;
+    }
+
+    if (getFullscreenElement()) {
+      try {
+        await exitDocumentFullscreen();
+      } catch {
+        setIsFullscreenSupported(isFullscreenAvailable(rootRef.current ?? document.documentElement));
+      }
+      setFullscreenFeedback("");
+      setShowFullscreenHint(false);
+      return;
+    }
+
+    await enterLandscapeFullscreen();
+  }, [enterLandscapeFullscreen, isLandscapeGameView]);
+
+  // Arm fullscreen on the first touch after rotating into landscape. This is as close to
+  // automatic as `requestFullscreen()` permits — it needs transient user activation, and
+  // `orientationchange` doesn't qualify. `pointerdown` covers touch, pen, and mouse in one
+  // listener and still counts as a real gesture. It does not call `preventDefault()` or
+  // `stopPropagation()`, so whatever the tap actually landed on (a square, a nav arrow, a
+  // tab) still runs its own handler normally; this just piggybacks fullscreen on top.
+  //
+  // Deliberately NOT `{ once: true }`: a rejected request (permission, an iframe without
+  // `allowfullscreen`, a browser that lies about support) would otherwise consume the
+  // listener and silently disarm the feature for the rest of the landscape session. The
+  // effect tears the listener down as soon as fullscreen actually takes.
+  useEffect(() => {
+    if (
+      !isLandscapeGameView ||
+      !isFullscreenSupported ||
+      isLandscapeFullscreen ||
+      userExitedLandscapeFullscreenRef.current
+    ) {
+      return;
+    }
+
+    const shellElement = rootRef.current;
+    if (!shellElement) {
+      return;
+    }
+
+    const armFullscreenOnTap = (event: PointerEvent) => {
+      // The fullscreen button owns its own toggle on click — leave that tap entirely to it.
+      const target = event.target;
+      if (target instanceof Element && target.closest(".tp-bingo-landscape-fullscreen")) {
+        return;
+      }
+      void enterLandscapeFullscreen();
+    };
+
+    shellElement.addEventListener("pointerdown", armFullscreenOnTap);
+    return () => {
+      shellElement.removeEventListener("pointerdown", armFullscreenOnTap);
+    };
+  }, [isLandscapeGameView, isFullscreenSupported, isLandscapeFullscreen, enterLandscapeFullscreen]);
 
   const collectAllBingoPoints = useCallback(async () => {
     if (!userId || isCollectingAllBingo || unclaimedWonBingoCards.length === 0 || venuePresence.isInteractionBlocked) return;
@@ -2011,8 +2131,9 @@ export function SportsBingoHome({
       landscapeCurrentCard?.status === "won" &&
       !landscapeCurrentCard.rewardClaimedAt &&
       landscapeCurrentCard.rewardPoints > 0;
-    const fullscreenUnavailableMessage =
-      hasCheckedFullscreenSupport && !isFullscreenSupported ? "Fullscreen unavailable in this browser." : fullscreenFeedback;
+    const landscapeEyebrow = isActiveLandscapeMode
+      ? `Board ${currentBoardNumber || 0} of ${currentBoardTotal}`
+      : `Scored ${currentBoardNumber || 0} of ${currentBoardTotal}`;
 
     const landscapeContent = (
       <div
@@ -2025,77 +2146,12 @@ export function SportsBingoHome({
         }`}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(125,211,252,0.15),transparent_24%),radial-gradient(circle_at_70%_100%,rgba(249,115,22,0.12),transparent_30%),linear-gradient(180deg,#020617_0%,#07111f_100%)]" />
-        <main className="tp-bingo-landscape-main relative z-[1] grid h-full w-full grid-rows-[auto_minmax(0,1fr)] gap-2 px-[max(env(safe-area-inset-left),0.6rem)] py-[max(env(safe-area-inset-top),0.35rem)] pr-[max(env(safe-area-inset-right),0.6rem)]">
-          <header className="tp-bingo-landscape-header flex min-h-0 items-center justify-between rounded-[14px] border border-sky-300/55 bg-slate-950/82 px-3 py-1.5 shadow-[0_0_24px_rgba(125,211,252,0.16)]">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase leading-none tracking-[0.16em] text-sky-300">
-                Sports Bingo · {isActiveLandscapeMode ? `Board ${currentBoardNumber || 0} of ${currentBoardTotal}` : `Scored ${currentBoardNumber || 0} of ${currentBoardTotal}`}
-              </p>
-              <h1 className="mt-1 truncate text-[18px] font-black leading-none text-slate-50 [font-family:'Bree_Serif','Nunito',serif]">
-                {landscapeCurrentCard?.gameLabel ?? (isActiveLandscapeMode ? "No active boards" : "No scored boards")}
-              </h1>
-            </div>
-            <div className="tp-bingo-landscape-controls flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={() => selectLandscapeBoardAt("active", normalizedLandscapeActiveIndex)}
-                className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition ${
-                  isActiveLandscapeMode
-                    ? "border-sky-300/70 bg-sky-300/15 text-sky-200"
-                    : "border-white/10 bg-white/[0.04] text-slate-300"
-                }`}
-              >
-                <ListChecks aria-hidden="true" className="h-3.5 w-3.5" />
-                <span className="tp-bingo-landscape-control-label">Active</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => selectLandscapeBoardAt("scored", normalizedLandscapeScoredIndex)}
-                className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition ${
-                  !isActiveLandscapeMode
-                    ? "border-amber-300/70 bg-amber-300/15 text-amber-100"
-                    : "border-white/10 bg-white/[0.04] text-slate-300"
-                }`}
-              >
-                <Trophy aria-hidden="true" className="h-3.5 w-3.5" />
-                <span className="tp-bingo-landscape-control-label">Scored</span>
-              </button>
-              {landscapeCurrentCard ? (
-                <span className="tp-bingo-landscape-status inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-[10px] font-black uppercase tracking-[0.1em] text-sky-200">
-                  <span className={`h-1.5 w-1.5 rounded-full ${currentCardIsLive && isActiveLandscapeMode ? "animate-pulse bg-sky-300" : "bg-slate-400"}`} />
-                  {isActiveLandscapeMode ? (currentCardIsLive ? "Live" : "Upcoming") : landscapeCurrentCard.status}
-                </span>
-              ) : null}
-              {isFullscreenSupported ? (
-                <div className="relative">
-                  {showFullscreenHint ? (
-                    <div className="pointer-events-none absolute right-0 top-[calc(100%+0.45rem)] z-10 w-max max-w-[15rem] rounded-full border border-sky-300/45 bg-slate-950/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-sky-100 shadow-[0_0_18px_rgba(125,211,252,0.18)]">
-                      Tap for full-screen board
-                    </div>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => void toggleLandscapeFullscreen()}
-                    className="tp-clean-button tp-bingo-landscape-fullscreen flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-200/90 bg-sky-300 text-slate-950 shadow-[0_0_0_2px_rgba(14,165,233,0.22),0_0_24px_rgba(125,211,252,0.38)] transition hover:bg-sky-200 active:scale-95"
-                    aria-label={isLandscapeFullscreen ? "Exit fullscreen Bingo board" : "Enter fullscreen Bingo board"}
-                    title={isLandscapeFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-                  >
-                    {isLandscapeFullscreen ? <Minimize2 aria-hidden="true" className="h-5 w-5" /> : <Maximize2 aria-hidden="true" className="h-5 w-5" />}
-                  </button>
-                </div>
-              ) : null}
-              {fullscreenUnavailableMessage ? (
-                <span
-                  className="tp-bingo-landscape-fullscreen-unavailable inline-flex h-8 max-w-[11rem] items-center rounded-full border border-white/10 bg-white/[0.05] px-2.5 text-[9px] font-black uppercase leading-tight tracking-[0.06em] text-slate-300"
-                  role="status"
-                >
-                  {fullscreenUnavailableMessage}
-                </span>
-              ) : null}
-            </div>
-          </header>
-
-          <section className="tp-bingo-landscape-content grid min-h-0 grid-cols-[2.7rem_minmax(0,1fr)_minmax(13rem,17rem)_2.7rem] items-center gap-2">
+        {/* No header row. It was the single largest app-owned band in landscape
+            (~49px of a 390px display) and the board is height-bound while the centre
+            column has ~240px of horizontal slack — so its contents now live in the
+            aside, which was already there and already had the width to absorb them. */}
+        <main className="tp-bingo-landscape-main relative z-[1] grid h-full w-full grid-rows-[minmax(0,1fr)]">
+          <section className="tp-bingo-landscape-content grid min-h-0 items-center">
             <button
               type="button"
               onClick={() => goToLandscapeBoard(-1)}
@@ -2108,7 +2164,7 @@ export function SportsBingoHome({
 
             <div className="flex h-full min-h-0 items-center justify-center">
               {landscapeCurrentCard ? (
-                <div className="tp-bingo-landscape-board-stage aspect-square h-full w-full">
+                <div className="tp-bingo-landscape-board-stage h-full w-full">
                   {renderLandscapeGrid(
                     landscapeCurrentCard.id,
                     landscapeCurrentCard.squares,
@@ -2151,19 +2207,122 @@ export function SportsBingoHome({
               )}
             </div>
 
-            <aside className="tp-bingo-landscape-aside grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-2">
+            <aside className="tp-bingo-landscape-aside grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-2">
+              <div className="tp-bingo-landscape-headline rounded-[18px] border border-sky-300/55 bg-slate-950/82 p-3 shadow-[0_0_24px_rgba(125,211,252,0.16)]">
+                <p className="truncate text-[10px] font-black uppercase leading-none tracking-[0.16em] text-sky-300">
+                  {landscapeEyebrow}
+                </p>
+                <h1 className="mt-1 truncate text-[16px] font-black leading-none text-slate-50 [font-family:'Bree_Serif','Nunito',serif]">
+                  {landscapeCurrentCard?.gameLabel ?? (isActiveLandscapeMode ? "No active boards" : "No scored boards")}
+                </h1>
+                <div className="tp-bingo-landscape-controls mt-2 flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => selectLandscapeBoardAt("active", normalizedLandscapeActiveIndex)}
+                    aria-label="Active boards"
+                    className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition ${
+                      isActiveLandscapeMode
+                        ? "border-sky-300/70 bg-sky-300/15 text-sky-200"
+                        : "border-white/10 bg-white/[0.04] text-slate-300"
+                    }`}
+                  >
+                    <ListChecks aria-hidden="true" className="h-3.5 w-3.5" />
+                    <span className="tp-bingo-landscape-control-label">Active</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => selectLandscapeBoardAt("scored", normalizedLandscapeScoredIndex)}
+                    aria-label="Scored boards"
+                    className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition ${
+                      !isActiveLandscapeMode
+                        ? "border-amber-300/70 bg-amber-300/15 text-amber-100"
+                        : "border-white/10 bg-white/[0.04] text-slate-300"
+                    }`}
+                  >
+                    <Trophy aria-hidden="true" className="h-3.5 w-3.5" />
+                    <span className="tp-bingo-landscape-control-label">Scored</span>
+                  </button>
+                  {landscapeCurrentCard ? (
+                    <span className="tp-bingo-landscape-status inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-[10px] font-black uppercase tracking-[0.1em] text-sky-200">
+                      <span className={`h-1.5 w-1.5 rounded-full ${currentCardIsLive && isActiveLandscapeMode ? "animate-pulse bg-sky-300" : "bg-slate-400"}`} />
+                      {isActiveLandscapeMode ? (currentCardIsLive ? "Live" : "Upcoming") : landscapeCurrentCard.status}
+                    </span>
+                  ) : null}
+                  {isFullscreenSupported ? (
+                    <div className="relative">
+                      {showFullscreenHint ? (
+                        <div className="pointer-events-none absolute bottom-[calc(100%+0.45rem)] right-0 z-10 w-max max-w-[15rem] rounded-full border border-sky-300/45 bg-slate-950/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-sky-100 shadow-[0_0_18px_rgba(125,211,252,0.18)]">
+                          Tap anywhere for full screen
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => void toggleLandscapeFullscreen()}
+                        className="tp-clean-button tp-bingo-landscape-fullscreen flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-sky-200/90 bg-sky-300 text-slate-950 shadow-[0_0_0_2px_rgba(14,165,233,0.22),0_0_24px_rgba(125,211,252,0.38)] transition hover:bg-sky-200 active:scale-95"
+                        aria-label={isLandscapeFullscreen ? "Exit fullscreen Bingo board" : "Enter fullscreen Bingo board"}
+                        title={isLandscapeFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                      >
+                        {isLandscapeFullscreen ? <Minimize2 aria-hidden="true" className="h-4 w-4" /> : <Maximize2 aria-hidden="true" className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  ) : showInstallCoachCard ? (
+                    <div className="tp-bingo-install-coach-card inline-flex items-center gap-1.5 rounded-full border border-sky-300/45 bg-slate-950/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-sky-100 shadow-[0_0_18px_rgba(125,211,252,0.18)]">
+                      <Share aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                      <span>Add to Home Screen for full screen</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowInstallCoachCard(false)}
+                        aria-label="Dismiss add to Home Screen tip"
+                        className="tp-clean-button flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-sky-200/80 hover:text-sky-100"
+                      >
+                        <X aria-hidden="true" className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : null}
+                  {canInstallOnDevice ? (
+                    <button
+                      type="button"
+                      onClick={promptInstall}
+                      className="tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-[10px] font-black uppercase tracking-[0.1em] text-sky-200 transition"
+                      aria-label="Install app"
+                      title="Install app"
+                    >
+                      <Download aria-hidden="true" className="h-3.5 w-3.5" />
+                      <span className="tp-bingo-landscape-control-label">Install</span>
+                    </button>
+                  ) : null}
+                </div>
+                {/* `fullscreenFeedback` is only ever set by a failed
+                    `toggleLandscapeFullscreen()` and is cleared on the next
+                    `fullscreenchange`, so it already means "a real attempt just
+                    failed." The old static "Fullscreen unavailable in this browser."
+                    pill rendered on every iPhone — where the API is simply absent and
+                    the button therefore never renders — spending landscape chrome to
+                    tell players about a control they cannot see. Dropped. */}
+                {fullscreenFeedback ? (
+                  <p
+                    className="mt-1.5 text-[9px] font-black uppercase leading-tight tracking-[0.06em] text-slate-300"
+                    role="status"
+                  >
+                    {fullscreenFeedback}
+                  </p>
+                ) : null}
+              </div>
               <div className="tp-bingo-landscape-panel min-h-0 rounded-[18px] border border-sky-300/35 bg-slate-950/82 p-3 shadow-[0_0_22px_rgba(125,211,252,0.1)]">
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-300">Board Progress</p>
                 {landscapeCurrentCard && landscapeProgress ? (
                   <div className="tp-bingo-landscape-progress mt-3 space-y-3">
-                    <BingoProgressRing squares={landscapeCurrentCard.squares} />
+                    <BingoProgressRing squares={landscapeCurrentCard.squares} size="sm" />
                     <div className="h-2 overflow-hidden rounded-full bg-white/[0.07]">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-300"
                         style={{ width: `${landscapeProgress.pctFilled}%` }}
                       />
                     </div>
-                    <p className="text-[11px] font-bold leading-snug text-slate-300">
+                    {/* Duplicates BingoProgressRing's own "N to bingo" subtitle; hidden on
+                        short landscape displays where the panel has to fit the Collect
+                        button too (see .tp-bingo-landscape-to-bingo in globals.css). */}
+                    <p className="tp-bingo-landscape-to-bingo text-[11px] font-bold leading-snug text-slate-300">
                       {landscapeProgress.toBingo === null
                         ? "Every line is blocked."
                         : landscapeProgress.toBingo === 0
