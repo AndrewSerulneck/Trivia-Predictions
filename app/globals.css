@@ -1801,10 +1801,18 @@ a[role="button"][class*="text-[11px]"] {
   to   { transform: scale(0.94) translateY(-12px); opacity: 0; }
 }
 
-/* Game content entrance after rules exit */
+/* Game content entrance after rules exit.
+   The `to` keyframe ends on `transform: none` because that is the honest end
+   state — but note that this alone does NOT clear the containing block: under
+   any forwards-filling mode (`both` / `forwards`) the browser retains the
+   animation's final *interpolated* value, and `none` interpolates as the
+   identity `matrix(1, 0, 0, 1, 0, 0)`, which still establishes a containing
+   block for `position: fixed` descendants. The load-bearing fix is the
+   `backwards` fill mode on `.animate-tp-surface-enter` below.
+   See docs/mobile-game-screen-blackout-plan.md. */
 @keyframes tp-surface-enter {
   from { transform: scale(0.96) translateY(10px); opacity: 0; }
-  to   { transform: scale(1) translateY(0); opacity: 1; }
+  to   { transform: none; opacity: 1; }
 }
 
 .animate-tp-surface-exit {
@@ -1813,9 +1821,25 @@ a[role="button"][class*="text-[11px]"] {
   will-change: transform, opacity;
 }
 
+/* This class stays on the game-surface wrapper for the life of the screen, so
+   nothing here may leave a permanent containing block for `position: fixed`
+   descendants (game modals, toasts, confetti overlays) — that would position
+   and clip them against this div instead of the viewport. Two separate things
+   are required, both verified in a real browser (Phase 4 of
+   docs/mobile-game-screen-blackout-plan.md); do not "tidy" either one back:
+
+   1. `backwards`, NOT `both`/`forwards`. A forwards-filling mode retains the
+      animation's final interpolated transform (the identity matrix) forever,
+      even when the `to` keyframe says `transform: none`. `backwards` drops the
+      fill once the animation ends, so the computed transform returns to `none`.
+      The visual end state is unchanged: the base style is already
+      `transform: none; opacity: 1`, exactly what the `to` keyframe holds.
+   2. `will-change: opacity` only. Naming `transform` (or `filter`/`perspective`)
+      in `will-change` creates a containing block by itself, independent of the
+      property's value — it would resurrect this bug even with (1) in place. */
 .animate-tp-surface-enter {
-  animation: tp-surface-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: transform, opacity;
+  animation: tp-surface-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  will-change: opacity;
 }
 
 /* iOS-style game card button — spring press physics */

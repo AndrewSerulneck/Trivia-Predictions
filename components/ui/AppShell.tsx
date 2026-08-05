@@ -61,10 +61,24 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
   const isGameScreen = !isAdmin && GAME_SCREEN_PATHS.some((p) => pathname?.startsWith(p));
   const showShellDecor = !isAdmin && !isFullscreen;
   const showLegalNotice = shouldShowLegalNotice(pathname);
+  // Only Category Blitz needs the hard 100svh clamp: its gameplay renders
+  // through a body-level fixed portal (CategoryBlitzPlayShell) that manages
+  // its own scroll/keyboard behavior independently of this shell. The other
+  // GAME_SCREEN_PATHS routes (trivia, bingo, pickem, fantasy, predictions,
+  // active-games, pending-challenges) render normal scrolling pages through
+  // PageShell/GameLandingExperience without lockViewport, so clamping their
+  // main to a fixed height with overflow:hidden traps their bottom content
+  // (e.g. tutorial next/back buttons) below the visible viewport with no way
+  // to scroll to it — see docs/mobile-game-screen-blackout-plan.md. Do not
+  // widen this clamp back to all GAME_SCREEN_PATHS without giving each of
+  // those routes its own locked-viewport frame first.
+  const isCategoryBlitzRoute = !isAdmin && Boolean(pathname?.startsWith("/category-blitz"));
   const mainClassName = isAdmin
     ? "h-full min-h-0"
-    : isGameScreen
+    : isCategoryBlitzRoute
     ? "h-full min-h-0 overflow-hidden p-0"
+    : isGameScreen
+    ? "flex-1 pb-24"
     : isFullscreen
     ? "min-h-0 p-0"
     : "flex-1 pb-24";
@@ -95,8 +109,10 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
       className={`tp-app-shell relative w-full ${
         isAdmin
           ? "fixed inset-0 h-screen w-screen max-w-full p-0 m-0 gap-0 overflow-hidden"
-          : isGameScreen
+          : isCategoryBlitzRoute
           ? "h-[100svh] min-h-[100svh] max-h-[100svh] overflow-hidden bg-slate-950"
+          : isGameScreen
+          ? "bg-slate-950"
           : isFullscreen
           ? ""
           : "mx-auto flex flex-col max-w-[720px] box-border overflow-x-hidden overflow-y-visible"

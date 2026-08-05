@@ -54,12 +54,67 @@ describe("Category Blitz mobile shell contract", () => {
   it("treats Category Blitz as a fullscreen game route with no shell footer padding", () => {
     const fullscreenPaths = sourceBetween(appShellSource, "const FULLSCREEN_PATHS = [", "];");
     const gameScreenPaths = sourceBetween(appShellSource, "const GAME_SCREEN_PATHS = [", "];");
-    const gameScreenMainBranch = sourceBetween(appShellSource, ": isGameScreen", ": isFullscreen");
+    const categoryBlitzMainBranch = sourceBetween(appShellSource, ": isCategoryBlitzRoute", ": isGameScreen");
 
     expect(fullscreenPaths).toContain("\"/category-blitz\"");
     expect(gameScreenPaths).toContain("\"/category-blitz\"");
-    expect(gameScreenMainBranch).toContain("\"h-full min-h-0 overflow-hidden p-0\"");
-    expect(gameScreenMainBranch).not.toContain("pb-24");
+    expect(categoryBlitzMainBranch).toContain("\"h-full min-h-0 overflow-hidden p-0\"");
+    expect(categoryBlitzMainBranch).not.toContain("pb-24");
+  });
+
+  it("does NOT clamp the other game routes (trivia, bingo, pickem, fantasy, predictions) to a fixed 100svh main", () => {
+    // Regression guard: commit 35115fc applied Category Blitz's h-[100svh]/overflow-hidden
+    // clamp to every GAME_SCREEN_PATHS route, not just /category-blitz. Those other routes
+    // render normal scrolling pages through PageShell without lockViewport, so the shared
+    // clamp trapped their bottom content (e.g. tutorial next/back buttons) below the visible
+    // viewport on iOS with no way to scroll to it — see docs/mobile-game-screen-blackout-plan.md.
+    // Only /category-blitz may get the h-full/overflow-hidden main branch and the
+    // h-[100svh]/max-h-[100svh] wrapper branch; every other GAME_SCREEN_PATHS route must fall
+    // back to a plain scrollable main (flex-1 pb-24) and an unclamped wrapper (bg-slate-950 only).
+    const gameScreenMainBranch = sourceBetween(appShellSource, ": isGameScreen\n    ? \"flex-1 pb-24\"", ": isFullscreen");
+    const gameScreenWrapperBranch = sourceBetween(
+      appShellSource,
+      ": isGameScreen\n          ? \"bg-slate-950\"",
+      ": isFullscreen"
+    );
+
+    expect(gameScreenMainBranch).not.toContain("overflow-hidden");
+    expect(gameScreenWrapperBranch).not.toContain("h-[100svh]");
+    expect(gameScreenWrapperBranch).not.toContain("max-h-[100svh]");
+  });
+
+  it("never leaves a persistent transform/will-change containing block on the game surface wrapper", () => {
+    // Regression guard (Phases 3-4 of docs/mobile-game-screen-blackout-plan.md):
+    // .animate-tp-surface-enter sits on GameLandingExperience's long-lived
+    // [data-venue-game-scroll] wrapper. If that element keeps a transform — or hints
+    // transform/filter/perspective in `will-change` — it becomes a permanent containing
+    // block for every `position: fixed` descendant (game modals, toasts, confetti
+    // overlays), which then position against this div and get clipped by its overflow
+    // instead of filling the viewport.
+    //
+    // TWO independent things are asserted, because Phase 4's browser run proved the
+    // first one alone is NOT sufficient (it measured computed
+    // `transform: matrix(1, 0, 0, 1, 0, 0)` and a fixed inset-0 child sized to the div
+    // rather than the viewport, with the `to`-keyframe fix already in place):
+    //   1. fill mode must be `backwards`, not `both`/`forwards`. A forwards-filling mode
+    //      retains the animation's final *interpolated* transform forever, and `none`
+    //      interpolates to the identity matrix — which still creates a containing block.
+    //   2. `will-change` must not name transform/filter/perspective — each creates a
+    //      containing block on its own, regardless of the property's actual value.
+    // End marker is "\n}" (not "}") because the from/to keyframe blocks are single-line
+    // and each carries its own closing brace mid-line.
+    const enterKeyframes = sourceBetween(globalsSource, "@keyframes tp-surface-enter {", "\n}");
+    const enterClass = sourceBetween(globalsSource, ".animate-tp-surface-enter {", "\n}");
+
+    expect(enterKeyframes).toContain("transform: none");
+    expect(enterKeyframes).not.toContain("scale(1) translateY(0)");
+
+    const enterAnimation = sourceBetween(enterClass, "animation:", ";");
+    expect(enterAnimation).toContain("backwards");
+    expect(enterAnimation).not.toMatch(/\b(both|forwards)\b/);
+
+    expect(enterClass).toContain("will-change: opacity");
+    expect(enterClass).not.toContain("transform");
   });
 
   it("keeps the legal notice out of fullscreen game routes but shows it everywhere else non-admin", () => {
