@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { AdminConsole } from "@/components/admin/AdminConsole";
-import { getAdminSectionBySlug } from "@/components/admin/adminSections";
+import { getAdminSectionBySlug } from "@/components/admin/adminSectionMeta";
 import { PageShell } from "@/components/ui/PageShell";
 import { listVenues } from "@/lib/venues";
 

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { ADMIN_SECTION_OPTIONS, type AdminSection } from "@/components/admin/adminSections";
+import { ADMIN_SECTION_OPTIONS, type AdminSection } from "@/components/admin/adminSectionMeta";
+import { ADMIN_CONSOLE_SECTION_RENDERERS } from "@/components/admin/adminSectionComponents";
 import { supabase } from "@/lib/supabase";
 import type { Venue } from "@/types";
 
@@ -97,7 +98,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   };
 
   const shouldRenderSectionContent = state === "idle" && authInitialized && accessToken;
-  const ActiveComponent = ADMIN_SECTION_OPTIONS.find((opt) => opt.id === activeSection)?.component;
+  const renderActiveSection = ADMIN_CONSOLE_SECTION_RENDERERS[activeSection];
 
   return (
     <div className="mx-auto w-full max-w-5xl p-3 [color-scheme:light]">
@@ -125,10 +126,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
             ))}
           </nav>
 
-          {shouldRenderSectionContent && ActiveComponent ? (
-            <div className="mt-4">
-              <ActiveComponent venues={availableVenues} />
-            </div>
+          {shouldRenderSectionContent && renderActiveSection ? (
+            <div className="mt-4">{renderActiveSection({ venues: availableVenues })}</div>
           ) : null}
         </div>
       ) : (

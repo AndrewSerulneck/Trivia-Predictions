@@ -565,6 +565,11 @@ async function handleRemoveDiscount(venueId: string): Promise<NextResponse> {
  * swapping a Stripe Price onto their subscription item. NOT a discount (see
  * lib/billingCustomPrice.ts); it is recorded in the same audit table under
  * discount_type 'custom_price' so all money-given-away lives in one trail.
+ *
+ * Accepts exactly one of stripePriceId (pasted Price id, the escape hatch for
+ * legacy/odd rates) or amountDollars (typed whole-dollar rate — reuses the same
+ * PostBody field grant-manual uses for the list rate; band/integer validation
+ * lives in lib/billingCustomPrice.ts's resolveMonthlyPriceForAmount, not here).
  */
 async function handleSetCustomPrice(
   venueId: string,
@@ -576,8 +581,26 @@ async function handleSetCustomPrice(
   }
 
   const priceId = (body.stripePriceId ?? "").trim();
-  if (!priceId) {
-    return NextResponse.json({ ok: false, error: "A Stripe price id is required." }, { status: 400 });
+  // JSON gives amountDollars as number | string | null depending on how the
+  // caller built the body — coerce the same way handleApplyDiscount coerces
+  // percentOff, rather than trusting the declared PostBody type.
+  const hasAmountDollars = body.amountDollars !== undefined && body.amountDollars !== null && body.amountDollars !== ("" as unknown);
+  const amountDollars = hasAmountDollars ? Number(body.amountDollars) : NaN;
+
+  if (priceId && hasAmountDollars) {
+    return NextResponse.json(
+      { ok: false, error: "Provide either a price id or a dollar amount, not both." },
+      { status: 400 }
+    );
+  }
+  if (!priceId && !hasAmountDollars) {
+    return NextResponse.json(
+      { ok: false, error: "A Stripe price id or a dollar amount is required." },
+      { status: 400 }
+    );
+  }
+  if (hasAmountDollars && !Number.isFinite(amountDollars)) {
+    return NextResponse.json({ ok: false, error: "That dollar amount isn't a number." }, { status: 400 });
   }
 
   const { data: row, error: rowError } = await supabaseAdmin
@@ -590,7 +613,7 @@ async function handleSetCustomPrice(
     return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
   }
 
-  const result = await setCustomPrice(row, priceId);
+  const result = await setCustomPrice(row, priceId ? { priceId } : { amountDollars });
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
   }

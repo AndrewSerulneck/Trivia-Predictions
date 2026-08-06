@@ -1043,6 +1043,14 @@ textarea {
   line-height: 1.25;
 }
 
+/* AdminSelect renders a <button>, so it misses the input/select/textarea rule
+   above and instead inherits the global button rule's white-on-white border.
+   Match the input border so the dropdown trigger reads as a bordered field. */
+.admin-select-bordered {
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+}
+
 /* Owner page inputs — force dark background & white text during browser autofill.
    Browsers use !important on autofill styles, so we must use the box-shadow inset
    trick to override the background, and -webkit-text-fill-color for the text. */
@@ -2259,4 +2267,27 @@ a[role="button"][class*="text-[11px]"] {
 .tp-backface-hidden {
   -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
+}
+
+/* ===== Radius dial (admin venue activation, geofence editor Phase 2) =====
+   The thumb/fill position is a continuous drag value, so it cannot be a
+   Tailwind class — it rides a CSS custom property (`--tp-dial-pct`, 0-100)
+   written imperatively by RadiusDial on pointer move, the same technique
+   `--tp-vh` / `--cbz-visible-*` already use. `touch-action: none` is what
+   stops iOS from scrolling the page instead of dragging the dial. */
+.tp-dial-track {
+  --tp-dial-pct: 0;
+  touch-action: none;
+  -webkit-user-select: none;
+          user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tp-dial-fill {
+  width: calc(var(--tp-dial-pct, 0) * 1%);
+}
+
+.tp-dial-thumb {
+  left: calc(var(--tp-dial-pct, 0) * 1%);
+  transform: translate(-50%, -50%);
 }

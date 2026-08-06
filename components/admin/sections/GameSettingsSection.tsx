@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { adminField, adminLabel } from "@/lib/adminStyles";
+import { AdminSelect } from "@/components/admin/AdminSelect";
+import { adminFieldAccent, adminLabel } from "@/lib/adminStyles";
 import type { Venue } from "@/types";
 
 type NFLPickEmScoringMode = "standard" | "spread";
@@ -148,17 +149,16 @@ export function GameSettingsSection({ venues }: GameSettingsSectionProps) {
         <div className="grid gap-4 md:grid-cols-[minmax(0,18rem)_1fr] md:items-end">
           <div>
             <label className={adminLabel}>Venue</label>
-            <select
+            <AdminSelect
               value={selectedVenueId}
-              onChange={(event) => setSelectedVenueId(event.target.value)}
-              className={adminField}
-            >
-              {venues.map((venue) => (
-                <option key={venue.id} value={venue.id}>
-                  {venue.name}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedVenueId}
+              ariaLabel="Venue"
+              className={adminFieldAccent}
+              options={venues.map((venue) => ({
+                value: venue.id,
+                label: venue.name,
+              }))}
+            />
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -204,7 +204,7 @@ export function GameSettingsSection({ venues }: GameSettingsSectionProps) {
           </div>
         ) : (
           <>
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <div className="mt-5 grid grid-cols-2 gap-3">
               {OPTIONS.map((option) => {
                 const selected = draftMode === option.value;
                 return (

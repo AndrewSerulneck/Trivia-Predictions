@@ -6,8 +6,20 @@ set -euo pipefail
 #
 # Executes a numbered set of phase docs, each as an independent, unattended
 # `claude -p` invocation, with automatic retry-on-failure, build/test
-# verification after every phase, cross-phase memory via an on-disk run log,
-# and a final strict code review pass.
+# verification after every phase, and cross-phase memory via an on-disk run log.
+#
+# After the last phase it closes out the session in three steps:
+#   1. A strict code review of the whole accumulated diff.
+#   2. If anything was found:
+#      a. A phased REMEDIATION PLAN is written to
+#         docs/<slug>-remediation-plan.md, with a model and effort level per
+#         phase. The plan is a kept artifact — it records what was wrong and
+#         what was decided, including findings judged false positives.
+#      b. That plan is then EXECUTED, one R-phase at a time, with the
+#         zero-token build/test gate re-run after each one. The run does not
+#         end with known-broken code, and the fixes land before verification.
+#   3. Local build/test verification, then the repo's /verify skill for a
+#      real-browser pass — run against the FIXED tree, not the broken one.
 #
 # To use for a NEW plan:
 #   1. Write docs/<slug>-plan.md (global constraints / decisions all phases
@@ -281,30 +293,174 @@ Otherwise, output a numbered, actionable checklist of necessary fixes. Do NOT at
 EOF
 )
 
-# 1. Cheap/Fast analysis pass using Sonnet (capture its reply — separate
-#    `claude -p` invocations do NOT share context, so the next step needs
-#    this text handed to it explicitly).
-REVIEW_FINDINGS=$(run_claude_step "sonnet" "high" "$REVIEW_PROMPT")
+# 1. Analysis pass (capture its reply — separate `claude -p` invocations do
+#    NOT share context, so the next step needs this text handed to it
+#    explicitly). Model is chosen by pick_review_model based on how large and
+#    how sensitive the accumulated diff is.
+REVIEW_FINDINGS=$(run_claude_step "$REVIEW_MODEL" "high" "$REVIEW_PROMPT")
+
+REMEDIATION_PLAN_DOC="docs/${PLAN_SLUG}-remediation-plan.md"
 
 if [[ "$REVIEW_FINDINGS" == "NO_ISSUES_FOUND" ]]; then
   echo "--------------------------------------------------"
-  echo "✅ No issues found in review. Skipping fix pass."
+  echo "✅ No issues found in review. Skipping remediation."
   echo "--------------------------------------------------"
 else
+  # ============================================================================
+  # 2a. REMEDIATION PLAN
+  # ============================================================================
+  # The findings are first turned into a written, phased plan on disk — same
+  # shape as the plan this script just executed, with a model and effort level
+  # per phase. The plan is an artifact you keep: it records what was wrong and
+  # what was decided, including any finding judged a false positive. Step 2b
+  # then actually executes it, so the run does not end with known-broken code.
   echo "--------------------------------------------------"
-  echo "🛠️ Executing Review Instructions (Opus for Complex Fixes)..."
+  echo "📝 Writing Remediation Plan → $REMEDIATION_PLAN_DOC"
   echo "--------------------------------------------------"
 
-  # 2. High-reasoning execution pass using Opus, given the findings directly.
-  FIX_PROMPT=$(cat << EOF
-The following code review findings were produced against the current git diff.
-Execute the listed fixes concisely, modifying files as needed.
+  PLAN_PROMPT=$(cat << EOF
+A strict code review of the current git diff produced the findings below.
 
+Write a phased remediation plan to $REMEDIATION_PLAN_DOC that addresses ALL of them.
+
+Requirements for the plan:
+- Group the findings into coherent phases ordered so earlier phases do not
+  invalidate later ones. Prefer few, substantial phases over many trivial ones.
+- Number the phases R0, R1, R2, ... and give each a "### Phase R<N>" heading.
+- Give every phase an explicit Claude model (sonnet or opus) and effort level
+  (low, medium, high). Justify each choice in one line: opus/high for
+  architectural, security, or judgment-heavy work; sonnet for mechanical or
+  pattern-following work.
+- For each phase state: the findings it closes, the files involved, and how to
+  verify it.
+- Call out explicitly any finding you judge to be a false positive or not worth
+  fixing, and say why, rather than silently padding the plan with it. A phase
+  may legitimately be "no code change needed" if that is the honest answer.
+- Follow the same conventions as the plan that was just executed. Read
+  $RUN_LOG first for what the phases actually discovered as they ran.
+- Note anything only a human on a real device can verify, and route it to a
+  checklist rather than pretending an agent can close it.
+
+Write ONLY the plan document in this step. Do NOT fix anything yet — the fixes
+are executed as a separate step immediately after.
+
+FINDINGS:
 $REVIEW_FINDINGS
 EOF
 )
-  run_claude_step "opus" "high" "$FIX_PROMPT" > /dev/null
+  run_claude_step "opus" "high" "$PLAN_PROMPT" > /dev/null
+
+  # ============================================================================
+  # 2b. EXECUTE THE REMEDIATION PLAN
+  # ============================================================================
+  # Work the plan phase by phase, in order, re-running the zero-token gate
+  # after each one so a broken fix is caught next to the change that caused it
+  # rather than at the end of the whole batch.
+  echo "--------------------------------------------------"
+  echo "🛠️  Executing Remediation Plan..."
+  echo "--------------------------------------------------"
+
+  # Pull the R-phase numbers straight out of the plan the previous step wrote,
+  # so the number of fix phases is whatever the plan actually called for.
+  REMEDIATION_PHASES=()
+  if [[ -f "$REMEDIATION_PLAN_DOC" ]]; then
+    while IFS= read -r rnum; do
+      [[ -n "$rnum" ]] && REMEDIATION_PHASES+=("$rnum")
+    done < <(grep -oE '^#{2,4}[[:space:]]+Phase[[:space:]]+R[0-9]+' "$REMEDIATION_PLAN_DOC" \
+             | grep -oE 'R[0-9]+' | sed 's/^R//' | awk '!seen[$0]++')
+  fi
+
+  if [[ ${#REMEDIATION_PHASES[@]} -eq 0 ]]; then
+    # No parseable R-phases (unexpected plan format). Fall back to executing
+    # the plan in a single pass rather than silently skipping the fixes.
+    echo "⚠️  No 'Phase R<N>' headings found in $REMEDIATION_PLAN_DOC."
+    echo "    Falling back to a single-pass execution of the whole plan."
+    FALLBACK_PROMPT=$(cat << EOF
+Read $REMEDIATION_PLAN_DOC and implement ALL of it, in the order it specifies.
+
+Then append a section headed "## Remediation" to $RUN_LOG (under 200 words)
+covering what you changed, anything you deliberately did not change and why,
+and anything left for a human to verify.
+
+If the plan says a finding needs no code change, do not invent one. Be concise.
+EOF
+)
+    run_claude_step "opus" "high" "$FALLBACK_PROMPT" > /dev/null
+    verify_or_fix
+  else
+    echo "    Plan defines ${#REMEDIATION_PHASES[@]} remediation phase(s): ${REMEDIATION_PHASES[*]}"
+    for rnum in "${REMEDIATION_PHASES[@]}"; do
+      echo "===================================================="
+      echo "REMEDIATION PHASE R$rnum — $REMEDIATION_PLAN_DOC"
+      echo "===================================================="
+
+      R_PROMPT=$(cat << EOF
+Read $RUN_LOG first — it records what earlier phases discovered, and a note
+there supersedes anything that contradicts it elsewhere.
+
+Then read $REMEDIATION_PLAN_DOC and implement ONLY its Phase R$rnum. Leave the
+other remediation phases alone; they are handled by their own steps.
+
+Use the Claude model and effort level that Phase R$rnum specifies for itself if
+they differ from this session — note the mismatch in the run log rather than
+silently proceeding at the wrong altitude on judgment-heavy work.
+
+Before finishing, append a section headed "## Remediation Phase R$rnum" to
+$RUN_LOG (under 150 words) covering: what you changed, any deviation from the
+plan and why, and anything a later phase or a human must still do.
+
+If Phase R$rnum concludes no code change is needed, say so and change nothing.
+Be concise.
+EOF
+)
+      # Opus for the fix passes: these are corrections to code that already
+      # passed one review, so the cheap failure mode is a plausible-looking
+      # patch that misses the actual defect.
+      run_claude_step "opus" "high" "$R_PROMPT" > /dev/null
+      verify_or_fix
+    done
+  fi
+
+  echo "--------------------------------------------------"
+  echo "✅ Remediation plan executed. Plan kept at $REMEDIATION_PLAN_DOC."
+  echo "--------------------------------------------------"
 fi
 
-# 3. Verify that Opus's fixes didn't break tests/builds
+# ==============================================================================
+# 3. FINAL VERIFICATION
+# ==============================================================================
+# Zero-token gate first, then the /verify skill for a real-browser pass.
 verify_or_fix
+
+echo "--------------------------------------------------"
+echo "🔬 Running the /verify skill (real-browser verification)..."
+echo "--------------------------------------------------"
+
+# NOTE: the /verify skill covers VENUE-SCOPED GAME PAGES (Category Blitz,
+# Trivia, Pickem, Bingo, Fantasy, Predictions) — seeding throwaway data,
+# getting past the cookie auth gate in proxy.ts, and driving the UI with
+# Playwright. If a plan touches none of those routes, the skill correctly
+# reports there is nothing in its scope to verify; that is a valid outcome,
+# not a failure.
+VERIFY_PROMPT=$(cat << EOF
+Read $RUN_LOG for what changed during this run, then run the /verify skill against the affected surfaces.
+
+Verify the real user-facing behavior the changes in the current git diff were supposed to produce — not just that the app builds.
+
+Report honestly and specifically:
+- what you verified, and the evidence for it
+- what FAILED, with the actual output
+- what you could NOT verify and why
+
+Do not report success on the strength of a build passing. If the changed surfaces fall outside the scope of that skill (it covers venue-scoped game pages), say so plainly instead of forcing an unrelated check. Headless browsers cannot verify browser chrome, safe-area insets, or keyboard behavior — never report those as verified from a headless run.
+EOF
+)
+run_claude_step "sonnet" "high" "$VERIFY_PROMPT"
+
+echo "=================================================="
+echo "🏁 Run complete."
+echo "   Run log:          $RUN_LOG"
+if [[ "$REVIEW_FINDINGS" != "NO_ISSUES_FOUND" ]]; then
+  echo "   Remediation plan: $REMEDIATION_PLAN_DOC (executed)"
+fi
+echo "=================================================="

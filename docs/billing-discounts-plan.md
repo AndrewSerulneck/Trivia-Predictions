@@ -150,7 +150,17 @@ the subscription item (`items: [{ id, price }]`, with an explicit
 surface reports the real rate. Decide deliberately whether the change takes
 effect immediately with proration or at the next period.
 
-> **Model/effort: Opus 5, medium.** Proration is real money and the wrong choice
+**As of 2026-08-06:** This phase is now superseded by `docs/billing-dollar-rate-plan.md`,
+which implements the same feature with a dollars-first UI (admin types a whole
+dollar amount rather than pasting a Stripe Price ID). That plan's Phases 1–7 are
+complete and verified end-to-end in real Stripe test mode. Use `setCustomPrice`
+from `lib/billingCustomPrice.ts` (the helper that originated here) with either
+`{ amountDollars }` (new, primary path via dollars-first UI in `BillingSection.tsx`)
+or `{ priceId }` (escape hatch for non-round legacy rates). Do not re-implement
+this phase; the implementation is already live.
+
+> **Model/effort: Opus 5, medium.** (Historical — implementation complete in
+> the newer dollar-rate track.) Proration is real money and the wrong choice
 > silently over- or under-charges. Independent of Phases 2–7 — could be deferred
 > entirely if negotiated rates are rare.
 

@@ -306,8 +306,65 @@ describe("POST /api/admin/billing — set-custom-price", () => {
     setRow({ id: "sub-1", billing_method: "stripe", stripe_subscription_id: "sub_stripe_1", amount_cents: 10000, current_period_end: null });
   });
 
-  it("rejects a missing price id before touching the helper", async () => {
+  it("rejects a missing price id and missing amountDollars before touching the helper", async () => {
     const response = await POST(postRequest({ action: "set-custom-price", venueId: "venue-1" }));
+
+    expect(response.status).toBe(400);
+    expect(mocks.setCustomPrice).not.toHaveBeenCalled();
+  });
+
+  it("rejects when both stripePriceId and amountDollars are supplied", async () => {
+    const response = await POST(
+      postRequest({ action: "set-custom-price", venueId: "venue-1", stripePriceId: "price_new", amountDollars: 75 })
+    );
+    const body = (await response.json()) as { ok: boolean; error: string };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/not both/);
+    expect(mocks.setCustomPrice).not.toHaveBeenCalled();
+  });
+
+  it("sets a custom price via amountDollars and records the audit grant", async () => {
+    mocks.setCustomPrice.mockResolvedValue({
+      ok: true,
+      priceId: "price_minted",
+      amountCents: 7500,
+      effective: "next_cycle",
+    });
+
+    const response = await POST(
+      postRequest({ action: "set-custom-price", venueId: "venue-1", amountDollars: 75, reason: "negotiated" })
+    );
+    const body = (await response.json()) as { ok: boolean; amountCents: number };
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({ ok: true, amountCents: 7500 });
+    expect(mocks.setCustomPrice).toHaveBeenCalledWith(state.row, { amountDollars: 75 });
+    expect(mocks.insertGrant).toHaveBeenCalledWith(
+      expect.objectContaining({ discount_type: "custom_price", custom_price_cents: 7500, reason: "negotiated" })
+    );
+  });
+
+  it("coerces a stringly-typed amountDollars from JSON before calling the helper", async () => {
+    mocks.setCustomPrice.mockResolvedValue({
+      ok: true,
+      priceId: "price_minted",
+      amountCents: 8000,
+      effective: "next_cycle",
+    });
+
+    const response = await POST(
+      postRequest({ action: "set-custom-price", venueId: "venue-1", amountDollars: "80" as unknown as number })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.setCustomPrice).toHaveBeenCalledWith(state.row, { amountDollars: 80 });
+  });
+
+  it("rejects a non-numeric amountDollars before calling the helper", async () => {
+    const response = await POST(
+      postRequest({ action: "set-custom-price", venueId: "venue-1", amountDollars: "not-a-number" as unknown as number })
+    );
 
     expect(response.status).toBe(400);
     expect(mocks.setCustomPrice).not.toHaveBeenCalled();
@@ -333,7 +390,7 @@ describe("POST /api/admin/billing — set-custom-price", () => {
 
     expect(response.status).toBe(200);
     expect(body).toMatchObject({ ok: true, amountCents: 7500 });
-    expect(mocks.setCustomPrice).toHaveBeenCalledWith(state.row, "price_new");
+    expect(mocks.setCustomPrice).toHaveBeenCalledWith(state.row, { priceId: "price_new" });
     expect(mocks.insertGrant).toHaveBeenCalledWith(
       expect.objectContaining({
         venue_id: "venue-1",

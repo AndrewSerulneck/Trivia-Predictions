@@ -3,51 +3,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Venue } from "@/types";
 import { TH, TD, TR } from "@/components/admin/AdminShell";
-import { VenueMapPicker } from "@/components/admin/VenueMapPicker";
+import { GeofenceEditor } from "@/components/admin/GeofenceEditor";
+import { DeleteVenueModal, useVenueDeletion } from "@/components/admin/DeleteVenueModal";
+import { useAddressLookup, type AddressPrediction } from "@/components/admin/useAddressLookup";
 import { adminField, adminLabel, adminFieldReadOnly } from "@/lib/adminStyles";
-
-type AddressPrediction = {
-  placeId: string;
-  mainText: string;
-  secondaryText: string;
-  fullText: string;
-};
-
-type AddressDetails = {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  latitude: number;
-  longitude: number;
-  placeId: string;
-};
+import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
+import {
+  BLANK_VENUE_FORM,
+  buildVenuePayload,
+  isVenueAddressIncomplete,
+  isValidHttpUrl,
+  validateVenueForm,
+  venueToForm,
+  type VenueFormState,
+} from "@/lib/adminVenueForm";
 
 type SortKey = "name" | "street" | "city" | "state" | "zipCode";
-
-type VenueFormState = {
-  name: string;
-  displayName: string;
-  logoText: string;
-  iconEmoji: string;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  county: string;
-  region: string;
-  radius: string;
-  latitude: string;
-  longitude: string;
-  placeId: string;
-  screenEnabled: boolean;
-  screenBrandImageUrl: string;
-  screenBrandPrimary: string;
-  screenBrandSecondary: string;
-  screenSponsorRotationEnabled: boolean;
-};
 
 type VenueScreenSponsor = {
   id: string;
@@ -73,32 +44,6 @@ type SponsorFormState = {
   endsAt: string;
 };
 
-const LOOKUP_INACTIVITY_MS = 5 * 60 * 1000;
-const PREDICT_DEBOUNCE_MS = 300;
-
-const BLANK_FORM: VenueFormState = {
-  name: "",
-  displayName: "",
-  logoText: "",
-  iconEmoji: "",
-  street: "",
-  city: "",
-  state: "",
-  zipCode: "",
-  country: "",
-  county: "",
-  region: "",
-  radius: "150",
-  latitude: "",
-  longitude: "",
-  placeId: "",
-  screenEnabled: true,
-  screenBrandImageUrl: "",
-  screenBrandPrimary: "",
-  screenBrandSecondary: "",
-  screenSponsorRotationEnabled: false,
-};
-
 const BLANK_SPONSOR_FORM: SponsorFormState = {
   id: null,
   title: "",
@@ -109,79 +54,6 @@ const BLANK_SPONSOR_FORM: SponsorFormState = {
   startsAt: "",
   endsAt: "",
 };
-
-function venueToForm(v: Venue): VenueFormState {
-  return {
-    name: v.name,
-    displayName: v.displayName ?? "",
-    logoText: v.logoText ?? "",
-    iconEmoji: v.iconEmoji ?? "",
-    street: v.street ?? v.address ?? "",
-    city: v.city ?? "",
-    state: v.state ?? "",
-    zipCode: v.zipCode ?? "",
-    country: v.country ?? "",
-    county: v.county ?? "",
-    region: v.region ?? "",
-    radius: String(v.radius),
-    latitude: String(v.latitude),
-    longitude: String(v.longitude),
-    placeId: v.placeId ?? "",
-    screenEnabled: v.screenEnabled ?? true,
-    screenBrandImageUrl: v.screenBrandImageUrl ?? "",
-    screenBrandPrimary: v.screenBrandPrimary ?? "",
-    screenBrandSecondary: v.screenBrandSecondary ?? "",
-    screenSponsorRotationEnabled: v.screenSponsorRotationEnabled ?? false,
-  };
-}
-
-function formatAddressDisplay(venue: Venue): string {
-  const street = venue.street ?? venue.address ?? "";
-  const cityStateZip = [venue.city ?? "", [venue.state ?? "", venue.zipCode ?? ""].filter(Boolean).join(" ")].filter(Boolean).join(", ");
-  return [street, cityStateZip].filter(Boolean).join(", ");
-}
-
-function buildAddressLabel(form: VenueFormState): string {
-  const cityStateZip = [form.city.trim(), [form.state.trim(), form.zipCode.trim()].filter(Boolean).join(" ")].filter(Boolean).join(", ");
-  return [form.street.trim(), cityStateZip, form.country.trim()].filter(Boolean).join(", ");
-}
-
-function isVenueAddressIncomplete(venue: Venue): boolean {
-  const street = String(venue.street ?? venue.address ?? "").trim();
-  const city = String(venue.city ?? "").trim();
-  const state = String(venue.state ?? "").trim();
-  const zipCode = String(venue.zipCode ?? "").trim();
-  const lat = Number(venue.latitude);
-  const lng = Number(venue.longitude);
-  const hasValidCoords = Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-  return !street || !city || !state || !zipCode || !hasValidCoords;
-}
-
-function createSessionToken(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-    const bytes = new Uint8Array(18);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
-  }
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID().replace(/-/g, "").slice(0, 36);
-  }
-  return Math.random().toString(36).slice(2).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24);
-}
-
-function isValidHttpUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-function isValidHexColor(value: string): boolean {
-  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value);
-}
 
 function toLocalDateTimeInput(iso: string | undefined): string {
   if (!iso) return "";
@@ -548,16 +420,13 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
   const label = adminLabel;
   const readOnlyField = adminFieldReadOnly;
 
-  const [lookupQuery, setLookupQuery] = useState("");
-  const [predictions, setPredictions] = useState<AddressPrediction[]>([]);
-  const [lookupOpen, setLookupOpen] = useState(false);
-  const [lookupLoading, setLookupLoading] = useState(false);
-  const [lookupError, setLookupError] = useState("");
   const [manualMode, setManualMode] = useState(false);
+  // Pin provenance drives the editor's label ("Pin set from your phone", etc.).
+  // The desktop form never tracked this before Phase 4 — an existing venue's
+  // stored coordinates are "on file", a blank create form has no pin yet.
+  const [pinSource, setPinSource] = useState<PinSource>(mode === "edit" ? "existing" : "none");
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sessionTokenRef = useRef<string>("");
-  const lastSessionActivityRef = useRef<number>(0);
+  const lookup = useAddressLookup();
   const lookupInputRef = useRef<HTMLInputElement | null>(null);
 
   const latValue = Number.parseFloat(form.latitude);
@@ -565,18 +434,22 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
   const hasValidCoordinates = Number.isFinite(latValue) && Number.isFinite(lngValue);
   const radiusValue = Number.parseInt(form.radius, 10) || 150;
 
-  function ensureLookupSessionToken(): string {
-    const now = Date.now();
-    if (!sessionTokenRef.current || now - lastSessionActivityRef.current > LOOKUP_INACTIVITY_MS) {
-      sessionTokenRef.current = createSessionToken();
-    }
-    lastSessionActivityRef.current = now;
-    return sessionTokenRef.current;
-  }
-
-  function resetLookupSession() {
-    sessionTokenRef.current = "";
-    lastSessionActivityRef.current = 0;
+  /**
+   * The single mutation path for pin + radius. GeofenceEditor owns no form
+   * state, so a pin drag, GPS fix, dial move or typed coordinate all land here
+   * as one value. `placeId` is cleared for the three sources that mean "the pin
+   * no longer belongs to the looked-up Place" — the same rule the separate
+   * lat/long inputs and map onChange each enforced inline before Phase 4.
+   */
+  function handleGeofenceChange(value: GeofenceEditorValue) {
+    const detached = value.source === "gps" || value.source === "map" || value.source === "manual";
+    onChange({
+      latitude: String(value.lat),
+      longitude: String(value.lng),
+      radius: String(value.radius),
+      ...(detached ? { placeId: "" } : {}),
+    });
+    setPinSource(value.source);
   }
 
   function clearAddressFields() {
@@ -590,62 +463,13 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
       longitude: "",
       placeId: "",
     });
-    setLookupQuery("");
-    setPredictions([]);
-    setLookupOpen(false);
-    setLookupError("");
-    resetLookupSession();
-  }
-
-  async function loadPredictions(query: string) {
-    const trimmed = query.trim();
-    if (trimmed.length < 3) {
-      setPredictions([]);
-      setLookupOpen(false);
-      return;
-    }
-
-    setLookupLoading(true);
-    setLookupError("");
-    try {
-      const sessionToken = ensureLookupSessionToken();
-      const response = await fetch("/api/geolocation/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed, sessionToken }),
-      });
-      const payload = (await response.json()) as { ok: boolean; predictions?: AddressPrediction[]; error?: string };
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.error ?? "Failed to load address predictions.");
-      }
-
-      setPredictions(payload.predictions ?? []);
-      setLookupOpen((payload.predictions ?? []).length > 0);
-    } catch (lookupErr) {
-      setPredictions([]);
-      setLookupOpen(false);
-      setLookupError(lookupErr instanceof Error ? lookupErr.message : "Address lookup is unavailable right now.");
-    } finally {
-      setLookupLoading(false);
-    }
+    lookup.reset();
+    setPinSource("none");
   }
 
   async function selectPrediction(prediction: AddressPrediction) {
-    setLookupLoading(true);
-    setLookupError("");
-    try {
-      const sessionToken = ensureLookupSessionToken();
-      const response = await fetch("/api/geolocation/details", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ placeId: prediction.placeId, sessionToken }),
-      });
-      const payload = (await response.json()) as { ok: boolean; details?: AddressDetails; error?: string };
-      if (!response.ok || !payload.ok || !payload.details) {
-        throw new Error(payload.error ?? "Failed to resolve address details.");
-      }
-
-      const details = payload.details;
+    const details = await lookup.select(prediction);
+    if (details) {
       onChange({
         street: details.street,
         city: details.city,
@@ -656,37 +480,10 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
         longitude: String(details.longitude),
         placeId: details.placeId,
       });
-      setLookupQuery(prediction.fullText || [prediction.mainText, prediction.secondaryText].filter(Boolean).join(", "));
-      setPredictions([]);
-      setLookupOpen(false);
+      setPinSource("lookup");
       setManualMode(false);
-      lastSessionActivityRef.current = Date.now();
-    } catch (lookupErr) {
-      setLookupError(lookupErr instanceof Error ? lookupErr.message : "Failed to resolve address.");
-    } finally {
-      setLookupLoading(false);
     }
   }
-
-  function handleLookupInput(raw: string) {
-    setLookupQuery(raw);
-    setLookupError("");
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (raw.trim().length < 3) {
-      setPredictions([]);
-      setLookupOpen(false);
-      return;
-    }
-    debounceRef.current = setTimeout(() => {
-      void loadPredictions(raw);
-    }, PREDICT_DEBOUNCE_MS);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     if (mode === "create") {
@@ -722,36 +519,24 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
           <label className={label}>Display Name</label>
           <input className={field} value={form.displayName} onChange={(event) => onChange({ displayName: event.target.value })} />
         </div>
-        <div>
-          <label className={label}>Logo Text</label>
-          <input className={field} value={form.logoText} onChange={(event) => onChange({ logoText: event.target.value })} />
-        </div>
-        <div>
-          <label className={label}>Icon Emoji</label>
-          <input className={field} value={form.iconEmoji} onChange={(event) => onChange({ iconEmoji: event.target.value })} />
-        </div>
-
         <div className="md:col-span-2">
           <label className={label}>Address Lookup</label>
           <div className="relative">
             <input
               ref={lookupInputRef}
-              value={lookupQuery}
-              onChange={(event) => handleLookupInput(event.target.value)}
-              onFocus={() => {
-                ensureLookupSessionToken();
-                if (predictions.length > 0) setLookupOpen(true);
-              }}
+              value={lookup.query}
+              onChange={(event) => lookup.handleInput(event.target.value)}
+              onFocus={lookup.openIfPredictions}
               onBlur={() => {
-                setTimeout(() => setLookupOpen(false), 120);
+                setTimeout(lookup.close, 120);
               }}
               placeholder={mode === "edit" ? "Change address?" : "Start typing an address (US-biased)"}
               className={field}
             />
-            {lookupLoading ? <span className="absolute right-3 top-2.5 text-xs text-slate-400">…</span> : null}
-            {lookupOpen && predictions.length > 0 ? (
+            {lookup.loading ? <span className="absolute right-3 top-2.5 text-xs text-slate-400">…</span> : null}
+            {lookup.open && lookup.predictions.length > 0 ? (
               <ul className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-                {predictions.map((prediction) => (
+                {lookup.predictions.map((prediction) => (
                   <li key={prediction.placeId}>
                     <button
                       type="button"
@@ -781,14 +566,14 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
               type="button"
               onClick={() => {
                 setManualMode((prev) => !prev);
-                setLookupError("");
+                lookup.clearError();
               }}
               className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
             >
               {manualMode ? "Use Lookup Mode" : "Can't find your address? Enter manually"}
             </button>
           </div>
-          {lookupError ? <p className="mt-1 text-xs text-amber-700">{lookupError}</p> : null}
+          {lookup.error ? <p className="mt-1 text-xs text-amber-700">{lookup.error}</p> : null}
         </div>
 
         <div>
@@ -837,46 +622,17 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
             onChange={(event) => onChange({ country: event.target.value })}
           />
         </div>
-        <div>
-          <label className={label}>Geofence Radius (m) *</label>
-          <input
-            type="number"
-            min={25}
-            max={2000}
-            className={field}
-            value={form.radius}
-            onChange={(event) => onChange({ radius: event.target.value })}
-          />
-          <p className="mt-1 text-xs text-slate-500">Distance from the venue pin a player must be within to join. 150m suits most bars; increase for large or multi-building venues.</p>
-        </div>
-        <div>
-          <label className={label}>Latitude *</label>
-          <input
-            className={field}
-            value={form.latitude}
-            onChange={(event) => onChange({ latitude: event.target.value, placeId: "" })}
-          />
-        </div>
-        <div>
-          <label className={label}>Longitude *</label>
-          <input
-            className={field}
-            value={form.longitude}
-            onChange={(event) => onChange({ longitude: event.target.value, placeId: "" })}
-          />
-        </div>
-        <div>
-          <label className={label}>County</label>
-          <input className={field} value={form.county} onChange={(event) => onChange({ county: event.target.value })} />
-        </div>
-        <div>
-          <label className={label}>Region</label>
-          <input className={field} value={form.region} onChange={(event) => onChange({ region: event.target.value })} />
-        </div>
-
+        {/*
+          Venue-activation Phase 4: the pin, the map and the radius dial are one
+          block sitting immediately after the address, so the flow reads
+          top-to-bottom — find the address, confirm the circle, activate. The
+          old bare "Geofence Radius (m)" number box and the raw lat/long inputs
+          are gone from the critical path; the dial owns the radius and the
+          editor's own "Advanced" disclosure owns the coordinates.
+        */}
         <div className="md:col-span-2">
           <div className="mb-1 flex items-center justify-between">
-            <label className={label}>Venue Pin & Geofence</label>
+            <label className={label}>Venue Pin &amp; Geofence *</label>
             {hasValidCoordinates && (
               <a
                 href={`https://maps.google.com/?q=${latValue},${lngValue}`}
@@ -895,12 +651,22 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
           ) : hasValidCoordinates ? (
             <p className="mb-1.5 text-xs text-amber-700">Coordinates set manually — no Place ID on record.</p>
           ) : null}
-          <VenueMapPicker
+          <GeofenceEditor
             latitude={hasValidCoordinates ? latValue : null}
             longitude={hasValidCoordinates ? lngValue : null}
             radius={radiusValue}
-            onChange={(lat, lng) => onChange({ latitude: String(lat), longitude: String(lng), placeId: "" })}
+            source={pinSource}
+            onChange={handleGeofenceChange}
           />
+        </div>
+
+        <div>
+          <label className={label}>County</label>
+          <input className={field} value={form.county} onChange={(event) => onChange({ county: event.target.value })} />
+        </div>
+        <div>
+          <label className={label}>Region</label>
+          <input className={field} value={form.region} onChange={(event) => onChange({ region: event.target.value })} />
         </div>
 
         <div className="md:col-span-2">
@@ -991,43 +757,28 @@ type VenuesSectionProps = {
 
 type ViewMode = "list" | "create" | "edit";
 
-// Mirrors AdminVenueDeletionSummary in lib/admin.ts (server-only module — kept
-// as a local shape so this client component never imports server code).
-type VenueDeletionSummary = {
-  venueId: string;
-  venueName: string | null;
-  isPartnerVenue: boolean;
-  owner: { name: string; email: string } | null;
-  ownerAccountWillBeDeleted: boolean;
-  subscription: {
-    status: "active" | "past_due" | "cancelled";
-    amountCents: number;
-    planType: string;
-    hasStripeSubscription: boolean;
-  } | null;
-  userCount: number;
-};
-
 export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueDeleted }: VenuesSectionProps) {
   const [mode, setMode] = useState<ViewMode>("list");
   const [venueList, setVenueList] = useState<Venue[]>(venues);
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
-  const [form, setForm] = useState<VenueFormState>(BLANK_FORM);
+  const [form, setForm] = useState<VenueFormState>(BLANK_VENUE_FORM);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [sortBy, setSortBy] = useState<SortKey>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  // Delete-confirmation modal state.
-  const [deleteTarget, setDeleteTarget] = useState<Venue | null>(null);
-  const [deleteSummary, setDeleteSummary] = useState<VenueDeletionSummary | null>(null);
-  const [deleteSummaryLoading, setDeleteSummaryLoading] = useState(false);
-  const [deleteSummaryError, setDeleteSummaryError] = useState("");
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [deleteBusy, setDeleteBusy] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
-  const deleteRequestIdRef = useRef(0);
+  const deletion = useVenueDeletion({
+    onOpened: () => {
+      setError("");
+      setSuccessMsg("");
+    },
+    onDeleted: (venue, message) => {
+      setVenueList((prev) => prev.filter((entry) => entry.id !== venue.id));
+      onVenueDeleted(venue.id);
+      setSuccessMsg(message);
+    },
+  });
 
   useEffect(() => {
     setVenueList(venues);
@@ -1074,62 +825,8 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
     setError("");
   }
 
-  function buildVenuePayload() {
-    return {
-      name: form.name.trim(),
-      street: form.street.trim(),
-      address: buildAddressLabel(form),
-      radius: Number.parseInt(form.radius, 10) || 100,
-      latitude: form.latitude ? Number.parseFloat(form.latitude) : undefined,
-      longitude: form.longitude ? Number.parseFloat(form.longitude) : undefined,
-      displayName: form.displayName.trim() || undefined,
-      logoText: form.logoText.trim() || undefined,
-      iconEmoji: form.iconEmoji.trim() || undefined,
-      city: form.city.trim() || undefined,
-      state: form.state.trim().toUpperCase() || undefined,
-      zipCode: form.zipCode.trim() || undefined,
-      country: form.country.trim() || undefined,
-      county: form.county.trim() || undefined,
-      region: form.region.trim() || undefined,
-      placeId: form.placeId.trim() || undefined,
-      screenEnabled: form.screenEnabled,
-      screenBrandImageUrl: form.screenBrandImageUrl.trim() || undefined,
-      screenBrandPrimary: form.screenBrandPrimary.trim() || undefined,
-      screenBrandSecondary: form.screenBrandSecondary.trim() || undefined,
-      screenSponsorRotationEnabled: form.screenSponsorRotationEnabled,
-    };
-  }
-
-  function validateVenueForm(): string | null {
-    if (!form.name.trim()) return "Venue name is required.";
-    if (!form.street.trim()) return "Street address is required.";
-    if (!form.city.trim()) return "City is required.";
-    if (!form.state.trim()) return "State is required.";
-    if (!form.zipCode.trim()) return "ZIP code is required.";
-    if (!form.country.trim()) return "Country is required.";
-
-    const latitude = Number.parseFloat(form.latitude);
-    const longitude = Number.parseFloat(form.longitude);
-    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
-      return "Latitude must be between -90 and 90.";
-    }
-    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
-      return "Longitude must be between -180 and 180.";
-    }
-    if (form.screenBrandImageUrl.trim() && !isValidHttpUrl(form.screenBrandImageUrl.trim())) {
-      return "Brand image URL must be a valid http(s) URL.";
-    }
-    if (form.screenBrandPrimary.trim() && !isValidHexColor(form.screenBrandPrimary.trim())) {
-      return "Primary brand color must be a valid hex color.";
-    }
-    if (form.screenBrandSecondary.trim() && !isValidHexColor(form.screenBrandSecondary.trim())) {
-      return "Secondary brand color must be a valid hex color.";
-    }
-    return null;
-  }
-
   function startCreate() {
-    setForm(BLANK_FORM);
+    setForm(BLANK_VENUE_FORM);
     setEditingVenue(null);
     setError("");
     setSuccessMsg("");
@@ -1145,7 +842,7 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
   }
 
   async function handleCreate() {
-    const validationError = validateVenueForm();
+    const validationError = validateVenueForm(form);
     if (validationError) {
       setError(validationError);
       return;
@@ -1156,7 +853,7 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
       const res = await fetch("/api/admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resource: "venues", ...buildVenuePayload() }),
+        body: JSON.stringify({ resource: "venues", ...buildVenuePayload(form) }),
       });
       const payload = (await res.json()) as { ok: boolean; item?: Venue; error?: string };
       if (!payload.ok || !payload.item) throw new Error(payload.error ?? "Failed to create venue.");
@@ -1164,7 +861,7 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
       onVenueCreated(payload.item);
       setVenueList((prev) => [payload.item!, ...prev]);
       setSuccessMsg(`Venue "${payload.item.name}" created successfully.`);
-      setForm(BLANK_FORM);
+      setForm(BLANK_VENUE_FORM);
       setMode("list");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create venue.");
@@ -1175,7 +872,7 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
 
   async function handleEdit() {
     if (!editingVenue) return;
-    const validationError = validateVenueForm();
+    const validationError = validateVenueForm(form);
     if (validationError) {
       setError(validationError);
       return;
@@ -1187,7 +884,7 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
       const res = await fetch("/api/admin", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resource: "venues", id: editingVenue.id, ...buildVenuePayload() }),
+        body: JSON.stringify({ resource: "venues", id: editingVenue.id, ...buildVenuePayload(form) }),
       });
       const payload = (await res.json()) as { ok: boolean; item?: Venue; error?: string };
       if (!payload.ok || !payload.item) throw new Error(payload.error ?? "Failed to update venue.");
@@ -1204,88 +901,6 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
     }
   }
 
-  function closeDeleteModal() {
-    if (deleteBusy) return;
-    deleteRequestIdRef.current += 1;
-    setDeleteTarget(null);
-    setDeleteSummary(null);
-    setDeleteSummaryError("");
-    setDeleteConfirmText("");
-    setDeleteSummaryLoading(false);
-    setDeleteError("");
-  }
-
-  async function openDeleteModal(venue: Venue) {
-    const requestId = ++deleteRequestIdRef.current;
-    setDeleteTarget(venue);
-    setDeleteSummary(null);
-    setDeleteSummaryError("");
-    setDeleteConfirmText("");
-    setDeleteSummaryLoading(true);
-    setDeleteError("");
-    setError("");
-    setSuccessMsg("");
-
-    try {
-      const response = await fetch(`/api/admin?resource=venue-deletion-summary&id=${encodeURIComponent(venue.id)}`);
-      const payload = (await response.json()) as { ok: boolean; error?: string; summary?: VenueDeletionSummary };
-      if (deleteRequestIdRef.current !== requestId) return;
-      if (!response.ok || !payload.ok || !payload.summary) {
-        throw new Error(payload.error ?? "Failed to load venue deletion details.");
-      }
-      setDeleteSummary(payload.summary);
-    } catch (err) {
-      if (deleteRequestIdRef.current !== requestId) return;
-      setDeleteSummaryError(err instanceof Error ? err.message : "Failed to load venue deletion details.");
-    } finally {
-      if (deleteRequestIdRef.current === requestId) {
-        setDeleteSummaryLoading(false);
-      }
-    }
-  }
-
-  async function confirmDelete() {
-    const venue = deleteTarget;
-    if (!venue) return;
-    setDeleteBusy(true);
-    setDeleteError("");
-    setError("");
-    setSuccessMsg("");
-
-    try {
-      const response = await fetch(`/api/admin?resource=venues&id=${encodeURIComponent(venue.id)}`, {
-        method: "DELETE",
-      });
-      const payload = (await response.json()) as {
-        ok: boolean;
-        error?: string;
-        subscriptionCancelled?: boolean;
-        ownerAccountDeleted?: boolean;
-      };
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.error ?? "Failed to delete venue.");
-      }
-
-      setVenueList((prev) => prev.filter((entry) => entry.id !== venue.id));
-      onVenueDeleted(venue.id);
-      const parts = [`Venue "${venue.name}" deleted`];
-      if (payload.subscriptionCancelled) {
-        parts.push("its Stripe subscription was cancelled");
-      }
-      if (payload.ownerAccountDeleted) {
-        parts.push("the orphaned owner account was removed");
-      }
-      setSuccessMsg(`${parts.join(", ")}.`);
-      deleteRequestIdRef.current += 1;
-      setDeleteTarget(null);
-      setDeleteSummary(null);
-      setDeleteConfirmText("");
-    } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "Failed to delete venue.");
-    } finally {
-      setDeleteBusy(false);
-    }
-  }
 
   if (mode === "create") {
     return (
@@ -1298,7 +913,10 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
         onCancel={() => setMode("list")}
         busy={busy}
         error={error}
-        submitLabel="Create Venue"
+        // Phase 4: both surfaces say the same thing on create. The mobile flow
+        // has always read "Activate venue"; desktop's generic "Create Venue"
+        // was the odd one out.
+        submitLabel="Activate Venue"
         mode="create"
       />
     );
@@ -1339,7 +957,7 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
             onClick={startCreate}
             className="min-h-[44px] w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 sm:w-auto"
           >
-            + Create Venue
+            + Add Venue
           </button>
         </div>
 
@@ -1400,9 +1018,9 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
                         </button>
                         <button
                           onClick={() => {
-                            void openDeleteModal(venue);
+                            void deletion.open(venue);
                           }}
-                          disabled={busy || deleteBusy}
+                          disabled={busy || deletion.busy}
                           className="min-h-[44px] rounded border border-red-200 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
                         >
                           Delete
@@ -1417,156 +1035,7 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
         </div>
       </div>
 
-      {deleteTarget ? (
-        <DeleteVenueModal
-          deleteTarget={deleteTarget}
-          deleteSummary={deleteSummary}
-          deleteSummaryLoading={deleteSummaryLoading}
-          deleteSummaryError={deleteSummaryError}
-          deleteConfirmText={deleteConfirmText}
-          setDeleteConfirmText={setDeleteConfirmText}
-          deleteBusy={deleteBusy}
-          deleteError={deleteError}
-          closeDeleteModal={closeDeleteModal}
-          confirmDelete={confirmDelete}
-        />
-      ) : null}
+      <DeleteVenueModal deletion={deletion} />
     </div>
-  );
-}
-
-function DeleteVenueModal({
-  deleteTarget,
-  deleteSummary,
-  deleteSummaryLoading,
-  deleteSummaryError,
-  deleteConfirmText,
-  setDeleteConfirmText,
-  deleteBusy,
-  deleteError,
-  closeDeleteModal,
-  confirmDelete,
-}: {
-  deleteTarget: Venue;
-  deleteSummary: VenueDeletionSummary | null;
-  deleteSummaryLoading: boolean;
-  deleteSummaryError: string;
-  deleteConfirmText: string;
-  setDeleteConfirmText: (value: string) => void;
-  deleteBusy: boolean;
-  deleteError: string;
-  closeDeleteModal: () => void;
-  confirmDelete: () => Promise<void>;
-}) {
-  const deleteTargetNameTrimmed = (deleteTarget.name ?? "").trim();
-  const deleteExpectedConfirmText = deleteTargetNameTrimmed || "DELETE";
-
-  return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
-            <div className="border-b border-slate-200 px-5 py-4">
-              <h3 className="text-sm font-semibold text-slate-900">Delete venue</h3>
-              <p className="mt-1 text-xs text-slate-500">
-                {deleteTarget.name}
-              </p>
-            </div>
-
-            <div className="space-y-3 px-5 py-4 text-sm">
-              {deleteSummaryLoading ? (
-                <p className="text-slate-500">Loading deletion details…</p>
-              ) : deleteSummaryError ? (
-                <div className="rounded-lg bg-red-50 px-3 py-2 text-red-700">{deleteSummaryError}</div>
-              ) : deleteSummary ? (
-                <>
-                  <p className="text-slate-700">
-                    This permanently deletes the venue and cascades to all of its data. This cannot be undone.
-                  </p>
-
-                  <ul className="space-y-1 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                    <li>
-                      <span className="font-semibold text-slate-800">{deleteSummary.userCount}</span> venue-scoped user
-                      {deleteSummary.userCount === 1 ? "" : "s"} will be removed (global accounts are kept).
-                    </li>
-                  </ul>
-
-                  {deleteSummary.isPartnerVenue ? (
-                    <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
-                      <p className="text-xs font-semibold text-amber-900">⚠ This is a partner venue.</p>
-                      {deleteSummary.owner ? (
-                        <p className="text-xs text-amber-800">
-                          Owner: {deleteSummary.owner.name} ({deleteSummary.owner.email})
-                          {deleteSummary.ownerAccountWillBeDeleted
-                            ? " — this is their only venue, so the owner account and login will also be deleted."
-                            : " — the owner has other venues, so their account will be kept."}
-                        </p>
-                      ) : null}
-                      {deleteSummary.subscription ? (
-                        <p className="text-xs text-amber-800">
-                          Billing: {deleteSummary.subscription.planType} · $
-                          {(deleteSummary.subscription.amountCents / 100).toFixed(2)} ·{" "}
-                          {deleteSummary.subscription.status}
-                          {deleteSummary.subscription.hasStripeSubscription
-                            ? " — the Stripe subscription will be cancelled immediately before deletion."
-                            : " — no Stripe subscription on file."}
-                        </p>
-                      ) : null}
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-amber-900">
-                          {deleteTargetNameTrimmed ? (
-                            <>
-                              Type the venue name <span className="font-semibold">{deleteTarget.name}</span> to
-                              confirm:
-                            </>
-                          ) : (
-                            <>
-                              This venue has no name on file. Type <span className="font-semibold">DELETE</span> to
-                              confirm:
-                            </>
-                          )}
-                        </label>
-                        <input
-                          type="text"
-                          value={deleteConfirmText}
-                          onChange={(e) => setDeleteConfirmText(e.target.value)}
-                          disabled={deleteBusy}
-                          className="w-full rounded-lg border border-amber-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
-                          placeholder={deleteTargetNameTrimmed || "DELETE"}
-                        />
-                      </div>
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
-
-              {deleteError ? (
-                <div className="rounded-lg bg-red-50 px-3 py-2 text-red-700">{deleteError}</div>
-              ) : null}
-            </div>
-
-            <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4">
-              <button
-                onClick={closeDeleteModal}
-                disabled={deleteBusy}
-                className="min-h-[44px] rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  void confirmDelete();
-                }}
-                disabled={
-                  deleteBusy ||
-                  deleteSummaryLoading ||
-                  !deleteSummary ||
-                  (deleteSummary.isPartnerVenue && deleteConfirmText.trim() !== deleteExpectedConfirmText)
-                }
-                className="min-h-[44px] rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                {deleteBusy ? "Deleting…" : "Delete venue"}
-              </button>
-            </div>
-          </div>
-        </div>
   );
 }

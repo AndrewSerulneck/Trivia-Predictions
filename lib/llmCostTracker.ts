@@ -20,6 +20,7 @@ const GEMINI_PRICING: Record<string, ModelPrice> = {
 // ── Public types ────────────────────────────────────────────────────────────
 
 export type LlmUsageFeature =
+  // category_blitz_grading/moderation: not emitted anywhere yet — no caller instruments Category Blitz
   | "category_blitz_grading"
   | "category_blitz_moderation"
   | "username_moderation"

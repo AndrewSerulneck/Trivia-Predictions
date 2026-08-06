@@ -34,3 +34,6 @@ nfl-weeks-*-before.json
 # Unattended phase-runner artifacts (docs/bingo-fullscreen-pwa-run-phases.sh)
 docs/.*-run-state/
 docs/*-run-console.log
+
+# Local scratch scripts (may stub auth/session endpoints — never commit)
+.scratch/

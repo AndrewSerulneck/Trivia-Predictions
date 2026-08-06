@@ -6,31 +6,55 @@ import { adminLabel } from "@/lib/adminStyles";
 import {
   ADMIN_NAV_GROUPS,
   MIGRATED_SECTIONS,
+  MOBILE_SECTION_ORDER,
+  MOBILE_SECTIONS,
   type AdminSection,
   type AdminSectionOption,
-} from "@/components/admin/adminSections";
-import { AccountsSection } from "@/components/admin/sections/AccountsSection";
-import { UsersSection } from "@/components/admin/sections/UsersSection";
-import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsSection";
-import { VenuesSection } from "@/components/admin/sections/VenuesSection";
-import { ChallengesSection } from "@/components/admin/sections/ChallengesSection";
-import { SchedulesSection } from "@/components/admin/sections/SchedulesSection";
-import { TriviaListSection } from "@/components/admin/sections/TriviaListSection";
-import { TriviaCreateSection } from "@/components/admin/sections/TriviaCreateSection";
-import { TriviaPendingReviewSection } from "@/components/admin/sections/TriviaPendingReviewSection";
-import { TriviaAnswerGraderSection } from "@/components/admin/sections/TriviaAnswerGraderSection";
-import { TriviaImageReviewSection } from "@/components/admin/sections/TriviaImageReviewSection";
-import { AdPlacementBuilder } from "@/components/admin/AdPlacementBuilder";
-import { AdAnalyticsDashboard } from "@/components/admin/AdAnalyticsDashboard";
-import { AdsListSection } from "@/components/admin/sections/AdsListSection";
-import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
-import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
-import { GameSettingsSection } from "@/components/admin/sections/GameSettingsSection";
-import { CategoryBlitzSection } from "@/components/admin/sections/CategoryBlitzSection";
-import { BillingSection } from "@/components/admin/sections/BillingSection";
-import { LiveTriviaInventorySection } from "@/components/admin/sections/LiveTriviaInventorySection";
+} from "@/components/admin/adminSectionMeta";
 import { QuestionInventoryAlert } from "@/components/admin/sections/QuestionInventoryAlert";
 import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
+import { AdminModeChooser, type AdminMode } from "@/components/admin/AdminModeChooser";
+import { AdminMobileShell } from "@/components/admin/AdminMobileShell";
+import {
+  AccountsSection,
+  UsersSection,
+  UserAnalyticsSection,
+  VenuesSection,
+  ChallengesSection,
+  SchedulesSection,
+  TriviaListSection,
+  TriviaPendingReviewSection,
+  TriviaImageReviewSection,
+  AdPlacementBuilder,
+  AdAnalyticsDashboard,
+  AdsListSection,
+  AdsCreateSection,
+  GameSettingsSection,
+  CategoryBlitzSection,
+  BillingSection,
+  LiveTriviaInventorySection,
+  UsernameModerationSection,
+  LlmCostSection,
+} from "@/components/admin/adminSectionComponents";
+
+const ADMIN_MODE_STORAGE_KEY = "hightop_admin_mode";
+
+function readStoredAdminMode(): AdminMode | null {
+  try {
+    const value = window.localStorage.getItem(ADMIN_MODE_STORAGE_KEY);
+    return value === "desktop" || value === "mobile" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredAdminMode(mode: AdminMode): void {
+  try {
+    window.localStorage.setItem(ADMIN_MODE_STORAGE_KEY, mode);
+  } catch {
+    // Ignore storage failures (private mode / strict privacy settings).
+  }
+}
 
 // ─── Shared Admin UI Primitives ───────────────────────────────────────────────
 
@@ -220,7 +244,11 @@ function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900 [color-scheme:light]">
+    /* `h-full overflow-y-auto`, not `min-h-screen`: inside AppShell's locked
+       admin box the document cannot scroll, so a `min-h` root would strand the
+       submit button off-screen once a soft keyboard shrinks the visual
+       viewport. Bounded + `overflow-y-auto` keeps the form reachable. */
+    <div className="flex h-full items-center justify-center overflow-y-auto bg-slate-900 [color-scheme:light]">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
         <div className="mb-8 text-center">
           <div className="mb-2 text-2xl font-bold text-slate-900">Hightop Admin</div>
@@ -307,20 +335,29 @@ type SidebarProps = {
   activeSection: AdminSection;
   onSelect: (section: AdminSection) => void;
   onLogout: () => void;
+  onSwitchToMobile: () => void;
   mobile?: boolean;
   onClose?: () => void;
 };
 
-function Sidebar({ activeSection, onSelect, onLogout, mobile = false, onClose }: SidebarProps) {
+function Sidebar({ activeSection, onSelect, onLogout, onSwitchToMobile, mobile = false, onClose }: SidebarProps) {
   return (
+    /* `h-full`, not the previous inline `minHeight: 100svh`: this nav sits
+       inside the now definite-height (`h-full`) shell root, and a `min-height`
+       larger than that box would push the flex line past the root's
+       `overflow-hidden` clip and cut off the logout/mode-switch footer below.
+       `h-full` fills exactly the root, letting the `flex-1 overflow-y-auto`
+       nav-group list at :368 scroll internally instead.
+       See docs/admin-mobile-remediation-plan.md Phase R3. */
     <nav
-      className="flex flex-col bg-slate-900"
-      style={{
-        width: mobile ? "100%" : 240,
-        minWidth: mobile ? "100%" : 240,
-        maxWidth: mobile ? "100%" : 240,
-        minHeight: "100vh",
-      }}
+      className={`flex h-full flex-col bg-slate-900 ${
+        mobile
+          ? "w-full min-w-full max-w-full"
+          : // Explicit px, not `w-60`: globals.css drops the root font to 14px
+            // under 430px, which would make a rem-based `w-60` 210px instead of
+            // the 240px this sidebar has always been.
+            "w-[240px] min-w-[240px] max-w-[240px]"
+      }`}
     >
       {/* Logo */}
       <div className="flex h-14 items-center border-b border-slate-800 px-5">
@@ -377,11 +414,20 @@ function Sidebar({ activeSection, onSelect, onLogout, mobile = false, onClose }:
         ))}
       </div>
 
-      {/* Logout */}
+      {/* Mode switch + logout */}
       <div className="border-t border-slate-800 p-4">
         <button
+          onClick={onSwitchToMobile}
+          className="mb-1 flex min-h-[44px] w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z" />
+          </svg>
+          Switch to Mobile
+        </button>
+        <button
           onClick={onLogout}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+          className="flex min-h-[44px] w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
@@ -398,16 +444,23 @@ function Sidebar({ activeSection, onSelect, onLogout, mobile = false, onClose }:
 type AdminShellProps = {
   venues: Venue[];
   initialSection?: AdminSection;
+  // True when initialSection came from an explicit deep link (e.g. a
+  // ?section= query param) rather than the default landing section. Deep
+  // links bypass the desktop/mobile chooser entirely (Phase 3, §A).
+  deepLinked?: boolean;
 };
 
 type AuthState = "checking" | "unauthenticated" | "authenticated";
+// "chooser" = post-login interstitial not yet resolved; "checking" covers both
+// the auth check and the brief localStorage read right after login succeeds.
+type ModeState = "checking" | "chooser" | AdminMode;
 
-export function AdminShell({ venues, initialSection = "venue-users" }: AdminShellProps) {
+export function AdminShell({ venues, initialSection = "venue-users", deepLinked = false }: AdminShellProps) {
   const [authState, setAuthState] = useState<AuthState>("checking");
   const [activeSection, setActiveSection] = useState<AdminSection>(initialSection);
   const [venueList, setVenueList] = useState<Venue[]>(venues);
-  const [isMobile, setIsMobile] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [modeState, setModeState] = useState<ModeState>("checking");
   const checkSession = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/session", { cache: "no-store" });
@@ -415,17 +468,6 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
     } catch {
       setAuthState("unauthenticated");
     }
-  }, []);
-
-  useEffect(() => {
-    const syncBreakpoint = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) setMobileSidebarOpen(false);
-    };
-    syncBreakpoint();
-    window.addEventListener("resize", syncBreakpoint);
-    return () => window.removeEventListener("resize", syncBreakpoint);
   }, []);
 
   useEffect(() => {
@@ -479,6 +521,26 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
     };
   }, [checkSession]);
 
+  // Resolve the chooser once login succeeds. Deep links always skip the
+  // chooser: they land on mobile only if that's the stored preference AND the
+  // deep-linked section is one of the three mobile-allowlisted sections;
+  // otherwise they land on desktop, since desktop can render any section.
+  useEffect(() => {
+    if (authState !== "authenticated") return;
+    const stored = readStoredAdminMode();
+    if (deepLinked) {
+      setModeState(stored === "mobile" && MOBILE_SECTIONS.has(activeSection) ? "mobile" : "desktop");
+      return;
+    }
+    if (stored === "mobile") {
+      setActiveSection((prev) => (MOBILE_SECTIONS.has(prev) ? prev : MOBILE_SECTION_ORDER[0]));
+    }
+    setModeState(stored ?? "chooser");
+    // Only re-run when auth/deep-link identity changes, not on every
+    // activeSection change from in-shell navigation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authState, deepLinked]);
+
   const handleLoginSuccess = useCallback(() => {
     setAuthState("authenticated");
   }, []);
@@ -500,9 +562,37 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
     setVenueList((prev) => prev.filter((entry) => entry.id !== venueId));
   }, []);
 
+  const handleSectionSelect = useCallback((section: AdminSection) => {
+    setActiveSection(section);
+    setMobileSidebarOpen(false);
+  }, []);
+
+  const handleChooseMode = useCallback(
+    (mode: AdminMode) => {
+      writeStoredAdminMode(mode);
+      if (mode === "mobile") {
+        setActiveSection((prev) => (MOBILE_SECTIONS.has(prev) ? prev : MOBILE_SECTION_ORDER[0]));
+      }
+      setModeState(mode);
+    },
+    []
+  );
+
+  const handleSwitchToMobile = useCallback(() => {
+    writeStoredAdminMode("mobile");
+    setActiveSection((prev) => (MOBILE_SECTIONS.has(prev) ? prev : MOBILE_SECTION_ORDER[0]));
+    setModeState("mobile");
+    setMobileSidebarOpen(false);
+  }, []);
+
+  const handleSwitchToDesktop = useCallback(() => {
+    writeStoredAdminMode("desktop");
+    setModeState("desktop");
+  }, []);
+
   if (authState === "checking") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900">
+      <div className="flex h-full items-center justify-center bg-slate-900">
         <div className="text-sm text-slate-400">Verifying session…</div>
       </div>
     );
@@ -510,6 +600,33 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
 
   if (authState === "unauthenticated") {
     return <LoginScreen onSuccess={handleLoginSuccess} />;
+  }
+
+  if (modeState === "checking") {
+    return (
+      <div className="flex h-full items-center justify-center bg-slate-900">
+        <div className="text-sm text-slate-400">Loading admin…</div>
+      </div>
+    );
+  }
+
+  if (modeState === "chooser") {
+    return <AdminModeChooser onChoose={handleChooseMode} />;
+  }
+
+  if (modeState === "mobile") {
+    return (
+      <AdminMobileShell
+        venues={venueList}
+        activeSection={activeSection}
+        onSelect={handleSectionSelect}
+        onSwitchToDesktop={handleSwitchToDesktop}
+        onLogout={handleLogout}
+        onVenueCreated={handleVenueCreated}
+        onVenueUpdated={handleVenueUpdated}
+        onVenueDeleted={handleVenueDeleted}
+      />
+    );
   }
 
   const allSections = ADMIN_NAV_GROUPS.flatMap((g) => g.items);
@@ -538,12 +655,8 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         return <SchedulesSection venues={venueList} />;
       case "trivia-list":
         return <TriviaListSection />;
-      case "trivia-create":
-        return <TriviaCreateSection />;
       case "trivia-review":
         return <TriviaPendingReviewSection />;
-      case "answer-grading":
-        return <TriviaAnswerGraderSection />;
       case "trivia-image-review":
         return <TriviaImageReviewSection />;
       case "ad-placement":
@@ -554,8 +667,6 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         return <AdsListSection venues={venueList} />;
       case "ads-create":
         return <AdsCreateSection venues={venueList} />;
-      case "pickem-settlement":
-        return <PickEmSettlementSection />;
       case "game-settings":
         return <GameSettingsSection venues={venueList} />;
       case "live-trivia-inventory":
@@ -564,73 +675,83 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         return <CategoryBlitzSection venues={venueList} />;
       case "partner-billing":
         return <BillingSection />;
+      case "username-moderation":
+        return <UsernameModerationSection />;
+      case "llm-cost":
+        return <LlmCostSection />;
       default:
         return currentSectionOption ? <LegacyPanel section={currentSectionOption} /> : null;
     }
   }
 
-  const handleSectionSelect = (section: AdminSection) => {
-    setActiveSection(section);
-    if (isMobile) setMobileSidebarOpen(false);
-  };
-
   return (
-    <div className="w-full h-screen max-h-screen m-0 p-0 flex bg-[#030712] overflow-hidden [color-scheme:light]">
-      {!isMobile ? (
+    /* `h-full`, not `min-h-[100svh]`: AppShell already renders the admin surface
+       inside `fixed inset-0 h-screen overflow-hidden` (AppShell.tsx) on top of
+       `html/body { height: 100vh; overflow: hidden }` (globals.css,
+       `.tp-admin-theme`), so this root's parent is already a definite-height,
+       non-scrolling box. Inheriting it with `h-full` is what makes `main`'s
+       `overflow-hidden` and the content pane's `h-full flex-1 overflow-y-auto`
+       below resolve. An indefinite `min-h-*` root breaks that chain: the inner
+       pane stops being a scroll container and the overflow is clipped
+       unreachable, because the document itself cannot scroll to it.
+       See docs/admin-mobile-remediation-plan.md Phase R3. */
+    <div className="w-full h-full m-0 p-0 flex bg-[#030712] overflow-hidden [color-scheme:light]">
+      <div className="hidden md:block">
         <Sidebar
           activeSection={activeSection}
           onSelect={handleSectionSelect}
           onLogout={handleLogout}
+          onSwitchToMobile={handleSwitchToMobile}
         />
-      ) : null}
+      </div>
 
-      {isMobile ? (
-        <>
-          <div
-            className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px] transition-opacity duration-300 ${
-              mobileSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
-            }`}
-            aria-hidden={!mobileSidebarOpen}
-            onClick={() => setMobileSidebarOpen(false)}
-          />
-          <aside
-            className={`fixed inset-y-0 left-0 z-50 w-[78vw] max-w-sm transform transition-transform duration-300 ${
-              mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-            aria-hidden={!mobileSidebarOpen}
+      <div
+        className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px] transition-opacity duration-300 md:hidden ${
+          mobileSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        aria-hidden={!mobileSidebarOpen}
+        onClick={() => setMobileSidebarOpen(false)}
+      />
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-[78vw] max-w-sm transform transition-transform duration-300 md:hidden ${
+          mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        aria-hidden={!mobileSidebarOpen}
+      >
+        <Sidebar
+          activeSection={activeSection}
+          onSelect={handleSectionSelect}
+          onLogout={handleLogout}
+          onSwitchToMobile={handleSwitchToMobile}
+          mobile
+          onClose={() => setMobileSidebarOpen(false)}
+        />
+      </aside>
+
+      <main className="h-full min-h-0 min-w-0 flex flex-1 flex-col overflow-hidden">
+        {/* Top header bar. `flex-none` so it keeps its `h-14` instead of being
+            shrunk by a tall content pane below it. */}
+        <div className="flex h-14 flex-none items-center gap-3 border-b border-slate-200 bg-white px-4 md:px-8">
+          <button
+            type="button"
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileSidebarOpen}
+            onClick={() => setMobileSidebarOpen((prev) => !prev)}
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md border border-slate-200 text-slate-700 hover:bg-slate-50 md:hidden"
           >
-            <Sidebar
-              activeSection={activeSection}
-              onSelect={handleSectionSelect}
-              onLogout={handleLogout}
-              mobile
-              onClose={() => setMobileSidebarOpen(false)}
-            />
-          </aside>
-        </>
-      ) : null}
-
-      <main className="h-full min-w-0 flex flex-1 flex-col overflow-hidden">
-        {/* Top header bar */}
-        <div className="flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-4 md:px-8">
-          {isMobile ? (
-            <button
-              type="button"
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileSidebarOpen}
-              onClick={() => setMobileSidebarOpen((prev) => !prev)}
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md border border-slate-200 text-slate-700 hover:bg-slate-50"
-            >
-              <span className="text-xl leading-none">☰</span>
-            </button>
-          ) : null}
+            <span className="text-xl leading-none">☰</span>
+          </button>
           <h1 className="text-sm font-semibold text-slate-800">
             {currentSectionOption?.label ?? "Dashboard"}
           </h1>
         </div>
 
-        {/* Content area */}
-        <div className="h-full flex-1 overflow-y-auto p-4 md:p-6 box-border">
+        {/* Content area. `min-h-0 flex-1`, not `h-full flex-1`: `h-full` here
+            resolved to 100% of `main` while the `h-14` header also occupies
+            part of it, overshooting by the header's height. `flex-1` alone
+            claims exactly the remaining space, and `min-h-0` lets it shrink
+            below its content so `overflow-y-auto` actually scrolls. */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6 box-border">
           <QuestionInventoryAlert />
           <SectionErrorBoundary>{renderContent()}</SectionErrorBoundary>
         </div>

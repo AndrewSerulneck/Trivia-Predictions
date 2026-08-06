@@ -138,7 +138,13 @@ export function LlmCostSection() {
   return (
     <div className="flex flex-col gap-6 p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white">LLM Cost Observability</h2>
+        <div>
+          <h2 className="text-lg font-bold text-white">LLM Cost Observability</h2>
+          <p className="mt-1 max-w-md text-[0.65rem] text-slate-500">
+            Tracks Username Moderation (Haiku) and Live Trivia rewrite (Gemini). Any other LLM
+            usage in the app is not instrumented and will not appear here.
+          </p>
+        </div>
         <div className="flex gap-1">
           {RANGE_OPTIONS.map((opt) => (
             <button
