@@ -8,7 +8,7 @@ import {
   sectionLabel,
   type AdminSection,
 } from "@/components/admin/adminSectionMeta";
-import { MobileVenuesSection, GameSettingsSection, BillingSection } from "@/components/admin/adminSectionComponents";
+import { MobileVenuesSection, BillingSection } from "@/components/admin/adminSectionComponents";
 import { MobileBottomSheet } from "@/components/admin/mobile/MobileBottomSheet";
 import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
 
@@ -16,7 +16,6 @@ type MobileSection = (typeof MOBILE_SECTION_ORDER)[number];
 
 const TAB_ICON: Record<MobileSection, string> = {
   "venue-manage": "🏠",
-  "game-settings": "🎮",
   "partner-billing": "💳",
 };
 
@@ -44,7 +43,7 @@ export function AdminMobileShell({
   const [moreOpen, setMoreOpen] = useState(false);
 
   // Defensive guard only — callers are expected to always pass one of the
-  // three allowlisted sections. Falls back to the first tab rather than
+  // allowlisted sections. Falls back to the first tab rather than
   // rendering nothing if that contract is ever violated.
   const safeSection: MobileSection = MOBILE_SECTIONS.has(activeSection)
     ? (activeSection as MobileSection)
@@ -62,8 +61,6 @@ export function AdminMobileShell({
             onNavigate={onSelect}
           />
         );
-      case "game-settings":
-        return <GameSettingsSection venues={venues} />;
       case "partner-billing":
         return <BillingSection />;
     }
@@ -112,7 +109,7 @@ export function AdminMobileShell({
         <SectionErrorBoundary>{renderSection(safeSection)}</SectionErrorBoundary>
       </main>
 
-      <nav className="grid flex-none grid-cols-3 gap-1 border-t border-slate-200 bg-white px-1 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-1">
+      <nav className="grid flex-none grid-cols-2 gap-1 border-t border-slate-200 bg-white px-1 pb-[calc(env(safe-area-inset-bottom)+2.5rem)] pt-1.5">
         {MOBILE_SECTION_ORDER.map((id) => {
           const isActive = id === safeSection;
           return (
@@ -121,13 +118,13 @@ export function AdminMobileShell({
               type="button"
               onClick={() => onSelect(id)}
               aria-current={isActive ? "page" : undefined}
-              className={`flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-lg text-xs transition-colors ${
+              className={`flex min-h-[104px] flex-col items-center justify-center gap-1 rounded-lg text-sm transition-colors ${
                 isActive
                   ? "bg-indigo-600 font-semibold text-white"
                   : "font-medium text-slate-500 hover:bg-slate-100 hover:text-indigo-600"
               }`}
             >
-              <span className="text-lg leading-none">{TAB_ICON[id]}</span>
+              <span className="text-2xl leading-none">{TAB_ICON[id]}</span>
               {sectionLabel(id)}
             </button>
           );

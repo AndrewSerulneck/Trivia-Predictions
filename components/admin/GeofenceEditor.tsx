@@ -46,6 +46,15 @@ type GeofenceEditorProps = {
   /** Hide the Advanced lat/long disclosure (the mobile flow has its own). */
   hideAdvanced?: boolean;
   className?: string;
+  /**
+   * Editing venue-activation follow-up: on the edit flow the map and radius
+   * dial start locked behind a summary card + "Edit location & geofence"
+   * button, so a thumb scrolling past the map can't nudge the pin or resize
+   * the geofence by accident. Uncontrolled — once tapped open, it stays open
+   * for the rest of this form mount. Omit (or false) for the create flow,
+   * where there's nothing destructive to protect yet.
+   */
+  startLocked?: boolean;
 };
 
 const GPS_OPTIONS: PositionOptions = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
@@ -61,6 +70,7 @@ export function GeofenceEditor({
   disabled = false,
   hideAdvanced = false,
   className,
+  startLocked = false,
 }: GeofenceEditorProps) {
   const mapRef = useRef<VenueMapPickerHandle | null>(null);
   const [radiusEditing, setRadiusEditing] = useState(false);
@@ -68,6 +78,7 @@ export function GeofenceEditor({
   const [locateError, setLocateError] = useState("");
   const [accuracyMeters, setAccuracyMeters] = useState<number | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [locked, setLocked] = useState(startLocked);
   // Raw text for the Advanced boxes, so a half-typed "-104." isn't parsed to
   // NaN and thrown away between keystrokes. Cleared on blur, which re-derives
   // the display from the caller's (canonical, committed) coordinates — that
@@ -154,6 +165,47 @@ export function GeofenceEditor({
 
   const latText = latDraft ?? (latitude === null ? "" : String(latitude));
   const lngText = lngDraft ?? (longitude === null ? "" : String(longitude));
+
+  if (locked) {
+    return (
+      <div className={className ? `space-y-3 ${className}` : "space-y-3"}>
+        <div className={cardShell}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{pinLabel(hasPin, source, accuracyMeters)}</p>
+              <p className="mt-0.5 text-xs text-slate-600">Geofence radius: {value} m</p>
+              {hasPin ? (
+                <p className="mt-0.5 font-mono text-[11px] text-slate-400">
+                  {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                </p>
+              ) : null}
+            </div>
+            {hasPin ? (
+              <a
+                href={`https://maps.google.com/?q=${latitude},${longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 text-xs font-semibold text-indigo-600 hover:underline"
+              >
+                Check ↗
+              </a>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={() => setLocked(false)}
+            disabled={disabled}
+            className="mt-3 min-h-[48px] w-full rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 active:bg-slate-50 disabled:opacity-60"
+          >
+            🔒 Edit location &amp; geofence
+          </button>
+          <p className="mt-2 text-xs text-slate-500">
+            Locked so a stray tap can&apos;t move the pin or resize the radius. Tap to make changes.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={className ? `space-y-3 ${className}` : "space-y-3"}>

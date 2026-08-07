@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Venue } from "@/types";
-import { GeofenceEditor, pinLabel } from "@/components/admin/GeofenceEditor";
+import { GeofenceEditor } from "@/components/admin/GeofenceEditor";
 import { useAddressLookup, type AddressPrediction } from "@/components/admin/useAddressLookup";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
@@ -97,8 +97,6 @@ export function ActivateVenueFlow({
   const [manualAddress, setManualAddress] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [pinSource, setPinSource] = useState<PinSource>(venue ? "existing" : "none");
-  const [locating, setLocating] = useState(false);
-  const [locateError, setLocateError] = useState("");
   const [accuracyMeters, setAccuracyMeters] = useState<number | null>(null);
   const [hintError, setHintError] = useState("");
 
@@ -117,10 +115,6 @@ export function ActivateVenueFlow({
   const coords = coordsOf(form);
   const radiusValue = Number.parseInt(form.radius, 10) || 150;
   const addressReady = hasWrittenAddress(form) && coords !== null;
-
-  // Wording now lives with the editor that renders it most of the time; step 1's
-  // pin summary imports it rather than keeping a second copy of the strings.
-  const pinSummary = pinLabel(coords !== null, pinSource, accuracyMeters);
 
   /**
    * The single mutation path for pin + radius on step 2. GeofenceEditor owns no
@@ -158,7 +152,6 @@ export function ActivateVenueFlow({
     });
     setPinSource("lookup");
     setAccuracyMeters(null);
-    setLocateError("");
     setManualAddress(false);
   }
 
@@ -191,38 +184,6 @@ export function ActivateVenueFlow({
     setManualAddress(false);
     setPinSource("none");
     setAccuracyMeters(null);
-    setLocateError("");
-  }
-
-  function useCurrentLocation() {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setLocateError("This device can't share its location. Pick the address above, then drag the pin on the map.");
-      return;
-    }
-    setLocating(true);
-    setLocateError("");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        patch({
-          latitude: String(position.coords.latitude),
-          longitude: String(position.coords.longitude),
-          // The coordinates no longer belong to the looked-up Place.
-          placeId: "",
-        });
-        setPinSource("gps");
-        setAccuracyMeters(position.coords.accuracy);
-        setLocating(false);
-      },
-      (positionError) => {
-        setLocating(false);
-        setLocateError(
-          positionError.code === positionError.PERMISSION_DENIED
-            ? "Location is blocked for this browser. Allow it in your phone's settings, or drag the pin on the map."
-            : "Couldn't get a fix. Try again near a window or outside, or drag the pin on the map."
-        );
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
   }
 
   function goToDetails() {
@@ -411,14 +372,6 @@ export function ActivateVenueFlow({
             </div>
           ) : null}
 
-          <PinCard
-            coords={coords}
-            pinLabel={pinSummary}
-            locating={locating}
-            locateError={locateError}
-            onUseCurrentLocation={useCurrentLocation}
-          />
-
           {banner ? (
             <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{banner}</div>
           ) : null}
@@ -476,6 +429,7 @@ export function ActivateVenueFlow({
             source={pinSource}
             onChange={handleGeofenceChange}
             hideAdvanced
+            startLocked={mode === "edit"}
           />
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -609,16 +563,14 @@ export function ActivateVenueFlow({
 
           {banner ? <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{banner}</div> : null}
 
-          <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-slate-100/95 px-4 py-3 backdrop-blur">
-            <button
-              type="button"
-              onClick={submit}
-              disabled={busy}
-              className="min-h-[52px] w-full rounded-xl bg-indigo-600 px-4 text-base font-semibold text-white disabled:opacity-50"
-            >
-              {busy ? "Saving…" : mode === "create" ? "Activate venue" : "Save changes"}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={busy}
+            className="flex h-[104px] w-full items-center justify-center rounded-xl bg-indigo-600 px-4 text-[32px] font-semibold leading-tight text-white disabled:opacity-50"
+          >
+            {busy ? "Saving…" : mode === "create" ? "Activate this venue" : "Save changes"}
+          </button>
         </div>
       )}
 
@@ -626,62 +578,3 @@ export function ActivateVenueFlow({
   );
 }
 
-type PinCardProps = {
-  coords: { lat: number; lng: number } | null;
-  pinLabel: string;
-  locating: boolean;
-  locateError: string;
-  onUseCurrentLocation: () => void;
-};
-
-/**
- * Step 1's pin *summary*. Since Phase 4 the editable map lives on step 2 inside
- * GeofenceEditor, so this card no longer opens a sheet — it reports where the
- * pin came from and offers the GPS shortcut, which is the one pin action worth
- * taking before the address is even confirmed.
- */
-function PinCard({ coords, pinLabel, locating, locateError, onUseCurrentLocation }: PinCardProps) {
-  return (
-    <div className={sectionCard}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900">
-            Make sure the pin drops on the right spot on the map or it won&apos;t work
-          </h3>
-          <p className="mt-0.5 text-xs text-slate-600">{pinLabel}</p>
-          {coords ? (
-            <p className="mt-0.5 font-mono text-[11px] text-slate-400">
-              {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
-            </p>
-          ) : null}
-        </div>
-        {coords ? (
-          <a
-            href={`https://maps.google.com/?q=${coords.lat},${coords.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 text-xs font-semibold text-indigo-600"
-          >
-            Check ↗
-          </a>
-        ) : null}
-      </div>
-
-      <div className="mt-3 grid grid-cols-1 gap-2">
-        <button
-          type="button"
-          onClick={onUseCurrentLocation}
-          disabled={locating}
-          className="min-h-[48px] w-full rounded-xl border border-indigo-300 bg-indigo-50 px-4 text-sm font-semibold text-indigo-800 disabled:opacity-60"
-        >
-          {locating ? "Getting a fix…" : "📍 Use my current location"}
-        </button>
-      </div>
-      <p className="mt-2 text-xs text-slate-500">
-        Standing inside the venue? Your phone&apos;s location is more accurate than any address lookup. You can drag
-        the pin on the map on the next step.
-      </p>
-      {locateError ? <p className="mt-2 text-xs text-amber-700">{locateError}</p> : null}
-    </div>
-  );
-}

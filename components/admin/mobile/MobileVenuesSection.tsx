@@ -163,7 +163,7 @@ export function MobileVenuesSection({
           setNotice("");
           setView({ kind: "create" });
         }}
-        className="min-h-[56px] w-full rounded-2xl bg-indigo-600 px-4 text-base font-semibold text-white shadow-sm"
+        className="h-[112px] min-h-[112px] w-full rounded-2xl bg-indigo-600 px-4 text-[2rem] font-semibold text-white shadow-sm"
       >
         ＋ Activate a venue
       </button>
@@ -292,20 +292,6 @@ function ActivatedSummary({ venue, onNavigate, onActivateAnother, onDone }: Acti
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-900">What&apos;s left</h3>
         <ul className="mt-3 space-y-3">
-          <li>
-            <p className="text-sm font-medium text-slate-800">▢ Check game settings</p>
-            <p className="mt-0.5 text-xs text-slate-600">
-              Games run on defaults from day one — nothing to switch on. The one per-venue choice is NFL Pick &apos;Em
-              scoring (standard vs spread).
-            </p>
-            <button
-              type="button"
-              onClick={() => onNavigate("game-settings")}
-              className="mt-2 min-h-[44px] rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700"
-            >
-              Open Game Settings
-            </button>
-          </li>
           <li>
             <p className="text-sm font-medium text-slate-800">▢ Billing access</p>
             <p className="mt-0.5 text-xs text-slate-600">

@@ -537,8 +537,8 @@ export function BillingSection() {
       <div>
         <h2 className="text-lg font-semibold text-slate-900">Partner Billing</h2>
         <p className="text-sm text-slate-600">
-          Grant Partner Dashboard access to venues that pay by check or another offline method.
-          Access stays active through the paid-through date; re-grant when the next payment clears.
+          Once a partner creates an account, you can use this screen to grant them access without having to enter a credit card.
+          
         </p>
       </div>
 
@@ -1161,15 +1161,14 @@ export function BillingSection() {
       </AdminModalSheet>
 
       <div className="space-y-3 border-t border-slate-200 pt-4">
-        <div className="flex items-center justify-between">
+        <div className="space-y-4">
           <div>
             <h3 className="text-base font-semibold text-slate-900">Promotion codes</h3>
             <p className="text-sm text-slate-600">
-              Codes a new partner can type into Checkout at signup (e.g. LAUNCH50). Has no effect
-              on an existing subscriber — use Discount above for that.
+              Create special codes partners can enter at Checkout to get a discount (e.g. LAUNCH50 for 50% off the first month).
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-stretch gap-3">
             {promoPanelOpen ? (
               <button
                 type="button"
@@ -1177,7 +1176,8 @@ export function BillingSection() {
                   setPromoFormOpen((open) => !open);
                   setPromoNotice("");
                 }}
-                className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500"
+                className="w-full rounded-xl bg-indigo-600 font-semibold text-white hover:bg-indigo-500"
+                style={{ padding: "0.875rem 1.75rem !important", fontSize: "1.0625rem !important", minHeight: "48px !important" }}
               >
                 {promoFormOpen ? "Cancel" : "New code"}
               </button>
@@ -1189,9 +1189,10 @@ export function BillingSection() {
                 setPromoFormOpen(false);
                 setPromoNotice("");
               }}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 active:bg-slate-100"
+              className="w-full rounded-xl bg-indigo-600 font-semibold text-white shadow-sm hover:bg-indigo-500 active:bg-indigo-700"
+              style={{ padding: "0.875rem 1.75rem !important", fontSize: "1.0625rem !important", minHeight: "48px !important" }}
             >
-              {promoPanelOpen ? "Hide" : "Manage"}
+              {promoPanelOpen ? "Hide Promotion Codes" : "Manage Promotion Codes"}
             </button>
           </div>
         </div>

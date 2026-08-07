@@ -96,7 +96,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
 // ADMIN_SECTION_OPTIONS.
 export const MOBILE_SECTION_ORDER = [
   "venue-manage",
-  "game-settings",
   "partner-billing",
 ] as const satisfies readonly AdminSection[];
 
