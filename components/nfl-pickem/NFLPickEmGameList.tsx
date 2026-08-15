@@ -393,7 +393,7 @@ export function NFLPickEmGameList({
   // The preseason preview week (see buildNFLGameWeekOptions) — at most one
   // entry ever carries this flag, and only before any NFL week has started.
   const previewWeek = useMemo(() => weeks.find((week) => week.isUpcomingPreview), [weeks]);
-  const previewWeekOpensLabel = useMemo(() => {
+  const previewWeekKickoffLabel = useMemo(() => {
     if (!previewWeek) return "";
     return formatCalendarDate(previewWeek.weekStartDate, { month: "long", day: "numeric" });
   }, [previewWeek]);
@@ -473,8 +473,8 @@ export function NFLPickEmGameList({
         {previewWeek && selectedWeekId === previewWeek.id && (
           <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-4 py-3 text-center">
             <p className="text-[12px] font-semibold leading-relaxed text-[#fde68a]">
-              {previewWeek.label || `Week ${previewWeek.weekNumber}`} opens {previewWeekOpensLabel} — lock in your
-              picks early.
+              {previewWeek.label || `Week ${previewWeek.weekNumber}`} picks are open now — games kick off{" "}
+              {previewWeekKickoffLabel}. Each pick locks at its own kickoff.
             </p>
           </section>
         )}

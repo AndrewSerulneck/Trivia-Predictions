@@ -80,7 +80,7 @@ export type ChallengeCampaignCard = {
 export const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
   "speed-trivia": ["Speed Trivia", ""],
   live_trivia: ["Live Trivia", ""],
-  bingo: ["Prop Bet Bingo", ""],
+  bingo: ["Prop Bingo", ""],
   pickem: ["Pick 'Em", ""],
   fantasy: ["Fantasy Sports", ""],
   "category-blitz": ["Category Blitz", ""],

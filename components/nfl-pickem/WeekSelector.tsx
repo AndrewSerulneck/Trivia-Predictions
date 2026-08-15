@@ -12,8 +12,6 @@ type WeekOption = {
   isLocked: boolean;
   isCurrent: boolean;
   gamesCount: number;
-  /** True only for the single preseason preview week — see lib/nflPickEm.ts. */
-  isUpcomingPreview?: boolean;
 };
 
 export function WeekSelector({
@@ -36,11 +34,7 @@ export function WeekSelector({
         <option key={week.id} value={week.id} className="bg-slate-900 text-[#fde68a]">
           {(week.label || `Week ${week.weekNumber}`)} · {formatCalendarDate(week.weekStartDate)} –{" "}
           {formatCalendarDate(week.weekEndDate)}
-          {week.isUpcomingPreview
-            ? ` (opens ${formatCalendarDate(week.weekStartDate)})`
-            : week.isCurrent
-              ? " (Now)"
-              : ""}
+          {week.isCurrent ? " (Now)" : ""}
         </option>
       ))}
     </select>
