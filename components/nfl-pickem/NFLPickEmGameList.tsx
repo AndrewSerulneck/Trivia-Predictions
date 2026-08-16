@@ -442,7 +442,9 @@ export function NFLPickEmGameList({
             </h1>
           </div>
           <p className="mt-2 text-[13px] font-semibold leading-relaxed text-slate-400">
-            Pick winners for every NFL matchup each week. Correct picks are worth 10 points. Each pick locks at that game&apos;s kickoff.
+            {previewWeek && selectedWeekId === previewWeek.id
+              ? `Pick winners for every NFL matchup. The season kicks off ${previewWeekKickoffLabel}. Correct picks are worth 10 points. Picks lock at kickoff.`
+              : "Pick winners for every NFL matchup this week. Correct picks are worth 10 points. Picks lock at kickoff."}
           </p>
         </section>
 
@@ -468,17 +470,6 @@ export function NFLPickEmGameList({
             </p>
           </section>
         )}
-
-        {/* Preseason early-access notice — see buildNFLGameWeekOptions */}
-        {previewWeek && selectedWeekId === previewWeek.id && (
-          <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-4 py-3 text-center">
-            <p className="text-[12px] font-semibold leading-relaxed text-[#fde68a]">
-              {previewWeek.label || `Week ${previewWeek.weekNumber}`} picks are open now — games kick off{" "}
-              {previewWeekKickoffLabel}. Each pick locks at its own kickoff.
-            </p>
-          </section>
-        )}
-
         {/* Weekly Summary */}
         {weekData && displaySummary && (
           <WeeklySummary

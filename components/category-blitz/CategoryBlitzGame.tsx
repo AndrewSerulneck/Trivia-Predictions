@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
 import { useScheduleUpdatedFlash } from "@/lib/hooks/useScheduleUpdatedBroadcast";
+import { useDelayedFlag } from "@/lib/hooks/useDelayedFlag";
 import ScheduleUpdatedToast from "@/components/ui/ScheduleUpdatedToast";
 import { useCategoryBlitzSession, type CategoryBlitzPhase } from "@/lib/categoryBlitzRealtime";
 import { isCategoryBlitzTestModeEnabled, setCategoryBlitzTestMode } from "@/lib/categoryBlitzTestMode";
@@ -39,6 +40,12 @@ const BORDER_ACTIVE = "border-emerald-400/60";
 const BORDER_CARD = "border-emerald-400/30";
 const TEXT_ACCENT = "text-emerald-300";
 const TEXT_LABEL = "text-emerald-300 tracking-[0.14em] uppercase font-black text-xs";
+
+/** How long ContinuousWaitScreen holds a zeroed countdown before admitting to
+ *  loading. Mirrors IntermissionStatus's LOADING_GRACE_MS — see the rationale
+ *  there; both exist so a sub-second wait shows no loading affordance at all
+ *  rather than a message that flashes past unread. */
+const CONTINUOUS_LOADING_GRACE_MS = 600;
 
 /** Matches RoundStartReveal's LAYOUT_MORPH_TRANSITION so the badge/row FLIP
  *  uses the same branded easing on both ends of the reveal → gameplay morph. */
@@ -634,21 +641,28 @@ function ContinuousWaitScreen({
   playerCount?: number;
 }) {
   const isUrgent = lobbyCountdown != null && lobbyCountdown <= 10;
+  // Same anti-flash grace as IntermissionStatus: for a continuous venue this
+  // screen is usually a sub-second transient while the first poll self-heals
+  // the session, so hold the zeroed countdown rather than blinking a loading
+  // message that's gone before it can be read.
+  const showLoading = useDelayedFlag(lobbyCountdown == null, CONTINUOUS_LOADING_GRACE_MS);
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto overscroll-contain px-4 py-6">
       <InviteBanner playerCount={playerCount} />
       <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-5 text-center`}>
-        <p className={TEXT_LABEL}>Next round starts in</p>
-        {lobbyCountdown != null ? (
-          <p
-            className={`mt-1 font-black tabular-nums text-[2.6rem] leading-none ${
-              isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
-            }`}
-          >
-            {formatMmSs(lobbyCountdown)}
-          </p>
+        {showLoading ? (
+          <p className={`animate-pulse text-2xl font-black ${TEXT_ACCENT}`}>Loading categories…</p>
         ) : (
-          <p className={`mt-1 animate-pulse text-2xl font-black ${TEXT_ACCENT}`}>Loading categories…</p>
+          <>
+            <p className={TEXT_LABEL}>Next round starts in</p>
+            <p
+              className={`mt-1 font-black tabular-nums text-[2.6rem] leading-none ${
+                isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
+              }`}
+            >
+              {formatMmSs(lobbyCountdown ?? 0)}
+            </p>
+          </>
         )}
         <p className="mt-3 text-sm text-emerald-100/80">One letter · 12 categories · 3 minutes</p>
       </div>
