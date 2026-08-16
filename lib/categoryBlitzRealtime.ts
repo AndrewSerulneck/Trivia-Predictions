@@ -42,6 +42,23 @@ export type CategoryBlitzPhase =
   | "results"    // reveal finished, full results/leaderboard visible
   | "complete";  // session ended
 
+/**
+ * The "next round in" countdown, carrying the id of the round whose boundary it
+ * is counting down to.
+ *
+ * The round id travels WITH the seconds rather than being re-derived from
+ * `currentRoundIdRef` when the countdown is read. Those two can disagree for a
+ * whole flush: the deferred-round effect runs before the round-boundary kick
+ * effect, so by the time the kick sees a zeroed countdown belonging to R1,
+ * `currentRoundIdRef` may already have advanced to R2. Anchoring the kick to a
+ * value that was computed alongside the countdown itself makes that class of
+ * disagreement unrepresentable.
+ */
+type NextRoundCountdown = {
+  roundId:          string;
+  secondsRemaining: number;
+};
+
 export interface CategoryBlitzSessionState {
   phase:           CategoryBlitzPhase;
   session:         CategoryBlitzSession | null;
@@ -115,13 +132,58 @@ const TIMER_TICK_MS   = 250;       // timer precision
 // treat the outage as persistent rather than a transient blip and escalate.
 const ESCALATE_AFTER_FAILURES = 4;
 
+// ── Round-boundary kick ───────────────────────────────────────────────────────
+// The next round does not exist until something calls the sessions endpoint:
+// `driveContinuousCategoryBlitz` (and its scheduled twin) generate the letter,
+// assemble the board and INSERT the row on demand. Nothing fires at T=0, so
+// before this existed a player who watched the intermission countdown hit zero
+// waited out the rest of the 15s fallback poll — ~7.5s on average — staring at
+// "Loading categories…" while the server sat idle. The one-minute cron is only
+// a backstop and is usually slower still.
+//
+// So: when the countdown reaches zero, ask for the round instead of waiting to
+// be told about it. Whichever client lands first creates the round; everyone
+// else is served by its `round_started` broadcast.
+//
+// Backoff for the retry ladder after the initial jittered attempt. Capped
+// deliberately — a venue whose letter has thin category-pool coverage makes
+// `startContinuousRound` throw every time, and an uncapped ladder would have
+// every client hammering the endpoint forever over a failure that retrying
+// cannot fix. After the last rung we simply fall back to the normal 15s poll.
+const KICK_RETRY_DELAYS_MS = [1_200, 3_000, 6_000] as const;
+
+/**
+ * Random delay before this client's first kick, so a venue full of players
+ * doesn't hit one session row simultaneously.
+ *
+ * The window scales with the number of players rather than being a fixed
+ * spread. With N clients drawing uniformly from [0, k·N], the expected time
+ * until the *earliest* one fires is k·N/(N+1) ≈ k — near-constant regardless
+ * of venue size — while the load itself stays spread across the whole window.
+ * So a solo player still gets their round in ~100ms, and the round still
+ * appears just as fast in a busy venue; only the redundant kicks fan out.
+ *
+ * This is also what keeps the global-room rollout
+ * (NEXT_PUBLIC_CATEGORY_BLITZ_GLOBAL_ROOM) safe: with pooling on, every venue
+ * shares one room and therefore one round boundary, so the herd becomes the
+ * total concurrent player count. The cap bounds the spread there without
+ * penalizing the small-venue case.
+ */
+const KICK_JITTER_PER_PLAYER_MS = 200;
+const KICK_JITTER_MAX_MS = 3_000;
+
+export const kickJitterMs = (playerCount: number): number => {
+  const players = Math.max(1, playerCount);
+  return Math.random() * Math.min(KICK_JITTER_MAX_MS, KICK_JITTER_PER_PLAYER_MS * players);
+};
+
 export function useCategoryBlitzSession(venueId: string, userId: string): CategoryBlitzSessionState {
   const [phase,         setPhase]         = useState<CategoryBlitzPhase>("idle");
   const [session,       setSession]       = useState<CategoryBlitzSession | null>(null);
   const [round,         setRound]         = useState<CategoryBlitzRound | null>(null);
   const [results,       setResults]       = useState<CategoryBlitzRoundResults | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [nextRoundStartsIn, setNextRoundStartsIn] = useState<number | null>(null);
+  const [nextRoundCountdown, setNextRoundCountdown] = useState<NextRoundCountdown | null>(null);
   const [lobbyCountdown, setLobbyCountdown] = useState<number | null>(null);
   const [isConnected,   setIsConnected]   = useState(false);
   const [error,         setError]         = useState<string | null>(null);
@@ -140,6 +202,16 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   const scoringCalledRef  = useRef(false);  // prevent double-trigger per round
   const currentRoundIdRef = useRef<string | null>(null);
   const endsAtRef         = useRef<number | null>(null);  // ms epoch
+  /** Mirrors `round`, but is also written synchronously by applyRound so it is
+   *  correct WITHIN the flush that applied it. loadCurrentRound calls
+   *  loadResults immediately after applyRound, before React re-renders, so
+   *  loadResults's own `round` closure is still the PREVIOUS round there.
+   *  Anchoring the next-round countdown on that stale round produces a
+   *  spurious zero (the old round's interval is long past), which flickers the
+   *  UI and — worse — arms the round-boundary kick against an anchor the
+   *  server already moved. Same class of bug as the boundary-id race the kick
+   *  effect guards against; see NextRoundCountdown. */
+  const roundRef          = useRef<CategoryBlitzRound | null>(null);
   /** Tracks whether RoundStartReveal's onDone has fired for a given round ID.
    *  The auto-scoring timer won't trigger until this matches currentRoundIdRef,
    *  preventing the phase transition from interrupting the reveal animation
@@ -183,10 +255,49 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
    *  the "next round in" countdown uses the venue's real continuous cadence
    *  without adding `session` to their dependency arrays. */
   const continuousTimingRef = useRef<CategoryBlitzContinuousTiming | null>(null);
+  /** Round id whose boundary this client has already kicked for, so the kick
+   *  fires once per round rather than on every 250ms tick that sees a zeroed
+   *  countdown. Keyed on the round that just ENDED (the boundary), so the
+   *  arrival of the next round naturally re-arms it for the boundary after. */
+  const kickedRoundIdRef  = useRef<string | null>(null);
+  /** Pending kick-ladder timeouts, cleared on unmount/venue change. Held in a
+   *  ref rather than an effect cleanup on purpose — see the kick effect. */
+  const kickTimeoutsRef   = useRef<number[]>([]);
+  /** Latest known player count, read synchronously by the kick's jitter math
+   *  so it doesn't have to depend on `session` (which changes every poll). */
+  const playerCountRef    = useRef(1);
+
+  const clearKickTimeouts = useCallback((): void => {
+    for (const id of kickTimeoutsRef.current) window.clearTimeout(id);
+    kickTimeoutsRef.current = [];
+  }, []);
+
+  /**
+   * Set the "next round in" countdown together with the round whose boundary it
+   * belongs to — the only way the countdown is ever set to a live value, so the
+   * pair can never be assembled from two different rounds.
+   *
+   * Returns the previous object unchanged when nothing moved. The timer ticks at
+   * 250ms but the countdown only changes once a second, and back when this was a
+   * bare number React bailed out of those no-op renders for free; without this
+   * guard a fresh object every tick would re-render the whole game surface four
+   * times a second AND re-run the round-boundary kick effect on each one.
+   */
+  const setNextRoundCountdownFor = useCallback((roundId: string, secondsRemaining: number): void => {
+    setNextRoundCountdown((prev) =>
+      prev && prev.roundId === roundId && prev.secondsRemaining === secondsRemaining
+        ? prev
+        : { roundId, secondsRemaining },
+    );
+  }, []);
 
   useEffect(() => {
     userIdRef.current = userId;
   }, [userId]);
+
+  useEffect(() => {
+    playerCountRef.current = session?.playerCount ?? 1;
+  }, [session]);
 
   useEffect(() => {
     continuousTimingRef.current =
@@ -204,6 +315,13 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
     phaseRef.current = phase;
   }, [phase]);
 
+  // Covers every setRound(null) path (no session / complete / lobby / abandoned
+  // / dismiss / venue reset); applyRound writes roundRef itself so the
+  // within-flush case above is also covered.
+  useEffect(() => {
+    roundRef.current = round;
+  }, [round]);
+
   useEffect(() => {
     if (venueId) return;
     const resetId = window.setTimeout(() => {
@@ -212,7 +330,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       setRound(null);
       setResults(null);
       setTimeRemaining(0);
-      setNextRoundStartsIn(null);
+      setNextRoundCountdown(null);
       setLobbyCountdown(null);
       setError(null);
       setErrorEscalated(false);
@@ -225,9 +343,11 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       errorStreakRef.current = 0;
       pendingActiveRoundRef.current = null;
       dismissedSessionIdRef.current = null;
+      kickedRoundIdRef.current = null;
+      clearKickTimeouts();
     }, 0);
     return () => window.clearTimeout(resetId);
-  }, [venueId]);
+  }, [venueId, clearKickTimeouts]);
 
   // ── Results-reveal gate ────────────────────────────────────────────────────
   // A round becoming scored enters the "reveal" phase (grading cascade) rather
@@ -338,6 +458,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       }
 
       setRound(r);
+      roundRef.current = r;
       // Only reset the reveal/scoring guards when this is genuinely a new
       // round — a duplicate poll re-delivering the same round shouldn't wipe
       // a reveal that already finished (that would strand the settlePhase
@@ -373,20 +494,20 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       if (r.status === "complete") {
         endsAtRef.current = null;
         setTimeRemaining(0);
-        setNextRoundStartsIn(nextStartRemaining);
+        setNextRoundCountdownFor(r.id, nextStartRemaining);
         settlePhase(r.id, "results");
         return;
       }
       if (r.status === "scoring") {
         endsAtRef.current = null;
         setTimeRemaining(0);
-        setNextRoundStartsIn(nextStartRemaining);
+        setNextRoundCountdownFor(r.id, nextStartRemaining);
         settlePhase(r.id, "scoring");
         return;
       }
       // active
       setTimeRemaining(remaining);
-      setNextRoundStartsIn(null);
+      setNextRoundCountdown(null);
       setPhase(remaining > 0 ? "answering" : "scoring");
     };
   });
@@ -482,7 +603,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setRound(null);
         setResults(null);
         setTimeRemaining(0);
-        setNextRoundStartsIn(null);
+        setNextRoundCountdown(null);
         setLobbyCountdown(null);
         endsAtRef.current = null;
         lobbyStartsAtRef.current = null;
@@ -516,7 +637,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setRound(null);
         setResults(null);
         setTimeRemaining(0);
-        setNextRoundStartsIn(null);
+        setNextRoundCountdown(null);
         endsAtRef.current = null;
         lobbyStartsAtRef.current = s.startsAt ? new Date(s.startsAt).getTime() : null;
         setPhase("lobby");
@@ -555,14 +676,22 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       setResults(json.results);
       settlePhase(roundId, "results");
       endsAtRef.current = null;
-      if (round?.startedAt) {
-        const nextStartAtMs = nextRoundStartAtMs(round, isCategoryBlitzTestModeEnabled(), continuousTimingRef.current);
-        setNextRoundStartsIn(Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
+      // roundRef, not the `round` state: loadCurrentRound calls this straight
+      // after applyRound within the same flush, where the closure's `round` is
+      // still the previous one (see roundRef).
+      const anchorRound = roundRef.current;
+      if (anchorRound?.startedAt) {
+        const nextStartAtMs = nextRoundStartAtMs(anchorRound, isCategoryBlitzTestModeEnabled(), continuousTimingRef.current);
+        // The carried id is the anchor round's own id, NOT the `roundId`
+        // argument — those differ only when a results payload for some other
+        // round arrives, and in that case the seconds belong to the anchor
+        // round, so labelling them with anything else would be a lie.
+        setNextRoundCountdownFor(anchorRound.id, Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
       }
     } catch {
       // Non-fatal — results panel will handle empty state.
     }
-  }, [round, settlePhase]);
+  }, [settlePhase, setNextRoundCountdownFor]);
 
   useEffect(() => {
     loadResultsRef.current = loadResults;
@@ -590,7 +719,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
           endsAtRef.current = null;
           if (round?.startedAt) {
             const nextStartAtMs = nextRoundStartAtMs(round, isCategoryBlitzTestModeEnabled(), continuousTimingRef.current);
-            setNextRoundStartsIn(Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
+            setNextRoundCountdownFor(round.id, Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
           }
         } else {
           // Score POST returned ok:false — reset the guard so the next timer
@@ -614,6 +743,9 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
 
   const timerRoundStartedAt = round?.startedAt ?? null;
   const timerRoundScoredAt = round?.scoredAt ?? null;
+  // The countdown below is derived from THIS round's anchor, so it is labelled
+  // with THIS round's id — see NextRoundCountdown.
+  const timerRoundId = round?.id ?? null;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -648,20 +780,83 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setLobbyCountdown(null);
       }
 
-      if ((phase === "results" || phase === "scoring" || phase === "reveal") && timerRoundStartedAt) {
+      if ((phase === "results" || phase === "scoring" || phase === "reveal") && timerRoundStartedAt && timerRoundId) {
         const nextStartAtMs = nextRoundStartAtMs(
           { startedAt: timerRoundStartedAt, scoredAt: timerRoundScoredAt },
           isCategoryBlitzTestModeEnabled(),
           continuousTimingRef.current,
         );
-        setNextRoundStartsIn(Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
+        setNextRoundCountdownFor(timerRoundId, Math.max(0, Math.round((nextStartAtMs - Date.now()) / 1000)));
       } else {
-        setNextRoundStartsIn(null);
+        setNextRoundCountdown(null);
       }
     }, TIMER_TICK_MS);
 
     return () => clearInterval(interval);
-  }, [phase, timerRoundStartedAt, timerRoundScoredAt]);
+  }, [phase, timerRoundStartedAt, timerRoundScoredAt, timerRoundId, setNextRoundCountdownFor]);
+
+  // ── Round-boundary kick ────────────────────────────────────────────────────
+  // The intermission countdown just hit zero, which means the server is now due
+  // to produce the next round but has no idea the moment arrived (see
+  // KICK_RETRY_DELAYS_MS above). Ask for it rather than waiting out the poll.
+  //
+  // Deliberately has NO effect cleanup cancelling the ladder. The ladder must
+  // outlive its own effect run: `phase` legitimately changes while the
+  // countdown sits at zero (a grading cascade settling flips "reveal" ->
+  // "results"), and a cleanup would cancel the pending retries while
+  // kickedRoundIdRef — already set — made the re-run bail out, silently killing
+  // the ladder exactly when a slow venue needs it most. Instead every rung
+  // re-checks currentRoundIdRef and self-terminates the moment the next round
+  // lands, from whatever source; the timeouts are cleared on unmount/venue
+  // change only.
+  useEffect(() => {
+    if (nextRoundCountdown === null || nextRoundCountdown.secondsRemaining > 0) return;
+    // "scoring" is deliberately NOT a kickable phase. An unscored round has no
+    // trustworthy next-round anchor: its countdown runs off
+    // `startedAt + duration + intermission`, but the server re-anchors to
+    // `scoredAt + intermission` the moment grading finishes. Arming here would
+    // burn kickedRoundIdRef against the pre-scoring estimate — and when /score
+    // keeps returning ok:false (the min-player gate) and holds this tab in
+    // "scoring" past that estimate, the real post-scoring countdown would then
+    // find the round already kicked and never fire. Waiting costs nothing:
+    // "reveal"/"results" both imply the round IS scored, and both are reached
+    // promptly by the /score response, the round_scored broadcast, or the poll.
+    if (phase !== "results" && phase !== "reveal") return;
+
+    // The boundary's identity comes from the countdown itself, never from
+    // currentRoundIdRef at effect time. The deferred-round effect above is
+    // declared first, so within a single flush it can already have advanced
+    // currentRoundIdRef to the NEXT round while this effect is still looking at
+    // the previous round's zeroed countdown — which used to arm the whole ladder
+    // against the wrong round (firing four loadSession calls into the new
+    // round's answering phase, and burning the new round's own boundary).
+    const boundaryRoundId = nextRoundCountdown.roundId;
+    if (kickedRoundIdRef.current === boundaryRoundId) return;
+    kickedRoundIdRef.current = boundaryRoundId;
+    // Drop any rungs still pending from the PREVIOUS boundary. They'd no-op on
+    // their own (their boundaryRoundId is stale), but clearing keeps the array
+    // from growing one entry per rung for the whole session.
+    clearKickTimeouts();
+
+    let rung = 0;
+    const fire = (): void => {
+      if (!mountedRef.current) return;
+      // The next round already arrived — via this client's kick, another
+      // player's, the round_started broadcast, or the fallback poll. Nothing
+      // left to ask for.
+      if (currentRoundIdRef.current !== boundaryRoundId) return;
+
+      debugLog(`[categoryBlitzRealtime] round-boundary kick (rung ${rung}) after round ${boundaryRoundId}`);
+      void loadSessionRef.current();
+
+      const delay = KICK_RETRY_DELAYS_MS[rung];
+      rung += 1;
+      if (delay === undefined) return;  // ladder exhausted — the 15s poll takes over
+      kickTimeoutsRef.current.push(window.setTimeout(fire, delay));
+    };
+
+    kickTimeoutsRef.current.push(window.setTimeout(fire, kickJitterMs(playerCountRef.current)));
+  }, [phase, nextRoundCountdown, clearKickTimeouts]);
 
   // ── Realtime subscription ─────────────────────────────────────────────────
 
@@ -700,7 +895,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         if (!active || !mountedRef.current) return;
         setPhase("complete");
         endsAtRef.current = null;
-        setNextRoundStartsIn(null);
+        setNextRoundCountdown(null);
         // Drop any deferred next round — the session is over, so a late
         // markResultsRevealDone must not flip "complete" back into "answering".
         pendingActiveRoundRef.current = null;
@@ -717,7 +912,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         if (!active || !mountedRef.current) return;
         setPhase("complete");
         endsAtRef.current = null;
-        setNextRoundStartsIn(null);
+        setNextRoundCountdown(null);
         pendingActiveRoundRef.current = null;
         if (sessionIdRef.current) void loadFinalResults(sessionIdRef.current);
       })
@@ -734,7 +929,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         setRound(null);
         setResults(null);
         setTimeRemaining(0);
-        setNextRoundStartsIn(null);
+        setNextRoundCountdown(null);
         setLobbyCountdown(null);
         endsAtRef.current = null;
         lobbyStartsAtRef.current = null;
@@ -784,8 +979,9 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
     return () => {
       mountedRef.current = false;
       clearInterval(poll);
+      clearKickTimeouts();
     };
-  }, [venueId]);
+  }, [venueId, clearKickTimeouts]);
 
   // ── Visibility catch-up ────────────────────────────────────────────────────
   // The 15s poll above is a worst-case fallback; a tab that was backgrounded
@@ -822,6 +1018,11 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
     setLobbyCountdown(null);
     setPhase("idle");
   }, []);
+
+  // Consumers only ever needed the seconds; the round id the countdown carries
+  // is an internal invariant for the round-boundary kick, not part of the
+  // public shape.
+  const nextRoundStartsIn = nextRoundCountdown?.secondsRemaining ?? null;
 
   return { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, isConnected, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete };
 }
