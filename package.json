@@ -50,6 +50,7 @@
     "bingo:measure:mlb": "node --env-file=.env.local scripts/measure-mlb-event-rates.cjs",
     "bingo:measure:nfl-quarters": "node --env-file=.env.local scripts/measure-nfl-quarter-rates.cjs",
     "bingo:calibrate:nfl": "node --env-file=.env.local --conditions react-server --import tsx scripts/calibrate-nfl-square-families.cjs",
+    "bingo:calibrate:mlb": "node --env-file=.env.local --conditions react-server --import tsx scripts/calibrate-mlb-square-families.cjs",
     "bingo:stars:nfl": "node --env-file=.env.local --conditions react-server --import tsx scripts/refresh-nfl-star-index.cjs",
     "bingo:stars:nfl:dry-run": "node --env-file=.env.local --conditions react-server --import tsx scripts/refresh-nfl-star-index.cjs --dry-run",
     "bingo:stars:mlb": "node --env-file=.env.local --conditions react-server --import tsx scripts/refresh-mlb-star-index.cjs",

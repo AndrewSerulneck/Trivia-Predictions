@@ -1,0 +1,53 @@
+{
+  "sampledGames": 300,
+  "perGameMeans": {
+    "hit": {
+      "home": 8.053,
+      "away": 8.127,
+      "pooled": 8.09,
+      "homeMinusAway": -0.073,
+      "homePctOfAway": 99.1
+    },
+    "walk": {
+      "home": 3.09,
+      "away": 3.15,
+      "pooled": 3.12,
+      "homeMinusAway": -0.06,
+      "homePctOfAway": 98.1
+    },
+    "hit_by_pitch": {
+      "home": 0.423,
+      "away": 0.447,
+      "pooled": 0.435,
+      "homeMinusAway": -0.023,
+      "homePctOfAway": 94.8
+    },
+    "strikeout": {
+      "home": 8.043,
+      "away": 8.727,
+      "pooled": 8.385,
+      "homeMinusAway": -0.683,
+      "homePctOfAway": 92.2
+    },
+    "groundout": {
+      "home": 7.883,
+      "away": 8.53,
+      "pooled": 8.207,
+      "homeMinusAway": -0.647,
+      "homePctOfAway": 92.4
+    },
+    "flyout": {
+      "home": 5.017,
+      "away": 5.107,
+      "pooled": 5.062,
+      "homeMinusAway": -0.09,
+      "homePctOfAway": 98.2
+    }
+  },
+  "battingInnings": {
+    "homeMean": 8.62,
+    "awayMean": 9.117,
+    "gamesHomeBattedFewerInnings": 149,
+    "gamesHomeBattedSameOrMore": 151
+  }
+}

@@ -1003,7 +1003,13 @@ unless a caller explicitly opts in.
   explicitly now that the whole R1-R4 recovery arc is complete — this is a natural checkpoint to ask,
   rather than letting more phases pile onto an unmerged branch.
 - **Not yet done, still open:** 6, 7, 5 (any order). 3 is closed (see R3's write-up). **Update:** 6 is
-  now also done — see its own "done" write-up below. Only 7 and 5 remain.
+  now also done — see its own "done" write-up below. **Update 2:** 7 is now also done (audit-only,
+  three WNBA findings reported, not fixed — see its own "done" write-up). **Update 3:** 5 and 8
+  are now also done (both 2026-08-18, both with their own "done" write-ups below). **Every phase
+  in this plan is complete.** That is NOT the same as "the area is clean" — Phase 7's Finding 3
+  and Phase 8's 108 mis-settled squares are both live and both awaiting a product decision from
+  Andrew, and Phase 5 surfaced a home/away base-rate gap that is a shipped-price change nobody
+  has approved. Read those three write-ups before declaring anything finished.
 
 ---
 
@@ -1068,6 +1074,184 @@ validity, whether a delta is real or noise, whether a family has enough events t
 not mechanical. `quick_out_under_3_pitches` in particular is derived from our own webhook stream
 and has no box-score column, so it cannot be calibrated this way at all; say so rather than
 inventing a number.
+
+---
+
+## Phase 5 — done (2026-08-18)
+
+**`npm run bingo:calibrate:mlb` shipped, run against the full 2025 season, and it found something
+the board-level backtest and the aggregate family table both structurally cannot see: the six
+`mlb_webhook_team_event_at_least` base rates are home/away-blind, and the home team bats one fewer
+inning in half of all games.** The pooled rate for every event is right (worst |z| = 1.16). Split by
+side, home is priced too high and away too low, in matched opposite directions, so every aggregate
+in this plan's history has been averaging the error away to zero.
+
+### What shipped
+
+- **`scripts/calibrate-mlb-square-families.cjs`** (new, 420 lines) + `"bingo:calibrate:mlb"` in
+  `package.json`, mirroring `bingo:calibrate:nfl`'s `--conditions react-server --import tsx`
+  invocation. Imports the **shipped** generator and graders
+  (`buildSportsBingoBoardFromBallDontLieGame`, `buildMlbTeamEventCandidateTemplatesForBacktest`,
+  `gradeResolversAgainstCompletedMLBGame`, `boardStatusesMakeALine`, `normalCdf`) — no mirrored
+  grading logic anywhere in it, per Phase 1's rule.
+- **No `lib/` change.** This phase is an instrument only. `lib/sportsBingo.ts` was not touched.
+
+Four outputs the NFL template does not have, each added because a first run was misreadable without
+it:
+
+| output | why it exists |
+|---|---|
+| `byTeamEventSide` | the whole finding below. Splits each event by `resolver.team`; the pooled `byTeamEvent` row hides it |
+| `stdErr` / `z` computed against **distinct games**, not squares | six boards off one game are one observation of that box score. Squares-as-N would have called every row significant |
+| `realizedWinRateOnBoardsWithoutUncalibratableSquares` | the raw win rate is biased low by the `quick_out_under_3_pitches` artifact — see below |
+| `notCalibratable` block | names what this instrument cannot price, so absence never reads as "no such square exists" |
+
+### Slate
+
+Full 2025 regular season: 2430 finals, spring training and postseason excluded (`season_type` is
+`"regular"`, not `"regular_season"` — probed live, and `seasons[]` *is* honoured on
+`/mlb/v1/games`, contrary to the "dates[] is the only param" note in
+`scripts/simulate-bingo-boards.cjs:165`). First 21 days dropped from the *sample* but kept in the
+priors, since the shrinkage prior (12 games of league mean) dominates that window. 600 games sampled
+evenly across 2025-04-08 → 2025-09-28, 6 boards each = **3600 boards, 87k graded squares**. Priors
+are built from every regular-season final strictly before each sampled game's date, so `--games`
+buys API cost back without ever weakening the retrodictive market.
+
+Artifact: `docs/phase0-artifacts/phase5-mlb-calibration-2026-08-18.json`.
+
+### The finding — `predictMlbTeamEventRate` is home/away-blind, and it shouldn't be
+
+Pooled, every event is priced correctly:
+
+```
+team_event:walk           assigned 0.490  realized 0.466   -0.024  z -1.16
+team_event:strikeout      assigned 0.441  realized 0.428   -0.013  z -0.65
+team_event:hit_by_pitch   assigned 0.334  realized 0.322   -0.011  z -0.60
+team_event:hit            assigned 0.414  realized 0.421   +0.007  z  0.37
+team_event:groundout      assigned 0.417  realized 0.428   +0.011  z  0.54
+team_event:flyout         assigned 0.487  realized 0.501   +0.013  z  0.66
+```
+
+Split by side, the same numbers separate:
+
+```
+team_event:ALL:home       assigned 0.434  realized 0.414   -0.020
+team_event:ALL:away       assigned 0.434  realized 0.450   +0.016
+team_event:strikeout:home assigned 0.440  realized 0.389   -0.052  z -2.54
+team_event:strikeout:away assigned 0.441  realized 0.466   +0.024  z  1.20
+```
+
+**The mechanism is not inferred from the table — it is measured directly from the box scores**, in
+a second pass that touches neither board generation nor the graders (300 games, evenly spaced
+across 2025; `docs/phase0-artifacts/phase5-mlb-home-away-split-2026-08-18.json`):
+
+```
+home team batting innings, mean          8.62
+away team batting innings, mean          9.12
+games where home batted FEWER innings   149 / 300   (49.7%)
+
+per-game team totals          home    away    home as % of away
+strikeout                     8.04    8.73         92.2%
+groundout                     7.88    8.53         92.4%
+hit_by_pitch                  0.42    0.45         94.8%
+walk                          3.09    3.15         98.1%
+flyout                        5.02    5.11         98.2%
+hit                           8.05    8.13         99.1%
+```
+
+The home team does not bat in the bottom of the 9th when it is already ahead, which is essentially
+half of all games. `predictMlbTeamEventRate` returns one league mean pooled over both sides, so a
+home "at least N" square is priced off ~9 innings of opportunity the home lineup only gets half the
+time. **All six events run home < away in the direct measurement, and 5 of 6 do in the price table**
+(`hit_by_pitch` is the exception in this run, at +0.001 home / −0.025 away — it is also the event
+with the smallest measured gap, 94.8%, on the smallest counts). Strikeout and groundout show the
+largest box-score gap and strikeout shows the largest price gap, which is the ordering the mechanism
+predicts.
+
+**Is it real or noise? Real, and modest.** The direct box-score measurement is not subject to
+board-draw noise and is unambiguous. The price table's own z-scores are more restrained: in this run
+only `strikeout:home` individually clears |z| ≥ 2. An earlier run over the identical slate with a
+different board draw put the side aggregates at −0.031 home / +0.016 away with home negative in 12
+of 14 rows — same sign, same ordering, magnitude moving a point or two. So: the *direction* is
+certain, the *size* is roughly 2-5 points of probability on the affected squares, and it is largest
+on strikeout.
+
+**This is a shipped-price change and is deliberately not made here.** Same discipline as Phase 3 and
+R3's NBA finding: the instrument reports, the price change gets its own review. The smallest fix
+that addresses it is a side-aware term in `predictMlbTeamEventRate` — the measured per-game ratios
+above are directly usable as a home-side multiplier — but whether to carry a home/away split at all
+is a product call about square-label symmetry as much as an accuracy one.
+
+### Board-level win rate
+
+```
+realizedWinRate                                          0.2425   (3600 boards)
+realizedWinRateOnBoardsWithoutUncalibratableSquares      0.2686   (2018 boards)
+```
+
+**Read the second one.** 1830 of the 3600 boards drew a `quick_out_under_3_pitches` square, which
+has no `/mlb/v1/stats` column, so the grader sees `currentCount: 0` and settles it `miss` every
+time — a square priced 0.58 forced to 0.00 by a missing column, not by anything about the price.
+Boards that happened not to draw one land at **26.9%, inside the 20-30% target band**. The raw
+24.25% is a floor, and R4's `--backtest` number (26.0%) carries the same downward bias for the same
+reason, which is worth knowing before the two are ever compared.
+
+### What this instrument cannot price — stated plainly, per this phase's own instruction
+
+1. **`quick_out_under_3_pitches` — not calibratable by any box-score method.** It is derived from
+   our own webhook stream. It is excluded from every table and reported once under
+   `notCalibratable`; **there is no number for it in this artifact and none should be invented.**
+   Phase 6's webhook verification is the only instrument that touches it.
+2. **Every player-level family — `player_prop`, `mlb_webhook_player_event_at_least`,
+   `mlb_webhook_player_event_at_most` — is at `n: 0`, structurally.** They come out of
+   `buildMLBPlayerPropCandidatesFromRecentStats`, which needs an *upcoming* game's lineups and
+   trailing stats; a historical replay cannot produce them. `npm run bingo:validate:mlb`'s realized
+   column is still the only instrument that sees them, and it is a smoke test, not a price.
+3. **The core-market rows are NOT a verdict on a shipped price.** In production those squares are
+   priced off a real vendor market model; here they are priced off this script's retrodictive one.
+   `team_total_under` at +0.044 (z 2.16) and `team_total_over` at −0.034 are a matched pair and mean
+   this harness's `MLB_TEAM_TOTAL_SIGMA` is slightly off — a note about the harness, not about the
+   game. The module header says this; do not let a future reader quote those rows as a mispricing.
+4. **Team-event prices here are league-mean, not opponent-adjusted** (R4's
+   `buildMlbTeamEventCandidateTemplatesForBacktest` reads `predictMlbTeamEventRate(event, null, 0)`
+   by design). So `byTeamEvent` judges the base the opponent adjustment is applied *to*, which is
+   the right question for a base rate and the wrong one for "is this card's square mispriced."
+
+### The comparison this phase was sequenced last to make
+
+Every shipped MLB base rate was set by `scripts/measure-mlb-event-rates.cjs` reading box-score
+columns directly, never through the graders. Now both exist. **They agree** — pooled, all six events
+land within 0.024 of assigned with |z| ≤ 1.16, on 87k squares. The grading path and the pricing path
+read the same event the same way; there is no third defect hiding between them. The one place they
+part company is the side split, and that is not a disagreement between the two instruments — it is
+something neither of them was built to see, because both pool the sides.
+
+### Gate — results
+
+```
+npx tsc --noEmit                       0 errors
+npm run lint                           clean
+npm run test:bingo-nfl                 244/244
+npm run test:bingo-mlb                 123/123
+npm run test (full suite)              1859 passing, 13 skipped, 0 failing
+```
+
+No test was added: per this plan's own standard, an instrument's output is its evidence, and Phase 5
+changes no behavior (Phases 1, 4a and 7 took the same exemption).
+
+### Handoff
+
+- **Phase 5 was the last numbered phase, and it does not close the area.** Phase 7's Finding 3
+  (WNBA has no `/wnba/v1/stats` or `/wnba/v1/lineups` endpoint at all, so every WNBA player- and
+  team-stat square is ungradeable) is still live, still unfixed, and still needs a product decision.
+  Phase 8's audit below found a second live issue that is bigger than the one it was sent to check.
+  **Do not read "Phase 5 done" as "sports bingo is clean."**
+- **The home/away finding is the one open engineering item from this phase**, and it is a price
+  change awaiting Andrew, not a bug awaiting a fix.
+- **Re-running:** `npm run bingo:calibrate:mlb` defaults to 400 games; the artifact above used
+  `--games 600 --boards 6` (~600 `/mlb/v1/stats` calls, ~12 minutes). `--games 0` replays all 2280
+  eligible games. Board generation is random per trial, so two runs over the identical slate differ
+  by a point or two per row — compare signs and orderings, not third decimals.
 
 ---
 
@@ -1195,6 +1379,218 @@ outcome is "no findings", which is a perfectly good result to write down.
 
 ---
 
+## Phase 7 — done (2026-08-18)
+
+**Not "no findings." WNBA has real, live, currently-active defects — bigger in kind than any single
+MLB one, because two of the three are field-name divergences on top of balldontlie simply not
+offering the `/wnba/v1/stats` and `/wnba/v1/lineups` endpoints at all.** WNBA is `enabled: true` in
+`components/bingo/SportsBingoSelectSport.tsx` and it is currently WNBA season (Aug 18) — this is
+live production exposure, not a dormant risk the way the pre-2026-08-18 MLB bugs briefly were before
+any real player-prop volume existed. **Report only, per this phase's own scope and the plan's
+"audit ≠ fix" discipline used everywhere else (Phase 3, R3's NBA-asymmetry finding) — nothing in
+`lib/sportsBingo.ts` was touched.**
+
+### Method
+
+Probed live against `https://api.balldontlie.io` using the same `Authorization` header
+`lib/balldontlie.ts` / `lib/ballDontLieClient.ts` use, via `node --env-file=.env.local`. Pulled a
+real completed WNBA game (Aces @ Mystics, 2026-08-11, id `24999`) from `/wnba/v1/games`, then probed
+every endpoint `lib/sportsBingo.ts` reaches through `basketballApiPrefixForSportKey("basketball_wnba")
+→ "/wnba/v1"` against it, and cross-checked a real completed NBA game (id `21716137`, 2026-06-10) as
+the control to confirm each divergence is WNBA-specific and not a preexisting NBA bug this plan
+would otherwise have caught by now.
+
+### Finding 1 — `status` never contains "final" for WNBA. `finalized` is permanently false.
+
+`isBallDontLieGameFinal` (`lib/sportsBingo.ts:2224`) is `status.trim().toLowerCase().includes("final")`,
+reading `game.status` directly at every call site (2358, 2613, 2916, plus the normalizer at 1404).
+That works for MLB (`"STATUS_FINAL"`) and NBA (confirmed live: `"Final"`). **WNBA's completed-game
+`status` is `"post"`** — the finality signal instead lives in a sibling field, `status_state:
+"final"`, which `lib/sportsBingo.ts` never reads anywhere (`grep -c status_state` = 0). So
+`buildNBAGamePlayerStatsSnapshot(...).finalized` is `false` for every WNBA game, forever, no matter
+how long ago it ended.
+
+**Confirmed live**, both leagues, same-shaped completed game:
+```
+WNBA (id 24999): status: "post"    status_state: "final"   → isBallDontLieGameFinal → false
+NBA  (id 21716137): status: "Final"  status_state: "final"   → isBallDontLieGameFinal → true
+```
+
+### Finding 2 — score keys diverge too, and the read for WNBA settlement doesn't even chain
+
+`buildNBAGamePlayerStatsSnapshot` reads `parseScoreValue(game.home_team_score)` /
+`(game.visitor_team_score)` directly (`lib/sportsBingo.ts:2359-2360`) — not through the `??`-chained
+`ballDontLieHomeScore`/`ballDontLieAwayScore` helpers R1 built for MLB, which at least fall back to
+`*_team_data.runs`. **WNBA's `/games` rows carry neither key** — no `home_team_score` (NBA/NFL's flat
+key) and no `home_team_data`/`away_team_data` (MLB's nested shape). WNBA uses its own third shape:
+flat `home_score` / `away_score`. Confirmed live on the same game: `home_score: 86, away_score: 76`,
+no `home_team_score` key present at all. So `homeScore`/`awayScore` on a WNBA snapshot are always
+`null`, structurally, regardless of Finding 1.
+
+### Finding 3 — `/wnba/v1/stats` and `/wnba/v1/lineups` don't exist on balldontlie at all
+
+This is the one that isn't a field-name bug and isn't fixable by editing `lib/sportsBingo.ts`.
+Confirmed live, repeatedly, with varied query params (`game_ids[]`, bare, `seasons[]`): both routes
+return `404 {"error":"Route not found"}` for WNBA — not an empty result, not a permissions error, the
+route itself doesn't exist on the provider. `/wnba/v1/season_averages/general` is also 404. By
+contrast `/wnba/v1/games`, `/wnba/v1/players`, `/wnba/v1/players/active`, and
+`/wnba/v1/odds/player_props` all return 200 (or a param-validation 400, which still proves the route
+exists). `fetchBallDontLieList` (`lib/balldontlie.ts:40-43`) swallows any non-`ok` response to `{}` →
+`data: []` with only a `console.error`, so every WNBA call to `/stats` or `/lineups` silently
+degrades to "zero player stat lines, zero starters" rather than surfacing as an outage — the same
+shape Phase 1's MLB harness was built to catch, except here there is no live shape to eventually
+find, because the provider has never shipped these two routes for WNBA. **`lib/fantasy.ts`
+(currently uncommitted-modified, a different feature) also calls `/wnba/v1/stats`
+(line ~1409) and would hit the same wall — flagged for whoever owns that file next, not fixed here,
+out of this plan's scope.**
+
+### Net effect, confirmed against production data (not theoretical)
+
+Queried `sports_bingo_cards`/`sports_bingo_squares` live (throwaway script, deleted after use, same
+method R3 used for its MLB count). **6 WNBA cards exist in production, all already settled to
+`status: "lost"`, spanning 150 squares: 101 `void`, 43 `miss`, 6 `hit`.** They did settle — not stuck
+pending forever — because `mustForceFinalize` (`lib/sportsBingo.ts:10767-10793`, the 12-hour
+force-finalize safety net keyed on `starts_at` elapsed time, not on the provider's own status field)
+overrides a permanently-`false` `finalized`/`completed`. But every one of those 6 cards graded 12
+hours late by construction, and the 101/150 (67%) void rate is the visible fingerprint of Finding 3:
+with `/stats` and `/lineups` structurally unreachable, any resolver that needs a real stat line has
+nothing to grade against and voids at the force-finalize window instead of resolving for real. This
+mirrors the pre-R3 MLB house-rule bug in shape (missing data should void, not miss — and here it
+correctly does void, so the *outcome* is house-rule-compliant) but the *root cause* is different and
+worse: MLB's data existed and was reachable, just misread; WNBA's data for player-level resolvers
+does not exist on the provider at all, so no client-side fix can produce it.
+
+### What is and isn't fixable
+
+- **Finding 1 (status) is a one-line fix** — same shape as R1's `isBallDontLieGameFinal` fix, just
+  reading `status_state` too: `.includes("final")` on `status` **or** `status_state`. Would not
+  touch MLB/NBA/NFL (their `status_state`, where present, already says "final" whenever their
+  `status` does).
+- **Finding 2 (score) is a small fix** — extend `ballDontLieHomeScore`/`ballDontLieAwayScore`'s `??`
+  chain with a third fallback to flat `home_score`/`away_score`, and point
+  `buildNBAGamePlayerStatsSnapshot`'s two direct reads (2359-2360) at those helpers instead of the
+  raw NBA/NFL-shaped keys — the same pattern R1 used for MLB's own third score shape.
+- **Finding 3 (missing endpoints) is not fixable in this codebase at all.** It needs balldontlie to
+  ship the routes, or a product decision to gate WNBA player-level resolvers (triple-doubles,
+  player props, anything needing `/stats` or `/lineups`) off entirely until they do, leaving only
+  team-level markets (moneyline/spread/total, once Findings 1-2 are fixed) live for WNBA.
+
+Initially reported without fixing, per Phase 7's own audit scope and this plan's discipline of
+separating "found and reported" from "fixed" everywhere else (Phase 3, R3's NBA-asymmetry finding).
+**Andrew then asked for Findings 1-2 to be fixed in this same session — see the follow-up below.**
+Finding 3 still cannot be fixed here; it remains a product call, unresolved.
+
+---
+
+## Phase 7 follow-up — Findings 1-2 fixed (2026-08-18)
+
+**Done same-day, on request, after the audit above.** Finding 3 (missing balldontlie endpoints) is
+unchanged and still open — it is not an engineering fix, see the audit's own note.
+
+### What shipped, in `lib/sportsBingo.ts`
+
+- **`isBallDontLieGameFinal` (~2224, signature changed)** — now `(status: string, statusState?:
+  string) => boolean`. Checks `status` first (unchanged behavior for MLB/NBA/NFL, all still match
+  on their own `status`), then OR's in `statusState.includes("final")` as a second signal. Every
+  call site with a `game` in scope (~1414 in `normalizeBallDontLieScoreRow`, ~2377 in
+  `buildNBAGamePlayerStatsSnapshot`) now passes `game.status_state`. The two NFL-only call sites
+  (`nflQuartersCompleted`'s `params.status`, `buildNFLGameStatsSnapshot`) and MLB's
+  `buildMLBGamePlayerStatsSnapshot` were left passing only `status` — NFL was confirmed live
+  (id `1341307`, 2026-02-08) to already say `"Final"` in `status` itself, so it doesn't need the
+  second signal, and MLB's `status_state` was never part of the plan's verified-facts table; leaving
+  both alone matches this plan's standing discipline of touching only the confirmed-broken site.
+- **`ballDontLieHomeScore` / `ballDontLieAwayScore` (~1435)** — `??` chain gained a third fallback:
+  `*_team_score ?? *_team_data.{runs,points,score} ?? *_score`. WNBA has neither of the first two, so
+  it now falls through to the flat `home_score`/`away_score` keys R1 never anticipated because MLB's
+  gap (the second link) was the only third-shape problem known at the time.
+- **`buildNBAGamePlayerStatsSnapshot` (~2321, now exported)** — its two direct score reads
+  (`parseScoreValue(game.home_team_score)` / `(game.visitor_team_score)`) now call
+  `ballDontLieHomeScore(game)` / `ballDontLieAwayScore(game)` instead, so WNBA gets the same
+  fallback chain MLB already had through R1. Exported (one-line "exported for the test" comment,
+  same convention as R1's exports) so
+  `tests/lib.sportsBingo.wnba-row-shape.test.ts` can call it directly rather than only through the
+  lighter-weight score normalizer.
+- **`BallDontLieGame` type** — gained `status_state?: string`, `home_score?: number | string | null`,
+  `away_score?: number | string | null`, each with an inline comment naming which league needs it.
+
+**Left untouched, deliberately:** the two NFL-only raw score reads (`buildNFLQuarterScores` ~2799,
+`buildNFLGameStatsSnapshot` ~2998) — NFL's shape was never broken, so per R1's "don't touch what's
+correct" precedent they still read `game.home_team_score` directly. `buildMLBGamePlayerStatsSnapshot`
+(~2632) already called the two helpers before this fix and needed no change to pick up the new
+`?? *_score` fallback for free — it's the same shared helper.
+
+### Tests
+
+- **`tests/lib.sportsBingo.balldontlie-score-normalizer.test.ts`** — two new cases: the WNBA shape
+  parses correctly (`status: "post"` + `status_state: "final"`, flat `home_score`/`away_score`), and
+  a pre-fix-verbatim regression proof (old parser reads `completed: false`, `home_team_score:
+  undefined` for the same row).
+- **`tests/lib.sportsBingo.wnba-row-shape.test.ts` (new)** — mirrors
+  `mlb-row-shape.test.ts`'s structure. Exercises the actual settlement-path function
+  (`buildNBAGamePlayerStatsSnapshot`) directly, against the real Aces @ Mystics row (id `24999`)
+  probed live during the audit: `finalized` now `true`, `homeScore`/`awayScore` now `86`/`76`, plus
+  two pre-fix regression assertions, plus an NBA control case (real id `21716137` row) proving NBA's
+  `*_team_score` read path is undisturbed.
+- **Proven failing pre-fix**, per this plan's testing standard: stashed only `lib/sportsBingo.ts`
+  (`git stash push --keep-index -- lib/sportsBingo.ts` — the incident's own standing rule against
+  `git checkout`/`restore` on this file, stash is the safe reversible alternative it names), reran
+  both files — all 4 new assertions failed exactly as expected (including
+  `buildNBAGamePlayerStatsSnapshot is not a function`, since the export didn't exist pre-fix either)
+  — then `git stash pop` to restore. Verified `git status` showed no other file touched by the
+  stash/pop round-trip.
+
+### Gate — results
+
+```
+npx tsc --noEmit                                          0 errors
+npm run lint                                                clean
+npm run test:bingo-nfl                                     244/244 (unchanged)
+npm run test:bingo-mlb                                     123/123 (was 121 — +2 in the normalizer file)
+npx vitest run tests/lib.sportsBingo.wnba-row-shape.test.ts
+  tests/lib.sportsBingo.balldontlie-score-normalizer.test.ts
+  tests/lib.sportsBingo.mlb-row-shape.test.ts
+  tests/lib.sportsBingo.sport-path-keys.test.ts
+  tests/lib.sportsBingo.nfl-safety-attribution.test.ts       43/43
+npm run test (full suite)                                   1859 passed / 0 failed / 13 skipped
+```
+
+`tests/lib.sportsBingo.wnba-row-shape.test.ts` is picked up by the full-suite glob automatically
+(vitest's default `tests/**/*.test.ts` match) — it is **not** wired into any named `test:bingo-*`
+script, since there is no `test:bingo-wnba`/`test:bingo-nba` script to wire it into and it doesn't
+belong under the MLB or NFL names. If a WNBA/NBA-specific named script is ever added, wire it in
+there.
+
+### Not fixed — Finding 3, unchanged, still a product call
+
+`/wnba/v1/stats` and `/wnba/v1/lineups` still don't exist on balldontlie. No code change can produce
+them. Every WNBA player-level resolver (player props, triple-doubles, anything needing a stat line
+or a starter) still silently voids at settlement — Findings 1-2 fix *when* and *what score* a WNBA
+card settles against, not the missing player data itself. The 6 existing production WNBA cards are
+historical and were not touched (no regrade run — that would be a Phase-3-style historical
+remediation decision, not part of this fix, and nobody asked for it). **Going forward, newly created
+WNBA cards will now finalize on time (at real completion, not 12 hours late) with correct team
+scores, but any player-level square on them will still void, because Finding 3 is still open.**
+
+### Handoff to whoever runs Phase 5 (the last phase)
+
+- **Phase 5 is MLB calibration (`bingo:calibrate:mlb`) and is untouched in scope by this fix or the
+  audit that preceded it** — WNBA is a different sport key with its own base-rate model
+  (`WNBA_CALIBRATION` at `lib/sportsBingo.ts:180-189`), not something `bingo:calibrate:mlb` measures.
+  Nothing here blocks Phase 5 or changes its inputs. `lib/sportsBingo.ts`'s diff from this fix is
+  isolated to the sites named above — re-grep before editing anything below ~1435 or ~2321, since
+  this fix shifted a handful of lines (the widened `BallDontLieGame` type, the new export comment).
+- **This still doesn't mean "the sports-bingo surface is fully clean" once Phase 5 lands.** Finding 3
+  is real, live, and unfixed — flag it to Andrew alongside Phase 5's results rather than letting
+  Phase 5's completion read as "everything is done." The product decision it needs (gate WNBA
+  player-level resolvers off vs. wait on the provider) is still open.
+- **Still on branch `restore/mlb-bingo-r1`, not `main`.** This follow-up adds a sixth
+  production-affecting change to the same unmerged branch (after R1-R4, Phase 6, and now this).
+  Nothing has been committed yet from this session — do that before starting Phase 5, per the
+  incident's own standing rule against letting production fixes sit uncommitted. Merge-to-`main`
+  decision is still open, still Andrew's.
+
+---
+
 ## Sequencing
 
 **Current sequencing (post-incident, 2026-08-18) — this is the one to follow:**
@@ -1207,7 +1603,8 @@ R1 ──> R4                    (the old Phase 4b, minus the surviving script h
 6, 7                          independent — land any time, but R1 first if they touch lib/sportsBingo.ts
 ```
 
-**Run order: R1 → R2 → R3 → R4 → 3 → 6 → 7 → 5.**
+**Run order: R1 → R2 → R3 → R4 → 3 → 6 → 7 → 5.** All executed in that order and complete as of
+2026-08-18; Phase 8 (added late, independent of the ordering) ran alongside Phase 5.
 
 R1 is first and urgent for a reason the original plan did not have to consider: the incident
 reverted the four *production* MLB row-shape fixes, so MLB player-prop squares are ungradeable on
@@ -1272,7 +1669,7 @@ plainly which half of the path it exercised — generation, settlement, or both.
 
 ## Phase 8 — Check whether NBA's `miss`-instead-of-`void` asymmetry has actually hit production
 
-**Not yet scheduled — added 2026-08-18 as a reminder, not started.**
+**Added 2026-08-18 as a reminder. Run and closed the same day — see the "done" write-up below.**
 
 **Model:** Sonnet 5 · **Effort:** Low (~10 min), one DB query. No code change unless the count is
 non-zero.
@@ -1306,3 +1703,146 @@ fix itself is still a small ternary change (mirror R3's `isMlb ? "void" : "miss"
 `isNba`) — but do not write that code until Andrew has seen the count and decided whether historical
 squares also need addressing, so the forward fix and any backfill land as one reviewed decision
 rather than two.
+
+---
+
+## Phase 8 — done (2026-08-18)
+
+**The count Phase 8 asked for is zero. The audit that produced it found something larger: the
+`miss`-instead-of-`void` asymmetry has already fired 108 times in production — just never through
+the `player_prop` resolver kind this phase named.** Every stats-derived square in the entire
+production history of Sports Bingo, across three sports and eight resolver kinds, settled `miss` on
+missing data while the market squares on the very same card correctly settled `void`.
+
+**Report only. No code was changed** — same discipline the phase itself specifies, and the same the
+plan used for Phase 3 and R3's NBA finding.
+
+### The literal answer to Phase 8's question
+
+Queried `sports_bingo_squares` and `sports_bingo_cards` live via `SUPABASE_SERVICE_ROLE_KEY`
+(throwaway script, deleted after use, no secrets echoed).
+
+- **NBA `player_prop` squares at `status = 'miss'`: 0.**
+- **`player_prop` squares in production at all, any sport, any status: 0.** Same result R3 got for
+  MLB, now confirmed to hold league-wide. The step-2 cross-check the phase describes ("a real miss
+  and a should-have-voided miss look identical") never became necessary — there was nothing to
+  disambiguate.
+- Production volume is 14 cards total, 350 squares: 6 `basketball_wnba`, 6 `baseball_mlb`, 2 `nba`.
+  All 14 are `status = 'lost'`.
+
+**Per the phase's own branch, this closes: the count is zero, no product decision is needed, and no
+NBA `player_prop` code change should be written.** The forward-looking asymmetry R3 reported at
+`case "player_prop"` (`if (isNba && !nbaStatsSnapshot)`, still flat `"miss"`) is unchanged and still
+unfixed — it is a bug waiting, not a bug that has bitten.
+
+### The bigger finding — the same bug, seven other resolver kinds, 108 live squares
+
+Tallying every square by sport and resolver kind exposes a perfectly clean split:
+
+```
+                                                        void   miss
+baseball_mlb    moneyline / spread_* / *_total_*         102      -
+baseball_mlb    mlb_webhook_team_event_at_least            -     42
+basketball_wnba moneyline / spread_* / *_total_*         101      -
+basketball_wnba nba_team_stat_at_least                     -     14
+basketball_wnba team_triple_double                         -      8
+basketball_wnba nba_team_scores_first                      -      6
+basketball_wnba nba_team_leads_at_halftime                 -      6
+basketball_wnba nba_team_outrebounds                       -      5
+basketball_wnba nba_team_three_pt_scorers                  -      4
+nba             moneyline / spread_* / *_total_*           25      -
+nba             nba_player_stat_at_least                    -     21
+nba             team_triple_double                          -      2
+                                                        ----   ----
+                                                         228    108      (+14 free hits = 350)
+```
+
+**Not one market square hit or missed; not one stats square voided.** That is not a coincidence, and
+the mechanism is exact. `refreshSportsBingoProgress` (`lib/sportsBingo.ts:~10806`) synthesizes a
+fallback snapshot when no score is available and the 12-hour force-finalize window has passed:
+
+```ts
+const effectiveScore: ScoreSnapshot = score ?? ({ …, homeScore: null, awayScore: null, completed: true });
+```
+
+Fed that object, `evaluateResolver` splits:
+
+- A market resolver sees `!hasGameScore` → `pending` → the force-finalize branch writes **`void`**.
+  Correct, and the house rule working as designed.
+- A stats resolver sees `!nbaStatsSnapshot && completed === true` → **`miss`, resolved**. Every one
+  of the eight kinds above has that literal shape, e.g. `nba_team_stat_at_least` at
+  `lib/sportsBingo.ts:9024-9029`.
+
+So a single settlement pass on a single card, with a single missing-data condition, voided half its
+squares and missed the other half. **The house rule the file states for itself — "Missing data
+voids, it never misses" — is being violated 108 times in the only production data that exists.**
+
+Why those particular squares had no data is already documented in this plan and is not in dispute:
+WNBA has no `/wnba/v1/stats` endpoint at all (Phase 7, Finding 3, still unfixed); MLB's snapshot path
+was unreachable before R1's row-shape fixes; and the two `nba` cards carry a `sport_key` no code path
+recognizes (below). The bug is not that the data was missing — it is what settlement did about it.
+
+**This also silently killed the regrade seam.** All eight kinds are registered in
+`isResolverEligibleForVoidRegrade` (`lib/sportsBingo.ts:9997-10025`), which reopens a `void` square
+when a late box score arrives. A `miss` is terminal and is never reconsidered. The kinds most likely
+to be missing data at settlement are exactly the kinds that were denied the mechanism built for
+them.
+
+### Player impact — real, but not outcome-changing
+
+**No card's outcome changes.** All 14 are `lost`, and they would still be lost under correct
+settlement: `boardStatusesMakeALine` treats a void as a non-hit, so a board whose 24 playable squares
+all void makes no line either way. No points, prizes or leaderboard positions are affected.
+
+What players were shown is a different matter: 108 squares displayed as a red "you missed this" when
+the truthful state was "we never got the data." That is a fairness/comms issue rather than an
+economic one, which is precisely why the remediation call belongs to Andrew and not here.
+
+### Remediation options — presented, not chosen
+
+Same framing Phase 3 uses. **Do not write either fix until Andrew has picked.**
+
+1. **Forward fix only.** Change the eight `!snapshot → miss` positions to `void`, matching the NFL
+   arm (which already voids everywhere — `case "nfl_player_anytime_td"`, `lib/sportsBingo.ts:9307`,
+   is the model) and MLB's `player_prop` arm after R3. Small and mechanical, but it is eight sites
+   across three sports and wants its own tests proven failing first, per this plan's standard.
+2. **Forward fix + backfill the 108.** Rewrite those rows `miss` → `void`. Cheap at this volume and
+   makes the historical record honest. Since no outcome changes, no points or prizes move.
+3. **Leave it.** Defensible: 14 cards, all lost regardless, and Phase 7's Finding 3 means WNBA
+   squares would only void into a different kind of dead end until the provider gap is resolved.
+
+Option 1 is the one that stops the count growing, and it is the only one that matters if WNBA or MLB
+Bingo sees real volume before Finding 3 is settled.
+
+### Side finding — two cards carry `sport_key = "nba"`, which nothing recognizes
+
+The two NBA cards (`bc8aa524…`, `e59236ea…`, created 2026-06-05 and 2026-06-10) have
+`sport_key = "nba"`, not the canonical `"basketball_nba"` the migration defaults to.
+`basketballApiPrefixForSportKey` (`lib/sportsBingo.ts:1256-1264`) returns `null` for it, so no stats
+snapshot was ever fetched for either card — which is why all 23 of their stats squares landed in the
+tally above. `evaluateResolver`'s `isNba` check is likewise `snapshot.sportKey === "basketball_nba"`,
+so had those cards carried a `player_prop`, it would have fallen through to the unsupported-market
+branch. Two rows, both already settled; worth a look at whatever wrote them before NBA sees real
+volume, but not urgent at this volume.
+
+### Related asymmetry noticed in passing, not fixed
+
+`case "player_prop"`'s support gate (`lib/sportsBingo.ts:8876-8883`) returns a flat
+`{ status: "miss" }` for an unsupported `marketKey` on **both** NBA and MLB, while the NFL arm
+fourteen lines above voids the identical condition. R3 fixed MLB's three missing-data positions but
+this fourth one is still `miss` for MLB too, so "MLB player props void on missing data" is not yet
+true without qualification. Inert today (zero `player_prop` squares exist), and it belongs with
+whichever change addresses the 108 above rather than as a separate edit.
+
+### Method
+
+Two throwaway Node scripts against the Supabase REST API using the service-role key, deleted after
+use. No production writes of any kind; both were read-only `GET`s. The resolver-kind tally covers
+all 350 square rows and all 14 card rows — the whole table, not a sample, so the counts above are
+exact rather than estimated.
+
+### Gate
+
+No code changed, so the gate is unchanged from Phase 5's run above (`tsc` 0, lint clean, 244/244
+NFL, 123/123 MLB, 1859 passing full suite). Nothing here was proven by a test, and nothing here
+should be — this phase is a query.
