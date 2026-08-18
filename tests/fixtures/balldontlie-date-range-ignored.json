@@ -1,0 +1,293 @@
+{
+  "capturedAt": "2026-08-17",
+  "note": "Live rows returned by balldontlie when a /games endpoint is given start_date/end_date. Both endpoints ignore the params and return the oldest rows in the archive.",
+  "nfl": {
+    "requestedWindow": "2025-11-06..2025-11-10",
+    "rows": [
+      {
+        "id": 19,
+        "visitor_team": {
+          "id": 30,
+          "conference": "NFC",
+          "division": "WEST",
+          "location": "San Francisco",
+          "name": "49ers",
+          "full_name": "San Francisco 49ers",
+          "abbreviation": "SF"
+        },
+        "home_team": {
+          "id": 20,
+          "conference": "NFC",
+          "division": "EAST",
+          "location": "New York",
+          "name": "Giants",
+          "full_name": "New York Giants",
+          "abbreviation": "NYG"
+        },
+        "summary": null,
+        "venue": null,
+        "week": 1,
+        "date": "2002-09-06T00:30:00.000Z",
+        "season": 2002,
+        "postseason": false,
+        "status": "Final",
+        "status_state": "final",
+        "home_team_score": 13,
+        "home_team_q1": 3,
+        "home_team_q2": 3,
+        "home_team_q3": 0,
+        "home_team_q4": 7,
+        "home_team_ot": null,
+        "visitor_team_score": 16,
+        "visitor_team_q1": 3,
+        "visitor_team_q2": 0,
+        "visitor_team_q3": 7,
+        "visitor_team_q4": 6,
+        "visitor_team_ot": null
+      },
+      {
+        "id": 20,
+        "visitor_team": {
+          "id": 4,
+          "conference": "AFC",
+          "division": "EAST",
+          "location": "New York",
+          "name": "Jets",
+          "full_name": "New York Jets",
+          "abbreviation": "NYJ"
+        },
+        "home_team": {
+          "id": 3,
+          "conference": "AFC",
+          "division": "EAST",
+          "location": "Buffalo",
+          "name": "Bills",
+          "full_name": "Buffalo Bills",
+          "abbreviation": "BUF"
+        },
+        "summary": null,
+        "venue": "Highmark Stadium",
+        "week": 1,
+        "date": "2002-09-08T17:00:00.000Z",
+        "season": 2002,
+        "postseason": false,
+        "status": "Final/OT",
+        "status_state": "final",
+        "home_team_score": 31,
+        "home_team_q1": 3,
+        "home_team_q2": 14,
+        "home_team_q3": 7,
+        "home_team_q4": 7,
+        "home_team_ot": 0,
+        "visitor_team_score": 37,
+        "visitor_team_q1": 0,
+        "visitor_team_q2": 17,
+        "visitor_team_q3": 3,
+        "visitor_team_q4": 11,
+        "visitor_team_ot": 6
+      },
+      {
+        "id": 21,
+        "visitor_team": {
+          "id": 23,
+          "conference": "NFC",
+          "division": "NORTH",
+          "location": "Minnesota",
+          "name": "Vikings",
+          "full_name": "Minnesota Vikings",
+          "abbreviation": "MIN"
+        },
+        "home_team": {
+          "id": 24,
+          "conference": "NFC",
+          "division": "NORTH",
+          "location": "Chicago",
+          "name": "Bears",
+          "full_name": "Chicago Bears",
+          "abbreviation": "CHI"
+        },
+        "summary": null,
+        "venue": null,
+        "week": 1,
+        "date": "2002-09-08T17:00:00.000Z",
+        "season": 2002,
+        "postseason": false,
+        "status": "Final",
+        "status_state": "final",
+        "home_team_score": 27,
+        "home_team_q1": 7,
+        "home_team_q2": 3,
+        "home_team_q3": 3,
+        "home_team_q4": 14,
+        "home_team_ot": null,
+        "visitor_team_score": 23,
+        "visitor_team_q1": 3,
+        "visitor_team_q2": 17,
+        "visitor_team_q3": 0,
+        "visitor_team_q4": 3,
+        "visitor_team_ot": null
+      }
+    ]
+  },
+  "mlb": {
+    "requestedWindow": "2026-08-13..2026-08-17",
+    "rows": [
+      {
+        "id": 5057355,
+        "home_team_name": "Cleveland            Indians",
+        "away_team_name": "Philadelphia         Phillies",
+        "home_team": {
+          "id": 8,
+          "slug": "cleveland-guardians",
+          "abbreviation": "CLE",
+          "display_name": "Cleveland Guardians",
+          "short_display_name": "Guardians",
+          "name": "Guardians",
+          "location": "Cleveland",
+          "league": "American",
+          "division": "Central"
+        },
+        "away_team": {
+          "id": 21,
+          "slug": "philadelphia-phillies",
+          "abbreviation": "PHI",
+          "display_name": "Philadelphia Phillies",
+          "short_display_name": "Phillies",
+          "name": "Phillies",
+          "location": "Philadelphia",
+          "league": "National",
+          "division": "East"
+        },
+        "season": 2000,
+        "postseason": false,
+        "season_type": "spring_training",
+        "date": "2000-03-02T18:05:00.000Z",
+        "home_team_data": {
+          "hits": 0,
+          "runs": 4,
+          "errors": 0,
+          "inning_scores": []
+        },
+        "away_team_data": {
+          "hits": 0,
+          "runs": 7,
+          "errors": 0,
+          "inning_scores": []
+        },
+        "venue": "Chain of Lakes Park",
+        "attendance": 4723,
+        "conference_play": false,
+        "status": "STATUS_FINAL",
+        "status_state": "final",
+        "period": 9,
+        "clock": 0,
+        "display_clock": "0:00",
+        "scoring_summary": []
+      },
+      {
+        "id": 5057356,
+        "home_team_name": "Toronto              Blue Jays",
+        "away_team_name": "New York             Yankees",
+        "home_team": {
+          "id": 29,
+          "slug": "toronto-blue-jays",
+          "abbreviation": "TOR",
+          "display_name": "Toronto Blue Jays",
+          "short_display_name": "Blue Jays",
+          "name": "Blue Jays",
+          "location": "Toronto",
+          "league": "American",
+          "division": "East"
+        },
+        "away_team": {
+          "id": 19,
+          "slug": "new-york-yankees",
+          "abbreviation": "NYY",
+          "display_name": "New York Yankees",
+          "short_display_name": "Yankees",
+          "name": "Yankees",
+          "location": "New York",
+          "league": "American",
+          "division": "East"
+        },
+        "season": 2000,
+        "postseason": false,
+        "season_type": "spring_training",
+        "date": "2000-03-02T18:05:00.000Z",
+        "home_team_data": {
+          "hits": 0,
+          "runs": 9,
+          "errors": 0,
+          "inning_scores": []
+        },
+        "away_team_data": {
+          "hits": 0,
+          "runs": 7,
+          "errors": 0,
+          "inning_scores": []
+        },
+        "venue": "Florida Auto Exchange Stadium",
+        "attendance": 6106,
+        "conference_play": false,
+        "status": "STATUS_FINAL",
+        "status_state": "final",
+        "period": 9,
+        "clock": 0,
+        "display_clock": "0:00",
+        "scoring_summary": []
+      },
+      {
+        "id": 5057357,
+        "home_team_name": "Chicago              White Sox",
+        "away_team_name": "Arizona              Diamondbacks",
+        "home_team": {
+          "id": 6,
+          "slug": "chicago-white-sox",
+          "abbreviation": "CHW",
+          "display_name": "Chicago White Sox",
+          "short_display_name": "White Sox",
+          "name": "White Sox",
+          "location": "Chicago",
+          "league": "American",
+          "division": "Central"
+        },
+        "away_team": {
+          "id": 1,
+          "slug": "arizona-diamondbacks",
+          "abbreviation": "ARI",
+          "display_name": "Arizona Diamondbacks",
+          "short_display_name": "Diamondbacks",
+          "name": "Diamondbacks",
+          "location": "Arizona",
+          "league": "National",
+          "division": "West"
+        },
+        "season": 2000,
+        "postseason": false,
+        "season_type": "spring_training",
+        "date": "2000-03-02T20:05:00.000Z",
+        "home_team_data": {
+          "hits": 0,
+          "runs": 3,
+          "errors": 0,
+          "inning_scores": []
+        },
+        "away_team_data": {
+          "hits": 0,
+          "runs": 8,
+          "errors": 0,
+          "inning_scores": []
+        },
+        "venue": "Kino Veterans Memorial Stadium",
+        "attendance": 4501,
+        "conference_play": false,
+        "status": "STATUS_FINAL",
+        "status_state": "final",
+        "period": 9,
+        "clock": 0,
+        "display_clock": "0:00",
+        "scoring_summary": []
+      }
+    ]
+  }
+}

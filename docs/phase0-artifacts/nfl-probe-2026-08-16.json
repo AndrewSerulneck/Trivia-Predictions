@@ -1,0 +1,295 @@
+{
+  "probedAtUtc": "2026-08-16T16:28:56.754Z",
+  "config": {
+    "baseUrl": "https://api.balldontlie.io",
+    "hasApiKey": true
+  },
+  "upcomingGames": {
+    "windowDays": [
+      "2026-08-16",
+      "2026-08-17",
+      "2026-08-18",
+      "2026-08-19",
+      "2026-08-20",
+      "2026-08-21",
+      "2026-08-22",
+      "2026-08-23",
+      "2026-08-24",
+      "2026-08-25"
+    ],
+    "count": 0,
+    "games": [],
+    "requestStatus": 200
+  },
+  "usedFallbackWindow": true,
+  "fallbackProbeGameIds": [
+    1392216,
+    1392217,
+    1392218,
+    1392219,
+    1392220,
+    1392221
+  ],
+  "preseasonCatalogCoverage": {
+    "totalGamesInSeason2025": 285,
+    "earliestGame": {
+      "id": 423945,
+      "date": "2025-09-05T00:20:00.000Z",
+      "week": 1,
+      "postseason": false
+    },
+    "augustDatedGameCount": 0,
+    "verdict": "NO PRESEASON COVERAGE — /nfl/v1/games has zero August-dated (preseason-window) games for season 2025; the catalog starts at Week 1."
+  },
+  "oddsByGame": {
+    "1392216": {
+      "vendorCount": 8,
+      "vendors": [
+        "draftkings",
+        "fanduel",
+        "fanatics",
+        "caesars",
+        "betrivers",
+        "betmgm",
+        "kalshi",
+        "polymarket"
+      ],
+      "hasSpread": true,
+      "hasTotal": true,
+      "hasMoneyline": true
+    },
+    "1392217": {
+      "vendorCount": 8,
+      "vendors": [
+        "draftkings",
+        "fanduel",
+        "caesars",
+        "betrivers",
+        "betmgm",
+        "kalshi",
+        "fanatics",
+        "polymarket"
+      ],
+      "hasSpread": true,
+      "hasTotal": true,
+      "hasMoneyline": true
+    },
+    "1392218": {
+      "vendorCount": 8,
+      "vendors": [
+        "draftkings",
+        "fanduel",
+        "caesars",
+        "betrivers",
+        "betmgm",
+        "kalshi",
+        "fanatics",
+        "polymarket"
+      ],
+      "hasSpread": true,
+      "hasTotal": true,
+      "hasMoneyline": true
+    },
+    "1392219": {
+      "vendorCount": 8,
+      "vendors": [
+        "draftkings",
+        "fanduel",
+        "fanatics",
+        "caesars",
+        "betrivers",
+        "betmgm",
+        "kalshi",
+        "polymarket"
+      ],
+      "hasSpread": true,
+      "hasTotal": true,
+      "hasMoneyline": true
+    },
+    "1392220": {
+      "vendorCount": 8,
+      "vendors": [
+        "draftkings",
+        "fanduel",
+        "fanatics",
+        "caesars",
+        "betrivers",
+        "betmgm",
+        "kalshi",
+        "polymarket"
+      ],
+      "hasSpread": true,
+      "hasTotal": true,
+      "hasMoneyline": true
+    },
+    "1392221": {
+      "vendorCount": 8,
+      "vendors": [
+        "draftkings",
+        "fanduel",
+        "fanatics",
+        "caesars",
+        "betrivers",
+        "betmgm",
+        "kalshi",
+        "polymarket"
+      ],
+      "hasSpread": true,
+      "hasTotal": true,
+      "hasMoneyline": true
+    }
+  },
+  "oddsRequestStatus": 200,
+  "playerPropsByGame": {
+    "1392216": {
+      "ok": true,
+      "status": 200,
+      "propCount": 0,
+      "distinctPropTypes": [],
+      "distinctPlayers": 0,
+      "distinctVendors": []
+    },
+    "1392217": {
+      "ok": true,
+      "status": 200,
+      "propCount": 0,
+      "distinctPropTypes": [],
+      "distinctPlayers": 0,
+      "distinctVendors": []
+    },
+    "1392218": {
+      "ok": true,
+      "status": 200,
+      "propCount": 0,
+      "distinctPropTypes": [],
+      "distinctPlayers": 0,
+      "distinctVendors": []
+    },
+    "1392219": {
+      "ok": true,
+      "status": 200,
+      "propCount": 0,
+      "distinctPropTypes": [],
+      "distinctPlayers": 0,
+      "distinctVendors": []
+    },
+    "1392220": {
+      "ok": true,
+      "status": 200,
+      "propCount": 0,
+      "distinctPropTypes": [],
+      "distinctPlayers": 0,
+      "distinctVendors": []
+    },
+    "1392221": {
+      "ok": true,
+      "status": 200,
+      "propCount": 0,
+      "distinctPropTypes": [],
+      "distinctPlayers": 0,
+      "distinctVendors": []
+    }
+  },
+  "sampleCompletedGame": {
+    "id": 423945,
+    "date": "2025-09-05T00:20:00.000Z",
+    "week": 1,
+    "status": "Final"
+  },
+  "statsFieldPresence": {
+    "passing_yards": {
+      "populatedIn": 2,
+      "ofRows": 60
+    },
+    "passing_touchdowns": {
+      "populatedIn": 2,
+      "ofRows": 60
+    },
+    "passing_attempts": {
+      "populatedIn": 2,
+      "ofRows": 60
+    },
+    "passing_completions": {
+      "populatedIn": 2,
+      "ofRows": 60
+    },
+    "passing_interceptions": {
+      "populatedIn": 2,
+      "ofRows": 60
+    },
+    "rushing_yards": {
+      "populatedIn": 8,
+      "ofRows": 60
+    },
+    "rushing_attempts": {
+      "populatedIn": 8,
+      "ofRows": 60
+    },
+    "rushing_touchdowns": {
+      "populatedIn": 8,
+      "ofRows": 60
+    },
+    "long_rushing": {
+      "populatedIn": 8,
+      "ofRows": 60
+    },
+    "receptions": {
+      "populatedIn": 15,
+      "ofRows": 60
+    },
+    "receiving_yards": {
+      "populatedIn": 15,
+      "ofRows": 60
+    },
+    "receiving_touchdowns": {
+      "populatedIn": 15,
+      "ofRows": 60
+    },
+    "long_reception": {
+      "populatedIn": 15,
+      "ofRows": 60
+    },
+    "field_goal_attempts": {
+      "populatedIn": 2,
+      "ofRows": 60
+    },
+    "field_goals_made": {
+      "populatedIn": 2,
+      "ofRows": 60
+    },
+    "long_field_goal_made": {
+      "populatedIn": 2,
+      "ofRows": 60
+    },
+    "extra_points_made": {
+      "populatedIn": 2,
+      "ofRows": 60
+    },
+    "total_points": {
+      "populatedIn": 0,
+      "ofRows": 60
+    }
+  },
+  "statsSampleRowCount": 60,
+  "hasKickingFields": true,
+  "hasLongestPassField": false,
+  "playsProbes": {
+    "upcoming": {
+      "status": 200,
+      "ok": true
+    },
+    "completed": {
+      "status": 200,
+      "ok": true
+    }
+  },
+  "tierVerdict": {
+    "gamesStatus": 200,
+    "oddsStatus": 200,
+    "playerPropsStatus": 200,
+    "statsStatus": 200,
+    "playsStatusUpcoming": 200,
+    "playsStatusCompleted": 200,
+    "likelyTier": "GOAT (odds+props+plays all 2xx)"
+  }
+}

@@ -1,0 +1,417 @@
+{
+  "season": "2025",
+  "gamesConsidered": 272,
+  "postseasonStatsGap": {
+    "postseasonGamesInSeason": 13,
+    "sampledForProbe": 3,
+    "teamStatsRowsReturned": 0,
+    "note": "CONFIRMED GAP: /nfl/v1/team_stats and /nfl/v1/stats return zero rows for 2025 postseason games. Postseason excluded from every base-rate measurement below; only the 272-game regular season is measured. This also means Tier 1/2/4 flavor squares (and, pre-existing, the Phase-3/4 player-prop and settlement paths) cannot grade postseason NFL boards today. Not one of the plan's five questions — found while fetching the season list for base rates."
+  },
+  "generatedAt": "2026-08-17T14:52:30.762Z",
+  "q1_team_stats_mid_game": {
+    "answered": false,
+    "note": "Cannot be determined from archived Final games — BDL only exposes team_stats for games that have already ended in this dataset, and there is no historical mid-game snapshot to replay. Requires a live probe during an actual in-progress NFL game (earliest opportunity: 2026 Week 1, ~2026-09-10). See findings doc for the exact live-check recipe."
+  },
+  "q2_sack_orientation": {
+    "checked": 378,
+    "ambiguous": 95,
+    "matchesOffenseTaken": 370,
+    "matchesDefenseMade": 4,
+    "examples": [
+      {
+        "gameId": 423962,
+        "team": "JAX",
+        "teamStatsSacks": 1,
+        "ownDefSacks": 3,
+        "opponentDefSacks": 1
+      },
+      {
+        "gameId": 423962,
+        "team": "CIN",
+        "teamStatsSacks": 3,
+        "ownDefSacks": 1,
+        "opponentDefSacks": 3
+      },
+      {
+        "gameId": 423964,
+        "team": "CHI",
+        "teamStatsSacks": 4,
+        "ownDefSacks": 0,
+        "opponentDefSacks": 4
+      },
+      {
+        "gameId": 423960,
+        "team": "MIN",
+        "teamStatsSacks": 3,
+        "ownDefSacks": 2,
+        "opponentDefSacks": 3
+      },
+      {
+        "gameId": 423960,
+        "team": "CHI",
+        "teamStatsSacks": 2,
+        "ownDefSacks": 3,
+        "opponentDefSacks": 2
+      }
+    ]
+  },
+  "q3_red_zone_semantics": {
+    "checked": 533,
+    "redZoneScoresNeverExceedsTotalTds": true,
+    "violations": 0,
+    "violationExamples": [],
+    "sawFgAttemptWithLowerScoresThanAttempts": 427
+  },
+  "q4_defensive_rows_populated": {
+    "total_tackles": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 11267,
+      "sample": [
+        {
+          "player": "Kylen Granson",
+          "pos": "TE",
+          "value": 1
+        },
+        {
+          "player": "Dak Prescott",
+          "pos": "QB",
+          "value": 1
+        }
+      ]
+    },
+    "defensive_sacks": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 1212,
+      "sample": [
+        {
+          "player": "Marshawn Kneeland",
+          "pos": "DE",
+          "value": 1
+        },
+        {
+          "player": "Daiyan Henley",
+          "pos": "LB",
+          "value": 1
+        }
+      ]
+    },
+    "solo_tackles": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 8903,
+      "sample": [
+        {
+          "player": "Kylen Granson",
+          "pos": "TE",
+          "value": 1
+        },
+        {
+          "player": "Dak Prescott",
+          "pos": "QB",
+          "value": 1
+        }
+      ]
+    },
+    "tackles_for_loss": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 2143,
+      "sample": [
+        {
+          "player": "Zack Baun",
+          "pos": "LB",
+          "value": 1
+        },
+        {
+          "player": "Jordan Davis",
+          "pos": "DT",
+          "value": 1
+        }
+      ]
+    },
+    "passes_defended": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 1893,
+      "sample": [
+        {
+          "player": "Zack Baun",
+          "pos": "LB",
+          "value": 1
+        },
+        {
+          "player": "Cooper DeJean",
+          "pos": "CB",
+          "value": 1
+        }
+      ]
+    },
+    "defensive_interceptions": {
+      "nonNullRows": 367,
+      "nonZeroRows": 366,
+      "sample": [
+        {
+          "player": "Jaylinn Hawkins",
+          "pos": "S",
+          "value": 1
+        },
+        {
+          "player": "Jaycee Horn",
+          "pos": "CB",
+          "value": 1
+        }
+      ]
+    },
+    "interception_yards": {
+      "nonNullRows": 367,
+      "nonZeroRows": 212,
+      "sample": [
+        {
+          "player": "Jaylinn Hawkins",
+          "pos": "S",
+          "value": 1
+        },
+        {
+          "player": "Jaycee Horn",
+          "pos": "CB",
+          "value": 10
+        }
+      ]
+    },
+    "interception_touchdowns": {
+      "nonNullRows": 477,
+      "nonZeroRows": 28,
+      "sample": [
+        {
+          "player": "Nahshon Wright",
+          "pos": "CB",
+          "value": 1
+        },
+        {
+          "player": "Kenny Moore II",
+          "pos": "CB",
+          "value": 1
+        }
+      ]
+    }
+  },
+  "q5_plays_fields_archived": {
+    "totalPlaysSampled": 16256,
+    "home_win_probability": {
+      "populated": 15963,
+      "rate": 0.9819758858267716
+    },
+    "clock_display": {
+      "populated": 16256,
+      "rate": 1
+    },
+    "start_yards_to_endzone": {
+      "populated": 13939,
+      "rate": 0.8574680118110236
+    },
+    "note": "These rates are measured on ARCHIVED (Final) games only. They show the fields persist in the historical record, which is necessary but not sufficient evidence they are populated mid-game live — see Q1/Q5 in the findings doc for why that needs a live probe during Week 1 2026."
+  },
+  "tier1BaseRates": {
+    "penalties_gte_3": {
+      "n": 544,
+      "rate": 0.9411764705882353
+    },
+    "penalties_gte_5": {
+      "n": 544,
+      "rate": 0.7426470588235294
+    },
+    "penalties_gte_7": {
+      "n": 544,
+      "rate": 0.4264705882352941
+    },
+    "penalty_yards_gte_75": {
+      "n": 544,
+      "rate": 0.1875
+    },
+    "turnovers_gte_2": {
+      "n": 544,
+      "rate": 0.3272058823529412
+    },
+    "turnovers_eq_0": {
+      "n": 544,
+      "rate": 0.34558823529411764
+    },
+    "third_down_conv_gte_6": {
+      "n": 544,
+      "rate": 0.39889705882352944
+    },
+    "third_down_conv_gte_8": {
+      "n": 544,
+      "rate": 0.1213235294117647
+    },
+    "fourth_down_conv_gte_1": {
+      "n": 544,
+      "rate": 0.5680147058823529
+    },
+    "fourth_down_attempted": {
+      "n": 544,
+      "rate": 0.7702205882352942
+    },
+    "perfect_red_zone_3plus": {
+      "n": 544,
+      "rate": 0.08455882352941177
+    },
+    "settled_for_fg_in_red_zone": {
+      "n": 544,
+      "rate": 0.7849264705882353
+    },
+    "top_gte_2100s_35min": {
+      "n": 544,
+      "rate": 0.13419117647058823
+    },
+    "total_yards_gte_400": {
+      "n": 544,
+      "rate": 0.18933823529411764
+    },
+    "total_yards_lt_250": {
+      "n": 544,
+      "rate": 0.17647058823529413
+    },
+    "yards_per_play_gte_6": {
+      "n": 544,
+      "rate": 0.2922794117647059
+    },
+    "first_downs_gte_25": {
+      "n": 544,
+      "rate": 0.15625
+    },
+    "rushing_yards_gte_150": {
+      "n": 544,
+      "rate": 0.23345588235294118
+    },
+    "passing_yards_gte_300": {
+      "n": 544,
+      "rate": 0.10845588235294118
+    },
+    "defensive_touchdown_gte_1": {
+      "n": 544,
+      "rate": 0.1213235294117647
+    },
+    "offensive_plays_gte_70": {
+      "n": 544,
+      "rate": 0.15625
+    },
+    "sacked_gte_4": {
+      "n": 544,
+      "rate": 0.23529411764705882
+    },
+    "combined_penalty_yards_gte_120": {
+      "n": 272,
+      "rate": 0.31985294117647056
+    },
+    "combined_turnovers_gte_3": {
+      "n": 272,
+      "rate": 0.4007352941176471
+    },
+    "top_advantage_gte_5min_either_team": {
+      "n": 272,
+      "rate": 0.5919117647058824
+    },
+    "neither_team_turnover_game_level": {
+      "n": 272,
+      "rate": 0.08088235294117647
+    }
+  },
+  "tier2BaseRates": {
+    "rusher_100": {
+      "n": 272,
+      "rate": 0.3235294117647059
+    },
+    "receiver_100": {
+      "n": 272,
+      "rate": 0.4264705882352941
+    },
+    "passer_300": {
+      "n": 272,
+      "rate": 0.22058823529411764
+    },
+    "both_qbs_250": {
+      "n": 272,
+      "rate": 0.15073529411764705
+    },
+    "receiver_10rec": {
+      "n": 272,
+      "rate": 0.13970588235294118
+    },
+    "player_2plus_td": {
+      "n": 272,
+      "rate": 0.5257352941176471
+    },
+    "fg_50plus": {
+      "n": 272,
+      "rate": 0.4742647058823529
+    },
+    "kicker_3fg": {
+      "n": 272,
+      "rate": 0.40808823529411764
+    },
+    "missed_fg_or_xp": {
+      "n": 272,
+      "rate": 0.45955882352941174
+    },
+    "punt_inside_20": {
+      "n": 272,
+      "rate": 0.9558823529411765
+    },
+    "non_qb_pass_attempt": {
+      "n": 272,
+      "rate": 0.07352941176470588
+    },
+    "defender_2sacks": {
+      "n": 272,
+      "rate": 0.3860294117647059
+    },
+    "defender_10tackles": {
+      "n": 272,
+      "rate": 0.7904411764705882
+    },
+    "defender_int": {
+      "n": 272,
+      "rate": 0.7867647058823529
+    }
+  },
+  "tier3BaseRates": {
+    "first_score_within_5min": {
+      "n": 90,
+      "rate": 0.17777777777777778
+    },
+    "score_final_minute_first_half": {
+      "n": 90,
+      "rate": 0.6555555555555556
+    },
+    "score_last_2min_fourth": {
+      "n": 90,
+      "rate": 0.4111111111111111
+    },
+    "both_teams_lead": {
+      "n": 90,
+      "rate": 0.6222222222222222
+    },
+    "lead_change_second_half": {
+      "n": 90,
+      "rate": 0.36666666666666664
+    },
+    "winner_trailed_in_fourth": {
+      "n": 90,
+      "rate": 0.2222222222222222
+    },
+    "tied_after_halftime": {
+      "n": 90,
+      "rate": 0.3
+    },
+    "two_point_conversion": {
+      "n": 90,
+      "rate": 0.17777777777777778
+    },
+    "safety": {
+      "n": 90,
+      "rate": 0.044444444444444446
+    },
+    "td_from_inside_2yd": {
+      "n": 90,
+      "rate": 0.6777777777777778
+    }
+  }
+}

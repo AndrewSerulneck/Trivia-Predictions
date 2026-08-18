@@ -98,9 +98,21 @@ describe("sports bingo player props ingestion", () => {
       status: "Final",
     };
 
+    // Since Phase 2 of docs/prop-bingo-nfl-plan.md, NFL spread/total squares are derived from the
+    // real /nfl/v1/odds consensus rather than the old hardcoded -3.5 / 45 constants — an NFL game
+    // with no book-posted market no longer produces a board at all (see
+    // tests/lib.sportsBingo.nfl-core-squares.test.ts), so this game needs real odds rows.
+    const nflOdds = [
+      { game_id: "nfl-evt-1", vendor: "fanduel", spread_home_value: -3.5, total_value: 44.5, moneyline_home_odds: -180, moneyline_away_odds: 152 },
+      { game_id: "nfl-evt-1", vendor: "draftkings", spread_home_value: -3.5, total_value: 45, moneyline_home_odds: -175, moneyline_away_odds: 148 },
+    ];
+
     const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
       const url = String(input);
 
+      if (url.includes("/nfl/v1/odds")) {
+        return Promise.resolve(bdlList(nflOdds));
+      }
       if (url.includes("/nfl/v1/games")) {
         return Promise.resolve(bdlList([nflGame]));
       }

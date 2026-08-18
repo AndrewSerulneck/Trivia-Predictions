@@ -1,0 +1,3647 @@
+{
+  "season": "2025",
+  "gamesConsidered": 272,
+  "postseasonStatsGap": {
+    "postseasonGamesInSeason": 13,
+    "sampledForProbe": 3,
+    "teamStatsRowsReturned": 0,
+    "note": "CONFIRMED GAP: /nfl/v1/team_stats and /nfl/v1/stats return zero rows for 2025 postseason games. Postseason excluded from every base-rate measurement below; only the 272-game regular season is measured. This also means Tier 1/2/4 flavor squares (and, pre-existing, the Phase-3/4 player-prop and settlement paths) cannot grade postseason NFL boards today. Not one of the plan's five questions — found while fetching the season list for base rates."
+  },
+  "generatedAt": "2026-08-17T16:13:39.069Z",
+  "q1_team_stats_mid_game": {
+    "answered": false,
+    "note": "Cannot be determined from archived Final games — BDL only exposes team_stats for games that have already ended in this dataset, and there is no historical mid-game snapshot to replay. Requires a live probe during an actual in-progress NFL game (earliest opportunity: 2026 Week 1, ~2026-09-10). See findings doc for the exact live-check recipe."
+  },
+  "q2_sack_orientation": {
+    "checked": 378,
+    "ambiguous": 95,
+    "matchesOffenseTaken": 370,
+    "matchesDefenseMade": 4,
+    "examples": [
+      {
+        "gameId": 423962,
+        "team": "JAX",
+        "teamStatsSacks": 1,
+        "ownDefSacks": 3,
+        "opponentDefSacks": 1
+      },
+      {
+        "gameId": 423962,
+        "team": "CIN",
+        "teamStatsSacks": 3,
+        "ownDefSacks": 1,
+        "opponentDefSacks": 3
+      },
+      {
+        "gameId": 423964,
+        "team": "CHI",
+        "teamStatsSacks": 4,
+        "ownDefSacks": 0,
+        "opponentDefSacks": 4
+      },
+      {
+        "gameId": 423960,
+        "team": "MIN",
+        "teamStatsSacks": 3,
+        "ownDefSacks": 2,
+        "opponentDefSacks": 3
+      },
+      {
+        "gameId": 423960,
+        "team": "CHI",
+        "teamStatsSacks": 2,
+        "ownDefSacks": 3,
+        "opponentDefSacks": 2
+      }
+    ]
+  },
+  "q3_red_zone_semantics": {
+    "checked": 533,
+    "redZoneScoresNeverExceedsTotalTds": true,
+    "violations": 0,
+    "violationExamples": [],
+    "sawFgAttemptWithLowerScoresThanAttempts": 427
+  },
+  "q4_defensive_rows_populated": {
+    "total_tackles": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 11267,
+      "sample": [
+        {
+          "player": "Kylen Granson",
+          "pos": "TE",
+          "value": 1
+        },
+        {
+          "player": "Dak Prescott",
+          "pos": "QB",
+          "value": 1
+        }
+      ]
+    },
+    "defensive_sacks": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 1212,
+      "sample": [
+        {
+          "player": "Marshawn Kneeland",
+          "pos": "DE",
+          "value": 1
+        },
+        {
+          "player": "Daiyan Henley",
+          "pos": "LB",
+          "value": 1
+        }
+      ]
+    },
+    "solo_tackles": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 8903,
+      "sample": [
+        {
+          "player": "Kylen Granson",
+          "pos": "TE",
+          "value": 1
+        },
+        {
+          "player": "Dak Prescott",
+          "pos": "QB",
+          "value": 1
+        }
+      ]
+    },
+    "tackles_for_loss": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 2143,
+      "sample": [
+        {
+          "player": "Zack Baun",
+          "pos": "LB",
+          "value": 1
+        },
+        {
+          "player": "Jordan Davis",
+          "pos": "DT",
+          "value": 1
+        }
+      ]
+    },
+    "passes_defended": {
+      "nonNullRows": 11487,
+      "nonZeroRows": 1893,
+      "sample": [
+        {
+          "player": "Zack Baun",
+          "pos": "LB",
+          "value": 1
+        },
+        {
+          "player": "Cooper DeJean",
+          "pos": "CB",
+          "value": 1
+        }
+      ]
+    },
+    "defensive_interceptions": {
+      "nonNullRows": 367,
+      "nonZeroRows": 366,
+      "sample": [
+        {
+          "player": "Jaylinn Hawkins",
+          "pos": "S",
+          "value": 1
+        },
+        {
+          "player": "Jaycee Horn",
+          "pos": "CB",
+          "value": 1
+        }
+      ]
+    },
+    "interception_yards": {
+      "nonNullRows": 367,
+      "nonZeroRows": 212,
+      "sample": [
+        {
+          "player": "Jaylinn Hawkins",
+          "pos": "S",
+          "value": 1
+        },
+        {
+          "player": "Jaycee Horn",
+          "pos": "CB",
+          "value": 10
+        }
+      ]
+    },
+    "interception_touchdowns": {
+      "nonNullRows": 477,
+      "nonZeroRows": 28,
+      "sample": [
+        {
+          "player": "Nahshon Wright",
+          "pos": "CB",
+          "value": 1
+        },
+        {
+          "player": "Kenny Moore II",
+          "pos": "CB",
+          "value": 1
+        }
+      ]
+    }
+  },
+  "q5_plays_fields_archived": {
+    "totalPlaysSampled": 49150,
+    "home_win_probability": {
+      "populated": 48196,
+      "rate": 0.98059003051882
+    },
+    "clock_display": {
+      "populated": 49150,
+      "rate": 1
+    },
+    "start_yards_to_endzone": {
+      "populated": 42170,
+      "rate": 0.8579857578840285
+    },
+    "note": "These rates are measured on ARCHIVED (Final) games only. They show the fields persist in the historical record, which is necessary but not sufficient evidence they are populated mid-game live — see Q1/Q5 in the findings doc for why that needs a live probe during Week 1 2026."
+  },
+  "tier1BaseRates": {
+    "penalties_gte_3": {
+      "n": 544,
+      "rate": 0.9411764705882353
+    },
+    "penalties_gte_5": {
+      "n": 544,
+      "rate": 0.7426470588235294
+    },
+    "penalties_gte_7": {
+      "n": 544,
+      "rate": 0.4264705882352941
+    },
+    "penalty_yards_gte_75": {
+      "n": 544,
+      "rate": 0.1875
+    },
+    "turnovers_gte_2": {
+      "n": 544,
+      "rate": 0.3272058823529412
+    },
+    "turnovers_eq_0": {
+      "n": 544,
+      "rate": 0.34558823529411764
+    },
+    "third_down_conv_gte_6": {
+      "n": 544,
+      "rate": 0.39889705882352944
+    },
+    "third_down_conv_gte_8": {
+      "n": 544,
+      "rate": 0.1213235294117647
+    },
+    "fourth_down_conv_gte_1": {
+      "n": 544,
+      "rate": 0.5680147058823529
+    },
+    "fourth_down_attempted": {
+      "n": 544,
+      "rate": 0.7702205882352942
+    },
+    "perfect_red_zone_3plus": {
+      "n": 544,
+      "rate": 0.08455882352941177
+    },
+    "settled_for_fg_in_red_zone": {
+      "n": 544,
+      "rate": 0.7849264705882353
+    },
+    "top_gte_2100s_35min": {
+      "n": 544,
+      "rate": 0.13419117647058823
+    },
+    "total_yards_gte_400": {
+      "n": 544,
+      "rate": 0.18933823529411764
+    },
+    "total_yards_lt_250": {
+      "n": 544,
+      "rate": 0.17647058823529413
+    },
+    "yards_per_play_gte_6": {
+      "n": 544,
+      "rate": 0.2922794117647059
+    },
+    "first_downs_gte_25": {
+      "n": 544,
+      "rate": 0.15625
+    },
+    "rushing_yards_gte_150": {
+      "n": 544,
+      "rate": 0.23345588235294118
+    },
+    "passing_yards_gte_300": {
+      "n": 544,
+      "rate": 0.10845588235294118
+    },
+    "defensive_touchdown_gte_1": {
+      "n": 544,
+      "rate": 0.1213235294117647
+    },
+    "offensive_plays_gte_70": {
+      "n": 544,
+      "rate": 0.15625
+    },
+    "sacked_gte_4": {
+      "n": 544,
+      "rate": 0.23529411764705882
+    },
+    "combined_penalty_yards_gte_120": {
+      "n": 272,
+      "rate": 0.31985294117647056
+    },
+    "combined_turnovers_gte_3": {
+      "n": 272,
+      "rate": 0.4007352941176471
+    },
+    "top_advantage_gte_5min_either_team": {
+      "n": 272,
+      "rate": 0.5919117647058824
+    },
+    "neither_team_turnover_game_level": {
+      "n": 272,
+      "rate": 0.08088235294117647
+    }
+  },
+  "tier2BaseRates": {
+    "rusher_100": {
+      "n": 272,
+      "rate": 0.3235294117647059
+    },
+    "receiver_100": {
+      "n": 272,
+      "rate": 0.4264705882352941
+    },
+    "passer_300": {
+      "n": 272,
+      "rate": 0.22058823529411764
+    },
+    "both_qbs_250": {
+      "n": 272,
+      "rate": 0.15073529411764705
+    },
+    "receiver_10rec": {
+      "n": 272,
+      "rate": 0.13970588235294118
+    },
+    "player_2plus_td": {
+      "n": 272,
+      "rate": 0.5257352941176471
+    },
+    "fg_50plus": {
+      "n": 272,
+      "rate": 0.4742647058823529
+    },
+    "kicker_3fg": {
+      "n": 272,
+      "rate": 0.40808823529411764
+    },
+    "missed_fg_or_xp": {
+      "n": 272,
+      "rate": 0.45955882352941174
+    },
+    "punt_inside_20": {
+      "n": 272,
+      "rate": 0.9558823529411765
+    },
+    "non_qb_pass_attempt": {
+      "n": 272,
+      "rate": 0.07352941176470588
+    },
+    "defender_2sacks": {
+      "n": 272,
+      "rate": 0.3860294117647059
+    },
+    "defender_10tackles": {
+      "n": 272,
+      "rate": 0.7904411764705882
+    },
+    "defender_int": {
+      "n": 272,
+      "rate": 0.7867647058823529
+    }
+  },
+  "tier3BaseRates": {
+    "first_score_within_5min": {
+      "n": 272,
+      "rate": 0.19117647058823528
+    },
+    "score_final_minute_first_half": {
+      "n": 272,
+      "rate": 0.6433823529411765
+    },
+    "score_last_2min_fourth": {
+      "n": 272,
+      "rate": 0.4117647058823529
+    },
+    "both_teams_lead": {
+      "n": 272,
+      "rate": 0.5955882352941176
+    },
+    "lead_change_second_half": {
+      "n": 272,
+      "rate": 0.3786764705882353
+    },
+    "winner_trailed_in_fourth": {
+      "n": 272,
+      "rate": 0.2536764705882353
+    },
+    "tied_after_halftime": {
+      "n": 272,
+      "rate": 0.26838235294117646
+    },
+    "two_point_conversion": {
+      "n": 272,
+      "rate": 0.18382352941176472
+    },
+    "safety": {
+      "n": 272,
+      "rate": 0.04779411764705882
+    },
+    "td_from_inside_2yd": {
+      "n": 272,
+      "rate": 0.6948529411764706
+    }
+  },
+  "tier1ThresholdSweep": {
+    "penalties": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 3,
+          "n": 542,
+          "rate": 0.9446494464944649
+        },
+        {
+          "threshold": 4,
+          "n": 542,
+          "rate": 0.8690036900369004
+        },
+        {
+          "threshold": 5,
+          "n": 542,
+          "rate": 0.7453874538745388
+        },
+        {
+          "threshold": 6,
+          "n": 542,
+          "rate": 0.5830258302583026
+        },
+        {
+          "threshold": 7,
+          "n": 542,
+          "rate": 0.4280442804428044
+        },
+        {
+          "threshold": 8,
+          "n": 542,
+          "rate": 0.2915129151291513
+        },
+        {
+          "threshold": 9,
+          "n": 542,
+          "rate": 0.1974169741697417
+        },
+        {
+          "threshold": 10,
+          "n": 542,
+          "rate": 0.14760147601476015
+        },
+        {
+          "threshold": 11,
+          "n": 542,
+          "rate": 0.0940959409594096
+        },
+        {
+          "threshold": 12,
+          "n": 542,
+          "rate": 0.04797047970479705
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 7,
+          "n": 542,
+          "rate": 0.4280442804428044
+        },
+        "lean-lock": {
+          "threshold": 5,
+          "n": 542,
+          "rate": 0.7453874538745388
+        },
+        "long-shot": {
+          "threshold": 10,
+          "n": 542,
+          "rate": 0.14760147601476015
+        }
+      }
+    },
+    "penalty_yards": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 30,
+          "n": 542,
+          "rate": 0.8247232472324724
+        },
+        {
+          "threshold": 35,
+          "n": 542,
+          "rate": 0.7472324723247232
+        },
+        {
+          "threshold": 40,
+          "n": 542,
+          "rate": 0.6642066420664207
+        },
+        {
+          "threshold": 45,
+          "n": 542,
+          "rate": 0.559040590405904
+        },
+        {
+          "threshold": 50,
+          "n": 542,
+          "rate": 0.46863468634686345
+        },
+        {
+          "threshold": 55,
+          "n": 542,
+          "rate": 0.3892988929889299
+        },
+        {
+          "threshold": 60,
+          "n": 542,
+          "rate": 0.3173431734317343
+        },
+        {
+          "threshold": 65,
+          "n": 542,
+          "rate": 0.26199261992619927
+        },
+        {
+          "threshold": 70,
+          "n": 542,
+          "rate": 0.21217712177121772
+        },
+        {
+          "threshold": 75,
+          "n": 542,
+          "rate": 0.1881918819188192
+        },
+        {
+          "threshold": 80,
+          "n": 542,
+          "rate": 0.14575645756457564
+        },
+        {
+          "threshold": 85,
+          "n": 542,
+          "rate": 0.1033210332103321
+        },
+        {
+          "threshold": 90,
+          "n": 542,
+          "rate": 0.08118081180811808
+        },
+        {
+          "threshold": 95,
+          "n": 542,
+          "rate": 0.05719557195571956
+        },
+        {
+          "threshold": 100,
+          "n": 542,
+          "rate": 0.046125461254612546
+        },
+        {
+          "threshold": 105,
+          "n": 542,
+          "rate": 0.03874538745387454
+        },
+        {
+          "threshold": 110,
+          "n": 542,
+          "rate": 0.025830258302583026
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 50,
+          "n": 542,
+          "rate": 0.46863468634686345
+        },
+        "lean-lock": {
+          "threshold": 35,
+          "n": 542,
+          "rate": 0.7472324723247232
+        },
+        "long-shot": {
+          "threshold": 80,
+          "n": 542,
+          "rate": 0.14575645756457564
+        }
+      }
+    },
+    "turnovers": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 544,
+          "rate": 0.6544117647058824
+        },
+        {
+          "threshold": 2,
+          "n": 544,
+          "rate": 0.3272058823529412
+        },
+        {
+          "threshold": 3,
+          "n": 544,
+          "rate": 0.1213235294117647
+        },
+        {
+          "threshold": 4,
+          "n": 544,
+          "rate": 0.034926470588235295
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 1,
+          "n": 544,
+          "rate": 0.6544117647058824
+        },
+        "lean-lock": {
+          "threshold": 1,
+          "n": 544,
+          "rate": 0.6544117647058824
+        },
+        "long-shot": {
+          "threshold": 3,
+          "n": 544,
+          "rate": 0.1213235294117647
+        }
+      }
+    },
+    "third_down_conversions": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 3,
+          "n": 544,
+          "rate": 0.8713235294117647
+        },
+        {
+          "threshold": 4,
+          "n": 544,
+          "rate": 0.7205882352941176
+        },
+        {
+          "threshold": 5,
+          "n": 544,
+          "rate": 0.5680147058823529
+        },
+        {
+          "threshold": 6,
+          "n": 544,
+          "rate": 0.39889705882352944
+        },
+        {
+          "threshold": 7,
+          "n": 544,
+          "rate": 0.2536764705882353
+        },
+        {
+          "threshold": 8,
+          "n": 544,
+          "rate": 0.1213235294117647
+        },
+        {
+          "threshold": 9,
+          "n": 544,
+          "rate": 0.05330882352941176
+        },
+        {
+          "threshold": 10,
+          "n": 544,
+          "rate": 0.02389705882352941
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 5,
+          "n": 544,
+          "rate": 0.5680147058823529
+        },
+        "lean-lock": {
+          "threshold": 4,
+          "n": 544,
+          "rate": 0.7205882352941176
+        },
+        "long-shot": {
+          "threshold": 8,
+          "n": 544,
+          "rate": 0.1213235294117647
+        }
+      }
+    },
+    "fourth_down_conversions": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 419,
+          "rate": 0.7374701670644391
+        },
+        {
+          "threshold": 2,
+          "n": 419,
+          "rate": 0.29832935560859186
+        },
+        {
+          "threshold": 3,
+          "n": 419,
+          "rate": 0.10501193317422435
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 2,
+          "n": 419,
+          "rate": 0.29832935560859186
+        },
+        "lean-lock": {
+          "threshold": 1,
+          "n": 419,
+          "rate": 0.7374701670644391
+        },
+        "long-shot": {
+          "threshold": 3,
+          "n": 419,
+          "rate": 0.10501193317422435
+        }
+      }
+    },
+    "possession_time_seconds": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1620,
+          "n": 544,
+          "rate": 0.7463235294117647
+        },
+        {
+          "threshold": 1680,
+          "n": 544,
+          "rate": 0.6764705882352942
+        },
+        {
+          "threshold": 1740,
+          "n": 544,
+          "rate": 0.5698529411764706
+        },
+        {
+          "threshold": 1800,
+          "n": 544,
+          "rate": 0.5055147058823529
+        },
+        {
+          "threshold": 1860,
+          "n": 544,
+          "rate": 0.4485294117647059
+        },
+        {
+          "threshold": 1920,
+          "n": 544,
+          "rate": 0.34191176470588236
+        },
+        {
+          "threshold": 1980,
+          "n": 544,
+          "rate": 0.26838235294117646
+        },
+        {
+          "threshold": 2040,
+          "n": 544,
+          "rate": 0.20588235294117646
+        },
+        {
+          "threshold": 2100,
+          "n": 544,
+          "rate": 0.13419117647058823
+        },
+        {
+          "threshold": 2160,
+          "n": 544,
+          "rate": 0.0974264705882353
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 1800,
+          "n": 544,
+          "rate": 0.5055147058823529
+        },
+        "lean-lock": {
+          "threshold": 1620,
+          "n": 544,
+          "rate": 0.7463235294117647
+        },
+        "long-shot": {
+          "threshold": 2100,
+          "n": 544,
+          "rate": 0.13419117647058823
+        }
+      }
+    },
+    "total_yards_at_least": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 250,
+          "n": 544,
+          "rate": 0.8235294117647058
+        },
+        {
+          "threshold": 260,
+          "n": 544,
+          "rate": 0.7977941176470589
+        },
+        {
+          "threshold": 270,
+          "n": 544,
+          "rate": 0.7591911764705882
+        },
+        {
+          "threshold": 280,
+          "n": 544,
+          "rate": 0.7169117647058824
+        },
+        {
+          "threshold": 290,
+          "n": 544,
+          "rate": 0.6856617647058824
+        },
+        {
+          "threshold": 300,
+          "n": 544,
+          "rate": 0.6286764705882353
+        },
+        {
+          "threshold": 310,
+          "n": 544,
+          "rate": 0.5955882352941176
+        },
+        {
+          "threshold": 320,
+          "n": 544,
+          "rate": 0.5496323529411765
+        },
+        {
+          "threshold": 330,
+          "n": 544,
+          "rate": 0.5128676470588235
+        },
+        {
+          "threshold": 340,
+          "n": 544,
+          "rate": 0.44669117647058826
+        },
+        {
+          "threshold": 350,
+          "n": 544,
+          "rate": 0.39889705882352944
+        },
+        {
+          "threshold": 360,
+          "n": 544,
+          "rate": 0.3492647058823529
+        },
+        {
+          "threshold": 370,
+          "n": 544,
+          "rate": 0.2959558823529412
+        },
+        {
+          "threshold": 380,
+          "n": 544,
+          "rate": 0.2647058823529412
+        },
+        {
+          "threshold": 390,
+          "n": 544,
+          "rate": 0.21691176470588236
+        },
+        {
+          "threshold": 400,
+          "n": 544,
+          "rate": 0.18933823529411764
+        },
+        {
+          "threshold": 410,
+          "n": 544,
+          "rate": 0.15625
+        },
+        {
+          "threshold": 420,
+          "n": 544,
+          "rate": 0.12316176470588236
+        },
+        {
+          "threshold": 430,
+          "n": 544,
+          "rate": 0.10294117647058823
+        },
+        {
+          "threshold": 440,
+          "n": 544,
+          "rate": 0.07904411764705882
+        },
+        {
+          "threshold": 450,
+          "n": 544,
+          "rate": 0.06801470588235294
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 330,
+          "n": 544,
+          "rate": 0.5128676470588235
+        },
+        "lean-lock": {
+          "threshold": 280,
+          "n": 544,
+          "rate": 0.7169117647058824
+        },
+        "long-shot": {
+          "threshold": 410,
+          "n": 544,
+          "rate": 0.15625
+        }
+      }
+    },
+    "total_yards_at_most": {
+      "comparison": "lte",
+      "points": [
+        {
+          "threshold": 220,
+          "n": 544,
+          "rate": 0.11213235294117647
+        },
+        {
+          "threshold": 230,
+          "n": 544,
+          "rate": 0.13786764705882354
+        },
+        {
+          "threshold": 240,
+          "n": 544,
+          "rate": 0.15441176470588236
+        },
+        {
+          "threshold": 250,
+          "n": 544,
+          "rate": 0.17830882352941177
+        },
+        {
+          "threshold": 260,
+          "n": 544,
+          "rate": 0.20955882352941177
+        },
+        {
+          "threshold": 270,
+          "n": 544,
+          "rate": 0.24632352941176472
+        },
+        {
+          "threshold": 280,
+          "n": 544,
+          "rate": 0.28308823529411764
+        },
+        {
+          "threshold": 290,
+          "n": 544,
+          "rate": 0.3180147058823529
+        },
+        {
+          "threshold": 300,
+          "n": 544,
+          "rate": 0.37316176470588236
+        },
+        {
+          "threshold": 310,
+          "n": 544,
+          "rate": 0.40441176470588236
+        },
+        {
+          "threshold": 320,
+          "n": 544,
+          "rate": 0.45588235294117646
+        },
+        {
+          "threshold": 330,
+          "n": 544,
+          "rate": 0.49080882352941174
+        },
+        {
+          "threshold": 340,
+          "n": 544,
+          "rate": 0.5625
+        },
+        {
+          "threshold": 350,
+          "n": 544,
+          "rate": 0.6047794117647058
+        },
+        {
+          "threshold": 360,
+          "n": 544,
+          "rate": 0.6580882352941176
+        },
+        {
+          "threshold": 370,
+          "n": 544,
+          "rate": 0.7077205882352942
+        },
+        {
+          "threshold": 380,
+          "n": 544,
+          "rate": 0.7408088235294118
+        },
+        {
+          "threshold": 390,
+          "n": 544,
+          "rate": 0.7849264705882353
+        },
+        {
+          "threshold": 400,
+          "n": 544,
+          "rate": 0.8180147058823529
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 330,
+          "n": 544,
+          "rate": 0.49080882352941174
+        },
+        "lean-lock": {
+          "threshold": 370,
+          "n": 544,
+          "rate": 0.7077205882352942
+        },
+        "long-shot": {
+          "threshold": 240,
+          "n": 544,
+          "rate": 0.15441176470588236
+        }
+      }
+    },
+    "yards_per_play": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 4,
+          "n": 544,
+          "rate": 0.8658088235294118
+        },
+        {
+          "threshold": 4.1,
+          "n": 544,
+          "rate": 0.8547794117647058
+        },
+        {
+          "threshold": 4.2,
+          "n": 544,
+          "rate": 0.8327205882352942
+        },
+        {
+          "threshold": 4.3,
+          "n": 544,
+          "rate": 0.8180147058823529
+        },
+        {
+          "threshold": 4.4,
+          "n": 544,
+          "rate": 0.7886029411764706
+        },
+        {
+          "threshold": 4.5,
+          "n": 544,
+          "rate": 0.7665441176470589
+        },
+        {
+          "threshold": 4.6,
+          "n": 544,
+          "rate": 0.7518382352941176
+        },
+        {
+          "threshold": 4.7,
+          "n": 544,
+          "rate": 0.7132352941176471
+        },
+        {
+          "threshold": 4.8,
+          "n": 544,
+          "rate": 0.6875
+        },
+        {
+          "threshold": 4.9,
+          "n": 544,
+          "rate": 0.6691176470588235
+        },
+        {
+          "threshold": 5,
+          "n": 544,
+          "rate": 0.625
+        },
+        {
+          "threshold": 5.1,
+          "n": 544,
+          "rate": 0.5882352941176471
+        },
+        {
+          "threshold": 5.2,
+          "n": 544,
+          "rate": 0.5625
+        },
+        {
+          "threshold": 5.3,
+          "n": 544,
+          "rate": 0.5257352941176471
+        },
+        {
+          "threshold": 5.4,
+          "n": 544,
+          "rate": 0.5
+        },
+        {
+          "threshold": 5.5,
+          "n": 544,
+          "rate": 0.45955882352941174
+        },
+        {
+          "threshold": 5.6,
+          "n": 544,
+          "rate": 0.4172794117647059
+        },
+        {
+          "threshold": 5.7,
+          "n": 544,
+          "rate": 0.3915441176470588
+        },
+        {
+          "threshold": 5.8,
+          "n": 544,
+          "rate": 0.36213235294117646
+        },
+        {
+          "threshold": 5.9,
+          "n": 544,
+          "rate": 0.31985294117647056
+        },
+        {
+          "threshold": 6,
+          "n": 544,
+          "rate": 0.2922794117647059
+        },
+        {
+          "threshold": 6.1,
+          "n": 544,
+          "rate": 0.2426470588235294
+        },
+        {
+          "threshold": 6.2,
+          "n": 544,
+          "rate": 0.21691176470588236
+        },
+        {
+          "threshold": 6.3,
+          "n": 544,
+          "rate": 0.20220588235294118
+        },
+        {
+          "threshold": 6.4,
+          "n": 544,
+          "rate": 0.1801470588235294
+        },
+        {
+          "threshold": 6.5,
+          "n": 544,
+          "rate": 0.15625
+        },
+        {
+          "threshold": 6.6,
+          "n": 544,
+          "rate": 0.13970588235294118
+        },
+        {
+          "threshold": 6.7,
+          "n": 544,
+          "rate": 0.12867647058823528
+        },
+        {
+          "threshold": 6.8,
+          "n": 544,
+          "rate": 0.11764705882352941
+        },
+        {
+          "threshold": 6.9,
+          "n": 544,
+          "rate": 0.10661764705882353
+        },
+        {
+          "threshold": 7,
+          "n": 544,
+          "rate": 0.0900735294117647
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 5.4,
+          "n": 544,
+          "rate": 0.5
+        },
+        "lean-lock": {
+          "threshold": 4.7,
+          "n": 544,
+          "rate": 0.7132352941176471
+        },
+        "long-shot": {
+          "threshold": 6.5,
+          "n": 544,
+          "rate": 0.15625
+        }
+      }
+    },
+    "first_downs": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 14,
+          "n": 544,
+          "rate": 0.8621323529411765
+        },
+        {
+          "threshold": 15,
+          "n": 544,
+          "rate": 0.8290441176470589
+        },
+        {
+          "threshold": 16,
+          "n": 544,
+          "rate": 0.7775735294117647
+        },
+        {
+          "threshold": 17,
+          "n": 544,
+          "rate": 0.7003676470588235
+        },
+        {
+          "threshold": 18,
+          "n": 544,
+          "rate": 0.6341911764705882
+        },
+        {
+          "threshold": 19,
+          "n": 544,
+          "rate": 0.5753676470588235
+        },
+        {
+          "threshold": 20,
+          "n": 544,
+          "rate": 0.4797794117647059
+        },
+        {
+          "threshold": 21,
+          "n": 544,
+          "rate": 0.4264705882352941
+        },
+        {
+          "threshold": 22,
+          "n": 544,
+          "rate": 0.3639705882352941
+        },
+        {
+          "threshold": 23,
+          "n": 544,
+          "rate": 0.2757352941176471
+        },
+        {
+          "threshold": 24,
+          "n": 544,
+          "rate": 0.20588235294117646
+        },
+        {
+          "threshold": 25,
+          "n": 544,
+          "rate": 0.15625
+        },
+        {
+          "threshold": 26,
+          "n": 544,
+          "rate": 0.10661764705882353
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 20,
+          "n": 544,
+          "rate": 0.4797794117647059
+        },
+        "lean-lock": {
+          "threshold": 17,
+          "n": 544,
+          "rate": 0.7003676470588235
+        },
+        "long-shot": {
+          "threshold": 25,
+          "n": 544,
+          "rate": 0.15625
+        }
+      }
+    },
+    "rushing_yards": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 70,
+          "n": 544,
+          "rate": 0.8253676470588235
+        },
+        {
+          "threshold": 75,
+          "n": 544,
+          "rate": 0.78125
+        },
+        {
+          "threshold": 80,
+          "n": 544,
+          "rate": 0.7426470588235294
+        },
+        {
+          "threshold": 85,
+          "n": 544,
+          "rate": 0.7058823529411765
+        },
+        {
+          "threshold": 90,
+          "n": 544,
+          "rate": 0.6580882352941176
+        },
+        {
+          "threshold": 95,
+          "n": 544,
+          "rate": 0.6286764705882353
+        },
+        {
+          "threshold": 100,
+          "n": 544,
+          "rate": 0.6011029411764706
+        },
+        {
+          "threshold": 105,
+          "n": 544,
+          "rate": 0.5680147058823529
+        },
+        {
+          "threshold": 110,
+          "n": 544,
+          "rate": 0.5294117647058824
+        },
+        {
+          "threshold": 115,
+          "n": 544,
+          "rate": 0.4963235294117647
+        },
+        {
+          "threshold": 120,
+          "n": 544,
+          "rate": 0.4430147058823529
+        },
+        {
+          "threshold": 125,
+          "n": 544,
+          "rate": 0.39705882352941174
+        },
+        {
+          "threshold": 130,
+          "n": 544,
+          "rate": 0.3602941176470588
+        },
+        {
+          "threshold": 135,
+          "n": 544,
+          "rate": 0.3327205882352941
+        },
+        {
+          "threshold": 140,
+          "n": 544,
+          "rate": 0.2977941176470588
+        },
+        {
+          "threshold": 145,
+          "n": 544,
+          "rate": 0.25919117647058826
+        },
+        {
+          "threshold": 150,
+          "n": 544,
+          "rate": 0.23345588235294118
+        },
+        {
+          "threshold": 155,
+          "n": 544,
+          "rate": 0.20404411764705882
+        },
+        {
+          "threshold": 160,
+          "n": 544,
+          "rate": 0.17830882352941177
+        },
+        {
+          "threshold": 165,
+          "n": 544,
+          "rate": 0.1488970588235294
+        },
+        {
+          "threshold": 170,
+          "n": 544,
+          "rate": 0.12316176470588236
+        },
+        {
+          "threshold": 175,
+          "n": 544,
+          "rate": 0.11029411764705882
+        },
+        {
+          "threshold": 180,
+          "n": 544,
+          "rate": 0.0974264705882353
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 115,
+          "n": 544,
+          "rate": 0.4963235294117647
+        },
+        "lean-lock": {
+          "threshold": 85,
+          "n": 544,
+          "rate": 0.7058823529411765
+        },
+        "long-shot": {
+          "threshold": 165,
+          "n": 544,
+          "rate": 0.1488970588235294
+        }
+      }
+    },
+    "net_passing_yards": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 140,
+          "n": 544,
+          "rate": 0.8327205882352942
+        },
+        {
+          "threshold": 150,
+          "n": 544,
+          "rate": 0.7959558823529411
+        },
+        {
+          "threshold": 160,
+          "n": 544,
+          "rate": 0.7518382352941176
+        },
+        {
+          "threshold": 170,
+          "n": 544,
+          "rate": 0.7113970588235294
+        },
+        {
+          "threshold": 180,
+          "n": 544,
+          "rate": 0.6691176470588235
+        },
+        {
+          "threshold": 190,
+          "n": 544,
+          "rate": 0.6139705882352942
+        },
+        {
+          "threshold": 200,
+          "n": 544,
+          "rate": 0.5441176470588235
+        },
+        {
+          "threshold": 210,
+          "n": 544,
+          "rate": 0.47610294117647056
+        },
+        {
+          "threshold": 220,
+          "n": 544,
+          "rate": 0.43014705882352944
+        },
+        {
+          "threshold": 230,
+          "n": 544,
+          "rate": 0.37683823529411764
+        },
+        {
+          "threshold": 240,
+          "n": 544,
+          "rate": 0.3290441176470588
+        },
+        {
+          "threshold": 250,
+          "n": 544,
+          "rate": 0.28125
+        },
+        {
+          "threshold": 260,
+          "n": 544,
+          "rate": 0.2426470588235294
+        },
+        {
+          "threshold": 270,
+          "n": 544,
+          "rate": 0.18933823529411764
+        },
+        {
+          "threshold": 280,
+          "n": 544,
+          "rate": 0.15808823529411764
+        },
+        {
+          "threshold": 290,
+          "n": 544,
+          "rate": 0.13051470588235295
+        },
+        {
+          "threshold": 300,
+          "n": 544,
+          "rate": 0.10845588235294118
+        },
+        {
+          "threshold": 310,
+          "n": 544,
+          "rate": 0.08823529411764706
+        },
+        {
+          "threshold": 320,
+          "n": 544,
+          "rate": 0.06985294117647059
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 210,
+          "n": 544,
+          "rate": 0.47610294117647056
+        },
+        "lean-lock": {
+          "threshold": 170,
+          "n": 544,
+          "rate": 0.7113970588235294
+        },
+        "long-shot": {
+          "threshold": 280,
+          "n": 544,
+          "rate": 0.15808823529411764
+        }
+      }
+    },
+    "total_offensive_plays": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 55,
+          "n": 544,
+          "rate": 0.7738970588235294
+        },
+        {
+          "threshold": 56,
+          "n": 544,
+          "rate": 0.7518382352941176
+        },
+        {
+          "threshold": 57,
+          "n": 544,
+          "rate": 0.7169117647058824
+        },
+        {
+          "threshold": 58,
+          "n": 544,
+          "rate": 0.6691176470588235
+        },
+        {
+          "threshold": 59,
+          "n": 544,
+          "rate": 0.6231617647058824
+        },
+        {
+          "threshold": 60,
+          "n": 544,
+          "rate": 0.5919117647058824
+        },
+        {
+          "threshold": 61,
+          "n": 544,
+          "rate": 0.5588235294117647
+        },
+        {
+          "threshold": 62,
+          "n": 544,
+          "rate": 0.5165441176470589
+        },
+        {
+          "threshold": 63,
+          "n": 544,
+          "rate": 0.46139705882352944
+        },
+        {
+          "threshold": 64,
+          "n": 544,
+          "rate": 0.4117647058823529
+        },
+        {
+          "threshold": 65,
+          "n": 544,
+          "rate": 0.3584558823529412
+        },
+        {
+          "threshold": 66,
+          "n": 544,
+          "rate": 0.2977941176470588
+        },
+        {
+          "threshold": 67,
+          "n": 544,
+          "rate": 0.2610294117647059
+        },
+        {
+          "threshold": 68,
+          "n": 544,
+          "rate": 0.21875
+        },
+        {
+          "threshold": 69,
+          "n": 544,
+          "rate": 0.18933823529411764
+        },
+        {
+          "threshold": 70,
+          "n": 544,
+          "rate": 0.15625
+        },
+        {
+          "threshold": 71,
+          "n": 544,
+          "rate": 0.1213235294117647
+        },
+        {
+          "threshold": 72,
+          "n": 544,
+          "rate": 0.09926470588235294
+        },
+        {
+          "threshold": 73,
+          "n": 544,
+          "rate": 0.07904411764705882
+        },
+        {
+          "threshold": 74,
+          "n": 544,
+          "rate": 0.06801470588235294
+        },
+        {
+          "threshold": 75,
+          "n": 544,
+          "rate": 0.05514705882352941
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 62,
+          "n": 544,
+          "rate": 0.5165441176470589
+        },
+        "lean-lock": {
+          "threshold": 57,
+          "n": 544,
+          "rate": 0.7169117647058824
+        },
+        "long-shot": {
+          "threshold": 70,
+          "n": 544,
+          "rate": 0.15625
+        }
+      }
+    },
+    "sacks_taken": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 473,
+          "rate": 1
+        },
+        {
+          "threshold": 2,
+          "n": 473,
+          "rate": 0.7251585623678647
+        },
+        {
+          "threshold": 3,
+          "n": 473,
+          "rate": 0.46723044397463004
+        },
+        {
+          "threshold": 4,
+          "n": 473,
+          "rate": 0.27061310782241016
+        },
+        {
+          "threshold": 5,
+          "n": 473,
+          "rate": 0.14587737843551796
+        },
+        {
+          "threshold": 6,
+          "n": 473,
+          "rate": 0.06976744186046512
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 3,
+          "n": 473,
+          "rate": 0.46723044397463004
+        },
+        "lean-lock": {
+          "threshold": 2,
+          "n": 473,
+          "rate": 0.7251585623678647
+        },
+        "long-shot": {
+          "threshold": 5,
+          "n": 473,
+          "rate": 0.14587737843551796
+        }
+      }
+    },
+    "red_zone_attempts": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 533,
+          "rate": 1
+        },
+        {
+          "threshold": 2,
+          "n": 533,
+          "rate": 0.8911819887429644
+        },
+        {
+          "threshold": 3,
+          "n": 533,
+          "rate": 0.6866791744840526
+        },
+        {
+          "threshold": 4,
+          "n": 533,
+          "rate": 0.40337711069418386
+        },
+        {
+          "threshold": 5,
+          "n": 533,
+          "rate": 0.2026266416510319
+        },
+        {
+          "threshold": 6,
+          "n": 533,
+          "rate": 0.07692307692307693
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 4,
+          "n": 533,
+          "rate": 0.40337711069418386
+        },
+        "lean-lock": {
+          "threshold": 3,
+          "n": 533,
+          "rate": 0.6866791744840526
+        },
+        "long-shot": {
+          "threshold": 5,
+          "n": 533,
+          "rate": 0.2026266416510319
+        }
+      }
+    },
+    "red_zone_scores": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 533,
+          "rate": 0.8649155722326454
+        },
+        {
+          "threshold": 2,
+          "n": 533,
+          "rate": 0.5872420262664165
+        },
+        {
+          "threshold": 3,
+          "n": 533,
+          "rate": 0.28893058161350843
+        },
+        {
+          "threshold": 4,
+          "n": 533,
+          "rate": 0.09943714821763602
+        },
+        {
+          "threshold": 5,
+          "n": 533,
+          "rate": 0.024390243902439025
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 2,
+          "n": 533,
+          "rate": 0.5872420262664165
+        },
+        "lean-lock": {
+          "threshold": 2,
+          "n": 533,
+          "rate": 0.5872420262664165
+        },
+        "long-shot": {
+          "threshold": 4,
+          "n": 533,
+          "rate": 0.09943714821763602
+        }
+      }
+    },
+    "combined_penalty_yards": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 60,
+          "n": 270,
+          "rate": 0.9
+        },
+        {
+          "threshold": 65,
+          "n": 270,
+          "rate": 0.8740740740740741
+        },
+        {
+          "threshold": 70,
+          "n": 270,
+          "rate": 0.825925925925926
+        },
+        {
+          "threshold": 75,
+          "n": 270,
+          "rate": 0.7814814814814814
+        },
+        {
+          "threshold": 80,
+          "n": 270,
+          "rate": 0.7074074074074074
+        },
+        {
+          "threshold": 85,
+          "n": 270,
+          "rate": 0.6333333333333333
+        },
+        {
+          "threshold": 90,
+          "n": 270,
+          "rate": 0.5777777777777777
+        },
+        {
+          "threshold": 95,
+          "n": 270,
+          "rate": 0.4962962962962963
+        },
+        {
+          "threshold": 100,
+          "n": 270,
+          "rate": 0.45185185185185184
+        },
+        {
+          "threshold": 105,
+          "n": 270,
+          "rate": 0.4148148148148148
+        },
+        {
+          "threshold": 110,
+          "n": 270,
+          "rate": 0.3888888888888889
+        },
+        {
+          "threshold": 115,
+          "n": 270,
+          "rate": 0.35555555555555557
+        },
+        {
+          "threshold": 120,
+          "n": 270,
+          "rate": 0.32222222222222224
+        },
+        {
+          "threshold": 125,
+          "n": 270,
+          "rate": 0.2777777777777778
+        },
+        {
+          "threshold": 130,
+          "n": 270,
+          "rate": 0.2518518518518518
+        },
+        {
+          "threshold": 135,
+          "n": 270,
+          "rate": 0.2111111111111111
+        },
+        {
+          "threshold": 140,
+          "n": 270,
+          "rate": 0.18888888888888888
+        },
+        {
+          "threshold": 145,
+          "n": 270,
+          "rate": 0.14444444444444443
+        },
+        {
+          "threshold": 150,
+          "n": 270,
+          "rate": 0.12222222222222222
+        },
+        {
+          "threshold": 155,
+          "n": 270,
+          "rate": 0.0962962962962963
+        },
+        {
+          "threshold": 160,
+          "n": 270,
+          "rate": 0.08888888888888889
+        },
+        {
+          "threshold": 165,
+          "n": 270,
+          "rate": 0.06666666666666667
+        },
+        {
+          "threshold": 170,
+          "n": 270,
+          "rate": 0.05185185185185185
+        },
+        {
+          "threshold": 175,
+          "n": 270,
+          "rate": 0.04814814814814815
+        },
+        {
+          "threshold": 180,
+          "n": 270,
+          "rate": 0.03333333333333333
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 95,
+          "n": 270,
+          "rate": 0.4962962962962963
+        },
+        "lean-lock": {
+          "threshold": 80,
+          "n": 270,
+          "rate": 0.7074074074074074
+        },
+        "long-shot": {
+          "threshold": 145,
+          "n": 270,
+          "rate": 0.14444444444444443
+        }
+      }
+    },
+    "combined_turnovers": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.9191176470588235
+        },
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.6764705882352942
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.4007352941176471
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.19852941176470587
+        },
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.07720588235294118
+        },
+        {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.025735294117647058
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.4007352941176471
+        },
+        "lean-lock": {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.6764705882352942
+        },
+        "long-shot": {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.19852941176470587
+        }
+      }
+    },
+    "combined_penalties": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 8,
+          "n": 270,
+          "rate": 0.9037037037037037
+        },
+        {
+          "threshold": 9,
+          "n": 270,
+          "rate": 0.8444444444444444
+        },
+        {
+          "threshold": 10,
+          "n": 270,
+          "rate": 0.7851851851851852
+        },
+        {
+          "threshold": 11,
+          "n": 270,
+          "rate": 0.6962962962962963
+        },
+        {
+          "threshold": 12,
+          "n": 270,
+          "rate": 0.5666666666666667
+        },
+        {
+          "threshold": 13,
+          "n": 270,
+          "rate": 0.4740740740740741
+        },
+        {
+          "threshold": 14,
+          "n": 270,
+          "rate": 0.3592592592592593
+        },
+        {
+          "threshold": 15,
+          "n": 270,
+          "rate": 0.28888888888888886
+        },
+        {
+          "threshold": 16,
+          "n": 270,
+          "rate": 0.24814814814814815
+        },
+        {
+          "threshold": 17,
+          "n": 270,
+          "rate": 0.2037037037037037
+        },
+        {
+          "threshold": 18,
+          "n": 270,
+          "rate": 0.15185185185185185
+        },
+        {
+          "threshold": 19,
+          "n": 270,
+          "rate": 0.11481481481481481
+        },
+        {
+          "threshold": 20,
+          "n": 270,
+          "rate": 0.08888888888888889
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 13,
+          "n": 270,
+          "rate": 0.4740740740740741
+        },
+        "lean-lock": {
+          "threshold": 11,
+          "n": 270,
+          "rate": 0.6962962962962963
+        },
+        "long-shot": {
+          "threshold": 18,
+          "n": 270,
+          "rate": 0.15185185185185185
+        }
+      }
+    },
+    "possession_time_gap": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 120,
+          "n": 272,
+          "rate": 0.8823529411764706
+        },
+        {
+          "threshold": 150,
+          "n": 272,
+          "rate": 0.8492647058823529
+        },
+        {
+          "threshold": 180,
+          "n": 272,
+          "rate": 0.7941176470588235
+        },
+        {
+          "threshold": 210,
+          "n": 272,
+          "rate": 0.7536764705882353
+        },
+        {
+          "threshold": 240,
+          "n": 272,
+          "rate": 0.6617647058823529
+        },
+        {
+          "threshold": 270,
+          "n": 272,
+          "rate": 0.6286764705882353
+        },
+        {
+          "threshold": 300,
+          "n": 272,
+          "rate": 0.5919117647058824
+        },
+        {
+          "threshold": 330,
+          "n": 272,
+          "rate": 0.5477941176470589
+        },
+        {
+          "threshold": 360,
+          "n": 272,
+          "rate": 0.5220588235294118
+        },
+        {
+          "threshold": 390,
+          "n": 272,
+          "rate": 0.48161764705882354
+        },
+        {
+          "threshold": 420,
+          "n": 272,
+          "rate": 0.44485294117647056
+        },
+        {
+          "threshold": 450,
+          "n": 272,
+          "rate": 0.40441176470588236
+        },
+        {
+          "threshold": 480,
+          "n": 272,
+          "rate": 0.39705882352941174
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 390,
+          "n": 272,
+          "rate": 0.48161764705882354
+        },
+        "lean-lock": {
+          "threshold": 210,
+          "n": 272,
+          "rate": 0.7536764705882353
+        },
+        "long-shot": {
+          "threshold": 480,
+          "n": 272,
+          "rate": 0.39705882352941174
+        }
+      }
+    },
+    "red_zone_shapes": {
+      "any_trip_without_td": {
+        "comparison": "gte",
+        "points": [
+          {
+            "threshold": 1,
+            "n": 533,
+            "rate": 0.801125703564728
+          },
+          {
+            "threshold": 2,
+            "n": 533,
+            "rate": 0.41275797373358347
+          },
+          {
+            "threshold": 3,
+            "n": 533,
+            "rate": 0.1350844277673546
+          },
+          {
+            "threshold": 4,
+            "n": 533,
+            "rate": 0.0375234521575985
+          }
+        ],
+        "nearest": {
+          "coin-flip": {
+            "threshold": 2,
+            "n": 533,
+            "rate": 0.41275797373358347
+          },
+          "lean-lock": {
+            "threshold": 1,
+            "n": 533,
+            "rate": 0.801125703564728
+          },
+          "long-shot": {
+            "threshold": 3,
+            "n": 533,
+            "rate": 0.1350844277673546
+          }
+        }
+      },
+      "perfect_red_zone_by_min_trips": [
+        {
+          "minTrips": 2,
+          "n": 533,
+          "rate": 0.14446529080675422
+        },
+        {
+          "minTrips": 3,
+          "n": 533,
+          "rate": 0.08630393996247655
+        },
+        {
+          "minTrips": 4,
+          "n": 533,
+          "rate": 0.028142589118198873
+        },
+        {
+          "minTrips": 5,
+          "n": 533,
+          "rate": 0.009380863039399626
+        }
+      ]
+    }
+  },
+  "tier2ThresholdSweep": {
+    "max_rushing_yards": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 60,
+          "n": 272,
+          "rate": 0.8529411764705882
+        },
+        {
+          "threshold": 65,
+          "n": 272,
+          "rate": 0.7830882352941176
+        },
+        {
+          "threshold": 70,
+          "n": 272,
+          "rate": 0.7058823529411765
+        },
+        {
+          "threshold": 75,
+          "n": 272,
+          "rate": 0.6397058823529411
+        },
+        {
+          "threshold": 80,
+          "n": 272,
+          "rate": 0.5661764705882353
+        },
+        {
+          "threshold": 85,
+          "n": 272,
+          "rate": 0.48161764705882354
+        },
+        {
+          "threshold": 90,
+          "n": 272,
+          "rate": 0.4227941176470588
+        },
+        {
+          "threshold": 95,
+          "n": 272,
+          "rate": 0.3602941176470588
+        },
+        {
+          "threshold": 100,
+          "n": 272,
+          "rate": 0.3235294117647059
+        },
+        {
+          "threshold": 105,
+          "n": 272,
+          "rate": 0.27941176470588236
+        },
+        {
+          "threshold": 110,
+          "n": 272,
+          "rate": 0.2426470588235294
+        },
+        {
+          "threshold": 115,
+          "n": 272,
+          "rate": 0.21691176470588236
+        },
+        {
+          "threshold": 120,
+          "n": 272,
+          "rate": 0.1875
+        },
+        {
+          "threshold": 125,
+          "n": 272,
+          "rate": 0.16544117647058823
+        },
+        {
+          "threshold": 130,
+          "n": 272,
+          "rate": 0.1323529411764706
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 85,
+          "n": 272,
+          "rate": 0.48161764705882354
+        },
+        "lean-lock": {
+          "threshold": 70,
+          "n": 272,
+          "rate": 0.7058823529411765
+        },
+        "long-shot": {
+          "threshold": 125,
+          "n": 272,
+          "rate": 0.16544117647058823
+        }
+      }
+    },
+    "max_receiving_yards": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 60,
+          "n": 272,
+          "rate": 0.9191176470588235
+        },
+        {
+          "threshold": 65,
+          "n": 272,
+          "rate": 0.8713235294117647
+        },
+        {
+          "threshold": 70,
+          "n": 272,
+          "rate": 0.8125
+        },
+        {
+          "threshold": 75,
+          "n": 272,
+          "rate": 0.75
+        },
+        {
+          "threshold": 80,
+          "n": 272,
+          "rate": 0.6838235294117647
+        },
+        {
+          "threshold": 85,
+          "n": 272,
+          "rate": 0.6360294117647058
+        },
+        {
+          "threshold": 90,
+          "n": 272,
+          "rate": 0.5772058823529411
+        },
+        {
+          "threshold": 95,
+          "n": 272,
+          "rate": 0.5147058823529411
+        },
+        {
+          "threshold": 100,
+          "n": 272,
+          "rate": 0.4264705882352941
+        },
+        {
+          "threshold": 105,
+          "n": 272,
+          "rate": 0.35661764705882354
+        },
+        {
+          "threshold": 110,
+          "n": 272,
+          "rate": 0.3272058823529412
+        },
+        {
+          "threshold": 115,
+          "n": 272,
+          "rate": 0.25
+        },
+        {
+          "threshold": 120,
+          "n": 272,
+          "rate": 0.20955882352941177
+        },
+        {
+          "threshold": 125,
+          "n": 272,
+          "rate": 0.1801470588235294
+        },
+        {
+          "threshold": 130,
+          "n": 272,
+          "rate": 0.16176470588235295
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 95,
+          "n": 272,
+          "rate": 0.5147058823529411
+        },
+        "lean-lock": {
+          "threshold": 75,
+          "n": 272,
+          "rate": 0.75
+        },
+        "long-shot": {
+          "threshold": 130,
+          "n": 272,
+          "rate": 0.16176470588235295
+        }
+      }
+    },
+    "max_passing_yards": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 200,
+          "n": 272,
+          "rate": 0.8198529411764706
+        },
+        {
+          "threshold": 210,
+          "n": 272,
+          "rate": 0.7867647058823529
+        },
+        {
+          "threshold": 220,
+          "n": 272,
+          "rate": 0.7536764705882353
+        },
+        {
+          "threshold": 230,
+          "n": 272,
+          "rate": 0.6911764705882353
+        },
+        {
+          "threshold": 240,
+          "n": 272,
+          "rate": 0.6360294117647058
+        },
+        {
+          "threshold": 250,
+          "n": 272,
+          "rate": 0.5625
+        },
+        {
+          "threshold": 260,
+          "n": 272,
+          "rate": 0.48161764705882354
+        },
+        {
+          "threshold": 270,
+          "n": 272,
+          "rate": 0.4264705882352941
+        },
+        {
+          "threshold": 280,
+          "n": 272,
+          "rate": 0.3602941176470588
+        },
+        {
+          "threshold": 290,
+          "n": 272,
+          "rate": 0.27941176470588236
+        },
+        {
+          "threshold": 300,
+          "n": 272,
+          "rate": 0.22058823529411764
+        },
+        {
+          "threshold": 310,
+          "n": 272,
+          "rate": 0.18382352941176472
+        },
+        {
+          "threshold": 320,
+          "n": 272,
+          "rate": 0.15073529411764705
+        },
+        {
+          "threshold": 330,
+          "n": 272,
+          "rate": 0.125
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 260,
+          "n": 272,
+          "rate": 0.48161764705882354
+        },
+        "lean-lock": {
+          "threshold": 230,
+          "n": 272,
+          "rate": 0.6911764705882353
+        },
+        "long-shot": {
+          "threshold": 320,
+          "n": 272,
+          "rate": 0.15073529411764705
+        }
+      }
+    },
+    "max_receptions": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.9632352941176471
+        },
+        {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.8198529411764706
+        },
+        {
+          "threshold": 7,
+          "n": 272,
+          "rate": 0.6580882352941176
+        },
+        {
+          "threshold": 8,
+          "n": 272,
+          "rate": 0.4338235294117647
+        },
+        {
+          "threshold": 9,
+          "n": 272,
+          "rate": 0.25735294117647056
+        },
+        {
+          "threshold": 10,
+          "n": 272,
+          "rate": 0.13970588235294118
+        },
+        {
+          "threshold": 11,
+          "n": 272,
+          "rate": 0.0625
+        },
+        {
+          "threshold": 12,
+          "n": 272,
+          "rate": 0.03676470588235294
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 8,
+          "n": 272,
+          "rate": 0.4338235294117647
+        },
+        "lean-lock": {
+          "threshold": 7,
+          "n": 272,
+          "rate": 0.6580882352941176
+        },
+        "long-shot": {
+          "threshold": 10,
+          "n": 272,
+          "rate": 0.13970588235294118
+        }
+      }
+    },
+    "max_player_touchdowns": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.9926470588235294
+        },
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.5257352941176471
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.09926470588235294
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.003676470588235294
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.5257352941176471
+        },
+        "lean-lock": {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.5257352941176471
+        },
+        "long-shot": {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.09926470588235294
+        }
+      }
+    },
+    "max_long_field_goal": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 40,
+          "n": 272,
+          "rate": 0.8235294117647058
+        },
+        {
+          "threshold": 41,
+          "n": 272,
+          "rate": 0.8198529411764706
+        },
+        {
+          "threshold": 42,
+          "n": 272,
+          "rate": 0.7830882352941176
+        },
+        {
+          "threshold": 43,
+          "n": 272,
+          "rate": 0.7536764705882353
+        },
+        {
+          "threshold": 44,
+          "n": 272,
+          "rate": 0.7205882352941176
+        },
+        {
+          "threshold": 45,
+          "n": 272,
+          "rate": 0.6985294117647058
+        },
+        {
+          "threshold": 46,
+          "n": 272,
+          "rate": 0.6507352941176471
+        },
+        {
+          "threshold": 47,
+          "n": 272,
+          "rate": 0.6139705882352942
+        },
+        {
+          "threshold": 48,
+          "n": 272,
+          "rate": 0.5698529411764706
+        },
+        {
+          "threshold": 49,
+          "n": 272,
+          "rate": 0.5036764705882353
+        },
+        {
+          "threshold": 50,
+          "n": 272,
+          "rate": 0.4742647058823529
+        },
+        {
+          "threshold": 51,
+          "n": 272,
+          "rate": 0.4338235294117647
+        },
+        {
+          "threshold": 52,
+          "n": 272,
+          "rate": 0.39705882352941174
+        },
+        {
+          "threshold": 53,
+          "n": 272,
+          "rate": 0.34558823529411764
+        },
+        {
+          "threshold": 54,
+          "n": 272,
+          "rate": 0.28308823529411764
+        },
+        {
+          "threshold": 55,
+          "n": 272,
+          "rate": 0.22426470588235295
+        },
+        {
+          "threshold": 56,
+          "n": 272,
+          "rate": 0.1875
+        },
+        {
+          "threshold": 57,
+          "n": 272,
+          "rate": 0.13602941176470587
+        },
+        {
+          "threshold": 58,
+          "n": 272,
+          "rate": 0.09926470588235294
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 49,
+          "n": 272,
+          "rate": 0.5036764705882353
+        },
+        "lean-lock": {
+          "threshold": 44,
+          "n": 272,
+          "rate": 0.7205882352941176
+        },
+        "long-shot": {
+          "threshold": 57,
+          "n": 272,
+          "rate": 0.13602941176470587
+        }
+      }
+    },
+    "max_field_goals_made": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.7830882352941176
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.40808823529411764
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.17647058823529413
+        },
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.051470588235294115
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.40808823529411764
+        },
+        "lean-lock": {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.7830882352941176
+        },
+        "long-shot": {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.17647058823529413
+        }
+      }
+    },
+    "game_field_goals_made": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.8529411764705882
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.7205882352941176
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.45588235294117646
+        },
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.23897058823529413
+        },
+        {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.10661764705882353
+        },
+        {
+          "threshold": 7,
+          "n": 272,
+          "rate": 0.04411764705882353
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.45588235294117646
+        },
+        "lean-lock": {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.7205882352941176
+        },
+        "long-shot": {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.10661764705882353
+        }
+      }
+    },
+    "game_punts_inside_20": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.9558823529411765
+        },
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.7720588235294118
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.5588235294117647
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.3125
+        },
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.1323529411764706
+        },
+        {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.029411764705882353
+        },
+        {
+          "threshold": 7,
+          "n": 272,
+          "rate": 0.011029411764705883
+        },
+        {
+          "threshold": 8,
+          "n": 272,
+          "rate": 0.007352941176470588
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.5588235294117647
+        },
+        "lean-lock": {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.7720588235294118
+        },
+        "long-shot": {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.1323529411764706
+        }
+      }
+    },
+    "max_defensive_sacks": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.9852941176470589
+        },
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.3860294117647059
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.03676470588235294
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.014705882352941176
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.3860294117647059
+        },
+        "lean-lock": {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.9852941176470589
+        },
+        "long-shot": {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.03676470588235294
+        }
+      }
+    },
+    "game_defensive_sacks": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.9227941176470589
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.7977941176470589
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.6323529411764706
+        },
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.5073529411764706
+        },
+        {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.3492647058823529
+        },
+        {
+          "threshold": 7,
+          "n": 272,
+          "rate": 0.23529411764705882
+        },
+        {
+          "threshold": 8,
+          "n": 272,
+          "rate": 0.15441176470588236
+        },
+        {
+          "threshold": 9,
+          "n": 272,
+          "rate": 0.0625
+        },
+        {
+          "threshold": 10,
+          "n": 272,
+          "rate": 0.03308823529411765
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.5073529411764706
+        },
+        "lean-lock": {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.7977941176470589
+        },
+        "long-shot": {
+          "threshold": 8,
+          "n": 272,
+          "rate": 0.15441176470588236
+        }
+      }
+    },
+    "max_total_tackles": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 8,
+          "n": 272,
+          "rate": 0.9889705882352942
+        },
+        {
+          "threshold": 9,
+          "n": 272,
+          "rate": 0.9338235294117647
+        },
+        {
+          "threshold": 10,
+          "n": 272,
+          "rate": 0.7904411764705882
+        },
+        {
+          "threshold": 11,
+          "n": 272,
+          "rate": 0.6066176470588235
+        },
+        {
+          "threshold": 12,
+          "n": 272,
+          "rate": 0.4264705882352941
+        },
+        {
+          "threshold": 13,
+          "n": 272,
+          "rate": 0.3014705882352941
+        },
+        {
+          "threshold": 14,
+          "n": 272,
+          "rate": 0.21691176470588236
+        },
+        {
+          "threshold": 15,
+          "n": 272,
+          "rate": 0.1213235294117647
+        },
+        {
+          "threshold": 16,
+          "n": 272,
+          "rate": 0.06985294117647059
+        },
+        {
+          "threshold": 17,
+          "n": 272,
+          "rate": 0.03308823529411765
+        },
+        {
+          "threshold": 18,
+          "n": 272,
+          "rate": 0.01838235294117647
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 12,
+          "n": 272,
+          "rate": 0.4264705882352941
+        },
+        "lean-lock": {
+          "threshold": 10,
+          "n": 272,
+          "rate": 0.7904411764705882
+        },
+        "long-shot": {
+          "threshold": 15,
+          "n": 272,
+          "rate": 0.1213235294117647
+        }
+      }
+    },
+    "game_interceptions": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.7867647058823529
+        },
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.43014705882352944
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.13602941176470587
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.03308823529411765
+        },
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.011029411764705883
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.43014705882352944
+        },
+        "lean-lock": {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.7867647058823529
+        },
+        "long-shot": {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.13602941176470587
+        }
+      }
+    },
+    "game_sacks_taken": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.9227941176470589
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.7977941176470589
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.6470588235294118
+        },
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.5036764705882353
+        },
+        {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.35294117647058826
+        },
+        {
+          "threshold": 7,
+          "n": 272,
+          "rate": 0.23529411764705882
+        },
+        {
+          "threshold": 8,
+          "n": 272,
+          "rate": 0.15808823529411764
+        },
+        {
+          "threshold": 9,
+          "n": 272,
+          "rate": 0.0661764705882353
+        },
+        {
+          "threshold": 10,
+          "n": 272,
+          "rate": 0.03308823529411765
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.5036764705882353
+        },
+        "lean-lock": {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.6470588235294118
+        },
+        "long-shot": {
+          "threshold": 8,
+          "n": 272,
+          "rate": 0.15808823529411764
+        }
+      }
+    },
+    "both_qbs_passing_yards": {
+      "comparison": "gte",
+      "points": [
+        {
+          "threshold": 150,
+          "n": 272,
+          "rate": 0.7095588235294118
+        },
+        {
+          "threshold": 160,
+          "n": 272,
+          "rate": 0.6323529411764706
+        },
+        {
+          "threshold": 170,
+          "n": 272,
+          "rate": 0.5808823529411765
+        },
+        {
+          "threshold": 180,
+          "n": 272,
+          "rate": 0.4852941176470588
+        },
+        {
+          "threshold": 190,
+          "n": 272,
+          "rate": 0.4338235294117647
+        },
+        {
+          "threshold": 200,
+          "n": 272,
+          "rate": 0.38235294117647056
+        },
+        {
+          "threshold": 210,
+          "n": 272,
+          "rate": 0.3014705882352941
+        },
+        {
+          "threshold": 220,
+          "n": 272,
+          "rate": 0.24632352941176472
+        },
+        {
+          "threshold": 230,
+          "n": 272,
+          "rate": 0.20220588235294118
+        },
+        {
+          "threshold": 240,
+          "n": 272,
+          "rate": 0.1801470588235294
+        },
+        {
+          "threshold": 250,
+          "n": 272,
+          "rate": 0.15073529411764705
+        },
+        {
+          "threshold": 260,
+          "n": 272,
+          "rate": 0.10294117647058823
+        },
+        {
+          "threshold": 270,
+          "n": 272,
+          "rate": 0.08823529411764706
+        },
+        {
+          "threshold": 280,
+          "n": 272,
+          "rate": 0.051470588235294115
+        },
+        {
+          "threshold": 290,
+          "n": 272,
+          "rate": 0.03308823529411765
+        },
+        {
+          "threshold": 300,
+          "n": 272,
+          "rate": 0.029411764705882353
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 180,
+          "n": 272,
+          "rate": 0.4852941176470588
+        },
+        "lean-lock": {
+          "threshold": 150,
+          "n": 272,
+          "rate": 0.7095588235294118
+        },
+        "long-shot": {
+          "threshold": 250,
+          "n": 272,
+          "rate": 0.15073529411764705
+        }
+      }
+    }
+  },
+  "tier3ThresholdSweep": {
+    "first_score_within_minutes": {
+      "comparison": "lte",
+      "points": [
+        {
+          "threshold": 2,
+          "n": 252,
+          "rate": 0.051587301587301584
+        },
+        {
+          "threshold": 3,
+          "n": 252,
+          "rate": 0.12698412698412698
+        },
+        {
+          "threshold": 4,
+          "n": 252,
+          "rate": 0.20634920634920634
+        },
+        {
+          "threshold": 5,
+          "n": 252,
+          "rate": 0.376984126984127
+        },
+        {
+          "threshold": 6,
+          "n": 252,
+          "rate": 0.503968253968254
+        },
+        {
+          "threshold": 7,
+          "n": 252,
+          "rate": 0.6071428571428571
+        },
+        {
+          "threshold": 8,
+          "n": 252,
+          "rate": 0.7063492063492064
+        },
+        {
+          "threshold": 9,
+          "n": 252,
+          "rate": 0.7857142857142857
+        },
+        {
+          "threshold": 10,
+          "n": 252,
+          "rate": 0.8333333333333334
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 6,
+          "n": 252,
+          "rate": 0.503968253968254
+        },
+        "lean-lock": {
+          "threshold": 8,
+          "n": 252,
+          "rate": 0.7063492063492064
+        },
+        "long-shot": {
+          "threshold": 3,
+          "n": 252,
+          "rate": 0.12698412698412698
+        }
+      }
+    },
+    "score_in_final_minutes_of_first_half": {
+      "comparison": "lte",
+      "points": [
+        {
+          "threshold": 0.5,
+          "n": 272,
+          "rate": 0.5661764705882353
+        },
+        {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.6470588235294118
+        },
+        {
+          "threshold": 1.5,
+          "n": 272,
+          "rate": 0.7022058823529411
+        },
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.7757352941176471
+        },
+        {
+          "threshold": 2.5,
+          "n": 272,
+          "rate": 0.7830882352941176
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.7941176470588235
+        },
+        {
+          "threshold": 3.5,
+          "n": 272,
+          "rate": 0.8125
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.8272058823529411
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 0.5,
+          "n": 272,
+          "rate": 0.5661764705882353
+        },
+        "lean-lock": {
+          "threshold": 1.5,
+          "n": 272,
+          "rate": 0.7022058823529411
+        },
+        "long-shot": {
+          "threshold": 0.5,
+          "n": 272,
+          "rate": 0.5661764705882353
+        }
+      }
+    },
+    "score_in_final_minutes_of_fourth": {
+      "comparison": "lte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.24632352941176472
+        },
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.4117647058823529
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.5588235294117647
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.6286764705882353
+        },
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.6985294117647058
+        },
+        {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.7316176470588235
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.5588235294117647
+        },
+        "lean-lock": {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.7316176470588235
+        },
+        "long-shot": {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.24632352941176472
+        }
+      }
+    },
+    "touchdown_from_inside_yards": {
+      "comparison": "lte",
+      "points": [
+        {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.5220588235294118
+        },
+        {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.6948529411764706
+        },
+        {
+          "threshold": 3,
+          "n": 272,
+          "rate": 0.7683823529411765
+        },
+        {
+          "threshold": 4,
+          "n": 272,
+          "rate": 0.8492647058823529
+        },
+        {
+          "threshold": 5,
+          "n": 272,
+          "rate": 0.8786764705882353
+        },
+        {
+          "threshold": 6,
+          "n": 272,
+          "rate": 0.9007352941176471
+        },
+        {
+          "threshold": 7,
+          "n": 272,
+          "rate": 0.9080882352941176
+        },
+        {
+          "threshold": 8,
+          "n": 272,
+          "rate": 0.9154411764705882
+        },
+        {
+          "threshold": 9,
+          "n": 272,
+          "rate": 0.9301470588235294
+        },
+        {
+          "threshold": 10,
+          "n": 272,
+          "rate": 0.9338235294117647
+        }
+      ],
+      "nearest": {
+        "coin-flip": {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.5220588235294118
+        },
+        "lean-lock": {
+          "threshold": 2,
+          "n": 272,
+          "rate": 0.6948529411764706
+        },
+        "long-shot": {
+          "threshold": 1,
+          "n": 272,
+          "rate": 0.5220588235294118
+        }
+      }
+    }
+  },
+  "tier4DriveReconstruction": {
+    "reconciliation": {
+      "gamesChecked": 272,
+      "exactMatchRate": 0.31985294117647056,
+      "withinOneRate": 0.875,
+      "meanAbsoluteDelta": 0.8125,
+      "shipGate": "Ship Tier 4 only if exactMatchRate >= 0.98 (docs/prop-bingo-nfl-plan.md, Phase 8 'Ship gate for Tier 4')."
+    },
+    "candidateRates": {
+      "both_teams_score_opening_drive": {
+        "n": 272,
+        "rate": 0.19117647058823528
+      },
+      "either_team_scores_opening_drive": {
+        "n": 272,
+        "rate": 0.6948529411764706
+      },
+      "opens_with_three_and_out": {
+        "n": 272,
+        "rate": 0
+      },
+      "touchdown_drive_75plus": {
+        "n": 272,
+        "rate": 0.6323529411764706
+      },
+      "turnover_inside_red_zone": {
+        "n": 272,
+        "rate": 0.03676470588235294
+      },
+      "team_punts_first_two_drives": {
+        "n": 272,
+        "rate": 0
+      }
+    }
+  }
+}

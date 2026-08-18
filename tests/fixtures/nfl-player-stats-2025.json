@@ -1,0 +1,9932 @@
+{
+ "423978": [
+  {
+   "player": {
+    "id": 2140,
+    "first_name": "Zayne",
+    "last_name": "Anderson",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 279572,
+    "first_name": "Kaden",
+    "last_name": "Davis",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 72,
+    "first_name": "Joe",
+    "last_name": "Flacco",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "passing_yards": 142,
+   "passing_attempts": 36,
+   "passing_completions": 21,
+   "passing_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 1630,
+    "first_name": "Nate",
+    "last_name": "Hobbs",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 722,
+    "first_name": "Cedric",
+    "last_name": "Tillman",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 3,
+   "receiving_yards": 26,
+   "long_reception": 10
+  },
+  {
+   "player": {
+    "id": 1485,
+    "first_name": "Quay",
+    "last_name": "Walker",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 14
+  },
+  {
+   "player": {
+    "id": 13874001,
+    "first_name": "Quinshon",
+    "last_name": "Judkins",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "rushing_yards": 94,
+   "rushing_attempts": 18,
+   "rushing_touchdowns": 1,
+   "long_rushing": 38,
+   "receptions": 1,
+   "receiving_yards": 1,
+   "long_reception": 1
+  },
+  {
+   "player": {
+    "id": 844,
+    "first_name": "David",
+    "last_name": "Njoku",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 5,
+   "receiving_yards": 40,
+   "long_reception": 13
+  },
+  {
+   "player": {
+    "id": 706,
+    "first_name": "Keisean",
+    "last_name": "Nixon",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 1696,
+    "first_name": "Xavier",
+    "last_name": "McKinney",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 6,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 1420,
+    "first_name": "Lukas",
+    "last_name": "Van Ness",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 88202,
+    "first_name": "Javon",
+    "last_name": "Bullard",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 7646,
+    "first_name": "Corey",
+    "last_name": "Bojorquez",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 1321,
+    "first_name": "Rashan",
+    "last_name": "Gary",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 2
+  },
+  {
+   "player": {
+    "id": 13874120,
+    "first_name": "Dylan",
+    "last_name": "Sampson",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "rushing_yards": 2,
+   "rushing_attempts": 1,
+   "long_rushing": 2
+  },
+  {
+   "player": {
+    "id": 53,
+    "first_name": "Jordan",
+    "last_name": "Love",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "passing_yards": 183,
+   "passing_touchdowns": 1,
+   "passing_attempts": 25,
+   "passing_completions": 18,
+   "passing_interceptions": 1,
+   "rushing_yards": 18,
+   "rushing_attempts": 4,
+   "long_rushing": 10
+  },
+  {
+   "player": {
+    "id": 1704,
+    "first_name": "Greg",
+    "last_name": "Newsome II",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 278643,
+    "first_name": "Myles",
+    "last_name": "Harden",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13874068,
+    "first_name": "Matthew",
+    "last_name": "Golden",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "rushing_yards": 9,
+   "rushing_attempts": 3,
+   "long_rushing": 4,
+   "receptions": 4,
+   "receiving_yards": 52,
+   "long_reception": 34
+  },
+  {
+   "player": {
+    "id": 1380,
+    "first_name": "Maliek",
+    "last_name": "Collins",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 5,
+   "defensive_sacks": 1.5
+  },
+  {
+   "player": {
+    "id": 105,
+    "first_name": "Josh",
+    "last_name": "Jacobs",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "rushing_yards": 30,
+   "rushing_attempts": 16,
+   "long_rushing": 7,
+   "receptions": 5,
+   "receiving_yards": 44,
+   "long_reception": 31
+  },
+  {
+   "player": {
+    "id": 13878110,
+    "first_name": "Mason",
+    "last_name": "Graham",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 13882104,
+    "first_name": "Isaiah",
+    "last_name": "Bond",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 2,
+   "receiving_yards": 16,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 1299,
+    "first_name": "Micah",
+    "last_name": "Parsons",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13874698,
+    "first_name": "Harold",
+    "last_name": "Fannin Jr.",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 3,
+   "receiving_yards": 25,
+   "long_reception": 13
+  },
+  {
+   "player": {
+    "id": 278594,
+    "first_name": "Blake",
+    "last_name": "Whiteheart",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1298,
+    "first_name": "Myles",
+    "last_name": "Garrett",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 6,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 1549,
+    "first_name": "Grant",
+    "last_name": "Delpit",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 9,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 2703,
+    "first_name": "Ronnie",
+    "last_name": "Hickman",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 1570,
+    "first_name": "Rayshawn",
+    "last_name": "Jenkins",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 13878538,
+    "first_name": "Carson",
+    "last_name": "Schwesinger",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 10,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 2202,
+    "first_name": "Devin",
+    "last_name": "Bush",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 13874392,
+    "first_name": "Savion",
+    "last_name": "Williams",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "rushing_yards": -1,
+   "rushing_attempts": 2,
+   "long_rushing": 2
+  },
+  {
+   "player": {
+    "id": 13875277,
+    "first_name": "Adin",
+    "last_name": "Huntington",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 4,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 1385,
+    "first_name": "Joe",
+    "last_name": "Tryon-Shoyinka",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 861,
+    "first_name": "Romeo",
+    "last_name": "Doubs",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 2,
+   "receiving_yards": 25,
+   "long_reception": 16
+  },
+  {
+   "player": {
+    "id": 1752,
+    "first_name": "Brandon",
+    "last_name": "McManus",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "field_goals_made": 1,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 39,
+   "extra_points_made": 1
+  },
+  {
+   "player": {
+    "id": 2085,
+    "first_name": "Denzel",
+    "last_name": "Ward",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 14,
+    "first_name": "Dontayvion",
+    "last_name": "Wicks",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 2,
+   "receiving_yards": 21,
+   "long_reception": 16
+  },
+  {
+   "player": {
+    "id": 1694,
+    "first_name": "Isaiah",
+    "last_name": "McDuffie",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 1226,
+    "first_name": "John",
+    "last_name": "FitzPatrick",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 2,
+   "receiving_yards": 12,
+   "receiving_touchdowns": 1,
+   "long_reception": 9
+  },
+  {
+   "player": {
+    "id": 2692,
+    "first_name": "Mohamoud",
+    "last_name": "Diabate",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 593,
+    "first_name": "Emanuel",
+    "last_name": "Wilson",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "rushing_yards": 25,
+   "rushing_attempts": 6,
+   "long_rushing": 9
+  },
+  {
+   "player": {
+    "id": 935,
+    "first_name": "Tucker",
+    "last_name": "Kraft",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 3,
+   "receiving_yards": 29,
+   "long_reception": 18
+  },
+  {
+   "player": {
+    "id": 1389,
+    "first_name": "Alex",
+    "last_name": "Wright",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 580,
+    "first_name": "Chris",
+    "last_name": "Brooks",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1710,
+    "first_name": "Colby",
+    "last_name": "Wooden",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 278589,
+    "first_name": "Jamari",
+    "last_name": "Thrash",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 2,
+   "receiving_yards": 7,
+   "long_reception": 4
+  },
+  {
+   "player": {
+    "id": 854,
+    "first_name": "Jerry",
+    "last_name": "Jeudy",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 1,
+   "receiving_yards": 17,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 1417,
+    "first_name": "Karl",
+    "last_name": "Brooks",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878428,
+    "first_name": "Easton",
+    "last_name": "Mascarenas-Arnold",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1666,
+    "first_name": "Isaiah",
+    "last_name": "McGuire",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1534,
+    "first_name": "Shelby",
+    "last_name": "Harris",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 776,
+    "first_name": "Nick",
+    "last_name": "Niemann",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 281372,
+    "first_name": "Evan",
+    "last_name": "Williams",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 88194,
+    "first_name": "Edgerrin",
+    "last_name": "Cooper",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 2684,
+    "first_name": "Carrington",
+    "last_name": "Valentine",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 483,
+    "first_name": "Jerome",
+    "last_name": "Ford",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 4,
+   "receiving_yards": 10,
+   "long_reception": 10
+  },
+  {
+   "player": {
+    "id": 7297606,
+    "first_name": "Andre",
+    "last_name": "Szmyt",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "field_goals_made": 2,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 55,
+   "extra_points_made": 1
+  },
+  {
+   "player": {
+    "id": 1543,
+    "first_name": "Jerome",
+    "last_name": "Baker",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 280417,
+    "first_name": "Sean",
+    "last_name": "Rhyan",
+    "position_abbreviation": "G"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13879005,
+    "first_name": "Donovan",
+    "last_name": "McMillon",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  }
+ ],
+ "423982": [
+  {
+   "player": {
+    "id": 278240,
+    "first_name": "Blake",
+    "last_name": "Corum",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "rushing_yards": 53,
+   "rushing_attempts": 8,
+   "long_rushing": 12
+  },
+  {
+   "player": {
+    "id": 281178,
+    "first_name": "Jeremiah",
+    "last_name": "Trotter Jr.",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 63,
+    "first_name": "Matthew",
+    "last_name": "Stafford",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "passing_yards": 196,
+   "passing_touchdowns": 2,
+   "passing_attempts": 33,
+   "passing_completions": 19,
+   "passing_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 757,
+    "first_name": "Kylen",
+    "last_name": "Granson",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1486,
+    "first_name": "Jordan",
+    "last_name": "Davis",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "fumbles_touchdowns": 1,
+   "total_tackles": 5,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1660,
+    "first_name": "Nolan",
+    "last_name": "Smith Jr.",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 463,
+    "first_name": "Kyren",
+    "last_name": "Williams",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "rushing_yards": 94,
+   "rushing_attempts": 20,
+   "long_rushing": 13,
+   "receptions": 2,
+   "receiving_yards": 18,
+   "receiving_touchdowns": 1,
+   "long_reception": 10
+  },
+  {
+   "player": {
+    "id": 281260,
+    "first_name": "Cooper",
+    "last_name": "DeJean",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 9
+  },
+  {
+   "player": {
+    "id": 821,
+    "first_name": "Davante",
+    "last_name": "Adams",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "receptions": 3,
+   "receiving_yards": 56,
+   "receiving_touchdowns": 1,
+   "long_reception": 44,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1512,
+    "first_name": "Zack",
+    "last_name": "Baun",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 7,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 476,
+    "first_name": "Saquon",
+    "last_name": "Barkley",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "rushing_yards": 46,
+   "rushing_attempts": 18,
+   "long_rushing": 12,
+   "receptions": 4,
+   "receiving_yards": 9,
+   "long_reception": 5
+  },
+  {
+   "player": {
+    "id": 43,
+    "first_name": "Jalen",
+    "last_name": "Hurts",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "passing_yards": 226,
+   "passing_touchdowns": 3,
+   "passing_attempts": 32,
+   "passing_completions": 21,
+   "rushing_yards": 40,
+   "rushing_attempts": 9,
+   "rushing_touchdowns": 1,
+   "long_rushing": 18
+  },
+  {
+   "player": {
+    "id": 826,
+    "first_name": "DeVonta",
+    "last_name": "Smith",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "receptions": 8,
+   "receiving_yards": 60,
+   "receiving_touchdowns": 1,
+   "long_reception": 16
+  },
+  {
+   "player": {
+    "id": 1323,
+    "first_name": "Kobie",
+    "last_name": "Turner",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 278249,
+    "first_name": "Jared",
+    "last_name": "Verse",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 6,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 278252,
+    "first_name": "Kamren",
+    "last_name": "Kinchens",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 280925,
+    "first_name": "Omar",
+    "last_name": "Speights",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 2422,
+    "first_name": "Quentin",
+    "last_name": "Lake",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 2673,
+    "first_name": "Emmanuel",
+    "last_name": "Forbes Jr.",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 892,
+    "first_name": "Jahan",
+    "last_name": "Dotson",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "receptions": 1,
+   "receiving_yards": 7,
+   "long_reception": 7
+  },
+  {
+   "player": {
+    "id": 1634,
+    "first_name": "Kam",
+    "last_name": "Curl",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 9
+  },
+  {
+   "player": {
+    "id": 1521,
+    "first_name": "Nate",
+    "last_name": "Landman",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 7517,
+    "first_name": "Jake",
+    "last_name": "Elliott",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "extra_points_made": 3
+  },
+  {
+   "player": {
+    "id": 1667,
+    "first_name": "Kelee",
+    "last_name": "Ringo",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13878300,
+    "first_name": "Jihaad",
+    "last_name": "Campbell",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 588,
+    "first_name": "Puka",
+    "last_name": "Nacua",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "rushing_yards": 6,
+   "rushing_attempts": 1,
+   "long_rushing": 6,
+   "receptions": 11,
+   "receiving_yards": 112,
+   "long_reception": 20
+  },
+  {
+   "player": {
+    "id": 278247,
+    "first_name": "Jordan",
+    "last_name": "Whittington",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "rushing_yards": 7,
+   "rushing_attempts": 2,
+   "long_rushing": 6,
+   "receptions": 2,
+   "receiving_yards": 7,
+   "long_reception": 9
+  },
+  {
+   "player": {
+    "id": 281047,
+    "first_name": "Jalyx",
+    "last_name": "Hunt",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 278245,
+    "first_name": "Joshua",
+    "last_name": "Karty",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "passing_attempts": 1,
+   "field_goals_made": 4,
+   "field_goal_attempts": 6,
+   "long_field_goal_made": 51,
+   "extra_points_made": 2
+  },
+  {
+   "player": {
+    "id": 1598,
+    "first_name": "Poona",
+    "last_name": "Ford",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 281732,
+    "first_name": "Xavier",
+    "last_name": "Smith",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13880637,
+    "first_name": "Andrew",
+    "last_name": "Mukuba",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 811,
+    "first_name": "A.J.",
+    "last_name": "Brown",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "receptions": 6,
+   "receiving_yards": 109,
+   "receiving_touchdowns": 1,
+   "long_reception": 38
+  },
+  {
+   "player": {
+    "id": 569,
+    "first_name": "Tank",
+    "last_name": "Bigsby",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1963,
+    "first_name": "Troy",
+    "last_name": "Reeder",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 278231,
+    "first_name": "Braden",
+    "last_name": "Fiske",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 281223,
+    "first_name": "Jaylen",
+    "last_name": "McCollough",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 278246,
+    "first_name": "Tyler",
+    "last_name": "Davis",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1156,
+    "first_name": "Grant",
+    "last_name": "Calcaterra",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1977,
+    "first_name": "Adoree'",
+    "last_name": "Jackson",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 2538,
+    "first_name": "Moro",
+    "last_name": "Ojomo",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2480,
+    "first_name": "Sydney",
+    "last_name": "Brown",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2400,
+    "first_name": "Reed",
+    "last_name": "Blankenship",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 88200,
+    "first_name": "Quinyon",
+    "last_name": "Mitchell",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 745,
+    "first_name": "John",
+    "last_name": "Metchie III",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "receptions": 1,
+   "receiving_yards": 8,
+   "long_reception": 8
+  },
+  {
+   "player": {
+    "id": 2688,
+    "first_name": "Byron",
+    "last_name": "Young",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1365,
+    "first_name": "Jalen",
+    "last_name": "Carter",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1336,
+    "first_name": "Byron",
+    "last_name": "Young",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 6,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 2036,
+    "first_name": "Marcus",
+    "last_name": "Epps",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878082,
+    "first_name": "Shaun",
+    "last_name": "Dolac",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2612,
+    "first_name": "Cobie",
+    "last_name": "Durant",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 762,
+    "first_name": "Dallas",
+    "last_name": "Goedert",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "receptions": 1,
+   "receiving_yards": 33,
+   "receiving_touchdowns": 1,
+   "long_reception": 33
+  },
+  {
+   "player": {
+    "id": 7704,
+    "first_name": "Ethan",
+    "last_name": "Evans",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "punts_inside_20": 1
+  },
+  {
+   "player": {
+    "id": 1454,
+    "first_name": "Josh",
+    "last_name": "Uche",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1083,
+    "first_name": "Davis",
+    "last_name": "Allen",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "receptions": 1,
+   "receiving_yards": 3,
+   "long_reception": 3
+  },
+  {
+   "player": {
+    "id": 2293,
+    "first_name": "Darious",
+    "last_name": "Williams",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13878432,
+    "first_name": "Josaiah",
+    "last_name": "Stewart",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2723,
+    "first_name": "Jakorian",
+    "last_name": "Bennett",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "total_tackles": 3
+  }
+ ],
+ "423985": [
+  {
+   "player": {
+    "id": 653,
+    "first_name": "Ray-Ray",
+    "last_name": "McCloud III",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 2,
+   "receiving_yards": 20,
+   "long_reception": 12,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 797,
+    "first_name": "Kyle",
+    "last_name": "Pitts Sr.",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 4,
+   "receiving_yards": 39,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 279875,
+    "first_name": "Michael",
+    "last_name": "Penix Jr.",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "passing_yards": 172,
+   "passing_attempts": 36,
+   "passing_completions": 18,
+   "passing_interceptions": 2,
+   "rushing_yards": 9,
+   "rushing_attempts": 2,
+   "long_rushing": 6
+  },
+  {
+   "player": {
+    "id": 13,
+    "first_name": "Drake",
+    "last_name": "London",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 5,
+   "receiving_yards": 55,
+   "long_reception": 18
+  },
+  {
+   "player": {
+    "id": 279051,
+    "first_name": "Maema",
+    "last_name": "Njongmeta",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13878114,
+    "first_name": "Bam",
+    "last_name": "Martin-Scott",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 739,
+    "first_name": "Darnell",
+    "last_name": "Mooney",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 4,
+   "receiving_yards": 44,
+   "long_reception": 21
+  },
+  {
+   "player": {
+    "id": 475,
+    "first_name": "Bijan",
+    "last_name": "Robinson",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "rushing_yards": 72,
+   "rushing_attempts": 13,
+   "long_rushing": 17,
+   "receptions": 5,
+   "receiving_yards": 39,
+   "long_reception": 25
+  },
+  {
+   "player": {
+    "id": 277943,
+    "first_name": "Chau",
+    "last_name": "Smith-Wade",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "interception_touchdowns": 1,
+   "fumbles_touchdowns": 1,
+   "total_tackles": 5,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 13878243,
+    "first_name": "Nic",
+    "last_name": "Scourton",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2109,
+    "first_name": "Mike",
+    "last_name": "Jackson",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 6,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 280761,
+    "first_name": "Trevin",
+    "last_name": "Wallace",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 1646778,
+    "first_name": "Parker",
+    "last_name": "Romo",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "field_goal_attempts": 2
+  },
+  {
+   "player": {
+    "id": 1412,
+    "first_name": "Kaden",
+    "last_name": "Elliss",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 9,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 965,
+    "first_name": "Hunter",
+    "last_name": "Renfrow",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 2,
+   "receiving_yards": 6,
+   "long_reception": 5
+  },
+  {
+   "player": {
+    "id": 2067,
+    "first_name": "Mike",
+    "last_name": "Hughes",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 281719,
+    "first_name": "Brycen",
+    "last_name": "Tremayne",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 2,
+   "receiving_yards": 15,
+   "long_reception": 8,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13879041,
+    "first_name": "Billy",
+    "last_name": "Bowman Jr.",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 75,
+    "first_name": "Bryce",
+    "last_name": "Young",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "passing_yards": 121,
+   "passing_attempts": 24,
+   "passing_completions": 16,
+   "rushing_yards": 8,
+   "rushing_attempts": 2,
+   "rushing_touchdowns": 1,
+   "long_rushing": 4
+  },
+  {
+   "player": {
+    "id": 2114,
+    "first_name": "Jessie",
+    "last_name": "Bates III",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 480,
+    "first_name": "Chuba",
+    "last_name": "Hubbard",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "rushing_yards": 73,
+   "rushing_attempts": 17,
+   "long_rushing": 8,
+   "receptions": 2,
+   "receiving_yards": 3,
+   "long_reception": 2
+  },
+  {
+   "player": {
+    "id": 2617,
+    "first_name": "Dee",
+    "last_name": "Alford",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 13874457,
+    "first_name": "Tetairoa",
+    "last_name": "McMillan",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 3,
+   "receiving_yards": 48,
+   "long_reception": 23
+  },
+  {
+   "player": {
+    "id": 1003,
+    "first_name": "Tommy",
+    "last_name": "Tremble",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 2,
+   "receiving_yards": 16,
+   "long_reception": 12
+  },
+  {
+   "player": {
+    "id": 13880650,
+    "first_name": "Xavier",
+    "last_name": "Watts",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 9
+  },
+  {
+   "player": {
+    "id": 1936,
+    "first_name": "A'Shawn",
+    "last_name": "Robinson",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2070,
+    "first_name": "Christian",
+    "last_name": "Rozeboom",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 9
+  },
+  {
+   "player": {
+    "id": 1515,
+    "first_name": "Derrick",
+    "last_name": "Brown",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13878943,
+    "first_name": "Lathan",
+    "last_name": "Ransom",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 13879086,
+    "first_name": "Ryan",
+    "last_name": "Fitzgerald",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "field_goals_made": 3,
+   "field_goal_attempts": 3,
+   "long_field_goal_made": 57,
+   "extra_points_made": 3
+  },
+  {
+   "player": {
+    "id": 7613,
+    "first_name": "Bradley",
+    "last_name": "Pinion",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "punts_inside_20": 1
+  },
+  {
+   "player": {
+    "id": 1964,
+    "first_name": "Nick",
+    "last_name": "Scott",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1173,
+    "first_name": "Charlie",
+    "last_name": "Woerner",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 1,
+   "receiving_yards": -5,
+   "long_reception": -5
+  },
+  {
+   "player": {
+    "id": 1524,
+    "first_name": "Tre'von",
+    "last_name": "Moehrig",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 2687,
+    "first_name": "DeMarcco",
+    "last_name": "Hellams",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1462,
+    "first_name": "Zach",
+    "last_name": "Harrison",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1085,
+    "first_name": "David",
+    "last_name": "Moore",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 1,
+   "receiving_yards": 5,
+   "long_reception": 5
+  },
+  {
+   "player": {
+    "id": 7706,
+    "first_name": "Sam",
+    "last_name": "Martin",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 494,
+    "first_name": "Tyler",
+    "last_name": "Allgeier",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "rushing_yards": 4,
+   "rushing_attempts": 1,
+   "long_rushing": 4,
+   "receptions": 1
+  },
+  {
+   "player": {
+    "id": 1332,
+    "first_name": "DJ",
+    "last_name": "Wonnum",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 281576,
+    "first_name": "Jaden",
+    "last_name": "Crumedy",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 520,
+    "first_name": "Rico",
+    "last_name": "Dowdle",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "rushing_yards": 30,
+   "rushing_attempts": 10,
+   "rushing_touchdowns": 1,
+   "long_rushing": 8,
+   "receptions": 1,
+   "receiving_yards": 8,
+   "long_reception": 8
+  },
+  {
+   "player": {
+    "id": 1618,
+    "first_name": "Divine",
+    "last_name": "Deablo",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1363,
+    "first_name": "Arnold",
+    "last_name": "Ebiketie",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2597,
+    "first_name": "LaCale",
+    "last_name": "London",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 280665,
+    "first_name": "Ruke",
+    "last_name": "Orhorhoro",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2403,
+    "first_name": "Akayleb",
+    "last_name": "Evans",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 280567,
+    "first_name": "Brandon",
+    "last_name": "Dorlus",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2553,
+    "first_name": "Jaycee",
+    "last_name": "Horn",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2396,
+    "first_name": "DeAngelo",
+    "last_name": "Malone",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 278003,
+    "first_name": "JD",
+    "last_name": "Bertrand",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13874599,
+    "first_name": "Mitchell",
+    "last_name": "Evans",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 1,
+   "receiving_yards": 9,
+   "long_reception": 9
+  },
+  {
+   "player": {
+    "id": 13874277,
+    "first_name": "Dalevon",
+    "last_name": "Campbell",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878696,
+    "first_name": "Jalon",
+    "last_name": "Walker",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 13873917,
+    "first_name": "Nathan",
+    "last_name": "Carter",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "rushing_yards": 46,
+   "rushing_attempts": 7,
+   "long_rushing": 10
+  },
+  {
+   "player": {
+    "id": 1415,
+    "first_name": "David",
+    "last_name": "Onyemata",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 78928,
+    "first_name": "David",
+    "last_name": "Sills V",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 1,
+   "receiving_yards": 9,
+   "long_reception": 9
+  },
+  {
+   "player": {
+    "id": 277937,
+    "first_name": "Ja'Tavion",
+    "last_name": "Sanders",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 2,
+   "receiving_yards": 11,
+   "long_reception": 7
+  },
+  {
+   "player": {
+    "id": 26,
+    "first_name": "Kirk",
+    "last_name": "Cousins",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "passing_yards": 29,
+   "passing_attempts": 7,
+   "passing_completions": 5
+  },
+  {
+   "player": {
+    "id": 2734,
+    "first_name": "Thomas",
+    "last_name": "Incoom",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13875376,
+    "first_name": "Cam",
+    "last_name": "Jackson",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 281995,
+    "first_name": "Demani",
+    "last_name": "Richardson",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13878856,
+    "first_name": "Corey",
+    "last_name": "Thornton",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2324,
+    "first_name": "DJ",
+    "last_name": "Johnson",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 77,
+    "first_name": "Andy",
+    "last_name": "Dalton",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "rushing_yards": -1,
+   "rushing_attempts": 1,
+   "long_rushing": -1
+  },
+  {
+   "player": {
+    "id": 2699,
+    "first_name": "Matthew",
+    "last_name": "Bergeron",
+    "position_abbreviation": "G"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  }
+ ],
+ "423990": [
+  {
+   "player": {
+    "id": 2278,
+    "first_name": "Chase",
+    "last_name": "Lucas",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 528,
+    "first_name": "Emari",
+    "last_name": "Demercado",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "rushing_attempts": 2,
+   "long_rushing": 1
+  },
+  {
+   "player": {
+    "id": 1959,
+    "first_name": "Luke",
+    "last_name": "Gifford",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1478,
+    "first_name": "Fred",
+    "last_name": "Warner",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 11
+  },
+  {
+   "player": {
+    "id": 41,
+    "first_name": "Kyler",
+    "last_name": "Murray",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "passing_yards": 159,
+   "passing_touchdowns": 1,
+   "passing_attempts": 35,
+   "passing_completions": 22,
+   "rushing_yards": 37,
+   "rushing_attempts": 6,
+   "long_rushing": 9
+  },
+  {
+   "player": {
+    "id": 13878930,
+    "first_name": "Marques",
+    "last_name": "Sigle",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 280205,
+    "first_name": "Tip",
+    "last_name": "Reiman",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "receptions": 2,
+   "receiving_yards": 8,
+   "long_reception": 6
+  },
+  {
+   "player": {
+    "id": 466,
+    "first_name": "James",
+    "last_name": "Conner",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "rushing_yards": 22,
+   "rushing_attempts": 9,
+   "long_rushing": 9,
+   "receptions": 3,
+   "receiving_yards": 15,
+   "long_reception": 10
+  },
+  {
+   "player": {
+    "id": 13875321,
+    "first_name": "Mykel",
+    "last_name": "Williams",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1314,
+    "first_name": "Bryce",
+    "last_name": "Huff",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 5,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 846,
+    "first_name": "Trey",
+    "last_name": "McBride",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "receptions": 5,
+   "receiving_yards": 43,
+   "receiving_touchdowns": 1,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 2659,
+    "first_name": "Dee",
+    "last_name": "Winters",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 277560,
+    "first_name": "Trey",
+    "last_name": "Benson",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "rushing_yards": 42,
+   "rushing_attempts": 10,
+   "long_rushing": 29,
+   "receptions": 3,
+   "receiving_yards": 9,
+   "long_reception": 5
+  },
+  {
+   "player": {
+    "id": 7547,
+    "first_name": "Chad",
+    "last_name": "Ryland",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "field_goals_made": 2,
+   "field_goal_attempts": 3,
+   "long_field_goal_made": 34,
+   "extra_points_made": 1
+  },
+  {
+   "player": {
+    "id": 1442,
+    "first_name": "Dalvin",
+    "last_name": "Tomlinson",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 461,
+    "first_name": "Christian",
+    "last_name": "McCaffrey",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "rushing_yards": 52,
+   "rushing_attempts": 17,
+   "long_rushing": 15,
+   "receptions": 10,
+   "receiving_yards": 88,
+   "long_reception": 20
+  },
+  {
+   "player": {
+    "id": 2102,
+    "first_name": "Akeem",
+    "last_name": "Davis-Gaither",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 48,
+    "first_name": "Mac",
+    "last_name": "Jones",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "passing_yards": 284,
+   "passing_touchdowns": 1,
+   "passing_attempts": 41,
+   "passing_completions": 27,
+   "passing_interceptions": 1,
+   "rushing_yards": -1,
+   "rushing_attempts": 1,
+   "long_rushing": -1
+  },
+  {
+   "player": {
+    "id": 1,
+    "first_name": "Thomas",
+    "last_name": "Morstead",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 1351,
+    "first_name": "Josh",
+    "last_name": "Sweat",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 2,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 281622,
+    "first_name": "Ricky",
+    "last_name": "Pearsall",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 8,
+   "receiving_yards": 117,
+   "long_reception": 34
+  },
+  {
+   "player": {
+    "id": 1311,
+    "first_name": "Nick",
+    "last_name": "Bosa",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1637,
+    "first_name": "Kalia",
+    "last_name": "Davis",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 82898,
+    "first_name": "Sam",
+    "last_name": "Okuayinonu",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 1030,
+    "first_name": "Elijah",
+    "last_name": "Higgins",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "receptions": 1,
+   "receiving_yards": 7,
+   "long_reception": 7
+  },
+  {
+   "player": {
+    "id": 13878166,
+    "first_name": "C.J.",
+    "last_name": "West",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 738,
+    "first_name": "Greg",
+    "last_name": "Dortch",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "rushing_yards": 5,
+   "rushing_attempts": 1,
+   "long_rushing": 5,
+   "receptions": 2,
+   "receiving_yards": 3,
+   "long_reception": 2
+  },
+  {
+   "player": {
+    "id": 2376,
+    "first_name": "Deommodore",
+    "last_name": "Lenoir",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 882,
+    "first_name": "Michael",
+    "last_name": "Wilson",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "receptions": 1,
+   "receiving_yards": 5,
+   "long_reception": 5
+  },
+  {
+   "player": {
+    "id": 277562,
+    "first_name": "Marvin",
+    "last_name": "Harrison Jr.",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "receptions": 3,
+   "receiving_yards": 44,
+   "long_reception": 32
+  },
+  {
+   "player": {
+    "id": 13878613,
+    "first_name": "Upton",
+    "last_name": "Stout",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 711,
+    "first_name": "Blake",
+    "last_name": "Gillikin",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 13878531,
+    "first_name": "Cody",
+    "last_name": "Simon",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 667,
+    "first_name": "Skyy",
+    "last_name": "Moore",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 1,
+   "receiving_yards": 10,
+   "long_reception": 10
+  },
+  {
+   "player": {
+    "id": 1430,
+    "first_name": "Mack",
+    "last_name": "Wilson Sr.",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 12
+  },
+  {
+   "player": {
+    "id": 1432,
+    "first_name": "Zaven",
+    "last_name": "Collins",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2732,
+    "first_name": "Ji'Ayir",
+    "last_name": "Brown",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 942,
+    "first_name": "Zay",
+    "last_name": "Jones",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "receptions": 2,
+   "receiving_yards": 25,
+   "long_reception": 18
+  },
+  {
+   "player": {
+    "id": 1482,
+    "first_name": "Jordan",
+    "last_name": "Elliott",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1519,
+    "first_name": "Jason",
+    "last_name": "Pinnock",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 946,
+    "first_name": "Marquez",
+    "last_name": "Valdes-Scantling",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 1,
+   "receiving_yards": 9,
+   "long_reception": 9
+  },
+  {
+   "player": {
+    "id": 277568,
+    "first_name": "Max",
+    "last_name": "Melton",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2643,
+    "first_name": "Kei'Trel",
+    "last_name": "Clark",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 741,
+    "first_name": "Kendrick",
+    "last_name": "Bourne",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 4,
+   "receiving_yards": 38,
+   "long_reception": 11
+  },
+  {
+   "player": {
+    "id": 1401,
+    "first_name": "Baron",
+    "last_name": "Browning",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1625,
+    "first_name": "Jalen",
+    "last_name": "Thompson",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 82472,
+    "first_name": "Jake",
+    "last_name": "Tonges",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 2,
+   "receiving_yards": 21,
+   "long_reception": 11
+  },
+  {
+   "player": {
+    "id": 281082,
+    "first_name": "Renardo",
+    "last_name": "Green",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 1347,
+    "first_name": "Calais",
+    "last_name": "Campbell",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 7533,
+    "first_name": "Eddy",
+    "last_name": "Pineiro",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "field_goals_made": 3,
+   "field_goal_attempts": 3,
+   "long_field_goal_made": 51,
+   "extra_points_made": 1
+  },
+  {
+   "player": {
+    "id": 2261,
+    "first_name": "Curtis",
+    "last_name": "Robinson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1235,
+    "first_name": "Simi",
+    "last_name": "Fehoko",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 281377,
+    "first_name": "Dadrion",
+    "last_name": "Taylor-Demerson",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 4,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 2516,
+    "first_name": "PJ",
+    "last_name": "Mustipher",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1940,
+    "first_name": "Siran",
+    "last_name": "Neal",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2474,
+    "first_name": "Brayden",
+    "last_name": "Willis",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2014,
+    "first_name": "Budda",
+    "last_name": "Baker",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 2718,
+    "first_name": "Darrell",
+    "last_name": "Luter Jr.",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13879044,
+    "first_name": "Kitan",
+    "last_name": "Crawford",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13878809,
+    "first_name": "Denzel",
+    "last_name": "Burke",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 491,
+    "first_name": "Brian",
+    "last_name": "Robinson Jr.",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "rushing_yards": 22,
+   "rushing_attempts": 2,
+   "long_rushing": 19
+  },
+  {
+   "player": {
+    "id": 281658,
+    "first_name": "Darius",
+    "last_name": "Robinson",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 856087,
+    "first_name": "Anthony",
+    "last_name": "Goodlow",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 727,
+    "first_name": "Kyle",
+    "last_name": "Juszczyk",
+    "position_abbreviation": "FB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 1,
+   "receiving_yards": 1,
+   "receiving_touchdowns": 1,
+   "long_reception": 1
+  },
+  {
+   "player": {
+    "id": 13878264,
+    "first_name": "Jordan",
+    "last_name": "Burch",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1435,
+    "first_name": "Dante",
+    "last_name": "Stills",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2689,
+    "first_name": "Owen",
+    "last_name": "Pappoe",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1716,
+    "first_name": "Trent",
+    "last_name": "Williams",
+    "position_abbreviation": "OT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 280880,
+    "first_name": "Tatum",
+    "last_name": "Bethune",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  }
+ ],
+ "423992": [
+  {
+   "player": {
+    "id": 2337,
+    "first_name": "Jake",
+    "last_name": "Hummel",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1510,
+    "first_name": "Broderick",
+    "last_name": "Washington Jr.",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 477,
+    "first_name": "Jahmyr",
+    "last_name": "Gibbs",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "rushing_yards": 67,
+   "rushing_attempts": 22,
+   "rushing_touchdowns": 2,
+   "long_rushing": 9,
+   "receptions": 5,
+   "receiving_yards": 32,
+   "long_reception": 9
+  },
+  {
+   "player": {
+    "id": 32,
+    "first_name": "Jared",
+    "last_name": "Goff",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "passing_yards": 202,
+   "passing_touchdowns": 1,
+   "passing_attempts": 28,
+   "passing_completions": 20,
+   "rushing_yards": 6,
+   "rushing_attempts": 4,
+   "long_rushing": 5
+  },
+  {
+   "player": {
+    "id": 1228,
+    "first_name": "Tylan",
+    "last_name": "Wallace",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1386,
+    "first_name": "Odafe",
+    "last_name": "Oweh",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 656,
+    "first_name": "Jameson",
+    "last_name": "Williams",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "receptions": 2,
+   "receiving_yards": 43,
+   "long_reception": 24
+  },
+  {
+   "player": {
+    "id": 1468,
+    "first_name": "Kyle",
+    "last_name": "Hamilton",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 9
+  },
+  {
+   "player": {
+    "id": 1922,
+    "first_name": "Chidobe",
+    "last_name": "Awuzie",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2013,
+    "first_name": "Marlon",
+    "last_name": "Humphrey",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 13878786,
+    "first_name": "Malaki",
+    "last_name": "Starks",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 1562,
+    "first_name": "John",
+    "last_name": "Jenkins",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 13877780,
+    "first_name": "Teddye",
+    "last_name": "Buchanan",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 113,
+    "first_name": "Amon-Ra",
+    "last_name": "St. Brown",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "receptions": 7,
+   "receiving_yards": 77,
+   "receiving_touchdowns": 1,
+   "long_reception": 20
+  },
+  {
+   "player": {
+    "id": 278253,
+    "first_name": "Jake",
+    "last_name": "Bates",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "field_goals_made": 1,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 45,
+   "extra_points_made": 5,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 773,
+    "first_name": "Mark",
+    "last_name": "Andrews",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "receptions": 6,
+   "receiving_yards": 91,
+   "receiving_touchdowns": 2,
+   "long_reception": 27
+  },
+  {
+   "player": {
+    "id": 33,
+    "first_name": "Lamar",
+    "last_name": "Jackson",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "passing_yards": 288,
+   "passing_touchdowns": 3,
+   "passing_attempts": 27,
+   "passing_completions": 21,
+   "rushing_yards": 35,
+   "rushing_attempts": 7,
+   "long_rushing": 13,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1677,
+    "first_name": "Brian",
+    "last_name": "Branch",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 36,
+    "first_name": "Derrick",
+    "last_name": "Henry",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "passing_attempts": 1,
+   "rushing_yards": 50,
+   "rushing_attempts": 12,
+   "rushing_touchdowns": 1,
+   "long_rushing": 28,
+   "receptions": 1,
+   "receiving_yards": 7,
+   "long_reception": 7
+  },
+  {
+   "player": {
+    "id": 1645,
+    "first_name": "Derrick",
+    "last_name": "Barnes",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 7,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 2479,
+    "first_name": "Kerby",
+    "last_name": "Joseph",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 13878849,
+    "first_name": "Tyler",
+    "last_name": "Loop",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "field_goals_made": 1,
+   "field_goal_attempts": 1,
+   "long_field_goal_made": 41,
+   "extra_points_made": 3
+  },
+  {
+   "player": {
+    "id": 13877817,
+    "first_name": "Mike",
+    "last_name": "Green",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 278566,
+    "first_name": "Rasheen",
+    "last_name": "Ali",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1676,
+    "first_name": "Tavius",
+    "last_name": "Robinson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 279908,
+    "first_name": "Sione",
+    "last_name": "Vaki",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1542,
+    "first_name": "Roquan",
+    "last_name": "Smith",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 1444,
+    "first_name": "Alex",
+    "last_name": "Anzalone",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 4,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 1094,
+    "first_name": "Charlie",
+    "last_name": "Kolar",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "receptions": 2,
+   "receiving_yards": 22,
+   "long_reception": 15
+  },
+  {
+   "player": {
+    "id": 1531,
+    "first_name": "Jack",
+    "last_name": "Campbell",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 8,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 598,
+    "first_name": "Kalif",
+    "last_name": "Raymond",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "receptions": 1,
+   "receiving_yards": 4,
+   "long_reception": 4
+  },
+  {
+   "player": {
+    "id": 518,
+    "first_name": "Justice",
+    "last_name": "Hill",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "receptions": 3,
+   "receiving_yards": 45,
+   "long_reception": 37
+  },
+  {
+   "player": {
+    "id": 2460,
+    "first_name": "Jordan",
+    "last_name": "Stout",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 278560,
+    "first_name": "Sanoussi",
+    "last_name": "Kane",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 278555,
+    "first_name": "T.J.",
+    "last_name": "Tampa",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 469,
+    "first_name": "David",
+    "last_name": "Montgomery",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "rushing_yards": 151,
+   "rushing_attempts": 12,
+   "rushing_touchdowns": 2,
+   "long_rushing": 72,
+   "receptions": 1,
+   "receiving_yards": 13,
+   "long_reception": 13
+  },
+  {
+   "player": {
+    "id": 744,
+    "first_name": "Sam",
+    "last_name": "LaPorta",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "receptions": 4,
+   "receiving_yards": 33,
+   "long_reception": 14
+  },
+  {
+   "player": {
+    "id": 1441,
+    "first_name": "Brent",
+    "last_name": "Urban",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 88197,
+    "first_name": "Nate",
+    "last_name": "Wiggins",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1553,
+    "first_name": "Travis",
+    "last_name": "Jones",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2532,
+    "first_name": "Tyler",
+    "last_name": "Lacy",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 683,
+    "first_name": "Rashod",
+    "last_name": "Bateman",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "receptions": 5,
+   "receiving_yards": 63,
+   "receiving_touchdowns": 1,
+   "long_reception": 20
+  },
+  {
+   "player": {
+    "id": 278251,
+    "first_name": "Terrion",
+    "last_name": "Arnold",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2037,
+    "first_name": "D.J.",
+    "last_name": "Reed",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 278521,
+    "first_name": "Devontez",
+    "last_name": "Walker",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "receptions": 1,
+   "receiving_yards": 34,
+   "long_reception": 34
+  },
+  {
+   "player": {
+    "id": 1910,
+    "first_name": "Zach",
+    "last_name": "Cunningham",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1175,
+    "first_name": "Khalil",
+    "last_name": "Dorsey",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 95,
+    "first_name": "DeAndre",
+    "last_name": "Hopkins",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "receptions": 1,
+   "receiving_yards": 13,
+   "long_reception": 13
+  },
+  {
+   "player": {
+    "id": 1629,
+    "first_name": "Amik",
+    "last_name": "Robertson",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13874236,
+    "first_name": "Dominic",
+    "last_name": "Lovett",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2302,
+    "first_name": "Grant",
+    "last_name": "Stuard",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 615,
+    "first_name": "Zay",
+    "last_name": "Flowers",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "receptions": 2,
+   "receiving_yards": 13,
+   "long_reception": 7
+  },
+  {
+   "player": {
+    "id": 2743,
+    "first_name": "Trevor",
+    "last_name": "Nowaske",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 2,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 67577,
+    "first_name": "Al-Quadin",
+    "last_name": "Muhammad",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 4,
+   "defensive_sacks": 2.5
+  },
+  {
+   "player": {
+    "id": 13875320,
+    "first_name": "Aeneas",
+    "last_name": "Peebles",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878561,
+    "first_name": "Keyon",
+    "last_name": "Martin",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2071,
+    "first_name": "Rock",
+    "last_name": "Ya-Sin",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1575,
+    "first_name": "DJ",
+    "last_name": "Reader",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1669,
+    "first_name": "Trenton",
+    "last_name": "Simpson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13877900,
+    "first_name": "Jay",
+    "last_name": "Higgins IV",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2176,
+    "first_name": "Daniel",
+    "last_name": "Thomas",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1304,
+    "first_name": "Aidan",
+    "last_name": "Hutchinson",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 2,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1858,
+    "first_name": "Pat",
+    "last_name": "O'Connor",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "total_tackles": 1
+  }
+ ],
+ "424054": [
+  {
+   "player": {
+    "id": 1903,
+    "first_name": "Mike",
+    "last_name": "Ford Jr.",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1412,
+    "first_name": "Kaden",
+    "last_name": "Elliss",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 12
+  },
+  {
+   "player": {
+    "id": 28,
+    "first_name": "Tua",
+    "last_name": "Tagovailoa",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "passing_yards": 205,
+   "passing_touchdowns": 4,
+   "passing_attempts": 26,
+   "passing_completions": 20
+  },
+  {
+   "player": {
+    "id": 278003,
+    "first_name": "JD",
+    "last_name": "Bertrand",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 9
+  },
+  {
+   "player": {
+    "id": 114,
+    "first_name": "De'Von",
+    "last_name": "Achane",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "rushing_yards": 67,
+   "rushing_attempts": 18,
+   "long_rushing": 12,
+   "receptions": 5,
+   "receiving_yards": 24,
+   "receiving_touchdowns": 1,
+   "long_reception": 10
+  },
+  {
+   "player": {
+    "id": 2617,
+    "first_name": "Dee",
+    "last_name": "Alford",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 5,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1307,
+    "first_name": "Bradley",
+    "last_name": "Chubb",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 7638,
+    "first_name": "Jake",
+    "last_name": "Bailey",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "punts_inside_20": 1
+  },
+  {
+   "player": {
+    "id": 2192,
+    "first_name": "Cameron",
+    "last_name": "Goode",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 281992,
+    "first_name": "Hayden",
+    "last_name": "Rucci",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 475,
+    "first_name": "Bijan",
+    "last_name": "Robinson",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "rushing_yards": 25,
+   "rushing_attempts": 9,
+   "long_rushing": 7,
+   "receptions": 3,
+   "receiving_yards": 23,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 1400,
+    "first_name": "Jordyn",
+    "last_name": "Brooks",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 10,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1354,
+    "first_name": "Jaelan",
+    "last_name": "Phillips",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 26,
+    "first_name": "Kirk",
+    "last_name": "Cousins",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "passing_yards": 173,
+   "passing_attempts": 31,
+   "passing_completions": 21,
+   "rushing_yards": 2,
+   "rushing_attempts": 2,
+   "long_rushing": 3
+  },
+  {
+   "player": {
+    "id": 2185,
+    "first_name": "Jack",
+    "last_name": "Jones",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 797,
+    "first_name": "Kyle",
+    "last_name": "Pitts Sr.",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 9,
+   "receiving_yards": 59,
+   "long_reception": 24
+  },
+  {
+   "player": {
+    "id": 7613,
+    "first_name": "Bradley",
+    "last_name": "Pinion",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 1415,
+    "first_name": "David",
+    "last_name": "Onyemata",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 1612,
+    "first_name": "Benito",
+    "last_name": "Jones",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2287,
+    "first_name": "Sam",
+    "last_name": "Roberts",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 1363,
+    "first_name": "Arnold",
+    "last_name": "Ebiketie",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 279725,
+    "first_name": "Malik",
+    "last_name": "Washington",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "receptions": 4,
+   "receiving_yards": 36,
+   "receiving_touchdowns": 1,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 279719,
+    "first_name": "Jaylen",
+    "last_name": "Wright",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "rushing_yards": 28,
+   "rushing_attempts": 9,
+   "long_rushing": 7,
+   "receptions": 1
+  },
+  {
+   "player": {
+    "id": 13873940,
+    "first_name": "Ollie",
+    "last_name": "Gordon II",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "rushing_yards": 46,
+   "rushing_attempts": 10,
+   "long_rushing": 13,
+   "receptions": 1,
+   "receiving_yards": 20,
+   "receiving_touchdowns": 1,
+   "long_reception": 20
+  },
+  {
+   "player": {
+    "id": 2114,
+    "first_name": "Jessie",
+    "last_name": "Bates III",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 2067,
+    "first_name": "Mike",
+    "last_name": "Hughes",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 928,
+    "first_name": "Nick",
+    "last_name": "Westbrook-Ikhine",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "receptions": 1,
+   "receiving_yards": 18,
+   "long_reception": 18,
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 280665,
+    "first_name": "Ruke",
+    "last_name": "Orhorhoro",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 7538,
+    "first_name": "Riley",
+    "last_name": "Patterson",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "field_goals_made": 2,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 36,
+   "extra_points_made": 4
+  },
+  {
+   "player": {
+    "id": 1457,
+    "first_name": "Ifeatu",
+    "last_name": "Melifonwu",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 2492,
+    "first_name": "Ethan",
+    "last_name": "Bonner",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1479,
+    "first_name": "Tyrel",
+    "last_name": "Dodson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 2121,
+    "first_name": "Minkah",
+    "last_name": "Fitzpatrick",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 494,
+    "first_name": "Tyler",
+    "last_name": "Allgeier",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "rushing_yards": 4,
+   "rushing_attempts": 4,
+   "rushing_touchdowns": 1,
+   "long_rushing": 6,
+   "receptions": 2,
+   "receiving_yards": 10,
+   "long_reception": 6
+  },
+  {
+   "player": {
+    "id": 1313,
+    "first_name": "Zach",
+    "last_name": "Sieler",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1646778,
+    "first_name": "Parker",
+    "last_name": "Romo",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "field_goals_made": 1,
+   "field_goal_attempts": 1,
+   "long_field_goal_made": 45,
+   "extra_points_made": 1
+  },
+  {
+   "player": {
+    "id": 13879058,
+    "first_name": "Dante",
+    "last_name": "Trader Jr.",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 775,
+    "first_name": "Alec",
+    "last_name": "Ingold",
+    "position_abbreviation": "FB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "receptions": 1
+  },
+  {
+   "player": {
+    "id": 13880650,
+    "first_name": "Xavier",
+    "last_name": "Watts",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 366278,
+    "first_name": "Natrone",
+    "last_name": "Brooks",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 701,
+    "first_name": "Jaylen",
+    "last_name": "Waddle",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "receptions": 5,
+   "receiving_yards": 99,
+   "receiving_touchdowns": 1,
+   "long_reception": 43
+  },
+  {
+   "player": {
+    "id": 104,
+    "first_name": "Cedrick",
+    "last_name": "Wilson Jr.",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "receptions": 1,
+   "receiving_yards": 2,
+   "long_reception": 2
+  },
+  {
+   "player": {
+    "id": 2295,
+    "first_name": "A.J.",
+    "last_name": "Terrell Jr.",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 78928,
+    "first_name": "David",
+    "last_name": "Sills V",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 2,
+   "receiving_yards": 14,
+   "long_reception": 12
+  },
+  {
+   "player": {
+    "id": 739,
+    "first_name": "Darnell",
+    "last_name": "Mooney",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 1,
+   "receiving_yards": 11,
+   "long_reception": 11
+  },
+  {
+   "player": {
+    "id": 82470,
+    "first_name": "Tanner",
+    "last_name": "Conner",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "receptions": 2,
+   "receiving_yards": 6,
+   "long_reception": 5,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1603,
+    "first_name": "Ronnie",
+    "last_name": "Harrison Jr.",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2396,
+    "first_name": "DeAngelo",
+    "last_name": "Malone",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878635,
+    "first_name": "James",
+    "last_name": "Pearce Jr.",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 1643,
+    "first_name": "Willie",
+    "last_name": "Gay Jr.",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 13875229,
+    "first_name": "Jordan",
+    "last_name": "Phillips",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1308,
+    "first_name": "Leonard",
+    "last_name": "Floyd",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 58036,
+    "first_name": "Jake",
+    "last_name": "Matthews",
+    "position_abbreviation": "OT"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2699,
+    "first_name": "Matthew",
+    "last_name": "Bergeron",
+    "position_abbreviation": "G"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 280567,
+    "first_name": "Brandon",
+    "last_name": "Dorlus",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1414,
+    "first_name": "Matthew",
+    "last_name": "Judon",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 770,
+    "first_name": "KhaDarel",
+    "last_name": "Hodge",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 3,
+   "receiving_yards": 31,
+   "long_reception": 16
+  },
+  {
+   "player": {
+    "id": 1609,
+    "first_name": "Rasul",
+    "last_name": "Douglas",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2381,
+    "first_name": "K.J.",
+    "last_name": "Britt",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 280083,
+    "first_name": "Casey",
+    "last_name": "Washington",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "receptions": 1,
+   "receiving_yards": 25,
+   "long_reception": 25
+  },
+  {
+   "player": {
+    "id": 2124,
+    "first_name": "Kendall",
+    "last_name": "Sheffield",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 78264,
+    "first_name": "Feleipe",
+    "last_name": "Franks",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2245,
+    "first_name": "Jordan",
+    "last_name": "Fuller",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 73,
+    "first_name": "Zach",
+    "last_name": "Wilson",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "passing_attempts": 1,
+   "passing_completions": 1
+  },
+  {
+   "player": {
+    "id": 13873917,
+    "first_name": "Nathan",
+    "last_name": "Carter",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "rushing_yards": 14,
+   "rushing_attempts": 2,
+   "long_rushing": 12
+  },
+  {
+   "player": {
+    "id": 1795,
+    "first_name": "Joe",
+    "last_name": "Cardona",
+    "position_abbreviation": "LS"
+   },
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "total_tackles": 1
+  }
+ ],
+ "424061": [
+  {
+   "player": {
+    "id": 1574,
+    "first_name": "Deion",
+    "last_name": "Jones",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 493,
+    "first_name": "Alvin",
+    "last_name": "Kamara",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "rushing_yards": 21,
+   "rushing_attempts": 6,
+   "long_rushing": 5,
+   "receptions": 2,
+   "receiving_yards": 24,
+   "long_reception": 15
+  },
+  {
+   "player": {
+    "id": 2055,
+    "first_name": "Jamel",
+    "last_name": "Dean",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 640,
+    "first_name": "Rashid",
+    "last_name": "Shaheed",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "receptions": 9,
+   "receiving_yards": 75,
+   "long_reception": 10
+  },
+  {
+   "player": {
+    "id": 279782,
+    "first_name": "Spencer",
+    "last_name": "Rattler",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "passing_yards": 136,
+   "passing_attempts": 21,
+   "passing_completions": 15,
+   "passing_interceptions": 1,
+   "rushing_yards": 12,
+   "rushing_attempts": 3,
+   "long_rushing": 7
+  },
+  {
+   "player": {
+    "id": 278128,
+    "first_name": "Tykee",
+    "last_name": "Smith",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 823,
+    "first_name": "Chris",
+    "last_name": "Olave",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "rushing_yards": -3,
+   "rushing_attempts": 1,
+   "long_rushing": -3,
+   "receptions": 8,
+   "receiving_yards": 63,
+   "long_reception": 28,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878806,
+    "first_name": "Jacob",
+    "last_name": "Parrish",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 6,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1390,
+    "first_name": "Lavonte",
+    "last_name": "David",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 10
+  },
+  {
+   "player": {
+    "id": 1449,
+    "first_name": "Anthony",
+    "last_name": "Nelson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "interception_touchdowns": 1,
+   "fumbles_touchdowns": 1,
+   "total_tackles": 4,
+   "defensive_sacks": 2,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 2429,
+    "first_name": "Zyon",
+    "last_name": "McCollum",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 2669,
+    "first_name": "SirVocea",
+    "last_name": "Dennis",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 7,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 277738,
+    "first_name": "Devaughn",
+    "last_name": "Vele",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "receptions": 1,
+   "receiving_yards": 10,
+   "long_reception": 10
+  },
+  {
+   "player": {
+    "id": 1951,
+    "first_name": "Davon",
+    "last_name": "Godchaux",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 1451,
+    "first_name": "Justin",
+    "last_name": "Reid",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 7,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 1339,
+    "first_name": "Chase",
+    "last_name": "Young",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 4,
+   "defensive_sacks": 1.5
+  },
+  {
+   "player": {
+    "id": 474,
+    "first_name": "Rachaad",
+    "last_name": "White",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "rushing_yards": 35,
+   "rushing_attempts": 13,
+   "long_rushing": 9,
+   "receptions": 2,
+   "receiving_yards": 26,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 1348,
+    "first_name": "Demario",
+    "last_name": "Davis",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 10
+  },
+  {
+   "player": {
+    "id": 52,
+    "first_name": "Baker",
+    "last_name": "Mayfield",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "passing_yards": 152,
+   "passing_attempts": 24,
+   "passing_completions": 15
+  },
+  {
+   "player": {
+    "id": 13874067,
+    "first_name": "Emeka",
+    "last_name": "Egbuka",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "receptions": 3,
+   "receiving_yards": 35,
+   "long_reception": 24
+  },
+  {
+   "player": {
+    "id": 1810,
+    "first_name": "Riley",
+    "last_name": "Dixon",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "punts_inside_20": 1
+  },
+  {
+   "player": {
+    "id": 1341,
+    "first_name": "Yaya",
+    "last_name": "Diaby",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 930,
+    "first_name": "Juwan",
+    "last_name": "Johnson",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "receptions": 5,
+   "receiving_yards": 53,
+   "long_reception": 16
+  },
+  {
+   "player": {
+    "id": 1362,
+    "first_name": "Antoine",
+    "last_name": "Winfield Jr.",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 6,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 13874315,
+    "first_name": "Devin",
+    "last_name": "Neal",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "receptions": 3,
+   "receiving_yards": 11,
+   "long_reception": 8
+  },
+  {
+   "player": {
+    "id": 13880655,
+    "first_name": "Kai",
+    "last_name": "Kroeger",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 1697,
+    "first_name": "Pete",
+    "last_name": "Werner",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 2310,
+    "first_name": "Chris",
+    "last_name": "Rumph II",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 668,
+    "first_name": "Sean",
+    "last_name": "Tucker",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "rushing_yards": 42,
+   "rushing_attempts": 12,
+   "rushing_touchdowns": 1,
+   "long_rushing": 15
+  },
+  {
+   "player": {
+    "id": 277938,
+    "first_name": "Kool-Aid",
+    "last_name": "McKinstry",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 903,
+    "first_name": "Cade",
+    "last_name": "Otton",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "receptions": 4,
+   "receiving_yards": 40,
+   "long_reception": 21
+  },
+  {
+   "player": {
+    "id": 729,
+    "first_name": "Sterling",
+    "last_name": "Shepard",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "receptions": 1,
+   "receiving_yards": 8,
+   "long_reception": 8
+  },
+  {
+   "player": {
+    "id": 1650,
+    "first_name": "Jordan",
+    "last_name": "Howden",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2415,
+    "first_name": "John",
+    "last_name": "Ridgeway III",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13874268,
+    "first_name": "Tez",
+    "last_name": "Johnson",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "receptions": 5,
+   "receiving_yards": 43,
+   "long_reception": 16
+  },
+  {
+   "player": {
+    "id": 1455,
+    "first_name": "Nathan",
+    "last_name": "Shepherd",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1494,
+    "first_name": "Jonathan",
+    "last_name": "Bullard",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 83,
+    "first_name": "Taysom",
+    "last_name": "Hill",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "rushing_yards": 6,
+   "rushing_attempts": 2,
+   "long_rushing": 3,
+   "receptions": 1,
+   "receiving_yards": 6,
+   "long_reception": 6
+  },
+  {
+   "player": {
+    "id": 1371,
+    "first_name": "Vita",
+    "last_name": "Vea",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 7523,
+    "first_name": "Chase",
+    "last_name": "McLaughlin",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "field_goals_made": 3,
+   "field_goal_attempts": 3,
+   "long_field_goal_made": 55,
+   "extra_points_made": 2
+  },
+  {
+   "player": {
+    "id": 279746,
+    "first_name": "Mohamed",
+    "last_name": "Kamara",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2585,
+    "first_name": "Christian",
+    "last_name": "Izien",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13879084,
+    "first_name": "Jonas",
+    "last_name": "Sanker",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 2418,
+    "first_name": "Josh",
+    "last_name": "Hayes",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 280353,
+    "first_name": "Graham",
+    "last_name": "Barton",
+    "position_abbreviation": "C"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 7543,
+    "first_name": "Blake",
+    "last_name": "Grupe",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "field_goals_made": 1,
+   "field_goal_attempts": 1,
+   "long_field_goal_made": 48
+  },
+  {
+   "player": {
+    "id": 13878523,
+    "first_name": "Danny",
+    "last_name": "Stutsman",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2184,
+    "first_name": "Terrell",
+    "last_name": "Burgess",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1654,
+    "first_name": "Alontae",
+    "last_name": "Taylor",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 280931,
+    "first_name": "Isaiah",
+    "last_name": "Stalbird",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 13874049,
+    "first_name": "Josh",
+    "last_name": "Williams",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "rushing_yards": 11,
+   "rushing_attempts": 4,
+   "long_rushing": 4
+  },
+  {
+   "player": {
+    "id": 1324,
+    "first_name": "Carl",
+    "last_name": "Granderson",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878715,
+    "first_name": "Quincy",
+    "last_name": "Riley",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13874050,
+    "first_name": "Tyler",
+    "last_name": "Shough",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "passing_yards": 128,
+   "passing_attempts": 30,
+   "passing_completions": 17,
+   "passing_interceptions": 1,
+   "rushing_yards": 12,
+   "rushing_attempts": 3,
+   "long_rushing": 6
+  },
+  {
+   "player": {
+    "id": 278130,
+    "first_name": "Chris",
+    "last_name": "Braswell",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878736,
+    "first_name": "Benjamin",
+    "last_name": "Morrison",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 13878153,
+    "first_name": "John",
+    "last_name": "Bullock",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13875172,
+    "first_name": "Elijah",
+    "last_name": "Roberts",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 642,
+    "first_name": "Brandin",
+    "last_name": "Cooks",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "receptions": 3,
+   "receiving_yards": 22,
+   "long_reception": 11
+  },
+  {
+   "player": {
+    "id": 1489,
+    "first_name": "Cameron",
+    "last_name": "Jordan",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1404,
+    "first_name": "Bryan",
+    "last_name": "Bresee",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1703,
+    "first_name": "Logan",
+    "last_name": "Hall",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 1,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 1657,
+    "first_name": "Markees",
+    "last_name": "Watts",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "total_tackles": 1,
+   "defensive_sacks": 0.5
+  }
+ ],
+ "424109": [
+  {
+   "player": {
+    "id": 2259,
+    "first_name": "Sam",
+    "last_name": "Franklin Jr.",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 93,
+    "first_name": "Davis",
+    "last_name": "Mills",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "passing_yards": 153,
+   "passing_touchdowns": 2,
+   "passing_attempts": 30,
+   "passing_completions": 16,
+   "rushing_yards": 4,
+   "rushing_attempts": 2,
+   "long_rushing": 5
+  },
+  {
+   "player": {
+    "id": 13874478,
+    "first_name": "Jaylin",
+    "last_name": "Noel",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "rushing_yards": 5,
+   "rushing_attempts": 1,
+   "long_rushing": 5,
+   "receptions": 1,
+   "receiving_yards": 4,
+   "long_reception": 4
+  },
+  {
+   "player": {
+    "id": 1563,
+    "first_name": "Jordan",
+    "last_name": "Poyer",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 1355,
+    "first_name": "Terrel",
+    "last_name": "Bernard",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 13873922,
+    "first_name": "Woody",
+    "last_name": "Marks",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "rushing_yards": 74,
+   "rushing_attempts": 16,
+   "long_rushing": 19,
+   "receptions": 1,
+   "receiving_yards": -5,
+   "long_reception": -5
+  },
+  {
+   "player": {
+    "id": 13874239,
+    "first_name": "Jayden",
+    "last_name": "Higgins",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "receptions": 4,
+   "receiving_yards": 38,
+   "receiving_touchdowns": 1,
+   "long_reception": 16
+  },
+  {
+   "player": {
+    "id": 712,
+    "first_name": "Khalil",
+    "last_name": "Shakir",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "receptions": 8,
+   "receiving_yards": 110,
+   "long_reception": 44
+  },
+  {
+   "player": {
+    "id": 13880597,
+    "first_name": "Jaylen",
+    "last_name": "Reed",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 12
+  },
+  {
+   "player": {
+    "id": 6,
+    "first_name": "Tommy",
+    "last_name": "Townsend",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "punts_inside_20": 4
+  },
+  {
+   "player": {
+    "id": 38,
+    "first_name": "Josh",
+    "last_name": "Allen",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "passing_yards": 253,
+   "passing_attempts": 34,
+   "passing_completions": 24,
+   "passing_interceptions": 2,
+   "rushing_yards": 20,
+   "rushing_attempts": 5,
+   "long_rushing": 14
+  },
+  {
+   "player": {
+    "id": 464,
+    "first_name": "James",
+    "last_name": "Cook III",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "rushing_yards": 116,
+   "rushing_attempts": 17,
+   "rushing_touchdowns": 1,
+   "long_rushing": 45,
+   "receptions": 3,
+   "receiving_yards": 13,
+   "long_reception": 6
+  },
+  {
+   "player": {
+    "id": 1012,
+    "first_name": "Dawson",
+    "last_name": "Knox",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "receptions": 3,
+   "receiving_yards": 17,
+   "long_reception": 9,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1588,
+    "first_name": "E.J.",
+    "last_name": "Speed",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 2625,
+    "first_name": "Henry",
+    "last_name": "To'oTo'o",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 7,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 79424,
+    "first_name": "Tommy",
+    "last_name": "Togiai",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 1296,
+    "first_name": "Danielle",
+    "last_name": "Hunter",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 6,
+   "defensive_sacks": 2
+  },
+  {
+   "player": {
+    "id": 568,
+    "first_name": "Ty",
+    "last_name": "Johnson",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "rushing_yards": 7,
+   "rushing_attempts": 2,
+   "long_rushing": 9,
+   "receptions": 3,
+   "receiving_yards": 45,
+   "long_reception": 23
+  },
+  {
+   "player": {
+    "id": 1513,
+    "first_name": "Azeez",
+    "last_name": "Al-Shaair",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 732,
+    "first_name": "Joshua",
+    "last_name": "Palmer",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "receptions": 2,
+   "receiving_yards": 21,
+   "long_reception": 11,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2700,
+    "first_name": "Dorian",
+    "last_name": "Williams",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13878089,
+    "first_name": "Deone",
+    "last_name": "Walker",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 7497,
+    "first_name": "Matt",
+    "last_name": "Prater",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "field_goals_made": 2,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 44,
+   "extra_points_made": 1
+  },
+  {
+   "player": {
+    "id": 555,
+    "first_name": "Nick",
+    "last_name": "Chubb",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "rushing_yards": 16,
+   "rushing_attempts": 6,
+   "long_rushing": 7,
+   "receptions": 1,
+   "receiving_yards": -1,
+   "long_reception": -1
+  },
+  {
+   "player": {
+    "id": 279696,
+    "first_name": "Cole",
+    "last_name": "Bishop",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 868,
+    "first_name": "Dalton",
+    "last_name": "Schultz",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "receptions": 1,
+   "receiving_yards": 8,
+   "long_reception": 8
+  },
+  {
+   "player": {
+    "id": 1388,
+    "first_name": "Greg",
+    "last_name": "Rousseau",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 1346,
+    "first_name": "Will",
+    "last_name": "Anderson Jr.",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 6,
+   "defensive_sacks": 2.5
+  },
+  {
+   "player": {
+    "id": 90,
+    "first_name": "Christian",
+    "last_name": "Kirk",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "receptions": 5,
+   "receiving_yards": 54,
+   "receiving_touchdowns": 1,
+   "long_reception": 33
+  },
+  {
+   "player": {
+    "id": 1828,
+    "first_name": "Ka'imi",
+    "last_name": "Fairbairn",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "field_goals_made": 3,
+   "field_goal_attempts": 3,
+   "long_field_goal_made": 43,
+   "extra_points_made": 2
+  },
+  {
+   "player": {
+    "id": 278421,
+    "first_name": "Kamari",
+    "last_name": "Lassiter",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 1353,
+    "first_name": "AJ",
+    "last_name": "Epenesa",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 790,
+    "first_name": "Gabe",
+    "last_name": "Davis",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "receptions": 1,
+   "receiving_yards": 22,
+   "long_reception": 22
+  },
+  {
+   "player": {
+    "id": 13874537,
+    "first_name": "Jackson",
+    "last_name": "Hawes",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "receptions": 2,
+   "receiving_yards": 26,
+   "long_reception": 18
+  },
+  {
+   "player": {
+    "id": 708,
+    "first_name": "Elijah",
+    "last_name": "Moore",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "receptions": 1,
+   "receiving_yards": -3,
+   "long_reception": -3
+  },
+  {
+   "player": {
+    "id": 278417,
+    "first_name": "Calen",
+    "last_name": "Bullock",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 5,
+   "defensive_interceptions": 2
+  },
+  {
+   "player": {
+    "id": 1620,
+    "first_name": "Myles",
+    "last_name": "Bryant",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1608,
+    "first_name": "Tim",
+    "last_name": "Settle",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1253,
+    "first_name": "Reggie",
+    "last_name": "Gilliam",
+    "position_abbreviation": "FB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "receptions": 1,
+   "receiving_yards": 2,
+   "long_reception": 2,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 279682,
+    "first_name": "Joe",
+    "last_name": "Andreessen",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 725,
+    "first_name": "Nico",
+    "last_name": "Collins",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "receptions": 3,
+   "receiving_yards": 55,
+   "long_reception": 24
+  },
+  {
+   "player": {
+    "id": 1446,
+    "first_name": "Larry",
+    "last_name": "Ogunjobi",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2605,
+    "first_name": "Christian",
+    "last_name": "Benford",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 13878470,
+    "first_name": "Jordan",
+    "last_name": "Hancock",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878443,
+    "first_name": "Maxwell",
+    "last_name": "Hairston",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1592,
+    "first_name": "Taron",
+    "last_name": "Johnson",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 624,
+    "first_name": "Xavier",
+    "last_name": "Hutchinson",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "rushing_yards": 9,
+   "rushing_attempts": 1,
+   "long_rushing": 9
+  },
+  {
+   "player": {
+    "id": 277561,
+    "first_name": "Ray",
+    "last_name": "Davis",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "kick_return_touchdowns": 1
+  },
+  {
+   "player": {
+    "id": 2154,
+    "first_name": "Jake",
+    "last_name": "Hansen",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1890,
+    "first_name": "Matt",
+    "last_name": "Milano",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 2095,
+    "first_name": "Cam",
+    "last_name": "Lewis",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1853,
+    "first_name": "Shaq",
+    "last_name": "Thompson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 1873,
+    "first_name": "Tre'Davious",
+    "last_name": "White",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 644,
+    "first_name": "Dare",
+    "last_name": "Ogunbowale",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878084,
+    "first_name": "T.J.",
+    "last_name": "Sanders",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1357,
+    "first_name": "Sheldon",
+    "last_name": "Rankins",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 1473,
+    "first_name": "Derek",
+    "last_name": "Barnett",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 1,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 279676,
+    "first_name": "Javon",
+    "last_name": "Solomon",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 278411,
+    "first_name": "British",
+    "last_name": "Brooks",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1492,
+    "first_name": "Mario",
+    "last_name": "Edwards Jr.",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "total_tackles": 1,
+   "defensive_sacks": 0.5
+  }
+ ],
+ "424113": [
+  {
+   "player": {
+    "id": 281375,
+    "first_name": "J.J.",
+    "last_name": "McCarthy",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "passing_yards": 87,
+   "passing_attempts": 19,
+   "passing_completions": 12,
+   "passing_interceptions": 2,
+   "rushing_yards": 10,
+   "rushing_attempts": 2,
+   "long_rushing": 10
+  },
+  {
+   "player": {
+    "id": 496,
+    "first_name": "Aaron",
+    "last_name": "Jones Sr.",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "rushing_yards": 41,
+   "rushing_attempts": 9,
+   "long_rushing": 13,
+   "receptions": 3,
+   "receiving_yards": 16,
+   "long_reception": 6,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 111,
+    "first_name": "Justin",
+    "last_name": "Jefferson",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "receptions": 4,
+   "receiving_yards": 48,
+   "long_reception": 19
+  },
+  {
+   "player": {
+    "id": 706,
+    "first_name": "Keisean",
+    "last_name": "Nixon",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1710,
+    "first_name": "Colby",
+    "last_name": "Wooden",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 1696,
+    "first_name": "Xavier",
+    "last_name": "McKinney",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1299,
+    "first_name": "Micah",
+    "last_name": "Parsons",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 2,
+   "defensive_sacks": 2
+  },
+  {
+   "player": {
+    "id": 277801,
+    "first_name": "Will",
+    "last_name": "Reichard",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "field_goals_made": 2,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 59
+  },
+  {
+   "player": {
+    "id": 1483,
+    "first_name": "Joshua",
+    "last_name": "Metellus",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 12
+  },
+  {
+   "player": {
+    "id": 280618,
+    "first_name": "Jalen",
+    "last_name": "Redmond",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 13877866,
+    "first_name": "Tyler",
+    "last_name": "Batty",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1506,
+    "first_name": "Blake",
+    "last_name": "Cashman",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 16
+  },
+  {
+   "player": {
+    "id": 53,
+    "first_name": "Jordan",
+    "last_name": "Love",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "passing_yards": 139,
+   "passing_attempts": 21,
+   "passing_completions": 14,
+   "rushing_yards": 15,
+   "rushing_attempts": 3,
+   "long_rushing": 13
+  },
+  {
+   "player": {
+    "id": 593,
+    "first_name": "Emanuel",
+    "last_name": "Wilson",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "rushing_yards": 107,
+   "rushing_attempts": 28,
+   "rushing_touchdowns": 2,
+   "long_rushing": 12,
+   "receptions": 2,
+   "receiving_yards": 18,
+   "long_reception": 11
+  },
+  {
+   "player": {
+    "id": 705,
+    "first_name": "Christian",
+    "last_name": "Watson",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 5,
+   "receiving_yards": 49,
+   "long_reception": 12
+  },
+  {
+   "player": {
+    "id": 88202,
+    "first_name": "Javon",
+    "last_name": "Bullard",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13874392,
+    "first_name": "Savion",
+    "last_name": "Williams",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "rushing_attempts": 1
+  },
+  {
+   "player": {
+    "id": 280640,
+    "first_name": "Levi Drake",
+    "last_name": "Rodriguez",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 77225,
+    "first_name": "Isaiah",
+    "last_name": "Rodgers",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 14,
+    "first_name": "Dontayvion",
+    "last_name": "Wicks",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 2,
+   "receiving_yards": 32,
+   "long_reception": 18
+  },
+  {
+   "player": {
+    "id": 1752,
+    "first_name": "Brandon",
+    "last_name": "McManus",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "field_goals_made": 3,
+   "field_goal_attempts": 3,
+   "long_field_goal_made": 40,
+   "extra_points_made": 2
+  },
+  {
+   "player": {
+    "id": 1321,
+    "first_name": "Rashan",
+    "last_name": "Gary",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1694,
+    "first_name": "Isaiah",
+    "last_name": "McDuffie",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 8,
+   "defensive_sacks": 0.5,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 280961,
+    "first_name": "Ty'Ron",
+    "last_name": "Hopper",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 544,
+    "first_name": "Jordan",
+    "last_name": "Mason",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "rushing_yards": 42,
+   "rushing_attempts": 8,
+   "long_rushing": 22
+  },
+  {
+   "player": {
+    "id": 281372,
+    "first_name": "Evan",
+    "last_name": "Williams",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 4,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 837,
+    "first_name": "T.J.",
+    "last_name": "Hockenson",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "rushing_attempts": 1,
+   "receptions": 4,
+   "receiving_yards": 19,
+   "long_reception": 5
+  },
+  {
+   "player": {
+    "id": 7669,
+    "first_name": "Ryan",
+    "last_name": "Wright",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 1939,
+    "first_name": "Eric",
+    "last_name": "Wilson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 2373,
+    "first_name": "Theo",
+    "last_name": "Jackson",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 861,
+    "first_name": "Romeo",
+    "last_name": "Doubs",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 2,
+   "receiving_yards": 23,
+   "long_reception": 18
+  },
+  {
+   "player": {
+    "id": 939,
+    "first_name": "Luke",
+    "last_name": "Musgrave",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 1,
+   "receiving_yards": 7,
+   "long_reception": 7
+  },
+  {
+   "player": {
+    "id": 277800,
+    "first_name": "Dallas",
+    "last_name": "Turner",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 2140,
+    "first_name": "Zayne",
+    "last_name": "Anderson",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 7718,
+    "first_name": "Daniel",
+    "last_name": "Whelan",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "punts_inside_20": 3
+  },
+  {
+   "player": {
+    "id": 992,
+    "first_name": "Josh",
+    "last_name": "Oliver",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "receptions": 1,
+   "receiving_yards": 4,
+   "long_reception": 4
+  },
+  {
+   "player": {
+    "id": 88194,
+    "first_name": "Edgerrin",
+    "last_name": "Cooper",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 281761,
+    "first_name": "Kamal",
+    "last_name": "Hadden",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 1525,
+    "first_name": "Kingsley",
+    "last_name": "Enagbare",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1342,
+    "first_name": "Javon",
+    "last_name": "Hargrave",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 1368,
+    "first_name": "Jonathan",
+    "last_name": "Allen",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1359,
+    "first_name": "Andrew",
+    "last_name": "Van Ginkel",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 580,
+    "first_name": "Chris",
+    "last_name": "Brooks",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "rushing_yards": 21,
+   "rushing_attempts": 8,
+   "long_rushing": 10,
+   "receptions": 1,
+   "receiving_yards": 5,
+   "long_reception": 5,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2231,
+    "first_name": "Byron",
+    "last_name": "Murphy Jr.",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13875380,
+    "first_name": "Warren",
+    "last_name": "Brinson",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 2,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 13877891,
+    "first_name": "Chaz",
+    "last_name": "Chambliss",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1829,
+    "first_name": "Fabian",
+    "last_name": "Moreau",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1375,
+    "first_name": "Devonte",
+    "last_name": "Wyatt",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 2
+  },
+  {
+   "player": {
+    "id": 1439,
+    "first_name": "Harrison",
+    "last_name": "Smith",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 281347,
+    "first_name": "Kitan",
+    "last_name": "Oladapo",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2465,
+    "first_name": "Tavierre",
+    "last_name": "Thomas",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1226,
+    "first_name": "John",
+    "last_name": "FitzPatrick",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 1,
+   "receiving_yards": 11,
+   "long_reception": 11
+  },
+  {
+   "player": {
+    "id": 1086,
+    "first_name": "Josh",
+    "last_name": "Whyle",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "receptions": 1,
+   "receiving_yards": 1,
+   "long_reception": 1
+  },
+  {
+   "player": {
+    "id": 1179,
+    "first_name": "Jalen",
+    "last_name": "Nailor",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1488,
+    "first_name": "Ivan",
+    "last_name": "Pace Jr.",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 17,
+    "first_name": "Malik",
+    "last_name": "Willis",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "passing_yards": 7,
+   "passing_attempts": 1,
+   "passing_completions": 1,
+   "rushing_yards": 3,
+   "rushing_attempts": 2,
+   "long_rushing": 4
+  },
+  {
+   "player": {
+    "id": 13875173,
+    "first_name": "Tyrion",
+    "last_name": "Ingram-Dawkins",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "total_tackles": 1
+  }
+ ],
+ "424115": [
+  {
+   "player": {
+    "id": 13878241,
+    "first_name": "Kevin",
+    "last_name": "Knowles",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 31,
+    "first_name": "Daniel",
+    "last_name": "Jones",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "passing_yards": 181,
+   "passing_touchdowns": 2,
+   "passing_attempts": 31,
+   "passing_completions": 19,
+   "rushing_yards": 16,
+   "rushing_attempts": 3,
+   "long_rushing": 13
+  },
+  {
+   "player": {
+    "id": 490,
+    "first_name": "Jonathan",
+    "last_name": "Taylor",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "rushing_yards": 58,
+   "rushing_attempts": 16,
+   "long_rushing": 27,
+   "receptions": 2,
+   "receiving_yards": 8,
+   "long_reception": 7
+  },
+  {
+   "player": {
+    "id": 1463,
+    "first_name": "Leo",
+    "last_name": "Chenal",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 1595,
+    "first_name": "Derrick",
+    "last_name": "Nnadi",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2427,
+    "first_name": "Jack",
+    "last_name": "Cochrane",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2552,
+    "first_name": "Nick",
+    "last_name": "Bolton",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 1397,
+    "first_name": "Drue",
+    "last_name": "Tranquill",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 820,
+    "first_name": "Michael",
+    "last_name": "Pittman Jr.",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "receptions": 5,
+   "receiving_yards": 27,
+   "receiving_touchdowns": 1,
+   "long_reception": 6
+  },
+  {
+   "player": {
+    "id": 279404,
+    "first_name": "Chris",
+    "last_name": "Roland-Wallace",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 13874582,
+    "first_name": "Tyler",
+    "last_name": "Warren",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "receptions": 5,
+   "receiving_yards": 45,
+   "long_reception": 16
+  },
+  {
+   "player": {
+    "id": 1461,
+    "first_name": "Trent",
+    "last_name": "McDuffie",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 7629,
+    "first_name": "Rigoberto",
+    "last_name": "Sanchez",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "punts_inside_20": 5
+  },
+  {
+   "player": {
+    "id": 1499,
+    "first_name": "Germaine",
+    "last_name": "Pratt",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 20
+  },
+  {
+   "player": {
+    "id": 279246,
+    "first_name": "Laiatu",
+    "last_name": "Latu",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 5,
+   "defensive_sacks": 0.5,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 34,
+    "first_name": "Patrick",
+    "last_name": "Mahomes",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "passing_yards": 352,
+   "passing_attempts": 46,
+   "passing_completions": 29,
+   "passing_interceptions": 1,
+   "rushing_yards": 30,
+   "rushing_attempts": 4,
+   "long_rushing": 13,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 512,
+    "first_name": "Kareem",
+    "last_name": "Hunt",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "rushing_yards": 104,
+   "rushing_attempts": 30,
+   "rushing_touchdowns": 1,
+   "long_rushing": 18,
+   "receptions": 3,
+   "receiving_yards": 26,
+   "long_reception": 11
+  },
+  {
+   "player": {
+    "id": 795,
+    "first_name": "Rashee",
+    "last_name": "Rice",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "receptions": 8,
+   "receiving_yards": 141,
+   "long_reception": 47
+  },
+  {
+   "player": {
+    "id": 2533,
+    "first_name": "Chamarri",
+    "last_name": "Conner",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 7520,
+    "first_name": "Michael",
+    "last_name": "Badgley",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "field_goals_made": 2,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 32,
+   "extra_points_made": 2
+  },
+  {
+   "player": {
+    "id": 2021,
+    "first_name": "Chris",
+    "last_name": "Lammons",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2647,
+    "first_name": "Sauce",
+    "last_name": "Gardner",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 1532,
+    "first_name": "Jaylen",
+    "last_name": "Watson",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2630,
+    "first_name": "Nick",
+    "last_name": "Cross",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 88093,
+    "first_name": "Xavier",
+    "last_name": "Worthy",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "receptions": 4,
+   "receiving_yards": 59,
+   "long_reception": 31
+  },
+  {
+   "player": {
+    "id": 13874030,
+    "first_name": "Brashard",
+    "last_name": "Smith",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "rushing_yards": 5,
+   "rushing_attempts": 1,
+   "long_rushing": 5,
+   "receptions": 3,
+   "receiving_yards": 31,
+   "long_reception": 15
+  },
+  {
+   "player": {
+    "id": 1690,
+    "first_name": "Cam",
+    "last_name": "Bynum",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1540,
+    "first_name": "Zaire",
+    "last_name": "Franklin",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 14
+  },
+  {
+   "player": {
+    "id": 1548,
+    "first_name": "Kenny",
+    "last_name": "Moore II",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 540,
+    "first_name": "Clyde",
+    "last_name": "Edwards-Helaire",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "rushing_yards": 8,
+   "rushing_attempts": 5,
+   "long_rushing": 4,
+   "receptions": 2,
+   "receiving_yards": 9,
+   "long_reception": 7
+  },
+  {
+   "player": {
+    "id": 1604,
+    "first_name": "Neville",
+    "last_name": "Gallimore",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1410,
+    "first_name": "Tyquan",
+    "last_name": "Lewis",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 835,
+    "first_name": "Travis",
+    "last_name": "Kelce",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "rushing_yards": 1,
+   "rushing_attempts": 1,
+   "long_rushing": 1,
+   "receptions": 4,
+   "receiving_yards": 43,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 7519,
+    "first_name": "Harrison",
+    "last_name": "Butker",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "field_goals_made": 5,
+   "field_goal_attempts": 5,
+   "long_field_goal_made": 48
+  },
+  {
+   "player": {
+    "id": 851,
+    "first_name": "Josh",
+    "last_name": "Downs",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "receptions": 2,
+   "receiving_yards": 10,
+   "long_reception": 6
+  },
+  {
+   "player": {
+    "id": 13875374,
+    "first_name": "Ashton",
+    "last_name": "Gillotte",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1032,
+    "first_name": "Mo",
+    "last_name": "Alie-Cox",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "receptions": 1,
+   "receiving_yards": 9,
+   "long_reception": 9
+  },
+  {
+   "player": {
+    "id": 72527,
+    "first_name": "Ashton",
+    "last_name": "Dulin",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "receptions": 1,
+   "receiving_yards": 48,
+   "long_reception": 48,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1048,
+    "first_name": "Drew",
+    "last_name": "Ogletree",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "receptions": 2,
+   "receiving_yards": 8,
+   "receiving_touchdowns": 1,
+   "long_reception": 4,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1692,
+    "first_name": "Grover",
+    "last_name": "Stewart",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 6,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 764,
+    "first_name": "Noah",
+    "last_name": "Gray",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "receptions": 3,
+   "receiving_yards": 25,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 365938,
+    "first_name": "Austin",
+    "last_name": "Ajiake",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 2,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 1326,
+    "first_name": "Kwity",
+    "last_name": "Paye",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 6,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 13878039,
+    "first_name": "Cooper",
+    "last_name": "McDonald",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1309,
+    "first_name": "Chris",
+    "last_name": "Jones",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2416,
+    "first_name": "Rodney",
+    "last_name": "Thomas II",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2217,
+    "first_name": "Charvarius",
+    "last_name": "Ward",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2716,
+    "first_name": "Jaylon",
+    "last_name": "Jones",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13875405,
+    "first_name": "Jaylahn",
+    "last_name": "Tuimoloau",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2413,
+    "first_name": "Bryan",
+    "last_name": "Cook",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 893,
+    "first_name": "Alec",
+    "last_name": "Pierce",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "receptions": 1,
+   "receiving_yards": 26,
+   "long_reception": 26
+  },
+  {
+   "player": {
+    "id": 1207,
+    "first_name": "Laquon",
+    "last_name": "Treadwell",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1317,
+    "first_name": "Samson",
+    "last_name": "Ebukam",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 279408,
+    "first_name": "Jaden",
+    "last_name": "Hicks",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 1507,
+    "first_name": "Jerry",
+    "last_name": "Tillery",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1768,
+    "first_name": "Mike",
+    "last_name": "Pennel",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 963,
+    "first_name": "JuJu",
+    "last_name": "Smith-Schuster",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "receptions": 1,
+   "receiving_yards": 8,
+   "long_reception": 8
+  },
+  {
+   "player": {
+    "id": 2334,
+    "first_name": "Buddy",
+    "last_name": "Johnson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2490,
+    "first_name": "Mekhi",
+    "last_name": "Blackmon",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 666,
+    "first_name": "Hollywood",
+    "last_name": "Brown",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "receptions": 1,
+   "receiving_yards": 10,
+   "long_reception": 10
+  },
+  {
+   "player": {
+    "id": 1556,
+    "first_name": "Adetomiwa",
+    "last_name": "Adebawore",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 2,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 13878479,
+    "first_name": "Nohl",
+    "last_name": "Williams",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 590,
+    "first_name": "Tyler",
+    "last_name": "Goodson",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "total_tackles": 1
+  }
+ ],
+ "424117": [
+  {
+   "player": {
+    "id": 13874120,
+    "first_name": "Dylan",
+    "last_name": "Sampson",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "rushing_yards": 23,
+   "rushing_attempts": 7,
+   "long_rushing": 26,
+   "receptions": 2,
+   "receiving_yards": 59,
+   "receiving_touchdowns": 1,
+   "long_reception": 66
+  },
+  {
+   "player": {
+    "id": 78569,
+    "first_name": "Alex",
+    "last_name": "Bachman",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13873908,
+    "first_name": "Shedeur",
+    "last_name": "Sanders",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "passing_yards": 209,
+   "passing_touchdowns": 1,
+   "passing_attempts": 20,
+   "passing_completions": 11,
+   "passing_interceptions": 1,
+   "rushing_yards": -1,
+   "rushing_attempts": 1,
+   "long_rushing": -1,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13874001,
+    "first_name": "Quinshon",
+    "last_name": "Judkins",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "rushing_yards": 47,
+   "rushing_attempts": 16,
+   "rushing_touchdowns": 2,
+   "long_rushing": 11
+  },
+  {
+   "player": {
+    "id": 13874698,
+    "first_name": "Harold",
+    "last_name": "Fannin Jr.",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "rushing_yards": 4,
+   "rushing_attempts": 1,
+   "long_rushing": 4,
+   "receptions": 4,
+   "receiving_yards": 40,
+   "long_reception": 17
+  },
+  {
+   "player": {
+    "id": 1471,
+    "first_name": "Elandon",
+    "last_name": "Roberts",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 82893,
+    "first_name": "Thomas",
+    "last_name": "Booker IV",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1378,
+    "first_name": "Adam",
+    "last_name": "Butler",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13882104,
+    "first_name": "Isaiah",
+    "last_name": "Bond",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 2,
+   "receiving_yards": 58,
+   "long_reception": 52
+  },
+  {
+   "player": {
+    "id": 1626,
+    "first_name": "Jeremy",
+    "last_name": "Chinn",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 7646,
+    "first_name": "Corey",
+    "last_name": "Bojorquez",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 50,
+    "first_name": "Geno",
+    "last_name": "Smith",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "passing_yards": 285,
+   "passing_touchdowns": 1,
+   "passing_attempts": 44,
+   "passing_completions": 30,
+   "rushing_yards": 8,
+   "rushing_attempts": 3,
+   "long_rushing": 9
+  },
+  {
+   "player": {
+    "id": 597,
+    "first_name": "Tre",
+    "last_name": "Tucker",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "receptions": 3,
+   "receiving_yards": 28,
+   "long_reception": 19
+  },
+  {
+   "player": {
+    "id": 1666,
+    "first_name": "Isaiah",
+    "last_name": "McGuire",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 7,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 2703,
+    "first_name": "Ronnie",
+    "last_name": "Hickman",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 13873873,
+    "first_name": "Ashton",
+    "last_name": "Jeanty",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "rushing_yards": 50,
+   "rushing_attempts": 17,
+   "long_rushing": 12,
+   "receptions": 8,
+   "receiving_yards": 58,
+   "receiving_touchdowns": 1,
+   "long_reception": 25
+  },
+  {
+   "player": {
+    "id": 2599,
+    "first_name": "Tyson",
+    "last_name": "Campbell",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 10
+  },
+  {
+   "player": {
+    "id": 13878110,
+    "first_name": "Mason",
+    "last_name": "Graham",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 277679,
+    "first_name": "Brock",
+    "last_name": "Bowers",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "receptions": 6,
+   "receiving_yards": 55,
+   "long_reception": 15
+  },
+  {
+   "player": {
+    "id": 2085,
+    "first_name": "Denzel",
+    "last_name": "Ward",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 7712,
+    "first_name": "AJ",
+    "last_name": "Cole",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 1,
+   "punts_inside_20": 1
+  },
+  {
+   "player": {
+    "id": 1480,
+    "first_name": "Devin",
+    "last_name": "White",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 1642,
+    "first_name": "Isaiah",
+    "last_name": "Pola-Mao",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 7297606,
+    "first_name": "Andre",
+    "last_name": "Szmyt",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "field_goals_made": 1,
+   "field_goal_attempts": 1,
+   "long_field_goal_made": 53,
+   "extra_points_made": 3
+  },
+  {
+   "player": {
+    "id": 1380,
+    "first_name": "Maliek",
+    "last_name": "Collins",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 3,
+   "defensive_sacks": 2.5
+  },
+  {
+   "player": {
+    "id": 1298,
+    "first_name": "Myles",
+    "last_name": "Garrett",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 5,
+   "defensive_sacks": 3
+  },
+  {
+   "player": {
+    "id": 2202,
+    "first_name": "Devin",
+    "last_name": "Bush",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 9,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 854,
+    "first_name": "Jerry",
+    "last_name": "Jeudy",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 1,
+   "receiving_yards": 39,
+   "long_reception": 39
+  },
+  {
+   "player": {
+    "id": 1333,
+    "first_name": "Malcolm",
+    "last_name": "Koonce",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 2,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1297,
+    "first_name": "Maxx",
+    "last_name": "Crosby",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 1534,
+    "first_name": "Shelby",
+    "last_name": "Harris",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 1570,
+    "first_name": "Rayshawn",
+    "last_name": "Jenkins",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 952,
+    "first_name": "Michael",
+    "last_name": "Mayer",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "receptions": 1,
+   "receiving_yards": 14,
+   "long_reception": 14
+  },
+  {
+   "player": {
+    "id": 2453,
+    "first_name": "Eric",
+    "last_name": "Stokes",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 2445,
+    "first_name": "Jon",
+    "last_name": "Rhattigan",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 278643,
+    "first_name": "Myles",
+    "last_name": "Harden",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 2385,
+    "first_name": "Darnay",
+    "last_name": "Holmes",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13878538,
+    "first_name": "Carson",
+    "last_name": "Schwesinger",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 11
+  },
+  {
+   "player": {
+    "id": 1543,
+    "first_name": "Jerome",
+    "last_name": "Baker",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 13874481,
+    "first_name": "Dont'e",
+    "last_name": "Thornton Jr.",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "receptions": 1,
+   "receiving_yards": 14,
+   "long_reception": 14
+  },
+  {
+   "player": {
+    "id": 470,
+    "first_name": "Raheem",
+    "last_name": "Mostert",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "rushing_yards": 2,
+   "rushing_attempts": 1,
+   "long_rushing": 2,
+   "receptions": 3,
+   "receiving_yards": 18,
+   "long_reception": 18
+  },
+  {
+   "player": {
+    "id": 2520,
+    "first_name": "Cameron",
+    "last_name": "Thomas",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 6,
+   "defensive_sacks": 1
+  },
+  {
+   "player": {
+    "id": 1916,
+    "first_name": "Daniel",
+    "last_name": "Carlson",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "field_goals_made": 1,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 41,
+   "extra_points_made": 1
+  },
+  {
+   "player": {
+    "id": 67458,
+    "first_name": "Jack",
+    "last_name": "Conklin",
+    "position_abbreviation": "OT"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 277661,
+    "first_name": "Charles",
+    "last_name": "Snowden",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 3,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 278611,
+    "first_name": "Mike",
+    "last_name": "Hall Jr.",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 4,
+   "defensive_sacks": 0.5
+  },
+  {
+   "player": {
+    "id": 841,
+    "first_name": "Tyler",
+    "last_name": "Lockett",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "receptions": 4,
+   "receiving_yards": 62,
+   "long_reception": 33
+  },
+  {
+   "player": {
+    "id": 279958,
+    "first_name": "Malachi",
+    "last_name": "Corley",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "rushing_yards": -6,
+   "rushing_attempts": 1,
+   "long_rushing": -6,
+   "receptions": 1,
+   "receiving_yards": 8,
+   "long_reception": 8
+  },
+  {
+   "player": {
+    "id": 279481,
+    "first_name": "Decamerion",
+    "last_name": "Richardson",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 722,
+    "first_name": "Cedric",
+    "last_name": "Tillman",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "receptions": 1,
+   "receiving_yards": 5,
+   "long_reception": 5
+  },
+  {
+   "player": {
+    "id": 2652,
+    "first_name": "Kyu Blu",
+    "last_name": "Kelly",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2125,
+    "first_name": "Jacob",
+    "last_name": "Bobenmoyer",
+    "position_abbreviation": "LS"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 279472,
+    "first_name": "Tommy",
+    "last_name": "Eichenberg",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 279467,
+    "first_name": "Jonah",
+    "last_name": "Laulu",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2332,
+    "first_name": "Lonnie",
+    "last_name": "Johnson Jr.",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1549,
+    "first_name": "Grant",
+    "last_name": "Delpit",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 2038,
+    "first_name": "D'Angelo",
+    "last_name": "Ross",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878279,
+    "first_name": "JJ",
+    "last_name": "Pegues",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1436,
+    "first_name": "Tyree",
+    "last_name": "Wilson",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 366253,
+    "first_name": "Christopher",
+    "last_name": "Edmonds",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1950,
+    "first_name": "Jamal",
+    "last_name": "Adams",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 483,
+    "first_name": "Jerome",
+    "last_name": "Ford",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "rushing_yards": -3,
+   "rushing_attempts": 1,
+   "long_rushing": -3
+  },
+  {
+   "player": {
+    "id": 1131,
+    "first_name": "Ian",
+    "last_name": "Thomas",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "receptions": 4,
+   "receiving_yards": 36,
+   "long_reception": 14
+  },
+  {
+   "player": {
+    "id": 2692,
+    "first_name": "Mohamoud",
+    "last_name": "Diabate",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "total_tackles": 1
+  }
+ ],
+ "424122": [
+  {
+   "player": {
+    "id": 13878943,
+    "first_name": "Lathan",
+    "last_name": "Ransom",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 2734,
+    "first_name": "Thomas",
+    "last_name": "Incoom",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 277921,
+    "first_name": "Claudin",
+    "last_name": "Cherelus",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 461,
+    "first_name": "Christian",
+    "last_name": "McCaffrey",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "rushing_yards": 89,
+   "rushing_attempts": 24,
+   "rushing_touchdowns": 1,
+   "long_rushing": 17,
+   "receptions": 7,
+   "receiving_yards": 53,
+   "long_reception": 19
+  },
+  {
+   "player": {
+    "id": 1524,
+    "first_name": "Tre'von",
+    "last_name": "Moehrig",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 27,
+    "first_name": "Brock",
+    "last_name": "Purdy",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "passing_yards": 193,
+   "passing_touchdowns": 1,
+   "passing_attempts": 32,
+   "passing_completions": 23,
+   "passing_interceptions": 3,
+   "rushing_yards": 16,
+   "rushing_attempts": 6,
+   "long_rushing": 9
+  },
+  {
+   "player": {
+    "id": 1936,
+    "first_name": "A'Shawn",
+    "last_name": "Robinson",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 2109,
+    "first_name": "Mike",
+    "last_name": "Jackson",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 4,
+   "defensive_interceptions": 1
+  },
+  {
+   "player": {
+    "id": 2190,
+    "first_name": "Krys",
+    "last_name": "Barnes",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 10
+  },
+  {
+   "player": {
+    "id": 281622,
+    "first_name": "Ricky",
+    "last_name": "Pearsall",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "rushing_yards": 2,
+   "rushing_attempts": 1,
+   "long_rushing": 2,
+   "receptions": 2,
+   "receiving_yards": 6,
+   "long_reception": 6
+  },
+  {
+   "player": {
+    "id": 491,
+    "first_name": "Brian",
+    "last_name": "Robinson Jr.",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "rushing_yards": 40,
+   "rushing_attempts": 7,
+   "long_rushing": 12,
+   "receptions": 1,
+   "receiving_yards": 4,
+   "long_reception": 4
+  },
+  {
+   "player": {
+    "id": 1964,
+    "first_name": "Nick",
+    "last_name": "Scott",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 8
+  },
+  {
+   "player": {
+    "id": 1515,
+    "first_name": "Derrick",
+    "last_name": "Brown",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2553,
+    "first_name": "Jaycee",
+    "last_name": "Horn",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1,
+   "defensive_interceptions": 2
+  },
+  {
+   "player": {
+    "id": 13878243,
+    "first_name": "Nic",
+    "last_name": "Scourton",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1040,
+    "first_name": "Luke",
+    "last_name": "Farrell",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 1,
+   "receiving_yards": 3,
+   "long_reception": 3,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1706,
+    "first_name": "Bobby",
+    "last_name": "Brown III",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 962,
+    "first_name": "Jauan",
+    "last_name": "Jennings",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 5,
+   "receiving_yards": 41,
+   "receiving_touchdowns": 1,
+   "long_reception": 12
+  },
+  {
+   "player": {
+    "id": 2421,
+    "first_name": "Matt",
+    "last_name": "Gay",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "field_goals_made": 2,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 47,
+   "extra_points_made": 2
+  },
+  {
+   "player": {
+    "id": 520,
+    "first_name": "Rico",
+    "last_name": "Dowdle",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "rushing_yards": 38,
+   "rushing_attempts": 6,
+   "long_rushing": 17,
+   "receptions": 4,
+   "receiving_yards": 36,
+   "long_reception": 12
+  },
+  {
+   "player": {
+    "id": 1332,
+    "first_name": "DJ",
+    "last_name": "Wonnum",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 5
+  },
+  {
+   "player": {
+    "id": 281332,
+    "first_name": "Malik",
+    "last_name": "Mustapha",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 7
+  },
+  {
+   "player": {
+    "id": 75,
+    "first_name": "Bryce",
+    "last_name": "Young",
+    "position_abbreviation": "QB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "passing_yards": 169,
+   "passing_touchdowns": 1,
+   "passing_attempts": 29,
+   "passing_completions": 18,
+   "passing_interceptions": 2,
+   "rushing_yards": 15,
+   "rushing_attempts": 4,
+   "long_rushing": 7
+  },
+  {
+   "player": {
+    "id": 13878613,
+    "first_name": "Upton",
+    "last_name": "Stout",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 480,
+    "first_name": "Chuba",
+    "last_name": "Hubbard",
+    "position_abbreviation": "RB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "rushing_yards": 16,
+   "rushing_attempts": 3,
+   "long_rushing": 10,
+   "receptions": 4,
+   "receiving_yards": 27,
+   "long_reception": 14
+  },
+  {
+   "player": {
+    "id": 7706,
+    "first_name": "Sam",
+    "last_name": "Martin",
+    "position_abbreviation": "P"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "punts_inside_20": 2
+  },
+  {
+   "player": {
+    "id": 727,
+    "first_name": "Kyle",
+    "last_name": "Juszczyk",
+    "position_abbreviation": "FB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1519,
+    "first_name": "Jason",
+    "last_name": "Pinnock",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1482,
+    "first_name": "Jordan",
+    "last_name": "Elliott",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2376,
+    "first_name": "Deommodore",
+    "last_name": "Lenoir",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 2732,
+    "first_name": "Ji'Ayir",
+    "last_name": "Brown",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 5,
+   "defensive_interceptions": 2
+  },
+  {
+   "player": {
+    "id": 1606,
+    "first_name": "Trevis",
+    "last_name": "Gipson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 754,
+    "first_name": "George",
+    "last_name": "Kittle",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 6,
+   "receiving_yards": 78,
+   "long_reception": 25
+  },
+  {
+   "player": {
+    "id": 1518,
+    "first_name": "Tershawn",
+    "last_name": "Wharton",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 2348,
+    "first_name": "LaBryan",
+    "last_name": "Ray",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 663,
+    "first_name": "Demarcus",
+    "last_name": "Robinson",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "receptions": 1,
+   "receiving_yards": 8,
+   "long_reception": 8
+  },
+  {
+   "player": {
+    "id": 13874457,
+    "first_name": "Tetairoa",
+    "last_name": "McMillan",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 2,
+   "receiving_yards": 35,
+   "receiving_touchdowns": 1,
+   "long_reception": 29,
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878316,
+    "first_name": "Princely",
+    "last_name": "Umanmielen",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 13878114,
+    "first_name": "Bam",
+    "last_name": "Martin-Scott",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 6
+  },
+  {
+   "player": {
+    "id": 77030,
+    "first_name": "Colton",
+    "last_name": "McKivitz",
+    "position_abbreviation": "OT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13874285,
+    "first_name": "Jimmy",
+    "last_name": "Horn Jr.",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 1,
+   "receiving_yards": 11,
+   "long_reception": 11
+  },
+  {
+   "player": {
+    "id": 1314,
+    "first_name": "Bryce",
+    "last_name": "Huff",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 82898,
+    "first_name": "Sam",
+    "last_name": "Okuayinonu",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 364100,
+    "first_name": "Jalen",
+    "last_name": "Coker",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 3,
+   "receiving_yards": 32,
+   "long_reception": 18
+  },
+  {
+   "player": {
+    "id": 13879086,
+    "first_name": "Ryan",
+    "last_name": "Fitzgerald",
+    "position_abbreviation": "PK"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "field_goals_made": 1,
+   "field_goal_attempts": 2,
+   "long_field_goal_made": 25
+  },
+  {
+   "player": {
+    "id": 281995,
+    "first_name": "Demani",
+    "last_name": "Richardson",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 277937,
+    "first_name": "Ja'Tavion",
+    "last_name": "Sanders",
+    "position_abbreviation": "TE"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 1,
+   "receiving_yards": 6,
+   "long_reception": 6
+  },
+  {
+   "player": {
+    "id": 277936,
+    "first_name": "Xavier",
+    "last_name": "Legette",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "receptions": 3,
+   "receiving_yards": 22,
+   "long_reception": 14
+  },
+  {
+   "player": {
+    "id": 1940,
+    "first_name": "Siran",
+    "last_name": "Neal",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2261,
+    "first_name": "Curtis",
+    "last_name": "Robinson",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 3
+  },
+  {
+   "player": {
+    "id": 13875368,
+    "first_name": "Alfred",
+    "last_name": "Collins",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878930,
+    "first_name": "Marques",
+    "last_name": "Sigle",
+    "position_abbreviation": "S"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 13878856,
+    "first_name": "Corey",
+    "last_name": "Thornton",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 13878255,
+    "first_name": "Nick",
+    "last_name": "Martin",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 2
+  },
+  {
+   "player": {
+    "id": 1636,
+    "first_name": "Keion",
+    "last_name": "White",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1637,
+    "first_name": "Kalia",
+    "last_name": "Davis",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 2659,
+    "first_name": "Dee",
+    "last_name": "Winters",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 279051,
+    "first_name": "Maema",
+    "last_name": "Njongmeta",
+    "position_abbreviation": "LB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 281719,
+    "first_name": "Brycen",
+    "last_name": "Tremayne",
+    "position_abbreviation": "WR"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 277943,
+    "first_name": "Chau",
+    "last_name": "Smith-Wade",
+    "position_abbreviation": "CB"
+   },
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "total_tackles": 4
+  },
+  {
+   "player": {
+    "id": 13878166,
+    "first_name": "C.J.",
+    "last_name": "West",
+    "position_abbreviation": "DT"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1
+  },
+  {
+   "player": {
+    "id": 1429,
+    "first_name": "Clelin",
+    "last_name": "Ferrell",
+    "position_abbreviation": "DE"
+   },
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "total_tackles": 1,
+   "defensive_sacks": 1
+  }
+ ]
+}

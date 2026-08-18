@@ -1,0 +1,374 @@
+[
+  {
+    "id": 423990,
+    "date": "2025-09-21T20:25:00.000Z",
+    "status": "Final",
+    "week": 3,
+    "season": 2025,
+    "home_team_score": 16,
+    "visitor_team_score": 15,
+    "home_team_q1": null,
+    "home_team_q2": 6,
+    "home_team_q3": null,
+    "home_team_q4": 10,
+    "home_team_ot": null,
+    "visitor_team_q1": null,
+    "visitor_team_q2": 3,
+    "visitor_team_q3": 3,
+    "visitor_team_q4": 9,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "San Francisco 49ers"
+    },
+    "visitor_team": {
+      "full_name": "Arizona Cardinals"
+    },
+    "_market": {
+      "homeSpread": -1.5,
+      "total": 43.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 423978,
+    "date": "2025-09-21T17:00:00.000Z",
+    "status": "Final",
+    "week": 3,
+    "season": 2025,
+    "home_team_score": 13,
+    "visitor_team_score": 10,
+    "home_team_q1": null,
+    "home_team_q2": null,
+    "home_team_q3": null,
+    "home_team_q4": 13,
+    "home_team_ot": null,
+    "visitor_team_q1": null,
+    "visitor_team_q2": 3,
+    "visitor_team_q3": 7,
+    "visitor_team_q4": null,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "Cleveland Browns"
+    },
+    "visitor_team": {
+      "full_name": "Green Bay Packers"
+    },
+    "_market": {
+      "homeSpread": -3.5,
+      "total": 41.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 424115,
+    "date": "2025-11-23T18:00:00.000Z",
+    "status": "Final/OT",
+    "week": 12,
+    "season": 2025,
+    "home_team_score": 23,
+    "visitor_team_score": 20,
+    "home_team_q1": null,
+    "home_team_q2": 9,
+    "home_team_q3": null,
+    "home_team_q4": 11,
+    "home_team_ot": 3,
+    "visitor_team_q1": 7,
+    "visitor_team_q2": 7,
+    "visitor_team_q3": 6,
+    "visitor_team_q4": null,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "Kansas City Chiefs"
+    },
+    "visitor_team": {
+      "full_name": "Indianapolis Colts"
+    },
+    "_market": {
+      "homeSpread": -6.5,
+      "total": 47.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 424109,
+    "date": "2025-11-21T01:15:00.000Z",
+    "status": "Final",
+    "week": 12,
+    "season": 2025,
+    "home_team_score": 23,
+    "visitor_team_score": 19,
+    "home_team_q1": 3,
+    "home_team_q2": 17,
+    "home_team_q3": 3,
+    "home_team_q4": null,
+    "home_team_ot": null,
+    "visitor_team_q1": 6,
+    "visitor_team_q2": 10,
+    "visitor_team_q3": null,
+    "visitor_team_q4": 3,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "Houston Texans"
+    },
+    "visitor_team": {
+      "full_name": "Buffalo Bills"
+    },
+    "_market": {
+      "homeSpread": -2.5,
+      "total": 44.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 423982,
+    "date": "2025-09-21T17:00:00.000Z",
+    "status": "Final",
+    "week": 3,
+    "season": 2025,
+    "home_team_score": 33,
+    "visitor_team_score": 26,
+    "home_team_q1": 7,
+    "home_team_q2": null,
+    "home_team_q3": 14,
+    "home_team_q4": 12,
+    "home_team_ot": null,
+    "visitor_team_q1": 10,
+    "visitor_team_q2": 9,
+    "visitor_team_q3": 7,
+    "visitor_team_q4": null,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "Philadelphia Eagles"
+    },
+    "visitor_team": {
+      "full_name": "Los Angeles Rams"
+    },
+    "_market": {
+      "homeSpread": -9.5,
+      "total": 49.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 423992,
+    "date": "2025-09-23T00:15:00.000Z",
+    "status": "Final",
+    "week": 3,
+    "season": 2025,
+    "home_team_score": 30,
+    "visitor_team_score": 38,
+    "home_team_q1": 7,
+    "home_team_q2": 7,
+    "home_team_q3": 7,
+    "home_team_q4": 9,
+    "home_team_ot": null,
+    "visitor_team_q1": 7,
+    "visitor_team_q2": 7,
+    "visitor_team_q3": 7,
+    "visitor_team_q4": 17,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "Baltimore Ravens"
+    },
+    "visitor_team": {
+      "full_name": "Detroit Lions"
+    },
+    "_market": {
+      "homeSpread": -3.5,
+      "total": 45.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 424122,
+    "date": "2025-11-25T01:15:00.000Z",
+    "status": "Final",
+    "week": 12,
+    "season": 2025,
+    "home_team_score": 20,
+    "visitor_team_score": 9,
+    "home_team_q1": 7,
+    "home_team_q2": 3,
+    "home_team_q3": 7,
+    "home_team_q4": 3,
+    "home_team_ot": null,
+    "visitor_team_q1": null,
+    "visitor_team_q2": 3,
+    "visitor_team_q3": 6,
+    "visitor_team_q4": null,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "San Francisco 49ers"
+    },
+    "visitor_team": {
+      "full_name": "Carolina Panthers"
+    },
+    "_market": {
+      "homeSpread": -7.5,
+      "total": 42.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 424117,
+    "date": "2025-11-23T21:05:00.000Z",
+    "status": "Final",
+    "week": 12,
+    "season": 2025,
+    "home_team_score": 10,
+    "visitor_team_score": 24,
+    "home_team_q1": null,
+    "home_team_q2": 3,
+    "home_team_q3": null,
+    "home_team_q4": 7,
+    "home_team_ot": null,
+    "visitor_team_q1": 14,
+    "visitor_team_q2": null,
+    "visitor_team_q3": null,
+    "visitor_team_q4": 10,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "Las Vegas Raiders"
+    },
+    "visitor_team": {
+      "full_name": "Cleveland Browns"
+    },
+    "_market": {
+      "homeSpread": 1.5,
+      "total": 46.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 424113,
+    "date": "2025-11-23T18:00:00.000Z",
+    "status": "Final",
+    "week": 12,
+    "season": 2025,
+    "home_team_score": 23,
+    "visitor_team_score": 6,
+    "home_team_q1": 7,
+    "home_team_q2": 3,
+    "home_team_q3": 7,
+    "home_team_q4": 6,
+    "home_team_ot": null,
+    "visitor_team_q1": 3,
+    "visitor_team_q2": 3,
+    "visitor_team_q3": null,
+    "visitor_team_q4": null,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "Green Bay Packers"
+    },
+    "visitor_team": {
+      "full_name": "Minnesota Vikings"
+    },
+    "_market": {
+      "homeSpread": -4.5,
+      "total": 44.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 424061,
+    "date": "2025-10-26T20:05:00.000Z",
+    "status": "Final",
+    "week": 8,
+    "season": 2025,
+    "home_team_score": 3,
+    "visitor_team_score": 23,
+    "home_team_q1": null,
+    "home_team_q2": 3,
+    "home_team_q3": null,
+    "home_team_q4": null,
+    "home_team_ot": null,
+    "visitor_team_q1": null,
+    "visitor_team_q2": 7,
+    "visitor_team_q3": 10,
+    "visitor_team_q4": 6,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "New Orleans Saints"
+    },
+    "visitor_team": {
+      "full_name": "Tampa Bay Buccaneers"
+    },
+    "_market": {
+      "homeSpread": -5.5,
+      "total": 48.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 424054,
+    "date": "2025-10-26T17:00:00.000Z",
+    "status": "Final",
+    "week": 8,
+    "season": 2025,
+    "home_team_score": 10,
+    "visitor_team_score": 34,
+    "home_team_q1": null,
+    "home_team_q2": 3,
+    "home_team_q3": null,
+    "home_team_q4": 7,
+    "home_team_ot": null,
+    "visitor_team_q1": 7,
+    "visitor_team_q2": 10,
+    "visitor_team_q3": 7,
+    "visitor_team_q4": 10,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "Atlanta Falcons"
+    },
+    "visitor_team": {
+      "full_name": "Miami Dolphins"
+    },
+    "_market": {
+      "homeSpread": -2.5,
+      "total": 43.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  },
+  {
+    "id": 423985,
+    "date": "2025-09-21T17:00:00.000Z",
+    "status": "Final",
+    "week": 3,
+    "season": 2025,
+    "home_team_score": 30,
+    "visitor_team_score": 0,
+    "home_team_q1": 7,
+    "home_team_q2": 3,
+    "home_team_q3": 10,
+    "home_team_q4": 10,
+    "home_team_ot": null,
+    "visitor_team_q1": null,
+    "visitor_team_q2": null,
+    "visitor_team_q3": null,
+    "visitor_team_q4": null,
+    "visitor_team_ot": null,
+    "home_team": {
+      "full_name": "Carolina Panthers"
+    },
+    "visitor_team": {
+      "full_name": "Atlanta Falcons"
+    },
+    "_market": {
+      "homeSpread": -6.5,
+      "total": 45.5,
+      "homeWinProb": null,
+      "vendorCount": 6
+    }
+  }
+]

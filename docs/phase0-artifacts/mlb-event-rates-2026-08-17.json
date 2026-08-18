@@ -1,0 +1,680 @@
+{
+  "generatedAt": "2026-08-17T12:54:11.079Z",
+  "window": {
+    "days": 45,
+    "from": "2026-07-03",
+    "to": "2026-08-16"
+  },
+  "coverage": {
+    "gamesScanned": 569,
+    "gamesWithoutStats": 0,
+    "teamGames": 1138
+  },
+  "note": "quick_out_under_3_pitches is not a balldontlie field and is deliberately absent — it can only be measured from our own webhook settlement history.",
+  "marginal": {
+    "hit": {
+      "sample": 1138,
+      "mean": 8.149,
+      "variance": 11.763,
+      "varianceOverMean": 1.443,
+      "negativeBinomialAtLeast": {
+        "4": 0.931,
+        "5": 0.863,
+        "6": 0.77,
+        "7": 0.659,
+        "8": 0.539,
+        "9": 0.423,
+        "10": 0.319,
+        "11": 0.231,
+        "12": 0.161
+      },
+      "negativeBinomialMaxError": 0.011,
+      "p10": 4,
+      "p25": 6,
+      "median": 8,
+      "p75": 10,
+      "p90": 13,
+      "max": 22,
+      "atLeast": {
+        "4": 0.9367311072056239,
+        "5": 0.8646748681898067,
+        "6": 0.7715289982425307,
+        "7": 0.6520210896309314,
+        "8": 0.5281195079086116,
+        "9": 0.4173989455184534,
+        "10": 0.3154657293497364,
+        "11": 0.23198594024604569,
+        "12": 0.15641476274165203
+      },
+      "shippedThreshold": 5,
+      "shippedProbability": 0.78,
+      "realizedAtShippedThreshold": 0.8646748681898067
+    },
+    "walk": {
+      "sample": 1138,
+      "mean": 3.275,
+      "variance": 4.098,
+      "varianceOverMean": 1.251,
+      "negativeBinomialAtLeast": {
+        "1": 0.946,
+        "2": 0.805,
+        "3": 0.607,
+        "4": 0.407,
+        "5": 0.246,
+        "6": 0.136
+      },
+      "negativeBinomialMaxError": 0.012,
+      "p10": 1,
+      "p25": 2,
+      "median": 3,
+      "p75": 4,
+      "p90": 6,
+      "max": 11,
+      "atLeast": {
+        "1": 0.9472759226713533,
+        "2": 0.81195079086116,
+        "3": 0.6045694200351494,
+        "4": 0.3954305799648506,
+        "5": 0.2460456942003515,
+        "6": 0.1344463971880492
+      },
+      "shippedThreshold": 2,
+      "shippedProbability": 0.62,
+      "realizedAtShippedThreshold": 0.81195079086116
+    },
+    "hit_by_pitch": {
+      "sample": 1138,
+      "mean": 0.431,
+      "variance": 0.485,
+      "varianceOverMean": 1.124,
+      "negativeBinomialAtLeast": {
+        "1": 0.334,
+        "2": 0.079
+      },
+      "negativeBinomialMaxError": 0.009,
+      "p10": 0,
+      "p25": 0,
+      "median": 0,
+      "p75": 1,
+      "p90": 1,
+      "max": 4,
+      "atLeast": {
+        "1": 0.3383128295254833,
+        "2": 0.070298769771529
+      },
+      "shippedThreshold": 1,
+      "shippedProbability": 0.38,
+      "realizedAtShippedThreshold": 0.3383128295254833
+    },
+    "strikeout": {
+      "sample": 1138,
+      "mean": 8.366,
+      "variance": 8.431,
+      "varianceOverMean": 1.008,
+      "negativeBinomialAtLeast": {
+        "4": 0.966,
+        "5": 0.919,
+        "6": 0.839,
+        "7": 0.728,
+        "8": 0.596,
+        "9": 0.458,
+        "10": 0.33,
+        "11": 0.223,
+        "12": 0.141,
+        "13": 0.084,
+        "14": 0.047
+      },
+      "negativeBinomialMaxError": 0.014,
+      "p10": 5,
+      "p25": 6,
+      "median": 8,
+      "p75": 10,
+      "p90": 12,
+      "max": 18,
+      "atLeast": {
+        "4": 0.9666080843585237,
+        "5": 0.9173989455184535,
+        "6": 0.8312829525483304,
+        "7": 0.7284710017574693,
+        "8": 0.5992970123022847,
+        "9": 0.4718804920913884,
+        "10": 0.3242530755711775,
+        "11": 0.2179261862917399,
+        "12": 0.13796133567662566,
+        "13": 0.08963093145869948,
+        "14": 0.05272407732864675
+      },
+      "shippedThreshold": 5,
+      "shippedProbability": 0.67,
+      "realizedAtShippedThreshold": 0.9173989455184535
+    },
+    "groundout": {
+      "sample": 1138,
+      "mean": 8.176,
+      "variance": 6.718,
+      "varianceOverMean": 0.822,
+      "negativeBinomialAtLeast": {
+        "3": 0.988,
+        "4": 0.962,
+        "5": 0.91,
+        "6": 0.824,
+        "7": 0.708,
+        "8": 0.571,
+        "9": 0.432,
+        "10": 0.305,
+        "11": 0.202
+      },
+      "negativeBinomialMaxError": 0.042,
+      "p10": 5,
+      "p25": 6.25,
+      "median": 8,
+      "p75": 10,
+      "p90": 11,
+      "max": 19,
+      "atLeast": {
+        "3": 0.9876977152899824,
+        "4": 0.9692442882249561,
+        "5": 0.9349736379613357,
+        "6": 0.8506151142355008,
+        "7": 0.7495606326889279,
+        "8": 0.5940246045694201,
+        "9": 0.4253075571177504,
+        "10": 0.29701230228471004,
+        "11": 0.17750439367311072
+      },
+      "shippedThreshold": 4,
+      "shippedProbability": 0.74,
+      "realizedAtShippedThreshold": 0.9692442882249561
+    },
+    "flyout": {
+      "sample": 1138,
+      "mean": 5.163,
+      "variance": 5.053,
+      "varianceOverMean": 0.979,
+      "negativeBinomialAtLeast": {
+        "3": 0.888,
+        "4": 0.757,
+        "5": 0.588,
+        "6": 0.413,
+        "7": 0.262,
+        "8": 0.151,
+        "9": 0.079,
+        "10": 0.038,
+        "11": 0.017
+      },
+      "negativeBinomialMaxError": 0.01,
+      "p10": 2,
+      "p25": 4,
+      "median": 5,
+      "p75": 7,
+      "p90": 8,
+      "max": 14,
+      "atLeast": {
+        "3": 0.8892794376098418,
+        "4": 0.7644991212653779,
+        "5": 0.5913884007029877,
+        "6": 0.4130052724077329,
+        "7": 0.2688927943760984,
+        "8": 0.14499121265377857,
+        "9": 0.06854130052724078,
+        "10": 0.03690685413005272,
+        "11": 0.01757469244288225
+      },
+      "shippedThreshold": 4,
+      "shippedProbability": 0.74,
+      "realizedAtShippedThreshold": 0.7644991212653779
+    }
+  },
+  "conditionalOnTrailingForm": {
+    "hit": {
+      "sample": 982,
+      "predictors": {
+        "own": {
+          "n": 982,
+          "slope": -0.161,
+          "correlation": -0.041,
+          "r2": 0.0017,
+          "predictorMean": 8.24,
+          "predictorSd": 0.856
+        },
+        "opponent": {
+          "n": 982,
+          "slope": 0.552,
+          "correlation": 0.154,
+          "r2": 0.0236,
+          "predictorMean": 8.232,
+          "predictorSd": 0.942
+        },
+        "combined": {
+          "n": 982,
+          "slope": 0.427,
+          "correlation": 0.083,
+          "r2": 0.0069,
+          "predictorMean": 8.236,
+          "predictorSd": 0.66
+        }
+      },
+      "bestPredictor": "opponent",
+      "bandCutoffs": {
+        "low": 7.75,
+        "high": 8.462
+      },
+      "low": {
+        "sample": 328,
+        "mean": 7.64,
+        "atLeast": {
+          "4": 0.948,
+          "5": 0.851,
+          "6": 0.735,
+          "7": 0.595,
+          "8": 0.442,
+          "9": 0.366,
+          "10": 0.253,
+          "11": 0.177,
+          "12": 0.116
+        }
+      },
+      "mid": {
+        "sample": 325,
+        "mean": 7.957,
+        "atLeast": {
+          "4": 0.92,
+          "5": 0.858,
+          "6": 0.772,
+          "7": 0.643,
+          "8": 0.52,
+          "9": 0.397,
+          "10": 0.298,
+          "11": 0.215,
+          "12": 0.138
+        }
+      },
+      "high": {
+        "sample": 329,
+        "mean": 8.675,
+        "atLeast": {
+          "4": 0.942,
+          "5": 0.891,
+          "6": 0.809,
+          "7": 0.702,
+          "8": 0.602,
+          "9": 0.474,
+          "10": 0.359,
+          "11": 0.267,
+          "12": 0.201
+        }
+      }
+    },
+    "walk": {
+      "sample": 982,
+      "predictors": {
+        "own": {
+          "n": 982,
+          "slope": 0.306,
+          "correlation": 0.087,
+          "r2": 0.0075,
+          "predictorMean": 3.233,
+          "predictorSd": 0.571
+        },
+        "opponent": {
+          "n": 982,
+          "slope": 0.547,
+          "correlation": 0.174,
+          "r2": 0.0302,
+          "predictorMean": 3.234,
+          "predictorSd": 0.639
+        },
+        "combined": {
+          "n": 982,
+          "slope": 0.731,
+          "correlation": 0.171,
+          "r2": 0.0292,
+          "predictorMean": 3.233,
+          "predictorSd": 0.47
+        }
+      },
+      "bestPredictor": "opponent",
+      "bandCutoffs": {
+        "low": 3.033,
+        "high": 3.5
+      },
+      "low": {
+        "sample": 329,
+        "mean": 2.869,
+        "atLeast": {
+          "1": 0.942,
+          "2": 0.748,
+          "3": 0.517,
+          "4": 0.304,
+          "5": 0.164,
+          "6": 0.082
+        }
+      },
+      "mid": {
+        "sample": 311,
+        "mean": 3.318,
+        "atLeast": {
+          "1": 0.945,
+          "2": 0.842,
+          "3": 0.637,
+          "4": 0.399,
+          "5": 0.251,
+          "6": 0.125
+        }
+      },
+      "high": {
+        "sample": 342,
+        "mean": 3.591,
+        "atLeast": {
+          "1": 0.959,
+          "2": 0.842,
+          "3": 0.658,
+          "4": 0.477,
+          "5": 0.313,
+          "6": 0.173
+        }
+      }
+    },
+    "hit_by_pitch": {
+      "sample": 982,
+      "predictors": {
+        "own": {
+          "n": 982,
+          "slope": 0.065,
+          "correlation": 0.019,
+          "r2": 0.0004,
+          "predictorMean": 0.439,
+          "predictorSd": 0.202
+        },
+        "opponent": {
+          "n": 982,
+          "slope": 0.496,
+          "correlation": 0.146,
+          "r2": 0.0214,
+          "predictorMean": 0.437,
+          "predictorSd": 0.204
+        },
+        "combined": {
+          "n": 982,
+          "slope": 0.56,
+          "correlation": 0.117,
+          "r2": 0.0137,
+          "predictorMean": 0.438,
+          "predictorSd": 0.144
+        }
+      },
+      "bestPredictor": "opponent",
+      "bandCutoffs": {
+        "low": 0.344,
+        "high": 0.529
+      },
+      "low": {
+        "sample": 329,
+        "mean": 0.322,
+        "atLeast": {
+          "1": 0.261,
+          "2": 0.046
+        }
+      },
+      "mid": {
+        "sample": 322,
+        "mean": 0.441,
+        "atLeast": {
+          "1": 0.366,
+          "2": 0.065
+        }
+      },
+      "high": {
+        "sample": 331,
+        "mean": 0.544,
+        "atLeast": {
+          "1": 0.405,
+          "2": 0.1
+        }
+      }
+    },
+    "strikeout": {
+      "sample": 982,
+      "predictors": {
+        "own": {
+          "n": 982,
+          "slope": 0.329,
+          "correlation": 0.104,
+          "r2": 0.0109,
+          "predictorMean": 8.433,
+          "predictorSd": 0.91
+        },
+        "opponent": {
+          "n": 982,
+          "slope": 0.85,
+          "correlation": 0.292,
+          "r2": 0.0855,
+          "predictorMean": 8.426,
+          "predictorSd": 0.987
+        },
+        "combined": {
+          "n": 982,
+          "slope": 1.142,
+          "correlation": 0.276,
+          "r2": 0.0764,
+          "predictorMean": 8.429,
+          "predictorSd": 0.694
+        }
+      },
+      "bestPredictor": "opponent",
+      "bandCutoffs": {
+        "low": 7.941,
+        "high": 8.871
+      },
+      "low": {
+        "sample": 328,
+        "mean": 7.387,
+        "atLeast": {
+          "4": 0.942,
+          "5": 0.86,
+          "6": 0.759,
+          "7": 0.631,
+          "8": 0.463,
+          "9": 0.341,
+          "10": 0.21,
+          "11": 0.113,
+          "12": 0.043,
+          "13": 0.021,
+          "14": 0.012
+        }
+      },
+      "mid": {
+        "sample": 326,
+        "mean": 8.408,
+        "atLeast": {
+          "4": 0.963,
+          "5": 0.926,
+          "6": 0.828,
+          "7": 0.724,
+          "8": 0.604,
+          "9": 0.457,
+          "10": 0.31,
+          "11": 0.224,
+          "12": 0.166,
+          "13": 0.113,
+          "14": 0.071
+        }
+      },
+      "high": {
+        "sample": 328,
+        "mean": 9.171,
+        "atLeast": {
+          "4": 0.985,
+          "5": 0.963,
+          "6": 0.912,
+          "7": 0.829,
+          "8": 0.732,
+          "9": 0.601,
+          "10": 0.427,
+          "11": 0.296,
+          "12": 0.186,
+          "13": 0.119,
+          "14": 0.07
+        }
+      }
+    },
+    "groundout": {
+      "sample": 982,
+      "predictors": {
+        "own": {
+          "n": 982,
+          "slope": 0.234,
+          "correlation": 0.068,
+          "r2": 0.0046,
+          "predictorMean": 8.219,
+          "predictorSd": 0.753
+        },
+        "opponent": {
+          "n": 982,
+          "slope": 0.732,
+          "correlation": 0.245,
+          "r2": 0.0598,
+          "predictorMean": 8.23,
+          "predictorSd": 0.872
+        },
+        "combined": {
+          "n": 982,
+          "slope": 0.906,
+          "correlation": 0.214,
+          "r2": 0.0459,
+          "predictorMean": 8.224,
+          "predictorSd": 0.617
+        }
+      },
+      "bestPredictor": "opponent",
+      "bandCutoffs": {
+        "low": 7.806,
+        "high": 8.571
+      },
+      "low": {
+        "sample": 328,
+        "mean": 7.412,
+        "atLeast": {
+          "3": 0.97,
+          "4": 0.936,
+          "5": 0.905,
+          "6": 0.78,
+          "7": 0.659,
+          "8": 0.473,
+          "9": 0.317,
+          "10": 0.192,
+          "11": 0.088
+        }
+      },
+      "mid": {
+        "sample": 324,
+        "mean": 8.33,
+        "atLeast": {
+          "3": 1,
+          "4": 0.978,
+          "5": 0.929,
+          "6": 0.843,
+          "7": 0.765,
+          "8": 0.614,
+          "9": 0.444,
+          "10": 0.312,
+          "11": 0.21
+        }
+      },
+      "high": {
+        "sample": 330,
+        "mean": 8.852,
+        "atLeast": {
+          "3": 0.994,
+          "4": 0.991,
+          "5": 0.97,
+          "6": 0.933,
+          "7": 0.812,
+          "8": 0.694,
+          "9": 0.521,
+          "10": 0.406,
+          "11": 0.248
+        }
+      }
+    },
+    "flyout": {
+      "sample": 982,
+      "predictors": {
+        "own": {
+          "n": 982,
+          "slope": 0.208,
+          "correlation": 0.063,
+          "r2": 0.0039,
+          "predictorMean": 5.063,
+          "predictorSd": 0.68
+        },
+        "opponent": {
+          "n": 982,
+          "slope": 0.751,
+          "correlation": 0.197,
+          "r2": 0.0389,
+          "predictorMean": 5.059,
+          "predictorSd": 0.595
+        },
+        "combined": {
+          "n": 982,
+          "slope": 0.823,
+          "correlation": 0.17,
+          "r2": 0.0291,
+          "predictorMean": 5.061,
+          "predictorSd": 0.469
+        }
+      },
+      "bestPredictor": "opponent",
+      "bandCutoffs": {
+        "low": 4.813,
+        "high": 5.368
+      },
+      "low": {
+        "sample": 329,
+        "mean": 4.632,
+        "atLeast": {
+          "3": 0.824,
+          "4": 0.672,
+          "5": 0.514,
+          "6": 0.325,
+          "7": 0.198,
+          "8": 0.097,
+          "9": 0.04,
+          "10": 0.021,
+          "11": 0.006
+        }
+      },
+      "mid": {
+        "sample": 325,
+        "mean": 5.382,
+        "atLeast": {
+          "3": 0.92,
+          "4": 0.785,
+          "5": 0.625,
+          "6": 0.477,
+          "7": 0.305,
+          "8": 0.157,
+          "9": 0.071,
+          "10": 0.037,
+          "11": 0.018
+        }
+      },
+      "high": {
+        "sample": 328,
+        "mean": 5.549,
+        "atLeast": {
+          "3": 0.93,
+          "4": 0.838,
+          "5": 0.625,
+          "6": 0.448,
+          "7": 0.32,
+          "8": 0.198,
+          "9": 0.113,
+          "10": 0.064,
+          "11": 0.03
+        }
+      }
+    }
+  }
+}

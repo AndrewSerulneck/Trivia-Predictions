@@ -1,0 +1,82 @@
+{
+  "ranAtUtc": "2026-08-17T16:48:11.079Z",
+  "mode": "forward",
+  "targetWinRate": 0.25,
+  "targetBand": [
+    0.2,
+    0.3
+  ],
+  "boardsPerGame": 6,
+  "sports": [
+    "basketball_nba",
+    "basketball_wnba",
+    "baseball_mlb",
+    "americanfootball_nfl"
+  ],
+  "result": {
+    "basketball_nba": {
+      "games": 0,
+      "boards": 0,
+      "predicted": null,
+      "legacyIndependentPredicted": null,
+      "errors": []
+    },
+    "basketball_wnba": {
+      "games": 1,
+      "boards": 6,
+      "predicted": {
+        "n": 6,
+        "min": 0.2272,
+        "p25": 0.2324,
+        "median": 0.2472,
+        "p75": 0.2712,
+        "max": 0.3,
+        "mean": 0.2519,
+        "inTargetBand": 1
+      },
+      "legacyIndependentPredicted": {
+        "n": 6,
+        "min": 0.1814,
+        "p25": 0.2275,
+        "median": 0.2805,
+        "p75": 0.3167,
+        "max": 0.3267,
+        "mean": 0.264,
+        "inTargetBand": 0.5
+      },
+      "errors": []
+    },
+    "baseball_mlb": {
+      "games": 11,
+      "boards": 66,
+      "predicted": {
+        "n": 66,
+        "min": 0.1832,
+        "p25": 0.2436,
+        "median": 0.2748,
+        "p75": 0.2884,
+        "max": 0.3,
+        "mean": 0.2648,
+        "inTargetBand": 0.9848
+      },
+      "legacyIndependentPredicted": {
+        "n": 66,
+        "min": 0.154,
+        "p25": 0.2576,
+        "median": 0.2938,
+        "p75": 0.317,
+        "max": 0.3678,
+        "mean": 0.2863,
+        "inTargetBand": 0.5455
+      },
+      "errors": []
+    },
+    "americanfootball_nfl": {
+      "games": 0,
+      "boards": 0,
+      "predicted": null,
+      "legacyIndependentPredicted": null,
+      "errors": []
+    }
+  }
+}

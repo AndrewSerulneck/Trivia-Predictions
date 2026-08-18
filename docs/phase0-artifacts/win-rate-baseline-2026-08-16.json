@@ -1,0 +1,360 @@
+{
+  "baselinedAtUtc": "2026-08-16T16:34:27.988Z",
+  "note": "boardProbability is the estimator's own independent-coin-flip Monte Carlo output (lib/sportsBingo.ts estimateBoardWinProbabilityWithTrials), targeting BINGO_BOARD_TARGET_WIN_RATE (today's default 0.42). Phase 5 replaces this estimator; this file is the pre-change baseline for that diff.",
+  "currentTargetWinRate": 0.42,
+  "results": {
+    "basketball_nba": {
+      "gamesFoundToday": 0,
+      "distribution": null,
+      "perGame": []
+    },
+    "basketball_wnba": {
+      "gamesFoundToday": 3,
+      "distribution": {
+        "n": 9,
+        "min": 0.37,
+        "max": 0.44583333333333336,
+        "mean": 0.3955,
+        "median": 0.3883
+      },
+      "perGame": [
+        {
+          "gameId": "25012",
+          "gameLabel": "Chicago Sky vs. Seattle Storm",
+          "trial": 0,
+          "boardProbability": 0.37
+        },
+        {
+          "gameId": "25012",
+          "gameLabel": "Chicago Sky vs. Seattle Storm",
+          "trial": 1,
+          "boardProbability": 0.42583333333333334
+        },
+        {
+          "gameId": "25012",
+          "gameLabel": "Chicago Sky vs. Seattle Storm",
+          "trial": 2,
+          "boardProbability": 0.44583333333333336
+        },
+        {
+          "gameId": "25014",
+          "gameLabel": "Indiana Fever vs. Atlanta Dream",
+          "trial": 0,
+          "boardProbability": 0.40166666666666667
+        },
+        {
+          "gameId": "25014",
+          "gameLabel": "Indiana Fever vs. Atlanta Dream",
+          "trial": 1,
+          "boardProbability": 0.3958333333333333
+        },
+        {
+          "gameId": "25014",
+          "gameLabel": "Indiana Fever vs. Atlanta Dream",
+          "trial": 2,
+          "boardProbability": 0.3883333333333333
+        },
+        {
+          "gameId": "25013",
+          "gameLabel": "Fire vs. Phoenix Mercury",
+          "trial": 0,
+          "boardProbability": 0.37166666666666665
+        },
+        {
+          "gameId": "25013",
+          "gameLabel": "Fire vs. Phoenix Mercury",
+          "trial": 1,
+          "boardProbability": 0.3858333333333333
+        },
+        {
+          "gameId": "25013",
+          "gameLabel": "Fire vs. Phoenix Mercury",
+          "trial": 2,
+          "boardProbability": 0.37416666666666665
+        }
+      ]
+    },
+    "baseball_mlb": {
+      "gamesFoundToday": 15,
+      "distribution": {
+        "n": 45,
+        "min": 0.38083333333333336,
+        "max": 0.46416666666666667,
+        "mean": 0.4325,
+        "median": 0.4342
+      },
+      "perGame": [
+        {
+          "gameId": "5059632",
+          "gameLabel": "Orioles vs. Rays",
+          "trial": 0,
+          "boardProbability": 0.44416666666666665
+        },
+        {
+          "gameId": "5059632",
+          "gameLabel": "Orioles vs. Rays",
+          "trial": 1,
+          "boardProbability": 0.43916666666666665
+        },
+        {
+          "gameId": "5059632",
+          "gameLabel": "Orioles vs. Rays",
+          "trial": 2,
+          "boardProbability": 0.40166666666666667
+        },
+        {
+          "gameId": "5059633",
+          "gameLabel": "Diamondbacks vs. Braves",
+          "trial": 0,
+          "boardProbability": 0.4091666666666667
+        },
+        {
+          "gameId": "5059633",
+          "gameLabel": "Diamondbacks vs. Braves",
+          "trial": 1,
+          "boardProbability": 0.4558333333333333
+        },
+        {
+          "gameId": "5059633",
+          "gameLabel": "Diamondbacks vs. Braves",
+          "trial": 2,
+          "boardProbability": 0.4125
+        },
+        {
+          "gameId": "5059634",
+          "gameLabel": "Red Sox vs. Pirates",
+          "trial": 0,
+          "boardProbability": 0.45416666666666666
+        },
+        {
+          "gameId": "5059634",
+          "gameLabel": "Red Sox vs. Pirates",
+          "trial": 1,
+          "boardProbability": 0.42583333333333334
+        },
+        {
+          "gameId": "5059634",
+          "gameLabel": "Red Sox vs. Pirates",
+          "trial": 2,
+          "boardProbability": 0.445
+        },
+        {
+          "gameId": "5059635",
+          "gameLabel": "Yankees vs. Blue Jays",
+          "trial": 0,
+          "boardProbability": 0.455
+        },
+        {
+          "gameId": "5059635",
+          "gameLabel": "Yankees vs. Blue Jays",
+          "trial": 1,
+          "boardProbability": 0.38083333333333336
+        },
+        {
+          "gameId": "5059635",
+          "gameLabel": "Yankees vs. Blue Jays",
+          "trial": 2,
+          "boardProbability": 0.4425
+        },
+        {
+          "gameId": "5059636",
+          "gameLabel": "White Sox vs. Tigers",
+          "trial": 0,
+          "boardProbability": 0.455
+        },
+        {
+          "gameId": "5059636",
+          "gameLabel": "White Sox vs. Tigers",
+          "trial": 1,
+          "boardProbability": 0.46416666666666667
+        },
+        {
+          "gameId": "5059636",
+          "gameLabel": "White Sox vs. Tigers",
+          "trial": 2,
+          "boardProbability": 0.42
+        },
+        {
+          "gameId": "5059637",
+          "gameLabel": "Marlins vs. Reds",
+          "trial": 0,
+          "boardProbability": 0.4
+        },
+        {
+          "gameId": "5059637",
+          "gameLabel": "Marlins vs. Reds",
+          "trial": 1,
+          "boardProbability": 0.455
+        },
+        {
+          "gameId": "5059637",
+          "gameLabel": "Marlins vs. Reds",
+          "trial": 2,
+          "boardProbability": 0.44333333333333336
+        },
+        {
+          "gameId": "5059638",
+          "gameLabel": "Padres vs. Guardians",
+          "trial": 0,
+          "boardProbability": 0.43833333333333335
+        },
+        {
+          "gameId": "5059638",
+          "gameLabel": "Padres vs. Guardians",
+          "trial": 1,
+          "boardProbability": 0.46166666666666667
+        },
+        {
+          "gameId": "5059638",
+          "gameLabel": "Padres vs. Guardians",
+          "trial": 2,
+          "boardProbability": 0.4083333333333333
+        },
+        {
+          "gameId": "5059639",
+          "gameLabel": "Nationals vs. Mets",
+          "trial": 0,
+          "boardProbability": 0.44583333333333336
+        },
+        {
+          "gameId": "5059639",
+          "gameLabel": "Nationals vs. Mets",
+          "trial": 1,
+          "boardProbability": 0.38666666666666666
+        },
+        {
+          "gameId": "5059639",
+          "gameLabel": "Nationals vs. Mets",
+          "trial": 2,
+          "boardProbability": 0.42083333333333334
+        },
+        {
+          "gameId": "5059640",
+          "gameLabel": "Phillies vs. Twins",
+          "trial": 0,
+          "boardProbability": 0.45916666666666667
+        },
+        {
+          "gameId": "5059640",
+          "gameLabel": "Phillies vs. Twins",
+          "trial": 1,
+          "boardProbability": 0.415
+        },
+        {
+          "gameId": "5059640",
+          "gameLabel": "Phillies vs. Twins",
+          "trial": 2,
+          "boardProbability": 0.41
+        },
+        {
+          "gameId": "5059641",
+          "gameLabel": "Cardinals vs. Cubs",
+          "trial": 0,
+          "boardProbability": 0.4533333333333333
+        },
+        {
+          "gameId": "5059641",
+          "gameLabel": "Cardinals vs. Cubs",
+          "trial": 1,
+          "boardProbability": 0.46
+        },
+        {
+          "gameId": "5059641",
+          "gameLabel": "Cardinals vs. Cubs",
+          "trial": 2,
+          "boardProbability": 0.44666666666666666
+        },
+        {
+          "gameId": "5059642",
+          "gameLabel": "Rockies vs. Giants",
+          "trial": 0,
+          "boardProbability": 0.43333333333333335
+        },
+        {
+          "gameId": "5059642",
+          "gameLabel": "Rockies vs. Giants",
+          "trial": 1,
+          "boardProbability": 0.42333333333333334
+        },
+        {
+          "gameId": "5059642",
+          "gameLabel": "Rockies vs. Giants",
+          "trial": 2,
+          "boardProbability": 0.4266666666666667
+        },
+        {
+          "gameId": "5059643",
+          "gameLabel": "Rangers vs. Athletics",
+          "trial": 0,
+          "boardProbability": 0.4483333333333333
+        },
+        {
+          "gameId": "5059643",
+          "gameLabel": "Rangers vs. Athletics",
+          "trial": 1,
+          "boardProbability": 0.4625
+        },
+        {
+          "gameId": "5059643",
+          "gameLabel": "Rangers vs. Athletics",
+          "trial": 2,
+          "boardProbability": 0.43083333333333335
+        },
+        {
+          "gameId": "5059644",
+          "gameLabel": "Royals vs. Angels",
+          "trial": 0,
+          "boardProbability": 0.42583333333333334
+        },
+        {
+          "gameId": "5059644",
+          "gameLabel": "Royals vs. Angels",
+          "trial": 1,
+          "boardProbability": 0.3858333333333333
+        },
+        {
+          "gameId": "5059644",
+          "gameLabel": "Royals vs. Angels",
+          "trial": 2,
+          "boardProbability": 0.45916666666666667
+        },
+        {
+          "gameId": "5059645",
+          "gameLabel": "Brewers vs. Dodgers",
+          "trial": 0,
+          "boardProbability": 0.42583333333333334
+        },
+        {
+          "gameId": "5059645",
+          "gameLabel": "Brewers vs. Dodgers",
+          "trial": 1,
+          "boardProbability": 0.41833333333333333
+        },
+        {
+          "gameId": "5059645",
+          "gameLabel": "Brewers vs. Dodgers",
+          "trial": 2,
+          "boardProbability": 0.45166666666666666
+        },
+        {
+          "gameId": "5059646",
+          "gameLabel": "Mariners vs. Astros",
+          "trial": 0,
+          "boardProbability": 0.42333333333333334
+        },
+        {
+          "gameId": "5059646",
+          "gameLabel": "Mariners vs. Astros",
+          "trial": 1,
+          "boardProbability": 0.43416666666666665
+        },
+        {
+          "gameId": "5059646",
+          "gameLabel": "Mariners vs. Astros",
+          "trial": 2,
+          "boardProbability": 0.4025
+        }
+      ]
+    }
+  }
+}

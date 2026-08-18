@@ -5,11 +5,22 @@ import {
   generateSportsBingoBoard,
   listUserSportsBingoCards,
 } from "@/lib/sportsBingo";
+import { resolveLeagueBlockReason } from "@/lib/leagueSeasonStatus";
 import {
   maybeRequireActiveVenuePresence,
   maybeRequireActiveVenuePresenceForUser,
   venuePresenceErrorResponse,
 } from "@/lib/venuePresence";
+
+// Deep-link bypass protection: the picker already hides out-of-season (and not-yet-activated)
+// leagues, but a scripted client can POST straight here.
+async function rejectIfLeagueUnavailable(sportKey: string): Promise<NextResponse | null> {
+  const blockReason = await resolveLeagueBlockReason(sportKey);
+  if (!blockReason) {
+    return null;
+  }
+  return NextResponse.json({ ok: false, error: blockReason }, { status: 400 });
+}
 
 function normalizeBoolean(value: string | null, fallback = false): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -78,9 +89,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: false, error: "gameId is required for board generation." }, { status: 400 });
       }
 
+      const sportKey = String(body.sportKey ?? "basketball_nba").trim().toLowerCase();
+      const leagueRejection = await rejectIfLeagueUnavailable(sportKey);
+      if (leagueRejection) {
+        return leagueRejection;
+      }
+
       const board = await generateSportsBingoBoard({
         gameId,
-        sportKey: String(body.sportKey ?? "basketball_nba"),
+        sportKey,
         generationMode: "preview",
       });
       return NextResponse.json({ ok: true, board });
@@ -99,13 +116,21 @@ export async function POST(request: Request) {
         );
       }
 
+      const sportKey = String((body as { sportKey?: string }).sportKey ?? "basketball_nba")
+        .trim()
+        .toLowerCase();
+      const leagueRejection = await rejectIfLeagueUnavailable(sportKey);
+      if (leagueRejection) {
+        return leagueRejection;
+      }
+
       await maybeRequireActiveVenuePresence({ userId, venueId });
 
       const card = await createSportsBingoCard({
         userId,
         venueId,
         gameId,
-        sportKey: String((body as { sportKey?: string }).sportKey ?? "basketball_nba"),
+        sportKey,
         squares,
       });
 

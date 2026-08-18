@@ -1,0 +1,45 @@
+{
+  "ranAtUtc": "2026-08-16T20:31:35.587Z",
+  "mode": "backtest",
+  "targetWinRate": 0.25,
+  "targetBand": [
+    0.2,
+    0.3
+  ],
+  "boardsPerGame": 5,
+  "seasons": [
+    "2025"
+  ],
+  "weeks": [
+    "6",
+    "9",
+    "14"
+  ],
+  "result": {
+    "boards": 215,
+    "realizedWinRate": 0.3023,
+    "predicted": {
+      "n": 215,
+      "min": 0.2008,
+      "p25": 0.2344,
+      "median": 0.2616,
+      "p75": 0.2828,
+      "max": 0.304,
+      "mean": 0.2573,
+      "inTargetBand": 0.9953
+    },
+    "legacyIndependentPredicted": {
+      "n": 215,
+      "min": 0.1129,
+      "p25": 0.218,
+      "median": 0.2597,
+      "p75": 0.2981,
+      "max": 0.4816,
+      "mean": 0.2599,
+      "inTargetBand": 0.6233
+    },
+    "ungradedSquareShare": 0.0008,
+    "perGameOmitted": "215 per-board rows omitted from the archived copy; re-run the command to regenerate"
+  },
+  "note": "Phase 5c backtest. Boards built by the shipped generator for 43 completed 2025 NFL games (weeks 6, 9, 14) and settled by the shipped Phase 4 graders. No player props (live-only) and a retrodictive market built from prior-week scoring, since balldontlie retains no historical odds."
+}

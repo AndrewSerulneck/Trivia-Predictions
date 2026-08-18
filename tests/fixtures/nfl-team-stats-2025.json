@@ -1,0 +1,518 @@
+{
+ "423978": [
+  {
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "penalties": 14,
+   "penalty_yards": 75,
+   "turnovers": 1,
+   "third_down_conversions": 10,
+   "total_yards": 230,
+   "yards_per_play": 3.8,
+   "first_downs": 14,
+   "rushing_yards": 81,
+   "net_passing_yards": 149,
+   "total_offensive_plays": 61,
+   "sacks": 5,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 2054,
+   "red_zone_attempts": 2,
+   "red_zone_scores": 1
+  },
+  {
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "penalties": 8,
+   "penalty_yards": 90,
+   "turnovers": 1,
+   "third_down_conversions": 4,
+   "fourth_down_conversions": 1,
+   "total_yards": 221,
+   "yards_per_play": 3.9,
+   "first_downs": 15,
+   "rushing_yards": 96,
+   "net_passing_yards": 125,
+   "total_offensive_plays": 57,
+   "sacks": 2,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1546,
+   "red_zone_attempts": 2,
+   "red_zone_scores": 1
+  }
+ ],
+ "423982": [
+  {
+   "team": {
+    "full_name": "Los Angeles Rams"
+   },
+   "penalties": 4,
+   "penalty_yards": 41,
+   "turnovers": 1,
+   "third_down_conversions": 3,
+   "fourth_down_conversions": 0,
+   "total_yards": 356,
+   "yards_per_play": 5.4,
+   "first_downs": 22,
+   "rushing_yards": 160,
+   "net_passing_yards": 196,
+   "total_offensive_plays": 66,
+   "sacks": 1,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1765,
+   "red_zone_attempts": 4,
+   "red_zone_scores": 1
+  },
+  {
+   "team": {
+    "full_name": "Philadelphia Eagles"
+   },
+   "penalties": 5,
+   "penalty_yards": 50,
+   "turnovers": 1,
+   "third_down_conversions": 5,
+   "fourth_down_conversions": 4,
+   "total_yards": 288,
+   "yards_per_play": 4.6,
+   "first_downs": 19,
+   "rushing_yards": 86,
+   "net_passing_yards": 202,
+   "total_offensive_plays": 63,
+   "sacks": 4,
+   "defensive_touchdowns": 1,
+   "possession_time_seconds": 1835,
+   "red_zone_attempts": 3,
+   "red_zone_scores": 3
+  }
+ ],
+ "423985": [
+  {
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "penalties": 3,
+   "penalty_yards": 23,
+   "turnovers": 3,
+   "third_down_conversions": 5,
+   "fourth_down_conversions": 0,
+   "total_yards": 332,
+   "yards_per_play": 5,
+   "first_downs": 17,
+   "rushing_yards": 131,
+   "net_passing_yards": 201,
+   "total_offensive_plays": 66,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1682
+  },
+  {
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "penalties": 6,
+   "penalty_yards": 55,
+   "turnovers": 1,
+   "third_down_conversions": 3,
+   "fourth_down_conversions": 2,
+   "total_yards": 224,
+   "yards_per_play": 4.1,
+   "first_downs": 15,
+   "rushing_yards": 110,
+   "net_passing_yards": 114,
+   "total_offensive_plays": 55,
+   "sacks": 1,
+   "defensive_touchdowns": 1,
+   "possession_time_seconds": 1918,
+   "red_zone_attempts": 3,
+   "red_zone_scores": 2
+  }
+ ],
+ "423990": [
+  {
+   "team": {
+    "full_name": "Arizona Cardinals"
+   },
+   "penalties": 5,
+   "penalty_yards": 30,
+   "turnovers": 0,
+   "third_down_conversions": 5,
+   "fourth_down_conversions": 2,
+   "total_yards": 260,
+   "yards_per_play": 4.1,
+   "first_downs": 16,
+   "rushing_yards": 106,
+   "net_passing_yards": 154,
+   "total_offensive_plays": 64,
+   "sacks": 1,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 2079,
+   "red_zone_attempts": 3,
+   "red_zone_scores": 1
+  },
+  {
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "penalties": 5,
+   "penalty_yards": 69,
+   "turnovers": 1,
+   "third_down_conversions": 2,
+   "fourth_down_conversions": 1,
+   "total_yards": 355,
+   "yards_per_play": 5.7,
+   "first_downs": 19,
+   "rushing_yards": 73,
+   "net_passing_yards": 282,
+   "total_offensive_plays": 62,
+   "sacks": 1,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1521,
+   "red_zone_attempts": 4,
+   "red_zone_scores": 1
+  }
+ ],
+ "423992": [
+  {
+   "team": {
+    "full_name": "Detroit Lions"
+   },
+   "penalties": 8,
+   "penalty_yards": 68,
+   "turnovers": 0,
+   "third_down_conversions": 7,
+   "fourth_down_conversions": 3,
+   "total_yards": 426,
+   "yards_per_play": 6.5,
+   "first_downs": 24,
+   "rushing_yards": 224,
+   "net_passing_yards": 202,
+   "total_offensive_plays": 66,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1998,
+   "red_zone_attempts": 5,
+   "red_zone_scores": 4
+  },
+  {
+   "team": {
+    "full_name": "Baltimore Ravens"
+   },
+   "penalties": 3,
+   "penalty_yards": 10,
+   "turnovers": 1,
+   "third_down_conversions": 6,
+   "fourth_down_conversions": 0,
+   "total_yards": 318,
+   "yards_per_play": 5.9,
+   "first_downs": 21,
+   "rushing_yards": 85,
+   "net_passing_yards": 233,
+   "total_offensive_plays": 54,
+   "sacks": 7,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1602,
+   "red_zone_attempts": 4,
+   "red_zone_scores": 2
+  }
+ ],
+ "424054": [
+  {
+   "team": {
+    "full_name": "Miami Dolphins"
+   },
+   "penalties": 4,
+   "penalty_yards": 54,
+   "turnovers": 0,
+   "third_down_conversions": 6,
+   "fourth_down_conversions": 1,
+   "total_yards": 338,
+   "yards_per_play": 5.2,
+   "first_downs": 24,
+   "rushing_yards": 141,
+   "net_passing_yards": 197,
+   "total_offensive_plays": 65,
+   "sacks": 1,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 2278,
+   "red_zone_attempts": 5,
+   "red_zone_scores": 3
+  },
+  {
+   "team": {
+    "full_name": "Atlanta Falcons"
+   },
+   "penalties": 8,
+   "penalty_yards": 76,
+   "turnovers": 1,
+   "third_down_conversions": 2,
+   "fourth_down_conversions": 2,
+   "total_yards": 213,
+   "yards_per_play": 4.3,
+   "first_downs": 11,
+   "rushing_yards": 45,
+   "net_passing_yards": 168,
+   "total_offensive_plays": 49,
+   "sacks": 1,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1322,
+   "red_zone_attempts": 2,
+   "red_zone_scores": 1
+  }
+ ],
+ "424061": [
+  {
+   "team": {
+    "full_name": "Tampa Bay Buccaneers"
+   },
+   "penalties": 4,
+   "penalty_yards": 25,
+   "turnovers": 1,
+   "third_down_conversions": 3,
+   "fourth_down_conversions": 1,
+   "total_yards": 212,
+   "yards_per_play": 3.8,
+   "first_downs": 14,
+   "rushing_yards": 88,
+   "net_passing_yards": 124,
+   "total_offensive_plays": 56,
+   "sacks": 3,
+   "defensive_touchdowns": 1,
+   "possession_time_seconds": 1976,
+   "red_zone_attempts": 2,
+   "red_zone_scores": 1
+  },
+  {
+   "team": {
+    "full_name": "New Orleans Saints"
+   },
+   "penalties": 8,
+   "penalty_yards": 40,
+   "turnovers": 4,
+   "third_down_conversions": 8,
+   "fourth_down_conversions": 2,
+   "total_yards": 275,
+   "yards_per_play": 3.9,
+   "first_downs": 17,
+   "rushing_yards": 48,
+   "net_passing_yards": 227,
+   "total_offensive_plays": 71,
+   "sacks": 5,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1624,
+   "red_zone_attempts": 1,
+   "red_zone_scores": 0
+  }
+ ],
+ "424109": [
+  {
+   "team": {
+    "full_name": "Buffalo Bills"
+   },
+   "penalties": 6,
+   "penalty_yards": 54,
+   "turnovers": 3,
+   "third_down_conversions": 5,
+   "fourth_down_conversions": 3,
+   "total_yards": 326,
+   "yards_per_play": 4.9,
+   "first_downs": 14,
+   "rushing_yards": 143,
+   "net_passing_yards": 183,
+   "total_offensive_plays": 66,
+   "sacks": 8,
+   "defensive_touchdowns": 1,
+   "possession_time_seconds": 1942,
+   "red_zone_attempts": 2,
+   "red_zone_scores": 0
+  },
+  {
+   "team": {
+    "full_name": "Houston Texans"
+   },
+   "penalties": 5,
+   "penalty_yards": 40,
+   "turnovers": 0,
+   "third_down_conversions": 2,
+   "fourth_down_conversions": 1,
+   "total_yards": 261,
+   "yards_per_play": 4.7,
+   "first_downs": 15,
+   "rushing_yards": 108,
+   "net_passing_yards": 153,
+   "total_offensive_plays": 56,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1658,
+   "red_zone_attempts": 4,
+   "red_zone_scores": 2
+  }
+ ],
+ "424113": [
+  {
+   "team": {
+    "full_name": "Minnesota Vikings"
+   },
+   "penalties": 2,
+   "penalty_yards": 29,
+   "turnovers": 3,
+   "third_down_conversions": 2,
+   "fourth_down_conversions": 0,
+   "total_yards": 145,
+   "yards_per_play": 3.3,
+   "first_downs": 10,
+   "rushing_yards": 93,
+   "net_passing_yards": 52,
+   "total_offensive_plays": 44,
+   "sacks": 5,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1365,
+   "red_zone_attempts": 1,
+   "red_zone_scores": 0
+  },
+  {
+   "team": {
+    "full_name": "Green Bay Packers"
+   },
+   "penalties": 2,
+   "penalty_yards": 10,
+   "turnovers": 0,
+   "third_down_conversions": 7,
+   "total_yards": 288,
+   "yards_per_play": 4.4,
+   "first_downs": 22,
+   "rushing_yards": 146,
+   "net_passing_yards": 142,
+   "total_offensive_plays": 65,
+   "sacks": 1,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 2235,
+   "red_zone_attempts": 4,
+   "red_zone_scores": 2
+  }
+ ],
+ "424115": [
+  {
+   "team": {
+    "full_name": "Indianapolis Colts"
+   },
+   "penalties": 11,
+   "penalty_yards": 83,
+   "turnovers": 0,
+   "third_down_conversions": 5,
+   "total_yards": 255,
+   "yards_per_play": 5.1,
+   "first_downs": 10,
+   "rushing_yards": 74,
+   "net_passing_yards": 181,
+   "total_offensive_plays": 50,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1528,
+   "red_zone_attempts": 4,
+   "red_zone_scores": 2
+  },
+  {
+   "team": {
+    "full_name": "Kansas City Chiefs"
+   },
+   "penalties": 7,
+   "penalty_yards": 57,
+   "turnovers": 2,
+   "third_down_conversions": 7,
+   "fourth_down_conversions": 2,
+   "total_yards": 494,
+   "yards_per_play": 5.4,
+   "first_downs": 33,
+   "rushing_yards": 148,
+   "net_passing_yards": 346,
+   "total_offensive_plays": 91,
+   "sacks": 4,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 2555,
+   "red_zone_attempts": 6,
+   "red_zone_scores": 1
+  }
+ ],
+ "424117": [
+  {
+   "team": {
+    "full_name": "Cleveland Browns"
+   },
+   "penalties": 8,
+   "penalty_yards": 77,
+   "turnovers": 2,
+   "third_down_conversions": 3,
+   "total_yards": 270,
+   "yards_per_play": 5.6,
+   "first_downs": 11,
+   "rushing_yards": 64,
+   "net_passing_yards": 206,
+   "total_offensive_plays": 48,
+   "sacks": 1,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1414,
+   "red_zone_attempts": 3,
+   "red_zone_scores": 2
+  },
+  {
+   "team": {
+    "full_name": "Las Vegas Raiders"
+   },
+   "penalties": 13,
+   "penalty_yards": 109,
+   "turnovers": 1,
+   "third_down_conversions": 4,
+   "fourth_down_conversions": 1,
+   "total_yards": 268,
+   "yards_per_play": 3.6,
+   "first_downs": 19,
+   "rushing_yards": 60,
+   "net_passing_yards": 208,
+   "total_offensive_plays": 75,
+   "sacks": 10,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 2186,
+   "red_zone_attempts": 1,
+   "red_zone_scores": 1
+  }
+ ],
+ "424122": [
+  {
+   "team": {
+    "full_name": "Carolina Panthers"
+   },
+   "penalties": 4,
+   "penalty_yards": 30,
+   "turnovers": 2,
+   "third_down_conversions": 1,
+   "total_yards": 230,
+   "yards_per_play": 5.3,
+   "first_downs": 12,
+   "rushing_yards": 69,
+   "net_passing_yards": 161,
+   "total_offensive_plays": 43,
+   "sacks": 1,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 1338,
+   "red_zone_attempts": 2,
+   "red_zone_scores": 0
+  },
+  {
+   "team": {
+    "full_name": "San Francisco 49ers"
+   },
+   "penalties": 2,
+   "penalty_yards": 6,
+   "turnovers": 3,
+   "third_down_conversions": 7,
+   "fourth_down_conversions": 2,
+   "total_yards": 340,
+   "yards_per_play": 4.9,
+   "first_downs": 23,
+   "rushing_yards": 147,
+   "net_passing_yards": 193,
+   "total_offensive_plays": 70,
+   "defensive_touchdowns": 0,
+   "possession_time_seconds": 2262,
+   "red_zone_attempts": 3,
+   "red_zone_scores": 2
+  }
+ ]
+}

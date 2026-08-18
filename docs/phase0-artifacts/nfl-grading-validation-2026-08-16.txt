@@ -1,0 +1,18 @@
+[validate] 43 completed games (seasons 2025, weeks 6,9,14)
+
+=== realized rates ===
+  first score is a field goal     44.2%   (Phase 3 priced 0.38, delta +0.06)
+  first scorer wins               55.8%   (Phase 3 priced 0.65, delta -0.09)
+  non-offensive touchdown         16.3%   (Phase 3 priced 0.26, delta -0.10)
+  fourth-down conversion          83.7%   (Phase 3 priced 0.75, delta +0.09)
+  50+ yard touchdown              27.9%   (Phase 3 priced 0.34, delta -0.06)
+  home scores every quarter       37.2%
+  a quarter scoreless for both    23.3%
+  overtime                         4.7%
+
+=== grading integrity ===
+  play walk reproduces final score : 43/43
+  quarter columns sum to final     : 43/43
+  first-TD scorer parsed           : 43/43
+
+PASS — grading substrate matches the archived feed.

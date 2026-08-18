@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { listSportsBingoGames } from "@/lib/sportsBingo";
+import { resolveLeagueBlockReason } from "@/lib/leagueSeasonStatus";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const sportKey = (searchParams.get("sportKey") ?? "basketball_nba").trim();
+    const sportKey = (searchParams.get("sportKey") ?? "basketball_nba").trim().toLowerCase();
     const includeLocked = (searchParams.get("includeLocked") ?? "true").trim().toLowerCase();
     const tzOffsetMinutes = searchParams.get("tzOffsetMinutes") ?? undefined;
+
+    const blockReason = await resolveLeagueBlockReason(sportKey);
+    if (blockReason) {
+      return NextResponse.json({ ok: false, error: blockReason }, { status: 400 });
+    }
 
     const games = await listSportsBingoGames({
       sportKey,

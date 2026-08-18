@@ -1,0 +1,393 @@
+{
+  "season": 2025,
+  "ranAtUtc": "2026-08-17T17:07:01.521Z",
+  "scope": "regular season; implied-total tables use weeks 5+ only",
+  "anchorTeamTotal": 23,
+  "games": 272,
+  "ratedGames": 208,
+  "ratedTeamGames": 416,
+  "skippedForMissingQuarters": 0,
+  "meanImpliedTeamTotal": 23.03,
+  "per_team_quarter_scores": {
+    "fit": {
+      "rateAtAnchor": 0.7314,
+      "slopePerImpliedPoint": 0.023,
+      "leagueRate": 0.732,
+      "n": 1664
+    },
+    "byImplied": [
+      {
+        "impliedBucket": "0-20",
+        "meanImplied": 18.83,
+        "n": 148,
+        "rate": 0.5878
+      },
+      {
+        "impliedBucket": "20-22",
+        "meanImplied": 21.08,
+        "n": 372,
+        "rate": 0.7043
+      },
+      {
+        "impliedBucket": "22-24",
+        "meanImplied": 22.96,
+        "n": 556,
+        "rate": 0.7446
+      },
+      {
+        "impliedBucket": "24-99",
+        "meanImplied": 25.37,
+        "n": 588,
+        "rate": 0.7738
+      }
+    ]
+  },
+  "scores_every_quarter": {
+    "fit": {
+      "rateAtAnchor": 0.302,
+      "slopePerImpliedPoint": 0.0371,
+      "leagueRate": 0.3029,
+      "n": 416
+    },
+    "byImplied": [
+      {
+        "impliedBucket": "0-20",
+        "meanImplied": 18.83,
+        "n": 37,
+        "rate": 0.1351
+      },
+      {
+        "impliedBucket": "20-22",
+        "meanImplied": 21.08,
+        "n": 93,
+        "rate": 0.2366
+      },
+      {
+        "impliedBucket": "22-24",
+        "meanImplied": 22.96,
+        "n": 139,
+        "rate": 0.3022
+      },
+      {
+        "impliedBucket": "24-99",
+        "meanImplied": 25.37,
+        "n": 147,
+        "rate": 0.3878
+      }
+    ]
+  },
+  "shutout_in_a_quarter": {
+    "n": 416,
+    "rate": 0.6971
+  },
+  "quarter_points": {
+    "gte_7": {
+      "fit": {
+        "rateAtAnchor": 0.9204,
+        "slopePerImpliedPoint": 0.0124,
+        "leagueRate": 0.9207,
+        "n": 416
+      },
+      "byImplied": [
+        {
+          "impliedBucket": "0-20",
+          "meanImplied": 18.83,
+          "n": 37,
+          "rate": 0.8919
+        },
+        {
+          "impliedBucket": "20-22",
+          "meanImplied": 21.08,
+          "n": 93,
+          "rate": 0.8817
+        },
+        {
+          "impliedBucket": "22-24",
+          "meanImplied": 22.96,
+          "n": 139,
+          "rate": 0.9209
+        },
+        {
+          "impliedBucket": "24-99",
+          "meanImplied": 25.37,
+          "n": 147,
+          "rate": 0.9524
+        }
+      ]
+    },
+    "gte_10": {
+      "fit": {
+        "rateAtAnchor": 0.6309,
+        "slopePerImpliedPoint": 0.0532,
+        "leagueRate": 0.6322,
+        "n": 416
+      },
+      "byImplied": [
+        {
+          "impliedBucket": "0-20",
+          "meanImplied": 18.83,
+          "n": 37,
+          "rate": 0.4595
+        },
+        {
+          "impliedBucket": "20-22",
+          "meanImplied": 21.08,
+          "n": 93,
+          "rate": 0.4946
+        },
+        {
+          "impliedBucket": "22-24",
+          "meanImplied": 22.96,
+          "n": 139,
+          "rate": 0.6331
+        },
+        {
+          "impliedBucket": "24-99",
+          "meanImplied": 25.37,
+          "n": 147,
+          "rate": 0.7619
+        }
+      ]
+    },
+    "gte_14": {
+      "fit": {
+        "rateAtAnchor": 0.3617,
+        "slopePerImpliedPoint": 0.0523,
+        "leagueRate": 0.363,
+        "n": 416
+      },
+      "byImplied": [
+        {
+          "impliedBucket": "0-20",
+          "meanImplied": 18.83,
+          "n": 37,
+          "rate": 0.2162
+        },
+        {
+          "impliedBucket": "20-22",
+          "meanImplied": 21.08,
+          "n": 93,
+          "rate": 0.2473
+        },
+        {
+          "impliedBucket": "22-24",
+          "meanImplied": 22.96,
+          "n": 139,
+          "rate": 0.3237
+        },
+        {
+          "impliedBucket": "24-99",
+          "meanImplied": 25.37,
+          "n": 147,
+          "rate": 0.5102
+        }
+      ]
+    },
+    "gte_17": {
+      "fit": {
+        "rateAtAnchor": 0.1051,
+        "slopePerImpliedPoint": 0.0262,
+        "leagueRate": 0.1058,
+        "n": 416
+      },
+      "byImplied": [
+        {
+          "impliedBucket": "0-20",
+          "meanImplied": 18.83,
+          "n": 37,
+          "rate": 0
+        },
+        {
+          "impliedBucket": "20-22",
+          "meanImplied": 21.08,
+          "n": 93,
+          "rate": 0.043
+        },
+        {
+          "impliedBucket": "22-24",
+          "meanImplied": 22.96,
+          "n": 139,
+          "rate": 0.1151
+        },
+        {
+          "impliedBucket": "24-99",
+          "meanImplied": 25.37,
+          "n": 147,
+          "rate": 0.1633
+        }
+      ]
+    },
+    "gte_21": {
+      "fit": {
+        "rateAtAnchor": 0.0359,
+        "slopePerImpliedPoint": 0.0067,
+        "leagueRate": 0.0361,
+        "n": 416
+      },
+      "byImplied": [
+        {
+          "impliedBucket": "0-20",
+          "meanImplied": 18.83,
+          "n": 37,
+          "rate": 0
+        },
+        {
+          "impliedBucket": "20-22",
+          "meanImplied": 21.08,
+          "n": 93,
+          "rate": 0.0215
+        },
+        {
+          "impliedBucket": "22-24",
+          "meanImplied": 22.96,
+          "n": 139,
+          "rate": 0.0432
+        },
+        {
+          "impliedBucket": "24-99",
+          "meanImplied": 25.37,
+          "n": 147,
+          "rate": 0.0476
+        }
+      ]
+    }
+  },
+  "any_quarter_scoreless": {
+    "league": {
+      "n": 272,
+      "rate": 0.2316
+    },
+    "byImpliedGameTotal": [
+      {
+        "impliedBucket": "0-42",
+        "meanImplied": 41.42,
+        "n": 10,
+        "rate": 0.1
+      },
+      {
+        "impliedBucket": "42-46",
+        "meanImplied": 44.28,
+        "n": 96,
+        "rate": 0.2708
+      },
+      {
+        "impliedBucket": "46-50",
+        "meanImplied": 47.6,
+        "n": 85,
+        "rate": 0.2353
+      },
+      {
+        "impliedBucket": "50-99",
+        "meanImplied": 51.08,
+        "n": 17,
+        "rate": 0.1176
+      }
+    ]
+  },
+  "second_half_higher_scoring": {
+    "excludingOvertime": {
+      "n": 272,
+      "rate": 0.4853
+    },
+    "exactTies": {
+      "n": 272,
+      "rate": 0.0441
+    },
+    "overtimeGames": 14
+  },
+  "unchanged_but_measured": {
+    "leads_at_halftime": {
+      "n": 544,
+      "rate": 0.4596
+    },
+    "halftime_leader_loses_or_draws": {
+      "n": 272,
+      "rate": 0.2206
+    },
+    "halftime_tie": {
+      "n": 272,
+      "rate": 0.0809
+    },
+    "overtime": {
+      "n": 272,
+      "rate": 0.0515
+    }
+  },
+  "fourth_down_conversion": {
+    "games": 272,
+    "eitherTeamConvertsAtLeastOne": 0.8272,
+    "perTeamGame": 0.568,
+    "teamStatRows": 544
+  },
+  "realized_basis_contrast": {
+    "note": "Bucketed on the realized team score, which is the outcome being predicted and which ranges well outside where implied totals live. Do NOT fit constants off this — compare bucket endpoints against the implied-basis tables above to see the difference.",
+    "scores_every_quarter": {
+      "fit": {
+        "rateAtAnchor": 0.3122,
+        "slopePerImpliedPoint": 0.0221,
+        "leagueRate": 0.3125,
+        "n": 544
+      },
+      "byImplied": [
+        {
+          "impliedBucket": "0-16",
+          "meanImplied": 9.61,
+          "n": 119,
+          "rate": 0
+        },
+        {
+          "impliedBucket": "16-21",
+          "meanImplied": 18.35,
+          "n": 108,
+          "rate": 0.2222
+        },
+        {
+          "impliedBucket": "21-27",
+          "meanImplied": 23.48,
+          "n": 119,
+          "rate": 0.3445
+        },
+        {
+          "impliedBucket": "27-99",
+          "meanImplied": 33.33,
+          "n": 198,
+          "rate": 0.5303
+        }
+      ]
+    },
+    "quarter_points_gte_14": {
+      "fit": {
+        "rateAtAnchor": 0.358,
+        "slopePerImpliedPoint": 0.034,
+        "leagueRate": 0.3585,
+        "n": 544
+      },
+      "byImplied": [
+        {
+          "impliedBucket": "0-16",
+          "meanImplied": 9.61,
+          "n": 119,
+          "rate": 0
+        },
+        {
+          "impliedBucket": "16-21",
+          "meanImplied": 18.35,
+          "n": 108,
+          "rate": 0.0833
+        },
+        {
+          "impliedBucket": "21-27",
+          "meanImplied": 23.48,
+          "n": 119,
+          "rate": 0.3025
+        },
+        {
+          "impliedBucket": "27-99",
+          "meanImplied": 33.33,
+          "n": 198,
+          "rate": 0.7576
+        }
+      ]
+    }
+  }
+}

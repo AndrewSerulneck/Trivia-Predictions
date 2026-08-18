@@ -1,0 +1,340 @@
+[
+  {
+    "id": "5059537",
+    "date": "2026-08-09T00:10:00.000Z",
+    "homeTeam": "Arizona Diamondbacks",
+    "awayTeam": "Los Angeles Dodgers",
+    "homeScore": 1,
+    "awayScore": 2,
+    "teamEventTotals": {
+      "home": {
+        "hit": 7,
+        "walk": 8,
+        "hit_by_pitch": 1,
+        "strikeout": 9,
+        "groundout": 5,
+        "flyout": 6
+      },
+      "away": {
+        "hit": 6,
+        "walk": 4,
+        "hit_by_pitch": 0,
+        "strikeout": 5,
+        "groundout": 9,
+        "flyout": 11
+      }
+    }
+  },
+  {
+    "id": "5059557",
+    "date": "2026-08-10T23:45:00.000Z",
+    "homeTeam": "St. Louis Cardinals",
+    "awayTeam": "Philadelphia Phillies",
+    "homeScore": 5,
+    "awayScore": 6,
+    "teamEventTotals": {
+      "home": {
+        "hit": 8,
+        "walk": 4,
+        "hit_by_pitch": 0,
+        "strikeout": 10,
+        "groundout": 5,
+        "flyout": 5
+      },
+      "away": {
+        "hit": 8,
+        "walk": 7,
+        "hit_by_pitch": 1,
+        "strikeout": 10,
+        "groundout": 7,
+        "flyout": 6
+      }
+    }
+  },
+  {
+    "id": "5059583",
+    "date": "2026-08-12T19:45:00.000Z",
+    "homeTeam": "San Francisco Giants",
+    "awayTeam": "Houston Astros",
+    "homeScore": 1,
+    "awayScore": 2,
+    "teamEventTotals": {
+      "home": {
+        "hit": 5,
+        "walk": 5,
+        "hit_by_pitch": 0,
+        "strikeout": 8,
+        "groundout": 7,
+        "flyout": 7
+      },
+      "away": {
+        "hit": 4,
+        "walk": 1,
+        "hit_by_pitch": 0,
+        "strikeout": 7,
+        "groundout": 8,
+        "flyout": 6
+      }
+    }
+  },
+  {
+    "id": "5059613",
+    "date": "2026-08-15T01:38:00.000Z",
+    "homeTeam": "Los Angeles Angels",
+    "awayTeam": "Kansas City Royals",
+    "homeScore": 6,
+    "awayScore": 7,
+    "teamEventTotals": {
+      "home": {
+        "hit": 10,
+        "walk": 1,
+        "hit_by_pitch": 1,
+        "strikeout": 9,
+        "groundout": 10,
+        "flyout": 5
+      },
+      "away": {
+        "hit": 10,
+        "walk": 3,
+        "hit_by_pitch": 0,
+        "strikeout": 10,
+        "groundout": 10,
+        "flyout": 1
+      }
+    }
+  },
+  {
+    "id": "5059646",
+    "date": "2026-08-16T23:20:00.000Z",
+    "homeTeam": "Houston Astros",
+    "awayTeam": "Seattle Mariners",
+    "homeScore": 2,
+    "awayScore": 3,
+    "teamEventTotals": {
+      "home": {
+        "hit": 7,
+        "walk": 2,
+        "hit_by_pitch": 1,
+        "strikeout": 9,
+        "groundout": 6,
+        "flyout": 5
+      },
+      "away": {
+        "hit": 8,
+        "walk": 7,
+        "hit_by_pitch": 1,
+        "strikeout": 8,
+        "groundout": 7,
+        "flyout": 4
+      }
+    }
+  },
+  {
+    "id": "5059568",
+    "date": "2026-08-11T23:07:00.000Z",
+    "homeTeam": "Toronto Blue Jays",
+    "awayTeam": "Boston Red Sox",
+    "homeScore": 5,
+    "awayScore": 3,
+    "teamEventTotals": {
+      "home": {
+        "hit": 10,
+        "walk": 3,
+        "hit_by_pitch": 1,
+        "strikeout": 6,
+        "groundout": 9,
+        "flyout": 3
+      },
+      "away": {
+        "hit": 7,
+        "walk": 7,
+        "hit_by_pitch": 0,
+        "strikeout": 8,
+        "groundout": 10,
+        "flyout": 2
+      }
+    }
+  },
+  {
+    "id": "5059609",
+    "date": "2026-08-14T23:10:00.000Z",
+    "homeTeam": "Cleveland Guardians",
+    "awayTeam": "San Diego Padres",
+    "homeScore": 5,
+    "awayScore": 7,
+    "teamEventTotals": {
+      "home": {
+        "hit": 10,
+        "walk": 2,
+        "hit_by_pitch": 0,
+        "strikeout": 8,
+        "groundout": 13,
+        "flyout": 2
+      },
+      "away": {
+        "hit": 12,
+        "walk": 5,
+        "hit_by_pitch": 1,
+        "strikeout": 8,
+        "groundout": 7,
+        "flyout": 2
+      }
+    }
+  },
+  {
+    "id": "5059640",
+    "date": "2026-08-16T18:10:00.000Z",
+    "homeTeam": "Minnesota Twins",
+    "awayTeam": "Philadelphia Phillies",
+    "homeScore": 5,
+    "awayScore": 7,
+    "teamEventTotals": {
+      "home": {
+        "hit": 7,
+        "walk": 5,
+        "hit_by_pitch": 1,
+        "strikeout": 9,
+        "groundout": 10,
+        "flyout": 3
+      },
+      "away": {
+        "hit": 9,
+        "walk": 3,
+        "hit_by_pitch": 0,
+        "strikeout": 7,
+        "groundout": 13,
+        "flyout": 2
+      }
+    }
+  },
+  {
+    "id": "5059570",
+    "date": "2026-08-11T23:40:00.000Z",
+    "homeTeam": "Minnesota Twins",
+    "awayTeam": "Baltimore Orioles",
+    "homeScore": 2,
+    "awayScore": 5,
+    "teamEventTotals": {
+      "home": {
+        "hit": 7,
+        "walk": 4,
+        "hit_by_pitch": 1,
+        "strikeout": 7,
+        "groundout": 11,
+        "flyout": 4
+      },
+      "away": {
+        "hit": 11,
+        "walk": 3,
+        "hit_by_pitch": 0,
+        "strikeout": 9,
+        "groundout": 3,
+        "flyout": 8
+      }
+    }
+  },
+  {
+    "id": "5059612",
+    "date": "2026-08-15T00:10:00.000Z",
+    "homeTeam": "Houston Astros",
+    "awayTeam": "Seattle Mariners",
+    "homeScore": 10,
+    "awayScore": 7,
+    "teamEventTotals": {
+      "home": {
+        "hit": 12,
+        "walk": 3,
+        "hit_by_pitch": 0,
+        "strikeout": 7,
+        "groundout": 9,
+        "flyout": 4
+      },
+      "away": {
+        "hit": 12,
+        "walk": 4,
+        "hit_by_pitch": 1,
+        "strikeout": 11,
+        "groundout": 7,
+        "flyout": 5
+      }
+    }
+  },
+  {
+    "id": "5059623",
+    "date": "2026-08-15T23:15:00.000Z",
+    "homeTeam": "Pittsburgh Pirates",
+    "awayTeam": "Boston Red Sox",
+    "homeScore": 0,
+    "awayScore": 4,
+    "teamEventTotals": {
+      "home": {
+        "hit": 6,
+        "walk": 1,
+        "hit_by_pitch": 0,
+        "strikeout": 10,
+        "groundout": 8,
+        "flyout": 4
+      },
+      "away": {
+        "hit": 9,
+        "walk": 4,
+        "hit_by_pitch": 0,
+        "strikeout": 11,
+        "groundout": 6,
+        "flyout": 5
+      }
+    }
+  },
+  {
+    "id": "5059625",
+    "date": "2026-08-15T23:10:00.000Z",
+    "homeTeam": "Cleveland Guardians",
+    "awayTeam": "San Diego Padres",
+    "homeScore": 6,
+    "awayScore": 1,
+    "teamEventTotals": {
+      "home": {
+        "hit": 11,
+        "walk": 2,
+        "hit_by_pitch": 0,
+        "strikeout": 9,
+        "groundout": 10,
+        "flyout": 2
+      },
+      "away": {
+        "hit": 1,
+        "walk": 3,
+        "hit_by_pitch": 1,
+        "strikeout": 11,
+        "groundout": 12,
+        "flyout": 2
+      }
+    }
+  },
+  {
+    "id": "5059587",
+    "date": "2026-08-12T22:45:00.000Z",
+    "homeTeam": "Washington Nationals",
+    "awayTeam": "Chicago Cubs",
+    "homeScore": 6,
+    "awayScore": 12,
+    "teamEventTotals": {
+      "home": {
+        "hit": 11,
+        "walk": 4,
+        "hit_by_pitch": 1,
+        "strikeout": 8,
+        "groundout": 11,
+        "flyout": 5
+      },
+      "away": {
+        "hit": 13,
+        "walk": 6,
+        "hit_by_pitch": 0,
+        "strikeout": 11,
+        "groundout": 10,
+        "flyout": 2
+      }
+    }
+  }
+]

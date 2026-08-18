@@ -1,0 +1,1036 @@
+{
+  "ranAtUtc": "2026-08-17T16:54:20.010Z",
+  "seasons": [
+    "2025"
+  ],
+  "weeks": [
+    "2",
+    "6",
+    "9",
+    "14",
+    "17"
+  ],
+  "boardsPerGame": 6,
+  "boards": 474,
+  "realizedWinRate": 0.2679,
+  "byKind": [
+    {
+      "id": "nfl_team_shutout_quarter",
+      "n": 129,
+      "assigned": 0.768,
+      "realized": 0.543,
+      "gap": -0.226,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_any_quarter_scoreless",
+      "n": 92,
+      "assigned": 0.323,
+      "realized": 0.185,
+      "gap": -0.139,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_red_zone_trip_without_touchdown",
+      "n": 57,
+      "assigned": 0.801,
+      "realized": 0.667,
+      "gap": -0.134,
+      "ungraded": 0.07
+    },
+    {
+      "id": "nfl_team_possession_advantage",
+      "n": 78,
+      "assigned": 0.296,
+      "realized": 0.218,
+      "gap": -0.078,
+      "ungraded": 0.051
+    },
+    {
+      "id": "nfl_halftime_leader_loses",
+      "n": 92,
+      "assigned": 0.205,
+      "realized": 0.13,
+      "gap": -0.074,
+      "ungraded": 0.076
+    },
+    {
+      "id": "nfl_score_in_final_minutes",
+      "n": 142,
+      "assigned": 0.52,
+      "realized": 0.458,
+      "gap": -0.063,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_goal_line_touchdown",
+      "n": 77,
+      "assigned": 0.525,
+      "realized": 0.468,
+      "gap": -0.057,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_both_teams_lead",
+      "n": 85,
+      "assigned": 0.596,
+      "realized": 0.541,
+      "gap": -0.055,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_non_offensive_touchdown",
+      "n": 77,
+      "assigned": 0.26,
+      "realized": 0.208,
+      "gap": -0.052,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_two_point_conversion",
+      "n": 88,
+      "assigned": 0.184,
+      "realized": 0.136,
+      "gap": -0.048,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_winner_trailed_in_fourth",
+      "n": 105,
+      "assigned": 0.254,
+      "realized": 0.21,
+      "gap": -0.044,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_safety",
+      "n": 100,
+      "assigned": 0.05,
+      "realized": 0.01,
+      "gap": -0.04,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_margin_at_most",
+      "n": 132,
+      "assigned": 0.348,
+      "realized": 0.311,
+      "gap": -0.037,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_lead_change_second_half",
+      "n": 81,
+      "assigned": 0.379,
+      "realized": 0.346,
+      "gap": -0.033,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_margin_at_least",
+      "n": 95,
+      "assigned": 0.233,
+      "realized": 0.2,
+      "gap": -0.033,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_both_teams_score_at_least",
+      "n": 89,
+      "assigned": 0.433,
+      "realized": 0.404,
+      "gap": -0.029,
+      "ungraded": 0
+    },
+    {
+      "id": "team_total_under",
+      "n": 875,
+      "assigned": 0.492,
+      "realized": 0.463,
+      "gap": -0.029,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_non_quarterback_pass_attempt",
+      "n": 102,
+      "assigned": 0.074,
+      "realized": 0.049,
+      "gap": -0.025,
+      "ungraded": 0.088
+    },
+    {
+      "id": "game_total_under",
+      "n": 930,
+      "assigned": 0.502,
+      "realized": 0.485,
+      "gap": -0.017,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_overtime",
+      "n": 82,
+      "assigned": 0.063,
+      "realized": 0.049,
+      "gap": -0.015,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_first_scorer_wins",
+      "n": 77,
+      "assigned": 0.65,
+      "realized": 0.636,
+      "gap": -0.014,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_stat_at_least",
+      "n": 886,
+      "assigned": 0.451,
+      "realized": 0.444,
+      "gap": -0.008,
+      "ungraded": 0.054
+    },
+    {
+      "id": "nfl_game_max_stat_at_least",
+      "n": 829,
+      "assigned": 0.454,
+      "realized": 0.452,
+      "gap": -0.002,
+      "ungraded": 0.046
+    },
+    {
+      "id": "nfl_game_missed_field_goal",
+      "n": 85,
+      "assigned": 0.46,
+      "realized": 0.459,
+      "gap": -0.001,
+      "ungraded": 0.047
+    },
+    {
+      "id": "moneyline",
+      "n": 948,
+      "assigned": 0.5,
+      "realized": 0.5,
+      "gap": 0,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_more_than",
+      "n": 848,
+      "assigned": 0.401,
+      "realized": 0.403,
+      "gap": 0.002,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_long_touchdown",
+      "n": 78,
+      "assigned": 0.341,
+      "realized": 0.346,
+      "gap": 0.005,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_first_score_is_field_goal",
+      "n": 75,
+      "assigned": 0.379,
+      "realized": 0.387,
+      "gap": 0.008,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_total_stat_at_least",
+      "n": 244,
+      "assigned": 0.495,
+      "realized": 0.504,
+      "gap": 0.009,
+      "ungraded": 0.057
+    },
+    {
+      "id": "spread_keep_close",
+      "n": 877,
+      "assigned": 0.602,
+      "realized": 0.624,
+      "gap": 0.022,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_stat_at_most",
+      "n": 149,
+      "assigned": 0.357,
+      "realized": 0.383,
+      "gap": 0.025,
+      "ungraded": 0.034
+    },
+    {
+      "id": "team_total_over",
+      "n": 833,
+      "assigned": 0.485,
+      "realized": 0.513,
+      "gap": 0.028,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_second_half_higher_scoring",
+      "n": 72,
+      "assigned": 0.51,
+      "realized": 0.542,
+      "gap": 0.032,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_over",
+      "n": 916,
+      "assigned": 0.491,
+      "realized": 0.535,
+      "gap": 0.044,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_combined_team_stat_at_most",
+      "n": 39,
+      "assigned": 0.081,
+      "realized": 0.128,
+      "gap": 0.047,
+      "ungraded": 0.051
+    },
+    {
+      "id": "nfl_team_perfect_red_zone",
+      "n": 67,
+      "assigned": 0.086,
+      "realized": 0.134,
+      "gap": 0.048,
+      "ungraded": 0.045
+    },
+    {
+      "id": "nfl_first_score_within_minutes",
+      "n": 67,
+      "assigned": 0.469,
+      "realized": 0.522,
+      "gap": 0.053,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_combined_team_stat_at_least",
+      "n": 117,
+      "assigned": 0.449,
+      "realized": 0.504,
+      "gap": 0.056,
+      "ungraded": 0.034
+    },
+    {
+      "id": "nfl_team_leads_at_halftime",
+      "n": 149,
+      "assigned": 0.453,
+      "realized": 0.53,
+      "gap": 0.078,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_tied_after_halftime",
+      "n": 95,
+      "assigned": 0.268,
+      "realized": 0.368,
+      "gap": 0.1,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_fourth_down_conversion",
+      "n": 69,
+      "assigned": 0.75,
+      "realized": 0.884,
+      "gap": 0.134,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_scores_every_quarter",
+      "n": 174,
+      "assigned": 0.232,
+      "realized": 0.374,
+      "gap": 0.142,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_quarter_points_at_least",
+      "n": 174,
+      "assigned": 0.188,
+      "realized": 0.362,
+      "gap": 0.174,
+      "ungraded": 0
+    }
+  ],
+  "bySquare": [
+    {
+      "id": "nfl_team_shutout_quarter:away",
+      "n": 65,
+      "assigned": 0.782,
+      "realized": 0.477,
+      "gap": -0.305,
+      "ungraded": 0
+    },
+    {
+      "id": "team_total_under:away:19.5",
+      "n": 45,
+      "assigned": 0.372,
+      "realized": 0.178,
+      "gap": -0.195,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_under:43.5",
+      "n": 49,
+      "assigned": 0.444,
+      "realized": 0.265,
+      "gap": -0.179,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_shutout_quarter:home",
+      "n": 64,
+      "assigned": 0.755,
+      "realized": 0.609,
+      "gap": -0.145,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_any_quarter_scoreless",
+      "n": 92,
+      "assigned": 0.323,
+      "realized": 0.185,
+      "gap": -0.139,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_under:46.5",
+      "n": 41,
+      "assigned": 0.514,
+      "realized": 0.39,
+      "gap": -0.124,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_more_than:home:5.5",
+      "n": 48,
+      "assigned": 0.413,
+      "realized": 0.292,
+      "gap": -0.121,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:any_player:field_goals_made:3.0",
+      "n": 74,
+      "assigned": 0.408,
+      "realized": 0.297,
+      "gap": -0.111,
+      "ungraded": 0.027
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:any_player:long_field_goal_made:50.0",
+      "n": 85,
+      "assigned": 0.474,
+      "realized": 0.365,
+      "gap": -0.109,
+      "ungraded": 0.047
+    },
+    {
+      "id": "nfl_game_total_stat_at_least:punts_inside_20:3.0",
+      "n": 70,
+      "assigned": 0.559,
+      "realized": 0.457,
+      "gap": -0.102,
+      "ungraded": 0.114
+    },
+    {
+      "id": "game_total_under:50.5",
+      "n": 48,
+      "assigned": 0.598,
+      "realized": 0.5,
+      "gap": -0.098,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_under:41.5",
+      "n": 55,
+      "assigned": 0.395,
+      "realized": 0.309,
+      "gap": -0.086,
+      "ungraded": 0
+    },
+    {
+      "id": "moneyline:home",
+      "n": 474,
+      "assigned": 0.522,
+      "realized": 0.443,
+      "gap": -0.078,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_more_than:home:3.5",
+      "n": 65,
+      "assigned": 0.463,
+      "realized": 0.385,
+      "gap": -0.078,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_halftime_leader_loses",
+      "n": 92,
+      "assigned": 0.205,
+      "realized": 0.13,
+      "gap": -0.074,
+      "ungraded": 0.076
+    },
+    {
+      "id": "nfl_margin_at_most:7.5",
+      "n": 49,
+      "assigned": 0.515,
+      "realized": 0.449,
+      "gap": -0.066,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_score_in_final_minutes:fourth_quarter:2.0",
+      "n": 77,
+      "assigned": 0.414,
+      "realized": 0.351,
+      "gap": -0.063,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_score_in_final_minutes:first_half:1.0",
+      "n": 65,
+      "assigned": 0.647,
+      "realized": 0.585,
+      "gap": -0.063,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_over:44.5",
+      "n": 56,
+      "assigned": 0.508,
+      "realized": 0.446,
+      "gap": -0.062,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_more_than:home:7.5",
+      "n": 59,
+      "assigned": 0.365,
+      "realized": 0.305,
+      "gap": -0.06,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_goal_line_touchdown:1",
+      "n": 77,
+      "assigned": 0.525,
+      "realized": 0.468,
+      "gap": -0.057,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_both_teams_lead",
+      "n": 85,
+      "assigned": 0.596,
+      "realized": 0.541,
+      "gap": -0.055,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_possession_advantage:away:300",
+      "n": 41,
+      "assigned": 0.296,
+      "realized": 0.244,
+      "gap": -0.052,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_non_offensive_touchdown",
+      "n": 77,
+      "assigned": 0.26,
+      "realized": 0.208,
+      "gap": -0.052,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:any_player:receptions:10.0",
+      "n": 79,
+      "assigned": 0.14,
+      "realized": 0.089,
+      "gap": -0.051,
+      "ungraded": 0.038
+    },
+    {
+      "id": "nfl_two_point_conversion",
+      "n": 88,
+      "assigned": 0.184,
+      "realized": 0.136,
+      "gap": -0.048,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_winner_trailed_in_fourth",
+      "n": 105,
+      "assigned": 0.254,
+      "realized": 0.21,
+      "gap": -0.044,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_safety",
+      "n": 100,
+      "assigned": 0.05,
+      "realized": 0.01,
+      "gap": -0.04,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_under:44.5",
+      "n": 51,
+      "assigned": 0.489,
+      "realized": 0.451,
+      "gap": -0.038,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_lead_change_second_half",
+      "n": 81,
+      "assigned": 0.379,
+      "realized": 0.346,
+      "gap": -0.033,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_margin_at_least:16.5",
+      "n": 95,
+      "assigned": 0.233,
+      "realized": 0.2,
+      "gap": -0.033,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:any_player:rushing_yards:85.0",
+      "n": 91,
+      "assigned": 0.482,
+      "realized": 0.451,
+      "gap": -0.031,
+      "ungraded": 0.033
+    },
+    {
+      "id": "nfl_both_teams_score_at_least:20.0",
+      "n": 89,
+      "assigned": 0.433,
+      "realized": 0.404,
+      "gap": -0.029,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_over:49.5",
+      "n": 40,
+      "assigned": 0.402,
+      "realized": 0.375,
+      "gap": -0.027,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_more_than:home:1.5",
+      "n": 47,
+      "assigned": 0.516,
+      "realized": 0.489,
+      "gap": -0.026,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_non_quarterback_pass_attempt",
+      "n": 102,
+      "assigned": 0.074,
+      "realized": 0.049,
+      "gap": -0.025,
+      "ungraded": 0.088
+    },
+    {
+      "id": "nfl_margin_at_most:3.5",
+      "n": 83,
+      "assigned": 0.249,
+      "realized": 0.229,
+      "gap": -0.02,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_keep_close:away:6.5",
+      "n": 42,
+      "assigned": 0.636,
+      "realized": 0.619,
+      "gap": -0.017,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_overtime",
+      "n": 82,
+      "assigned": 0.063,
+      "realized": 0.049,
+      "gap": -0.015,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_first_scorer_wins",
+      "n": 77,
+      "assigned": 0.65,
+      "realized": 0.636,
+      "gap": -0.014,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:any_player:total_tackles:12.0",
+      "n": 84,
+      "assigned": 0.426,
+      "realized": 0.417,
+      "gap": -0.009,
+      "ungraded": 0.071
+    },
+    {
+      "id": "spread_more_than:home:9.5",
+      "n": 50,
+      "assigned": 0.308,
+      "realized": 0.3,
+      "gap": -0.008,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_under:47.5",
+      "n": 50,
+      "assigned": 0.548,
+      "realized": 0.54,
+      "gap": -0.008,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_missed_field_goal",
+      "n": 85,
+      "assigned": 0.46,
+      "realized": 0.459,
+      "gap": -0.001,
+      "ungraded": 0.047
+    },
+    {
+      "id": "game_total_over:46.5",
+      "n": 40,
+      "assigned": 0.47,
+      "realized": 0.475,
+      "gap": 0.005,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_under:37.5",
+      "n": 44,
+      "assigned": 0.29,
+      "realized": 0.295,
+      "gap": 0.005,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_long_touchdown:50",
+      "n": 78,
+      "assigned": 0.341,
+      "realized": 0.346,
+      "gap": 0.005,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_first_score_is_field_goal",
+      "n": 75,
+      "assigned": 0.379,
+      "realized": 0.387,
+      "gap": 0.008,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_more_than:home:2.5",
+      "n": 44,
+      "assigned": 0.479,
+      "realized": 0.5,
+      "gap": 0.021,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_keep_close:away:9.5",
+      "n": 66,
+      "assigned": 0.689,
+      "realized": 0.712,
+      "gap": 0.023,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:any_player:passing_yards:260.0",
+      "n": 92,
+      "assigned": 0.483,
+      "realized": 0.511,
+      "gap": 0.028,
+      "ungraded": 0.043
+    },
+    {
+      "id": "nfl_second_half_higher_scoring",
+      "n": 72,
+      "assigned": 0.51,
+      "realized": 0.542,
+      "gap": 0.032,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_leads_at_halftime:away",
+      "n": 78,
+      "assigned": 0.441,
+      "realized": 0.474,
+      "gap": 0.033,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_total_stat_at_least:defensive_interceptions:2.0",
+      "n": 86,
+      "assigned": 0.43,
+      "realized": 0.465,
+      "gap": 0.035,
+      "ungraded": 0.058
+    },
+    {
+      "id": "nfl_team_stat_at_most:away:turnovers:0.0",
+      "n": 42,
+      "assigned": 0.346,
+      "realized": 0.381,
+      "gap": 0.035,
+      "ungraded": 0.024
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:any_player:receiving_yards:75.0",
+      "n": 72,
+      "assigned": 0.751,
+      "realized": 0.792,
+      "gap": 0.041,
+      "ungraded": 0.056
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:any_player:defensive_sacks:2.0",
+      "n": 84,
+      "assigned": 0.386,
+      "realized": 0.429,
+      "gap": 0.043,
+      "ungraded": 0.06
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:any_player:touchdowns:2.0",
+      "n": 70,
+      "assigned": 0.528,
+      "realized": 0.571,
+      "gap": 0.043,
+      "ungraded": 0.014
+    },
+    {
+      "id": "game_total_under:53.5",
+      "n": 51,
+      "assigned": 0.673,
+      "realized": 0.725,
+      "gap": 0.052,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_first_score_within_minutes:6.0",
+      "n": 67,
+      "assigned": 0.469,
+      "realized": 0.522,
+      "gap": 0.053,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_stat_at_most:home:turnovers:0.0",
+      "n": 42,
+      "assigned": 0.346,
+      "realized": 0.405,
+      "gap": 0.059,
+      "ungraded": 0.048
+    },
+    {
+      "id": "nfl_combined_team_stat_at_least:penalties:13.0",
+      "n": 43,
+      "assigned": 0.471,
+      "realized": 0.535,
+      "gap": 0.064,
+      "ungraded": 0.047
+    },
+    {
+      "id": "game_total_over:51.5",
+      "n": 44,
+      "assigned": 0.366,
+      "realized": 0.432,
+      "gap": 0.065,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_over:47.5",
+      "n": 60,
+      "assigned": 0.447,
+      "realized": 0.517,
+      "gap": 0.07,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_total_stat_at_least:defensive_sacks:5.0",
+      "n": 88,
+      "assigned": 0.507,
+      "realized": 0.58,
+      "gap": 0.073,
+      "ungraded": 0.011
+    },
+    {
+      "id": "spread_keep_close:away:3.5",
+      "n": 57,
+      "assigned": 0.522,
+      "realized": 0.596,
+      "gap": 0.074,
+      "ungraded": 0
+    },
+    {
+      "id": "moneyline:away",
+      "n": 474,
+      "assigned": 0.478,
+      "realized": 0.557,
+      "gap": 0.078,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_keep_close:away:1.5",
+      "n": 56,
+      "assigned": 0.474,
+      "realized": 0.554,
+      "gap": 0.079,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_over:50.5",
+      "n": 42,
+      "assigned": 0.403,
+      "realized": 0.5,
+      "gap": 0.097,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_combined_team_stat_at_least:turnovers:3.0",
+      "n": 46,
+      "assigned": 0.401,
+      "realized": 0.5,
+      "gap": 0.099,
+      "ungraded": 0.043
+    },
+    {
+      "id": "nfl_tied_after_halftime",
+      "n": 95,
+      "assigned": 0.268,
+      "realized": 0.368,
+      "gap": 0.1,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_over:41.5",
+      "n": 62,
+      "assigned": 0.608,
+      "realized": 0.71,
+      "gap": 0.102,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_over:53.5",
+      "n": 46,
+      "assigned": 0.31,
+      "realized": 0.413,
+      "gap": 0.103,
+      "ungraded": 0
+    },
+    {
+      "id": "game_total_over:37.5",
+      "n": 46,
+      "assigned": 0.697,
+      "realized": 0.804,
+      "gap": 0.107,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_game_max_stat_at_least:both_teams:passing_yards:180.0",
+      "n": 98,
+      "assigned": 0.486,
+      "realized": 0.602,
+      "gap": 0.116,
+      "ungraded": 0.061
+    },
+    {
+      "id": "nfl_team_leads_at_halftime:home",
+      "n": 71,
+      "assigned": 0.465,
+      "realized": 0.592,
+      "gap": 0.127,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_quarter_points_at_least:away:14.0",
+      "n": 87,
+      "assigned": 0.179,
+      "realized": 0.31,
+      "gap": 0.131,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_fourth_down_conversion",
+      "n": 69,
+      "assigned": 0.75,
+      "realized": 0.884,
+      "gap": 0.134,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_scores_every_quarter:home",
+      "n": 85,
+      "assigned": 0.242,
+      "realized": 0.376,
+      "gap": 0.135,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_scores_every_quarter:away",
+      "n": 89,
+      "assigned": 0.222,
+      "realized": 0.371,
+      "gap": 0.148,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_keep_close:away:7.5",
+      "n": 51,
+      "assigned": 0.643,
+      "realized": 0.804,
+      "gap": 0.161,
+      "ungraded": 0
+    },
+    {
+      "id": "spread_keep_close:away:5.5",
+      "n": 54,
+      "assigned": 0.575,
+      "realized": 0.741,
+      "gap": 0.166,
+      "ungraded": 0
+    },
+    {
+      "id": "team_total_over:away:25.5",
+      "n": 44,
+      "assigned": 0.379,
+      "realized": 0.591,
+      "gap": 0.212,
+      "ungraded": 0
+    },
+    {
+      "id": "nfl_team_quarter_points_at_least:home:14.0",
+      "n": 87,
+      "assigned": 0.197,
+      "realized": 0.414,
+      "gap": 0.217,
+      "ungraded": 0
+    }
+  ]
+}

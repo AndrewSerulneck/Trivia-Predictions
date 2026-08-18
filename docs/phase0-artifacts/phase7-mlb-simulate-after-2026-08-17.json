@@ -1,0 +1,30 @@
+    "baseball_mlb"
+  ],
+  "result": {
+    "baseball_mlb": {
+      "games": 11,
+      "boards": 66,
+      "predicted": {
+        "n": 66,
+        "min": 0.198,
+        "p25": 0.2288,
+        "median": 0.2544,
+        "p75": 0.2816,
+        "max": 0.2984,
+        "mean": 0.2517,
+        "inTargetBand": 0.9848
+      },
+      "legacyIndependentPredicted": {
+        "n": 66,
+        "min": 0.1584,
+        "p25": 0.2457,
+        "median": 0.2868,
+        "p75": 0.3207,
+        "max": 0.4216,
+        "mean": 0.2883,
+        "inTargetBand": 0.5909
+      },
+      "errors": []
+    }
+  }
+}

@@ -1,0 +1,4828 @@
+{
+  "generatedAt": "2026-08-17T20:06:18.006Z",
+  "season": 2026,
+  "priorSeason": 2025,
+  "current": {
+    "players": []
+  },
+  "prior": {
+    "players": [
+      {
+        "playerId": 461,
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 1,
+        "productionPercentile": 0.9896
+      },
+      {
+        "playerId": 846,
+        "name": "Trey McBride",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 1,
+        "productionPercentile": 0.9887
+      },
+      {
+        "playerId": 588,
+        "name": "Puka Nacua",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9918,
+        "productionPercentile": 0.9938
+      },
+      {
+        "playerId": 113,
+        "name": "Amon-Ra St. Brown",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9959,
+        "productionPercentile": 0.9835
+      },
+      {
+        "playerId": 490,
+        "name": "Jonathan Taylor",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9861,
+        "productionPercentile": 0.9931
+      },
+      {
+        "playerId": 869,
+        "name": "Jaxon Smith-Njigba",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9877,
+        "productionPercentile": 0.9815
+      },
+      {
+        "playerId": 11,
+        "name": "Ja'Marr Chase",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 1,
+        "productionPercentile": 0.9691
+      },
+      {
+        "playerId": 477,
+        "name": "Jahmyr Gibbs",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9653,
+        "productionPercentile": 0.9792
+      },
+      {
+        "playerId": 464,
+        "name": "James Cook III",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9792,
+        "productionPercentile": 0.9618
+      },
+      {
+        "playerId": 475,
+        "name": "Bijan Robinson",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9931,
+        "productionPercentile": 0.9479
+      },
+      {
+        "playerId": 823,
+        "name": "Chris Olave",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9835,
+        "productionPercentile": 0.9568
+      },
+      {
+        "playerId": 684,
+        "name": "George Pickens",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9712,
+        "productionPercentile": 0.9691
+      },
+      {
+        "playerId": 63,
+        "name": "Matthew Stafford",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9512,
+        "productionPercentile": 0.9817
+      },
+      {
+        "playerId": 25,
+        "name": "Dak Prescott",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9878,
+        "productionPercentile": 0.9329
+      },
+      {
+        "playerId": 36,
+        "name": "Derrick Henry",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9514,
+        "productionPercentile": 0.9653
+      },
+      {
+        "playerId": 797,
+        "name": "Kyle Pitts Sr.",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9925,
+        "productionPercentile": 0.9135
+      },
+      {
+        "playerId": 277679,
+        "name": "Brock Bowers",
+        "position": "TE",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.9323,
+        "productionPercentile": 0.9737
+      },
+      {
+        "playerId": 42,
+        "name": "Trevor Lawrence",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9634,
+        "productionPercentile": 0.939
+      },
+      {
+        "playerId": 13874698,
+        "name": "Harold Fannin Jr.",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9699,
+        "productionPercentile": 0.9323
+      },
+      {
+        "playerId": 114,
+        "name": "De'Von Achane",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9444,
+        "productionPercentile": 0.9514
+      },
+      {
+        "playerId": 13,
+        "name": "Drake London",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.9218,
+        "productionPercentile": 0.9691
+      },
+      {
+        "playerId": 725,
+        "name": "Nico Collins",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.9424,
+        "productionPercentile": 0.9465
+      },
+      {
+        "playerId": 13874582,
+        "name": "Tyler Warren",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.985,
+        "productionPercentile": 0.8985
+      },
+      {
+        "playerId": 811,
+        "name": "A.J. Brown",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.9465,
+        "productionPercentile": 0.9362
+      },
+      {
+        "playerId": 835,
+        "name": "Travis Kelce",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9774,
+        "productionPercentile": 0.9023
+      },
+      {
+        "playerId": 850,
+        "name": "Courtland Sutton",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9588,
+        "productionPercentile": 0.9136
+      },
+      {
+        "playerId": 279866,
+        "name": "Drake Maye",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9146,
+        "productionPercentile": 0.9573
+      },
+      {
+        "playerId": 821,
+        "name": "Davante Adams",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.93,
+        "productionPercentile": 0.9403
+      },
+      {
+        "playerId": 882,
+        "name": "Michael Wilson",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.963,
+        "productionPercentile": 0.9053
+      },
+      {
+        "playerId": 463,
+        "name": "Kyren Williams",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9236,
+        "productionPercentile": 0.9444
+      },
+      {
+        "playerId": 13874457,
+        "name": "Tetairoa McMillan",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9547,
+        "productionPercentile": 0.9115
+      },
+      {
+        "playerId": 762,
+        "name": "Dallas Goedert",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.9248,
+        "productionPercentile": 0.9361
+      },
+      {
+        "playerId": 277867,
+        "name": "Caleb Williams",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9756,
+        "productionPercentile": 0.8841
+      },
+      {
+        "playerId": 32,
+        "name": "Jared Goff",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9268,
+        "productionPercentile": 0.9329
+      },
+      {
+        "playerId": 911,
+        "name": "Hunter Henry",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9398,
+        "productionPercentile": 0.9173
+      },
+      {
+        "playerId": 476,
+        "name": "Saquon Barkley",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9583,
+        "productionPercentile": 0.8958
+      },
+      {
+        "playerId": 277730,
+        "name": "Bo Nix",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 1,
+        "productionPercentile": 0.8537
+      },
+      {
+        "playerId": 853,
+        "name": "Jake Ferguson",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9549,
+        "productionPercentile": 0.8985
+      },
+      {
+        "playerId": 615,
+        "name": "Zay Flowers",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9383,
+        "productionPercentile": 0.9136
+      },
+      {
+        "playerId": 471,
+        "name": "Travis Etienne Jr.",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9306,
+        "productionPercentile": 0.9201
+      },
+      {
+        "playerId": 489,
+        "name": "Javonte Williams",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9167,
+        "productionPercentile": 0.9271
+      },
+      {
+        "playerId": 551,
+        "name": "Chase Brown",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9375,
+        "productionPercentile": 0.9063
+      },
+      {
+        "playerId": 754,
+        "name": "George Kittle",
+        "position": "TE",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.8647,
+        "productionPercentile": 0.9737
+      },
+      {
+        "playerId": 13873873,
+        "name": "Ashton Jeanty",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9722,
+        "productionPercentile": 0.8646
+      },
+      {
+        "playerId": 591,
+        "name": "Wan'Dale Robinson",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9753,
+        "productionPercentile": 0.8601
+      },
+      {
+        "playerId": 13874067,
+        "name": "Emeka Egbuka",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9671,
+        "productionPercentile": 0.8683
+      },
+      {
+        "playerId": 13874670,
+        "name": "Colston Loveland",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9248,
+        "productionPercentile": 0.9023
+      },
+      {
+        "playerId": 656,
+        "name": "Jameson Williams",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8971,
+        "productionPercentile": 0.9239
+      },
+      {
+        "playerId": 34,
+        "name": "Patrick Mahomes",
+        "position": "QB",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.8659,
+        "productionPercentile": 0.9512
+      },
+      {
+        "playerId": 866,
+        "name": "Tee Higgins",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.8765,
+        "productionPercentile": 0.9383
+      },
+      {
+        "playerId": 105,
+        "name": "Josh Jacobs",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.8889,
+        "productionPercentile": 0.9201
+      },
+      {
+        "playerId": 930,
+        "name": "Juwan Johnson",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9549,
+        "productionPercentile": 0.8534
+      },
+      {
+        "playerId": 45,
+        "name": "Justin Herbert",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9146,
+        "productionPercentile": 0.8841
+      },
+      {
+        "playerId": 868,
+        "name": "Dalton Schultz",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9624,
+        "productionPercentile": 0.8346
+      },
+      {
+        "playerId": 795,
+        "name": "Rashee Rice",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.8148,
+        "productionPercentile": 0.9794
+      },
+      {
+        "playerId": 824,
+        "name": "DK Metcalf",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.8848,
+        "productionPercentile": 0.9053
+      },
+      {
+        "playerId": 38,
+        "name": "Josh Allen",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.878,
+        "productionPercentile": 0.9085
+      },
+      {
+        "playerId": 465,
+        "name": "D'Andre Swift",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8819,
+        "productionPercentile": 0.9028
+      },
+      {
+        "playerId": 575,
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.9342,
+        "productionPercentile": 0.8498
+      },
+      {
+        "playerId": 820,
+        "name": "Michael Pittman Jr.",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9177,
+        "productionPercentile": 0.8663
+      },
+      {
+        "playerId": 701,
+        "name": "Jaylen Waddle",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8889,
+        "productionPercentile": 0.8909
+      },
+      {
+        "playerId": 277681,
+        "name": "Ladd McConkey",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9095,
+        "productionPercentile": 0.858
+      },
+      {
+        "playerId": 277866,
+        "name": "Rome Odunze",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.8519,
+        "productionPercentile": 0.9095
+      },
+      {
+        "playerId": 826,
+        "name": "DeVonta Smith",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9259,
+        "productionPercentile": 0.8313
+      },
+      {
+        "playerId": 277793,
+        "name": "Theo Johnson",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.8872,
+        "productionPercentile": 0.8684
+      },
+      {
+        "playerId": 473,
+        "name": "Breece Hall",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9097,
+        "productionPercentile": 0.8438
+      },
+      {
+        "playerId": 1011,
+        "name": "Zach Ertz",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.8797,
+        "productionPercentile": 0.8722
+      },
+      {
+        "playerId": 102,
+        "name": "Deebo Samuel Sr.",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8848,
+        "productionPercentile": 0.8642
+      },
+      {
+        "playerId": 718,
+        "name": "Quentin Johnston",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.8354,
+        "productionPercentile": 0.9136
+      },
+      {
+        "playerId": 52,
+        "name": "Baker Mayfield",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.939,
+        "productionPercentile": 0.8049
+      },
+      {
+        "playerId": 893,
+        "name": "Alec Pierce",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.823,
+        "productionPercentile": 0.9177
+      },
+      {
+        "playerId": 88,
+        "name": "Keenan Allen",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9547,
+        "productionPercentile": 0.784
+      },
+      {
+        "playerId": 111,
+        "name": "Justin Jefferson",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9794,
+        "productionPercentile": 0.7572
+      },
+      {
+        "playerId": 935,
+        "name": "Tucker Kraft",
+        "position": "TE",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.7368,
+        "productionPercentile": 0.9962
+      },
+      {
+        "playerId": 962,
+        "name": "Jauan Jennings",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.8519,
+        "productionPercentile": 0.8786
+      },
+      {
+        "playerId": 735,
+        "name": "Stefon Diggs",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8971,
+        "productionPercentile": 0.8333
+      },
+      {
+        "playerId": 520,
+        "name": "Rico Dowdle",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9028,
+        "productionPercentile": 0.8229
+      },
+      {
+        "playerId": 279519,
+        "name": "Troy Franklin",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9012,
+        "productionPercentile": 0.8169
+      },
+      {
+        "playerId": 278448,
+        "name": "AJ Barner",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8496,
+        "productionPercentile": 0.8684
+      },
+      {
+        "playerId": 862,
+        "name": "Dalton Kincaid",
+        "position": "TE",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.782,
+        "productionPercentile": 0.9323
+      },
+      {
+        "playerId": 1057,
+        "name": "Parker Washington",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8724,
+        "productionPercentile": 0.8395
+      },
+      {
+        "playerId": 744,
+        "name": "Sam LaPorta",
+        "position": "TE",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.782,
+        "productionPercentile": 0.9286
+      },
+      {
+        "playerId": 488,
+        "name": "Jaylen Warren",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8611,
+        "productionPercentile": 0.8472
+      },
+      {
+        "playerId": 773,
+        "name": "Mark Andrews",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8722,
+        "productionPercentile": 0.8346
+      },
+      {
+        "playerId": 13874001,
+        "name": "Quinshon Judkins",
+        "position": "RB",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.875,
+        "productionPercentile": 0.8299
+      },
+      {
+        "playerId": 673,
+        "name": "DJ Moore",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8354,
+        "productionPercentile": 0.8642
+      },
+      {
+        "playerId": 13874754,
+        "name": "Oronde Gadsden",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.8647,
+        "productionPercentile": 0.8346
+      },
+      {
+        "playerId": 37,
+        "name": "Jakobi Meyers",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9136,
+        "productionPercentile": 0.7819
+      },
+      {
+        "playerId": 43,
+        "name": "Jalen Hurts",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8537,
+        "productionPercentile": 0.8415
+      },
+      {
+        "playerId": 1165,
+        "name": "Brenton Strange",
+        "position": "TE",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.8271,
+        "productionPercentile": 0.8609
+      },
+      {
+        "playerId": 861,
+        "name": "Romeo Doubs",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8354,
+        "productionPercentile": 0.8457
+      },
+      {
+        "playerId": 13873951,
+        "name": "TreVeyon Henderson",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8403,
+        "productionPercentile": 0.8403
+      },
+      {
+        "playerId": 18,
+        "name": "Jacoby Brissett",
+        "position": "QB",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.8293,
+        "productionPercentile": 0.8476
+      },
+      {
+        "playerId": 969,
+        "name": "Colby Parkinson",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.8195,
+        "productionPercentile": 0.8571
+      },
+      {
+        "playerId": 705,
+        "name": "Christian Watson",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.7243,
+        "productionPercentile": 0.9506
+      },
+      {
+        "playerId": 278135,
+        "name": "Bucky Irving",
+        "position": "RB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.8333,
+        "productionPercentile": 0.8403
+      },
+      {
+        "playerId": 712,
+        "name": "Khalil Shakir",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8724,
+        "productionPercentile": 0.7984
+      },
+      {
+        "playerId": 504,
+        "name": "Zach Charbonnet",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8333,
+        "productionPercentile": 0.8368
+      },
+      {
+        "playerId": 472,
+        "name": "Tony Pollard",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8958,
+        "productionPercentile": 0.7674
+      },
+      {
+        "playerId": 597,
+        "name": "Tre Tucker",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8642,
+        "productionPercentile": 0.7942
+      },
+      {
+        "playerId": 734,
+        "name": "Chig Okonkwo",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9023,
+        "productionPercentile": 0.7481
+      },
+      {
+        "playerId": 277562,
+        "name": "Marvin Harrison Jr.",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.7984,
+        "productionPercentile": 0.8457
+      },
+      {
+        "playerId": 278370,
+        "name": "Brian Thomas Jr.",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.856,
+        "productionPercentile": 0.7881
+      },
+      {
+        "playerId": 13873967,
+        "name": "RJ Harvey",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8194,
+        "productionPercentile": 0.8229
+      },
+      {
+        "playerId": 115,
+        "name": "Garrett Wilson",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.7449,
+        "productionPercentile": 0.8951
+      },
+      {
+        "playerId": 479,
+        "name": "Kenneth Walker III",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8681,
+        "productionPercentile": 0.7708
+      },
+      {
+        "playerId": 760,
+        "name": "Jordan Addison",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.8189,
+        "productionPercentile": 0.8169
+      },
+      {
+        "playerId": 837,
+        "name": "T.J. Hockenson",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.8421,
+        "productionPercentile": 0.7895
+      },
+      {
+        "playerId": 27,
+        "name": "Brock Purdy",
+        "position": "QB",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.6707,
+        "productionPercentile": 0.9573
+      },
+      {
+        "playerId": 12,
+        "name": "Kenny Gainwell",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8125,
+        "productionPercentile": 0.8056
+      },
+      {
+        "playerId": 31,
+        "name": "Daniel Jones",
+        "position": "QB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.7439,
+        "productionPercentile": 0.8659
+      },
+      {
+        "playerId": 815,
+        "name": "Mike Evans",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.7572,
+        "productionPercentile": 0.8519
+      },
+      {
+        "playerId": 950,
+        "name": "Pat Freiermuth",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8045,
+        "productionPercentile": 0.8008
+      },
+      {
+        "playerId": 834,
+        "name": "Terry McLaurin",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.7531,
+        "productionPercentile": 0.8477
+      },
+      {
+        "playerId": 13873922,
+        "name": "Woody Marks",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8542,
+        "productionPercentile": 0.7465
+      },
+      {
+        "playerId": 851,
+        "name": "Josh Downs",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8395,
+        "productionPercentile": 0.7593
+      },
+      {
+        "playerId": 13874089,
+        "name": "Elic Ayomanor",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8436,
+        "productionPercentile": 0.751
+      },
+      {
+        "playerId": 903,
+        "name": "Cade Otton",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.9098,
+        "productionPercentile": 0.6842
+      },
+      {
+        "playerId": 13873977,
+        "name": "Omarion Hampton",
+        "position": "RB",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.7222,
+        "productionPercentile": 0.8715
+      },
+      {
+        "playerId": 666,
+        "name": "Hollywood Brown",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8107,
+        "productionPercentile": 0.7819
+      },
+      {
+        "playerId": 277784,
+        "name": "Tyrone Tracy Jr.",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.8472,
+        "productionPercentile": 0.7431
+      },
+      {
+        "playerId": 499,
+        "name": "Rhamondre Stevenson",
+        "position": "RB",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.7361,
+        "productionPercentile": 0.8507
+      },
+      {
+        "playerId": 70,
+        "name": "Sam Darnold",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8049,
+        "productionPercentile": 0.7805
+      },
+      {
+        "playerId": 469,
+        "name": "David Montgomery",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7847,
+        "productionPercentile": 0.7917
+      },
+      {
+        "playerId": 844,
+        "name": "David Njoku",
+        "position": "TE",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.7594,
+        "productionPercentile": 0.8158
+      },
+      {
+        "playerId": 13874196,
+        "name": "Cam Skattebo",
+        "position": "RB",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.6667,
+        "productionPercentile": 0.9063
+      },
+      {
+        "playerId": 885,
+        "name": "Darren Waller",
+        "position": "TE",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.6692,
+        "productionPercentile": 0.9023
+      },
+      {
+        "playerId": 854,
+        "name": "Jerry Jeudy",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.9095,
+        "productionPercentile": 0.6605
+      },
+      {
+        "playerId": 13874000,
+        "name": "Jacory Croskey-Merritt",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7986,
+        "productionPercentile": 0.7708
+      },
+      {
+        "playerId": 512,
+        "name": "Kareem Hunt",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7986,
+        "productionPercentile": 0.7639
+      },
+      {
+        "playerId": 13874239,
+        "name": "Jayden Higgins",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7819,
+        "productionPercentile": 0.7798
+      },
+      {
+        "playerId": 53,
+        "name": "Jordan Love",
+        "position": "QB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.7805,
+        "productionPercentile": 0.7805
+      },
+      {
+        "playerId": 75,
+        "name": "Bryce Young",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8415,
+        "productionPercentile": 0.7195
+      },
+      {
+        "playerId": 1012,
+        "name": "Dawson Knox",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.782,
+        "productionPercentile": 0.7782
+      },
+      {
+        "playerId": 669,
+        "name": "J.K. Dobbins",
+        "position": "RB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.7361,
+        "productionPercentile": 0.8229
+      },
+      {
+        "playerId": 94,
+        "name": "Aaron Rodgers",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8171,
+        "productionPercentile": 0.7378
+      },
+      {
+        "playerId": 836,
+        "name": "Evan Engram",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8947,
+        "productionPercentile": 0.6579
+      },
+      {
+        "playerId": 13873984,
+        "name": "Kyle Monangai",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8125,
+        "productionPercentile": 0.7257
+      },
+      {
+        "playerId": 279581,
+        "name": "Kimani Vidal",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.7778,
+        "productionPercentile": 0.75
+      },
+      {
+        "playerId": 640,
+        "name": "Rashid Shaheed",
+        "position": "WR",
+        "gamesPlayed": 18,
+        "usagePercentile": 0.8642,
+        "productionPercentile": 0.6626
+      },
+      {
+        "playerId": 277804,
+        "name": "Malik Nabers",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.5761,
+        "productionPercentile": 0.9506
+      },
+      {
+        "playerId": 13874782,
+        "name": "Mason Taylor",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.8346,
+        "productionPercentile": 0.6917
+      },
+      {
+        "playerId": 13874439,
+        "name": "Gunnar Helm",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.812,
+        "productionPercentile": 0.7068
+      },
+      {
+        "playerId": 57,
+        "name": "C.J. Stroud",
+        "position": "QB",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.7683,
+        "productionPercentile": 0.75
+      },
+      {
+        "playerId": 13874116,
+        "name": "Chimere Dike",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8107,
+        "productionPercentile": 0.7037
+      },
+      {
+        "playerId": 99,
+        "name": "Jonnu Smith",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8045,
+        "productionPercentile": 0.7068
+      },
+      {
+        "playerId": 82472,
+        "name": "Jake Tonges",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7444,
+        "productionPercentile": 0.7632
+      },
+      {
+        "playerId": 1200,
+        "name": "Kayshon Boutte",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.6708,
+        "productionPercentile": 0.8354
+      },
+      {
+        "playerId": 277567,
+        "name": "Keon Coleman",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.7449,
+        "productionPercentile": 0.7551
+      },
+      {
+        "playerId": 544,
+        "name": "Jordan Mason",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.7639,
+        "productionPercentile": 0.7326
+      },
+      {
+        "playerId": 895,
+        "name": "Tyler Higbee",
+        "position": "TE",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.6767,
+        "productionPercentile": 0.8195
+      },
+      {
+        "playerId": 496,
+        "name": "Aaron Jones Sr.",
+        "position": "RB",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.7569,
+        "productionPercentile": 0.7257
+      },
+      {
+        "playerId": 33,
+        "name": "Lamar Jackson",
+        "position": "QB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6951,
+        "productionPercentile": 0.7866
+      },
+      {
+        "playerId": 13874242,
+        "name": "Luther Burden III",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.7531,
+        "productionPercentile": 0.7263
+      },
+      {
+        "playerId": 279725,
+        "name": "Malik Washington",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7778,
+        "productionPercentile": 0.6975
+      },
+      {
+        "playerId": 279886,
+        "name": "Ryan Flournoy",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.7284,
+        "productionPercentile": 0.7469
+      },
+      {
+        "playerId": 794,
+        "name": "Cooper Kupp",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.786,
+        "productionPercentile": 0.6852
+      },
+      {
+        "playerId": 967,
+        "name": "Mack Hollins",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.7778,
+        "productionPercentile": 0.6914
+      },
+      {
+        "playerId": 952,
+        "name": "Michael Mayer",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.7895,
+        "productionPercentile": 0.6767
+      },
+      {
+        "playerId": 278420,
+        "name": "Adonai Mitchell",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.8107,
+        "productionPercentile": 0.6502
+      },
+      {
+        "playerId": 759,
+        "name": "Cole Kmet",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.7594,
+        "productionPercentile": 0.6992
+      },
+      {
+        "playerId": 13873832,
+        "name": "Jaxson Dart",
+        "position": "QB",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.7317,
+        "productionPercentile": 0.7256
+      },
+      {
+        "playerId": 13873931,
+        "name": "Cam Ward",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.8902,
+        "productionPercentile": 0.5671
+      },
+      {
+        "playerId": 50,
+        "name": "Geno Smith",
+        "position": "QB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.7927,
+        "productionPercentile": 0.6585
+      },
+      {
+        "playerId": 914,
+        "name": "Noah Fant",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.7143,
+        "productionPercentile": 0.7368
+      },
+      {
+        "playerId": 35,
+        "name": "Joe Burrow",
+        "position": "QB",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.5854,
+        "productionPercentile": 0.8598
+      },
+      {
+        "playerId": 88093,
+        "name": "Xavier Worthy",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.7984,
+        "productionPercentile": 0.6461
+      },
+      {
+        "playerId": 480,
+        "name": "Chuba Hubbard",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.7569,
+        "productionPercentile": 0.6875
+      },
+      {
+        "playerId": 971,
+        "name": "Mike Gesicki",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.7218,
+        "productionPercentile": 0.7218
+      },
+      {
+        "playerId": 474,
+        "name": "Rachaad White",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7778,
+        "productionPercentile": 0.6632
+      },
+      {
+        "playerId": 494,
+        "name": "Tyler Allgeier",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7222,
+        "productionPercentile": 0.7188
+      },
+      {
+        "playerId": 100,
+        "name": "Chris Godwin Jr.",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.6872,
+        "productionPercentile": 0.7469
+      },
+      {
+        "playerId": 277936,
+        "name": "Xavier Legette",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.7654,
+        "productionPercentile": 0.6687
+      },
+      {
+        "playerId": 278240,
+        "name": "Blake Corum",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7222,
+        "productionPercentile": 0.7118
+      },
+      {
+        "playerId": 1179,
+        "name": "Jalen Nailor",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7119,
+        "productionPercentile": 0.714
+      },
+      {
+        "playerId": 611,
+        "name": "Calvin Austin III",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.7243,
+        "productionPercentile": 0.6934
+      },
+      {
+        "playerId": 624,
+        "name": "Xavier Hutchinson",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7325,
+        "productionPercentile": 0.6749
+      },
+      {
+        "playerId": 364100,
+        "name": "Jalen Coker",
+        "position": "WR",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.6379,
+        "productionPercentile": 0.7654
+      },
+      {
+        "playerId": 689,
+        "name": "Tyreek Hill",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.5391,
+        "productionPercentile": 0.8621
+      },
+      {
+        "playerId": 13874050,
+        "name": "Tyler Shough",
+        "position": "QB",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.7073,
+        "productionPercentile": 0.6829
+      },
+      {
+        "playerId": 852,
+        "name": "Darius Slayton",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.7613,
+        "productionPercentile": 0.6276
+      },
+      {
+        "playerId": 1028,
+        "name": "Olamide Zaccheaus",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.7778,
+        "productionPercentile": 0.607
+      },
+      {
+        "playerId": 1188,
+        "name": "Greg Dulcich",
+        "position": "TE",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.6541,
+        "productionPercentile": 0.7218
+      },
+      {
+        "playerId": 739,
+        "name": "Darnell Mooney",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.7901,
+        "productionPercentile": 0.5823
+      },
+      {
+        "playerId": 13874106,
+        "name": "Travis Hunter",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.6584,
+        "productionPercentile": 0.714
+      },
+      {
+        "playerId": 281622,
+        "name": "Ricky Pearsall",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.7119,
+        "productionPercentile": 0.6584
+      },
+      {
+        "playerId": 493,
+        "name": "Alvin Kamara",
+        "position": "RB",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.7431,
+        "productionPercentile": 0.625
+      },
+      {
+        "playerId": 534,
+        "name": "Chris Rodriguez Jr.",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6528,
+        "productionPercentile": 0.7153
+      },
+      {
+        "playerId": 28,
+        "name": "Tua Tagovailoa",
+        "position": "QB",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.7195,
+        "productionPercentile": 0.6463
+      },
+      {
+        "playerId": 13874268,
+        "name": "Tez Johnson",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.6502,
+        "productionPercentile": 0.7119
+      },
+      {
+        "playerId": 1072,
+        "name": "Andrei Iosivas",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7366,
+        "productionPercentile": 0.6214
+      },
+      {
+        "playerId": 630,
+        "name": "DeMario Douglas",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6708,
+        "productionPercentile": 0.6831
+      },
+      {
+        "playerId": 72,
+        "name": "Joe Flacco",
+        "position": "QB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.7561,
+        "productionPercentile": 0.5976
+      },
+      {
+        "playerId": 1003,
+        "name": "Tommy Tremble",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7068,
+        "productionPercentile": 0.6466
+      },
+      {
+        "playerId": 1123,
+        "name": "Darnell Washington",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.7293,
+        "productionPercentile": 0.6165
+      },
+      {
+        "playerId": 917,
+        "name": "Isaiah Likely",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.7068,
+        "productionPercentile": 0.6353
+      },
+      {
+        "playerId": 697,
+        "name": "Bam Knight",
+        "position": "RB",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.6458,
+        "productionPercentile": 0.6944
+      },
+      {
+        "playerId": 655,
+        "name": "Marvin Mims Jr.",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.6872,
+        "productionPercentile": 0.6523
+      },
+      {
+        "playerId": 1083,
+        "name": "Davis Allen",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6541,
+        "productionPercentile": 0.6805
+      },
+      {
+        "playerId": 8,
+        "name": "Devin Singletary",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6806,
+        "productionPercentile": 0.6493
+      },
+      {
+        "playerId": 622,
+        "name": "Tyquan Thornton",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.6091,
+        "productionPercentile": 0.716
+      },
+      {
+        "playerId": 13874543,
+        "name": "Terrance Ferguson",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.6015,
+        "productionPercentile": 0.7218
+      },
+      {
+        "playerId": 729,
+        "name": "Sterling Shepard",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.7119,
+        "productionPercentile": 0.6049
+      },
+      {
+        "playerId": 555,
+        "name": "Nick Chubb",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.6944,
+        "productionPercentile": 0.6215
+      },
+      {
+        "playerId": 966,
+        "name": "Daniel Bellinger",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.6241,
+        "productionPercentile": 0.6917
+      },
+      {
+        "playerId": 279875,
+        "name": "Michael Penix Jr.",
+        "position": "QB",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.6585,
+        "productionPercentile": 0.6524
+      },
+      {
+        "playerId": 14,
+        "name": "Dontayvion Wicks",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.6708,
+        "productionPercentile": 0.6399
+      },
+      {
+        "playerId": 478,
+        "name": "Isiah Pacheco",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.7014,
+        "productionPercentile": 0.6042
+      },
+      {
+        "playerId": 976,
+        "name": "Austin Hooper",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.6241,
+        "productionPercentile": 0.6729
+      },
+      {
+        "playerId": 577,
+        "name": "KaVontae Turpin",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.6173,
+        "productionPercentile": 0.677
+      },
+      {
+        "playerId": 48,
+        "name": "Mac Jones",
+        "position": "QB",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.6829,
+        "productionPercentile": 0.6098
+      },
+      {
+        "playerId": 278124,
+        "name": "Jayden Daniels",
+        "position": "QB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.5732,
+        "productionPercentile": 0.7134
+      },
+      {
+        "playerId": 741,
+        "name": "Kendrick Bourne",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.7119,
+        "productionPercentile": 0.5741
+      },
+      {
+        "playerId": 277937,
+        "name": "Ja'Tavion Sanders",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6692,
+        "productionPercentile": 0.6128
+      },
+      {
+        "playerId": 593,
+        "name": "Emanuel Wilson",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6944,
+        "productionPercentile": 0.5833
+      },
+      {
+        "playerId": 277738,
+        "name": "Devaughn Vele",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6296,
+        "productionPercentile": 0.6399
+      },
+      {
+        "playerId": 281375,
+        "name": "J.J. McCarthy",
+        "position": "QB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.622,
+        "productionPercentile": 0.6463
+      },
+      {
+        "playerId": 1030,
+        "name": "Elijah Higgins",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7068,
+        "productionPercentile": 0.5564
+      },
+      {
+        "playerId": 23,
+        "name": "Carson Wentz",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.5244,
+        "productionPercentile": 0.7378
+      },
+      {
+        "playerId": 722,
+        "name": "Cedric Tillman",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6296,
+        "productionPercentile": 0.6296
+      },
+      {
+        "playerId": 506,
+        "name": "Tyjae Spears",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6597,
+        "productionPercentile": 0.5972
+      },
+      {
+        "playerId": 13874098,
+        "name": "Tory Horton",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.4815,
+        "productionPercentile": 0.7716
+      },
+      {
+        "playerId": 549,
+        "name": "Michael Carter",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6736,
+        "productionPercentile": 0.5764
+      },
+      {
+        "playerId": 13874014,
+        "name": "Bhayshul Tuten",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.6181,
+        "productionPercentile": 0.6319
+      },
+      {
+        "playerId": 41,
+        "name": "Kyler Murray",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.5366,
+        "productionPercentile": 0.7073
+      },
+      {
+        "playerId": 466,
+        "name": "James Conner",
+        "position": "RB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.4514,
+        "productionPercentile": 0.7917
+      },
+      {
+        "playerId": 738,
+        "name": "Greg Dortch",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.5556,
+        "productionPercentile": 0.6872
+      },
+      {
+        "playerId": 668,
+        "name": "Sean Tucker",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6181,
+        "productionPercentile": 0.6215
+      },
+      {
+        "playerId": 13874137,
+        "name": "Pat Bryant",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.679,
+        "productionPercentile": 0.5597
+      },
+      {
+        "playerId": 98,
+        "name": "Tanner Hudson",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.5865,
+        "productionPercentile": 0.6504
+      },
+      {
+        "playerId": 745,
+        "name": "John Metchie III",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.6749,
+        "productionPercentile": 0.5597
+      },
+      {
+        "playerId": 13874289,
+        "name": "Elijah Arroyo",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6241,
+        "productionPercentile": 0.609
+      },
+      {
+        "playerId": 743,
+        "name": "Van Jefferson",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.6955,
+        "productionPercentile": 0.535
+      },
+      {
+        "playerId": 992,
+        "name": "Josh Oliver",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.5338,
+        "productionPercentile": 0.6955
+      },
+      {
+        "playerId": 537,
+        "name": "Samaje Perine",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.6389,
+        "productionPercentile": 0.5903
+      },
+      {
+        "playerId": 90,
+        "name": "Christian Kirk",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6955,
+        "productionPercentile": 0.5226
+      },
+      {
+        "playerId": 764,
+        "name": "Noah Gray",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.7068,
+        "productionPercentile": 0.5113
+      },
+      {
+        "playerId": 568,
+        "name": "Ty Johnson",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6042,
+        "productionPercentile": 0.6076
+      },
+      {
+        "playerId": 1088,
+        "name": "Brock Wright",
+        "position": "TE",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.5639,
+        "productionPercentile": 0.6429
+      },
+      {
+        "playerId": 13874599,
+        "name": "Mitchell Evans",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6015,
+        "productionPercentile": 0.6053
+      },
+      {
+        "playerId": 683,
+        "name": "Rashod Bateman",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.6173,
+        "productionPercentile": 0.5885
+      },
+      {
+        "playerId": 841,
+        "name": "Tyler Lockett",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.7243,
+        "productionPercentile": 0.4794
+      },
+      {
+        "playerId": 13874068,
+        "name": "Matthew Golden",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.6502,
+        "productionPercentile": 0.5535
+      },
+      {
+        "playerId": 665,
+        "name": "Calvin Ridley",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.5967,
+        "productionPercentile": 0.6029
+      },
+      {
+        "playerId": 13874537,
+        "name": "Jackson Hawes",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5338,
+        "productionPercentile": 0.6654
+      },
+      {
+        "playerId": 279719,
+        "name": "Jaylen Wright",
+        "position": "RB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.5972,
+        "productionPercentile": 0.6007
+      },
+      {
+        "playerId": 95,
+        "name": "DeAndre Hopkins",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6296,
+        "productionPercentile": 0.5679
+      },
+      {
+        "playerId": 69,
+        "name": "Justin Fields",
+        "position": "QB",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.5976,
+        "productionPercentile": 0.5793
+      },
+      {
+        "playerId": 939,
+        "name": "Luke Musgrave",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6391,
+        "productionPercentile": 0.5376
+      },
+      {
+        "playerId": 13874399,
+        "name": "Isaac TeSlaa",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5267,
+        "productionPercentile": 0.6481
+      },
+      {
+        "playerId": 963,
+        "name": "JuJu Smith-Schuster",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6584,
+        "productionPercentile": 0.5144
+      },
+      {
+        "playerId": 13874355,
+        "name": "Theo Wease Jr.",
+        "position": "WR",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.3374,
+        "productionPercentile": 0.8354
+      },
+      {
+        "playerId": 13882104,
+        "name": "Isaiah Bond",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.6502,
+        "productionPercentile": 0.5226
+      },
+      {
+        "playerId": 279782,
+        "name": "Spencer Rattler",
+        "position": "QB",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.6463,
+        "productionPercentile": 0.5244
+      },
+      {
+        "playerId": 2294,
+        "name": "Hunter Long",
+        "position": "TE",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.5113,
+        "productionPercentile": 0.6579
+      },
+      {
+        "playerId": 574,
+        "name": "Jayden Reed",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.4815,
+        "productionPercentile": 0.6872
+      },
+      {
+        "playerId": 13874120,
+        "name": "Dylan Sampson",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.6389,
+        "productionPercentile": 0.5278
+      },
+      {
+        "playerId": 965,
+        "name": "Hunter Renfrow",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.5226,
+        "productionPercentile": 0.642
+      },
+      {
+        "playerId": 13874315,
+        "name": "Devin Neal",
+        "position": "RB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.5764,
+        "productionPercentile": 0.5833
+      },
+      {
+        "playerId": 26,
+        "name": "Kirk Cousins",
+        "position": "QB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.6341,
+        "productionPercentile": 0.5244
+      },
+      {
+        "playerId": 1046,
+        "name": "Jeremy Ruckert",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6316,
+        "productionPercentile": 0.5188
+      },
+      {
+        "playerId": 732,
+        "name": "Joshua Palmer",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.6091,
+        "productionPercentile": 0.535
+      },
+      {
+        "playerId": 278126,
+        "name": "Luke McCaffrey",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.4156,
+        "productionPercentile": 0.7284
+      },
+      {
+        "playerId": 13874411,
+        "name": "Tre' Harris",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.6379,
+        "productionPercentile": 0.5041
+      },
+      {
+        "playerId": 44,
+        "name": "Marcus Mariota",
+        "position": "QB",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.6098,
+        "productionPercentile": 0.5305
+      },
+      {
+        "playerId": 13873908,
+        "name": "Shedeur Sanders",
+        "position": "QB",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.561,
+        "productionPercentile": 0.5732
+      },
+      {
+        "playerId": 13874478,
+        "name": "Jaylin Noel",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5761,
+        "productionPercentile": 0.5535
+      },
+      {
+        "playerId": 277739,
+        "name": "Audric Estime",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.5278,
+        "productionPercentile": 0.5938
+      },
+      {
+        "playerId": 10,
+        "name": "Dyami Brown",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.6091,
+        "productionPercentile": 0.5123
+      },
+      {
+        "playerId": 1000,
+        "name": "Adam Trautman",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5789,
+        "productionPercentile": 0.5414
+      },
+      {
+        "playerId": 663,
+        "name": "Demarcus Robinson",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.5761,
+        "productionPercentile": 0.5329
+      },
+      {
+        "playerId": 491,
+        "name": "Brian Robinson Jr.",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.625,
+        "productionPercentile": 0.4792
+      },
+      {
+        "playerId": 13873940,
+        "name": "Ollie Gordon II",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5972,
+        "productionPercentile": 0.5035
+      },
+      {
+        "playerId": 790,
+        "name": "Gabe Davis",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.4486,
+        "productionPercentile": 0.6399
+      },
+      {
+        "playerId": 518,
+        "name": "Justice Hill",
+        "position": "RB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.4861,
+        "productionPercentile": 0.5938
+      },
+      {
+        "playerId": 586135,
+        "name": "Jawhar Jordan",
+        "position": "RB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.5,
+        "productionPercentile": 0.5764
+      },
+      {
+        "playerId": 598,
+        "name": "Kalif Raymond",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.5473,
+        "productionPercentile": 0.5288
+      },
+      {
+        "playerId": 642,
+        "name": "Brandin Cooks",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.5967,
+        "productionPercentile": 0.4794
+      },
+      {
+        "playerId": 2320,
+        "name": "Malik Davis",
+        "position": "RB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.5208,
+        "productionPercentile": 0.5521
+      },
+      {
+        "playerId": 516,
+        "name": "Keaton Mitchell",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.5625,
+        "productionPercentile": 0.5104
+      },
+      {
+        "playerId": 78928,
+        "name": "David Sills V",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5967,
+        "productionPercentile": 0.4753
+      },
+      {
+        "playerId": 1094,
+        "name": "Charlie Kolar",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.4812,
+        "productionPercentile": 0.5827
+      },
+      {
+        "playerId": 281555,
+        "name": "Kevin Austin Jr.",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.4979,
+        "productionPercentile": 0.5658
+      },
+      {
+        "playerId": 560,
+        "name": "Kendre Miller",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.5069,
+        "productionPercentile": 0.5556
+      },
+      {
+        "playerId": 277560,
+        "name": "Trey Benson",
+        "position": "RB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.4861,
+        "productionPercentile": 0.5729
+      },
+      {
+        "playerId": 961,
+        "name": "Jalen Tolbert",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.5597,
+        "productionPercentile": 0.4959
+      },
+      {
+        "playerId": 86,
+        "name": "Jameis Winston",
+        "position": "QB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.3902,
+        "productionPercentile": 0.6646
+      },
+      {
+        "playerId": 892,
+        "name": "Jahan Dotson",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5967,
+        "productionPercentile": 0.4568
+      },
+      {
+        "playerId": 528,
+        "name": "Emari Demercado",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.5347,
+        "productionPercentile": 0.5174
+      },
+      {
+        "playerId": 68772,
+        "name": "Tim Patrick",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.5103,
+        "productionPercentile": 0.5412
+      },
+      {
+        "playerId": 24,
+        "name": "Jake Browning",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.4634,
+        "productionPercentile": 0.5854
+      },
+      {
+        "playerId": 21219,
+        "name": "Philip Rivers",
+        "position": "QB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.4512,
+        "productionPercentile": 0.5915
+      },
+      {
+        "playerId": 1141,
+        "name": "Julian Hill",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.5564,
+        "productionPercentile": 0.485
+      },
+      {
+        "playerId": 1117,
+        "name": "Luke Schoonmaker",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5789,
+        "productionPercentile": 0.4586
+      },
+      {
+        "playerId": 280155,
+        "name": "Isaiah Williams",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.5967,
+        "productionPercentile": 0.4383
+      },
+      {
+        "playerId": 685,
+        "name": "Treylon Burks",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.4815,
+        "productionPercentile": 0.5535
+      },
+      {
+        "playerId": 508,
+        "name": "Miles Sanders",
+        "position": "RB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.3958,
+        "productionPercentile": 0.6389
+      },
+      {
+        "playerId": 1031,
+        "name": "Lil'Jordan Humphrey",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.5185,
+        "productionPercentile": 0.5103
+      },
+      {
+        "playerId": 981,
+        "name": "Isaiah Hodgins",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.4527,
+        "productionPercentile": 0.5741
+      },
+      {
+        "playerId": 278133,
+        "name": "Jalen McMillan",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.4156,
+        "productionPercentile": 0.6091
+      },
+      {
+        "playerId": 93,
+        "name": "Davis Mills",
+        "position": "QB",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.5122,
+        "productionPercentile": 0.5122
+      },
+      {
+        "playerId": 78339,
+        "name": "Jaret Patterson",
+        "position": "RB",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.4861,
+        "productionPercentile": 0.5382
+      },
+      {
+        "playerId": 277561,
+        "name": "Ray Davis",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5625,
+        "productionPercentile": 0.4618
+      },
+      {
+        "playerId": 279853,
+        "name": "Isaiah Davis",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.5625,
+        "productionPercentile": 0.4549
+      },
+      {
+        "playerId": 1032,
+        "name": "Mo Alie-Cox",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5564,
+        "productionPercentile": 0.4586
+      },
+      {
+        "playerId": 13874592,
+        "name": "Kyle Williams",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.4691,
+        "productionPercentile": 0.5453
+      },
+      {
+        "playerId": 946,
+        "name": "Marquez Valdes-Scantling",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.5391,
+        "productionPercentile": 0.4733
+      },
+      {
+        "playerId": 569,
+        "name": "Tank Bigsby",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5417,
+        "productionPercentile": 0.4688
+      },
+      {
+        "playerId": 1020,
+        "name": "Will Dissly",
+        "position": "TE",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.5038,
+        "productionPercentile": 0.5038
+      },
+      {
+        "playerId": 1029,
+        "name": "Drew Sample",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5564,
+        "productionPercentile": 0.4511
+      },
+      {
+        "playerId": 13874158,
+        "name": "Raheim Sanders",
+        "position": "RB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.4167,
+        "productionPercentile": 0.5903
+      },
+      {
+        "playerId": 13874030,
+        "name": "Brashard Smith",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5972,
+        "productionPercentile": 0.4063
+      },
+      {
+        "playerId": 2019,
+        "name": "Jeremy McNichols",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5694,
+        "productionPercentile": 0.434
+      },
+      {
+        "playerId": 13873932,
+        "name": "Jaydon Blue",
+        "position": "RB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.4444,
+        "productionPercentile": 0.559
+      },
+      {
+        "playerId": 278664,
+        "name": "Roman Wilson",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.4609,
+        "productionPercentile": 0.5412
+      },
+      {
+        "playerId": 1273,
+        "name": "Albert Okwuegbunam Jr.",
+        "position": "TE",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.3459,
+        "productionPercentile": 0.6504
+      },
+      {
+        "playerId": 13874460,
+        "name": "Jaylin Lane",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.5514,
+        "productionPercentile": 0.4444
+      },
+      {
+        "playerId": 1045,
+        "name": "John Bates",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.5038,
+        "productionPercentile": 0.4887
+      },
+      {
+        "playerId": 281732,
+        "name": "Xavier Smith",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.5103,
+        "productionPercentile": 0.4815
+      },
+      {
+        "playerId": 637,
+        "name": "Chris Moore",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.4979,
+        "productionPercentile": 0.4815
+      },
+      {
+        "playerId": 279096,
+        "name": "Cade Stover",
+        "position": "TE",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.5038,
+        "productionPercentile": 0.4737
+      },
+      {
+        "playerId": 728,
+        "name": "Adam Thielen",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.5761,
+        "productionPercentile": 0.4012
+      },
+      {
+        "playerId": 1019,
+        "name": "Johnny Mundt",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.5338,
+        "productionPercentile": 0.4398
+      },
+      {
+        "playerId": 1040,
+        "name": "Luke Farrell",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.4586,
+        "productionPercentile": 0.5113
+      },
+      {
+        "playerId": 82470,
+        "name": "Tanner Conner",
+        "position": "TE",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.4812,
+        "productionPercentile": 0.4887
+      },
+      {
+        "playerId": 51,
+        "name": "Tyrod Taylor",
+        "position": "QB",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.4878,
+        "productionPercentile": 0.4817
+      },
+      {
+        "playerId": 942,
+        "name": "Zay Jones",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.4486,
+        "productionPercentile": 0.5206
+      },
+      {
+        "playerId": 873,
+        "name": "Josh Reynolds",
+        "position": "WR",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.4691,
+        "productionPercentile": 0.4959
+      },
+      {
+        "playerId": 13874133,
+        "name": "Jack Bech",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.5391,
+        "productionPercentile": 0.4259
+      },
+      {
+        "playerId": 651,
+        "name": "Tutu Atwell",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.4156,
+        "productionPercentile": 0.5473
+      },
+      {
+        "playerId": 513,
+        "name": "Jaleel McLaughlin",
+        "position": "RB",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.4583,
+        "productionPercentile": 0.5
+      },
+      {
+        "playerId": 1237,
+        "name": "Tyler Johnson",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.4486,
+        "productionPercentile": 0.5082
+      },
+      {
+        "playerId": 13873898,
+        "name": "Dillon Gabriel",
+        "position": "QB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.5488,
+        "productionPercentile": 0.4024
+      },
+      {
+        "playerId": 13874002,
+        "name": "Phil Mafah",
+        "position": "RB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1806,
+        "productionPercentile": 0.7674
+      },
+      {
+        "playerId": 281666,
+        "name": "Mitchell Tinsley",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5103,
+        "productionPercentile": 0.4342
+      },
+      {
+        "playerId": 365861,
+        "name": "Tyrell Shavers",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.4979,
+        "productionPercentile": 0.4465
+      },
+      {
+        "playerId": 280079,
+        "name": "Ben Sinnott",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.4511,
+        "productionPercentile": 0.485
+      },
+      {
+        "playerId": 708,
+        "name": "Elijah Moore",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.428,
+        "productionPercentile": 0.5041
+      },
+      {
+        "playerId": 1226,
+        "name": "John FitzPatrick",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.4812,
+        "productionPercentile": 0.4474
+      },
+      {
+        "playerId": 1192,
+        "name": "Nate Adkins",
+        "position": "TE",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.4211,
+        "productionPercentile": 0.5075
+      },
+      {
+        "playerId": 13873821,
+        "name": "Brady Cook",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.5,
+        "productionPercentile": 0.4268
+      },
+      {
+        "playerId": 530,
+        "name": "Antonio Gibson",
+        "position": "RB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.3958,
+        "productionPercentile": 0.5243
+      },
+      {
+        "playerId": 13874481,
+        "name": "Dont'e Thornton Jr.",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.5473,
+        "productionPercentile": 0.3724
+      },
+      {
+        "playerId": 1156,
+        "name": "Grant Calcaterra",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.4511,
+        "productionPercentile": 0.4586
+      },
+      {
+        "playerId": 278247,
+        "name": "Jordan Whittington",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.5185,
+        "productionPercentile": 0.3889
+      },
+      {
+        "playerId": 1131,
+        "name": "Ian Thomas",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.4511,
+        "productionPercentile": 0.4549
+      },
+      {
+        "playerId": 39,
+        "name": "Russell Wilson",
+        "position": "QB",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.4756,
+        "productionPercentile": 0.4268
+      },
+      {
+        "playerId": 483,
+        "name": "Jerome Ford",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.5139,
+        "productionPercentile": 0.3819
+      },
+      {
+        "playerId": 1112,
+        "name": "Ronnie Bell",
+        "position": "WR",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.2305,
+        "productionPercentile": 0.6626
+      },
+      {
+        "playerId": 279851,
+        "name": "Braelon Allen",
+        "position": "RB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.3403,
+        "productionPercentile": 0.5521
+      },
+      {
+        "playerId": 13873786,
+        "name": "Quinn Ewers",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.439,
+        "productionPercentile": 0.4512
+      },
+      {
+        "playerId": 281544,
+        "name": "Zavier Scott",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.4931,
+        "productionPercentile": 0.3958
+      },
+      {
+        "playerId": 280141,
+        "name": "Brevyn Spann-Ford",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.4511,
+        "productionPercentile": 0.4286
+      },
+      {
+        "playerId": 278521,
+        "name": "Devontez Walker",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.2963,
+        "productionPercentile": 0.5782
+      },
+      {
+        "playerId": 13874605,
+        "name": "Jahdae Walker",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.3374,
+        "productionPercentile": 0.535
+      },
+      {
+        "playerId": 774,
+        "name": "Tyler Conklin",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.406,
+        "productionPercentile": 0.4624
+      },
+      {
+        "playerId": 948,
+        "name": "Allen Lazard",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.4486,
+        "productionPercentile": 0.4177
+      },
+      {
+        "playerId": 1086,
+        "name": "Josh Whyle",
+        "position": "TE",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.3459,
+        "productionPercentile": 0.5188
+      },
+      {
+        "playerId": 1283,
+        "name": "Gunner Olszewski",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.3704,
+        "productionPercentile": 0.4897
+      },
+      {
+        "playerId": 638,
+        "name": "Curtis Samuel",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.3086,
+        "productionPercentile": 0.5494
+      },
+      {
+        "playerId": 11106,
+        "name": "Anthony Firkser",
+        "position": "TE",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.406,
+        "productionPercentile": 0.4511
+      },
+      {
+        "playerId": 498,
+        "name": "Austin Ekeler",
+        "position": "RB",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.3403,
+        "productionPercentile": 0.5139
+      },
+      {
+        "playerId": 13874290,
+        "name": "Konata Mumpfield",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.4979,
+        "productionPercentile": 0.3498
+      },
+      {
+        "playerId": 1158,
+        "name": "Jack Stoll",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.4211,
+        "productionPercentile": 0.4248
+      },
+      {
+        "playerId": 279958,
+        "name": "Malachi Corley",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.3909,
+        "productionPercentile": 0.4506
+      },
+      {
+        "playerId": 17,
+        "name": "Malik Willis",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.3171,
+        "productionPercentile": 0.5244
+      },
+      {
+        "playerId": 784,
+        "name": "Noah Brown",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.3374,
+        "productionPercentile": 0.5041
+      },
+      {
+        "playerId": 80,
+        "name": "Tyler Huntley",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.439,
+        "productionPercentile": 0.4024
+      },
+      {
+        "playerId": 13874285,
+        "name": "Jimmy Horn Jr.",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.4156,
+        "productionPercentile": 0.4239
+      },
+      {
+        "playerId": 281719,
+        "name": "Brycen Tremayne",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.4486,
+        "productionPercentile": 0.3868
+      },
+      {
+        "playerId": 7765,
+        "name": "Michael Bandy",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2305,
+        "productionPercentile": 0.5988
+      },
+      {
+        "playerId": 1184,
+        "name": "Quintin Morris",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.3835,
+        "productionPercentile": 0.4436
+      },
+      {
+        "playerId": 580,
+        "name": "Chris Brooks",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.4653,
+        "productionPercentile": 0.3611
+      },
+      {
+        "playerId": 1004,
+        "name": "Foster Moreau",
+        "position": "TE",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.406,
+        "productionPercentile": 0.4173
+      },
+      {
+        "playerId": 278589,
+        "name": "Jamari Thrash",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.4156,
+        "productionPercentile": 0.4074
+      },
+      {
+        "playerId": 470,
+        "name": "Raheem Mostert",
+        "position": "RB",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.4306,
+        "productionPercentile": 0.3889
+      },
+      {
+        "playerId": 587,
+        "name": "Ameer Abdullah",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.4167,
+        "productionPercentile": 0.4028
+      },
+      {
+        "playerId": 653,
+        "name": "Ray-Ray McCloud III",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.4156,
+        "productionPercentile": 0.3992
+      },
+      {
+        "playerId": 280083,
+        "name": "Casey Washington",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.3909,
+        "productionPercentile": 0.4198
+      },
+      {
+        "playerId": 68886,
+        "name": "Dante Pettis",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.3498,
+        "productionPercentile": 0.4527
+      },
+      {
+        "playerId": 281849,
+        "name": "Terrell Jennings",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.3681,
+        "productionPercentile": 0.434
+      },
+      {
+        "playerId": 928,
+        "name": "Nick Westbrook-Ikhine",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.4609,
+        "productionPercentile": 0.3395
+      },
+      {
+        "playerId": 1281,
+        "name": "Shedrick Jackson",
+        "position": "WR",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.251,
+        "productionPercentile": 0.5473
+      },
+      {
+        "playerId": 13873813,
+        "name": "Riley Leonard",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.3902,
+        "productionPercentile": 0.4024
+      },
+      {
+        "playerId": 81946,
+        "name": "Tyler Badie",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.4444,
+        "productionPercentile": 0.3472
+      },
+      {
+        "playerId": 13874312,
+        "name": "Xavier Restrepo",
+        "position": "WR",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.284,
+        "productionPercentile": 0.5
+      },
+      {
+        "playerId": 277941,
+        "name": "Mason Tipton",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.428,
+        "productionPercentile": 0.3498
+      },
+      {
+        "playerId": 1060,
+        "name": "Robbie Chosen",
+        "position": "WR",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.3086,
+        "productionPercentile": 0.4691
+      },
+      {
+        "playerId": 13873919,
+        "name": "LeQuint Allen Jr.",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.4306,
+        "productionPercentile": 0.3368
+      },
+      {
+        "playerId": 13874392,
+        "name": "Savion Williams",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.3374,
+        "productionPercentile": 0.43
+      },
+      {
+        "playerId": 1041,
+        "name": "Stone Smartt",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.3835,
+        "productionPercentile": 0.3759
+      },
+      {
+        "playerId": 675,
+        "name": "Bo Melton",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.3704,
+        "productionPercentile": 0.3889
+      },
+      {
+        "playerId": 467,
+        "name": "Najee Harris",
+        "position": "RB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.2917,
+        "productionPercentile": 0.4618
+      },
+      {
+        "playerId": 72527,
+        "name": "Ashton Dulin",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.3374,
+        "productionPercentile": 0.4156
+      },
+      {
+        "playerId": 13874527,
+        "name": "KeAndre Lambert-Smith",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.358,
+        "productionPercentile": 0.393
+      },
+      {
+        "playerId": 1173,
+        "name": "Charlie Woerner",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.3835,
+        "productionPercentile": 0.3647
+      },
+      {
+        "playerId": 13873921,
+        "name": "DJ Giddens",
+        "position": "RB",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.3958,
+        "productionPercentile": 0.3507
+      },
+      {
+        "playerId": 1048,
+        "name": "Drew Ogletree",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.3459,
+        "productionPercentile": 0.3985
+      },
+      {
+        "playerId": 505,
+        "name": "Ty Chandler",
+        "position": "RB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.3403,
+        "productionPercentile": 0.3993
+      },
+      {
+        "playerId": 40137,
+        "name": "Josh Johnson",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.3659,
+        "productionPercentile": 0.372
+      },
+      {
+        "playerId": 757,
+        "name": "Kylen Granson",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.3835,
+        "productionPercentile": 0.3534
+      },
+      {
+        "playerId": 278427,
+        "name": "George Holani",
+        "position": "RB",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.3681,
+        "productionPercentile": 0.3681
+      },
+      {
+        "playerId": 13874584,
+        "name": "Arian Smith",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.4198,
+        "productionPercentile": 0.3066
+      },
+      {
+        "playerId": 13874390,
+        "name": "Gage Larvadain",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.3909,
+        "productionPercentile": 0.3354
+      },
+      {
+        "playerId": 13873883,
+        "name": "Kaleb Johnson",
+        "position": "RB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.4028,
+        "productionPercentile": 0.3194
+      },
+      {
+        "playerId": 280138,
+        "name": "Xavier Weaver",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.3704,
+        "productionPercentile": 0.3477
+      },
+      {
+        "playerId": 1033,
+        "name": "Scotty Miller",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.3909,
+        "productionPercentile": 0.3251
+      },
+      {
+        "playerId": 1270,
+        "name": "James Proche II",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.358,
+        "productionPercentile": 0.358
+      },
+      {
+        "playerId": 366304,
+        "name": "Brittain Brown",
+        "position": "RB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.1736,
+        "productionPercentile": 0.5417
+      },
+      {
+        "playerId": 1219,
+        "name": "Eric Saubert",
+        "position": "TE",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.3534,
+        "productionPercentile": 0.3609
+      },
+      {
+        "playerId": 1116,
+        "name": "Josiah Deguara",
+        "position": "TE",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.2857,
+        "productionPercentile": 0.4211
+      },
+      {
+        "playerId": 279298,
+        "name": "David Martin-Robinson",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.3459,
+        "productionPercentile": 0.3609
+      },
+      {
+        "playerId": 13874635,
+        "name": "Sal Cannella",
+        "position": "TE",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.2857,
+        "productionPercentile": 0.4211
+      },
+      {
+        "playerId": 13874246,
+        "name": "Darius Cooper",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.3498,
+        "productionPercentile": 0.356
+      },
+      {
+        "playerId": 926,
+        "name": "Jalin Hyatt",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.3909,
+        "productionPercentile": 0.3128
+      },
+      {
+        "playerId": 1197,
+        "name": "Ben Sims",
+        "position": "TE",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.3459,
+        "productionPercentile": 0.3571
+      },
+      {
+        "playerId": 1178,
+        "name": "Austin Trammell",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.3374,
+        "productionPercentile": 0.3621
+      },
+      {
+        "playerId": 280058,
+        "name": "Brenden Bates",
+        "position": "TE",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.2857,
+        "productionPercentile": 0.4135
+      },
+      {
+        "playerId": 585591,
+        "name": "Chris Oladokun",
+        "position": "QB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.3537,
+        "productionPercentile": 0.3415
+      },
+      {
+        "playerId": 62,
+        "name": "Mitchell Trubisky",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2683,
+        "productionPercentile": 0.4268
+      },
+      {
+        "playerId": 78230,
+        "name": "Trey Lance",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.4024,
+        "productionPercentile": 0.2927
+      },
+      {
+        "playerId": 88195,
+        "name": "Will Shipley",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.375,
+        "productionPercentile": 0.3125
+      },
+      {
+        "playerId": 13874564,
+        "name": "Keleki Latu",
+        "position": "TE",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.2406,
+        "productionPercentile": 0.4436
+      },
+      {
+        "playerId": 644,
+        "name": "Dare Ogunbowale",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.3681,
+        "productionPercentile": 0.309
+      },
+      {
+        "playerId": 604,
+        "name": "Trayveon Williams",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.2986,
+        "productionPercentile": 0.375
+      },
+      {
+        "playerId": 280205,
+        "name": "Tip Reiman",
+        "position": "TE",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2857,
+        "productionPercentile": 0.3872
+      },
+      {
+        "playerId": 703,
+        "name": "Braxton Berrios",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2963,
+        "productionPercentile": 0.3745
+      },
+      {
+        "playerId": 366106,
+        "name": "Dylan Drummond",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.3498,
+        "productionPercentile": 0.321
+      },
+      {
+        "playerId": 934,
+        "name": "Durham Smythe",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.3459,
+        "productionPercentile": 0.3233
+      },
+      {
+        "playerId": 13874369,
+        "name": "Efton Chism III",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.1934,
+        "productionPercentile": 0.4753
+      },
+      {
+        "playerId": 78897,
+        "name": "Cody White",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.2305,
+        "productionPercentile": 0.4362
+      },
+      {
+        "playerId": 22,
+        "name": "Mason Rudolph",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.3415,
+        "productionPercentile": 0.3232
+      },
+      {
+        "playerId": 13873841,
+        "name": "Max Brosmer",
+        "position": "QB",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.4146,
+        "productionPercentile": 0.25
+      },
+      {
+        "playerId": 13874437,
+        "name": "Jacoby Jones",
+        "position": "WR",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.5288
+      },
+      {
+        "playerId": 78895,
+        "name": "Shane Zylstra",
+        "position": "TE",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.2857,
+        "productionPercentile": 0.3722
+      },
+      {
+        "playerId": 13874027,
+        "name": "Trevor Etienne",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.3472,
+        "productionPercentile": 0.309
+      },
+      {
+        "playerId": 767,
+        "name": "Evan Hull",
+        "position": "RB",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.3125,
+        "productionPercentile": 0.3403
+      },
+      {
+        "playerId": 13874079,
+        "name": "Corey Kiner",
+        "position": "RB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2569,
+        "productionPercentile": 0.3924
+      },
+      {
+        "playerId": 1062,
+        "name": "Malik Heath",
+        "position": "WR",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.284,
+        "productionPercentile": 0.3642
+      },
+      {
+        "playerId": 540610,
+        "name": "Jared Wayne",
+        "position": "WR",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1564,
+        "productionPercentile": 0.4897
+      },
+      {
+        "playerId": 721,
+        "name": "Harrison Bryant",
+        "position": "TE",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.3459,
+        "productionPercentile": 0.2932
+      },
+      {
+        "playerId": 1082,
+        "name": "Lucas Krull",
+        "position": "TE",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.2406,
+        "productionPercentile": 0.3985
+      },
+      {
+        "playerId": 507,
+        "name": "Zamir White",
+        "position": "RB",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.2917,
+        "productionPercentile": 0.3438
+      },
+      {
+        "playerId": 501,
+        "name": "Khalil Herbert",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.3125,
+        "productionPercentile": 0.3229
+      },
+      {
+        "playerId": 1181,
+        "name": "James Mitchell",
+        "position": "TE",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.2105,
+        "productionPercentile": 0.4248
+      },
+      {
+        "playerId": 81729,
+        "name": "Hassan Haskins",
+        "position": "RB",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.3403,
+        "productionPercentile": 0.2917
+      },
+      {
+        "playerId": 1228,
+        "name": "Tylan Wallace",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.2963,
+        "productionPercentile": 0.3354
+      },
+      {
+        "playerId": 1119,
+        "name": "Jalen Brooks",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.2634,
+        "productionPercentile": 0.3663
+      },
+      {
+        "playerId": 278594,
+        "name": "Blake Whiteheart",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.3459,
+        "productionPercentile": 0.282
+      },
+      {
+        "playerId": 104,
+        "name": "Cedrick Wilson Jr.",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.3086,
+        "productionPercentile": 0.3148
+      },
+      {
+        "playerId": 770,
+        "name": "KhaDarel Hodge",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.3374,
+        "productionPercentile": 0.286
+      },
+      {
+        "playerId": 667,
+        "name": "Skyy Moore",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.284,
+        "productionPercentile": 0.3374
+      },
+      {
+        "playerId": 278566,
+        "name": "Rasheen Ali",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.2917,
+        "productionPercentile": 0.3264
+      },
+      {
+        "playerId": 901,
+        "name": "Justin Watson",
+        "position": "WR",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.2305,
+        "productionPercentile": 0.3868
+      },
+      {
+        "playerId": 278137,
+        "name": "Kameron Johnson",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.284,
+        "productionPercentile": 0.3333
+      },
+      {
+        "playerId": 500,
+        "name": "AJ Dillon",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.2569,
+        "productionPercentile": 0.3576
+      },
+      {
+        "playerId": 740,
+        "name": "Dee Eskridge",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.284,
+        "productionPercentile": 0.3251
+      },
+      {
+        "playerId": 281765,
+        "name": "Tahj Washington",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.251,
+        "productionPercentile": 0.3436
+      },
+      {
+        "playerId": 997,
+        "name": "Will Mallory",
+        "position": "TE",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.1278,
+        "productionPercentile": 0.4662
+      },
+      {
+        "playerId": 20,
+        "name": "Cooper Rush",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.3049,
+        "productionPercentile": 0.2866
+      },
+      {
+        "playerId": 279805,
+        "name": "Tanner McKee",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2927,
+        "productionPercentile": 0.2988
+      },
+      {
+        "playerId": 13874119,
+        "name": "Jakobie Keeney-James",
+        "position": "WR",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1564,
+        "productionPercentile": 0.4342
+      },
+      {
+        "playerId": 106,
+        "name": "Cam Akers",
+        "position": "RB",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.1736,
+        "productionPercentile": 0.4132
+      },
+      {
+        "playerId": 1234,
+        "name": "Tucker Fisk",
+        "position": "TE",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.2406,
+        "productionPercentile": 0.3459
+      },
+      {
+        "playerId": 716,
+        "name": "Ben Skowronek",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.2634,
+        "productionPercentile": 0.321
+      },
+      {
+        "playerId": 1221,
+        "name": "Ross Dwelley",
+        "position": "TE",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.2857,
+        "productionPercentile": 0.297
+      },
+      {
+        "playerId": 511,
+        "name": "Dameon Pierce",
+        "position": "RB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.2569,
+        "productionPercentile": 0.316
+      },
+      {
+        "playerId": 78168,
+        "name": "Tom Kennedy",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.2305,
+        "productionPercentile": 0.3416
+      },
+      {
+        "playerId": 77,
+        "name": "Andy Dalton",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2561,
+        "productionPercentile": 0.311
+      },
+      {
+        "playerId": 83,
+        "name": "Taysom Hill",
+        "position": "QB",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.3293,
+        "productionPercentile": 0.2378
+      },
+      {
+        "playerId": 281928,
+        "name": "Ryan Miller",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.2305,
+        "productionPercentile": 0.3354
+      },
+      {
+        "playerId": 13873817,
+        "name": "Tahj Brooks",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.2917,
+        "productionPercentile": 0.2708
+      },
+      {
+        "playerId": 13873892,
+        "name": "Jacardia Wright",
+        "position": "RB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1597,
+        "productionPercentile": 0.4028
+      },
+      {
+        "playerId": 308038,
+        "name": "Zaire Mitchell-Paden",
+        "position": "TE",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.2105,
+        "productionPercentile": 0.3496
+      },
+      {
+        "playerId": 913,
+        "name": "Jonathan Mingo",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.251,
+        "productionPercentile": 0.3086
+      },
+      {
+        "playerId": 278411,
+        "name": "British Brooks",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.2639,
+        "productionPercentile": 0.2951
+      },
+      {
+        "playerId": 1242,
+        "name": "Mason Kinsey",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.2305,
+        "productionPercentile": 0.3272
+      },
+      {
+        "playerId": 13874324,
+        "name": "Beaux Collins",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.2634,
+        "productionPercentile": 0.2922
+      },
+      {
+        "playerId": 540,
+        "name": "Clyde Edwards-Helaire",
+        "position": "RB",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.2014,
+        "productionPercentile": 0.3542
+      },
+      {
+        "playerId": 66,
+        "name": "Aidan O'Connell",
+        "position": "QB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.2195,
+        "productionPercentile": 0.3354
+      },
+      {
+        "playerId": 1127,
+        "name": "Payne Durham",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.2406,
+        "productionPercentile": 0.3008
+      },
+      {
+        "playerId": 13874427,
+        "name": "Jordan Watkins",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.1934,
+        "productionPercentile": 0.3457
+      },
+      {
+        "playerId": 67,
+        "name": "Kenny Pickett",
+        "position": "QB",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.2805,
+        "productionPercentile": 0.2561
+      },
+      {
+        "playerId": 13873917,
+        "name": "Nathan Carter",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.2014,
+        "productionPercentile": 0.3333
+      },
+      {
+        "playerId": 1095,
+        "name": "Trent Sherfield",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.251,
+        "productionPercentile": 0.2798
+      },
+      {
+        "playerId": 1149,
+        "name": "Britain Covey",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.2305,
+        "productionPercentile": 0.2984
+      },
+      {
+        "playerId": 691,
+        "name": "Devin Duvernay",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.251,
+        "productionPercentile": 0.2757
+      },
+      {
+        "playerId": 280078,
+        "name": "Colson Yankoff",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.2105,
+        "productionPercentile": 0.3158
+      },
+      {
+        "playerId": 2616,
+        "name": "Dareke Young",
+        "position": "WR",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.1934,
+        "productionPercentile": 0.3313
+      },
+      {
+        "playerId": 13874724,
+        "name": "Ben Yurosek",
+        "position": "TE",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.2105,
+        "productionPercentile": 0.312
+      },
+      {
+        "playerId": 695,
+        "name": "Kene Nwangwu",
+        "position": "RB",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.2361,
+        "productionPercentile": 0.2847
+      },
+      {
+        "playerId": 82117,
+        "name": "Jelani Woods",
+        "position": "TE",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2105,
+        "productionPercentile": 0.3083
+      },
+      {
+        "playerId": 279349,
+        "name": "Tay Martin",
+        "position": "WR",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.1564,
+        "productionPercentile": 0.3621
+      },
+      {
+        "playerId": 13874523,
+        "name": "Quentin Skinner",
+        "position": "WR",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.3868
+      },
+      {
+        "playerId": 71756,
+        "name": "Brandon Allen",
+        "position": "QB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.2439,
+        "productionPercentile": 0.2744
+      },
+      {
+        "playerId": 279890,
+        "name": "Joe Milton III",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2317,
+        "productionPercentile": 0.2866
+      },
+      {
+        "playerId": 614,
+        "name": "Deven Thompkins",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.1934,
+        "productionPercentile": 0.3189
+      },
+      {
+        "playerId": 7751,
+        "name": "Andre Baccellia",
+        "position": "WR",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.2305,
+        "productionPercentile": 0.2778
+      },
+      {
+        "playerId": 13874701,
+        "name": "Moliki Matavao",
+        "position": "TE",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.1729,
+        "productionPercentile": 0.3308
+      },
+      {
+        "playerId": 579,
+        "name": "D'Ernest Johnson",
+        "position": "RB",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.2361,
+        "productionPercentile": 0.2674
+      },
+      {
+        "playerId": 280201,
+        "name": "Devin Culp",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.1278,
+        "productionPercentile": 0.3722
+      },
+      {
+        "playerId": 13874435,
+        "name": "Drake Dabney",
+        "position": "TE",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.1729,
+        "productionPercentile": 0.3271
+      },
+      {
+        "playerId": 366001,
+        "name": "Cam Grandy",
+        "position": "TE",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.1729,
+        "productionPercentile": 0.3195
+      },
+      {
+        "playerId": 570,
+        "name": "Ronnie Rivers",
+        "position": "RB",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.2014,
+        "productionPercentile": 0.2882
+      },
+      {
+        "playerId": 1106,
+        "name": "Samori Toure",
+        "position": "WR",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1934,
+        "productionPercentile": 0.2942
+      },
+      {
+        "playerId": 279701,
+        "name": "Shane Buechele",
+        "position": "QB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1585,
+        "productionPercentile": 0.3232
+      },
+      {
+        "playerId": 590,
+        "name": "Tyler Goodson",
+        "position": "RB",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.2153,
+        "productionPercentile": 0.2639
+      },
+      {
+        "playerId": 2568,
+        "name": "Julius Chestnut",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.2222,
+        "productionPercentile": 0.2569
+      },
+      {
+        "playerId": 13874250,
+        "name": "Tai Felton",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.1934,
+        "productionPercentile": 0.2737
+      },
+      {
+        "playerId": 581,
+        "name": "Derius Davis",
+        "position": "WR",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.1934,
+        "productionPercentile": 0.2716
+      },
+      {
+        "playerId": 78569,
+        "name": "Alex Bachman",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.1934,
+        "productionPercentile": 0.2654
+      },
+      {
+        "playerId": 1206,
+        "name": "Chris Manhertz",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.1729,
+        "productionPercentile": 0.2857
+      },
+      {
+        "playerId": 279439,
+        "name": "Dylan Laube",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.2083,
+        "productionPercentile": 0.2465
+      },
+      {
+        "playerId": 13874426,
+        "name": "Jalen Royals",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.1934,
+        "productionPercentile": 0.2613
+      },
+      {
+        "playerId": 79,
+        "name": "Clayton Tune",
+        "position": "QB",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.2073,
+        "productionPercentile": 0.2378
+      },
+      {
+        "playerId": 996,
+        "name": "Pharaoh Brown",
+        "position": "TE",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.1729,
+        "productionPercentile": 0.2707
+      },
+      {
+        "playerId": 1085,
+        "name": "David Moore",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.3107
+      },
+      {
+        "playerId": 71872,
+        "name": "Myles Gaskin",
+        "position": "RB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1389,
+        "productionPercentile": 0.3021
+      },
+      {
+        "playerId": 751,
+        "name": "Jake Bobo",
+        "position": "WR",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.1564,
+        "productionPercentile": 0.2819
+      },
+      {
+        "playerId": 366132,
+        "name": "Jack Westover",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.1729,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 279375,
+        "name": "Jared Wiley",
+        "position": "TE",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.1278,
+        "productionPercentile": 0.3045
+      },
+      {
+        "playerId": 1098,
+        "name": "Tim Jones",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.3004
+      },
+      {
+        "playerId": 13874049,
+        "name": "Josh Williams",
+        "position": "RB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.1528,
+        "productionPercentile": 0.2778
+      },
+      {
+        "playerId": 109,
+        "name": "DeeJay Dallas",
+        "position": "RB",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.1528,
+        "productionPercentile": 0.2743
+      },
+      {
+        "playerId": 279350,
+        "name": "Bryce Oliver",
+        "position": "WR",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.2901
+      },
+      {
+        "playerId": 61,
+        "name": "Joshua Dobbs",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.2073,
+        "productionPercentile": 0.2134
+      },
+      {
+        "playerId": 13873928,
+        "name": "Amar Johnson",
+        "position": "RB",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.1389,
+        "productionPercentile": 0.2813
+      },
+      {
+        "playerId": 605,
+        "name": "Xavier Gipson",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.1564,
+        "productionPercentile": 0.2634
+      },
+      {
+        "playerId": 278416,
+        "name": "Anthony Gould",
+        "position": "WR",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.1564,
+        "productionPercentile": 0.2593
+      },
+      {
+        "playerId": 279422,
+        "name": "Nikko Remigio",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.284
+      },
+      {
+        "playerId": 13874291,
+        "name": "Ke'Shawn Williams",
+        "position": "WR",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.2716
+      },
+      {
+        "playerId": 13874675,
+        "name": "Carter Runyon",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "usagePercentile": 0.1278,
+        "productionPercentile": 0.2744
+      },
+      {
+        "playerId": 1075,
+        "name": "Robert Tonyan",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.1278,
+        "productionPercentile": 0.2669
+      },
+      {
+        "playerId": 278568,
+        "name": "Owen Wright",
+        "position": "RB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.1389,
+        "productionPercentile": 0.2535
+      },
+      {
+        "playerId": 1257,
+        "name": "Giovanni Ricci",
+        "position": "TE",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.1278,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 2474,
+        "name": "Brayden Willis",
+        "position": "TE",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.1278,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 13874386,
+        "name": "Nick Kallerup",
+        "position": "TE",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.1278,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 65,
+        "name": "Gardner Minshew II",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.1829,
+        "productionPercentile": 0.2073
+      },
+      {
+        "playerId": 786,
+        "name": "Teddy Bridgewater",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.1707,
+        "productionPercentile": 0.2195
+      },
+      {
+        "playerId": 696,
+        "name": "Charlie Jones",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 750,
+        "name": "Mecole Hardman Jr.",
+        "position": "WR",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 763,
+        "name": "Steven Sims",
+        "position": "WR",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 1133,
+        "name": "Jason Brownlee",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 69311,
+        "name": "Malik Turner",
+        "position": "WR",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 13874203,
+        "name": "Coleman Owen",
+        "position": "WR",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.1317,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 13873987,
+        "name": "Kalel Mullings",
+        "position": "RB",
+        "gamesPlayed": 9,
+        "usagePercentile": 0.1389,
+        "productionPercentile": 0.2431
+      },
+      {
+        "playerId": 621,
+        "name": "Velus Jones Jr.",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.3025
+      },
+      {
+        "playerId": 552,
+        "name": "Craig Reynolds",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.1389,
+        "productionPercentile": 0.2361
+      },
+      {
+        "playerId": 521,
+        "name": "Roschon Johnson",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.1042,
+        "productionPercentile": 0.2604
+      },
+      {
+        "playerId": 279076,
+        "name": "Kendall Milton",
+        "position": "RB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.1042,
+        "productionPercentile": 0.2535
+      },
+      {
+        "playerId": 78264,
+        "name": "Feleipe Franks",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.0677,
+        "productionPercentile": 0.282
+      },
+      {
+        "playerId": 30,
+        "name": "Nick Mullens",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.1585,
+        "productionPercentile": 0.189
+      },
+      {
+        "playerId": 107,
+        "name": "Malik Cunningham",
+        "position": "WR",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2675
+      },
+      {
+        "playerId": 13881891,
+        "name": "Jacob Saylors",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.1042,
+        "productionPercentile": 0.2396
+      },
+      {
+        "playerId": 101,
+        "name": "Parris Campbell",
+        "position": "WR",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 682,
+        "name": "DeAndre Carter",
+        "position": "WR",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 789,
+        "name": "Jamal Agnew",
+        "position": "WR",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 1064,
+        "name": "River Cracraft",
+        "position": "WR",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 1207,
+        "name": "Laquon Treadwell",
+        "position": "WR",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 1235,
+        "name": "Simi Fehoko",
+        "position": "WR",
+        "gamesPlayed": 8,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 2201,
+        "name": "DJ Turner",
+        "position": "WR",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 279500,
+        "name": "Justin Shorter",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 279572,
+        "name": "Kaden Davis",
+        "position": "WR",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 281477,
+        "name": "Chris Blair",
+        "position": "WR",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 281639,
+        "name": "Jeshaun Jones",
+        "position": "WR",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 366145,
+        "name": "Jalen Moreno-Cropper",
+        "position": "WR",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 13874236,
+        "name": "Dominic Lovett",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 13874277,
+        "name": "Dalevon Campbell",
+        "position": "WR",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 13874297,
+        "name": "Dalen Cambre",
+        "position": "WR",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 13874468,
+        "name": "LaJohntay Wester",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 13874548,
+        "name": "Myles Price",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "usagePercentile": 0.0782,
+        "productionPercentile": 0.2572
+      },
+      {
+        "playerId": 1171,
+        "name": "Teagan Quitoriano",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "usagePercentile": 0.0677,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 1259,
+        "name": "Ko Kieft",
+        "position": "TE",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.0677,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 84249,
+        "name": "Nikola Kalinic",
+        "position": "TE",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.0677,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 278648,
+        "name": "Cameron Latu",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "usagePercentile": 0.0677,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 279987,
+        "name": "Princeton Fant",
+        "position": "TE",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0677,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 280223,
+        "name": "Travis Vokolek",
+        "position": "TE",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.0677,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 281992,
+        "name": "Hayden Rucci",
+        "position": "TE",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.0677,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 13874723,
+        "name": "Thomas Fidone II",
+        "position": "TE",
+        "gamesPlayed": 7,
+        "usagePercentile": 0.0677,
+        "productionPercentile": 0.2632
+      },
+      {
+        "playerId": 73,
+        "name": "Zach Wilson",
+        "position": "QB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.1341,
+        "productionPercentile": 0.1951
+      },
+      {
+        "playerId": 40,
+        "name": "Tyson Bagent",
+        "position": "QB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.0976,
+        "productionPercentile": 0.2256
+      },
+      {
+        "playerId": 279908,
+        "name": "Sione Vaki",
+        "position": "RB",
+        "gamesPlayed": 11,
+        "usagePercentile": 0.0764,
+        "productionPercentile": 0.2326
+      },
+      {
+        "playerId": 529,
+        "name": "Elijah Mitchell",
+        "position": "RB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0764,
+        "productionPercentile": 0.2292
+      },
+      {
+        "playerId": 13873872,
+        "name": "Ulysses Bentley IV",
+        "position": "RB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0764,
+        "productionPercentile": 0.2292
+      },
+      {
+        "playerId": 60,
+        "name": "Drew Lock",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "usagePercentile": 0.122,
+        "productionPercentile": 0.1829
+      },
+      {
+        "playerId": 76,
+        "name": "Anthony Richardson Sr.",
+        "position": "QB",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.0976,
+        "productionPercentile": 0.2012
+      },
+      {
+        "playerId": 68625,
+        "name": "Nyheim Hines",
+        "position": "RB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.1042,
+        "productionPercentile": 0.1944
+      },
+      {
+        "playerId": 554,
+        "name": "Chase Edmonds",
+        "position": "RB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.0486,
+        "productionPercentile": 0.2292
+      },
+      {
+        "playerId": 559,
+        "name": "Trey Sermon",
+        "position": "RB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.0486,
+        "productionPercentile": 0.2292
+      },
+      {
+        "playerId": 625,
+        "name": "Eric Gray",
+        "position": "RB",
+        "gamesPlayed": 4,
+        "usagePercentile": 0.0486,
+        "productionPercentile": 0.2292
+      },
+      {
+        "playerId": 679,
+        "name": "Gary Brightwell",
+        "position": "RB",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.0486,
+        "productionPercentile": 0.2292
+      },
+      {
+        "playerId": 1279,
+        "name": "Jordan Mims",
+        "position": "RB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0486,
+        "productionPercentile": 0.2292
+      },
+      {
+        "playerId": 279760,
+        "name": "Isaac Guerendo",
+        "position": "RB",
+        "gamesPlayed": 14,
+        "usagePercentile": 0.0486,
+        "productionPercentile": 0.2292
+      },
+      {
+        "playerId": 7604685,
+        "name": "Lew Nichols",
+        "position": "RB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0486,
+        "productionPercentile": 0.2292
+      },
+      {
+        "playerId": 1275,
+        "name": "Travis Homer",
+        "position": "RB",
+        "gamesPlayed": 10,
+        "usagePercentile": 0.0764,
+        "productionPercentile": 0.1979
+      },
+      {
+        "playerId": 46,
+        "name": "Jimmy Garoppolo",
+        "position": "QB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.122,
+        "productionPercentile": 0.1402
+      },
+      {
+        "playerId": 805,
+        "name": "Kyle Allen",
+        "position": "QB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.0732,
+        "productionPercentile": 0.1646
+      },
+      {
+        "playerId": 13873804,
+        "name": "Jalen Milroe",
+        "position": "QB",
+        "gamesPlayed": 3,
+        "usagePercentile": 0.061,
+        "productionPercentile": 0.1768
+      },
+      {
+        "playerId": 279144,
+        "name": "Kedon Slovis",
+        "position": "QB",
+        "gamesPlayed": 2,
+        "usagePercentile": 0.0488,
+        "productionPercentile": 0.1646
+      },
+      {
+        "playerId": 71,
+        "name": "Jarrett Stidham",
+        "position": "QB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0366,
+        "productionPercentile": 0.1646
+      },
+      {
+        "playerId": 281852,
+        "name": "Adrian Martinez",
+        "position": "QB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0366,
+        "productionPercentile": 0.1646
+      },
+      {
+        "playerId": 92,
+        "name": "Brett Rypien",
+        "position": "QB",
+        "gamesPlayed": 1,
+        "usagePercentile": 0.0122,
+        "productionPercentile": 0.1707
+      }
+    ]
+  }
+}

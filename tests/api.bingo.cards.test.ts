@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   listUserSportsBingoCards: vi.fn(),
@@ -19,6 +19,57 @@ describe("/api/bingo/cards", () => {
     mocks.listUserSportsBingoCards.mockReset();
     mocks.generateSportsBingoBoard.mockReset();
     mocks.createSportsBingoCard.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  // Regression for the code-review fix: an untrimmed/mis-cased sportKey must not bypass the NFL
+  // activation gate. Before the fix, " americanfootball_nfl" (leading space) or
+  // "AMERICANFOOTBALL_NFL" (upper case) failed the `=== NFL_SPORT_KEY` check in
+  // resolveLeagueBlockReason and sailed through even with the flag off.
+  it("POST generate normalizes sportKey before the league gate, blocking a disguised NFL key", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BINGO_NFL_ENABLED", "");
+
+    const response = await POST(
+      new Request("http://localhost/api/bingo/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "generate", gameId: "game-1", sportKey: " AmericanFootball_NFL " }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error: string };
+
+    expect(response.status).toBe(400);
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe("NFL Sports Bingo is coming soon.");
+    expect(mocks.generateSportsBingoBoard).not.toHaveBeenCalled();
+  });
+
+  it("POST play normalizes sportKey before the league gate, blocking a disguised NFL key", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BINGO_NFL_ENABLED", "");
+
+    const response = await POST(
+      new Request("http://localhost/api/bingo/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "play",
+          userId: "u1",
+          venueId: "venue-1",
+          gameId: "game-1",
+          sportKey: " AmericanFootball_NFL ",
+          squares: [{ index: 0, key: "moneyline:home", isFree: false }],
+        }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error: string };
+
+    expect(response.status).toBe(400);
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe("NFL Sports Bingo is coming soon.");
+    expect(mocks.createSportsBingoCard).not.toHaveBeenCalled();
   });
 
   it("GET returns empty list when userId missing", async () => {
