@@ -663,8 +663,18 @@ type ScoreSnapshot = {
 type BallDontLieTeam = {
   id?: number;
   full_name?: string;
+  /** MLB team objects carry no `full_name` — only `display_name` ("Kansas City Royals"). */
+  display_name?: string;
+  /** Mascot only on MLB ("Royals"); the full name on NBA/WNBA/NFL. */
   name?: string;
   city?: string;
+};
+
+/** `/mlb/v1/games` nests the run total here; there is no `*_team_score` key on an MLB row. */
+type BallDontLieTeamGameData = {
+  runs?: number | string | null;
+  points?: number | string | null;
+  score?: number | string | null;
 };
 
 type BallDontLieGame = {
@@ -677,6 +687,10 @@ type BallDontLieGame = {
   visitor_team_score?: number | string | null;
   home_team?: BallDontLieTeam;
   visitor_team?: BallDontLieTeam;
+  /** MLB says `away_team`; NBA/WNBA/NFL say `visitor_team`. Read both via `ballDontLieAwayTeam`. */
+  away_team?: BallDontLieTeam;
+  home_team_data?: BallDontLieTeamGameData;
+  away_team_data?: BallDontLieTeamGameData;
 };
 
 type BallDontLiePlayer = {
@@ -708,7 +722,13 @@ type BallDontLieStat = {
 };
 
 type BallDontLieLineup = {
+  /** NBA/WNBA only. `/mlb/v1/lineups` rows carry no `starter` key — see `isBallDontLieLineupStarter`. */
   starter?: boolean;
+  /** MLB batters: 1-9 for the starting nine, null otherwise. */
+  batting_order?: number | string | null;
+  /** MLB starting pitcher marker (batting order is null on that row). */
+  is_probable_pitcher?: boolean | null;
+  position?: string | null;
   player?: BallDontLiePlayer;
   team?: BallDontLieTeam;
 };
@@ -1053,18 +1073,17 @@ const LINE_PATTERNS: number[][] = [
   [4, 8, 12, 16, 20],
 ];
 
-const SPORT_PATH_BY_KEY: Record<string, string> = {
+/**
+ * The **only** league-path table in this module. It holds exactly the leagues
+ * `app/api/bingo/leagues/route.ts` ships (NHL and the six soccer keys were unreachable dead
+ * weight); `tests/lib.sportsBingo.sport-path-keys.test.ts` fails if the two drift apart again.
+ * Exported for that guard.
+ */
+export const SPORT_PATH_BY_KEY: Record<string, string> = {
   basketball_nba: "/nba/v1/games",
   basketball_wnba: "/wnba/v1/games",
   americanfootball_nfl: "/nfl/v1/games",
   baseball_mlb: "/mlb/v1/games",
-  icehockey_nhl: "/nhl/v1/games",
-  soccer_usa_mls: "/mls/v1/matches",
-  soccer_epl: "/epl/v2/matches",
-  soccer_spain_la_liga: "/laliga/v1/matches",
-  soccer_italy_serie_a: "/seriea/v1/matches",
-  soccer_germany_bundesliga: "/bundesliga/v1/matches",
-  soccer_uefa_champs_league: "/ucl/v1/matches",
 };
 
 function dayKeysForWindow(startMs: number, endMs: number): string[] {
@@ -1320,8 +1339,115 @@ function tokenizeName(value: string): string[] {
   return normalizeNameKey(value).split(" ").filter(Boolean);
 }
 
+/**
+ * BDL's team-name key is not the same across leagues: NBA/WNBA/NFL carry `full_name`
+ * ("Denver Nuggets"); MLB carries **no `full_name` at all** — only `display_name`
+ * ("Kansas City Royals") plus a mascot-only `name` ("Royals"). Verified live 2026-08-18.
+ *
+ * **Open question, deliberately left open:** this reads `full_name ?? name`, so an MLB team
+ * resolves to its *mascot* here. Every consumer on this path (`teamsMatch`, `inferCardTeamSide`)
+ * folds both forms through `getTeamIdentityKey`, so "Royals" still matches a card holding
+ * "Kansas City Royals" — measured at 27/27 team sides resolved on live data. Reaching for
+ * `display_name` here instead would be *more* faithful, but it also widens the pool the MLB
+ * candidate builder can see (fixture team objects carrying only `display_name` start resolving a
+ * team side), which changes generated boards. That belongs in its own change with its own
+ * board-snapshot re-baseline, not in a restore. Callers that need the full name — anything that
+ * *stores* or *displays* the string rather than matching it — use `ballDontLieTeamFullName`.
+ */
 function getTeamDisplayName(team: BallDontLieTeam | null | undefined): string {
   return String(team?.full_name ?? team?.name ?? "").trim();
+}
+
+/**
+ * The full team name across every league's spelling, preferring `display_name` over the
+ * mascot-only `name` so MLB yields "Kansas City Royals" rather than "Royals". Used where the
+ * string is stored or shown (`normalizeBallDontLieScoreRow`), not where it is fuzzy-matched.
+ */
+function ballDontLieTeamFullName(team: BallDontLieTeam | null | undefined): string {
+  return String(team?.full_name ?? team?.display_name ?? team?.name ?? "").trim();
+}
+
+/**
+ * The shape-tolerant `/…/v1/games` row parser both leagues share. `getScoresBySportKey` used to
+ * read `visitor_team.full_name` / `home_team_score` / `visitor_team_score` inline, which resolved
+ * to nothing on every MLB row (MLB says `away_team`, `display_name`, `home_team_data.runs`) so
+ * every MLB row was dropped. Returns `null` for a row missing an id or either team name.
+ *
+ * Exported for `tests/lib.sportsBingo.balldontlie-score-normalizer.test.ts`.
+ */
+export function normalizeBallDontLieScoreRow(
+  row: Record<string, unknown>,
+  sportKey: string
+): ScoreSnapshot | null {
+  const game = row as BallDontLieGame;
+  const gameId = String(game.id ?? "").trim();
+  const homeTeam = ballDontLieTeamFullName(game.home_team);
+  const awayTeam = ballDontLieTeamFullName(ballDontLieAwayTeam(game));
+  if (!gameId || !homeTeam || !awayTeam) {
+    return null;
+  }
+
+  const status = String(game.status ?? "").toLowerCase();
+
+  return {
+    gameId,
+    sportKey,
+    homeTeam,
+    awayTeam,
+    homeScore: ballDontLieHomeScore(game),
+    awayScore: ballDontLieAwayScore(game),
+    // `ft` is soccer's full-time marker and MUST be matched as a whole word: a bare
+    // `includes("ft")` also matches **"halftime"**, which declared every NFL game complete at
+    // the half — every square on the board settling on a two-quarter score. Found while building
+    // Phase 4's halftime squares (docs/prop-bingo-nfl-plan.md); it was latent before NFL had
+    // any square that could notice.
+    completed: isBallDontLieGameFinal(status) || /\bft\b/.test(status),
+  };
+}
+
+/** MLB says `away_team`; every other BDL league says `visitor_team`. */
+function ballDontLieAwayTeam(game: BallDontLieGame): BallDontLieTeam | undefined {
+  return game.visitor_team ?? game.away_team;
+}
+
+function ballDontLieTeamDataScore(data: BallDontLieTeamGameData | undefined): unknown {
+  if (!data) {
+    return undefined;
+  }
+  return data.runs ?? data.points ?? data.score;
+}
+
+/**
+ * MLB has **no `home_team_score` key at all** — runs live at `home_team_data.runs`. Reading only
+ * the flat key made every MLB snapshot score `null`, which made `toMLBLiveScoreSnapshot` return
+ * `null` for every card.
+ */
+function ballDontLieHomeScore(game: BallDontLieGame): number | null {
+  return parseScoreValue(game.home_team_score ?? ballDontLieTeamDataScore(game.home_team_data));
+}
+
+function ballDontLieAwayScore(game: BallDontLieGame): number | null {
+  return parseScoreValue(game.visitor_team_score ?? ballDontLieTeamDataScore(game.away_team_data));
+}
+
+/**
+ * `/mlb/v1/lineups` rows carry no `starter` key: the starting nine carry `batting_order` 1-9 and
+ * the starting pitcher carries `is_probable_pitcher: true` with a null batting order. NBA/WNBA rows
+ * do carry the boolean. Both vocabularies are read here so no caller has to know which league it
+ * is holding. Verified live 2026-08-18 (MLB: 20 starter rows/game; NBA: 21 rows, 10 `starter: true`).
+ */
+export function isBallDontLieLineupStarter(row: BallDontLieLineup | null | undefined): boolean {
+  if (!row) {
+    return false;
+  }
+  if (typeof row.starter === "boolean") {
+    return row.starter;
+  }
+  if (row.is_probable_pitcher === true) {
+    return true;
+  }
+  const battingOrder = Number.parseInt(String(row.batting_order ?? ""), 10);
+  return Number.isFinite(battingOrder) && battingOrder >= 1 && battingOrder <= 9;
 }
 
 function getTeamIdentityKey(name: string): string {
@@ -2077,8 +2203,13 @@ function getGameTimestamp(game: BallDontLieGame): number {
   return Number.POSITIVE_INFINITY;
 }
 
+/**
+ * `includes`, not `startsWith`: MLB reports `"STATUS_FINAL"`, so a `startsWith("final")` check
+ * meant an MLB game was **never** `finalized` and its squares could only ever settle through the
+ * force-finalize window. NFL/NBA say `"Final"` / `"Final/OT"`, still matched.
+ */
 function isBallDontLieGameFinal(status: string): boolean {
-  return status.trim().toLowerCase().startsWith("final");
+  return status.trim().toLowerCase().includes("final");
 }
 
 function inferCardTeamSide(card: SportsBingoCardRow, maybeTeamName: string): TeamSide | null {
@@ -2127,10 +2258,11 @@ function parseStatNumber(value: unknown): number {
   return 0;
 }
 
-function pickBestMatchingBallDontLieGame(card: SportsBingoCardRow, games: BallDontLieGame[]): BallDontLieGame | null {
+/** Exported for the MLB validator (`scripts/validate-mlb-bingo-grading.cjs`) and its tests. */
+export function pickBestMatchingBallDontLieGame(card: SportsBingoCardRow, games: BallDontLieGame[]): BallDontLieGame | null {
   const matching = games.filter((game) => {
     const home = getTeamDisplayName(game.home_team);
-    const away = getTeamDisplayName(game.visitor_team);
+    const away = getTeamDisplayName(ballDontLieAwayTeam(game));
     return teamsMatch(home, card.home_team) && teamsMatch(away, card.away_team);
   });
   if (matching.length === 0) {
@@ -2409,7 +2541,8 @@ function parseMlbPitcherOutsFromIp(value: unknown): number {
   return whole * 3;
 }
 
-function buildMLBGamePlayerStatsSnapshot(
+/** Exported for the MLB validator (`scripts/validate-mlb-bingo-grading.cjs`) and its tests. */
+export function buildMLBGamePlayerStatsSnapshot(
   card: SportsBingoCardRow,
   game: BallDontLieGame,
   stats: Array<Record<string, unknown>>,
@@ -2465,8 +2598,8 @@ function buildMLBGamePlayerStatsSnapshot(
   return {
     gameId: Number(game.id ?? 0),
     finalized: isBallDontLieGameFinal(String(game.status ?? "")),
-    homeScore: parseScoreValue(game.home_team_score),
-    awayScore: parseScoreValue(game.visitor_team_score),
+    homeScore: ballDontLieHomeScore(game),
+    awayScore: ballDontLieAwayScore(game),
     lines,
     byPlayerKey,
     lineupByPlayerId: extras?.lineupByPlayerId ?? new Map(),
@@ -2522,7 +2655,7 @@ async function getMLBGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
         const playerId = Number(row.player?.id ?? 0);
         const playerName = `${String(row.player?.first_name ?? "").trim()} ${String(row.player?.last_name ?? "").trim()}`.trim();
         const teamSide = inferCardTeamSide(card, getTeamDisplayName(row.team));
-        const payload = { starter: row.starter === true, teamSide };
+        const payload = { starter: isBallDontLieLineupStarter(row), teamSide };
         if (Number.isFinite(playerId) && playerId > 0) {
           lineupByPlayerId.set(playerId, payload);
         }
@@ -2949,7 +3082,8 @@ function isNFLNonOffensiveTouchdownPlay(play: BallDontLieNFLPlay): boolean {
  * a *position* ("tackled by safety …"), which would read every tackle as a scoring play — and it
  * is where the nullification wording lives.
  */
-function isNFLSafetyPlay(play: BallDontLieNFLPlay): boolean {
+/** Exported for `tests/lib.sportsBingo.nfl-safety-attribution.test.ts`. */
+export function isNFLSafetyPlay(play: BallDontLieNFLPlay): boolean {
   if (String(play.type_slug ?? "").trim().toLowerCase() === "safety") {
     return true;
   }
@@ -2966,7 +3100,8 @@ function isNFLSafetyPlay(play: BallDontLieNFLPlay): boolean {
  * Conversion)"`, a delta of 8) and a failed one reads `"(Two-Point Pass Conversion Failed)"` on a
  * delta of 6 — so the failure wording has to be excluded or every failed try grades as a hit.
  */
-function isNFLTwoPointConversionPlay(play: BallDontLieNFLPlay): boolean {
+/** Exported for `tests/lib.sportsBingo.nfl-safety-attribution.test.ts`. */
+export function isNFLTwoPointConversionPlay(play: BallDontLieNFLPlay): boolean {
   const haystack = `${String(play.type_slug ?? "")} ${String(play.type_text ?? "")} ${String(play.short_text ?? "")}`;
   if (!/two[-\s]?point|\b2[-\s]?pt\b/i.test(haystack)) {
     return false;
@@ -3684,7 +3819,8 @@ function pickLikeliestMLBPlayerStatLine(lines: MLBPlayerStatLine[]): MLBPlayerSt
   });
 }
 
-function findMLBPlayerStatLine(snapshot: MLBGamePlayerStatsSnapshot, playerName: string): MLBPlayerStatLine | null {
+/** Exported for the validator's player-name lookup metric. */
+export function findMLBPlayerStatLine(snapshot: MLBGamePlayerStatsSnapshot, playerName: string): MLBPlayerStatLine | null {
   const ref = parseResolverPlayerRef(playerName);
   if (ref.playerId) {
     const byId = snapshot.lines.filter((line) => line.playerId === ref.playerId);
@@ -4291,7 +4427,7 @@ function buildGameAndCandidatesFromBallDontLie(
     : -3.5;
   const averageTotal = marketModel
     ? marketModel.total
-    : sportKey === "americanfootball_nfl" ? 45 : sportKey === "baseball_mlb" ? 8 : sportKey === "icehockey_nhl" ? 6 : isWnbaSportKey(sportKey) ? WNBA_CALIBRATION.averageTotal : 226;
+    : sportKey === "americanfootball_nfl" ? 45 : sportKey === "baseball_mlb" ? 8 : isWnbaSportKey(sportKey) ? WNBA_CALIBRATION.averageTotal : 226;
   const baseOverProbability = 0.5;
 
   // With a market model the spread is the authority on which side is favored; the de-vigged
@@ -5251,7 +5387,7 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
       lineupQuery.append("game_ids[]", game.id);
       const lineupRows = await fetchBallDontLieList<BallDontLieLineup>("/mlb/v1/lineups", lineupQuery);
       for (const row of lineupRows) {
-        if (row.starter !== true) {
+        if (!isBallDontLieLineupStarter(row)) {
           continue;
         }
         const playerId = Number(row.player?.id ?? 0);
@@ -8468,7 +8604,8 @@ async function listCardRows(params: {
   }));
 }
 
-function evaluateResolver(
+/** Exported for the validator, which grades a resolver against a live-fetched snapshot directly. */
+export function evaluateResolver(
   resolver: SportsBingoResolver,
   snapshot: ScoreSnapshot,
   nbaStatsSnapshot: NBAGamePlayerStatsSnapshot | null = null,
@@ -10174,20 +10311,7 @@ async function getScoresBySportKey(sportKey: string): Promise<Map<string, ScoreS
   }
   cacheTelemetry.scoreCacheMisses += 1;
 
-  const sportPathByKey: Record<string, string> = {
-    basketball_nba: "/nba/v1/games",
-    basketball_wnba: "/wnba/v1/games",
-    americanfootball_nfl: "/nfl/v1/games",
-    baseball_mlb: "/mlb/v1/games",
-    icehockey_nhl: "/nhl/v1/games",
-    soccer_usa_mls: "/mls/v1/games",
-    soccer_epl: "/epl/v1/games",
-    soccer_spain_la_liga: "/laliga/v1/games",
-    soccer_italy_serie_a: "/seriea/v1/games",
-    soccer_germany_bundesliga: "/bundesliga/v1/games",
-    soccer_uefa_champs_league: "/ucl/v1/games",
-  };
-  const path = sportPathByKey[sportKey];
+  const path = SPORT_PATH_BY_KEY[sportKey];
   if (!path) {
     return new Map<string, ScoreSnapshot>();
   }
@@ -10205,31 +10329,11 @@ async function getScoresBySportKey(sportKey: string): Promise<Map<string, ScoreS
 
   const byGameId = new Map<string, ScoreSnapshot>();
   for (const event of payload) {
-    const gameId = String(event.id ?? "").trim();
-    const homeTeam = String(event.home_team?.full_name ?? event.home_team?.name ?? "").trim();
-    const awayTeam = String(event.visitor_team?.full_name ?? event.visitor_team?.name ?? "").trim();
-    if (!gameId || !homeTeam || !awayTeam) {
+    const snapshot = normalizeBallDontLieScoreRow(event as Record<string, unknown>, sportKey);
+    if (!snapshot) {
       continue;
     }
-
-    const homeScore = parseScoreValue(event.home_team_score);
-    const awayScore = parseScoreValue(event.visitor_team_score);
-    const status = String(event.status ?? "").toLowerCase();
-
-    byGameId.set(gameId, {
-      gameId,
-      sportKey: sportKey,
-      homeTeam,
-      awayTeam,
-      homeScore,
-      awayScore,
-      // `ft` is soccer's full-time marker and MUST be matched as a whole word: a bare
-      // `includes("ft")` also matches **"halftime"**, which declared every NFL game complete at
-      // the half — every square on the board settling on a two-quarter score. Found while building
-      // Phase 4's halftime squares (docs/prop-bingo-nfl-plan.md); it was latent before NFL had
-      // any square that could notice.
-      completed: status.includes("final") || /\bft\b/.test(status),
-    });
+    byGameId.set(snapshot.gameId, snapshot);
   }
 
   scoreCache.set(sportKey, {
