@@ -8793,7 +8793,7 @@ export function evaluateResolver(
         if (!completed) {
           return { status: "pending", resolved: false };
         }
-        return { status: "miss", resolved: true };
+        return { status: "void", resolved: true };
       }
 
       const nbaLine = isNba && nbaStatsSnapshot ? findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player) : null;
@@ -8803,7 +8803,7 @@ export function evaluateResolver(
         if (!completed && !isFinalized) {
           return { status: "pending", resolved: false };
         }
-        return { status: "miss", resolved: true };
+        return { status: isMlb ? "void" : "miss", resolved: true };
       }
       const value = nbaLine
         ? getNBAPlayerPropValue(nbaLine, resolver.marketKey)
@@ -8814,7 +8814,7 @@ export function evaluateResolver(
         if (!completed && !isFinalized) {
           return { status: "pending", resolved: false };
         }
-        return { status: "miss", resolved: true };
+        return { status: isMlb ? "void" : "miss", resolved: true };
       }
 
       const line = value;

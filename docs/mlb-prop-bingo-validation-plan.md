@@ -772,6 +772,87 @@ loss):
 
 ---
 
+## Phase R3 — done (2026-08-18)
+
+**All three `miss`-instead-of-`void` positions fixed, exactly as specified.** No line-number
+surprises this time — R2 shifted everything below `getGameTimestamp` but the `case "player_prop"`
+block in `evaluateResolver` was still easy to re-grep (landed at **8736** in the post-R2 tree).
+
+### What shipped
+
+Three one-word edits inside the shared (non-NFL) arm of `case "player_prop"`:
+
+- **8792-8797** (`if (isMlb && !mlbStatsSnapshot)`, missing snapshot at Final) — `"miss"` →
+  `"void"`. This position has no NBA counterpart to preserve (it's MLB-gated already), so it's a
+  flat change, not a ternary.
+- **8802-8807** (`if (!nbaLine && !mlbLine)`, missing stat line at Final) — `"miss"` →
+  `status: isMlb ? "void" : "miss"`. NBA arm unchanged.
+- **8813-8818** (non-finite value at Final) — same `isMlb ? "void" : "miss"` ternary.
+
+**Left untouched, deliberately:** the `line === resolver.line` push/tie block a few lines below
+(~8821-8826, still flat `"miss"` for both leagues) — that's a resolved value that happens to equal
+the line exactly, not missing data, so it's out of the house rule's scope and the tests don't touch
+it either.
+
+### NBA-asymmetry finding — confirmed, not fixed
+
+**NBA has the identical `miss`-on-missing-data asymmetry**, verified against the current
+post-R1/R3 tree, not just the reverted source. `case "player_prop"`, **8786-8791**
+(`if (isNba && !nbaStatsSnapshot)`), still returns flat `{ status: "miss", resolved: true }` at
+Final with no snapshot — same shape as MLB had before this phase. Left alone per the plan's
+explicit instruction; this is a report, not a fix. If NBA Prop Bingo ever ships player props for
+real, this is the same bug waiting.
+
+### Historical mis-settle count — zero, Phase 3 closes immediately
+
+Queried `sports_bingo_squares` live via `SUPABASE_SERVICE_ROLE_KEY` (throwaway script, deleted
+after use, no secrets echoed). **Total MLB (`sport_key = 'baseball_mlb'`) cards in production: 6.**
+Of those 6 cards, **zero `sports_bingo_squares` rows have a `player_prop` resolver at all, in any
+status** — not just zero at `status = 'miss'`. MLB Prop Bingo has essentially not been played with
+real players yet; the bug was live but nothing was there for it to hit.
+
+**Phase 3 is answered, not merely investigated: the count is 0, so per the plan's own branch
+("If that count is zero — plausible... this phase closes immediately with a note and nothing else
+happens") — Phase 3 needs no further work, no product decision, no regrade. Note this in Phase 3's
+own section if anyone re-opens it.** The series-disambiguation defect R2 found (wrong-game
+mis-grading) is a separate risk from this one and is *not* covered by this zero — but with only 6
+MLB cards ever created, it's worth a five-minute follow-up check (not scoped here) on whether any
+of those 6 spanned a repeated-matchup window.
+
+### R3 gate — results
+
+```
+npx tsc --noEmit                       0 errors
+npm run lint                           clean
+npm run test:bingo-nfl                 244/244
+npm run test:bingo-mlb                 106/106  (was 103/106 — the 3 R3 tests now pass)
+npm run test (full suite)              1837/1850 passing, 13 skipped, 0 failing
+```
+
+### Handoff to whoever runs R4 (or Phase 3/5/6/7)
+
+- **R3 needed no line-number archaeology and no surprises.** The fix was exactly the three
+  positions the plan's tests already specified — copy this write-up's confidence, not a warning.
+- **Phase 3 is closed, not just unblocked.** Zero MLB `player_prop` squares exist in production of
+  any status. Do not re-run the historical-miss query expecting a different answer unless MLB Prop
+  Bingo has shipped meaningfully more volume since 2026-08-18.
+- **R4 is untouched by R3** — it's the backtest-seam work (`buildMlbTeamEventCandidateTemplatesForBacktest`,
+  `extraCandidates`), independent of the grading path R3 touched. Still needed, still Medium effort.
+- **Phase 5 (calibration) is now actually unblocked** per the plan's own sequencing — R3 was the
+  last gate item ("Running this before Phase 2 would measure the miss-instead-of-void bug and bake
+  it into a price"). With only 6 MLB cards total and zero player-prop volume, though, whoever runs
+  Phase 5 should sanity-check there's enough real settlement history to calibrate against before
+  spending the Opus 5 budget — the plan's `bingo:calibrate:mlb` measures against live box scores via
+  the harness, not against these near-empty production tables, so this may be moot; worth a two-
+  minute gut check before running it anyway.
+- **Still on branch `restore/mlb-bingo-r1`, not `main`.** Three production-affecting fixes now sit
+  on this branch (R1's five row-shape defects, R2's `getGameTimestamp` sixth defect, R3's void
+  fix). The case for merging keeps getting stronger; Andrew still has not been asked.
+- **Not yet done, still open per the plan's run order:** R4, then 3 (closed above, no work needed),
+  6, 7, 5.
+
+---
+
 ## Phase R4 — Re-implement Phase 4b's two `lib/` seams
 
 **Model:** Sonnet 5 · **Effort:** Medium (~1.5 hrs) · Needs R1. Independent of R2/R3.
