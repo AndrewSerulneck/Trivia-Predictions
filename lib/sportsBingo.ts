@@ -155,7 +155,17 @@ const BINGO_FORCE_FINALIZE_AFTER_START_MS = 12 * 60 * 60 * 1000;
 const BINGO_ALLOW_POSSIBLE_SQUARES = String(process.env.BINGO_ALLOW_POSSIBLE_SQUARES ?? "")
   .trim()
   .toLowerCase() === "true";
-const NBA_PLAYER_STATS_CACHE_MS = 5_000;
+// Exported for tests/lib.sportsBingo.nba-fetch-failure.test.ts, which proves the two TTLs are
+// actually different at the cache rather than hardcoding a duplicate of either value.
+export const NBA_PLAYER_STATS_CACHE_MS = 5_000;
+/**
+ * The negative TTL for an NBA/WNBA snapshot answer where at least one of the five
+ * `getNBAGamePlayerStatsSnapshot` fetches failed (network error or non-OK response), rather than
+ * legitimately returning nothing. Same reasoning as `SEASON_STATUS_FAILURE_CACHE_MS`: a failure and
+ * a real answer must not share a TTL, or one bad provider blip locks a card out of grading for the
+ * whole cache window. Phase 2b of docs/bingo-correctness-and-wnba-repair-plan.md.
+ */
+export const NBA_PLAYER_STATS_FAILURE_CACHE_MS = 1_000;
 /**
  * `/nfl/v1/plays` caps `per_page` at 100 and a regulation game runs ~150-180 plays, so four pages
  * covers a long overtime game with headroom while still bounding the walk — this runs on a
@@ -793,13 +803,26 @@ type NBAGamePlayerStatsSnapshot = {
   awayHasTripleDouble: boolean;
   anyHasTripleDouble: boolean;
   lineupByPlayerId: Map<number, { starter: boolean; teamSide: TeamSide | null }>;
+  /** False when the `/lineups` fetch failed (Phase 2b) — bench-scores squares stay pending/void
+   * rather than reading an empty map as "not a starter" and settling a false miss. */
+  lineupDataAvailable: boolean;
   firstScoringTeam: TeamSide | null;
   homeHalftimeScore: number | null;
   awayHalftimeScore: number | null;
   homeMaxQuarterPoints: number;
   awayMaxQuarterPoints: number;
+  /** False when the `/plays` walk failed (Phase 2b) — mirrors `NFLPlayDerivedFacts.available`.
+   * `firstScoringTeam`/halftime/quarter-max all default to their "nothing scored yet" values on an
+   * empty walk, which is indistinguishable from a real 0-0 first half unless this flag is checked
+   * first. team_scores_first / team_leads_at_halftime / team_points_in_any_quarter_at_least all gate
+   * on it before reading those fields. */
+  quarterExtrasAvailable: boolean;
   firstHalfByPlayerId: Map<number, { pts: number; ast: number; stl: number }>;
   maxQuarterAssistsByPlayerId: Map<number, number>;
+  /** False when the NBA per-period stats walk failed (Phase 2b; always true for WNBA — that walk is
+   * intentionally never attempted there, see Phase 3d, which is a different condition from a fetch
+   * failure and stays out of this flag's scope). Gates the three player-quarter families. */
+  periodStatsAvailable: boolean;
 };
 
 type MLBPlayerStatLine = {
@@ -2342,13 +2365,16 @@ export function buildNBAGamePlayerStatsSnapshot(
   stats: BallDontLieStat[],
   extras?: {
     lineupByPlayerId?: Map<number, { starter: boolean; teamSide: TeamSide | null }>;
+    lineupDataAvailable?: boolean;
     firstScoringTeam?: TeamSide | null;
     homeHalftimeScore?: number | null;
     awayHalftimeScore?: number | null;
     homeMaxQuarterPoints?: number;
     awayMaxQuarterPoints?: number;
+    quarterExtrasAvailable?: boolean;
     firstHalfByPlayerId?: Map<number, { pts: number; ast: number; stl: number }>;
     maxQuarterAssistsByPlayerId?: Map<number, number>;
+    periodStatsAvailable?: boolean;
   }
 ): NBAGamePlayerStatsSnapshot {
   const lines: NBAPlayerStatLine[] = [];
@@ -2407,13 +2433,16 @@ export function buildNBAGamePlayerStatsSnapshot(
     awayHasTripleDouble,
     anyHasTripleDouble: homeHasTripleDouble || awayHasTripleDouble,
     lineupByPlayerId: extras?.lineupByPlayerId ?? new Map(),
+    lineupDataAvailable: extras?.lineupDataAvailable ?? true,
     firstScoringTeam: extras?.firstScoringTeam ?? null,
     homeHalftimeScore: extras?.homeHalftimeScore ?? null,
     awayHalftimeScore: extras?.awayHalftimeScore ?? null,
     homeMaxQuarterPoints: extras?.homeMaxQuarterPoints ?? 0,
     awayMaxQuarterPoints: extras?.awayMaxQuarterPoints ?? 0,
+    quarterExtrasAvailable: extras?.quarterExtrasAvailable ?? true,
     firstHalfByPlayerId: extras?.firstHalfByPlayerId ?? new Map(),
     maxQuarterAssistsByPlayerId: extras?.maxQuarterAssistsByPlayerId ?? new Map(),
+    periodStatsAvailable: extras?.periodStatsAvailable ?? true,
   };
 }
 
@@ -2485,7 +2514,11 @@ export function buildBasketballPlayWalkExtras(
   return { firstScoringTeam, homeHalftimeScore, awayHalftimeScore, homeMaxQuarterPoints, awayMaxQuarterPoints };
 }
 
-async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<NBAGamePlayerStatsSnapshot | null> {
+// Exported for tests/lib.sportsBingo.nba-fetch-failure.test.ts (Phase 2b) — the fetch-failure
+// handling and cache-TTL split live entirely inside this function's orchestration of its five
+// fetches, so a direct call under a mocked ballDontLieClient is the only way to test it without
+// reimplementing it.
+export async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<NBAGamePlayerStatsSnapshot | null> {
   if (!isBasketballSportKey(card.sport_key)) {
     return null;
   }
@@ -2502,13 +2535,21 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
     return cached.snapshot;
   }
 
+  // Phase 2b: a fetch that failed (network error or non-OK response — `fetchBallDontLieList`
+  // degrades both to `[]`, never throws) must not be cached for as long as a real answer. Tracked
+  // across all five fetches below so any cache write in this call picks the right TTL.
+  let anyFetchFailed = false;
+  const rememberNull = (): null => {
+    nbaPlayerStatsCache.set(card.game_id, {
+      snapshot: null,
+      expiresAt: now + (anyFetchFailed ? NBA_PLAYER_STATS_FAILURE_CACHE_MS : NBA_PLAYER_STATS_CACHE_MS),
+    });
+    return null;
+  };
+
   try {
     if (!isBallDontLieConfigured()) {
-      nbaPlayerStatsCache.set(card.game_id, {
-        snapshot: null,
-        expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
-      });
-      return null;
+      return rememberNull();
     }
 
     const startsAt = +new Date(card.starts_at);
@@ -2521,14 +2562,14 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
       start_date: startDate,
       end_date: endDate,
     });
-    const games = await fetchBallDontLieList<BallDontLieGame>(`${basketballApiPrefix}/games`, gameQuery);
+    const gamesFailure: BallDontLieFailureBox = { failed: false };
+    const games = await fetchBallDontLieList<BallDontLieGame>(`${basketballApiPrefix}/games`, gameQuery, {
+      failure: gamesFailure,
+    });
+    if (gamesFailure.failed) anyFetchFailed = true;
     const matchedGame = pickBestMatchingBallDontLieGame(card, games);
     if (!matchedGame || typeof matchedGame.id !== "number") {
-      nbaPlayerStatsCache.set(card.game_id, {
-        snapshot: null,
-        expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
-      });
-      return null;
+      return rememberNull();
     }
 
     const statsQuery = new URLSearchParams({ per_page: "100" });
@@ -2538,11 +2579,26 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
       statsQuery.set("period", "0");
     }
     statsQuery.append("game_ids[]", String(matchedGame.id));
-    const stats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/${statsPath}`, statsQuery);
+    const statsFailure: BallDontLieFailureBox = { failed: false };
+    const stats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/${statsPath}`, statsQuery, {
+      failure: statsFailure,
+    });
+    if (statsFailure.failed) {
+      // The box score is not optional: without it there is no snapshot, not an empty one — a
+      // zero-filled snapshot reads to every resolver as "this event definitively did not happen"
+      // (see docs/bingo-correctness-and-wnba-repair-plan.md, Phase 2b). Bail before spending the
+      // remaining four fetches; a null snapshot needs none of their output.
+      anyFetchFailed = true;
+      return rememberNull();
+    }
 
     const lineupsQuery = new URLSearchParams({ per_page: "100" });
     lineupsQuery.append("game_ids[]", String(matchedGame.id));
-    const lineups = await fetchBallDontLieList<BallDontLieLineup>(`${basketballApiPrefix}/lineups`, lineupsQuery);
+    const lineupsFailure: BallDontLieFailureBox = { failed: false };
+    const lineups = await fetchBallDontLieList<BallDontLieLineup>(`${basketballApiPrefix}/lineups`, lineupsQuery, {
+      failure: lineupsFailure,
+    });
+    if (lineupsFailure.failed) anyFetchFailed = true;
     const lineupByPlayerId = new Map<number, { starter: boolean; teamSide: TeamSide | null }>();
     for (const row of lineups) {
       const playerId = Number(row.player?.id ?? 0);
@@ -2557,22 +2613,43 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
     // (verified live 2026-08-18). Confirmed this is not a truncated walk: neither league's plays
     // response carries a `meta.next_cursor`, so `fetchBallDontLieList` returns after one page.
     const playsQuery = new URLSearchParams({ per_page: "100", game_id: String(matchedGame.id) });
-    const plays = await fetchBallDontLieList<BallDontLiePlay>(`${basketballApiPrefix}/plays`, playsQuery);
-    const playWalk = buildBasketballPlayWalkExtras(plays, card);
+    const playsFailure: BallDontLieFailureBox = { failed: false };
+    const plays = await fetchBallDontLieList<BallDontLiePlay>(`${basketballApiPrefix}/plays`, playsQuery, {
+      failure: playsFailure,
+    });
+    if (playsFailure.failed) anyFetchFailed = true;
+    // A failed walk and a walk that legitimately found nothing yet (0-0, first half in progress)
+    // both leave `plays` empty, but only the failure should stop the box-score squares' siblings
+    // from settling — hence gating on the failure box, not on `plays.length`.
+    const playWalk = playsFailure.failed
+      ? { firstScoringTeam: null, homeHalftimeScore: null, awayHalftimeScore: null, homeMaxQuarterPoints: 0, awayMaxQuarterPoints: 0 }
+      : buildBasketballPlayWalkExtras(plays, card);
     const { firstScoringTeam, homeHalftimeScore, awayHalftimeScore, homeMaxQuarterPoints, awayMaxQuarterPoints } = playWalk;
 
     const firstHalfByPlayerId = new Map<number, { pts: number; ast: number; stl: number }>();
     const maxQuarterAssistsByPlayerId = new Map<number, number>();
+    let periodStatsAvailable = true;
     // WNBA's box-score endpoint ignores `period` entirely (verified live 2026-08-18: period=1 and
     // period=0 return identical rows), so this per-period player walk would silently write
     // full-game totals into every quarter. There's no substitute source, so these two maps stay
     // empty for WNBA — buildNBAAchievementCandidates (3d) never generates the four families that
-    // read them, so this is a scoped no-op, not a data loss.
+    // read them, so this is a scoped no-op, not a data loss. `periodStatsAvailable` stays `true`
+    // here regardless — this is "not attempted by design," a different condition from the fetch
+    // failure it otherwise tracks, and the WNBA-absence gap this leaves is a known, flagged one
+    // (see Phase 3's "new findings" write-up), not this phase's to fix.
     if (!wnbaMode) {
       for (const period of [1, 2, 3, 4]) {
         const periodQuery = new URLSearchParams({ per_page: "100", period: String(period) });
         periodQuery.append("game_ids[]", String(matchedGame.id));
-        const periodStats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/${statsPath}`, periodQuery);
+        const periodFailure: BallDontLieFailureBox = { failed: false };
+        const periodStats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/${statsPath}`, periodQuery, {
+          failure: periodFailure,
+        });
+        if (periodFailure.failed) {
+          anyFetchFailed = true;
+          periodStatsAvailable = false;
+          continue;
+        }
         for (const line of periodStats) {
           const playerId = Number(line.player?.id ?? 0);
           if (!Number.isFinite(playerId) || playerId <= 0) continue;
@@ -2590,26 +2667,26 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
 
     const snapshot = buildNBAGamePlayerStatsSnapshot(card, matchedGame, stats, {
       lineupByPlayerId,
+      lineupDataAvailable: !lineupsFailure.failed,
       firstScoringTeam,
       homeHalftimeScore,
       awayHalftimeScore,
       homeMaxQuarterPoints,
       awayMaxQuarterPoints,
+      quarterExtrasAvailable: !playsFailure.failed,
       firstHalfByPlayerId,
       maxQuarterAssistsByPlayerId,
+      periodStatsAvailable,
     });
 
     nbaPlayerStatsCache.set(card.game_id, {
       snapshot,
-      expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
+      expiresAt: now + (anyFetchFailed ? NBA_PLAYER_STATS_FAILURE_CACHE_MS : NBA_PLAYER_STATS_CACHE_MS),
     });
     return snapshot;
   } catch {
-    nbaPlayerStatsCache.set(card.game_id, {
-      snapshot: null,
-      expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
-    });
-    return null;
+    anyFetchFailed = true;
+    return rememberNull();
   }
 }
 
@@ -9261,7 +9338,9 @@ export function evaluateResolver(
       return { status: teamAgg.totalRebounds > oppAgg.totalRebounds ? "hit" : "miss", resolved: true };
     }
     case "nba_player_bench_scores": {
-      if (!nbaStatsSnapshot) return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      if (!nbaStatsSnapshot || !nbaStatsSnapshot.lineupDataAvailable) {
+        return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      }
       const playerId = resolveSnapshotPlayerId(nbaStatsSnapshot, resolver.player);
       if (!playerId) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
       const lineup = nbaStatsSnapshot.lineupByPlayerId.get(playerId);
@@ -9273,7 +9352,9 @@ export function evaluateResolver(
       return { status: "pending", resolved: false };
     }
     case "nba_team_scores_first": {
-      if (!nbaStatsSnapshot) return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      if (!nbaStatsSnapshot || !nbaStatsSnapshot.quarterExtrasAvailable) {
+        return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      }
       if (!nbaStatsSnapshot.firstScoringTeam) {
         if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
         return { status: "pending", resolved: false };
@@ -9281,7 +9362,9 @@ export function evaluateResolver(
       return { status: nbaStatsSnapshot.firstScoringTeam === resolver.team ? "hit" : "miss", resolved: true };
     }
     case "nba_team_leads_at_halftime": {
-      if (!nbaStatsSnapshot) return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      if (!nbaStatsSnapshot || !nbaStatsSnapshot.quarterExtrasAvailable) {
+        return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      }
       const homeHalf = nbaStatsSnapshot.homeHalftimeScore;
       const awayHalf = nbaStatsSnapshot.awayHalftimeScore;
       if (homeHalf === null || awayHalf === null) {
@@ -9293,14 +9376,18 @@ export function evaluateResolver(
       return { status: teamLeads ? "hit" : "miss", resolved: true };
     }
     case "nba_team_points_in_any_quarter_at_least": {
-      if (!nbaStatsSnapshot) return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      if (!nbaStatsSnapshot || !nbaStatsSnapshot.quarterExtrasAvailable) {
+        return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      }
       const maxPoints = resolver.team === "home" ? nbaStatsSnapshot.homeMaxQuarterPoints : nbaStatsSnapshot.awayMaxQuarterPoints;
       if (maxPoints >= resolver.threshold) return { status: "hit", resolved: true };
       if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
       return { status: "pending", resolved: false };
     }
     case "nba_player_points_first_half_at_least": {
-      if (!nbaStatsSnapshot) return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      if (!nbaStatsSnapshot || !nbaStatsSnapshot.periodStatsAvailable) {
+        return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      }
       const playerId = resolveSnapshotPlayerId(nbaStatsSnapshot, resolver.player);
       if (!playerId) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
       const agg = nbaStatsSnapshot.firstHalfByPlayerId.get(playerId);
@@ -9310,7 +9397,9 @@ export function evaluateResolver(
       return { status: "pending", resolved: false };
     }
     case "nba_player_assists_in_any_quarter_at_least": {
-      if (!nbaStatsSnapshot) return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      if (!nbaStatsSnapshot || !nbaStatsSnapshot.periodStatsAvailable) {
+        return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      }
       const playerId = resolveSnapshotPlayerId(nbaStatsSnapshot, resolver.player);
       if (!playerId) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
       const maxAst = nbaStatsSnapshot.maxQuarterAssistsByPlayerId.get(playerId) ?? 0;
@@ -9319,7 +9408,9 @@ export function evaluateResolver(
       return { status: "pending", resolved: false };
     }
     case "nba_player_steals_first_half_at_least": {
-      if (!nbaStatsSnapshot) return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      if (!nbaStatsSnapshot || !nbaStatsSnapshot.periodStatsAvailable) {
+        return completed ? { status: "void", resolved: true } : { status: "pending", resolved: false };
+      }
       const playerId = resolveSnapshotPlayerId(nbaStatsSnapshot, resolver.player);
       if (!playerId) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
       const agg = nbaStatsSnapshot.firstHalfByPlayerId.get(playerId);

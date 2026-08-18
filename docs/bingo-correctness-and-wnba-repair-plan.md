@@ -877,3 +877,207 @@ npm run test:pwa-contract             # 20 passed — required for Phase 3 per t
 
 - No interaction with Phase 3 at all — confirmed unchanged from 2a's note. Different files
   entirely.
+
+---
+
+## Phase 2b — done, 2026-08-18 — handoff to whoever picks up Phase 1 next
+
+**Status: complete, all gates green, uncommitted on `restore/mlb-bingo-r1` until this write-up
+lands with it in the same commit (matching 2a/3's pattern).** Landed after Phase 3 per the plan's
+suggested order and its own explicit sequencing note (both phases edit
+`getNBAGamePlayerStatsSnapshot`; Phase 3 restructured the fetches, this phase instruments them).
+
+### What changed
+
+**`lib/sportsBingo.ts`, `getNBAGamePlayerStatsSnapshot`** — all five fetches (games, box score,
+lineups, plays, the four-call NBA-only per-period-stats loop) now pass a `BallDontLieFailureBox`
+and react to it individually, per the plan's explicit "decide per fetch" instruction:
+
+- **Box score (`stats`) fails → the whole snapshot is `null`.** This is the core fix. Before this
+  phase, `fetchBallDontLieList` degrading a failed box-score fetch to `[]` produced a fully-formed,
+  zero-filled `NBAGamePlayerStatsSnapshot` that every resolver read as "this event definitively did
+  not happen" — the mechanism that mis-settled all 43 WNBA squares before Phase 3's endpoint fixes,
+  and one Phase 3 only removed one instance of, not the general case (a rate limit, an outage, a
+  schema change, or a future league on the wrong path reproduces it identically). On a stats
+  failure the function now bails immediately — the remaining four fetches never run, since a null
+  snapshot needs none of their output.
+- **Games fetch fails → also `null`**, same as a genuine "no matching game in the lookup window"
+  (unchanged behavior there), but now tagged so the cache TTL below knows it was a failure, not a
+  real answer.
+- **Lineups fetch fails → `lineupDataAvailable: false`** (new snapshot field). Only
+  `nba_player_bench_scores` reads it. Box score and plays data are untouched.
+- **Plays fetch fails → `quarterExtrasAvailable: false`** (new snapshot field), and the
+  play-walk-derived fields (`firstScoringTeam`, both halftime scores, both max-quarter-points) are
+  forced to their empty defaults regardless of what `buildBasketballPlayWalkExtras([], card)` would
+  have computed from an empty array — the two states (walk found nothing yet vs. walk never ran)
+  must not be conflated, so the override is on the failure box, not on `plays.length`. Box score
+  squares still grade normally.
+- **Any one of the four per-period-stats fetches fails (NBA only) → `periodStatsAvailable:
+  false`** for the whole game, not just that quarter — a partial quarter walk is not trustworthy
+  for a `_first_half_at_least` or `_in_any_quarter_at_least` square. The loop continues to the next
+  period on a failure (`continue`) rather than aborting, since a later quarter's data is still
+  worth having for whichever families actually need it, but the flag downgrades the whole set.
+  Unaffected by WNBA — the loop is skipped there entirely by Phase 3d for an unrelated reason ("the
+  endpoint ignores `period`," not "it failed"), and `periodStatsAvailable` stays `true` in that
+  case by design (see the in-code comment) — this is a *different condition* from a fetch failure,
+  and Phase 3's already-flagged "four suppressed families settle miss on a populated snapshot" gap
+  is explicitly **not** touched by this phase (still open, still low-impact, still just flagged).
+
+**Distinguishing "unknown" from a real value, without widening any field to nullable.** The plan
+called out `homeMaxQuarterPoints: 0`/`awayMaxQuarterPoints: 0` meaning both "measured zero" and
+"never fetched" as the same bug one level down. Rather than making those two fields (and
+`lineupByPlayerId`, and the two per-player maps) nullable/sentinel-valued one at a time, this phase
+added three sibling booleans to `NBAGamePlayerStatsSnapshot` — `lineupDataAvailable`,
+`quarterExtrasAvailable`, `periodStatsAvailable` — one per fetch-failure domain, each defaulting to
+`true` when not explicitly supplied (so every other caller of `buildNBAGamePlayerStatsSnapshot` —
+the WNBA row-shape tests, the validator script — is unaffected). This mirrors a pattern **already
+established elsewhere in this same file**: `NFLPlayDerivedFacts.available` and
+`NFLTeamStatsFacts.available` do exactly this for NFL's own optional-fetch legs
+(`lib/sportsBingo.ts:904-959`), and `evaluateResolver`'s NFL arm already gates on them
+(`if (!nflStatsSnapshot || !nflStatsSnapshot.plays.available)`). This phase's NBA/WNBA gates
+(below) are the same shape. Chose this over nullable fields because it's directly testable, doesn't
+require every existing reader of `homeMaxQuarterPoints` etc. to add a null-check, and matches
+precedent already in the codebase rather than inventing a second convention next to it.
+
+**`evaluateResolver`** — seven resolver kinds gained an availability check ahead of their existing
+`!nbaStatsSnapshot` guard (same `void`-if-completed-else-`pending` shape as that guard, just also
+firing when the snapshot is present but the relevant fetch failed):
+
+```
+nba_player_bench_scores                    → !lineupDataAvailable
+nba_team_scores_first                       → !quarterExtrasAvailable
+nba_team_leads_at_halftime                  → !quarterExtrasAvailable
+nba_team_points_in_any_quarter_at_least     → !quarterExtrasAvailable
+nba_player_points_first_half_at_least       → !periodStatsAvailable
+nba_player_assists_in_any_quarter_at_least  → !periodStatsAvailable
+nba_player_steals_first_half_at_least       → !periodStatsAvailable
+```
+
+All seven were already in `isResolverEligibleForVoidRegrade` from Phase 2a (they were among the 22
+guard sites), so the regrade seam needed no further change — a square voided by one of these new
+gates is exactly as reopenable as one voided by the original `!nbaStatsSnapshot` guard.
+
+**Cache TTL split.** New `NBA_PLAYER_STATS_FAILURE_CACHE_MS = 1_000` (exported), alongside
+`NBA_PLAYER_STATS_CACHE_MS = 5_000` (now also exported, for the test below). A local
+`anyFetchFailed` boolean is set by any of the five fetches' failure boxes and checked at every
+`nbaPlayerStatsCache.set(...)` call site (there are three: the two early-`null` returns and the
+success path) — same pattern as the pre-existing `SEASON_STATUS_FAILURE_CACHE_MS` /
+`hasUpcomingGamesInWindow` (`lib/sportsBingo.ts:1146`). Worth knowing: the *full* TTL here was
+already only 5 seconds (much shorter than the season-status cache's 6 hours), so the practical
+blast radius this closes is smaller than the plan's framing suggested — a bad blip was never going
+to lock a card out for long either way. Implemented anyway, per the plan's explicit test ask (#4)
+and because "a failure and a real answer share a TTL" is the same category of bug regardless of the
+window size.
+
+### What was deliberately not changed
+
+- **`nba_player_bench_scores`'s missing-`completed`-gate on the `!lineup || lineup.starter → miss`
+  branch** (`lib/sportsBingo.ts`, same case). Noticed while touching this case: unlike every other
+  branch in `evaluateResolver`, this one settles `miss` immediately on an empty/non-starter lineup
+  entry with no `completed` check at all — so a game whose lineups haven't posted yet (normal
+  pre-tip-off state, not a failure) would settle `miss` early instead of `pending`. This is a real
+  bug, but it's a *different* condition from Phase 2b's subject (a fetch that failed vs. a fetch
+  that succeeded and correctly found nothing yet), it's the same class of thing Phase 2a explicitly
+  left alone (`if (!line)`/`if (!playerId)` branches — "a different condition and belongs to its
+  own change"), and fixing it isn't needed for this phase's tests to pass. Flagging forward rather
+  than fixing, same as Phase 3 did for its two new findings.
+- **The two Phase 3 findings** (`/wnba/v1/season_averages/general` 404, the four-suppressed-families
+  settlement gap) — still open, still out of scope, mentioned here only so they don't get lost
+  between write-ups.
+- **No row adapter, no nullable-field widening** on `homeMaxQuarterPoints`/`awayMaxQuarterPoints` —
+  see the `available`-boolean reasoning above.
+
+### Tests
+
+New `tests/lib.sportsBingo.nba-fetch-failure.test.ts` (6 tests) — drives the real, now-exported
+`getNBAGamePlayerStatsSnapshot` under a per-endpoint-controllable mock of
+`@/lib/ballDontLieClient` (a `failing` set that makes a given path's `options.failure.failed = true`
+and returns `[]`, and a separate `emptying` set that returns `[]` *without* setting the failure box,
+so "the provider said empty" and "the provider was down" are independently triggerable — the exact
+distinction this phase's subject depends on). Uses `vi.useFakeTimers()` to prove the TTL split
+behaviorally (a second call inside the short window refetches; inside the long window it doesn't)
+rather than reading the cache's internal state directly, since the cache map itself stays private.
+
+Maps directly to the plan's four test asks:
+1. Box-score fetch fails → snapshot is `null` (not zero-filled).
+2. Box-score fetch succeeds with a genuine `emptying`-triggered `[]` → snapshot is non-null with
+   `lines: []` — proves the distinguishing signal is the failure box, not row count.
+3. Plays fetch fails, box score succeeds → `lines` still populated and correct;
+   `quarterExtrasAvailable: false`; `firstScoringTeam`/`homeMaxQuarterPoints` sit at their empty
+   defaults rather than a stale/wrong computed value; `lineupDataAvailable` unaffected (proves the
+   per-fetch isolation, not just "one flag for everything").
+4. TTL split, both directions: a success survives a `NBA_PLAYER_STATS_FAILURE_CACHE_MS + 1` advance
+   with zero new network calls (full TTL still in effect); a failure does not (refetches).
+
+Also added a lineups-fetch-failure test (not one of the plan's four named asks, but the same shape
+of gap on the fifth fetch) — `lineupDataAvailable: false`, box score and plays data unaffected.
+
+**`tests/lib.sportsBingo.missing-data-voids.test.ts` (Phase 2a's file) extended, not replaced** —
+its "no over-reach: present snapshot, genuinely below threshold" fixture is a hand-built
+`as any` `NBAGamePlayerStatsSnapshot`-shaped object (Phase 2a's write-up already flagged this as
+fragile to type growth). Added the three new fields there set to `true`, since that test's whole
+point is "data is available and the answer is a real miss," not "data is unavailable" — without the
+addition, the fixture's missing fields would read as `undefined` → falsy → the new availability
+gates would fire and turn the test's expected `miss`/`hit` into an unexpected `void`. This is
+exactly the fragility Phase 2a's write-up predicted ("worth revisiting if that type grows before
+Phase 3" — it grew again, in 2b, and needed the same manual sync).
+
+**Proven failing first, verified by hand:** `git diff lib/sportsBingo.ts > phase2b.diff`,
+`git apply -R` (never `git checkout -- <file>` — see the standing rule), reran both test files: the
+new file failed all 6 (the export doesn't exist pre-fix, so every call throws
+`TypeError: ... is not a function` — a real failure, not a vacuous one, since the test file's whole
+premise is calling that exported function), the extended existing file's 6 tests still passed
+unchanged (expected — that file's assertions don't exercise the new gates, only the fixture needed
+updating so *later* runs wouldn't spuriously break). `git apply`'d the diff back, reran, all 12
+passed.
+
+### Gates run, all green
+
+```
+npx tsc --noEmit                      # clean
+npm run lint                          # clean
+npm run test:bingo-nfl                # 250 passed (unchanged — this phase touches no NFL code)
+npm run test:bingo-mlb                # 129 passed (unchanged — this phase touches no MLB code)
+npm run test                          # 1883 passed / 13 skipped / 0 failing (was 1877/13/0 after Phase 3; +6 from the new file)
+```
+`test:pwa-contract` not run — per the plan's gate table this is required for Phase 3 only, and this
+phase touches no PWA/manifest surface.
+
+### What's not done — do not treat 2b as fully closed
+
+1. **Not committed as of this write-up being drafted** — will land in the same commit as this
+   section, per the pattern 2a/3 both established (docs + code + tests together). If you're reading
+   this from a diff instead of `git log`, the commit didn't happen yet; don't start Phase 1 without
+   checking `git status` first, same standing instruction as always.
+2. **The `nba_player_bench_scores` missing-`completed`-gate bug (see "deliberately not changed"
+   above) is real and still there.** Not this phase's to fix, but worth a line in whatever tracks
+   open items for this feature area if one exists outside this plan doc.
+3. **Andrew's historical-rows decision (raised in 2a) is still unmade.** Unrelated to this phase's
+   files, mentioned here only so it doesn't get lost across three write-ups now.
+4. **The negative TTL's practical impact is smaller than it might sound** — full TTL here was
+   already 5 seconds pre-existing, not the hours-long window the `SEASON_STATUS_FAILURE_CACHE_MS`
+   precedent this pattern is modeled on protects against. Implemented per the plan's explicit ask
+   anyway (see "Cache TTL split" above) — just don't oversell this bullet point if summarizing the
+   phase's impact to anyone.
+
+### Handoff to Phase 1 (up next — the only phase left; independent, any time, needs API budget)
+
+- **No interaction with 2b at all.** Phase 1 touches `scripts/measure-mlb-event-rates.cjs`,
+  `lib/mlbTeamEventRates.ts`, and two MLB call sites in `lib/sportsBingo.ts` —
+  `buildMlbTeamEventCandidateTemplatesForBacktest` (now defined at line 5424, was 5309 in the
+  plan's original text) and `buildMLBPlayerPropCandidatesFromRecentStats` (now at 5477, was 5769).
+  **Re-grep before editing regardless** — this phase's edits sit entirely above 2507 in the file, so
+  every later line number moved, but by an amount that varies through the file rather than a flat
+  offset; don't assume a constant shift. Nothing in 2b touches MLB rate models, team-event candidate
+  generation, or the calibration script.
+- **This is the last phase in the plan's table.** After Phase 1 lands (with its own live-measured
+  artifact per its own "do not hand-copy" rule), the whole `docs/bingo-correctness-and-wnba-repair-plan.md`
+  plan is complete: 2a (NBA void-on-null), 3 (WNBA settlement + the NBA plays fix), 2b (fetch-failure
+  hardening), 1 (MLB home/away split) will all be done. At that point the open items still
+  outstanding across all four write-ups are: Andrew's historical-rows backfill decision (2a), the
+  bench-scores completed-gate bug (2b, this write-up), and Phase 3's two flagged findings
+  (`/wnba/v1/season_averages/general` 404, the four-suppressed-families settlement gap). None of
+  those block calling the plan done — they're all explicitly scoped out, not overlooked.
+- **The branch-merge question the plan's "Branch state" section raises is still open and still
+  Andrew's** — worth re-raising once Phase 1 lands and this plan is fully done, since by then the
+  branch will carry nine production-affecting changes never merged to `main`.
