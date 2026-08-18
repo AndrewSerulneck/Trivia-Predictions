@@ -681,10 +681,20 @@ type BallDontLieGame = {
   id?: number;
   season?: number;
   status?: string;
+  /**
+   * WNBA's completed-game `status` is `"post"`, never `"final"` — the finality signal instead
+   * lives here (`"final"`). MLB/NBA/NFL say `"final"` in `status` itself already; `status_state`
+   * is read as a second, OR'd signal so those leagues are unaffected. See Phase 7 of
+   * docs/mlb-prop-bingo-validation-plan.md.
+   */
+  status_state?: string;
   datetime?: string;
   date?: string;
   home_team_score?: number | string | null;
   visitor_team_score?: number | string | null;
+  /** WNBA's flat score keys — a third shape, distinct from NBA/NFL's `*_team_score` and MLB's `*_team_data.runs`. */
+  home_score?: number | string | null;
+  away_score?: number | string | null;
   home_team?: BallDontLieTeam;
   visitor_team?: BallDontLieTeam;
   /** MLB says `away_team`; NBA/WNBA/NFL say `visitor_team`. Read both via `ballDontLieAwayTeam`. */
@@ -1401,7 +1411,7 @@ export function normalizeBallDontLieScoreRow(
     // the half — every square on the board settling on a two-quarter score. Found while building
     // Phase 4's halftime squares (docs/prop-bingo-nfl-plan.md); it was latent before NFL had
     // any square that could notice.
-    completed: isBallDontLieGameFinal(status) || /\bft\b/.test(status),
+    completed: isBallDontLieGameFinal(status, game.status_state) || /\bft\b/.test(status),
   };
 }
 
@@ -1421,13 +1431,17 @@ function ballDontLieTeamDataScore(data: BallDontLieTeamGameData | undefined): un
  * MLB has **no `home_team_score` key at all** — runs live at `home_team_data.runs`. Reading only
  * the flat key made every MLB snapshot score `null`, which made `toMLBLiveScoreSnapshot` return
  * `null` for every card.
+ *
+ * WNBA has a *third* shape: no `home_team_score`, no `home_team_data`, just flat `home_score` /
+ * `away_score`. Without this fallback every WNBA snapshot score was `null` too (confirmed live
+ * 2026-08-18, Phase 7 of docs/mlb-prop-bingo-validation-plan.md).
  */
 function ballDontLieHomeScore(game: BallDontLieGame): number | null {
-  return parseScoreValue(game.home_team_score ?? ballDontLieTeamDataScore(game.home_team_data));
+  return parseScoreValue(game.home_team_score ?? ballDontLieTeamDataScore(game.home_team_data) ?? game.home_score);
 }
 
 function ballDontLieAwayScore(game: BallDontLieGame): number | null {
-  return parseScoreValue(game.visitor_team_score ?? ballDontLieTeamDataScore(game.away_team_data));
+  return parseScoreValue(game.visitor_team_score ?? ballDontLieTeamDataScore(game.away_team_data) ?? game.away_score);
 }
 
 /**
@@ -2220,9 +2234,18 @@ function getGameTimestamp(game: BallDontLieGame): number {
  * `includes`, not `startsWith`: MLB reports `"STATUS_FINAL"`, so a `startsWith("final")` check
  * meant an MLB game was **never** `finalized` and its squares could only ever settle through the
  * force-finalize window. NFL/NBA say `"Final"` / `"Final/OT"`, still matched.
+ *
+ * `statusState`, if passed, is OR'd in as a second signal: WNBA's completed-game `status` is
+ * `"post"`, never `"final"`, so `status` alone left every WNBA game permanently un-finalized and
+ * every square settling 12 hours late through the force-finalize window instead of on completion
+ * (confirmed live 2026-08-18, Phase 7 of docs/mlb-prop-bingo-validation-plan.md). MLB/NBA/NFL
+ * already say "final" in `status` itself, so passing their `status_state` too is a no-op.
  */
-function isBallDontLieGameFinal(status: string): boolean {
-  return status.trim().toLowerCase().includes("final");
+function isBallDontLieGameFinal(status: string, statusState?: string): boolean {
+  if (status.trim().toLowerCase().includes("final")) {
+    return true;
+  }
+  return Boolean(statusState?.trim().toLowerCase().includes("final"));
 }
 
 function inferCardTeamSide(card: SportsBingoCardRow, maybeTeamName: string): TeamSide | null {
@@ -2293,7 +2316,9 @@ export function pickBestMatchingBallDontLieGame(card: SportsBingoCardRow, games:
 }
 
 
-function buildNBAGamePlayerStatsSnapshot(
+// Exported for tests/lib.sportsBingo.wnba-row-shape.test.ts — WNBA shares this function with NBA
+// via basketballApiPrefixForSportKey, and its `finalized`/score reads were the Phase 7 defect site.
+export function buildNBAGamePlayerStatsSnapshot(
   card: SportsBingoCardRow,
   game: BallDontLieGame,
   stats: BallDontLieStat[],
@@ -2355,9 +2380,9 @@ function buildNBAGamePlayerStatsSnapshot(
 
   return {
     gameId: Number(game.id ?? 0),
-    finalized: isBallDontLieGameFinal(String(game.status ?? "")),
-    homeScore: parseScoreValue(game.home_team_score),
-    awayScore: parseScoreValue(game.visitor_team_score),
+    finalized: isBallDontLieGameFinal(String(game.status ?? ""), game.status_state),
+    homeScore: ballDontLieHomeScore(game),
+    awayScore: ballDontLieAwayScore(game),
     lines,
     byPlayerKey,
     homeHasTripleDouble,
