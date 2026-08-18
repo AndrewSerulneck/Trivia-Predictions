@@ -1,8 +1,25 @@
 # Admin Test Debt — Phases A & B (stale tests from commit `6c2ff46`)
 
-**Status: not started.** Written 2026-08-17, extracted from the Appendix of
-`docs/prop-bingo-nfl-plan.md` so it can be executed independently, *after* the Prop Bingo code
-review lands.
+**Status: Phase A done (commit `eb813e0`, 2026-08-18). Phase B done (2026-08-18) — `npm run test`
+fully green, `npx tsc --noEmit` and `npm run lint` clean.** Written 2026-08-17,
+extracted from the Appendix of `docs/prop-bingo-nfl-plan.md` so it can be executed independently,
+*after* the Prop Bingo code review lands.
+
+## Handoff to Phase B (2026-08-18)
+
+Phase A is committed (`eb813e0`). Baseline re-verified right before that commit and again right
+after: **before** — `2 failed | 189 passed | 1 skipped` files, `4 failed | 1736 passed | 13 skipped`
+tests, matching this doc's original count exactly. **After Phase A** — `npm run test` shows exactly
+`2 failed` files collapsed to **1 failed file** (`tests/venue-activation.phase4-mount.test.ts`),
+**4 failed → 3 failed** tests, all three being the Phase B ones listed below. `npx tsc --noEmit` and
+`npm run lint` are both clean, unchanged from baseline. Nothing outside
+`tests/admin-mobile.section-registry-split.test.ts` was touched.
+
+Do not re-run the Phase A diagnosis — it's re-verified and closed. Start Phase B directly from
+"### Diagnosis" below. Ground rule 2 (don't fix product code) and ground rule 3 (treat pre-8/7 docs
+as suspect until checked against current source) still apply. Acceptance criterion for Phase B is
+unchanged: `npm run test` fully green (0 failures) plus the new lock-coverage tests and the two doc
+updates described below, then commit separately from Phase A.
 
 **Do this after the Prop Bingo review, not before.** Neither phase touches Prop Bingo,
 `lib/sportsBingo.ts`, `lib/sportsBingoOdds.ts`, or any flag, so folding them into that diff would

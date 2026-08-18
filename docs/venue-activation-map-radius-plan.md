@@ -659,6 +659,31 @@ remains untouched here too. **Do not chase it as part of this plan.**
   the 15%-refit-threshold feel in item 3 — both were flagged as genuinely untested guesses, not
   just formalities).
 
+### As-built addendum — the edit-mode lock (post-`6c2ff46`, 2026-08-18)
+
+`6c2ff46` ("Tweaking Admin Mobile View", 2026-08-07) added a change this plan's Phase 5 predates
+and never documented: `GeofenceEditor` gained a `startLocked` prop
+([GeofenceEditor.tsx:57](components/admin/GeofenceEditor.tsx#L57)). When true, the component
+mounts locked behind a read-only summary card (pin label, `Geofence radius: {value} m`,
+coordinates, a "Check ↗" maps link, and a "🔒 Edit location & geofence" button) instead of the
+map + dial — so a thumb scrolling past the map on a phone can't accidentally nudge the pin or
+resize the geofence. It's uncontrolled: once tapped open via the unlock button, it stays open for
+the rest of that form mount.
+
+**The only caller is `ActivateVenueFlow.tsx:432`**, passing `startLocked={mode === "edit"}`.
+Desktop's `VenuesSection.tsx:654` passes no `startLocked` at all, so the desktop editor is
+unlocked in both create and edit — the lock is **mobile-edit-only**, not "edit-mode" in general.
+
+This shipped with zero test coverage, which is why it surfaced as three tests going red in
+`tests/venue-activation.phase4-mount.test.ts` (they queried for the slider that a locked mount no
+longer renders) rather than one clear signal. Fixed 2026-08-18
+(`docs/admin-test-debt-phases-a-b-plan.md` Phase B): the three tests now click the unlock button
+first, and four new tests pin the lock's own contract directly — locked-by-default in mobile edit
+mode with a read-only summary and no slider/inputs reachable, create mode exposes the dial with no
+unlock step, unlock is one-way across a re-render, and desktop edit mode has no lock at all. See
+`docs/venue-activation-device-checklist.md`'s new item 9 for the one thing jsdom still can't
+verify here — the actual stray-thumb-scroll case the lock exists to prevent.
+
 ---
 
 ---

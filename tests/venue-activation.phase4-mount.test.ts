@@ -50,6 +50,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+// ActivateVenueFlow renders GeofenceEditor with startLocked={mode === "edit"}
+// (components/admin/mobile/ActivateVenueFlow.tsx:432), so every edit-mode
+// mount starts behind the read-only summary card and needs one unlock click
+// before the dial/map exist in the DOM.
+function unlockEditor() {
+  fireEvent.click(screen.getByRole("button", { name: /Edit location & geofence/ }));
+}
+
 describe("ActivateVenueFlow (mobile) — Phase 4 mount", () => {
   it("edit mode renders the slider at the venue's radius and no old controls", () => {
     render(
@@ -63,6 +71,7 @@ describe("ActivateVenueFlow (mobile) — Phase 4 mount", () => {
         onCancel: vi.fn(),
       })
     );
+    unlockEditor();
     const slider = screen.getByRole("slider", { name: "Geofence radius" });
     expect(slider.getAttribute("aria-valuenow")).toBe("150");
     expect(screen.queryByText("Adjust pin on map")).toBeNull();
@@ -98,6 +107,7 @@ describe("ActivateVenueFlow (mobile) — Phase 4 mount", () => {
         onCancel: vi.fn(),
       })
     );
+    unlockEditor();
     fireEvent.keyDown(screen.getByRole("slider", { name: "Geofence radius" }), { key: "ArrowRight" });
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -119,6 +129,7 @@ describe("ActivateVenueFlow (mobile) — Phase 4 mount", () => {
         onCancel: vi.fn(),
       })
     );
+    unlockEditor();
     // Dial move: pin summary should still read "on file" provenance since a
     // dial-only move never touches source.
     fireEvent.keyDown(screen.getByRole("slider", { name: "Geofence radius" }), { key: "ArrowRight" });
@@ -135,6 +146,81 @@ describe("ActivateVenueFlow (mobile) — Phase 4 mount", () => {
     if (!latInput) throw new Error("Latitude input not found");
     fireEvent.change(latInput, { target: { value: "41.0" } });
     expect(screen.getByText("Pin set from typed coordinates")).not.toBeNull();
+  });
+
+  // The lock itself (startLocked, ActivateVenueFlow.tsx:432) had zero
+  // coverage before this — the three tests above only worked because they
+  // added the unlock click retroactively. These pin the lock's own contract.
+  it("edit mode starts locked: no slider, no map controls, a read-only summary card", () => {
+    render(
+      createElement(ActivateVenueFlow, {
+        mode: "edit",
+        venue,
+        busy: false,
+        error: "",
+        onSubmit: vi.fn(),
+        onValidationError: vi.fn(),
+        onCancel: vi.fn(),
+      })
+    );
+    expect(screen.queryByRole("slider")).toBeNull();
+    // Scoped to the locked summary card itself — the surrounding form (venue
+    // name, Advanced disclosure) legitimately has its own textboxes.
+    const summaryText = screen.getByText("Geofence radius: 150 m");
+    const card = summaryText.closest("div")?.parentElement;
+    if (!card) throw new Error("Locked summary card not found");
+    expect(card.querySelector("input")).toBeNull();
+    expect(screen.getByRole("button", { name: /Edit location & geofence/ })).not.toBeNull();
+  });
+
+  it("create mode is not locked — the dial is exposed immediately, no unlock needed", () => {
+    // mode: "create" with a fully-formed venue prop starts step 1 ("location")
+    // pre-filled with a real address+pin, so clicking "Continue" reaches step
+    // 2 synchronously — no need to drive the async Places-autocomplete lookup
+    // just to prove the lock is absent on this surface.
+    render(
+      createElement(ActivateVenueFlow, {
+        mode: "create",
+        venue,
+        busy: false,
+        error: "",
+        onSubmit: vi.fn(),
+        onValidationError: vi.fn(),
+        onCancel: vi.fn(),
+      })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByRole("slider", { name: "Geofence radius" })).not.toBeNull();
+    expect(screen.queryByRole("button", { name: /Edit location & geofence/ })).toBeNull();
+  });
+
+  it("unlock is one-way — the dial stays mounted across a re-render", () => {
+    const { rerender } = render(
+      createElement(ActivateVenueFlow, {
+        mode: "edit",
+        venue,
+        busy: false,
+        error: "",
+        onSubmit: vi.fn(),
+        onValidationError: vi.fn(),
+        onCancel: vi.fn(),
+      })
+    );
+    unlockEditor();
+    expect(screen.getByRole("slider", { name: "Geofence radius" })).not.toBeNull();
+
+    rerender(
+      createElement(ActivateVenueFlow, {
+        mode: "edit",
+        venue,
+        busy: true,
+        error: "",
+        onSubmit: vi.fn(),
+        onValidationError: vi.fn(),
+        onCancel: vi.fn(),
+      })
+    );
+    expect(screen.getByRole("slider", { name: "Geofence radius" })).not.toBeNull();
   });
 });
 
@@ -158,6 +244,24 @@ describe("VenuesSection (desktop) — Phase 4 mount", () => {
     fireEvent.click(screen.getByRole("button", { name: "+ Add Venue" }));
     fireEvent.click(screen.getByRole("button", { name: /Use my current location/ }));
     expect(await screen.findByText("Pin set from your phone (±12 m)")).not.toBeNull();
+  });
+
+  // startLocked has exactly one caller (ActivateVenueFlow.tsx:432) — desktop's
+  // VenuesSection.tsx:654 passes no startLocked at all, so the lock is
+  // mobile-edit-only, not "edit-mode" in general. Pin that narrower claim
+  // separately rather than folding it into the mobile create/edit tests above.
+  it("desktop edit mode has no lock — the slider is present with no unlock step", () => {
+    render(
+      createElement(VenuesSection, {
+        venues: [venue],
+        onVenueCreated: vi.fn(),
+        onVenueUpdated: vi.fn(),
+        onVenueDeleted: vi.fn(),
+      })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByRole("slider", { name: "Geofence radius" })).not.toBeNull();
+    expect(screen.queryByRole("button", { name: /Edit location & geofence/ })).toBeNull();
   });
 
   it("create button reads Activate Venue", () => {

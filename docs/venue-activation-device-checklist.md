@@ -141,3 +141,28 @@ this plan.
 - [ ] Confirm the Place ID caption above the map still shows/hides correctly:
       present after an address-lookup pin, replaced by "Coordinates set
       manually" after a drag/GPS/manual edit
+
+## 9. Edit-mode lock — the stray-thumb case (jsdom cannot verify this)
+
+Added by `6c2ff46` (2026-08-07) with no test or checklist coverage at the
+time; jsdom coverage was closed retroactively (see
+`docs/venue-activation-map-radius-plan.md`'s "As-built addendum — the
+edit-mode lock"), but the actual physical scenario the lock exists to
+prevent has never been checked on a real device.
+
+- [ ] Open an existing venue for edit on mobile — the map and dial should
+      **not** be visible yet; a locked summary card ("🔒 Edit location &
+      geofence") should show instead
+- [ ] Scroll the edit form past the locked card with a thumb, the way you
+      normally would to reach fields below it — confirm nothing about the pin
+      or radius changes from the scroll gesture itself (this is the whole
+      point of the lock; a `role="slider"` under a thumb mid-scroll is
+      exactly what it exists to avoid)
+- [ ] Tap "🔒 Edit location & geofence" — the map and dial should appear and
+      stay interactive for the rest of that screen (no re-locking on scroll
+      or on a radius change)
+- [ ] Open a **new** venue (create mode) on mobile — confirm there is no lock
+      at all; the map/dial should be reachable immediately once step 2 loads
+- [ ] Open an existing venue for edit on **desktop** — confirm there is no
+      lock there either (desktop is unlocked in both create and edit; only
+      mobile edit is locked)
