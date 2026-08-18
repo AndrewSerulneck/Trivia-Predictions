@@ -747,6 +747,14 @@ type BallDontLiePlay = {
   period?: number;
   home_score?: number;
   away_score?: number;
+  /**
+   * The payload field is `scoring_play`, verified live 2026-08-18 for both NBA and WNBA — our
+   * code read `is_scoring_play` (which does not exist on either league's rows), so
+   * `firstScoringTeam`/halftime/quarter-max reads have never populated for either league. Kept
+   * `is_scoring_play` as a fallback read, not a preferred one, in case a future payload variant
+   * reintroduces it.
+   */
+  scoring_play?: boolean;
   is_scoring_play?: boolean;
   points?: number;
   player_ids?: number[];
@@ -1261,6 +1269,16 @@ function basketballApiPrefixForSportKey(sportKey: string): string | null {
     return "/wnba/v1";
   }
   return null;
+}
+
+/**
+ * balldontlie's box-score path is genuinely inverted between leagues, not a case of one name
+ * serving both: NBA's box score is `/stats` (`/player_stats` 404s), WNBA's is `/player_stats`
+ * (`/stats` 404s). Verified live 2026-08-18 against real completed games in both leagues — see
+ * Phase 3 of docs/bingo-correctness-and-wnba-repair-plan.md.
+ */
+export function basketballStatsPathForSportKey(sportKey: string): string {
+  return isWnbaSportKey(sportKey) ? "player_stats" : "stats";
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -2399,6 +2417,74 @@ export function buildNBAGamePlayerStatsSnapshot(
   };
 }
 
+/**
+ * Exported for tests/lib.sportsBingo.nba-plays-fix.test.ts — pulled out of
+ * getNBAGamePlayerStatsSnapshot so 3b's two live fixes (the scalar `game_id` param and the real
+ * `scoring_play` field name, verified live 2026-08-18 for both NBA and WNBA) are directly testable
+ * without mocking network. Behavior is unchanged from the inline version.
+ */
+export function buildBasketballPlayWalkExtras(
+  plays: readonly BallDontLiePlay[],
+  card: SportsBingoCardRow
+): {
+  firstScoringTeam: TeamSide | null;
+  homeHalftimeScore: number | null;
+  awayHalftimeScore: number | null;
+  homeMaxQuarterPoints: number;
+  awayMaxQuarterPoints: number;
+} {
+  let firstScoringTeam: TeamSide | null = null;
+  let homeHalftimeScore: number | null = null;
+  let awayHalftimeScore: number | null = null;
+  const quarterStarts = new Map<number, { home: number; away: number }>();
+  const quarterMax = new Map<number, { home: number; away: number }>();
+  const orderedPlays = [...plays].sort((a, b) => {
+    const pa = Number(a.period ?? 0);
+    const pb = Number(b.period ?? 0);
+    if (pa !== pb) return pa - pb;
+    const sa = Number(a.home_score ?? 0) + Number(a.away_score ?? 0);
+    const sb = Number(b.home_score ?? 0) + Number(b.away_score ?? 0);
+    return sa - sb;
+  });
+  for (const play of orderedPlays) {
+    const period = Number(play.period ?? 0);
+    const homeScore = parseScoreValue(play.home_score) ?? 0;
+    const awayScore = parseScoreValue(play.away_score) ?? 0;
+    if (period >= 1 && period <= 4) {
+      if (!quarterStarts.has(period)) {
+        const previous = quarterMax.get(period - 1) ?? { home: 0, away: 0 };
+        quarterStarts.set(period, { home: previous.home, away: previous.away });
+      }
+      const currentMax = quarterMax.get(period) ?? { home: 0, away: 0 };
+      quarterMax.set(period, { home: Math.max(currentMax.home, homeScore), away: Math.max(currentMax.away, awayScore) });
+    }
+    const scoringFlag = play.scoring_play ?? play.is_scoring_play;
+    if (firstScoringTeam === null && scoringFlag === true) {
+      const playSide = inferCardTeamSide(card, getTeamDisplayName(play.team));
+      if (playSide) {
+        firstScoringTeam = playSide;
+      } else if ((parseScoreValue(play.home_score) ?? 0) > 0 || (parseScoreValue(play.away_score) ?? 0) > 0) {
+        firstScoringTeam = (parseScoreValue(play.home_score) ?? 0) > (parseScoreValue(play.away_score) ?? 0) ? "home" : "away";
+      }
+    }
+    if (period <= 2) {
+      homeHalftimeScore = homeScore;
+      awayHalftimeScore = awayScore;
+    }
+  }
+
+  let homeMaxQuarterPoints = 0;
+  let awayMaxQuarterPoints = 0;
+  for (let period = 1; period <= 4; period += 1) {
+    const start = quarterStarts.get(period) ?? { home: 0, away: 0 };
+    const end = quarterMax.get(period) ?? { home: 0, away: 0 };
+    homeMaxQuarterPoints = Math.max(homeMaxQuarterPoints, Math.max(0, end.home - start.home));
+    awayMaxQuarterPoints = Math.max(awayMaxQuarterPoints, Math.max(0, end.away - start.away));
+  }
+
+  return { firstScoringTeam, homeHalftimeScore, awayHalftimeScore, homeMaxQuarterPoints, awayMaxQuarterPoints };
+}
+
 async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<NBAGamePlayerStatsSnapshot | null> {
   if (!isBasketballSportKey(card.sport_key)) {
     return null;
@@ -2407,6 +2493,8 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
   if (!basketballApiPrefix) {
     return null;
   }
+  const statsPath = basketballStatsPathForSportKey(card.sport_key);
+  const wnbaMode = isWnbaSportKey(card.sport_key);
 
   const now = Date.now();
   const cached = nbaPlayerStatsCache.get(card.game_id);
@@ -2443,12 +2531,14 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
       return null;
     }
 
-    const statsQuery = new URLSearchParams({
-      per_page: "100",
-      period: "0",
-    });
+    const statsQuery = new URLSearchParams({ per_page: "100" });
+    if (!wnbaMode) {
+      // WNBA's /player_stats silently ignores `period` (verified live 2026-08-18); omit it there
+      // so the request says what it means instead of implying a filter that does nothing.
+      statsQuery.set("period", "0");
+    }
     statsQuery.append("game_ids[]", String(matchedGame.id));
-    const stats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/stats`, statsQuery);
+    const stats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/${statsPath}`, statsQuery);
 
     const lineupsQuery = new URLSearchParams({ per_page: "100" });
     lineupsQuery.append("game_ids[]", String(matchedGame.id));
@@ -2463,73 +2553,37 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
       lineupByPlayerId.set(playerId, { starter: row.starter === true, teamSide });
     }
 
-    const playsQuery = new URLSearchParams({ per_page: "100" });
-    playsQuery.append("game_ids[]", String(matchedGame.id));
+    // `/plays` takes a scalar `game_id`, not `game_ids[]` — the latter 400s for both leagues
+    // (verified live 2026-08-18). Confirmed this is not a truncated walk: neither league's plays
+    // response carries a `meta.next_cursor`, so `fetchBallDontLieList` returns after one page.
+    const playsQuery = new URLSearchParams({ per_page: "100", game_id: String(matchedGame.id) });
     const plays = await fetchBallDontLieList<BallDontLiePlay>(`${basketballApiPrefix}/plays`, playsQuery);
-    let firstScoringTeam: TeamSide | null = null;
-    let homeHalftimeScore: number | null = null;
-    let awayHalftimeScore: number | null = null;
-    const quarterStarts = new Map<number, { home: number; away: number }>();
-    const quarterMax = new Map<number, { home: number; away: number }>();
-    const orderedPlays = [...plays].sort((a, b) => {
-      const pa = Number(a.period ?? 0);
-      const pb = Number(b.period ?? 0);
-      if (pa !== pb) return pa - pb;
-      const sa = Number(a.home_score ?? 0) + Number(a.away_score ?? 0);
-      const sb = Number(b.home_score ?? 0) + Number(b.away_score ?? 0);
-      return sa - sb;
-    });
-    for (const play of orderedPlays) {
-      const period = Number(play.period ?? 0);
-      const homeScore = parseScoreValue(play.home_score) ?? 0;
-      const awayScore = parseScoreValue(play.away_score) ?? 0;
-      if (period >= 1 && period <= 4) {
-        if (!quarterStarts.has(period)) {
-          const previous = quarterMax.get(period - 1) ?? { home: 0, away: 0 };
-          quarterStarts.set(period, { home: previous.home, away: previous.away });
-        }
-        const currentMax = quarterMax.get(period) ?? { home: 0, away: 0 };
-        quarterMax.set(period, { home: Math.max(currentMax.home, homeScore), away: Math.max(currentMax.away, awayScore) });
-      }
-      if (firstScoringTeam === null && play.is_scoring_play === true) {
-        const playSide = inferCardTeamSide(card, getTeamDisplayName(play.team));
-        if (playSide) {
-          firstScoringTeam = playSide;
-        } else if ((parseScoreValue(play.home_score) ?? 0) > 0 || (parseScoreValue(play.away_score) ?? 0) > 0) {
-          firstScoringTeam = (parseScoreValue(play.home_score) ?? 0) > (parseScoreValue(play.away_score) ?? 0) ? "home" : "away";
-        }
-      }
-      if (period <= 2) {
-        homeHalftimeScore = homeScore;
-        awayHalftimeScore = awayScore;
-      }
-    }
-
-    let homeMaxQuarterPoints = 0;
-    let awayMaxQuarterPoints = 0;
-    for (let period = 1; period <= 4; period += 1) {
-      const start = quarterStarts.get(period) ?? { home: 0, away: 0 };
-      const end = quarterMax.get(period) ?? { home: 0, away: 0 };
-      homeMaxQuarterPoints = Math.max(homeMaxQuarterPoints, Math.max(0, end.home - start.home));
-      awayMaxQuarterPoints = Math.max(awayMaxQuarterPoints, Math.max(0, end.away - start.away));
-    }
+    const playWalk = buildBasketballPlayWalkExtras(plays, card);
+    const { firstScoringTeam, homeHalftimeScore, awayHalftimeScore, homeMaxQuarterPoints, awayMaxQuarterPoints } = playWalk;
 
     const firstHalfByPlayerId = new Map<number, { pts: number; ast: number; stl: number }>();
     const maxQuarterAssistsByPlayerId = new Map<number, number>();
-    for (const period of [1, 2, 3, 4]) {
-      const periodQuery = new URLSearchParams({ per_page: "100", period: String(period) });
-      periodQuery.append("game_ids[]", String(matchedGame.id));
-      const periodStats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/stats`, periodQuery);
-      for (const line of periodStats) {
-        const playerId = Number(line.player?.id ?? 0);
-        if (!Number.isFinite(playerId) || playerId <= 0) continue;
-        const ast = parseStatNumber(line.ast);
-        if (period <= 2) {
-          addFirstHalfAccumulator(firstHalfByPlayerId, playerId, parseStatNumber(line.pts), ast, parseStatNumber(line.stl));
-        }
-        const currentAstMax = maxQuarterAssistsByPlayerId.get(playerId) ?? 0;
-        if (ast > currentAstMax) {
-          maxQuarterAssistsByPlayerId.set(playerId, ast);
+    // WNBA's box-score endpoint ignores `period` entirely (verified live 2026-08-18: period=1 and
+    // period=0 return identical rows), so this per-period player walk would silently write
+    // full-game totals into every quarter. There's no substitute source, so these two maps stay
+    // empty for WNBA — buildNBAAchievementCandidates (3d) never generates the four families that
+    // read them, so this is a scoped no-op, not a data loss.
+    if (!wnbaMode) {
+      for (const period of [1, 2, 3, 4]) {
+        const periodQuery = new URLSearchParams({ per_page: "100", period: String(period) });
+        periodQuery.append("game_ids[]", String(matchedGame.id));
+        const periodStats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/${statsPath}`, periodQuery);
+        for (const line of periodStats) {
+          const playerId = Number(line.player?.id ?? 0);
+          if (!Number.isFinite(playerId) || playerId <= 0) continue;
+          const ast = parseStatNumber(line.ast);
+          if (period <= 2) {
+            addFirstHalfAccumulator(firstHalfByPlayerId, playerId, parseStatNumber(line.pts), ast, parseStatNumber(line.stl));
+          }
+          const currentAstMax = maxQuarterAssistsByPlayerId.get(playerId) ?? 0;
+          if (ast > currentAstMax) {
+            maxQuarterAssistsByPlayerId.set(playerId, ast);
+          }
         }
       }
     }
@@ -4708,6 +4762,8 @@ async function getNBAPlayerProfilesForGame(game: SportsBingoGame): Promise<NBAPl
     nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
     return [];
   }
+  const statsPath = basketballStatsPathForSportKey(game.sportKey);
+  const wnbaMode = isWnbaSportKey(game.sportKey);
 
   try {
     const gameStartMs = Date.parse(game.startsAt);
@@ -4829,12 +4885,14 @@ async function getNBAPlayerProfilesForGame(game: SportsBingoGame): Promise<NBAPl
         start_date: historicalStart,
         end_date: historicalEnd,
         per_page: "100",
-        period: "0",
       });
+      if (!wnbaMode) {
+        historicalQuery.set("period", "0");
+      }
       for (const id of playerChunk) {
         historicalQuery.append("player_ids[]", String(id));
       }
-      const rows = await fetchBallDontLieList<Record<string, unknown>>(`${basketballApiPrefix}/stats`, historicalQuery);
+      const rows = await fetchBallDontLieList<Record<string, unknown>>(`${basketballApiPrefix}/${statsPath}`, historicalQuery);
       for (const raw of rows) {
         const player = asRecord(asRecord(raw).player);
         const playerId = Number(player.id ?? asRecord(raw).player_id ?? 0);
@@ -5006,7 +5064,9 @@ async function getNBAPlayerProfilesForGame(game: SportsBingoGame): Promise<NBAPl
   }
 }
 
-async function buildNBAAchievementCandidates(game: SportsBingoGame, _candidates: SportsBingoSquareTemplate[]): Promise<SportsBingoSquareTemplate[]> {
+/** Exported for tests/lib.sportsBingo.wnba-row-shape.test.ts — Phase 3d's WNBA generation gate
+ * (the four families needing starter/per-period data WNBA doesn't have) lives here. */
+export async function buildNBAAchievementCandidates(game: SportsBingoGame, _candidates: SportsBingoSquareTemplate[]): Promise<SportsBingoSquareTemplate[]> {
   const profiles = await getNBAPlayerProfilesForGame(game);
   const wnbaMode = isWnbaSportKey(game.sportKey);
   const scaleCountThreshold = (base: number, min = 1): number =>
@@ -5055,26 +5115,34 @@ async function buildNBAAchievementCandidates(game: SportsBingoGame, _candidates:
       push({ kind: "nba_player_triple_threat", player: ref }, Math.min(probabilityAtLeast(p.stats.pts, 5) * probabilityAtLeast(p.stats.reb, 5) * probabilityAtLeast(p.stats.ast, 5) * 2.4, 0.95), "possible");
       push({ kind: "nba_player_stat_at_least", player: ref, metric: "minutes_played", threshold: scaleCountThreshold(30, 24) }, hasSample ? rate.minutes30 : probabilityAtLeast(p.stats.min, scaleCountThreshold(30, 24)), "supported");
       push({ kind: "nba_player_plus_minus_at_least", player: ref, threshold: 10 }, hasSample ? rate.plusMinus10 : probabilityAtLeast(pm + 10, 10), "possible");
-      push(
-        { kind: "nba_player_bench_scores", player: ref, threshold: scaleCountThreshold(8, 6) },
-        p.historical.benchSampleSize >= 3 ? rate.benchPoints8 : p.stats.pts >= 10 ? 0.32 : p.stats.pts >= 7 ? 0.24 : 0.12,
-        "possible"
-      );
-      push(
-        { kind: "nba_player_points_first_half_at_least", player: ref, threshold: scaleCountThreshold(10, 7) },
-        probabilityAtLeast(p.stats.pts * 0.52, scaleCountThreshold(10, 7)),
-        "possible"
-      );
-      push(
-        { kind: "nba_player_assists_in_any_quarter_at_least", player: ref, threshold: scaleCountThreshold(3, 2) },
-        probabilityAtLeast(p.stats.ast * 0.34, scaleCountThreshold(3, 2)),
-        "possible"
-      );
-      push(
-        { kind: "nba_player_steals_first_half_at_least", player: ref, threshold: scaleCountThreshold(2, 1) },
-        probabilityAtLeast(p.stats.stl * 0.58, scaleCountThreshold(2, 1)),
-        "possible"
-      );
+      // These four need data WNBA genuinely does not have: a starter flag (/wnba/v1/lineups
+      // 404s, no substitute) or a per-period player split (the `period` param is silently
+      // ignored on /wnba/v1/player_stats — verified live 2026-08-18). Gate generation, not
+      // settlement — evaluateResolver's guards for all four already void safely on a missing
+      // snapshot/map entry (Phase 2a), so leaving one on an old board is safe; the fix here is to
+      // stop putting new ones on a board at all.
+      if (!wnbaMode) {
+        push(
+          { kind: "nba_player_bench_scores", player: ref, threshold: scaleCountThreshold(8, 6) },
+          p.historical.benchSampleSize >= 3 ? rate.benchPoints8 : p.stats.pts >= 10 ? 0.32 : p.stats.pts >= 7 ? 0.24 : 0.12,
+          "possible"
+        );
+        push(
+          { kind: "nba_player_points_first_half_at_least", player: ref, threshold: scaleCountThreshold(10, 7) },
+          probabilityAtLeast(p.stats.pts * 0.52, scaleCountThreshold(10, 7)),
+          "possible"
+        );
+        push(
+          { kind: "nba_player_assists_in_any_quarter_at_least", player: ref, threshold: scaleCountThreshold(3, 2) },
+          probabilityAtLeast(p.stats.ast * 0.34, scaleCountThreshold(3, 2)),
+          "possible"
+        );
+        push(
+          { kind: "nba_player_steals_first_half_at_least", player: ref, threshold: scaleCountThreshold(2, 1) },
+          probabilityAtLeast(p.stats.stl * 0.58, scaleCountThreshold(2, 1)),
+          "possible"
+        );
+      }
     }
 
     const hasPlayerSpecific = templates.some((item) => {

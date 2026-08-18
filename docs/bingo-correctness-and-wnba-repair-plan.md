@@ -524,3 +524,356 @@ All of this sits downstream of `restore/mlb-bingo-r1`, which as of 2026-08-18 ca
 production-affecting changes and has never been merged to `main`. The merge decision is still open
 and still Andrew's. Whoever picks up 2a in particular should ask again — a player-facing correctness
 fix does nobody any good sitting on an unmerged branch.
+
+---
+
+## Phase 2a — done, 2026-08-18 — handoff to whoever picks up Phase 3 next
+
+**Status: complete, all gates green, uncommitted on `restore/mlb-bingo-r1`.** Not yet committed —
+see "What's not done" below before you commit or move on.
+
+### What changed
+
+`lib/sportsBingo.ts`, `evaluateResolver`: all 22 `if (!nbaStatsSnapshot)` guards (21 resolver
+kinds — `team_triple_double`/`any_triple_double` share one guard) now return `{ status: "void" }`
+instead of `{ status: "miss" }` when `completed` is true and no snapshot ever arrived. Re-derived
+the guard list independently by grepping every `case` with a bare `!nbaStatsSnapshot` check rather
+than trusting the plan's own enumeration — it matched exactly (mind the count: the plan's table
+lists 23 kind-names because it splits `team_triple_double` / `any_triple_double`, but they are one
+guard site, so 22 sites got edited).
+
+**Nothing else in `evaluateResolver` changed.** In particular, left untouched, per the plan's scope
+decisions:
+- `if (!line)` / `if (!playerId)` branches — a player absent from a box score that *did* arrive.
+  Still returns `miss`. Arguably should also void (NFL does this), but that's a different
+  condition and its own change; noted here for whoever eventually picks it up.
+- Value-comparison branches (`completed || snapshot.finalized → miss`) — real misses, left alone.
+- `case "player_prop"`'s unsupported-`marketKey` gate (~line 8877-8884) — still a flat `miss` on
+  both NBA and MLB, NFL voids the identical condition 14 lines above it. Inert today (zero
+  `player_prop` squares in production per the facts table). Not fixed, per plan.
+- The three `mlb_webhook_*` resolvers — out of scope for 2a entirely, per plan (they read
+  `currentCount ?? 0`, no snapshot involved).
+
+**One incidental export added:** `isResolverEligibleForVoidRegrade` (~line 9997) is now
+`export function` instead of `function`. It was already correct — all 21/22 touched kinds were
+already registered in it, so the regrade seam needed no code change — but it was private, and the
+new test needs to call it directly to prove the regrade path is actually reachable rather than
+asserting it by reading the source. Pure visibility change, zero behavior difference.
+
+### Tests
+
+New `tests/lib.sportsBingo.missing-data-voids.test.ts`, 6 tests, wired into both
+`npm run test:bingo-nfl` and `npm run test:bingo-mlb` (package.json scripts updated). Calls
+`evaluateResolver` directly (it's exported) rather than routing through
+`refreshSportsBingoProgress` + a mocked Supabase/balldontlie double the way
+`nfl-settlement.test.ts` does — the bug and the fix live entirely inside one pure function, so a
+direct unit call is more direct proof and needs no fixture plumbing. If Phase 3's WNBA validation
+work wants an end-to-end harness, that's `scripts/validate-wnba-bingo-grading.cjs` per the plan,
+not this file.
+
+**Proven failing first, verified by hand:** reverted the `lib/sportsBingo.ts` diff with
+`git apply -R` (never `git checkout -- <file>` — see the standing rule below and the memory it's
+drawn from), reran the new test file, confirmed 4 of 6 tests failed for the right reasons (3 on
+`miss` vs `void`, 1 because `isResolverEligibleForVoidRegrade` wasn't exported yet), then
+`git apply`'d the diff back and reran to confirm all 6 pass again.
+
+Test coverage maps to the plan's four asks:
+1. Reproduces production (`FORCE_FINALIZED_NO_SCORE` = the exact
+   `{ homeScore: null, awayScore: null, completed: true }` shape `refreshSportsBingoProgress`
+   synthesizes) across a representative sample (player/team/quarter/halftime kinds), plus a second
+   test running the same assertion across all 22 guard sites.
+2. The consistency property: a market resolver (`moneyline`) and every sampled stats resolver
+   agree — neither returns `miss` — on the identical missing-data condition.
+3. No over-reach, two angles: (a) snapshot absent but game still in progress → stays `pending`,
+   not `void`; (b) snapshot *present* with genuinely-below-threshold values at Final → still
+   `miss`. (b) needed a hand-built minimal `NBAGamePlayerStatsSnapshot`-shaped fixture (not
+   exported from `lib/sportsBingo.ts`, so it's a structurally-typed `as any` object listing every
+   field `findNBAPlayerStatLine`/`buildNBATeamAggregates` touch — `lines`, `byPlayerKey`,
+   `lineupByPlayerId`, `firstHalfByPlayerId`, `maxQuarterAssistsByPlayerId`, the two
+   `*MaxQuarterPoints`, the two `*HalftimeScore`, `firstScoringTeam`, the three triple-double
+   flags, `finalized`). If you add a field to that type, this fixture will not fail loudly — it'll
+   just read `undefined` for the new field via `as any`. Worth revisiting if that type grows before
+   Phase 3 (which does touch it — see below).
+4. Regrade reachability: every touched kind passes `isResolverEligibleForVoidRegrade`.
+
+### Gates run, all green
+
+```
+npx tsc --noEmit                      # clean
+npm run lint                          # clean (fixed one unused eslint-disable in the new test file)
+npm run test:bingo-nfl                # 250 passed (was 244 — +6 from the new file)
+npm run test:bingo-mlb                # 129 passed (was 123 — +6 from the new file)
+npm run test                          # 1865 passed / 13 skipped / 0 failing (was 1859/13/0)
+```
+`test:pwa-contract` not run — Phase 3 only, per the plan's gate table, and this phase touches no
+PWA/manifest surface.
+
+### What's not done — do not treat 2a as fully closed
+
+1. **Not committed.** `lib/sportsBingo.ts`, `tests/lib.sportsBingo.missing-data-voids.test.ts`, and
+   `package.json` all carry uncommitted 2a changes right now, on top of the *other*, unrelated
+   uncommitted work already on this branch (`lib/fantasy.ts`, `lib/sportsBingoNflFlavor.ts`,
+   `lib/thesportsdb.ts`, the NFL flavor/simulate scripts, `lib/envNumber.ts`, two new phaseE
+   artifacts, two new unrelated test files). **Commit 2a on its own** before starting Phase 3 —
+   don't let it get swept into an unrelated commit, and don't `git add -A`. Suggested scope:
+   `lib/sportsBingo.ts` (the guard changes + the `export` on
+   `isResolverEligibleForVoidRegrade`), the new test file, and the two `package.json` script-line
+   edits.
+2. **The historical-rows decision is still Andrew's, unmade.** The plan lays out three options —
+   forward-fix only / forward-fix + scoped backfill migration / leave it — for the 108
+   already-mis-settled rows. This phase took option 1 (forward fix only) by default, per the
+   plan's explicit instruction ("do not write the backfill until Andrew picks"). If Andrew wants
+   the backfill, that's a new timestamped migration under `supabase/migrations/`, scoped by
+   resolver kind AND `status = 'miss'` AND card sport — flag this back to Andrew, don't infer an
+   answer.
+3. **43 WNBA squares are still wrong** — this phase only fixes NBA's genuinely-null-snapshot case
+   (23 squares). WNBA's snapshot is present-but-empty (endpoints 404 into a zero-filled object),
+   which 2a's `!nbaStatsSnapshot` guards never see. That's Phase 3 (endpoint fixes) + Phase 2b
+   (make a failed fetch return `null` instead of zeros). **Do not describe 2a as "fixing WNBA"** —
+   it doesn't touch a single WNBA square.
+
+### Handoff to Phase 3 (next up per the plan's suggested order: 2a → 3 → 2b → 1)
+
+- Phase 3 edits `getNBAGamePlayerStatsSnapshot` (~2402-2560), the historical candidate walk
+  (~4837), and the achievement-candidate block (~5059-5074) — none of which 2a touched, so no
+  merge conflict expected, but re-grep the line numbers anyway; they will have moved by the time
+  you land 3a-3e, since 2a didn't touch this file's line count meaningfully (net +0 lines — every
+  edit was `"miss"` → `"void"` in place) but Phase 3 will add real code before them.
+- 2a's void-on-no-snapshot fix is exactly what makes Phase 3's four suppressed families (3d:
+  `nba_player_bench_scores`, `nba_player_points_first_half_at_least`,
+  `nba_player_assists_in_any_quarter_at_least`, `nba_player_steals_first_half_at_least`) safe to
+  leave un-suppressed at the `evaluateResolver` layer if one somehow still reaches a WNBA board —
+  the plan says as much ("Phase 2a already makes them void safely if one ever appears"). That's
+  now true; verified by this phase's test 2 (all 22 kinds, including those four, void correctly).
+- The NBA-side fixture built for this phase's "no over-reach" test (see item 3 above) is a decent
+  starting point if Phase 3 needs a similar hand-built `NBAGamePlayerStatsSnapshot` for its own
+  tests — but Phase 3's real work is on `getNBAGamePlayerStatsSnapshot`'s *construction* path
+  (`buildNBAGamePlayerStatsSnapshot`, the fetch calls, endpoint selection), not on
+  `evaluateResolver`'s consumption of it, so you'll likely be building fixtures at a different
+  layer (raw balldontlie JSON rows) rather than reusing this one directly.
+- Re-probe live before writing code against any endpoint/field-name claim in Phase 3's "Correction
+  1" and "Correction 2" — this session did not re-verify those against the live balldontlie API
+  (2a's scope never called an external endpoint), so treat them as unconfirmed-by-this-session,
+  consistent with the plan's own standing rule.
+
+### Handoff to Phase 2b (after Phase 3, same function conflict reason per the plan)
+
+- 2b threads a `BallDontLieFailureBox` through `getNBAGamePlayerStatsSnapshot`'s five fetches —
+  untouched by 2a. No interaction with 2a's changes; 2b's `null`-snapshot output is exactly what
+  2a's guards now correctly void on. The two phases compose as designed: 2b makes more cases reach
+  `!nbaStatsSnapshot`, 2a makes that guard do the right thing. Nothing further needed from 2a's
+  side.
+
+### Handoff to Phase 1 (independent, any time, needs API budget)
+
+- No interaction with 2a at all — different files (`scripts/measure-mlb-event-rates.cjs`,
+  `lib/mlbTeamEventRates.ts`, two MLB call sites in `lib/sportsBingo.ts` far from
+  `evaluateResolver`). Nothing to hand off.
+
+---
+
+## Phase 3 — done, 2026-08-18 — handoff to whoever picks up Phase 2b next
+
+**Status: complete, all gates green including a live verification pass, uncommitted on
+`restore/mlb-bingo-r1`.** Landed after 2a per the plan's suggested order. Every endpoint/field-name
+claim in this write-up was re-probed live in this session — see `scripts/probe-wnba-bingo-settlement.cjs`
+(new, checked in as `npm run bingo:probe:wnba`) — none of it was trusted from the plan's own
+Corrections 1/2, which themselves were confirmed exactly as written.
+
+### What changed
+
+**3a — box score.** New `basketballStatsPathForSportKey(sportKey)` next to
+`basketballApiPrefixForSportKey`, returning `"player_stats"` for WNBA and `"stats"` for NBA
+(**exported**, `lib/sportsBingo.ts` — used at the box-score fetch in `getNBAGamePlayerStatsSnapshot`
+and the historical walk in `getNBAPlayerProfilesForGame`). The `period: "0"` param is now omitted
+for WNBA at both call sites (confirmed live: WNBA's `/player_stats` returns identical rows for
+`period=0` and `period=1` — the param is silently ignored, not honored-as-zero). No row adapter
+needed, confirmed exactly as the plan predicted: `buildNBAGamePlayerStatsSnapshot`'s per-row parsing
+already routes every counting stat through `parseStatNumber`, which already treats `null` as `0`
+correctly (new test: `tests/lib.sportsBingo.wnba-row-shape.test.ts`, "null-as-zero" describe block).
+
+**3b — the plays walk (a live NBA fix riding along, confirmed live for both leagues this
+session).** `/plays` now sends a scalar `game_id`, not `game_ids[]` (both leagues 400 on the
+plural — verified live against a real NBA game for the first time; the plan's Correction 2 had
+only inferred this from the WNBA case). The scoring-play read is now `play.scoring_play ??
+play.is_scoring_play` — **live probing found `scoring_play` is the real field for both NBA and
+WNBA**, and `is_scoring_play` does not exist on either league's rows at all (not "NBA still uses
+the old name" — it never did). Pulled the whole play-walk out of
+`getNBAGamePlayerStatsSnapshot` into a new exported pure function,
+`buildBasketballPlayWalkExtras(plays, card)`, specifically so 3b is unit-testable without mocking
+network — see `tests/lib.sportsBingo.nba-plays-fix.test.ts` (new, NBA-only, separate file per the
+plan's explicit ask so this doesn't get buried in a WNBA-titled file). Confirmed live via
+`npm run bingo:validate:wnba`: `firstScoringTeam`, halftime scores, and max-quarter-points are now
+populated 100% of the time on both a 15-game WNBA sample and a 15-game NBA sample (from 0% before —
+these fields have been null/0 in production for the life of the feature on both leagues).
+
+**3c — the historical candidate walk** (`getNBAPlayerProfilesForGame`, the function whose body
+also contains 3a's second call site). Same endpoint-path fix, same conditional `period` drop. This
+is the walk that was 404ing for WNBA and is why **no WNBA board has ever carried a player square**
+(per the plan's own facts table). Confirmed unlocked live: `npm run bingo:simulate -- --sports
+basketball_wnba --boards 6` against 4 real upcoming WNBA games now generates player-specific
+squares (`nba_player_stat_at_least`, etc.) where it previously could not.
+
+**3d — suppressed the four data-unavailable families for WNBA generation only**
+(`buildNBAAchievementCandidates`, now **exported** for its own test — bench scores, first-half
+points, any-quarter assists, first-half steals — gated on `!wnbaMode`, settlement arms untouched
+per the plan). Also skipped the per-period player-stats fetch loop in
+`getNBAGamePlayerStatsSnapshot` entirely for WNBA (`if (!wnbaMode)`), rather than fetching it and
+discarding the result — WNBA's `/player_stats` ignores `period`, so fetching it would silently
+write full-game totals into every quarter bucket; there is no correct data to get, so the two maps
+(`firstHalfByPlayerId`, `maxQuarterAssistsByPlayerId`) now stay empty for WNBA rather than wrong.
+Proven failing first by temporarily forcing the 3d gate to `true`: the WNBA-absence test failed for
+the right reason (all four kinds present), reverted, reran green.
+
+**3e — mascot-only team names.** No new string comparison was introduced anywhere in this phase
+(the endpoint/query changes never touch team-name matching), so `teamsMatch` needed no code change.
+Added a regression fixture (`tests/lib.sportsBingo.wnba-row-shape.test.ts`) plus **live
+confirmation this genuinely occurs in production data right now**: the live validator run below hit
+three real games carrying `"Fire"` and `"Tempo"` as bare `full_name` with `city: ""`, and matched
+all of them correctly.
+
+### Live verification (all three of the plan's required steps)
+
+**1. Live settlement replay — new `scripts/validate-wnba-bingo-grading.cjs` / `npm run
+bingo:validate:wnba`.** Modeled on `scripts/validate-mlb-bingo-grading.cjs`: imports the shipped
+`pickBestMatchingBallDontLieGame`, `buildNBAGamePlayerStatsSnapshot`, `evaluateResolver` rather than
+mirroring their logic, and re-derives its own endpoint/query choices independently (matching that
+script's own pattern) rather than importing this phase's new helpers — so it's checking the fix,
+not agreeing with it by construction. Run against 15 real completed WNBA games (last 10 days) and
+15 real completed NBA games (last 200 days — NBA is off-season in August):
+
+```
+match rate 15/15, score reconciliation 15/15, finalized rate 15/15,
+team-side resolution 100%, play-walk populated 15/15   (both leagues)
+```
+
+Per-family settled status showed a healthy hit/miss mix with **no family stuck at all-void or
+all-pending** for either league, across market kinds and the newly-unlocked team quarter/halftime/
+scores-first families. Full output not reproduced here — rerun `npm run bingo:validate:wnba` for a
+fresh read; it hits the live feed every time by design.
+
+**2. NBA plays fix confirmed on real NBA games** — folded into the same script rather than a
+separate throwaway one (item 2 of the plan's verification order): `firstScoringTeam` non-null,
+halftime scores populated, max quarter points > 0 on 15/15 real NBA games. These have been
+null/0 in production for the entire life of the feature — "it changed" was the pass condition, and
+it changed.
+
+**3. Board win rate** — `npm run bingo:simulate -- --sports basketball_wnba --boards 6` against 4
+real upcoming WNBA games, 24 boards: `inTargetBand: 1.0` (every board landed in the 20-30% target
+band), mean 26.6%, min 20.3%, max 29.6%. Player squares are now part of the mix (3c) and the board
+generator's existing simulation-based rebalancing absorbed them without needing any change.
+
+### New findings this session, not in the original plan
+
+- **`/wnba/v1/season_averages/general` also 404s.** Discovered via the `bingo:simulate` run above
+  (visible in its stderr). This is a *different* endpoint from anything Corrections 1/2 named, feeds
+  `getNBAPlayerProfilesForGame`'s season-stat fallback (`p.stats`, used only when a player's
+  historical sample is thin), and is **not fixed here** — out of scope for a settlement-repair
+  phase, and low-impact in practice: 3c's fixed historical walk (`/player_stats` with
+  `start_date`/`end_date`) is what actually populates `p.historical.rates`, and
+  `buildNBAAchievementCandidates` prefers that empirical rate over the season-stat fallback whenever
+  `sampleSize >= 6`. Worth a future one-line fix (same `basketballStatsPathForSportKey`-shaped
+  rename, presumably) but does not block this phase or bias settlement.
+- **A real, scoped, accepted gap in the four suppressed families' settlement path.** Diagnostic
+  section of `bingo:validate:wnba`'s output: build one of the four suppressed-family resolvers
+  against a real, populated WNBA snapshot (now that 3a makes WNBA snapshots non-null) and it settles
+  `"miss"` on all 15 games, not `"void"` — because `firstHalfByPlayerId`/`maxQuarterAssistsByPlayerId`
+  are correctly empty (3d's reasoning above) but `evaluateResolver`'s arms for these four kinds treat
+  "snapshot present, player entry absent" as a real miss once `completed` is true (the same `if
+  (!line)`/`if (!playerId)` class of branch 2a explicitly left alone, "a different condition and
+  belongs to its own change"). **Not production-affecting today** — the facts table confirms zero
+  WNBA player squares exist on any current board, and 3d stops new ones of these four kinds from
+  ever being generated — but if a next phase ever revisits 2a's noted-and-deferred `if (!line)`
+  branches, these four are exactly the case that motivates it. Flagging forward rather than fixing:
+  it's a settlement-layer nuance adjacent to 2b's whole subject (distinguishing "unknown" from a
+  real value), not this phase's.
+- **`tests/lib.sportsBingo.player-props.test.ts`'s NBA board test is flaky, pre-existing, unrelated
+  to this phase.** Failed once in a full-suite run. Bisected with `git stash` (isolated
+  lib/sportsBingo.ts to pre-Phase-3 state): still reproduces at roughly the same rate (2/20 runs)
+  with Phase 3's changes fully reverted, so this is not a regression — it's Monte Carlo board
+  generation (180 random attempts, unseeded) against a 3-player fixture pool tight enough
+  (`hard_floor: 8`, `player_specific_selected_count: 7`, `shortfall: 1`) that a specific named
+  player's square isn't always among the ones selected. Not fixed here — flagging for whoever next
+  touches that file or the board-selection RNG.
+
+### Tests
+
+- `tests/lib.sportsBingo.wnba-row-shape.test.ts` extended from 4 tests to 11: endpoint selection
+  (`basketballStatsPathForSportKey`), null-as-zero row parsing, the Tempo/Fire mascot-only fixture,
+  and the 3d generation-suppression pair (WNBA absent / NBA present, built from an identical mocked
+  player pool via a new `vi.mock("@/lib/ballDontLieClient", ...)` — file-scoped, confirmed not to
+  affect this file's pre-existing network-free tests).
+- `tests/lib.sportsBingo.nba-plays-fix.test.ts` (new, 6 tests): `buildBasketballPlayWalkExtras`
+  directly — the real `scoring_play` field, the `is_scoring_play` fallback ordering ("read whichever
+  exists" means fall back only when `scoring_play` is absent, not prefer `is_scoring_play`),
+  halftime-score and max-quarter-points arithmetic, and the empty-response safe-default case.
+  Proven failing first: temporarily reverted the field read to `is_scoring_play`-only, confirmed the
+  2 tests targeting that fix failed for the right reason, reverted back, reran green.
+- Neither new/extended file is wired into `test:bingo-nfl` / `test:bingo-mlb` — this is basketball,
+  not NFL or MLB, and `npm run test` already picks up every `tests/**/*.test.ts` file by default
+  (see `vitest.config.ts`), same as `wnba-row-shape.test.ts` was before this phase.
+
+### Gates run, all green
+
+```
+npx tsc --noEmit                      # clean
+npm run lint                          # clean
+npm run test:bingo-nfl                # 250 passed (unchanged from 2a — this phase doesn't touch NFL)
+npm run test:bingo-mlb                # 129 passed (unchanged from 2a — this phase doesn't touch MLB)
+npm run test                          # 1877 passed / 13 skipped / 0 failing (was 1865/13/0 after 2a)
+npm run test:pwa-contract             # 20 passed — required for Phase 3 per the plan's gate table
+```
+
+### What's not done — do not treat Phase 3 as fully closed
+
+1. **Not committed.** Same situation 2a left: this phase's changes to `lib/sportsBingo.ts`,
+   `package.json`, the two test files, and the two new scripts
+   (`scripts/validate-wnba-bingo-grading.cjs`, `scripts/probe-wnba-bingo-settlement.cjs`) sit
+   uncommitted on top of 2a (already committed, `c838320`) and the *other*, still-unrelated
+   uncommitted work already on this branch (`lib/fantasy.ts`, `lib/sportsBingoNflFlavor.ts`,
+   `lib/thesportsdb.ts`, the NFL flavor/simulate scripts, `lib/envNumber.ts`, two new phaseE
+   artifacts, two new unrelated test files). **Commit Phase 3 on its own** before starting 2b —
+   don't let it get swept into an unrelated commit, and don't `git add -A`.
+2. **Andrew's historical-rows decision (raised in 2a) is still unmade** and Phase 3 doesn't change
+   the calculus — see 2a's write-up above. Not this phase's call to make.
+3. **The two new findings above are flagged, not fixed** — `/wnba/v1/season_averages/general`'s 404
+   and the four-suppressed-families settlement gap. Both are low-impact and out of this phase's
+   explicit scope; don't let either block moving on to 2b.
+4. **Board win rate was checked once, live, against whatever WNBA games happened to be scheduled
+   2026-08-18.** The plan calls this "safe to leave on," but it's a point-in-time sample of 4 games
+   — if WNBA board composition drifts as the season progresses (more/fewer player squares depending
+   on roster/injury news feeding the historical walk), it's worth another `bingo:simulate` pass
+   before or shortly after this ships to production.
+
+### Handoff to Phase 2b (up next, same function conflict reason the plan calls out)
+
+- 2b threads a `BallDontLieFailureBox` through `getNBAGamePlayerStatsSnapshot`'s five fetches. All
+  five still exist after this phase, at the same conceptual steps (games, box score, lineups, plays,
+  per-period stats), but **line numbers moved substantially** — this phase added the
+  `basketballStatsPathForSportKey` helper, the `wnbaMode` conditionals, and pulled the whole
+  play-walk out into `buildBasketballPlayWalkExtras` sitting just above the function. Re-grep before
+  editing.
+- The play-walk extraction changes *where* 2b's plays-failure handling needs to live: the fetch
+  call itself (`const plays = await fetchBallDontLieList<BallDontLiePlay>(...)`) is still inline in
+  `getNBAGamePlayerStatsSnapshot`, but what happens with a failed fetch's result now flows into
+  `buildBasketballPlayWalkExtras(plays, card)` rather than an inline loop. The plan's guidance
+  ("plays failing should degrade the extras to unknown, not null the whole snapshot") still applies
+  identically — 2b's failure box on the plays fetch should gate what gets passed as `extras` to
+  `buildNBAGamePlayerStatsSnapshot`, same as before, just one function boundary earlier now.
+- The periodStats loop 2b also needs to instrument is now inside an `if (!wnbaMode)` block (3d) —
+  a plays/periodStats failure box for that loop only needs to apply to the NBA branch; WNBA already
+  skips it unconditionally for a different reason (the endpoint ignores `period`, not "it failed").
+  Don't conflate the two — a WNBA periodStats "failure" box would be reporting on a fetch that
+  Phase 3 made this function stop making at all.
+- The negative-TTL cache fix (`nbaPlayerStatsCache`) is untouched by this phase — same cache, same
+  full `NBA_PLAYER_STATS_CACHE_MS` on every write, exactly as 2b's plan section describes.
+- This phase's two new findings (season_averages 404, the four-families settlement gap) are both
+  adjacent to 2b's subject matter but out of its stated scope (2b is specifically about
+  `getNBAGamePlayerStatsSnapshot`'s five fetches, not `getNBAPlayerProfilesForGame`'s or
+  `evaluateResolver`'s). Worth a mention in 2b's own write-up as "still open" rather than silently
+  dropped.
+
+### Handoff to Phase 1 (independent, any time, needs API budget)
+
+- No interaction with Phase 3 at all — confirmed unchanged from 2a's note. Different files
+  entirely.
