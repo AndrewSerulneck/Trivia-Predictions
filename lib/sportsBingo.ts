@@ -4338,7 +4338,8 @@ function buildNFLTeamGameCandidates(
 function buildGameAndCandidatesFromBallDontLie(
   sportKey: string,
   gameData: BallDontLieGame,
-  marketModel: NFLMarketModel | null = null
+  marketModel: NFLMarketModel | null = null,
+  extraCandidates: SportsBingoSquareTemplate[] = []
 ): GameCatalogEntry | null {
   const gameId = String(gameData.id ?? "").trim();
   const eventRecord = gameData as unknown as Record<string, unknown>;
@@ -4567,6 +4568,11 @@ function buildGameAndCandidatesFromBallDontLie(
   if (sportKey === "americanfootball_nfl" && marketModel) {
     rawCandidates.push(...buildNFLTeamGameCandidates(game, marketModel, coreSupportLevel));
   }
+
+  // R4 of docs/mlb-prop-bingo-validation-plan.md: the backtest seam for candidates the async
+  // pipeline normally supplies (currently just the MLB team-event block). Empty for every caller
+  // that doesn't pass it, so forward generation via `loadGameCatalog` is unaffected.
+  rawCandidates.push(...extraCandidates);
 
   const candidates = aggregateCandidates(rawCandidates)
     .map((item) => ({ ...item, probability: clamp(item.probability, 0.05, 0.95) }))
@@ -5230,6 +5236,72 @@ function buildMlbTeamAllowedRates(
 /** Locate a team's rates by the same fuzzy name match the rest of the MLB path uses. */
 function findMlbTeamAllowedRate(rates: MlbTeamAllowedRate[], teamName: string): MlbTeamAllowedRate | null {
   return rates.find((entry) => teamsMatch(entry.teamName, teamName)) ?? null;
+}
+
+/**
+ * R4 of docs/mlb-prop-bingo-validation-plan.md — the `mlb_webhook_team_event_at_least` block,
+ * standalone and **league-mean priced only**.
+ *
+ * `buildMLBPlayerPropCandidatesFromRecentStats` builds the same resolver kind but needs an
+ * *upcoming* game — it fetches `/mlb/v1/games` for the weeks before `game.startsAt` to compute
+ * opponent-adjusted rates via `buildMlbTeamAllowedRates`. A backtest replays a *historical* game,
+ * so that pipeline structurally cannot run against it. This reconstructs the same six-event,
+ * two-rung shape at `predictMlbTeamEventRate(event, null, 0)` — that function's own documented
+ * no-opponent-data degradation path (it returns the league mean), not a new invention — so
+ * `scripts/simulate-bingo-boards.cjs` has enough resolver families for `generateBoardForGame` to
+ * find a feasible 24-square board for a completed game, which core markets alone cannot do.
+ */
+export function buildMlbTeamEventCandidateTemplatesForBacktest(game: SportsBingoGame): SportsBingoSquareTemplate[] {
+  const templates: SportsBingoSquareTemplate[] = [];
+  const measuredTeamEvents: readonly MeasuredMlbTeamEvent[] = [
+    "hit",
+    "walk",
+    "hit_by_pitch",
+    "strikeout",
+    "groundout",
+    "flyout",
+  ];
+
+  for (const teamSide of ["home", "away"] as const) {
+    // Same fixed constant the live path uses — `quick_out_under_3_pitches` is derived from our own
+    // webhook stream, not a balldontlie field, so there is no measured model to fall back to here.
+    const quickOutResolver: SportsBingoResolver = {
+      kind: "mlb_webhook_team_event_at_least",
+      team: teamSide,
+      event: "quick_out_under_3_pitches",
+      threshold: 1,
+    };
+    templates.push({
+      key: resolverKey(quickOutResolver),
+      label: buildSquareLabel(game, quickOutResolver),
+      resolver: quickOutResolver,
+      probability: 0.58,
+      bucket: "achievement",
+      supportLevel: "supported",
+    });
+
+    for (const eventKind of measuredTeamEvents) {
+      const expectedRate = predictMlbTeamEventRate(eventKind, null, 0);
+      for (const rung of buildMlbTeamEventRungs(eventKind, expectedRate)) {
+        const resolver: SportsBingoResolver = {
+          kind: "mlb_webhook_team_event_at_least",
+          team: teamSide,
+          event: eventKind,
+          threshold: rung.threshold,
+        };
+        templates.push({
+          key: resolverKey(resolver),
+          label: buildSquareLabel(game, resolver),
+          resolver,
+          probability: rung.probability,
+          bucket: "achievement",
+          supportLevel: "supported",
+        });
+      }
+    }
+  }
+
+  return templates;
 }
 
 async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame): Promise<SportsBingoSquareTemplate[]> {
@@ -7705,6 +7777,8 @@ export function buildSportsBingoBoardFromBallDontLieGame(params: {
   sportKey: string;
   row: Record<string, unknown>;
   marketModel?: NFLMarketModel | null;
+  /** R4: extra candidate templates the caller assembled itself — see `buildMlbTeamEventCandidateTemplatesForBacktest`. */
+  extraCandidates?: SportsBingoSquareTemplate[];
 }): {
   game: SportsBingoGame;
   boardProbability: number;
@@ -7715,7 +7789,8 @@ export function buildSportsBingoBoardFromBallDontLieGame(params: {
   const entry = buildGameAndCandidatesFromBallDontLie(
     params.sportKey,
     params.row as BallDontLieGame,
-    params.marketModel ?? null
+    params.marketModel ?? null,
+    params.extraCandidates ?? []
   );
   if (!entry) {
     return null;

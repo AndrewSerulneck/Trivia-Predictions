@@ -902,6 +902,110 @@ re-confirm NFL backtest is unaffected (~23.3% on a 6-game check, inside the 20-3
 
 ---
 
+## Phase R4 — done (2026-08-18)
+
+**Both `lib/` seams rebuilt exactly as specified. No surprises, no deviations from the plan.**
+`scripts/simulate-bingo-boards.cjs` (the surviving script half) needed zero changes — it already
+pinned both signatures, as the plan predicted.
+
+### What shipped, in `lib/sportsBingo.ts`
+
+1. **`buildMlbTeamEventCandidateTemplatesForBacktest(game: SportsBingoGame)`** (new, exported,
+   placed right after `findMlbTeamAllowedRate`, ~5254) — mirrors the team-event block inside
+   `buildMLBPlayerPropCandidatesFromRecentStats` (both team sides, the fixed `quick_out_under_3_pitches`
+   constant at 0.58, then the six `MeasuredMlbTeamEvent`s through `buildMlbTeamEventRungs`) but reads
+   `predictMlbTeamEventRate(eventKind, null, 0)` instead of building `buildMlbTeamAllowedRates` from
+   fetched opponent history — exactly the plan's specified degradation path, confirmed by reading
+   `lib/mlbTeamEventRates.ts:122-139`: `opponentGames <= 0` short-circuits to `model.leagueMean`
+   before any of the opponent-adjustment math runs. No network call, no async, synchronous and pure —
+   it does not need to be, since the script calls it once per historical game outside any generation
+   loop.
+2. **`extraCandidates` param** — added to both `buildGameAndCandidatesFromBallDontLie` (new fourth
+   parameter, `extraCandidates: SportsBingoSquareTemplate[] = []`, spread into `rawCandidates` right
+   before `aggregateCandidates` runs, ~4571) and the exported
+   `buildSportsBingoBoardFromBallDontLieGame` (new optional `extraCandidates?:
+   SportsBingoSquareTemplate[]` field, defaulted to `[]` and threaded straight through). Purely
+   additive — `loadGameCatalog`'s only call site doesn't pass it, so live forward-mode board
+   generation (NFL, NBA, WNBA, and MLB's normal async path) is provably unaffected, not just assumed
+   so: `test:bingo-nfl` held at 244/244 and `test:bingo-mlb` held at 106/106, unchanged from R3.
+
+Both were exactly the two seams R4's own spec named — no third seam turned up, unlike R2's surprise
+sixth defect.
+
+### Live gate — results
+
+```
+npx tsc --noEmit                                          0 errors
+npm run lint                                               clean
+npm run test:bingo-nfl                                     244/244 (unchanged from R3)
+npm run test:bingo-mlb                                     106/106 (unchanged from R3)
+npm run test (full suite)                                  1837/1850 passing, 13 skipped, 0 failing
+
+npm run bingo:simulate -- --backtest --sports baseball_mlb --days 10 --boards 3
+  boards: 423, realizedWinRate: 0.260, predicted.mean: 0.2612, predicted.inTargetBand: 0.9905,
+  ungradedSquareShare: 0
+
+npm run bingo:simulate -- --backtest --sports basketball_nba
+  Error: --backtest only implements americanfootball_nfl, baseball_mlb; got unsupported
+  --sports value(s): basketball_nba          (4a guard still live, unaffected)
+
+npm run bingo:simulate -- --backtest --sports americanfootball_nfl --weeks 6 --boards 3
+  boards: 45, realizedWinRate: 0.200, predicted.mean: 0.252, predicted.inTargetBand: 1
+  (NFL backtest unaffected by the new optional param)
+```
+
+**423 boards, same count as the pre-loss run** (same `--days 10` window definition, though not the
+same calendar days — today is 2026-08-18, the pre-loss run was some hours earlier the same day, so
+the 10-day windows mostly overlap but aren't byte-identical). **Realized win rate landed at 26.0%,
+inside the 20-30% target band and closer to the predicted mean (26.12%) than the pre-loss run's
+19.4%/26.3%** — read that as this run's particular 10-day slate having less variance against its own
+league-mean pricing, not as a fix to anything; the pre-loss write-up's own caveat still applies
+verbatim: league-mean team-event pricing over a ~10-day window is a smoke test that the path runs
+end to end, not a calibration-grade replay, and a few points of movement run to run is expected, not
+a signal. `ungradedSquareShare: 0` again — every square resolved cleanly.
+
+### Nothing else changed
+
+`lib/sportsBingo.ts`'s diff is exactly 77 insertions / 2 deletions, isolated to the two seams above —
+verified with `git diff --stat` before committing. No other function was touched, no types were
+widened beyond the two new parameters, and no NBA/NFL/WNBA code path runs through either new symbol
+unless a caller explicitly opts in.
+
+### Handoff to whoever runs 3, 6, 7, or 5 next
+
+- **R4 is the last item in the R1-R4 recovery arc.** Per the plan's own sequencing
+  (`R1 → R2 → R3 → R4 → 3 → 6 → 7 → 5`), Phase 3 is already closed (R3's write-up: zero MLB
+  `player_prop` squares in production of any status), so **the only phases actually left are 6, 7,
+  and 5**, in any order among themselves — R4 does not gate any of them, it only had to land before
+  them per the run order.
+- **Phase 6** (verify `mlb_webhook_*` squares) is unrelated to what R4 touched — R4's new
+  `mlb_webhook_team_event_at_least` candidates are backtest-only synthetic templates, never written
+  through the live webhook accumulation path (`applyMlbWebhookPropEvent` /
+  `applyMlbPlayerSnapshotEvent`, ~10008/~10073 pre-R4, shifted by ~77 lines now). Don't confuse the
+  two — R4 proves the *resolver* shape generates and grades correctly against historical box scores;
+  Phase 6 is about whether the *live* webhook stream ever populates `resolver.currentCount` for real,
+  which R4's backtest path never exercises (it settles through `gradeResolversAgainstCompletedMLBGame`
+  reading box scores directly, not through webhook accumulation).
+- **Phase 7** (WNBA audit) is untouched by R4 and still open — nothing here changes its scope.
+- **Phase 5** (calibration, Opus 5, real API cost) was already the last phase in the run order and
+  still is. R3's handoff already flagged the sanity check worth doing first (only 6 MLB cards total,
+  zero player-prop volume) — that's still true and R4 adds nothing to it, since `bingo:calibrate:mlb`
+  would measure against live box scores via the harness, not these near-empty production tables, per
+  R3's own note.
+- **Re-grep before editing `lib/sportsBingo.ts` again.** This phase added 77 lines starting at
+  ~5254 (the new exported function) plus a handful more at ~4342 and ~7780 (the two threaded
+  parameters); every line number below ~5254 in this document is now stale by that much on top of
+  R1/R2/R3's prior drift. `npx tsc --noEmit` staying at 0 errors is the fast way to confirm nothing
+  downstream silently broke from the shift.
+- **Still on branch `restore/mlb-bingo-r1`, not `main`.** Four production/instrument-affecting
+  changes now sit on this branch (R1's five row-shape defects, R2's `getGameTimestamp` sixth defect,
+  R3's void fix, R4's backtest seams). Andrew still has not been asked whether to merge. Worth raising
+  explicitly now that the whole R1-R4 recovery arc is complete — this is a natural checkpoint to ask,
+  rather than letting more phases pile onto an unmerged branch.
+- **Not yet done, still open:** 6, 7, 5 (any order). 3 is closed (see R3's write-up).
+
+---
+
 ## Original Phase 2 handoff (superseded by R1–R3 above — kept for its detail)
 
 Phases 1 and 4a/4b are done; nothing blocks Phase 2. Re-read Phase 2's section above in full before
@@ -1068,3 +1172,42 @@ defects survived here because the shapes were assumed from NBA/NFL. Any phase ab
 field name should re-probe it in the same session, and any phase that reports success should say
 plainly which half of the path it exercised — generation, settlement, or both. `bingo:simulate
 --backtest` reporting a healthy win rate for the wrong league is the cautionary example.
+
+---
+
+## Phase 8 — Check whether NBA's `miss`-instead-of-`void` asymmetry has actually hit production
+
+**Not yet scheduled — added 2026-08-18 as a reminder, not started.**
+
+**Model:** Sonnet 5 · **Effort:** Low (~10 min), one DB query. No code change unless the count is
+non-zero.
+
+R3 confirmed NBA's arm of `case "player_prop"` in `evaluateResolver` (~8786-8791,
+`if (isNba && !nbaStatsSnapshot)`) has the identical `miss`-on-missing-data bug MLB had before R3 —
+found and reported, deliberately **not** fixed, since the plan scopes fixing forward behavior as
+its own change with its own review (same reasoning as Phase 3 for MLB).
+
+**Unlike MLB, this one can't be assumed dormant.** MLB's version was inert until 2026-08-18 because
+the snapshot path itself was unreachable; NBA player-prop grading has been live and reachable the
+whole time. If the asymmetry has ever actually fired — a missing snapshot, missing stat line, or
+non-finite value at Final for an NBA player-prop square — that square settled `miss` for a real
+player when the house rule says it should have voided.
+
+**Do this (same method R3 used for MLB's historical count):**
+
+1. Query `sports_bingo_squares` for rows on `basketball_nba` cards with a `player_prop` resolver
+   and `status = 'miss'`.
+2. That alone isn't proof — a real `miss` and a should-have-voided `miss` look identical in the
+   status column. Cross-check candidates against whatever signal distinguishes them (e.g. no
+   corresponding NBA stats snapshot ever existed for that game/player at the time of settlement, if
+   that's reconstructable; otherwise this may need spot-checking a sample by hand).
+3. Report the count and, if non-zero, treat it the same way Phase 3 treats a non-zero MLB count:
+   present it and the remediation options (leave it, regrade via the void-regrade path, regrade +
+   re-run line detection) as a product/fairness call, not an engineering one — do not pick for
+   Andrew.
+
+**If the count is zero:** note it and close, same as Phase 3 did for MLB. **If non-zero:** the NBA
+fix itself is still a small ternary change (mirror R3's `isMlb ? "void" : "miss"` pattern, just for
+`isNba`) — but do not write that code until Andrew has seen the count and decided whether historical
+squares also need addressing, so the forward fix and any backfill land as one reviewed decision
+rather than two.
