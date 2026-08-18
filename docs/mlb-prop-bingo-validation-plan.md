@@ -28,10 +28,12 @@ base for everything here and is not repeated in full.
 > `--backtest only implements americanfootball_nfl, baseball_mlb; …`, and `npm run lint` is clean.
 >
 > **Recovery is scoped as Phases R1–R4 below.** Do those before touching Phases 3, 5, 6 or 7.
-> **R1 is done (2026-08-18)** — `lib/sportsBingo.ts` is restored and committed on branch
-> `restore/mlb-bingo-r1`; `tsc` is back to 0 errors. **R2 is next.** Read R1's as-built block for
-> one deliberate deviation from R1's own instruction table (`getTeamDisplayName`) and two Phase B
-> reverts R1's table did not list.
+> **R1 and R2 are done (2026-08-18)** — `lib/sportsBingo.ts` is restored and committed on branch
+> `restore/mlb-bingo-r1`; `tsc` is back to 0 errors and `npm run bingo:validate:mlb` is at 100% on
+> all six metrics. **R3 is next.** Read R1's as-built block for one deliberate deviation from R1's
+> own instruction table (`getTeamDisplayName`) and two Phase B reverts R1's table did not list, and
+> **read R2's as-built block for a sixth MLB row-shape defect (`getGameTimestamp`) that R1's table
+> never listed, affects NFL and WNBA too, and widens Phase 3's scope.**
 > Nothing else in the plan changed.
 
 ## Why this plan exists
@@ -57,6 +59,7 @@ All probed live 2026-08-18; do not re-derive, but **do re-verify before writing 
 | `/mlb/v1/lineups` | 20 rows/game, **starters only**. No `starter` key. Batters carry `batting_order` 1-9; the starting pitcher carries `is_probable_pitcher: true` and a null batting order |
 | team objects (both) | no `full_name`. Only `display_name` ("Kansas City Royals") and `name` (mascot only, "Royals") |
 | `/nba/v1/lineups` | **does** carry `starter` (21 rows, exactly 10 true). NBA is not affected by the lineup defect |
+| `/mlb`, `/nfl`, `/wnba` `/v1/games` | **no `datetime` key**; `date` is already a full ISO timestamp. Only `/nba/v1/games` splits them (date-only `date` + a separate `datetime`). Added by R2 — see its as-built block |
 
 End-to-end spot check through the shipped matcher and snapshot builder (Royals @ Angels,
 2026-08-16), post-fix: game matched, score 1/0, `finalized` true, 27 stat lines, **27/27** team
@@ -573,6 +576,156 @@ team-side resolution · starter detection · player-name lookup rate
 Anything below 100% means R1 missed one of the five defect sites; the write-up's per-metric mapping
 (§Phase 1) tells you which. Also confirm nothing in the **Verified facts** table drifted — per this
 plan's standing rule, re-probe rather than trust. Record the run in this doc.
+
+---
+
+## Phase R2 — done (2026-08-18)
+
+**PASS, but only after a code fix R2 was not supposed to need.** The first run came back
+**23/25 (92.0%)** on match rate, and R2 turned up a **sixth MLB row-shape defect** that R1's table
+never listed and Phase 1's original run never exposed. All six metrics are at 100% now.
+
+### The run that failed
+
+```
+match rate                        23/25 (92.0%)
+score reconciliation              23/25 (92.0%)
+finalized rate                    23/25 (92.0%)
+team-side resolution             676/676 (100.0%)
+starter rows (raw / flagged true) 460 / 460 across 25 games with a populated lineup response
+player-name lookup rate          460/460 (100.0%)
+
+match miss game 5059601: matcher returned 5059593
+match miss game 5059615: matcher returned 5059602
+```
+
+The score and finalized misses are **not independent** — the harness `continue`s past a match miss,
+so one root cause dented three metrics. Read that shape as one failure, not three.
+
+### Root cause — `getGameTimestamp`, a sixth MLB row-shape defect
+
+Probed live: both pairs are **consecutive nights of the same series**, not doubleheaders (Rangers @
+Angels 8/13 and 8/14; Brewers @ Dodgers 8/14 and 8/15). In each case the matcher returned the
+*previous night's* game.
+
+`pickBestMatchingBallDontLieGame` filters by team pair, then sorts by `|kickoff - card.starts_at|`
+via `getGameTimestamp`. That helper read `game.datetime` first and otherwise parsed `date` as
+`` `${date}T00:00:00.000Z` ``. **MLB `/games` rows carry no `datetime` key at all, and their `date`
+is already a full ISO timestamp** (`"2026-08-14T02:07:00.000Z"`) — so the fallback built
+`"2026-08-14T02:07:00.000ZT00:00:00.000Z"`, which is unparseable, and every MLB game scored
+`POSITIVE_INFINITY`. `Infinity - Infinity` is `NaN`, V8 treats a `NaN` comparator as `0`, the sort
+stayed stable, and `matching[0]` was simply whichever game the feed listed first. **The
+kickoff-proximity tiebreak was completely inert on MLB** — every multi-game series graded its later
+games against the earlier game's box score. Production-affecting, and invisible to a card whose
+matchup happens to appear once in the candidate window (which is why Phase 1's smaller 15-game
+window scored 15/15).
+
+**This is not an R1 miss.** `getGameTimestamp` was never one of R1's five sites; `git show
+f4873eb -- lib/sportsBingo.ts` does not touch it and neither did the pre-incident code. It predates
+the whole recovery arc.
+
+**Fix (`lib/sportsBingo.ts`, `getGameTimestamp` ~2186):** try `+new Date(date)` directly before the
+midnight-suffix append. Date-only strings (NBA's `"2025-10-21"`) parse to the same UTC midnight the
+suffix produced, so NBA is bit-identical; only the previously-`Infinity` rows change. Docblock
+records the whole failure mode in place.
+
+**Blast radius is wider than MLB.** Probed live: `/nfl/v1/games` and `/wnba/v1/games` have the same
+shape (full-ISO `date`, no `datetime`); only `/nba/v1/games` carries both (date-only `date` +
+`datetime`). So the tiebreak was inert for three of the four supported leagues and this fix repairs
+all three. NFL is the least exposed in practice (one game per matchup per week), WNBA is not, and
+**Phase 7's WNBA audit should treat this as a confirmed hit, not a hypothesis.**
+
+### The passing run — acceptance met
+
+```
+[validate] 25 completed MLB games (last 5 days, capped at 25)
+match rate                        25/25 (100.0%)
+score reconciliation              25/25 (100.0%)
+finalized rate                    25/25 (100.0%)
+team-side resolution             735/735 (100.0%)
+starter rows (raw / flagged true) 500 / 500 across 25 games with a populated lineup response
+empty lineup responses              0/25
+player-name lookup rate          500/500 (100.0%)
+PASS — MLB grading substrate matches the archived feed.
+```
+
+Realized rates (smoke test only, per the Phase 1 write-up's own caveat — these moved a few points
+against Phase 1's 7-day window and that is expected):
+
+```
+player_hits               over  0.5  58.9%   (Phase 1: 55.9%)
+player_home_runs          over  0.5  10.7%   (13.0%)
+player_rbis               over  0.5  25.6%   (28.1%)
+player_runs               over  0.5  34.9%   (34.1%)
+player_stolen_bases       over  0.5   6.9%   ( 7.0%)
+player_strikeouts_pitcher over  3.5  68.0%   (83.3%)
+player_pitcher_outs       over 14.5  70.0%   (80.0%)
+```
+
+The two pitcher markets are the only ones that moved materially, on ~50 samples apiece. Worth a
+skeptical eye at **Phase 5** (calibration), which is the phase those numbers actually feed; nothing
+in R2's gate turns on them.
+
+### The `??` chain the R1 handoff flagged — checked, still theoretical
+
+R1 asked R2 to watch for a live MLB row carrying `home_team_score: 0` alongside
+`home_team_data.runs`, which `??` would resolve to the flat `0`. **It would have surfaced as a
+score-reconciliation miss on a shutout, and score reconciliation is 25/25 across a window
+containing shutouts.** Still theoretical; leave the chain as R1 shipped it.
+
+### Verified facts — re-probed, no drift
+
+Re-probed `/mlb/v1/games` live: keys are `id, home_team_name, away_team_name, home_team, away_team,
+season, postseason, season_type, date, home_team_data, away_team_data, venue, attendance,
+conference_play, status, status_state, period, clock, display_clock, scoring_summary`. No
+`visitor_team`, no `*_team_score`, `status: "STATUS_FINAL"` — table row confirmed. The stats and
+lineup rows are confirmed transitively by the harness (735/735 team sides, 500/500 name lookups,
+500 starter rows across 25 games, 0 empty lineup responses). **One row to add to that table:**
+`/mlb/v1/games` (and `/nfl`, `/wnba`) carry **no `datetime` key**; `date` is a full ISO timestamp.
+Only `/nba/v1/games` splits the two.
+
+### Regression test
+
+`tests/lib.sportsBingo.mlb-row-shape.test.ts` gained a fourth `describe` — *"MLB series
+disambiguation — the kickoff-proximity tiebreak"* — with four tests: the second night's card picks
+the second night's game, the first night's still picks the first, a verbatim pre-fix
+`toBeNaN()` proof, and an NBA `date` + `datetime` non-regression. Same file, same fixtures as the
+five R1 defects, so the sixth lives next to its siblings.
+
+### R2 gate — results
+
+```
+npx tsc --noEmit                       0 errors
+npm run lint                           clean
+npm run test:bingo-nfl                 244/244
+npm run test:bingo-mlb                 103/106  (the 3 failures are R3's, unchanged)
+npm run test (full suite)              1834/1850 passing, 13 skipped, 3 failing — all R3's
+tests/lib.sportsBingo.mlb-star-tilt     green (board snapshots unmoved by the fix)
+tests/lib.sportsBingo.nfl-star-tilt     green
+```
+
+The three failures are still exactly the pre-written R3 proof tests in
+`tests/lib.sportsBingo.mlb-row-shape.test.ts` (`miss` where `void` is expected). Unchanged from R1;
+R2 did not touch that path.
+
+### Handoff to whoever runs R3 (or R4)
+
+- **R3's spec is unchanged and R2 did nothing to it.** The three failing tests still specify it
+  exactly; copy the NFL arm of `case "player_prop"` in `evaluateResolver`, leave the NBA arm alone.
+- **Re-grep line numbers before editing.** R2 added ~13 lines to `getGameTimestamp`'s docblock and
+  body at ~2186, so everything below it in `lib/sportsBingo.ts` shifted down. Every line number in
+  this document is now stale by that much.
+- **Phase 3 (historical mis-settlement) just got bigger and R3 is not the only input.** It was
+  scoped around the `miss`/`void` bug. It must now also cover cards whose *matchup repeated inside
+  the candidate window* — those were graded against the wrong game's box score entirely, which is a
+  worse failure than a wrong void. Any MLB series (i.e. most of the season) is in scope, and so are
+  WNBA cards. Whoever runs Phase 3 should read this R2 block before scoping the query.
+- **Phase 7 (WNBA audit) has one confirmed defect waiting**, per the blast-radius note above.
+- **Phase 5 (calibration) should not trust the two pitcher markets' realized rates** until it has a
+  window larger than ~50 samples each.
+- **Still on branch `restore/mlb-bingo-r1`, not `main`.** R1 raised the merge question and it is
+  still open — R2 adds a second production-affecting fix to the same branch, which strengthens the
+  case for merging sooner rather than later. Andrew has not been asked.
 
 ---
 

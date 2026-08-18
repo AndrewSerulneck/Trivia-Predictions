@@ -2183,6 +2183,15 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
 }
 
 
+/**
+ * MLB, NFL and WNBA game rows carry **no `datetime` key at all**, and their `date` is already a
+ * full ISO timestamp (`"2026-08-14T02:07:00.000Z"`). Appending `T00:00:00.000Z` to that produces
+ * an unparseable string, so every such game used to return `POSITIVE_INFINITY` and
+ * `pickBestMatchingBallDontLieGame`'s kickoff-proximity tiebreak went completely inert — a team
+ * pair that appears twice in the candidate window (any multi-game series) always matched the
+ * first-listed game. Parse `date` as-is first; only date-only strings (NBA's `"2025-10-21"`) get
+ * the midnight suffix.
+ */
 function getGameTimestamp(game: BallDontLieGame): number {
   const primary = String(game.datetime ?? "").trim();
   if (primary) {
@@ -2194,6 +2203,10 @@ function getGameTimestamp(game: BallDontLieGame): number {
 
   const fallback = String(game.date ?? "").trim();
   if (fallback) {
+    const direct = +new Date(fallback);
+    if (Number.isFinite(direct)) {
+      return direct;
+    }
     const parsed = +new Date(`${fallback}T00:00:00.000Z`);
     if (Number.isFinite(parsed)) {
       return parsed;

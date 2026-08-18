@@ -99,6 +99,52 @@ describe("MLB /games row shape — the matcher that gated every MLB player-stat 
   });
 });
 
+/**
+ * R2 found a sixth MLB row-shape defect the five R1 fixes did not cover: MLB (and NFL, and WNBA)
+ * `/games` rows carry **no `datetime` key**, and their `date` is already a full ISO timestamp.
+ * `getGameTimestamp` only ever parsed `date` as `` `${date}T00:00:00.000Z` ``, which is
+ * unparseable for those rows, so every candidate scored `POSITIVE_INFINITY` and the matcher's
+ * kickoff-proximity tiebreak went inert — a repeated matchup (any multi-game series) always
+ * matched whichever game the feed listed first. Live proof: `npm run bingo:validate:mlb` graded
+ * two of 25 games against the wrong game before the fix.
+ */
+describe("MLB series disambiguation — the kickoff-proximity tiebreak", () => {
+  const seriesGameOne = { ...mlbGameRow, id: 5059593, date: "2026-08-13T02:00:00.000Z" };
+  const seriesGameTwo = { ...mlbGameRow, id: 5059601, date: "2026-08-14T02:07:00.000Z" };
+
+  it("picks the game whose start time matches the card, not the first one listed", () => {
+    const secondNightCard = {
+      ...card("Houston Astros", "Detroit Tigers", "baseball_mlb"),
+      starts_at: "2026-08-14T02:07:00.000Z",
+    };
+    expect(pickBestMatchingBallDontLieGame(secondNightCard, [seriesGameOne, seriesGameTwo])?.id).toBe(5059601);
+  });
+
+  it("still picks the first night's game for the first night's card", () => {
+    const firstNightCard = {
+      ...card("Houston Astros", "Detroit Tigers", "baseball_mlb"),
+      starts_at: "2026-08-13T02:00:00.000Z",
+    };
+    expect(pickBestMatchingBallDontLieGame(firstNightCard, [seriesGameOne, seriesGameTwo])?.id).toBe(5059593);
+  });
+
+  it("was blind to the difference before the fix — the pre-fix parse was NaN for both", () => {
+    // Verbatim pre-fix read: the only `date` branch was the midnight-suffix append.
+    expect(+new Date(`${seriesGameOne.date}T00:00:00.000Z`)).toBeNaN();
+    expect(+new Date(`${seriesGameTwo.date}T00:00:00.000Z`)).toBeNaN();
+  });
+
+  it("still honors an NBA-shaped row's separate date-only `date` + `datetime` pair", () => {
+    const nbaEarly = { ...nbaGameRow, id: 1, date: "2026-03-02", datetime: "2026-03-02T00:00:00Z" };
+    const nbaLate = { ...nbaGameRow, id: 2, date: "2026-03-05", datetime: "2026-03-05T00:00:00Z" };
+    const nbaCard = {
+      ...card("Denver Nuggets", "Los Angeles Lakers", "basketball_nba"),
+      starts_at: "2026-03-05T00:00:00Z",
+    };
+    expect(pickBestMatchingBallDontLieGame(nbaCard, [nbaEarly, nbaLate])?.id).toBe(2);
+  });
+});
+
 describe("MLB player-stats snapshot carries the final score", () => {
   const mlbCard = card("Houston Astros", "Detroit Tigers", "baseball_mlb");
 
