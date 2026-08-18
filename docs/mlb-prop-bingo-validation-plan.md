@@ -1002,7 +1002,8 @@ unless a caller explicitly opts in.
   R3's void fix, R4's backtest seams). Andrew still has not been asked whether to merge. Worth raising
   explicitly now that the whole R1-R4 recovery arc is complete — this is a natural checkpoint to ask,
   rather than letting more phases pile onto an unmerged branch.
-- **Not yet done, still open:** 6, 7, 5 (any order). 3 is closed (see R3's write-up).
+- **Not yet done, still open:** 6, 7, 5 (any order). 3 is closed (see R3's write-up). **Update:** 6 is
+  now also done — see its own "done" write-up below. Only 7 and 5 remain.
 
 ---
 
@@ -1085,6 +1086,100 @@ checked offline: that `applyMlbWebhookPropEvent` / `applyMlbPlayerSnapshotEvent`
 increment the right squares for a synthetic event sequence. What cannot: that the stream delivers
 the events at all. **State that split explicitly in whatever this phase produces** rather than
 implying end-to-end coverage — the same trap `bingo:simulate --backtest` fell into.
+
+---
+
+## Phase 6 — done (2026-08-18)
+
+**Offline half done: `applyMlbWebhookPropEvent` and `applyMlbPlayerSnapshotEvent` (post-R4 at
+~10190/~10255) are now covered end to end against a synthetic event sequence, with the live-stream
+half explicitly out of scope — see the split below.** No production code changed; this phase is
+pure test coverage, same exemption class as Phases 1/4a/7 in spirit, though it wasn't listed among
+them, since nothing here altered behavior.
+
+### What shipped
+
+`tests/lib.sportsBingo.mlb-webhook-events.test.ts` (new, 15 tests), wired into
+`test:bingo-mlb` in `package.json`. Runs against the same in-memory `supabaseAdmin` double
+(`tests/helpers/bingoSupabaseDouble.ts`) the NFL settlement tests already use — no new test
+infrastructure needed, since the double's query surface (`select`/`update`/`eq`/`in`) already
+covers everything both functions touch.
+
+Coverage, matched to the two code paths inside `applyMlbWebhookPropEvent`:
+
+- **The direct path** (squares pre-tagged with `player_id` + `event_type` columns at board-creation
+  time via `getSquareMetadataForResolver`): `mlb_webhook_player_event_at_least` increments and hits
+  at threshold; the `home_run`→`hit` alias counts; a non-matching player is ignored;
+  `mlb_webhook_player_event_at_most` flips to `miss` (not `hit`) the instant the ceiling is
+  exceeded, and stays `pending` under it.
+- **The fallback loop** (team-event squares carry no `player_id`, so they're never reached by the
+  direct query and must fall out of the per-card loop keyed on `resolveTeamSideFromEvent`):
+  team-side attribution is correct and doesn't cross-credit the other side; team-name matching is
+  fuzzy (`teamsMatch`), not exact-string; `quick_out_under_3_pitches` requires both an out-type
+  event *and* `pitchCount < 3` — tested all three ways (non-out event, out but ≥3 pitches, qualifying
+  out) since that resolver's guard is the only one with a compound condition; events for a different
+  `gameId` are ignored entirely; an already-settled square is skipped and its `currentCount` is left
+  untouched (proves the loop's `status !== "pending"` filter, not just the math).
+- **`applyMlbPlayerSnapshotEvent`**: sets `currentCount` to the snapshot's absolute total (not an
+  increment — the snapshot function and the webhook-event function have different write semantics
+  and both are tested to their own contract); the batter/pitcher stat-field mapping in
+  `mlbResolverCurrentCountFromPlayerSnapshot` is checked for `hit`/`home_run`/`pitcher_out`; a
+  no-op update (resolved count unchanged) correctly reports `updatedSquares: 0` rather than a
+  spurious write; wrong-player and malformed-event (`playerId: 0`) inputs are no-ops.
+
+**Sensitivity-checked, not just green on first run**: before finalizing, deliberately broke the
+`_at_most` ceiling check (`current > maxAllowed` → `current > maxAllowed + 999`) and reran just this
+file — it failed exactly the one test targeting that branch, 14/15 still green. Confirms the suite
+catches real logic regressions rather than passing vacuously off a mock-configuration accident. The
+break was reverted before commit; `git diff --stat lib/sportsBingo.ts` showed zero lines changed
+afterward.
+
+### The split this phase's own instruction demanded — stated plainly
+
+**What is verified:** the accumulation and settlement math inside `applyMlbWebhookPropEvent` /
+`applyMlbPlayerSnapshotEvent` is correct for every event shape the resolver vocabulary defines,
+against a synthetic sequence.
+
+**What is NOT verified and cannot be from this repo:** whether the live MLB webhook stream ever
+actually calls these two functions with real events during a real game — that delivery path is an
+entirely separate system (whatever fires the webhook), has no offline harness, and this phase does
+not touch it. A green run of `test:bingo-mlb` proves the grading logic is right; it says nothing
+about whether `resolver.currentCount` ever moves on a live card. If that needs verifying, it needs
+watching an actual live MLB game with an active webhook-square card — out of scope for an offline
+session.
+
+### Gate
+
+```
+npx tsc --noEmit                       0 errors
+npm run lint                           clean
+npm run test:bingo-nfl                 244/244 (unchanged)
+npm run test:bingo-mlb                 121/121 (was 106/106; +15 new)
+npm run test (full suite)              1852/1865 passing, 13 skipped, 0 failing
+```
+
+### Handoff to whoever runs Phase 7 or 5 next (the only two left)
+
+- **Nothing here touches Phase 7's (WNBA) or Phase 5's (calibration) scope.** This phase was purely
+  additive test coverage on the MLB webhook-event path; no line number below ~10190 that either of
+  those phases might reference moved, since no production code changed.
+- **Commit scope discipline, same as R1-R4**: this commit should carry only `package.json` (the one
+  `test:bingo-mlb` line), the new test file, and this plan doc's Phase 6 write-up — leave the other
+  uncommitted survivors (`lib/fantasy.ts`, `lib/sportsBingoNflFlavor.ts`, `lib/thesportsdb.ts`,
+  `lib/envNumber.ts`, `scripts/probe-nfl-flavor-squares.cjs`, `scripts/simulate-bingo-boards.cjs`,
+  `tests/lib.sportsBingo.nfl-star-tilt.test.ts`, `tests/lib.envNumber.test.ts`,
+  `tests/components.bingo.SportsBingoSelectSport.test.ts`, the two
+  `docs/phase0-artifacts/*.json`) alone — they belong to other work.
+- **Only Phase 7 (WNBA audit, Haiku 4.5, ~30 min) and Phase 5 (calibration, Opus 5, real API cost)
+  remain.** Either order is fine between them; Phase 5 was always meant to run last regardless.
+  Phase 7 has one confirmed thing to check per R2's write-up: the `getGameTimestamp` fix (R2) is
+  known to also apply to WNBA (`/wnba/v1/games` has the same no-`datetime`/full-ISO-`date` shape as
+  MLB and NFL) — treat that as a **confirmed hit already fixed by R2**, not a fresh finding to
+  rediscover; Phase 7's own probe is about *other* WNBA field-name divergences, the MLB-style class
+  of bug this whole plan is about.
+- **Still on branch `restore/mlb-bingo-r1`, not `main`.** Andrew has not been asked whether to
+  merge; this is now five phases of production/instrument work sitting on the same unmerged branch
+  (R1-R4 plus this Phase 6 addition), which keeps strengthening the case for merging soon.
 
 ---
 
