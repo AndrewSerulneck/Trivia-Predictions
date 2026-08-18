@@ -110,16 +110,40 @@ describe("admin section registry split", () => {
     expect(componentsSource).toContain("ADMIN_CONSOLE_SECTION_RENDERERS");
   });
 
-  it("keeps the mobile allowlist a literal 3-item array, never derived", () => {
+  it("keeps the mobile allowlist a literal string-array, never derived", () => {
     // Deliberate Phase 3 invariant, restated here because R4 moved this
     // constant between modules: adding a section to ADMIN_SECTION_OPTIONS must
     // never make it reachable on mobile — only editing this literal list does.
+    // The count itself isn't the point (6c2ff46 shrank it 3 -> 2 on purpose);
+    // what matters is that it stays a hand-written literal, not a derived value.
     const stripped = stripComments(metaSource);
     const match = stripped.match(/MOBILE_SECTION_ORDER\s*=\s*\[([\s\S]*?)\]\s*as const/);
     expect(match).not.toBeNull();
     const entries = (match?.[1] ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-    expect(entries).toHaveLength(3);
+    for (const entry of entries) {
+      expect(entry).toMatch(/^"[a-z-]+"$/);
+    }
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.length).toBeLessThanOrEqual(5);
     expect(stripped).not.toMatch(/MOBILE_SECTION_ORDER[\s\S]{0,80}ADMIN_SECTION_OPTIONS/);
+  });
+
+  it("keeps AdminMobileShell's renderSection switch exhaustive over MOBILE_SECTION_ORDER", () => {
+    // A half-done 6c2ff46 would have removed a section from MOBILE_SECTION_ORDER
+    // without removing its case from renderSection (or vice versa). TAB_ICON is
+    // typed Record<MobileSection, string> so tsc catches that half; nothing
+    // caught the switch until this test.
+    const stripped = stripComments(metaSource);
+    const match = stripped.match(/MOBILE_SECTION_ORDER\s*=\s*\[([\s\S]*?)\]\s*as const/);
+    expect(match).not.toBeNull();
+    const entries = (match?.[1] ?? "")
+      .split(",")
+      .map((s) => s.trim().replace(/^"|"$/g, ""))
+      .filter(Boolean);
+    const shellSource = read("components/admin/AdminMobileShell.tsx");
+    for (const id of entries) {
+      expect(shellSource).toContain(`case "${id}":`);
+    }
   });
 
   it("keeps one shared sectionLabel definition, not a per-shell copy", () => {
