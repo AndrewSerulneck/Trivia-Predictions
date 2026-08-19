@@ -21,6 +21,10 @@
  *
  * - Raw sweep: `docs/phase0-artifacts/phase8b-nfl-threshold-sweep-2026-08-17.json`
  * - 8a's findings and the five feed unknowns: `docs/prop-bingo-nfl-phase8a-findings.md`
+ * - `nfl_safety` recalibration (2026-08-18, same 272-game window, probe rule realigned to shipped
+ *   grading): `docs/phase0-artifacts/phaseE-nfl-safety-recalibration-2026-08-18.json`. It is the
+ *   only number in this file the probe and the grader had drifted apart on; the other eight Tier-3
+ *   rates re-measured bit-identical, which is what proves the window is the same one.
  *
  * **These are single-season rates and they drift.** Re-run the sweep against the newest completed
  * season and diff before trusting them a year out — the same caveat Phase 7 put on its MLB numbers.
@@ -488,10 +492,28 @@ function nflGameFlavorSquares(): NFLFlavorSquare[] {
     // Plan #40, on target as sketched.
     square(3, { kind: "nfl_winner_trailed_in_fourth" }, 0.254),
     // Plan #42, on target as sketched. A scoring delta of exactly 8 — the boundary the Phase 4
-    // corrupt-play guard deliberately permits. Do not tighten that guard to 7.
+    // corrupt-play guard deliberately permits. Do not tighten that guard to 7. Shipped grading
+    // also counts a *separately booked* +2 that the feed types as a two-point try; re-measuring
+    // under that wider rule (Phase E, below) moved this number by exactly nothing — 50/272 either
+    // way — because no 2025 regular-season game booked one that way. Unchanged, and now measured
+    // under the rule that actually grades it.
     square(3, { kind: "nfl_two_point_conversion" }, 0.184),
-    // Plan #43, on target as sketched, and matches the commonly cited real-world safety rate.
-    square(3, { kind: "nfl_safety" }, 0.048),
+    // Plan #43. **Recalibrated 2026-08-18 (Phase E of
+    // docs/prop-bingo-out-of-scope-followup-plan.md): 0.048 -> 0.044, n = 272.**
+    //
+    // The original 0.048 (13/272) was measured by a probe that still scored *any* +2 as a safety.
+    // Shipped grading stopped doing that in Phase 3 — a +2 is attributed by play type, and a +2
+    // nothing types voids rather than guessing — so the old number counted plays this square can
+    // no longer hit on. Re-running the probe against the shipped predicates over the *same*
+    // 272-game 2025 regular season gives 12/272 = 0.0441 hits, plus 1/272 unattributable (which
+    // grades `void`, neither hit nor miss, so it stays in the denominator the board simulator
+    // prices against). Artifact: docs/phase0-artifacts/phaseE-nfl-safety-recalibration-2026-08-18.json.
+    //
+    // **Read the size of this correction honestly.** It is one game. At n = 272 a 12/272 rate
+    // carries a 95% interval of roughly 0.023-0.076, so 0.048 and 0.044 are not statistically
+    // distinguishable here; what the re-measurement buys is that the number is no longer measured
+    // by a rule the grader stopped using. Only a multi-season sample could separate them.
+    square(3, { kind: "nfl_safety" }, 0.044),
     // Plan #44, sketched at the 2-yard line (0.695 — a lean-lock, not a coin flip). The 1 is.
     square(3, { kind: "nfl_goal_line_touchdown", yards: 1 }, 0.522, 1),
   ];

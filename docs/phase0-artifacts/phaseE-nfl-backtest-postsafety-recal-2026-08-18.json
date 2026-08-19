@@ -1,0 +1,1593 @@
+{
+  "ranAtUtc": "2026-08-18T14:17:21.163Z",
+  "mode": "backtest",
+  "targetWinRate": 0.25,
+  "targetBand": [
+    0.2,
+    0.3
+  ],
+  "boardsPerGame": 4,
+  "seasons": [
+    "2025"
+  ],
+  "weeks": [
+    "6",
+    "9",
+    "14"
+  ],
+  "result": {
+    "boards": 172,
+    "realizedWinRate": 0.2616,
+    "predicted": {
+      "n": 172,
+      "min": 0.2008,
+      "p25": 0.2296,
+      "median": 0.2536,
+      "p75": 0.274,
+      "max": 0.2996,
+      "mean": 0.2517,
+      "inTargetBand": 1
+    },
+    "legacyIndependentPredicted": {
+      "n": 172,
+      "min": 0.1396,
+      "p25": 0.2167,
+      "median": 0.248,
+      "p75": 0.2875,
+      "max": 0.4014,
+      "mean": 0.2536,
+      "inTargetBand": 0.686
+    },
+    "ungradedSquareShare": 0.0002,
+    "perGame": [
+      {
+        "gameId": "424023",
+        "label": "Philadelphia Eagles @ New York Giants",
+        "week": 6,
+        "predicted": 0.2856,
+        "legacyPredicted": 0.2762,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424023",
+        "label": "Philadelphia Eagles @ New York Giants",
+        "week": 6,
+        "predicted": 0.2396,
+        "legacyPredicted": 0.1732,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424023",
+        "label": "Philadelphia Eagles @ New York Giants",
+        "week": 6,
+        "predicted": 0.2852,
+        "legacyPredicted": 0.2455,
+        "won": true,
+        "hits": 11
+      },
+      {
+        "gameId": "424023",
+        "label": "Philadelphia Eagles @ New York Giants",
+        "week": 6,
+        "predicted": 0.2416,
+        "legacyPredicted": 0.2436,
+        "won": false,
+        "hits": 7
+      },
+      {
+        "gameId": "424024",
+        "label": "Denver Broncos @ New York Jets",
+        "week": 6,
+        "predicted": 0.2612,
+        "legacyPredicted": 0.2245,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424024",
+        "label": "Denver Broncos @ New York Jets",
+        "week": 6,
+        "predicted": 0.2316,
+        "legacyPredicted": 0.3093,
+        "won": false,
+        "hits": 13
+      },
+      {
+        "gameId": "424024",
+        "label": "Denver Broncos @ New York Jets",
+        "week": 6,
+        "predicted": 0.2932,
+        "legacyPredicted": 0.2597,
+        "won": true,
+        "hits": 14
+      },
+      {
+        "gameId": "424024",
+        "label": "Denver Broncos @ New York Jets",
+        "week": 6,
+        "predicted": 0.2244,
+        "legacyPredicted": 0.2559,
+        "won": true,
+        "hits": 14
+      },
+      {
+        "gameId": "424025",
+        "label": "Arizona Cardinals @ Indianapolis Colts",
+        "week": 6,
+        "predicted": 0.2476,
+        "legacyPredicted": 0.2286,
+        "won": true,
+        "hits": 13
+      },
+      {
+        "gameId": "424025",
+        "label": "Arizona Cardinals @ Indianapolis Colts",
+        "week": 6,
+        "predicted": 0.228,
+        "legacyPredicted": 0.2069,
+        "won": true,
+        "hits": 16
+      },
+      {
+        "gameId": "424025",
+        "label": "Arizona Cardinals @ Indianapolis Colts",
+        "week": 6,
+        "predicted": 0.2552,
+        "legacyPredicted": 0.2495,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424025",
+        "label": "Arizona Cardinals @ Indianapolis Colts",
+        "week": 6,
+        "predicted": 0.2708,
+        "legacyPredicted": 0.227,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424026",
+        "label": "Los Angeles Chargers @ Miami Dolphins",
+        "week": 6,
+        "predicted": 0.2508,
+        "legacyPredicted": 0.2963,
+        "won": true,
+        "hits": 15
+      },
+      {
+        "gameId": "424026",
+        "label": "Los Angeles Chargers @ Miami Dolphins",
+        "week": 6,
+        "predicted": 0.2316,
+        "legacyPredicted": 0.3529,
+        "won": true,
+        "hits": 14
+      },
+      {
+        "gameId": "424026",
+        "label": "Los Angeles Chargers @ Miami Dolphins",
+        "week": 6,
+        "predicted": 0.26,
+        "legacyPredicted": 0.2602,
+        "won": false,
+        "hits": 13
+      },
+      {
+        "gameId": "424026",
+        "label": "Los Angeles Chargers @ Miami Dolphins",
+        "week": 6,
+        "predicted": 0.2792,
+        "legacyPredicted": 0.167,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424027",
+        "label": "Cleveland Browns @ Pittsburgh Steelers",
+        "week": 6,
+        "predicted": 0.2348,
+        "legacyPredicted": 0.3255,
+        "won": false,
+        "hits": 14
+      },
+      {
+        "gameId": "424027",
+        "label": "Cleveland Browns @ Pittsburgh Steelers",
+        "week": 6,
+        "predicted": 0.2948,
+        "legacyPredicted": 0.2998,
+        "won": false,
+        "hits": 6
+      },
+      {
+        "gameId": "424027",
+        "label": "Cleveland Browns @ Pittsburgh Steelers",
+        "week": 6,
+        "predicted": 0.2348,
+        "legacyPredicted": 0.2561,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424027",
+        "label": "Cleveland Browns @ Pittsburgh Steelers",
+        "week": 6,
+        "predicted": 0.2844,
+        "legacyPredicted": 0.2771,
+        "won": false,
+        "hits": 13
+      },
+      {
+        "gameId": "424029",
+        "label": "Dallas Cowboys @ Carolina Panthers",
+        "week": 6,
+        "predicted": 0.2736,
+        "legacyPredicted": 0.3359,
+        "won": true,
+        "hits": 15
+      },
+      {
+        "gameId": "424029",
+        "label": "Dallas Cowboys @ Carolina Panthers",
+        "week": 6,
+        "predicted": 0.2856,
+        "legacyPredicted": 0.2071,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424029",
+        "label": "Dallas Cowboys @ Carolina Panthers",
+        "week": 6,
+        "predicted": 0.276,
+        "legacyPredicted": 0.2146,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424029",
+        "label": "Dallas Cowboys @ Carolina Panthers",
+        "week": 6,
+        "predicted": 0.2804,
+        "legacyPredicted": 0.2036,
+        "won": false,
+        "hits": 13
+      },
+      {
+        "gameId": "424030",
+        "label": "Seattle Seahawks @ Jacksonville Jaguars",
+        "week": 6,
+        "predicted": 0.2388,
+        "legacyPredicted": 0.3255,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424030",
+        "label": "Seattle Seahawks @ Jacksonville Jaguars",
+        "week": 6,
+        "predicted": 0.2232,
+        "legacyPredicted": 0.304,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424030",
+        "label": "Seattle Seahawks @ Jacksonville Jaguars",
+        "week": 6,
+        "predicted": 0.2704,
+        "legacyPredicted": 0.2677,
+        "won": true,
+        "hits": 10
+      },
+      {
+        "gameId": "424030",
+        "label": "Seattle Seahawks @ Jacksonville Jaguars",
+        "week": 6,
+        "predicted": 0.2272,
+        "legacyPredicted": 0.2111,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424031",
+        "label": "Los Angeles Rams @ Baltimore Ravens",
+        "week": 6,
+        "predicted": 0.2568,
+        "legacyPredicted": 0.3024,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424031",
+        "label": "Los Angeles Rams @ Baltimore Ravens",
+        "week": 6,
+        "predicted": 0.2404,
+        "legacyPredicted": 0.2141,
+        "won": true,
+        "hits": 14
+      },
+      {
+        "gameId": "424031",
+        "label": "Los Angeles Rams @ Baltimore Ravens",
+        "week": 6,
+        "predicted": 0.2816,
+        "legacyPredicted": 0.3124,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424031",
+        "label": "Los Angeles Rams @ Baltimore Ravens",
+        "week": 6,
+        "predicted": 0.202,
+        "legacyPredicted": 0.222,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424034",
+        "label": "New England Patriots @ New Orleans Saints",
+        "week": 6,
+        "predicted": 0.2856,
+        "legacyPredicted": 0.3479,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424034",
+        "label": "New England Patriots @ New Orleans Saints",
+        "week": 6,
+        "predicted": 0.2112,
+        "legacyPredicted": 0.2456,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424034",
+        "label": "New England Patriots @ New Orleans Saints",
+        "week": 6,
+        "predicted": 0.25,
+        "legacyPredicted": 0.203,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424034",
+        "label": "New England Patriots @ New Orleans Saints",
+        "week": 6,
+        "predicted": 0.22,
+        "legacyPredicted": 0.3535,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424032",
+        "label": "Tennessee Titans @ Las Vegas Raiders",
+        "week": 6,
+        "predicted": 0.252,
+        "legacyPredicted": 0.291,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424032",
+        "label": "Tennessee Titans @ Las Vegas Raiders",
+        "week": 6,
+        "predicted": 0.26,
+        "legacyPredicted": 0.2574,
+        "won": false,
+        "hits": 7
+      },
+      {
+        "gameId": "424032",
+        "label": "Tennessee Titans @ Las Vegas Raiders",
+        "week": 6,
+        "predicted": 0.2716,
+        "legacyPredicted": 0.3909,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424032",
+        "label": "Tennessee Titans @ Las Vegas Raiders",
+        "week": 6,
+        "predicted": 0.2756,
+        "legacyPredicted": 0.2586,
+        "won": true,
+        "hits": 11
+      },
+      {
+        "gameId": "424028",
+        "label": "San Francisco 49ers @ Tampa Bay Buccaneers",
+        "week": 6,
+        "predicted": 0.2592,
+        "legacyPredicted": 0.1588,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424028",
+        "label": "San Francisco 49ers @ Tampa Bay Buccaneers",
+        "week": 6,
+        "predicted": 0.2372,
+        "legacyPredicted": 0.1819,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424028",
+        "label": "San Francisco 49ers @ Tampa Bay Buccaneers",
+        "week": 6,
+        "predicted": 0.2604,
+        "legacyPredicted": 0.2805,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424028",
+        "label": "San Francisco 49ers @ Tampa Bay Buccaneers",
+        "week": 6,
+        "predicted": 0.276,
+        "legacyPredicted": 0.1911,
+        "won": true,
+        "hits": 10
+      },
+      {
+        "gameId": "424033",
+        "label": "Cincinnati Bengals @ Green Bay Packers",
+        "week": 6,
+        "predicted": 0.2096,
+        "legacyPredicted": 0.1807,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424033",
+        "label": "Cincinnati Bengals @ Green Bay Packers",
+        "week": 6,
+        "predicted": 0.2496,
+        "legacyPredicted": 0.2469,
+        "won": true,
+        "hits": 11
+      },
+      {
+        "gameId": "424033",
+        "label": "Cincinnati Bengals @ Green Bay Packers",
+        "week": 6,
+        "predicted": 0.2988,
+        "legacyPredicted": 0.2546,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424033",
+        "label": "Cincinnati Bengals @ Green Bay Packers",
+        "week": 6,
+        "predicted": 0.2844,
+        "legacyPredicted": 0.2166,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424035",
+        "label": "Detroit Lions @ Kansas City Chiefs",
+        "week": 6,
+        "predicted": 0.2308,
+        "legacyPredicted": 0.1956,
+        "won": true,
+        "hits": 12
+      },
+      {
+        "gameId": "424035",
+        "label": "Detroit Lions @ Kansas City Chiefs",
+        "week": 6,
+        "predicted": 0.2008,
+        "legacyPredicted": 0.201,
+        "won": true,
+        "hits": 9
+      },
+      {
+        "gameId": "424035",
+        "label": "Detroit Lions @ Kansas City Chiefs",
+        "week": 6,
+        "predicted": 0.2676,
+        "legacyPredicted": 0.2664,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424035",
+        "label": "Detroit Lions @ Kansas City Chiefs",
+        "week": 6,
+        "predicted": 0.2088,
+        "legacyPredicted": 0.315,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424036",
+        "label": "Buffalo Bills @ Atlanta Falcons",
+        "week": 6,
+        "predicted": 0.2196,
+        "legacyPredicted": 0.2109,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424036",
+        "label": "Buffalo Bills @ Atlanta Falcons",
+        "week": 6,
+        "predicted": 0.2328,
+        "legacyPredicted": 0.2729,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424036",
+        "label": "Buffalo Bills @ Atlanta Falcons",
+        "week": 6,
+        "predicted": 0.2504,
+        "legacyPredicted": 0.3431,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424036",
+        "label": "Buffalo Bills @ Atlanta Falcons",
+        "week": 6,
+        "predicted": 0.2916,
+        "legacyPredicted": 0.243,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424037",
+        "label": "Chicago Bears @ Washington Commanders",
+        "week": 6,
+        "predicted": 0.2596,
+        "legacyPredicted": 0.2023,
+        "won": true,
+        "hits": 11
+      },
+      {
+        "gameId": "424037",
+        "label": "Chicago Bears @ Washington Commanders",
+        "week": 6,
+        "predicted": 0.2508,
+        "legacyPredicted": 0.2255,
+        "won": true,
+        "hits": 10
+      },
+      {
+        "gameId": "424037",
+        "label": "Chicago Bears @ Washington Commanders",
+        "week": 6,
+        "predicted": 0.2672,
+        "legacyPredicted": 0.2155,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424037",
+        "label": "Chicago Bears @ Washington Commanders",
+        "week": 6,
+        "predicted": 0.2484,
+        "legacyPredicted": 0.2117,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424066",
+        "label": "Baltimore Ravens @ Miami Dolphins",
+        "week": 9,
+        "predicted": 0.2364,
+        "legacyPredicted": 0.2447,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424066",
+        "label": "Baltimore Ravens @ Miami Dolphins",
+        "week": 9,
+        "predicted": 0.218,
+        "legacyPredicted": 0.2184,
+        "won": true,
+        "hits": 13
+      },
+      {
+        "gameId": "424066",
+        "label": "Baltimore Ravens @ Miami Dolphins",
+        "week": 9,
+        "predicted": 0.2052,
+        "legacyPredicted": 0.2142,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424066",
+        "label": "Baltimore Ravens @ Miami Dolphins",
+        "week": 9,
+        "predicted": 0.2884,
+        "legacyPredicted": 0.3079,
+        "won": true,
+        "hits": 15
+      },
+      {
+        "gameId": "424067",
+        "label": "Chicago Bears @ Cincinnati Bengals",
+        "week": 9,
+        "predicted": 0.2072,
+        "legacyPredicted": 0.2226,
+        "won": true,
+        "hits": 14
+      },
+      {
+        "gameId": "424067",
+        "label": "Chicago Bears @ Cincinnati Bengals",
+        "week": 9,
+        "predicted": 0.2488,
+        "legacyPredicted": 0.2785,
+        "won": false,
+        "hits": 14
+      },
+      {
+        "gameId": "424067",
+        "label": "Chicago Bears @ Cincinnati Bengals",
+        "week": 9,
+        "predicted": 0.2416,
+        "legacyPredicted": 0.2542,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424067",
+        "label": "Chicago Bears @ Cincinnati Bengals",
+        "week": 9,
+        "predicted": 0.27,
+        "legacyPredicted": 0.2037,
+        "won": true,
+        "hits": 16
+      },
+      {
+        "gameId": "424068",
+        "label": "Minnesota Vikings @ Detroit Lions",
+        "week": 9,
+        "predicted": 0.2632,
+        "legacyPredicted": 0.2329,
+        "won": true,
+        "hits": 11
+      },
+      {
+        "gameId": "424068",
+        "label": "Minnesota Vikings @ Detroit Lions",
+        "week": 9,
+        "predicted": 0.294,
+        "legacyPredicted": 0.2251,
+        "won": true,
+        "hits": 10
+      },
+      {
+        "gameId": "424068",
+        "label": "Minnesota Vikings @ Detroit Lions",
+        "week": 9,
+        "predicted": 0.2384,
+        "legacyPredicted": 0.1846,
+        "won": true,
+        "hits": 13
+      },
+      {
+        "gameId": "424068",
+        "label": "Minnesota Vikings @ Detroit Lions",
+        "week": 9,
+        "predicted": 0.2444,
+        "legacyPredicted": 0.3425,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424069",
+        "label": "Carolina Panthers @ Green Bay Packers",
+        "week": 9,
+        "predicted": 0.2324,
+        "legacyPredicted": 0.2946,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424069",
+        "label": "Carolina Panthers @ Green Bay Packers",
+        "week": 9,
+        "predicted": 0.2232,
+        "legacyPredicted": 0.1628,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424069",
+        "label": "Carolina Panthers @ Green Bay Packers",
+        "week": 9,
+        "predicted": 0.2668,
+        "legacyPredicted": 0.1792,
+        "won": true,
+        "hits": 9
+      },
+      {
+        "gameId": "424069",
+        "label": "Carolina Panthers @ Green Bay Packers",
+        "week": 9,
+        "predicted": 0.2548,
+        "legacyPredicted": 0.3041,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424070",
+        "label": "Los Angeles Chargers @ Tennessee Titans",
+        "week": 9,
+        "predicted": 0.2812,
+        "legacyPredicted": 0.2464,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424070",
+        "label": "Los Angeles Chargers @ Tennessee Titans",
+        "week": 9,
+        "predicted": 0.2456,
+        "legacyPredicted": 0.2939,
+        "won": false,
+        "hits": 14
+      },
+      {
+        "gameId": "424070",
+        "label": "Los Angeles Chargers @ Tennessee Titans",
+        "week": 9,
+        "predicted": 0.2464,
+        "legacyPredicted": 0.2744,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424070",
+        "label": "Los Angeles Chargers @ Tennessee Titans",
+        "week": 9,
+        "predicted": 0.238,
+        "legacyPredicted": 0.2226,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424071",
+        "label": "Atlanta Falcons @ New England Patriots",
+        "week": 9,
+        "predicted": 0.2292,
+        "legacyPredicted": 0.2826,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424071",
+        "label": "Atlanta Falcons @ New England Patriots",
+        "week": 9,
+        "predicted": 0.23,
+        "legacyPredicted": 0.2894,
+        "won": true,
+        "hits": 15
+      },
+      {
+        "gameId": "424071",
+        "label": "Atlanta Falcons @ New England Patriots",
+        "week": 9,
+        "predicted": 0.2208,
+        "legacyPredicted": 0.2354,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424071",
+        "label": "Atlanta Falcons @ New England Patriots",
+        "week": 9,
+        "predicted": 0.274,
+        "legacyPredicted": 0.2551,
+        "won": true,
+        "hits": 13
+      },
+      {
+        "gameId": "424072",
+        "label": "San Francisco 49ers @ New York Giants",
+        "week": 9,
+        "predicted": 0.2892,
+        "legacyPredicted": 0.3508,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424072",
+        "label": "San Francisco 49ers @ New York Giants",
+        "week": 9,
+        "predicted": 0.2708,
+        "legacyPredicted": 0.2188,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424072",
+        "label": "San Francisco 49ers @ New York Giants",
+        "week": 9,
+        "predicted": 0.2748,
+        "legacyPredicted": 0.2661,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424072",
+        "label": "San Francisco 49ers @ New York Giants",
+        "week": 9,
+        "predicted": 0.2628,
+        "legacyPredicted": 0.4014,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424073",
+        "label": "Indianapolis Colts @ Pittsburgh Steelers",
+        "week": 9,
+        "predicted": 0.2536,
+        "legacyPredicted": 0.2416,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424073",
+        "label": "Indianapolis Colts @ Pittsburgh Steelers",
+        "week": 9,
+        "predicted": 0.242,
+        "legacyPredicted": 0.277,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424073",
+        "label": "Indianapolis Colts @ Pittsburgh Steelers",
+        "week": 9,
+        "predicted": 0.2424,
+        "legacyPredicted": 0.2854,
+        "won": true,
+        "hits": 11
+      },
+      {
+        "gameId": "424073",
+        "label": "Indianapolis Colts @ Pittsburgh Steelers",
+        "week": 9,
+        "predicted": 0.2596,
+        "legacyPredicted": 0.2152,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424074",
+        "label": "Denver Broncos @ Houston Texans",
+        "week": 9,
+        "predicted": 0.2552,
+        "legacyPredicted": 0.2858,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424074",
+        "label": "Denver Broncos @ Houston Texans",
+        "week": 9,
+        "predicted": 0.2036,
+        "legacyPredicted": 0.2677,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424074",
+        "label": "Denver Broncos @ Houston Texans",
+        "week": 9,
+        "predicted": 0.2628,
+        "legacyPredicted": 0.183,
+        "won": true,
+        "hits": 10
+      },
+      {
+        "gameId": "424074",
+        "label": "Denver Broncos @ Houston Texans",
+        "week": 9,
+        "predicted": 0.2536,
+        "legacyPredicted": 0.1985,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424075",
+        "label": "Jacksonville Jaguars @ Las Vegas Raiders",
+        "week": 9,
+        "predicted": 0.264,
+        "legacyPredicted": 0.297,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424075",
+        "label": "Jacksonville Jaguars @ Las Vegas Raiders",
+        "week": 9,
+        "predicted": 0.2108,
+        "legacyPredicted": 0.22,
+        "won": true,
+        "hits": 13
+      },
+      {
+        "gameId": "424075",
+        "label": "Jacksonville Jaguars @ Las Vegas Raiders",
+        "week": 9,
+        "predicted": 0.2756,
+        "legacyPredicted": 0.2181,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424075",
+        "label": "Jacksonville Jaguars @ Las Vegas Raiders",
+        "week": 9,
+        "predicted": 0.2616,
+        "legacyPredicted": 0.2162,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424076",
+        "label": "New Orleans Saints @ Los Angeles Rams",
+        "week": 9,
+        "predicted": 0.2992,
+        "legacyPredicted": 0.2587,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424076",
+        "label": "New Orleans Saints @ Los Angeles Rams",
+        "week": 9,
+        "predicted": 0.2576,
+        "legacyPredicted": 0.2228,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424076",
+        "label": "New Orleans Saints @ Los Angeles Rams",
+        "week": 9,
+        "predicted": 0.2992,
+        "legacyPredicted": 0.254,
+        "won": true,
+        "hits": 13
+      },
+      {
+        "gameId": "424076",
+        "label": "New Orleans Saints @ Los Angeles Rams",
+        "week": 9,
+        "predicted": 0.2272,
+        "legacyPredicted": 0.2597,
+        "won": true,
+        "hits": 13
+      },
+      {
+        "gameId": "424077",
+        "label": "Kansas City Chiefs @ Buffalo Bills",
+        "week": 9,
+        "predicted": 0.2736,
+        "legacyPredicted": 0.396,
+        "won": false,
+        "hits": 13
+      },
+      {
+        "gameId": "424077",
+        "label": "Kansas City Chiefs @ Buffalo Bills",
+        "week": 9,
+        "predicted": 0.2048,
+        "legacyPredicted": 0.2509,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424077",
+        "label": "Kansas City Chiefs @ Buffalo Bills",
+        "week": 9,
+        "predicted": 0.204,
+        "legacyPredicted": 0.3003,
+        "won": true,
+        "hits": 15
+      },
+      {
+        "gameId": "424077",
+        "label": "Kansas City Chiefs @ Buffalo Bills",
+        "week": 9,
+        "predicted": 0.2648,
+        "legacyPredicted": 0.2283,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424078",
+        "label": "Seattle Seahawks @ Washington Commanders",
+        "week": 9,
+        "predicted": 0.278,
+        "legacyPredicted": 0.2794,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424078",
+        "label": "Seattle Seahawks @ Washington Commanders",
+        "week": 9,
+        "predicted": 0.2224,
+        "legacyPredicted": 0.2739,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424078",
+        "label": "Seattle Seahawks @ Washington Commanders",
+        "week": 9,
+        "predicted": 0.268,
+        "legacyPredicted": 0.2219,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424078",
+        "label": "Seattle Seahawks @ Washington Commanders",
+        "week": 9,
+        "predicted": 0.2928,
+        "legacyPredicted": 0.2671,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424079",
+        "label": "Arizona Cardinals @ Dallas Cowboys",
+        "week": 9,
+        "predicted": 0.2124,
+        "legacyPredicted": 0.2263,
+        "won": false,
+        "hits": 7
+      },
+      {
+        "gameId": "424079",
+        "label": "Arizona Cardinals @ Dallas Cowboys",
+        "week": 9,
+        "predicted": 0.2312,
+        "legacyPredicted": 0.2615,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424079",
+        "label": "Arizona Cardinals @ Dallas Cowboys",
+        "week": 9,
+        "predicted": 0.2684,
+        "legacyPredicted": 0.2415,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424079",
+        "label": "Arizona Cardinals @ Dallas Cowboys",
+        "week": 9,
+        "predicted": 0.2708,
+        "legacyPredicted": 0.284,
+        "won": true,
+        "hits": 13
+      },
+      {
+        "gameId": "424139",
+        "label": "Dallas Cowboys @ Detroit Lions",
+        "week": 14,
+        "predicted": 0.2804,
+        "legacyPredicted": 0.2769,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424139",
+        "label": "Dallas Cowboys @ Detroit Lions",
+        "week": 14,
+        "predicted": 0.2148,
+        "legacyPredicted": 0.2135,
+        "won": true,
+        "hits": 15
+      },
+      {
+        "gameId": "424139",
+        "label": "Dallas Cowboys @ Detroit Lions",
+        "week": 14,
+        "predicted": 0.244,
+        "legacyPredicted": 0.2334,
+        "won": false,
+        "hits": 13
+      },
+      {
+        "gameId": "424139",
+        "label": "Dallas Cowboys @ Detroit Lions",
+        "week": 14,
+        "predicted": 0.2632,
+        "legacyPredicted": 0.26,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424140",
+        "label": "Seattle Seahawks @ Atlanta Falcons",
+        "week": 14,
+        "predicted": 0.2728,
+        "legacyPredicted": 0.2479,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424140",
+        "label": "Seattle Seahawks @ Atlanta Falcons",
+        "week": 14,
+        "predicted": 0.2728,
+        "legacyPredicted": 0.2105,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424140",
+        "label": "Seattle Seahawks @ Atlanta Falcons",
+        "week": 14,
+        "predicted": 0.2472,
+        "legacyPredicted": 0.3306,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424140",
+        "label": "Seattle Seahawks @ Atlanta Falcons",
+        "week": 14,
+        "predicted": 0.2528,
+        "legacyPredicted": 0.3265,
+        "won": true,
+        "hits": 17
+      },
+      {
+        "gameId": "424141",
+        "label": "Tennessee Titans @ Cleveland Browns",
+        "week": 14,
+        "predicted": 0.2888,
+        "legacyPredicted": 0.3279,
+        "won": true,
+        "hits": 13
+      },
+      {
+        "gameId": "424141",
+        "label": "Tennessee Titans @ Cleveland Browns",
+        "week": 14,
+        "predicted": 0.2296,
+        "legacyPredicted": 0.2869,
+        "won": true,
+        "hits": 11
+      },
+      {
+        "gameId": "424141",
+        "label": "Tennessee Titans @ Cleveland Browns",
+        "week": 14,
+        "predicted": 0.2188,
+        "legacyPredicted": 0.2355,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424141",
+        "label": "Tennessee Titans @ Cleveland Browns",
+        "week": 14,
+        "predicted": 0.2108,
+        "legacyPredicted": 0.1804,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424143",
+        "label": "Washington Commanders @ Minnesota Vikings",
+        "week": 14,
+        "predicted": 0.2712,
+        "legacyPredicted": 0.2913,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424143",
+        "label": "Washington Commanders @ Minnesota Vikings",
+        "week": 14,
+        "predicted": 0.2876,
+        "legacyPredicted": 0.3063,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424143",
+        "label": "Washington Commanders @ Minnesota Vikings",
+        "week": 14,
+        "predicted": 0.2996,
+        "legacyPredicted": 0.3051,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424143",
+        "label": "Washington Commanders @ Minnesota Vikings",
+        "week": 14,
+        "predicted": 0.2104,
+        "legacyPredicted": 0.1774,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424144",
+        "label": "Miami Dolphins @ New York Jets",
+        "week": 14,
+        "predicted": 0.2192,
+        "legacyPredicted": 0.244,
+        "won": false,
+        "hits": 14
+      },
+      {
+        "gameId": "424144",
+        "label": "Miami Dolphins @ New York Jets",
+        "week": 14,
+        "predicted": 0.202,
+        "legacyPredicted": 0.2196,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424144",
+        "label": "Miami Dolphins @ New York Jets",
+        "week": 14,
+        "predicted": 0.2776,
+        "legacyPredicted": 0.2049,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424144",
+        "label": "Miami Dolphins @ New York Jets",
+        "week": 14,
+        "predicted": 0.226,
+        "legacyPredicted": 0.2602,
+        "won": false,
+        "hits": 13
+      },
+      {
+        "gameId": "424145",
+        "label": "New Orleans Saints @ Tampa Bay Buccaneers",
+        "week": 14,
+        "predicted": 0.2588,
+        "legacyPredicted": 0.354,
+        "won": true,
+        "hits": 11
+      },
+      {
+        "gameId": "424145",
+        "label": "New Orleans Saints @ Tampa Bay Buccaneers",
+        "week": 14,
+        "predicted": 0.2968,
+        "legacyPredicted": 0.2537,
+        "won": true,
+        "hits": 16
+      },
+      {
+        "gameId": "424145",
+        "label": "New Orleans Saints @ Tampa Bay Buccaneers",
+        "week": 14,
+        "predicted": 0.2012,
+        "legacyPredicted": 0.208,
+        "won": false,
+        "hits": 6
+      },
+      {
+        "gameId": "424145",
+        "label": "New Orleans Saints @ Tampa Bay Buccaneers",
+        "week": 14,
+        "predicted": 0.2928,
+        "legacyPredicted": 0.2764,
+        "won": true,
+        "hits": 10
+      },
+      {
+        "gameId": "424146",
+        "label": "Indianapolis Colts @ Jacksonville Jaguars",
+        "week": 14,
+        "predicted": 0.2052,
+        "legacyPredicted": 0.2205,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424146",
+        "label": "Indianapolis Colts @ Jacksonville Jaguars",
+        "week": 14,
+        "predicted": 0.2892,
+        "legacyPredicted": 0.2276,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424146",
+        "label": "Indianapolis Colts @ Jacksonville Jaguars",
+        "week": 14,
+        "predicted": 0.2936,
+        "legacyPredicted": 0.166,
+        "won": false,
+        "hits": 7
+      },
+      {
+        "gameId": "424146",
+        "label": "Indianapolis Colts @ Jacksonville Jaguars",
+        "week": 14,
+        "predicted": 0.2236,
+        "legacyPredicted": 0.248,
+        "won": false,
+        "hits": 5
+      },
+      {
+        "gameId": "424147",
+        "label": "Pittsburgh Steelers @ Baltimore Ravens",
+        "week": 14,
+        "predicted": 0.2548,
+        "legacyPredicted": 0.2259,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424147",
+        "label": "Pittsburgh Steelers @ Baltimore Ravens",
+        "week": 14,
+        "predicted": 0.2432,
+        "legacyPredicted": 0.2875,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424147",
+        "label": "Pittsburgh Steelers @ Baltimore Ravens",
+        "week": 14,
+        "predicted": 0.2732,
+        "legacyPredicted": 0.3558,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424147",
+        "label": "Pittsburgh Steelers @ Baltimore Ravens",
+        "week": 14,
+        "predicted": 0.2912,
+        "legacyPredicted": 0.3151,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424149",
+        "label": "Cincinnati Bengals @ Buffalo Bills",
+        "week": 14,
+        "predicted": 0.2808,
+        "legacyPredicted": 0.3262,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424149",
+        "label": "Cincinnati Bengals @ Buffalo Bills",
+        "week": 14,
+        "predicted": 0.2324,
+        "legacyPredicted": 0.2249,
+        "won": true,
+        "hits": 16
+      },
+      {
+        "gameId": "424149",
+        "label": "Cincinnati Bengals @ Buffalo Bills",
+        "week": 14,
+        "predicted": 0.228,
+        "legacyPredicted": 0.1973,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424149",
+        "label": "Cincinnati Bengals @ Buffalo Bills",
+        "week": 14,
+        "predicted": 0.2084,
+        "legacyPredicted": 0.1796,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424148",
+        "label": "Denver Broncos @ Las Vegas Raiders",
+        "week": 14,
+        "predicted": 0.2092,
+        "legacyPredicted": 0.1618,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424148",
+        "label": "Denver Broncos @ Las Vegas Raiders",
+        "week": 14,
+        "predicted": 0.2896,
+        "legacyPredicted": 0.3207,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424148",
+        "label": "Denver Broncos @ Las Vegas Raiders",
+        "week": 14,
+        "predicted": 0.2856,
+        "legacyPredicted": 0.3045,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424148",
+        "label": "Denver Broncos @ Las Vegas Raiders",
+        "week": 14,
+        "predicted": 0.2108,
+        "legacyPredicted": 0.2497,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424142",
+        "label": "Chicago Bears @ Green Bay Packers",
+        "week": 14,
+        "predicted": 0.2924,
+        "legacyPredicted": 0.2926,
+        "won": true,
+        "hits": 12
+      },
+      {
+        "gameId": "424142",
+        "label": "Chicago Bears @ Green Bay Packers",
+        "week": 14,
+        "predicted": 0.2536,
+        "legacyPredicted": 0.2006,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424142",
+        "label": "Chicago Bears @ Green Bay Packers",
+        "week": 14,
+        "predicted": 0.2168,
+        "legacyPredicted": 0.1396,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424142",
+        "label": "Chicago Bears @ Green Bay Packers",
+        "week": 14,
+        "predicted": 0.2052,
+        "legacyPredicted": 0.2475,
+        "won": false,
+        "hits": 14
+      },
+      {
+        "gameId": "424150",
+        "label": "Los Angeles Rams @ Arizona Cardinals",
+        "week": 14,
+        "predicted": 0.2536,
+        "legacyPredicted": 0.2167,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424150",
+        "label": "Los Angeles Rams @ Arizona Cardinals",
+        "week": 14,
+        "predicted": 0.2052,
+        "legacyPredicted": 0.236,
+        "won": false,
+        "hits": 8
+      },
+      {
+        "gameId": "424150",
+        "label": "Los Angeles Rams @ Arizona Cardinals",
+        "week": 14,
+        "predicted": 0.2276,
+        "legacyPredicted": 0.1963,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424150",
+        "label": "Los Angeles Rams @ Arizona Cardinals",
+        "week": 14,
+        "predicted": 0.27,
+        "legacyPredicted": 0.2654,
+        "won": true,
+        "hits": 11
+      },
+      {
+        "gameId": "424151",
+        "label": "Houston Texans @ Kansas City Chiefs",
+        "week": 14,
+        "predicted": 0.2912,
+        "legacyPredicted": 0.306,
+        "won": true,
+        "hits": 12
+      },
+      {
+        "gameId": "424151",
+        "label": "Houston Texans @ Kansas City Chiefs",
+        "week": 14,
+        "predicted": 0.2368,
+        "legacyPredicted": 0.3019,
+        "won": false,
+        "hits": 11
+      },
+      {
+        "gameId": "424151",
+        "label": "Houston Texans @ Kansas City Chiefs",
+        "week": 14,
+        "predicted": 0.2568,
+        "legacyPredicted": 0.1988,
+        "won": false,
+        "hits": 10
+      },
+      {
+        "gameId": "424151",
+        "label": "Houston Texans @ Kansas City Chiefs",
+        "week": 14,
+        "predicted": 0.2376,
+        "legacyPredicted": 0.2813,
+        "won": false,
+        "hits": 9
+      },
+      {
+        "gameId": "424152",
+        "label": "Philadelphia Eagles @ Los Angeles Chargers",
+        "week": 14,
+        "predicted": 0.2352,
+        "legacyPredicted": 0.2397,
+        "won": false,
+        "hits": 12
+      },
+      {
+        "gameId": "424152",
+        "label": "Philadelphia Eagles @ Los Angeles Chargers",
+        "week": 14,
+        "predicted": 0.2244,
+        "legacyPredicted": 0.2299,
+        "won": false,
+        "hits": 14
+      },
+      {
+        "gameId": "424152",
+        "label": "Philadelphia Eagles @ Los Angeles Chargers",
+        "week": 14,
+        "predicted": 0.26,
+        "legacyPredicted": 0.2401,
+        "won": false,
+        "hits": 13
+      },
+      {
+        "gameId": "424152",
+        "label": "Philadelphia Eagles @ Los Angeles Chargers",
+        "week": 14,
+        "predicted": 0.2972,
+        "legacyPredicted": 0.2268,
+        "won": false,
+        "hits": 9
+      }
+    ]
+  }
+}

@@ -24,13 +24,23 @@
  *   --tier3-sample N already existed; 8b ran it at the full 272 to lock Tier-3 thresholds.
  *
  *   npm run bingo:probe:nfl-flavor -- --season 2025 --sweep --tier4 --tier3-sample 272 --json
+ *
+ * Phase E of docs/prop-bingo-out-of-scope-followup-plan.md added one more, also opt-in:
+ *   --tier3-only     skip the /nfl/v1/team_stats and /nfl/v1/stats fetches (Tier 1/2/4 only) and
+ *                    walk plays alone. Re-measuring a Tier-3 base rate over the full 272-game
+ *                    season otherwise pays ~450 requests that cannot affect the answer.
+ *
+ *   npm run bingo:probe:nfl-flavor -- --season 2025 --tier3-only --tier3-sample 272 --json
+ *
+ * It also stopped mirroring the shipped safety/two-point attribution and started importing it —
+ * see `tabulateTier3`. That is why this script now runs under `--import tsx`.
  */
 
 const BASE_URL = process.env.BALLDONTLIE_API_BASE_URL ?? "https://api.balldontlie.io";
 const API_KEY = process.env.BALLDONTLIE_API_KEY;
 
 function parseArgs(argv) {
-  const args = { season: "2025", json: false, tier3Sample: 100, plays: true, sweep: false, tier4: false };
+  const args = { season: "2025", json: false, tier3Sample: 100, plays: true, sweep: false, tier4: false, tier3Only: false };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === "--season") {
       args.season = String(argv[i + 1] ?? "2025");
@@ -46,6 +56,13 @@ function parseArgs(argv) {
       args.sweep = true;
     } else if (argv[i] === "--tier4") {
       args.tier4 = true;
+    } else if (argv[i] === "--tier3-only") {
+      // Phase E: re-measuring a Tier-3 base rate needs the plays walk and nothing else. The
+      // /nfl/v1/stats and /nfl/v1/team_stats fetches are ~450 requests that feed Tier 1/2/4 only,
+      // and skipping them cannot move a Tier-3 number: the game list (and therefore the Tier-3
+      // stride sample) is built from /nfl/v1/games alone. Tier 1/2/4 report `null` in this mode.
+      args.tier3Only = true;
+      args.tier4 = false;
     }
   }
   return args;
@@ -525,7 +542,21 @@ function parseScoreValue(v) {
   return Number.isFinite(num) ? num : null;
 }
 
-function tabulateTier3(gamesWithPlays) {
+/**
+ * `graders` carries the two **shipped** predicates (`isNFLSafetyPlay`,
+ * `isNFLTwoPointConversionPlay`, imported from `lib/sportsBingo.ts` in `main`) rather than copies.
+ *
+ * Phase E of docs/prop-bingo-out-of-scope-followup-plan.md: this function used to score a bare
+ * `delta === 2` as a safety, full stop. Shipped grading stopped doing that in Phase 3 of the
+ * parent fix plan — a +2 is now attributed **by play type**, and a +2 that nothing types makes
+ * *both* `safety` and `two_point_conversion` unknown rather than picking one. The probe kept the
+ * old rule, so the committed `nfl_safety` base rate counted every separately-booked two-point try
+ * as a safety and over-stated the square, while `nfl_two_point_conversion` (old rule: `delta === 8`
+ * only) under-stated it by the same plays. The walk below is now a line-for-line mirror of
+ * `buildNFLPlayDerivedFacts`'s tri-state branch.
+ */
+function tabulateTier3(gamesWithPlays, graders) {
+  const { isNFLSafetyPlay, isNFLTwoPointConversionPlay } = graders;
   const MAX_POINTS_PER_PLAY = 8;
   const counters = {
     first_score_within_5min: 0,
@@ -537,6 +568,12 @@ function tabulateTier3(gamesWithPlays) {
     tied_after_halftime: 0,
     two_point_conversion: 0,
     safety: 0,
+    // Games where an unattributable +2 left the fact `null` — which the shipped grader settles as
+    // `void`, neither hit nor miss. Reported so the two rates above can be read as "hit out of all
+    // games" (what the board simulator prices) without hiding how much of the denominator is
+    // actually unresolvable.
+    two_point_conversion_ambiguous: 0,
+    safety_ambiguous: 0,
     td_from_inside_2yd: 0,
   };
   const n = gamesWithPlays.length;
@@ -589,8 +626,19 @@ function tabulateTier3(gamesWithPlays) {
         if (mm < 2) sawScoreInLast2MinFourth = true;
       }
 
-      if (delta === 2) sawSafety = true;
+      // Mirrors lib/sportsBingo.ts `buildNFLPlayDerivedFacts`. `false` -> not seen, `true` -> seen,
+      // `null` -> a +2 landed that neither predicate could attribute, so neither fact is knowable.
       if (delta === 8) sawTwoPointConversion = true;
+      if (delta === 2 && isNFLSafetyPlay(play)) {
+        sawSafety = true;
+      } else if (delta === 2) {
+        if (isNFLTwoPointConversionPlay(play)) {
+          sawTwoPointConversion = true;
+        } else {
+          if (sawSafety !== true) sawSafety = null;
+          if (sawTwoPointConversion !== true) sawTwoPointConversion = null;
+        }
+      }
       if (
         delta >= 6 &&
         typeof play.start_yards_to_endzone === "number" &&
@@ -621,8 +669,10 @@ function tabulateTier3(gamesWithPlays) {
     if (winnerTrailedAtAnyFourthQPoint) counters.winner_trailed_in_fourth += 1;
     if (sawScoreInFinalMinuteFirstHalf) counters.score_final_minute_first_half += 1;
     if (sawScoreInLast2MinFourth) counters.score_last_2min_fourth += 1;
-    if (sawSafety) counters.safety += 1;
-    if (sawTwoPointConversion) counters.two_point_conversion += 1;
+    if (sawSafety === true) counters.safety += 1;
+    else if (sawSafety === null) counters.safety_ambiguous += 1;
+    if (sawTwoPointConversion === true) counters.two_point_conversion += 1;
+    else if (sawTwoPointConversion === null) counters.two_point_conversion_ambiguous += 1;
     if (sawTdFromInside2yd) counters.td_from_inside_2yd += 1;
   }
 
@@ -880,17 +930,23 @@ async function main() {
   const games = allGames.filter((g) => !postseasonGameIds.has(g.id));
   const gameIds = games.map((g) => g.id);
 
-  console.error(`[probe] fetching team_stats for ${gameIds.length} regular-season games...`);
-  const teamStatsRows = await fetchTeamStatsForGames(gameIds);
-  console.error(`[probe] ${teamStatsRows.length} team_stats rows`);
+  let teamStatsRows = [];
+  let playerStatsRows = [];
+  if (args.tier3Only) {
+    console.error("[probe] --tier3-only: skipping team_stats and player stats (Tier 1/2/4 and Q2-Q4 report null)");
+  } else {
+    console.error(`[probe] fetching team_stats for ${gameIds.length} regular-season games...`);
+    teamStatsRows = await fetchTeamStatsForGames(gameIds);
+    console.error(`[probe] ${teamStatsRows.length} team_stats rows`);
 
-  console.error(`[probe] fetching player stats for ${gameIds.length} games (this is the slow part)...`);
-  const playerStatsRows = await fetchPlayerStatsForGames(gameIds);
-  console.error(`[probe] ${playerStatsRows.length} player stat rows`);
+    console.error(`[probe] fetching player stats for ${gameIds.length} games (this is the slow part)...`);
+    playerStatsRows = await fetchPlayerStatsForGames(gameIds);
+    console.error(`[probe] ${playerStatsRows.length} player stat rows`);
+  }
 
-  const q2 = checkSackOrientation(teamStatsRows, playerStatsRows);
-  const q3 = checkRedZoneSemantics(teamStatsRows, playerStatsRows);
-  const q4 = checkDefensiveRows(playerStatsRows);
+  const q2 = args.tier3Only ? null : checkSackOrientation(teamStatsRows, playerStatsRows);
+  const q3 = args.tier3Only ? null : checkRedZoneSemantics(teamStatsRows, playerStatsRows);
+  const q4 = args.tier3Only ? null : checkDefensiveRows(playerStatsRows);
 
   let q5 = null;
   let tier3 = null;
@@ -915,15 +971,19 @@ async function main() {
     }
     console.error(`[probe] ${gamesWithPlays.length} games with plays data, ${allPlays.length} total plays sampled`);
     q5 = checkPlaysFields(allPlays);
-    tier3 = tabulateTier3(gamesWithPlays);
+    // The shipped predicates, not a copy of them — a mirrored implementation here would measure
+    // the mirror rather than the grader that settles real squares (same discipline as
+    // scripts/validate-nfl-bingo-grading.cjs).
+    const { isNFLSafetyPlay, isNFLTwoPointConversionPlay } = await import("../lib/sportsBingo.ts");
+    tier3 = tabulateTier3(gamesWithPlays, { isNFLSafetyPlay, isNFLTwoPointConversionPlay });
     if (args.sweep) tier3Sweep = sweepTier3(gamesWithPlays);
     if (args.tier4) tier4 = tabulateTier4(gamesWithPlays, teamStatsRows);
   }
 
-  const tier1 = tabulateTier1(teamStatsRows);
-  const tier2 = tabulateTier2(playerStatsRows);
-  const tier1Sweep = args.sweep ? sweepTier1(teamStatsRows) : null;
-  const tier2Sweep = args.sweep ? sweepTier2(playerStatsRows) : null;
+  const tier1 = args.tier3Only ? null : tabulateTier1(teamStatsRows);
+  const tier2 = args.tier3Only ? null : tabulateTier2(playerStatsRows);
+  const tier1Sweep = args.sweep && !args.tier3Only ? sweepTier1(teamStatsRows) : null;
+  const tier2Sweep = args.sweep && !args.tier3Only ? sweepTier2(playerStatsRows) : null;
 
   const report = {
     season: args.season,
@@ -953,25 +1013,35 @@ async function main() {
     console.log(JSON.stringify(report, null, 2));
   } else {
     console.log(`\n=== Phase 8a probe — ${args.season} season, ${games.length} completed games ===\n`);
-    console.log("Q2 — sack orientation (team_stats.sacks vs summed player defensive_sacks):");
-    console.log(`  checked=${q2.checked} ambiguous=${q2.ambiguous} matchesOffenseTaken=${q2.matchesOffenseTaken} matchesDefenseMade=${q2.matchesDefenseMade}`);
-    console.log("Q3 — red_zone_scores semantics:");
-    console.log(`  checked=${q3.checked} neverExceedsTotalTds=${q3.redZoneScoresNeverExceedsTotalTds} violations=${q3.violations} attemptsGtScores=${q3.sawFgAttemptWithLowerScoresThanAttempts}`);
-    console.log("Q4 — defensive row population:");
-    console.log(JSON.stringify(q4, null, 2));
+    if (q2) {
+      console.log("Q2 — sack orientation (team_stats.sacks vs summed player defensive_sacks):");
+      console.log(`  checked=${q2.checked} ambiguous=${q2.ambiguous} matchesOffenseTaken=${q2.matchesOffenseTaken} matchesDefenseMade=${q2.matchesDefenseMade}`);
+    }
+    if (q3) {
+      console.log("Q3 — red_zone_scores semantics:");
+      console.log(`  checked=${q3.checked} neverExceedsTotalTds=${q3.redZoneScoresNeverExceedsTotalTds} violations=${q3.violations} attemptsGtScores=${q3.sawFgAttemptWithLowerScoresThanAttempts}`);
+    }
+    if (q4) {
+      console.log("Q4 — defensive row population:");
+      console.log(JSON.stringify(q4, null, 2));
+    }
     if (q5) {
       console.log("Q5 — plays fields on archived games:");
       console.log(JSON.stringify(q5, null, 2));
     }
-    console.log("\nTier 1 base rates:");
-    console.log(JSON.stringify(tier1, null, 2));
-    console.log("\nTier 2 base rates:");
-    console.log(JSON.stringify(tier2, null, 2));
+    if (tier1) {
+      console.log("\nTier 1 base rates:");
+      console.log(JSON.stringify(tier1, null, 2));
+    }
+    if (tier2) {
+      console.log("\nTier 2 base rates:");
+      console.log(JSON.stringify(tier2, null, 2));
+    }
     if (tier3) {
       console.log("\nTier 3 base rates (sampled):");
       console.log(JSON.stringify(tier3, null, 2));
     }
-    if (tier1Sweep) {
+    if (tier1Sweep || tier2Sweep || tier3Sweep) {
       console.log("\nThreshold sweeps — the threshold nearest each intended feel, per field:");
       for (const [group, sweep] of [
         ["tier1", tier1Sweep],
