@@ -196,3 +196,109 @@ describe("evaluateResolver — missing stats snapshot voids instead of missing (
     }
   });
 });
+
+// Phase 1 of docs/bingo-settlement-gap-cleanup-plan.md.
+//
+// `nba_player_bench_scores` collapsed two different conditions into one `miss`: a player who
+// started (a real, immediately-knowable miss) and a player simply absent from lineups yet (the
+// normal pre-tip-off state everywhere else in the file). This proves the split: absent-and-not-
+// completed now stays pending, absent-and-completed still misses, and starter still misses
+// immediately either way.
+describe("evaluateResolver — nba_player_bench_scores does not settle before tip-off (Phase 1)", () => {
+  const BENCH_RESOLVER: SportsBingoResolver = {
+    kind: "nba_player_bench_scores",
+    player: "Player One",
+    threshold: 10,
+  };
+
+  const baseLine: NBAPlayerStatLineLike = {
+    playerId: 1,
+    playerName: "Player One",
+    teamSide: "home",
+    pts: 15,
+    reb: 0,
+    ast: 0,
+    stl: 0,
+    blk: 0,
+    turnover: 0,
+    threes: 0,
+    fgm: 0,
+    fga: 0,
+    ftm: 0,
+    fta: 0,
+    oreb: 0,
+    dreb: 0,
+    minSeconds: 0,
+    plusMinus: 0,
+  };
+
+  function snapshotWith(lineupByPlayerId: Map<number, { starter: boolean; teamSide: "home" | "away" | null }>) {
+    return {
+      finalized: true,
+      lines: [baseLine],
+      byPlayerKey: new Map([["player one", [baseLine]]]),
+      lineupByPlayerId,
+      lineupDataAvailable: true,
+      firstHalfByPlayerId: new Map(),
+      maxQuarterAssistsByPlayerId: new Map(),
+      periodStatsAvailable: true,
+      homeMaxQuarterPoints: 0,
+      awayMaxQuarterPoints: 0,
+      quarterExtrasAvailable: true,
+      homeHalftimeScore: 40,
+      awayHalftimeScore: 45,
+      firstScoringTeam: "away",
+      homeHasTripleDouble: false,
+      awayHasTripleDouble: false,
+      anyHasTripleDouble: false,
+    } as any;
+  }
+
+  it("lineups present, player absent, game in progress -> pending (fails today with miss)", () => {
+    const snapshot = snapshotWith(new Map());
+    const result = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: false }, snapshot, null, null);
+    expect(result).toEqual({ status: "pending", resolved: false });
+  });
+
+  it("lineups present, player absent, completed -> miss, not void", () => {
+    const snapshot = snapshotWith(new Map());
+    const result = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: true }, snapshot, null, null);
+    expect(result).toEqual({ status: "miss", resolved: true });
+  });
+
+  it("player present and starter -> miss immediately, in progress or not", () => {
+    const snapshot = snapshotWith(new Map([[1, { starter: true, teamSide: "home" }]]));
+    const inProgress = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: false }, snapshot, null, null);
+    expect(inProgress).toEqual({ status: "miss", resolved: true });
+
+    const completed = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: true }, snapshot, null, null);
+    expect(completed).toEqual({ status: "miss", resolved: true });
+  });
+
+  it("player present, not starter, above threshold -> hit", () => {
+    const snapshot = snapshotWith(new Map([[1, { starter: false, teamSide: "home" }]]));
+    const result = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: true }, snapshot, null, null);
+    expect(result).toEqual({ status: "hit", resolved: true });
+  });
+});
+
+type NBAPlayerStatLineLike = {
+  playerId: number | null;
+  playerName: string;
+  teamSide: "home" | "away" | null;
+  pts: number;
+  reb: number;
+  ast: number;
+  stl: number;
+  blk: number;
+  turnover: number;
+  threes: number;
+  fgm: number;
+  fga: number;
+  ftm: number;
+  fta: number;
+  oreb: number;
+  dreb: number;
+  minSeconds: number;
+  plusMinus: number;
+};

@@ -9345,7 +9345,8 @@ export function evaluateResolver(
       const playerId = resolveSnapshotPlayerId(nbaStatsSnapshot, resolver.player);
       if (!playerId) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
       const lineup = nbaStatsSnapshot.lineupByPlayerId.get(playerId);
-      if (!lineup || lineup.starter) return { status: "miss", resolved: true };
+      if (lineup?.starter) return { status: "miss", resolved: true };
+      if (!lineup) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
       const line = findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player);
       if (!line) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
       if (line.pts >= resolver.threshold) return { status: "hit", resolved: true };
