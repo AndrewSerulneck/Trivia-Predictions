@@ -195,3 +195,80 @@ describe("MLB team-event rebalance (Phase 7)", () => {
     expect([...MLB_TEAM_EVENT_RUNG_TARGETS].sort((a, b) => a - b)).toEqual([0.35, 0.45, 0.55]);
   });
 });
+
+/**
+ * Phase 1 of docs/bingo-correctness-and-wnba-repair-plan.md — the home/away split.
+ *
+ * The home team doesn't bat in the bottom of the 9th when already ahead (~half of all games), so
+ * its event totals run structurally below the away team's. Before this phase every square priced
+ * off one pooled `leagueMean` regardless of side; these guard the split without hardcoding the
+ * measured numbers, so a re-measurement doesn't rewrite the tests — only a change in *direction*
+ * should ever fail these.
+ */
+describe("MLB team-event home/away split (Phase 1)", () => {
+  it("prices every measured event's home mean below its away mean", () => {
+    for (const event of MEASURED_EVENTS) {
+      const model = MLB_TEAM_EVENT_RATES[event];
+      expect(model.homeMean).toBeLessThan(model.awayMean);
+    }
+  });
+
+  it("a null side returns exactly the pooled leagueMean, no opponent data", () => {
+    for (const event of MEASURED_EVENTS) {
+      expect(predictMlbTeamEventRate(event, null, 0, null)).toBe(MLB_TEAM_EVENT_RATES[event].leagueMean);
+      expect(predictMlbTeamEventRate(event, null, 0)).toBe(MLB_TEAM_EVENT_RATES[event].leagueMean);
+    }
+  });
+
+  it("a null side matches the pooled leagueMean even with opponent data supplied", () => {
+    for (const event of MEASURED_EVENTS) {
+      const model = MLB_TEAM_EVENT_RATES[event];
+      expect(predictMlbTeamEventRate(event, model.opponentMean, 20, null)).toBeCloseTo(model.leagueMean, 6);
+    }
+  });
+
+  it("home and away, no opponent data, reproduce homeMean/awayMean exactly", () => {
+    for (const event of MEASURED_EVENTS) {
+      const model = MLB_TEAM_EVENT_RATES[event];
+      expect(predictMlbTeamEventRate(event, null, 0, "home")).toBe(model.homeMean);
+      expect(predictMlbTeamEventRate(event, null, 0, "away")).toBe(model.awayMean);
+    }
+  });
+
+  it("the side base rate and the opponent adjustment compose rather than one clobbering the other", () => {
+    // Same opponent input, different side: the two home/away outputs must differ by (roughly) the
+    // same gap as their unadjusted base means — the opponent slope is shared, only the base shifts.
+    for (const event of MEASURED_EVENTS) {
+      const model = MLB_TEAM_EVENT_RATES[event];
+      const tough = model.opponentMean + 2 * model.opponentSd;
+      const home = predictMlbTeamEventRate(event, tough, 20, "home");
+      const away = predictMlbTeamEventRate(event, tough, 20, "away");
+      expect(home).toBeLessThan(away);
+      expect(away - home).toBeCloseTo(model.awayMean - model.homeMean, 6);
+
+      // The opponent adjustment itself still moves the price up from the side's own base mean —
+      // it isn't discarded just because a side was supplied.
+      expect(home).toBeGreaterThan(model.homeMean);
+      expect(away).toBeGreaterThan(model.awayMean);
+    }
+  });
+
+  it("a generated MLB board's home and away rungs for the same event can differ in threshold", () => {
+    // Not every event necessarily rounds to a different integer threshold on every rung — the
+    // real claim is that the block as a whole is no longer side-blind. At least one event's rungs
+    // must actually differ between home and away.
+    let anyEventDiffers = false;
+    for (const event of MEASURED_EVENTS) {
+      const homeRungs = buildMlbTeamEventRungs(event, predictMlbTeamEventRate(event, null, 0, "home"));
+      const awayRungs = buildMlbTeamEventRungs(event, predictMlbTeamEventRate(event, null, 0, "away"));
+      expect(homeRungs.length).toBeGreaterThan(0);
+      expect(awayRungs.length).toBeGreaterThan(0);
+      const homeThresholds = homeRungs.map((rung) => rung.threshold).join(",");
+      const awayThresholds = awayRungs.map((rung) => rung.threshold).join(",");
+      if (homeThresholds !== awayThresholds) {
+        anyEventDiffers = true;
+      }
+    }
+    expect(anyEventDiffers).toBe(true);
+  });
+});

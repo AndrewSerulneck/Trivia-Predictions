@@ -22,7 +22,7 @@
  * The seventh, `quick_out_under_3_pitches`, is **not** a balldontlie field — it is derived from our
  * own webhook stream. It cannot be measured here at all, by design; see the plan's 7a note.
  *
- * ## Two views, because 7b needs both
+ * ## Three views, because Phase 1 of docs/bingo-correctness-and-wnba-repair-plan.md needs a third
  *
  *   1. **Marginal** — `P(X >= n)` for every event at every plausible threshold, across all
  *      team-games. This is what picks the league-default rung.
@@ -31,6 +31,17 @@
  *      the production builder uses) was low/mid/high. This is what says whether scaling a threshold
  *      per game is worth doing, and by how much. If the split bands are on top of each other, a
  *      per-game threshold is theatre.
+ *   3. **By home/away side** — the home team doesn't bat in the bottom of the 9th when already
+ *      ahead (roughly half of all games), so its event totals run structurally below the away
+ *      team's. This view is what showed that gap: mean, variance and `P(X >= n)` per event, split
+ *      by which side the team was on. Team-side is resolved with the same fuzzy `teamsMatch` the
+ *      rest of the MLB bingo path uses (reimplemented locally below, not imported, so this script
+ *      stays a plain node script with no TS build step) against `game.home_team_name` /
+ *      `game.away_team_name` — never `===`, since a mascot-only team name is a real, live case
+ *      elsewhere in this codebase and there is no reason MLB is exempt.
+ *
+ * Views 1 and 2 are kept byte-identical in shape to before this addition, so the archived
+ * docs/phase0-artifacts/mlb-event-rates-2026-08-17.json stays comparable.
  *
  * Usage (same convention as scripts/validate-nfl-bingo-grading.cjs):
  *   npm run bingo:measure:mlb
@@ -94,6 +105,46 @@ const SHIPPED_PROBABILITIES = {
 function num(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/**
+ * Mirrors `normalizeTeamKey` / `toMascotDisplayName` / `teamsMatch` in lib/sportsBingo.ts. Kept as
+ * a small local copy rather than an import: this script runs as plain `node`, no TS build step,
+ * and these three functions are self-contained (no other module dependency) so the duplication is
+ * cheap and the two copies are trivially diffable if lib/sportsBingo.ts's ever changes.
+ */
+function normalizeTeamKey(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "").trim();
+}
+
+function toMascotDisplayName(team) {
+  const trimmed = team.trim();
+  if (!trimmed) return trimmed;
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return trimmed;
+  const lastTwo = parts.slice(-2).join(" ");
+  const keepLastTwo = new Set([
+    "Red Sox",
+    "White Sox",
+    "Blue Jays",
+    "Trail Blazers",
+    "Golden Knights",
+    "Maple Leafs",
+  ]);
+  if (keepLastTwo.has(lastTwo)) return lastTwo;
+  return parts[parts.length - 1] ?? trimmed;
+}
+
+function getTeamIdentityKey(name) {
+  return normalizeTeamKey(toMascotDisplayName(name));
+}
+
+function teamsMatch(left, right) {
+  if (!left || !right) return false;
+  const normalizedLeft = normalizeTeamKey(left);
+  const normalizedRight = normalizeTeamKey(right);
+  if (normalizedLeft === normalizedRight) return true;
+  return getTeamIdentityKey(left) === getTeamIdentityKey(right);
 }
 
 function parseArgs(argv) {
@@ -171,6 +222,7 @@ async function main() {
   const teamGames = [];
   let gamesScanned = 0;
   let gamesWithoutStats = 0;
+  let gamesWithUnresolvedSide = 0;
 
   for (const date of dates) {
     const games = await fetchGamesOnDate(date);
@@ -211,6 +263,19 @@ async function main() {
         sides[1].allowed = sides[0].counts;
         sides[0].opponent = sides[1].teamName;
         sides[1].opponent = sides[0].teamName;
+
+        const homeTeamName = String(game.home_team_name ?? "").trim();
+        const awayTeamName = String(game.away_team_name ?? "").trim();
+        for (const entry of sides) {
+          if (teamsMatch(entry.teamName, homeTeamName)) {
+            entry.side = "home";
+          } else if (teamsMatch(entry.teamName, awayTeamName)) {
+            entry.side = "away";
+          } else {
+            entry.side = null;
+            gamesWithUnresolvedSide += 1;
+          }
+        }
         teamGames.push(...sides);
       }
     }
@@ -262,6 +327,37 @@ async function main() {
       shippedProbability: SHIPPED_PROBABILITIES[event],
       realizedAtShippedThreshold: atLeast[spec.shipped] ?? null,
     };
+  }
+
+  // --- View 3: split by home/away side ------------------------------------------------------
+  // The home team doesn't bat in the bottom of the 9th when already ahead (~half of all games),
+  // so its totals run structurally below the away team's — this is the split that shows it. Same
+  // per-event shape as marginal (mean/variance/atLeast), one object per side, so it stays directly
+  // comparable to view 1.
+  function describeSide(values, spec) {
+    if (values.length === 0) return null;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const variance =
+      values.length > 1 ? values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1) : 0;
+    const atLeast = {};
+    for (const threshold of spec.thresholds) {
+      atLeast[threshold] = Number((values.filter((value) => value >= threshold).length / values.length).toFixed(3));
+    }
+    return {
+      sample: values.length,
+      mean: Number(mean.toFixed(3)),
+      variance: Number(variance.toFixed(3)),
+      median: quantile(sorted, 0.5),
+      atLeast,
+    };
+  }
+
+  const bySide = {};
+  for (const [event, spec] of Object.entries(EVENTS)) {
+    const homeValues = teamGames.filter((entry) => entry.side === "home").map((entry) => entry.counts[event] ?? 0);
+    const awayValues = teamGames.filter((entry) => entry.side === "away").map((entry) => entry.counts[event] ?? 0);
+    bySide[event] = { home: describeSide(homeValues, spec), away: describeSide(awayValues, spec) };
   }
 
   // --- View 2: is there any per-game signal, and where does it come from? ---------------------
@@ -379,11 +475,12 @@ async function main() {
   const report = {
     generatedAt: new Date().toISOString(),
     window: { days: args.days, from: dates[0], to: dates[dates.length - 1] },
-    coverage: { gamesScanned, gamesWithoutStats, teamGames: teamGames.length },
+    coverage: { gamesScanned, gamesWithoutStats, teamGames: teamGames.length, gamesWithUnresolvedSide },
     note:
       "quick_out_under_3_pitches is not a balldontlie field and is deliberately absent — it can only be measured from our own webhook settlement history.",
     marginal,
     conditionalOnTrailingForm: conditionalReport,
+    bySide,
   };
 
   if (args.json) {
@@ -409,6 +506,18 @@ async function main() {
       .join("  ");
     console.log(`  ${event.padEnd(15)} ${cells}`);
     console.log(`  ${"".padEnd(15)} ${fit}   (var/mean ${row.varianceOverMean}, max err ${row.negativeBinomialMaxError})`);
+  }
+  console.log(`\nHome/away split (gamesWithUnresolvedSide: ${gamesWithUnresolvedSide}):`);
+  console.log("event            home mean   away mean   diff   home n   away n");
+  for (const [event, row] of Object.entries(bySide)) {
+    if (!row.home || !row.away) {
+      console.log(`${event.padEnd(15)} (insufficient side-resolved data)`);
+      continue;
+    }
+    const diff = row.home.mean - row.away.mean;
+    console.log(
+      `${event.padEnd(15)} ${String(row.home.mean).padStart(9)}   ${String(row.away.mean).padStart(9)}   ${diff.toFixed(3).padStart(6)}   ${String(row.home.sample).padStart(6)}   ${String(row.away.sample).padStart(6)}`
+    );
   }
   console.log("\nPer-game predictors — slope of actual count on each trailing rate (r = correlation):");
   console.log("event            own slope/r        opp slope/r        combined slope/r    best");

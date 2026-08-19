@@ -1081,3 +1081,147 @@ phase touches no PWA/manifest surface.
 - **The branch-merge question the plan's "Branch state" section raises is still open and still
   Andrew's** — worth re-raising once Phase 1 lands and this plan is fully done, since by then the
   branch will carry nine production-affecting changes never merged to `main`.
+
+---
+
+## Phase 1 — done, 2026-08-18 — the plan is now complete
+
+**Status: complete, all gates green, uncommitted on `restore/mlb-bingo-r1`.** Last phase in the
+plan's table. Landed independently of 2a/3/2b, as the plan said it could.
+
+### What changed
+
+**1a — the measurement script.** `scripts/measure-mlb-event-rates.cjs` gained a third view,
+`bySide`, alongside the existing marginal and conditional-on-trailing-form views (kept
+byte-identical in shape, per the plan's explicit ask). Team side is resolved per team-game by
+matching `entry.teamName` against the game row's top-level `home_team_name` / `away_team_name`
+(confirmed live this session — MLB's `/games` rows do carry those two flat string fields, exactly
+as the plan's 1a section named them) through a **locally reimplemented** `teamsMatch` /
+`normalizeTeamKey` / `toMascotDisplayName` — not imported from `lib/sportsBingo.ts`, since this
+script runs as plain `node` with no TS build step and those three functions are self-contained.
+Matched with `teamsMatch`, never `===`, per the plan's explicit instruction. Text-mode output
+gained a home/away summary table; JSON output gained `bySide` and `coverage.gamesWithUnresolvedSide`.
+
+**1b — re-measured, not hand-copied.** `npm run bingo:measure:mlb -- --days 120 --json`, live,
+this session: 3,102 team-games from 1,551 completed games (2026-04-21 .. 2026-08-17),
+`gamesWithUnresolvedSide: 0` — every team-game's side resolved. Archived at
+`docs/phase0-artifacts/mlb-event-rates-side-split-2026-08-18.json`. **The whole table in
+`lib/mlbTeamEventRates.ts` was replaced wholesale from this one run** — `leagueMean`, `variance`,
+and the four `opponent*` fields too, not just the two new `homeMean`/`awayMean` fields — per the
+plan's "do not hand-copy" rule: mixing this run's side ratio onto the old 2026-08-17 pooled numbers
+would have introduced a second error while fixing the first. All six events confirmed home mean <
+away mean, largest on strikeouts (home 8.006 vs away 8.635 — close to Phase 5's corroborating
+8.04/8.73, as expected from an independent live sample, not identical).
+
+**1c — the model.** `MlbTeamEventRateModel` gained `homeMean`/`awayMean`; `leagueMean` stays as the
+`teamSide: null` fallback, unchanged in meaning. **Variance was measured per side and left pooled**
+— every event's home/away variance sits within ~5% of the pooled figure (hit and walk are right at
+that boundary, ~5.0-5.3%; the rest are 1-4%), so per the plan's explicit instruction ("within ~5%
+of pooled, keep one variance... an unjustified constant is worse than none") `variance` stays one
+number shared by both sides. Recorded in the module comment, not silently decided.
+
+**1d — threaded through.** `predictMlbTeamEventRate` gained a fourth parameter,
+`teamSide: TeamSide | null = null` (default `null` so every untouched caller keeps calling it with
+three arguments and gets exactly today's pooled behavior — the compatibility escape hatch the plan
+asked for, verified by test, not just by inspection). Selects `homeMean` / `awayMean` /
+`leagueMean` as the base the opponent adjustment is applied on top of; the adjustment math itself
+is untouched. `TeamSide` is declared locally in `lib/mlbTeamEventRates.ts` (`"home" | "away"`)
+rather than imported from `lib/sportsBingo.ts`, to avoid a circular import — it's structurally
+identical to that module's own `TeamSide`, so every existing call site's value is assignable
+without a cast. Both call sites now pass their loop's `teamSide` variable:
+`buildMlbTeamEventCandidateTemplatesForBacktest` (line ~5454, confirmed already inside a
+`for (const teamSide of ["home", "away"])` loop, just wasn't threading it) and the live path in
+`buildMLBPlayerPropCandidatesFromRecentStats` (line ~5914, same shape). `buildMlbTeamEventRungs`
+needed no signature change, as the plan predicted — it only ever saw `expectedRate`.
+
+### Tests
+
+Extended `tests/lib.sportsBingo.mlb-event-rebalance.test.ts` with a new `describe` block, six
+tests, none hardcoding a measured number (assert direction/equality against `MLB_TEAM_EVENT_RATES`
+itself, so a re-measurement doesn't rewrite them, per the plan's explicit ask):
+
+1. Every measured event's `homeMean < awayMean`.
+2. `teamSide: null` (both explicit and via the default parameter) returns exactly `leagueMean`,
+   with no opponent data.
+3. `teamSide: null` still returns `leagueMean` even *with* opponent data supplied — the side gate
+   is checked before the opponent branch, not only in the no-opponent-data path.
+4. `teamSide: "home"` / `"away"` with no opponent data reproduce `homeMean` / `awayMean` exactly.
+5. The side base and the opponent adjustment compose: same tough-opponent input, home stays below
+   away by exactly the gap between their base means, and each side's price still moves *up* from
+   its own base mean rather than the opponent adjustment being discarded when a side is supplied.
+6. A generated board's home/away rungs for the same event can actually differ in threshold (at
+   least one of the six events must, board-wide — not every event necessarily rounds to a
+   different integer at every target).
+
+All 17 tests in the file pass (11 pre-existing + 6 new).
+
+**Proven failing first:** ran the new tests against the pre-Phase-1 three-argument
+`predictMlbTeamEventRate` and the pooled-only `MlbTeamEventRateModel` (by temporarily reverting
+`lib/mlbTeamEventRates.ts`) — TypeScript itself refuses to compile tests 1 and 4-6 (`homeMean`/
+`awayMean` don't exist on the type, `predictMlbTeamEventRate` doesn't accept a fourth argument),
+which is a real failure, not a vacuous one. Reapplied, reran, all green.
+
+### An incidental fixture repair, not a regression
+
+`tests/lib.sportsBingo.mlb-star-tilt.test.ts`'s `MLB_HOIST_SNAPSHOT` — a byte-identical-board
+regression pin from an unrelated earlier phase (`docs/prop-bingo-code-review-fix-plan.md`'s
+star-tier hoist) — failed once this landed. Board 1 of its 3-board seeded snapshot carries
+`mlb_webhook_team_event_at_least` squares whose thresholds are a direct function of
+`predictMlbTeamEventRate`'s output, which this phase intentionally changed. **This is the fix
+working, not a regression**: re-captured board 1's signature against the new code (boards 2 and 3
+came back byte-identical to before — their seeded draws never happened to select a team-event
+square whose threshold moved) and recorded why in a comment on the constant, so a future reader
+doesn't mistake it for hoist drift.
+
+### Verification
+
+```
+npm run bingo:calibrate:mlb -- --games 600 --boards 6 --json
+```
+
+Archived at `docs/phase0-artifacts/phase1-mlb-calibration-after-side-split-2026-08-18.json`,
+compared against the pre-Phase-1 baseline `docs/phase0-artifacts/phase5-mlb-calibration-2026-08-18.json`:
+
+| metric | before | after |
+|---|---|---|
+| `team_event:ALL:home` gap | -0.020 | -0.008 |
+| `team_event:ALL:away` gap | +0.016 | -0.008 |
+| `byTeamEvent` (pooled) gaps | -0.024 .. +0.013 | -0.032 .. +0.006 |
+
+**Success condition met**: both `team_event:ALL:home` and `team_event:ALL:away` moved toward zero
+(home's gap shrank from -0.020 to -0.008; away's flipped sign and shrank from +0.016 to -0.008 in
+magnitude). `byTeamEvent` (pooled) stayed in the same small range it was in before — no systematic
+degradation from the split, as the plan required. Per the plan's own caveat, board generation is
+random per trial, so this compares signs and magnitudes, not third decimals — both sides now sit
+closer to zero and closer to each other than before, which is the whole claim Phase 1 makes.
+
+### Gates run, all green
+
+```
+npx tsc --noEmit                      # clean
+npm run lint                          # clean
+npm run test:bingo-nfl                # 250 passed (unchanged — this phase touches no NFL code)
+npm run test:bingo-mlb                # 135 passed (was 129; +6 from the new describe block)
+npm run test                          # 1889 passed / 13 skipped / 0 failing (was 1883/13/0 after 2b)
+```
+`test:pwa-contract` not run — required for Phase 3 only per the plan's gate table, and this phase
+touches no PWA/manifest surface.
+
+### What's not done — do not treat Phase 1 as fully closed
+
+1. **Not committed.** Same pattern as every prior phase in this plan: `lib/mlbTeamEventRates.ts`,
+   `lib/sportsBingo.ts` (two call sites), `scripts/measure-mlb-event-rates.cjs`,
+   `tests/lib.sportsBingo.mlb-event-rebalance.test.ts`,
+   `tests/lib.sportsBingo.mlb-star-tilt.test.ts` (the incidental snapshot repair), this doc, and the
+   two new artifacts (`docs/phase0-artifacts/mlb-event-rates-side-split-2026-08-18.json`,
+   `docs/phase0-artifacts/phase1-mlb-calibration-after-side-split-2026-08-18.json`) all sit
+   uncommitted on top of 2a/3/2b (already committed) and the *other*, still-unrelated uncommitted
+   NFL-flavor work already on this branch. **Commit Phase 1 on its own**, don't `git add -A`.
+2. **This is the last phase — the whole plan is now done**, but three items flagged across the four
+   write-ups remain genuinely open, none blocking: Andrew's historical-rows backfill decision (2a),
+   the `nba_player_bench_scores` missing-`completed`-gate bug (2b), and Phase 3's two findings
+   (`/wnba/v1/season_averages/general` 404, the four-suppressed-families settlement gap).
+3. **The branch-merge question is now the only thing left.** After this phase's commit, the branch
+   carries nine production-affecting changes never merged to `main` — still Andrew's call, per the
+   plan's "Branch state" section, and worth raising now that nothing else in this plan is blocking
+   it.

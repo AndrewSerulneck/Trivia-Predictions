@@ -5451,7 +5451,7 @@ export function buildMlbTeamEventCandidateTemplatesForBacktest(game: SportsBingo
     });
 
     for (const eventKind of measuredTeamEvents) {
-      const expectedRate = predictMlbTeamEventRate(eventKind, null, 0);
+      const expectedRate = predictMlbTeamEventRate(eventKind, null, 0, teamSide);
       for (const rung of buildMlbTeamEventRungs(eventKind, expectedRate)) {
         const resolver: SportsBingoResolver = {
           kind: "mlb_webhook_team_event_at_least",
@@ -5914,7 +5914,8 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
         const expectedRate = predictMlbTeamEventRate(
           eventKind,
           opponentAllowed ? opponentAllowed.allowed[eventKind] : null,
-          opponentAllowed ? opponentAllowed.games : 0
+          opponentAllowed ? opponentAllowed.games : 0,
+          teamSide
         );
         for (const rung of buildMlbTeamEventRungs(eventKind, expectedRate)) {
           const resolver: SportsBingoResolver = {
