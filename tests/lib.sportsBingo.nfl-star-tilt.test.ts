@@ -357,8 +357,14 @@ describe("NFL star-tilted prop selection (Phase 9b)", () => {
     }, 60_000);
 
     it("stops tilting when the tier boosts are turned off — the effect is the boost, not the fixture", async () => {
+      // Deterministic PRNG, re-seeded identically for both runs below: the only thing that should
+      // differ between `boosted` and `flatWeights` is the env-driven tier weights, not which random
+      // draws happen to land. Without this, real `Math.random()` made the 0.08 margin an occasional
+      // flake (reproduced both failing and passing in isolation — see Phase F of
+      // docs/prop-bingo-out-of-scope-followup-plan.md).
       const runStarShare = async (): Promise<number> => {
         vi.resetModules();
+        installSeededRandom(0xf1a7);
         installFetchMock(FLAT_PROP_ROWS);
         const boards = await generateBoards(30);
         const totals = boards.reduce(
