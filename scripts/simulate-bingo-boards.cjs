@@ -35,6 +35,31 @@
  *   npm run bingo:simulate
  *   npm run bingo:simulate -- --sports basketball_wnba,baseball_mlb --boards 5
  *   npm run bingo:simulate -- --backtest --seasons 2025 --weeks 6,9,14 --boards 4
+ *   npm run bingo:simulate -- --backtest --sports baseball_mlb --days 10 --boards 4
+ *
+ * ## Phase 4b of docs/mlb-prop-bingo-validation-plan.md — MLB backtest
+ *
+ * MLB backtest mode is date-based (`--days`), not week-based — balldontlie has no week concept for
+ * MLB and a season is 162 games, not 18. Its retrodictive market is built from both teams' trailing
+ * **runs** scored/allowed (mirroring the NFL points-based one below) rather than points, and it
+ * settles through `gradeResolversAgainstCompletedMLBGame` — the same shipped grader Phase 1's
+ * validator drives, imported rather than mirrored, for the same reason.
+ *
+ * **Narrower than production, on two specific axes.** `buildSportsBingoBoardFromBallDontLieGame`
+ * only reaches the *synchronous* candidate path (core markets), which alone is too few resolver
+ * families for `generateBoardForGame` to arrange a feasible 24-square board — confirmed by running
+ * it: it throws "Unable to generate a bingo board for this game" every time. The team-event block
+ * (`mlb_webhook_team_event_at_least`) is added back in via
+ * `buildMlbTeamEventCandidateTemplatesForBacktest`, but **priced at the league mean only, with no
+ * per-game opponent adjustment** — the real adjustment needs the async `buildMlbTeamAllowedRates`
+ * pipeline (opposing pitching staff's trailing rate allowed), which is exactly the giant candidate
+ * pipeline this backtest deliberately does not re-implement. Settlement is still real: box-score
+ * totals fetched per game, graded through the shipped `gradeResolversAgainstCompletedMLBGame`. What
+ * stays genuinely out of reach is **player props** — no historical odds, the same limitation NFL
+ * has — and the webhook block's *live-stream delivery*, which has its own dedicated instrument,
+ * Phase 6 of the MLB plan, because it never touches this stats-snapshot path at all in production
+ * either. Read the realized rate as validating the grading path end to end on a plausible board, not
+ * as a calibration-grade replay of what a real card's exact pricing would show.
  */
 
 const BASE_URL = process.env.BALLDONTLIE_API_BASE_URL ?? "https://api.balldontlie.io";
@@ -44,6 +69,27 @@ const API_KEY = process.env.BALLDONTLIE_API_KEY;
 const NFL_LEAGUE_AVG_TEAM_POINTS = 22.5;
 const NFL_SHRINKAGE_GAMES = 3;
 const NFL_HOME_FIELD_POINTS = 1.5;
+
+/**
+ * MLB run-scoring priors for the retrodictive market, mirroring the NFL constants above but for
+ * runs. **Estimated from published single-game MLB run-distribution figures (team runs/game mean
+ * ~4.3, SD ~3), not measured against our own feed** — unlike lib/mlbTeamEventRates.ts's team-event
+ * model, which Phase 7 of prop-bingo-nfl-plan.md did measure over 1,138 team-games. A backtest is
+ * its own tripwire for these: `predicted` vs `realizedWinRate` in the output is where a badly wrong
+ * sigma would show up. Sharpening them into a measured constant, the same way Phase 7 did for the
+ * team-event block, is future work, not this phase's job.
+ */
+const MLB_LEAGUE_AVG_TEAM_RUNS = 4.3;
+const MLB_SHRINKAGE_GAMES = 12;
+const MLB_HOME_FIELD_RUNS = 0.15;
+const MLB_TEAM_TOTAL_SIGMA = 3.0;
+const MLB_MARGIN_SIGMA = 4.2;
+const MLB_GAME_TOTAL_SIGMA = Math.sqrt(Math.max(1, 4 * MLB_TEAM_TOTAL_SIGMA * MLB_TEAM_TOTAL_SIGMA - MLB_MARGIN_SIGMA * MLB_MARGIN_SIGMA));
+const MLB_MIN_TOTAL = 4;
+const MLB_MAX_TOTAL = 16;
+
+/** Resolver kinds a sport's synchronous candidate path can emit — used only to sanity-log board makeup. */
+const SUPPORTED_BACKTEST_SPORTS = new Set(["americanfootball_nfl", "baseball_mlb"]);
 
 /** Resolver kinds that need a `/nfl/v1/plays` walk to settle (Optional 3b). */
 const PLAY_DERIVED_KINDS = new Set([
@@ -85,8 +131,10 @@ function parseArgs(argv) {
   const args = {
     backtest: false,
     sports: ["basketball_nba", "basketball_wnba", "baseball_mlb", "americanfootball_nfl"],
+    sportsExplicit: false,
     seasons: ["2025"],
     weeks: ["6", "9", "14"],
+    days: 10,
     boards: 4,
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -95,6 +143,7 @@ function parseArgs(argv) {
       args.backtest = true;
     } else if (flag === "--sports") {
       args.sports = String(argv[i + 1] ?? "").split(",").filter(Boolean);
+      args.sportsExplicit = true;
       i += 1;
     } else if (flag === "--seasons") {
       args.seasons = String(argv[i + 1] ?? "").split(",").filter(Boolean);
@@ -102,12 +151,30 @@ function parseArgs(argv) {
     } else if (flag === "--weeks") {
       args.weeks = String(argv[i + 1] ?? "").split(",").filter(Boolean);
       i += 1;
+    } else if (flag === "--days") {
+      args.days = Number.parseInt(argv[i + 1], 10) || args.days;
+      i += 1;
     } else if (flag === "--boards") {
       args.boards = Number.parseInt(argv[i + 1], 10) || args.boards;
       i += 1;
     }
   }
   return args;
+}
+
+/** `dates[]` is the only param MLB/NFL `/games` endpoints honour — see the identical note in
+ * scripts/validate-mlb-bingo-grading.cjs and buildBallDontLieDatesQuery's comment in lib/sportsBingo.ts. */
+function dayKeysForWindow(fromMs, toMs) {
+  const days = [];
+  const cursor = new Date(fromMs);
+  cursor.setUTCHours(0, 0, 0, 0);
+  const end = new Date(toMs);
+  end.setUTCHours(0, 0, 0, 0);
+  while (cursor.getTime() <= end.getTime()) {
+    days.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return days;
 }
 
 async function fetchAll(path, params, maxPages = 8) {
@@ -232,7 +299,7 @@ async function runForward(args, sportsBingo) {
  * mean. This is the stand-in for a closing line; see the header note on why a real one is not
  * available. Nothing here reads the game being priced.
  */
-function buildPowerRatings(priorGames) {
+function buildNFLPowerRatings(priorGames) {
   const scored = new Map();
   const allowed = new Map();
   const played = new Map();
@@ -262,7 +329,7 @@ function buildPowerRatings(priorGames) {
   };
 }
 
-function retrodictiveConsensus(game, ratings) {
+function nflRetrodictiveConsensus(game, ratings) {
   const homeId = game.home_team?.id;
   const awayId = game.visitor_team?.id;
   if (!homeId || !awayId) return null;
@@ -279,7 +346,90 @@ function retrodictiveConsensus(game, ratings) {
   };
 }
 
-async function runBacktest(args, sportsBingo, sportsBingoOdds) {
+/**
+ * MLB counterpart of `buildNFLPowerRatings` — both teams' **runs** scored/allowed through the days
+ * *before* the one being backtested, shrunk toward the league mean. `game.home_team_data.runs` /
+ * `game.away_team_data.runs` are the verified MLB run fields (no `*_team_score` keys on this
+ * endpoint — see the plan's "Verified facts" table); reading `home_team_score` here the way the NFL
+ * ratings do would silently zero every game.
+ */
+function buildMLBPowerRatings(priorGames) {
+  const scored = new Map();
+  const allowed = new Map();
+  const played = new Map();
+
+  const add = (map, teamId, value) => map.set(teamId, (map.get(teamId) ?? 0) + value);
+
+  for (const game of priorGames) {
+    const homeId = game.home_team?.id;
+    const awayId = game.away_team?.id;
+    const homeRuns = Number(game.home_team_data?.runs);
+    const awayRuns = Number(game.away_team_data?.runs);
+    if (!homeId || !awayId || !Number.isFinite(homeRuns) || !Number.isFinite(awayRuns)) continue;
+    add(scored, homeId, homeRuns);
+    add(allowed, homeId, awayRuns);
+    add(played, homeId, 1);
+    add(scored, awayId, awayRuns);
+    add(allowed, awayId, homeRuns);
+    add(played, awayId, 1);
+  }
+
+  const shrink = (total, count) =>
+    (total + MLB_SHRINKAGE_GAMES * MLB_LEAGUE_AVG_TEAM_RUNS) / (count + MLB_SHRINKAGE_GAMES);
+
+  return {
+    scoredAvg: (teamId) => shrink(scored.get(teamId) ?? 0, played.get(teamId) ?? 0),
+    allowedAvg: (teamId) => shrink(allowed.get(teamId) ?? 0, played.get(teamId) ?? 0),
+  };
+}
+
+function mlbRetrodictiveConsensus(game, ratings) {
+  const homeId = game.home_team?.id;
+  const awayId = game.away_team?.id;
+  if (!homeId || !awayId) return null;
+
+  const homeExpected = (ratings.scoredAvg(homeId) + ratings.allowedAvg(awayId)) / 2 + MLB_HOME_FIELD_RUNS / 2;
+  const awayExpected = (ratings.scoredAvg(awayId) + ratings.allowedAvg(homeId)) / 2 - MLB_HOME_FIELD_RUNS / 2;
+
+  return {
+    homeSpread: -(homeExpected - awayExpected),
+    total: homeExpected + awayExpected,
+  };
+}
+
+/**
+ * A minimal market-model object exposing only the fields
+ * `buildGameAndCandidatesFromBallDontLie` reads for a non-NFL sport (`winProbability`, `homeSpread`,
+ * `total`, `favorite`, `marginMoreThan`, `gameTotalOver`, `teamTotalOver`) — the NFL-only fields
+ * (`marginAbsAtMost`, `leadsAtHalftime`, `overtime`, …) are gated behind
+ * `sportKey === "americanfootball_nfl"` in that function and are never read for MLB, so they are
+ * deliberately not implemented here. Reuses `normalCdf` from lib/sportsBingoOdds.ts rather than
+ * re-implementing the normal-approximation math, the one piece of this that *is* shipped grading
+ * logic.
+ */
+function buildMlbMarketModel(consensus, normalCdf) {
+  const homeSpread = Math.max(-6, Math.min(6, consensus.homeSpread));
+  const total = Math.max(MLB_MIN_TOTAL, Math.min(MLB_MAX_TOTAL, consensus.total));
+  const expectedHomeMargin = -homeSpread;
+  const impliedHomeTotal = total / 2 + expectedHomeMargin / 2;
+  const impliedAwayTotal = total - impliedHomeTotal;
+
+  const marginAbove = (threshold) => 1 - normalCdf(threshold, expectedHomeMargin, MLB_MARGIN_SIGMA);
+  const impliedTotalFor = (team) => (team === "home" ? impliedHomeTotal : impliedAwayTotal);
+
+  return {
+    homeSpread,
+    total,
+    favorite: homeSpread <= 0 ? "home" : "away",
+    winProbability: (team) => (team === "home" ? marginAbove(0) : 1 - marginAbove(0)),
+    marginMoreThan: (team, line) =>
+      team === "home" ? marginAbove(line) : normalCdf(-line, expectedHomeMargin, MLB_MARGIN_SIGMA),
+    gameTotalOver: (line) => 1 - normalCdf(line, total, MLB_GAME_TOTAL_SIGMA),
+    teamTotalOver: (team, line) => 1 - normalCdf(line, impliedTotalFor(team), MLB_TEAM_TOTAL_SIGMA),
+  };
+}
+
+async function runNFLBacktest(args, sportsBingo, sportsBingoOdds) {
   const perGame = [];
   const realizedFlags = [];
   const predicted = [];
@@ -299,7 +449,7 @@ async function runBacktest(args, sportsBingo, sportsBingoOdds) {
       const games = seasonGames.filter((row) => Number(row.week) === week);
 
       if (!ratingsByWeek.has(week)) {
-        ratingsByWeek.set(week, buildPowerRatings(priorGames.filter((row) => Number(row.week) < week)));
+        ratingsByWeek.set(week, buildNFLPowerRatings(priorGames.filter((row) => Number(row.week) < week)));
       }
       const ratings = ratingsByWeek.get(week);
 
@@ -307,7 +457,7 @@ async function runBacktest(args, sportsBingo, sportsBingoOdds) {
         const status = String(game.status ?? "");
         if (!/final/i.test(status)) continue;
 
-        const consensus = retrodictiveConsensus(game, ratings);
+        const consensus = nflRetrodictiveConsensus(game, ratings);
         if (!consensus) continue;
         const marketModel = sportsBingoOdds.buildNFLMarketModel(consensus);
 
@@ -404,6 +554,169 @@ async function runBacktest(args, sportsBingo, sportsBingoOdds) {
   };
 }
 
+/**
+ * Phase 4b of docs/mlb-prop-bingo-validation-plan.md — the MLB counterpart of `runNFLBacktest`.
+ * Date-based rather than week-based: `--days N` backtests every completed game in the trailing N
+ * days, with each game's retrodictive market built only from games strictly *before* its own date
+ * (leak-free, same discipline as the NFL loop's `week < current week` filter).
+ *
+ * Settles through `sportsBingo.gradeResolversAgainstCompletedMLBGame` — the shipped grader Phase 1's
+ * validator also drives via `evaluateResolver` directly. `teamEventTotals` is summed from
+ * `/mlb/v1/stats` using the same field mapping `scripts/measure-mlb-event-rates.cjs` measured the
+ * base rates against (hit -> hits, walk -> bb, hit_by_pitch -> hit_by_pitch, strikeout -> k,
+ * groundout -> ground_outs, flyout -> fly_outs); `quick_out_under_3_pitches` has no box-score column
+ * and is left unseeded, which the grader reads as a miss on a completed game — the same conservative
+ * reading production takes, not a backtest shortcut.
+ */
+const MLB_TEAM_EVENT_STAT_FIELDS = {
+  hit: "hits",
+  walk: "bb",
+  hit_by_pitch: "hit_by_pitch",
+  strikeout: "k",
+  groundout: "ground_outs",
+  flyout: "fly_outs",
+};
+async function runMLBBacktest(args, sportsBingo, sportsBingoOdds) {
+  const perGame = [];
+  const realizedFlags = [];
+  const predicted = [];
+  const legacyPredicted = [];
+  let ungradedSquares = 0;
+  let gradedSquares = 0;
+
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const gamesQuery = new URLSearchParams({ per_page: "100" });
+  for (const day of dayKeysForWindow(now - args.days * dayMs, now)) gamesQuery.append("dates[]", day);
+  const windowGames = await fetchAll("/mlb/v1/games", gamesQuery);
+
+  const finals = windowGames.filter((game) => String(game.status ?? "") === "STATUS_FINAL");
+  const dateKeyOf = (game) => String(game.date ?? "").slice(0, 10);
+  const ratingsByDate = new Map();
+
+  for (const game of finals) {
+    const gameDate = dateKeyOf(game);
+    if (!ratingsByDate.has(gameDate)) {
+      const priorGames = finals.filter((row) => dateKeyOf(row) < gameDate);
+      ratingsByDate.set(gameDate, buildMLBPowerRatings(priorGames));
+    }
+    const ratings = ratingsByDate.get(gameDate);
+
+    const consensus = mlbRetrodictiveConsensus(game, ratings);
+    if (!consensus) continue;
+    const marketModel = buildMlbMarketModel(consensus, sportsBingoOdds.normalCdf);
+
+    const homeTeam = game.home_team?.display_name ?? "";
+    const awayTeam = game.away_team?.display_name ?? "";
+    const homeScore = Number(game.home_team_data?.runs);
+    const awayScore = Number(game.away_team_data?.runs);
+    if (!Number.isFinite(homeScore) || !Number.isFinite(awayScore)) continue;
+
+    // Built once per game (not per trial/board) — every board trial for this game shares the same
+    // synthetic team-event candidate set, exactly as every trial shares the same core-market one.
+    const syntheticGame = { id: String(game.id), sportKey: "baseball_mlb", homeTeam, awayTeam, startsAt: game.date, gameLabel: "", isLocked: true };
+    const extraCandidates = sportsBingo.buildMlbTeamEventCandidateTemplatesForBacktest(syntheticGame);
+
+    const boards = [];
+    for (let trial = 0; trial < args.boards; trial += 1) {
+      const built = sportsBingo.buildSportsBingoBoardFromBallDontLieGame({
+        sportKey: "baseball_mlb",
+        row: game,
+        marketModel,
+        extraCandidates,
+      });
+      if (built) boards.push(built);
+    }
+    if (boards.length === 0) continue;
+
+    const needsTeamEventTotals = boards.some((board) =>
+      board.squares.some((square) => square.resolver.kind === "mlb_webhook_team_event_at_least")
+    );
+    const teamEventTotals = { home: {}, away: {} };
+    if (needsTeamEventTotals) {
+      const statsQuery = new URLSearchParams({ per_page: "100" });
+      statsQuery.append("game_ids[]", String(game.id));
+      const statRows = await fetchAll("/mlb/v1/stats", statsQuery, 4);
+      for (const row of statRows) {
+        const teamName = row.team?.display_name ?? row.team_name ?? "";
+        const side = teamName === homeTeam ? "home" : teamName === awayTeam ? "away" : null;
+        if (!side) continue;
+        for (const [event, field] of Object.entries(MLB_TEAM_EVENT_STAT_FIELDS)) {
+          const value = Number(row[field]);
+          if (!Number.isFinite(value)) continue;
+          teamEventTotals[side][event] = (teamEventTotals[side][event] ?? 0) + value;
+        }
+      }
+    }
+
+    for (const board of boards) {
+      const playable = board.squares.filter((square) => !square.isFree);
+      const graded = sportsBingo.gradeResolversAgainstCompletedMLBGame({
+        gameId: String(game.id),
+        homeTeam,
+        awayTeam,
+        homeScore,
+        awayScore,
+        teamEventTotals,
+        resolvers: playable.map((square) => square.resolver),
+      });
+
+      const marks = playable.map((square, index) => {
+        const outcome = graded[index];
+        if (outcome.status === "pending" || outcome.status === "void") ungradedSquares += 1;
+        else gradedSquares += 1;
+        return { index: square.index, hit: outcome.status === "hit" };
+      });
+
+      const won = sportsBingo.boardStatusesMakeALine(marks);
+      const legacy = legacyIndependentEstimate(board.squares);
+      realizedFlags.push(won ? 1 : 0);
+      predicted.push(board.boardProbability);
+      legacyPredicted.push(legacy);
+      perGame.push({
+        gameId: String(game.id),
+        label: `${awayTeam} @ ${homeTeam}`,
+        date: gameDate,
+        predicted: Number(board.boardProbability.toFixed(4)),
+        legacyPredicted: Number(legacy.toFixed(4)),
+        won,
+        hits: marks.filter((mark) => mark.hit).length,
+      });
+    }
+  }
+
+  const realizedRate = realizedFlags.length > 0 ? realizedFlags.reduce((a, b) => a + b, 0) / realizedFlags.length : null;
+
+  return {
+    scopeNote:
+      "core markets plus a league-mean-priced (not opponent-adjusted) mlb_webhook_team_event_at_least " +
+      "block, settled against real box scores; player props are not backtestable here (no historical " +
+      "odds) — see the module header",
+    boards: realizedFlags.length,
+    realizedWinRate: realizedRate === null ? null : Number(realizedRate.toFixed(4)),
+    predicted: summarize(predicted),
+    legacyIndependentPredicted: summarize(legacyPredicted),
+    ungradedSquareShare:
+      gradedSquares + ungradedSquares > 0
+        ? Number((ungradedSquares / (gradedSquares + ungradedSquares)).toFixed(4))
+        : null,
+    perGame,
+  };
+}
+
+/** Dispatches to the per-sport backtest implementation for every requested sport that has one. */
+async function runBacktest(args, sportsBingo, sportsBingoOdds) {
+  const targets = args.sports.filter((sportKey) => SUPPORTED_BACKTEST_SPORTS.has(sportKey));
+  const results = {};
+  if (targets.includes("americanfootball_nfl")) {
+    results.americanfootball_nfl = await runNFLBacktest(args, sportsBingo, sportsBingoOdds);
+  }
+  if (targets.includes("baseball_mlb")) {
+    results.baseball_mlb = await runMLBBacktest(args, sportsBingo, sportsBingoOdds);
+  }
+  return results;
+}
+
 // --- entry ---------------------------------------------------------------------------------------
 
 async function main() {
@@ -431,8 +744,24 @@ async function main() {
     if (!API_KEY) {
       throw new Error("BALLDONTLIE_API_KEY is required for backtest mode.");
     }
+    // Backtest mode implements NFL (week-based) and, as of Phase 4b of the MLB validation plan,
+    // MLB (date-based). It used to silently accept any --sports value (including the forward-mode
+    // default, which covers all four leagues) and answer about NFL anyway regardless of what was
+    // asked for — e.g. an "MLB" run actually reporting Eagles @ Giants. Refuse loudly instead of
+    // lying about which league was priced. Only enforced when --sports was explicitly passed, so
+    // plain `--backtest` (no --sports) keeps working and silently runs only the implemented subset
+    // of the forward-mode default (NFL + MLB; NBA/WNBA have no backtest implementation yet).
+    if (args.sportsExplicit) {
+      const unsupported = args.sports.filter((sportKey) => !SUPPORTED_BACKTEST_SPORTS.has(sportKey));
+      if (unsupported.length > 0) {
+        throw new Error(
+          `--backtest only implements ${[...SUPPORTED_BACKTEST_SPORTS].join(", ")}; got unsupported --sports value(s): ${unsupported.join(", ")}`
+        );
+      }
+    }
     payload.seasons = args.seasons;
     payload.weeks = args.weeks;
+    payload.days = args.days;
     payload.result = await runBacktest(args, sportsBingo, sportsBingoOdds);
   } else {
     payload.sports = args.sports;
