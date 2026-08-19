@@ -35,10 +35,13 @@ const historicalStatRow = (playerId: number, teamId: number, gameId: number) => 
   min: "32:00",
 });
 
+const fetchCallLog = vi.hoisted(() => [] as string[]);
+
 vi.mock("@/lib/ballDontLieClient", () => ({
   isBallDontLieConfigured: () => true,
   fetchBallDontLieJson: async () => ({}),
   fetchBallDontLieList: async (path: string) => {
+    fetchCallLog.push(path);
     if (path.endsWith("/games")) {
       return [
         {
@@ -278,5 +281,41 @@ describe("3d: the four data-unavailable families are suppressed for WNBA generat
     for (const kind of SUPPRESSED_KINDS) {
       expect(kinds.has(kind)).toBe(true);
     }
+  });
+});
+
+/**
+ * Phase 3 of docs/bingo-settlement-gap-cleanup-plan.md — WNBA's `/season_averages/general` 404s at
+ * every season_type candidate (re-probed live 2026-08-18, no path variant exists). Skip the whole
+ * block for WNBA rather than spend three guaranteed-dead requests; NBA's path is untouched.
+ */
+describe("3 (settlement-gap-cleanup): WNBA candidate build skips the dead season_averages call", () => {
+  const gameFor = (sportKey: string, id: string) =>
+    ({
+      id,
+      sportKey,
+      homeTeam: "Home Team",
+      awayTeam: "Away Team",
+      startsAt: "2026-08-12T02:00:00.000Z",
+      gameLabel: "Home Team vs Away Team",
+      isLocked: false,
+    }) as Parameters<typeof buildNBAAchievementCandidates>[0];
+
+  it("no season_averages request is issued for a WNBA candidate build", async () => {
+    fetchCallLog.length = 0;
+    await buildNBAAchievementCandidates(gameFor("basketball_wnba", "500001-wnba-sa"), []);
+    expect(fetchCallLog.some((path) => path.endsWith("/season_averages/general"))).toBe(false);
+  });
+
+  it("NBA still issues the season_averages request and consumes the rows", async () => {
+    fetchCallLog.length = 0;
+    await buildNBAAchievementCandidates(gameFor("basketball_nba", "500001-nba-sa"), []);
+    expect(fetchCallLog.some((path) => path.endsWith("/season_averages/general"))).toBe(true);
+  });
+
+  it("WNBA candidate generation still produces player squares, proving the historical walk (not season averages) feeds them", async () => {
+    const candidates = await buildNBAAchievementCandidates(gameFor("basketball_wnba", "500001-wnba-sa2"), []);
+    const playerKinds = candidates.filter((c) => c.resolver.kind.startsWith("nba_player_"));
+    expect(playerKinds.length).toBeGreaterThan(0);
   });
 });

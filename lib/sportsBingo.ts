@@ -4935,24 +4935,28 @@ async function getNBAPlayerProfilesForGame(game: SportsBingoGame): Promise<NBAPl
       return [];
     }
     
-    const seasonTypeCandidates: Array<"regular" | "playoffs" | ""> = ["regular", "playoffs", ""];
+    // balldontlie serves no WNBA season-averages endpoint at any path (re-probed 2026-08-18,
+    // all three season_type candidates 404) — skip rather than spend three guaranteed-dead requests.
     let seasonRows: Record<string, unknown>[] = [];
-    for (const seasonType of seasonTypeCandidates) {
-      const seasonQuery = new URLSearchParams({
-        season: String(season),
-        type: "base",
-        per_page: "100",
-      });
-      if (seasonType) {
-        seasonQuery.set("season_type", seasonType);
-      }
-      for (const id of playerIds) {
-        seasonQuery.append("player_ids[]", String(id));
-      }
-      const rows = await fetchBallDontLieList<Record<string, unknown>>(`${basketballApiPrefix}/season_averages/general`, seasonQuery);
-      if (rows.length > 0) {
-        seasonRows = rows;
-        break;
+    if (!wnbaMode) {
+      const seasonTypeCandidates: Array<"regular" | "playoffs" | ""> = ["regular", "playoffs", ""];
+      for (const seasonType of seasonTypeCandidates) {
+        const seasonQuery = new URLSearchParams({
+          season: String(season),
+          type: "base",
+          per_page: "100",
+        });
+        if (seasonType) {
+          seasonQuery.set("season_type", seasonType);
+        }
+        for (const id of playerIds) {
+          seasonQuery.append("player_ids[]", String(id));
+        }
+        const rows = await fetchBallDontLieList<Record<string, unknown>>(`${basketballApiPrefix}/season_averages/general`, seasonQuery);
+        if (rows.length > 0) {
+          seasonRows = rows;
+          break;
+        }
       }
     }
     const byPlayerId = new Map<number, Record<string, unknown>>();
