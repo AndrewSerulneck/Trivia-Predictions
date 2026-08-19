@@ -1,9 +1,12 @@
 import "server-only";
+import { intFromEnv } from "@/lib/envNumber";
 
 const THESPORTSDB_API_BASE_URL = process.env.THESPORTSDB_API_BASE_URL?.trim() || "https://www.thesportsdb.com/api/v1/json";
 const THESPORTSDB_API_KEY = process.env.THESPORTSDB_API_KEY?.trim() || "";
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME?.trim() || "";
-const HEADSHOT_SIZE = Number.parseInt(process.env.HEADSHOT_SIZE?.trim() || "200", 10) || 200;
+// A 0px headshot is meaningless, so treat it the same as garbage input rather than inventing a
+// 0px-image semantic — Phase A of docs/prop-bingo-out-of-scope-followup-plan.md.
+const HEADSHOT_SIZE = Math.max(1, intFromEnv(process.env.HEADSHOT_SIZE?.trim(), 200));
 
 type TheSportsDbPlayer = {
   strPlayer?: string | null;

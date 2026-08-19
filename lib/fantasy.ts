@@ -5,6 +5,7 @@ import { apiSportsGet } from "@/lib/apisports";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
 import { fetchNBAHeadshot as fetchTheSportsDbHeadshot } from "@/lib/thesportsdb";
+import { intFromEnv } from "@/lib/envNumber";
 
 const APISPORTS_NBA_BASE_URL = process.env.APISPORTS_NBA_BASE_URL?.trim() ?? "https://v2.nba.api-sports.io";
 const APISPORTS_API_KEY = process.env.APISPORTS_API_KEY?.trim() ?? "";
@@ -15,7 +16,7 @@ const FANTASY_MLB_LINEUP_SIZE = 6;
 const FANTASY_MLB_PITCHER_COUNT = 3;
 const FANTASY_MLB_HITTER_COUNT = 3;
 const FANTASY_MAX_LINEUP_SIZE = Math.max(FANTASY_STANDARD_LINEUP_SIZE, FANTASY_MLB_LINEUP_SIZE);
-const FANTASY_POINTS_MULTIPLIER = Math.max(1, Number.parseInt(process.env.FANTASY_POINTS_MULTIPLIER ?? "1", 10) || 1);
+const FANTASY_POINTS_MULTIPLIER = Math.max(1, intFromEnv(process.env.FANTASY_POINTS_MULTIPLIER, 1));
 // Keep this high enough to include full-day NBA slates across multiple games.
 const FANTASY_PLAYER_POOL_LIMIT = 200;
 const FANTASY_LIVE_STATS_LOOKBACK_MS = 48 * 60 * 60 * 1000;
