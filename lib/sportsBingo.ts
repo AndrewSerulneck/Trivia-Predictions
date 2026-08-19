@@ -2592,21 +2592,32 @@ export async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): P
       return rememberNull();
     }
 
-    const lineupsQuery = new URLSearchParams({ per_page: "100" });
-    lineupsQuery.append("game_ids[]", String(matchedGame.id));
-    const lineupsFailure: BallDontLieFailureBox = { failed: false };
-    const lineups = await fetchBallDontLieList<BallDontLieLineup>(`${basketballApiPrefix}/lineups`, lineupsQuery, {
-      failure: lineupsFailure,
-    });
-    if (lineupsFailure.failed) anyFetchFailed = true;
+    // `/wnba/v1/lineups` 404s on every WNBA game — no starter data exists for the league at all
+    // (verified live 2026-08-18). That is structural, not a fetch failure: skip the request rather
+    // than making a guaranteed-dead call, and say so directly via `lineupDataAvailable: false`
+    // instead of discovering it by 404 accident. Must not set `anyFetchFailed` — a skipped fetch is
+    // not a failed one, and WNBA snapshots must keep the full cache TTL, not the failure TTL.
     const lineupByPlayerId = new Map<number, { starter: boolean; teamSide: TeamSide | null }>();
-    for (const row of lineups) {
-      const playerId = Number(row.player?.id ?? 0);
-      if (!Number.isFinite(playerId) || playerId <= 0) {
-        continue;
+    let lineupDataAvailable = true;
+    if (wnbaMode) {
+      lineupDataAvailable = false;
+    } else {
+      const lineupsQuery = new URLSearchParams({ per_page: "100" });
+      lineupsQuery.append("game_ids[]", String(matchedGame.id));
+      const lineupsFailure: BallDontLieFailureBox = { failed: false };
+      const lineups = await fetchBallDontLieList<BallDontLieLineup>(`${basketballApiPrefix}/lineups`, lineupsQuery, {
+        failure: lineupsFailure,
+      });
+      if (lineupsFailure.failed) anyFetchFailed = true;
+      lineupDataAvailable = !lineupsFailure.failed;
+      for (const row of lineups) {
+        const playerId = Number(row.player?.id ?? 0);
+        if (!Number.isFinite(playerId) || playerId <= 0) {
+          continue;
+        }
+        const teamSide = inferCardTeamSide(card, getTeamDisplayName(row.team));
+        lineupByPlayerId.set(playerId, { starter: row.starter === true, teamSide });
       }
-      const teamSide = inferCardTeamSide(card, getTeamDisplayName(row.team));
-      lineupByPlayerId.set(playerId, { starter: row.starter === true, teamSide });
     }
 
     // `/plays` takes a scalar `game_id`, not `game_ids[]` — the latter 400s for both leagues
@@ -2628,15 +2639,16 @@ export async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): P
 
     const firstHalfByPlayerId = new Map<number, { pts: number; ast: number; stl: number }>();
     const maxQuarterAssistsByPlayerId = new Map<number, number>();
-    let periodStatsAvailable = true;
     // WNBA's box-score endpoint ignores `period` entirely (verified live 2026-08-18: period=1 and
     // period=0 return identical rows), so this per-period player walk would silently write
     // full-game totals into every quarter. There's no substitute source, so these two maps stay
-    // empty for WNBA — buildNBAAchievementCandidates (3d) never generates the four families that
-    // read them, so this is a scoped no-op, not a data loss. `periodStatsAvailable` stays `true`
-    // here regardless — this is "not attempted by design," a different condition from the fetch
-    // failure it otherwise tracks, and the WNBA-absence gap this leaves is a known, flagged one
-    // (see Phase 3's "new findings" write-up), not this phase's to fix.
+    // empty for WNBA and `periodStatsAvailable` is `false` — no gradeable per-period data exists
+    // for this league, structurally, not because a fetch failed. The three families that read
+    // these maps (`nba_player_points_first_half_at_least`, `nba_player_assists_in_any_quarter_at_least`,
+    // `nba_player_steals_first_half_at_least`) gate on this flag and settle `void`, not `miss`, as a
+    // result. `buildNBAAchievementCandidates` (Phase 3d) also never generates these families onto a
+    // WNBA board — this is the belt-and-braces settlement-side half of that same defense.
+    let periodStatsAvailable = !wnbaMode;
     if (!wnbaMode) {
       for (const period of [1, 2, 3, 4]) {
         const periodQuery = new URLSearchParams({ per_page: "100", period: String(period) });
@@ -2667,7 +2679,7 @@ export async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): P
 
     const snapshot = buildNBAGamePlayerStatsSnapshot(card, matchedGame, stats, {
       lineupByPlayerId,
-      lineupDataAvailable: !lineupsFailure.failed,
+      lineupDataAvailable,
       firstScoringTeam,
       homeHalftimeScore,
       awayHalftimeScore,

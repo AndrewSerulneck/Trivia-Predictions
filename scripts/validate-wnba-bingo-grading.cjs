@@ -204,7 +204,15 @@ async function validateLeague(label, prefix, { days, limit }, evaluateResolver, 
       failures.push(`play-walk underfilled game ${game.id}: ${JSON.stringify(extras)}`);
     }
 
-    const snapshot = buildNBAGamePlayerStatsSnapshot(card, matchedGame, stats, extras);
+    // Phase 2 of docs/bingo-settlement-gap-cleanup-plan.md: getNBAGamePlayerStatsSnapshot now sets
+    // both flags false for WNBA (structural, not a fetch failure — no lineups endpoint, no
+    // gradeable per-period split). Mirror that decision here so the suppressed-family diagnostic
+    // below actually exercises the shipped fix instead of the pre-Phase-2 defaults.
+    const snapshot = buildNBAGamePlayerStatsSnapshot(card, matchedGame, stats, {
+      ...extras,
+      lineupDataAvailable: label !== "wnba",
+      periodStatsAvailable: label !== "wnba",
+    });
 
     const rawHome = Number(game.home_team_score ?? game.home_score);
     const rawAway = Number(game.visitor_team_score ?? game.away_score);

@@ -71,8 +71,14 @@ const failing = new Set<string>();
 /** Like `failing`, but returns `[]` without setting the failure box — a real "provider said empty". */
 const emptying = new Set<string>();
 const callCounts = new Map<string, number>();
+/**
+ * `/player_stats` is WNBA's box-score path (`basketballStatsPathForSportKey`); it does not end
+ * with `/stats` (it ends with `/player_stats`), so it needs its own suffix entry — matched before
+ * `/stats` in every `.find()` below so a WNBA path never falls through to the wrong bucket.
+ */
+const SUFFIXES = ["/games", "/player_stats", "/stats", "/lineups", "/plays"];
 const countCall = (path: string) => {
-  for (const suffix of ["/games", "/stats", "/lineups", "/plays"]) {
+  for (const suffix of SUFFIXES) {
     if (path.endsWith(suffix)) {
       callCounts.set(suffix, (callCounts.get(suffix) ?? 0) + 1);
       return;
@@ -85,7 +91,7 @@ vi.mock("@/lib/ballDontLieClient", () => ({
   fetchBallDontLieJson: async () => ({}),
   fetchBallDontLieList: async (path: string, _query: URLSearchParams, options?: { failure?: { failed: boolean } }) => {
     countCall(path);
-    const suffix = ["/games", "/stats", "/lineups", "/plays"].find((s) => path.endsWith(s));
+    const suffix = SUFFIXES.find((s) => path.endsWith(s));
     if (suffix && failing.has(suffix)) {
       if (options?.failure) options.failure.failed = true;
       return [];
@@ -94,6 +100,7 @@ vi.mock("@/lib/ballDontLieClient", () => ({
       return [];
     }
     if (path.endsWith("/games")) return [gameRow];
+    if (path.endsWith("/player_stats")) return [statRow];
     if (path.endsWith("/stats")) return [statRow];
     if (path.endsWith("/lineups")) return [];
     if (path.endsWith("/plays")) return [scoringPlayRow];
@@ -103,10 +110,10 @@ vi.mock("@/lib/ballDontLieClient", () => ({
 
 import { getNBAGamePlayerStatsSnapshot, NBA_PLAYER_STATS_CACHE_MS, NBA_PLAYER_STATS_FAILURE_CACHE_MS } from "@/lib/sportsBingo";
 
-const card = (gameId: string) =>
+const card = (gameId: string, sportKey = "basketball_nba") =>
   ({
     game_id: gameId,
-    sport_key: "basketball_nba",
+    sport_key: sportKey,
     home_team: HOME_TEAM,
     away_team: AWAY_TEAM,
     starts_at: "2026-08-12T02:00:00.000Z",
@@ -115,6 +122,7 @@ const card = (gameId: string) =>
 let nextGameId = 1;
 /** A fresh `game_id` per test so nobody reads another test's cache entry. */
 const freshCard = () => card(String(nextGameId++));
+const freshWnbaCard = () => card(String(nextGameId++), "basketball_wnba");
 
 beforeEach(() => {
   failing.clear();
@@ -187,5 +195,50 @@ describe("getNBAGamePlayerStatsSnapshot — a failed fetch must not look like a 
     expect(NBA_PLAYER_STATS_FAILURE_CACHE_MS).toBeLessThan(NBA_PLAYER_STATS_CACHE_MS);
     await getNBAGamePlayerStatsSnapshot(c);
     expect(callCounts.get("/games") ?? 0).toBeGreaterThan(gamesCallsAfterFirst); // refetched
+  });
+});
+
+/**
+ * Phase 2 of docs/bingo-settlement-gap-cleanup-plan.md.
+ *
+ * WNBA's `/lineups` 404s on every game and its box-score endpoint ignores `period`, so both were
+ * structurally un-gradeable, not failing — but the snapshot used to describe the lineups gap only
+ * by *discovering* the guaranteed 404 (a real fetch, a real failure box, a real TTL collapse) and
+ * described the period-stats gap not at all (`periodStatsAvailable` stayed `true`). This block
+ * proves the snapshot now says both directly, without a live 404, and without touching the TTL.
+ */
+describe("getNBAGamePlayerStatsSnapshot — WNBA structural unavailability, not fetch failure (Phase 2)", () => {
+  it("WNBA snapshot reports periodStatsAvailable: false and lineupDataAvailable: false", async () => {
+    const snapshot = await getNBAGamePlayerStatsSnapshot(freshWnbaCard());
+    expect(snapshot).not.toBeNull();
+    expect(snapshot?.periodStatsAvailable).toBe(false);
+    expect(snapshot?.lineupDataAvailable).toBe(false);
+  });
+
+  it("no lineups or per-period request is issued for a WNBA game at all", async () => {
+    await getNBAGamePlayerStatsSnapshot(freshWnbaCard());
+    expect(callCounts.get("/lineups") ?? 0).toBe(0);
+    // Only one box-score call (the full-game fetch) — no per-period walk (which would reuse the
+    // same /player_stats suffix four more times, once per quarter).
+    expect(callCounts.get("/player_stats") ?? 0).toBe(1);
+  });
+
+  it("a WNBA snapshot gets the full cache TTL, not the failure TTL — no fetch is 'failed' here", async () => {
+    const c = freshWnbaCard();
+    await getNBAGamePlayerStatsSnapshot(c);
+    const gamesCallsAfterFirst = callCounts.get("/games") ?? 0;
+    vi.advanceTimersByTime(NBA_PLAYER_STATS_FAILURE_CACHE_MS + 1);
+    await getNBAGamePlayerStatsSnapshot(c);
+    expect(callCounts.get("/games") ?? 0).toBe(gamesCallsAfterFirst); // still cached past the short TTL
+  });
+
+  it("an equivalent NBA game is unchanged: both flags true, lineups and per-period fetches still issued", async () => {
+    const snapshot = await getNBAGamePlayerStatsSnapshot(freshCard());
+    expect(snapshot).not.toBeNull();
+    expect(snapshot?.periodStatsAvailable).toBe(true);
+    expect(snapshot?.lineupDataAvailable).toBe(true);
+    expect(callCounts.get("/lineups") ?? 0).toBeGreaterThan(0);
+    // 4 period calls (one per quarter) plus the 1 full-game call.
+    expect(callCounts.get("/stats") ?? 0).toBe(5);
   });
 });

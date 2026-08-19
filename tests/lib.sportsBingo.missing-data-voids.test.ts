@@ -282,6 +282,105 @@ describe("evaluateResolver — nba_player_bench_scores does not settle before ti
   });
 });
 
+// Phase 2 of docs/bingo-settlement-gap-cleanup-plan.md.
+//
+// WNBA structurally cannot support per-period player splits (`/player_stats` ignores `period`) or
+// starter data (`/lineups` 404s every game). Before this phase the snapshot said so only for
+// lineups, and only by way of a guaranteed-dead fetch; `periodStatsAvailable` stayed `true` for
+// WNBA regardless, so the three period-stats families read empty maps and settled a false `miss`
+// at Final instead of `void`. This proves both flags now describe the true, gradeable state, and
+// that a fully-populated WNBA snapshot (real box-score lines, just no period/lineup data) still
+// votes `void` on those four families rather than reading the absence as a real zero.
+describe("evaluateResolver — WNBA period-stat and bench-scores families void on structurally-unavailable data, not miss (Phase 2)", () => {
+  const wnbaLine: NBAPlayerStatLineLike = {
+    playerId: 1,
+    playerName: "Player One",
+    teamSide: "home",
+    pts: 25,
+    reb: 10,
+    ast: 8,
+    stl: 3,
+    blk: 2,
+    turnover: 1,
+    threes: 3,
+    fgm: 9,
+    fga: 18,
+    ftm: 5,
+    fta: 6,
+    oreb: 3,
+    dreb: 7,
+    minSeconds: 1900,
+    plusMinus: 8,
+  };
+
+  // A fully-populated WNBA snapshot at Final: real box-score data exists (unlike the force-
+  // finalized-no-score fixture above), but `periodStatsAvailable` and `lineupDataAvailable` are
+  // both false — the structural WNBA gap this phase describes, not a fetch failure.
+  const wnbaSnapshot = {
+    finalized: true,
+    lines: [wnbaLine],
+    byPlayerKey: new Map([["player one", [wnbaLine]]]),
+    lineupByPlayerId: new Map(),
+    lineupDataAvailable: false,
+    firstHalfByPlayerId: new Map(),
+    maxQuarterAssistsByPlayerId: new Map(),
+    periodStatsAvailable: false,
+    homeMaxQuarterPoints: 0,
+    awayMaxQuarterPoints: 0,
+    quarterExtrasAvailable: true,
+    homeHalftimeScore: 40,
+    awayHalftimeScore: 45,
+    firstScoringTeam: "away",
+    homeHasTripleDouble: false,
+    awayHasTripleDouble: false,
+    anyHasTripleDouble: false,
+  } as any;
+
+  const WNBA_COMPLETED = { ...FORCE_FINALIZED_NO_SCORE, sportKey: "basketball_wnba", homeScore: 86, awayScore: 76, completed: true };
+
+  const PERIOD_STAT_RESOLVERS: { label: string; resolver: SportsBingoResolver }[] = [
+    {
+      label: "nba_player_points_first_half_at_least",
+      resolver: { kind: "nba_player_points_first_half_at_least", player: "Player One", threshold: 10 },
+    },
+    {
+      label: "nba_player_assists_in_any_quarter_at_least",
+      resolver: { kind: "nba_player_assists_in_any_quarter_at_least", player: "Player One", threshold: 5 },
+    },
+    {
+      label: "nba_player_steals_first_half_at_least",
+      resolver: { kind: "nba_player_steals_first_half_at_least", player: "Player One", threshold: 2 },
+    },
+  ];
+
+  it("all three period-stats families void, not miss, on a fully-populated WNBA snapshot at Final", () => {
+    for (const { label, resolver } of PERIOD_STAT_RESOLVERS) {
+      const result = evaluateResolver(resolver, WNBA_COMPLETED, wnbaSnapshot, null, null);
+      expect(result, label).toEqual({ status: "void", resolved: true });
+    }
+  });
+
+  it("nba_player_bench_scores still voids on WNBA — Half B's fix preserves the behavior the 404 used to provide by accident", () => {
+    const result = evaluateResolver(
+      { kind: "nba_player_bench_scores", player: "Player One", threshold: 10 },
+      WNBA_COMPLETED,
+      wnbaSnapshot,
+      null,
+      null
+    );
+    expect(result).toEqual({ status: "void", resolved: true });
+  });
+
+  it("an equivalent NBA snapshot (both flags true) is unaffected: same box score, families settle normally instead of voiding", () => {
+    const nbaSnapshot = { ...wnbaSnapshot, lineupDataAvailable: true, periodStatsAvailable: true };
+    const nbaCompleted = { ...WNBA_COMPLETED, sportKey: "basketball_nba" };
+    for (const { label, resolver } of PERIOD_STAT_RESOLVERS) {
+      const result = evaluateResolver(resolver, nbaCompleted, nbaSnapshot, null, null);
+      expect(result.status, label).not.toBe("void");
+    }
+  });
+});
+
 type NBAPlayerStatLineLike = {
   playerId: number | null;
   playerName: string;
