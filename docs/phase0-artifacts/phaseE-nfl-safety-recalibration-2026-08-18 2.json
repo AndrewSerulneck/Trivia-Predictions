@@ -1,0 +1,90 @@
+{
+  "season": "2025",
+  "gamesConsidered": 272,
+  "postseasonStatsGap": {
+    "postseasonGamesInSeason": 13,
+    "sampledForProbe": 3,
+    "teamStatsRowsReturned": 0,
+    "note": "CONFIRMED GAP: /nfl/v1/team_stats and /nfl/v1/stats return zero rows for 2025 postseason games. Postseason excluded from every base-rate measurement below; only the 272-game regular season is measured. This also means Tier 1/2/4 flavor squares (and, pre-existing, the Phase-3/4 player-prop and settlement paths) cannot grade postseason NFL boards today. Not one of the plan's five questions — found while fetching the season list for base rates."
+  },
+  "generatedAt": "2026-08-18T14:14:43.174Z",
+  "q1_team_stats_mid_game": {
+    "answered": false,
+    "note": "Cannot be determined from archived Final games — BDL only exposes team_stats for games that have already ended in this dataset, and there is no historical mid-game snapshot to replay. Requires a live probe during an actual in-progress NFL game (earliest opportunity: 2026 Week 1, ~2026-09-10). See findings doc for the exact live-check recipe."
+  },
+  "q2_sack_orientation": null,
+  "q3_red_zone_semantics": null,
+  "q4_defensive_rows_populated": null,
+  "q5_plays_fields_archived": {
+    "totalPlaysSampled": 49150,
+    "home_win_probability": {
+      "populated": 48196,
+      "rate": 0.98059003051882
+    },
+    "clock_display": {
+      "populated": 49150,
+      "rate": 1
+    },
+    "start_yards_to_endzone": {
+      "populated": 42170,
+      "rate": 0.8579857578840285
+    },
+    "note": "These rates are measured on ARCHIVED (Final) games only. They show the fields persist in the historical record, which is necessary but not sufficient evidence they are populated mid-game live — see Q1/Q5 in the findings doc for why that needs a live probe during Week 1 2026."
+  },
+  "tier1BaseRates": null,
+  "tier2BaseRates": null,
+  "tier3BaseRates": {
+    "first_score_within_5min": {
+      "n": 272,
+      "rate": 0.19117647058823528
+    },
+    "score_final_minute_first_half": {
+      "n": 272,
+      "rate": 0.6433823529411765
+    },
+    "score_last_2min_fourth": {
+      "n": 272,
+      "rate": 0.4117647058823529
+    },
+    "both_teams_lead": {
+      "n": 272,
+      "rate": 0.5955882352941176
+    },
+    "lead_change_second_half": {
+      "n": 272,
+      "rate": 0.3786764705882353
+    },
+    "winner_trailed_in_fourth": {
+      "n": 272,
+      "rate": 0.2536764705882353
+    },
+    "tied_after_halftime": {
+      "n": 272,
+      "rate": 0.26838235294117646
+    },
+    "two_point_conversion": {
+      "n": 272,
+      "rate": 0.18382352941176472
+    },
+    "safety": {
+      "n": 272,
+      "rate": 0.04411764705882353
+    },
+    "two_point_conversion_ambiguous": {
+      "n": 272,
+      "rate": 0.003676470588235294
+    },
+    "safety_ambiguous": {
+      "n": 272,
+      "rate": 0.003676470588235294
+    },
+    "td_from_inside_2yd": {
+      "n": 272,
+      "rate": 0.6948529411764706
+    }
+  },
+  "tier1ThresholdSweep": null,
+  "tier2ThresholdSweep": null,
+  "tier3ThresholdSweep": null,
+  "tier4DriveReconstruction": null
+}
