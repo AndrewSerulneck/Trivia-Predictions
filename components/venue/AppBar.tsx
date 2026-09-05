@@ -1,13 +1,11 @@
 "use client";
 
-import { ChevronLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { PointsPill } from "@/components/ui/PointsPill";
 import { usePointsSummary } from "@/components/ui/usePointsSummary";
 import { GameMark, type GameChromeKey } from "@/components/venue/GameChrome";
-import { getVenueId } from "@/lib/storage";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AppBar — the single, always-visible top navigation surface shared across the
@@ -30,8 +28,12 @@ const GAME_LABEL: Record<GameChromeKey, string> = {
   "nfl-pickem": "NFL Pick 'Em",
 };
 
+// `leading` defaults to the canonical ExitBackButton so any bar that doesn't
+// say otherwise gets the one correct Back for free. Pass `leading={null}` to
+// opt out explicitly (a root screen with nothing to go back to); a default
+// parameter only fills in for `undefined`, so `null` is a real opt-out.
 export function AppBar({
-  leading,
+  leading = <ExitBackButton venueHomeFallback />,
   center,
   trailing,
 }: {
@@ -58,37 +60,18 @@ export function GameAppBar({
   exitLabel?: string;
 }) {
   const summary = usePointsSummary();
-  const router = useRouter();
   const accentText =
     game === "bingo" ? "text-sky-300" :
     game === "nfl-pickem" ? "text-amber-200" :
     "text-amber-200";
 
-  // Prefer the parent-injected exit (which runs the venue return animation),
-  // but always guarantee a working back action even if that wiring is absent.
-  const handleExit = () => {
-    if (onExit) {
-      onExit();
-      return;
-    }
-    const venueId = (getVenueId() ?? "").trim();
-    router.push(venueId ? `/venue/${encodeURIComponent(venueId)}` : "/");
-  };
-
+  // The exit itself lives in ExitBackButton: `onExit` (the parent-injected exit
+  // that runs the venue return animation) still wins, and when it's absent
+  // `venueHomeFallback` resolves the stored venue home AND plays the same return
+  // transition — strictly better than the bare router.push this used to do.
   return (
     <AppBar
-      leading={
-        <>
-          <button
-            type="button"
-            onClick={handleExit}
-            aria-label={exitLabel}
-            className="tp-clean-button inline-flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-slate-300 transition-colors hover:text-white"
-          >
-            <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-          </button>
-        </>
-      }
+      leading={<ExitBackButton onExit={onExit} venueHomeFallback label={exitLabel} />}
       center={
         <>
           <GameMark game={game} />

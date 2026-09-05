@@ -4,7 +4,9 @@
 >
 > **Read `SYSTEM_CONTEXT.md` before starting any task.**
 >
-> **Strategic direction (next few weeks):** `/info` is becoming the apex homepage; the player game login is moving to `play.hightopchallenge.com`; and the `/owner/*` payments surface is becoming the mobile-first **Partner Dashboard** (self-serve live-game scheduling, TV display URL, and Stripe billing). See `SYSTEM_CONTEXT.md` §0 and the canonical build plan in `docs/partner-dashboard-plan.md`.
+> **`/info` IS the home page.** Any control that means "go to the home page" — a Back button, a nav logo, a marketing link — must target **`/info`**, never `/`. Until the domain split flips, apex `/` still serves `JoinFlow` (the *player sign-in*), so pointing "home" at `/` silently drops partners and first-time visitors on a login screen. Use `marketingHref("/info")` from `lib/domainSplit.ts` so the link stays relative today and becomes an absolute apex URL after the split.
+>
+> **Strategic direction (next few weeks):** the player game login is moving to `play.hightopchallenge.com` (which is what finally moves `/` off the apex); and the `/owner/*` payments surface is becoming the mobile-first **Partner Dashboard** (self-serve live-game scheduling, TV display URL, and Stripe billing). See `SYSTEM_CONTEXT.md` §0 and the canonical build plan in `docs/partner-dashboard-plan.md`.
 >
 > **`proxy.ts` is the live edge gate — do NOT add a `middleware.ts`.** In Next.js 16 the middleware convention was renamed to `proxy.ts`; it is auto-detected and runs in production (the build lists it as `Proxy (Middleware)`). Adding `middleware.ts` is a hard build error. Its cookie auth-gate is live — never change its default behavior without an explicit, separately-verified decision.
 > **Domain split is built, flag-gated off.** The apex→`play.` host routing is layered at the top of `proxy.ts` (via `lib/domainSplit.ts`) behind `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED` (off = today's single origin, fully inert). When ready to switch over, execute **`docs/phase-6-domain-split-runbook.md`** exactly (DNS + envs + `.hightopchallenge.com` cookie domain + smoke tests; reversal is one flag).
@@ -103,6 +105,54 @@
 - **Run `npm run test:god-mode-join` after touching join/geofence/auth flow.** This named tripwire includes a static guard that fails if account-backed venue selection starts calling browser geolocation before server profile resolution again.
 - **`venueListBuiltRef` must be reset** whenever the user returns to `auth-method-selection` (sign-out, back navigation) so the next login rebuilds the list fresh. It must NOT be reset by in-session back-navigation to the venue list itself (e.g. from a venue-login sub-screen) — that should reuse the already-built list, not re-prompt location.
 - **Full history/rationale:** `docs/join-flow-location-error-plan.md`.
+
+## Navigation (Back / Next / Sign Out) — unified 2026-09-05
+
+Full as-built record, per-phase: `docs/navigation-unification-plan.md` (Phases 0–7 all
+shipped; only a real-device visual pass remains, §13c).
+
+- **There are exactly four navigation primitives, all in `components/navigation/`.**
+  Do not hand-roll a fifth, and do not re-implement any of their behavior inline:
+  - `ExitBackButton` — **THE** Back. "Leave this screen for its parent." A neutral
+    dark-slate 34px circle with a Lucide `ChevronLeft`, exactly one per screen, pinned
+    **top-left in the sticky header** — never inline in content, never at the bottom,
+    never in a wizard footer.
+  - `StepBackButton` + `NextButton`, composed by **`WizardFooter`** — step progression
+    inside a multi-step flow. Rendering `<StepBackButton>`/`<NextButton>` anywhere but
+    `WizardFooter.tsx` fails the tripwire.
+  - `SignOutButton` — "leave your account." Lives as the **last** item of an account
+    drawer / sidebar footer, below a divider, so it can never sit next to Back. It
+    **never renders an arrow** (an arrow reads as Back).
+- **Back's behavior lives in `components/navigation/exitNavigation.ts`, not in the
+  component.** `useExitNavigation` owns the precedence order (`onExit` → `venueHomeFallback`
+  → history), the installed-PWA hardening (`history.length <= 1` → internal referrer →
+  `href`), the 150ms post-`history.back()` fallthrough, and the venue-game return
+  transition. Never copy this logic to a call site.
+- **The warm red-orange exit pill is RETIRED.** `.tp-exit-pill`, `.ht-btn-exit`, the
+  `--ht-exit-*` CSS vars and the Tailwind `ht.color.exit` scale were all deleted in
+  Phase 7. Back is neutral slate on every surface and is **never tinted per game** —
+  that neutrality is exactly what lets the identical button sit on Bingo's felt,
+  Category Blitz's emerald and Live Trivia's cyan. Use `tone="light"` (not a new
+  component) for the admin and `/owner/*` white-card surfaces.
+- **All auth teardown goes through `SignOutButton`/`performSignOut`.** `signOut()`,
+  `clearVenueSession()` and the three logout endpoints (`/api/join/logout`,
+  `/api/owner/auth/logout`, `/api/admin/logout`) are called from `SignOutButton.tsx`
+  and nowhere else. Two allow-listed exceptions exist and are **not** sign-outs:
+  `JoinFlow` dropping a stale Supabase session mid-login, and `VenueHubClient`'s
+  arrival watchdog. Add teardown to the button, not to the call site.
+- **Host shells own the Back slot, not the pages.** Player content pages pass
+  `PageShell backTo={…}`; `/owner/*` pages pass `OwnerShell backTo={…}` (plus
+  `showAccountMenu` for Sign Out); the four `GameAppBar` games inherit it from
+  `components/venue/AppBar.tsx`'s defaulted `leading` slot. Do not add a page-level
+  back link that bypasses its shell.
+- **Run `npm run test` after touching any navigation control** —
+  `tests/navigation-controls-contract.test.ts` is the standing static tripwire (7
+  assertions: no raw `←` in player-facing TSX, no retired warm-pill literals, the
+  sign-out/endpoint allowlists, the `WizardFooter`/`SignOutButton` host allowlists, and
+  that `BackButton.tsx` stays deleted). It runs under plain `npm run test`, not a named
+  `test:*` script. Phase 1 also touched the landscape bingo chrome, so
+  `npm run test:pwa-contract` applies there, and any change to `JoinFlow`'s wizard
+  footer still requires `npm run test:god-mode-join`.
 
 ## PWA / Bingo Landscape Fullscreen
 - **The PWA is for PLAYERS ONLY.** `/owner/*` and `/admin` stay an ordinary website — they are better with an address bar, tabs and a real keyboard. No install promotion on those surfaces.

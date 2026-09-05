@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 
 type BillingResponse = {
@@ -111,15 +110,15 @@ const OwnerBillingSetupPage = () => {
   };
 
   return (
-    <OwnerShell title="Set Up Your Subscription" subtitle="Unlock the app for your venue" maxWidth="lg" variant="dark">
+    <OwnerShell
+      title="Set Up Your Subscription"
+      subtitle="Unlock the app for your venue"
+      maxWidth="lg"
+      variant="dark"
+      backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
+      showAccountMenu
+    >
       <div className="space-y-5">
-        <Link
-          href="/owner/dashboard"
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ht-exit-border bg-gradient-to-br from-ht-exit-from via-ht-exit-via to-ht-exit-to px-4 text-sm font-black text-ht-exit-text"
-        >
-          ← Dashboard
-        </Link>
-
         {loading ? (
           <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
         ) : error ? (

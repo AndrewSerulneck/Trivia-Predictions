@@ -245,17 +245,17 @@ const OwnerSchedulePage = () => {
   };
 
   return (
-    <OwnerShell title="Live Games" subtitle="Games your whole venue plays together" maxWidth="lg" variant="dark">
+    <OwnerShell
+      title="Live Games"
+      subtitle="Games your whole venue plays together"
+      maxWidth="lg"
+      variant="dark"
+      backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
+      showAccountMenu
+    >
       <div className="space-y-5">
-        <div className="flex items-center justify-between gap-3">
-          <Link
-            href="/owner/dashboard"
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ht-exit-border bg-gradient-to-br from-ht-exit-from via-ht-exit-via to-ht-exit-to px-4 text-sm font-black text-ht-exit-text"
-          >
-            ← Dashboard
-          </Link>
-
-          {venues.length > 1 ? (
+        {venues.length > 1 ? (
+          <div className="flex justify-end">
             <Dropdown
               value={selectedVenueId}
               onChange={(next) => {
@@ -267,8 +267,8 @@ const OwnerSchedulePage = () => {
               size="sm"
               className="min-h-11 rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 text-sm font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
             />
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         {loading ? (
           <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>

@@ -9,6 +9,7 @@ import { readWarmTriviaCache } from "@/lib/warmupCache";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import { canAdvanceToNextTriviaQuestion } from "@/lib/triviaRoundProgress";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
+import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { isPopupBlocking, isPopupVisible, subscribePopupBlockingChange } from "@/components/ui/popupBlocking";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
@@ -1486,14 +1487,7 @@ export function TriviaGame({
             className="flex shrink-0 items-center justify-between gap-2 px-3.5"
             style={{ paddingTop: "max(env(safe-area-inset-top), 10px)", paddingBottom: "12px" }}
           >
-            <button
-              type="button"
-              onMouseDown={() => triggerHaptic(14)}
-              onClick={returnToVenueHome}
-              className="tp-exit-pill tp-clean-button inline-flex items-center gap-1.5 px-3 font-black text-[12px]"
-            >
-              ← Venue
-            </button>
+            <ExitBackButton onExit={returnToVenueHome} label="Back to venue" />
             <div
               className="font-black uppercase tracking-[0.06em] text-[#facc15] text-[17px]"
               style={{ textShadow: "0 1px 0 #000, 0 0 14px rgba(250,204,21,0.5)" }}
@@ -1615,14 +1609,10 @@ export function TriviaGame({
             className="flex shrink-0 items-center justify-between gap-2 px-3.5"
             style={{ paddingTop: "max(env(safe-area-inset-top), 10px)", paddingBottom: "12px" }}
           >
-            <button
-              type="button"
-              onMouseDown={() => triggerHaptic(14)}
-              onClick={onChangeCategory ?? returnToVenueHome}
-              className="tp-exit-pill tp-clean-button inline-flex items-center gap-1.5 px-3 font-black text-[12px]"
-            >
-              ← Back
-            </button>
+            <ExitBackButton
+              onExit={onChangeCategory ?? returnToVenueHome}
+              label={onChangeCategory ? "Change category" : "Back to venue"}
+            />
             <div
               className="font-black uppercase tracking-[0.06em] text-[#facc15] text-[17px]"
               style={{ textShadow: "0 1px 0 #000, 0 0 14px rgba(250,204,21,0.5)" }}
@@ -1811,14 +1801,7 @@ export function TriviaGame({
           className="flex shrink-0 items-center justify-between gap-2 px-3.5"
           style={{ paddingTop: "max(env(safe-area-inset-top), 10px)", paddingBottom: "12px" }}
         >
-          <button
-            type="button"
-            onMouseDown={() => triggerHaptic(14)}
-            onClick={returnToVenueHome}
-            className="tp-exit-pill tp-clean-button inline-flex items-center gap-1.5 px-3 font-black text-[12px]"
-          >
-            ← Venue
-          </button>
+          <ExitBackButton onExit={returnToVenueHome} label="Back to venue" />
           <div
             className="font-black uppercase tracking-[0.06em] text-[#facc15] text-[17px]"
             style={{ textShadow: "0 1px 0 #000, 0 0 14px rgba(250,204,21,0.5)" }}

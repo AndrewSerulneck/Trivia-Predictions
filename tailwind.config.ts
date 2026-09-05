@@ -101,13 +101,6 @@ const config: Config = {
             400: "#fb7185",
             500: "#f43f5e",
           },
-          exit: {
-            from: "#a93d3a",
-            via: "#c8573e",
-            to: "#e9784e",
-            text: "#fff7ea",
-            border: "#1c2b3a",
-          },
         },
       },
       backgroundColor: {

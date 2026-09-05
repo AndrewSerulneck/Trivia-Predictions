@@ -88,15 +88,6 @@ const bannerStyles = {
 
 const cardLabelClass = "text-[11px] font-black uppercase tracking-wider text-ht-muted";
 
-const ExitPill = () => (
-  <Link
-    href="/owner/dashboard"
-    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ht-exit-border bg-gradient-to-br from-ht-exit-from via-ht-exit-via to-ht-exit-to px-4 text-sm font-black text-ht-exit-text"
-  >
-    ← Dashboard
-  </Link>
-);
-
 const OwnerBillingPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -245,12 +236,18 @@ const OwnerBillingPage = () => {
   };
 
   return (
-    <OwnerShell title="Billing" subtitle="Subscription, payment & invoices" maxWidth="lg" variant="dark">
+    <OwnerShell
+      title="Billing"
+      subtitle="Subscription, payment & invoices"
+      maxWidth="lg"
+      variant="dark"
+      backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
+      showAccountMenu
+    >
       {loading ? (
         <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
       ) : !subscription ? (
         <div className="space-y-5">
-          <ExitPill />
           {urlBanner ? (
             <div className={`rounded-xl px-4 py-3 text-sm font-bold ${bannerStyles[urlBanner.kind]}`}>{urlBanner.text}</div>
           ) : null}
@@ -272,8 +269,6 @@ const OwnerBillingPage = () => {
         </div>
       ) : (
         <div className="space-y-5">
-          <ExitPill />
-
           {actionMessage ? (
             <div className="rounded-xl bg-ht-cyan-500/15 px-4 py-3 text-sm font-bold text-ht-cyan-300">{actionMessage}</div>
           ) : urlBanner ? (

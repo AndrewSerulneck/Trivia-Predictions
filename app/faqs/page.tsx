@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { BackButton } from "@/components/navigation/BackButton";
 import { PageShell } from "@/components/ui/PageShell";
 
 type GameSubsection = {
@@ -95,9 +94,13 @@ export default function FaqsPage() {
   };
 
   return (
-    <PageShell title="FAQs" description="Quick answers for players." showPageTitle={false}>
+    <PageShell
+      title="FAQs"
+      description="Quick answers for players."
+      showPageTitle={false}
+      backTo={{ label: "Back", showLabel: true, venueHomeFallback: true }}
+    >
       <div className="space-y-3">
-        <BackButton label="Back" venueHomeFallback />
         <section className="space-y-3">
           {FAQ_ITEMS.map((item, index) => {
             const isOpen = openIndex === index;

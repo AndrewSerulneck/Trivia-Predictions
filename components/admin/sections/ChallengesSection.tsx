@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import type { Venue } from "@/types";
 import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/AdminShell";
 import { adminField, adminLabel } from "@/lib/adminStyles";
+import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import {
   CreateRewardWizard,
   type CreateRewardSubmission,
@@ -678,16 +679,15 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
 
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center gap-3">
+          <ExitBackButton
+            tone="light"
+            onExit={() => { resetCreateForm(); setMode("list"); }}
+            label="Back to reward list"
+          />
           <h2 className="text-base font-semibold text-slate-900">
             {mode === "edit" ? "Edit Reward" : "New Reward"}
           </h2>
-          <button
-            onClick={() => { resetCreateForm(); setMode("list"); }}
-            className="text-sm text-slate-500 hover:text-slate-800"
-          >
-            ← Back to list
-          </button>
         </div>
 
         <div className="grid grid-cols-2 gap-5">

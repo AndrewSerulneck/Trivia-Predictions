@@ -44,13 +44,21 @@ codes) use tabular mono (`--ht-font-mono`).
 | Live Games — **Live Trivia** | Cyan → blue → violet | `bg-ht-game-live` |
 | Live Games — **Category Blitz** *(new)* | Fuchsia → violet | `bg-ht-game-blitz` |
 | Billing | Indigo (neutral) | `bg-ht-game-billing` |
-| Back / Exit only | Warm red-orange | `from-ht-exit-from via-ht-exit-via to-ht-exit-to` |
 
-> **Category Blitz accent decision:** true cyan-complement (red-orange) is reserved
-> for exit, so Category Blitz takes **fuchsia→violet** — distinct from Live Trivia's
-> cyan while staying inside the game-identity gradient family. These gradients were
-> added to `app/globals.css` (`--ht-game-blitz`, `--ht-game-billing`,
-> `--ht-game-display`) and `tailwind.config.ts` (`backgroundImage`).
+> **Back / Exit is NOT an accent color anymore.** The warm red-orange "exit pill"
+> (`--ht-exit-*` / `from-ht-exit-from …`) is **retired** — the navigation
+> unification (`docs/navigation-unification-plan.md` §1a, §11b) replaced it
+> app-wide, partner surfaces included, with the neutral dark slate circle
+> `ExitBackButton` (`components/navigation/ExitBackButton.tsx`). The `--ht-exit-*`
+> tokens and the Tailwind `ht.exit` scale were removed. See §2 "Back / Exit".
+
+> **Category Blitz accent decision:** Category Blitz takes **fuchsia→violet** —
+> distinct from Live Trivia's cyan while staying inside the game-identity gradient
+> family. (Historically red-orange was "reserved for exit"; that constraint is
+> gone now that exit is a neutral circle, but the fuchsia→violet choice stands.)
+> These gradients were added to `app/globals.css` (`--ht-game-blitz`,
+> `--ht-game-billing`, `--ht-game-display`) and `tailwind.config.ts`
+> (`backgroundImage`).
 
 ---
 
@@ -68,14 +76,21 @@ uppercase tracking-wider` + leading dot. **Color = state:**
 - cyan → `Scheduled`
 - amber → `Next up`
 - slate → `Ended` / `Coming soon`
-- rose → `Payment due` (never used for the exit pill)
+- rose → `Payment due` (rose is errors/attention only — never back/exit)
 
 ### Buttons
 All: `rounded-xl font-black min-h-11 border transition active:translate-y-px`.
 - **Primary** — `bg-ht-cyan-500 text-slate-950` + cyan glow. The one committing action per screen.
 - **Secondary** — `bg-ht-elevated border-ht-soft text-ht-primary`.
-- **Exit / Back pill** — warm gradient, `rounded-full`, `min-h-11`, `border-ht-exit-border`.
-  Sticky at top of every sub-screen. Only warm element on screen.
+
+### Back / Exit
+`ExitBackButton` (`components/navigation/ExitBackButton.tsx`) — a 34px
+`border-white/10 bg-slate-900 text-slate-300` circle with a Lucide `ChevronLeft`,
+**no warm tint**, never a raw `←` glyph. It renders in `OwnerShell`'s header back
+slot (`backTo` prop), leading, above the logo block; `OwnerAccountMenu` (with
+`SignOutButton variant="partner"`) sits trailing in the same row. On every
+`/owner/*` page the header row sits on a dark background, so the default `dark`
+tone is correct — no page passes `tone`. The retired warm "exit pill" is gone.
 
 ### List row
 `flex gap-3 items-center bg-ht-surface rounded-[14px] border border-ht-hairline p-3`.
@@ -106,7 +121,7 @@ see a static header, no caret), then 3 tap targets, each with a live status line
 3. **Billing** → emerald "Active · Renews <date>" / rose "Payment due".
 
 ### Section 1 — Live Games  *(stub — `app/owner/schedule/page.tsx`; Phase 4)*
-Sticky back pill → primary "Schedule a game" → **Upcoming** list → **Past** list
+Header back circle (`OwnerShell backTo`) → primary "Schedule a game" → **Upcoming** list → **Past** list
 (dimmed). Rows carry the game-type accent pill. **Empty state:** icon tile + "No
 games on the board" + "Schedule a game" CTA (header CTA also persists).
 
@@ -140,7 +155,7 @@ Stripe: `active`→emerald, `past_due`→rose "Payment due", `cancelled`→slate
 - Blunt, human copy — "Couldn't schedule that game." not "An error occurred."
 - Inline field errors = rose 1px border + short reason under the field; toast summarizes.
 - Stripe failures surface the real reason and route to Update payment method.
-- Rose is errors only — never the exit pill.
+- Rose is errors only — never used for back/exit (which is the neutral dark circle).
 
 **Success**
 - Emerald toast, auto-dismiss ~3.5s, swipe/tap to clear.
@@ -156,5 +171,8 @@ Stripe: `active`→emerald, `past_due`→rose "Payment due", `cancelled`→slate
 - ✅ `OwnerShell` gained a `variant="dark"` (canvas, no white card); auth/billing
   pages keep `variant="light"`.
 - ✅ Hub re-skinned to these tokens (`app/owner/dashboard/page.tsx`).
-- ✅ Live Games / Venue Display stubs re-skinned (dark, exit pill, empty state).
+- ✅ Live Games / Venue Display stubs re-skinned (dark, empty state).
 - ⏳ Billing UI (`app/owner/billing/*`) still light-themed — re-skin alongside Phase 4/5.
+- ✅ Nav unification (`docs/navigation-unification-plan.md` Phase 5): the per-page
+  "← Dashboard" links collapsed into `OwnerShell`'s header back circle
+  (`ExitBackButton`) + `OwnerAccountMenu`; the warm exit pill is retired everywhere.

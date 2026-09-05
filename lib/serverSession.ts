@@ -30,6 +30,27 @@ export function createSessionCookie(userId: string): string {
 }
 
 /**
+ * Expire the `tp_sess` cookie.
+ *
+ * `tp_sess` is `HttpOnly`, so JS cannot clear it — `clearClientState()` only
+ * reaches `tp_venue_id` / `tp_user_id`. A player sign-out therefore has to make
+ * a server round trip (`POST /api/join/logout`) and this is what that route
+ * sends back.
+ *
+ * ⚠️ The attributes must mirror `createSessionCookie` exactly. A browser
+ * matches a deletion on name + Domain + Path only, so omitting `Domain` when
+ * `NEXT_PUBLIC_COOKIE_DOMAIN` is set (post domain-split) would delete a
+ * host-only cookie that does not exist and leave the real `.hightopchallenge.com`
+ * session alive.
+ */
+export function clearSessionCookie(): string {
+  const secureAttr = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const domain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN?.trim();
+  const domainAttr = domain ? `; Domain=${domain}` : "";
+  return `${COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secureAttr}${domainAttr}`;
+}
+
+/**
  * Resolve the acting user for a request that also carries a client-supplied
  * `userId` (query param or body field).
  *

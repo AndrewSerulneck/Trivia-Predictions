@@ -53,7 +53,8 @@ export function LeftHamburgerMenu({ showAlerts = true }: LeftHamburgerMenuProps)
 
   return (
     <div className="relative z-[220] w-full">
-      <div className="relative flex w-full items-center gap-2 rounded-none border-b border-ht-border-hairline bg-ht-surface px-2 py-1.5 shadow-[0_1px_0_rgba(255,255,255,0.04)]">
+      {/* Border/bg/padding live on PageShell's wrapper now, so an ExitBackButton can share the same bar. */}
+      <div className="relative flex w-full items-center gap-2">
         <AccountMenu hasUnclaimedPrize={summary.hasUnclaimedPrize} />
 
         <div className="ml-auto flex min-w-0 items-center gap-1.5">

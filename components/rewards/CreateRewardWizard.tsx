@@ -39,6 +39,8 @@
 // `variant` swaps a small class-token map rather than forking the component.
 
 import { useEffect, useMemo, useState } from "react";
+import type { NavTone } from "@/components/navigation/StepBackButton";
+import { WizardFooter } from "@/components/navigation/WizardFooter";
 import {
   REWARD_DEFINITIONS,
   isValidRewardThreshold,
@@ -150,7 +152,6 @@ const MENU_ITEM_OPTIONS: Array<{ value: RewardMenuItem; label: string }> = [
 type Styles = {
   card: string;
   heading: string;
-  backLink: string;
   label: string;
   input: string;
   /** Dropdown sized to sit inside a sentence rather than fill a row. */
@@ -163,7 +164,6 @@ type Styles = {
   optionCardActive: string;
   chip: string;
   chipActive: string;
-  primaryButton: string;
   secondaryButton: string;
   error: string;
   block: string;
@@ -177,7 +177,6 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
   admin: {
     card: "space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm",
     heading: "text-base font-semibold text-slate-900",
-    backLink: "text-sm font-medium text-indigo-600 hover:text-indigo-700",
     label: "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600",
     input:
       "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200",
@@ -192,8 +191,6 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
     optionCardActive: "border-indigo-500 bg-indigo-50",
     chip: "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600",
     chipActive: "border-indigo-500 bg-indigo-50 text-indigo-700",
-    primaryButton:
-      "w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50",
     secondaryButton: "text-sm font-medium text-slate-500 hover:text-slate-700",
     error: "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700",
     block: "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800",
@@ -203,7 +200,6 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
   owner: {
     card: "space-y-4 rounded-2xl border border-ht-hairline bg-ht-surface p-4 shadow-ht-card",
     heading: "text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300",
-    backLink: "text-sm font-bold text-ht-cyan-300",
     label: "mb-1 block text-xs font-semibold text-ht-muted",
     input:
       "w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5 text-base font-bold text-ht-primary outline-none focus:border-ht-cyan-400",
@@ -218,8 +214,6 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
     optionCardActive: "border-ht-cyan-400 bg-ht-elevated",
     chip: "rounded-xl border border-ht-hairline bg-ht-elevated/50 px-3 py-2 text-xs font-black text-ht-muted",
     chipActive: "border-ht-cyan-400 bg-ht-elevated text-ht-primary",
-    primaryButton:
-      "w-full rounded-xl border border-ht-soft bg-ht-cyan-500 px-4 py-2.5 text-sm font-black text-slate-950 disabled:opacity-50",
     secondaryButton: "text-sm font-bold text-ht-muted",
     error: "rounded-xl border border-ht-rose-500/30 bg-ht-rose-500/10 px-3 py-2 text-xs font-bold text-ht-rose-300",
     block: "rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs font-bold text-amber-300",
@@ -245,6 +239,10 @@ export function CreateRewardWizard({
   onCancel,
 }: CreateRewardWizardProps) {
   const s = VARIANT_STYLES[variant];
+  // The admin host is a light, non-player surface (navigation-unification-plan
+  // §4 Phase 6); the owner host is dark-native. Same footer, same positions,
+  // the palette each card already uses.
+  const footerTone: NavTone = variant === "admin" ? "light" : "dark";
 
   const [venueId, setVenueId] = useState(defaultVenueId ?? venues[0]?.id ?? "");
   const [definition, setDefinition] = useState<RewardDefinition | null>(null);
@@ -610,12 +608,6 @@ export function CreateRewardWizard({
     }
   };
 
-  const BackButton = ({ to, label }: { to: Step; label: string }) => (
-    <button type="button" onClick={() => setStep(to)} className={s.backLink}>
-      ← {label}
-    </button>
-  );
-
   const scheduleLink = (
     <a href={scheduleLinkHref} className="underline">
       Schedule Live Trivia
@@ -688,8 +680,6 @@ export function CreateRewardWizard({
 
       {step === "terms" && definition && context ? (
         <div className="space-y-4">
-          <BackButton to="definition" label={definition.name} />
-
           {/* 1. The question that decides everything below it. */}
           {definition.supportsGameWinner ? (
             <div>
@@ -1030,16 +1020,20 @@ export function CreateRewardWizard({
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={
+          <WizardFooter
+            variant="inline"
+            tone={footerTone}
+            onBack={() => setStep("definition")}
+            backLabel={definition.name}
+            nextLabel="Next: Offer a Prize"
+            nextDisabled={
               isNFLDefinition
                 ? !(nflTermsResult?.ok ?? false)
                 : useGamePicker
                   ? !gameWinnerTerms.ok
                   : Boolean(termsError)
             }
-            onClick={() => {
+            onNext={() => {
               if (!isGameWinner) {
                 // The step is the definition's, not a fixed 10: Live Trivia
                 // targets are points (step 10), NFL targets are correct picks
@@ -1057,16 +1051,12 @@ export function CreateRewardWizard({
               setThresholdError(null);
               setStep("prize");
             }}
-            className={s.primaryButton}
-          >
-            Next: Offer a Prize
-          </button>
+          />
         </div>
       ) : null}
 
       {step === "prize" && definition ? (
         <div className="space-y-4">
-          <BackButton to="terms" label="Back" />
           <p className={s.heading}>Prize</p>
 
           <div className="grid grid-cols-2 gap-2">
@@ -1154,15 +1144,18 @@ export function CreateRewardWizard({
             </div>
           )}
 
-          <button type="button" onClick={() => setStep("confirm")} className={s.primaryButton}>
-            Next: Confirm
-          </button>
+          <WizardFooter
+            variant="inline"
+            tone={footerTone}
+            onBack={() => setStep("terms")}
+            onNext={() => setStep("confirm")}
+            nextLabel="Next: Confirm"
+          />
         </div>
       ) : null}
 
       {step === "confirm" && definition ? (
         <div className="space-y-4">
-          <BackButton to="prize" label="Back" />
           <p className={s.heading}>Confirm</p>
 
           <div>
@@ -1201,9 +1194,16 @@ export function CreateRewardWizard({
 
           {submitError ? <div className={s.error}>{submitError}</div> : null}
 
-          <button type="button" onClick={() => void handleSubmit()} disabled={submitting} className={s.primaryButton}>
-            {submitting ? "Creating…" : "Create Reward"}
-          </button>
+          <WizardFooter
+            variant="inline"
+            tone={footerTone}
+            onBack={() => setStep("prize")}
+            onNext={() => void handleSubmit()}
+            nextLabel="Create Reward"
+            nextBusyLabel="Creating…"
+            nextBusy={submitting}
+            nextHideChevron
+          />
         </div>
       ) : null}
     </div>

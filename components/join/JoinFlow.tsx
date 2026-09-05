@@ -43,13 +43,14 @@ import {
   clearLoginInProgress,
   clearSelectedVenueLock,
   endAuthRequest,
-  hardClearAuthAndCache,
   hardClearAuthAndCachePreserveVenue,
   setSelectedVenueLock,
   setLoginInProgress,
 } from "@/lib/authFastPath";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
+import { SignOutButton } from "@/components/navigation/SignOutButton";
+import { WizardFooter } from "@/components/navigation/WizardFooter";
 import { getVenueById, listVenues, readCachedVenues } from "@/lib/venues";
 import {
   setVenueHomeRouteIntent,
@@ -586,25 +587,17 @@ const UsernameStep = memo(function UsernameStep({
         </div>
       ) : null}
 
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          style={{ border: "1px solid #1c2b3a" }}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-5 py-2.5 text-sm font-black text-[#fff7ea] shadow-sm transition-all active:scale-95 active:brightness-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60"
-        >
-          <span aria-hidden="true">←</span>
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={!value.trim() || isAdvancingToPin}
-          className="tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-        >
-          {isAdvancingToPin ? "Loading..." : "Next →"}
-        </button>
-      </div>
+      {/* Step-back + Next. `variant="inline"` because this footer is the last row
+          INSIDE the join card, not a bar pinned to the viewport. */}
+      <WizardFooter
+        variant="inline"
+        onBack={onBack}
+        onNext={handleNext}
+        nextLabel="Next"
+        nextBusyLabel="Loading..."
+        nextBusy={isAdvancingToPin}
+        nextDisabled={!value.trim()}
+      />
 
       {locationLoading ? (
         <p className="text-xs text-ht-fg-muted">Verifying your location...</p>
@@ -699,25 +692,17 @@ const PinStep = memo(function PinStep({
         </div>
       ) : null}
 
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          style={{ border: "1px solid #1c2b3a" }}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-5 py-2.5 text-sm font-black text-[#fff7ea] shadow-sm transition-all active:scale-95 active:brightness-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60"
-        >
-          <span aria-hidden="true">←</span>
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={() => onSubmit()}
-          disabled={!canCreate || pin.length !== 4 || isAuthLoading}
-          className="tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-        >
-          Enter ↵
-        </button>
-      </div>
+      {/* "Enter" is this step's Next — it advances the flow past the PIN. The
+          §2b audit counted only two literal "Next →"s in this file, but the
+          control occupies the Next slot and pairs with the step-back, so it
+          belongs in the footer rather than beside it. */}
+      <WizardFooter
+        variant="inline"
+        onBack={onBack}
+        onNext={() => onSubmit()}
+        nextLabel="Enter"
+        nextDisabled={!canCreate || pin.length !== 4 || isAuthLoading}
+      />
       {!isAuthLoading && !canCreate && !errorMessage && !connectionRetryMessage ? (
         <p className="text-xs font-semibold text-amber-300">{blockedReason}</p>
       ) : null}
@@ -2328,12 +2313,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setActivePanel("venue-list");
   }, []);
 
-  const handleSignOut = useCallback(() => {
+  // Runs AFTER SignOutButton's teardown (POST /api/join/logout →
+  // hardClearAuthAndCache → signOut) and before any redirect. It carries only
+  // the state SignOutButton cannot reach: JoinFlow's panel machine and the
+  // `venueListBuiltRef` reset that CLAUDE.md requires whenever the user returns
+  // to `auth-method-selection`, so the next login rebuilds the venue list (and
+  // re-runs the single post-auth geolocation check) from scratch.
+  const handleSignedOut = useCallback(() => {
     venueListBuiltRef.current = false;
-    hardClearAuthAndCache();
     setAccountIdState(null);
     setAccountUsername("");
-    void signOut().catch(() => {});
     refreshAuthSession();
     setPanelDirection(-1);
     setActivePanel("auth-method-selection");
@@ -2731,24 +2720,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                       </AnimatePresence>
                     </div>
 
-                    <div className="flex gap-3">
-                      {welcomeSlide > 0 && (
-                        <button
-                          type="button"
-                          onClick={handleWelcomePrev}
-                          className="tp-clean-button inline-flex min-h-[50px] flex-1 items-center justify-center rounded-xl border border-white/20 py-3 px-6 text-base font-black text-white transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-                        >
-                          ← Back
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={handleWelcomeNext}
-                        className="tp-clean-button inline-flex min-h-[50px] flex-1 items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-                      >
-                        {welcomeSlide < WELCOME_SLIDES.length - 1 ? "Next →" : "Let's Go! →"}
-                      </button>
-                    </div>
+                    {/* First slide has no previous step, so `onBack` is omitted
+                        and Next keeps the trailing position on its own. The
+                        terminal slide hides the chevron (§6e) to keep today's
+                        arrow-free "Let's Go!". */}
+                    <WizardFooter
+                      variant="inline"
+                      {...(welcomeSlide > 0 ? { onBack: handleWelcomePrev } : {})}
+                      onNext={handleWelcomeNext}
+                      nextLabel={welcomeSlide < WELCOME_SLIDES.length - 1 ? "Next" : "Let's Go!"}
+                      nextHideChevron={welcomeSlide === WELCOME_SLIDES.length - 1}
+                    />
                   </motion.div>
                 )}
 
@@ -3042,14 +3024,20 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     exit="exit"
                     transition={SWIPE_SPRING_TRANSITION}
                   >
+                    {/* Sign Out, NOT Back. This used to render a warm exit pill
+                        with a `←` — it read as Back and acted as sign-out, the
+                        most dangerous instance in the nav audit. It is now the
+                        canonical rose danger control with no arrow, and the
+                        teardown (including the HttpOnly `tp_sess` revoke that
+                        the old handler could not do) lives in SignOutButton.
+                        See docs/navigation-unification-plan.md §2c-1. */}
                     <div className="mb-4 flex items-center">
-                      <button
-                        type="button"
-                        onClick={handleSignOut}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-1.5 text-sm font-black text-[#fff7ea] shadow-sm transition-all active:scale-95 active:brightness-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60"
-                      >
-                        ← Sign Out
-                      </button>
+                      <SignOutButton
+                        variant="player"
+                        redirectTo={null}
+                        onSignedOut={handleSignedOut}
+                        className="inline-flex items-center rounded-full border border-rose-400/45 bg-rose-500/10 px-4 py-1.5 text-sm font-black text-rose-300 transition-colors hover:bg-rose-500/15 disabled:opacity-50"
+                      />
                     </div>
 
                     {errorMessage && (

@@ -1,9 +1,9 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu } from "lucide-react";
+import { AccountMenuList } from "@/components/navigation/AccountMenuList";
 import { getUserId, getUsername, getVenueId, saveUsername } from "@/lib/storage";
 import { setScrollLock } from "@/lib/scrollLock";
 
@@ -20,39 +20,6 @@ type UsernameUpdatePayload = {
   };
 };
 
-const MENU_ITEMS = [
-  {
-    label: "Career Stats",
-    description: "Track your lifetime performance across every game.",
-    href: "/active-games",
-  },
-  {
-    label: "FAQs",
-    description: "Get quick answers about gameplay and prizes.",
-    href: "/faqs",
-  },
-  {
-    label: "Advertise With Us",
-    description: "Submit the advertiser intake form.",
-    href: "/advertise",
-  },
-  {
-    label: "Redeem Prizes",
-    description: "See earned rewards and prize redemptions.",
-    href: "/redeem-prizes",
-  },
-] as const;
-
-function isActiveMenuPath(pathname: string, href: string): boolean {
-  if (href === "/") {
-    return pathname === href;
-  }
-  if (href.startsWith("/venue/")) {
-    return pathname.startsWith("/venue/");
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
 // AccountMenu — the universal hamburger trigger + slide-out drawer + change
 // username modal. Extracted from LeftHamburgerMenu so it can live in the
 // in-game AppBar's leading slot, keeping the menu reachable during gameplay.
@@ -65,8 +32,6 @@ export function AccountMenu({
   hasUnclaimedPrize?: boolean;
   triggerClassName?: string;
 }) {
-  const pathname = usePathname();
-  const router = useRouter();
   const scrollLockOwnerId = useId();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -218,42 +183,8 @@ export function AccountMenu({
             </button>
           </div>
 
-          <nav aria-label="Primary navigation">
-            <ul className="space-y-3">
-              {MENU_ITEMS.map((item) => {
-                const active = isActiveMenuPath(pathname, item.href);
-                return (
-                  <li key={`${item.label}:${item.href}`}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        router.push(item.href);
-                      }}
-                      className={`w-full rounded-ht-lg border px-4 py-3.5 text-left ${
-                        active
-                          ? "border-ht-border-strong bg-ht-elevated text-ht-fg-primary"
-                          : "border-ht-border-hairline bg-ht-elevated/50 text-ht-fg-secondary hover:border-ht-border-soft hover:bg-ht-elevated"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 text-lg font-black leading-tight">
-                        {item.label}
-                        {item.href === "/redeem-prizes" && hasUnclaimedPrize && (
-                          <span
-                            className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400"
-                            aria-label="Unclaimed prize"
-                          />
-                        )}
-                      </div>
-                      <div className={`mt-1 text-sm leading-snug ${active ? "text-ht-fg-secondary" : "text-ht-fg-muted"}`}>
-                        {item.description}
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+          <AccountMenuList onNavigate={() => setIsMenuOpen(false)} hasUnclaimedPrize={hasUnclaimedPrize} />
+
         </aside>
 
         {isUsernameModalOpen ? (

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { OwnerShell, ownerInputClass, ownerLabelClass, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
 
 const OwnerForgotPasswordPage = () => {
@@ -34,15 +33,16 @@ const OwnerForgotPasswordPage = () => {
   };
 
   return (
-    <OwnerShell title="Reset Your Password" subtitle="We'll send a reset link to your email">
+    <OwnerShell
+      title="Reset Your Password"
+      subtitle="We'll send a reset link to your email"
+      backTo={{ href: "/owner/login", label: "Back to sign in", preferHref: true, showLabel: true }}
+    >
       {sent ? (
         <div className="space-y-4 text-center">
           <p className="text-sm text-slate-600">
             If that email is associated with an owner account, you&apos;ll receive a password reset link shortly. Check your inbox (and spam folder).
           </p>
-          <Link href="/owner/login" className="block text-sm font-semibold text-indigo-600 hover:text-indigo-800">
-            ← Back to Sign In
-          </Link>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -61,11 +61,6 @@ const OwnerForgotPasswordPage = () => {
           <button type="submit" disabled={submitting} className={ownerPrimaryButtonClass}>
             {submitting ? "Sending…" : "Send Reset Link"}
           </button>
-          <p className="text-center text-sm text-slate-500">
-            <Link href="/owner/login" className="hover:text-slate-700">
-              ← Back to Sign In
-            </Link>
-          </p>
         </form>
       )}
     </OwnerShell>

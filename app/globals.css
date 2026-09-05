@@ -74,13 +74,11 @@
   --ht-rose-500: #f43f5e;
 
   /* -----------------------------------------------------------
-     THE EXIT PILL — the ONLY warm element on screen
+     EXIT / BACK — retired. The warm-red exit pill was replaced
+     app-wide by the neutral dark slate circle (ExitBackButton),
+     per docs/navigation-unification-plan.md §1a. No token needed:
+     the circle is plain slate utilities and carries no warm tint.
      ----------------------------------------------------------- */
-  --ht-exit-from:   #a93d3a;
-  --ht-exit-via:    #c8573e;
-  --ht-exit-to:     #e9784e;
-  --ht-exit-text:   #fff7ea;
-  --ht-exit-border: #1c2b3a;
 
   /* -----------------------------------------------------------
      PAGE-LEVEL ACCENTS — what color a non-game screen takes
@@ -1227,30 +1225,6 @@ h4 {
   transform: none;
 }
 
-/* Exit pill — ONLY warm element on screen */
-.ht-btn-exit {
-  background: linear-gradient(to right, var(--ht-exit-from), var(--ht-exit-via), var(--ht-exit-to));
-  border: 1px solid var(--ht-exit-border);
-  color: var(--ht-exit-text);
-  border-radius: var(--ht-radius-pill);
-  min-height: 44px;
-  padding: 0 18px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--ht-font-body);
-  font-size: var(--ht-text-sm);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(28, 43, 58, 0.35);
-}
-
-.ht-btn-exit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(28, 43, 58, 0.5);
-}
-
 /* Base input */
 .ht-input {
   background: var(--ht-elevated);
@@ -2012,22 +1986,6 @@ a[role="button"][class*="text-[11px]"] {
   background-color: #0f172a;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-}
-
-/* Universal exit/back button — warm red pill, dark structural border for contrast on warm backgrounds (e.g. Bingo) */
-.tp-exit-pill {
-  background: linear-gradient(to right, #a93d3a, #c8573e, #e9784e);
-  border: 1px solid #1c2b3a !important; /* !important beats button:not(:disabled) specificity */
-  color: #fff7ea;
-  border-radius: 9999px;
-  min-height: 44px;
-  box-shadow: 0 1px 3px rgba(28, 43, 58, 0.35);
-  @apply transition-all duration-150;
-}
-
-.tp-exit-pill:active {
-  transform: scale(0.95);
-  filter: brightness(0.9);
 }
 
 /* --- HIGHTOP BRANDING ADDITIONS --- */

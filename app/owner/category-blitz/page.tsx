@@ -96,7 +96,12 @@ export default function OwnerCategoryBlitzPage() {
   }
 
   return (
-    <OwnerShell title="Category Blitz" subtitle="Configure continuous loop mode and category pool">
+    <OwnerShell
+      title="Category Blitz"
+      subtitle="Configure continuous loop mode and category pool"
+      backTo={{ href: "/owner/schedule", label: "Back to Schedule", preferHref: true, showLabel: true }}
+      showAccountMenu
+    >
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Venue Selector */}
         <div className="flex items-center justify-end">
@@ -123,16 +128,6 @@ export default function OwnerCategoryBlitzPage() {
 
         {/* Pool Manager */}
         <CategoryPoolManager venueId={selectedVenueId} />
-
-        {/* Back to Schedule */}
-        <div className="flex justify-start pt-4 border-t border-slate-700/50">
-          <a
-            href="/owner/schedule"
-            className="text-sm text-slate-400 hover:text-slate-300 transition-colors"
-          >
-            ← Back to Schedule
-          </a>
-        </div>
       </div>
     </OwnerShell>
   );

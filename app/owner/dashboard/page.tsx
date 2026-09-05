@@ -40,11 +40,6 @@ const OwnerDashboardPage = () => {
 
   const selectedVenue = useMemo(() => venues.find((v) => v.id === selectedVenueId), [venues, selectedVenueId]);
 
-  const handleLogout = async () => {
-    await fetch("/api/owner/auth/logout", { method: "POST" });
-    router.push("/owner/login");
-  };
-
   const tiles: Array<{
     href: string;
     label: string;
@@ -99,7 +94,13 @@ const OwnerDashboardPage = () => {
   const venueInitial = (selectedVenue?.name ?? "?").charAt(0).toUpperCase();
 
   return (
-    <OwnerShell title="Partner Dashboard" subtitle="Run your venue from your phone" maxWidth="lg" variant="dark">
+    <OwnerShell
+      title="Partner Dashboard"
+      subtitle="Run your venue from your phone"
+      maxWidth="lg"
+      variant="dark"
+      showAccountMenu
+    >
       {loading ? (
         <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
       ) : (
@@ -173,14 +174,6 @@ const OwnerDashboardPage = () => {
               </Link>
             ))}
           </div>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full py-2 text-center text-sm font-semibold text-ht-muted transition-colors hover:text-ht-secondary"
-          >
-            🚪 Sign out
-          </button>
         </div>
       )}
     </OwnerShell>

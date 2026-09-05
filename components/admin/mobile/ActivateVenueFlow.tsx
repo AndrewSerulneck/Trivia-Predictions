@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import type { Venue } from "@/types";
 import { GeofenceEditor } from "@/components/admin/GeofenceEditor";
+import { WizardFooter } from "@/components/navigation/WizardFooter";
 import { useAddressLookup, type AddressPrediction } from "@/components/admin/useAddressLookup";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
@@ -215,23 +217,19 @@ export function ActivateVenueFlow({
   return (
     <div className="pb-2">
       <div className="mb-4 flex items-center justify-between gap-3">
+        {/* Exit-back only. This used to be BOTH exit and step-back depending on
+            mode/step; the step-back now lives in the WizardFooter at the bottom
+            of each step (navigation-unification-plan §0), so the two controls
+            are never the same button again. Admin keeps its light chrome rather
+            than the player-dark circle — same position, same meaning. */}
         <button
           type="button"
-          onClick={() => {
-            // Create: step 2 walks back to step 1. Edit: step 1 is only ever
-            // reached from step 2's "Change address", so it walks back there —
-            // never out of the form, which would drop unsaved edits.
-            if (mode === "create" && step === "details") setStep("location");
-            else if (mode === "edit" && step === "location") setStep("details");
-            else onCancel();
-          }}
+          onClick={onCancel}
+          aria-label="Back to venues"
           className="inline-flex min-h-[44px] items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm active:bg-slate-50"
         >
-          ‹ {(mode === "create" && step === "details") || (mode === "edit" && step === "location")
-            ? mode === "create"
-              ? "Address"
-              : "Details"
-            : "Venues"}
+          <ChevronLeft aria-hidden className="h-4 w-4" />
+          Venues
         </button>
         {mode === "create" ? (
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -376,17 +374,20 @@ export function ActivateVenueFlow({
             <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{banner}</div>
           ) : null}
 
-          <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-slate-100/95 px-4 py-3 backdrop-blur">
-            <button
-              type="button"
-              onClick={goToDetails}
-              className={`min-h-[52px] w-full rounded-xl px-4 text-base font-semibold text-white ${
-                addressReady ? "bg-indigo-600" : "bg-slate-400"
-              }`}
-            >
-              Continue
-            </button>
-          </div>
+          {/* Continue stays ENABLED when the address isn't ready — greyed, but
+              tappable, because goToDetails is what surfaces the "add a street…"
+              / "set the pin" hint. Disabling it would silently do nothing. */}
+          <WizardFooter
+            className="-mx-4"
+            tone="light"
+            {...(mode === "edit" ? { onBack: () => setStep("details"), backLabel: "Details" } : {})}
+            onNext={goToDetails}
+            nextLabel="Continue"
+            nextSizeClass="min-h-[52px] px-4 text-base"
+            {...(addressReady
+              ? {}
+              : { nextAccentClass: "bg-slate-400 text-white focus-visible:ring-slate-300" })}
+          />
         </div>
       ) : (
         <div className="space-y-4">
@@ -563,14 +564,21 @@ export function ActivateVenueFlow({
 
           {banner ? <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{banner}</div> : null}
 
-          <button
-            type="button"
-            onClick={submit}
-            disabled={busy}
-            className="flex h-[104px] w-full items-center justify-center rounded-xl bg-indigo-600 px-4 text-[32px] font-semibold leading-tight text-white disabled:opacity-50"
-          >
-            {busy ? "Saving…" : mode === "create" ? "Activate this venue" : "Save changes"}
-          </button>
+          {/* The oversized primary is deliberate — a salesperson taps this
+              standing inside a bar — so it keeps its own size slot rather than
+              the 44px default. Terminal action, hence no chevron. */}
+          <WizardFooter
+            className="-mx-4"
+            tone="light"
+            {...(mode === "create" ? { onBack: () => setStep("location"), backLabel: "Address" } : {})}
+            backDisabled={busy}
+            onNext={submit}
+            nextLabel={mode === "create" ? "Activate this venue" : "Save changes"}
+            nextBusyLabel="Saving…"
+            nextBusy={busy}
+            nextHideChevron
+            nextSizeClass="min-h-[104px] px-4 text-[32px] leading-tight"
+          />
         </div>
       )}
 

@@ -50,7 +50,11 @@ const OwnerLoginPage = () => {
   };
 
   return (
-    <OwnerShell title="Partner Venue Sign In" subtitle="Manage your subscription and billing">
+    <OwnerShell
+      title="Partner Venue Sign In"
+      subtitle="Manage your subscription and billing"
+      backTo={{ href: marketingHref("/info"), label: "Back to Home Page", preferHref: true, showLabel: true }}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className={ownerLabelClass}>Email</label>
@@ -98,14 +102,6 @@ const OwnerLoginPage = () => {
           Create an account
         </Link>
       </p>
-      <div className="mt-6 border-t border-slate-200 pt-5">
-        <Link
-          href={marketingHref("/")}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900"
-        >
-          ← Back to Home Page
-        </Link>
-      </div>
     </OwnerShell>
   );
 };

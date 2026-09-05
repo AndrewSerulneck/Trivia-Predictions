@@ -30,7 +30,7 @@ dark, electric, high-contrast, with glowing accent colors that tell you which ga
   player-facing app.
 - Every section is labeled in a specific accent color. The accent tells you where you are.
 - Every interactive element (button, input, tab) uses the same dark-native button grammar.
-- The back/exit button is always a warm red gradient pill — the only warm element on screen.
+- The back/exit button is always the same neutral dark slate circle (Lucide `ChevronLeft`), pinned top-left. No warm pill, no accent tint. (Superseded the old warm-red "exit pill" — see the Back/Exit Navigation section and `docs/navigation-unification-plan.md` §1a.)
 - Every game has its own color identity that runs continuously from the hub button through
   the landing page into the live gameplay.
 
@@ -178,19 +178,30 @@ border-radius: rounded-xl
 hover:         hover:bg-[accent-950]/40
 ```
 
-### Back / Exit Navigation (THE WARM ELEMENT — use everywhere for exit/back)
-The CSS class `.tp-exit-pill` already exists in `app/globals.css`. Use it universally.
+### Back / Exit Navigation (the neutral dark circle — use everywhere for exit/back)
+Import `ExitBackButton` from `components/navigation/ExitBackButton.tsx`. It is the one
+canonical Back: exactly one per screen, in the **leading slot of the sticky top bar,
+top-left** — never inline in content, never at the bottom, never in a wizard footer.
 ```
-background:    linear-gradient(to right, #a93d3a, #c8573e, #e9784e)
-border:        1px solid #1c2b3a
-text:          text-[#fff7ea]  font-black
-border-radius: rounded-full (pill)
-min-height:    44px
-active:        scale-95 brightness-90
+element:       Lucide ChevronLeft (h-4 w-4) in a 34px circle — never a raw ← glyph
+border:        border border-white/10
+surface:       bg-slate-900
+text:          text-slate-300  hover:text-white
+border-radius: rounded-full
+active:        tp-clean-button press feedback
+light variant: tone="light" → border-slate-300 bg-white text-slate-600 (admin + owner
+               auth/billing white cards only)
 ```
-This warm red/orange gradient is the **only warm-palette element** that appears site-wide
-(outside of the game hub buttons themselves). Its warmth makes it immediately findable
-as "the way out" against a screen full of cool dark surfaces.
+Neutral slate with **no accent tint** is deliberate — the identical control sits
+unchanged on Bingo's warm felt, Category Blitz's emerald, Live Trivia's cyan and the
+plain content pages. The old warm-red "exit pill" (`.tp-exit-pill`, `--ht-exit-*`) is
+retired and removed from `app/globals.css`. Never use rose, and never a warm gradient,
+for back/exit. See `docs/navigation-unification-plan.md` §1a.
+
+The other navigation controls: **step-back** and **Next** live in a sticky bottom
+`WizardFooter` (`StepBackButton` ghost / `NextButton` cyan-400 CTA — never `accent-500`);
+**Sign Out** (`SignOutButton`, danger-tinted) is the last item of the account
+drawer / sidebar footer and is deliberately kept out of every top bar.
 
 ### Ghost / Tertiary
 ```
@@ -235,7 +246,7 @@ error:         border-rose-400/60 ring-1 ring-rose-400/20
 - Section dividers: `border-slate-800`
 - User info section at top: `bg-slate-800/60 rounded-2xl` with `text-white` username, `text-cyan-300` points/rank
 - Overlay/scrim behind open menu: `bg-slate-950/80 backdrop-blur-sm`
-- Close button: `.tp-exit-pill` or ghost `text-slate-400`
+- Close button: `ExitBackButton` (the dark circle) or ghost `text-slate-400`
 
 ### 6b. Mobile Bottom Navigation — `components/ui/MobileBottomNav.tsx`
 
@@ -457,8 +468,8 @@ These are pre-game screens where the user picks their board/game/sport before pl
 - Item label: `text-slate-200 font-semibold`
 - Item sublabel/count: `text-orange-300 text-sm`
 - Primary CTA ("Select This Board" etc.): `bg-orange-500 text-white font-black rounded-xl`
-- Back button: `.tp-exit-pill` with `style={{ boxShadow: "0 0 0 2px #020617" }}` for
-  contrast against the orange background (same fix used in `SportsBingoHome.tsx`)
+- Back button: `ExitBackButton` (the dark circle) — its `border-white/10 bg-slate-900`
+  already reads cleanly against the orange background; no extra shadow ring needed
 
 ---
 
@@ -550,7 +561,7 @@ This panel appears on the game landing screen before a user enters a game.
 - Game subtitle: `text-[game-accent-300] text-sm font-black uppercase tracking-[0.14em]`
 - Rules list: `text-slate-300 text-sm`
 - "Enter Game" CTA: Primary style with game accent
-- Back button: `.tp-exit-pill`
+- Back button: `ExitBackButton` (the dark circle)
 
 ### Game Landing Experience — `components/venue/GameLandingExperience.tsx`
 
@@ -655,8 +666,9 @@ body { background: var(--tp-canvas); }  /* #020617 — no green turf gradient */
 □ Card border is 1px tinted at /30–/60 from the section's accent color?
 □ Section label is uppercase tracking-[0.14em] font-black text-sm in accent-300?
 □ All text on dark surfaces uses slate-50 / slate-300 / slate-400 (never slate-600)?
-□ Primary button uses accent-500 bg with text-slate-950?
-□ Back/exit uses .tp-exit-pill (warm red gradient pill)?
+□ Primary button uses accent-500 bg with text-slate-950? (wizard-footer Next is cyan-400)
+□ Back/exit is the neutral dark slate circle (ExitBackButton — Lucide ChevronLeft,
+  border-white/10 bg-slate-900, NO warm tint), pinned top-left?
 □ No white cards, no cream backgrounds, no comic drop shadows?
 ```
 

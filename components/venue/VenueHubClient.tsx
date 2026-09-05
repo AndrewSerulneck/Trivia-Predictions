@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import type { Venue, LeaderboardEntry } from "@/types";
+import { AccountMenuList } from "@/components/navigation/AccountMenuList";
 import { getAccountId, getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
@@ -96,36 +97,7 @@ type ChallengeCampaignPayload = {
   campaigns?: ChallengeCampaignCard[];
 };
 
-type VenueMenuItem = {
-  label: string;
-  description: string;
-  href: string;
-};
-
 const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["category-blitz", "speed-trivia", "nfl-pickem", "live_trivia", "bingo", "fantasy", "pickem"];
-const VENUE_DRAWER_MENU_ITEMS: VenueMenuItem[] = [
-  {
-    label: "Career Stats",
-    description: "Track your lifetime performance across every game.",
-    href: "/active-games",
-  },
-  {
-    label: "FAQs",
-    description: "Get quick answers about gameplay and prizes.",
-    href: "/faqs",
-  },
-  {
-    label: "Advertise With Us",
-    description: "Submit the advertiser intake form.",
-    href: "/advertise",
-  },
-  {
-    label: "Redeem Prizes",
-    description: "See earned rewards and prize redemptions.",
-    href: "/redeem-prizes",
-  },
-];
-
 const SWIPE_SCREEN_COUNT = 3;
 const FETCH_TIMEOUT_MS = 4500;
 const BADGE_FETCH_TIMEOUT_MS = 3500;
@@ -267,16 +239,6 @@ function pathMatches(expectedPath: string, candidatePath: string): boolean {
   return candidatePath === expectedPath || candidatePath.startsWith(`${expectedPath}/`);
 }
 
-function isActiveMenuPath(pathname: string, href: string): boolean {
-  if (href === "/") {
-    return pathname === href;
-  }
-  if (href.startsWith("/venue/")) {
-    return pathname.startsWith("/venue/");
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
 function isPasskeyUserCancel(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const err = error as Record<string, unknown>;
@@ -317,7 +279,6 @@ function venueDebugLog(message: string, details?: Record<string, unknown>) {
 
 function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
   const router = useRouter();
-  const pathname = usePathname();
   // Bootstrap snapshot and entry handoff are read from sessionStorage ONLY after
   // mount (in useEffect). Reading them during render would produce different values
   // on the server (no sessionStorage) vs. the client, causing a hydration mismatch.
@@ -578,14 +539,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const openMenu = useCallback(() => {
     setIsMenuOpen(true);
   }, []);
-
-  const leaveVenue = () => {
-    try {
-      (navigator as any).vibrate?.([22, 40, 22]);
-    } catch {}
-    clearVenueSession();
-    router.push("/");
-  };
 
   const goToScreen = useCallback((screenIndex: HomeScreenIndex) => {
     const viewport = swipeViewportRef.current;
@@ -1671,46 +1624,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             </div>
           )}
 
-          <nav aria-label="Primary navigation">
-            <ul className="space-y-3">
-              {VENUE_DRAWER_MENU_ITEMS.map((item) => {
-                const active = isActiveMenuPath(pathname, item.href);
-                return (
-                  <li key={`${item.label}:${item.href}`}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        router.push(item.href);
-                      }}
-                      className={`w-full rounded-ht-lg border px-4 py-3.5 text-left ${
-                        active
-                          ? "border-ht-border-strong bg-ht-elevated text-ht-fg-primary"
-                          : "border-ht-border-hairline bg-ht-elevated/50 text-ht-fg-secondary hover:border-ht-border-soft hover:bg-ht-elevated"
-                      }`}
-                    >
-                      <div className="text-lg font-black leading-tight">{item.label}</div>
-                      <div className={`mt-1 text-sm leading-snug ${active ? "text-ht-fg-secondary" : "text-ht-fg-muted"}`}>
-                        {item.description}
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-              <li>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    leaveVenue();
-                  }}
-                  className="w-full rounded-ht-lg border border-rose-400/45 bg-rose-500/10 px-4 py-3 text-left text-base font-black text-rose-300"
-                >
-                  Leave Venue
-                </button>
-              </li>
-            </ul>
-          </nav>
+          <AccountMenuList onNavigate={() => setIsMenuOpen(false)} />
         </aside>
       </div>
 

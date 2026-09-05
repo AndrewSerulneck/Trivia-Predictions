@@ -2,10 +2,10 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
 import { useScheduleUpdatedFlash } from "@/lib/hooks/useScheduleUpdatedBroadcast";
 import { useDelayedFlag } from "@/lib/hooks/useDelayedFlag";
+import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import ScheduleUpdatedToast from "@/components/ui/ScheduleUpdatedToast";
 import { useCategoryBlitzSession, type CategoryBlitzPhase } from "@/lib/categoryBlitzRealtime";
 import { isCategoryBlitzTestModeEnabled, setCategoryBlitzTestMode } from "@/lib/categoryBlitzTestMode";
@@ -2090,17 +2090,7 @@ function Header({
   return (
     <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950 px-4 py-3`}>
       <div className="flex items-center gap-2">
-        {onBack ? (
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label="Back to venue"
-            className="tp-clean-button -ml-1 inline-flex h-8 shrink-0 items-center gap-0.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 pl-1 pr-2.5 text-emerald-300 transition-colors hover:bg-emerald-500/20 hover:text-emerald-200"
-          >
-            <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-            <span className="text-[0.65rem] font-black uppercase tracking-[0.1em]">Back</span>
-          </button>
-        ) : null}
+        {onBack ? <ExitBackButton onExit={onBack} label="Back to venue" /> : null}
         {error && (
           <span className="ml-auto text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
             Reconnecting…

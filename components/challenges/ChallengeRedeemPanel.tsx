@@ -169,7 +169,17 @@ function gameTypeLabel(gameTypes: string[]): string {
 
 // ── ChallengeRedeemPanel ──────────────────────────────────────────────────────
 
-export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
+type ChallengeRedeemPanelProps = {
+  venueId: string;
+  /**
+   * Hands the caller the exit-back teardown so it can be wired into
+   * PageShell's `backTo` (rendered in the header, not inline here anymore —
+   * see docs/navigation-unification-plan.md Phase 2).
+   */
+  onExitReady?: (exit: () => void) => void;
+};
+
+export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPanelProps) {
   const router = useRouter();
   const venuePresence = useVenuePresence();
   const [userId, setUserId] = useState("");
@@ -272,6 +282,10 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
     });
   }, [router, venueId]);
 
+  useEffect(() => {
+    onExitReady?.(backToVenue);
+  }, [backToVenue, onExitReady]);
+
   // challengeId is null on a coupon whose reward was deleted (detached history).
   // Several such rows can coexist and share a cycleStart (two rewards pinned to
   // the same game), so the fallback also needs claimedAt to stay unique.
@@ -344,17 +358,6 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
 
   return (
     <div className="space-y-3">
-      <button
-        type="button"
-        onClick={backToVenue}
-        className="tp-clean-button inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35"
-      >
-        <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">
-          ←
-        </span>
-        Back to Venue
-      </button>
-
       {/* ── Active campaign progress gauges ── */}
       {!loading && activeCampaigns.length > 0 && (
         <section className="rounded-2xl border border-cyan-700/60 bg-gradient-to-br from-cyan-950 to-slate-900 p-4 shadow-lg shadow-cyan-950/50">

@@ -11,6 +11,7 @@ import {
 import { MobileVenuesSection, BillingSection } from "@/components/admin/adminSectionComponents";
 import { MobileBottomSheet } from "@/components/admin/mobile/MobileBottomSheet";
 import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
+import { SignOutButton } from "@/components/navigation/SignOutButton";
 
 type MobileSection = (typeof MOBILE_SECTION_ORDER)[number];
 
@@ -24,7 +25,7 @@ type AdminMobileShellProps = {
   activeSection: AdminSection;
   onSelect: (section: AdminSection) => void;
   onSwitchToDesktop: () => void;
-  onLogout: () => void;
+  onSignedOut: () => void;
   onVenueCreated: (venue: Venue) => void;
   onVenueUpdated: (venue: Venue) => void;
   onVenueDeleted: (venueId: string) => void;
@@ -35,7 +36,7 @@ export function AdminMobileShell({
   activeSection,
   onSelect,
   onSwitchToDesktop,
-  onLogout,
+  onSignedOut,
   onVenueCreated,
   onVenueUpdated,
   onVenueDeleted,
@@ -142,16 +143,16 @@ export function AdminMobileShell({
         >
           Switch to Desktop
         </button>
-        <button
-          type="button"
-          onClick={() => {
+        <SignOutButton
+          variant="admin"
+          onSignedOut={() => {
             setMoreOpen(false);
-            onLogout();
+            onSignedOut();
           }}
-          className="flex min-h-[44px] w-full items-center rounded-lg px-3 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+          className="flex min-h-[44px] w-full items-center rounded-lg px-3 text-left text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
         >
           Sign out
-        </button>
+        </SignOutButton>
       </MobileBottomSheet>
     </div>
   );

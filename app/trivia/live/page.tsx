@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
+import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import { RankBadge } from "@/components/trivia/RankBadge";
 import { AnimatedQuestionText } from "@/components/animations/AnimatedQuestionText";
 import { LiveTriviaCountdownTimer } from "@/components/animations/LiveTriviaCountdownTimer";
@@ -1143,14 +1144,7 @@ function LiveShowdownPageContent() {
               >
                 Retry Sync
               </button>
-              <button
-                type="button"
-                onClick={() => void goHome()}
-                className="tp-clean-button tp-exit-pill inline-flex items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.08em]"
-              >
-                <span aria-hidden="true">←</span>
-                Back
-              </button>
+              <ExitBackButton onExit={() => void goHome()} label="Back to venue" />
             </div>
           </section>
         </div>
@@ -1227,15 +1221,7 @@ function LiveShowdownPageContent() {
       <div className="mx-auto w-full max-w-md flex-1 min-h-0 overflow-y-auto touch-pan-y space-y-4 px-4 pt-4 pb-4">
         <header className="rounded-2xl border border-cyan-400/60 bg-slate-900 p-4">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => void goHome()}
-              disabled={isLeaving}
-              aria-label="Back to venue"
-              className="tp-exit-pill tp-clean-button inline-flex h-9 w-9 shrink-0 items-center justify-center text-lg disabled:opacity-50"
-            >
-              ←
-            </button>
+            <ExitBackButton onExit={() => void goHome()} disabled={isLeaving} label="Back to venue" />
             <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Trivia Showdown</h1>
           </div>
         </header>
@@ -1476,7 +1462,7 @@ function LiveShowdownPageContent() {
                       onClick={() => void goHome()}
                       className="w-full rounded-2xl bg-rose-500 px-4 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-white transition-colors hover:bg-rose-400"
                     >
-                      ← Back to venue
+                      Back to venue
                     </button>
                   </>
                 ) : (
@@ -1596,7 +1582,7 @@ function LiveShowdownPageContent() {
                       onClick={() => void goHome()}
                       className="w-full rounded-2xl bg-rose-500 px-4 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-white transition-colors hover:bg-rose-400"
                     >
-                      ← Back to Venue
+                      Back to Venue
                     </button>
                   </>
                 )}

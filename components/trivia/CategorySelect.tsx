@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import { TRIVIA_CATEGORIES, ALL_CATEGORIES_SENTINEL } from "@/lib/triviaCategories";
 import { getVenueId } from "@/lib/storage";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
@@ -49,22 +50,15 @@ export function CategorySelect({ onSelect }: Props) {
           className="flex shrink-0 items-center justify-between gap-2 px-3.5"
           style={{ paddingTop: "max(env(safe-area-inset-top), 10px)", paddingBottom: "12px" }}
         >
-          <button
-            type="button"
-            onMouseDown={() => triggerHaptic(14)}
-            onClick={returnToVenueHome}
-            className="tp-exit-pill tp-clean-button inline-flex items-center gap-1.5 px-3 font-black text-[12px]"
-          >
-            ← Back
-          </button>
+          <ExitBackButton onExit={returnToVenueHome} label="Back to venue" />
           <div
             className="font-black uppercase tracking-[0.06em] text-[#facc15] text-[17px]"
             style={{ textShadow: "0 1px 0 #000, 0 0 14px rgba(250,204,21,0.5)" }}
           >
             Speed Trivia
           </div>
-          {/* Spacer to balance the header */}
-          <div className="w-[72px]" />
+          {/* Spacer to balance the header — matches ExitBackButton's 34px circle */}
+          <div className="w-[34px]" />
         </div>
 
         {/* Content */}

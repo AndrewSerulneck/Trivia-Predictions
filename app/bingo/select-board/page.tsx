@@ -1,5 +1,4 @@
 import { PageShell } from "@/components/ui/PageShell";
-import { BackButton } from "@/components/navigation/BackButton";
 import { SportsBingoSelectBoard } from "@/components/bingo/SportsBingoSelectBoard";
 import { VenuePresenceBoundary } from "@/components/venue/VenuePresenceBoundary";
 import { APP_PAGE_NAMES } from "@/lib/pageNames";
@@ -19,9 +18,9 @@ export default async function SportsBingoSelectBoardPage({
     <PageShell
       title={APP_PAGE_NAMES.sportsBingo}
       showPageTitle={false}
+      backTo={{ href: backHref, label: "Back", preferHref: true }}
     >
       <div className="h-full space-y-4 overflow-y-auto pr-1">
-        <BackButton href={backHref} label="Back" preferHref />
         <VenuePresenceBoundary>
           <SportsBingoSelectBoard />
         </VenuePresenceBoundary>

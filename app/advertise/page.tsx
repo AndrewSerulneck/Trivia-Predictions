@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { AdvertisingIntakeForm } from "@/components/ads/AdvertisingIntakeForm";
-import { BackButton } from "@/components/navigation/BackButton";
 import { PageShell } from "@/components/ui/PageShell";
 
 export const metadata: Metadata = {
@@ -33,9 +32,9 @@ export default function AdvertisePage() {
       showUserStatus={false}
       showAlerts={false}
       showPageTitle={false}
+      backTo={{ label: "Back", showLabel: true }}
     >
       <div className="space-y-4">
-        <BackButton label="Back" />
         <p className="text-sm text-ht-fg-secondary">
           Fill out this quick intake form and our team will follow up.
         </p>

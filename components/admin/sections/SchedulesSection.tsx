@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CampaignRecurringType, Venue } from "@/types";
 import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/AdminShell";
 import { adminField, adminLabel } from "@/lib/adminStyles";
+import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -984,16 +985,15 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
 
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center gap-3">
+          <ExitBackButton
+            tone="light"
+            onExit={() => { resetCreateForm(); setEditingScheduleId(null); setMode("list"); }}
+            label="Back to session list"
+          />
           <h2 className="text-base font-semibold text-slate-900">
             {isEditMode ? "Edit Live Trivia Session" : "Schedule Live Trivia"}
           </h2>
-          <button
-            onClick={() => { resetCreateForm(); setEditingScheduleId(null); setMode("list"); }}
-            className="text-sm text-slate-500 hover:text-slate-800"
-          >
-            ← Back to list
-          </button>
         </div>
 
         <div className="grid grid-cols-2 gap-5">
@@ -1166,7 +1166,12 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
       <div className="space-y-4">
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <div className="flex items-center gap-3 border-b border-slate-200 px-6 py-4">
+            <ExitBackButton
+              tone="light"
+              onExit={closeManageQuestions}
+              label="Back to schedule list"
+            />
             <div>
               <h2 className="text-sm font-semibold text-slate-900">
                 Manage Questions: {manageSchedule.title}
@@ -1176,12 +1181,6 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
                 {sessionQuestions.length} question{sessionQuestions.length !== 1 ? "s" : ""} total
               </p>
             </div>
-            <button
-              onClick={closeManageQuestions}
-              className="text-sm text-slate-500 hover:text-slate-800"
-            >
-              ← Back to schedule list
-            </button>
           </div>
 
           {/* Loading state */}

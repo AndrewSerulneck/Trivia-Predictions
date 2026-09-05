@@ -1,3 +1,4 @@
+import { ExitBackButton, type ExitBackButtonProps } from "@/components/navigation/ExitBackButton";
 import { LeftHamburgerMenu } from "@/components/ui/LeftHamburgerMenu";
 
 type PageShellProps = {
@@ -9,6 +10,8 @@ type PageShellProps = {
   showUserStatus?: boolean;
   showAlerts?: boolean;
   showPageTitle?: boolean;
+  /** Renders an ExitBackButton in the header's leading slot, pinned above the fold. See docs/navigation-unification-plan.md §1b. */
+  backTo?: ExitBackButtonProps;
   shellClassName?: string;
   mainClassName?: string;
   children?: React.ReactNode;
@@ -21,6 +24,7 @@ export function PageShell({
   showUserStatus = true,
   showAlerts = true,
   showPageTitle = true,
+  backTo,
   children,
   noContainer = false,
   lockViewport = false,
@@ -28,14 +32,17 @@ export function PageShell({
   mainClassName,
 }: PageShellProps) {
   const useCompactTopNav = !showBranding;
-  const hasCompactHeaderContent = showUserStatus || showPageTitle;
+  // Whether the header renders its top row at all — either the account/points
+  // bar (showUserStatus) or a lone ExitBackButton (backTo), or both sharing it.
+  const hasHeaderRow = showUserStatus || Boolean(backTo);
+  const hasCompactHeaderContent = hasHeaderRow || showPageTitle;
   const mainClass = noContainer
     ? lockViewport
       ? "min-h-0 flex-1 overflow-hidden p-0"
       : "min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-0"
     : "bg-ht-surface border border-ht-border-hairline rounded-ht-2xl min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-3 sm:p-4 text-base";
   const compactHeaderSpacerClass = useCompactTopNav && hasCompactHeaderContent
-    ? showUserStatus
+    ? hasHeaderRow
       ? showPageTitle
         ? "h-[calc(env(safe-area-inset-top)+5.35rem)] sm:h-[calc(env(safe-area-inset-top)+6.4rem)]"
         : "h-[calc(env(safe-area-inset-top)+4.35rem)] sm:h-[calc(env(safe-area-inset-top)+5.1rem)]"
@@ -60,10 +67,19 @@ export function PageShell({
         hasCompactHeaderContent ? (
           <header className="tp-page-header tp-page-header-compact fixed inset-x-0 top-0 z-[1000] w-full max-w-none overflow-visible px-0 pb-0 pt-0">
             <div className="w-full max-w-none box-border px-0 pt-[max(env(safe-area-inset-top),0px)]">
-              {showUserStatus ? <LeftHamburgerMenu showAlerts={showAlerts} /> : null}
+              {hasHeaderRow ? (
+                <div className="relative flex w-full items-center gap-2 rounded-none border-b border-ht-border-hairline bg-ht-surface px-2 py-1.5 shadow-[0_1px_0_rgba(255,255,255,0.04)]">
+                  {backTo ? <ExitBackButton {...backTo} /> : null}
+                  {showUserStatus ? (
+                    <div className="min-w-0 flex-1">
+                      <LeftHamburgerMenu showAlerts={showAlerts} />
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
               {showPageTitle ? (
                 <div
-                  className={`${showUserStatus ? "mt-1" : ""} mx-0 rounded-none border-b border-ht-border-hairline bg-ht-elevated/95 px-2 py-1 text-center text-xs text-ht-fg-muted backdrop-blur`}
+                  className={`${hasHeaderRow ? "mt-1" : ""} mx-0 rounded-none border-b border-ht-border-hairline bg-ht-elevated/95 px-2 py-1 text-center text-xs text-ht-fg-muted backdrop-blur`}
                 >
                   <span className="font-semibold">{title}</span>
                   {description ? <span className="font-medium">: {description}</span> : null}

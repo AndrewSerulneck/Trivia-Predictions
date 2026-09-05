@@ -15,6 +15,7 @@ import { QuestionInventoryAlert } from "@/components/admin/sections/QuestionInve
 import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
 import { AdminModeChooser, type AdminMode } from "@/components/admin/AdminModeChooser";
 import { AdminMobileShell } from "@/components/admin/AdminMobileShell";
+import { SignOutButton } from "@/components/navigation/SignOutButton";
 import {
   AccountsSection,
   UsersSection,
@@ -334,13 +335,13 @@ function LegacyPanel({ section }: { section: AdminSectionOption }) {
 type SidebarProps = {
   activeSection: AdminSection;
   onSelect: (section: AdminSection) => void;
-  onLogout: () => void;
+  onSignedOut: () => void;
   onSwitchToMobile: () => void;
   mobile?: boolean;
   onClose?: () => void;
 };
 
-function Sidebar({ activeSection, onSelect, onLogout, onSwitchToMobile, mobile = false, onClose }: SidebarProps) {
+function Sidebar({ activeSection, onSelect, onSignedOut, onSwitchToMobile, mobile = false, onClose }: SidebarProps) {
   return (
     /* `h-full`, not the previous inline `minHeight: 100svh`: this nav sits
        inside the now definite-height (`h-full`) shell root, and a `min-height`
@@ -425,15 +426,16 @@ function Sidebar({ activeSection, onSelect, onLogout, onSwitchToMobile, mobile =
           </svg>
           Switch to Mobile
         </button>
-        <button
-          onClick={onLogout}
-          className="flex min-h-[44px] w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+        <SignOutButton
+          variant="admin"
+          onSignedOut={onSignedOut}
+          className="flex min-h-[44px] w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-white disabled:opacity-50"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
           </svg>
           Sign out
-        </button>
+        </SignOutButton>
       </div>
     </nav>
   );
@@ -545,8 +547,11 @@ export function AdminShell({ venues, initialSection = "venue-users", deepLinked 
     setAuthState("authenticated");
   }, []);
 
-  const handleLogout = useCallback(async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
+  // The POST to /api/admin/logout now lives in SignOutButton (variant="admin");
+  // this just resets the in-place auth state afterward, since AdminShell
+  // re-renders its own LoginScreen rather than navigating. Passed as
+  // `onSignedOut` to every Sidebar / AdminMobileShell instance.
+  const handleSignedOut = useCallback(() => {
     setAuthState("unauthenticated");
   }, []);
 
@@ -621,7 +626,7 @@ export function AdminShell({ venues, initialSection = "venue-users", deepLinked 
         activeSection={activeSection}
         onSelect={handleSectionSelect}
         onSwitchToDesktop={handleSwitchToDesktop}
-        onLogout={handleLogout}
+        onSignedOut={handleSignedOut}
         onVenueCreated={handleVenueCreated}
         onVenueUpdated={handleVenueUpdated}
         onVenueDeleted={handleVenueDeleted}
@@ -700,7 +705,7 @@ export function AdminShell({ venues, initialSection = "venue-users", deepLinked 
         <Sidebar
           activeSection={activeSection}
           onSelect={handleSectionSelect}
-          onLogout={handleLogout}
+          onSignedOut={handleSignedOut}
           onSwitchToMobile={handleSwitchToMobile}
         />
       </div>
@@ -721,7 +726,7 @@ export function AdminShell({ venues, initialSection = "venue-users", deepLinked 
         <Sidebar
           activeSection={activeSection}
           onSelect={handleSectionSelect}
-          onLogout={handleLogout}
+          onSignedOut={handleSignedOut}
           onSwitchToMobile={handleSwitchToMobile}
           mobile
           onClose={() => setMobileSidebarOpen(false)}

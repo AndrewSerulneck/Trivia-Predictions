@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { OwnerShell, ownerInputClass, ownerLabelClass, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
+import { OwnerShell, ownerInputClass, ownerLabelClass } from "@/components/owner/OwnerShell";
+import { WizardFooter } from "@/components/navigation/WizardFooter";
 
 const EyeIcon = ({ open }: { open: boolean }) =>
   open ? (
@@ -96,13 +97,11 @@ const OwnerRegisterPage = () => {
   };
 
   return (
-    <OwnerShell title="Create Owner Account" subtitle={step === 1 ? "Tell us about you and your venue" : "Confirm your venue"}>
-      <Link
-        href="/owner/login"
-        className="mb-5 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900"
-      >
-        ← Back
-      </Link>
+    <OwnerShell
+      title="Create Owner Account"
+      subtitle={step === 1 ? "Tell us about you and your venue" : "Confirm your venue"}
+      backTo={{ href: "/owner/login", label: "Back to sign in", preferHref: true, showLabel: true }}
+    >
       {step === 1 ? (
         <form onSubmit={handleFindVenue} className="space-y-4">
           <div>
@@ -142,9 +141,16 @@ const OwnerRegisterPage = () => {
             <input inputMode="numeric" value={zip} onChange={(e) => setZip(e.target.value)} placeholder="33071" className={ownerInputClass} />
           </div>
           {error ? <p className="text-sm font-medium text-rose-600">{error}</p> : null}
-          <button type="submit" disabled={submitting} className={ownerPrimaryButtonClass}>
-            {submitting ? "Searching…" : "Find My Venue"}
-          </button>
+          {/* First step, so no step-back — the top-left exit is the only way out.
+              `nextType="submit"` keeps the form's Enter-to-submit working. */}
+          <WizardFooter
+            variant="inline"
+            tone="light"
+            nextType="submit"
+            nextLabel="Find My Venue"
+            nextBusyLabel="Searching…"
+            nextBusy={submitting}
+          />
         </form>
       ) : (
         <div className="space-y-4">
@@ -167,16 +173,18 @@ const OwnerRegisterPage = () => {
             ))}
           </div>
           {error ? <p className="text-sm font-medium text-rose-600">{error}</p> : null}
-          <button type="button" disabled={submitting} onClick={handleRegister} className={ownerPrimaryButtonClass}>
-            {submitting ? "Creating account…" : "Create Account"}
-          </button>
-          <button
-            type="button"
-            onClick={() => { setStep(1); setError(null); }}
-            className="w-full text-center text-sm text-slate-500 hover:text-slate-700"
-          >
-            ← Back to edit details
-          </button>
+          <WizardFooter
+            variant="inline"
+            tone="light"
+            onBack={() => { setStep(1); setError(null); }}
+            backLabel="Details"
+            backDisabled={submitting}
+            onNext={() => void handleRegister()}
+            nextLabel="Create Account"
+            nextBusyLabel="Creating account…"
+            nextBusy={submitting}
+            nextHideChevron
+          />
         </div>
       )}
       <p className="mt-6 text-center text-sm text-slate-500">

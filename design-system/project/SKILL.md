@@ -11,9 +11,10 @@ other available files:
 - **`colors_and_type.css`** — single source of truth for every design token.
   Canvas/surface ladder, accent palettes, **page-level accents** (cyan home /
   amber leaderboard / blue activity / gold prizes / slate FAQs / rose danger),
-  **five game color identities**, exit pill, type scale, radii, shadows,
+  **five game color identities**, type scale, radii, shadows,
   spacing, and the `tp-glow-pulse` animation. Import this from any HTML
-  artifact.
+  artifact. (The `--ht-exit-*` tokens are retired — see the exit/back note
+  below — but remain in `colors_and_type.css` so old preview specimens render.)
 - **`assets/`** — logo (`brand/hightop-logo.svg`), five game icon PNGs,
   player silhouette, checkmark. Copy these into your output; do not redraw.
 - **`preview/`** — design-system specimen cards (type, colors, spacing,
@@ -38,8 +39,10 @@ Apply this to every player-facing component you build. **All 7 must pass.**
 □ Card border is 1px tinted at /30–/60 from the section's accent color?
 □ Section label is uppercase tracking-[0.14em] font-black text-sm in accent-300?
 □ All text on dark surfaces uses slate-50 / slate-300 / slate-400 (never slate-600)?
-□ Primary button uses accent-500 bg with text-slate-950?
-□ Back/exit uses .tp-exit-pill (warm red gradient pill)?
+□ Primary button uses accent-500 bg with text-slate-950? (advance/Next in a
+  wizard footer is cyan-400 — see components/navigation/NextButton.tsx)
+□ Back/exit is the neutral dark slate circle (ExitBackButton — Lucide
+  ChevronLeft, border-white/10 bg-slate-900, NO warm tint), pinned top-left?
 □ No white cards, no cream backgrounds, no comic drop shadows?
 ```
 
@@ -51,15 +54,25 @@ Apply this to every player-facing component you build. **All 7 must pass.**
    focus / Live Trivia. Emerald = answering / success. Amber = countdowns /
    leaderboard / closest-guess. Fuchsia = answer reveal / intermission.
    Rose = error / wrong / danger. Blue = activity / career. Gold = prizes.
-3. **The exit pill is the only warm element on screen** — warm-red gradient
-   pill with the dark structural border. Never use rose for back/exit.
+3. **Back/exit is the neutral dark slate circle, everywhere** — Lucide
+   `ChevronLeft` in a 34px `border-white/10 bg-slate-900 text-slate-300`
+   circle, pinned to the leading slot of the top bar. It carries **no accent
+   tint** so the identical control sits unchanged on Bingo's warm felt,
+   Category Blitz's emerald, Live Trivia's cyan and the plain content pages.
+   This replaces the retired warm-red "exit pill" (see
+   `docs/navigation-unification-plan.md` §1a). Never use rose, and never a
+   warm gradient, for back/exit. Admin + the owner auth/billing white cards
+   use the same circle with `tone="light"`
+   (`components/navigation/ExitBackButton.tsx`). The three multi-step-flow
+   controls — step-back, Next, Sign Out — are `StepBackButton` / `NextButton`
+   (composed by `WizardFooter`) and `SignOutButton`; Sign Out is never a top-bar
+   control.
 4. **Five game identities, each themed to its gameplay** (canonical hexes in
    `colors_and_type.css`):
    - Live Trivia = cyan→blue→violet broadcast gradient
    - Speed Trivia = electric yellow / lime racing stripes on near-black
    - Sports Bingo = casino felt green w/ gold trim and a **cool-ice sky-300
-     border** (the cool border cuts cleanly against the warm exit pill on the
-     same screen)
+     border**
    - Pick 'Em = sportsbook ticket — diagonal navy-vs-magenta split with
      ticket-yellow accent
    - Fantasy = coach's chalkboard — deep forest with chalk grid + X/O play
@@ -98,9 +111,15 @@ Apply this to every player-facing component you build. **All 7 must pass.**
   Join Live Trivia!
 </button>
 
-// Exit pill — class already exists in globals.css
-<button className="tp-exit-pill px-4 py-2 inline-flex items-center gap-2">
-  <span className="text-xs">←</span> Back to Venue
+// Back/exit — the canonical dark circle. In production code import
+// ExitBackButton (components/navigation/ExitBackButton.tsx); the raw markup:
+<button
+  aria-label="Back to Venue"
+  className="tp-clean-button inline-flex h-[34px] w-[34px] shrink-0 items-center
+             justify-center rounded-full border border-white/10 bg-slate-900
+             text-slate-300 transition-colors hover:text-white"
+>
+  {/* Lucide ChevronLeft, h-4 w-4 — never a raw ← glyph */}
 </button>
 ```
 
