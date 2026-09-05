@@ -1,8 +1,11 @@
 "use client";
 
+import { haptic } from "@/lib/haptics";
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight, Download, ListChecks, Maximize2, Minimize2, Plus, Share, Trophy, X } from "lucide-react";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import type { CSSProperties, TouchEvent as ReactTouchEvent } from "react";
@@ -599,7 +602,7 @@ function renderCompactGrid(
             )} ${
               shouldPop
                 ? isSuccessPop
-                  ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse"
+                  ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse motion-reduce:animate-none"
                   : "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]"
                 : ""
             }`}
@@ -676,7 +679,7 @@ function renderExpandedGrid(
               )} ${
                 shouldPop
                   ? isSuccessPop
-                    ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse"
+                    ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse motion-reduce:animate-none"
                     : "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]"
                   : ""
               }`}
@@ -764,7 +767,7 @@ function renderLandscapeGrid(
               )} ${
                 shouldPop
                   ? isSuccessPop
-                    ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse"
+                    ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse motion-reduce:animate-none"
                     : "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]"
                   : ""
               }`}
@@ -812,6 +815,9 @@ export function SportsBingoHome({
   initialCardId?: string;
   onBack?: () => void;
 }) {
+  const claimPointsPendingRef = useRef(false);
+  const collectAllBingoPointsPendingRef = useRef(false);
+  const reducedMotion = useReducedMotion();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const { triggerAnimation } = useAnimationTrigger();
   const venuePresence = useVenuePresence();
@@ -1899,52 +1905,60 @@ export function SportsBingoHome({
   }, [isLandscapeGameView, isFullscreenSupported, isLandscapeFullscreen, enterLandscapeFullscreen]);
 
   const collectAllBingoPoints = useCallback(async () => {
-    if (!userId || isCollectingAllBingo || unclaimedWonBingoCards.length === 0 || venuePresence.isInteractionBlocked) return;
-    setIsCollectingAllBingo(true);
-    setErrorMessage("");
-    let totalAwarded = 0;
-    let firstRect: DOMRect | undefined;
+    if (collectAllBingoPointsPendingRef.current) return;
+    collectAllBingoPointsPendingRef.current = true;
     try {
-      const collectButton = document.querySelector<HTMLElement>("[data-bingo-collect-all]");
-      firstRect = collectButton?.getBoundingClientRect();
-      for (const card of unclaimedWonBingoCards) {
-        const response = await fetch("/api/bingo/cards", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "claim", userId, cardId: card.id }),
-        });
-        const payload = (await response.json()) as ClaimResponse & { code?: string; userMessage?: string };
-        const presenceFailure = venuePresence.capturePresenceFailure(payload);
-        if (presenceFailure) {
-          break;
+      if (!userId || claimPointsPendingRef.current || isCollectingAllBingo || unclaimedWonBingoCards.length === 0 || venuePresence.isInteractionBlocked) return;
+      setIsCollectingAllBingo(true);
+      setErrorMessage("");
+      let totalAwarded = 0;
+      let firstRect: DOMRect | undefined;
+      try {
+        const collectButton = document.querySelector<HTMLElement>("[data-bingo-collect-all]");
+        firstRect = collectButton?.getBoundingClientRect();
+        for (const card of unclaimedWonBingoCards) {
+          const response = await fetch("/api/bingo/cards", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "claim", userId, cardId: card.id }),
+          });
+          const payload = (await response.json()) as ClaimResponse & { code?: string; userMessage?: string };
+          const presenceFailure = venuePresence.capturePresenceFailure(payload);
+          if (presenceFailure) {
+            break;
+          }
+          if (payload.ok && payload.result) {
+            totalAwarded += payload.result.rewardPoints;
+          }
         }
-        if (payload.ok && payload.result) {
-          totalAwarded += payload.result.rewardPoints;
+        if (totalAwarded > 0) {
+          haptic("success");
+          window.dispatchEvent(
+            new CustomEvent("tp:coin-flight", {
+              detail: {
+                sourceRect: firstRect
+                  ? { left: firstRect.left, top: firstRect.top, width: firstRect.width, height: firstRect.height }
+                  : undefined,
+                delta: totalAwarded,
+                coins: Math.min(36, Math.max(14, Math.round(totalAwarded / 4))),
+              },
+            })
+          );
+          window.dispatchEvent(
+            new CustomEvent("tp:points-updated", {
+              detail: { source: "bingo-claim", delta: totalAwarded },
+            })
+          );
         }
+      } catch {
+        setErrorMessage("Failed to collect some boards. Try individual collect buttons below.");
+      } finally {
+        setIsCollectingAllBingo(false);
+        void loadCards({ background: true });
       }
-      if (totalAwarded > 0) {
-        window.dispatchEvent(
-          new CustomEvent("tp:coin-flight", {
-            detail: {
-              sourceRect: firstRect
-                ? { left: firstRect.left, top: firstRect.top, width: firstRect.width, height: firstRect.height }
-                : undefined,
-              delta: totalAwarded,
-              coins: Math.min(36, Math.max(14, Math.round(totalAwarded / 4))),
-            },
-          })
-        );
-        window.dispatchEvent(
-          new CustomEvent("tp:points-updated", {
-            detail: { source: "bingo-claim", delta: totalAwarded },
-          })
-        );
-      }
-    } catch {
-      setErrorMessage("Failed to collect some boards. Try individual collect buttons below.");
+
     } finally {
-      setIsCollectingAllBingo(false);
-      void loadCards({ background: true });
+      collectAllBingoPointsPendingRef.current = false;
     }
   }, [isCollectingAllBingo, loadCards, unclaimedWonBingoCards, userId, venuePresence]);
 
@@ -1994,67 +2008,75 @@ export function SportsBingoHome({
   }, [hasStartedActiveCard, loadCards, nextActiveCardStartMs, userId]);
 
   const claimPoints = async (card: BingoCard, sourceElement: HTMLElement | null = null) => {
-    if (!userId || claimingCardId || venuePresence.isInteractionBlocked) {
-      return;
-    }
-
-    setClaimingCardId(card.id);
-    setErrorMessage("");
+    if (claimPointsPendingRef.current) return;
+    claimPointsPendingRef.current = true;
     try {
-      const response = await fetch("/api/bingo/cards", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "claim",
-          userId,
-          cardId: card.id,
-        }),
-      });
-      const payload = (await response.json()) as ClaimResponse & { code?: string; userMessage?: string };
-      const presenceFailure = venuePresence.capturePresenceFailure(payload);
-      if (presenceFailure) {
-        throw new Error(presenceFailure.userMessage);
-      }
-      if (!payload.ok || !payload.result) {
-        throw new Error(payload.error ?? "Failed to claim Bingo points.");
+      if (!userId || collectAllBingoPointsPendingRef.current || claimingCardId || venuePresence.isInteractionBlocked) {
+        return;
       }
 
-      const buttonRect = sourceElement?.getBoundingClientRect();
-      window.dispatchEvent(
-        new CustomEvent("tp:coin-flight", {
-          detail: {
-            sourceRect: buttonRect
-              ? { left: buttonRect.left, top: buttonRect.top, width: buttonRect.width, height: buttonRect.height }
-              : undefined,
-            delta: payload.result.rewardPoints,
-            coins: Math.min(32, Math.max(12, Math.round(payload.result.rewardPoints / 4))),
-          },
-        })
-      );
-      window.dispatchEvent(
-        new CustomEvent("tp:points-updated", {
-          detail: {
-            source: "bingo-claim",
-            delta: payload.result.rewardPoints,
-          },
-        })
-      );
+      setClaimingCardId(card.id);
+      setErrorMessage("");
+      try {
+        const response = await fetch("/api/bingo/cards", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "claim",
+            userId,
+            cardId: card.id,
+          }),
+        });
+        const payload = (await response.json()) as ClaimResponse & { code?: string; userMessage?: string };
+        const presenceFailure = venuePresence.capturePresenceFailure(payload);
+        if (presenceFailure) {
+          throw new Error(presenceFailure.userMessage);
+        }
+        if (!payload.ok || !payload.result) {
+          throw new Error(payload.error ?? "Failed to claim Bingo points.");
+        }
 
-      setCards((prev) =>
-        prev.map((item) =>
-          item.id === card.id
-            ? {
-                ...item,
-                rewardClaimedAt: new Date().toISOString(),
-              }
-            : item
-        )
-      );
-      void loadCards({ background: true });
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to claim Bingo points.");
+        haptic("success");
+        const buttonRect = sourceElement?.getBoundingClientRect();
+        window.dispatchEvent(
+          new CustomEvent("tp:coin-flight", {
+            detail: {
+              sourceRect: buttonRect
+                ? { left: buttonRect.left, top: buttonRect.top, width: buttonRect.width, height: buttonRect.height }
+                : undefined,
+              delta: payload.result.rewardPoints,
+              coins: Math.min(32, Math.max(12, Math.round(payload.result.rewardPoints / 4))),
+            },
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent("tp:points-updated", {
+            detail: {
+              source: "bingo-claim",
+              delta: payload.result.rewardPoints,
+            },
+          })
+        );
+
+        setCards((prev) =>
+          prev.map((item) =>
+            item.id === card.id
+              ? {
+                  ...item,
+                  rewardClaimedAt: new Date().toISOString(),
+                }
+              : item
+          )
+        );
+        void loadCards({ background: true });
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Failed to claim Bingo points.");
+      } finally {
+        setClaimingCardId("");
+      }
+
     } finally {
-      setClaimingCardId("");
+      claimPointsPendingRef.current = false;
     }
   };
 
@@ -2088,9 +2110,9 @@ export function SportsBingoHome({
                   fontSize: "clamp(2.2rem, 10vw, 4.5rem)",
                   textShadow: "0 0 22px rgba(239,68,68,0.42), 0 0 44px rgba(239,68,68,0.24)",
                 }}
-                initial={{ scale: 0.72, opacity: 0, y: 0 }}
-                animate={{ scale: [0.72, 1.08, 1.02, 0.98], y: [0, -20, -16, -8], opacity: [0, 1, 1, 0] }}
-                transition={{
+                initial={reducedMotion ? false : { scale: 0.72, opacity: 0, y: 0 }}
+                animate={reducedMotion ? { scale: 1, y: 0, opacity: 1 } : { scale: [0.72, 1.08, 1.02, 0.98], y: [0, -20, -16, -8], opacity: [0, 1, 1, 0] }}
+                transition={reducedMotion ? { duration: 0 } : {
                   duration: 0.55,
                   times: [0, 0.28, 0.62, 1],
                   ease: ["easeOut", "easeOut", "easeIn", "easeIn"],
@@ -2108,9 +2130,9 @@ export function SportsBingoHome({
                   fontSize: "clamp(1.8rem, 7vw, 3.2rem)",
                   textShadow: "0 0 18px rgba(239,68,68,0.38), 0 0 34px rgba(239,68,68,0.18)",
                 }}
-                initial={{ scale: 0.7, opacity: 0, y: 0 }}
-                animate={{ scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
-                transition={{ duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
+                initial={reducedMotion ? false : { scale: 0.7, opacity: 0, y: 0 }}
+                animate={reducedMotion ? { scale: 1, opacity: 1, y: 0 } : { scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
+                transition={reducedMotion ? { duration: 0 } : { duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
                 onAnimationComplete={() => setLimitEchoAnim(null)}
               >
                 Limit Reached
@@ -2143,7 +2165,7 @@ export function SportsBingoHome({
         style={landscapeViewportStyle}
         className={`tp-bingo-theme tp-bingo-landscape-shell fixed z-[1300] flex overflow-hidden bg-[#020617] text-slate-100 ${
           isScreenShaking ? "tp-bingo-screen-shake" : ""
-        }`}
+        }`} role="status"
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(125,211,252,0.15),transparent_24%),radial-gradient(circle_at_70%_100%,rgba(249,115,22,0.12),transparent_30%),linear-gradient(180deg,#020617_0%,#07111f_100%)]" />
         {/* No header row. It was the single largest app-owned band in landscape
@@ -2244,7 +2266,7 @@ export function SportsBingoHome({
                   </button>
                   {landscapeCurrentCard ? (
                     <span className="tp-bingo-landscape-status inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-[10px] font-black uppercase tracking-[0.1em] text-sky-200">
-                      <span className={`h-1.5 w-1.5 rounded-full ${currentCardIsLive && isActiveLandscapeMode ? "animate-pulse bg-sky-300" : "bg-slate-400"}`} />
+                      <span className={`h-1.5 w-1.5 rounded-full ${currentCardIsLive && isActiveLandscapeMode ? "animate-pulse motion-reduce:animate-none bg-sky-300" : "bg-slate-400"}`} />
                       {isActiveLandscapeMode ? (currentCardIsLive ? "Live" : "Upcoming") : landscapeCurrentCard.status}
                     </span>
                   ) : null}
@@ -2332,10 +2354,12 @@ export function SportsBingoHome({
                     {canCollectCurrentCard ? (
                       <button
                         type="button"
+                        disabled={Boolean(claimingCardId) || isCollectingAllBingo}
+                        aria-busy={claimingCardId === landscapeCurrentCard.id}
                         onClick={(event) => void claimPoints(landscapeCurrentCard, event.currentTarget)}
                         className="tp-clean-button flex h-10 w-full items-center justify-center rounded-[10px] bg-amber-400 px-3 text-[12px] font-black uppercase text-slate-950"
                       >
-                        Collect {landscapeCurrentCard.rewardPoints} Points
+                        {claimingCardId === landscapeCurrentCard.id ? <><ButtonSpinner /> Collecting…</> : `Collect ${landscapeCurrentCard.rewardPoints} Points`}
                       </button>
                     ) : null}
                   </div>
@@ -2382,12 +2406,12 @@ export function SportsBingoHome({
   );
 
   return (
-    <div ref={rootRef} className={`tp-bingo-theme ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
+    <div ref={rootRef} className={`tp-bingo-theme ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`} role="status">
       <GameAppBar game="bingo" onExit={onBack} />
 
       <div className="mx-auto w-full max-w-[30rem] px-3 pb-6">
         {errorMessage ? (
-          <div className="mt-3 rounded-xl border border-rose-500/50 bg-rose-950/80 p-3 text-sm text-rose-300">{errorMessage}</div>
+          <div className="mt-3 rounded-xl border border-rose-500/50 bg-rose-950/80 p-3 text-sm text-rose-300" role="alert">{errorMessage}</div>
         ) : null}
 
         {loadingCards && cards.length === 0 ? (
@@ -2489,10 +2513,11 @@ export function SportsBingoHome({
                   type="button"
                   data-bingo-collect-all
                   onClick={() => void collectAllBingoPoints()}
-                  disabled={isCollectingAllBingo}
+                  disabled={isCollectingAllBingo || Boolean(claimingCardId)}
+                  aria-busy={isCollectingAllBingo}
                   className="tp-clean-button inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-300/60 bg-emerald-500/[0.16] px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.04em] text-emerald-300 disabled:opacity-60"
                 >
-                  {isCollectingAllBingo ? "Collecting…" : `Collect +${totalUnclaimedBingoPoints}`}
+                  {isCollectingAllBingo ? <><ButtonSpinner /> Collecting…</> : `Collect +${totalUnclaimedBingoPoints}`}
                 </button>
               </div>
             ) : null}
@@ -2543,7 +2568,7 @@ export function SportsBingoHome({
                           <span className="flex items-center gap-1.5">
                             <span
                               className={`h-1.5 w-1.5 rounded-full ${
-                                card.status === "won" ? "bg-amber-400" : live ? "animate-pulse bg-emerald-400" : "bg-slate-500"
+                                card.status === "won" ? "bg-amber-400" : live ? "animate-pulse motion-reduce:animate-none bg-emerald-400" : "bg-slate-500"
                               }`}
                             />
                             <span className={`text-[11px] font-black tracking-[0.02em] ${on ? "text-sky-300" : "text-slate-300"}`}>
@@ -2713,7 +2738,7 @@ export function SportsBingoHome({
                           won
                             ? "border border-emerald-400/40 bg-[linear-gradient(180deg,rgba(16,185,129,0.10),#0f172a)]"
                             : "border border-white/[0.07] bg-slate-900"
-                        } ${showClaim ? "animate-pulse ring-2 ring-amber-300/40" : ""}`}
+                        } ${showClaim ? "animate-pulse motion-reduce:animate-none ring-2 ring-amber-300/40" : ""}`}
                       >
                         <span
                           className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-[13px] font-black ${
@@ -2872,6 +2897,9 @@ export function SportsBingoHome({
       {actionPopsPortal}
       {limitFeedbackPortal}
       <style jsx global>{`
+        @media (prefers-reduced-motion: reduce) {
+          .tp-bingo-screen-shake, .pickem-limit-pulse, .bingo-board-pop { animation: none !important; }
+        }
         @keyframes tp-bingo-screen-shake {
           0% { transform: translate3d(0, 0, 0); }
           20% { transform: translate3d(-1px, 0, 0); }

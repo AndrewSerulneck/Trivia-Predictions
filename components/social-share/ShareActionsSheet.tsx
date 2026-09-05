@@ -18,6 +18,7 @@ interface ShareActionsSheetProps {
   capabilities?: StoryShareCapabilitySnapshot;
   analyticsContext?: StoryShareAnalyticsContext;
   onRetryNativeShare?: () => void;
+  sharing?: boolean;
   onClose?: () => void;
   className?: string;
 }
@@ -55,6 +56,7 @@ export function ShareActionsSheet({
   capabilities,
   analyticsContext,
   onRetryNativeShare,
+  sharing = false,
   onClose,
   className = "",
 }: ShareActionsSheetProps) {
@@ -139,7 +141,7 @@ export function ShareActionsSheet({
           <button
             type="button"
             onClick={onClose}
-            className="tp-clean-button flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.08] text-white transition hover:bg-white/[0.12] active:scale-95"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.08] text-white transition hover:bg-white/[0.12] "
             aria-label="Close share options"
             title="Close"
           >
@@ -163,7 +165,7 @@ export function ShareActionsSheet({
             type="button"
             onClick={handleDownload}
             disabled={!objectUrl}
-            className="tp-clean-button inline-flex h-11 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-4 text-sm font-black text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 active:scale-[0.99]"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-11 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-4 text-sm font-black text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
           >
             <Download className="h-4 w-4" aria-hidden="true" />
             Save image
@@ -172,11 +174,12 @@ export function ShareActionsSheet({
             <button
               type="button"
               onClick={onRetryNativeShare}
-              disabled={!imageBlob}
-              className="tp-clean-button inline-flex h-11 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.08] px-4 text-sm font-black text-white transition hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.99]"
+              disabled={!imageBlob || sharing}
+              aria-busy={sharing}
+              className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-11 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.08] px-4 text-sm font-black text-white transition hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-50 "
             >
               <Smartphone className="h-4 w-4" aria-hidden="true" />
-              Try share sheet
+              {sharing ? "Sharing…" : "Try share sheet"}
             </button>
           ) : null}
         </div>
@@ -189,7 +192,7 @@ export function ShareActionsSheet({
             type="button"
             onClick={() => handleOpenDeepLink(option)}
             disabled={!objectUrl || !option.likelyAvailable}
-            className="tp-clean-button flex w-full items-center justify-between gap-3 rounded-xl border border-white/[0.10] bg-white/[0.06] px-3 py-3 text-left transition hover:bg-white/[0.10] disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.99]"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button flex w-full items-center justify-between gap-3 rounded-xl border border-white/[0.10] bg-white/[0.06] px-3 py-3 text-left transition hover:bg-white/[0.10] disabled:cursor-not-allowed disabled:opacity-50 "
           >
             <span className="min-w-0">
               <span className="block text-sm font-black text-white">{option.label}</span>
@@ -208,15 +211,15 @@ export function ShareActionsSheet({
       </div>
 
       {status.kind === "downloaded" ? (
-        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-emerald-300">Image saved</p>
+        <p role="status" className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-emerald-300">Image saved</p>
       ) : status.kind === "download_failed" ? (
-        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-rose-300">Save failed</p>
+        <p role="status" className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-rose-300">Save failed</p>
       ) : status.kind === "opened" ? (
-        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-cyan-300">
+        <p role="status" className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-cyan-300">
           Opening {status.target === "instagram" ? "Instagram" : "Facebook"}
         </p>
       ) : status.kind === "open_failed" ? (
-        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-rose-300">
+        <p role="status" className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-rose-300">
           Could not open {status.target === "instagram" ? "Instagram" : "Facebook"}
         </p>
       ) : null}

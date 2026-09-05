@@ -1,8 +1,12 @@
 "use client";
+
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
+import { haptic } from "@/lib/haptics";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { GameAppBar } from "@/components/venue/AppBar";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
@@ -125,7 +129,6 @@ const PICKEM_INLINE_SLOTS: Record<number, AdSlot> = {
   6: "pickem-inline-cards-26-30",
 };
 
-
 function getSportIcon(slug: string): string {
   return SPORT_ICONS[slug] ?? "🏟️";
 }
@@ -199,6 +202,7 @@ function getDisplayedScoreCell(game: PickEmGame, teamName: string, score: number
 }
 
 export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack }: { initialSportSlug?: string; initialDate?: string; onBack?: () => void }) {
+  const reducedMotion = useReducedMotion();
   const normalizedInitialSportSlug = String(initialSportSlug ?? "").trim().toLowerCase();
   const todayDateKey = getLocalDateKey();
   const router = useRouter();
@@ -210,6 +214,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   const [loadingSports, setLoadingSports] = useState(true);
   const [loadingGames, setLoadingGames] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const savingGamesRef = useRef(new Set<string>());
+  const [savingGames, setSavingGames] = useState<Set<string>>(new Set());
+  const [savedMessage, setSavedMessage] = useState("");
   const [submitMessage, setSubmitMessage] = useState("");
   const [optimisticPickByGame, setOptimisticPickByGame] = useState<Record<string, string | undefined>>({});
   const [sports, setSports] = useState<PickEmSport[]>([]);
@@ -225,8 +232,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   const loadedSportSlugRef = useRef<string>("");
   const loadGamesRef = useRef<((opts?: { background?: boolean }) => Promise<void>) | null>(null);
   const hasLiveGamesRef = useRef(false);
-  const inFlightGameIdsRef = useRef<Record<string, boolean>>({});
-  const queuedPickByGameRef = useRef<Record<string, string>>({});
   const refreshTimerRef = useRef<number | null>(null);
   const [pickPulseByGameId, setPickPulseByGameId] = useState<Record<string, string | undefined>>({});
   const [dailyPickCount, setDailyPickCount] = useState(0);
@@ -464,8 +469,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
     };
   }, []);
 
-
-
   const grouped = useMemo(() => {
     const byLeague = new Map<string, PickEmGame[]>();
     for (const game of games) {
@@ -627,135 +630,52 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
     [userId, venuePresence]
   );
 
-  const flushGamePick = useCallback(
-    async (gameId: string, pickTeam: string): Promise<void> => {
-      if (inFlightGameIdsRef.current[gameId]) {
-        queuedPickByGameRef.current[gameId] = pickTeam;
+  const submitPick = useCallback(
+    async (game: PickEmGame, pickTeam: string) => {
+      if (savingGamesRef.current.has(game.id)) return;
+      if (!userId || !venueId) { setSubmitMessage("Join a venue first to submit Pick 'Em selections."); return; }
+      if (!isViewingToday) { setSubmitMessage("You can only place picks for today. Switch back to today to make picks."); return; }
+      if (venuePresence.isInteractionBlocked) return;
+      const previousTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
+      const isDeselect = previousTeam === pickTeam;
+      if (!previousTeam && pickCount >= PICKEM_PICK_LIMIT) {
+        setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
         return;
       }
-
-      inFlightGameIdsRef.current[gameId] = true;
+      savingGamesRef.current.add(game.id);
+      setSavingGames(new Set(savingGamesRef.current));
+      setSavedMessage("");
+      setSubmitMessage("");
+      haptic("selection");
+      const delta = isDeselect ? -1 : previousTeam ? 0 : 1;
+      setDailyPickCountDelta((current) => current + delta);
+      const applySelection = (team: string | undefined) => {
+        setGames((current) => current.map((row) => row.id === game.id ? { ...row, userPickTeam: team, userPickStatus: "pending" } : row));
+        setOptimisticPickByGame((current) => {
+          const next = { ...current };
+          if (team) next[game.id] = team; else delete next[game.id];
+          return next;
+        });
+      };
+      applySelection(isDeselect ? undefined : pickTeam);
+      setPickPulseByGameId((current) => ({ ...current, [game.id]: isDeselect ? undefined : pickTeam }));
+      window.setTimeout(() => setPickPulseByGameId((current) => ({ ...current, [game.id]: undefined })), 420);
+      if (delta > 0) { popIdRef.current += 1; setPopAnim({ count: pickCount + 1, shake: false, id: popIdRef.current }); }
       try {
-        await submitPickRequest(gameId, pickTeam);
+        if (isDeselect) await clearPickRequest(game.id); else await submitPickRequest(game.id, pickTeam);
+        setSavedMessage("Pick saved");
         scheduleBackgroundRefresh();
         await loadDailyPickCount();
       } catch (error) {
-        delete queuedPickByGameRef.current[gameId];
-        const serverPick = latestGameMapRef.current.get(gameId)?.userPickTeam;
-        setOptimisticPickByGame((current) => {
-          const next = { ...current };
-          if (serverPick) {
-            next[gameId] = serverPick;
-          } else {
-            delete next[gameId];
-          }
-          return next;
-        });
-        await loadDailyPickCount();
+        applySelection(previousTeam);
+        setDailyPickCountDelta((current) => current - delta);
         setSubmitMessage(error instanceof Error ? error.message : "Failed to save your pick.");
       } finally {
-        inFlightGameIdsRef.current[gameId] = false;
-        const queuedTeam = queuedPickByGameRef.current[gameId];
-        if (queuedTeam && queuedTeam !== pickTeam) {
-          delete queuedPickByGameRef.current[gameId];
-          void flushGamePick(gameId, queuedTeam);
-        }
+        savingGamesRef.current.delete(game.id);
+        setSavingGames(new Set(savingGamesRef.current));
       }
     },
-    [loadDailyPickCount, scheduleBackgroundRefresh, submitPickRequest]
-  );
-
-  const submitPick = useCallback(
-    async (game: PickEmGame, pickTeam: string) => {
-      const triggerLimitReachedPop = () => {
-        setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
-        popIdRef.current += 1;
-        setPopAnim({ count: PICKEM_PICK_LIMIT, shake: true, id: popIdRef.current });
-        window.setTimeout(() => {
-          popIdRef.current += 1;
-          setLimitEchoAnim({ id: popIdRef.current });
-        }, 170);
-        setLimitPulse(false);
-        window.requestAnimationFrame(() => setLimitPulse(true));
-        window.setTimeout(() => setLimitPulse(false), 900);
-      };
-      if (!userId || !venueId) {
-        setSubmitMessage("Join a venue first to submit Pick 'Em selections.");
-        return;
-      }
-      if (!isViewingToday) {
-        setSubmitMessage("You can only place picks for today. Switch back to today to make picks.");
-        return;
-      }
-      if (venuePresence.isInteractionBlocked) {
-        return;
-      }
-      const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
-      const isDeselect = displayedPickTeam === pickTeam;
-      const isSwitch = !!displayedPickTeam && !isDeselect;
-      setSubmitMessage("");
-      if (!isDeselect && !isSwitch && pickCount >= PICKEM_PICK_LIMIT) {
-        triggerLimitReachedPop();
-        return;
-      }
-      if (isDeselect) {
-        setDailyPickCountDelta((current) => current - 1);
-      } else if (!displayedPickTeam) {
-        setDailyPickCountDelta((current) => current + 1);
-        popIdRef.current += 1;
-        setPopAnim({ count: pickCount + 1, shake: false, id: popIdRef.current });
-      }
-      setGames((current) =>
-        current.map((row) =>
-          row.id === game.id
-            ? {
-                ...row,
-                userPickTeam: isDeselect ? undefined : pickTeam,
-                userPickStatus: "pending",
-              }
-            : row
-        )
-      );
-      setOptimisticPickByGame((current) => {
-        const next = { ...current };
-        if (isDeselect) {
-          delete next[game.id];
-        } else {
-          next[game.id] = pickTeam;
-        }
-        return next;
-      });
-      setPickPulseByGameId((current) => ({ ...current, [game.id]: isDeselect ? undefined : pickTeam }));
-      window.setTimeout(() => {
-        setPickPulseByGameId((current) => {
-          if (current[game.id] !== (isDeselect ? undefined : pickTeam)) return current;
-          const next = { ...current };
-          delete next[game.id];
-          return next;
-        });
-      }, 420);
-      if (isDeselect) {
-        void (async () => {
-          try {
-            await clearPickRequest(game.id);
-            scheduleBackgroundRefresh();
-            await loadDailyPickCount();
-          } catch (error) {
-            const serverPick = latestGameMapRef.current.get(game.id)?.userPickTeam;
-            setOptimisticPickByGame((current) => {
-              const next = { ...current };
-              if (serverPick) next[game.id] = serverPick;
-              return next;
-            });
-            setDailyPickCountDelta((current) => current + 1);
-            setSubmitMessage(error instanceof Error ? error.message : "Failed to clear your pick.");
-          }
-        })();
-      } else {
-        void flushGamePick(game.id, pickTeam);
-      }
-    },
-    [clearPickRequest, flushGamePick, isViewingToday, loadDailyPickCount, optimisticPickByGame, pickCount, scheduleBackgroundRefresh, userId, venueId, venuePresence.isInteractionBlocked]
+    [clearPickRequest, submitPickRequest, isViewingToday, loadDailyPickCount, optimisticPickByGame, pickCount, scheduleBackgroundRefresh, userId, venueId, venuePresence.isInteractionBlocked]
   );
 
   useEffect(() => {
@@ -879,7 +799,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
     setMultiplierAnim({ label, id: popIdRef.current });
   }, [pointsBank, userId, venueId]);
 
-
   const totalPickEmGames = grouped.reduce((sum, [, leagueGames]) => sum + leagueGames.length, 0);
   let renderedPickEmCardCount = 0;
 
@@ -912,6 +831,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           35% { transform: scale(1.08); opacity: 0.92; }
           100% { transform: scale(1); opacity: 1; }
         }
+        @media (prefers-reduced-motion: reduce) {
+          .sport-pop, .pickem-gold-flash, .pickem-limit-pulse { animation: none !important; }
+        }
         .sport-pop { animation: sport-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
         .pickem-gold-flash { animation: pickem-gold-flash 700ms ease-out; }
         .pickem-limit-pulse { animation: pickem-limit-pulse 420ms ease-in-out; }
@@ -932,8 +854,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           </p>
 
           <motion.div
-            animate={limitPulse ? { scale: [1, 1.06, 1] } : { scale: 1 }}
-            transition={{ duration: 0.35 }}
+            animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : limitPulse ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+            transition={reducedMotion ? { duration: 0 } : { duration: 0.35 }}
             className={`mt-3 overflow-hidden rounded-xl border ${
               pickCount >= PICKEM_PICK_LIMIT
                 ? "border-rose-400/60 bg-rose-950/20"
@@ -967,9 +889,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
               </div>
               <motion.span
                 key={pickCount}
-                initial={{ scale: 1 }}
-                animate={{ scale: [1, 1.16, 1] }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                initial={reducedMotion ? false : { scale: 1 }}
+                animate={reducedMotion ? { scale: 1 } : { scale: [1, 1.16, 1] }}
+                transition={reducedMotion ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }}
                 className={`shrink-0 text-[19px] font-black leading-none tabular-nums ${
                   pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-[#fde68a]"
                 }`}
@@ -989,7 +911,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                   setSubmitMessage("");
                   setErrorMessage("");
                 }}
-                className="tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#fde68a]/45 bg-slate-950/65 text-[#fde68a]"
+                className="tp-player-hit-target tp-player-pressable tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#fde68a]/45 bg-slate-950/65 text-[#fde68a]"
                 aria-label="Previous day"
               >
                 ◀
@@ -1015,7 +937,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                   setErrorMessage("");
                 }}
                 disabled={isViewingToday}
-                className="tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#fde68a]/30 bg-slate-950/55 text-[#fde68a] disabled:cursor-not-allowed disabled:opacity-35"
+                className="tp-player-hit-target tp-player-pressable tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#fde68a]/30 bg-slate-950/55 text-[#fde68a] disabled:cursor-not-allowed disabled:opacity-35"
                 aria-label="Next day"
               >
                 ▶
@@ -1077,13 +999,13 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                             setTimeout(() => setFlashingSportSlug(""), 500);
                           }
                         }}
-                        className={`tp-clean-button inline-flex h-12 w-full items-center justify-center rounded-full border p-0 text-2xl leading-none ${
+                        className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button inline-flex h-12 w-full items-center justify-center rounded-full border p-0 text-2xl leading-none ${
                           isSelected
                             ? "border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
                             : isDisabled
                             ? "cursor-not-allowed border-white/10 bg-white/[0.03] text-slate-600 opacity-60"
                             : "border-white/15 bg-white/[0.03] text-slate-400"
-                        } ${flashingSportSlug === item.slug ? "sport-pop" : ""}`}
+                        } ${flashingSportSlug === item.slug ? "sport-pop" : ""}`)}
                         aria-label={item.label}
                         title={item.label}
                       >
@@ -1098,13 +1020,14 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         </section>
 
         {errorMessage ? (
-          <div className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300">
+          <div className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300" role="alert">
             {errorMessage}
           </div>
         ) : null}
 
-        {submitMessage ? (
-          <div className="rounded-xl border border-amber-400/45 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-300">
+        <span role="status" className="sr-only">{savedMessage}</span>
+      {submitMessage ? (
+          <div className="rounded-xl border border-amber-400/45 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-300" role="alert">
             {submitMessage}
           </div>
         ) : null}
@@ -1205,15 +1128,18 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                               }`}
                             >
                               {game.status === "live" ? (
-                                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse motion-reduce:animate-none" />
                               ) : null}
-                              {statusLabel}
+                              {savingGames.has(game.id) ? <><ButtonSpinner /> Saving…</> : statusLabel}
                             </span>
                           </div>
+                          <span role="status" className="sr-only">{savingGames.has(game.id) ? "Saving…" : ""}</span>
                           <div className="flex overflow-hidden bg-[#020617]/45">
                             <button
                               type="button"
                               aria-disabled={disableAwaySelection}
+                              disabled={savingGames.has(game.id)}
+                              aria-busy={savingGames.has(game.id)}
                               onClick={() => {
                                 if (disableAwaySelection) {
                                   if (!awaySelected && !homeSelected && pickCount >= PICKEM_PICK_LIMIT) {
@@ -1237,11 +1163,11 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                                 void submitPick(game, game.awayTeam);
                               }}
                               style={{ touchAction: "manipulation" }}
-                              className={`tp-clean-button flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${
+                              className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${
                                 disableAwaySelection ? "cursor-not-allowed opacity-45" : ""
                               } ${
                                 awaySelected ? "bg-[#fde68a]/15" : ""
-                              } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01]" : ""}`}
+                              } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01]" : ""}`)}
                             >
                               <span
                                 className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black ${
@@ -1263,6 +1189,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                             <button
                               type="button"
                               aria-disabled={disableHomeSelection}
+                              disabled={savingGames.has(game.id)}
+                              aria-busy={savingGames.has(game.id)}
                               onClick={() => {
                                 if (disableHomeSelection) {
                                   if (!awaySelected && !homeSelected && pickCount >= PICKEM_PICK_LIMIT) {
@@ -1286,11 +1214,11 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                                 void submitPick(game, game.homeTeam);
                               }}
                               style={{ touchAction: "manipulation" }}
-                              className={`tp-clean-button flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${
+                              className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${
                                 disableHomeSelection ? "cursor-not-allowed opacity-45" : ""
                               } ${
                                 homeSelected ? "bg-[#fde68a]/15" : ""
-                              } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01]" : ""}`}
+                              } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01]" : ""}`)}
                             >
                               <span
                                 className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black ${
@@ -1365,14 +1293,14 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                         textShadow: "0 0 30px rgba(250,204,21,0.62), 0 0 62px rgba(250,204,21,0.42)",
                         filter: "drop-shadow(0 0 14px rgba(250,204,21,0.75))",
                       }}
-                      initial={{ scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
-                      animate={{
+                      initial={reducedMotion ? false : { scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
+                      animate={reducedMotion ? { scale: 1, y: 0, rotate: 0, opacity: 1 } : {
                         scale: [0, 1.65, 1.25, 1.25, 0.9],
                         y: [0, -35, -35, -35, 340],
                         rotate: [0, 0, 0, 0, 13],
                         opacity: [0, 1, 1, 1, 0],
                       }}
-                      transition={{
+                      transition={reducedMotion ? { duration: 0 } : {
                         duration: 0.8,
                         times: [0, 0.13, 0.23, 0.62, 1],
                         ease: ["easeOut", "easeOut", "linear", "easeIn"],
@@ -1393,9 +1321,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                         fontSize: "clamp(1.8rem, 7vw, 3.2rem)",
                         textShadow: "0 0 18px rgba(239,68,68,0.38), 0 0 34px rgba(239,68,68,0.18)",
                       }}
-                      initial={{ scale: 0.7, opacity: 0, y: 0 }}
-                      animate={{ scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
-                      transition={{ duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
+                      initial={reducedMotion ? false : { scale: 0.7, opacity: 0, y: 0 }}
+                      animate={reducedMotion ? { scale: 1, opacity: 1, y: 0 } : { scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
+                      transition={reducedMotion ? { duration: 0 } : { duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
                       onAnimationComplete={() => setLimitEchoAnim(null)}
                     >
                       Limit Reached
@@ -1421,9 +1349,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                             ? "0 0 22px rgba(239,68,68,0.42), 0 0 44px rgba(239,68,68,0.24)"
                             : "0 0 60px rgba(34,197,94,0.55), 0 0 120px rgba(34,197,94,0.3)",
                       }}
-                      initial={{ scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
-                      animate={
-                        isLimitReached
+                      initial={reducedMotion ? false : { scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
+                      animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : isLimitReached
                           ? {
                               scale: [0.72, 1.08, 1.02, 0.98],
                               y: [0, -20, -16, -8],
@@ -1442,10 +1369,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                                 y: [0, -35, -35, -35, 340],
                                 rotate: [0, 0, 0, 0, 13],
                                 opacity: [0, 1, 1, 1, 0],
-                              }
-                      }
-                      transition={
-                        isLimitReached
+                              }}
+                      transition={reducedMotion ? { duration: 0 } : isLimitReached
                           ? {
                               duration: 0.55,
                               times: [0, 0.28, 0.62, 1],
@@ -1461,8 +1386,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                                 duration: 0.8,
                                 times: [0, 0.13, 0.23, 0.62, 1],
                                 ease: ["easeOut", "easeOut", "linear", "easeIn"],
-                              }
-                      }
+                              }}
                     >
                       {isLimitReached ? "Limit Reached" : popAnim.count}
                     </motion.span>
@@ -1474,9 +1398,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                           fontSize: "clamp(1.8rem, 7vw, 3.2rem)",
                           textShadow: "0 0 18px rgba(239,68,68,0.38), 0 0 34px rgba(239,68,68,0.18)",
                         }}
-                        initial={{ scale: 0.7, opacity: 0, y: 0 }}
-                        animate={{ scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
-                        transition={{ duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
+                        initial={reducedMotion ? false : { scale: 0.7, opacity: 0, y: 0 }}
+                        animate={reducedMotion ? { scale: 1, opacity: 1, y: 0 } : { scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
+                        transition={reducedMotion ? { duration: 0 } : { duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
                         onAnimationComplete={() => setLimitEchoAnim(null)}
                       >
                         Limit Reached

@@ -1,7 +1,11 @@
 "use client";
 
+import { haptic } from "@/lib/haptics";
+
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
+import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
@@ -49,7 +53,7 @@ const QUESTIONS_PER_ROUND = 15;
 const ROUND_LIMIT_PER_WINDOW = 3;
 const PRE_ROUND_COUNTDOWN_START = 3;
 const BUTTON_POP_CLASS =
-  "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300";
+  "transition-all motion-reduce:transition-none duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300";
 const ANSWER_LETTERS = ["A", "B", "C", "D"] as const;
 const INCORRECT_EMOJIS = [
   "😢",
@@ -104,11 +108,6 @@ type RecoveredRoundState = {
   attempted: number;
   message: string;
 };
-
-function triggerHaptic(pattern: number | number[] = 12) {
-  if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
-  navigator.vibrate(pattern);
-}
 
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -217,9 +216,9 @@ type AnswerButtonProps = {
   isRevealedCorrect: boolean;
   isSelectedWrong: boolean;
   locked: boolean;
+  busy: boolean;
   onChoose: (index: number) => void;
 };
-
 
 function AnswerButton({
   option,
@@ -230,8 +229,10 @@ function AnswerButton({
   isRevealedCorrect,
   isSelectedWrong,
   locked,
+  busy,
   onChoose,
 }: AnswerButtonProps) {
+  const reducedMotion = useReducedMotion();
   const controls = useAnimationControls();
 
   useEffect(() => {
@@ -239,6 +240,7 @@ function AnswerButton({
   }, [controls, questionId]);
 
   useEffect(() => {
+    if (reducedMotion) { controls.stop(); controls.set({ scale: 1, filter: "none" }); return; }
     if (isRevealedCorrect) {
       let active = true;
       const seq = async () => {
@@ -271,7 +273,7 @@ function AnswerButton({
       filter: "none",
       transition: { duration: 0.1 },
     });
-  }, [controls, isRevealedCorrect, isSelectedWrong]);
+  }, [controls, isRevealedCorrect, isSelectedWrong, reducedMotion]);
 
   const buttonClass = isRevealedCorrect
     ? "border-[#34d399] bg-emerald-500/20 text-[#a7f3d0]"
@@ -294,11 +296,12 @@ function AnswerButton({
       type="button"
       data-answer-token={`${questionId}-${optionIndex}`}
       animate={controls}
-      whileTap={{ scale: 0.96, transition: { duration: 0.06 } }}
-      onMouseDown={() => triggerHaptic()}
+      whileTap={reducedMotion || locked ? undefined : { scale: 0.96, transition: { duration: 0.06 } }}
+
       onClick={() => onChoose(optionIndex)}
       disabled={locked}
-      className={`grid grid-cols-[26px_1fr_auto] items-center gap-2.5 rounded-[14px] border-2 p-3 text-left leading-snug transition-colors duration-[80ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 disabled:opacity-80 ${buttonClass}`}
+      aria-busy={busy}
+      className={"tp-player-hit-target tp-player-pressable " + (`grid grid-cols-[26px_1fr_auto] items-center gap-2.5 rounded-[14px] border-2 p-3 text-left leading-snug transition-colors duration-[80ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 disabled:opacity-80 ${buttonClass}`)} transition={reducedMotion ? { duration: 0 } : undefined}
     >
       <span
         className={`inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[8px] font-black text-[14px] ${chipClass}`}
@@ -306,7 +309,7 @@ function AnswerButton({
         {letter}
       </span>
       <span className="text-[13px] font-extrabold">{option}</span>
-      {isRevealedCorrect ? (
+      {busy ? <ButtonSpinner /> : isRevealedCorrect ? (
         <span className="text-[14px] font-black text-[#34d399]">✓</span>
       ) : (
         <span aria-hidden="true" className="w-0" />
@@ -324,6 +327,7 @@ export function TriviaGame({
   selectedCategory?: string | null;
   onChangeCategory?: () => void;
 }) {
+  const reducedMotion = useReducedMotion();
   const router = useRouter();
   const { triggerAnimation } = useAnimationTrigger();
   const venuePresence = useVenuePresence();
@@ -335,6 +339,8 @@ export function TriviaGame({
   const [quota, setQuota] = useState<TriviaQuota | null>(null);
   const [index, setIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const answerPendingRef = useRef(false);
+  const nextRoundPendingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string>("");
   const [feedbackKind, setFeedbackKind] = useState<"correct" | "incorrect" | "timeout" | null>(null);
@@ -762,6 +768,7 @@ export function TriviaGame({
         setQuestions(recoveredInterruptedQuestion.questions);
         setIndex(recoveredInterruptedQuestion.nextIndex);
         setSelectedAnswer(null);
+        answerPendingRef.current = false;
         setIsSubmitting(false);
         setFeedback("");
         setFeedbackKind(null);
@@ -934,10 +941,12 @@ export function TriviaGame({
         return;
       }
 
-      if (!question || isSubmitting || selectedAnswer !== null) {
+      if (!question || answerPendingRef.current || isSubmitting || selectedAnswer !== null) {
         return;
       }
 
+      answerPendingRef.current = true;
+      if (answerIndex >= 0) haptic("selection");
       setSelectedAnswer(answerIndex);
       setIsSubmitting(true);
       setFeedback("");
@@ -960,7 +969,7 @@ export function TriviaGame({
         setFeedbackKind("correct");
         setRewardPulse(`🎉 Correct +${POINTS_PER_CORRECT}`);
         setShowRewardPulse(true);
-        triggerHaptic([20, 50, 20]);
+
         // Note: optimistic feedback uses base points; updated below once server confirms
       } else {
         setFeedback(`Incorrect. Correct answer: ${question.options[localCorrectAnswer]}.`);
@@ -976,101 +985,102 @@ export function TriviaGame({
       }
 
       try {
-        const response = await fetch("/api/trivia", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: submittingUserId || undefined,
-            questionId: question.id,
-            answer: answerIndex,
-            timeElapsed: 0,
-          }),
-        });
+          const response = await fetch("/api/trivia", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: submittingUserId || undefined,
+              questionId: question.id,
+              answer: answerIndex,
+              timeElapsed: 0,
+            }),
+          });
 
-        const payload = (await response.json()) as SubmitResponse;
-        const presenceFailure = venuePresence.capturePresenceFailure(payload);
-        if (presenceFailure) {
-          throw new Error(presenceFailure.userMessage);
-        }
-        if (!payload.ok || !payload.result) {
-          if (payload.quota) {
-            setQuota(payload.quota);
+          const payload = (await response.json()) as SubmitResponse;
+          const presenceFailure = venuePresence.capturePresenceFailure(payload);
+          if (presenceFailure) {
+            throw new Error(presenceFailure.userMessage);
           }
-          throw new Error(payload.error ?? "Failed to submit answer.");
-        }
+          if (!payload.ok || !payload.result) {
+            if (payload.quota) {
+              setQuota(payload.quota);
+            }
+            throw new Error(payload.error ?? "Failed to submit answer.");
+          }
 
-        if (payload.result.alreadyAnswered) {
-          setFeedback("You already answered this question earlier. Skipping scoring.");
-          setFeedbackKind(null);
-          setRevealedCorrectAnswer(payload.result.correctAnswer);
-          void loadQuota();
-          void loadCurrentUserPoints();
-          return;
-        }
+          if (payload.result.alreadyAnswered) {
+            setFeedback("You already answered this question earlier. Skipping scoring.");
+            setFeedbackKind(null);
+            setRevealedCorrectAnswer(payload.result.correctAnswer);
+            void loadQuota();
+            void loadCurrentUserPoints();
+            return;
+          }
 
-        const wasCorrect = payload.result.isCorrect;
-        const pointsAwarded = Math.max(0, Number(payload.result.pointsAwarded ?? POINTS_PER_CORRECT));
-        const multiplierApplied = Number(payload.result.multiplierApplied ?? 1);
-        const challengeActive = multiplierApplied > 1;
-        setAttempted((value) => value + 1);
+          const wasCorrect = payload.result.isCorrect;
+          const pointsAwarded = Math.max(0, Number(payload.result.pointsAwarded ?? POINTS_PER_CORRECT));
+          const multiplierApplied = Number(payload.result.multiplierApplied ?? 1);
+          const challengeActive = multiplierApplied > 1;
+          setAttempted((value) => value + 1);
 
-        if (payload.result.correctAnswer !== localCorrectAnswer) {
-          setRevealedCorrectAnswer(payload.result.correctAnswer);
-        }
+          if (payload.result.correctAnswer !== localCorrectAnswer) {
+            setRevealedCorrectAnswer(payload.result.correctAnswer);
+          }
 
-        if (wasCorrect) {
-          const savedLabel = payload.result.saved ? "saved" : "recorded";
-          setRewardPulse(
-            challengeActive
-              ? `⚡ ${multiplierApplied}x Challenge! +${pointsAwarded} pts ${savedLabel}`
-              : `🔥 +${pointsAwarded} pts ${savedLabel}`
-          );
-          setShowRewardPulse(true);
-          triggerHaptic([35, 35, 35]);
-          setFeedback(
-            challengeActive
-              ? `Correct! +${pointsAwarded} points (${multiplierApplied}x Challenge multiplier active).`
-              : `Correct! +${pointsAwarded} points added to your profile.`
-          );
-          setFeedbackKind("correct");
-          setCorrectAnswers((value) => value + 1);
-          setRoundPointsAwarded((value) => value + pointsAwarded);
-          triggerPointsFlow(answerIndex, pointsAwarded);
-          if (submittingUserId) {
-            setCurrentUserPoints((value) => (value ?? 0) + pointsAwarded);
-            window.dispatchEvent(
-              new CustomEvent("tp:points-updated", {
-                detail: { source: "speed-trivia", delta: pointsAwarded, multiplier: multiplierApplied },
-              })
+          if (wasCorrect) {
+            const savedLabel = payload.result.saved ? "saved" : "recorded";
+            setRewardPulse(
+              challengeActive
+                ? `⚡ ${multiplierApplied}x Challenge! +${pointsAwarded} pts ${savedLabel}`
+                : `🔥 +${pointsAwarded} pts ${savedLabel}`
             );
-            if (challengeActive) {
+            setShowRewardPulse(true);
+
+            setFeedback(
+              challengeActive
+                ? `Correct! +${pointsAwarded} points (${multiplierApplied}x Challenge multiplier active).`
+                : `Correct! +${pointsAwarded} points added to your profile.`
+            );
+            setFeedbackKind("correct");
+            setCorrectAnswers((value) => value + 1);
+            setRoundPointsAwarded((value) => value + pointsAwarded);
+            triggerPointsFlow(answerIndex, pointsAwarded);
+            if (submittingUserId) {
+              setCurrentUserPoints((value) => (value ?? 0) + pointsAwarded);
               window.dispatchEvent(
-                new CustomEvent("tp:success-particles", {
-                  detail: { source: "trivia-challenge", color: "gold", multiplier: multiplierApplied },
+                new CustomEvent("tp:points-updated", {
+                  detail: { source: "speed-trivia", delta: pointsAwarded, multiplier: multiplierApplied },
                 })
               );
+              if (challengeActive) {
+                window.dispatchEvent(
+                  new CustomEvent("tp:success-particles", {
+                    detail: { source: "trivia-challenge", color: "gold", multiplier: multiplierApplied },
+                  })
+                );
+              }
             }
+          } else {
+            setFeedback(`Incorrect. Correct answer: ${question.options[payload.result.correctAnswer]}.`);
+            setFeedbackKind("incorrect");
+            setRewardPulse("🙌 Nice try");
+            setShowRewardPulse(true);
+
           }
-        } else {
-          setFeedback(`Incorrect. Correct answer: ${question.options[payload.result.correctAnswer]}.`);
-          setFeedbackKind("incorrect");
-          setRewardPulse("🙌 Nice try");
-          setShowRewardPulse(true);
-          triggerHaptic([35, 35]);
-        }
 
-        if ((wasCorrect ? "correct" : "incorrect") !== localOutcome) {
-          triggerCelebration(wasCorrect);
-        }
+          if ((wasCorrect ? "correct" : "incorrect") !== localOutcome) {
+            triggerCelebration(wasCorrect);
+          }
 
-        void loadQuota();
-        void loadCurrentUserPoints();
+          void loadQuota();
+          void loadCurrentUserPoints();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not submit answer.";
         setFeedback(message);
         setFeedbackKind(null);
         void loadQuota();
       } finally {
+        answerPendingRef.current = false;
         setIsSubmitting(false);
       }
     },
@@ -1147,6 +1157,8 @@ export function TriviaGame({
   };
 
   const startNextRound = useCallback(async () => {
+    if (nextRoundPendingRef.current) return;
+    nextRoundPendingRef.current = true;
     if (typeof window !== "undefined") {
       try {
         window.sessionStorage.setItem(TRIVIA_ROUND_ENDED_ACTIVE_KEY, "0");
@@ -1158,8 +1170,9 @@ export function TriviaGame({
     setRoundEndedMessage("");
     setRoundPointsAwarded(0);
     try {
-      await loadRoundQuestions({ showLoading: true, useWarmCache: false });
+        await loadRoundQuestions({ showLoading: true, useWarmCache: false });
     } finally {
+      nextRoundPendingRef.current = false;
       setIsPreparingNextRound(false);
     }
   }, [loadRoundQuestions]);
@@ -1445,7 +1458,7 @@ export function TriviaGame({
     return (
       <div className="flex h-full min-h-0 flex-col items-center justify-center gap-4 bg-transparent">
         <div className="relative h-20 w-20">
-          <div className="absolute inset-0 animate-spin rounded-full border-4 border-[rgba(250,204,21,0.2)] border-t-[#facc15]" />
+          <div className="absolute inset-0 animate-spin motion-reduce:animate-none rounded-full border-4 border-[rgba(250,204,21,0.2)] border-t-[#facc15]" />
           <div className="absolute inset-2 flex items-center justify-center rounded-full bg-[#0f0f17] font-black tracking-[0.2em] text-[#facc15] text-[11px]">
             HC
           </div>
@@ -1458,7 +1471,7 @@ export function TriviaGame({
   if (loadError) {
     return (
       <div className="flex h-full min-h-0 items-center justify-center bg-transparent p-4">
-        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-[12px] text-rose-400">
+        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-[12px] text-rose-400" role="alert">
           {loadError}
         </div>
       </div>
@@ -1469,7 +1482,7 @@ export function TriviaGame({
     return (
       <div className="flex h-full min-h-0 items-center justify-center bg-transparent">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[rgba(250,204,21,0.25)] border-t-[#facc15]" />
+          <div className="h-7 w-7 animate-spin motion-reduce:animate-none rounded-full border-2 border-[rgba(250,204,21,0.25)] border-t-[#facc15]" />
           <p className="font-black uppercase tracking-[0.12em] text-[#facc15] text-[10px]">Tallying results…</p>
         </div>
       </div>
@@ -1524,7 +1537,7 @@ export function TriviaGame({
                 ) : null}
               </div>
               <div
-                className={`col-span-2 rounded-xl border bg-[rgba(250,204,21,0.08)] p-3 transition-all duration-300 ${
+                className={`col-span-2 rounded-xl border bg-[rgba(250,204,21,0.08)] p-3 transition-all motion-reduce:transition-none duration-300 ${
                   totalCardPulsing
                     ? "border-[rgba(250,204,21,0.8)] shadow-[0_0_16px_rgba(250,204,21,0.35)]"
                     : "border-[rgba(250,204,21,0.3)]"
@@ -1561,10 +1574,11 @@ export function TriviaGame({
               )}
               <button
                 type="button"
-                onMouseDown={() => triggerHaptic(14)}
+
                 onClick={() => { void startNextRound(); }}
                 disabled={isPreparingNextRound || triviaQuotaLocked}
-                className={`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`}
+                aria-busy={isPreparingNextRound}
+                className={"tp-player-hit-target tp-player-pressable " + (`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`)}
                 style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }}
               >
                 {isPreparingNextRound
@@ -1576,9 +1590,9 @@ export function TriviaGame({
               {onChangeCategory && (
                 <button
                   type="button"
-                  onMouseDown={() => triggerHaptic(12)}
+
                   onClick={onChangeCategory}
-                  className={`${BUTTON_POP_CLASS} w-full rounded-[14px] border border-[rgba(250,204,21,0.35)] bg-transparent py-3.5 font-black uppercase tracking-[0.04em] text-[#facc15] text-[14px]`}
+                  className={"tp-player-hit-target tp-player-pressable " + (`${BUTTON_POP_CLASS} w-full rounded-[14px] border border-[rgba(250,204,21,0.35)] bg-transparent py-3.5 font-black uppercase tracking-[0.04em] text-[#facc15] text-[14px]`)}
                 >
                   Change Category
                 </button>
@@ -1681,9 +1695,9 @@ export function TriviaGame({
                   </div>
                   <button
                     type="button"
-                    onMouseDown={() => triggerHaptic(12)}
+
                     onClick={onChangeCategory}
-                    className={`${BUTTON_POP_CLASS} w-full rounded-[14px] border border-[rgba(250,204,21,0.35)] bg-transparent py-3.5 font-black uppercase tracking-[0.04em] text-[#facc15] text-[14px]`}
+                    className={"tp-player-hit-target tp-player-pressable " + (`${BUTTON_POP_CLASS} w-full rounded-[14px] border border-[rgba(250,204,21,0.35)] bg-transparent py-3.5 font-black uppercase tracking-[0.04em] text-[#facc15] text-[14px]`)}
                   >
                     Change Category
                   </button>
@@ -1691,7 +1705,7 @@ export function TriviaGame({
               ) : (
                 <button
                   type="button"
-                  onMouseDown={() => triggerHaptic(20)}
+
                   onClick={() => {
                     setRoundEndedMessage("");
                     setIsRoundStarted(true);
@@ -1700,7 +1714,7 @@ export function TriviaGame({
                     setRoundStartPoints(currentUserPoints ?? null);
                   }}
                   disabled={triviaQuotaLocked}
-                  className={`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`}
+                  className={"tp-player-hit-target tp-player-pressable " + (`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`)}
                   style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }}
                 >
                   {triviaQuotaLocked ? `Locked · ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
@@ -1845,11 +1859,12 @@ export function TriviaGame({
         <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto">
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
+              aria-busy={isSubmitting}
               key={question.id}
-              initial={{ opacity: 0, y: 10 }}
+              initial={reducedMotion ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 35 }}
               className="flex flex-col"
             >
               {/* Question card with SVG timer ring */}
@@ -1940,6 +1955,7 @@ export function TriviaGame({
                       selected={isSelected}
                       isRevealedCorrect={isRevealedCorrect}
                       isSelectedWrong={isSelectedWrong}
+                      busy={isSubmitting && isSelected}
                       locked={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0 || triviaQuotaLocked}
                       onChoose={(idx) => { void chooseAnswer(idx); }}
                     />
@@ -1967,7 +1983,7 @@ export function TriviaGame({
                             : feedbackKind === "incorrect" || feedbackKind === "timeout"
                             ? "text-rose-300"
                             : "text-slate-300"
-                        }`}
+                        }`} role={feedbackKind === null ? "alert" : "status"}
                       >
                         {feedback}
                       </div>
@@ -2007,12 +2023,13 @@ export function TriviaGame({
           <button
             ref={nextQuestionButtonRef}
             type="button"
-            onMouseDown={() => triggerHaptic(14)}
+
             onClick={nextQuestion}
             disabled={!canAdvanceToNextTriviaQuestion({ selectedAnswer, isSubmitting })}
-            className={`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`}
-            style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }}
+            className={"tp-player-hit-target tp-player-pressable " + (`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`)}
+            style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }} aria-busy={isSubmitting}
           >
+              {(isSubmitting) ? <ButtonSpinner /> : null}
             Next Question →
           </button>
         </div>

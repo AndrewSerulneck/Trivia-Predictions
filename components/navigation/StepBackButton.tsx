@@ -20,7 +20,7 @@ import { ChevronLeft } from "lucide-react";
 export type NavTone = "dark" | "light";
 
 const STEP_BACK_LAYOUT_CLASS =
-  "tp-clean-button inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-5 py-3 text-sm font-black transition-all active:translate-y-[1px] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2";
+  "tp-clean-button inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-5 py-3 text-sm font-black transition-all disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2";
 
 export const STEP_BACK_TONE_CLASS: Record<NavTone, string> = {
   dark: "border border-white/15 bg-white/5 text-slate-300 focus-visible:ring-white/30",
@@ -34,6 +34,7 @@ export type StepBackButtonProps = {
   onClick: () => void;
   label?: string;
   disabled?: boolean;
+  busy?: boolean;
   tone?: NavTone;
   className?: string;
 };
@@ -42,6 +43,7 @@ export function StepBackButton({
   onClick,
   label = "Back",
   disabled = false,
+  busy = false,
   tone = "dark",
   className = "",
 }: StepBackButtonProps) {
@@ -49,8 +51,9 @@ export function StepBackButton({
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
-      className={`${STEP_BACK_LAYOUT_CLASS} ${STEP_BACK_TONE_CLASS[tone]}${className ? ` ${className}` : ""}`}
+      disabled={disabled || busy}
+      aria-busy={busy}
+      className={`${tone === "dark" ? "tp-player-hit-target tp-player-pressable " : ""}${STEP_BACK_LAYOUT_CLASS} ${STEP_BACK_TONE_CLASS[tone]}${className ? ` ${className}` : ""}`}
     >
       <ChevronLeft aria-hidden="true" className="h-4 w-4" />
       {label}

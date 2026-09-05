@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, type TouchEvent } from "react";
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, type Variants, useReducedMotion } from "framer-motion";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
 import { GameOnboardingCard, GAME_STEP_DOT_ACTIVE } from "@/components/venue/GameIdentityPanel";
 
@@ -46,6 +46,7 @@ export function CategoryBlitzOnboardingOverlay({
   onClose: () => void;
   onJoin: () => void;
 }) {
+  const reducedMotion = useReducedMotion();
   const [currentStep, setCurrentStep] = useState(0);
   const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -134,10 +135,10 @@ export function CategoryBlitzOnboardingOverlay({
                 key={`${GAME_KEY}-${currentStep}`}
                 custom={slideDirection}
                 variants={ONBOARDING_CARD_VARIANTS}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={ONBOARDING_CARD_TRANSITION}
+                initial={reducedMotion ? false : "enter"}
+                animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                exit={reducedMotion ? { opacity: 0 } : "exit"}
+                transition={reducedMotion ? { duration: 0 } : ONBOARDING_CARD_TRANSITION}
                 className="absolute inset-0 h-full w-full"
               >
                 <GameOnboardingCard
@@ -156,9 +157,9 @@ export function CategoryBlitzOnboardingOverlay({
               key={index}
               type="button"
               onClick={() => transitionToStep(index)}
-              className={`tp-clean-button h-2 rounded-full transition-all duration-200 ${
+              className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button h-2 rounded-full transition-all duration-200 ${
                 index === currentStep ? `w-6 ${GAME_STEP_DOT_ACTIVE[GAME_KEY]}` : "w-2 bg-white/30"
-              }`}
+              }`)}
               aria-label={`Go to step ${index + 1}`}
             />
           ))}
@@ -167,7 +168,7 @@ export function CategoryBlitzOnboardingOverlay({
           <button
             type="button"
             onClick={currentStep > 0 ? goToPreviousStep : handleClose}
-            className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-3 py-2 text-base font-black text-slate-900"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-3 py-2 text-base font-black text-slate-900"
           >
             Back
           </button>
@@ -175,7 +176,7 @@ export function CategoryBlitzOnboardingOverlay({
             <button
               type="button"
               onClick={handleJoinClick}
-              className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white"
+              className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white"
             >
               Join Game
             </button>
@@ -183,7 +184,7 @@ export function CategoryBlitzOnboardingOverlay({
             <button
               type="button"
               onClick={goToNextStep}
-              className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white"
+              className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white"
             >
               Next
             </button>

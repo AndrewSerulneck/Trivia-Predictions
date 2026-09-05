@@ -1,8 +1,10 @@
 "use client";
 
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { readSelectedBingoGame } from "@/lib/bingoSelectedGameCache";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
@@ -234,6 +236,9 @@ function getGeneratingLoaderVariant(sportKey: string): {
 }
 
 export function SportsBingoSelectBoard() {
+  const playBoardPendingRef = useRef(false);
+  const generateBoardPendingRef = useRef(false);
+  const reducedMotion = useReducedMotion();
   const router = useRouter();
   const searchParams = useSearchParams();
   const venuePresence = useVenuePresence();
@@ -265,6 +270,7 @@ export function SportsBingoSelectBoard() {
   }, []);
 
   const loadGame = useCallback(async () => {
+    if (playBoardPendingRef.current) return;
     if (!gameId) {
       setGame(null);
       setLoadingGame(false);
@@ -381,84 +387,100 @@ export function SportsBingoSelectBoard() {
     !playing;
 
   const generateBoard = useCallback(async () => {
-    if (!gameId) {
-      setErrorMessage("Missing game selection.");
-      return;
-    }
-
-    setGenerating(true);
-    setErrorMessage("");
-
+    if (generateBoardPendingRef.current) return;
+    generateBoardPendingRef.current = true;
     try {
-      const response = await fetch("/api/bingo/cards", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "generate",
-          gameId,
-          sportKey,
-        }),
-      });
-      const payload = (await response.json()) as GenerateResponse;
-      if (!payload.ok || !payload.board) {
-        throw new Error(payload.error ?? "Failed to generate a new bingo card.");
+      if (playBoardPendingRef.current) return;
+      if (!gameId) {
+        setErrorMessage("Missing game selection.");
+        return;
       }
-      setPreview(payload.board);
-      setPreviewPopKey((value) => value + 1);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to generate a new bingo card.");
+
+      setGenerating(true);
+      setErrorMessage("");
+
+      try {
+        const response = await fetch("/api/bingo/cards", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "generate",
+            gameId,
+            sportKey,
+          }),
+        });
+        const payload = (await response.json()) as GenerateResponse;
+        if (!payload.ok || !payload.board) {
+          throw new Error(payload.error ?? "Failed to generate a new bingo card.");
+        }
+        setPreview(payload.board);
+        setPreviewPopKey((value) => value + 1);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Failed to generate a new bingo card.");
+      } finally {
+        setGenerating(false);
+      }
+
     } finally {
-      setGenerating(false);
+      generateBoardPendingRef.current = false;
     }
   }, [gameId, sportKey]);
 
   const playBoard = useCallback(async () => {
-    if (!preview) {
-      setErrorMessage("Generate a board first.");
-      return;
-    }
-    if (!userId || !venueId) {
-      setErrorMessage("Join a venue before locking this card.");
-      return;
-    }
-    if (venuePresence.isInteractionBlocked) {
-      return;
-    }
-
-    setPlaying(true);
-    setErrorMessage("");
-
+    if (playBoardPendingRef.current) return;
+    playBoardPendingRef.current = true;
     try {
-      const response = await fetch("/api/bingo/cards", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "play",
-          userId,
-          venueId,
-          gameId: preview.game.id,
-          sportKey: preview.game.sportKey,
-          squares: preview.squares.map((square) => ({
-            index: square.index,
-            key: square.key,
-            isFree: square.isFree,
-          })),
-        }),
-      });
-      const payload = (await response.json()) as PlayResponse & { code?: string; userMessage?: string };
-      const presenceFailure = venuePresence.capturePresenceFailure(payload);
-      if (presenceFailure) {
-        throw new Error(presenceFailure.userMessage);
+      if (generateBoardPendingRef.current) return;
+      if (!preview) {
+        setErrorMessage("Generate a board first.");
+        return;
       }
-      if (!payload.ok || !payload.card) {
-        throw new Error(payload.error ?? "Failed to lock your bingo card.");
+      if (!userId || !venueId) {
+        setErrorMessage("Join a venue before locking this card.");
+        return;
+      }
+      if (venuePresence.isInteractionBlocked) {
+        return;
       }
 
-      router.push("/bingo/home");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to lock your bingo card.");
+      setPlaying(true);
+      setErrorMessage("");
+
+      try {
+        const response = await fetch("/api/bingo/cards", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "play",
+            userId,
+            venueId,
+            gameId: preview.game.id,
+            sportKey: preview.game.sportKey,
+            squares: preview.squares.map((square) => ({
+              index: square.index,
+              key: square.key,
+              isFree: square.isFree,
+            })),
+          }),
+        });
+        const payload = (await response.json()) as PlayResponse & { code?: string; userMessage?: string };
+        const presenceFailure = venuePresence.capturePresenceFailure(payload);
+        if (presenceFailure) {
+          throw new Error(presenceFailure.userMessage);
+        }
+        if (!payload.ok || !payload.card) {
+          throw new Error(payload.error ?? "Failed to lock your bingo card.");
+        }
+
+        router.push("/bingo/home");
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Failed to lock your bingo card.");
+      } finally {
+        setPlaying(false);
+      }
+
     } finally {
-      setPlaying(false);
+      playBoardPendingRef.current = false;
     }
   }, [preview, router, userId, venueId, venuePresence]);
 
@@ -582,7 +604,7 @@ export function SportsBingoSelectBoard() {
   return (
     <div className="tp-bingo-theme space-y-4">
       {errorMessage ? (
-        <div className="rounded-md border border-rose-500/40 bg-rose-950/30 p-3 text-sm text-rose-300">{errorMessage}</div>
+        <div className="rounded-md border border-rose-500/40 bg-rose-950/30 p-3 text-sm text-rose-300" role="alert">{errorMessage}</div>
       ) : null}
 
       <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
@@ -614,9 +636,10 @@ export function SportsBingoSelectBoard() {
               void generateBoard();
             }}
             disabled={!canGenerate}
-            className="tp-clean-button inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border border-sky-300/55 bg-sky-300/10 px-4 py-2 text-sm font-bold text-sky-200 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-busy={generating}
+            className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border border-sky-300/55 bg-sky-300/10 px-4 py-2 text-sm font-bold text-sky-200 transition-all motion-reduce:transition-none  disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {generating ? "Shuffling..." : preview ? "🎲 Shuffle Board" : "🎲 Generate Board"}
+            {generating ? <><ButtonSpinner /> Generating…</> : preview ? "🎲 Shuffle Board" : "🎲 Generate Board"}
           </button>
           <button
             type="button"
@@ -624,9 +647,10 @@ export function SportsBingoSelectBoard() {
               void playBoard();
             }}
             disabled={!canPlay}
-            className="tp-clean-button inline-flex min-h-[42px] items-center rounded-xl border border-sky-300/60 bg-sky-500/20 px-4 py-2 text-sm font-black text-white shadow-[0_3px_0_rgba(0,0,0,0.4)] transition-all active:translate-y-px active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+            aria-busy={playing}
+            className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[42px] items-center rounded-xl border border-sky-300/60 bg-sky-500/20 px-4 py-2 text-sm font-black text-white shadow-[0_3px_0_rgba(0,0,0,0.4)] transition-all motion-reduce:transition-none   disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {playing ? "Locking..." : "Play!"}
+            {playing ? <><ButtonSpinner /> Opening…</> : "Play!"}
           </button>
         </div>
         {generating ? (
@@ -662,10 +686,10 @@ export function SportsBingoSelectBoard() {
             </p>
             <motion.div
               key={previewPopKey}
-              className="mx-auto w-full max-w-[560px] cursor-pointer transition-all duration-200"
-              initial={{ scale: 0.92 }}
-              animate={{ scale: [0.92, 1.04, 1] }}
-              transition={{ duration: 0.42, times: [0, 0.6, 1], ease: ["easeOut", "easeOut", "easeInOut"] }}
+              className="mx-auto w-full max-w-[560px] cursor-pointer transition-all motion-reduce:transition-none duration-200"
+              initial={reducedMotion ? false : { scale: 0.92 }}
+              animate={reducedMotion ? { scale: 1 } : { scale: [0.92, 1.04, 1] }}
+              transition={reducedMotion ? { duration: 0 } : { duration: 0.42, times: [0, 0.6, 1], ease: ["easeOut", "easeOut", "easeInOut"] }}
               onClick={() => {
                 setIsPreviewExpanded(true);
               }}
@@ -687,7 +711,7 @@ export function SportsBingoSelectBoard() {
           <button
             type="button"
             aria-label="Close expanded board preview"
-            className="absolute inset-0 bg-slate-950/35"
+            className="tp-player-hit-target tp-player-pressable absolute inset-0 bg-slate-950/35"
             onClick={() => {
               setIsPreviewExpanded(false);
             }}
@@ -700,7 +724,7 @@ export function SportsBingoSelectBoard() {
                 onClick={() => {
                   setIsPreviewExpanded(false);
                 }}
-                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-white/10 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-white/10 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
               >
                 <span aria-hidden="true">✕</span>
                 <span>Close</span>
@@ -714,6 +738,9 @@ export function SportsBingoSelectBoard() {
         </div>
       ) : null}
       <style jsx>{`
+        @media (prefers-reduced-motion: reduce) {
+          .tp-bingo-sport-loader, .tp-bingo-loader-bar { animation: none !important; }
+        }
         @keyframes tp-bingo-loader-bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-5px); }

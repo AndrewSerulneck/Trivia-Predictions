@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
@@ -26,6 +26,7 @@ function pathMatches(expectedPath: string, candidatePath: string): boolean {
 
 export function GlobalTransitionOverlay() {
   const pathname = usePathname();
+  const reducedMotion = useReducedMotion();
   const [visible, setVisible] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const targetPathRef = useRef<string>("");
@@ -65,6 +66,7 @@ export function GlobalTransitionOverlay() {
   }, [clearSafetyTimers]);
 
   const startFadeOut = useCallback(() => {
+    if (reducedMotion) { finalizeOverlay(); return; }
     if (isFadingOutRef.current) {
       return;
     }
@@ -79,14 +81,14 @@ export function GlobalTransitionOverlay() {
         finalizeOverlay();
       }, OVERLAY_FADE_OUT_MS + 350);
     }
-  }, [clearSafetyTimers, finalizeOverlay]);
+  }, [clearSafetyTimers, finalizeOverlay, reducedMotion]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
     const preload = new Image();
-    preload.src = "/brand/hightop-logo.svg";
+    preload.src = "/brand/htc-logo.png";
     try {
       preload.decode?.().catch(() => {
         // Ignore decode failures.
@@ -195,7 +197,7 @@ export function GlobalTransitionOverlay() {
   if (!shouldRender) {
     return (
       <img
-        src="/brand/hightop-logo.svg"
+        src="/brand/htc-logo.png"
         alt=""
         aria-hidden="true"
         className="pointer-events-none fixed left-0 top-0 h-px w-px opacity-0"
@@ -210,7 +212,7 @@ export function GlobalTransitionOverlay() {
     <motion.div
       initial={{ opacity: 1 }}
       animate={{ opacity: isFadingOut ? 0 : 1 }}
-      transition={{ duration: 0.62, ease: "easeInOut" }}
+      transition={{ duration: reducedMotion ? 0 : 0.62, ease: "easeInOut" }}
       onAnimationComplete={() => {
         if (!isFadingOut) {
           return;

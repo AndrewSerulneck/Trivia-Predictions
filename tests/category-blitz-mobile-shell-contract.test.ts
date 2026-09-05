@@ -117,20 +117,6 @@ describe("Category Blitz mobile shell contract", () => {
     expect(enterClass).not.toContain("transform");
   });
 
-  it("keeps the legal notice out of fullscreen game routes but shows it everywhere else non-admin", () => {
-    // Code review round 3 phase 7: the prior version of this test locked in a
-    // regression (commit 35115fc narrowed the notice to venue-home-only by
-    // accident). Confirmed with the user that the narrowing was unintended;
-    // the notice must render on every non-admin, non-fullscreen route. This is
-    // a compliance decision — do not narrow it again without a separately
-    // verified decision (components/ui/AppShell.tsx:42-55).
-    expect(appShellSource).toContain(
-      "export function shouldShowLegalNotice(pathname: string | null | undefined): boolean {"
-    );
-    expect(appShellSource).toContain("const showLegalNotice = shouldShowLegalNotice(pathname);");
-    expect(appShellSource).toContain("{showLegalNotice ? (");
-  });
-
   it("renders Category Blitz gameplay through a dark, dedicated play shell", () => {
     // Phase 3 of the app-feel plan: `/category-blitz/play` no longer goes through
     // GameLandingExperience/PageShell. The contract is that the play route's shell is

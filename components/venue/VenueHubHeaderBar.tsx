@@ -8,7 +8,6 @@ type VenueHubHeaderBarProps = {
   venueDisplayName: string;
   isMenuOpen: boolean;
   onOpenMenu: () => void;
-  onTriggerPulse: () => void;
   activeScreen: HomeScreenIndex;
   onGoToScreen: (screenIndex: HomeScreenIndex) => void;
   challengeBadgeCount: number;
@@ -18,7 +17,6 @@ function VenueHubHeaderBarInner({
   venueDisplayName,
   isMenuOpen,
   onOpenMenu,
-  onTriggerPulse,
   activeScreen,
   onGoToScreen,
   challengeBadgeCount,
@@ -28,9 +26,8 @@ function VenueHubHeaderBarInner({
       <div className="flex items-center justify-between px-4 py-1.5">
         <button
           type="button"
-          onMouseDown={onTriggerPulse}
           onClick={onOpenMenu}
-          className="tp-clean-button inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-white/10 bg-ht-surface text-ht-fg-primary"
+          className="tp-clean-button tp-player-hit-target tp-player-pressable inline-flex h-11 w-11 items-center justify-center rounded-[10px] border border-white/10 bg-ht-surface text-ht-fg-primary"
           aria-label="Open navigation menu"
           aria-expanded={isMenuOpen}
         >
@@ -55,7 +52,7 @@ function VenueHubHeaderBarInner({
               <button
                 type="button"
                 onClick={() => onGoToScreen(0)}
-                className={`tp-clean-button rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                className={`tp-clean-button tp-player-hit-target tp-player-pressable rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
                   activeScreen === 0 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
                 }`}
               >
@@ -64,7 +61,7 @@ function VenueHubHeaderBarInner({
               <button
                 type="button"
                 onClick={() => onGoToScreen(1)}
-                className={`tp-clean-button rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                className={`tp-clean-button tp-player-hit-target tp-player-pressable rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
                   activeScreen === 1 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
                 }`}
               >
@@ -73,7 +70,7 @@ function VenueHubHeaderBarInner({
               <button
                 type="button"
                 onClick={() => onGoToScreen(2)}
-                className={`tp-clean-button relative rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                className={`tp-clean-button tp-player-hit-target tp-player-pressable relative rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
                   activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
                 }`}
               >

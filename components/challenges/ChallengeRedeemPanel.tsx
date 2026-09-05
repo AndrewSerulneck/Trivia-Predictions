@@ -1,5 +1,9 @@
 "use client";
 
+import { haptic } from "@/lib/haptics";
+
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
@@ -186,6 +190,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
   const [wins, setWins] = useState<ChallengeWin[]>([]);
   const [activeCampaigns, setActiveCampaigns] = useState<CampaignSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
+  const claimPendingRef = useRef(false);
   const [claimingId, setClaimingId] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
@@ -301,59 +306,62 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
       const key = claimKey(win);
       // A coupon with no challengeId belongs to a deleted reward — it is already
       // history and has nothing left to redeem against.
-      if (!userId || !venueId || !win.challengeId || claimingId || win.claimedAt) return;
+      if (!userId || !venueId || !win.challengeId || claimPendingRef.current || win.claimedAt) return;
       if (venuePresence.isInteractionBlocked) return;
+      claimPendingRef.current = true;
       setClaimingId(key);
       setErrorMessage("");
       setStatusMessage("");
       try {
-        const response = await fetch("/api/challenge-campaigns/redeem", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, venueId, challengeId: win.challengeId, cycleStart: win.cycleStart ?? undefined }),
-        });
-        const payload = (await response.json()) as {
-          ok: boolean;
-          code?: string;
-          result?: { claimed: boolean; challengeName: string };
-          error?: string;
-          userMessage?: string;
-        };
-        const presenceFailure = venuePresence.capturePresenceFailure(payload);
-        if (presenceFailure) {
-          throw new Error(presenceFailure.userMessage);
-        }
-        if (!payload.ok || !payload.result) {
-          throw new Error(payload.error ?? "Failed to redeem challenge prize.");
-        }
-        if (payload.result.claimed) {
-          window.dispatchEvent(
-            new CustomEvent("tp:coin-flight", {
-              detail: {
-                sourceRect: {
-                  left: sourceRect.left,
-                  top: sourceRect.top,
-                  width: sourceRect.width,
-                  height: sourceRect.height,
+          const response = await fetch("/api/challenge-campaigns/redeem", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, venueId, challengeId: win.challengeId, cycleStart: win.cycleStart ?? undefined }),
+          });
+          const payload = (await response.json()) as {
+            ok: boolean;
+            code?: string;
+            result?: { claimed: boolean; challengeName: string };
+            error?: string;
+            userMessage?: string;
+          };
+          const presenceFailure = venuePresence.capturePresenceFailure(payload);
+          if (presenceFailure) {
+            throw new Error(presenceFailure.userMessage);
+          }
+          if (!payload.ok || !payload.result) {
+            throw new Error(payload.error ?? "Failed to redeem challenge prize.");
+          }
+          if (payload.result.claimed) {
+            haptic("success");
+            window.dispatchEvent(
+              new CustomEvent("tp:coin-flight", {
+                detail: {
+                  sourceRect: {
+                    left: sourceRect.left,
+                    top: sourceRect.top,
+                    width: sourceRect.width,
+                    height: sourceRect.height,
+                  },
+                  delta: 30,
+                  coins: 24,
                 },
-                delta: 30,
-                coins: 24,
-              },
-            })
-          );
-          setStatusMessage(`Redeemed ${payload.result.challengeName}. Prize is now marked as claimed.`);
-        } else {
-          setStatusMessage(`Prize already claimed for ${payload.result.challengeName}.`);
-        }
-        await load();
+              })
+            );
+            setStatusMessage(`Redeemed ${payload.result.challengeName}. Prize is now marked as claimed.`);
+          } else {
+            setStatusMessage(`Prize already claimed for ${payload.result.challengeName}.`);
+          }
+          await load();
       } catch (error) {
         setStatusMessage("");
         setErrorMessage(error instanceof Error ? error.message : "Failed to redeem challenge prize.");
       } finally {
+        claimPendingRef.current = false;
         setClaimingId((prev) => (prev === key ? "" : prev));
       }
     },
-    [claimingId, load, userId, venueId, venuePresence]
+    [load, userId, venueId, venuePresence]
   );
 
   return (
@@ -466,8 +474,9 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                       const rect = event.currentTarget.getBoundingClientRect();
                       void claim(win, rect);
                     }}
-                    className="mt-3 min-h-[44px] rounded-ht-lg border border-indigo-500/50 bg-indigo-500/15 px-3 py-2 text-sm font-semibold text-indigo-300 disabled:opacity-60"
+                    className="tp-player-hit-target tp-player-pressable mt-3 min-h-[44px] rounded-ht-lg border border-indigo-500/50 bg-indigo-500/15 px-3 py-2 text-sm font-semibold text-indigo-300 disabled:opacity-60" aria-busy={Boolean(claimingId)}
                   >
+              {(Boolean(claimingId)) ? <ButtonSpinner /> : null}
                     {claimingId === key ? "Redeeming..." : "Redeem"}
                   </button>
                 </li>
@@ -493,12 +502,12 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
         ) : null}
 
         {statusMessage ? (
-          <p className="mt-3 rounded-ht-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400">
+          <p className="mt-3 rounded-ht-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400" role="status">
             {statusMessage}
           </p>
         ) : null}
         {errorMessage ? (
-          <p className="mt-3 rounded-ht-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400">
+          <p className="mt-3 rounded-ht-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400" role="alert">
             {errorMessage}
           </p>
         ) : null}

@@ -46,7 +46,7 @@ export function StoryShareLauncher({
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="tp-clean-button inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-4 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(34,211,238,0.18)] transition hover:bg-cyan-200 active:scale-[0.99]"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-4 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(34,211,238,0.18)] transition hover:bg-cyan-200 "
           >
             <Share2 className="h-4 w-4" aria-hidden="true" />
             {buttonLabel}

@@ -84,7 +84,7 @@ export function WizardFooter({
       {hint ? <div className={HINT_CLASS[tone]}>{hint}</div> : null}
       <div className="flex items-center gap-3">
         {onBack ? (
-          <StepBackButton onClick={onBack} label={backLabel} disabled={backDisabled} tone={tone} />
+          <StepBackButton onClick={onBack} label={backLabel} disabled={backDisabled} busy={tone === "dark" && nextBusy} tone={tone} />
         ) : null}
         {showNext ? (
           <NextButton

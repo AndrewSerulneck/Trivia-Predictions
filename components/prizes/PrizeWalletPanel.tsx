@@ -1,6 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { haptic } from "@/lib/haptics";
+
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
@@ -104,7 +108,7 @@ function WineCoupon({ win, onRedeem, large }: CouponCardProps) {
           <button
             type="button"
             onClick={() => onRedeem(win)}
-            className="tp-clean-button rounded-lg border border-rose-500/60 bg-rose-500/20 px-6 py-3 text-sm font-bold text-rose-200 hover:bg-rose-500/30"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-rose-500/60 bg-rose-500/20 px-6 py-3 text-sm font-bold text-rose-200 hover:bg-rose-500/30"
           >
             Redeem
           </button>
@@ -142,7 +146,7 @@ function AppetizerCoupon({ win, onRedeem, large }: CouponCardProps) {
           <button
             type="button"
             onClick={() => onRedeem(win)}
-            className="tp-clean-button rounded-lg border border-emerald-500/60 bg-emerald-500/20 px-6 py-3 text-sm font-bold text-emerald-200 hover:bg-emerald-500/30"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-emerald-500/60 bg-emerald-500/20 px-6 py-3 text-sm font-bold text-emerald-200 hover:bg-emerald-500/30"
           >
             Redeem
           </button>
@@ -186,7 +190,7 @@ function GiftCertificateCoupon({ win, onRedeem, large }: CouponCardProps) {
           <button
             type="button"
             onClick={() => onRedeem(win)}
-            className="tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-6 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-6 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
           >
             Redeem
           </button>
@@ -230,7 +234,7 @@ function GiftCardCoupon({ win, onRedeem, large }: CouponCardProps) {
           <button
             type="button"
             onClick={() => onRedeem(win)}
-            className="tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-6 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-6 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
           >
             Redeem
           </button>
@@ -311,7 +315,7 @@ function MenuItemCoupon({ win, onRedeem, large }: CouponCardProps) {
           <button
             type="button"
             onClick={() => onRedeem(win)}
-            className={`tp-clean-button rounded-lg border px-6 py-3 text-sm font-bold ${theme.buttonBorder}`}
+            className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button rounded-lg border px-6 py-3 text-sm font-bold ${theme.buttonBorder}`)}
           >
             Redeem
           </button>
@@ -340,18 +344,21 @@ type RedeemModalProps = {
   onClose: () => void;
   confirming: boolean;
   confirmed: boolean;
+  errorMessage: string;
 };
 
-function RedeemModal({ win, onConfirm, onClose, confirming, confirmed }: RedeemModalProps) {
+function RedeemModal({ win, onConfirm, onClose, confirming, confirmed, errorMessage }: RedeemModalProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-4 sm:items-center"
+      role="dialog" aria-modal="true" aria-label="Confirm redemption"
+      className="fixed inset-0 z-[6200] flex items-end justify-center bg-black/75 p-4 pb-[max(env(safe-area-inset-bottom),16px)] sm:items-center"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="w-full max-w-sm animate-in slide-in-from-bottom-4 duration-200 space-y-4">
+        {errorMessage ? <p role="alert" className="text-sm text-rose-300">{errorMessage}</p> : null}
         {confirmed ? (
           <div className="rounded-2xl border border-emerald-500/50 bg-emerald-950/80 p-6 text-center">
-            <p className="text-xl font-black text-emerald-300">Redeemed!</p>
+            <p role="status" className="text-xl font-black text-emerald-300">Redeemed!</p>
             <p className="mt-2 text-sm text-emerald-400/80">Your prize has been recorded. Enjoy!</p>
           </div>
         ) : (
@@ -370,7 +377,7 @@ function RedeemModal({ win, onConfirm, onClose, confirming, confirmed }: RedeemM
                 type="button"
                 onClick={onClose}
                 disabled={confirming}
-                className="tp-clean-button flex-1 rounded-xl border border-ht-border-hairline py-3 text-sm font-semibold text-ht-fg-secondary disabled:opacity-50"
+                className="tp-player-hit-target tp-player-pressable tp-clean-button flex-1 rounded-xl border border-ht-border-hairline py-3 text-sm font-semibold text-ht-fg-secondary disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -378,8 +385,9 @@ function RedeemModal({ win, onConfirm, onClose, confirming, confirmed }: RedeemM
                 type="button"
                 onClick={onConfirm}
                 disabled={confirming}
-                className="tp-clean-button flex-1 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-500 disabled:opacity-50"
+                className="tp-player-hit-target tp-player-pressable tp-clean-button flex-1 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-500 disabled:opacity-50" aria-busy={confirming}
               >
+              {(confirming) ? <ButtonSpinner /> : null}
                 {confirming ? "Confirming..." : "Confirm Redemption"}
               </button>
             </div>
@@ -409,6 +417,8 @@ export function PrizeWalletPanel() {
 
   // Redeem modal
   const [redeemingWin, setRedeemingWin] = useState<ChallengeCampaignWin | null>(null);
+  const claimPendingRef = useRef(false);
+  const redeemPendingRef = useRef(false);
   const [redeemConfirming, setRedeemConfirming] = useState(false);
   const [redeemConfirmed, setRedeemConfirmed] = useState(false);
 
@@ -417,12 +427,12 @@ export function PrizeWalletPanel() {
     setVenueId(getVenueId() ?? "");
   }, []);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (showLoading = true) => {
     if (!venueId) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (showLoading) setLoading(true);
     setErrorMessage("");
     try {
       const params = new URLSearchParams({ venueId });
@@ -479,52 +489,56 @@ export function PrizeWalletPanel() {
   // ── Weekly prize claim ───────────────────────────────────────────────────
   const claimWeeklyPrize = useCallback(
     async (prizeWin: PrizeWin, sourceRect: DOMRect) => {
-      if (!userId || !prizeWin.id || claimingId) return;
+      if (!userId || !prizeWin.id || claimPendingRef.current) return;
+      claimPendingRef.current = true;
       setClaimingId(prizeWin.id);
       setErrorMessage("");
       setStatusMessage("");
       try {
-        const res = await fetch("/api/prizes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "claim", userId, prizeWinId: prizeWin.id }),
-        });
-        const payload = (await res.json()) as {
-          ok: boolean;
-          result?: { claimed: boolean; rewardPoints: number; prizeTitle: string };
-          error?: string;
-        };
-        if (!payload.ok || !payload.result) throw new Error(payload.error ?? "Failed to claim prize.");
-        if (payload.result.claimed && payload.result.rewardPoints > 0) {
-          window.dispatchEvent(new CustomEvent("tp:coin-flight", {
-            detail: {
-              sourceRect: { left: sourceRect.left, top: sourceRect.top, width: sourceRect.width, height: sourceRect.height },
-              delta: payload.result.rewardPoints,
-              coins: Math.min(36, Math.max(12, Math.round(payload.result.rewardPoints / 2))),
-            },
-          }));
-          window.dispatchEvent(new CustomEvent("tp:points-updated", {
-            detail: { source: "prize-claim", delta: payload.result.rewardPoints },
-          }));
-        }
-        setStatusMessage(
-          payload.result.claimed
-            ? `Claimed "${payload.result.prizeTitle}"${payload.result.rewardPoints > 0 ? ` for +${payload.result.rewardPoints} points.` : "."}`
-            : "This prize has already been claimed."
-        );
-        await load();
+          const res = await fetch("/api/prizes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "claim", userId, prizeWinId: prizeWin.id }),
+          });
+          const payload = (await res.json()) as {
+            ok: boolean;
+            result?: { claimed: boolean; rewardPoints: number; prizeTitle: string };
+            error?: string;
+          };
+          if (!payload.ok || !payload.result) throw new Error(payload.error ?? "Failed to claim prize.");
+          if (payload.result.claimed && payload.result.rewardPoints > 0) {
+            window.dispatchEvent(new CustomEvent("tp:coin-flight", {
+              detail: {
+                sourceRect: { left: sourceRect.left, top: sourceRect.top, width: sourceRect.width, height: sourceRect.height },
+                delta: payload.result.rewardPoints,
+                coins: Math.min(36, Math.max(12, Math.round(payload.result.rewardPoints / 2))),
+              },
+            }));
+            window.dispatchEvent(new CustomEvent("tp:points-updated", {
+              detail: { source: "prize-claim", delta: payload.result.rewardPoints },
+            }));
+          }
+          if (payload.result.claimed) haptic("success");
+          setStatusMessage(
+            payload.result.claimed
+              ? `Claimed "${payload.result.prizeTitle}"${payload.result.rewardPoints > 0 ? ` for +${payload.result.rewardPoints} points.` : "."}`
+              : "This prize has already been claimed."
+          );
+          await load(false);
       } catch (error) {
         setStatusMessage("");
         setErrorMessage(error instanceof Error ? error.message : "Failed to claim prize.");
       } finally {
+        claimPendingRef.current = false;
         setClaimingId("");
       }
     },
-    [claimingId, load, userId]
+    [load, userId]
   );
 
   // ── Challenge coupon redeem ──────────────────────────────────────────────
   const handleRedeemOpen = useCallback((win: ChallengeCampaignWin) => {
+    setErrorMessage("");
     setRedeemingWin(win);
     setRedeemConfirmed(false);
   }, []);
@@ -532,31 +546,33 @@ export function PrizeWalletPanel() {
   const handleRedeemConfirm = useCallback(async () => {
     // A coupon with no challengeId belongs to a reward the partner deleted; it is
     // already-redeemed history and has nothing left to redeem against.
-    if (!redeemingWin?.challengeId || !userId || !venueId) return;
+    if (!redeemingWin?.challengeId || !userId || !venueId || redeemPendingRef.current) return;
+    redeemPendingRef.current = true;
     setRedeemConfirming(true);
     setErrorMessage("");
     try {
-      const res = await fetch("/api/prizes/redeem-challenge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, venueId, challengeId: redeemingWin.challengeId }),
-      });
-      const payload = (await res.json()) as { ok: boolean; code?: string; error?: string; userMessage?: string };
-      const presenceFailure = venuePresence.capturePresenceFailure(payload);
-      if (presenceFailure) {
-        throw new Error(presenceFailure.userMessage);
-      }
-      if (!payload.ok) throw new Error(payload.error ?? "Failed to redeem prize.");
-      setRedeemConfirmed(true);
-      await load();
-      setTimeout(() => {
-        setRedeemingWin(null);
-        setRedeemConfirmed(false);
-      }, 2000);
+        const res = await fetch("/api/prizes/redeem-challenge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, venueId, challengeId: redeemingWin.challengeId }),
+        });
+        const payload = (await res.json()) as { ok: boolean; code?: string; error?: string; userMessage?: string };
+        const presenceFailure = venuePresence.capturePresenceFailure(payload);
+        if (presenceFailure) {
+          throw new Error(presenceFailure.userMessage);
+        }
+        if (!payload.ok) throw new Error(payload.error ?? "Failed to redeem prize.");
+        setRedeemConfirmed(true);
+        haptic("success");
+        await load(false);
+        setTimeout(() => {
+          setRedeemingWin(null);
+          setRedeemConfirmed(false);
+        }, 2000);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to redeem prize.");
-      setRedeemingWin(null);
     } finally {
+      redeemPendingRef.current = false;
       setRedeemConfirming(false);
     }
   }, [redeemingWin, userId, venueId, load, venuePresence]);
@@ -584,17 +600,18 @@ export function PrizeWalletPanel() {
           onClose={() => { if (!redeemConfirming) setRedeemingWin(null); }}
           confirming={redeemConfirming}
           confirmed={redeemConfirmed}
+          errorMessage={errorMessage}
         />
       )}
 
       <div className="space-y-4">
         {errorMessage && (
-          <p className="rounded-ht-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400">
+          <p className="rounded-ht-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400" role="alert">
             {errorMessage}
           </p>
         )}
         {statusMessage && (
-          <p className="rounded-ht-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400">
+          <p className="rounded-ht-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400" role="status">
             {statusMessage}
           </p>
         )}
@@ -663,13 +680,14 @@ export function PrizeWalletPanel() {
                       {win.status === "awarded" && (
                         <button
                           type="button"
-                          disabled={claimingId === win.id}
+                          disabled={Boolean(claimingId)}
                           onClick={(e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
                             void claimWeeklyPrize(win, rect);
                           }}
-                          className="tp-clean-button mt-2 rounded-ht-md border border-indigo-500/50 bg-indigo-500/15 px-2 py-1 text-xs font-semibold text-indigo-300 disabled:opacity-60"
+                          className="tp-player-hit-target tp-player-pressable tp-clean-button mt-2 rounded-ht-md border border-indigo-500/50 bg-indigo-500/15 px-2 py-1 text-xs font-semibold text-indigo-300 disabled:opacity-60" aria-busy={claimingId === win.id}
                         >
+              {(claimingId === win.id) ? <ButtonSpinner /> : null}
                           {claimingId === win.id ? "Claiming..." : "Claim Prize"}
                         </button>
                       )}

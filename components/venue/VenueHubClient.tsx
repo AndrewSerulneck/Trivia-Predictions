@@ -1,8 +1,11 @@
 "use client";
 
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
+import { readPlayerPanel, savePlayerPanel } from "@/lib/playerViewState";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { AccountMenuList } from "@/components/navigation/AccountMenuList";
@@ -273,12 +276,15 @@ function venueDebugLog(message: string, details?: Record<string, unknown>) {
   if (!venueDebugEnabled) {
     return;
   }
-   
+
   console.log(`[tp-debug][venue-home] ${message}`, details ?? {});
 }
 
 function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
+  const handlePasskeySetupPendingRef = useRef(false);
   const router = useRouter();
+  const reducedMotion = useReducedMotion();
+  const launchPendingRef = useRef(false);
   // Bootstrap snapshot and entry handoff are read from sessionStorage ONLY after
   // mount (in useEffect). Reading them during render would produce different values
   // on the server (no sessionStorage) vs. the client, causing a hydration mismatch.
@@ -432,7 +438,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       window.removeEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
       window.clearTimeout(fallbackTimer);
     };
-     
+
   }, [venue.id]);
 
   useEffect(() => {
@@ -529,13 +535,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     };
   }, [homeRevealComplete]);
 
-  const triggerPulse = useCallback(() => {
-    if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
-    try {
-      (navigator as any).vibrate?.(14);
-    } catch {}
-  }, []);
-
   const openMenu = useCallback(() => {
     setIsMenuOpen(true);
   }, []);
@@ -545,10 +544,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     if (!viewport) return;
     const nextIndex = clamp(screenIndex, 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
     if (nextIndex === activeScreenRef.current) return;
-    viewport.scrollTo({ left: viewport.clientWidth * nextIndex, behavior: "smooth" });
+    savePlayerPanel(venue.id, nextIndex);
+    viewport.scrollTo({ left: viewport.clientWidth * nextIndex, behavior: reducedMotion ? "auto" : "smooth" });
     setActiveScreen(nextIndex);
     activeScreenRef.current = nextIndex;
-  }, []);
+  }, [reducedMotion, venue.id]);
 
   const onCarouselScroll = useCallback(() => {
     const viewport = swipeViewportRef.current;
@@ -561,15 +561,19 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       if (nextIndex === activeScreenRef.current) return;
       activeScreenRef.current = nextIndex;
       setActiveScreen(nextIndex);
+      savePlayerPanel(venue.id, nextIndex);
     });
-  }, []);
+  }, [venue.id]);
 
   useLayoutEffect(() => {
     const viewport = swipeViewportRef.current;
     if (!viewport) return;
-    viewport.scrollLeft = viewport.clientWidth * activeScreenRef.current;
+    const restoredPanel = readPlayerPanel(venue.id);
+    activeScreenRef.current = restoredPanel;
+    setActiveScreen(restoredPanel);
+    viewport.scrollLeft = viewport.clientWidth * restoredPanel;
     setCarouselBootstrapped(true);
-  }, []);
+  }, [venue.id]);
 
   useEffect(() => {
     const onResize = () => {
@@ -630,111 +634,118 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   }, []);
 
   const handlePasskeySetup = useCallback(async () => {
-    setPasskeySetupError("");
-    setPasskeySetupMessage("");
-
-    if (!browserSupportsWebAuthn()) {
-      setPasskeySetupError("This browser does not support passkey setup.");
-      return;
-    }
-
-    const userId = (getUserId() ?? "").trim();
-    const venueId = venue.id;
-    const username = (getUsername() ?? menuUsername).trim();
-    const accountId = (getAccountId() ?? "").trim();
-    if (!userId || !venueId || (!username && !accountId)) {
-      setPasskeySetupError("Please sign in again before setting up a passkey.");
-      return;
-    }
-
-    setIsPasskeySetupLoading(true);
-    const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
-    logAuthIncident("venue-passkey", "setup-start", {
-      venueId,
-      userId,
-      username,
-      userAgent,
-    });
-
+    if (handlePasskeySetupPendingRef.current) return;
+    handlePasskeySetupPendingRef.current = true;
     try {
-      const optionsResponse = await fetch("/api/auth/passkey/register/options", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...(accountId ? { accountId } : {}),
-          userId,
-          venueId,
-          username,
-        }),
-      });
-      const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
-      if (!optionsResponse.ok || !optionsPayload?.ok || !optionsPayload.options || !optionsPayload.challengeId) {
-        const mappedMessage = getPasskeyClientMessage(
-          optionsPayload?.errorCode,
-          optionsPayload?.error || "Passkey setup could not be started."
-        );
-        setPasskeySetupError(mappedMessage);
-        logAuthIncident("venue-passkey", "setup-options-failed", {
-          venueId,
-          userId,
-          code: optionsPayload?.errorCode ?? null,
-          message: optionsPayload?.error ?? null,
-        });
+      setPasskeySetupError("");
+      setPasskeySetupMessage("");
+
+      if (!browserSupportsWebAuthn()) {
+        setPasskeySetupError("This browser does not support passkey setup.");
         return;
       }
 
-      const registrationResponse = await startRegistration({
-        optionsJSON: optionsPayload.options,
-      });
-
-      const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          challengeId: optionsPayload.challengeId,
-          response: registrationResponse,
-          userId,
-          venueId,
-        }),
-      });
-      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
-      if (!verifyResponse.ok || !verifyPayload?.ok) {
-        const mappedMessage = getPasskeyClientMessage(
-          verifyPayload?.errorCode,
-          verifyPayload?.error || "Passkey setup verification failed."
-        );
-        setPasskeySetupError(mappedMessage);
-        logAuthIncident("venue-passkey", "setup-verify-failed", {
-          venueId,
-          userId,
-          code: verifyPayload?.errorCode ?? null,
-          message: verifyPayload?.error ?? null,
-        });
+      const userId = (getUserId() ?? "").trim();
+      const venueId = venue.id;
+      const username = (getUsername() ?? menuUsername).trim();
+      const accountId = (getAccountId() ?? "").trim();
+      if (!userId || !venueId || (!username && !accountId)) {
+        setPasskeySetupError("Please sign in again before setting up a passkey.");
         return;
       }
 
-      setPasskeySetupMessage("Passkey enabled. Next login can use Face ID, Touch ID, or device PIN.");
-      setHasPasskey(true);
-      logAuthIncident("venue-passkey", "setup-success", { venueId, userId });
-    } catch (error) {
-      if (isPasskeyUserCancel(error)) {
-        setPasskeySetupError("");
-        logAuthIncident("venue-passkey", "setup-canceled", { venueId, userId });
-      } else {
-        const fallback = error instanceof Error ? error.message : "Passkey setup failed.";
-        setPasskeySetupError(getPasskeyClientMessage(undefined, fallback));
-        logAuthIncident("venue-passkey", "setup-error", {
-          venueId,
-          userId,
-          message: fallback,
+      setIsPasskeySetupLoading(true);
+      const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
+      logAuthIncident("venue-passkey", "setup-start", {
+        venueId,
+        userId,
+        username,
+        userAgent,
+      });
+
+      try {
+        const optionsResponse = await fetch("/api/auth/passkey/register/options", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...(accountId ? { accountId } : {}),
+            userId,
+            venueId,
+            username,
+          }),
         });
+        const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
+        if (!optionsResponse.ok || !optionsPayload?.ok || !optionsPayload.options || !optionsPayload.challengeId) {
+          const mappedMessage = getPasskeyClientMessage(
+            optionsPayload?.errorCode,
+            optionsPayload?.error || "Passkey setup could not be started."
+          );
+          setPasskeySetupError(mappedMessage);
+          logAuthIncident("venue-passkey", "setup-options-failed", {
+            venueId,
+            userId,
+            code: optionsPayload?.errorCode ?? null,
+            message: optionsPayload?.error ?? null,
+          });
+          return;
+        }
+
+        const registrationResponse = await startRegistration({
+          optionsJSON: optionsPayload.options,
+        });
+
+        const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            challengeId: optionsPayload.challengeId,
+            response: registrationResponse,
+            userId,
+            venueId,
+          }),
+        });
+        const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
+        if (!verifyResponse.ok || !verifyPayload?.ok) {
+          const mappedMessage = getPasskeyClientMessage(
+            verifyPayload?.errorCode,
+            verifyPayload?.error || "Passkey setup verification failed."
+          );
+          setPasskeySetupError(mappedMessage);
+          logAuthIncident("venue-passkey", "setup-verify-failed", {
+            venueId,
+            userId,
+            code: verifyPayload?.errorCode ?? null,
+            message: verifyPayload?.error ?? null,
+          });
+          return;
+        }
+
+        setPasskeySetupMessage("Passkey enabled. Next login can use Face ID, Touch ID, or device PIN.");
+        setHasPasskey(true);
+        logAuthIncident("venue-passkey", "setup-success", { venueId, userId });
+      } catch (error) {
+        if (isPasskeyUserCancel(error)) {
+          setPasskeySetupError("");
+          logAuthIncident("venue-passkey", "setup-canceled", { venueId, userId });
+        } else {
+          const fallback = error instanceof Error ? error.message : "Passkey setup failed.";
+          setPasskeySetupError(getPasskeyClientMessage(undefined, fallback));
+          logAuthIncident("venue-passkey", "setup-error", {
+            venueId,
+            userId,
+            message: fallback,
+          });
+        }
+      } finally {
+        setIsPasskeySetupLoading(false);
       }
+
     } finally {
-      setIsPasskeySetupLoading(false);
+      handlePasskeySetupPendingRef.current = false;
     }
   }, [menuUsername, venue.id]);
 
@@ -1287,7 +1298,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
 
   const enterCategoryBlitzGame = useCallback(
     async (sourceElement: HTMLElement | null, persistCardSnapshot = true) => {
-      triggerPulse();
+      if (launchPendingRef.current) return;
+      launchPendingRef.current = true;
       setPendingDestination("category-blitz");
       try {
         await runVenueGameOpenTransition({
@@ -1298,10 +1310,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           persistCardSnapshot,
         });
       } catch {
+        launchPendingRef.current = false;
         setPendingDestination(null);
       }
     },
-    [router, triggerPulse]
+    [router]
   );
 
   const goTo = useCallback(
@@ -1310,6 +1323,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       sourceElement: HTMLElement | null,
       options?: { persistCardSnapshot?: boolean }
     ) => {
+      if (launchPendingRef.current) return;
       if (dest === "category-blitz") {
         // Tutorial cards must never render on the lobby route itself — show
         // them as an overlay here on the home screen, every time the player
@@ -1324,7 +1338,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       if (!destination) return;
       const targetPath =
         dest === "live_trivia" ? `${destination.path}?venueId=${encodeURIComponent(venue.id)}` : destination.path;
-      triggerPulse();
+      if (launchPendingRef.current) return;
+      launchPendingRef.current = true;
       setPendingDestination(dest);
       try {
         await runVenueGameOpenTransition({
@@ -1335,10 +1350,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           persistCardSnapshot: options?.persistCardSnapshot ?? true,
         });
       } catch {
+        launchPendingRef.current = false;
         setPendingDestination(null);
       }
     },
-  [router, triggerPulse, venue.id]
+  [router, venue.id]
   );
 
   const closeCategoryBlitzOnboarding = useCallback(() => {
@@ -1482,7 +1498,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         venueDisplayName={venueDisplayName}
         isMenuOpen={isMenuOpen}
         onOpenMenu={openMenu}
-        onTriggerPulse={triggerPulse}
         activeScreen={activeScreen}
         onGoToScreen={goToScreen}
         challengeBadgeCount={challengeBadgeCount}
@@ -1494,7 +1509,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         <div
           ref={swipeViewportRef}
           onScroll={onCarouselScroll}
-          className="venue-home-carousel relative m-0 flex w-full overflow-x-auto overflow-y-visible p-0 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="venue-home-carousel relative m-0 flex w-full overflow-x-auto overflow-y-visible p-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{
             scrollSnapType: "x mandatory",
             WebkitOverflowScrolling: "touch",
@@ -1519,7 +1534,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           visibleBadgeByGame={visibleBadgeByGame}
           badgeError={badgeError}
           categoryBlitzSessionActive={categoryBlitzSessionActive}
-          onTriggerPulse={triggerPulse}
           onGoTo={handleGoTo}
           onRetryBadges={retryBadges}
         />
@@ -1553,9 +1567,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         <button
           type="button"
           onClick={() => setIsMenuOpen(false)}
-          className={`absolute inset-0 h-full w-full bg-black/40 transition-opacity duration-200 ${
+          className={"tp-player-hit-target tp-player-pressable " + (`absolute inset-0 h-full w-full bg-black/40 transition-opacity duration-200 ${
             isMenuOpen ? "opacity-100" : "opacity-0"
-          }`}
+          }`)}
           aria-label="Close navigation menu"
         />
 
@@ -1569,7 +1583,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             <button
               type="button"
               onClick={() => setIsMenuOpen(false)}
-              className="rounded-ht-sm border border-ht-border-soft bg-ht-elevated px-3 py-1.5 text-base font-semibold text-ht-fg-muted"
+              className="tp-player-hit-target tp-player-pressable rounded-ht-sm border border-ht-border-soft bg-ht-elevated px-3 py-1.5 text-base font-semibold text-ht-fg-muted"
             >
               Close
             </button>
@@ -1607,17 +1621,18 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 type="button"
                 onClick={() => void handlePasskeySetup()}
                 disabled={isPasskeySetupLoading}
-                className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200 disabled:opacity-50"
+                className="tp-player-hit-target tp-player-pressable mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200 disabled:opacity-50" aria-busy={isPasskeySetupLoading}
               >
+              {(isPasskeySetupLoading) ? <ButtonSpinner /> : null}
                 {isPasskeySetupLoading ? "Setting up passkey..." : "Set Up Passkey"}
               </button>
               {passkeySetupError ? (
-                <p className="mt-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200">
+                <p className="mt-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200" role="alert">
                   {passkeySetupError}
                 </p>
               ) : null}
               {passkeySetupMessage ? (
-                <p className="mt-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200">
+                <p className="mt-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200" role="status">
                   {passkeySetupMessage}
                 </p>
               ) : null}
@@ -1632,23 +1647,23 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         {selectedChallenge && selectedChallengeDetail ? (
           <motion.div
             className="fixed inset-0 z-[99999] flex items-start justify-center bg-black/45 px-3 pb-4 pt-16"
-            initial={{ opacity: 0 }}
+            initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSelectedChallengeId(null)}
+            onClick={() => setSelectedChallengeId(null)} transition={reducedMotion ? { duration: 0 } : undefined}
           >
             <motion.div
               className="relative w-fit max-w-[calc(100vw-12px)] max-h-[calc(100svh-5rem)] overflow-y-auto rounded-2xl border border-cyan-400/40 bg-slate-900 px-5 pb-6 pt-5 shadow-[0_24px_48px_rgba(0,0,0,0.6)]"
-              initial={{ opacity: 0, y: 28, scale: 0.98 }}
+              initial={reducedMotion ? false : { opacity: 0, y: 28, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 14, scale: 0.99 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.99 }}
+              transition={reducedMotion ? { duration: 0 } : { duration: 0.2, ease: "easeOut" }}
               onClick={(event) => event.stopPropagation()}
             >
               <button
                 type="button"
                 style={{ border: "1px solid rgba(255,255,255,0.12)" }}
-                className="tp-clean-button absolute right-3 top-3 inline-flex h-10 min-w-[4.5rem] items-center justify-center rounded-full bg-slate-800 px-4 text-sm font-semibold text-slate-300"
+                className="tp-player-hit-target tp-player-pressable tp-clean-button absolute right-3 top-3 inline-flex h-10 min-w-[4.5rem] items-center justify-center rounded-full bg-slate-800 px-4 text-sm font-semibold text-slate-300"
                 onClick={() => setSelectedChallengeId(null)}
                 aria-label="Close reward details"
               >
@@ -1700,7 +1715,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 <button
                   type="button"
                   onClick={(event) => playChallengeGame(selectedChallengePlayKey, event.currentTarget)}
-                  className="mt-6 w-[min(92vw,24rem)] rounded-2xl px-5 py-4 text-xl font-black uppercase tracking-[0.08em] shadow-lg"
+                  className="tp-player-hit-target tp-player-pressable mt-6 w-[min(92vw,24rem)] rounded-2xl px-5 py-4 text-xl font-black uppercase tracking-[0.08em] shadow-lg"
                   style={{
                     background: selectedChallengeDetail.iconStyle.barGradient,
                     border: `1px solid ${selectedChallengeDetail.iconStyle.borderColor}`,

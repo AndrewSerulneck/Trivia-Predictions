@@ -792,7 +792,6 @@ export default function InfoPage() {
             </div>
             <div className="border-t border-white/8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
               <p>© {new Date().getFullYear()} Hightop Challenge. All rights reserved.</p>
-              <p>Use restricted to authorized, geofenced venues.</p>
             </div>
           </div>
         </footer>

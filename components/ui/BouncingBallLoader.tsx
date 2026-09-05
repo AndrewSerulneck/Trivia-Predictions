@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface BouncingBallLoaderProps {
   label?: string;
@@ -15,6 +15,7 @@ export function BouncingBallLoader({
   fullScreen = false,
   dark = false,
 }: BouncingBallLoaderProps) {
+  const reducedMotion = useReducedMotion();
   const ballSize =
     size === "sm" ? "h-7 w-7" : size === "lg" ? "h-14 w-14" : "h-10 w-10";
   const containerH =
@@ -35,8 +36,8 @@ export function BouncingBallLoader({
     <div className={`relative ${containerH} overflow-hidden`}>
       <motion.div
         className={`absolute left-1/2 top-0 ${ballSize} -translate-x-1/2 rounded-full border-2 border-orange-900 bg-orange-400`}
-        animate={{ y: bounceY, scaleX: [1, 1.06, 1], scaleY: [1, 0.92, 1] }}
-        transition={{ repeat: Infinity, duration: 0.72, ease: "easeInOut" }}
+        animate={reducedMotion ? { y: 0, scaleX: 1, scaleY: 1 } : { y: bounceY, scaleX: [1, 1.06, 1], scaleY: [1, 0.92, 1] }}
+        transition={reducedMotion ? { duration: 0 } : { repeat: Infinity, duration: 0.72, ease: "easeInOut" }}
       >
         <div className="absolute inset-x-[47%] top-0 h-full w-[2px] bg-orange-900/80" />
         <div className="absolute inset-y-[47%] left-0 h-[2px] w-full bg-orange-900/80" />

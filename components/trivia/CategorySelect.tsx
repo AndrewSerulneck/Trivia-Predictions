@@ -1,5 +1,8 @@
 "use client";
 
+import { haptic } from "@/lib/haptics";
+
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import { TRIVIA_CATEGORIES, ALL_CATEGORIES_SENTINEL } from "@/lib/triviaCategories";
@@ -7,12 +10,7 @@ import { getVenueId } from "@/lib/storage";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 
 const BUTTON_POP_CLASS =
-  "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300";
-
-function triggerHaptic(pattern: number | number[] = 12) {
-  if (typeof navigator === "undefined" || !navigator.vibrate) return;
-  navigator.vibrate(pattern);
-}
+  "transition-all motion-reduce:transition-none duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300";
 
 type Props = {
   onSelect: (category: string | null) => void;
@@ -20,6 +18,15 @@ type Props = {
 
 export function CategorySelect({ onSelect }: Props) {
   const router = useRouter();
+  const choosingRef = useRef(false);
+  const [choosing, setChoosing] = useState(false);
+  const chooseCategory = (category: string | null) => {
+    if (choosingRef.current) return;
+    choosingRef.current = true;
+    setChoosing(true);
+    haptic("selection");
+    onSelect(category);
+  };
 
   const returnToVenueHome = () => {
     const venueId = getVenueId()?.trim() ?? "";
@@ -57,8 +64,8 @@ export function CategorySelect({ onSelect }: Props) {
           >
             Speed Trivia
           </div>
-          {/* Spacer to balance the header — matches ExitBackButton's 34px circle */}
-          <div className="w-[34px]" />
+          {/* Spacer to balance the header — matches ExitBackButton's 44px target */}
+          <div className="w-[44px]" />
         </div>
 
         {/* Content */}
@@ -76,9 +83,11 @@ export function CategorySelect({ onSelect }: Props) {
           {/* All Categories button */}
           <button
             type="button"
-            onMouseDown={() => triggerHaptic(14)}
-            onClick={() => onSelect(null)}
-            className={`${BUTTON_POP_CLASS} mb-3 flex w-full items-center gap-3 rounded-[14px] border border-[rgba(250,204,21,0.45)] bg-[rgba(250,204,21,0.1)] px-4 py-3.5`}
+
+            disabled={choosing}
+            aria-busy={choosing}
+            onClick={() => chooseCategory(null)}
+            className={"tp-player-hit-target tp-player-pressable " + (`${BUTTON_POP_CLASS} mb-3 flex w-full items-center gap-3 rounded-[14px] border border-[rgba(250,204,21,0.45)] bg-[rgba(250,204,21,0.1)] px-4 py-3.5`)}
             style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.15), 0 6px 16px rgba(250,204,21,0.12)" }}
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.12)]">
@@ -100,9 +109,11 @@ export function CategorySelect({ onSelect }: Props) {
                 <button
                   key={cat.slug}
                   type="button"
-                  onMouseDown={() => triggerHaptic(12)}
-                  onClick={() => onSelect(cat.dbValue)}
-                  className={`${BUTTON_POP_CLASS} flex flex-col items-center gap-2 rounded-[14px] border border-[rgba(250,204,21,0.25)] bg-[rgba(250,204,21,0.06)] px-3 py-4`}
+
+                  disabled={choosing}
+            aria-busy={choosing}
+            onClick={() => chooseCategory(cat.dbValue)}
+                  className={"tp-player-hit-target tp-player-pressable " + (`${BUTTON_POP_CLASS} flex flex-col items-center gap-2 rounded-[14px] border border-[rgba(250,204,21,0.25)] bg-[rgba(250,204,21,0.06)] px-3 py-4`)}
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[rgba(250,204,21,0.25)] bg-[rgba(250,204,21,0.1)]">
                     <Icon size={20} className="text-[#facc15]" />

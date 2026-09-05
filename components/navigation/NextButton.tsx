@@ -1,5 +1,6 @@
 "use client";
 
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { ChevronRight } from "lucide-react";
 import type { NavTone } from "@/components/navigation/StepBackButton";
 
@@ -20,7 +21,7 @@ import type { NavTone } from "@/components/navigation/StepBackButton";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const NEXT_BUTTON_SHELL_CLASS =
-  "tp-clean-button inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl font-black transition-all active:translate-y-[1px] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2";
+  "tp-clean-button inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl font-black transition-all disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2";
 
 /**
  * Size is a separate, REPLACEABLE slot rather than something a `className` can
@@ -76,8 +77,10 @@ export function NextButton({
       type={type}
       onClick={onClick}
       disabled={disabled || busy}
-      className={`${NEXT_BUTTON_SHELL_CLASS} ${sizeClass} ${accentClass ?? NEXT_BUTTON_TONE_CLASS[tone]}${className ? ` ${className}` : ""}`}
+      aria-busy={busy}
+      className={`${tone === "dark" ? "tp-player-hit-target tp-player-pressable " : ""}${NEXT_BUTTON_SHELL_CLASS} ${sizeClass} ${accentClass ?? NEXT_BUTTON_TONE_CLASS[tone]}${className ? ` ${className}` : ""}`}
     >
+      {busy ? <ButtonSpinner /> : null}
       {busy ? busyLabel ?? label : label}
       {hideChevron || busy ? null : <ChevronRight aria-hidden="true" className="h-4 w-4" />}
     </button>

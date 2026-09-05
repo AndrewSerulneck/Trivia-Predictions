@@ -1,8 +1,10 @@
 "use client";
 
+import { haptic } from "@/lib/haptics";
+
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { GameAppBar } from "@/components/venue/AppBar";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { getUserId, getVenueId } from "@/lib/storage";
@@ -80,6 +82,7 @@ export function NFLPickEmGameList({
   /** Injected by GameLandingExperience — ends the analytics session and runs the venue return transition. */
   onBack?: () => void;
 }) {
+  const reducedMotion = useReducedMotion();
   const router = useRouter();
 
   // Core state
@@ -110,14 +113,17 @@ export function NFLPickEmGameList({
     games: NFLGame[];
     userSummary?: UserSummary;
   } | null>(null);
-  
+
   // UI state
   const [loadingWeeks, setLoadingWeeks] = useState(true);
   const [loadingGames, setLoadingGames] = useState(false);
+  const pendingGamesRef = useRef(new Set<string>());
+  const [pendingGames, setPendingGames] = useState<Set<string>>(new Set());
+  const [saveMessage, setSaveMessage] = useState("");
   const [error, setError] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
   const [venueId, setVenueId] = useState<string>("");
-  
+
   // Optimistic state
   const [optimisticPicks, setOptimisticPicks] = useState<Record<string, string>>({});
 
@@ -141,7 +147,7 @@ export function NFLPickEmGameList({
   // Per-game request sequence number so an earlier, slower response can't
   // clobber a newer optimistic pick.
   const requestSeqRef = useRef<Record<string, number>>({});
-  
+
   // Initialize user data
   useEffect(() => {
     setUserId(getUserId() || "");
@@ -156,14 +162,14 @@ export function NFLPickEmGameList({
     });
     serverPicksRef.current = serverPicks;
   }, [weekData]);
-  
+
   // Load weeks list
   useEffect(() => {
     async function loadWeeks() {
       try {
         const response = await fetch("/api/nfl-pickem/weeks?includeComplete=true");
         const data = await response.json();
-        
+
         if (!data.ok) throw new Error(data.error);
 
         setWeeks(data.weeks);
@@ -191,37 +197,37 @@ export function NFLPickEmGameList({
         setLoadingWeeks(false);
       }
     }
-    
+
     loadWeeks();
   }, [initialWeekId]);
-  
+
   // Load games when week changes
   useEffect(() => {
     if (!selectedWeekId) return;
-    
+
     // Cancel any in-flight requests
     Object.values(inFlightRequests.current).forEach(ctrl => ctrl.abort());
     inFlightRequests.current = {};
-    
+
     async function loadGames() {
       setLoadingGames(true);
       setError("");
-      
+
       const controller = new AbortController();
       inFlightRequests.current[selectedWeekId] = controller;
-      
+
       try {
         const params = new URLSearchParams({ weekId: selectedWeekId });
         if (userId) params.set("userId", userId);
         if (venueId) params.set("venueId", venueId);
-        
+
         const response = await fetch(`/api/nfl-pickem/games?${params}`, {
           signal: controller.signal,
         });
-        
+
         const data = await response.json();
         if (!data.ok) throw new Error(data.error);
-        
+
         // Only update if this request wasn't cancelled
         if (!controller.signal.aborted) {
           setWeekData({
@@ -232,7 +238,7 @@ export function NFLPickEmGameList({
             games: data.games,
             userSummary: data.userSummary,
           });
-          
+
           // Clear optimistic picks for this week
           setOptimisticPicks({});
           optimisticPicksRef.current = {};
@@ -249,7 +255,7 @@ export function NFLPickEmGameList({
         delete inFlightRequests.current[selectedWeekId];
       }
     }
-    
+
     loadGames();
   }, [selectedWeekId, userId, venueId]);
 
@@ -279,6 +285,12 @@ export function NFLPickEmGameList({
       return;
     }
 
+    if (pendingGamesRef.current.has(game.id)) return;
+    pendingGamesRef.current.add(game.id);
+    setPendingGames(new Set(pendingGamesRef.current));
+    setSaveMessage("");
+    setError("");
+    haptic("selection");
     const currentPick = optimisticPicksRef.current[game.id] ?? serverPicksRef.current[game.id];
     const isDeselect = currentPick === team;
 
@@ -313,6 +325,7 @@ export function NFLPickEmGameList({
       const data = await response.json();
       if (!data.ok) throw new Error(data.error);
 
+      setSaveMessage("Pick saved");
       setLeaderboardRefreshKey((value) => value + 1);
     } catch (err) {
       // A newer request for this game has since started — it owns the
@@ -320,17 +333,20 @@ export function NFLPickEmGameList({
       if (requestSeqRef.current[game.id] !== seq) return;
 
       const rolledBack = { ...optimisticPicksRef.current };
-      if (isDeselect) {
-        rolledBack[game.id] = currentPick!;
+      if (currentPick) {
+        rolledBack[game.id] = currentPick;
       } else {
         delete rolledBack[game.id];
       }
       optimisticPicksRef.current = rolledBack;
       setOptimisticPicks(rolledBack);
       setError(err instanceof Error ? err.message : "Failed to submit pick");
+    } finally {
+      pendingGamesRef.current.delete(game.id);
+      setPendingGames(new Set(pendingGamesRef.current));
     }
   }, [userId, venueId, selectedWeekId]);
-  
+
   // Memoized game list with optimistic updates
   const gamesWithOptimistic = useMemo(() => {
     if (!weekData) return [];
@@ -380,7 +396,7 @@ export function NFLPickEmGameList({
       isComplete: picksCount > 0 && pendingPicks === 0,
     };
   }, [weekData?.userSummary, gamesWithOptimistic]);
-  
+
   const spreadsBannerState = useMemo(
     () =>
       getSpreadsBannerState({
@@ -423,18 +439,18 @@ export function NFLPickEmGameList({
 
     return order.map((key) => byKey.get(key)!);
   }, [gamesWithOptimistic]);
-  
+
   // Render
   return (
     <div className="min-h-[100dvh] touch-pan-y bg-slate-950 pb-[max(env(safe-area-inset-bottom),24px)]">
       <GameAppBar game="nfl-pickem" onExit={onBack} />
-      
+
       <div className="space-y-4 px-3 pt-3">
         {/* Header */}
         <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-4 py-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🏈</span>
-            <h1 
+            <h1
               className="text-[22px] leading-none text-[#fde68a]"
               style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
             >
@@ -478,17 +494,18 @@ export function NFLPickEmGameList({
             isComplete={displaySummary.isComplete}
           />
         )}
-        
+
         {/* Error Display */}
         <AnimatePresence>
+          <p role="status" className="sr-only">{saveMessage}</p>
           {error && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={reducedMotion ? false : { opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-4 py-3"
+              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
+              className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-4 py-3" transition={reducedMotion ? { duration: 0 } : undefined}
             >
-              <p className="text-[12px] font-semibold text-rose-300">{error}</p>
+              <p className="text-[12px] font-semibold text-rose-300" role="alert">{error}</p>
               <button
                 onClick={() => setError("")}
                 className="mt-1 text-[11px] text-rose-400 underline"
@@ -498,14 +515,14 @@ export function NFLPickEmGameList({
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         {/* Games Loading */}
         {loadingGames && !weekData && (
           <div className="flex items-center justify-center py-12">
             <BouncingBallLoader size="md" label="Loading games..." />
           </div>
         )}
-        
+
         {/* Degraded scoring-mode/spread-line surface — week-wide, not per-card */}
         {weekData && spreadsBannerState && (
           <section className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-3">
@@ -530,6 +547,7 @@ export function NFLPickEmGameList({
                 <div className="space-y-2.5">
                   {group.games.map(game => (
                     <NFLGameCard
+                      saving={pendingGames.has(game.id)}
                       key={game.id}
                       game={game}
                       onPick={submitPick}

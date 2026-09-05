@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { motion, useAnimationControls } from "framer-motion";
+import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
 
 export type ActionPopTone = "cyan" | "gold";
 
@@ -18,9 +18,15 @@ export function ActionPop({
   tone: ActionPopTone;
   onDone: () => void;
 }) {
+  const reducedMotion = useReducedMotion();
   const controls = useAnimationControls();
 
   useEffect(() => {
+    if (reducedMotion) {
+      controls.set({ opacity: 1, scale: 1, y: 0 });
+      const timer = window.setTimeout(onDone, 850);
+      return () => window.clearTimeout(timer);
+    }
     let active = true;
     let holdTimer: number | null = null;
     const run = async () => {
@@ -53,7 +59,7 @@ export function ActionPop({
         window.clearTimeout(holdTimer);
       }
     };
-  }, [controls, onDone]);
+  }, [controls, onDone, reducedMotion]);
 
   return (
     <motion.div
@@ -68,7 +74,7 @@ export function ActionPop({
             ? "0 0 8px rgba(250,204,21,0.92), 0 0 16px rgba(250,204,21,0.75)"
             : "0 0 8px rgba(0,255,255,0.95), 0 0 16px rgba(0,255,255,0.8)",
         willChange: "transform, opacity",
-      }}
+      }} transition={reducedMotion ? { duration: 0 } : undefined}
     >
       {text}
     </motion.div>

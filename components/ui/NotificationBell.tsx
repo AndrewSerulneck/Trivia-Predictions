@@ -1,5 +1,7 @@
 "use client";
 
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -91,6 +93,10 @@ export function NotificationBell() {
   // Start false to keep server and client initial HTML consistent.
   // Read from storage after mount to avoid hydration mismatches.
   const [hasUser, setHasUser] = useState(false);
+  const markPendingRef = useRef(false);
+  const [markingRead, setMarkingRead] = useState(false);
+  const [readMessage, setReadMessage] = useState("");
+  const [readError, setReadError] = useState("");
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -250,15 +256,26 @@ export function NotificationBell() {
 
   const markRead = async (notificationId?: string) => {
     const userId = userIdRef.current;
-    if (!userId) return;
-
-    await fetch("/api/notifications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, notificationId }),
-    });
-
-    await loadNotifications(userId);
+    if (!userId || markPendingRef.current) return;
+    markPendingRef.current = true;
+    setMarkingRead(true);
+    setReadError("");
+    setReadMessage("");
+    try {
+        const response = await fetch("/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, notificationId }),
+        });
+        if (!response.ok) throw new Error("Could not mark alerts read. Try again.");
+        await loadNotifications(userId);
+        setReadMessage("Alerts marked read");
+    } catch (error) {
+      setReadError(error instanceof Error ? error.message : "Could not mark alerts read.");
+    } finally {
+      markPendingRef.current = false;
+      setMarkingRead(false);
+    }
   };
 
   if (!hasUser) {
@@ -271,7 +288,7 @@ export function NotificationBell() {
         id="tp-notification-bell"
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-ht-sm border border-ht-border-soft bg-ht-elevated text-base font-semibold text-ht-fg-primary hover:opacity-80 transition-opacity"
+        className="tp-player-hit-target tp-player-pressable relative inline-flex h-9 w-9 items-center justify-center rounded-ht-sm border border-ht-border-soft bg-ht-elevated text-base font-semibold text-ht-fg-primary hover:opacity-80 transition-opacity"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={unreadCount > 0 ? `${unreadCount} unread alerts` : "Open alerts"}
@@ -341,7 +358,7 @@ export function NotificationBell() {
                         }
                         router.push(item.linkUrl ?? resolveNotificationHref(item.message));
                       }}
-                      className="tp-clean-button flex w-full items-start gap-3 px-4 py-3 hover:bg-slate-800/60 transition-colors"
+                      className="tp-player-hit-target tp-player-pressable tp-clean-button flex w-full items-start gap-3 px-4 py-3 hover:bg-slate-800/60 transition-colors"
                     >
                       <span className={`mt-[5px] h-2 w-2 shrink-0 rounded-full ${dotColor}`} aria-hidden="true" />
                       <span className="min-w-0 flex-1 text-left">
@@ -369,13 +386,17 @@ export function NotificationBell() {
               })}
             </ul>
           )}
+          <p role="status" className="sr-only">{readMessage}</p>
+          {readError ? <p role="alert" className="px-4 text-sm text-rose-300">{readError}</p> : null}
           <div className="border-t border-slate-800 px-4 py-2.5">
             <button
               type="button"
               onClick={() => { void markRead(); }}
-              className="tp-clean-button text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-slate-300 transition-colors"
+              disabled={markingRead}
+              aria-busy={markingRead}
+              className="tp-player-hit-target tp-player-pressable tp-clean-button text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-slate-300 transition-colors"
             >
-              Mark all read
+              {markingRead ? <><ButtonSpinner /> Updating…</> : "Mark all read"}
             </button>
           </div>
         </div>,

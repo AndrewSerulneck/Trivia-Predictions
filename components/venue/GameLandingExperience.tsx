@@ -11,7 +11,7 @@ import {
   type ReactElement,
   type TouchEvent,
 } from "react";
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, type Variants, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
 import { endCurrentGameSession, startGameSession, type GameAnalyticsType } from "@/lib/analytics";
@@ -112,6 +112,7 @@ export function GameLandingExperience({
   playDisabledLabel?: string;
   children: React.ReactNode;
 }) {
+  const reducedMotion = useReducedMotion();
   const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(initialPlaying);
   const [rulesExiting, setRulesExiting] = useState(false);
@@ -354,10 +355,10 @@ export function GameLandingExperience({
                       key={`${gameKey}-${currentStep}`}
                       custom={slideDirection}
                       variants={ONBOARDING_CARD_VARIANTS}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={ONBOARDING_CARD_TRANSITION}
+                      initial={reducedMotion ? false : "enter"}
+                      animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                      exit={reducedMotion ? { opacity: 0 } : "exit"}
+                      transition={reducedMotion ? { duration: 0 } : ONBOARDING_CARD_TRANSITION}
                       className="absolute inset-0 h-full w-full"
                     >
                       <GameOnboardingCard

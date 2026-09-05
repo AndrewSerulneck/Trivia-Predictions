@@ -70,7 +70,7 @@ export function applyVenueScreenDebugMode(
       sponsorSlots: [
         {
           title: "Sample Sponsor",
-          imageUrl: "/brand/hightop-logo.svg",
+          imageUrl: "/brand/htc-logo.png",
           linkUrl: null,
         },
       ],

@@ -1,6 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
+import { motion, useReducedMotion } from "framer-motion";
 
 export type NFLGame = {
   id: string;
@@ -38,12 +40,15 @@ export function NFLGameCard({
   onPick,
   isLocked,
   scoringMode,
+  saving = false,
 }: {
   game: NFLGame;
   onPick: (game: NFLGame, team: string) => void;
   isLocked: boolean;
+  saving?: boolean;
   scoringMode: "standard" | "spread";
 }) {
+  const reducedMotion = useReducedMotion();
   // Pinned to Eastern so this always agrees with the day-section heading
   // above it (server-computed in ET) — a viewer's local clock can put a
   // Thursday-night ET kickoff on a different weekday. See
@@ -56,7 +61,7 @@ export function NFLGameCard({
     });
     return `${time} ET`;
   };
-  
+
   const awaySelected = game.userPickTeam === game.awayTeam;
   const homeSelected = game.userPickTeam === game.homeTeam;
   const isCorrect = game.userPickStatus === "won";
@@ -64,11 +69,11 @@ export function NFLGameCard({
   const showSpread = scoringMode === "spread";
   const awaySpreadLabel = showSpread ? formatSpread(game.awaySpread) : null;
   const homeSpreadLabel = showSpread ? formatSpread(game.homeSpread) : null;
-  
+
   return (
     <motion.div
       className="overflow-hidden rounded-xl border border-[#fde68a]/45 bg-[linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)]"
-      whileTap={!isLocked ? { scale: 0.99 } : undefined}
+      whileTap={reducedMotion ? undefined : !isLocked && !saving ? { scale: 0.99 } : undefined} transition={reducedMotion ? { duration: 0 } : undefined}
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-dashed border-[#fde68a]/45 px-4 py-2">
@@ -91,25 +96,28 @@ export function NFLGameCard({
         </span>
       </div>
 
+      <span role="status" className="sr-only">{saving ? "Saving…" : ""}</span>
       {/* Teams */}
       <div className="flex overflow-hidden bg-[#020617]/45">
         {/* Away Team */}
         <button
           type="button"
-          disabled={isLocked}
+          disabled={isLocked || saving}
+          aria-busy={saving}
           onClick={() => onPick(game, game.awayTeam)}
-          className={`tp-clean-button relative flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center transition-colors ${
+          className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button relative flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center transition-colors ${
             isLocked ? "cursor-not-allowed opacity-50" : "hover:bg-white/5"
-          } ${awaySelected ? "bg-[#fde68a]/15" : ""}`}
+          } ${awaySelected ? "bg-[#fde68a]/15" : ""}`)}
         >
-          <span className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black transition-all duration-150 ease-out ${
+          {saving ? <span className="absolute right-2 top-2"><ButtonSpinner /></span> : null}
+          <span className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black transition-all motion-reduce:transition-none duration-150 ease-out ${
             awaySelected
               ? "rotate-[-7deg] scale-110 border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
               : "scale-100 border border-[#fde68a]/45 text-transparent"
           }`}>
             ✓
           </span>
-          
+
           <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-white">
             {game.awayTeam}
           </span>
@@ -118,7 +126,7 @@ export function NFLGameCard({
               {awaySpreadLabel}
             </span>
           )}
-          
+
           {game.status === "final" && (
             <span className={`text-[18px] font-black tabular-nums ${
               game.winnerTeam === game.awayTeam ? "text-emerald-300" : "text-slate-400"
@@ -127,26 +135,28 @@ export function NFLGameCard({
             </span>
           )}
         </button>
-        
+
         <div className="w-px shrink-0 bg-[#fde68a]/20" />
-        
+
         {/* Home Team */}
         <button
           type="button"
-          disabled={isLocked}
+          disabled={isLocked || saving}
+          aria-busy={saving}
           onClick={() => onPick(game, game.homeTeam)}
-          className={`tp-clean-button relative flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center transition-colors ${
+          className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button relative flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center transition-colors ${
             isLocked ? "cursor-not-allowed opacity-50" : "hover:bg-white/5"
-          } ${homeSelected ? "bg-[#fde68a]/15" : ""}`}
+          } ${homeSelected ? "bg-[#fde68a]/15" : ""}`)}
         >
-          <span className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black transition-all duration-150 ease-out ${
+          {saving ? <span className="absolute right-2 top-2"><ButtonSpinner /></span> : null}
+          <span className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black transition-all motion-reduce:transition-none duration-150 ease-out ${
             homeSelected
               ? "rotate-[-7deg] scale-110 border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
               : "scale-100 border border-[#fde68a]/45 text-transparent"
           }`}>
             ✓
           </span>
-          
+
           <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-white">
             {game.homeTeam}
           </span>
@@ -155,7 +165,7 @@ export function NFLGameCard({
               {homeSpreadLabel}
             </span>
           )}
-          
+
           {game.status === "final" && (
             <span className={`text-[18px] font-black tabular-nums ${
               game.winnerTeam === game.homeTeam ? "text-emerald-300" : "text-slate-400"
@@ -165,19 +175,19 @@ export function NFLGameCard({
           )}
         </button>
       </div>
-      
+
       {/* Result Banner */}
       {game.status === "final" && game.userPickTeam && (
         <div className={`px-4 py-1.5 text-[11px] font-extrabold tracking-[0.04em] ${
-          isCorrect 
-            ? "bg-emerald-500/20 text-emerald-300" 
+          isCorrect
+            ? "bg-emerald-500/20 text-emerald-300"
             : isWrong
             ? "bg-rose-500/20 text-rose-300"
             : "bg-amber-500/20 text-amber-300"
         }`}>
-          {isCorrect 
-            ? `✓ Correct! +10 points` 
-            : isWrong 
+          {isCorrect
+            ? `✓ Correct! +10 points`
+            : isWrong
             ? "✗ Incorrect"
             : "● Push (Tie)"}
         </div>

@@ -210,6 +210,22 @@
   box-sizing: border-box;
 }
 
+/* App-style scrollbar treatment: hide the browser chrome without changing an
+ * element's overflow behavior. Document, panel, modal, carousel, and tab-strip
+ * scrolling remain controlled by their existing overflow declarations. */
+html,
+body,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   font-family: var(--ht-font-body);
   color: var(--ht-fg-primary);
@@ -706,15 +722,6 @@ body.tp-admin-theme select:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
   -webkit-text-fill-color: #0f172a !important;
   caret-color: #0f172a !important;
-}
-
-/* Reserve scrollbar space on both sides only on desktop — prevents layout shift
-   when a scrollbar appears without off-centering content on mobile. */
-@media (hover: hover) and (pointer: fine) {
-  html,
-  body {
-    scrollbar-gutter: stable both-edges;
-  }
 }
 
 /* Ensure text does not inflate unpredictably on iOS narrow screens. */
@@ -2248,4 +2255,85 @@ a[role="button"][class*="text-[11px]"] {
 .tp-dial-thumb {
   left: calc(var(--tp-dial-pct, 0) * 1%);
   transform: translate(-50%, -50%);
+}
+
+/* Player controls opt in. These rules never change scroll or text-field behavior. */
+.tp-player-hit-target.tp-player-hit-target {
+  /* Override legacy 36px compact-mode minima, including the 13px root font. */
+  min-width: 44px !important;
+  min-height: 44px !important;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.tp-player-pressable {
+  transition: transform 100ms ease, opacity 100ms ease;
+}
+.tp-player-pressable:enabled:active:not([aria-busy="true"]) {
+  transform: scale(0.98) translateY(1px) !important;
+}
+.tp-player-pressable:disabled:active,
+.tp-player-pressable[aria-busy="true"]:active {
+  transform: none !important;
+}
+.tp-player-hit-target:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.tp-button-spinner { animation: spin 800ms linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .tp-player-pressable:enabled:active:not([aria-busy="true"]) {
+    transform: none !important;
+    opacity: 0.8;
+  }
+  .tp-button-spinner { animation: none; }
+}
+
+/* Reduced motion changes presentation only; game clocks and JS safety timers remain. */
+@media (prefers-reduced-motion: reduce) {
+  .tp-bounce-hover:hover,
+  .tp-pop-in,
+  .animate-tp-countdown-pop,
+  .animate-tp-countdown-critical,
+  .animate-tp-answer-shimmer,
+  .animate-tp-rain,
+  .animate-tp-points-burst,
+  .animate-tp-points-fall,
+  .animate-tp-popup-sheet-up,
+  .animate-tp-popup-sheet-down,
+  .animate-tp-fade-in,
+  .animate-tp-fade-out,
+  .bingo-square-pop,
+  .animate-tp-surface-exit,
+  .animate-tp-surface-enter,
+  .tp-coin-idle,
+  .tp-coin-idle-shimmer,
+  .tp-scanline,
+  .tp-verdict-pop,
+  .tp-shake,
+  .tp-dot-pulse,
+  .tp-valid-glow,
+  .tp-reject-flash,
+  .tp-timer-panic,
+  .tp-countdown-urgent,
+  .tp-lock-shimmer,
+  .tp-lock-seal,
+  .tp-fw-glow,
+  .tp-fw-shimmer,
+  .tp-button-spinner { animation: none !important; }
+  .animate-tp-surface-enter, .animate-tp-surface-exit { transform: none !important; opacity: 1; }
+  .venue-home-carousel { scroll-behavior: auto !important; }
+}
+
+/* Back's 44px box has no visible frame; its child is the existing 34px circle. */
+.tp-player-back {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-tp-rain, .animate-tp-points-burst { visibility: hidden; }
+  .tp-game-card-btn, .tp-game-card-btn.is-opening { transition: none !important; transform: none !important; }
 }

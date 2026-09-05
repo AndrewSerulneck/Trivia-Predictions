@@ -1,10 +1,12 @@
 "use client";
 
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import { House } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { browserSupportsWebAuthn, startAuthentication, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import { PageShell } from "@/components/ui/PageShell";
 import { useIsRunningAsInstalledPwa } from "@/lib/pwa";
@@ -448,10 +450,11 @@ function LocationStatusCard({
         type="button"
         onClick={onRetry}
         disabled={isLoading}
-        className={`tp-clean-button inline-flex min-h-[42px] items-center rounded-xl px-4 py-2 text-sm disabled:opacity-50 ${
+        className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button inline-flex min-h-[42px] items-center rounded-xl px-4 py-2 text-sm disabled:opacity-50 ${
           buttonTone === "cyan" ? "bg-cyan-400 font-black text-slate-950" : "bg-slate-700 font-semibold text-white"
-        }`}
+        }`)} aria-busy={isLoading}
       >
+              {(isLoading) ? <ButtonSpinner /> : null}
         {isLoading ? loadingLabel : buttonLabel}
       </button>
     </div>
@@ -462,7 +465,7 @@ function VenueListSkeleton() {
   return (
     <div className="space-y-2" aria-hidden>
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="h-16 animate-pulse rounded-xl border border-slate-700 bg-slate-800/50" />
+        <div key={i} className="h-16 animate-pulse motion-reduce:animate-none rounded-xl border border-slate-700 bg-slate-800/50" />
       ))}
     </div>
   );
@@ -482,7 +485,7 @@ const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onS
       <button
         type="button"
         onClick={() => onSelect(venue)}
-        className="flex w-full items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 transition-all hover:border-cyan-400/50 hover:bg-slate-800 active:scale-[0.98]"
+        className="tp-player-hit-target tp-player-pressable flex w-full items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 transition-all motion-reduce:transition-none hover:border-cyan-400/50 hover:bg-slate-800 "
       >
         <span className="flex items-center gap-3">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 bg-slate-700 text-base font-medium text-white">
@@ -504,7 +507,6 @@ const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onS
     </li>
   );
 });
-
 
 type UsernameStepProps = {
   direction: 1 | -1;
@@ -531,6 +533,7 @@ const UsernameStep = memo(function UsernameStep({
   heading = "What’s your username?",
   subheading = "If this is your first time playing, make one up!",
 }: UsernameStepProps) {
+  const reducedMotion = useReducedMotion();
   const [value, setValue] = useState("");
 
   const handleNext = useCallback(() => {
@@ -543,10 +546,10 @@ const UsernameStep = memo(function UsernameStep({
       key="step-username"
       custom={direction}
       variants={ONBOARDING_PANEL_VARIANTS}
-      initial="enter"
-      animate="center"
-      exit="exit"
-      transition={SWIPE_SPRING_TRANSITION}
+      initial={reducedMotion ? false : "enter"}
+      animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+      exit={reducedMotion ? { opacity: 0 } : "exit"}
+      transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
       className="flex flex-col gap-5"
     >
       <div>
@@ -582,7 +585,7 @@ const UsernameStep = memo(function UsernameStep({
       />
 
       {errorMessage ? (
-        <div className="rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
+        <div className="rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200" role="alert">
           {errorMessage}
         </div>
       ) : null}
@@ -639,15 +642,16 @@ const PinStep = memo(function PinStep({
   onAnimationComplete,
   onPinContainerClick,
 }: PinStepProps) {
+  const reducedMotion = useReducedMotion();
   return (
     <motion.div
       key="step-pin"
       custom={direction}
       variants={ONBOARDING_PANEL_VARIANTS}
-      initial="enter"
-      animate="center"
-      exit="exit"
-      transition={SWIPE_SPRING_TRANSITION}
+      initial={reducedMotion ? false : "enter"}
+      animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+      exit={reducedMotion ? { opacity: 0 } : "exit"}
+      transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
       onAnimationComplete={onAnimationComplete}
       className="flex flex-col gap-5"
     >
@@ -663,13 +667,13 @@ const PinStep = memo(function PinStep({
 
       <div
         ref={pinContainerRef}
-        className={`flex cursor-text items-center gap-6 px-2 ${isPinShaking ? "animate-shake" : ""}`}
+        className={`flex cursor-text items-center gap-6 px-2 ${isPinShaking ? "animate-shake motion-reduce:animate-none" : ""}`}
         onClick={onPinContainerClick}
       >
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`flex h-11 w-11 items-center justify-center rounded-xl border-2 transition-all duration-150 ${
+            className={`flex h-11 w-11 items-center justify-center rounded-xl border-2 transition-all motion-reduce:transition-none duration-150 ${
               i < pin.length
                 ? "border-cyan-300 bg-cyan-500/25"
                 : "border-slate-600 bg-transparent"
@@ -681,13 +685,13 @@ const PinStep = memo(function PinStep({
       </div>
 
       {isAuthLoading ? (
-        <p className="animate-pulse text-sm text-ht-fg-muted">{loadingPhrase}</p>
+        <p className="animate-pulse motion-reduce:animate-none text-sm text-ht-fg-muted">{loadingPhrase}</p>
       ) : errorMessage ? (
-        <div className="rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
+        <div className="rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200" role="alert">
           {errorMessage}
         </div>
       ) : connectionRetryMessage ? (
-        <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200">
+        <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200" role="status">
           {connectionRetryMessage}
         </div>
       ) : null}
@@ -701,6 +705,8 @@ const PinStep = memo(function PinStep({
         onBack={onBack}
         onNext={() => onSubmit()}
         nextLabel="Enter"
+        nextBusy={isAuthLoading}
+        nextBusyLabel="Signing in…"
         nextDisabled={!canCreate || pin.length !== 4 || isAuthLoading}
       />
       {!isAuthLoading && !canCreate && !errorMessage && !connectionRetryMessage ? (
@@ -742,14 +748,14 @@ function PasskeyEnrollmentPrompt({ onSetUp, onSkip }: PasskeyEnrollmentPromptPro
           <button
             type="button"
             onClick={onSetUp}
-            className="tp-clean-button inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all motion-reduce:transition-none  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
           >
             Set Up PIN →
           </button>
           <button
             type="button"
             onClick={onSkip}
-            className="tp-clean-button inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-transparent py-2 px-6 text-sm font-semibold text-ht-fg-muted transition-all active:opacity-70 focus-visible:outline-none"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-transparent py-2 px-6 text-sm font-semibold text-ht-fg-muted transition-all motion-reduce:transition-none active:opacity-70 focus-visible:outline-none"
           >
             I&apos;ll remember my PIN — skip
           </button>
@@ -760,6 +766,15 @@ function PasskeyEnrollmentPrompt({ onSetUp, onSkip }: PasskeyEnrollmentPromptPro
 }
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
+  const createProfilePendingRef = useRef(false);
+  const handlePasskeyEnrollSetUpPendingRef = useRef(false);
+  const handleEnrollSetUpPendingRef = useRef(false);
+  const handleAccountPasskeySignInPendingRef = useRef(false);
+  const handleAccountSubmitPinPendingRef = useRef(false);
+  const handleAccountGoToPinStepPendingRef = useRef(false);
+  const resolveAndNavigatePendingRef = useRef(false);
+  const handleGrantLocationPendingRef = useRef(false);
+  const reducedMotion = useReducedMotion();
   const router = useRouter();
   const pathname = usePathname();
   const { refresh: refreshAuthSession, state: authState } = useAuthSession();
@@ -1064,7 +1079,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     []
   );
 
-
   useEffect(() => {
     if (!pathname?.startsWith("/join") && pathname !== "/") {
       clearNavigationFallback();
@@ -1270,87 +1284,94 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   // there previously sent authenticated venue-list users through the single-venue
   // path and stranded them on auth-method-selection.
   const handleGrantLocation = useCallback(async (intent: "venue-specific" | "venue-list") => {
-    setLocationLoading(true);
-    setLocationPermissionState(null);
-    const { coords, failureReason } = await getInitialLocation();
-    setLocationFailureReason(failureReason);
-    if (failureReason === "denied") {
-      setLocationPermissionState(await resolveDeniedPermissionState());
-      setLocationLoading(false);
-      return;
-    }
-    setLocationPermissionState("granted");
+    if (handleGrantLocationPendingRef.current) return;
+    handleGrantLocationPendingRef.current = true;
+    try {
+      setLocationLoading(true);
+      setLocationPermissionState(null);
+      const { coords, failureReason } = await getInitialLocation();
+      setLocationFailureReason(failureReason);
+      if (failureReason === "denied") {
+        setLocationPermissionState(await resolveDeniedPermissionState());
+        setLocationLoading(false);
+        return;
+      }
+      setLocationPermissionState("granted");
 
-    if (intent === "venue-specific" && venue) {
-      // venueParam case: verify distance to the specific venue
-      if (coords) {
-        const distance = calculateDistanceMeters(coords, {
-          latitude: venue.latitude,
-          longitude: venue.longitude,
-        });
-        const allowedDistance = getGeofenceThresholdMeters(venue.radius, coords.accuracy);
-        setDistanceMeters(distance);
-        if (distance <= allowedDistance) {
-          setLocationVerified(true);
-          setVerifiedLocation(coords);
-          setLastLocationVerifiedAt(Date.now());
-          setLocationNotice("");
-          setErrorMessage("");
+      if (intent === "venue-specific" && venue) {
+        // venueParam case: verify distance to the specific venue
+        if (coords) {
+          const distance = calculateDistanceMeters(coords, {
+            latitude: venue.latitude,
+            longitude: venue.longitude,
+          });
+          const allowedDistance = getGeofenceThresholdMeters(venue.radius, coords.accuracy);
+          setDistanceMeters(distance);
+          if (distance <= allowedDistance) {
+            setLocationVerified(true);
+            setVerifiedLocation(coords);
+            setLastLocationVerifiedAt(Date.now());
+            setLocationNotice("");
+            setErrorMessage("");
+          } else {
+            setLocationVerified(false);
+            setVerifiedLocation(null);
+            setErrorMessage(`You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`);
+          }
         } else {
           setLocationVerified(false);
-          setVerifiedLocation(null);
-          setErrorMessage(`You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`);
+          setLocationNotice("Location check unavailable. Try again.");
         }
+        setLocationLoading(false);
+        setPanelDirection(1);
+        setActivePanel("auth-method-selection");
+        return;
+      }
+
+      // No venueParam: re-fetch venues and filter by proximity (venueList may already
+      // be empty from the prior denied attempt, so it can't be trusted here).
+      if (coords) {
+        const venues = await listVenues();
+        const nearbyVenues = venues
+          .map((item) => ({
+            venue: item,
+            distance: calculateDistanceMeters(coords, {
+              latitude: item.latitude,
+              longitude: item.longitude,
+            }),
+          }))
+          .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
+          .sort((a, b) => a.distance - b.distance)
+          .map((item) => item.venue);
+        setVenueList(nearbyVenues);
+        setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
+        setLocationNotice(
+          nearbyVenues.length > 0
+            ? `Found ${nearbyVenues.length} nearby venue(s).`
+            : "No venue is currently in range from your location."
+        );
       } else {
-        setLocationVerified(false);
-        setLocationNotice("Location check unavailable. Try again.");
+        setVenueList([]);
+        setVerifiedLocation(null);
+        setLocationNotice("Location check unavailable right now. Retry to see nearby venues.");
       }
       setLocationLoading(false);
+      setVenue(null);
+      const storedAccountId = (getAccountId() ?? "").trim();
+      const storedUserId = (getUserId() ?? "").trim();
+      const storedUsername = (getUsername() ?? "").trim();
+      const hasStoredIdentity = Boolean(storedAccountId || (storedUserId && storedUsername));
       setPanelDirection(1);
-      setActivePanel("auth-method-selection");
-      return;
-    }
+      if (hasStoredIdentity) {
+        setAccountIdState(storedAccountId || null);
+        setAccountUsername(storedUsername);
+        setActivePanel("venue-list");
+      } else {
+        setActivePanel("auth-method-selection");
+      }
 
-    // No venueParam: re-fetch venues and filter by proximity (venueList may already
-    // be empty from the prior denied attempt, so it can't be trusted here).
-    if (coords) {
-      const venues = await listVenues();
-      const nearbyVenues = venues
-        .map((item) => ({
-          venue: item,
-          distance: calculateDistanceMeters(coords, {
-            latitude: item.latitude,
-            longitude: item.longitude,
-          }),
-        }))
-        .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
-        .sort((a, b) => a.distance - b.distance)
-        .map((item) => item.venue);
-      setVenueList(nearbyVenues);
-      setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
-      setLocationNotice(
-        nearbyVenues.length > 0
-          ? `Found ${nearbyVenues.length} nearby venue(s).`
-          : "No venue is currently in range from your location."
-      );
-    } else {
-      setVenueList([]);
-      setVerifiedLocation(null);
-      setLocationNotice("Location check unavailable right now. Retry to see nearby venues.");
-    }
-    setLocationLoading(false);
-    setVenue(null);
-    const storedAccountId = (getAccountId() ?? "").trim();
-    const storedUserId = (getUserId() ?? "").trim();
-    const storedUsername = (getUsername() ?? "").trim();
-    const hasStoredIdentity = Boolean(storedAccountId || (storedUserId && storedUsername));
-    setPanelDirection(1);
-    if (hasStoredIdentity) {
-      setAccountIdState(storedAccountId || null);
-      setAccountUsername(storedUsername);
-      setActivePanel("venue-list");
-    } else {
-      setActivePanel("auth-method-selection");
+    } finally {
+      handleGrantLocationPendingRef.current = false;
     }
   }, [venue]);
 
@@ -1388,67 +1409,74 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const resolveAndNavigate = useCallback(
     async (resolvedAccountId: string, selectedVenue: Venue, location?: Coordinates) => {
-      // GOD MODE JOIN CONTRACT:
-      // This API call is the server-authoritative venue entry boundary. Do not add
-      // client-only geofence requirements in front of it for account-backed users;
-      // the API reads `accounts.god_mode` and bypasses geofence for those accounts.
-      setErrorMessage("");
-      setPendingVenueSelectionId(selectedVenue.id);
-      setStatus("saving");
-      setIsTransitioning(true);
-      setIsOptimisticallyEntering(true);
-      setAuthLoginState("authenticating");
-      setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+    if (resolveAndNavigatePendingRef.current) return;
+    resolveAndNavigatePendingRef.current = true;
+    try {
+        // GOD MODE JOIN CONTRACT:
+        // This API call is the server-authoritative venue entry boundary. Do not add
+        // client-only geofence requirements in front of it for account-backed users;
+        // the API reads `accounts.god_mode` and bypasses geofence for those accounts.
+        setErrorMessage("");
+        setPendingVenueSelectionId(selectedVenue.id);
+        setStatus("saving");
+        setIsTransitioning(true);
+        setIsOptimisticallyEntering(true);
+        setAuthLoginState("authenticating");
+        setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
 
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("tp:global-transition-show", {
-            detail: { targetPath: `/venue/${selectedVenue.id}` },
-          })
-        );
-      }
-
-      let didNavigate = false;
-      try {
-        const user = await resolveVenueProfileServerFirst({
-          selectedVenue,
-          location,
-          verifyVenueAccess,
-          onLocationBlocked: () => {
-            if (typeof window !== "undefined") {
-              window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
-            }
-          },
-          resolveProfile: (profileLocation) =>
-            resolveVenueProfile({
-              accountId: resolvedAccountId,
-              venueId: selectedVenue.id,
-              location: profileLocation,
-            }),
-        });
-        if (!user) {
-          return;
-        }
-        await navigateToResolvedVenue(selectedVenue, user);
-        didNavigate = true;
-      } catch (error) {
         if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+          window.dispatchEvent(
+            new CustomEvent("tp:global-transition-show", {
+              detail: { targetPath: `/venue/${selectedVenue.id}` },
+            })
+          );
         }
-        setAuthLoginState("error");
-        setErrorMessage(getErrorMessage(error, "Failed to join venue. Please try again."));
-      } finally {
-        setPendingVenueSelectionId(null);
-        if (!didNavigate) {
-          clearLoginInProgress();
-          clearSelectedVenueLock();
-          setIsOptimisticallyEntering(false);
-          setIsTransitioning(false);
-          setStatus("ready");
-          setAuthLoginState("idle");
+
+        let didNavigate = false;
+        try {
+          const user = await resolveVenueProfileServerFirst({
+            selectedVenue,
+            location,
+            verifyVenueAccess,
+            onLocationBlocked: () => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+              }
+            },
+            resolveProfile: (profileLocation) =>
+              resolveVenueProfile({
+                accountId: resolvedAccountId,
+                venueId: selectedVenue.id,
+                location: profileLocation,
+              }),
+          });
+          if (!user) {
+            return;
+          }
+          await navigateToResolvedVenue(selectedVenue, user);
+          didNavigate = true;
+        } catch (error) {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+          }
+          setAuthLoginState("error");
+          setErrorMessage(getErrorMessage(error, "Failed to join venue. Please try again."));
+        } finally {
+          setPendingVenueSelectionId(null);
+          if (!didNavigate) {
+            clearLoginInProgress();
+            clearSelectedVenueLock();
+            setIsOptimisticallyEntering(false);
+            setIsTransitioning(false);
+            setStatus("ready");
+            setAuthLoginState("idle");
+          }
         }
-      }
-    },
+
+    } finally {
+      resolveAndNavigatePendingRef.current = false;
+    }
+  },
     [navigateToResolvedVenue, verifyVenueAccess]
   );
 
@@ -1917,7 +1945,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
   }, [activePanel, accountId, accountUsername]);
 
-
   useEffect(() => {
     // Read the latest timer on unmount; copying the initial ref value would miss later shake timers.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2027,107 +2054,114 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const handleAccountGoToPinStep = useCallback(
     async (usernameValue: string) => {
-      if (isAccountPasskeyLoading) {
-        return;
-      }
-      if (!validateUsername(usernameValue)) {
-        setAccountAuthError("Please enter a valid username.");
-        return;
-      }
-      const normalizedUsername = usernameValue.trim();
-      setUsername(normalizedUsername);
-      setAccountAuthError("");
-
-      const moveToPinStep = (message?: string) => {
-        setAccountAuthError(message ?? "");
-        setPin("");
-        setLoginStepDirection(1);
-        setLoginStep("pin");
-      };
-
-      // For sign-in, verify the username exists before advancing to PIN.
-      if (activePanel === "account-sign-in") {
-        setIsAccountPasskeyLoading(true);
-        try {
-          const checkResponse = await fetch(
-            `/api/join/account?username=${encodeURIComponent(normalizedUsername)}`,
-            { cache: "no-store" }
-          );
-          const checkPayload = (await checkResponse.json().catch(() => null)) as { ok?: boolean; exists?: boolean } | null;
-          if (!checkPayload?.exists) {
-            setAccountAuthError(
-              "We're sorry, we do not recognize that username. Please go back and create an account."
-            );
-            return;
-          }
-        } catch {
-          // Network error — allow proceeding so the PIN attempt can surface the real failure.
-        } finally {
-          setIsAccountPasskeyLoading(false);
-        }
-      }
-
-      // For account sign-in, only attempt passkey when this device has previously
-      // enrolled/used a local passkey for the username.
-      if (activePanel === "account-sign-in" && browserSupportsWebAuthn()) {
-        if (!hasLocalPasskeyForUsername(normalizedUsername)) {
-          moveToPinStep();
+    if (handleAccountGoToPinStepPendingRef.current) return;
+    handleAccountGoToPinStepPendingRef.current = true;
+    try {
+        if (isAccountPasskeyLoading) {
           return;
         }
-        setIsAccountPasskeyLoading(true);
-        try {
-          const optionsResponse = await fetch("/api/auth/passkey/authenticate/options", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: normalizedUsername }),
-          });
-          const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
-          if (!optionsResponse.ok || !optionsPayload?.ok) {
+        if (!validateUsername(usernameValue)) {
+          setAccountAuthError("Please enter a valid username.");
+          return;
+        }
+        const normalizedUsername = usernameValue.trim();
+        setUsername(normalizedUsername);
+        setAccountAuthError("");
+
+        const moveToPinStep = (message?: string) => {
+          setAccountAuthError(message ?? "");
+          setPin("");
+          setLoginStepDirection(1);
+          setLoginStep("pin");
+        };
+
+        // For sign-in, verify the username exists before advancing to PIN.
+        if (activePanel === "account-sign-in") {
+          setIsAccountPasskeyLoading(true);
+          try {
+            const checkResponse = await fetch(
+              `/api/join/account?username=${encodeURIComponent(normalizedUsername)}`,
+              { cache: "no-store" }
+            );
+            const checkPayload = (await checkResponse.json().catch(() => null)) as { ok?: boolean; exists?: boolean } | null;
+            if (!checkPayload?.exists) {
+              setAccountAuthError(
+                "We're sorry, we do not recognize that username. Please go back and create an account."
+              );
+              return;
+            }
+          } catch {
+            // Network error — allow proceeding so the PIN attempt can surface the real failure.
+          } finally {
+            setIsAccountPasskeyLoading(false);
+          }
+        }
+
+        // For account sign-in, only attempt passkey when this device has previously
+        // enrolled/used a local passkey for the username.
+        if (activePanel === "account-sign-in" && browserSupportsWebAuthn()) {
+          if (!hasLocalPasskeyForUsername(normalizedUsername)) {
             moveToPinStep();
             return;
           }
-          if (optionsPayload.requiresPinFallback || !optionsPayload.options || !optionsPayload.challengeId) {
-            moveToPinStep(getPasskeyClientMessage(optionsPayload.reasonCode, ""));
-            return;
-          }
+          setIsAccountPasskeyLoading(true);
+          try {
+            const optionsResponse = await fetch("/api/auth/passkey/authenticate/options", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username: normalizedUsername }),
+            });
+            const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
+            if (!optionsResponse.ok || !optionsPayload?.ok) {
+              moveToPinStep();
+              return;
+            }
+            if (optionsPayload.requiresPinFallback || !optionsPayload.options || !optionsPayload.challengeId) {
+              moveToPinStep(getPasskeyClientMessage(optionsPayload.reasonCode, ""));
+              return;
+            }
 
-          const assertionResponse = await startAuthentication({ optionsJSON: optionsPayload.options });
-          const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ challengeId: optionsPayload.challengeId, response: assertionResponse }),
-          });
-          type AccountVerifyPayload = PasskeyAuthVerifyPayload & { account?: { id: string; username: string } };
-          const verifyPayload = (await verifyResponse.json().catch(() => null)) as AccountVerifyPayload | null;
+            const assertionResponse = await startAuthentication({ optionsJSON: optionsPayload.options });
+            const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ challengeId: optionsPayload.challengeId, response: assertionResponse }),
+            });
+            type AccountVerifyPayload = PasskeyAuthVerifyPayload & { account?: { id: string; username: string } };
+            const verifyPayload = (await verifyResponse.json().catch(() => null)) as AccountVerifyPayload | null;
 
-          if (!verifyResponse.ok || !verifyPayload?.ok || !verifyPayload.account?.id) {
-            moveToPinStep(getPasskeyClientMessage(verifyPayload?.errorCode, ""));
-            return;
-          }
+            if (!verifyResponse.ok || !verifyPayload?.ok || !verifyPayload.account?.id) {
+              moveToPinStep(getPasskeyClientMessage(verifyPayload?.errorCode, ""));
+              return;
+            }
 
-          rememberLocalPasskeyForUsername(verifyPayload.account.username ?? normalizedUsername);
-          saveAccountId(verifyPayload.account.id);
-          saveGodMode(verifyPayload.account.godMode ?? false);
-          setAccountIdState(verifyPayload.account.id);
-          setAccountUsername(verifyPayload.account.username ?? normalizedUsername);
-          setIsNewAccount(false);
-          setPanelDirection(1);
-          setActivePanel("venue-list");
-          return;
-        } catch (error) {
-          if (isPasskeyUserCancel(error)) {
-            moveToPinStep("Passkey prompt canceled. Use your PIN to continue.");
+            rememberLocalPasskeyForUsername(verifyPayload.account.username ?? normalizedUsername);
+            saveAccountId(verifyPayload.account.id);
+            saveGodMode(verifyPayload.account.godMode ?? false);
+            setAccountIdState(verifyPayload.account.id);
+            setAccountUsername(verifyPayload.account.username ?? normalizedUsername);
+            setIsNewAccount(false);
+            setPanelDirection(1);
+            setActivePanel("venue-list");
             return;
+          } catch (error) {
+            if (isPasskeyUserCancel(error)) {
+              moveToPinStep("Passkey prompt canceled. Use your PIN to continue.");
+              return;
+            }
+            moveToPinStep();
+            return;
+          } finally {
+            setIsAccountPasskeyLoading(false);
           }
-          moveToPinStep();
-          return;
-        } finally {
-          setIsAccountPasskeyLoading(false);
         }
-      }
 
-      moveToPinStep();
-    },
+        moveToPinStep();
+
+    } finally {
+      handleAccountGoToPinStepPendingRef.current = false;
+    }
+  },
     [activePanel, isAccountPasskeyLoading]
   );
 
@@ -2145,165 +2179,185 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const handleAccountSubmitPin = useCallback(
     async (pinOverride?: string) => {
-      const candidatePin = normalizePin(String(pinOverride ?? getCurrentPinCandidate()));
-      if (!validatePin(candidatePin)) {
-        setAccountAuthError(INVALID_PIN_MESSAGE);
-        setIsPinShaking(true);
-        return;
-      }
-      if (accountAuthLoading) return;
-
-      setAccountAuthError("");
-      setAccountAuthLoading(true);
-      setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
-
-      try {
-        const account = await createOrLoginAccount({
-          username,
-          pin: candidatePin,
-          mode: activePanel === "account-sign-in" ? "login" : "create",
-        });
-        saveAccountId(account.id);
-        saveGodMode(account.godMode ?? false);
-        setAccountIdState(account.id);
-        setAccountUsername(account.username);
-
-        const alreadyEnrolled = (() => {
-          try { return Boolean(localStorage.getItem(PASSKEY_ENROLLMENT_STORAGE_KEY)); } catch { return false; }
-        })();
-        const isCreate = activePanel === "account-creation";
-        const shouldOffer = isCreate && !alreadyEnrolled && !passkeyRegistrationPromptedRef.current && browserSupportsWebAuthn();
-
-        setPanelDirection(1);
-        if (shouldOffer) {
-          setIsNewAccount(true);
-          setActivePanel("passkey-enrollment-offer");
-        } else {
-          setIsNewAccount(false);
-          setActivePanel("venue-list");
-        }
-      } catch (error) {
-        let msg = getErrorMessage(error, "Authentication failed. Please try again.");
-        if (msg === "Incorrect PIN.") {
-          msg = "That PIN doesn't match the username you entered. Try again, or create a new account with a passkey so you never have to remember this info again.";
+    if (handleAccountSubmitPinPendingRef.current) return;
+    handleAccountSubmitPinPendingRef.current = true;
+    try {
+        const candidatePin = normalizePin(String(pinOverride ?? getCurrentPinCandidate()));
+        if (!validatePin(candidatePin)) {
+          setAccountAuthError(INVALID_PIN_MESSAGE);
           setIsPinShaking(true);
-          setPin("");
+          return;
         }
-        setAccountAuthError(msg);
-      } finally {
-        setAccountAuthLoading(false);
-      }
-    },
+        if (accountAuthLoading) return;
+
+        setAccountAuthError("");
+        setAccountAuthLoading(true);
+        setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+
+        try {
+          const account = await createOrLoginAccount({
+            username,
+            pin: candidatePin,
+            mode: activePanel === "account-sign-in" ? "login" : "create",
+          });
+          saveAccountId(account.id);
+          saveGodMode(account.godMode ?? false);
+          setAccountIdState(account.id);
+          setAccountUsername(account.username);
+
+          const alreadyEnrolled = (() => {
+            try { return Boolean(localStorage.getItem(PASSKEY_ENROLLMENT_STORAGE_KEY)); } catch { return false; }
+          })();
+          const isCreate = activePanel === "account-creation";
+          const shouldOffer = isCreate && !alreadyEnrolled && !passkeyRegistrationPromptedRef.current && browserSupportsWebAuthn();
+
+          setPanelDirection(1);
+          if (shouldOffer) {
+            setIsNewAccount(true);
+            setActivePanel("passkey-enrollment-offer");
+          } else {
+            setIsNewAccount(false);
+            setActivePanel("venue-list");
+          }
+        } catch (error) {
+          let msg = getErrorMessage(error, "Authentication failed. Please try again.");
+          if (msg === "Incorrect PIN.") {
+            msg = "That PIN doesn't match the username you entered. Try again, or create a new account with a passkey so you never have to remember this info again.";
+            setIsPinShaking(true);
+          }
+          setAccountAuthError(msg);
+        } finally {
+          setAccountAuthLoading(false);
+        }
+
+    } finally {
+      handleAccountSubmitPinPendingRef.current = false;
+    }
+  },
     [accountAuthLoading, activePanel, username, getCurrentPinCandidate]
   );
 
   const handleAccountPasskeySignIn = useCallback(async () => {
-    if (isAccountPasskeyLoading) return;
-    setPasskeyAuthError("");
-    setAccountAuthError("");
-    if (!browserSupportsWebAuthn()) {
-      setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
-      return;
-    }
-    setIsAccountPasskeyLoading(true);
+    if (handleAccountPasskeySignInPendingRef.current) return;
+    handleAccountPasskeySignInPendingRef.current = true;
     try {
-      const optionsResponse = await fetch("/api/auth/passkey/authenticate/options", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
-      if (!optionsResponse.ok || !optionsPayload?.ok) {
+      if (isAccountPasskeyLoading) return;
+      setPasskeyAuthError("");
+      setAccountAuthError("");
+      if (!browserSupportsWebAuthn()) {
         setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
         return;
       }
-      if (optionsPayload.requiresPinFallback || !optionsPayload.options || !optionsPayload.challengeId) {
-        setPasskeyAuthError(getPasskeyClientMessage(optionsPayload.reasonCode, NO_LOCAL_PASSKEY_MESSAGE));
-        return;
-      }
-
-      let assertionResponse: Awaited<ReturnType<typeof startAuthentication>>;
+      setIsAccountPasskeyLoading(true);
       try {
-        assertionResponse = await startAuthentication({ optionsJSON: optionsPayload.options });
-      } catch (error) {
-        if (isPasskeyUserCancel(error)) {
-          return;
-        }
-        if (isPasskeyUnavailable(error)) {
+        const optionsResponse = await fetch("/api/auth/passkey/authenticate/options", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
+        if (!optionsResponse.ok || !optionsPayload?.ok) {
           setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
           return;
         }
-        setPasskeyAuthError(getErrorMessage(error, NO_LOCAL_PASSKEY_MESSAGE));
-        return;
+        if (optionsPayload.requiresPinFallback || !optionsPayload.options || !optionsPayload.challengeId) {
+          setPasskeyAuthError(getPasskeyClientMessage(optionsPayload.reasonCode, NO_LOCAL_PASSKEY_MESSAGE));
+          return;
+        }
+
+        let assertionResponse: Awaited<ReturnType<typeof startAuthentication>>;
+        try {
+          assertionResponse = await startAuthentication({ optionsJSON: optionsPayload.options });
+        } catch (error) {
+          if (isPasskeyUserCancel(error)) {
+            return;
+          }
+          if (isPasskeyUnavailable(error)) {
+            setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
+            return;
+          }
+          setPasskeyAuthError(getErrorMessage(error, NO_LOCAL_PASSKEY_MESSAGE));
+          return;
+        }
+
+        const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ challengeId: optionsPayload.challengeId, response: assertionResponse }),
+        });
+        const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyAuthVerifyPayload | null;
+        if (!verifyResponse.ok || !verifyPayload?.ok || !verifyPayload.account?.id) {
+          setPasskeyAuthError(getPasskeyClientMessage(verifyPayload?.errorCode, NO_LOCAL_PASSKEY_MESSAGE));
+          return;
+        }
+
+        const resolvedUsername = verifyPayload.account.username ?? "";
+        if (resolvedUsername) {
+          setAccountUsername(resolvedUsername);
+        }
+        saveAccountId(verifyPayload.account.id);
+        saveGodMode(verifyPayload.account.godMode ?? false);
+        setAccountIdState(verifyPayload.account.id);
+        setIsNewAccount(false);
+        setPanelDirection(1);
+        setActivePanel("venue-list");
+      } catch (error) {
+        if (!isPasskeyUserCancel(error)) {
+          setPasskeyAuthError(getErrorMessage(error, NO_LOCAL_PASSKEY_MESSAGE));
+        }
+      } finally {
+        setIsAccountPasskeyLoading(false);
       }
 
-      const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ challengeId: optionsPayload.challengeId, response: assertionResponse }),
-      });
-      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyAuthVerifyPayload | null;
-      if (!verifyResponse.ok || !verifyPayload?.ok || !verifyPayload.account?.id) {
-        setPasskeyAuthError(getPasskeyClientMessage(verifyPayload?.errorCode, NO_LOCAL_PASSKEY_MESSAGE));
-        return;
-      }
-
-      const resolvedUsername = verifyPayload.account.username ?? "";
-      if (resolvedUsername) {
-        setAccountUsername(resolvedUsername);
-      }
-      saveAccountId(verifyPayload.account.id);
-      saveGodMode(verifyPayload.account.godMode ?? false);
-      setAccountIdState(verifyPayload.account.id);
-      setIsNewAccount(false);
-      setPanelDirection(1);
-      setActivePanel("venue-list");
-    } catch (error) {
-      if (!isPasskeyUserCancel(error)) {
-        setPasskeyAuthError(getErrorMessage(error, NO_LOCAL_PASSKEY_MESSAGE));
-      }
     } finally {
-      setIsAccountPasskeyLoading(false);
+      handleAccountPasskeySignInPendingRef.current = false;
     }
   }, [isAccountPasskeyLoading]);
 
   const handleEnrollSetUp = useCallback(async () => {
-    const stored = enrollmentOptionsRef.current;
-    if (!stored) {
-      passkeyRegistrationPromptedRef.current = true;
-      setPanelDirection(1);
-      setActivePanel("venue-list");
-      return;
-    }
-
-    setIsEnrollmentLoading(true);
-    setEnrollmentError("");
-
+    if (handleEnrollSetUpPendingRef.current) return;
+    handleEnrollSetUpPendingRef.current = true;
     try {
-      const registrationResponse = await startRegistration({ optionsJSON: stored.options });
-      const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ challengeId: stored.challengeId, response: registrationResponse, accountId }),
-      });
-      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
-      if (verifyResponse.ok && verifyPayload?.ok) {
-        try { localStorage.setItem(PASSKEY_ENROLLMENT_STORAGE_KEY, "1"); } catch { /* non-critical */ }
-        rememberLocalPasskeyForUsername(accountUsername);
-      }
-      passkeyRegistrationPromptedRef.current = true;
-      setPanelDirection(1);
-      setActivePanel("venue-list");
-    } catch (error) {
-      if (isPasskeyUserCancel(error)) {
+      const stored = enrollmentOptionsRef.current;
+      if (!stored) {
         passkeyRegistrationPromptedRef.current = true;
         setPanelDirection(1);
         setActivePanel("venue-list");
         return;
       }
-      setEnrollmentError("Setup failed. You can enable Face ID from your account settings later.");
+
+      setIsEnrollmentLoading(true);
+      setEnrollmentError("");
+
+      try {
+        const registrationResponse = await startRegistration({ optionsJSON: stored.options });
+        const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ challengeId: stored.challengeId, response: registrationResponse, accountId }),
+        });
+        const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
+        if (verifyResponse.ok && verifyPayload?.ok) {
+          try { localStorage.setItem(PASSKEY_ENROLLMENT_STORAGE_KEY, "1"); } catch { /* non-critical */ }
+          rememberLocalPasskeyForUsername(accountUsername);
+        }
+        passkeyRegistrationPromptedRef.current = true;
+        setPanelDirection(1);
+        setActivePanel("venue-list");
+      } catch (error) {
+        if (isPasskeyUserCancel(error)) {
+          passkeyRegistrationPromptedRef.current = true;
+          setPanelDirection(1);
+          setActivePanel("venue-list");
+          return;
+        }
+        setEnrollmentError("Setup failed. You can enable Face ID from your account settings later.");
+      } finally {
+        setIsEnrollmentLoading(false);
+      }
+
     } finally {
-      setIsEnrollmentLoading(false);
+      handleEnrollSetUpPendingRef.current = false;
     }
   }, [accountId, accountUsername]);
 
@@ -2334,39 +2388,46 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   // This fires directly from a button click so iOS/Safari user-activation is preserved
   // when startRegistration() is called — no async work happens before it.
   const handlePasskeyEnrollSetUp = useCallback(async () => {
-    if (!passkeyEnrollmentStep) return;
-    const { challengeId, options, user, venueTarget } = passkeyEnrollmentStep;
-    // Options unavailable (server not configured yet) — navigate without enrolling.
-    if (!options || !challengeId) {
-      window.location.assign(venueTarget);
-      return;
-    }
+    if (handlePasskeyEnrollSetUpPendingRef.current) return;
+    handlePasskeyEnrollSetUpPendingRef.current = true;
     try {
-      const registrationResponse = await startRegistration({ optionsJSON: options });
-      const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          challengeId,
-          response: registrationResponse,
-          userId: user.id,
-          venueId: venue?.id,
-        }),
-      });
-      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
-      if (verifyResponse.ok && verifyPayload?.ok) {
-        try { localStorage.setItem(PASSKEY_ENROLLMENT_STORAGE_KEY, "1"); } catch { /* non-critical */ }
-        rememberLocalPasskeyForUsername(user.username);
-      } else {
-        console.info("[Passkey] Enrollment verify failed", { code: verifyPayload?.errorCode });
+      if (!passkeyEnrollmentStep) return;
+      const { challengeId, options, user, venueTarget } = passkeyEnrollmentStep;
+      // Options unavailable (server not configured yet) — navigate without enrolling.
+      if (!options || !challengeId) {
+        window.location.assign(venueTarget);
+        return;
       }
-    } catch (error) {
-      // User canceled or device unavailable — still navigate.
-      if (!isPasskeyUserCancel(error)) {
-        console.info("[Passkey] Enrollment setup failed:", getErrorMessage(error, "unknown"));
+      try {
+        const registrationResponse = await startRegistration({ optionsJSON: options });
+        const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            challengeId,
+            response: registrationResponse,
+            userId: user.id,
+            venueId: venue?.id,
+          }),
+        });
+        const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
+        if (verifyResponse.ok && verifyPayload?.ok) {
+          try { localStorage.setItem(PASSKEY_ENROLLMENT_STORAGE_KEY, "1"); } catch { /* non-critical */ }
+          rememberLocalPasskeyForUsername(user.username);
+        } else {
+          console.info("[Passkey] Enrollment verify failed", { code: verifyPayload?.errorCode });
+        }
+      } catch (error) {
+        // User canceled or device unavailable — still navigate.
+        if (!isPasskeyUserCancel(error)) {
+          console.info("[Passkey] Enrollment setup failed:", getErrorMessage(error, "unknown"));
+        }
+      } finally {
+        window.location.assign(venueTarget);
       }
+
     } finally {
-      window.location.assign(venueTarget);
+      handlePasskeyEnrollSetUpPendingRef.current = false;
     }
   }, [passkeyEnrollmentStep, venue?.id]);
 
@@ -2380,274 +2441,279 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   // createProfile intentionally stays local to capture the current join/auth state for one login attempt.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   async function createProfile(pinOverride?: string) {
-    const effectivePin = normalizePin(String(pinOverride ?? getCurrentPinCandidate()));
-    if (!venue) return;
-    const submitStartedAt = Date.now();
-    setErrorMessage("");
-    setConnectionRetryMessage("");
-    setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
-    if (!validateUsername(username)) {
-      setErrorMessage("Username is required.");
-      return;
-    }
-    if (!validatePin(effectivePin)) {
-      setErrorMessage(INVALID_PIN_MESSAGE);
-      return;
-    }
-
+    if (createProfilePendingRef.current) return;
+    createProfilePendingRef.current = true;
     try {
-      const account = await createOrLoginAccount({
-        username,
-        pin: effectivePin,
-        mode: "login",
-      });
-      saveAccountId(account.id);
-      saveGodMode(account.godMode ?? false);
-      setAccountIdState(account.id);
-      setAccountUsername(account.username);
-      await resolveAndNavigate(account.id, venue);
-      return;
-    } catch (error) {
-      const message = getErrorMessage(error, "Account authentication failed.");
-      if (message === "Incorrect PIN.") {
-        setErrorMessage("That PIN doesn't match the username you entered. Try again.");
-        setIsPinShaking(true);
-        setPin("");
+      const effectivePin = normalizePin(String(pinOverride ?? getCurrentPinCandidate()));
+      if (!venue) return;
+      const submitStartedAt = Date.now();
+      setErrorMessage("");
+      setConnectionRetryMessage("");
+      setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+      if (!validateUsername(username)) {
+        setErrorMessage("Username is required.");
         return;
       }
-      if (!message.includes("do not recognize that username/PIN combination")) {
-        setErrorMessage(message);
+      if (!validatePin(effectivePin)) {
+        setErrorMessage(INVALID_PIN_MESSAGE);
         return;
       }
-      // Legacy venue-scoped users fall through to the old location-gated profile
-      // creation path. God Mode accounts live in `accounts`, so they never reach
-      // this browser geofence gate.
-    }
 
-    if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode) && !locationVerified) {
-      setErrorMessage("Verify your location before creating a profile.");
-      return;
-    }
-
-    setLocationNotice("");
-
-    const targetVenuePath = `/venue/${venue.id}`;
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("tp:global-transition-show", {
-          detail: { targetPath: targetVenuePath },
-        })
-      );
-    }
-
-    abortInFlightLogin();
-
-    const attemptId = loginAttemptIdRef.current + 1;
-    loginAttemptIdRef.current = attemptId;
-    const traceId = `join-${attemptId}-${submitStartedAt}`;
-    logAuthIncident("join-flow", "create-profile-start", {
-      traceId,
-      attemptId,
-      venueId: venue.id,
-      username,
-      locationVerified,
-    });
-
-    const loginController = beginAuthRequest();
-    loginAbortRef.current = loginController;
-    clearLoginWatchdog();
-
-    setAuthLoginState("authenticating");
-    setIsTransitioning(true);
-    setIsOptimisticallyEntering(true);
-    setStatus("saving");
-    setIsAuthLoading(true);
-    setLocationNotice("Joining venue...");
-
-    loginWatchdogRef.current = window.setTimeout(() => {
-      if (loginAttemptIdRef.current !== attemptId) {
-        return;
-      }
-      if (loginAbortRef.current) {
-        loginAbortRef.current.abort();
-      }
-      logAuthIncident("join-flow", "create-profile-watchdog-timeout", {
-        attemptId,
-        venueId: venue.id,
-        timeoutMs: LOGIN_WATCHDOG_TIMEOUT_MS,
-      });
-      setConnectionRetryMessage(
-        "Connection is slow. Your venue is still selected — tap Enter Game to retry."
-      );
-    }, LOGIN_WATCHDOG_TIMEOUT_MS);
-
-    let didNavigate = false;
-    try {
-      // Never block PIN login on Supabase auth sign-out latency.
-      void signOut().catch(() => {});
-
-      const user = await createUserProfile({
-        username,
-        venueId: venue.id,
-        selectedVenueId: venue.id,
-        pin: effectivePin,
-        location: verifiedLocation ?? undefined,
-        signal: loginController.signal,
-        traceId,
-      });
-      logAuthIncident("join-flow", "create-user-profile-success", {
-        traceId,
-        attemptId,
-        venueId: venue.id,
-        userId: user.id,
-        elapsedMs: Date.now() - submitStartedAt,
-      });
-
-      if (loginAttemptIdRef.current !== attemptId || loginController.signal.aborted) {
-        return;
-      }
-      if (String(user.venueId ?? "").trim() !== venue.id) {
-        throw new Error("Session venue mismatch detected. Please try again.");
-      }
-
-      // Determine whether to show the passkey enrollment prompt.
-      // We always show it for unenrolled users who support WebAuthn — even if the
-      // options fetch fails (options will be null and Set Up navigates gracefully).
-      const alreadyEnrolled = (() => {
-        try { return Boolean(localStorage.getItem(PASSKEY_ENROLLMENT_STORAGE_KEY)); } catch { return false; }
-      })();
-      const shouldPromptPasskey =
-        !alreadyEnrolled &&
-        !passkeyRegistrationPromptedRef.current &&
-        browserSupportsWebAuthn();
-
-      // Pre-fetch options so the "Set Up" button click can call startRegistration()
-      // with no async gap — required for iOS Safari user-activation.
-      let enrollmentOptions: PasskeyRegisterOptionsPayload | null = null;
-      if (shouldPromptPasskey) {
-        try {
-          const optRes = await fetch("/api/auth/passkey/register/options", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: user.id, venueId: venue.id, username: user.username }),
-          });
-          const optPayload = (await optRes.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
-          if (optRes.ok && optPayload?.ok && optPayload.options && optPayload.challengeId) {
-            enrollmentOptions = optPayload;
-          } else if (optPayload?.errorCode && !isSilentPasskeyFallbackCode(optPayload.errorCode)) {
-            console.warn("[Passkey] Enrollment options failed:", optPayload.errorCode);
-          }
-        } catch { /* non-critical — prompt still shows, Set Up falls back gracefully */ }
-      }
-
-      hardClearAuthAndCachePreserveVenue(venue.id);
-      saveVenueId(venue.id);
-      saveUsername(user.username);
-      saveUserId(user.id);
-      ensureSiteSession();
-      syncUserGeographicData({
-        zipCode: venue.zipCode,
-        city: venue.city,
-        stateCode: venue.state,
-        regionKey: venue.region,
-        country: venue.country,
-        dataSource: "geolocation",
-      });
-      setSelectedVenueLock(venue.id);
-      setLoginInProgress(venue.id);
-      refreshAuthSession();
-      setVenueHomeRouteIntent({ venueId: venue.id });
-      setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
-
-      const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
-        user.id
-      )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
-      logAuthIncident("join-flow", "redirect-to-venue", {
-        traceId,
-        attemptId,
-        venueId: venue.id,
-        target: hardTarget,
-        elapsedMs: Date.now() - submitStartedAt,
-      });
-      void signInAnonymously().catch(() => {});
-      void preflightVenueHomeCriticalData({
-        userId: user.id,
-        venueId: venue.id,
-        signal: loginController.signal,
-      }).catch(() => {});
-      void preloadVenueHome(venue, user.id).catch(() => {});
-
-      setAuthLoginState("navigating");
-      didNavigate = true;
-
-      if (shouldPromptPasskey) {
-        // Show the passkey enrollment overlay — PasskeyEnrollmentPrompt handles navigation.
-        // options/challengeId may be null if the fetch failed; the handler navigates gracefully.
-        passkeyRegistrationPromptedRef.current = true;
-        setPasskeyEnrollmentStep({
-          user,
-          challengeId: enrollmentOptions?.challengeId ?? null,
-          options: enrollmentOptions?.options ?? null,
-          venueTarget: hardTarget,
+      try {
+        const account = await createOrLoginAccount({
+          username,
+          pin: effectivePin,
+          mode: "login",
         });
-      } else {
-        window.location.assign(hardTarget);
+        saveAccountId(account.id);
+        saveGodMode(account.godMode ?? false);
+        setAccountIdState(account.id);
+        setAccountUsername(account.username);
+        await resolveAndNavigate(account.id, venue);
+        return;
+      } catch (error) {
+        const message = getErrorMessage(error, "Account authentication failed.");
+        if (message === "Incorrect PIN.") {
+          setErrorMessage("That PIN doesn't match the username you entered. Try again.");
+          setIsPinShaking(true);
+          return;
+        }
+        if (!message.includes("do not recognize that username/PIN combination")) {
+          setErrorMessage(message);
+          return;
+        }
+        // Legacy venue-scoped users fall through to the old location-gated profile
+        // creation path. God Mode accounts live in `accounts`, so they never reach
+        // this browser geofence gate.
       }
-    } catch (error) {
-      if (loginAttemptIdRef.current !== attemptId) {
+
+      if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode) && !locationVerified) {
+        setErrorMessage("Verify your location before creating a profile.");
         return;
       }
-      if (error instanceof Error && error.message === "Login request was canceled.") {
-        return;
-      }
+
+      setLocationNotice("");
+
+      const targetVenuePath = `/venue/${venue.id}`;
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+        window.dispatchEvent(
+          new CustomEvent("tp:global-transition-show", {
+            detail: { targetPath: targetVenuePath },
+          })
+        );
       }
-      setAuthLoginState("error");
-      let message = getErrorMessage(error, "Failed to create profile.");
-      if (message === "PIN must be exactly 4 digits.") {
-        message = INVALID_PIN_MESSAGE;
-      }
-      if (message === "Incorrect PIN.") {
-        message = "That PIN doesn't match the username you entered. Try again, or create a new account with a passkey so you never have to remember this info again.";
-        setIsPinShaking(true);
-        setPin("");
-        setConnectionRetryMessage("");
-      }
-      logAuthIncident("join-flow", "create-profile-error", {
+
+      abortInFlightLogin();
+
+      const attemptId = loginAttemptIdRef.current + 1;
+      loginAttemptIdRef.current = attemptId;
+      const traceId = `join-${attemptId}-${submitStartedAt}`;
+      logAuthIncident("join-flow", "create-profile-start", {
         traceId,
         attemptId,
         venueId: venue.id,
-        message,
-        elapsedMs: Date.now() - submitStartedAt,
+        username,
+        locationVerified,
       });
-      if (message === "Join request timed out. Please try again.") {
+
+      const loginController = beginAuthRequest();
+      loginAbortRef.current = loginController;
+      clearLoginWatchdog();
+
+      setAuthLoginState("authenticating");
+      setIsTransitioning(true);
+      setIsOptimisticallyEntering(true);
+      setStatus("saving");
+      setIsAuthLoading(true);
+      setLocationNotice("Joining venue...");
+
+      loginWatchdogRef.current = window.setTimeout(() => {
+        if (loginAttemptIdRef.current !== attemptId) {
+          return;
+        }
+        if (loginAbortRef.current) {
+          loginAbortRef.current.abort();
+        }
+        logAuthIncident("join-flow", "create-profile-watchdog-timeout", {
+          attemptId,
+          venueId: venue.id,
+          timeoutMs: LOGIN_WATCHDOG_TIMEOUT_MS,
+        });
         setConnectionRetryMessage(
-          "Connection is slow. Venue is still selected, and you can retry now without starting over."
+          "Connection is slow. Your venue is still selected — tap Enter Game to retry."
         );
-      } else {
-        setErrorMessage(message);
-      }
-    } finally {
-      if (loginAttemptIdRef.current === attemptId) {
-        loginAbortRef.current = null;
-        endAuthRequest(loginController);
-        clearLoginWatchdog();
-        setIsAuthLoading(false);
-      }
-      if (!didNavigate) {
+      }, LOGIN_WATCHDOG_TIMEOUT_MS);
+
+      let didNavigate = false;
+      try {
+        // Never block PIN login on Supabase auth sign-out latency.
+        void signOut().catch(() => {});
+
+        const user = await createUserProfile({
+          username,
+          venueId: venue.id,
+          selectedVenueId: venue.id,
+          pin: effectivePin,
+          location: verifiedLocation ?? undefined,
+          signal: loginController.signal,
+          traceId,
+        });
+        logAuthIncident("join-flow", "create-user-profile-success", {
+          traceId,
+          attemptId,
+          venueId: venue.id,
+          userId: user.id,
+          elapsedMs: Date.now() - submitStartedAt,
+        });
+
+        if (loginAttemptIdRef.current !== attemptId || loginController.signal.aborted) {
+          return;
+        }
+        if (String(user.venueId ?? "").trim() !== venue.id) {
+          throw new Error("Session venue mismatch detected. Please try again.");
+        }
+
+        // Determine whether to show the passkey enrollment prompt.
+        // We always show it for unenrolled users who support WebAuthn — even if the
+        // options fetch fails (options will be null and Set Up navigates gracefully).
+        const alreadyEnrolled = (() => {
+          try { return Boolean(localStorage.getItem(PASSKEY_ENROLLMENT_STORAGE_KEY)); } catch { return false; }
+        })();
+        const shouldPromptPasskey =
+          !alreadyEnrolled &&
+          !passkeyRegistrationPromptedRef.current &&
+          browserSupportsWebAuthn();
+
+        // Pre-fetch options so the "Set Up" button click can call startRegistration()
+        // with no async gap — required for iOS Safari user-activation.
+        let enrollmentOptions: PasskeyRegisterOptionsPayload | null = null;
+        if (shouldPromptPasskey) {
+          try {
+            const optRes = await fetch("/api/auth/passkey/register/options", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: user.id, venueId: venue.id, username: user.username }),
+            });
+            const optPayload = (await optRes.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
+            if (optRes.ok && optPayload?.ok && optPayload.options && optPayload.challengeId) {
+              enrollmentOptions = optPayload;
+            } else if (optPayload?.errorCode && !isSilentPasskeyFallbackCode(optPayload.errorCode)) {
+              console.warn("[Passkey] Enrollment options failed:", optPayload.errorCode);
+            }
+          } catch { /* non-critical — prompt still shows, Set Up falls back gracefully */ }
+        }
+
+        hardClearAuthAndCachePreserveVenue(venue.id);
+        saveVenueId(venue.id);
+        saveUsername(user.username);
+        saveUserId(user.id);
+        ensureSiteSession();
+        syncUserGeographicData({
+          zipCode: venue.zipCode,
+          city: venue.city,
+          stateCode: venue.state,
+          regionKey: venue.region,
+          country: venue.country,
+          dataSource: "geolocation",
+        });
+        setSelectedVenueLock(venue.id);
+        setLoginInProgress(venue.id);
+        refreshAuthSession();
+        setVenueHomeRouteIntent({ venueId: venue.id });
+        setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
+
+        const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
+          user.id
+        )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
+        logAuthIncident("join-flow", "redirect-to-venue", {
+          traceId,
+          attemptId,
+          venueId: venue.id,
+          target: hardTarget,
+          elapsedMs: Date.now() - submitStartedAt,
+        });
+        void signInAnonymously().catch(() => {});
+        void preflightVenueHomeCriticalData({
+          userId: user.id,
+          venueId: venue.id,
+          signal: loginController.signal,
+        }).catch(() => {});
+        void preloadVenueHome(venue, user.id).catch(() => {});
+
+        setAuthLoginState("navigating");
+        didNavigate = true;
+
+        if (shouldPromptPasskey) {
+          // Show the passkey enrollment overlay — PasskeyEnrollmentPrompt handles navigation.
+          // options/challengeId may be null if the fetch failed; the handler navigates gracefully.
+          passkeyRegistrationPromptedRef.current = true;
+          setPasskeyEnrollmentStep({
+            user,
+            challengeId: enrollmentOptions?.challengeId ?? null,
+            options: enrollmentOptions?.options ?? null,
+            venueTarget: hardTarget,
+          });
+        } else {
+          window.location.assign(hardTarget);
+        }
+      } catch (error) {
+        if (loginAttemptIdRef.current !== attemptId) {
+          return;
+        }
+        if (error instanceof Error && error.message === "Login request was canceled.") {
+          return;
+        }
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
         }
-        clearLoginInProgress();
-        clearSelectedVenueLock();
-        setIsOptimisticallyEntering(false);
-        setIsTransitioning(false);
-        setStatus("ready");
+        setAuthLoginState("error");
+        let message = getErrorMessage(error, "Failed to create profile.");
+        if (message === "PIN must be exactly 4 digits.") {
+          message = INVALID_PIN_MESSAGE;
+        }
+        if (message === "Incorrect PIN.") {
+          message = "That PIN doesn't match the username you entered. Try again, or create a new account with a passkey so you never have to remember this info again.";
+          setIsPinShaking(true);
+          setConnectionRetryMessage("");
+        }
+        logAuthIncident("join-flow", "create-profile-error", {
+          traceId,
+          attemptId,
+          venueId: venue.id,
+          message,
+          elapsedMs: Date.now() - submitStartedAt,
+        });
+        if (message === "Join request timed out. Please try again.") {
+          setConnectionRetryMessage(
+            "Connection is slow. Venue is still selected, and you can retry now without starting over."
+          );
+        } else {
+          setErrorMessage(message);
+        }
+      } finally {
         if (loginAttemptIdRef.current === attemptId) {
-          setAuthLoginState("idle");
+          loginAbortRef.current = null;
+          endAuthRequest(loginController);
+          clearLoginWatchdog();
+          setIsAuthLoading(false);
+        }
+        if (!didNavigate) {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+          }
+          clearLoginInProgress();
+          clearSelectedVenueLock();
+          setIsOptimisticallyEntering(false);
+          setIsTransitioning(false);
+          setStatus("ready");
+          if (loginAttemptIdRef.current === attemptId) {
+            setAuthLoginState("idle");
+          }
         }
       }
+
+    } finally {
+      createProfilePendingRef.current = false;
     }
   };
 
@@ -2682,10 +2748,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     key="welcome"
                     custom={panelDirection}
                     variants={ONBOARDING_PANEL_VARIANTS}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={SWIPE_SPRING_TRANSITION}
+                    initial={reducedMotion ? false : "enter"}
+                    animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                    exit={reducedMotion ? { opacity: 0 } : "exit"}
+                    transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
                     className="flex flex-col gap-4"
                   >
                     {/* Step dots — inside card, above slide content */}
@@ -2693,7 +2759,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                       {WELCOME_SLIDES.map((_, i) => (
                         <div
                           key={i}
-                          className={`h-1.5 rounded-full transition-all duration-200 ${i === welcomeSlide ? "w-6 bg-cyan-400" : "w-1.5 bg-white/25"}`}
+                          className={`h-1.5 rounded-full transition-all motion-reduce:transition-none duration-200 ${i === welcomeSlide ? "w-6 bg-cyan-400" : "w-1.5 bg-white/25"}`}
                         />
                       ))}
                     </div>
@@ -2705,10 +2771,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           key={welcomeSlide}
                           custom={welcomeSlideDirection}
                           variants={ONBOARDING_PANEL_VARIANTS}
-                          initial="enter"
-                          animate="center"
-                          exit="exit"
-                          transition={SWIPE_SPRING_TRANSITION}
+                          initial={reducedMotion ? false : "enter"}
+                          animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                          exit={reducedMotion ? { opacity: 0 } : "exit"}
+                          transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
                           className="absolute inset-0 flex flex-col gap-4 text-center overflow-y-auto"
                         >
                           {WELCOME_SLIDES[welcomeSlide].emoji && <div className="select-none text-[3.6rem]" aria-hidden>{WELCOME_SLIDES[welcomeSlide].emoji}</div>}
@@ -2740,10 +2806,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     key="location-permission"
                     custom={panelDirection}
                     variants={ONBOARDING_PANEL_VARIANTS}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={SWIPE_SPRING_TRANSITION}
+                    initial={reducedMotion ? false : "enter"}
+                    animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                    exit={reducedMotion ? { opacity: 0 } : "exit"}
+                    transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
                     className="flex flex-col gap-6"
                   >
                     <div className="space-y-3 text-center">
@@ -2768,8 +2834,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           type="button"
                           onClick={() => void handleGrantLocation("venue-specific")}
                           disabled={locationLoading}
-                          className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                          className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all motion-reduce:transition-none  disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60" aria-busy={locationLoading}
                         >
+              {(locationLoading) ? <ButtonSpinner /> : null}
                           {locationLoading ? "Checking location..." : "Try Again"}
                         </button>
                       </div>
@@ -2778,8 +2845,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         type="button"
                         onClick={() => void handleGrantLocation("venue-specific")}
                         disabled={locationLoading}
-                        className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                        className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all motion-reduce:transition-none  disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60" aria-busy={locationLoading}
                       >
+              {(locationLoading) ? <ButtonSpinner /> : null}
                         {locationLoading ? "Checking your location..." : "Share My Location →"}
                       </button>
                     )}
@@ -2792,10 +2860,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     key="auth-method-selection"
                     custom={panelDirection}
                     variants={ONBOARDING_PANEL_VARIANTS}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={SWIPE_SPRING_TRANSITION}
+                    initial={reducedMotion ? false : "enter"}
+                    animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                    exit={reducedMotion ? { opacity: 0 } : "exit"}
+                    transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
                     className="flex flex-col gap-6"
                   >
                     <div>
@@ -2813,11 +2881,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                             type="button"
                             onClick={handleAccountPasskeySignIn}
                             disabled={isAccountPasskeyLoading}
+                            aria-busy={isAccountPasskeyLoading}
                             aria-label="Sign in with Face ID or Touch ID"
-                            className="tp-clean-button flex h-20 w-20 items-center justify-center rounded-full border border-cyan-400/40 bg-slate-800 text-3xl shadow-sm transition-all active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                            className="tp-player-hit-target tp-player-pressable tp-clean-button flex h-20 w-20 items-center justify-center rounded-full border border-cyan-400/40 bg-slate-800 text-3xl shadow-sm transition-all motion-reduce:transition-none  disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
                           >
                             {isAccountPasskeyLoading ? (
-                              <span className="animate-spin text-xl text-cyan-300">⟳</span>
+                              <span className="animate-spin motion-reduce:animate-none text-xl text-cyan-300">⟳</span>
                             ) : (
                               "🔑"
                             )}
@@ -2840,7 +2909,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                             setAccountAuthError("");
                             setActivePanel("account-sign-in");
                           }}
-                          className="tp-clean-button flex h-20 w-20 items-center justify-center rounded-full border border-slate-600 bg-slate-800 text-3xl shadow-sm transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                          className="tp-player-hit-target tp-player-pressable tp-clean-button flex h-20 w-20 items-center justify-center rounded-full border border-slate-600 bg-slate-800 text-3xl shadow-sm transition-all motion-reduce:transition-none  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
                         >
                           🔒
                         </button>
@@ -2849,7 +2918,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     </div>
 
                     {passkeyAuthError ? (
-                      <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200">
+                      <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200" role="alert">
                         {passkeyAuthError}
                       </div>
                     ) : null}
@@ -2870,7 +2939,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         setAccountAuthError("");
                         setActivePanel("account-creation");
                       }}
-                      className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                      className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all motion-reduce:transition-none  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
                     >
                       <span className="text-2xl">Create Account →</span>
                     </button>
@@ -2883,10 +2952,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     key={activePanel}
                     custom={panelDirection}
                     variants={ONBOARDING_PANEL_VARIANTS}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={SWIPE_SPRING_TRANSITION}
+                    initial={reducedMotion ? false : "enter"}
+                    animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                    exit={reducedMotion ? { opacity: 0 } : "exit"}
+                    transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
                     className="relative"
                   >
                     {/* Hidden real PIN input — keeps mobile keyboard stable. */}
@@ -2969,10 +3038,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     key="passkey-enrollment-offer"
                     custom={panelDirection}
                     variants={ONBOARDING_PANEL_VARIANTS}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={SWIPE_SPRING_TRANSITION}
+                    initial={reducedMotion ? false : "enter"}
+                    animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                    exit={reducedMotion ? { opacity: 0 } : "exit"}
+                    transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
                     className="flex flex-col gap-5"
                   >
                     <div className="text-center space-y-3">
@@ -2987,7 +3056,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     </div>
 
                     {enrollmentError ? (
-                      <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200">
+                      <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200" role="alert">
                         {enrollmentError}
                       </div>
                     ) : null}
@@ -2997,7 +3066,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         type="button"
                         onClick={handleEnrollSetUp}
                         disabled={isEnrollmentLoading}
-                        className="tp-clean-button inline-flex min-h-[64px] w-full items-center justify-center rounded-xl bg-cyan-400 py-4 px-6 text-xl font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                        aria-busy={isEnrollmentLoading}
+                        className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[64px] w-full items-center justify-center rounded-xl bg-cyan-400 py-4 px-6 text-xl font-black text-slate-950 transition-all motion-reduce:transition-none  disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
                       >
                         {isEnrollmentLoading ? "Setting up..." : "Set Up a Passkey →"}
                       </button>
@@ -3005,7 +3075,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         type="button"
                         onClick={handleEnrollSkip}
                         disabled={isEnrollmentLoading}
-                        className="tp-clean-button inline-flex min-h-[64px] w-full items-center justify-center rounded-xl bg-slate-800 py-4 px-6 text-xl font-black text-ht-fg-muted transition-all active:opacity-70 focus-visible:outline-none"
+                        aria-busy={isEnrollmentLoading}
+                        className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[64px] w-full items-center justify-center rounded-xl bg-slate-800 py-4 px-6 text-xl font-black text-ht-fg-muted transition-all motion-reduce:transition-none active:opacity-70 focus-visible:outline-none"
                       >
                         No thanks! What kind of an IDIOT forgets their username and PIN?
                       </button>
@@ -3019,10 +3090,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     key="venue-list"
                     custom={panelDirection}
                     variants={ONBOARDING_PANEL_VARIANTS}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={SWIPE_SPRING_TRANSITION}
+                    initial={reducedMotion ? false : "enter"}
+                    animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                    exit={reducedMotion ? { opacity: 0 } : "exit"}
+                    transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
                   >
                     {/* Sign Out, NOT Back. This used to render a warm exit pill
                         with a `←` — it read as Back and acted as sign-out, the
@@ -3041,7 +3112,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     </div>
 
                     {errorMessage && (
-                      <div className="mb-4 rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
+                      <div className="mb-4 rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200" role="alert">
                         {errorMessage}
                       </div>
                     )}
@@ -3143,7 +3214,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         <button
                           type="button"
                           onClick={() => router.refresh()}
-                          className="tp-clean-button inline-flex min-h-[42px] items-center rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white"
+                          className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex min-h-[42px] items-center rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white"
                         >
                           Retry nearby venue scan
                         </button>
@@ -3158,10 +3229,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     key={`venue-login-${venue.id}`}
                     custom={panelDirection}
                     variants={ONBOARDING_PANEL_VARIANTS}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={SWIPE_SPRING_TRANSITION}
+                    initial={reducedMotion ? false : "enter"}
+                    animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : "center"}
+                    exit={reducedMotion ? { opacity: 0 } : "exit"}
+                    transition={reducedMotion ? { duration: 0 } : SWIPE_SPRING_TRANSITION}
                     className="relative"
                   >
                     <p className="mb-5 text-xl font-black uppercase tracking-[0.12em]"

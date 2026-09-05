@@ -1,12 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
+import { useReducedMotion } from "framer-motion";
 import { ANIMATION_REGISTRY } from "@/components/animations/animationRegistry";
 import { useAnimationOverlayState } from "@/components/animations/AnimationTriggerProvider";
 
 export function AnimationOverlay() {
   const { active, completeAnimation } = useAnimationOverlayState();
 
-  if (!active) {
+  const reducedMotion = useReducedMotion();
+  useEffect(() => {
+    if (reducedMotion && active) completeAnimation(active.id);
+  }, [active, completeAnimation, reducedMotion]);
+
+  if (!active || reducedMotion) {
     return null;
   }
 

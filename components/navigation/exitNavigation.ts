@@ -1,5 +1,7 @@
 "use client";
 
+import { haptic } from "@/lib/haptics";
+
 import { useRouter } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
 import { VENUE_HOME_GAME_KEYS, inferVenueGameKeyFromPath } from "@/lib/venueGameCards";
@@ -36,8 +38,7 @@ export type ExitNavigationOptions = {
 
 /** `navigator.vibrate(14)` — the standard back-press haptic. Safe on every platform. */
 export function triggerBackHaptic(): void {
-  if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
-  navigator.vibrate(14);
+  haptic("selection");
 }
 
 /**

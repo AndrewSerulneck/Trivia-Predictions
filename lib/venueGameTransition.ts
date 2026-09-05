@@ -396,6 +396,7 @@ function getRectFromSnapshot(snapshot: VenueCardViewportSnapshot): DOMRect {
 }
 
 async function animateVenueCardSettle(gameKey: VenueGameKey): Promise<void> {
+  if (prefersReducedMotion()) return;
   if (typeof window === "undefined" || typeof document === "undefined") {
     return;
   }

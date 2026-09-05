@@ -4,12 +4,14 @@ import { describe, expect, it, vi } from "vitest";
 import { NFLGameCard, type NFLGame } from "@/components/nfl-pickem/NFLGameCard";
 
 vi.mock("framer-motion", () => ({
+  useReducedMotion: () => false,
   motion: {
     div: ({
       children,
       whileTap,
+      transition,
       ...props
-    }: React.HTMLAttributes<HTMLDivElement> & { whileTap?: unknown }) => React.createElement("div", props, children),
+    }: React.HTMLAttributes<HTMLDivElement> & { whileTap?: unknown; transition?: unknown }) => React.createElement("div", props, children),
   },
 }));
 

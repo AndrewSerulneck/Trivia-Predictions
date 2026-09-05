@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
+import { haptic } from "@/lib/haptics";
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth";
 import { hardClearAuthAndCache } from "@/lib/authFastPath";
@@ -119,15 +121,13 @@ export function SignOutButton({
   disabled = false,
 }: SignOutButtonProps) {
   const router = useRouter();
+  const busyRef = useRef(false);
   const [busy, setBusy] = useState(false);
 
   const handleClick = useCallback(async () => {
-    if (busy) return;
-    // Same confirmation buzz VenueHubClient's "Leave Venue" used, kept so the
-    // rename in Phase 3 doesn't quietly drop a piece of the interaction.
-    if (variant === "player" && typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate([22, 40, 22]);
-    }
+    if (busyRef.current || disabled) return;
+    busyRef.current = true;
+    if (variant === "player") haptic("warning");
     setBusy(true);
     try {
       await performSignOut(variant);
@@ -137,18 +137,20 @@ export function SignOutButton({
         router.push(destination);
       }
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
-  }, [busy, onSignedOut, redirectTo, router, variant]);
+  }, [disabled, onSignedOut, redirectTo, router, variant]);
 
   return (
     <button
       type="button"
       onClick={() => void handleClick()}
       disabled={disabled || busy}
-      className={className ?? DANGER_ROW_CLASS}
+      aria-busy={busy}
+      className={`${variant === "player" ? "tp-player-hit-target tp-player-pressable " : ""}${className ?? DANGER_ROW_CLASS}`}
     >
-      {children ?? label}
+      {busy ? <><ButtonSpinner /> <span role="status">Signing out…</span></> : children ?? label}
     </button>
   );
 }

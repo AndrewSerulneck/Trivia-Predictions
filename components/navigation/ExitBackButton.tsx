@@ -26,7 +26,7 @@ import { type NavTone } from "@/components/navigation/StepBackButton";
 // docs/navigation-unification-plan.md §10f. If a Phase 7 tripwire ever asserts
 // on EXIT_BACK_CIRCLE_CLASS, assert on the rendered class *set*, not the literal.
 export const EXIT_BACK_CIRCLE_LAYOUT_CLASS =
-  "tp-clean-button inline-flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border transition-colors";
+  "inline-flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border transition-colors";
 
 export const EXIT_BACK_TONE_CLASS: Record<NavTone, string> = {
   dark: "border-white/10 bg-slate-900 text-slate-300 hover:text-white",
@@ -86,13 +86,16 @@ export function ExitBackButton({
   const button = (
     <button
       type="button"
-      onMouseDown={triggerBackHaptic}
-      onClick={handleExit}
+      onClick={() => { triggerBackHaptic(); void handleExit(); }}
       aria-label={label}
       disabled={disabled}
-      className={`${EXIT_BACK_CIRCLE_LAYOUT_CLASS} ${EXIT_BACK_TONE_CLASS[tone]} disabled:opacity-50${className ? ` ${className}` : ""}`}
+      className={`${tone === "dark" ? "tp-clean-button tp-player-hit-target tp-player-pressable tp-player-back inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full" : `tp-clean-button ${EXIT_BACK_CIRCLE_LAYOUT_CLASS} ${EXIT_BACK_TONE_CLASS.light}`} disabled:opacity-50${className ? ` ${className}` : ""}`}
     >
-      <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+      {tone === "dark" ? (
+        <span className={`${EXIT_BACK_CIRCLE_LAYOUT_CLASS} ${EXIT_BACK_TONE_CLASS.dark}`}>
+          <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+        </span>
+      ) : <ChevronLeft aria-hidden="true" className="h-4 w-4" />}
     </button>
   );
 

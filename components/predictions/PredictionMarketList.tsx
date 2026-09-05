@@ -1,5 +1,7 @@
 "use client";
 
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { calculatePoints, formatProbability } from "@/lib/predictions";
@@ -172,11 +174,6 @@ function normalizeMarketPayload(market: Prediction): Prediction | null {
   };
 }
 
-function triggerHaptic(pattern: number | number[] = 12) {
-  if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
-  navigator.vibrate(pattern);
-}
-
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
   const minutes = Math.floor(safeSeconds / 60);
@@ -277,6 +274,7 @@ function marketMatchesCloseWindow(market: Prediction, closeWindow: CloseWindowKe
 }
 
 export function PredictionMarketList() {
+  const submitPickPendingRef = useRef(new Set<string>());
   const router = useRouter();
   const [messages, setMessages] = useState<SubmitState>({});
   const [limitPopups, setLimitPopups] = useState<PopupState>({});
@@ -778,103 +776,109 @@ export function PredictionMarketList() {
   }
 
   const submitPick = async (predictionId: string, outcomeId: string) => {
-    if (!userId) {
-      setMessages((prev) => ({ ...prev, [predictionId]: "Join a venue first to place picks." }));
-      triggerHaptic([20, 20]);
-      return;
-    }
-    if (predictionsQuotaLocked) {
-      const message = `Hourly prediction limit reached. You can pick again in ${formatCountdown(quotaSecondsRemaining)}.`;
-      setMessages((prev) => ({
-        ...prev,
-        [predictionId]: message,
-      }));
-      setLimitPopups((prev) => ({ ...prev, [predictionId]: message }));
-      window.setTimeout(() => {
-        setLimitPopups((prev) => {
-          const next = { ...prev };
-          delete next[predictionId];
-          return next;
-        });
-      }, 2200);
-      triggerHaptic([20, 20]);
-      return;
-    }
-
-    const existingPendingPick = pendingPickByMarket.get(predictionId);
-    if (existingPendingPick) {
-      const message = `You already picked "${existingPendingPick.outcomeTitle}" for this market.`;
-      setMessages((prev) => ({ ...prev, [predictionId]: message }));
-      triggerHaptic([20, 20]);
-      return;
-    }
-
-    setPendingByMarket((prev) => ({ ...prev, [predictionId]: true }));
-    setMessages((prev) => ({ ...prev, [predictionId]: "" }));
-    triggerHaptic(10);
-
-    const selectedMarket = allMarkets.find((market) => market.id === predictionId);
-    const selectedOutcome = selectedMarket?.outcomes.find((outcome) => outcome.id === outcomeId);
-    const optimisticPickId = `optimistic-${predictionId}-${Date.now()}`;
-    const optimisticPick: PendingPickItem | null =
-      userId && selectedMarket && selectedOutcome
-        ? {
-            id: optimisticPickId,
-            userId,
-            predictionId,
-            outcomeId,
-            outcomeTitle: selectedOutcome.title,
-            points: calculatePoints(selectedOutcome.probability),
-            status: "pending",
-            createdAt: new Date().toISOString(),
-            marketQuestion: selectedMarket.question,
-            marketClosesAt: selectedMarket.closesAt,
-            marketSport: selectedMarket.sport ?? undefined,
-            marketLeague: selectedMarket.league ?? undefined,
-          }
-        : null;
-    if (optimisticPick) {
-      setPendingPicks((prev) => [optimisticPick, ...prev.filter((item) => item.predictionId !== predictionId)]);
-      setMessages((prev) => ({ ...prev, [predictionId]: "Pick locked in." }));
-      setJustLockedMarketId(predictionId);
-      if (lockAnimationTimeoutRef.current) {
-        window.clearTimeout(lockAnimationTimeoutRef.current);
-      }
-      lockAnimationTimeoutRef.current = window.setTimeout(() => {
-        setJustLockedMarketId((current) => (current === predictionId ? null : current));
-      }, 550);
-    }
-
+    if (submitPickPendingRef.current.has(predictionId)) return;
+    submitPickPendingRef.current.add(predictionId);
     try {
-      if (!selectedOutcome) {
-        throw new Error("Unable to identify selected option.");
+      if (!userId) {
+        setMessages((prev) => ({ ...prev, [predictionId]: "Join a venue first to place picks." }));
+
+        return;
+      }
+      if (predictionsQuotaLocked) {
+        const message = `Hourly prediction limit reached. You can pick again in ${formatCountdown(quotaSecondsRemaining)}.`;
+        setMessages((prev) => ({
+          ...prev,
+          [predictionId]: message,
+        }));
+        setLimitPopups((prev) => ({ ...prev, [predictionId]: message }));
+        window.setTimeout(() => {
+          setLimitPopups((prev) => {
+            const next = { ...prev };
+            delete next[predictionId];
+            return next;
+          });
+        }, 2200);
+
+        return;
       }
 
-      const response = await fetch("/api/predictions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, predictionId, outcomeId }),
-      });
+      const existingPendingPick = pendingPickByMarket.get(predictionId);
+      if (existingPendingPick) {
+        const message = `You already picked "${existingPendingPick.outcomeTitle}" for this market.`;
+        setMessages((prev) => ({ ...prev, [predictionId]: message }));
 
-      const payload = (await response.json()) as { ok: boolean; error?: string };
-      if (!payload.ok) {
-        throw new Error(payload.error ?? "Failed to place pick.");
+        return;
       }
 
-      setMessages((prev) => ({ ...prev, [predictionId]: "Pick placed successfully." }));
-      triggerHaptic([25, 40, 25]);
-      void loadQuota();
-      void loadPendingPicks();
-    } catch (error) {
+      setPendingByMarket((prev) => ({ ...prev, [predictionId]: true }));
+      setMessages((prev) => ({ ...prev, [predictionId]: "" }));
+
+      const selectedMarket = allMarkets.find((market) => market.id === predictionId);
+      const selectedOutcome = selectedMarket?.outcomes.find((outcome) => outcome.id === outcomeId);
+      const optimisticPickId = `optimistic-${predictionId}-${Date.now()}`;
+      const optimisticPick: PendingPickItem | null =
+        userId && selectedMarket && selectedOutcome
+          ? {
+              id: optimisticPickId,
+              userId,
+              predictionId,
+              outcomeId,
+              outcomeTitle: selectedOutcome.title,
+              points: calculatePoints(selectedOutcome.probability),
+              status: "pending",
+              createdAt: new Date().toISOString(),
+              marketQuestion: selectedMarket.question,
+              marketClosesAt: selectedMarket.closesAt,
+              marketSport: selectedMarket.sport ?? undefined,
+              marketLeague: selectedMarket.league ?? undefined,
+            }
+          : null;
       if (optimisticPick) {
-        setPendingPicks((prev) => prev.filter((item) => item.id !== optimisticPickId));
+        setPendingPicks((prev) => [optimisticPick, ...prev.filter((item) => item.predictionId !== predictionId)]);
+        setMessages((prev) => ({ ...prev, [predictionId]: "Pick locked in." }));
+        setJustLockedMarketId(predictionId);
+        if (lockAnimationTimeoutRef.current) {
+          window.clearTimeout(lockAnimationTimeoutRef.current);
+        }
+        lockAnimationTimeoutRef.current = window.setTimeout(() => {
+          setJustLockedMarketId((current) => (current === predictionId ? null : current));
+        }, 550);
       }
-      setMessages((prev) => ({
-        ...prev,
-        [predictionId]: error instanceof Error ? error.message : "Failed to place pick.",
-      }));
+
+      try {
+        if (!selectedOutcome) {
+          throw new Error("Unable to identify selected option.");
+        }
+
+        const response = await fetch("/api/predictions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, predictionId, outcomeId }),
+        });
+
+        const payload = (await response.json()) as { ok: boolean; error?: string };
+        if (!payload.ok) {
+          throw new Error(payload.error ?? "Failed to place pick.");
+        }
+
+        setMessages((prev) => ({ ...prev, [predictionId]: "Pick placed successfully." }));
+
+        void loadQuota();
+        void loadPendingPicks();
+      } catch (error) {
+        if (optimisticPick) {
+          setPendingPicks((prev) => prev.filter((item) => item.id !== optimisticPickId));
+        }
+        setMessages((prev) => ({
+          ...prev,
+          [predictionId]: error instanceof Error ? error.message : "Failed to place pick.",
+        }));
+      } finally {
+        setPendingByMarket((prev) => ({ ...prev, [predictionId]: false }));
+      }
+
     } finally {
-      setPendingByMarket((prev) => ({ ...prev, [predictionId]: false }));
+      submitPickPendingRef.current.delete(predictionId);
     }
   };
 
@@ -914,10 +918,11 @@ export function PredictionMarketList() {
                 <button
                   type="button"
                   onClick={() => {
-                    triggerHaptic();
+
                     void submitPick(market.id, outcome.id);
                   }}
                   disabled={marketLocked}
+                    aria-busy={Boolean(pendingByMarket[market.id])}
                   className={`tp-clean-button ${BUTTON_POP_CLASS} mt-2 inline-flex w-full items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60 ${
                     existingPendingPick
                       ? isSelectedOutcome
@@ -926,7 +931,7 @@ export function PredictionMarketList() {
                       : "bg-gradient-to-r from-blue-700 to-cyan-600"
                   }`}
                 >
-                  {existingPendingPick ? (isSelectedOutcome ? "Selected" : "Locked") : "Pick"}
+                  {pendingByMarket[market.id] ? <><ButtonSpinner /> Saving…</> : existingPendingPick ? (isSelectedOutcome ? "Selected" : "Locked") : "Pick"}
                 </button>
               </li>
             );
@@ -942,7 +947,7 @@ export function PredictionMarketList() {
             {limitPopups[market.id]}
           </div>
         ) : null}
-        {messages[market.id] ? <p className="mt-2 text-xs text-ht-fg-muted">{messages[market.id]}</p> : null}
+        {messages[market.id] ? <p role={messages[market.id] === "Pick placed successfully." || messages[market.id] === "Pick locked in." ? "status" : "alert"} className="mt-2 text-xs text-ht-fg-muted">{messages[market.id]}</p> : null}
       </article>
     );
   };
@@ -1161,7 +1166,7 @@ export function PredictionMarketList() {
       </section>
 
       {errorMessage ? (
-        <div className="rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-400">{errorMessage}</div>
+        <div className="rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-400" role="alert">{errorMessage}</div>
       ) : null}
       {showOutOfSeasonMessage ? (
         <div className="rounded-md border border-amber-400/40 bg-amber-500/10 p-3 text-sm font-medium text-amber-300">

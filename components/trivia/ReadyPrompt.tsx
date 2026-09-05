@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 interface ReadyPromptProps {
   type: "game_start" | "round_start";
@@ -11,6 +11,7 @@ interface ReadyPromptProps {
 }
 
 export function ReadyPrompt({ type, roundNumber, category, secondsRemaining, isVisible }: ReadyPromptProps) {
+  const reducedMotion = useReducedMotion();
   const isLateRound = roundNumber !== undefined && roundNumber >= 6;
 
   const gradientClass =
@@ -31,16 +32,16 @@ export function ReadyPrompt({ type, roundNumber, category, secondsRemaining, isV
       {isVisible ? (
         <motion.div
           key="ready-prompt"
-          initial={{ opacity: 0 }}
+          initial={reducedMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={reducedMotion ? { duration: 0 } : { duration: 0.3 }}
           className="fixed inset-0 z-[1400] flex flex-col items-center justify-center bg-slate-950/95 p-6 text-center backdrop-blur-sm"
         >
           <motion.div
-            initial={{ scale: 0.85, y: 24 }}
+            initial={reducedMotion ? false : { scale: 0.85, y: 24 }}
             animate={{ scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 340, damping: 22 }}
+            transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 340, damping: 22 }}
             className="flex flex-col items-center"
           >
             <p
@@ -58,8 +59,8 @@ export function ReadyPrompt({ type, roundNumber, category, secondsRemaining, isV
               </div>
             ) : null}
             <motion.p
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 0.65, repeat: Infinity, ease: "easeInOut" }}
+              animate={reducedMotion ? { scale: 1 } : { scale: [1, 1.1, 1] }}
+              transition={reducedMotion ? { duration: 0 } : { duration: 0.65, repeat: Infinity, ease: "easeInOut" }}
               className={`mt-5 bg-gradient-to-r ${gradientClass} bg-clip-text font-black text-transparent ${secondsRemaining <= 0 ? "text-3xl" : "text-9xl tabular-nums"}`}
             >
               {secondsRemaining <= 0 ? "Game Loading..." : Math.max(0, secondsRemaining)}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -120,6 +121,7 @@ function drawCoin(ctx: CanvasRenderingContext2D, x: number, y: number, radius: n
 }
 
 export function CoinFXCanvas() {
+  const reducedMotion = useReducedMotion();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   // Render into document.body so the full-viewport canvas escapes any
   // transformed / backdrop-blur ancestor (e.g. the AppBar), which would
@@ -135,6 +137,7 @@ export function CoinFXCanvas() {
   const activeRef = useRef(false);
 
   useEffect(() => {
+    if (reducedMotion) return;
     const canvas = canvasRef.current;
     if (!canvas) {
       return;
@@ -259,8 +262,9 @@ export function CoinFXCanvas() {
       window.removeEventListener("tp:coin-flight", onCoinFlight as EventListener);
       particlesRef.current = [];
       stopLoop();
+      context.clearRect(0, 0, canvas.width, canvas.height);
     };
-  }, []);
+  }, [mounted, reducedMotion]);
 
   const canvas = <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-[1150]" aria-hidden="true" />;
   if (!mounted) {

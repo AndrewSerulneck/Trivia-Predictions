@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { haptic } from "@/lib/haptics";
+
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
+import { useEffect, useRef, useState } from "react";
 
 type TiebreakerGame = {
   gameId: string;
@@ -32,6 +36,8 @@ export function NFLTiebreakerCard({
   const [savedGuess, setSavedGuess] = useState<number | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(true);
+  const savingRef = useRef(false);
+  const [saveMessage, setSaveMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -72,12 +78,13 @@ export function NFLTiebreakerCard({
   }, [venueId, weekId, userId]);
 
   const handleSave = async () => {
+    if (savingRef.current || game?.isLocked) return;
     if (!userId || !venueId || !weekId) {
       setError("Please join a venue to answer the tiebreaker");
       return;
     }
 
-    const predictedTotal = Number(inputValue);
+    const predictedTotal = inputValue.trim() === "" ? NaN : Number(inputValue);
     if (!Number.isInteger(predictedTotal) || predictedTotal < 0 || predictedTotal > 200) {
       setError("Enter a whole number between 0 and 200.");
       return;
@@ -87,6 +94,8 @@ export function NFLTiebreakerCard({
     // Optimistic: reflect the save immediately, roll back on failure. No
     // blocking spinner — same pattern as submitPick in NFLPickEmGameList.
     setSavedGuess(predictedTotal);
+    savingRef.current = true;
+    setSaveMessage("");
     setSaving(true);
     setError("");
 
@@ -98,10 +107,13 @@ export function NFLTiebreakerCard({
       });
       const data = await response.json();
       if (!data.ok) throw new Error(data.error);
+      setSaveMessage("Tiebreaker saved");
+      haptic("success");
     } catch (err) {
       setSavedGuess(previousGuess);
       setError(err instanceof Error ? err.message : "Failed to save your guess");
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -118,7 +130,8 @@ export function NFLTiebreakerCard({
         How many total points will be scored in {game.awayTeam} at {game.homeTeam}?
       </p>
 
-      {error && <p className="mt-2 text-[12px] font-semibold text-rose-400">{error}</p>}
+      <p role="status" className="sr-only">{saveMessage}</p>
+      {error && <p role="alert" className="mt-2 text-[12px] font-semibold text-rose-400">{error}</p>}
 
       {game.isLocked ? (
         <p className="mt-3 text-[13px] font-bold text-slate-300">
@@ -132,6 +145,7 @@ export function NFLTiebreakerCard({
               min={0}
               max={200}
               inputMode="numeric"
+              disabled={saving}
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
               className="w-24 rounded-xl border border-[#fde68a]/30 bg-slate-950 px-3 py-2 text-[14px] font-bold text-white focus:outline-none focus:ring-2 focus:ring-[#fde68a]/40"
@@ -141,9 +155,10 @@ export function NFLTiebreakerCard({
               type="button"
               onClick={handleSave}
               disabled={saving || inputValue === ""}
-              className="tp-clean-button rounded-xl bg-[#fde68a] px-4 py-2 text-[13px] font-black text-[#1a2f72] disabled:opacity-50"
+              className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-xl bg-[#fde68a] px-4 py-2 text-[13px] font-black text-[#1a2f72] disabled:opacity-50" aria-busy={saving}
             >
-              Save
+              {(saving) ? <ButtonSpinner /> : null}
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
           <p className="mt-2 text-[11px] font-semibold text-slate-500">Locks at {formatKickoff(game.startsAt)}</p>

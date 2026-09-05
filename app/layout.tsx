@@ -18,9 +18,6 @@ import { AnimationTriggerProvider } from "@/components/animations/AnimationTrigg
 import { initializeScheduledTasks } from "@/lib/scheduledTasks";
 import "./globals.css";
 
-const GLOBAL_LEGAL_NOTICE =
-  "Use of this platform is restricted to authorized, geofenced locations. To inquire about becoming an activated venue or to obtain a commercial license for your establishment, please contact partnerships@hightopchallenge.com.";
-
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hightopchallenge.com";
 
 export const metadata: Metadata = {
@@ -56,6 +53,7 @@ export const metadata: Metadata = {
   // iOS ignores the manifest's icons for the home screen and needs this
   // link tag; omitting it produces a screenshot-of-the-page icon.
   icons: {
+    icon: "/icon.png",
     apple: "/icons/apple-touch-icon.png",
   },
   // `apple-mobile-web-app-capable`, not the manifest, is what gives iOS a
@@ -96,7 +94,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className="m-0 p-0">
       <head>
-        <link rel="preload" href="/brand/hightop-logo.svg" as="image" fetchPriority="high" />
+        <link rel="preload" href="/brand/htc-logo.png" as="image" fetchPriority="high" />
         {/* Next's `appleWebApp` metadata only emits the modern unprefixed
             `mobile-web-app-capable`, which WebKit only honors from iOS
             17.4+. Pre-17.4 iOS needs this legacy name to get the chromeless
@@ -107,7 +105,7 @@ export default async function RootLayout({
         <AuthSessionProvider>
           <AnimationTriggerProvider>
             <OwnerRecoveryRedirectGuard />
-            <AppShell legalNotice={GLOBAL_LEGAL_NOTICE}>{children}</AppShell>
+            <AppShell>{children}</AppShell>
             <Suspense fallback={null}>
               <AuthNavigationGuard />
             </Suspense>

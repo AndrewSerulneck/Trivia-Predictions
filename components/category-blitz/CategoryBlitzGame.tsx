@@ -1,5 +1,8 @@
 "use client";
 
+import { haptic } from "@/lib/haptics";
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
@@ -32,7 +35,6 @@ import { buildCategoryBlitzStorySharePayload } from "@/lib/socialShare/storyPayl
 import { GAME_THEME } from "@/lib/themeTokens";
 import { MODE_CONFIG, getModeFlipTakeoverVariant, type CategoryBlitzThemeKey } from "@/lib/categoryBlitzModes";
 import type { CategoryBlitzRoundResults, CategoryBlitzMode } from "@/types";
-
 
 const LETTER_GRADIENT =
   "bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)]";
@@ -651,13 +653,13 @@ function ContinuousWaitScreen({
       <InviteBanner playerCount={playerCount} />
       <div className={`w-full max-w-sm rounded-2xl border-2 ${BORDER_ACTIVE} bg-emerald-500/10 p-5 text-center`}>
         {showLoading ? (
-          <p className={`animate-pulse text-2xl font-black ${TEXT_ACCENT}`}>Loading categories…</p>
+          <p className={`animate-pulse motion-reduce:animate-none text-2xl font-black ${TEXT_ACCENT}`}>Loading categories…</p>
         ) : (
           <>
             <p className={TEXT_LABEL}>Next round starts in</p>
             <p
               className={`mt-1 font-black tabular-nums text-[2.6rem] leading-none ${
-                isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
+                isUrgent ? "animate-pulse motion-reduce:animate-none text-rose-400" : TEXT_ACCENT
               }`}
             >
               {formatMmSs(lobbyCountdown ?? 0)}
@@ -753,7 +755,7 @@ function LobbyScreen({
               <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-400">Game starts in</p>
               <p
                 className={`mt-1 font-black tabular-nums text-[2.6rem] leading-none ${
-                  isUrgent ? "animate-pulse text-rose-400" : TEXT_ACCENT
+                  isUrgent ? "animate-pulse motion-reduce:animate-none text-rose-400" : TEXT_ACCENT
                 }`}
               >
                 {formatMmSs(countdownSeconds)}
@@ -768,7 +770,7 @@ function LobbyScreen({
             </>
           )}
           <div className={`mt-4 inline-flex items-center gap-2 rounded-full border ${BORDER_ACTIVE} bg-emerald-950/30 px-3 py-1.5 text-xs font-black uppercase tracking-widest ${TEXT_ACCENT}`}>
-            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+            <span className="h-2 w-2 animate-pulse motion-reduce:animate-none rounded-full bg-emerald-400" />
             Ready
           </div>
         </div>
@@ -809,7 +811,7 @@ function ScoringScreen({ mode = "standard" }: { mode?: CategoryBlitzMode }) {
         <p className="mt-3 text-xl font-black text-white">Checking answers…</p>
         <p className="mt-2 text-sm text-slate-400">{MODE_CONFIG[mode].rule}</p>
         <div className="mt-4 flex justify-center">
-          <div className={`h-6 w-6 animate-spin rounded-full border-2 ${theme.spinnerRing}`} />
+          <div className={`h-6 w-6 animate-spin motion-reduce:animate-none rounded-full border-2 ${theme.spinnerRing}`} />
         </div>
       </div>
     </div>
@@ -1773,9 +1775,10 @@ export const AnsweringScreen = memo(function AnsweringScreen({
     };
   }, []);
 
-  const submitAnswers = useCallback(async () => {
+  const submitAnswers = useCallback(async (userInitiated = false) => {
     if (submittedRef.current || venuePresence.isInteractionBlocked) return;
     submittedRef.current = true;
+    if (userInitiated) haptic("commit");
     setSubmitState("submitting");
     setErrorMsg("");
 
@@ -1842,13 +1845,13 @@ export const AnsweringScreen = memo(function AnsweringScreen({
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
         <div className={`w-full max-w-sm rounded-2xl border-2 ${theme.borderActive} ${theme.bgTint} p-6 text-center`}>
-          <p className={theme.textLabel}>Answers submitted</p>
+          <p role="status" className={theme.textLabel}>Answers submitted</p>
           <p className="mt-3 text-xl font-black text-white">
             {totalFilled === 0 ? "No answers recorded." : `${totalFilled} answer${totalFilled !== 1 ? "s" : ""} submitted!`}
           </p>
           <p className={`mt-2 text-sm ${theme.textSoft}`}>Waiting for scoring…</p>
           <div className="mt-4 flex justify-center">
-            <div className={`h-5 w-5 animate-spin rounded-full border-2 ${theme.spinnerRing}`} />
+            <div className={`h-5 w-5 animate-spin motion-reduce:animate-none rounded-full border-2 ${theme.spinnerRing}`} />
           </div>
         </div>
       </div>
@@ -1879,6 +1882,7 @@ export const AnsweringScreen = memo(function AnsweringScreen({
       // inferring them from rects.
       data-category-blitz-compact-chrome={compactChrome ? "" : undefined}
     >
+      <span role="status" className="sr-only">{submitState === "submitting" ? "Submitting answers…" : ""}</span>
       {submitState === "submitting" && (
         <SubmitLockAnimation answersCount={totalFilled} />
       )}
@@ -2037,13 +2041,11 @@ export const AnsweringScreen = memo(function AnsweringScreen({
           data-category-blitz-footer
           className="shrink-0 border-t border-rose-400/20 bg-slate-950 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3"
         >
-          <p className="mb-2 text-center text-xs font-semibold text-rose-400">{errorMsg}</p>
+          <p className="mb-2 text-center text-xs font-semibold text-rose-400" role="alert">{errorMsg}</p>
           <button
             type="button"
             onClick={() => {
-              submittedRef.current = false;
-              setSubmitState("idle");
-              void submitAnswers();
+              void submitAnswers(true);
             }}
             className="w-full rounded-xl border border-rose-400/50 bg-rose-500/20 py-3 text-sm font-black text-rose-300"
           >
@@ -2163,6 +2165,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   // test_mode DB column is true), so gating on session.testMode (server
   // truth) rather than just the local toggle avoids showing a button that
   // would just 403 against a real session.
+  const skipPendingRef = useRef(false);
   const [isSkippingRound, setIsSkippingRound] = useState(false);
 
   // If test mode is already on (persisted from a prior visit) when a
@@ -2183,7 +2186,8 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
 
   const canSkipRound = testMode && !!session?.testMode && (session?.status === "lobby" || session?.status === "active");
   const skipRound = useCallback(() => {
-    if (!session?.id || isSkippingRound) return;
+    if (!session?.id || skipPendingRef.current) return;
+    skipPendingRef.current = true;
     setIsSkippingRound(true);
     void fetch(`/api/category-blitz/sessions/${session.id}/skip-round`, { method: "POST" })
       .then((res) => {
@@ -2199,8 +2203,8 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         // showing the current state if this fails, same as any other
         // dropped dev-tooling request.
       })
-      .finally(() => setIsSkippingRound(false));
-  }, [session, isSkippingRound, retry]);
+      .finally(() => { skipPendingRef.current = false; setIsSkippingRound(false); });
+  }, [session, retry]);
 
   // The round in play right now drives the whole page's ambient color world
   // (§4c) — "Blend In!" for the round's full duration (answering → scoring →
@@ -2536,7 +2540,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
           <div className="w-full max-w-sm rounded-2xl border border-rose-400/40 bg-slate-900 p-5 text-center">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-300">Connection error</p>
-            <p className="mt-2 text-sm text-slate-400">{error}</p>
+            <p className="mt-2 text-sm text-slate-400" role="alert">{error}</p>
             {errorEscalated && (
               <>
                 <p className="mt-2 text-xs text-slate-500">
@@ -2585,9 +2589,10 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
               data-category-blitz-dev-only
               onClick={skipRound}
               disabled={isSkippingRound}
+              aria-busy={isSkippingRound}
               className="fixed bottom-2 right-32 z-[999] rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-950 disabled:opacity-50"
             >
-              {isSkippingRound ? "Skipping…" : "Skip round"}
+              {isSkippingRound ? <><ButtonSpinner /> Skipping…</> : "Skip round"}
             </button>
           )}
           {testMode && <DevAnimationPanel />}

@@ -1,5 +1,7 @@
 "use client";
 
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Aperture, Camera, Check, Image as ImageIcon, RotateCcw, Share2, X } from "lucide-react";
 import {
@@ -125,6 +127,9 @@ export function StoryCaptureModal({
   preparedStory,
   onCaptureComplete,
 }: StoryCaptureModalProps) {
+  const shareCapturedStoryPendingRef = useRef(false);
+  const captureStoryImagePendingRef = useRef(false);
+  const startCameraPendingRef = useRef(false);
   const [state, setState] = useState<CameraViewportState>("idle");
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<StoryCameraSessionError | null>(null);
@@ -214,120 +219,141 @@ export function StoryCaptureModal({
   }, [preparedStoryKey, resetCapturedImage]);
 
   const startCamera = useCallback(async () => {
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    stopSession();
-    setError(null);
-    setState("requesting");
-
+    if (startCameraPendingRef.current) return;
+    startCameraPendingRef.current = true;
     try {
-      const session = await webStoryPlatform.requestFrontCameraSession();
-      if (requestIdRef.current !== requestId) {
-        session.stop();
-        return;
+      const requestId = requestIdRef.current + 1;
+      requestIdRef.current = requestId;
+      stopSession();
+      setError(null);
+      setState("requesting");
+
+      try {
+        const session = await webStoryPlatform.requestFrontCameraSession();
+        if (requestIdRef.current !== requestId) {
+          session.stop();
+          return;
+        }
+        sessionRef.current = session;
+        setStream(session.stream);
+        setState("active");
+        trackStoryCameraPermissionResult({
+          ...analyticsContext,
+          permissionState: "granted",
+          usedCameraFallback: session.usedFallback,
+        });
+      } catch (unknownError) {
+        if (requestIdRef.current !== requestId) {
+          return;
+        }
+        const normalized = normalizeCameraSessionError(unknownError);
+        setError(normalized);
+        setState(cameraErrorToState(normalized));
+        trackStoryCameraPermissionResult({
+          ...analyticsContext,
+          permissionState:
+            normalized.code === "permission-denied"
+              ? "denied"
+              : normalized.code === "unsupported-browser" || normalized.code === "insecure-context"
+              ? "unsupported"
+              : "unknown",
+          cameraErrorCode: normalized.code,
+        });
       }
-      sessionRef.current = session;
-      setStream(session.stream);
-      setState("active");
-      trackStoryCameraPermissionResult({
-        ...analyticsContext,
-        permissionState: "granted",
-        usedCameraFallback: session.usedFallback,
-      });
-    } catch (unknownError) {
-      if (requestIdRef.current !== requestId) {
-        return;
-      }
-      const normalized = normalizeCameraSessionError(unknownError);
-      setError(normalized);
-      setState(cameraErrorToState(normalized));
-      trackStoryCameraPermissionResult({
-        ...analyticsContext,
-        permissionState:
-          normalized.code === "permission-denied"
-            ? "denied"
-            : normalized.code === "unsupported-browser" || normalized.code === "insecure-context"
-            ? "unsupported"
-            : "unknown",
-        cameraErrorCode: normalized.code,
-      });
+
+    } finally {
+      startCameraPendingRef.current = false;
     }
   }, [analyticsContext, stopSession]);
 
   const captureStoryImage = useCallback(async () => {
-    const video = videoRef.current;
-    if (!video || state !== "active") {
-      return;
-    }
-
-    setCaptureState("capturing");
-    setCaptureError(null);
-    setCapturedBlob(null);
-    setCapturedImageUrl((currentUrl) => {
-      if (currentUrl) {
-        URL.revokeObjectURL(currentUrl);
-      }
-      return null;
-    });
-
+    if (captureStoryImagePendingRef.current) return;
+    captureStoryImagePendingRef.current = true;
     try {
-      const blob = await webStoryPlatform.captureFrame({
-        source: video,
-        spec: activePreparedStory.renderSpec,
+      const video = videoRef.current;
+      if (!video || state !== "active") {
+        return;
+      }
+
+      setCaptureState("capturing");
+      setCaptureError(null);
+      setCapturedBlob(null);
+      setCapturedImageUrl((currentUrl) => {
+        if (currentUrl) {
+          URL.revokeObjectURL(currentUrl);
+        }
+        return null;
       });
-      const objectUrl = URL.createObjectURL(blob);
-      setCapturedBlob(blob);
-      setCapturedImageUrl(objectUrl);
-      setCaptureState("captured");
-      setNativeShareState("idle");
-      setShareResult(null);
-      setFallbackOpen(false);
-      trackStoryCaptureCompleted({
-        ...analyticsContext,
-        imageWidth: activePreparedStory.renderSpec.width,
-        imageHeight: activePreparedStory.renderSpec.height,
-      });
-      onCaptureComplete?.(blob);
-    } catch (unknownError) {
-      const message = unknownError instanceof StoryCanvasRenderError
-        ? unknownError.message
-        : "Story capture failed unexpectedly.";
-      setCaptureError(message);
-      setCaptureState("failed");
+
+      try {
+        const blob = await webStoryPlatform.captureFrame({
+          source: video,
+          spec: activePreparedStory.renderSpec,
+        });
+        const objectUrl = URL.createObjectURL(blob);
+        setCapturedBlob(blob);
+        setCapturedImageUrl(objectUrl);
+        setCaptureState("captured");
+        setNativeShareState("idle");
+        setShareResult(null);
+        setFallbackOpen(false);
+        trackStoryCaptureCompleted({
+          ...analyticsContext,
+          imageWidth: activePreparedStory.renderSpec.width,
+          imageHeight: activePreparedStory.renderSpec.height,
+        });
+        onCaptureComplete?.(blob);
+      } catch (unknownError) {
+        const message = unknownError instanceof StoryCanvasRenderError
+          ? unknownError.message
+          : "Story capture failed unexpectedly.";
+        setCaptureError(message);
+        setCaptureState("failed");
+      }
+
+    } finally {
+      captureStoryImagePendingRef.current = false;
     }
   }, [activePreparedStory.renderSpec, analyticsContext, onCaptureComplete, state]);
 
   const shareCapturedStory = useCallback(async () => {
-    if (!capturedBlob || nativeShareState === "sharing") {
-      return;
+    if (shareCapturedStoryPendingRef.current) return;
+    shareCapturedStoryPendingRef.current = true;
+    try {
+      if (!capturedBlob || nativeShareState === "sharing") {
+        return;
+      }
+
+      setNativeShareState("sharing");
+      setShareResult(null);
+      trackStoryShareAttempted(analyticsContext);
+
+      const result = await webStoryPlatform.shareImage({
+        blob: capturedBlob,
+        fileName: getStoryShareFileName(activePreparedStory),
+        title: activePreparedStory.headline,
+        text: activePreparedStory.caption ?? activePreparedStory.subheadline,
+      });
+
+      setShareResult(result);
+      trackStoryShareCompleted({
+        ...analyticsContext,
+        shareStatus: result.status,
+        fallbackRecommended: result.fallbackRecommended,
+        resultReason: result.reason ?? null,
+      });
+      if (result.status === "shared") {
+        setNativeShareState("shared");
+        setFallbackOpen(false);
+        return;
+      }
+
+      setNativeShareState("fallback");
+      setFallbackOpen(true);
+
+    } finally {
+      shareCapturedStoryPendingRef.current = false;
     }
-
-    setNativeShareState("sharing");
-    setShareResult(null);
-    trackStoryShareAttempted(analyticsContext);
-
-    const result = await webStoryPlatform.shareImage({
-      blob: capturedBlob,
-      fileName: getStoryShareFileName(activePreparedStory),
-      title: activePreparedStory.headline,
-      text: activePreparedStory.caption ?? activePreparedStory.subheadline,
-    });
-
-    setShareResult(result);
-    trackStoryShareCompleted({
-      ...analyticsContext,
-      shareStatus: result.status,
-      fallbackRecommended: result.fallbackRecommended,
-      resultReason: result.reason ?? null,
-    });
-    if (result.status === "shared") {
-      setNativeShareState("shared");
-      setFallbackOpen(false);
-      return;
-    }
-
-    setNativeShareState("fallback");
-    setFallbackOpen(true);
   }, [activePreparedStory, analyticsContext, capturedBlob, nativeShareState]);
 
   useEffect(() => {
@@ -478,7 +504,7 @@ export function StoryCaptureModal({
           <button
             type="button"
             onClick={closeModal}
-            className="tp-clean-button flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.08] text-white shadow-[0_8px_22px_rgba(0,0,0,0.32)] transition hover:bg-white/[0.12] active:scale-95"
+            className="tp-player-hit-target tp-player-pressable tp-clean-button flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.08] text-white shadow-[0_8px_22px_rgba(0,0,0,0.32)] transition hover:bg-white/[0.12] "
             aria-label="Close story capture"
             title="Close"
           >
@@ -526,13 +552,14 @@ export function StoryCaptureModal({
               shareResult={shareResult}
               analyticsContext={analyticsContext}
               onRetryNativeShare={shareCapturedStory}
+              sharing={nativeShareState === "sharing"}
               onClose={() => setFallbackOpen(false)}
             />
           ) : null}
         </main>
 
         <footer className="shrink-0 border-t border-white/10 bg-slate-950/[0.92] px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-3 backdrop-blur">
-          <p className="min-h-[1.25rem] text-center text-sm font-bold leading-snug text-slate-300">{statusCopy}</p>
+          <p className="min-h-[1.25rem] text-center text-sm font-bold leading-snug text-slate-300"><span role={captureError || error || shareResult?.status === "failed" ? "alert" : "status"}>{statusCopy}</span></p>
           <div className="mt-2">
             <StoryShareStatusToast tone={getShareToastTone(nativeShareState, shareResult)} message={shareStatusCopy} />
           </div>
@@ -547,7 +574,8 @@ export function StoryCaptureModal({
               type="button"
               onClick={startCamera}
               disabled={!canStart}
-              className="tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(34,211,238,0.22)] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 active:scale-[0.99]"
+              aria-busy={state === "requesting"}
+              className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(34,211,238,0.22)] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
             >
               {state === "denied" || state === "unsupported" || state === "error" ? (
                 <RotateCcw className="h-4 w-4" aria-hidden="true" />
@@ -560,28 +588,30 @@ export function StoryCaptureModal({
               type="button"
               onClick={captureStoryImage}
               disabled={!canCapture || nativeShareState === "sharing"}
-              className="tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-emerald-200/40 bg-emerald-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(52,211,153,0.18)] transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 active:scale-[0.99]"
+              aria-busy={captureState === "capturing"}
+              className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-emerald-200/40 bg-emerald-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(52,211,153,0.18)] transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
             >
               {captureState === "captured" ? (
                 <RotateCcw className="h-4 w-4" aria-hidden="true" />
               ) : (
                 <Aperture className="h-4 w-4" aria-hidden="true" />
               )}
-              {captureButtonLabel}
+              {captureState === "capturing" ? <ButtonSpinner /> : null}{captureButtonLabel}
             </button>
             <button
               type="button"
               onClick={shareCapturedStory}
               disabled={!canShare}
-              className="tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-amber-200/40 bg-amber-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(251,191,36,0.16)] transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 active:scale-[0.99]"
+              aria-busy={nativeShareState === "sharing"}
+              className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-amber-200/40 bg-amber-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(251,191,36,0.16)] transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
             >
               <Share2 className="h-4 w-4" aria-hidden="true" />
-              {shareButtonLabel}
+              {nativeShareState === "sharing" ? <ButtonSpinner /> : null}{shareButtonLabel}
             </button>
             <button
               type="button"
               onClick={closeModal}
-              className="tp-clean-button h-12 rounded-full border border-white/[0.12] bg-white/[0.08] px-5 text-sm font-black text-white transition hover:bg-white/[0.12] active:scale-[0.99]"
+              className="tp-player-hit-target tp-player-pressable tp-clean-button h-12 rounded-full border border-white/[0.12] bg-white/[0.08] px-5 text-sm font-black text-white transition hover:bg-white/[0.12] "
             >
               Done
             </button>

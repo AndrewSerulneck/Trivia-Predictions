@@ -22,7 +22,7 @@ export default function ComingSoonPage() {
       <section className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center text-center">
         <div className="mb-9 flex items-center gap-3">
           <Image
-            src="/brand/hightop-logo.svg"
+            src="/brand/htc-logo.png"
             alt="Hightop Challenge"
             width={52}
             height={52}

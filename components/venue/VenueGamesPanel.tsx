@@ -1,5 +1,7 @@
 "use client";
 
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+
 import React from "react";
 import Image from "next/image";
 import type { VenueGameCardConfig, VenueGameKey } from "@/lib/venueGameCards";
@@ -69,7 +71,6 @@ type VenueGamesPanelProps = {
   visibleBadgeByGame: Map<VenueGameKey, string>;
   badgeError: string;
   categoryBlitzSessionActive?: boolean;
-  onTriggerPulse: () => void;
   onGoTo: (dest: VenueGameKey, sourceElement: HTMLElement | null) => void;
   onRetryBadges: () => void;
 };
@@ -89,7 +90,6 @@ function VenueGamesPanelInner({
   visibleBadgeByGame,
   badgeError,
   categoryBlitzSessionActive = false,
-  onTriggerPulse,
   onGoTo,
   onRetryBadges,
 }: VenueGamesPanelProps) {
@@ -150,20 +150,17 @@ function VenueGamesPanelInner({
               </div>
               <button
                 type="button"
-                onMouseDown={onTriggerPulse}
                 onClick={(event) => {
                   onGoTo("live_trivia", event.currentTarget);
                 }}
                 disabled={pendingDestination !== null}
-                className={`tp-clean-button min-w-[7.2rem] rounded-[12px] border px-4 py-2 text-lg font-black leading-tight transition-all disabled:opacity-60 ${
+                className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button min-w-[7.2rem] rounded-[12px] border px-4 py-2 text-lg font-black leading-tight transition-all motion-reduce:transition-none disabled:opacity-60 ${
                   lobbyButtonShouldPulse
-                    ? "animate-pulse border-rose-300/60 bg-rose-400/20 text-rose-200 shadow-[0_0_0_1px_rgba(252,165,165,0.3)]"
+                    ? "animate-pulse motion-reduce:animate-none border-rose-300/60 bg-rose-400/20 text-rose-200 shadow-[0_0_0_1px_rgba(252,165,165,0.3)]"
                     : "border-cyan-400/40 bg-cyan-400/10 text-cyan-200 shadow-[0_0_0_1px_rgba(34,211,238,0.28)] hover:bg-cyan-400/15"
-                }`}
+                }`)} aria-busy={pendingDestination === "live_trivia"}
               >
-                Enter
-                <br />
-                lobby
+                {pendingDestination === "live_trivia" ? <><ButtonSpinner /><br />Opening…</> : <>Enter<br />lobby</>}
               </button>
             </div>
           </div>
@@ -179,15 +176,15 @@ function VenueGamesPanelInner({
                 <button
                   key={card.key}
                   type="button"
-                  onMouseDown={onTriggerPulse}
-                  onClick={(event) => {
+                    onClick={(event) => {
                     onGoTo(card.key, event.currentTarget);
                   }}
                   disabled={pendingDestination !== null}
                   data-venue-game-card={card.key}
-                  className={`tp-clean-button tp-game-card-btn group relative w-full overflow-hidden rounded-[22px] border border-white/75 text-left shadow-[0_12px_26px_rgba(15,23,42,0.5)] ${isOpening ? "is-opening" : ""}`}
-                  style={{ background: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }}
+                  className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button tp-game-card-btn group relative w-full overflow-hidden rounded-[22px] border border-white/75 text-left shadow-[0_12px_26px_rgba(15,23,42,0.5)] ${isOpening ? "is-opening" : ""}`)}
+                  style={{ background: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }} aria-busy={isOpening}
                 >
+                  {isOpening ? <span role="status" className="absolute bottom-2 right-3 z-10 inline-flex items-center gap-2 text-sm font-black"><ButtonSpinner /> Opening…</span> : null}
                   <div className="relative flex min-h-[190px] flex-col gap-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div
@@ -262,7 +259,7 @@ function VenueGamesPanelInner({
           <button
             type="button"
             onClick={onRetryBadges}
-            className="mx-auto mt-2 block max-w-[24rem] rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-300"
+            className="tp-player-hit-target tp-player-pressable mx-auto mt-2 block max-w-[24rem] rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-300"
           >
             {badgeError} Tap to retry
           </button>

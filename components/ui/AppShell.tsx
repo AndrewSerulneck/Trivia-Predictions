@@ -6,10 +6,9 @@ import type { ReactNode } from "react";
 
 type AppShellProps = {
   children: ReactNode;
-  legalNotice: string;
 };
 
-// All routes that should fill the full viewport with zero AppShell padding or footer.
+// All routes that should fill the full viewport with zero AppShell padding.
 const FULLSCREEN_PATHS = [
   "/trivia",
   "/category-blitz",
@@ -39,28 +38,12 @@ const GAME_SCREEN_PATHS = [
   "/pending-challenges",
 ];
 
-// Legal/geofence/commercial-license notice must render on every non-admin,
-// non-fullscreen route (e.g. /info, /join, /owner/*), not just the venue
-// home page. Commit 35115fc narrowed this to venue-home-only by accident
-// (bundled into an unrelated layout refactor); code-review round 3 phase 7
-// confirmed with the user that the narrowing was unintended and restored
-// the original scope. Do not narrow this again without an explicit,
-// separately-verified compliance decision. Exported as a pure function so
-// the invariant is testable without a DOM-rendering harness (this project
-// has none).
-export function shouldShowLegalNotice(pathname: string | null | undefined): boolean {
-  const isAdmin = pathname?.startsWith("/admin");
-  const isFullscreen = !isAdmin && FULLSCREEN_PATHS.some((p) => pathname?.startsWith(p));
-  return !isAdmin && !isFullscreen;
-}
-
-export function AppShell({ children, legalNotice }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
   const isFullscreen = !isAdmin && FULLSCREEN_PATHS.some((p) => pathname?.startsWith(p));
   const isGameScreen = !isAdmin && GAME_SCREEN_PATHS.some((p) => pathname?.startsWith(p));
   const showShellDecor = !isAdmin && !isFullscreen;
-  const showLegalNotice = shouldShowLegalNotice(pathname);
   // Only Category Blitz needs the hard 100svh clamp: its gameplay renders
   // through a body-level fixed portal (CategoryBlitzPlayShell) that manages
   // its own scroll/keyboard behavior independently of this shell. The other
@@ -129,11 +112,6 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
       <Suspense fallback={null}>
         <main className={mainClassName}>{children}</main>
       </Suspense>
-      {showLegalNotice ? (
-        <footer className="relative z-10 border-t border-ht-border-hairline bg-ht-surface px-3 py-2 text-center text-xs leading-relaxed text-ht-fg-muted break-words">
-          {legalNotice}
-        </footer>
-      ) : null}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronDown, Trophy } from "lucide-react";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { NFL_REWARD_MIN_PICKERS } from "@/lib/nflPickEmRewardWeeks";
@@ -73,6 +73,7 @@ const outcomeColor = (status: LeaderboardPick["status"]): string => {
 };
 
 function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: RewardWinner }) {
+  const reducedMotion = useReducedMotion();
   const [isExpanded, setIsExpanded] = useState(false);
   const prize = winner ? describeRewardPrize(winner) : "";
 
@@ -130,10 +131,10 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
+            initial={reducedMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            exit={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : { duration: 0.2 }}
             className="overflow-hidden border-t border-[#fde68a]/15"
           >
             <div className="space-y-1.5 px-3 py-2.5">
@@ -212,6 +213,7 @@ export function NFLPickEmLeaderboard({
   /** Bumped by the parent after a successful pick so this refetches without depending on picks state. */
   refreshKey: number;
 }) {
+  const reducedMotion = useReducedMotion();
   const [mode, setMode] = useState<LeaderboardMode>("week");
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -346,12 +348,12 @@ export function NFLPickEmLeaderboard({
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={reducedMotion ? false : { opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-4 py-3"
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
+            className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-4 py-3" transition={reducedMotion ? { duration: 0 } : undefined}
           >
-            <p className="text-[12px] font-semibold text-rose-300">{error}</p>
+            <p className="text-[12px] font-semibold text-rose-300" role="alert">{error}</p>
           </motion.div>
         )}
       </AnimatePresence>
