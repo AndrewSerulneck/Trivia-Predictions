@@ -183,7 +183,7 @@ describe("NFL prop mix (Phase 3)", () => {
 
     const first = squares.find((square) => square.key === "nfl_player_first_td:saquon barkley::12");
     expect(first).toBeDefined();
-    expect(first!.label).toBe("Saquon Barkley scores the game's first touchdown.");
+    expect(first!.label).toBe("Saquon Barkley scores the game's first TD.");
     // A first-TD price is a real long shot and must stay one — not get inflated to look fair.
     expect(first!.probability).toBeLessThan(0.2);
   });

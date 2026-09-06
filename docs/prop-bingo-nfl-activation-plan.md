@@ -45,7 +45,7 @@ ships. Three of them are **not** met today.
 | 3 | Prices de-vigged off a real market consensus, not a hand sigmoid | ✅ built (8 vendors) |
 | 4 | Star-tilted props so the board carries recognisable names | ✅ built — **snapshot is stale (Phase 0)** |
 | 5 | Squares resolve *through* the game, not all at the whistle | ⚠️ **unmeasured — `team_stats` mid-game population is still 8a's open unknown (Phase 5)** |
-| 6 | Live stat pops / ActionPop celebrations while the game runs | ❌ **NFL is silent — no webhook, no `live-stats:` broadcast (Phase 3)** |
+| 6 | Live stat pops / ActionPop celebrations while the game runs | ⚠️ **built 2026-09-05 (Phase 3) — sweep-driven `live-stats:` broadcast, never seen on a live NFL game (confirm in Phase 5)** |
 | 7 | A prop is never assigned to a player who won't play | ❌ **no inactives handling; MLB has late-scratch swap, NFL has nothing (Phase 4)** |
 | 8 | Missing data voids, never mis-settles as a miss | ✅ built (`missing-data-voids` coverage) |
 | 9 | Board renders correctly portrait **and** in landscape/PWA | ⚠️ **never observed on an NFL board (Phase 2)** |
@@ -148,6 +148,105 @@ against the parity bar — it is the "entertaining, competitive, interesting" ch
 **Done when:** three real Week 1 boards pass all nine parity items that can be judged offline
 (1, 2, 3, 4, 8) and the label/pacing read is written down.
 
+#### Phase 1 — AS BUILT (2026-09-05, Sonnet 5)
+
+**Status: DONE for the games whose props are posted; one item deferred to a Tue 9/8 re-run.**
+Full write-up: **`docs/prop-bingo-nfl-week1-audit.md`**. Raw 24-board data:
+`docs/phase0-artifacts/nfl-week1-board-audit-2026-09-05.json`. New tool:
+`scripts/audit-nfl-week1-boards.cjs`.
+
+**Timing caveat that shaped everything:** this was run **2026-09-05, i.e. 4–8 days before
+kickoff**, not on Tue 9/8. Consequence: the Sunday-slate yardage over/under prop markets are **not
+posted yet**, so 2 of the 4 audited games had a TD-only prop pool. The opener (NE @ SEA), whose
+props *are* fully posted, is the clean read and passes every offline parity item.
+
+**How it was run** (the forward `bingo:simulate` path is blocked two ways for pre-game-day NFL):
+- `BINGO_LOOKAHEAD_HOURS` is a **hardcoded `const = 36`** in `lib/sportsBingo.ts`, not
+  env-configurable. It was temporarily set to `240`, the audit run, then **reverted** — working
+  tree is clean except the new untracked `.cjs` script (verified via `git status`).
+- `listSportsBingoGames` *also* filters to games whose local date == today, so
+  `npm run bingo:simulate` still reports NFL `games: 0` even with a wide lookahead. Its
+  `inTargetBand` metric is unavailable until an actual NFL game day. The audit script calls
+  `generateSportsBingoBoard({ gameId })` directly (explicit id bypasses the today-filter) with ids
+  from `npm run bingo:probe:nfl`, and computes the win-rate distribution over 24 boards instead.
+
+**Parity-bar result (offline items 1, 2, 3, 4, 8):**
+| Item | NE @ SEA (pool 59) | TB @ CIN (pool 30) | NO @ DET (pool 18, TD-only) | BAL @ IND (pool 16, TD-only) |
+|---|---|---|---|---|
+| 1 mix 2/3/3/2/6/8 | ✅ exact ×6 | ✅ exact ×6 | ❌ 4 prop / 8–10 special | ❌ 4 prop / 8–10 special |
+| 2 win rate 20–30% | ✅ 0.218–0.293 | ✅ 0.214–0.292 | ✅ 0.223–0.268 | ✅ 0.226–0.300 |
+| 3 de-vigged consensus | ✅ | ✅ | ✅ | ✅ |
+| 4 star tilt, ≥2 non-star | ✅ | ✅ | ⚠️ fewer stars (thin pool) | ⚠️ fewer stars (thin pool) |
+| 8 voids | n/a offline | | | |
+
+All 24 boards' predicted win rate landed 0.214–0.300, median ≈ 0.25. Phase 1's "three boards"
+bar is met by the 12 NE @ SEA + TB @ CIN boards.
+
+**Findings (ranked; full detail in the audit doc):**
+1. **Thin prop pool → prop bucket underfilled, specials backfill to 8–10 per board** on games
+   whose yardage props aren't posted yet. NE @ SEA (full pool) hits 8/8 props exactly, so this is
+   *expected* to self-resolve during kickoff week — **must be re-verified Tue 9/8.** If it
+   persists, the uncapped special-backfill is a real bug (a board with 10 correlated game-script
+   specials). Fix deferred pending the re-run.
+2. **No roster/team gate on prop candidates.** The per-game feed 4–8 days out lists players on
+   neither team — **A.J. Brown, Romeo Doubs, Rashid Shaheed landed on NE @ SEA boards.**
+   `teamName` is resolved but never used as a filter. **Fold into Phase 4:** drop a prop whose
+   `teamName` matches neither side (only when `teamName` is present). May self-clean by Tue 9/8.
+3. **`anytime_td_1q…4q` markets are posted but never become squares** (allowlist has only
+   full-game `anytime_td` + `first_td`). Early board movement rides on ~2 first-TD squares/board.
+   **Decision for Andrew / Phase 3 owner:** accept, or add quarter-scoped TD squares.
+4. **≤2 prop squares per player is by design** (shared `pickCandidateSet` cap) but the Phase 1
+   checklist says "no player on two squares." Saw Chase Brown on `first_td` + `anytime_td` at
+   once (near-perfectly correlated). Reconcile the doc or schedule a shared-function change —
+   Andrew's call (touching `pickCandidateSet` is out of scope for Phases 1/2/4).
+5. **Label length 61–63 chars** on `special` / first-TD templates — longest of any league, never
+   seen in a real 5×5 cell. **Phase 2's device pass must check these in-cell** and shorten
+   templates if they wrap/truncate.
+
+**Gates (vs Phase 0 baseline — all match):** `npx tsc --noEmit` exit 0 (after `rm -rf .next`);
+`npm run lint` exit 0; `npm run test:bingo-nfl` **257/257**; `npm run test` 1920 pass / 1 fail / 13
+skip — the 1 failure is the pre-existing `billingDiscounts` date time-bomb Phase 0 documented.
+
+**Follow-up done same day (2026-09-05), at Andrew's request — "don't wait for live data":**
+- **Historical board audit** (`scripts/audit-nfl-historical-boards.cjs`, new) over 2025 completed
+  games. Historical boards have **no player-prop squares** (`/nfl/v1/odds/player_props` is
+  live-only — hard limit, `lib/sportsBingo.ts:7959`), so this audits the 16 core/special squares +
+  settlement. **Settlement is clean** (0.6–0.9% void, 0% pending across ~1,440 graded squares);
+  prop-free boards still price into the band (0.21–0.30).
+- **Full-season backtest** `npm run bingo:simulate -- --backtest --sports americanfootball_nfl
+  --seasons 2025 --weeks 1..18 --boards 4`: **1,140 boards, realized win rate 0.2667**,
+  `inTargetBand: 1.0`, ungraded 0.64%. Matches the original plan's 0.2561 — nothing regressed.
+- **Label shortening (finding #5):** 13 `nfl_*` templates in `buildSquareLabel` shortened + an
+  NFL-only short form for the shared `spread_keep_close` label (NBA/MLB byte-identical). Max
+  label **63 → 48 chars**, p90 44 → 36 (measured over 60 historical boards). One family left at
+  43–48 (`"<Team> are held to 300 total yards or fewer."` in `lib/sportsBingoNflFlavor.ts`) —
+  deferred to a future Phase 8b flavor pass. `tests/lib.sportsBingo.nfl-prop-mix.test.ts:186`
+  updated for the `first_td` label. All gates re-run green (NFL 257/257, MLB 142/142, full
+  1920/1/13). Artifacts: `docs/phase0-artifacts/nfl-historical-board-audit-2025-weeks-1-10-18.json`,
+  and the backtest JSON in the run output.
+
+**Handoff to Phase 2:**
+- **Re-run the audit first thing on Tue 9/8** (NFL will be naturally inside the 36h window by
+  ~8:20am ET, so no lookahead edit needed):
+  `node --env-file=.env.local --conditions react-server --import tsx scripts/audit-nfl-week1-boards.cjs --games <ids from bingo:probe:nfl> --boards 6 --out <scratch>.json`.
+  Confirm findings #1 and #2 have cleared (full prop pools, on-roster players only). Also re-run
+  `npm run bingo:simulate` **on Wed 9/9 or Sun 9/13** — it will finally score NFL that day; check
+  median ∈ 20–30% and `inTargetBand` comparable to MLB's ~0.97.
+- Findings #1 and #2, if still present Tue 9/8, are **Phase 2 blockers** (parity item 1 +
+  correctness) — do not flip the flag with off-roster stars on boards or 10-special boards on the
+  Sunday slate.
+- Findings #3 and #4 are **decisions, not blockers** — surface them to Andrew as part of the
+  go/no-go, don't hold the flip on them.
+- Finding #5 (labels) is a **Phase 2 in-scope check** — it's exactly what the live browser/device
+  pass is for.
+- The audit script (`scripts/audit-nfl-week1-boards.cjs`) is new and untracked. Commit it with the
+  Phase 1 docs (audit doc + raw JSON artifact) so Phase 2 can re-run it. Its star-tier column is a
+  name-recognition proxy vs the 2025 index; trust the generator's own `[sportsBingo] nfl_star_mix`
+  log line for the real within-game tiering.
+- The NFL `current` star block is still empty (2026 season hasn't started) — star tilt runs off the
+  2025 `prior` block, by design for Week 1. Consider `npm run bingo:stars:nfl` after the first
+  Sunday slate settles so `current` starts populating (judgement call, owned by Phase 1/5).
+
 ---
 
 ### Phase 2 — Live browser + device pass, then the flag flip
@@ -201,6 +300,139 @@ throttling and the no-double-fire semantics right is the whole job.
 
 ---
 
+#### Phase 3 — AS BUILT (2026-09-05, Opus 5)
+
+**Status: DONE, and unobservable until a live NFL game.** Everything below is built, typechecked,
+linted and unit-tested, but no NFL game has been played since it shipped, so the only thing that
+can still be wrong is a live-feed assumption. **Phase 5 owns the confirmation** — see the
+"Verify this during the Phase 5 live window" checklist at the end of this section.
+
+**Files:**
+| File | Change |
+|---|---|
+| `lib/sportsBingoLiveEvents.ts` | **NEW.** Isomorphic (no `server-only`, no Supabase, no React) — imported by both the server sweep and the client board. Holds the row type, the classifier, and the snapshot-diff planner. |
+| `lib/sportsBingo.ts` | Previous-sweep state map + `broadcastNFLLiveStatDeltas`, called from the NFL branch of `refreshSportsBingoProgress`. No new provider request. |
+| `components/bingo/SportsBingoHome.tsx` | `classifyLiveDeltaEvent` and `LivePlayerStatRealtimeRow` **moved out** to the new lib (NBA/MLB logic byte-identical); added the stale-row guard and NFL square-anchoring guards. |
+| `tests/lib.sportsBingo.nfl-live-events.test.ts` | **NEW**, 20 tests. Added to the `test:bingo-nfl` script in `package.json`. |
+
+**How it works** (the NBA/MLB path is a BDL webhook; NFL has none, so the sweep *is* the heartbeat):
+
+1. `refreshSportsBingoProgress` already pulls `/nfl/v1/stats` once per game per sweep for grading.
+   Right after that memoized fetch, `broadcastNFLLiveStatDeltas` diffs the snapshot's `lines`
+   against `nflLiveStatStateByGameId` (module-level, per game, keyed by normalized player name)
+   and publishes only the **changed** players on `live-stats:americanfootball_nfl`.
+   **Zero new provider requests. `vercel.json` untouched. No cron entry added.**
+2. Rows go out in the existing `LivePlayerStatRealtimeRow` shape plus an optional `nfl` block
+   carrying the twelve NFL counters. The client subscription (channel name, game-id filter,
+   player-id filter, prev-row map) is **unchanged**.
+3. `classifyLiveDeltaEvent` takes an NFL branch **first and returns early**. This is load-bearing:
+   NFL rows put the player's own points in `pts`, and a 6-point touchdown falling through to the
+   basketball rules would fire `"3-POINTER!"` on a football board.
+
+**Event slate** (exactly what the plan specified, plus one fallback): `TD PASS!`, `RUSHING TD!`,
+`TOUCHDOWN CATCH!`, `TOUCHDOWN!` (return/defensive), `100 RUSH YARDS!`, `100 REC YARDS!`,
+`FIELD GOAL!`, `INTERCEPTION!` (caught), `PICKED OFF!` (thrown), `SACK!` — plus a
+`+N YDS` fallback at `NFL_LIVE_STAT_YARDS_POP_THRESHOLD = 25` scrimmage yards in one sweep, so a
+long drive still moves the board between scores. Max 2 pops per row per sweep.
+
+**Three semantics decisions worth knowing before you touch this:**
+
+- **Rows carry absolute totals, never deltas.** `refreshSportsBingoProgress` runs from the cron
+  *and* from every user card poll *and* from the NBA/MLB webhook, on any number of warm Fluid
+  instances that each hold their own previous-sweep map — so the same change **will** be broadcast
+  more than once. Absolute totals make the duplicate inert: the client re-derives the delta against
+  its own last-seen row, and a repeat yields all zeros. **This is the no-double-fire mechanism.**
+  If you ever change these rows to carry deltas you will get duplicate ActionPops.
+- **Out-of-order delivery is the one case totals don't fix**, so `isRegressedNflLiveStatRow` guards
+  it client-side: an instance with a stale cached snapshot can publish *older* totals after newer
+  ones, and storing that rewind as the new baseline would re-fire the same pop when the real row
+  lands. The client drops rewinding rows instead of storing them. NFL-only — an NBA/MLB webhook
+  correction downward is legitimate.
+- **No previous snapshot → no rows.** A cold instance meeting a game mid-way seeds its baseline and
+  publishes nothing, rather than replaying the whole first half as one burst.
+
+**Cost discipline:** `NFL_LIVE_STAT_BROADCAST_MAX_PER_SWEEP = 12` rows per game per sweep, ranked
+by `broadcastPriority` so the cap drops "gained 4 rushing yards", never a touchdown. One reused
+channel object (each `send()` on an unsubscribed admin channel is an HTTP POST; creating a channel
+per row would leak channel objects into a warm instance). Sends are collected and flushed with one
+`Promise.allSettled` before the sweep returns — **not** awaited inline (that would put a realtime
+round-trip between two cards' square updates) and **not** orphaned (a one-card sweep would exit
+with its POSTs still in flight and silently drop every pop).
+
+**State lifetime:** `nflLiveStatStateByGameId` is deliberately **not** cleared by
+`maybeInvalidateSportsBingoCaches`. It is delta state, not a cache of provider data — clearing it
+re-seeds, and a re-seed publishes nothing, so wiring it into invalidation would swallow exactly the
+changes it exists to detect. It self-prunes at `NFL_LIVE_STAT_STATE_TTL_MS` (6h since last touch).
+
+**Deliberately NOT done (do not treat these as oversights):**
+- **No `live_player_stats` table write.** The NBA/MLB webhooks upsert because they are the only
+  writer of that row; the NFL sweep would be writing ~40 rows per game per minute for a table
+  nothing reads on the bingo path. Broadcast only.
+- **No 300-yard passing milestone.** The plan listed 100-yard *rushing/receiving* crossings; adding
+  a passing tier is a judgement call left to whoever tunes this after seeing a real game.
+- **Quarter-scoped TD props (`anytime_td_1q…4q`)** — that is Phase 1 finding #3, still an open
+  decision for Andrew, and it is a *board-generation* change, not a live-event one.
+
+**Known limitation, by design:** a client's **first** sighting of any player is its baseline and
+pops nothing. So the very first stat change a player makes after you open the board is silent; the
+second one pops. This is the same rule NBA/MLB already live with (the client comment at
+`SportsBingoHome.tsx`'s channel-3 effect documents it), and it is why the channel must not be torn
+down on every card poll. If Phase 5 finds this too quiet in practice, the fix is a server-sent
+zero baseline row per newly-seen player — **do not** fix it by making rows carry deltas.
+
+**Gates (vs the Phase 0 baseline — all match):**
+| Gate | Result |
+|---|---|
+| `npx tsc --noEmit` | exit 0, clean (no `.next` noise this time) |
+| `npm run lint` | exit 0, clean |
+| `npm run test:bingo-nfl` | **277/277** (was 257; +20 from the new file) |
+| `npm run test:bingo-mlb` | 142/142 |
+| `npm run test:pwa-contract` | 20/20 |
+| `npm run test` | **1940 pass / 1 fail / 13 skip** — the 1 failure is still the pre-existing `tests/lib.billingDiscounts.test.ts` date time-bomb Phase 0 documented. Not ours. |
+| `npm run build` | succeeds — this is the real proof the new isomorphic module does not drag `server-only` into the client bundle. |
+
+**Verify this during the Phase 5 live window (Wed 9/9 8:20pm ET, NE @ SEA):**
+1. Grep the sweep's telemetry line for the three new fields:
+   `[sportsBingo][telemetry] … nfl_live_stat_rows / nfl_live_stat_dropped_rows / nfl_live_stat_seeded_games`.
+   Expected shape: `seeded_games` 1 on the first sweep that sees the game and 0 after;
+   `rows` in the 3–12 range during live play, 0 between drives; `dropped_rows` usually 0. A
+   persistently-capped `dropped_rows` means 12 is too low for a real slate — raise
+   `NFL_LIVE_STAT_BROADCAST_MAX_PER_SWEEP`, don't remove the cap.
+2. Watch an open board on a phone through a scoring drive and confirm a pop actually lands, and
+   that it lands on a *sensible square* (the `findRelevantSquareForEvent` guards added here are the
+   untested-in-anger part: "SACK!" must not anchor to that same player's receiving-yards square).
+3. Confirm the **pace**. One sweep per minute means pops arrive in clumps, up to ~60s behind the
+   TV. If that reads as broken rather than delayed, that is a real finding — record it; the fix is
+   *not* a new cron (hard boundary), it is either accepting the lag or narrowing what pops.
+4. Sanity-check the field mapping against a real box score: `otherTouchdowns` is the sum of
+   kick-return + punt-return + interception + fumble TDs, and `defensiveSacks`/
+   `defensiveInterceptions` are the defender's own columns. If BDL's live NFL rows name any of
+   these differently mid-game than they do at Final, the pops for that family simply never fire —
+   a silent failure, so check it explicitly rather than assuming.
+
+**Handoff to Phase 4 (inactives and late scratches — Sonnet 5, ~half day):**
+- **Nothing from Phase 3 blocks Phase 4.** They touch disjoint code: Phase 4 lives in
+  `buildNFLPlayerPropCandidates` (pre-generation) and a new NFL sibling of
+  `autoSwapLateScratchedStarSquares` (post-lock), neither of which Phase 3 went near.
+- **One overlap to exploit:** Phase 4's post-lock swap needs "is this player actually playing?",
+  and the sweep now already holds a per-game map of who has appeared in the box score
+  (`nflLiveStatStateByGameId`). Do **not** repurpose that map as the inactives source — it is
+  delta state with a 6h TTL and it cannot distinguish "inactive" from "hasn't touched the ball
+  yet". Use `/nfl/v1/player_injuries` as the plan specifies. It is mentioned here only so you do
+  not think it is already solved.
+- **Also fold in Phase 1 finding #2** (the plan already assigns it to Phase 4): drop a prop
+  candidate whose `teamName` matches neither side of the game, *only when `teamName` is present*.
+  A.J. Brown, Romeo Doubs and Rashid Shaheed landed on NE @ SEA boards on 2026-09-05.
+- **Working tree state when Phase 3 finished:** Phase 1's changes are still **uncommitted** —
+  `lib/sportsBingo.ts` label shortening, `tests/lib.sportsBingo.nfl-prop-mix.test.ts`, the audit
+  doc, the two `scripts/audit-nfl-*.cjs` and the three `docs/phase0-artifacts/*.json`. Phase 3's
+  files sit on top of them in the same working tree. If you commit, either commit Phase 1 and
+  Phase 3 as two commits or say plainly in the message that it is both.
+- **Gate commands for Phase 4** are unchanged, but `npm run test:bingo-nfl` is now **277**, not
+  257 — do not treat the higher number as a regression.
+
+---
+
 ### Phase 4 — Inactives and late scratches
 **Model: Sonnet 5 · Effort: medium (~half day).**
 
@@ -216,6 +448,140 @@ square on a 24-square board is a quarter of a line gone.
   replacement, with the same notification path MLB uses.
 - Void stays the safety net for everything the swap misses; never settle a scratched player `miss`.
 - Tests: mirror `tests/lib.sportsBingo.missing-data-voids.test.ts` for NFL, plus a swap test.
+
+#### Phase 4 — AS BUILT (2026-09-05, Sonnet 5)
+
+**Status: DONE. Unobservable until a real NFL game / a real injury report matters — the pieces
+are typechecked, linted and unit-tested (12 new tests), but no board has been generated against a
+live `/nfl/v1/player_injuries` pull and no late scratch has been swapped in anger. Phase 5 owns
+the live confirmation — see the checklist at the end of this section.**
+
+**Live feed shape (probed 2026-09-05, `node --env-file=.env.local` one-off):** `/nfl/v1/player_injuries`
+returns `{ data: [{ player: { id, first_name, last_name, position, team }, status, comment, date }],
+meta: { next_cursor } }`. 334 rows league-wide, ~4 pages at `per_page=100`. Distinct `status`
+values seen: `Questionable` 196, `IR` 71, `PUP-P` 40, `NFI-A` 8, `Reserve-Sus` 7, `Out` 5,
+`PUP-R` 4, `NFI-R` 2, `Reserve-DNR` 1. No `Doubtful` posted this far out, but it is in BDL's
+vocabulary. **Both feeds are BDL, so `player.id` on an injury row joins cleanly to `playerId` on a
+prop market — the match is on the integer, name-key is only the fallback.**
+
+**Files:**
+| File | Change |
+|---|---|
+| `lib/sportsBingoNflInjuries.ts` | **NEW.** `server-only`. Holds `fetchNFLPlayerInjuries`, `buildNFLInjuryIndex` (pure), `isNFLPlayerInactive` (pure), `isInactiveNFLInjuryStatus` (pure), `resolveNFLInjuryIndex` (24h process cache, injectable fetch, `maxStalenessMs` param), the status allow-list, and `__resetNFLInjuryIndexCacheForTests`. Mirrors `lib/sportsBingoNflStars.ts`'s cache/fallback shape line for line. |
+| `lib/sportsBingo.ts` | Import block; `NFL_LATE_SCRATCH_SWAP_WINDOW_MS` (150 min, env `BINGO_NFL_LATE_SCRATCH_WINDOW_MS`); `filterNFLPropMarketsForEligibility` (pre-generation drop + safety valve) wired into `buildNFLPlayerPropCandidates` (new 4th arg `injuryIndex`); `resolveNFLInjuryIndex()` call added in `getGameEntryWithCandidates`'s NFL branch; `isNflLateScratchWindow`, `nflPropResolverPlayerRef`, exported `planNFLInactivePropSwaps` (pure) + `NFLInactivePropSwap` type, `autoSwapInactiveNFLPropSquares` (the DB applier); one `resolveNFLInjuryIndex({ maxStalenessMs: 10min })` pull per sweep + the `autoSwapInactiveNFLPropSquares` call in the NFL branch of `refreshSportsBingoProgress`; `nfl_inactive_swaps` telemetry field. |
+| `tests/lib.sportsBingo.nfl-inactives.test.ts` | **NEW**, 12 tests. Added to `test:bingo-nfl` in `package.json`. |
+
+**Pre-generation filter — what actually ships:**
+- `filterNFLPropMarketsForEligibility(game, markets, injuryIndex)` runs before `buildNFLStarScoresByPlayerId`,
+  so an inactive star is not even scored for tilt. It drops a market when **either**:
+  1. **Phase 1 finding #2** — `market.teamName` is non-empty and `teamsMatch` says it is neither
+     side of this game (A.J. Brown / Romeo Doubs / Rashid Shaheed on NE @ SEA). An **absent**
+     `teamName` is not a signal and is kept — same rule the plan states.
+  2. **Injury** — `isNFLPlayerInactive(injuryIndex, market.playerId, market.playerName)` is true.
+- **Inactive status allow-list** (`NFL_INACTIVE_INJURY_STATUSES` in `lib/sportsBingoNflInjuries.ts`):
+  `out`, `doubtful`, `ir` (+ `injured reserve` / `injured-reserve`), `pup-r`, `nfi-r`,
+  `reserve-sus`, `reserve-dnr`, `reserve-ret`. **This is wider than the plan's literal "Out / IR /
+  Doubtful".** Rationale: `PUP-R` / `NFI-R` are the *regular-season* reserve lists (a player on
+  either cannot play for ≥4 weeks); `Reserve-Sus/DNR/Ret` are not injuries but the same board
+  outcome. **`PUP-P`, `NFI-A` and `Questionable` are deliberately NOT on the list** — those
+  players can and routinely do play. If Andrew wants the strict three, delete the four extra
+  entries; nothing else changes. Settlement's void still backstops any status not on the list.
+- **Safety valve:** if the two filters would empty a **non-empty** market pool (a team-name
+  format mismatch nuking every market, or a freak fully-injured slate), the raw markets are
+  returned and a `nfl_prop_eligibility_all_dropped` warning is logged. A board never ships with
+  zero props because of this filter.
+- **Telemetry:** `[sportsBingo] nfl_prop_eligibility { markets, eligible, dropped_off_roster, dropped_inactive }`
+  is logged per game whenever anything was dropped.
+- **Cost:** one `/nfl/v1/player_injuries` pull per 24h per warm instance, shared across the whole
+  slate (process-cached in `resolveNFLInjuryIndex`, not per game). A feed failure → empty index
+  with `failed: true` → filter is a no-op, 5-minute negative TTL. `vercel.json` untouched, no
+  cron added.
+
+**Post-lock swap — what actually ships:**
+- `planNFLInactivePropSwaps({ card, squares, injuryIndex, nowMs? })` is **pure and exported** —
+  the swap *decision* is unit-testable with no Supabase double. `autoSwapInactiveNFLPropSquares`
+  is the thin DB applier that runs the plan's `sports_bingo_squares` updates.
+- **Window:** `isNflLateScratchWindow` = MLB's exact two-clause logic (`inGameWindow` ±150 min of
+  `starts_at`, `inLockWindow` 0..+150 min after `created_at`), just a wider constant because NFL
+  inactives post ~90 min before kickoff vs MLB's ~30.
+- **What gets swapped:** a `pending`, non-free square whose resolver is `player_prop`,
+  `nfl_player_anytime_td` or `nfl_player_first_td` **and** whose player `isNFLPlayerInactive` per
+  the injury index. (The swap fn is only called on `sport_key === "americanfootball_nfl"` cards,
+  so touching the shared `player_prop` kind here is safe.)
+- **Replacement:** a fixed `{ kind: "nfl_both_teams_score_at_least", threshold: 17 }` — a live
+  whole-game square with **no box-score or roster dependency**, so it resolves through the game
+  and can never re-hit the same DNP wall. The square **keeps its own priced probability**
+  (clamped 0.25–0.75), unlike MLB which hardcodes 0.46 — this keeps the card's stored
+  `board_probability` coherent without a re-model.
+- **"Same notification path MLB uses" = none.** `autoSwapLateScratchedStarSquares` sends no
+  user notification (just the row update); this mirrors that exactly. If a notification is
+  wanted, it belongs on *both* leagues, in a follow-up.
+- **Known limitations, by design (do not treat as bugs):**
+  - Two scratched players on one board both swap to the identical "both teams score 17+"
+    square. Same limitation MLB carries (all → team-HR). Rare; accepted.
+  - The swap uses `Date.now()` inside the sweep. The injury index it reads is refreshed at most
+    every ~10 min (`NFL_INJURY_INDEX_LIVE_STALENESS_MS`), so a scratch that posts 90 min out is
+    caught within ~10 min, not instantly.
+  - `resolveNFLInjuryIndex` is a **module-level** cache. In tests, `vi.resetModules()` clears it;
+    `__resetNFLInjuryIndexCacheForTests()` is there if a test needs it without a full reset.
+
+**Deliberately NOT done:**
+- **No `/nfl/v1/player_injuries` probe script committed.** The probe was a throwaway one-off; the
+  shape is recorded above. Add one to `scripts/` only if Phase 5/6 needs repeatable status-vocab
+  monitoring.
+- **No env flag.** This follows the star-index precedent (no flag) rather than the activation
+  flag precedent. It is inert until `NEXT_PUBLIC_BINGO_NFL_ENABLED` is on anyway, and a feed
+  failure already degrades to a no-op. `BINGO_NFL_INJURY_INDEX_CACHE_MS` and
+  `BINGO_NFL_LATE_SCRATCH_WINDOW_MS` are the only new tunables.
+- **No swap for NBA/WNBA.** Out of scope; the plan is NFL-only and the shared `player_prop` path
+  is untouched for other leagues.
+
+**Gates (vs the Phase 0 baseline — all match):**
+| Gate | Result |
+|---|---|
+| `npx tsc --noEmit` | exit 0, clean (after `rm -rf .next`) |
+| `npm run lint` | exit 0, clean |
+| `npm run test:bingo-nfl` | **289/289** (was 277; +12 from the new file) |
+| `npm run test:bingo-mlb` | 142/142 |
+| `npm run test` | **1952 pass / 1 fail / 13 skip** — the 1 failure is still the pre-existing `tests/lib.billingDiscounts.test.ts` date time-bomb Phase 0 documented. Not ours (confirmed: it fails on a clean stash of these changes). |
+
+**Verify during the Phase 5 live window (Wed 9/9 8:20pm ET, NE @ SEA; Sun 9/13 slate):**
+1. **Pre-generation, Sun 9/13 morning:** after inactives post (~90 min before the 1pm games),
+   regenerate a board for a game with a known inactive skill player and confirm no square carries
+   that player. Grep the generation logs for `[sportsBingo] nfl_prop_eligibility` — `dropped_inactive`
+   should be non-zero on at least one Sunday game. If it is always 0, the id join is broken (check
+   that `market.playerId` and the injury row's `player.id` are the same integer space).
+2. **Status vocab:** re-pull `/nfl/v1/player_injuries` on game day and diff the distinct `status`
+   set against the list recorded above. A **new** season-ending code (BDL adds them occasionally)
+   would silently fall through to "active" — add it to `NFL_INACTIVE_INJURY_STATUSES`. `Doubtful`
+   in particular has never been seen live yet; confirm it grades as inactive when it first appears.
+3. **Post-lock swap:** this only fires if a player with a prop square on a live card is ruled out
+   **inside 150 min of kickoff**. It may simply not happen Week 1. If it does, grep the sweep
+   telemetry for `nfl_inactive_swaps` > 0 and confirm the swapped square shows "both teams score
+   at least 17 points" on the board, still `pending`, and that it resolves normally through the
+   game. If `nfl_inactive_swaps` is stuck > 0 every sweep for the same card, the DB update is not
+   sticking (the square keeps matching the plan) — check the `sports_bingo_squares` write.
+4. **Safety valve:** if any Sunday game logs `nfl_prop_eligibility_all_dropped`, the `teamsMatch`
+   call is failing on that game's team-name format — the board still shipped (raw markets kept),
+   but the finding #2 filter is dead for that game. Record the team-name strings involved.
+5. **Windows math:** `NFL_LATE_SCRATCH_SWAP_WINDOW_MS` is 150 min. Thursday/Monday nighters and
+   the Sunday 1pm/4pm/8pm waves all differ; confirm the window actually covers "inactives posted →
+   first sweep after kickoff" for at least the Sunday 1pm wave.
+
+**Handoff to Phase 6 (realized calibration, after Week 3):**
+- Add an **injury-family check** to the calibration pass: how many boards had a square dropped
+  pre-generation vs how many still voided at settlement for a DNP. If void rate on prop squares
+  is materially down from Phase 1's 0.6–0.9%, the pre-filter is doing its job; if it is
+  unchanged, the filter is not matching (see Phase 5 check #1).
+- `NFL_INJURY_INDEX_LIVE_STALENESS_MS` (10 min) and `NFL_LATE_SCRATCH_SWAP_WINDOW_MS` (150 min)
+  are un-evidenced guesses — Phase 5's window observations should confirm or retune them.
+
+**Working tree when Phase 4 finished:** Phase 1's changes (`lib/sportsBingo.ts` label
+shortening, `tests/lib.sportsBingo.nfl-prop-mix.test.ts`, the audit doc, the two
+`scripts/audit-nfl-*.cjs`, the three `docs/phase0-artifacts/*.json`) and Phase 3's files are
+**still uncommitted** and Phase 4's changes sit on top of them in the same working tree. If you
+commit, either split Phase 1 / Phase 3 / Phase 4 into separate commits or say plainly in the
+message that it is all three. `npm run test:bingo-nfl` is now **289**, not 277 — not a regression.
 
 ---
 
@@ -266,6 +632,43 @@ the first real check, and the instrument already exists.
   describes settlement as webhook-driven, which is not true for NFL.
 - Add the NFL activation + rollback line to a run log, and record the flag state in
   `docs/prop-bingo-nfl-plan.md`'s header so it stops saying NFL is dark.
+
+#### Phase 7 — PARTIAL (2026-09-05, Sonnet 5) — the calendar-independent slice
+
+Done ahead of the flip because neither item depends on it:
+
+- **`SYSTEM_CONTEXT.md` §Sports Bingo updated.** Now says NFL boards are built but flag-gated
+  (`isNflGameplayEnabled()`), lists the NFL resolver families, and — the substantive correction —
+  states that **NFL has no BallDontLie webhook**, so every NFL square (grading, settlement, the
+  `live-stats:americanfootball_nfl` ActionPop broadcast, injury filtering, late-scratch swap) is
+  driven by the 1-minute `/api/cron/bingo-progress` sweep, not a webhook.
+
+**Star-index refresh cadence — proposal for Andrew (not executed; `vercel.json` is a hard boundary):**
+
+The obligation is now `npm run bingo:stars:nfl` **and** `npm run bingo:stars:mlb`, and it has
+lapsed once already (Phase 0). The 24h live cache (`resolveNFLStarIndex` / `resolveMLBStarIndex`)
+means the *product* is correct without any refresh — the committed snapshot is a diff artifact and
+a staleness tripwire input, never a runtime fallback. So the only thing a lapsed refresh breaks is
+CI (the freshness tripwires go red at 14 days), which is exactly what caught it last time.
+
+Three options, cheapest first:
+
+1. **Do nothing structural; let the tripwire be the reminder.** It already works — the 14-day
+   `NFL_STAR_INDEX_SNAPSHOT_MAX_AGE_DAYS` / MLB equivalent fail the build and force the refresh.
+   Cost: whoever hits the red build eats a ~10-minute detour. This is the status quo.
+2. **A standing weekly reminder** (calendar / Linear recurring / `/schedule` routine) to run both
+   `bingo:stars:*` scripts and commit. Keeps the snapshots fresh enough that the tripwire never
+   fires, no infra change. Recommended if the red-build detour is judged annoying.
+3. **A cron** (`/api/cron/bingo-star-index-refresh`, weekly) that re-pulls both indexes and opens a
+   PR with the regenerated snapshots. This needs a `vercel.json` cron entry — **Andrew's call
+   only**, and it is more machinery than a once-a-week manual script warrants given option 1
+   already prevents silent staleness.
+
+**Recommendation:** option 2. The tripwire (option 1) is the real safety net; a weekly reminder
+just avoids the annoyance of discovering it via a failed build.
+
+**Still blocked on the flip (do after Phase 2):** the run-log activation + rollback line, and
+flipping `docs/prop-bingo-nfl-plan.md`'s header off "NFL is dark".
 
 ---
 

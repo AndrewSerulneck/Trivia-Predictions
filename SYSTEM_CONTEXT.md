@@ -114,11 +114,17 @@ Before this, Back had 10 implementations across 5 visual treatments, Next had 2,
 
 ### Sports Bingo
 - Players mark off bingo squares based on real sports events tied to live NBA, WNBA, and MLB games.
+  **NFL boards are fully built but flag-gated off** (`NEXT_PUBLIC_BINGO_NFL_ENABLED`, single reader
+  `isNflGameplayEnabled()` in `lib/leagueSeasonStatus.ts`) pending the activation pass in
+  `docs/prop-bingo-nfl-activation-plan.md`. Off = NFL never appears in the picker, fully inert.
 - Each square has a `resolver` — a typed rule that defines what must happen for the square to be marked hit or miss. Resolver types include:
   - **NBA/WNBA player stat milestones:** e.g. "LeBron scores 25+ points" (`nba_player_stat_at_least`)
   - **NBA/WNBA team stats:** e.g. "team outrebounds opponent", "team scores first", "leads at halftime"
   - **NBA/WNBA player achievements:** double-double, triple-double, perfect FT, zero turnovers, etc.
   - **MLB webhook events:** batter/pitcher prop events delivered in real time (e.g. home run, strikeout)
+  - **NFL:** market-derived core ladder (moneyline/spread/total/team-total), quarter/half specials,
+    star-tilted player props (`player_prop`, `nfl_player_anytime_td`, `nfl_player_first_td`),
+    play-by-play squares, and flavor/team-stat squares. See `docs/prop-bingo-nfl-plan.md`.
   - **Moneyline / spread / game total / team total / player prop:** settled when game is final
 - Squares resolve to `hit`, `miss`, or remain `pending` during live play.
 
@@ -128,6 +134,13 @@ Before this, Back had 10 implementations across 5 visual treatments, Next had 2,
 - `refreshSportsBingoProgress()` is called after every webhook event (with throttled invalidation) to push updated state to clients.
 - Fallback: `/api/cron/bingo-progress` runs every 1 minute.
 - Squares that depend on game outcome (moneyline, spread, totals) are resolved when the game-final event arrives via webhook, triggering `refreshSportsBingoProgress({ limit: 500, bypassCache: true })`.
+- **NFL has no BallDontLie webhook surface** — there is no `/api/webhooks/balldontlie` path for NFL.
+  Every NFL square (grading, settlement, and the `live-stats:americanfootball_nfl` ActionPop
+  broadcast) is driven entirely by the 1-minute `/api/cron/bingo-progress` sweep polling
+  `/nfl/v1/stats`. Late-scratch handling is also sweep-driven: `resolveNFLInjuryIndex`
+  (`/nfl/v1/player_injuries`, 24h-cached) filters inactive players out of board generation, and
+  `autoSwapInactiveNFLPropSquares` swaps a prop square inside the kickoff window if its player is
+  ruled out (mirrors MLB's `autoSwapLateScratchedStarSquares`).
 
 ### Pick'Em
 - Users select the winner from a list of that day's games across one or more sports.

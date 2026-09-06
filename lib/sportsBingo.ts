@@ -1,6 +1,7 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import {
   fetchBallDontLieList,
@@ -78,6 +79,17 @@ import {
   type NFLPlayerStatField,
   type NFLTeamStatField,
 } from "@/lib/sportsBingoNflFlavor";
+import {
+  buildNflLiveStatBroadcastPlan,
+  NFL_LIVE_STAT_SPORT_KEY,
+  type NflLiveStatTotals,
+} from "@/lib/sportsBingoLiveEvents";
+import {
+  isNFLPlayerInactive,
+  resolveNFLInjuryIndex,
+  NFL_INJURY_INDEX_LIVE_STALENESS_MS,
+  type NFLInjuryIndex,
+} from "@/lib/sportsBingoNflInjuries";
 
 const DEFAULT_SPORT_KEY = "basketball_nba";
 const BINGO_REWARD_POINTS = Number.parseInt(process.env.BINGO_REWARD_POINTS ?? "50", 10);
@@ -167,6 +179,13 @@ export const NBA_PLAYER_STATS_CACHE_MS = 5_000;
  */
 export const NBA_PLAYER_STATS_FAILURE_CACHE_MS = 1_000;
 /**
+ * Phase 3 of docs/prop-bingo-nfl-activation-plan.md — how long an NFL game's previous-sweep box
+ * score is kept in memory after the last sweep that touched it. Long enough that a quiet stretch
+ * (a long injury timeout, halftime) never loses the baseline; short enough that a finished Sunday
+ * slate is not still resident when the Monday night game starts.
+ */
+const NFL_LIVE_STAT_STATE_TTL_MS = 6 * 60 * 60 * 1_000;
+/**
  * `/nfl/v1/plays` caps `per_page` at 100 and a regulation game runs ~150-180 plays, so four pages
  * covers a long overtime game with headroom while still bounding the walk — this runs on a
  * 1-minute cron against a paid provider (plan handoff note 9).
@@ -185,6 +204,13 @@ const MLB_LATE_SCRATCH_SWAP_WINDOW_MS_RAW = Number.parseInt(process.env.BINGO_ML
 const MLB_LATE_SCRATCH_SWAP_WINDOW_MS = Number.isFinite(MLB_LATE_SCRATCH_SWAP_WINDOW_MS_RAW)
   ? Math.max(60_000, MLB_LATE_SCRATCH_SWAP_WINDOW_MS_RAW)
   : 1_800_000;
+// NFL inactives post ~90 minutes before kickoff, so the late-scratch swap window opens wider than
+// MLB's 30 minutes — default 150 minutes either side of the start (and the same span after card
+// creation, mirroring MLB's `inLockWindow`).
+const NFL_LATE_SCRATCH_SWAP_WINDOW_MS_RAW = Number.parseInt(process.env.BINGO_NFL_LATE_SCRATCH_WINDOW_MS ?? "9000000", 10);
+const NFL_LATE_SCRATCH_SWAP_WINDOW_MS = Number.isFinite(NFL_LATE_SCRATCH_SWAP_WINDOW_MS_RAW)
+  ? Math.max(60_000, NFL_LATE_SCRATCH_SWAP_WINDOW_MS_RAW)
+  : 9_000_000;
 const wnbaConfigNumber = (raw: string | undefined, fallback: number): number => {
   const parsed = Number.parseFloat(raw ?? "");
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -1218,6 +1244,20 @@ let nflGameStatsCache = new Map<
   { expiresAt: number; includedPlays: boolean; includedTeamStats: boolean; snapshot: NFLGameStatsSnapshot | null }
 >();
 let nbaPlayerProfilesCache = new Map<string, { expiresAt: number; profiles: NBAPlayerProfile[] }>();
+/**
+ * Phase 3 of docs/prop-bingo-nfl-activation-plan.md — the previous sweep's NFL box score, per game,
+ * keyed by normalized player name. This is **not** a cache of provider data and
+ * `maybeInvalidateSportsBingoCaches` deliberately does not clear it: dropping it re-seeds the
+ * baseline, and a re-seed publishes nothing (see `buildNflLiveStatBroadcastPlan`), so clearing it
+ * on every `bypassCache: true` call would swallow exactly the stat changes it exists to detect.
+ *
+ * `expiresAt` is only about memory: an entry is dropped once no sweep has touched it for
+ * `NFL_LIVE_STAT_STATE_TTL_MS`, which for a finished game is a few minutes after the final whistle.
+ */
+let nflLiveStatStateByGameId = new Map<
+  string,
+  { touchedAt: number; byPlayerKey: Map<string, NflLiveStatTotals> }
+>();
 let cacheInvalidatedAtByScope = new Map<string, number>();
 const cacheTelemetry = {
   scoreCacheHits: 0,
@@ -2000,6 +2040,11 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
       return `${team} win by ${formatLine(resolver.line)}+ ${unit}.`;
     }
     case "spread_keep_close": {
+      // The predicate (final margin < line) is symmetric, so the team name is noise. NFL keeps the
+      // short form for the 5×5 mobile grid; NBA/MLB stay byte-identical to their shipped label.
+      if (game.sportKey === "americanfootball_nfl") {
+        return `Final margin under ${formatLine(resolver.line)} points.`;
+      }
       const team = teamForSide(resolver.team);
       const unit = game.sportKey === "baseball_mlb" ? "runs" : "points";
       return `${team} win or lose by less than ${formatLine(resolver.line)} ${unit}.`;
@@ -2151,7 +2196,7 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
     case "nfl_player_anytime_td":
       return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player} scores a touchdown.`;
     case "nfl_player_first_td":
-      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player} scores the game's first touchdown.`;
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player} scores the game's first TD.`;
     case "nfl_team_scores_every_quarter":
       return `${teamForSide(resolver.team)} score in all four quarters.`;
     case "nfl_team_shutout_quarter":
@@ -2173,13 +2218,13 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
     case "nfl_margin_at_least":
       return `Final margin: ${formatLine(resolver.line)} points or more.`;
     case "nfl_second_half_higher_scoring":
-      return "The second half outscores the first half.";
+      return "The 2nd half outscores the 1st.";
     case "nfl_first_score_is_field_goal":
-      return "The game's first score is a field goal.";
+      return "The first score is a field goal.";
     case "nfl_first_scorer_wins":
-      return "The team that scores first wins the game.";
+      return "The first team to score wins.";
     case "nfl_non_offensive_touchdown":
-      return "A defensive or special-teams touchdown is scored.";
+      return "A defensive or special-teams TD.";
     case "nfl_fourth_down_conversion":
       return "Either team converts a fourth down.";
     case "nfl_long_touchdown":
@@ -2197,13 +2242,11 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
     case "nfl_combined_team_stat_at_most":
       return describeNFLCombinedTeamStat(resolver.field, resolver.threshold, "at_most");
     case "nfl_team_perfect_red_zone":
-      return `${teamForSide(resolver.team)} score a touchdown on every red-zone trip (${formatLine(
-        resolver.minTrips
-      )}+ trips).`;
+      return `${teamForSide(resolver.team)}: a TD on every red-zone trip.`;
     case "nfl_team_red_zone_trip_without_touchdown":
-      return `${teamForSide(resolver.team)} leave a red-zone trip without a touchdown.`;
+      return `${teamForSide(resolver.team)}: a red-zone trip with no TD.`;
     case "nfl_team_possession_advantage":
-      return `${teamForSide(resolver.team)} win time of possession by ${Math.round(resolver.seconds / 60)}+ minutes.`;
+      return `${teamForSide(resolver.team)}: ${Math.round(resolver.seconds / 60)}+ min possession edge.`;
     case "nfl_game_max_stat_at_least":
       return describeNFLPlayerStatMax(resolver.field, resolver.threshold, resolver.scope);
     case "nfl_game_total_stat_at_least":
@@ -2213,19 +2256,19 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
     case "nfl_non_quarterback_pass_attempt":
       return "A non-quarterback throws a pass.";
     case "nfl_first_score_within_minutes":
-      return `The first score comes inside the opening ${formatLine(resolver.minutes)} minutes.`;
+      return `First score inside the opening ${formatLine(resolver.minutes)} min.`;
     case "nfl_score_in_final_minutes":
       return resolver.segment === "first_half"
-        ? `Someone scores in the final ${formatLine(resolver.minutes)} minute${resolver.minutes === 1 ? "" : "s"} of the first half.`
-        : `Someone scores in the final ${formatLine(resolver.minutes)} minute${resolver.minutes === 1 ? "" : "s"} of the fourth quarter.`;
+        ? `A score in the last ${formatLine(resolver.minutes)} min of the half.`
+        : `A score in the last ${formatLine(resolver.minutes)} min of Q4.`;
     case "nfl_both_teams_lead":
       return "Both teams lead at some point.";
     case "nfl_lead_change_second_half":
-      return "There is a lead change in the second half.";
+      return "A lead change in the second half.";
     case "nfl_tied_after_halftime":
-      return "The game is tied at some point after halftime.";
+      return "The game is tied after halftime.";
     case "nfl_winner_trailed_in_fourth":
-      return "The winning team trailed in the fourth quarter.";
+      return "The winner trailed in the 4th quarter.";
     case "nfl_two_point_conversion":
       return "A two-point conversion is good.";
     case "nfl_safety":
@@ -3584,6 +3627,91 @@ async function getNFLGameStatsSnapshot(
 }
 
 /**
+ * Phase 3 of docs/prop-bingo-nfl-activation-plan.md — the `live-stats:americanfootball_nfl` channel.
+ *
+ * Reused across sends rather than created per send. `supabaseAdmin.channel(name)` registers a new
+ * channel object on the client every time it is called, and a `send()` on an unsubscribed channel
+ * is an HTTP POST to the realtime broadcast endpoint — so creating one per row would leak channel
+ * objects into a warm Fluid instance for no gain.
+ */
+let nflLiveStatsChannel: RealtimeChannel | null = null;
+
+function getNFLLiveStatsChannel(): RealtimeChannel | null {
+  if (!supabaseAdmin) {
+    return null;
+  }
+  if (!nflLiveStatsChannel) {
+    nflLiveStatsChannel = supabaseAdmin.channel(`live-stats:${NFL_LIVE_STAT_SPORT_KEY}`);
+  }
+  return nflLiveStatsChannel;
+}
+
+/**
+ * `game_status` for a broadcast row. The client only ever displays it, so this stays coarse and
+ * derives entirely from the snapshot we already hold — it must not cost a request.
+ */
+function nflLiveGameStatusLabel(snapshot: NFLGameStatsSnapshot): string {
+  if (snapshot.finalized) {
+    return "Final";
+  }
+  if (snapshot.quarters.quartersCompleted > 0 || snapshot.lines.length > 0) {
+    return "In Progress";
+  }
+  return "Scheduled";
+}
+
+/**
+ * Publish this game's changed player lines onto `live-stats:americanfootball_nfl`.
+ *
+ * This is the whole of NFL's live-event parity: BDL ships no NFL webhook, so the 1-minute sweep's
+ * own `/nfl/v1/stats` pull is the heartbeat. **No new request is made here** — the snapshot is the
+ * one the sweep already fetched and memoized for grading. Call it at most once per game per sweep.
+ *
+ * Sends are never awaited inline — that would put a realtime round-trip between two cards' square
+ * updates — but they are *not* orphaned either: the promises are handed back so the sweep can
+ * settle them all once before returning. A serverless invocation that returns with fetches still
+ * in flight can have them cut off, which on a one-card sweep would silently drop every pop.
+ * Failures are swallowed on purpose: the sweep's job is to settle squares, and a lost broadcast
+ * costs one celebration while the next sweep re-diffs from the same stored baseline.
+ */
+function broadcastNFLLiveStatDeltas(
+  card: SportsBingoCardRow,
+  snapshot: NFLGameStatsSnapshot
+): { broadcastRows: number; droppedRows: number; seeded: boolean; sends: Array<Promise<unknown>> } {
+  const now = Date.now();
+  for (const [gameId, state] of nflLiveStatStateByGameId) {
+    if (now - state.touchedAt > NFL_LIVE_STAT_STATE_TTL_MS) {
+      nflLiveStatStateByGameId.delete(gameId);
+    }
+  }
+
+  const existing = nflLiveStatStateByGameId.get(card.game_id) ?? null;
+  const plan = buildNflLiveStatBroadcastPlan({
+    gameId: card.game_id,
+    gameStatus: nflLiveGameStatusLabel(snapshot),
+    lines: snapshot.lines,
+    previousByPlayerKey: existing?.byPlayerKey ?? null,
+  });
+  nflLiveStatStateByGameId.set(card.game_id, { touchedAt: now, byPlayerKey: plan.nextByPlayerKey });
+
+  const sends: Array<Promise<unknown>> = [];
+  if (plan.rows.length > 0) {
+    const channel = getNFLLiveStatsChannel();
+    if (channel) {
+      for (const row of plan.rows) {
+        sends.push(
+          channel.send({ type: "broadcast", event: "stat_update", payload: row }).catch(() => {
+            // See the doc comment: a lost broadcast costs a celebration, never a settlement.
+          })
+        );
+      }
+    }
+  }
+
+  return { broadcastRows: plan.rows.length, droppedRows: plan.droppedRows, seeded: !existing, sends };
+}
+
+/**
  * Last-resort fuzzy name match: same last name, and a first name that matches or shares an initial
  * (so the gamebook's "A.Brown" still finds "A.J. Brown"). Factored out here rather than reusing the
  * NBA/MLB copies of this block, which are entangled with their own `pickLikeliest*` reducers.
@@ -4349,7 +4477,17 @@ async function getGameEntryWithCandidates(params: {
     // failure degrades to empty maps, which is the same market-attention-only fallback Phase 9b
     // shipped when this argument was still `null`.
     const nflStarIndex = await resolveNFLStarIndex();
-    const nflPropCandidates = buildNFLPlayerPropCandidates(entry.game, nflPropMarkets, nflStarIndex);
+    // Phase 4: drop props for players the injury feed lists as not playing this week, before the
+    // board is assembled. 24h-cached process-wide (see lib/sportsBingoNflInjuries.ts), so a full
+    // Sunday slate shares one `/nfl/v1/player_injuries` pull; a feed failure degrades to "no
+    // signal" and settlement's void still covers a scratch that slips through.
+    const nflInjuryIndex = await resolveNFLInjuryIndex();
+    const nflPropCandidates = buildNFLPlayerPropCandidates(
+      entry.game,
+      nflPropMarkets,
+      nflStarIndex,
+      nflInjuryIndex
+    );
     if (nflPropCandidates.length > 0) {
       merged = aggregateCandidates([...merged, ...nflPropCandidates]);
     }
@@ -6300,15 +6438,74 @@ function buildNFLStarScoresByPlayerId(
  * odds. MLB's raw-implied path carries the book's hold and therefore overstates every square; that
  * is a real pre-existing calibration bug, deliberately not copied here.
  */
+/**
+ * Phase 4 (docs/prop-bingo-nfl-activation-plan.md) + Phase 1 finding #2 — drop a posted market
+ * before it can become a square when either:
+ *   - the provider's `teamName` is present and matches neither side of this game (the player is on
+ *     some other roster — A.J. Brown, Romeo Doubs and Rashid Shaheed all landed on NE @ SEA boards
+ *     on 2026-09-05 for exactly this). An absent `teamName` is not a signal, so it is kept.
+ *   - the injury feed lists the player Out / Doubtful / IR / season-reserve (`isNFLPlayerInactive`).
+ *
+ * Both are pre-board hygiene. Settlement still voids anything that slips past this, never misses.
+ * Safety valve: if the filters would empty a non-empty pool (a team-name format mismatch, or a
+ * freak fully-injured slate), the raw markets are returned rather than shipping a propless board.
+ */
+function filterNFLPropMarketsForEligibility(
+  game: SportsBingoGame,
+  markets: NFLPlayerPropMarket[],
+  injuryIndex: NFLInjuryIndex | null
+): NFLPlayerPropMarket[] {
+  const eligible: NFLPlayerPropMarket[] = [];
+  let droppedOffRoster = 0;
+  let droppedInactive = 0;
+  for (const market of markets) {
+    if (
+      market.teamName &&
+      !teamsMatch(market.teamName, game.homeTeam) &&
+      !teamsMatch(market.teamName, game.awayTeam)
+    ) {
+      droppedOffRoster += 1;
+      continue;
+    }
+    if (injuryIndex && isNFLPlayerInactive(injuryIndex, market.playerId, market.playerName)) {
+      droppedInactive += 1;
+      continue;
+    }
+    eligible.push(market);
+  }
+
+  if (eligible.length === 0 && markets.length > 0) {
+    console.warn("[sportsBingo] nfl_prop_eligibility_all_dropped", {
+      gameId: game.id,
+      markets: markets.length,
+      dropped_off_roster: droppedOffRoster,
+      dropped_inactive: droppedInactive,
+    });
+    return markets;
+  }
+  if (droppedOffRoster > 0 || droppedInactive > 0) {
+    console.info("[sportsBingo] nfl_prop_eligibility", {
+      gameId: game.id,
+      markets: markets.length,
+      eligible: eligible.length,
+      dropped_off_roster: droppedOffRoster,
+      dropped_inactive: droppedInactive,
+    });
+  }
+  return eligible;
+}
+
 function buildNFLPlayerPropCandidates(
   game: SportsBingoGame,
   markets: NFLPlayerPropMarket[],
-  starIndex: NFLSeasonStarIndexPair | null = null
+  starIndex: NFLSeasonStarIndexPair | null = null,
+  injuryIndex: NFLInjuryIndex | null = null
 ): SportsBingoSquareTemplate[] {
   const candidates: SportsBingoSquareTemplate[] = [];
-  const starScores = buildNFLStarScoresByPlayerId(markets, starIndex);
+  const eligibleMarkets = filterNFLPropMarketsForEligibility(game, markets, injuryIndex);
+  const starScores = buildNFLStarScoresByPlayerId(eligibleMarkets, starIndex);
 
-  for (const market of markets) {
+  for (const market of eligibleMarkets) {
     const playerRef = toResolverPlayerRef(market.playerName, market.playerId);
     // Generation-time only, never persisted onto the resolver — Phase 5b's correlated estimator
     // reads it to tie this player's night to his own team's scoring. `null` when the provider gave
@@ -10828,6 +11025,147 @@ async function autoSwapLateScratchedStarSquares(params: {
   return { swappedSquares, updatedSquares, squares };
 }
 
+function isNflLateScratchWindow(card: SportsBingoCardRow, nowMs: number): boolean {
+  const startsAtMs = Date.parse(card.starts_at);
+  const createdAtMs = Date.parse(card.created_at);
+  const inGameWindow =
+    Number.isFinite(startsAtMs) &&
+    nowMs >= startsAtMs - NFL_LATE_SCRATCH_SWAP_WINDOW_MS &&
+    nowMs <= startsAtMs + NFL_LATE_SCRATCH_SWAP_WINDOW_MS;
+  const inLockWindow =
+    Number.isFinite(createdAtMs) &&
+    nowMs >= createdAtMs &&
+    nowMs <= createdAtMs + NFL_LATE_SCRATCH_SWAP_WINDOW_MS;
+  return inGameWindow || inLockWindow;
+}
+
+/** The player ref carried by an NFL player-prop resolver, or null for a non-player resolver. */
+function nflPropResolverPlayerRef(resolver: SportsBingoResolver): string | null {
+  switch (resolver.kind) {
+    case "player_prop":
+    case "nfl_player_anytime_td":
+    case "nfl_player_first_td":
+      return resolver.player || null;
+    default:
+      return null;
+  }
+}
+
+export type NFLInactivePropSwap = {
+  squareId: string;
+  squareIndex: number;
+  playerRef: string;
+  replacementResolver: SportsBingoResolver;
+  replacementLabel: string;
+  probability: number;
+};
+
+/**
+ * Phase 4 (docs/prop-bingo-nfl-activation-plan.md) — pure: given a card's squares and a *fresh*
+ * injury index, decide which NFL player-prop squares belong to a player who is now inactive and
+ * what each should become. Kept separate from the DB write in `autoSwapInactiveNFLPropSquares`
+ * below so the swap decision is unit-testable without a Supabase double.
+ *
+ * Mirrors MLB's `autoSwapLateScratchedStarSquares` philosophy: a dead player square is swapped for
+ * a live *whole-game* square that still resolves through the game — "both teams score at least 17
+ * points," which has no box-score or roster dependency. The square keeps its own priced
+ * probability (clamped) rather than being re-modelled, so the card's stored win probability stays
+ * coherent. Two scratched players on one board both land on this same replacement — the same
+ * limitation MLB carries; rare enough to accept. Void stays the settlement-time safety net for
+ * everything the window misses; a scratched player is never settled `miss`.
+ */
+export function planNFLInactivePropSwaps(params: {
+  card: SportsBingoCardRow;
+  squares: SportsBingoSquareRow[];
+  injuryIndex: NFLInjuryIndex | null;
+  nowMs?: number;
+}): NFLInactivePropSwap[] {
+  const { card, squares, injuryIndex } = params;
+  if (!injuryIndex || injuryIndex.failed) {
+    return [];
+  }
+  if (injuryIndex.inactivePlayerIds.size === 0 && injuryIndex.inactivePlayerKeys.size === 0) {
+    return [];
+  }
+  const nowMs = params.nowMs ?? Date.now();
+  if (!isNflLateScratchWindow(card, nowMs)) {
+    return [];
+  }
+
+  const game = toGameFromCardRow(card);
+  const swaps: NFLInactivePropSwap[] = [];
+  for (const square of squares) {
+    if (!square || square.is_free || square.status !== "pending") {
+      continue;
+    }
+    const resolver = parseResolver(square.resolver);
+    if (!resolver) {
+      continue;
+    }
+    const playerRef = nflPropResolverPlayerRef(resolver);
+    if (!playerRef) {
+      continue;
+    }
+    const parsedRef = parseResolverPlayerRef(playerRef);
+    if (!isNFLPlayerInactive(injuryIndex, parsedRef.playerId, parsedRef.displayName || playerRef)) {
+      continue;
+    }
+    const replacementResolver: SportsBingoResolver = {
+      kind: "nfl_both_teams_score_at_least",
+      threshold: 17,
+    };
+    swaps.push({
+      squareId: square.id,
+      squareIndex: square.square_index,
+      playerRef,
+      replacementResolver,
+      replacementLabel: buildSquareLabel(game, replacementResolver),
+      probability: clamp(Number(square.probability ?? 0.5) || 0.5, 0.25, 0.75),
+    });
+  }
+  return swaps;
+}
+
+async function autoSwapInactiveNFLPropSquares(params: {
+  card: SportsBingoCardRow;
+  squares: SportsBingoSquareRow[];
+  injuryIndex: NFLInjuryIndex | null;
+}): Promise<{ swappedSquares: number; updatedSquares: number; squares: SportsBingoSquareRow[] }> {
+  const squares = [...params.squares];
+  const plan = planNFLInactivePropSwaps({ card: params.card, squares, injuryIndex: params.injuryIndex });
+  if (plan.length === 0) {
+    return { swappedSquares: 0, updatedSquares: 0, squares };
+  }
+
+  const indexById = new Map(squares.map((square, index) => [square.id, index]));
+  let swappedSquares = 0;
+  let updatedSquares = 0;
+  for (const swap of plan) {
+    const { data, error } = await supabaseAdmin!
+      .from("sports_bingo_squares")
+      .update({
+        resolver: swap.replacementResolver,
+        label: swap.replacementLabel,
+        probability: swap.probability,
+        status: "pending",
+        resolved_at: null,
+      })
+      .eq("id", swap.squareId)
+      .select("id, card_id, square_index, label, resolver, probability, is_free, status, created_at, resolved_at")
+      .single<SportsBingoSquareRow>();
+    if (error || !data) {
+      continue;
+    }
+    const index = indexById.get(swap.squareId);
+    if (index !== undefined) {
+      squares[index] = data;
+    }
+    swappedSquares += 1;
+    updatedSquares += 1;
+  }
+  return { swappedSquares, updatedSquares, squares };
+}
+
 export async function refreshSportsBingoProgress(params: {
   userId?: string;
   limit?: number;
@@ -10907,11 +11245,27 @@ export async function refreshSportsBingoProgress(params: {
   let settledLosses = 0;
   let nearWinAlerts = 0;
   let swappedLateScratchSquares = 0;
+  let swappedNflInactiveSquares = 0;
+  // Phase 4: one `/nfl/v1/player_injuries` pull per sweep, shared across every NFL card, and only
+  // when an NFL card is actually present. `resolveNFLInjuryIndex` is also process-cached, but the
+  // live-staleness bound forces a re-pull if that cache is older than ~10 minutes so a scratch
+  // that posts ~90 minutes before kickoff is caught mid-sweep.
+  let nflInjuryIndexForSweep: NFLInjuryIndex | null = null;
+  let nflInjuryIndexLoaded = false;
   const nbaStatsSnapshotsByOddsGameId = new Map<string, NBAGamePlayerStatsSnapshot | null>();
   const mlbStatsSnapshotsByOddsGameId = new Map<string, MLBGamePlayerStatsSnapshot | null>();
   // Keyed by game id **and** whether the plays walk was included, so a plays-free snapshot fetched
   // for one card is never reused for a card that actually holds an Optional-3b square.
   const nflStatsSnapshotsByGameId = new Map<string, NFLGameStatsSnapshot | null>();
+  // Phase 3 (live-event parity): one `live-stats:americanfootball_nfl` diff per *game* per sweep,
+  // no matter how many cards or memo variants that game has. Without this set, two cards whose
+  // resolvers need different optional legs (plays / team_stats) produce two snapshot fetches and
+  // would double-broadcast the same change inside a single sweep.
+  const nflLiveStatBroadcastGameIds = new Set<string>();
+  let nflLiveStatBroadcastRows = 0;
+  let nflLiveStatDroppedRows = 0;
+  let nflLiveStatSeededGames = 0;
+  const nflLiveStatSends: Array<Promise<unknown>> = [];
 
   for (const entry of activeCardRows) {
     const cardRow = entry.card;
@@ -10938,6 +11292,24 @@ export async function refreshSportsBingoProgress(params: {
         nflStatsSnapshot = await getNFLGameStatsSnapshot(cardRow, { includePlays, includeTeamStats });
         nflStatsSnapshotsByGameId.set(memoKey, nflStatsSnapshot);
       }
+      if (nflStatsSnapshot && !nflLiveStatBroadcastGameIds.has(cardRow.game_id)) {
+        nflLiveStatBroadcastGameIds.add(cardRow.game_id);
+        const broadcast = broadcastNFLLiveStatDeltas(cardRow, nflStatsSnapshot);
+        nflLiveStatBroadcastRows += broadcast.broadcastRows;
+        nflLiveStatDroppedRows += broadcast.droppedRows;
+        nflLiveStatSeededGames += broadcast.seeded ? 1 : 0;
+        nflLiveStatSends.push(...broadcast.sends);
+      }
+      if (!nflInjuryIndexLoaded) {
+        nflInjuryIndexLoaded = true;
+        try {
+          nflInjuryIndexForSweep = await resolveNFLInjuryIndex({
+            maxStalenessMs: NFL_INJURY_INDEX_LIVE_STALENESS_MS,
+          });
+        } catch {
+          nflInjuryIndexForSweep = null;
+        }
+      }
     } else if (isBasketballSportKey(cardRow.sport_key)) {
       if (nbaStatsSnapshotsByOddsGameId.has(cardRow.game_id)) {
         nbaStatsSnapshot = nbaStatsSnapshotsByOddsGameId.get(cardRow.game_id) ?? null;
@@ -10962,6 +11334,19 @@ export async function refreshSportsBingoProgress(params: {
       });
       squares = swapResult.squares;
       swappedLateScratchSquares += swapResult.swappedSquares;
+      updatedSquares += swapResult.updatedSquares;
+    }
+
+    if (cardRow.sport_key === "americanfootball_nfl") {
+      // Phase 4: inside the kickoff window, swap any prop square whose player is now on the injury
+      // report as not playing for a live whole-game square. Void still backstops anything missed.
+      const swapResult = await autoSwapInactiveNFLPropSquares({
+        card: cardRow,
+        squares,
+        injuryIndex: nflInjuryIndexForSweep,
+      });
+      squares = swapResult.squares;
+      swappedNflInactiveSquares += swapResult.swappedSquares;
       updatedSquares += swapResult.updatedSquares;
     }
 
@@ -11156,6 +11541,12 @@ export async function refreshSportsBingoProgress(params: {
     await supabaseAdmin!.from("sports_bingo_cards").update({ last_cron_processed_at: new Date().toISOString() }).eq("id", cardRow.id);
   }
 
+  // Flush the NFL live-stat broadcasts before returning, so a short sweep does not exit with its
+  // realtime POSTs still in flight. Settled, never rethrown — each promise already swallows.
+  if (nflLiveStatSends.length > 0) {
+    await Promise.allSettled(nflLiveStatSends);
+  }
+
   const response = {
     scannedCards: activeCardRows.length,
     updatedSquares,
@@ -11171,6 +11562,10 @@ export async function refreshSportsBingoProgress(params: {
     settled_losses: response.settledLosses,
     near_win_alerts: response.nearWinAlerts,
     late_scratch_swaps: swappedLateScratchSquares,
+    nfl_inactive_swaps: swappedNflInactiveSquares,
+    nfl_live_stat_rows: nflLiveStatBroadcastRows,
+    nfl_live_stat_dropped_rows: nflLiveStatDroppedRows,
+    nfl_live_stat_seeded_games: nflLiveStatSeededGames,
     refresh_latency_ms: Date.now() - refreshStartedAtMs,
     score_cache_hits: cacheTelemetry.scoreCacheHits,
     score_cache_misses: cacheTelemetry.scoreCacheMisses,

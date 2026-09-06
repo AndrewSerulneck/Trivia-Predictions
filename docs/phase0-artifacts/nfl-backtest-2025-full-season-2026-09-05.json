@@ -1,0 +1,16 @@
+{
+  "ranAtUtc": "2026-09-06T00:19:55.934Z",
+  "command": "npm run bingo:simulate -- --backtest --sports americanfootball_nfl --seasons 2025 --weeks 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 --boards 4",
+  "mode": "backtest",
+  "note": "Prop-free by construction (historical player-prop markets do not exist). Floor on realism.",
+  "targetBand": [0.2, 0.3],
+  "result": {
+    "americanfootball_nfl": {
+      "boards": 1140,
+      "realizedWinRate": 0.2667,
+      "predicted": { "n": 1140, "min": 0.2, "p25": 0.2312, "median": 0.2552, "p75": 0.2776, "max": 0.3, "mean": 0.2534, "inTargetBand": 1 },
+      "legacyIndependentPredicted": { "n": 1140, "min": 0.1035, "p25": 0.2115, "median": 0.245, "p75": 0.2814, "max": 0.398, "mean": 0.2477, "inTargetBand": 0.6667 },
+      "ungradedSquareShare": 0.0064
+    }
+  }
+}

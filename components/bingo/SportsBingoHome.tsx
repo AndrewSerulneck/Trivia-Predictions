@@ -19,6 +19,11 @@ import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { ActionPop, type ActionPopTone } from "@/components/bingo/ActionPop";
+import {
+  classifyLiveDeltaEvent,
+  isRegressedNflLiveStatRow,
+  type LivePlayerStatRealtimeRow,
+} from "@/lib/sportsBingoLiveEvents";
 import { ViewTabs, FoldLine, LiveDot } from "@/components/venue/GameChrome";
 import { GameAppBar } from "@/components/venue/AppBar";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
@@ -68,23 +73,6 @@ type ClaimResponse = {
     rewardPoints: number;
   };
   error?: string;
-};
-
-type LivePlayerStatRealtimeRow = {
-  game_id: string;
-  player_id: number;
-  player_name: string;
-  game_status: string;
-  pts: number;
-  ast: number;
-  reb: number;
-  stl: number;
-  blk: number;
-  turnovers: number;
-  total_fantasy_points: number;
-  sport_key?: string;
-  stat_type?: string;
-  value?: number;
 };
 
 type ActionPopItem = {
@@ -388,56 +376,6 @@ function summarizeCardState(card: BingoCard): {
   }
 
   return { hitCount, nearWin, completedLines };
-}
-
-function classifyLiveDeltaEvent(previous: LivePlayerStatRealtimeRow, next: LivePlayerStatRealtimeRow): VisualEngagementEvent[] {
-  const events: VisualEngagementEvent[] = [];
-  const sportKey = String(next.sport_key ?? "").toLowerCase();
-  const statType = String(next.stat_type ?? "").toLowerCase();
-  const prevValue = Number(previous.value ?? previous.total_fantasy_points ?? 0);
-  const nextValue = Number(next.value ?? next.total_fantasy_points ?? 0);
-  const valueDelta = nextValue - prevValue;
-
-  const ptsDelta = Number(next.pts ?? 0) - Number(previous.pts ?? 0);
-  const stlDelta = Number(next.stl ?? 0) - Number(previous.stl ?? 0);
-  const blkDelta = Number(next.blk ?? 0) - Number(previous.blk ?? 0);
-  const astDelta = Number(next.ast ?? 0) - Number(previous.ast ?? 0);
-  const rebDelta = Number(next.reb ?? 0) - Number(previous.reb ?? 0);
-
-  const isHomeRunEvent =
-    statType.includes("home_run") ||
-    statType.includes("home-run") ||
-    (sportKey.includes("baseball") && statType.includes("hr"));
-  const isTouchdownEvent = statType.includes("touchdown") || statType.includes("td");
-  const isStrikeoutEvent = statType.includes("strikeout") || statType.includes("k");
-
-  if (isHomeRunEvent && valueDelta >= 1) {
-    events.push({ text: "HOME RUN!", tone: "gold", shouldShake: true, majorGlow: true });
-  }
-  if (isTouchdownEvent && valueDelta >= 1) {
-    events.push({ text: "TOUCHDOWN!", tone: "gold", majorGlow: true });
-  }
-  if (ptsDelta >= 3) {
-    events.push({ text: "3-POINTER!", tone: "gold", majorGlow: true });
-  }
-  if (blkDelta >= 1) {
-    events.push({ text: "BLOCK!", tone: "cyan" });
-  }
-  if (stlDelta >= 1) {
-    events.push({ text: "STEAL!", tone: "cyan" });
-  }
-  if (isStrikeoutEvent && valueDelta >= 1) {
-    events.push({ text: "STRIKEOUT!", tone: "cyan" });
-  }
-
-  if (events.length === 0) {
-    const scoreDelta = Math.max(valueDelta, ptsDelta, astDelta * 1.5, rebDelta * 1.2);
-    if (scoreDelta >= 0.5) {
-      events.push({ text: `+${scoreDelta.toFixed(0)} PTS`, tone: "cyan" });
-    }
-  }
-
-  return events;
 }
 
 const BINGO_HEADER_LETTERS = [
@@ -1198,6 +1136,30 @@ export function SportsBingoHome({
           if (textKey.includes("block") && !labelKey.includes("block")) continue;
           if (textKey.includes("steal") && !labelKey.includes("steal")) continue;
           if (textKey.includes("home run") && !labelKey.includes("home run")) continue;
+          // NFL (Phase 3): a player holds at most two prop squares, so without these the "SACK!"
+          // pop can land on that same player's receiving-yards square. Tokens are compared against
+          // `normalizeKey` output, which is lowercase words separated by single spaces.
+          if (
+            (textKey.includes("touchdown") || textKey.includes(" td") || textKey.startsWith("td ")) &&
+            !(labelKey.includes("touchdown") || labelKey.includes(" td") || labelKey.includes("scores"))
+          ) {
+            continue;
+          }
+          if (textKey.includes("field goal") && !labelKey.includes("field goal")) continue;
+          if (textKey.includes("sack") && !labelKey.includes("sack")) continue;
+          if (
+            (textKey.includes("interception") || textKey.includes("picked off")) &&
+            !labelKey.includes("interception")
+          ) {
+            continue;
+          }
+          if (textKey.includes("rush yards") && !labelKey.includes("rush")) continue;
+          if (
+            textKey.includes("rec yards") &&
+            !(labelKey.includes("receiv") || labelKey.includes("catch") || labelKey.includes("reception"))
+          ) {
+            continue;
+          }
           return { squareKey: toCardSquareKey(card.id, square.index), cardId: card.id };
         }
       }
@@ -1581,6 +1543,11 @@ export function SportsBingoHome({
 
           const mapKey = `${gameId}:${playerId}`;
           const previous = liveStatsPrevByPlayerRef.current.get(mapKey);
+          // NFL rows come from the 1-minute sweep, which can run on several warm serverless
+          // instances at once; one holding a stale snapshot can deliver *older* totals after
+          // newer ones. Storing a rewind as the new baseline would re-fire the pop it already
+          // showed as soon as the real row lands, so the rewind is dropped instead.
+          if (previous && isRegressedNflLiveStatRow(previous, next)) return;
           liveStatsPrevByPlayerRef.current.set(mapKey, next);
           if (!previous) return;
 
