@@ -271,6 +271,54 @@ This is Phase 6's carried-forward item from the original plan, and the actual go
 **Done when:** an NFL board has been generated and played on a real device, and the flag is on in
 prod with the rollback (flip it back) written into the run log.
 
+#### Phase 2 — PARTIAL (2026-09-05, Sonnet 5) — headless browser pass done; prod flip + device pass still open
+
+**Why partial:** the prod flag flip is a Vercel dashboard action (no CLI in this environment,
+`.env.local` is a hard boundary) and there is **no NFL game inside the 36h board window until
+Wed 9/9** — `BINGO_LOOKAHEAD_HOURS` is a hardcoded `const = 36` and `listSportsBingoGames` also
+filters to games starting *today*, so the opener (9/9 8:20pm ET) is not pickable through the real
+UI until 9/9. The headless pass below forced the flag on and temporarily widened the lookahead
+(reverted immediately after — working tree clean, `= 36` restored) to seed and drive one real
+NE @ SEA board.
+
+**What was verified (local dev server, `NEXT_PUBLIC_BINGO_NFL_ENABLED=true`
+`NEXT_PUBLIC_BINGO_SEASON_GATING_ENABLED=true`, Chrome via Playwright, 390×844):**
+| Check | Result |
+|---|---|
+| `GET /api/bingo/leagues` with the flag on | NBA `out_of_season · Returns October 2026`; WNBA / MLB / **NFL `in_season`** — exactly the plan's expected output. NFL is **not** `coming_soon` (that's the flag-off state). |
+| Sport picker (`/bingo/select-sport`) | NFL tile visible and enabled, no "Coming soon" note. |
+| Board render (`/bingo/home?cardId=…`, seeded NE @ SEA board, `boardProbability` 0.209) | All 25 squares render in the 5×5 grid; center FREE with check; Board Progress + Legend panels render. Screenshot: `scratchpad/02-board-portrait.png` (kept for this write-up only). |
+| **Label legibility (Phase 1 finding #5)** | Seeded board max label **47 chars** ("TreVeyon Henderson: at least 8 receiving yards."), p90 45, mean 34 — matches Phase 1's post-shortening measurements. In-cell: labels **wrap to ≤4 lines, no mid-word clip, zero vertical overflow** (`scrollHeight ≤ clientHeight` on all 25 cells). Finding #5 reads as **resolved** at portrait 390px. |
+| `ExitBackButton` | Present top-left, 44×44, `aria-label="Back to venue"`. The board opens as a **modal overlay** on `/bingo/home`; dismiss order is ✕ Close (top-right, closes the overlay) → then the top-left Back button → navigates to `/venue/venue-pacific-street`. Confirmed working. |
+| Browser landscape | Split board/panel layout renders cleanly, labels fit at the smaller font (`scratchpad/04-board-landscape.png`). **Not** the installed-PWA landscape surface — that stays device-only. |
+
+**Findings (none blocking the flip):**
+1. **Header truncation** — the board modal + the `/bingo/home` card button both show
+   "New England Patriots vs. S…" (ellipsis). Cosmetic; the full matchup is in the board itself.
+   Not NFL-specific (any long matchup does it). Left as-is.
+2. **`?cardId=` lingers after ✕ Close** — dismissing the board overlay leaves the query param in
+   the URL (modal is gone, param is inert). Pre-existing, all leagues. Not touched.
+3. **Star names skew 2025** — seeded board had "Jadarian Price", "TreVeyon Henderson" (real
+   Patriots rookies) but the tilt is running off the 2025 `prior` index (2026 season hasn't
+   started). Exactly what Phase 1's handoff predicted; not a bug.
+4. **`POST /api/venue-presence/heartbeat` 403** in the console — the Playwright user isn't
+   "present" at the venue via the real join flow. Test-harness artifact, unrelated to bingo.
+
+**Still open (Andrew):**
+- Flip `NEXT_PUBLIC_BINGO_NFL_ENABLED=true` in Vercel → Production, redeploy. Rollback = same
+  field to `false`. Recommend flipping `NEXT_PUBLIC_BINGO_SEASON_GATING_ENABLED=true` in the same
+  trip (verified: gives the NBA `out_of_season` / others `in_season` split above).
+- Real-device pass: **§7 of `docs/bingo-fullscreen-pwa-device-checklist.md`** (added by this
+  phase) — installed-PWA landscape with a real NFL board, once one is openable (Wed 9/9 / Sun 9/13).
+- Run-log activation + rollback line (Phase 7's still-blocked item).
+- `npm run test:pwa-contract` — **not run** here; no bingo chrome / manifest / `lib/pwa.ts` /
+  `.tp-bingo-landscape-*` CSS was touched by any of Phases 1/3/4, so it's not gated. Run it if
+  Phase 2's device pass leads to a CSS change.
+
+**Gates:** `npx tsc --noEmit` exit 0 after the lookahead revert; working tree clean (only the
+checklist doc + this doc changed by the write-up). No code change from Phase 2 — the flip is
+config-only, as the flag contract requires.
+
 ---
 
 ### Phase 3 — Make NFL boards pop: live-event parity

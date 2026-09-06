@@ -138,6 +138,26 @@ static half of this; these rows cover what it cannot see.
 | 6.8 | Partner Dashboard (`/owner/*`) in a normal browser tab, run a Stripe Checkout round-trip | Returns to a correct, refreshed billing state. The PWA is players-only so partners should never be installed, but Phase 4 added a defensive `visibilitychange` refetch — exercise it in a plain tab | Nice-to-have | ☐ |
 | 6.9 | Admin (`/admin`) in a normal browser tab | Unchanged | Nice-to-have | ☐ |
 
+## 7. NFL Prop Bingo — activation (`docs/prop-bingo-nfl-activation-plan.md` Phase 2)
+
+NFL boards were verified headlessly on 2026-09-05 (flag forced on, lookahead temporarily widened,
+NE @ SEA board seeded): sport picker shows **NFL** enabled with no "Coming soon"; the 5×5 board
+renders all 25 squares with **no label overflow at 390px width** (max label 47 chars wrapped to
+≤4 lines, matching the Phase 1 shortening pass); the top-left `ExitBackButton` ("Back to venue")
+navigates to the venue home; browser landscape renders the split board/panel layout cleanly. What
+a headless run **cannot** see is the installed-PWA landscape surface — these rows are that gap.
+Run once a real NFL board is openable on a phone (Wed 9/9, or the Sun 9/13 slate).
+
+| # | Steps | Expected | Blocking | Pass/Fail |
+|---|---|---|---|---|
+| 7.1 | With `NEXT_PUBLIC_BINGO_NFL_ENABLED=true` in prod, open the Bingo sport picker | NFL tile is enabled and tappable (not greyed / not "Coming soon") | **Blocking** | ☐ |
+| 7.2 | Select NFL → pick a game → generate a board | Board generates, 25 squares, center FREE; no error toast | **Blocking** | ☐ |
+| 7.3 | Read the longest-labelled NFL square in the **portrait** 5×5 grid | Full text readable, wraps within the cell, no mid-word clip. NFL prop labels ("Jaxon Smith-Njigba scores the game's first TD.") are the longest of any league | **Blocking** | ☐ |
+| 7.4 | Rotate to landscape (browser), then in the **installed PWA** | Enhanced landscape board; NFL labels still fit at the smaller landscape font (target 11px); no row clipped | **Blocking** | ☐ |
+| 7.5 | Check player-prop squares name recognisable players | Names read as real 2026 NFL players. Pre-Week-1 the star tilt runs off the 2025 index, so some names skew to 2025 — not a device bug, note it and move on | Nice-to-have | ☐ |
+| 7.6 | Open the board, tap ✕ Close, then the top-left Back button | ✕ Close dismisses the board overlay; Back returns to the venue home | **Blocking** | ☐ |
+| 7.7 | Leave an NFL board open through a live scoring drive | Squares tick and ActionPop celebrations fire (Phase 3) — clumped ~1/min behind the TV, which is expected, not broken | Nice-to-have | ☐ |
+
 ---
 
 ## If something fails
