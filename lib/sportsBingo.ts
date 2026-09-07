@@ -9009,6 +9009,11 @@ async function listCardRows(params: {
   sportKey?: string;
   gameId?: string;
   stalestFirst?: boolean;
+  // Half-open [startsAtFrom, startsAtTo) window on `starts_at`, as ISO strings. Used by the
+  // Bingo calendar (plan 5a): the day filter has to run in SQL, because filtering the 100-row
+  // window client-side silently loses history for an active player.
+  startsAtFrom?: string;
+  startsAtTo?: string;
 }): Promise<Array<{ card: SportsBingoCardRow; squares: SportsBingoSquareRow[] }>> {
   assertSupabaseConfigured();
 
@@ -9034,6 +9039,12 @@ async function listCardRows(params: {
   }
   if (params.gameId) {
     query = query.eq("game_id", params.gameId);
+  }
+  if (params.startsAtFrom) {
+    query = query.gte("starts_at", params.startsAtFrom);
+  }
+  if (params.startsAtTo) {
+    query = query.lt("starts_at", params.startsAtTo);
   }
 
   const { data: cardsData, error: cardsError } = await query;
@@ -11584,6 +11595,8 @@ export async function listUserSportsBingoCards(params: {
   userId: string;
   includeSettled?: boolean;
   refreshProgress?: boolean;
+  startsAtFrom?: string;
+  startsAtTo?: string;
 }): Promise<SportsBingoCard[]> {
   const userId = params.userId.trim();
   if (!userId) {
@@ -11594,7 +11607,13 @@ export async function listUserSportsBingoCards(params: {
     await refreshSportsBingoProgress({ userId, limit: 50 });
   }
 
-  const rows = await listCardRows({ userId, activeOnly: false, limit: 100 });
+  const rows = await listCardRows({
+    userId,
+    activeOnly: false,
+    limit: 100,
+    startsAtFrom: params.startsAtFrom,
+    startsAtTo: params.startsAtTo,
+  });
   const cards = rows.map((entry) => mapCardRow(entry.card, entry.squares));
 
   if (params.includeSettled) {
@@ -11602,6 +11621,60 @@ export async function listUserSportsBingoCards(params: {
   }
 
   return cards.filter((card) => card.status === "active");
+}
+
+// Local-calendar days on which the user holds at least one board. Feeds the Bingo date
+// calendar's "this day has boards" dots (plan 5a). Deliberately a single-column read over a
+// wider row window than `listUserSportsBingoCards` — it is cheap, and the calendar is useless
+// if it can only dot the 100 most recent cards. `tzOffsetMinutes` follows the browser's
+// `Date.getTimezoneOffset()` convention (minutes to ADD to local time to get UTC), matching
+// `listSportsBingoGames`.
+export async function listUserSportsBingoCardDates(params: {
+  userId: string;
+  tzOffsetMinutes?: number | string;
+  limit?: number;
+}): Promise<string[]> {
+  assertSupabaseConfigured();
+
+  const userId = params.userId.trim();
+  if (!userId) {
+    return [];
+  }
+
+  const parsedOffset = Number.parseInt(String(params.tzOffsetMinutes ?? ""), 10);
+  const tzOffsetMinutes = Number.isFinite(parsedOffset)
+    ? Math.max(-14 * 60, Math.min(14 * 60, parsedOffset))
+    : new Date().getTimezoneOffset();
+
+  const { data, error } = await supabaseAdmin!
+    .from("sports_bingo_cards")
+    .select("starts_at")
+    .eq("user_id", userId)
+    .order("starts_at", { ascending: false })
+    .limit(Math.max(1, Math.min(params.limit ?? 500, 1000)));
+
+  if (error || !data) {
+    if (isMissingSportsBingoTablesError(error)) {
+      return [];
+    }
+    throw new Error(error?.message ?? "Failed to load bingo card dates.");
+  }
+
+  const days = new Set<string>();
+  for (const row of data as Array<{ starts_at: string | null }>) {
+    const startsAtMs = Date.parse(String(row.starts_at ?? ""));
+    if (!Number.isFinite(startsAtMs)) {
+      continue;
+    }
+    const local = new Date(startsAtMs - tzOffsetMinutes * 60_000);
+    days.add(
+      `${local.getUTCFullYear()}-${String(local.getUTCMonth() + 1).padStart(2, "0")}-${String(
+        local.getUTCDate()
+      ).padStart(2, "0")}`
+    );
+  }
+
+  return Array.from(days).sort();
 }
 
 function normalizeSquarePreviewPayload(value: unknown): Array<{ index: number; key: string; isFree: boolean }> {

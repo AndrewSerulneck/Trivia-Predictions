@@ -165,13 +165,7 @@ export const AD_PLACEMENTS: Record<Exclude<AdPageKey, "global">, AdPagePlacement
         defaultDisplayTrigger: "on-load",
         allowedDisplayTriggers: ["on-load", "on-scroll"],
       },
-      inline: {
-        name: "Inline Ad",
-        description: "Embedded ad inline with Bingo content.",
-        defaultSlot: "inline-content",
-        defaultDisplayTrigger: "on-load",
-        allowedDisplayTriggers: ["on-load"],
-      },
+      // Inline slot retired 2026-09-07 — see docs/prop-bingo-page-simplification-plan.md Phase 1.
     },
   },
   pickem: {
@@ -372,4 +366,22 @@ export function normalizeAdPlacementMeta(input: {
     roundNumber: parsedRound && parsedRound >= 1 && parsedRound <= 24 ? parsedRound : undefined,
     sequenceIndex: parsedSequence && parsedSequence >= 1 && parsedSequence <= 50 ? parsedSequence : undefined,
   };
+}
+
+/**
+ * Bingo inline ad slot retired 2026-09-07 — see docs/prop-bingo-page-simplification-plan.md Phase 1.
+ * Single source of truth for "is this placement the retired Bingo inline slot?", mirroring the
+ * match arms of supabase/migrations/20260907120000_retire_bingo_inline_ad_slot.sql:
+ *   page_key = 'sports-bingo' AND (ad_type = 'inline' OR slot = 'inline-content' OR slot_key = 'sports-bingo-inline')
+ */
+export const RETIRED_BINGO_INLINE_AD_MESSAGE = "The Bingo inline ad slot has been retired.";
+
+export function isRetiredBingoInlinePlacement(input: {
+  pageKey?: AdPageKey | string | null;
+  adType?: AdType | string | null;
+  slot?: AdSlot | string | null;
+  slotKey?: string | null;
+}): boolean {
+  if (input.pageKey !== "sports-bingo") return false;
+  return input.adType === "inline" || input.slot === "inline-content" || input.slotKey === "sports-bingo-inline";
 }

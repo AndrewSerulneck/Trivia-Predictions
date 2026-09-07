@@ -7,6 +7,7 @@ import { getInlineSlotRegistryEntries } from "@/lib/adSlotRegistry";
 import {
   isAdTypeSupportedForPage,
   isDisplayTriggerSupportedForPlacement,
+  isRetiredBingoInlinePlacement,
   isSlotCompatibleWithAdType,
   normalizeAdPlacementMeta,
 } from "@/lib/adPlacements";
@@ -970,6 +971,21 @@ export async function getAdminAdvertisementById(id: string): Promise<Advertiseme
   return mapAdRow(data);
 }
 
+/** Bulk sibling of getAdminAdvertisementById: one query, unknown ids simply absent from the result. */
+export async function listAdminAdvertisementsByIds(ids: string[]): Promise<Advertisement[]> {
+  assertAdminConfigured();
+  const uniqueIds = Array.from(new Set((ids ?? []).map((id) => String(id ?? "").trim()).filter(Boolean)));
+  if (uniqueIds.length === 0) return [];
+  const { data, error } = await supabaseAdmin!
+    .from("advertisements")
+    .select(AD_SELECT)
+    .in("id", uniqueIds);
+  if (error) {
+    throw new Error(error.message ?? "Failed to load advertisements.");
+  }
+  return ((data ?? []) as AdvertisementRow[]).map(mapAdRow);
+}
+
 function normalizeAdGeoList(values?: string[] | null, uppercase = false): string[] {
   const base = Array.isArray(values) ? values : [];
   return Array.from(
@@ -1381,13 +1397,28 @@ export async function updateAdminAdvertisement(input: {
   if (placementMeta.pageKey === "global") {
     throw new Error("Select a specific page for this advertisement.");
   }
-  if (!isAdTypeSupportedForPage(placementMeta.pageKey, placementMeta.adType)) {
+  // Bingo inline ad slot retired 2026-09-07 (Phase 1). Those legacy rows are no longer a valid
+  // placement, which would otherwise make them permanently unsaveable. Winding one down — saving
+  // it inactive — stays allowed, because an inactive ad serves nowhere. Bringing one back active
+  // is refused up front in app/api/admin/route.ts.
+  const isRetiredInlineWindDown =
+    input.active === false &&
+    isRetiredBingoInlinePlacement({
+      pageKey: placementMeta.pageKey,
+      adType: placementMeta.adType,
+      slot: placementMeta.slot,
+      slotKey: input.slotKey,
+    });
+  if (!isRetiredInlineWindDown && !isAdTypeSupportedForPage(placementMeta.pageKey, placementMeta.adType)) {
     throw new Error(`Ad type "${placementMeta.adType}" is not supported on page "${placementMeta.pageKey}".`);
   }
   if (!isSlotCompatibleWithAdType(placementMeta.slot, placementMeta.adType)) {
     throw new Error(`Slot "${placementMeta.slot}" is not compatible with ad type "${placementMeta.adType}".`);
   }
-  if (!isDisplayTriggerSupportedForPlacement(placementMeta.pageKey, placementMeta.adType, placementMeta.displayTrigger)) {
+  if (
+    !isRetiredInlineWindDown &&
+    !isDisplayTriggerSupportedForPlacement(placementMeta.pageKey, placementMeta.adType, placementMeta.displayTrigger)
+  ) {
     throw new Error(
       `Trigger "${placementMeta.displayTrigger}" is not supported for ${placementMeta.adType} ads on page "${placementMeta.pageKey}".`
     );

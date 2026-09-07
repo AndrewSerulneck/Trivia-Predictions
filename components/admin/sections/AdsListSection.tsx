@@ -356,13 +356,24 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
           ids: Array.from(selectedIds),
         }),
       });
-      const payload = (await response.json()) as { ok: boolean; error?: string; updated?: number; deleted?: number };
+      const payload = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        updated?: number;
+        deleted?: number;
+        skippedRetired?: number;
+      };
       if (!response.ok || !payload.ok) {
         throw new Error(payload.error ?? `Failed to ${action} selected ads.`);
       }
 
       const affected = payload.updated ?? payload.deleted ?? selectedIds.size;
-      setSuccess(`${affected} ad(s) ${action === "delete" ? "deleted" : action === "enable" ? "enabled" : "disabled"}.`);
+      const skippedNote = payload.skippedRetired
+        ? ` ${payload.skippedRetired} retired Bingo inline ad(s) skipped.`
+        : "";
+      setSuccess(
+        `${affected} ad(s) ${action === "delete" ? "deleted" : action === "enable" ? "enabled" : "disabled"}.${skippedNote}`
+      );
       setSelectedIds(new Set());
       await fetchAds();
     } catch (err) {

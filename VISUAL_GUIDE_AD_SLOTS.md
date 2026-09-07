@@ -69,7 +69,7 @@ PICK 'EM PAGE
 BINGO PAGE
   Entry Pop-Up ..................... Slot: popup-on-entry ................. ID: 040
   Scroll Pop-Up .................... Slot: popup-on-scroll ................ ID: 041
-  Grid Inline Ad ................... Slot: inline-content ................. ID: 066 ✅ UNIQUE!
+  Grid Inline Ad .................. RETIRED 2026-09-07 (was IDs 042/066) — see docs/prop-bingo-page-simplification-plan.md Phase 1
   Mobile Banner .................... Slot: mobile-adhesion ................ ID: 043
 
 FANTASY PAGE

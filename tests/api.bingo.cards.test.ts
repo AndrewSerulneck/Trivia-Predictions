@@ -2,12 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   listUserSportsBingoCards: vi.fn(),
+  listUserSportsBingoCardDates: vi.fn(),
   generateSportsBingoBoard: vi.fn(),
   createSportsBingoCard: vi.fn(),
 }));
 
 vi.mock("@/lib/sportsBingo", () => ({
   listUserSportsBingoCards: mocks.listUserSportsBingoCards,
+  listUserSportsBingoCardDates: mocks.listUserSportsBingoCardDates,
   generateSportsBingoBoard: mocks.generateSportsBingoBoard,
   createSportsBingoCard: mocks.createSportsBingoCard,
 }));
@@ -17,6 +19,7 @@ import { GET, POST } from "@/app/api/bingo/cards/route";
 describe("/api/bingo/cards", () => {
   beforeEach(() => {
     mocks.listUserSportsBingoCards.mockReset();
+    mocks.listUserSportsBingoCardDates.mockReset();
     mocks.generateSportsBingoBoard.mockReset();
     mocks.createSportsBingoCard.mockReset();
   });
@@ -142,6 +145,134 @@ describe("/api/bingo/cards", () => {
       includeSettled: true,
       refreshProgress: false,
     });
+  });
+
+  // Phase 5a — the calendar's day filter has to run in SQL. `tzOffsetMinutes` follows
+  // Date.getTimezoneOffset(): minutes to ADD to local time to reach UTC, so UTC-4 sends 240 and
+  // local midnight on 2026-09-06 is 04:00Z that same day.
+  it("GET translates date + tzOffsetMinutes into a half-open UTC starts_at window", async () => {
+    mocks.listUserSportsBingoCards.mockResolvedValue([]);
+
+    const response = await GET(
+      new Request(
+        "http://localhost/api/bingo/cards?userId=u1&includeSettled=true&date=2026-09-06&tzOffsetMinutes=240"
+      )
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.listUserSportsBingoCards).toHaveBeenCalledWith({
+      userId: "u1",
+      includeSettled: true,
+      refreshProgress: false,
+      startsAtFrom: "2026-09-06T04:00:00.000Z",
+      startsAtTo: "2026-09-07T04:00:00.000Z",
+    });
+  });
+
+  it("GET handles a negative tz offset (east of UTC) without drifting a day", async () => {
+    mocks.listUserSportsBingoCards.mockResolvedValue([]);
+
+    await GET(
+      new Request(
+        "http://localhost/api/bingo/cards?userId=u1&includeSettled=true&date=2026-09-06&tzOffsetMinutes=-540"
+      )
+    );
+
+    expect(mocks.listUserSportsBingoCards).toHaveBeenCalledWith({
+      userId: "u1",
+      includeSettled: true,
+      refreshProgress: false,
+      startsAtFrom: "2026-09-05T15:00:00.000Z",
+      startsAtTo: "2026-09-06T15:00:00.000Z",
+    });
+  });
+
+  // Silently ignoring a bad `date` would hand a past-day view the player's whole history, which
+  // reads as a data bug rather than a bad request.
+  it("GET rejects a malformed date instead of falling back to every card", async () => {
+    const response = await GET(new Request("http://localhost/api/bingo/cards?userId=u1&date=09-06-2026"));
+    const body = (await response.json()) as { ok: boolean; error: string };
+
+    expect(response.status).toBe(400);
+    expect(body.ok).toBe(false);
+    expect(body.error).toContain("YYYY-MM-DD");
+    expect(mocks.listUserSportsBingoCards).not.toHaveBeenCalled();
+  });
+
+  // `Date.UTC(2026, 1, 30)` silently rolls to March 2, so shape-only validation would return
+  // the wrong day's boards with a 200. The round-trip check rejects it.
+  it("GET rejects a calendar-impossible date (2026-02-30) instead of rolling it over", async () => {
+    const response = await GET(new Request("http://localhost/api/bingo/cards?userId=u1&date=2026-02-30"));
+    const body = (await response.json()) as { ok: boolean; error: string };
+
+    expect(response.status).toBe(400);
+    expect(body.ok).toBe(false);
+    expect(body.error).toContain("YYYY-MM-DD");
+    expect(mocks.listUserSportsBingoCards).not.toHaveBeenCalled();
+  });
+
+  it("GET accepts a real calendar day (2026-02-28)", async () => {
+    mocks.listUserSportsBingoCards.mockResolvedValue([]);
+
+    const response = await GET(
+      new Request("http://localhost/api/bingo/cards?userId=u1&date=2026-02-28&tzOffsetMinutes=0")
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.listUserSportsBingoCards).toHaveBeenCalledWith({
+      userId: "u1",
+      includeSettled: true,
+      refreshProgress: false,
+      startsAtFrom: "2026-02-28T00:00:00.000Z",
+      startsAtTo: "2026-03-01T00:00:00.000Z",
+    });
+  });
+
+  it("GET still returns 200 with cards (and no activeDates) when the calendar-dates query fails", async () => {
+    mocks.listUserSportsBingoCards.mockResolvedValue([{ id: "card-1" }]);
+    mocks.listUserSportsBingoCardDates.mockRejectedValue(new Error("calendar query blew up"));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const response = await GET(
+      new Request("http://localhost/api/bingo/cards?userId=u1&includeDates=true&tzOffsetMinutes=240")
+    );
+    const body = (await response.json()) as { ok: boolean; cards: Array<{ id: string }>; activeDates?: string[] };
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.cards).toHaveLength(1);
+    expect(body.activeDates).toBeUndefined();
+    expect(errorSpy).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+  });
+
+  it("GET omits the starts_at window entirely when no date is given", async () => {
+    mocks.listUserSportsBingoCards.mockResolvedValue([]);
+
+    await GET(new Request("http://localhost/api/bingo/cards?userId=u1&includeSettled=true"));
+
+    const call = mocks.listUserSportsBingoCards.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(call).not.toHaveProperty("startsAtFrom");
+    expect(call).not.toHaveProperty("startsAtTo");
+  });
+
+  it("GET returns activeDates only when includeDates is requested", async () => {
+    mocks.listUserSportsBingoCards.mockResolvedValue([]);
+    mocks.listUserSportsBingoCardDates.mockResolvedValue(["2026-09-05", "2026-09-06"]);
+
+    const withoutDates = await GET(new Request("http://localhost/api/bingo/cards?userId=u1"));
+    const withoutBody = (await withoutDates.json()) as { activeDates?: string[] };
+    expect(withoutBody.activeDates).toBeUndefined();
+    expect(mocks.listUserSportsBingoCardDates).not.toHaveBeenCalled();
+
+    const withDates = await GET(
+      new Request("http://localhost/api/bingo/cards?userId=u1&includeDates=true&tzOffsetMinutes=240")
+    );
+    const withBody = (await withDates.json()) as { activeDates?: string[] };
+
+    expect(withBody.activeDates).toEqual(["2026-09-05", "2026-09-06"]);
+    expect(mocks.listUserSportsBingoCardDates).toHaveBeenCalledWith({ userId: "u1", tzOffsetMinutes: 240 });
   });
 
   it("POST generate returns board preview", async () => {

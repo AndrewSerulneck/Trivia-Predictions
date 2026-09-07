@@ -335,6 +335,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const scrollTickingRef = useRef(false);
   const activeScreenRef = useRef<HomeScreenIndex>(0);
+  // A tab press updates the selected label before its smooth carousel scroll
+  // starts. Keep that choice authoritative until the scroll has settled: a
+  // Games → Rewards animation passes the Leaderboard position on the way and
+  // must not temporarily select its label.
+  const pendingScreenNavigationRef = useRef<HomeScreenIndex | null>(null);
+  const carouselSettleTimerRef = useRef<number | null>(null);
   const warmupPromiseRef = useRef<Promise<void> | null>(null);
   const warmupStartedRef = useRef(false);
   const badgeRequestRef = useRef<AbortController | null>(null);
@@ -539,16 +545,43 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     setIsMenuOpen(true);
   }, []);
 
+  const settleScreenNavigation = useCallback(() => {
+    if (carouselSettleTimerRef.current !== null) {
+      window.clearTimeout(carouselSettleTimerRef.current);
+      carouselSettleTimerRef.current = null;
+    }
+    if (pendingScreenNavigationRef.current === null) return;
+
+    pendingScreenNavigationRef.current = null;
+    const viewport = swipeViewportRef.current;
+    if (!viewport) return;
+    const panelWidth = Math.max(1, viewport.clientWidth);
+    const settledIndex = clamp(Math.round(viewport.scrollLeft / panelWidth), 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
+    if (settledIndex === activeScreenRef.current) return;
+    activeScreenRef.current = settledIndex;
+    setActiveScreen(settledIndex);
+    savePlayerPanel(venue.id, settledIndex);
+  }, [venue.id]);
+
   const goToScreen = useCallback((screenIndex: HomeScreenIndex) => {
     const viewport = swipeViewportRef.current;
     if (!viewport) return;
     const nextIndex = clamp(screenIndex, 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
     if (nextIndex === activeScreenRef.current) return;
     savePlayerPanel(venue.id, nextIndex);
+    pendingScreenNavigationRef.current = reducedMotion ? null : nextIndex;
+    if (carouselSettleTimerRef.current !== null) {
+      window.clearTimeout(carouselSettleTimerRef.current);
+    }
     viewport.scrollTo({ left: viewport.clientWidth * nextIndex, behavior: reducedMotion ? "auto" : "smooth" });
     setActiveScreen(nextIndex);
     activeScreenRef.current = nextIndex;
-  }, [reducedMotion, venue.id]);
+    // `scrollend` below handles supported browsers. This fallback also covers
+    // browsers that do not dispatch it for programmatic smooth scrolling.
+    if (!reducedMotion) {
+      carouselSettleTimerRef.current = window.setTimeout(settleScreenNavigation, 1000);
+    }
+  }, [reducedMotion, settleScreenNavigation, venue.id]);
 
   const onCarouselScroll = useCallback(() => {
     const viewport = swipeViewportRef.current;
@@ -556,6 +589,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     scrollTickingRef.current = true;
     window.requestAnimationFrame(() => {
       scrollTickingRef.current = false;
+      if (pendingScreenNavigationRef.current !== null) return;
       const panelWidth = Math.max(1, viewport.clientWidth);
       const nextIndex = clamp(Math.round(viewport.scrollLeft / panelWidth), 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
       if (nextIndex === activeScreenRef.current) return;
@@ -564,6 +598,14 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       savePlayerPanel(venue.id, nextIndex);
     });
   }, [venue.id]);
+
+  useEffect(() => {
+    return () => {
+      if (carouselSettleTimerRef.current !== null) {
+        window.clearTimeout(carouselSettleTimerRef.current);
+      }
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const viewport = swipeViewportRef.current;
@@ -1509,6 +1551,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         <div
           ref={swipeViewportRef}
           onScroll={onCarouselScroll}
+          onScrollEnd={settleScreenNavigation}
           className="venue-home-carousel relative m-0 flex w-full overflow-x-auto overflow-y-visible p-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{
             scrollSnapType: "x mandatory",

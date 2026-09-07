@@ -66,7 +66,7 @@ Every inline ad throughout your system uses a generic fallback slot name: `"lead
 
 **Other Pages (Inline):**
 - Slot 065: Pick 'Em Inline
-- Slot 066: Bingo Inline
+- Slot 066: Bingo Inline — RETIRED 2026-09-07 (with 042); see docs/prop-bingo-page-simplification-plan.md Phase 1
 - Slot 067: Fantasy Inline
 - Slot 068: Live Trivia Inline
 - Slot 069: Predictions Inline
@@ -130,7 +130,7 @@ Test in browser:
 - Join page loads ads ✅
 - Venue leaderboard shows ads at rows 1-10, 11-20, etc ✅
 - Pick 'Em shows inline ads between cards ✅
-- Bingo shows inline ads ✅
+- Bingo inline ad: RETIRED 2026-09-07 (see docs/prop-bingo-page-simplification-plan.md Phase 1)
 - Fantasy shows inline ads ✅
 - Admin form shows correct slots ✅
 

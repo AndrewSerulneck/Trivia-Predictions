@@ -85,7 +85,7 @@ const PAGES: PageDef[] = [
     slots: [
       { key: "sports-bingo-popup-on-entry", label: "Pop-Up Ad",  description: "Appears when users enter Bingo",        id: "040" },
       { key: "sports-bingo-banner",         label: "Banner Ad",  description: "Persistent bottom banner in Bingo",     id: "043" },
-      { key: "sports-bingo-inline",         label: "Inline Ad",  description: "Inline slot on Bingo screens",          id: "042" },
+      // "sports-bingo-inline" (id 042) retired 2026-09-07 — see docs/prop-bingo-page-simplification-plan.md Phase 1.
     ],
   },
   {

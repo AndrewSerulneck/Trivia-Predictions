@@ -8,6 +8,7 @@ import {
   AD_PLACEMENTS,
   getAllowedDisplayTriggers,
   getDefaultPlacementMeta,
+  isRetiredBingoInlinePlacement,
   isSlotCompatibleWithAdType,
 } from "@/lib/adPlacements";
 import { AD_SLOT_REGISTRY } from "@/lib/adSlotRegistry";
@@ -155,8 +156,6 @@ function getSlotHintForPage(pageKey: AdPageKey, slot: AdSlot): string {
           return "Appears in specific Pick 'Em card range";
         }
         return "Generic inline placement (deprecated for Pick 'Em)";
-      case "sports-bingo":
-        return "Appears within Bingo game area";
       case "fantasy":
         return "Appears in Fantasy player feed";
       case "live-trivia":
@@ -414,6 +413,15 @@ export function AdFormFields({
   const slotOptions = getAvailableSlotsForPageAndType(draft.pageKey, draft.adType);
   const selectedSlotOptionId = getDraftSlotOptionId(draft, slotOptions) || slotOptions[0]?.id || "";
   const slotHint = getSlotHintForPage(draft.pageKey, draft.slot);
+  // A legacy row can hold a page/ad-type combination that no longer exists (today: the retired
+  // Bingo inline slot). Keep the current value visible as a disabled option rather than letting
+  // the select silently display a different ad type than the draft will actually submit.
+  const isUnsupportedAdTypeSelection = draft.adType ? !availableAdTypes.includes(draft.adType) : false;
+  const isRetiredSelection = isRetiredBingoInlinePlacement({
+    pageKey: draft.pageKey,
+    adType: draft.adType,
+    slot: draft.slot,
+  });
   const isVenueLeaderboardSelection = isVenueLeaderboardSlot(draft.pageKey, draft.slot);
   const hasValidLeaderboardSequence = isValidVenueLeaderboardSequenceIndex(draft.sequenceIndex);
 
@@ -597,12 +605,23 @@ export function AdFormFields({
           {adTypeOptions.length === 0 ? (
             <option value="">No ad types available for this page</option>
           ) : null}
+          {isUnsupportedAdTypeSelection ? (
+            <option value={draft.adType} disabled>
+              {AD_TYPE_OPTIONS.find((option) => option.value === draft.adType)?.label ?? draft.adType} (retired)
+            </option>
+          ) : null}
           {adTypeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
+        {isRetiredSelection ? (
+          <p className="mt-2 text-xs text-amber-700">
+            This Bingo inline slot is retired and no longer renders. You can save this ad as
+            inactive, or move it to another page or ad type — it cannot be saved as active.
+          </p>
+        ) : null}
       </div>
 
       <div>

@@ -74,7 +74,7 @@ Welcome! You've just received a complete system for fixing ad slot ambiguity in 
 - `/components/leaderboard/LeaderboardTable.tsx` — 2 instances
 - `/app/leaderboard/page.tsx` — 1 instance
 - `/components/pickem/PickEmGameList.tsx` — 1 instance
-- `/components/bingo/SportsBingoHome.tsx` — 2 instances
+- `/components/bingo/SportsBingoHome.tsx` — 2 instances (RETIRED 2026-09-07; see docs/prop-bingo-page-simplification-plan.md Phase 1)
 - `/components/fantasy/FantasyHome.tsx` — 1 instance
 - `/components/predictions/PredictionMarketList.tsx` — 1 instance
 - `/components/join/JoinFlow.tsx` — 1 instance

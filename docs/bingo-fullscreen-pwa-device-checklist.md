@@ -158,6 +158,59 @@ Run once a real NFL board is openable on a phone (Wed 9/9, or the Sun 9/13 slate
 | 7.6 | Open the board, tap ✕ Close, then the top-left Back button | ✕ Close dismisses the board overlay; Back returns to the venue home | **Blocking** | ☐ |
 | 7.7 | Leave an NFL board open through a live scoring drive | Squares tick and ActionPop celebrations fire (Phase 3) — clumped ~1/min behind the TV, which is expected, not broken | Nice-to-have | ☐ |
 
+## 8. Prop Bingo `/bingo/home` simplification (`docs/prop-bingo-page-simplification-plan.md` Phases 1–6)
+
+Phases 1–6 rebuilt the portrait `/bingo/home` page: the inline ad is gone, the horizontal
+board switcher became a vertical stack, every board is labelled with its sport emoji + mascot
+matchup, a branded date rail + month calendar replaced the Active/Scored tabs, and board
+creation moved into a slide-up sheet. All six phases are source-clean and passed
+tsc / lint / build / `npm run test` (1974/1975; the one failure is the pre-existing wall-clock
+`lib.billingDiscounts` case) / `npm run test:pwa-contract` (20/20) — but **none of it has been
+seen on a phone.** These rows are that gap. Run in **portrait** on a real device with an
+account that has live, upcoming and settled Bingo boards.
+
+| # | Steps | Expected | Blocking | Pass/Fail |
+|---|---|---|---|---|
+| 8.1 | Open `/bingo/home` with 2–4 boards, scroll top to bottom | First scroll shows, in order: the unclaimed-points banner (only if points are owed), the date rail, the board stack, one dashed "Add a board" control. No inline ad, no "how it works" strip, no "live updates / synced" whisper | **Blocking** | ☐ |
+| 8.2 | Look at each board card header | Sport emoji (~22px) + mascot matchup ("⚾ Braves vs. Phillies"), the loudest text on the card; secondary line shows Live / Starts-at | **Blocking** | ☐ |
+| 8.3 | Watch a live board with a prop resolving | The square's glow/pop animation still fires, and **only that board re-renders** (the others don't flash). This is the top risk from the Phase 2 extraction | **Blocking** | ☐ |
+| 8.4 | Leave the page open while a board settles (game ends) today | The board **stays in today's stack**, moves down into the finished section, shows its result + points, and the Collect button appears if points are unclaimed. It must not vanish (decision 1) | **Blocking** | ☐ |
+| 8.5 | Deep-link `/bingo/home?cardId=<a settled board>` | Lands on that board's calendar day and scrolls to it — not a blank tab, not "today" with the board missing (Phase 5d guard iii) | **Blocking** | ☐ |
+| 8.6 | Tap the date-rail label → month sheet | Opens as a slide-up sheet; today ringed, selected filled, days-with-boards dotted, future days disabled; ◀/▶ page months; "Jump to today" works; Escape / backdrop / Close all dismiss | **Blocking** | ☐ |
+| 8.7 | Pick a past day with boards | Stack shows that day's boards read-only; **no "Add a board" control**; empty past day offers "Back to today" | **Blocking** | ☐ |
+| 8.8 | Leave the page open across local midnight (or set the clock) | The rail stops calling yesterday "Today"; a 10pm game still live at 12:05am stays on the stack, doesn't drop off at midnight | Nice-to-have | ☐ |
+| 8.9 | Tap "Add a board" with < 4 boards | Steps 1→2→3 slide up over the stack as a sheet — **no route change**. Pick league → game → board | **Blocking** | ☐ |
+| 8.10 | Lock a board in from the sheet | Sheet slides back down; the new board is already in the stack behind it with the "just added" pop. No navigation to `/bingo/select-*` | **Blocking** | ☐ |
+| 8.11 | Inside the creation sheet on step 3, open the expanded board preview | The preview modal covers the full screen — it is **not** clipped inside the 90svh sheet panel (the `onAnimationEnd` class-drop guards this) | **Blocking** | ☐ |
+| 8.12 | Sheet dismissal: Escape, backdrop tap, and the header Close (✕) | All three close it; the in-sheet step-back is a chevron, never a raw `←`; focus returns to the "Add a board" trigger | **Blocking** | ☐ |
+| 8.13 | Tap "Add a board" with exactly 4 active boards | Pulses "Max 4 boards" / "Limit Reached" and does **not** open the sheet. This is now the only place the 4-board limit is communicated | **Blocking** | ☐ |
+| 8.14 | First-run: an account with **zero boards ever** | The first-run panel still fills the screen sensibly (both explainer strips were deleted in Phase 6). If it looks thin, grow the panel — do **not** restore the strips. Its own "Get your first board" button opens the sheet | **Blocking** | ☐ |
+| 8.15 | "Closest line" tile on a live board (Phase 6 kept it, flagged for re-decision) | Decide on sight: if the header + `N/25 marked` already tell the story and this reads as noise, delete it in `BingoBoardCard.tsx` (keep the settled `Points` branch — the Collect button shares that row). Record the decision here | Nice-to-have | ☐ |
+| 8.16 | "Turn your phone sideways…" hint on the first-run panel | Keep or cut on sight — it's the only landscape discoverability hint but odd advice to someone with no boards | Nice-to-have | ☐ |
+| 8.17 | Standalone-PWA cross-check of 8.1, 8.6, 8.9–8.11 | The date sheet and creation sheet sit above `GameAppBar`, lock the background scroll, and release it on close — in the installed app, not just a tab | **Blocking** | ☐ |
+| 8.18 | Rotate to landscape mid-stack, then back | Landscape is the **unchanged** swipe carousel with its own Active/Scored toggle and fullscreen behaviour — identical to `main` (decision 2). The creation sheet is not mounted in landscape | **Blocking** | ☐ |
+| 8.19 | Watch for a hydration warning in the console on first load of `/bingo/home` | None. Phase 7 fixed a server/client branch on the `actionPops` portal (`SportsBingoHome.tsx` ~:1948) — the portal now renders only once a pop is queued | **Blocking** | ☐ |
+
+## 9. Prop Bingo code-review fixes (`docs/prop-bingo-code-review-fix-plan.md` Phases 9–14.5)
+
+Seven review findings on the Phase 1–8 simplification tree, fixed 2026-09-07. Six are covered by
+the automated gate (tsc / lint / `npm run test` 2004-pass-0-fail / `npm run test:pwa-contract`
+20/20). The seventh — a still-running game viewed on its own calendar day **after local
+midnight** — is invisible to a headless pass by construction (the wrong badge and the wrong modal
+both render fine) and needs a real late game. Run once a Bingo game that starts ≥7pm local is
+live, then sit on the page past midnight (or move the device clock forward).
+
+| # | Steps | Expected | Blocking | Pass/Fail |
+|---|---|---|---|---|
+| 9.1 | With a game that kicked off late last night still inside its 6-hour window, page the date rail back one day to that game's calendar date | The board badges a green **● Live** pill — **not** "Starts 10:00 PM" — and its footer reads "Closest line / N to go" | **Blocking** | ☐ |
+| 9.2 | Tap that board | Opens **"Sports Bingo · Live Board"** (progress ring, legend, "How to win") — **not** "Sports Bingo · Final Board / No bingo this game" | **Blocking** | ☐ |
+| 9.3 | Leave that past-day view open through a live scoring play on that game | The squares tick there in step with today's stack — the board is not a frozen snapshot (Phase 14.5) | **Blocking** | ☐ |
+| 9.4 | Stay on that past-day view until the game ends / a prop settles it | The board flips **Live → Final in place** (no manual day-switch), and if it settled to a win the **Collect** button appears and pays out from that view | **Blocking** | ☐ |
+| 9.5 | Once the game is genuinely >6 hours past kickoff, reload and revisit that day | The board now reads as a settled result (no Live pill), opens the Final Board modal. (A badge that was correct at open can stay stale if you park on the screen for 4+ hours with no scoring — known, accepted residual) | Nice-to-have | ☐ |
+| 9.6 | Open the month calendar, pick a day, immediately reopen it (< 300ms) | It stays open — it does not auto-close from a stale close timer (Phase 12) | Nice-to-have | ☐ |
+| 9.7 | Switch directly between two different past days on the rail | The new day's boards appear behind a brief loader — no one-frame flash of the previous day's boards under the new day's label (Phase 14) | Nice-to-have | ☐ |
+| 9.8 | Generate an **NFL** board and watch the generating loader | Copy reads "Generating NFL board…" — not "Generating NBA board…" (Phase 11) | Nice-to-have | ☐ |
+
 ---
 
 ## If something fails

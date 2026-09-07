@@ -46,7 +46,7 @@ TASK:
 1. Keep all existing entries (IDs 001-064) UNCHANGED
 2. Add these 6 NEW entries to AD_SLOT_REGISTRY array BEFORE the closing bracket:
    - ID 065: Pick 'Em Inline (Between Cards)
-   - ID 066: Bingo Inline (Under Grid)  
+   - ID 066: Bingo Inline (Under Grid) — RETIRED 2026-09-07 (with 042); see docs/prop-bingo-page-simplification-plan.md Phase 1
    - ID 067: Fantasy Inline (Feed)
    - ID 068: Live Trivia Inline (Lobby)
    - ID 069: Predictions Inline (Market List)
@@ -186,6 +186,8 @@ CURRENT CODE:
 CHANGE: Replace slot="leaderboard-sidebar" with slot="inline-content"
 
 === FILE 4: /components/bingo/SportsBingoHome.tsx ===
+NOTE: The Bingo inline ad slot was RETIRED 2026-09-07 — this section is historical only.
+See docs/prop-bingo-page-simplification-plan.md Phase 1.
 Lines 1697 and 1794: Two InlineSlotAdClient components with slot="leaderboard-sidebar"
 
 CURRENT CODE (line 1697):

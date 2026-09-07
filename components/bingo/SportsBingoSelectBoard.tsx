@@ -9,6 +9,7 @@ import { getUserId, getVenueId } from "@/lib/storage";
 import { readSelectedBingoGame } from "@/lib/bingoSelectedGameCache";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
+import { getLeagueDisplay, toMascotDisplayName } from "@/lib/sportsBingoLeagues";
 
 type BingoGame = {
   id: string;
@@ -164,34 +165,6 @@ function getExpandedSquareStyle(isFree: boolean): string {
   return "border-white/10 bg-white/[0.04] text-white/75";
 }
 
-function toMascotDisplayName(team: string): string {
-  const trimmed = team.trim();
-  if (!trimmed) {
-    return trimmed;
-  }
-
-  const parts = trimmed.split(/\s+/).filter(Boolean);
-  if (parts.length <= 1) {
-    return trimmed;
-  }
-
-  const lastTwo = parts.slice(-2).join(" ");
-  const keepLastTwo = new Set([
-    "Red Sox",
-    "White Sox",
-    "Blue Jays",
-    "Trail Blazers",
-    "Golden Knights",
-    "Maple Leafs",
-  ]);
-
-  if (keepLastTwo.has(lastTwo)) {
-    return lastTwo;
-  }
-
-  return parts[parts.length - 1] ?? trimmed;
-}
-
 function getGeneratingLoaderVariant(sportKey: string): {
   emoji: string;
   title: string;
@@ -202,9 +175,10 @@ function getGeneratingLoaderVariant(sportKey: string): {
   barClassName: string;
 } {
   const normalized = sportKey.trim().toLowerCase();
+  const emoji = getLeagueDisplay(sportKey).emoji;
   if (normalized.includes("wnba")) {
     return {
-      emoji: "🏀",
+      emoji,
       title: "Generating WNBA board...",
       subtitle: "Calibrating pace-aware player and team squares.",
       panelClassName: "border-sky-300/30 bg-slate-800/70",
@@ -215,7 +189,7 @@ function getGeneratingLoaderVariant(sportKey: string): {
   }
   if (normalized.includes("baseball") || normalized.includes("mlb")) {
     return {
-      emoji: "⚾",
+      emoji,
       title: "Generating MLB board...",
       subtitle: "Building balanced prop and team-event squares.",
       panelClassName: "border-sky-300/30 bg-slate-800/70",
@@ -224,10 +198,32 @@ function getGeneratingLoaderVariant(sportKey: string): {
       barClassName: "bg-gradient-to-r from-cyan-500 to-sky-400",
     };
   }
+  if (normalized.includes("americanfootball") || normalized.includes("nfl")) {
+    return {
+      emoji,
+      title: "Generating NFL board...",
+      subtitle: "Building balanced drive, scoring, and player-prop squares.",
+      panelClassName: "border-sky-300/30 bg-slate-800/70",
+      badgeClassName: "border border-sky-300/40 bg-sky-300/10 text-sky-200",
+      barTrackClassName: "bg-slate-700/70",
+      barClassName: "bg-gradient-to-r from-sky-500 to-cyan-400",
+    };
+  }
+  if (normalized.includes("basketball") || normalized.includes("nba")) {
+    return {
+      emoji,
+      title: "Generating NBA board...",
+      subtitle: "Optimizing a fresh mix of team and player squares.",
+      panelClassName: "border-sky-300/30 bg-slate-800/70",
+      badgeClassName: "border border-sky-300/40 bg-sky-300/10 text-sky-200",
+      barTrackClassName: "bg-slate-700/70",
+      barClassName: "bg-gradient-to-r from-sky-500 to-cyan-400",
+    };
+  }
   return {
-    emoji: "🏀",
-    title: "Generating NBA board...",
-    subtitle: "Optimizing a fresh mix of team and player squares.",
+    emoji,
+    title: "Generating your board...",
+    subtitle: "Assembling a fresh mix of team and player squares.",
     panelClassName: "border-sky-300/30 bg-slate-800/70",
     badgeClassName: "border border-sky-300/40 bg-sky-300/10 text-sky-200",
     barTrackClassName: "bg-slate-700/70",
@@ -235,7 +231,27 @@ function getGeneratingLoaderVariant(sportKey: string): {
   };
 }
 
-export function SportsBingoSelectBoard() {
+export type SportsBingoSelectBoardProps = {
+  /** Sheet host (plan 4a). Absent, the league comes off the URL as it always has. */
+  sportKey?: string;
+  /** Sheet host (plan 4a). Absent, the game comes off the URL as it always has. */
+  gameId?: string;
+  /**
+   * Sheet host (plan 4d). When supplied, locking a board calls this instead of
+   * `router.push("/bingo/home")` — the sheet is already ON `/bingo/home`, so navigating would
+   * throw away the page state the new board is meant to appear in.
+   */
+  onCreated?: (cardId: string) => void;
+  /** The sheet header already says "Step 3 of 3"; suppress the in-card copy so it is not said twice. */
+  hideStepHeading?: boolean;
+};
+
+export function SportsBingoSelectBoard({
+  sportKey: sportKeyProp,
+  gameId: gameIdProp,
+  onCreated,
+  hideStepHeading = false,
+}: SportsBingoSelectBoardProps) {
   const playBoardPendingRef = useRef(false);
   const generateBoardPendingRef = useRef(false);
   const reducedMotion = useReducedMotion();
@@ -243,8 +259,10 @@ export function SportsBingoSelectBoard() {
   const searchParams = useSearchParams();
   const venuePresence = useVenuePresence();
 
-  const sportKey = (searchParams.get("sportKey") ?? "basketball_nba").trim() || "basketball_nba";
-  const gameId = (searchParams.get("gameId") ?? "").trim();
+  // Props win; the URL is the fallback (plan 4a). `useSearchParams` is still called
+  // unconditionally, but on the sheet's host page (`/bingo/home`) it carries neither key.
+  const sportKey = (sportKeyProp ?? searchParams.get("sportKey") ?? "").trim() || "basketball_nba";
+  const gameId = (gameIdProp ?? searchParams.get("gameId") ?? "").trim();
   const cardsView = (searchParams.get("cardsView") ?? searchParams.get("view") ?? "active").trim().toLowerCase();
   const isHistoricalCardsView = cardsView === "settled" || cardsView === "past" || cardsView === "history";
 
@@ -472,7 +490,11 @@ export function SportsBingoSelectBoard() {
           throw new Error(payload.error ?? "Failed to lock your bingo card.");
         }
 
-        router.push("/bingo/home");
+        if (onCreated) {
+          onCreated(payload.card.id);
+        } else {
+          router.push("/bingo/home");
+        }
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : "Failed to lock your bingo card.");
       } finally {
@@ -482,7 +504,7 @@ export function SportsBingoSelectBoard() {
     } finally {
       playBoardPendingRef.current = false;
     }
-  }, [preview, router, userId, venueId, venuePresence]);
+  }, [onCreated, preview, router, userId, venueId, venuePresence]);
 
   const renderPreviewGrid = (squares: BingoBoardSquare[]) => {
     const byIndex = new Map<number, BingoBoardSquare>();
@@ -608,8 +630,12 @@ export function SportsBingoSelectBoard() {
       ) : null}
 
       <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-300">Step 3 of 3</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-200">Generate And Lock Board</h2>
+        {hideStepHeading ? null : (
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-300">Step 3 of 3</p>
+        )}
+        <h2 className={`text-lg font-semibold text-slate-200 ${hideStepHeading ? "" : "mt-1"}`}>
+          Generate And Lock Board
+        </h2>
 
         {loadingGame ? (
           <div className="mt-2">

@@ -26,6 +26,7 @@ import {
   listAdminAccounts,
   listPendingPredictionSummaries,
   listAdminAdvertisements,
+  listAdminAdvertisementsByIds,
   listAdminPickEmMatchupsByDate,
   listAdminPickEmUnsettledGames,
   listAdminTriviaQuestions,
@@ -47,6 +48,10 @@ import {
 } from "@/lib/admin";
 import type { PlaceholderAdTemplateInput } from "@/lib/admin";
 import { requireAdminAuth } from "@/lib/adminAuth";
+import {
+  RETIRED_BINGO_INLINE_AD_MESSAGE,
+  isRetiredBingoInlinePlacement,
+} from "@/lib/adPlacements";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   createChallengeCampaign,
@@ -798,6 +803,15 @@ export async function POST(request: Request) {
     }
 
     if (body.resource === "ads") {
+      // Bingo inline ad slot retired 2026-09-07 — see docs/prop-bingo-page-simplification-plan.md Phase 1.
+      // Creation is refused outright: there is no legitimate reason to mint a new row in a slot
+      // that no longer renders, active or not.
+      if (isRetiredBingoInlinePlacement({ pageKey: body.pageKey, adType: body.adType, slot: body.slot })) {
+        return NextResponse.json(
+          { ok: false, error: RETIRED_BINGO_INLINE_AD_MESSAGE },
+          { status: 400 }
+        );
+      }
       try {
         const item = await createAdminAdvertisement({
           slot: body.slot,
@@ -1407,6 +1421,23 @@ export async function PATCH(request: Request) {
     }
 
     if (body.resource === "ads") {
+      // Bingo inline ad slot retired 2026-09-07 — see docs/prop-bingo-page-simplification-plan.md Phase 1.
+      // Guard the resulting state, not the request: a save that would leave the row an ACTIVE
+      // Bingo inline ad is refused, while winding one down (active: false) or moving it off the
+      // retired page/slot/type combination stays allowed. The migration deactivated these rows
+      // rather than deleting them, so the admin must still be able to manage them.
+      if (
+        body.active &&
+        isRetiredBingoInlinePlacement({ pageKey: body.pageKey, adType: body.adType, slot: body.slot })
+      ) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: `${RETIRED_BINGO_INLINE_AD_MESSAGE} Save it as inactive, or move it to another page, ad type, or slot.`,
+          },
+          { status: 400 }
+        );
+      }
       try {
         const item = await updateAdminAdvertisement({
           id: body.id,
@@ -1556,9 +1587,34 @@ export async function PATCH(request: Request) {
         const deleted = await bulkDeleteAdminAdvertisements(body.ids);
         return NextResponse.json({ ok: true, deleted });
       }
-      if (body.action === "enable" || body.action === "disable") {
-        const updated = await bulkSetAdminAdvertisementsActive(body.ids, body.action === "enable");
+      if (body.action === "disable") {
+        const updated = await bulkSetAdminAdvertisementsActive(body.ids, false);
         return NextResponse.json({ ok: true, updated });
+      }
+      if (body.action === "enable") {
+        // Same rule as the single-ad PATCH above: enabling is the one bulk action that can
+        // resurrect the retired Bingo inline slot, so those ids are skipped and reported back.
+        // Disable and delete stay unguarded — winding down is always allowed.
+        const rows = await listAdminAdvertisementsByIds(body.ids);
+        const retiredIds = rows
+          .filter((row) =>
+            isRetiredBingoInlinePlacement({
+              pageKey: row.pageKey,
+              adType: row.adType,
+              slot: row.slot,
+              slotKey: row.slotKey,
+            })
+          )
+          .map((row) => row.id);
+        const enableIds = body.ids.filter((id) => !retiredIds.includes(id));
+        const updated = enableIds.length > 0 ? await bulkSetAdminAdvertisementsActive(enableIds, true) : 0;
+        return NextResponse.json({
+          ok: true,
+          updated,
+          ...(retiredIds.length > 0
+            ? { skippedRetired: retiredIds.length, skippedRetiredIds: retiredIds }
+            : {}),
+        });
       }
       return NextResponse.json({ ok: false, error: "Invalid bulk ads action." }, { status: 400 });
     }

@@ -74,6 +74,7 @@ import { normalizePin } from "@/lib/pin";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 import { markJoinWelcomeSeen, shouldShowJoinWelcome } from "@/lib/joinWelcome";
 import { marketingHref } from "@/lib/domainSplit";
+import { SWIPE_PANEL_VARIANTS, SWIPE_TWEEN } from "@/lib/swipeTransition";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel =
@@ -302,26 +303,11 @@ const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig
 const PRELOAD_FETCH_TIMEOUT_MS = 1500;
 const LOGIN_WATCHDOG_TIMEOUT_MS = 30000;
 
-const ONBOARDING_PANEL_VARIANTS = {
-  enter: (direction: 1 | -1) => ({
-    x: direction > 0 ? "100%" : "-100%",
-    opacity: 1,
-  }),
-  center: {
-    x: "0%",
-    opacity: 1,
-  },
-  exit: (direction: 1 | -1) => ({
-    x: direction > 0 ? "-100%" : "100%",
-    opacity: 1,
-  }),
-};
-
-const SWIPE_SPRING_TRANSITION = {
-  type: "tween" as const,
-  duration: 0.22,
-  ease: [0.4, 0.0, 0.2, 1.0] as [number, number, number, number],
-};
+// The panel swipe (username → PIN, welcome carousel, venue list) now lives in
+// `@/lib/swipeTransition` so `components/bingo/CreateBoardSheet.tsx` shares the exact motion.
+// Local names kept via import alias to avoid churn across the ~10 call sites below.
+const ONBOARDING_PANEL_VARIANTS = SWIPE_PANEL_VARIANTS;
+const SWIPE_SPRING_TRANSITION = SWIPE_TWEEN;
 
 const LOADING_PHRASES = [
   "Lace up...",

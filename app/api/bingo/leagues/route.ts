@@ -5,16 +5,17 @@ import {
   NFL_SPORT_KEY,
   resolveLeagueSeasonStatus,
 } from "@/lib/leagueSeasonStatus";
+import { SPORTS_BINGO_LEAGUES } from "@/lib/sportsBingoLeagues";
 
-// Keep this list and its keys/labels/icons in sync with the client fallback in
-// components/bingo/SportsBingoSelectSport.tsx — that fallback renders every league enabled
-// (today's behavior) if this route errors, so the two are intentionally not shared code.
-const LEAGUES = [
-  { key: "basketball_nba", label: "NBA", icon: "🏀" },
-  { key: "basketball_wnba", label: "WNBA", icon: "🏀" },
-  { key: "americanfootball_nfl", label: "NFL", icon: "🏈" },
-  { key: "baseball_mlb", label: "MLB", icon: "⚾" },
-];
+// The static key/label/emoji catalog is now shared (`lib/sportsBingoLeagues.ts`). What stays
+// deliberately NOT shared is the fallback in components/bingo/SportsBingoSelectSport.tsx that
+// renders every league *enabled* if this route errors — that fail-open status behavior is the
+// intentional duplication, not the emoji table.
+const LEAGUES = SPORTS_BINGO_LEAGUES.map((league) => ({
+  key: league.sportKey,
+  label: league.label,
+  icon: league.emoji,
+}));
 
 export async function GET() {
   try {

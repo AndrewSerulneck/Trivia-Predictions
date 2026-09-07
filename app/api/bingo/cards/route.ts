@@ -3,6 +3,7 @@ import {
   claimSportsBingoReward,
   createSportsBingoCard,
   generateSportsBingoBoard,
+  listUserSportsBingoCardDates,
   listUserSportsBingoCards,
 } from "@/lib/sportsBingo";
 import { resolveLeagueBlockReason } from "@/lib/leagueSeasonStatus";
@@ -30,6 +31,49 @@ function normalizeBoolean(value: string | null, fallback = false): boolean {
   return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
+const LOCAL_DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function normalizeTzOffsetMinutes(value: string | null): number {
+  const parsed = Number.parseInt(String(value ?? ""), 10);
+  if (!Number.isFinite(parsed)) {
+    return 0;
+  }
+  return Math.max(-14 * 60, Math.min(14 * 60, parsed));
+}
+
+// Half-open UTC window for one LOCAL calendar day. `tzOffsetMinutes` follows the browser's
+// `Date.getTimezoneOffset()` convention (minutes to ADD to local time to reach UTC), so local
+// midnight in UTC is `Date.UTC(y, m, d) + offset * 60_000`. Returns null for a malformed date.
+function resolveLocalDayWindow(
+  date: string,
+  tzOffsetMinutes: number
+): { startsAtFrom: string; startsAtTo: string } | null {
+  if (!LOCAL_DAY_PATTERN.test(date)) {
+    return null;
+  }
+  const [year, month, day] = date.split("-").map((part) => Number.parseInt(part, 10));
+  const utcMidnight = Date.UTC(year, month - 1, day);
+  if (!Number.isFinite(utcMidnight)) {
+    return null;
+  }
+  // `Date.UTC` silently rolls impossible dates over (2026-02-30 -> March 2), which would return
+  // the wrong day's boards with a 200. Round-trip the constructed instant and reject on any
+  // component mismatch so the malformed-date -> 400 path below actually fires.
+  const roundTrip = new Date(utcMidnight);
+  if (
+    roundTrip.getUTCFullYear() !== year ||
+    roundTrip.getUTCMonth() !== month - 1 ||
+    roundTrip.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  const startMs = utcMidnight + tzOffsetMinutes * 60_000;
+  return {
+    startsAtFrom: new Date(startMs).toISOString(),
+    startsAtTo: new Date(startMs + 24 * 60 * 60 * 1000).toISOString(),
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -38,20 +82,51 @@ export async function GET(request: Request) {
     const refreshProgressRequested = normalizeBoolean(searchParams.get("refreshProgress"), false);
     // Historical/settled queries are immutable snapshots and must never trigger expensive refresh evaluation.
     const refreshProgress = includeSettled ? false : refreshProgressRequested;
+    const requestedDate = (searchParams.get("date") ?? "").trim();
+    const tzOffsetMinutes = normalizeTzOffsetMinutes(searchParams.get("tzOffsetMinutes"));
+    const includeDates = normalizeBoolean(searchParams.get("includeDates"), false);
 
     if (!userId) {
       return NextResponse.json({ ok: true, cards: [] });
+    }
+
+    // A malformed `date` is refused rather than silently ignored: falling back to "every card"
+    // would hand a past-day view the whole history and read as a data bug, not a bad request.
+    let dayWindow: { startsAtFrom: string; startsAtTo: string } | null = null;
+    if (requestedDate) {
+      dayWindow = resolveLocalDayWindow(requestedDate, tzOffsetMinutes);
+      if (!dayWindow) {
+        return NextResponse.json(
+          { ok: false, error: "date must be a local calendar day formatted as YYYY-MM-DD." },
+          { status: 400 }
+        );
+      }
     }
 
     const cards = await listUserSportsBingoCards({
       userId,
       includeSettled,
       refreshProgress,
+      ...(dayWindow ?? {}),
     });
+
+    // The calendar dots are decorative. A failure here must not 500 the primary boards
+    // response, so this query gets its own try/catch: on error the calendar simply renders
+    // without dots (the response shape already treats `activeDates` as optional).
+    let activeDates: string[] | undefined;
+    if (includeDates) {
+      try {
+        activeDates = await listUserSportsBingoCardDates({ userId, tzOffsetMinutes });
+      } catch (datesError) {
+        console.error("[bingo][cards][dates] failed to load calendar dates", datesError);
+        activeDates = undefined;
+      }
+    }
 
     return NextResponse.json({
       ok: true,
       cards,
+      ...(activeDates ? { activeDates } : {}),
     });
   } catch (error) {
     return NextResponse.json(

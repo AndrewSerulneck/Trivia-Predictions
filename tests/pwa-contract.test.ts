@@ -27,6 +27,8 @@ const read = (relativePath: string): string =>
 const globalsSource = read("app/globals.css");
 const pwaLibSource = read("lib/pwa.ts");
 const bingoSource = read("components/bingo/SportsBingoHome.tsx");
+const bingoSharedSource = read("components/bingo/bingoBoardShared.tsx");
+const bingoBoardCardSource = read("components/bingo/BingoBoardCard.tsx");
 const packageJson = JSON.parse(read("package.json")) as {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
@@ -420,12 +422,24 @@ describe("Bingo landscape CSS stays out of portrait", () => {
   it("keeps portrait square labels on the original truncation budget", () => {
     // Phase 1 raised the label cap for the big landscape squares only. Portrait
     // squares are far smaller; the same cap there overflows them.
-    expect(bingoSource).toContain("function shortenLabel(label: string, maxLength = 18): string {");
-    expect(bingoSource).toContain("{isFree ? \"FREE\" : shortenLabel(square.label)}");
+    //
+    // Phase 2 of docs/prop-bingo-page-simplification-plan.md moved `shortenLabel` into
+    // components/bingo/bingoBoardShared.tsx and the portrait square render into
+    // components/bingo/BingoBoardCard.tsx. The landscape cap and its single use site
+    // both stay in SportsBingoHome.tsx.
+    expect(bingoSharedSource).toContain(
+      "export function shortenLabel(label: string, maxLength = 18): string {"
+    );
+    expect(bingoBoardCardSource).toContain("{isFree ? \"FREE\" : shortenLabel(square.label)}");
+    // The portrait grid lives in exactly one place now — it must not come back here.
+    expect(bingoSource).not.toContain("shortenLabel(square.label)}");
 
+    const landscapeCapDeclarations = bingoSharedSource.match(/LANDSCAPE_SQUARE_LABEL_MAX_LENGTH/g) ?? [];
+    expect(landscapeCapDeclarations).toHaveLength(1);
     const landscapeCapUses = bingoSource.match(/LANDSCAPE_SQUARE_LABEL_MAX_LENGTH/g) ?? [];
-    // Exactly two: the declaration and the single landscape render site.
+    // Exactly two: the import and the single landscape render site.
     expect(landscapeCapUses).toHaveLength(2);
+    expect(bingoBoardCardSource).not.toContain("LANDSCAPE_SQUARE_LABEL_MAX_LENGTH");
   });
 
   it("adds no Bingo-specific viewport clamp to the shared app shell", () => {

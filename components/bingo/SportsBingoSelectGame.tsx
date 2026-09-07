@@ -6,7 +6,7 @@ import { getUserId } from "@/lib/storage";
 import { writeSelectedBingoGame } from "@/lib/bingoSelectedGameCache";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
-type BingoGame = {
+export type SportsBingoGame = {
   id: string;
   sportKey: string;
   homeTeam: string;
@@ -18,7 +18,7 @@ type BingoGame = {
 
 type GamesResponse = {
   ok: boolean;
-  games?: BingoGame[];
+  games?: SportsBingoGame[];
   error?: string;
 };
 
@@ -49,13 +49,37 @@ function formatLocalDateTime(iso: string): string {
   });
 }
 
-export function SportsBingoSelectGame() {
+export type SportsBingoSelectGameProps = {
+  /**
+   * Sheet host (plan 4a). When absent the component reads the league off the URL exactly as the
+   * standalone `/bingo/select-game` route always has.
+   */
+  sportKey?: string;
+  /**
+   * Sheet host (plan 4a). When supplied, picking a game calls this instead of navigating to
+   * `/bingo/select-board`. The selected game is still written to the session cache either way,
+   * so step 3 can render its summary without a second `/api/bingo/games` round trip.
+   */
+  onSelectGame?: (game: SportsBingoGame) => void;
+  /** The sheet header already says "Step 2 of 3"; suppress the in-card copy so it is not said twice. */
+  hideStepHeading?: boolean;
+};
+
+export function SportsBingoSelectGame({
+  sportKey: sportKeyProp,
+  onSelectGame,
+  hideStepHeading = false,
+}: SportsBingoSelectGameProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sportKey = (searchParams.get("sportKey") ?? "basketball_nba").trim() || "basketball_nba";
+  // Props win; the URL is the fallback. `useSearchParams` still has to be called unconditionally
+  // (hooks rule), but on the sheet's host page (`/bingo/home`) it carries no `sportKey` at all,
+  // so the prop is the only thing that can resolve the league there.
+  const routeSportKey = (searchParams.get("sportKey") ?? "").trim();
+  const sportKey = (sportKeyProp ?? routeSportKey).trim() || "basketball_nba";
 
   const [userId, setUserId] = useState("");
-  const [games, setGames] = useState<BingoGame[]>([]);
+  const [games, setGames] = useState<SportsBingoGame[]>([]);
   const [activeGameIds, setActiveGameIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -131,8 +155,10 @@ export function SportsBingoSelectGame() {
       <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-300">Step 2 of 3</p>
-            <h2 className="mt-1 text-lg font-semibold text-slate-200">Choose A Game</h2>
+            {hideStepHeading ? null : (
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-300">Step 2 of 3</p>
+            )}
+            <h2 className={`text-lg font-semibold text-slate-200 ${hideStepHeading ? "" : "mt-1"}`}>Choose A Game</h2>
           </div>
           <span className="shrink-0 rounded-full border border-sky-300/40 bg-sky-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-sky-200">
             {activeGameIds.size} of 4 boards active
@@ -161,6 +187,10 @@ export function SportsBingoSelectGame() {
                       return;
                     }
                     writeSelectedBingoGame(game);
+                    if (onSelectGame) {
+                      onSelectGame(game);
+                      return;
+                    }
                     router.push(
                       `/bingo/select-board?sportKey=${encodeURIComponent(sportKey)}&gameId=${encodeURIComponent(game.id)}`
                     );

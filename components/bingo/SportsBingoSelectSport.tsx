@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SPORTS_BINGO_LEAGUES } from "@/lib/sportsBingoLeagues";
 
 type SportOption = {
   key: string;
@@ -13,13 +14,22 @@ type SportOption = {
 
 // Static fallback: today's always-clickable list, used both when season gating is off
 // (NEXT_PUBLIC_BINGO_SEASON_GATING_ENABLED unset) and when the /api/bingo/leagues call fails —
-// fail open, never blank the picker over a flaky request.
-const FALLBACK_SPORT_OPTIONS: SportOption[] = [
-  { key: "basketball_nba", label: "NBA", icon: "🏀", enabled: true },
-  { key: "basketball_wnba", label: "WNBA", icon: "🏀", enabled: true },
-  { key: "americanfootball_nfl", label: "NFL", icon: "🏈", enabled: false, note: "Coming soon" },
-  { key: "baseball_mlb", label: "MLB", icon: "⚾", enabled: true },
-];
+// fail open, never blank the picker over a flaky request. Key/label/icon come from the shared
+// catalog; only the fail-open `enabled`/`note` status stays local (see route.ts comment).
+const FALLBACK_STATUS: Record<string, { enabled: boolean; note?: string }> = {
+  basketball_nba: { enabled: true },
+  basketball_wnba: { enabled: true },
+  americanfootball_nfl: { enabled: false, note: "Coming soon" },
+  baseball_mlb: { enabled: true },
+};
+
+const FALLBACK_SPORT_OPTIONS: SportOption[] = SPORTS_BINGO_LEAGUES.map((league) => ({
+  key: league.sportKey,
+  label: league.label,
+  icon: league.emoji,
+  enabled: FALLBACK_STATUS[league.sportKey]?.enabled ?? true,
+  note: FALLBACK_STATUS[league.sportKey]?.note,
+}));
 
 type LeaguesApiLeague = {
   key: string;
@@ -30,7 +40,18 @@ type LeaguesApiLeague = {
   note?: string;
 };
 
-export function SportsBingoSelectSport() {
+export type SportsBingoSelectSportProps = {
+  /**
+   * Sheet host (plan 4a). When supplied, picking a league calls this instead of navigating to
+   * `/bingo/select-game` — that is the ONLY difference between the standalone route and the
+   * in-place `CreateBoardSheet`. Absent, the component behaves exactly as it always has.
+   */
+  onSelectSport?: (sportKey: string) => void;
+  /** The sheet header already says "Step 1 of 3"; suppress the in-card copy so it is not said twice. */
+  hideStepHeading?: boolean;
+};
+
+export function SportsBingoSelectSport({ onSelectSport, hideStepHeading = false }: SportsBingoSelectSportProps) {
   const router = useRouter();
   const [sportOptions, setSportOptions] = useState<SportOption[] | null>(null);
 
@@ -77,8 +98,10 @@ export function SportsBingoSelectSport() {
   return (
     <div className="tp-bingo-theme space-y-4">
       <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-300">Step 1 of 3</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-200">Choose A League</h2>
+        {hideStepHeading ? null : (
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-300">Step 1 of 3</p>
+        )}
+        <h2 className={`text-lg font-semibold text-slate-200 ${hideStepHeading ? "" : "mt-1"}`}>Choose A League</h2>
         <p className="mt-1 text-sm text-slate-400">Pick a league, then a game, then lock in your board.</p>
         <p className="mt-3 flex items-center gap-2 rounded-md border border-sky-300/40 bg-sky-300/10 px-3 py-2 text-xs font-semibold text-sky-200">
           <span aria-hidden="true">📱</span>
@@ -103,6 +126,10 @@ export function SportsBingoSelectSport() {
                   type="button"
                   onClick={() => {
                     if (!sport.enabled) {
+                      return;
+                    }
+                    if (onSelectSport) {
+                      onSelectSport(sport.key);
                       return;
                     }
                     router.push(`/bingo/select-game?sportKey=${encodeURIComponent(sport.key)}`);

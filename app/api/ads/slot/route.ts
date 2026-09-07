@@ -48,6 +48,11 @@ export async function GET(request: Request) {
     const clientCounterRaw = Number.parseInt(searchParams.get("clientCounter") ?? "", 10);
     const clientCounter = Number.isFinite(clientCounterRaw) ? clientCounterRaw : 0;
 
+    // Bingo inline ad slot retired 2026-09-07 — see docs/prop-bingo-page-simplification-plan.md Phase 1.
+    if (slotKeyParam === "sports-bingo-inline") {
+      return NextResponse.json({ ok: true, ad: null });
+    }
+
     // New canonical path: ?slotKey=venue-popup-on-entry
     if (slotKeyParam) {
       const ad = await getAdForSlotKey(slotKeyParam, venueId, {
@@ -72,6 +77,10 @@ export async function GET(request: Request) {
 
     if (pageKeyParam && !isAdPageKey(pageKeyParam)) {
       return NextResponse.json({ ok: false, error: "Invalid page key." }, { status: 400 });
+    }
+    // Bingo inline ad slot retired 2026-09-07 — see docs/prop-bingo-page-simplification-plan.md Phase 1.
+    if (pageKeyParam === "sports-bingo" && (adTypeParam === "inline" || slotParam === "inline-content")) {
+      return NextResponse.json({ ok: true, ad: null });
     }
     if (adTypeParam && !isAdType(adTypeParam)) {
       return NextResponse.json({ ok: false, error: "Invalid ad type." }, { status: 400 });

@@ -360,21 +360,54 @@ describe("applyDiscountToSubscription — offline/check-billed rows never call S
     expect(mocks.subscriptionUpdate).not.toHaveBeenCalled();
   };
 
-  it("pushes current_period_end forward for free months", async () => {
-    const result = await applyDiscountToSubscription(OFFLINE_ROW, {
-      type: "free_months",
-      months: 3,
-    });
+  // The free-months base date is `max(current_period_end, now)` (the free_months branch
+  // of applyDiscountToSubscription) — an already-lapsed period is never extended from the
+  // past. That makes the assertion date-relative, so both branches pin the clock rather
+  // than depending on the wall date (Phase 16 of docs/prop-bingo-code-review-fix-plan.md).
+  it("pushes current_period_end forward from an unlapsed period end for free months", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-15T12:00:00.000Z")); // before OFFLINE_ROW's 2026-08-31
+    try {
+      const result = await applyDiscountToSubscription(OFFLINE_ROW, {
+        type: "free_months",
+        months: 3,
+      });
 
-    expect(result).toMatchObject({ ok: true, mode: "local", couponId: null, label: "3 free months" });
-    const payload = mocks.dbUpdate.mock.calls[0][0];
-    expect(payload.current_period_end).toBe("2026-11-30T00:00:00.000Z");
-    expect(payload.discount_ends_at).toBe("2026-11-30T00:00:00.000Z");
-    expect(payload).not.toHaveProperty("amount_cents");
-    // Free months move the paid-through date, not the rate. Mirroring 100% here
-    // would make every surface render this partner's rate as $0 forever.
-    expect(payload.discount_percent_off).toBeNull();
-    expectNoStripe();
+      expect(result).toMatchObject({ ok: true, mode: "local", couponId: null, label: "3 free months" });
+      const payload = mocks.dbUpdate.mock.calls[0][0];
+      // 2026-08-31 + 3 months, clamped to November's 30 days.
+      expect(payload.current_period_end).toBe("2026-11-30T00:00:00.000Z");
+      expect(payload.discount_ends_at).toBe("2026-11-30T00:00:00.000Z");
+      expect(payload).not.toHaveProperty("amount_cents");
+      // Free months move the paid-through date, not the rate. Mirroring 100% here
+      // would make every surface render this partner's rate as $0 forever.
+      expect(payload.discount_percent_off).toBeNull();
+      expectNoStripe();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("extends free months from today when the stored period end has already lapsed", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-15T12:00:00.000Z")); // after OFFLINE_ROW's 2026-08-31
+    try {
+      const result = await applyDiscountToSubscription(OFFLINE_ROW, {
+        type: "free_months",
+        months: 3,
+      });
+
+      expect(result).toMatchObject({ ok: true, mode: "local", couponId: null, label: "3 free months" });
+      const payload = mocks.dbUpdate.mock.calls[0][0];
+      // Base is `now` (2026-10-15), not the lapsed 2026-08-31, so 3 months lands 2027-01-15.
+      expect(payload.current_period_end).toBe("2027-01-15T12:00:00.000Z");
+      expect(payload.discount_ends_at).toBe("2027-01-15T12:00:00.000Z");
+      expect(payload).not.toHaveProperty("amount_cents");
+      expect(payload.discount_percent_off).toBeNull();
+      expectNoStripe();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("mirrors percent off without touching amount_cents", async () => {

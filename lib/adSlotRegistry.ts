@@ -42,7 +42,7 @@ export const AD_SLOT_REGISTRY: SlotRegistryEntry[] = [
   // SPORTS BINGO
   { id: "040", label: "Bingo Entry Pop-Up",          pageKey: "sports-bingo", slot: "popup-on-entry",                 trigger: "on-load"  },
   { id: "041", label: "Bingo Scroll Pop-Up",         pageKey: "sports-bingo", slot: "popup-on-scroll",                trigger: "on-scroll"},
-  { id: "042", label: "Bingo Inline Content",        pageKey: "sports-bingo", slot: "inline-content",                 trigger: "on-load"  },
+  // id "042" (Bingo Inline Content) retired 2026-09-07 — see docs/prop-bingo-page-simplification-plan.md Phase 1.
   { id: "043", label: "Bingo Mobile Banner",         pageKey: "sports-bingo", slot: "mobile-adhesion",                trigger: "on-load"  },
   { id: "044", label: "Bingo Mobile Banner (Scroll)",pageKey: "sports-bingo", slot: "mobile-adhesion",                trigger: "on-scroll"},
   // PICK 'EM
@@ -58,7 +58,7 @@ export const AD_SLOT_REGISTRY: SlotRegistryEntry[] = [
   { id: "063", label: "Fantasy Mobile Banner",       pageKey: "fantasy",      slot: "mobile-adhesion",                trigger: "on-load"  },
   { id: "064", label: "Fantasy Mobile Banner (Scroll)", pageKey: "fantasy",   slot: "mobile-adhesion",                trigger: "on-scroll"},
   // INLINE REFINEMENTS
-  { id: "066", label: "Bingo Inline (Under Grid)",   pageKey: "sports-bingo", slot: "inline-content",                 trigger: "on-load"  },
+  // id "066" (Bingo Inline (Under Grid)) retired 2026-09-07 — see docs/prop-bingo-page-simplification-plan.md Phase 1.
   { id: "067", label: "Fantasy Inline (Feed)",       pageKey: "fantasy",      slot: "inline-content",                 trigger: "on-load"  },
   { id: "068", label: "Live Trivia Inline (Lobby)",  pageKey: "live-trivia",  slot: "inline-content",                 trigger: "on-load"  },
   // PICK 'EM - 6 SPECIFIC INLINE SLOTS

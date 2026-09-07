@@ -17,52 +17,42 @@ import { isInstallPromptEnabled, isIOSSafari, useIsRunningAsInstalledPwa, usePwa
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
-import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { ActionPop, type ActionPopTone } from "@/components/bingo/ActionPop";
 import {
   classifyLiveDeltaEvent,
   isRegressedNflLiveStatRow,
   type LivePlayerStatRealtimeRow,
 } from "@/lib/sportsBingoLiveEvents";
-import { ViewTabs, FoldLine, LiveDot } from "@/components/venue/GameChrome";
+import { BingoBoardCard } from "@/components/bingo/BingoBoardCard";
+import { CreateBoardSheet } from "@/components/bingo/CreateBoardSheet";
+import { getLeagueDisplay, toMascotMatchup } from "@/lib/sportsBingoLeagues";
+import {
+  BINGO_GAME_BUFFER_MS,
+  BINGO_HEADER_LETTERS,
+  LANDSCAPE_SQUARE_LABEL_MAX_LENGTH,
+  getBoardProgress,
+  getCardSquareStyle,
+  mergeLiveCardUpdates,
+  renderSquareStatusGlyph,
+  resolveHistoryStackEntry,
+  shortenLabel,
+  summarizeCardState,
+  toCardSquareKey,
+  type BingoCard,
+  type BingoCardSquare,
+} from "@/components/bingo/bingoBoardShared";
+// `LiveDot` moved to `BingoBoardCard` with the status row in Phase 2; `ViewTabs` was retired in
+// Phase 5d — the date rail plus each board's own result state carries what the tabs carried.
+import { DateCalendarPopover, toLocalDateKey, todayDateKey } from "@/components/ui/DateCalendarPopover";
 import { GameAppBar } from "@/components/venue/AppBar";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 
-type BingoCardSquare = {
-  id: string;
-  index: number;
-  key: string;
-  label: string;
-  probability: number;
-  isFree: boolean;
-  status: "pending" | "hit" | "miss" | "void" | "replaced";
-  resolvedAt?: string;
-  propProgress?: { current: number; target: number; unit: string };
-};
-
-type BingoCard = {
-  id: string;
-  userId: string;
-  venueId: string;
-  gameId: string;
-  gameLabel: string;
-  sportKey: string;
-  homeTeam: string;
-  awayTeam: string;
-  startsAt: string;
-  status: "active" | "won" | "lost" | "canceled";
-  boardProbability: number;
-  rewardPoints: number;
-  rewardClaimedAt?: string;
-  createdAt: string;
-  settledAt?: string;
-  squares: BingoCardSquare[];
-};
-
 type CardsResponse = {
   ok: boolean;
   cards?: BingoCard[];
+  /** Local `YYYY-MM-DD` days on which the player holds at least one board (plan 5a). */
+  activeDates?: string[];
   error?: string;
 };
 
@@ -102,21 +92,6 @@ type FullscreenCapableDocument = Document & {
   webkitExitFullscreen?: () => Promise<void> | void;
 };
 
-const LINE_PATTERNS: number[][] = [
-  [0, 1, 2, 3, 4],
-  [5, 6, 7, 8, 9],
-  [10, 11, 12, 13, 14],
-  [15, 16, 17, 18, 19],
-  [20, 21, 22, 23, 24],
-  [0, 5, 10, 15, 20],
-  [1, 6, 11, 16, 21],
-  [2, 7, 12, 17, 22],
-  [3, 8, 13, 18, 23],
-  [4, 9, 14, 19, 24],
-  [0, 6, 12, 18, 24],
-  [4, 8, 12, 16, 20],
-];
-const BINGO_GAME_BUFFER_MS = 6 * 60 * 60 * 1000;
 const FINAL_SCORES_RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
 const DEFAULT_LANDSCAPE_VIEWPORT_STYLE = {
   "--bingo-landscape-vw": "100vw",
@@ -165,85 +140,6 @@ async function exitDocumentFullscreen(): Promise<void> {
   }
 }
 
-function formatLocalDateTime(iso: string): string {
-  const date = new Date(iso);
-  return date.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-// Landscape squares only. Phase 1 grew each square and raised the square font; the
-// board stage then dropped its square aspect cap and now fills the full landscape
-// column, so cells are wider than they are tall and have several lines of room.
-// The whole premise of the landscape view is that it shows the prop bet in full, so
-// there is deliberately NO character cap here any more — `shortenLabel`'s ellipsis
-// was the last thing truncating text that the box could actually fit. The `line-clamp-4`
-// on the label span remains the only limit, and it clamps by real rendered lines
-// rather than by a guessed character count. Portrait squares are far smaller and keep
-// `shortenLabel`'s own default; do not reuse this behavior there.
-const LANDSCAPE_SQUARE_LABEL_MAX_LENGTH = Number.POSITIVE_INFINITY;
-
-function shortenLabel(label: string, maxLength = 18): string {
-  const trimmed = label.trim();
-  const supportPrefixMatch = trimmed.match(/^\[(SUPPORTED|POSSIBLE)\]\s*/i);
-  const prefix = supportPrefixMatch?.[1]
-    ? supportPrefixMatch[1].toUpperCase() === "SUPPORTED"
-      ? "S: "
-      : "P: "
-    : "";
-  const body = supportPrefixMatch ? trimmed.replace(/^\[(SUPPORTED|POSSIBLE)\]\s*/i, "") : trimmed;
-  const normalized = `${prefix}${body}`;
-
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-  return `${normalized.slice(0, maxLength - 3)}...`;
-}
-
-// Casino-felt square treatment — open squares read as dark "daub-ready" tiles on
-// the green felt; hit squares glow orange; the FREE center is gold.
-function getCardSquareStyle(status: BingoCardSquare["status"], isFree: boolean): string {
-  if (isFree) {
-    return "border-amber-300/65 bg-[linear-gradient(135deg,rgba(252,211,77,0.42),rgba(217,119,6,0.32))] text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]";
-  }
-  if (status === "hit") {
-    return "border-orange-400/70 bg-[radial-gradient(circle_at_50%_38%,rgba(249,115,22,0.6),rgba(249,115,22,0.16)_70%,transparent),rgba(249,115,22,0.18)] text-orange-100 shadow-[0_0_12px_rgba(249,115,22,0.45)]";
-  }
-  if (status === "miss") {
-    return "border-rose-500/45 bg-rose-950/30 text-rose-300/80";
-  }
-  if (status === "void") {
-    return "border-white/[0.06] bg-slate-900/40 text-slate-600";
-  }
-  // pending — open square on the felt, awaiting a stat update
-  return "border-white/10 bg-white/[0.04] text-white/75";
-}
-
-function renderSquareStatusGlyph(square: BingoCardSquare) {
-  if (square.isFree || square.status === "hit") {
-    return (
-      <span className="absolute right-0.5 top-0.5 text-[11px] font-black leading-none text-amber-200 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
-        ✓
-      </span>
-    );
-  }
-  if (square.status === "miss") {
-    return (
-      <span className="absolute right-1 top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white">
-        ✕
-      </span>
-    );
-  }
-  return null;
-}
-
-function toCardSquareKey(cardId: string, squareIndex: number): string {
-  return `${cardId}:${squareIndex}`;
-}
-
 function toTimestamp(value?: string): number {
   if (!value) {
     return Number.POSITIVE_INFINITY;
@@ -282,6 +178,14 @@ function getFinalScoreTimestamp(card: BingoCard): number {
   const createdAtMs = Date.parse(String(card.createdAt ?? ""));
   if (Number.isFinite(createdAtMs)) return createdAtMs;
   return Number.NEGATIVE_INFINITY;
+}
+
+// Local-calendar-day comparison for the portrait stack. `toLocalDateKey` / `todayDateKey` are
+// the same helpers the date calendar uses, so the client's day filter and the API's
+// `date=YYYY-MM-DD` window are guaranteed to agree on where a day starts.
+function isCardOnLocalDay(iso: string, dayKey: string): boolean {
+  const cardDay = toLocalDateKey(iso);
+  return cardDay !== "" && cardDay === dayKey;
 }
 
 function compareCardsLatestToEarliest(a: BingoCard, b: BingoCard): number {
@@ -325,112 +229,6 @@ function collectUpdatedSquareChanges(
   }
 
   return updates;
-}
-
-function summarizeCardState(card: BingoCard): {
-  hitCount: number;
-  nearWin: boolean;
-  completedLines: number;
-} {
-  const byIndex = new Map<number, BingoCardSquare>();
-  for (const square of card.squares) {
-    byIndex.set(square.index, square);
-  }
-
-  const hitCount = card.squares.reduce((sum, square) => {
-    if (square.isFree || square.status === "hit") {
-      return sum + 1;
-    }
-    return sum;
-  }, 0);
-
-  let nearWin = false;
-  let completedLines = 0;
-
-  for (const line of LINE_PATTERNS) {
-    let hits = 0;
-    let misses = 0;
-    let pending = 0;
-
-    for (const index of line) {
-      const square = byIndex.get(index);
-      if (!square) {
-        pending += 1;
-        continue;
-      }
-      if (square.isFree || square.status === "hit") {
-        hits += 1;
-      } else if (square.status === "miss") {
-        misses += 1;
-      } else {
-        pending += 1;
-      }
-    }
-
-    if (hits === 5) {
-      completedLines += 1;
-    }
-    if (hits === 4 && misses === 0 && pending === 1) {
-      nearWin = true;
-    }
-  }
-
-  return { hitCount, nearWin, completedLines };
-}
-
-const BINGO_HEADER_LETTERS = [
-  { letter: "B", color: "text-rose-300" },
-  { letter: "I", color: "text-amber-300" },
-  { letter: "N", color: "text-emerald-300" },
-  { letter: "G", color: "text-sky-300" },
-  { letter: "O", color: "text-violet-300" },
-] as const;
-
-// Closest 5-in-a-row remaining for the board: 0 means a line is complete (bingo),
-// null means every line is blocked by a miss/void. Drives the "N to bingo" hint.
-function getClosestLineRemaining(squares: BingoCardSquare[]): number | null {
-  const byIndex = new Map<number, BingoCardSquare>();
-  for (const square of squares) {
-    byIndex.set(square.index, square);
-  }
-  let best: number | null = null;
-  for (const line of LINE_PATTERNS) {
-    let hits = 0;
-    let blocked = false;
-    for (const index of line) {
-      const square = byIndex.get(index);
-      if (square && (square.isFree || square.status === "hit")) {
-        hits += 1;
-      } else if (square && (square.status === "miss" || square.status === "void")) {
-        blocked = true;
-        break;
-      }
-    }
-    if (blocked) {
-      continue;
-    }
-    const remaining = 5 - hits;
-    if (best === null || remaining < best) {
-      best = remaining;
-    }
-  }
-  return best;
-}
-
-function getBoardProgress(squares: BingoCardSquare[]): {
-  hitCount: number;
-  pctFilled: number;
-  toBingo: number | null;
-} {
-  const hitCount = squares.reduce(
-    (sum, square) => (square.isFree || square.status === "hit" ? sum + 1 : sum),
-    0
-  );
-  return {
-    hitCount,
-    pctFilled: Math.round((hitCount / 25) * 100),
-    toBingo: getClosestLineRemaining(squares),
-  };
 }
 
 // Casino-felt progress ring — mirrors the conic gauge in the Bingo design mockups.
@@ -487,84 +285,6 @@ const BingoLegend = () => (
     </li>
   </ul>
 );
-
-function renderCompactGrid(
-  cardId: string,
-  squares: BingoCardSquare[],
-  recentlyUpdatedSquareKeys: ReadonlySet<string>,
-  recentlySucceededSquareKeys: ReadonlySet<string>,
-  glowingSquareKeys: ReadonlySet<string>
-) {
-  const byIndex = new Map<number, BingoCardSquare>();
-  for (const square of squares) {
-    byIndex.set(square.index, square);
-  }
-
-  return (
-    <div className="relative rounded-[18px] border-2 border-sky-300/90 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.10),transparent_60%),radial-gradient(circle_at_20%_80%,rgba(0,0,0,0.45),transparent_60%),#0c3a2e] p-3 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.4),0_12px_26px_rgba(0,0,0,0.55),0_0_28px_rgba(125,211,252,0.18)]">
-      <span aria-hidden="true" className="pointer-events-none absolute inset-1 rounded-[14px] border border-[#c89b3a]/55" />
-      <div className="relative z-[2] mb-2 grid grid-cols-5 gap-1.5">
-        {BINGO_HEADER_LETTERS.map((item) => (
-          <div
-            key={item.letter}
-            className={`text-center text-lg font-black tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
-          >
-            {item.letter}
-          </div>
-        ))}
-      </div>
-      <div className="relative z-[2] grid grid-cols-5 gap-1.5">
-      {Array.from({ length: 25 }).map((_, index) => {
-        const square = byIndex.get(index);
-        if (!square) {
-          return <div key={index} className="h-10 rounded-md border border-white/[0.06] bg-slate-900/40" />;
-        }
-
-        const isFree = Boolean(square.isFree);
-        const squareKey = toCardSquareKey(cardId, index);
-        const shouldPop = recentlyUpdatedSquareKeys.has(squareKey);
-        const isSuccessPop = recentlySucceededSquareKeys.has(squareKey);
-        const isGlowing = glowingSquareKeys.has(squareKey);
-        const progressText =
-          square.propProgress && square.status === "pending"
-            ? `${Math.min(square.propProgress.current, square.propProgress.target)}/${square.propProgress.target}`
-            : "";
-        return (
-          <div
-            key={index}
-            title={square.label}
-            data-bingo-square-key={squareKey}
-            className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] ${getCardSquareStyle(
-              square.status,
-              isFree
-            )} ${
-              shouldPop
-                ? isSuccessPop
-                  ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse motion-reduce:animate-none"
-                  : "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]"
-                : ""
-            }`}
-          >
-            <span
-              className={`pointer-events-none absolute inset-0 rounded-md bg-cyan-300/35 blur-[1px] transition duration-200 ${
-                isGlowing ? "scale-110 opacity-100" : "scale-95 opacity-0"
-              }`}
-              style={{ willChange: "transform, opacity" }}
-            />
-            {renderSquareStatusGlyph(square)}
-            <span>{isFree ? "FREE" : shortenLabel(square.label)}</span>
-            {progressText ? (
-              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] font-black text-sky-200/90">
-                {progressText}
-              </span>
-            ) : null}
-          </div>
-        );
-      })}
-      </div>
-    </div>
-  );
-}
 
 function renderExpandedGrid(
   cardId: string,
@@ -746,6 +466,7 @@ function LoadingState({ label }: { label: string }) {
 }
 
 export function SportsBingoHome({
+  initialDate = "",
   initialCardId = "",
   onBack,
 }: {
@@ -764,6 +485,23 @@ export function SportsBingoHome({
   const [venueId, setVenueId] = useState("");
   const [cards, setCards] = useState<BingoCard[]>([]);
   const [loadingCards, setLoadingCards] = useState(true);
+  // Phase 5 date rail. `todayKey` is captured once per mount and re-synced by the day-rollover
+  // effect below, so a page left open past midnight does not keep calling yesterday "Today".
+  const [todayKey, setTodayKey] = useState(() => todayDateKey());
+  const [selectedDate, setSelectedDate] = useState(() =>
+    /^\d{4}-\d{2}-\d{2}$/.test(initialDate) ? initialDate : todayDateKey()
+  );
+  const [activeDates, setActiveDates] = useState<string[]>([]);
+  // Phase 4: board creation happens in a slide-up sheet over this page, not on three routes.
+  // Portrait only — the landscape tree returns well above the portrait render and never mounts it.
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
+  // A PAST day is fetched separately (server-side `date=` window) instead of narrowing the main
+  // fetch: `cards` also feeds the unclaimed-points banner, the claim path and the landscape
+  // carousel, all of which are day-agnostic and must keep seeing everything.
+  const [historyCards, setHistoryCards] = useState<BingoCard[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+  const [pendingScrollCardId, setPendingScrollCardId] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [claimingCardId, setClaimingCardId] = useState("");
   const [isCollectingAllBingo, setIsCollectingAllBingo] = useState(false);
@@ -775,8 +513,6 @@ export function SportsBingoHome({
   const [limitPulse, setLimitPulse] = useState(false);
   const [limitPopAnim, setLimitPopAnim] = useState<{ id: number } | null>(null);
   const [limitEchoAnim, setLimitEchoAnim] = useState<{ id: number } | null>(null);
-  const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
-  const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
   const [actionPops, setActionPops] = useState<ActionPopItem[]>([]);
   const [glowCardIds, setGlowCardIds] = useState<Set<string>>(new Set());
   const [glowSquareKeys, setGlowSquareKeys] = useState<Set<string>>(new Set());
@@ -812,8 +548,6 @@ export function SportsBingoHome({
   const boardPopTimersRef = useRef<Map<string, number>>(new Map());
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"active" | "scored">("active");
-  const [selectedActiveBoardId, setSelectedActiveBoardId] = useState("");
   const isInstalledPwa = useIsRunningAsInstalledPwa();
   const { canInstallOnDevice, promptInstall } = usePwaInstallPrompt();
 
@@ -822,25 +556,71 @@ export function SportsBingoHome({
     setVenueId(getVenueId() ?? "");
   }, []);
 
+  // Phase 14: switching the rail to another PAST day raises the history-loading flag in the SAME
+  // commit as the date change. Before this, the flag was set only by the passive fetch effect
+  // below — one render later, long enough to paint the previous day's boards under the new day's
+  // label for a frame. Switching back to today keeps the flag DOWN (14b): today's boards are
+  // already in hand, and the fetch effect's `isViewingToday` early-return only clears it again.
+  const selectDate = useCallback(
+    (nextDate: string) => {
+      setSelectedDate(nextDate);
+      if (nextDate !== todayKey) {
+        setLoadingHistory(true);
+      }
+    },
+    [todayKey]
+  );
+
+  // Deep link into one board (`/bingo/home?cardId=…`). Before Phase 5 this reached a settled
+  // board by flipping to the Scored tab; with the tabs retired it selects the board's own
+  // calendar DAY, then opens and scrolls to it.
+  const deepLinkHandledRef = useRef("");
   useEffect(() => {
     const targetCardId = initialCardId.trim();
-    if (!targetCardId || cards.length === 0) {
+    if (!targetCardId || cards.length === 0 || deepLinkHandledRef.current === targetCardId) {
       return;
     }
     const targetCard = cards.find((card) => card.id === targetCardId);
     if (!targetCard) {
       return;
     }
+    deepLinkHandledRef.current = targetCardId;
+    const cardDay = toLocalDateKey(targetCard.startsAt);
+    // A live board stays on today's stack even when its game started yesterday, so only send
+    // the rail to another day for a board that is genuinely finished. Route through `selectDate`
+    // (Phase 14) so a deep link that lands on a past day flashes the loader in the same commit,
+    // exactly like picking that day from the calendar — no stale frame either way.
+    if (cardDay && targetCard.status !== "active") {
+      selectDate(cardDay);
+    }
     if (targetCard.status === "active") {
-      setActiveTab("active");
       setExpandedActiveCardId(targetCard.id);
       setExpandedFinalCardId("");
     } else {
-      setActiveTab("scored");
       setExpandedFinalCardId(targetCard.id);
       setExpandedActiveCardId("");
     }
-  }, [cards, initialCardId]);
+    setPendingScrollCardId(targetCard.id);
+  }, [cards, initialCardId, selectDate]);
+
+  // Scrolling is deferred rather than done inline: selecting another calendar day above kicks
+  // off the past-day fetch, so the target board does not exist in the DOM yet. Re-running on
+  // every stack change means the scroll lands on the render that finally paints the board.
+  useEffect(() => {
+    if (!pendingScrollCardId) {
+      return;
+    }
+    const element = document.querySelector(`[data-bingo-card-id="${CSS.escape(pendingScrollCardId)}"]`);
+    if (!element) {
+      return;
+    }
+    setPendingScrollCardId("");
+    window.requestAnimationFrame(() => {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    // `cards` / `historyCards` are what the stack is rebuilt from, so re-running when either
+    // changes is the same as re-running when the stack repaints — without a forward reference.
+  }, [cards, historyCards, pendingScrollCardId]);
 
   useEffect(() => {
     const fromBell = sessionStorage.getItem("tp:celebrate") === "bingo";
@@ -1360,7 +1140,9 @@ export function SportsBingoHome({
     }
     try {
       const response = await fetch(
-        `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true&refreshProgress=${refreshProgress ? "true" : "false"}`,
+        `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true&refreshProgress=${
+          refreshProgress ? "true" : "false"
+        }&includeDates=true&tzOffsetMinutes=${encodeURIComponent(String(new Date().getTimezoneOffset()))}`,
         {
           cache: "no-store",
         }
@@ -1371,6 +1153,9 @@ export function SportsBingoHome({
       }
       if (!background) {
         setErrorMessage("");
+      }
+      if (Array.isArray(payload.activeDates)) {
+        setActiveDates(payload.activeDates);
       }
       const nextCards = payload.cards ?? [];
       setCards((previousCards) => {
@@ -1418,6 +1203,76 @@ export function SportsBingoHome({
     void loadCards();
   }, [loadCards]);
 
+  const isViewingToday = selectedDate === todayKey;
+
+  // Keep "today" honest across a midnight rollover without a 1s interval: re-check on focus,
+  // on visibility change, and once per minute (cheap — it is a string compare).
+  useEffect(() => {
+    const syncToday = () => setTodayKey(todayDateKey());
+    const interval = window.setInterval(syncToday, 60_000);
+    window.addEventListener("focus", syncToday);
+    document.addEventListener("visibilitychange", syncToday);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", syncToday);
+      document.removeEventListener("visibilitychange", syncToday);
+    };
+  }, []);
+
+  // A previous day is a server-side query (plan 5a): the main 100-row window would silently
+  // drop history for an active player, so the day filter has to run in SQL.
+  useEffect(() => {
+    if (!userId || isViewingToday) {
+      setHistoryCards([]);
+      setHistoryError("");
+      setLoadingHistory(false);
+      return;
+    }
+    let cancelled = false;
+    setLoadingHistory(true);
+    setHistoryError("");
+    (async () => {
+      try {
+        const response = await fetch(
+          `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true&refreshProgress=false&date=${encodeURIComponent(
+            selectedDate
+          )}&tzOffsetMinutes=${encodeURIComponent(String(new Date().getTimezoneOffset()))}`,
+          { cache: "no-store" }
+        );
+        const payload = (await response.json()) as CardsResponse;
+        if (cancelled) return;
+        if (!payload.ok) {
+          throw new Error(payload.error ?? "Failed to load boards for that day.");
+        }
+        setHistoryCards(payload.cards ?? []);
+      } catch (error) {
+        if (cancelled) return;
+        setHistoryCards([]);
+        setHistoryError(error instanceof Error ? error.message : "Failed to load boards for that day.");
+      } finally {
+        if (!cancelled) setLoadingHistory(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isViewingToday, selectedDate, userId]);
+
+  // Phase 14.5: write live board updates through to the past-day stack. `historyCards` is the
+  // write-once day-scoped fetch above, but a board still running on its own (now past) calendar
+  // day is ALSO in the live `cards` window and already subscribed, so `card_updated` broadcasts
+  // are already calling `loadCards({ background: true })` — into `cards`, where the past-day
+  // stack never looks. Patch those rows through by id so the squares under Phase 13's `Live`
+  // badge tick in step with today's stack, and a board that settles while parked here flips to
+  // Final in place. `mergeLiveCardUpdates` returns `prev` by identity when nothing overlaps (a
+  // past day of only finished boards), so `historyStackCards` does not churn per broadcast; it
+  // also never appends, so a dateless `cards` row can't land on a day it doesn't belong to.
+  // No interaction with `loadingHistory` — this runs after the fetch has resolved.
+  useEffect(() => {
+    if (isViewingToday) return;
+    setHistoryCards((prev) => mergeLiveCardUpdates(prev, cards));
+  }, [cards, isViewingToday]);
+
   // Detect card-level transitions (won, near-win) by comparing to previous snapshot.
   useEffect(() => {
     const prev = prevCardsRef.current;
@@ -1439,19 +1294,6 @@ export function SportsBingoHome({
       triggerAnimation("BINGO_NEAR_WIN");
     }
   }, [cards, triggerAnimation]);
-
-  useEffect(() => {
-    const updateFreshness = () => {
-      if (!lastRealtimeMessageAt) {
-        setIsRealtimeFresh(false);
-        return;
-      }
-      setIsRealtimeFresh(Date.now() - lastRealtimeMessageAt <= 10_000);
-    };
-    updateFreshness();
-    const interval = window.setInterval(updateFreshness, 1000);
-    return () => window.clearInterval(interval);
-  }, [lastRealtimeMessageAt]);
 
   const subscribedGameIds = useMemo(() => Array.from(new Set(cards.map((card) => card.gameId).filter(Boolean))), [cards]);
   // Stable string key so subscription deps only change when game composition changes.
@@ -1492,14 +1334,9 @@ export function SportsBingoHome({
         .channel(`bingo-game:${gameId}`)
         .on("broadcast", { event: "card_updated" }, () => {
           if (!active) return;
-          setLastRealtimeMessageAt(Date.now());
           void loadCards({ background: true, refreshProgress: false });
         })
-        .subscribe((status) => {
-          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-            setIsRealtimeFresh(false);
-          }
-        })
+        .subscribe()
     );
 
     return () => {
@@ -1612,22 +1449,6 @@ export function SportsBingoHome({
       finalizedCards: finalized,
     };
   }, [cards]);
-  const selectedActiveCard = useMemo(
-    () => activeCards.find((card) => card.id === selectedActiveBoardId) ?? activeCards[0] ?? null,
-    [activeCards, selectedActiveBoardId]
-  );
-  // Keep the selected active board valid as the active list changes; default to the first.
-  useEffect(() => {
-    if (activeCards.length === 0) {
-      if (selectedActiveBoardId) {
-        setSelectedActiveBoardId("");
-      }
-      return;
-    }
-    if (!activeCards.some((card) => card.id === selectedActiveBoardId)) {
-      setSelectedActiveBoardId(activeCards[0].id);
-    }
-  }, [activeCards, selectedActiveBoardId]);
   const hasStartedActiveCard = useMemo(() => {
     const now = Date.now();
     return activeCards.some((card) => {
@@ -1650,6 +1471,53 @@ export function SportsBingoHome({
     return nextStart;
   }, [activeCards]);
   const settledCards = finalizedCards;
+  // Portrait stack order (plan 2c): live boards, then upcoming by start time, then the boards
+  // that FINISHED TODAY. That last group is the whole point — decision 1 retired the Scored
+  // tab, and a board that settles while the player is watching must move down this stack
+  // rather than vanish.
+  const todaysSettledCards = useMemo(
+    () => settledCards.filter((card) => isCardOnLocalDay(card.startsAt, todayKey)),
+    [settledCards, todayKey]
+  );
+  // `activeCards` is already sorted earliest-to-latest, and every live board started before
+  // every upcoming one, so that sort already yields live-then-upcoming. Partitioning explicitly
+  // keeps the contract readable (and correct if the sort ever changes).
+  //
+  // DEVIATION from plan 5c, deliberate: the day filter is NOT applied to the active partition.
+  // Games are only ever offered from today's local slate, so an active board is today's board —
+  // except in the one window that matters, a 10pm game still live at 12:05am. Filtering active
+  // boards by `startsAt`'s day would make that live board vanish off today's stack at midnight,
+  // which is precisely the disappearing-board failure decision 1 forbids. Settled boards still
+  // sort by their own day, so a finished board is found under the day it was played.
+  const portraitStackCards = useMemo<Array<{ card: BingoCard; isLive: boolean }>>(() => {
+    const now = Date.now();
+    const live: Array<{ card: BingoCard; isLive: boolean }> = [];
+    const upcoming: Array<{ card: BingoCard; isLive: boolean }> = [];
+    for (const card of activeCards) {
+      const startsAtMs = Date.parse(card.startsAt);
+      if (Number.isFinite(startsAtMs) && startsAtMs <= now) {
+        live.push({ card, isLive: true });
+      } else {
+        upcoming.push({ card, isLive: false });
+      }
+    }
+    return [...live, ...upcoming, ...todaysSettledCards.map((card) => ({ card, isLive: false }))];
+  }, [activeCards, todaysSettledCards]);
+  // A past day is read-only: newest board first, every board that day, no Add control.
+  //
+  // Per-card state is decided by `resolveHistoryStackEntry` (stale-row normalization + a
+  // DERIVED `isLive`), not by membership in this stack. Plan 13b: a past calendar day is not
+  // the same thing as a finished game — the 10pm board that `portraitStackCards` deliberately
+  // keeps on today's stack past midnight (see the deviation note above) is ALSO reachable by
+  // paging the rail back one day, and it is still running. The old hard-coded `isLive: false`
+  // badged it "Starts 10:00 PM" on its own calendar day.
+  const historyStackCards = useMemo<Array<{ card: BingoCard; isLive: boolean }>>(() => {
+    const now = Date.now();
+    return historyCards
+      .map((card) => resolveHistoryStackEntry(card, now))
+      .sort((a, b) => compareCardsLatestToEarliest(a.card, b.card));
+  }, [historyCards]);
+  const visibleStackCards = isViewingToday ? portraitStackCards : historyStackCards;
   const unclaimedWonBingoCards = useMemo(
     () => settledCards.filter((card) => card.status === "won" && !card.rewardClaimedAt && card.rewardPoints > 0),
     [settledCards]
@@ -1929,15 +1797,45 @@ export function SportsBingoHome({
     }
   }, [isCollectingAllBingo, loadCards, unclaimedWonBingoCards, userId, venuePresence]);
 
+  // A still-running board is reachable from the history stack too (plan 13b/13c), and the
+  // history fetch is a separate query — resolve against the union so opening one from a past
+  // day cannot land on an empty modal. In practice the main 100-row fetch also carries it, but
+  // that overlap is a coincidence of the row window, not a contract.
   const expandedActiveCard = useMemo(
-    () => activeCards.find((card) => card.id === expandedActiveCardId) ?? null,
-    [activeCards, expandedActiveCardId]
+    () =>
+      activeCards.find((card) => card.id === expandedActiveCardId) ??
+      historyStackCards.find((entry) => entry.card.id === expandedActiveCardId && entry.card.status === "active")
+        ?.card ??
+      null,
+    [activeCards, expandedActiveCardId, historyStackCards]
   );
+  // History boards are not in `settledCards` (they come from the past-day fetch), so the
+  // expanded-board modal and the claim path both resolve against the union.
   const expandedFinalCard = useMemo(
-    () => settledCards.find((card) => card.id === expandedFinalCardId) ?? null,
-    [expandedFinalCardId, settledCards]
+    () =>
+      settledCards.find((card) => card.id === expandedFinalCardId) ??
+      historyStackCards.find((entry) => entry.card.id === expandedFinalCardId)?.card ??
+      null,
+    [expandedFinalCardId, historyStackCards, settledCards]
   );
   const hasReachedBoardLimit = activeCards.length >= 4;
+
+  // Phase 4 triggers. Opening the sheet replaces the three `/bingo/select-*` navigations; the
+  // routes still exist and still work (deep links, the landscape empty state, browser back).
+  const openCreateBoardSheet = useCallback(() => setIsCreateSheetOpen(true), []);
+  const handleBoardCreated = useCallback(() => {
+    // A board can only be created for today's slate, so if the player had paged the calendar
+    // back, snap forward — otherwise the new board would render on a day nobody is looking at.
+    // `todayKey` is re-read rather than reused so the two stay consistent across a midnight
+    // rollover that the once-a-minute sync has not caught yet.
+    const freshToday = todayDateKey();
+    setTodayKey(freshToday);
+    setSelectedDate(freshToday);
+    // Background refetch, not a route push: the new card arrives in `cards`, lands in
+    // `portraitStackCards`, and picks up the `recentlyAddedCardIds` pop for free — the sheet
+    // slides down onto a board that is already there.
+    void loadCards({ background: true });
+  }, [loadCards]);
   const triggerLimitReachedFeedback = useCallback(() => {
     setShowBoardLimitMessage(true);
     window.setTimeout(() => setShowBoardLimitMessage(false), 900);
@@ -2025,15 +1923,14 @@ export function SportsBingoHome({
           })
         );
 
+        const claimedAt = new Date().toISOString();
         setCards((prev) =>
-          prev.map((item) =>
-            item.id === card.id
-              ? {
-                  ...item,
-                  rewardClaimedAt: new Date().toISOString(),
-                }
-              : item
-          )
+          prev.map((item) => (item.id === card.id ? { ...item, rewardClaimedAt: claimedAt } : item))
+        );
+        // A past-day board lives in `historyCards`, not `cards`, and its Collect button is
+        // driven by `rewardClaimedAt` — mirror the claim there or the button stays lit.
+        setHistoryCards((prev) =>
+          prev.map((item) => (item.id === card.id ? { ...item, rewardClaimedAt: claimedAt } : item))
         );
         void loadCards({ background: true });
       } catch (error) {
@@ -2047,8 +1944,60 @@ export function SportsBingoHome({
     }
   };
 
+  // `BingoBoardCard` is memoized with a custom comparator that compares these two props by
+  // identity (see the comparator note in `BingoBoardCard.tsx`), so they must be referentially
+  // stable for the whole session. The latest-value ref keeps them stable WITHOUT going stale:
+  // the ref is re-pointed on every render, so a tap always runs the current closure.
+  const boardActionsRef = useRef<{
+    open: (cardId: string) => void;
+    claim: (cardId: string, sourceElement: HTMLElement | null) => void;
+  }>({ open: () => {}, claim: () => {} });
+  boardActionsRef.current = {
+    open: (cardId: string) => {
+      const historyEntry = historyStackCards.find((entry) => entry.card.id === cardId);
+      // Settled is decided by the board's own (normalized) status, never by which stack it came
+      // out of (plan 13c). Membership in the history stack only means "viewed on a past
+      // calendar day" — a board still inside `BINGO_GAME_BUFFER_MS` is running, and must open
+      // the live board modal rather than the "Final Board / No bingo this game" one.
+      const isSettledBoard = historyEntry
+        ? historyEntry.card.status !== "active"
+        : settledCards.some((card) => card.id === cardId);
+      // The landscape carousel only ever holds cards from the main fetch; a past-day board has
+      // no slot there, so leave its selection alone rather than pointing it at index 0.
+      if (!historyEntry) {
+        selectLandscapeCard(isSettledBoard ? "scored" : "active", cardId);
+      }
+      if (isSettledBoard) {
+        setExpandedFinalCardId(cardId);
+        setExpandedActiveCardId("");
+      } else {
+        setExpandedActiveCardId(cardId);
+        setExpandedFinalCardId("");
+      }
+    },
+    claim: (cardId: string, sourceElement: HTMLElement | null) => {
+      const card =
+        cards.find((item) => item.id === cardId) ??
+        historyStackCards.find((entry) => entry.card.id === cardId)?.card;
+      if (card) {
+        void claimPoints(card, sourceElement);
+      }
+    },
+  };
+  const handleOpenBoard = useCallback((cardId: string) => {
+    boardActionsRef.current.open(cardId);
+  }, []);
+  const handleClaimBoard = useCallback((cardId: string, sourceElement: HTMLElement | null) => {
+    boardActionsRef.current.claim(cardId, sourceElement);
+  }, []);
+
+  // Gate on `actionPops.length` (not just `typeof document`) so the first client render
+  // matches the server's (both produce `null` until a pop is queued by user interaction,
+  // which only happens well after hydration). Rendering the portal unconditionally on the
+  // client was a server/client branch and tripped a hydration mismatch. Mirrors the
+  // `limitFeedbackPortal` guard immediately below.
   const actionPopsPortal =
-    typeof document !== "undefined"
+    typeof document !== "undefined" && actionPops.length > 0
       ? createPortal(
           <div className="pointer-events-none fixed inset-0 z-[2400]" aria-hidden="true">
             {actionPops.map((pop) => (
@@ -2201,8 +2150,20 @@ export function SportsBingoHome({
                 <p className="truncate text-[10px] font-black uppercase leading-none tracking-[0.16em] text-sky-300">
                   {landscapeEyebrow}
                 </p>
-                <h1 className="mt-1 truncate text-[16px] font-black leading-none text-slate-50 [font-family:'Bree_Serif','Nunito',serif]">
-                  {landscapeCurrentCard?.gameLabel ?? (isActiveLandscapeMode ? "No active boards" : "No scored boards")}
+                <h1 className="mt-1 flex items-center gap-1.5 truncate text-[16px] font-black leading-none text-slate-50 [font-family:'Bree_Serif','Nunito',serif]">
+                  {landscapeCurrentCard ? (
+                    <>
+                      <span aria-hidden="true" className="shrink-0 text-[20px] leading-none">
+                        {getLeagueDisplay(landscapeCurrentCard.sportKey).emoji}
+                      </span>
+                      <span className="truncate">
+                        {toMascotMatchup(landscapeCurrentCard.awayTeam, landscapeCurrentCard.homeTeam) ||
+                          landscapeCurrentCard.gameLabel}
+                      </span>
+                    </>
+                  ) : (
+                    isActiveLandscapeMode ? "No active boards" : "No scored boards"
+                  )}
                 </h1>
                 <div className="tp-bingo-landscape-controls mt-2 flex flex-wrap items-center gap-1.5">
                   <button
@@ -2363,14 +2324,9 @@ export function SportsBingoHome({
       : landscapeContent;
   }
 
+  // First run is a whole-account state, not a per-day one: it must not re-trigger just because
+  // the player paged the calendar back to a day they had no boards on.
   const isFirstRun = !loadingCards && activeCards.length === 0 && settledCards.length === 0;
-  const selectedBoardProgress = selectedActiveCard ? getBoardProgress(selectedActiveCard.squares) : null;
-  const selectedBoardIsLive = selectedActiveCard ? Date.parse(selectedActiveCard.startsAt) <= Date.now() : false;
-  const scoredWonCount = settledCards.filter((card) => card.status === "won").length;
-  const scoredPointsWon = settledCards.reduce(
-    (sum, card) => (card.status === "won" ? sum + card.rewardPoints : sum),
-    0
-  );
 
   return (
     <div ref={rootRef} className={`tp-bingo-theme ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`} role="status">
@@ -2387,83 +2343,47 @@ export function SportsBingoHome({
           </div>
         ) : isFirstRun ? (
           /* ════════ FIRST RUN — no boards yet ════════ */
-          <>
-            <div className="pt-4">
-              <div className="relative overflow-hidden rounded-[18px] border-2 border-sky-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.12),transparent_60%),#0c3a2e] p-4 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.35),0_12px_26px_rgba(0,0,0,0.5)]">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · </p>
-                <p className="mt-1.5 text-[26px] leading-[1.08] text-amber-100 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
-                  You don&apos;t have an active board yet.
-                </p>
-                <p className="mt-1.5 text-[12px] font-bold leading-relaxed text-amber-100/60">
-                  Click the button below to create a 5×5 board of player props and box-score calls. Plays happen, squares
-                  light up automatically. Five in a row wins 100 points.
-                </p>
-                <div className="mt-3.5 grid grid-cols-5 gap-1 opacity-90">
-                  {Array.from({ length: 25 }).map((_, i) => {
-                    const hit = [2, 6, 8, 16, 20].includes(i);
-                    const free = i === 12;
-                    return (
-                      <div
-                        key={i}
-                        className={`aspect-square rounded ${
-                          free
-                            ? "border border-amber-200 bg-[linear-gradient(135deg,#c89b3a,#f59e0b)]"
-                            : hit
-                            ? "border border-amber-200 bg-[linear-gradient(135deg,#f97316,#fbbf24)]"
-                            : "border border-[#fff7ea]/20 bg-[#fff7ea]/[0.16]"
-                        }`}
-                      />
-                    );
-                  })}
-                </div>
-                <Link
-                  href="/bingo/select-sport"
-                  className="tp-clean-button mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[13px] bg-sky-300 px-4 py-3.5 text-[14.5px] font-black uppercase tracking-[0.03em] text-[#08233a] shadow-[0_0_0_1px_rgba(125,211,252,0.4),0_10px_26px_rgba(125,211,252,0.28)] transition-transform active:scale-95"
-                >
-                  Get your first board
-                  <ArrowRight aria-hidden="true" className="h-4 w-4" />
-                </Link>
-                <p className="mt-2.5 text-center text-[10px] font-black tracking-[0.04em] text-sky-300">
-                  Turn your phone sideways for a better view of your boards.
-                </p>
+          <div className="pt-4">
+            <div className="relative overflow-hidden rounded-[18px] border-2 border-sky-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.12),transparent_60%),#0c3a2e] p-4 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.35),0_12px_26px_rgba(0,0,0,0.5)]">
+              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo</p>
+              <p className="mt-1.5 text-[26px] leading-[1.08] text-amber-100 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
+                You don&apos;t have an active board yet.
+              </p>
+              <p className="mt-1.5 text-[12px] font-bold leading-relaxed text-amber-100/60">
+                Click the button below to create a 5×5 board of player props and box-score calls. Plays happen, squares
+                light up automatically. Five in a row wins 100 points.
+              </p>
+              <div className="mt-3.5 grid grid-cols-5 gap-1 opacity-90">
+                {Array.from({ length: 25 }).map((_, i) => {
+                  const hit = [2, 6, 8, 16, 20].includes(i);
+                  const free = i === 12;
+                  return (
+                    <div
+                      key={i}
+                      className={`aspect-square rounded ${
+                        free
+                          ? "border border-amber-200 bg-[linear-gradient(135deg,#c89b3a,#f59e0b)]"
+                          : hit
+                          ? "border border-amber-200 bg-[linear-gradient(135deg,#f97316,#fbbf24)]"
+                          : "border border-[#fff7ea]/20 bg-[#fff7ea]/[0.16]"
+                      }`}
+                    />
+                  );
+                })}
               </div>
+              <button
+                type="button"
+                onClick={openCreateBoardSheet}
+                className="tp-clean-button mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[13px] bg-sky-300 px-4 py-3.5 text-[14.5px] font-black uppercase tracking-[0.03em] text-[#08233a] shadow-[0_0_0_1px_rgba(125,211,252,0.4),0_10px_26px_rgba(125,211,252,0.28)] transition-transform active:scale-95"
+              >
+                Get your first board
+                <ArrowRight aria-hidden="true" className="h-4 w-4" />
+              </button>
+              <p className="mt-2.5 text-center text-[10px] font-black tracking-[0.04em] text-sky-300">
+                Turn your phone sideways for a better view of your boards.
+              </p>
             </div>
-
-            <div className="mt-3 flex gap-2">
-              {[
-                { n: "1", t: "Pick a game", d: "From tonight's slate" },
-                { n: "2", t: "We build it", d: "25 live squares" },
-                { n: "3", t: "Match 5", d: "Row, column or diagonal" },
-              ].map((step) => (
-                <div key={step.n} className="flex-1 rounded-xl border border-white/[0.07] bg-slate-900 p-2.5">
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-[7px] border border-sky-300/40 bg-sky-300/[0.14] text-[10px] font-black text-sky-300 [font-family:ui-monospace,monospace]">
-                    {step.n}
-                  </span>
-                  <div className="mt-1.5 text-[11.5px] font-black text-slate-50">{step.t}</div>
-                  <div className="mt-0.5 text-[9.5px] font-bold leading-tight text-slate-400">{step.d}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-3 rounded-[10px] border border-sky-300/25 bg-sky-300/[0.06] px-3 py-2.5 text-[10px] font-bold leading-snug text-sky-300">
-              Hold up to 4 boards at once across tonight&apos;s games. Squares auto-mark as plays happen — you just watch them
-              fill.
-            </div>
-
-            <div className="pt-3">
-              <FoldLine />
-            </div>
-            <div className="pt-2.5">
-              <InlineSlotAdClient
-                slot="inline-content"
-                venueId={venueId}
-                pageKey="sports-bingo"
-                adType="inline"
-                displayTrigger="on-load"
-                placementKey="bingo-home-firstrun-inline"
-              />
-            </div>
-          </>
+          </div>
         ) : (
           /* ════════ ACTIVE / SCORED ════════ */
           <>
@@ -2490,274 +2410,106 @@ export function SportsBingoHome({
             ) : null}
 
             <div className="pt-3">
-              <ViewTabs
-                game="bingo"
-                active={activeTab}
-                onPick={(id) => setActiveTab(id === "scored" ? "scored" : "active")}
-                tabs={[
-                  { id: "active", label: "Active", count: activeCards.length, live: activeCards.length > 0 },
-                  { id: "scored", label: "Scored", count: settledCards.length },
-                ]}
+              <DateCalendarPopover
+                selectedDate={selectedDate}
+                today={todayKey}
+                markedDates={activeDates}
+                maxDate={todayKey}
+                onSelect={selectDate}
+                label="Board date"
               />
             </div>
 
-            {activeTab === "active" ? (
-              activeCards.length === 0 ? (
-                <div className="mt-4 rounded-2xl border border-sky-300/25 bg-slate-900 p-5 text-center">
-                  <p className="text-[13px] font-bold text-slate-300">No active boards right now.</p>
-                  <Link
-                    href="/bingo/select-sport"
+            {historyError ? (
+              <div className="mt-3 rounded-xl border border-rose-500/40 bg-rose-950/40 p-3 text-[12px] font-bold text-rose-300" role="alert">
+                {historyError}
+              </div>
+            ) : null}
+
+            {!isViewingToday && loadingHistory ? (
+              <div className="pt-6">
+                <LoadingState label="Loading that day's boards..." />
+              </div>
+            ) : visibleStackCards.length === 0 ? (
+              <div className="mt-4 rounded-2xl border border-sky-300/25 bg-slate-900 p-5 text-center">
+                <p className="text-[13px] font-bold text-slate-300">
+                  {isViewingToday ? "No active boards right now." : "No boards on this day."}
+                </p>
+                {isViewingToday ? (
+                  <button
+                    type="button"
+                    onClick={openCreateBoardSheet}
                     className="tp-clean-button mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-sky-300 px-5 py-2.5 text-[12.5px] font-black uppercase tracking-[0.03em] text-[#08233a]"
                   >
                     Get a board <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  {/* Up-to-4 active board switcher */}
-                  <div className="mt-3 flex items-stretch gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {activeCards.map((card) => {
-                      const on = selectedActiveCard?.id === card.id;
-                      const live = Date.parse(card.startsAt) <= Date.now();
-                      const remaining = getClosestLineRemaining(card.squares);
-                      return (
-                        <button
-                          key={card.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedActiveBoardId(card.id);
-                            selectLandscapeCard("active", card.id);
-                          }}
-                          className={`tp-clean-button flex shrink-0 flex-col items-start gap-0.5 rounded-[11px] px-2.5 py-1.5 ${
-                            on ? "border border-sky-300/55 bg-sky-300/[0.12]" : "border border-white/[0.08] bg-white/[0.025]"
-                          } ${recentlyAddedCardIds.has(card.id) ? "bingo-board-pop" : ""}`}
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full ${
-                                card.status === "won" ? "bg-amber-400" : live ? "animate-pulse motion-reduce:animate-none bg-emerald-400" : "bg-slate-500"
-                              }`}
-                            />
-                            <span className={`text-[11px] font-black tracking-[0.02em] ${on ? "text-sky-300" : "text-slate-300"}`}>
-                              {card.gameLabel}
-                            </span>
-                          </span>
-                          <span
-                            className={`text-[9px] font-bold [font-family:ui-monospace,monospace] ${
-                              on ? "text-sky-300" : "text-slate-500"
-                            }`}
-                          >
-                            {remaining === null ? "blocked" : remaining === 0 ? "bingo!" : `${remaining} to go`}
-                          </span>
-                        </button>
-                      );
-                    })}
-                    {hasReachedBoardLimit ? (
-                      <button
-                        type="button"
-                        onClick={triggerLimitReachedFeedback}
-                        className={`tp-clean-button flex min-w-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-[11px] border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-2 text-sky-300 ${
-                          limitPulse ? "pickem-limit-pulse" : ""
-                        }`}
-                      >
-                        <Plus aria-hidden="true" className="h-4 w-4" />
-                        <span className="text-[7.5px] font-black uppercase tracking-[0.08em]">
-                          {showBoardLimitMessage ? "Max 4" : "Add"}
-                        </span>
-                      </button>
-                    ) : (
-                      <Link
-                        href="/bingo/select-sport"
-                        className="tp-clean-button flex min-w-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-[11px] border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-2 text-sky-300"
-                      >
-                        <Plus aria-hidden="true" className="h-4 w-4" />
-                        <span className="text-[7.5px] font-black uppercase tracking-[0.08em]">Add</span>
-                      </Link>
-                    )}
-                  </div>
-
-                  {selectedActiveCard ? (
-                    <>
-                      {/* Live + freshness status for the selected board */}
-                      <div className="mt-2.5 flex items-center gap-2">
-                        {selectedBoardIsLive ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-500/[0.14] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-300">
-                            <LiveDot />
-                            Live
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full border border-sky-300/35 bg-sky-300/[0.08] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-sky-300">
-                            Starts {formatLocalDateTime(selectedActiveCard.startsAt)}
-                          </span>
-                        )}
-                        <span className="inline-flex items-center rounded-full border border-sky-300/30 bg-sky-300/10 px-2.5 py-1 text-[9.5px] font-bold text-sky-300 [font-family:ui-monospace,monospace]">
-                          {selectedBoardProgress?.hitCount ?? 0}/25 marked
-                        </span>
-                        <span className="ml-auto text-[9px] font-bold tracking-[0.04em] text-slate-500">
-                          {isRealtimeFresh ? "live updates" : "synced"}
-                        </span>
-                      </div>
-
-                      {/* PRIMARY ZONE — the selected board */}
-                      <div
-                        data-bingo-card-id={selectedActiveCard.id}
-                        onClick={() => {
-                          selectLandscapeCard("active", selectedActiveCard.id);
-                          setExpandedActiveCardId(selectedActiveCard.id);
-                        }}
-                        className={`relative mt-2.5 cursor-pointer ${
-                          recentlyAddedCardIds.has(selectedActiveCard.id) ? "bingo-board-pop" : ""
-                        }`}
-                      >
-                        <span
-                          className={`pointer-events-none absolute inset-0 z-[3] rounded-[18px] bg-cyan-300/20 transition duration-200 [will-change:transform,opacity] ${
-                            glowCardIds.has(selectedActiveCard.id) ? "scale-105 opacity-100" : "scale-95 opacity-0"
-                          }`}
-                        />
-                        {renderCompactGrid(
-                          selectedActiveCard.id,
-                          selectedActiveCard.squares,
-                          recentlyUpdatedSquareKeys,
-                          recentlySucceededSquareKeys,
-                          glowSquareKeys
-                        )}
-                      </div>
-
-                      {/* Closest line + expand */}
-                      <div className="mt-2.5 flex items-stretch gap-2">
-                        <div className="flex-1 rounded-xl border border-sky-300/35 bg-slate-900 px-3 py-2">
-                          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-sky-300">Closest line</p>
-                          <p className="mt-0.5 text-[13px] font-black text-amber-400 [font-family:ui-monospace,monospace]">
-                            {selectedBoardProgress?.toBingo === null
-                              ? "Every line blocked"
-                              : selectedBoardProgress?.toBingo === 0
-                              ? "Bingo!"
-                              : `${selectedBoardProgress?.toBingo} to go`}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            selectLandscapeCard("active", selectedActiveCard.id);
-                            setExpandedActiveCardId(selectedActiveCard.id);
-                          }}
-                          className="tp-clean-button inline-flex shrink-0 items-center rounded-xl border border-sky-300/45 bg-sky-300/10 px-4 text-[11px] font-black uppercase tracking-[0.04em] text-sky-300"
-                        >
-                          Expand
-                        </button>
-                      </div>
-                    </>
-                  ) : null}
-                </>
-              )
-            ) : settledCards.length === 0 ? (
-              <div className="mt-4 rounded-2xl border border-sky-300/20 bg-slate-900 p-5 text-center text-[13px] font-bold text-slate-300">
-                No scored boards yet.
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDate(todayKey)}
+                    className="tp-clean-button mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-sky-300/40 bg-sky-300/[0.12] px-5 py-2.5 text-[12.5px] font-black uppercase tracking-[0.03em] text-sky-300"
+                  >
+                    Back to today
+                  </button>
+                )}
               </div>
             ) : (
               <>
-                {/* Summary */}
-                <div className="mt-3 flex gap-2">
-                  <div className="flex-1 rounded-xl border border-white/[0.08] bg-slate-900 px-3 py-2">
-                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-emerald-300">Boards won</p>
-                    <p className="mt-0.5 text-[16px] font-black text-slate-50 [font-family:ui-monospace,monospace]">
-                      {scoredWonCount} / {settledCards.length}
-                    </p>
-                  </div>
-                  <div className="flex-1 rounded-xl border border-white/[0.08] bg-slate-900 px-3 py-2">
-                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Points won</p>
-                    <p className="mt-0.5 text-[16px] font-black text-amber-400 [font-family:ui-monospace,monospace]">
-                      {scoredPointsWon}
-                    </p>
-                  </div>
+                {/* Vertical board stack (plan 2c) — every board the player holds for the selected
+                    day, one under the next: live, then upcoming, then boards that finished that
+                    day. A past day is the same stack, read-only, with no Add control. */}
+                <div className="mt-3 flex flex-col gap-4">
+                  {visibleStackCards.map(({ card, isLive }) => (
+                    <BingoBoardCard
+                      key={card.id}
+                      card={card}
+                      isLive={isLive}
+                      recentlyUpdatedSquareKeys={recentlyUpdatedSquareKeys}
+                      recentlySucceededSquareKeys={recentlySucceededSquareKeys}
+                      glowSquareKeys={glowSquareKeys}
+                      glowCardIds={glowCardIds}
+                      recentlyAddedCardIds={recentlyAddedCardIds}
+                      isClaiming={claimingCardId === card.id}
+                      claimDisabled={
+                        isCollectingAllBingo ||
+                        (Boolean(claimingCardId) && claimingCardId !== card.id) ||
+                        venuePresence.isInteractionBlocked
+                      }
+                      onOpen={handleOpenBoard}
+                      onClaim={handleClaimBoard}
+                    />
+                  ))}
                 </div>
 
-                <div className="mb-1.5 mt-3 flex items-baseline justify-between">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">All boards</p>
-                  <span className="text-[9.5px] font-bold tracking-[0.04em] text-slate-500">
-                    Recent · {settledCards.length} board{settledCards.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-
-                {/* Flat list — every recent board, newest first, no week grouping */}
-                <ul className="flex flex-col gap-1.5">
-                  {settledCards.slice(0, 12).map((card) => {
-                    const summary = summarizeCardState(card);
-                    const won = card.status === "won";
-                    const showClaim = won && !card.rewardClaimedAt;
-                    return (
-                      <li
-                        key={card.id}
-                        data-bingo-card-id={card.id}
-                        onClick={
-                          showClaim
-                            ? (event) => {
-                                selectLandscapeCard("scored", card.id);
-                                void claimPoints(card, event.currentTarget);
-                              }
-                            : () => {
-                                selectLandscapeCard("scored", card.id);
-                                setExpandedFinalCardId(card.id);
-                              }
-                        }
-                        className={`grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2.5 rounded-xl px-3 py-2.5 ${
-                          won
-                            ? "border border-emerald-400/40 bg-[linear-gradient(180deg,rgba(16,185,129,0.10),#0f172a)]"
-                            : "border border-white/[0.07] bg-slate-900"
-                        } ${showClaim ? "animate-pulse motion-reduce:animate-none ring-2 ring-amber-300/40" : ""}`}
-                      >
-                        <span
-                          className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-[13px] font-black ${
-                            won
-                              ? "border border-emerald-300/45 bg-emerald-500/[0.16] text-emerald-300"
-                              : "border border-white/[0.08] bg-white/[0.04] text-slate-500"
-                          }`}
-                        >
-                          {won ? "✓" : "—"}
-                        </span>
-                        <div className="min-w-0">
-                          <div className="truncate text-[12.5px] font-black text-slate-50">{card.gameLabel}</div>
-                          <div className="mt-0.5 text-[10px] font-bold text-slate-400">
-                            {formatLocalDateTime(card.startsAt)} · {summary.hitCount}/25 hits
-                          </div>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <div
-                            className={`text-[15px] font-black [font-family:ui-monospace,monospace] ${
-                              won ? "text-emerald-300" : "text-slate-600"
-                            }`}
-                          >
-                            {won ? `+${card.rewardPoints}` : "0"}
-                          </div>
-                          <div
-                            className={`mt-0.5 text-[8.5px] font-black uppercase tracking-[0.06em] ${
-                              showClaim ? "text-amber-300" : won ? "text-slate-500" : "text-slate-600"
-                            }`}
-                          >
-                            {showClaim ? "Tap to claim" : won && card.rewardClaimedAt ? "Claimed" : won ? "Won" : card.status}
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {/* The "+ Add a Board" control. The full-size empty-board tile originally planned
+                    for Phase 4 was cancelled (Andrew, 2026-09-07) — this button is the final
+                    design. Hidden on a past day: you cannot create a board for a game that has
+                    already happened (plan 4f). */}
+                {isViewingToday ? (
+                  hasReachedBoardLimit ? (
+                    <button
+                      type="button"
+                      onClick={triggerLimitReachedFeedback}
+                      className={`tp-clean-button mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em] text-sky-300 ${
+                        limitPulse ? "pickem-limit-pulse" : ""
+                      }`}
+                    >
+                      <Plus aria-hidden="true" className="h-4 w-4" />
+                      {showBoardLimitMessage ? "Max 4 boards" : "Add a board"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={openCreateBoardSheet}
+                      className="tp-clean-button mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em] text-sky-300"
+                    >
+                      <Plus aria-hidden="true" className="h-4 w-4" />
+                      Add a board
+                    </button>
+                  )
+                ) : null}
               </>
             )}
-
-            <div className="pt-3">
-              <FoldLine />
-            </div>
-            <div className="pt-2.5">
-              <InlineSlotAdClient
-                slot="inline-content"
-                venueId={venueId}
-                pageKey="sports-bingo"
-                adType="inline"
-                displayTrigger="on-load"
-                placementKey={activeTab === "active" ? "bingo-home-active-inline" : "bingo-home-final-inline"}
-              />
-            </div>
           </>
         )}
       </div>
@@ -2859,6 +2611,13 @@ export function SportsBingoHome({
             </div>
           </div>
         </div>
+      ) : null}
+
+      {/* Board creation, in place (plan 4b/4g). Portrait only — the landscape tree returns above
+          this render path, so rotating with the sheet open unmounts it and releases its scroll
+          lock. z-[5000] clears GameAppBar's sticky z-30. */}
+      {isCreateSheetOpen ? (
+        <CreateBoardSheet onClose={() => setIsCreateSheetOpen(false)} onCreated={handleBoardCreated} />
       ) : null}
 
       {actionPopsPortal}
