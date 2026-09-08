@@ -1,0 +1,31 @@
+-- Partner Self-Serve Signup — Phase 5a §3.
+-- docs/partner-self-serve-signup-plan.md
+--
+-- One venue, one owner row. `venue_owner_venues` was created UNIQUE (owner_id,
+-- venue_id) in 20260627100000_venue_owner_billing.sql, which stops one owner
+-- linking the same venue twice but does NOT stop two different people claiming
+-- one venue.
+--
+-- POST /api/owner/signup re-checks ownership immediately before its link insert,
+-- which narrows that race to the gap between the check and the insert but cannot
+-- close it — there is no cross-table transaction through the JS client. The
+-- database is the only place this can be made atomic.
+--
+-- The route already catches 23505 on that insert and converts it to the 409
+-- `venue_claimed` response the client renders (the branch shipped inert, with no
+-- constraint to violate); this index is what makes it reachable.
+--
+-- PRECONDITION, verified against production before this file was written
+-- (2026-09-07, `npm run signup:check-claim-precondition`):
+--
+--     select venue_id, count(*) from venue_owner_venues
+--     group by venue_id having count(*) > 1;
+--
+--   → 4 rows, 4 distinct venues, 0 venues with more than one owner. CLEAN.
+--
+-- If co-ownership is ever an intended product feature, this index is what has to
+-- be dropped first, and POST /api/owner/signup's claim branch reconsidered with
+-- it.
+
+create unique index if not exists venue_owner_venues_venue_id_key
+  on public.venue_owner_venues (venue_id);

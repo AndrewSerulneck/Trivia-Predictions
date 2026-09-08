@@ -2,9 +2,17 @@ import { NextResponse } from "next/server";
 import { isCronAuthorized } from "@/lib/cronAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
+import {
+  reconcileLapsedVenues,
+  repairMissedVenueReveals,
+  type LapsedVenueReconcileResult,
+  type VenueRevealRepairResult,
+} from "@/lib/venueVisibilitySync";
 
 /**
- * Daily billing cron. Its ONLY job is expiring lapsed offline/check grants.
+ * Daily billing cron. Three jobs: expiring lapsed offline/check grants,
+ * repairing a missed self-serve venue reveal, and reconciling lapsed self-serve
+ * venues (re-hide / restore / report).
  *
  * It used to also rebill card subscriptions through SlimCD, which was abandoned
  * before launch and removed wholesale (lib/slimcd.ts and the hosted-page session/
@@ -15,6 +23,28 @@ import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
  * `billing_subscriptions.slimcd_recurring_token` and
  * `billing_invoices.slimcd_ticket` remain in the schema as dead columns: nothing
  * reads or writes them, and dropping a column is irreversible for no gain.
+ *
+ * Phase 3 of docs/self-serve-signup-review-fixes-plan.md gave it a SECOND job:
+ * venue-visibility reconciliation. The Stripe webhook's `maybeRevealVenue` is a
+ * best-effort follower that fires once and swallows its errors by design, so a
+ * single transient failure left a paying self-serve partner permanently hidden
+ * from every player with no repair path. This cron is that repair path — it is
+ * already daily, already `isCronAuthorized`, and already owns the one lapse path
+ * that has no webhook at all. Do not fix a visibility bug by making the webhook
+ * follower throw; fix it here.
+ *
+ * Phase 9 (docs/lapsed-venue-rehide-plan.md Phases 3–5) added a THIRD job:
+ * `reconcileLapsedVenues` — restore a venue we hid once its billing is live
+ * again, re-hide a self-serve venue whose subscription lapsed, and report (never
+ * touch) lapsed admin-activated venues. Its restore + re-hide halves are gated
+ * on `VENUE_REHIDE_ENABLED` (server-side, no redeploy) and ship LOG-ONLY: with
+ * the flag unset they run and log what they would do, writing nothing.
+ *
+ * `?dryRun=1` forces BOTH reconcilers to report without writing. The offline
+ * expiry sweep above is unaffected by it — that job has been live for months and
+ * is not what the flag is for. Neither reconciler is ever allowed to fail the
+ * cron: the offline-expiry sweep has already committed by the time they run, and
+ * a reconciler fault must not make Vercel's retry re-run it.
  */
 export async function POST(request: Request) {
   if (!isCronAuthorized(request)) {
@@ -26,6 +56,7 @@ export async function POST(request: Request) {
   }
 
   const nowIso = new Date().toISOString();
+  const dryRun = new URL(request.url).searchParams.get("dryRun") === "1";
 
   // Expire offline/check grants whose paid-through date has passed. These rows
   // carry no processor token, so nothing else ever flips them: they are billed by
@@ -61,7 +92,45 @@ export async function POST(request: Request) {
 
   const offlineExpired = expired?.length ?? 0;
 
-  return NextResponse.json({ ok: true, offlineExpired });
+  // Phase 9 — lapsed-venue reconcile: restore a venue we hid once billing is
+  // live again, re-hide a self-serve venue whose subscription lapsed, and report
+  // (never touch) lapsed admin-activated venues. Restore + re-hide are gated on
+  // VENUE_REHIDE_ENABLED and ship LOG-ONLY (they run and log, writing nothing,
+  // until the flag flips). `?dryRun=1` forces the same.
+  //
+  // Runs BEFORE the reveal repair on purpose: the restore job is the
+  // intent-specific path for "a resubscriber's venue comes back" (correct
+  // logging, `rehidden_at` cleared, abort-over-cap). The reveal repair that
+  // follows is a strict superset for the *paying + hidden + self-serve* case and
+  // mops up anything restore did not — an initial reveal the webhook dropped,
+  // never `rehidden_at`-stamped. Re-hide (acts only on NOT-live billing) and the
+  // reveal repair (acts only on live billing) are disjoint.
+  //
+  // Never allowed to fail the cron: the offline-expiry sweep above has already
+  // committed, and a reconciler fault must not make Vercel's retry re-run it.
+  let venueRehide: LapsedVenueReconcileResult | { threw: string };
+  try {
+    venueRehide = await reconcileLapsedVenues({ dryRun });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[VenueVisibility] rehide-reconcile-threw: ${message}`);
+    venueRehide = { threw: message };
+  }
+
+  // Reveal-repair for self-serve venues the Stripe webhook missed. Deliberately
+  // NOT behind VENUE_REHIDE_ENABLED: it only ever un-hides a venue that is
+  // self-serve-created AND currently paying, which is exactly what the webhook
+  // was already supposed to do — it is the repair for a bug, not new behavior.
+  let venueReveal: VenueRevealRepairResult | { threw: string };
+  try {
+    venueReveal = await repairMissedVenueReveals({ dryRun });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[VenueVisibility] reveal-repair-threw: ${message}`);
+    venueReveal = { threw: message };
+  }
+
+  return NextResponse.json({ ok: true, offlineExpired, venueReveal, venueRehide });
 }
 
 export async function GET(request: Request) {

@@ -1,20 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
+import { fetchVenueStaticMap } from "@/lib/venueStaticMap";
 
-const STATIC_MAPS_BASE = "https://maps.googleapis.com/maps/api/staticmap";
-const CIRCLE_POINTS = 24;
-
-function buildCirclePath(lat: number, lon: number, radiusMeters: number): string {
-  const latRad = (lat * Math.PI) / 180;
-  const points: string[] = [];
-  for (let i = 0; i <= CIRCLE_POINTS; i++) {
-    const angle = (i / CIRCLE_POINTS) * 2 * Math.PI;
-    const dLat = (radiusMeters / 111320) * Math.cos(angle);
-    const dLon = (radiusMeters / (111320 * Math.cos(latRad))) * Math.sin(angle);
-    points.push(`${(lat + dLat).toFixed(6)},${(lon + dLon).toFixed(6)}`);
-  }
-  return points.join("|");
-}
+// The Static Maps builder lives in lib/venueStaticMap.ts, shared with the public
+// signup sibling (app/api/signup/venue-map/route.ts). This route differs only in
+// its admin radius bounds (25–2000 m) and indigo circle colour.
 
 export async function GET(request: Request) {
   const auth = await requireAdminAuth(request);
@@ -31,33 +21,24 @@ export async function GET(request: Request) {
     return new NextResponse("Invalid coordinates", { status: 400 });
   }
 
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
-  if (!apiKey) {
-    return new NextResponse("Maps API not configured", { status: 500 });
-  }
-
-  const params = new URLSearchParams({
-    center: `${lat},${lon}`,
-    zoom: "16",
+  const result = await fetchVenueStaticMap({
+    lat,
+    lon,
+    radiusMeters: radius,
     size: "600x280",
-    scale: "2",
-    maptype: "roadmap",
-    markers: `color:red|${lat},${lon}`,
-    key: apiKey,
+    strokeColor: "0x4f46e5ff",
+    fillColor: "0x4f46e520",
   });
-
-  const circlePath = `color:0x4f46e5ff|weight:2|fillcolor:0x4f46e520|${buildCirclePath(lat, lon, radius)}`;
-  const url = `${STATIC_MAPS_BASE}?${params.toString()}&path=${encodeURIComponent(circlePath)}`;
-
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) {
-    return new NextResponse("Failed to fetch map", { status: response.status });
+  if (!result.ok) {
+    return new NextResponse(
+      result.status === 500 ? "Maps API not configured" : "Failed to fetch map",
+      { status: result.status }
+    );
   }
 
-  const buffer = await response.arrayBuffer();
-  return new NextResponse(buffer, {
+  return new NextResponse(result.body, {
     headers: {
-      "Content-Type": response.headers.get("Content-Type") ?? "image/png",
+      "Content-Type": result.contentType,
       "Cache-Control": "no-store",
     },
   });

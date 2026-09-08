@@ -5,10 +5,13 @@ import { RadiusDial } from "@/components/admin/RadiusDial";
 import { VenueMapPicker, type VenueMapPickerHandle } from "@/components/admin/VenueMapPicker";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import {
+  RADIUS_MAX,
+  RADIUS_MIN,
   clampRadius,
   snapRadius,
   type GeofenceEditorChange,
   type PinSource,
+  type RadiusPreset,
 } from "@/lib/geofenceEditor";
 
 /**
@@ -55,6 +58,23 @@ type GeofenceEditorProps = {
    * where there's nothing destructive to protect yet.
    */
   startLocked?: boolean;
+  /**
+   * Passed straight through to VenueMapPicker. Defaults to the admin-gated
+   * maps-key route; the public self-serve signup wizard passes
+   * "/api/signup/maps-key" (docs/partner-self-serve-signup-plan.md §4 Phase 1).
+   */
+  mapsKeyEndpoint?: string;
+  /**
+   * Radius domain, passed straight to RadiusDial and used to clamp every value
+   * this editor emits. Defaults to the admin constants (25–2000 m); the
+   * self-serve signup wizard passes 50–200 m
+   * (docs/partner-self-serve-signup-plan.md §4 Phase 2). Omitting both is
+   * bit-identical to the pre-Phase-2 editor.
+   */
+  min?: number;
+  max?: number;
+  /** One-tap radius shortcut chips. Defaults to admin's; signup passes its own. */
+  presets?: ReadonlyArray<RadiusPreset>;
 };
 
 const GPS_OPTIONS: PositionOptions = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
@@ -71,6 +91,10 @@ export function GeofenceEditor({
   hideAdvanced = false,
   className,
   startLocked = false,
+  mapsKeyEndpoint,
+  min = RADIUS_MIN,
+  max = RADIUS_MAX,
+  presets,
 }: GeofenceEditorProps) {
   const mapRef = useRef<VenueMapPickerHandle | null>(null);
   const [radiusEditing, setRadiusEditing] = useState(false);
@@ -87,18 +111,18 @@ export function GeofenceEditor({
   const [lngDraft, setLngDraft] = useState<string | null>(null);
 
   const hasPin = latitude !== null && longitude !== null;
-  const value = clampRadius(snapRadius(radius));
+  const value = clampRadius(snapRadius(radius, min, max), min, max);
 
   const emit = useCallback(
     (next: { lat: number; lng: number; radius: number; source: PinSource }) => {
       onChange({
         lat: next.lat,
         lng: next.lng,
-        radius: clampRadius(next.radius),
+        radius: clampRadius(next.radius, min, max),
         source: next.source,
       });
     },
-    [onChange]
+    [onChange, min, max]
   );
 
   const handleRadiusChange = useCallback(
@@ -217,6 +241,7 @@ export function GeofenceEditor({
           radius={value}
           radiusEditing={radiusEditing}
           onChange={handleMapDrag}
+          mapsKeyEndpoint={mapsKeyEndpoint}
         />
       ) : (
         // Lazy-mount: no coordinates yet means nothing to show, and mounting
@@ -281,6 +306,9 @@ export function GeofenceEditor({
           onChange={handleRadiusChange}
           onEditingChange={setRadiusEditing}
           disabled={disabled || !hasPin}
+          min={min}
+          max={max}
+          presets={presets}
         />
       </div>
 

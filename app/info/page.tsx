@@ -6,12 +6,19 @@ import Link from "next/link";
 import { ContactForm } from "@/components/info/ContactForm";
 import { GameShowcaseBlock, type GameShowcase } from "@/components/info/AnnotatedScreenshot";
 import { gameHref } from "@/lib/domainSplit";
+import { signupEntryPath } from "@/lib/selfServeSignup";
 
 // Game CTAs point at the player game, which moves to `play.` under the domain
 // split — gameHref stays relative while the split is off. The apex is marketing,
 // so it hosts this page and the Partner Login (/owner/login) directly.
 const PLAY_HREF = gameHref("/");
 const JOIN_HREF = gameHref("/join");
+
+// Partner sign-up. `/owner/*` stays on the apex through the domain split, so this
+// is always relative. Resolves to the self-serve wizard when
+// NEXT_PUBLIC_SELF_SERVE_SIGNUP_ENABLED is on, else the legacy venue-lookup page
+// (which redirects to the wizard anyway once the flag flips).
+const SIGNUP_HREF = signupEntryPath();
 
 const TRIVIA_SHOWCASES: GameShowcase[] = [
   {
@@ -402,12 +409,20 @@ export default function InfoPage() {
                 </svg>
               </a>
             </div>
-            <a
-              href="/owner/login"
-              className="hidden md:inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 htm-btn-glow"
-            >
-              Partner Login
-            </a>
+            <div className="hidden md:flex items-center gap-3">
+              <a
+                href="/owner/login"
+                className="text-sm font-semibold text-slate-300 hover:text-white transition-colors whitespace-nowrap"
+              >
+                Partner Login
+              </a>
+              <a
+                href={SIGNUP_HREF}
+                className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 htm-btn-glow whitespace-nowrap"
+              >
+                Get Started
+              </a>
+            </div>
             <button
               className="md:hidden flex flex-col gap-[5px] p-2"
               aria-label="Toggle menu"
@@ -433,9 +448,16 @@ export default function InfoPage() {
               <a
                 href="/owner/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="mt-2 inline-flex justify-center rounded-xl bg-cyan-400 px-4 py-3 text-sm font-black text-slate-950"
+                className="text-slate-300 hover:text-white"
               >
                 Partner Login
+              </a>
+              <a
+                href={SIGNUP_HREF}
+                onClick={() => setMobileMenuOpen(false)}
+                className="mt-2 inline-flex justify-center rounded-xl bg-cyan-400 px-4 py-3 text-sm font-black text-slate-950"
+              >
+                Get Your Venue Started
               </a>
             </div>
           )}
@@ -471,7 +493,7 @@ export default function InfoPage() {
               <span className="htm-grad">Game Nights</span>
             </h1>
             <div className="flex flex-col gap-4 justify-center items-center mb-10">
-              {/* Row 1: Play and Partner Login side by side */}
+              {/* Row 1: Play and Become a Partner side by side */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link
                   href={JOIN_HREF}
@@ -485,35 +507,42 @@ export default function InfoPage() {
                   Play Hightop Challenge
                 </Link>
                 <a
-                  href="/owner/login"
+                  href={SIGNUP_HREF}
                   className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-indigo-400 to-indigo-500 px-10 py-5 text-lg font-black text-slate-950 htm-btn-glow shadow-lg shadow-indigo-400/25 hover:shadow-indigo-400/40 transition-all"
                 >
                   <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-950/20">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-950">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
+                      <path d="M12 5v14M5 12h14"/>
                     </svg>
                   </span>
-                  Partner Venue Login
+                  Get Your Venue Started
                 </a>
               </div>
-              {/* Row 2: See the Games below */}
-              <a
-                href="#games"
-                className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-8 py-4 text-base font-black text-slate-950 htm-btn-glow shadow-lg shadow-amber-400/25 hover:shadow-amber-400/40 transition-all"
-              >
-                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-slate-950/20">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-950">
-                    <line x1="8" y1="6" x2="21" y2="6"></line>
-                    <line x1="8" y1="12" x2="21" y2="12"></line>
-                    <line x1="8" y1="18" x2="21" y2="18"></line>
-                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                  </svg>
-                </span>
-                See the Games
-              </a>
+              {/* Row 2: See the Games + an unobtrusive route back to Partner Login */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a
+                  href="#games"
+                  className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-8 py-4 text-base font-black text-slate-950 htm-btn-glow shadow-lg shadow-amber-400/25 hover:shadow-amber-400/40 transition-all"
+                >
+                  <span className="flex items-center justify-center w-7 h-7 rounded-full bg-slate-950/20">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-950">
+                      <line x1="8" y1="6" x2="21" y2="6"></line>
+                      <line x1="8" y1="12" x2="21" y2="12"></line>
+                      <line x1="8" y1="18" x2="21" y2="18"></line>
+                      <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                      <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                      <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                  </span>
+                  See the Games
+                </a>
+                <a
+                  href="/owner/login"
+                  className="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-4 text-base font-bold text-slate-200 hover:border-white/40 hover:text-white transition-colors"
+                >
+                  Already a partner? Sign in
+                </a>
+              </div>
             </div>
             <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
               Digital games that can only be accessed at your bar, played on your guests&apos; phones.
@@ -695,11 +724,18 @@ export default function InfoPage() {
                 ))}
               </ul>
               <a
-                href="#contact"
+                href={SIGNUP_HREF}
                 className="rounded-xl bg-cyan-400 px-6 py-4 text-center text-base font-black text-slate-950 htm-btn-glow"
               >
                 Get Started
               </a>
+              <p className="text-center text-xs text-slate-500">
+                Prefer to talk first?{" "}
+                <a href="#contact" className="font-semibold text-slate-300 hover:text-white">
+                  Contact us
+                </a>
+                .
+              </p>
             </div>
           </div>
         </section>

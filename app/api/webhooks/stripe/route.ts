@@ -11,6 +11,7 @@ import {
   resolveDiscountCouponResult,
   type DiscountMirror,
 } from "@/lib/billingDiscounts";
+import { isBillingLapsed, isVenueRehideEnabled } from "@/lib/venueVisibility";
 
 // Stripe requires the raw request body to verify the signature — force the
 // Node.js runtime so the body is not transformed.
@@ -90,6 +91,14 @@ export async function POST(request: Request) {
         //
         // Never on the deleted branch: a cancellation is not an activation.
         if (!isDeleted) await runFirstSyncFollowers(result, sub);
+        // The opposite transition, and deliberately a SEPARATE entry point
+        // rather than a branch inside runFirstSyncFollowers: reveal fires when a
+        // venue starts paying, re-hide when it stops, and one overloaded
+        // function that did both would be harder to read than either. Runs on
+        // BOTH the updated and deleted branches — Stripe ends a cancelled
+        // subscription with `.deleted`, but a subscription can also reach a dead
+        // status (`canceled`, `incomplete_expired`, `paused`) via `.updated`.
+        await runStateChangeFollowers(result, sub);
         break;
       }
       case "customer.discount.created":
@@ -166,10 +175,22 @@ type UpsertResult = {
    * refuses any first sync that isn't.
    */
   isFirstSyncForSubscription: boolean;
+  /**
+   * The local status actually written to the mirror (`active` / `past_due` /
+   * `cancelled`), or null when nothing was written.
+   *
+   * Carried on the result rather than re-derived from `sub.status` by the
+   * state-change follower, because the two are NOT the same answer: the delete
+   * branch forces `cancelled` regardless of what Stripe's payload says, and
+   * `mapStripeSubscriptionStatus` folds several Stripe statuses into each of
+   * ours. A follower that decides on the mirror row must read the value the
+   * mirror got.
+   */
+  status: string | null;
 };
 
 /** Nothing was written, so no follower should run. */
-const SKIPPED: UpsertResult = { applied: false, isFirstSyncForSubscription: false };
+const SKIPPED: UpsertResult = { applied: false, isFirstSyncForSubscription: false, status: null };
 
 /**
  * Upsert a billing_subscriptions row from a Stripe subscription. venueId/ownerId
@@ -283,7 +304,7 @@ async function upsertSubscription(
   // Surfaced (not swallowed) so a schema/DB problem 500s and Stripe retries,
   // instead of silently leaving billing_subscriptions out of sync.
   if (error) throw new Error(`upsertSubscription failed: ${error.message}`);
-  return { applied: true, isFirstSyncForSubscription: !alreadyTracked };
+  return { applied: true, isFirstSyncForSubscription: !alreadyTracked, status };
 }
 
 /**
@@ -466,16 +487,224 @@ async function syncDiscountFromEvent(discount: Stripe.Discount, removed: boolean
 }
 
 /**
- * The two things that must happen the moment a venue's row first comes to track a
+ * The three things that must happen the moment a venue's row first comes to track a
  * paid Stripe subscription, wherever that write happened — checkout.session.completed
  * on a card that settled immediately, or customer.subscription.updated on one that
  * needed 3-D Secure. Wiring either of these to a single event type is what made
- * them one-sided; hanging both off the write itself is what keeps them symmetric.
+ * them one-sided; hanging all of them off the write itself is what keeps them
+ * symmetric.
  */
 async function runFirstSyncFollowers(result: UpsertResult, sub: Stripe.Subscription): Promise<void> {
   if (!result.applied || !result.isFirstSyncForSubscription) return;
+  await maybeRevealVenue(sub);
   await maybeSendWelcomeEmail(sub);
   await backfillSubscriptionInvoices(sub);
+}
+
+/**
+ * The mirror image of runFirstSyncFollowers: what must happen when an ALREADY
+ * TRACKED subscription changes state, rather than when one first appears.
+ *
+ * Hangs off the upsert RESULT, not the raw event, which is what gives it the
+ * stale-subscription-id guard for free — a late/retried event for a replaced
+ * subscription returns SKIPPED from upsertSubscription and never reaches here,
+ * so it can't hide a venue that has since moved to a new card or an offline
+ * grant.
+ *
+ * Nothing here is a first-sync concern, so it is NOT called from
+ * checkout.session.completed: that path only ever writes an `active`/`trialing`
+ * subscription (the creation gate refuses anything else), so a re-hide there
+ * would be dead code pretending to be a safety net.
+ */
+async function runStateChangeFollowers(result: UpsertResult, sub: Stripe.Subscription): Promise<void> {
+  if (!result.applied) return;
+  await maybeRehideVenue(result, sub);
+}
+
+/**
+ * Lapsed Venue Re-Hide — docs/lapsed-venue-rehide-plan.md Phase 2. The exact
+ * mirror of maybeRevealVenue: when a self-serve venue's subscription can no
+ * longer bill, take it back out of the player join list.
+ *
+ * THE PRODUCT DECISION IS ENTIRELY STRIPE'S SEMANTICS, AND THAT IS THE POINT:
+ *   - A partner who cancels keeps the period they paid for. Stripe holds the
+ *     subscription `active` with `cancel_at_period_end` until the period really
+ *     ends, then fires `customer.subscription.deleted`. "Wait for period end" is
+ *     not something implemented here; it is something not short-circuited.
+ *   - A failed payment is a retry, not a departure. Stripe moves the
+ *     subscription to `past_due` and keeps trying; classifyBillingRow calls that
+ *     LIVE, so nothing happens. A successful retry likewise changes nothing —
+ *     they were never hidden.
+ * So the whole rule is `isBillingLapsed(the row we just wrote)`. NEVER add a
+ * `current_period_end < now` comparison here: dunning windows, proration and
+ * grace periods are Stripe's to model, its status already reflects them, and
+ * re-deriving it is how you hide a partner mid-period.
+ *
+ * The billing half is asked of lib/venueVisibility.ts (one truth table with
+ * shouldRevealVenue / shouldRehideVenue / shouldRestoreVenue); the VENUE half is
+ * expressed as filters on the UPDATE, exactly as maybeRevealVenue does, because
+ * that is what makes this idempotent without a read/write race:
+ *
+ *   - `.eq("hidden", false)` — matches nothing on a Stripe retry, and nothing on
+ *     a venue an admin already hid.
+ *   - `.not("self_serve_created_at", "is", null)` — LOAD-BEARING, the same
+ *     clause and the same reason as maybeRevealVenue. Production carries two
+ *     hidden venues that are not self-serve signups (the Category Blitz global
+ *     rooms `category-blitz-global-room` and `hc-cbz-live`, both stamp-null),
+ *     and admin-activated venues are ops-managed: they get a report from the
+ *     daily reconciler, never an automatic hide (re-hide plan §4 Phase 3).
+ *   - `.or("latitude.neq.0,longitude.neq.0")` — i.e. NOT(lat = 0 AND lng = 0),
+ *     not two `.neq` filters, which would also exclude a real venue on the
+ *     equator or the prime meridian. Belt to the stamp guard's braces, and
+ *     load-bearing for a second reason: this write STAMPS `rehidden_at`, and
+ *     `shouldRestoreVenue` restores anything carrying that stamp without
+ *     re-checking provenance. Refusing a placeholder here is what keeps a
+ *     mis-stamped internal room out of the restore path forever.
+ *
+ * `rehidden_at` is set in the same write. It is not bookkeeping: it is the only
+ * thing that distinguishes "we hid this because they lapsed" from "an admin hid
+ * this on purpose", and it is what `shouldRestoreVenue` requires. Hiding without
+ * stamping would make the hide permanent.
+ *
+ * Gated on VENUE_REHIDE_ENABLED (server-side, so it flips without a redeploy).
+ * Off — today's default — this function reads the flag and returns, and the
+ * feature is fully inert.
+ *
+ * Never throws, same contract as its twin: a failure here must not fail the
+ * webhook, or Stripe retries the whole event and re-drives billing sync over a
+ * cosmetic problem. BEST-EFFORT BY DESIGN, AND THAT IS NOT THE BUG — the repair
+ * path is the daily reconciler in /api/cron/billing, never a louder follower.
+ */
+async function maybeRehideVenue(result: UpsertResult, sub: Stripe.Subscription): Promise<void> {
+  if (!supabaseAdmin) return;
+  if (!isVenueRehideEnabled()) return;
+
+  const venueId = sub.metadata?.venueId?.trim();
+  if (!venueId) return;
+
+  // The row upsertSubscription just wrote, in the shape the shared predicate
+  // reads. `billing_method` is "stripe" verbatim because that upsert reasserts
+  // it on every write (a venue that moves from an offline grant to a card is
+  // reclassified there), and `stripe_subscription_id` is this subscription.
+  if (
+    !isBillingLapsed({
+      status: result.status ?? "",
+      stripe_subscription_id: sub.id,
+      billing_method: "stripe",
+    })
+  ) {
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("venues")
+      .update({ hidden: true, rehidden_at: new Date().toISOString() })
+      .eq("id", venueId)
+      .eq("hidden", false)
+      .not("self_serve_created_at", "is", null)
+      .or("latitude.neq.0,longitude.neq.0")
+      .select("id")
+      .returns<{ id: string }[]>();
+
+    if (error) {
+      console.error(`[stripe-webhook] rehide-venue-failed venue=${venueId}: ${error.message}`);
+      return;
+    }
+    if ((data ?? []).length > 0) {
+      console.log(
+        `[stripe-webhook] re-hid self-serve venue ${venueId} — subscription ${sub.id} is ${result.status}`
+      );
+    }
+  } catch (error) {
+    // Best-effort — the subscription is already synced by upsertSubscription above.
+    console.error(
+      `[stripe-webhook] rehide-venue-threw venue=${venueId}: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+/**
+ * Partner Self-Serve Signup — Phase 6. Make a self-serve venue visible to players
+ * on first paid activation.
+ *
+ * `POST /api/owner/signup` creates its venue with `hidden = true` (Checkout needs
+ * a venueId, so the row has to exist before anyone has paid) and stamps
+ * `self_serve_created_at` in the SAME insert. A completed payment is the gate
+ * that reveals it. Ordered FIRST among the followers so the venue is live before
+ * the welcome email tells the partner it is.
+ *
+ * THE `self_serve_created_at is not null` GUARD IS LOAD-BEARING — do not relax it
+ * to a plain `hidden = true` match. Production carries two other hidden venues,
+ * both Category Blitz global rooms (`category-blitz-global-room` and
+ * `hc-cbz-live`, both stamp-null, verified 2026-09-07). That stamp is currently
+ * the ONLY thing separating them from a self-serve row, and revealing a global
+ * room would put an internal pooling room in every player's venue list.
+ *
+ * The stamp is deliberately NOT cleared on reveal: it is the row's provenance,
+ * and `/api/cron/signup-sweep` cannot reap a revealed venue anyway (it requires
+ * `hidden = true` AND no billing_subscriptions row, and a paid venue has both
+ * wrong — a cancelled subscriber still keeps its row).
+ *
+ * The (0, 0) clause is defence in depth on top of the stamp. Both Category Blitz
+ * global rooms sit at exactly (0, 0), and "a venue at (0, 0) is a placeholder or
+ * internal room and is NEVER revealable" is a standing rule (CLAUDE.md, Venue
+ * Visibility) that should hold even if a row is somehow mis-stamped. Expressed as
+ * `.or("latitude.neq.0,longitude.neq.0")` — i.e. NOT(lat = 0 AND lng = 0) — and
+ * not as two `.neq` filters, which would also exclude a real venue that happens
+ * to sit exactly on the equator or the prime meridian. `venues.latitude` and
+ * `.longitude` are NOT NULL (20260214153000_initial_schema.sql), so there is no
+ * null case to reason about.
+ *
+ * Idempotent (the `hidden = true` predicate matches nothing on a retry) and never
+ * throws — same contract as maybeSendWelcomeEmail. A failure here must not fail
+ * the webhook: Stripe would retry the whole event and re-drive billing sync over
+ * a cosmetic problem.
+ *
+ * BEST-EFFORT BY DESIGN, AND THAT IS NOT THE BUG. When this misses, the repair is
+ * `repairMissedVenueReveals` in lib/venueVisibilitySync.ts, run daily by
+ * /api/cron/billing (review-fixes plan Finding #3). Never "fix" a missed reveal
+ * by making this throw.
+ *
+ * IT IS ALSO THE RESTORE HALF of the lapsed-venue re-hide, which is why the
+ * write clears `rehidden_at`. A partner who lapses (maybeRehideVenue stamps the
+ * column) and later resubscribes arrives here with a fresh Stripe subscription
+ * id — a first sync — and matches this predicate every bit as well as
+ * `shouldRestoreVenue` would. Un-hiding without clearing the stamp would leave a
+ * VISIBLE venue still marked "we hid this", which is stale provenance the
+ * reconciler and the admin badge both read. Whatever un-hides a venue clears the
+ * stamp: no exceptions, in any path.
+ */
+async function maybeRevealVenue(sub: Stripe.Subscription): Promise<void> {
+  if (!supabaseAdmin) return;
+
+  const venueId = sub.metadata?.venueId?.trim();
+  if (!venueId) return;
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("venues")
+      .update({ hidden: false, rehidden_at: null })
+      .eq("id", venueId)
+      .eq("hidden", true)
+      .not("self_serve_created_at", "is", null)
+      .or("latitude.neq.0,longitude.neq.0")
+      .select("id")
+      .returns<{ id: string }[]>();
+
+    if (error) {
+      console.error(`[stripe-webhook] reveal-venue-failed venue=${venueId}: ${error.message}`);
+      return;
+    }
+    if ((data ?? []).length > 0) {
+      console.log(`[stripe-webhook] revealed self-serve venue ${venueId} on first subscription sync`);
+    }
+  } catch (error) {
+    // Best-effort — the subscription is already synced by upsertSubscription above.
+    console.error(
+      `[stripe-webhook] reveal-venue-threw venue=${venueId}: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 }
 
 /**

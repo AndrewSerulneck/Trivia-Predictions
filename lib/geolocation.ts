@@ -1,5 +1,6 @@
 export { calculateDistanceMeters, getGeofenceThresholdMeters } from "@/lib/geofence";
 import type { GeofenceCoordinates } from "@/lib/geofence";
+import { serverGoogleMapsKey } from "@/lib/googleMapsKeys";
 
 export type Coordinates = {
   latitude: number;
@@ -213,7 +214,7 @@ const US_LOCATION_BIAS_RECTANGLE = {
 };
 
 function getApiKey(): string {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
+  const apiKey = serverGoogleMapsKey();
   if (!apiKey) {
     throw new Error("Google Maps API key is not configured.");
   }

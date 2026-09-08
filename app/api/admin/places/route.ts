@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
+import { serverGoogleMapsKey } from "@/lib/googleMapsKeys";
 
 type Suggestion = {
   label: string;
@@ -182,7 +183,7 @@ export async function GET(request: Request) {
     const rawLimit = Number.parseInt(searchParams.get("limit") ?? "8", 10);
     const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(12, rawLimit)) : 8;
     const provider = (searchParams.get("provider") ?? "").trim().toLowerCase();
-    const googleApiKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
+    const googleApiKey = serverGoogleMapsKey();
 
     let suggestions: Suggestion[] = [];
     if ((provider === "google" || provider === "") && googleApiKey) {

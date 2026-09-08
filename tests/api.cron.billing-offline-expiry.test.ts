@@ -12,8 +12,16 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
  * and its status='cancelled' write.
  *
  * Since the SlimCD teardown (Phase 4 of docs/billing-code-review-fixes-plan.md)
- * this sweep is the cron's ONLY job — the rebilling due-query and charge loop
- * are gone, and card renewals are Stripe's own recurring billing.
+ * this sweep is the cron's only WRITE against billing_subscriptions — the
+ * rebilling due-query and charge loop are gone, and card renewals are Stripe's
+ * own recurring billing.
+ *
+ * Phase 3 of docs/self-serve-signup-review-fixes-plan.md gave the cron a second
+ * job (venue-visibility reveal repair). Every assertion below is unchanged; the
+ * builder just grew the filter ops that job uses (`not`, `in`, `order`, `limit`)
+ * so it runs for real here and finds zero candidates, rather than throwing into
+ * the route's catch and passing for the wrong reason. Reveal-repair behaviour is
+ * covered in tests/api.cron.billing.reveal.test.ts.
  */
 
 type Call = {
@@ -22,6 +30,7 @@ type Call = {
   eq: Array<[string, unknown]>;
   lte: Array<[string, unknown]>;
   neq: Array<[string, unknown]>;
+  table: string;
 };
 
 const mocks = vi.hoisted(() => ({
@@ -33,8 +42,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/supabaseAdmin", () => {
-  const makeBuilder = () => {
-    const call: Call = { eq: [], lte: [], neq: [] };
+  const makeBuilder = (table: string) => {
+    const call: Call = { eq: [], lte: [], neq: [], table };
     mocks.calls.push(call);
     const builder: Record<string, unknown> = {};
     const chain = () => builder;
@@ -51,6 +60,11 @@ vi.mock("@/lib/supabaseAdmin", () => {
       call.neq.push([col, val]);
       return builder;
     });
+    // Filter ops the reveal-repair scan uses. Unrecorded on purpose: this file
+    // asserts the offline sweep, not that job.
+    for (const op of ["not", "in", "order", "limit", "or"]) {
+      builder[op] = vi.fn(chain);
+    }
     builder.update = vi.fn((payload: Record<string, unknown>) => {
       call.update = payload;
       return builder;
@@ -69,7 +83,7 @@ vi.mock("@/lib/supabaseAdmin", () => {
   };
   return {
     supabaseAdmin: {
-      from: vi.fn(() => makeBuilder()),
+      from: vi.fn((table: string) => makeBuilder(table)),
     },
   };
 });

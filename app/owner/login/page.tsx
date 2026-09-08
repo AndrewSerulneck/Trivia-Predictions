@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell, ownerInputClass, ownerLabelClass, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
 import { marketingHref } from "@/lib/domainSplit";
+import { signupEntryPath } from "@/lib/selfServeSignup";
 
 const EyeIcon = ({ open }: { open: boolean }) =>
   open ? (
@@ -98,7 +99,7 @@ const OwnerLoginPage = () => {
       </form>
       <p className="mt-6 text-center text-sm text-slate-500">
         New venue owner?{" "}
-        <Link href="/owner/register" className="font-semibold text-indigo-600 hover:text-indigo-800">
+        <Link href={signupEntryPath()} className="font-semibold text-indigo-600 hover:text-indigo-800">
           Create an account
         </Link>
       </p>

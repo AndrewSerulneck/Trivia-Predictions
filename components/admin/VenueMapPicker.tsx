@@ -50,7 +50,17 @@ type VenueMapPickerProps = {
   onChange: (lat: number, lng: number) => void;
   /** True while the radius dial is actively being dragged — thickens the circle stroke. */
   radiusEditing?: boolean;
+  /**
+   * Where to fetch the Google Maps JS key from. Defaults to the admin-gated
+   * route; the public self-serve signup wizard passes "/api/signup/maps-key",
+   * which is flag-gated + rate-limited instead of admin-authed
+   * (docs/partner-self-serve-signup-plan.md §4 Phase 1). Parameterised rather
+   * than forked so there is one map implementation.
+   */
+  mapsKeyEndpoint?: string;
 };
+
+export const ADMIN_MAPS_KEY_ENDPOINT = "/api/admin/maps-key";
 
 export type VenueMapPickerHandle = {
   /** Re-center the map on the current pin (or a supplied position) and reset zoom to fit the radius. */
@@ -110,7 +120,17 @@ function fitToCircle(map: GmapsMap, circle: GmapsCircle, gmaps: GmapsGlobal["map
 }
 
 export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerProps>(
-  function VenueMapPicker({ latitude, longitude, radius, onChange, radiusEditing = false }, ref) {
+  function VenueMapPicker(
+    {
+      latitude,
+      longitude,
+      radius,
+      onChange,
+      radiusEditing = false,
+      mapsKeyEndpoint = ADMIN_MAPS_KEY_ENDPOINT,
+    },
+    ref
+  ) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapDivRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<GmapsMap | null>(null);
@@ -129,7 +149,7 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
     // Fetch API key from secure endpoint then load Maps JS script
     useEffect(() => {
       let cancelled = false;
-      void fetch("/api/admin/maps-key")
+      void fetch(mapsKeyEndpoint)
         .then((res) => res.json() as Promise<{ ok: boolean; apiKey?: string; error?: string }>)
         .then((data) => {
           if (cancelled) return;
@@ -145,7 +165,7 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
           if (!cancelled) setLoadError("Failed to load map configuration.");
         });
       return () => { cancelled = true; };
-    }, []);
+    }, [mapsKeyEndpoint]);
 
     // Initialize map once Google Maps JS is ready
     useEffect(() => {

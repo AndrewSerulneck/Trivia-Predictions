@@ -5,6 +5,7 @@ import type { Venue } from "@/types";
 import { TH, TD, TR } from "@/components/admin/AdminShell";
 import { GeofenceEditor } from "@/components/admin/GeofenceEditor";
 import { DeleteVenueModal, useVenueDeletion } from "@/components/admin/DeleteVenueModal";
+import { HiddenVenuesPanel } from "@/components/admin/sections/HiddenVenuesPanel";
 import { useAddressLookup, type AddressPrediction } from "@/components/admin/useAddressLookup";
 import { adminField, adminLabel, adminFieldReadOnly } from "@/lib/adminStyles";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
@@ -1034,6 +1035,8 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
           </table>
         </div>
       </div>
+
+      <HiddenVenuesPanel />
 
       <DeleteVenueModal deletion={deletion} />
     </div>

@@ -15,6 +15,8 @@
     "test:venue-screen-overflow": "node scripts/verify-venue-screen-overflow.mjs",
     "category-blitz:verify-mobile-shell": "node --env-file=.env.local --conditions react-server --import tsx scripts/verify-category-blitz-mobile-shell.cjs",
     "auth:smoke": "node scripts/auth-smoke.cjs",
+    "signup:check-claim-precondition": "node --env-file=.env.local scripts/check-venue-owner-duplicates.cjs",
+    "signup:check-orphan-auth-users": "node --env-file=.env.local scripts/check-orphaned-auth-users.cjs",
     "category-blitz:build": "node --env-file=.env.local scripts/build-category-blitz-letter-index.cjs",
     "category-blitz:build:dry-run": "node --env-file=.env.local scripts/build-category-blitz-letter-index.cjs --dry-run",
     "category-blitz:simulate": "node --env-file=.env.local --conditions react-server --import tsx scripts/simulate-category-blitz.cjs",

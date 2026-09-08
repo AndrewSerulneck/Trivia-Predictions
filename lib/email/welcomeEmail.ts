@@ -63,10 +63,34 @@ const SIGN_OFF = "See you on game night,\nThe Hightop Challenge team";
 
 const formatAmount = (cents: number): string => `$${(cents / 100).toFixed(2)}`;
 
+/**
+ * The only two values in this email that are not authored copy are `venueName`
+ * and `ownerName`, and as of Partner Self-Serve Signup (Phase 6) BOTH are typed
+ * by an unauthenticated stranger on /owner/signup rather than by an admin. They
+ * are interpolated into an HTML string, so they must be escaped.
+ *
+ * The everyday case is not an attack, it is punctuation: "Bar & Grill" is one of
+ * the most common bar names there is, and a raw `&` in HTML is the start of an
+ * entity reference — mail clients mostly recover, but the correct byte is
+ * `&amp;`. `<` is the one that actually breaks the layout.
+ *
+ * The PLAIN TEXT branch must NOT be escaped — it is not markup, and escaping it
+ * would put a literal "&amp;" in front of the partner.
+ *
+ * Only `& < >`. Quotes and apostrophes are deliberately left alone: both values
+ * are interpolated into element TEXT, never into an attribute, so they need no
+ * escaping there — and "Joe's Bar" / "O'Neil" are common enough that turning
+ * every one into `&#39;` would be noise in exchange for nothing.
+ */
+const escapeHtml = (value: string): string =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 export const buildWelcomeEmail = (input: WelcomeEmailInput): WelcomeEmailContent => {
   const planAmount = formatAmount(input.planAmountCents);
   const greeting = input.ownerName ? `Hi ${input.ownerName},` : "Hi there,";
+  const greetingHtml = input.ownerName ? `Hi ${escapeHtml(input.ownerName)},` : "Hi there,";
   const confirmation = CONFIRMATION_LINE(input.venueName, planAmount);
+  const confirmationHtml = CONFIRMATION_LINE(escapeHtml(input.venueName), planAmount);
 
   const featureCardsHtml = FEATURE_TOUR.map(
     (feature) => `
@@ -90,9 +114,9 @@ export const buildWelcomeEmail = (input: WelcomeEmailInput): WelcomeEmailContent
           <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius: 12px; overflow: hidden;">
             <tr>
               <td style="padding: 32px 32px 8px;">
-                <p style="margin: 0 0 16px; font-size: 14px; color: #888;">${greeting}</p>
+                <p style="margin: 0 0 16px; font-size: 14px; color: #888;">${greetingHtml}</p>
                 <h1 style="margin: 0 0 12px; font-size: 22px; color: #111;">Welcome to Hightop Challenge</h1>
-                <p style="margin: 0 0 24px; font-size: 15px; color: #333; line-height: 1.5;">${confirmation}</p>
+                <p style="margin: 0 0 24px; font-size: 15px; color: #333; line-height: 1.5;">${confirmationHtml}</p>
               </td>
             </tr>
             <tr>

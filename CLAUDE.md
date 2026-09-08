@@ -90,6 +90,208 @@
   untouched). Full as-built record, deviations and remaining work:
   `docs/nfl-pickem-reward-plan.md`.
 
+## Partner Self-Serve Signup (`/owner/signup`, flag-gated)
+
+- **A partner can now subscribe without an admin pre-activating their venue.**
+  The full-screen wizard at `/owner/signup` (six steps: name → email → password →
+  address → geofence → review → Stripe Checkout) creates its own `venues` row
+  (`hidden = true`, `self_serve_created_at` stamped) and owner account, then hands
+  off to `/owner/billing/setup`. The Stripe webhook unhides the venue on first
+  paid activation. Full plan + as-built: `docs/partner-self-serve-signup-plan.md`;
+  ops cutover: `docs/self-serve-signup-runbook.md`.
+- **Admin Activate-a-Venue is NOT deleted.** `components/admin/mobile/ActivateVenueFlow.tsx`
+  stays — ops still needs it for offline-billed venues, second venues for an
+  existing owner (self-serve is **one venue per email**), and support fixes. It is
+  no longer a *prerequisite*, that is all that changed.
+- **Everything is behind `NEXT_PUBLIC_SELF_SERVE_SIGNUP_ENABLED`**, single reader
+  `isSelfServeSignupEnabled()` in `lib/selfServeSignup.ts` (same reversible
+  convention as `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED`). Off (today's default) =
+  `/owner/register` keeps its venue-lookup flow and every `/api/signup/*` route
+  plus `/owner/signup` 404s. On = `/owner/register` redirects to `/owner/signup`
+  and the `/info` partner CTAs point there. The flag is a `NEXT_PUBLIC_*` value
+  inlined at build time, so **env var, then redeploy** — a mid-rollout skew shows
+  as a live wizard whose submit 404s.
+- **`/api/signup/maps-key`, `/api/signup/places`, `/api/signup/venue-map`,
+  `/api/signup/email-available` and `POST /api/owner/signup` are public and
+  unauthenticated** (the first three are Google-billed). They are gated on the
+  flag + `rateLimit()` (`lib/rateLimit.ts`, `signup_attempts` table), never
+  `requireAdminAuth`.
+- **"Does this email already have a partner account?" is asked in exactly one
+  place — `ownerEmailExists()` in `lib/ownerEmailAvailability.ts`** — by both
+  `POST /api/signup/email-available` (the step-2 pre-check that stops the wizard
+  advancing) and `POST /api/owner/signup` (the authority, re-run before any
+  write because the pre-check is skippable and raceable). The partner-facing
+  sentence is `OWNER_EMAIL_TAKEN_MESSAGE`, defined once and rendered on the
+  email field; `EmailStep` shows a real sign-in link beside it, so the message
+  must NOT carry a raw `/owner/login` path. A contract test pins all of this.
+- **`/api/signup/email-available` is an email-enumeration oracle, accepted
+  narrowly.** The disclosure already existed — a signup form cannot refuse
+  duplicate accounts and hide that it did — so the pre-check changes the *cost*
+  of enumeration, not the fact of it. That cost is controlled by its own
+  `emailCheck` bucket, which is an **hour-long window on purpose** (sized
+  against someone walking a list, not against burst traffic). Do not widen it to
+  a per-minute window, and do not add a GET/query-string variant.
+- **The step-2 pre-check FAILS OPEN; the submit fails closed.** A 404, 503, 429
+  or dead network on `/api/signup/email-available` lets the partner through,
+  because `POST /api/owner/signup` re-runs the same lookup and is the authority.
+  Only a definite `available: false` blocks. Never invert this — a UX pre-check
+  that can wedge the whole wizard when a non-essential route is unhealthy is
+  worse than the dead end it replaced. Conversely, a lookup *failure* must never
+  be collapsed into `available: true`.
+- **An attacker-supplied venue id must pass the SAME eligibility predicate as
+  proximity discovery.** `POST /api/owner/signup` takes an optional
+  `claimVenueId` from the request body; it is attacker-controlled and never
+  trusted as proof of anything. The claim/placeholder/provenance predicates live
+  in **one place, `lib/venueClaim.ts`** (`isClaimableVenueRow`,
+  `isPlaceholderVenueRow`, `isSelfServeVenueRow`, `isAdminHiddenVenueRow`,
+  `claimableDistanceMeters`, plus the shared `VENUE_CLAIM_COLUMNS` select),
+  called by **both** `findNearbyVenue` and the claim branch. `route.ts` must not
+  import `calculateDistanceMeters` or hand-list venue columns — the contract test
+  fails the build if it does.
+- **A venue at `latitude = 0, longitude = 0` is a placeholder or internal room
+  and is NEVER claimable, joinable, or revealable.** Both Category Blitz global
+  rooms are seeded there. This clause is `isPlaceholderVenueRow` in
+  `lib/venueClaim.ts`; the Stripe webhook's reveal update also carries
+  `.or("latitude.neq.0,longitude.neq.0")` (NOT two `.neq` filters — that would
+  exclude a real venue on the equator or prime meridian).
+- **`self_serve_created_at` is a capability grant, not a timestamp.** Writing it
+  simultaneously arms `maybeRevealVenue` (publish the venue to every player's
+  join list) and `sweepAbandonedSignupVenues` (delete the row in 7 days). Never
+  stamp a row this flow did not create; guard the stamp on the stamp itself
+  (`isSelfServeVenueRow`), never on `hidden`. A stranger must not get a
+  `venue_owner_venues` row to an admin-created hidden venue at all —
+  `isAdminHiddenVenueRow` refuses it outright on both the claim and discovery
+  branches.
+- **`/api/signup/maps-key` fails closed.** It serves `GOOGLE_MAPS_BROWSER_KEY`
+  via `publicBrowserGoogleMapsKey()` or returns **503** with
+  `[SignupMapsKey] browser-key-unset` — it must never fall back to the
+  unrestricted server key. Only `/api/admin/maps-key` (authenticated) keeps the
+  fallback, via `browserGoogleMapsKey()`.
+- **Two Google Maps keys, one Cloud project (`lib/googleMapsKeys.ts`).**
+  `browserGoogleMapsKey()` = `GOOGLE_MAPS_BROWSER_KEY` (HTTP-referrer-restricted
+  to our hosts), falling back to `GOOGLE_MAPS_API_KEY` if unset — **authenticated
+  surfaces only**. `publicBrowserGoogleMapsKey()` = `GOOGLE_MAPS_BROWSER_KEY` or
+  `""`, no fallback. `serverGoogleMapsKey()` = `GOOGLE_MAPS_API_KEY`, and is the
+  **only** server-side reader of that var (Places / Static Maps / Geocoding
+  `fetch`; the shared Static Maps builder is `lib/venueStaticMap.ts`); it **must
+  not be referrer-restricted** (a server request has no `Referer`). Do not
+  collapse these into one key or read `GOOGLE_MAPS_API_KEY` inline anywhere else —
+  the contract test enforces both. Risk #1 + the exact Cloud Console steps:
+  `docs/self-serve-signup-runbook.md` §2.
+- **The signup rate limiter is atomic in Postgres.** The quota decision is the
+  `claim_signup_attempt` RPC — a count-guarded insert under
+  `pg_advisory_xact_lock`, same pattern as `award_cycle_winner`. `lib/rateLimit.ts`
+  is one `.rpc()` call and computes nothing; it fails **closed** on any error,
+  including a missing function (mid-deploy skew:
+  `[SignupRateLimit] claim_signup_attempt-missing`). Never re-implement the guard
+  as a TypeScript read-then-write — that is the bug it replaced.
+- **Public `/api/signup/*` routes return generic errors.** Upstream Google / config
+  error text goes to `console.error`, never the response body
+  (`/api/signup/places` is `"Address lookup is unavailable right now."`). The
+  authenticated admin siblings keep their diagnostics.
+- **The `/api/cron/signup-sweep` `vercel.json` cron entry
+  (`{ "path": "/api/cron/signup-sweep", "schedule": "0 8 * * *" }`) was added
+  2026-09-07 on Andrew's explicit instruction**, so the "do not alter
+  `vercel.json` unasked" hard boundary was satisfied. Recorded here so the next
+  reviewer does not re-flag it; the boundary otherwise still stands.
+- **`/api/cron/signup-sweep` is deliberately un-flag-gated** and ships log-only
+  (`SIGNUP_SWEEP_DELETE_ENABLED` / `SIGNUP_SWEEP_AUTH_DELETE_ENABLED`, both
+  absent). An `auth.users` row with **no email** is an anonymous player session,
+  never a partner — the sweep's email filter is what keeps it off the 765 orphan
+  player rows in production. See the section below and
+  `tests/lib.auth-users-fk-guard.test.ts`.
+
+## `auth.users` is SHARED WITH PLAYERS — standing prohibition
+
+`auth.users` is **not** the venue-owner credential store. Seven tables reference
+it, and only one of them (`venue_owners`, `ON DELETE CASCADE`) is a partner
+credential. The other six belong to PLAYERS — including `accounts.auth_id` and
+`users.auth_id`, both `ON DELETE SET NULL`, both actively read and written by
+`app/api/join/profile/route.ts`.
+
+`SET NULL` means **deleting an `auth.users` row does not error** — it silently
+detaches a player's account from their identity. The `CASCADE` ones delete their
+gameplay rows outright.
+
+- **No signup or owner code path may adopt, delete, or reset the password of a
+  PRE-EXISTING `auth.users` row.** The tempting shortcut — "this email has no
+  `venue_owners` row, so just take over the auth user" — is an **account-takeover
+  vector against players**. Do not build it. `POST /api/owner/signup` returns a
+  support-contact 409 instead (`[OwnerSignup] orphan-auth-user`).
+- Deleting an auth user is legitimate **only** for one the same request just
+  created — exactly and only what that route's `unwind()` does.
+- Any batch reconciliation (`/api/cron/signup-sweep`) must check
+  **every** consumer table before deleting, not just `venue_owners`.
+- **AN `auth.users` ROW WITH NO EMAIL IS AN ANONYMOUS PLAYER, NEVER A PARTNER.**
+  `lib/auth.ts`'s `signInAnonymously()` (three call sites in `JoinFlow.tsx`)
+  mints one per anonymous visit, and a visitor who never finishes joining a venue
+  never gets an `accounts` or `users` row — so **765 of production's 966 auth
+  users are "orphans" by the seven-table test and every one of them is a player**
+  (measured 2026-09-07). The seven-table guard alone is NOT sufficient; the sweep
+  additionally requires an email, and `POST /api/owner/signup` always sets one.
+  Never delete an emailless auth user to "fix" a signup. Size it first with
+  `npm run signup:check-orphan-auth-users` (read-only).
+- **`tests/lib.auth-users-fk-guard.test.ts` is the tripwire.** It pins the exact
+  set of seven tables and their on-delete rules; an eighth consumer fails it.
+  Run `npm run test` after any migration that touches an `auth.users` FK.
+
+## Venue Visibility (`venues.hidden`, the reveal / re-hide lifecycle)
+
+- **`venues.hidden` is soft.** It removes a venue from the join list — and that
+  exclusion happens in exactly **one** place, `listVenues()` in `lib/venues.ts`
+  (`hidden.is.null,hidden.eq.false`). Already-joined players, direct URLs, the
+  owner dashboard and the TV screen are all unaffected. Do not harden this into a
+  real access gate without a separate, explicit decision.
+- **`lib/venueVisibility.ts` is the single home** of `shouldRevealVenue` /
+  `shouldRehideVenue` / `shouldRestoreVenue` — one truth table, all three built on
+  `classifyBillingRow()` from `lib/billing.ts` and on `lib/venueClaim.ts`'s
+  `isSelfServeVenueRow` / `isPlaceholderVenueRow`. Never re-derive the
+  live/not-live predicate, the self-serve-provenance test, or the `(0,0)`
+  placeholder clause at a call site.
+- **Never compute `current_period_end < now` in a visibility path.** Stripe's
+  subscription status already encodes cancel-at-period-end and dunning;
+  `classifyBillingRow()` reads the status, not the dates.
+- **Never delete a `billing_subscriptions` row on cancellation.** That row is the
+  only thing keeping `sweepAbandonedSignupVenues` from deleting a re-hidden real
+  venue.
+- **Both webhook followers (`maybeRevealVenue`, `maybeRehideVenue`) are
+  best-effort by design** — each fires once and swallows its error so a cosmetic
+  failure can't make Stripe retry the whole billing sync. **`/api/cron/billing`
+  is the repair path** (`lib/venueVisibilitySync.ts`, daily, bounded,
+  `isCronAuthorized`, no `rateLimit()`): `repairMissedVenueReveals` re-does a
+  missed reveal, and `reconcileLapsedVenues` runs three jobs — **restore** (a
+  venue we hid, once billing is live again), **re-hide** (a lapsed self-serve
+  venue), and **report** (count-only, lapsed admin-activated venues; never
+  touched). A visibility bug is fixed in the reconciler, **never** by making a
+  follower throw.
+- **Re-hide / restore are wired, flag-gated, and ship LOG-ONLY.**
+  `VENUE_REHIDE_ENABLED` (server-side, **no** `NEXT_PUBLIC_` — it flips without a
+  redeploy), single reader `isVenueRehideEnabled()` in `lib/venueVisibility.ts`.
+  Off (today's default) = `maybeRehideVenue` returns early and the cron's
+  restore + re-hide jobs run in dry-run mode (they log `[VenueVisibility]` lines,
+  write nothing); the report job always runs. `?dryRun=1` on the cron forces the
+  same. Cutover: read a week of dry-run lines, then set the flag. Full plan:
+  `docs/lapsed-venue-rehide-plan.md`.
+- **`venues.rehidden_at` is provenance, not bookkeeping** — it is the only thing
+  telling "we hid this because they lapsed" (restorable) from "an admin hid this
+  on purpose" (never auto-restore). Written by `maybeRehideVenue` and the cron
+  re-hide job; **cleared by `maybeRevealVenue`, `repairMissedVenueReveals` and
+  the cron restore job**. Rule with no exceptions: whatever un-hides a venue
+  clears `rehidden_at` in the same write. Migration
+  `20260908130000_venues_rehidden_at.sql`, live.
+- **Admin sees hidden venues in the "Hidden venues" panel** (bottom of the
+  Venues section — `HiddenVenuesPanel`, `GET /api/admin?resource=hidden-venues`
+  → `listHiddenVenues`). Rows are badged **lapsed** (`rehidden_at` set — the
+  reconciler hid it), **admin-hidden** (`hidden`, no stamp), or **system room**
+  ((0,0) placeholder). Only lapsed rows get a **Restore (unhide)** button
+  (`POST resource=venue-visibility action=restore` → `restoreLapsedVenue`), which
+  clears `rehidden_at`. The manual restore is deliberately **billing-agnostic**:
+  if the subscription is still not live the nightly reconciler re-hides the venue
+  on its next run, so the real fix is a live subscription — the panel copy says
+  this. `restoreLapsedVenue` refuses anything that is not a genuine lapsed row
+  (guarded on `hidden = true` AND `rehidden_at IS NOT NULL` AND self-serve-stamped
+  AND not (0,0)), so it can never publish a Category Blitz global room.
+
 ## Architecture & Database Patterns
 - **Client Queries:** Use `lib/supabase.ts` via `createClient(url, anonKey)`. Subject to RLS.
 - **Server/API Queries:** Use `lib/supabaseAdmin.ts` via `createClient(url, serviceRoleKey)`. Guarded by `"server-only"`, bypasses RLS. Used for server-side mutations inside API routes.

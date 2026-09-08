@@ -6,6 +6,23 @@
 export const RADIUS_MIN = 25;
 export const RADIUS_MAX = 2000;
 
+// Every radius helper below takes an optional (min, max) domain, defaulting to
+// the admin constants above. Passing nothing is bit-identical to the pre-Phase-2
+// behavior (docs/partner-self-serve-signup-plan.md §4 Phase 2) — that equivalence
+// is the acceptance test. The self-serve signup wizard passes SIGNUP_RADIUS_MIN
+// (50) / SIGNUP_RADIUS_MAX (200) so a stranger can't draw a 2 km circle.
+
+/**
+ * Snap granularity for a given domain. The legacy admin domain keeps its coarse
+ * 25 m (below 500) / 50 m (above) grid; a narrow custom domain like signup's
+ * 50–200 m gets a 10 m grid, because 25 m gives only ~7 stops across the whole
+ * range. The 400 m span cutoff is what separates the two.
+ */
+function radiusSnapStep(radius: number, min: number, max: number): number {
+  if (max - min <= 400) return 10;
+  return radius < 500 ? 25 : 50;
+}
+
 // Existing precedent from ActivateVenueFlow.tsx — reused verbatim so the mobile
 // flow's pin-provenance copy ("Pin set from your phone", "existing" on edit,
 // etc.) keeps working unchanged when it switches to GeofenceEditor in Phase 4.
@@ -26,8 +43,11 @@ export const RADIUS_PRESETS: ReadonlyArray<RadiusPreset> = [
  * Plain-language sense of scale for the live readout, so an admin who has no
  * intuition for "220 m" can still tell whether the circle is right.
  */
-export function radiusDescription(radius: number): string {
-  const preset = RADIUS_PRESETS.find((entry) => entry.value === radius);
+export function radiusDescription(
+  radius: number,
+  presets: ReadonlyArray<RadiusPreset> = RADIUS_PRESETS
+): string {
+  const preset = presets.find((entry) => entry.value === radius);
   if (preset) return preset.hint;
   if (radius <= 75) return "Just the building";
   if (radius < 200) return "About a bar and its patio";
@@ -55,36 +75,52 @@ export type GeofenceEditorChange = (value: GeofenceEditorValue) => void;
  *
  * t is the pointer's fractional position on the track, 0..1.
  */
-export function dialFractionToRadius(t: number): number {
+export function dialFractionToRadius(
+  t: number,
+  min: number = RADIUS_MIN,
+  max: number = RADIUS_MAX
+): number {
   const clampedT = Math.min(1, Math.max(0, t));
-  const logMin = Math.log(RADIUS_MIN);
-  const logMax = Math.log(RADIUS_MAX);
+  const logMin = Math.log(min);
+  const logMax = Math.log(max);
   const raw = Math.exp(logMin + clampedT * (logMax - logMin));
-  return snapRadius(raw);
+  return snapRadius(raw, min, max);
 }
 
 /** Inverse of dialFractionToRadius — where the thumb sits for a given radius. */
-export function radiusToDialFraction(radius: number): number {
-  const clamped = clampRadius(radius);
-  const logMin = Math.log(RADIUS_MIN);
-  const logMax = Math.log(RADIUS_MAX);
+export function radiusToDialFraction(
+  radius: number,
+  min: number = RADIUS_MIN,
+  max: number = RADIUS_MAX
+): number {
+  const clamped = clampRadius(radius, min, max);
+  const logMin = Math.log(min);
+  const logMax = Math.log(max);
   return (Math.log(clamped) - logMin) / (logMax - logMin);
 }
 
 /**
- * Snap to 25m increments below 500m, 50m above — per the plan's Phase 0
- * decision. Snapping happens *after* the log-space interpolation, not before,
- * so the snap grid doesn't distort the perceived drag speed.
+ * Snap to the domain's grid (see radiusSnapStep). Snapping happens *after* the
+ * log-space interpolation, not before, so the snap grid doesn't distort the
+ * perceived drag speed.
  */
-export function snapRadius(radius: number): number {
-  const clamped = clampRadius(radius);
-  const step = clamped < 500 ? 25 : 50;
+export function snapRadius(
+  radius: number,
+  min: number = RADIUS_MIN,
+  max: number = RADIUS_MAX
+): number {
+  const clamped = clampRadius(radius, min, max);
+  const step = radiusSnapStep(clamped, min, max);
   const snapped = Math.round(clamped / step) * step;
-  return clampRadius(snapped);
+  return clampRadius(snapped, min, max);
 }
 
-export function clampRadius(radius: number): number {
-  return Math.min(RADIUS_MAX, Math.max(RADIUS_MIN, radius));
+export function clampRadius(
+  radius: number,
+  min: number = RADIUS_MIN,
+  max: number = RADIUS_MAX
+): number {
+  return Math.min(max, Math.max(min, radius));
 }
 
 /**
@@ -92,7 +128,12 @@ export function clampRadius(radius: number): number {
  * (Phase 2). Matches the snap granularity so every keypress lands on a valid,
  * already-snapped value.
  */
-export function radiusKeyStep(radius: number, direction: 1 | -1): number {
-  const step = radius < 500 ? 25 : 50;
-  return clampRadius(radius + direction * step);
+export function radiusKeyStep(
+  radius: number,
+  direction: 1 | -1,
+  min: number = RADIUS_MIN,
+  max: number = RADIUS_MAX
+): number {
+  const step = radiusSnapStep(radius, min, max);
+  return clampRadius(radius + direction * step, min, max);
 }

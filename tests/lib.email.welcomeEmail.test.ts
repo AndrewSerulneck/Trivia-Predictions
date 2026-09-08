@@ -45,4 +45,32 @@ describe("buildWelcomeEmail", () => {
     const { subject } = buildWelcomeEmail(baseInput);
     expect(subject.length).toBeGreaterThan(0);
   });
+
+  // Partner Self-Serve Signup — Phase 6. Before self-serve signup, `venueName`
+  // and `ownerName` could only be set by an admin. They are now typed by an
+  // unauthenticated stranger on /owner/signup, and they are interpolated into an
+  // HTML string.
+  describe("partner-supplied names in the HTML body", () => {
+    it("escapes an ampersand — 'Bar & Grill' is the ordinary case, not an attack", () => {
+      const { html, text } = buildWelcomeEmail({ ...baseInput, venueName: "Joe's Bar & Grill" });
+      expect(html).toContain("Joe's Bar &amp; Grill");
+      expect(html).not.toContain("Joe's Bar & Grill");
+      // The plain-text branch is not markup and must stay literal.
+      expect(text).toContain("Joe's Bar & Grill");
+      expect(text).not.toContain("&amp;");
+    });
+
+    it("escapes markup in the venue name", () => {
+      const { html } = buildWelcomeEmail({ ...baseInput, venueName: "<script>alert(1)</script>" });
+      expect(html).not.toContain("<script>");
+      expect(html).toContain("&lt;script&gt;");
+    });
+
+    it("escapes markup in the owner name", () => {
+      const { html, text } = buildWelcomeEmail({ ...baseInput, ownerName: "Ann <b>O'Neil</b>" });
+      expect(html).not.toContain("<b>O'Neil</b>");
+      expect(html).toContain("&lt;b&gt;O'Neil&lt;/b&gt;");
+      expect(text).toContain("Ann <b>O'Neil</b>");
+    });
+  });
 });

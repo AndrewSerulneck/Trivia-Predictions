@@ -5,6 +5,7 @@ import {
   RADIUS_MAX,
   RADIUS_MIN,
   RADIUS_PRESETS,
+  type RadiusPreset,
   clampRadius,
   dialFractionToRadius,
   radiusDescription,
@@ -40,16 +41,38 @@ type RadiusDialProps = {
   disabled?: boolean;
   /** Rendered under the readout; defaults to the plain-language scale hint. */
   label?: string;
+  /**
+   * Radius domain. Defaults to the admin constants (25–2000 m); the self-serve
+   * signup wizard passes 50–200 m (docs/partner-self-serve-signup-plan.md §4
+   * Phase 2). Threaded into every math call — passing nothing is bit-identical
+   * to the pre-Phase-2 dial.
+   */
+  min?: number;
+  max?: number;
+  /**
+   * One-tap shortcut chips. Defaults to admin's 150/300/600; signup passes
+   * SIGNUP_RADIUS_PRESETS. Also drives the plain-language readout hint.
+   */
+  presets?: ReadonlyArray<RadiusPreset>;
 };
 
 const KEY_END_DELAY_MS = 400;
 
-export function RadiusDial({ radius, onChange, onEditingChange, disabled = false, label }: RadiusDialProps) {
+export function RadiusDial({
+  radius,
+  onChange,
+  onEditingChange,
+  disabled = false,
+  label,
+  min = RADIUS_MIN,
+  max = RADIUS_MAX,
+  presets = RADIUS_PRESETS,
+}: RadiusDialProps) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
   const keyEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const value = clampRadius(snapRadius(radius));
+  const value = clampRadius(snapRadius(radius, min, max), min, max);
 
   // Keep the visual position in sync with the value on every render, including
   // changes that did not come from this component (preset chip, Advanced
@@ -57,8 +80,8 @@ export function RadiusDial({ radius, onChange, onEditingChange, disabled = false
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    track.style.setProperty("--tp-dial-pct", String(radiusToDialFraction(value) * 100));
-  }, [value]);
+    track.style.setProperty("--tp-dial-pct", String(radiusToDialFraction(value, min, max) * 100));
+  }, [value, min, max]);
 
   useEffect(
     () => () => {
@@ -74,10 +97,10 @@ export function RadiusDial({ radius, onChange, onEditingChange, disabled = false
       const rect = track.getBoundingClientRect();
       if (rect.width <= 0) return;
       const fraction = (clientX - rect.left) / rect.width;
-      const next = dialFractionToRadius(fraction);
+      const next = dialFractionToRadius(fraction, min, max);
       if (next !== value) onChange(next);
     },
-    [onChange, value]
+    [onChange, value, min, max]
   );
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
@@ -115,19 +138,19 @@ export function RadiusDial({ radius, onChange, onEditingChange, disabled = false
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (disabled) return;
     let next: number | null = null;
-    if (event.key === "ArrowRight" || event.key === "ArrowUp") next = radiusKeyStep(value, 1);
-    else if (event.key === "ArrowLeft" || event.key === "ArrowDown") next = radiusKeyStep(value, -1);
-    else if (event.key === "Home") next = RADIUS_MIN;
-    else if (event.key === "End") next = RADIUS_MAX;
-    else if (event.key === "PageUp") next = clampRadius(snapRadius(value * 1.25));
-    else if (event.key === "PageDown") next = clampRadius(snapRadius(value / 1.25));
+    if (event.key === "ArrowRight" || event.key === "ArrowUp") next = radiusKeyStep(value, 1, min, max);
+    else if (event.key === "ArrowLeft" || event.key === "ArrowDown") next = radiusKeyStep(value, -1, min, max);
+    else if (event.key === "Home") next = min;
+    else if (event.key === "End") next = max;
+    else if (event.key === "PageUp") next = clampRadius(snapRadius(value * 1.25, min, max), min, max);
+    else if (event.key === "PageDown") next = clampRadius(snapRadius(value / 1.25, min, max), min, max);
     if (next === null) return;
     event.preventDefault();
     markKeyboardEditing();
     if (next !== value) onChange(next);
   }
 
-  const description = label ?? radiusDescription(value);
+  const description = label ?? radiusDescription(value, presets);
 
   return (
     <div className="space-y-3">
@@ -137,7 +160,7 @@ export function RadiusDial({ radius, onChange, onEditingChange, disabled = false
           <span className="ml-2 text-xs text-slate-500">{description}</span>
         </div>
         <span className="text-[11px] uppercase tracking-wide text-slate-400">
-          {RADIUS_MIN}–{RADIUS_MAX} m
+          {min}–{max} m
         </span>
       </div>
 
@@ -146,8 +169,8 @@ export function RadiusDial({ radius, onChange, onEditingChange, disabled = false
         role="slider"
         tabIndex={disabled ? -1 : 0}
         aria-label="Geofence radius"
-        aria-valuemin={RADIUS_MIN}
-        aria-valuemax={RADIUS_MAX}
+        aria-valuemin={min}
+        aria-valuemax={max}
         aria-valuenow={value}
         aria-valuetext={`${value} meters — ${description}`}
         aria-disabled={disabled || undefined}
@@ -164,8 +187,8 @@ export function RadiusDial({ radius, onChange, onEditingChange, disabled = false
         <div className="tp-dial-thumb pointer-events-none absolute top-1/2 h-9 w-9 rounded-full border-2 border-white bg-indigo-600 shadow-md" />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        {RADIUS_PRESETS.map((preset) => {
+      <div className={`grid gap-2 ${presets.length % 3 === 0 ? "grid-cols-3" : "grid-cols-2"}`}>
+        {presets.map((preset) => {
           const selected = value === preset.value;
           return (
             <button

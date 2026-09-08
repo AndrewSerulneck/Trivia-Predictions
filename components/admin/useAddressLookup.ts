@@ -25,6 +25,30 @@ export type AddressDetails = {
   placeId: string;
 };
 
+/**
+ * Which pair of routes this lookup talks to. Admin surfaces use the default
+ * (admin-gated) endpoints; the public self-serve signup wizard passes its own
+ * flag-gated, rate-limited endpoint (components/signup/useSignupAddressLookup.ts).
+ *
+ * This is a PARAMETER rather than a forked copy of the hook on purpose
+ * (docs/partner-self-serve-signup-plan.md §4 Phase 1): one implementation means
+ * one request-sequencing fix, one debounce and — the billing-relevant part —
+ * one Places session-token accounting.
+ */
+export type AddressLookupEndpoints = {
+  /** POST { query, sessionToken } → { ok, predictions } */
+  predict: string;
+  /** POST { placeId, sessionToken } → { ok, details } */
+  details: string;
+};
+
+// Module-level so the default argument keeps a stable identity across renders —
+// the endpoints are useCallback dependencies below.
+export const ADMIN_ADDRESS_LOOKUP_ENDPOINTS: AddressLookupEndpoints = {
+  predict: "/api/geolocation/predict",
+  details: "/api/geolocation/details",
+};
+
 const LOOKUP_INACTIVITY_MS = 5 * 60 * 1000;
 const PREDICT_DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 3;
@@ -60,7 +84,11 @@ export type AddressLookup = {
   select: (prediction: AddressPrediction) => Promise<AddressDetails | null>;
 };
 
-export function useAddressLookup(): AddressLookup {
+export function useAddressLookup(
+  endpoints: AddressLookupEndpoints = ADMIN_ADDRESS_LOOKUP_ENDPOINTS
+): AddressLookup {
+  const { predict: predictEndpoint, details: detailsEndpoint } = endpoints;
+
   const [query, setQuery] = useState("");
   const [predictions, setPredictions] = useState<AddressPrediction[]>([]);
   const [open, setOpen] = useState(false);
@@ -96,7 +124,7 @@ export function useAddressLookup(): AddressLookup {
       setError("");
       try {
         const sessionToken = ensureSessionToken();
-        const response = await fetch("/api/geolocation/predict", {
+        const response = await fetch(predictEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query: trimmed, sessionToken }),
@@ -122,7 +150,7 @@ export function useAddressLookup(): AddressLookup {
         }
       }
     },
-    [ensureSessionToken]
+    [ensureSessionToken, predictEndpoint]
   );
 
   const handleInput = useCallback(
@@ -151,7 +179,7 @@ export function useAddressLookup(): AddressLookup {
       setError("");
       try {
         const sessionToken = ensureSessionToken();
-        const response = await fetch("/api/geolocation/details", {
+        const response = await fetch(detailsEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ placeId: prediction.placeId, sessionToken }),
@@ -177,7 +205,7 @@ export function useAddressLookup(): AddressLookup {
         }
       }
     },
-    [ensureSessionToken]
+    [ensureSessionToken, detailsEndpoint]
   );
 
   const reset = useCallback(() => {

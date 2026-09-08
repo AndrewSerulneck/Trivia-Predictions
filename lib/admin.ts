@@ -1964,6 +1964,21 @@ export async function createAdminVenue(input: {
   screenBrandPrimary?: string;
   screenBrandSecondary?: string;
   screenSponsorRotationEnabled?: boolean;
+  /**
+   * Partner Self-Serve Signup (plan §4 Phase 5). Both are OPTIONAL and omitted
+   * from the insert when undefined, so every admin caller stays byte-identical:
+   * `hidden` keeps its `false` column default and `self_serve_created_at` stays
+   * null.
+   *
+   * They are set here rather than by a follow-up UPDATE on purpose. A venue
+   * created visible and hidden a moment later is briefly joinable by players,
+   * and — far worse — if that UPDATE failed the row would be left visible with
+   * a null `self_serve_created_at`, which is exactly the shape Phase 6's
+   * abandoned-signup sweep is forbidden to touch. One insert has neither
+   * failure mode.
+   */
+  hidden?: boolean;
+  selfServeCreatedAt?: string;
 }): Promise<Venue> {
   assertAdminConfigured();
 
@@ -2027,7 +2042,17 @@ export async function createAdminVenue(input: {
 
   let nextVenueId = baseVenueId.startsWith("venue-") ? baseVenueId : `venue-${baseVenueId}`;
   let suffix = 2;
+  // Bounded in principle, not just in practice. The loop appends -2, -3, … until
+  // it finds a free id; with SIGNUP_FIELD_LIMITS.venueName capping the name it
+  // cannot be driven far, but an unbounded `while (true)` around a network call
+  // is one Supabase misbehavior away from hanging a serverless invocation until
+  // it times out. 50 collisions on one venue name is a data problem, not a
+  // naming one.
+  const MAX_VENUE_ID_ATTEMPTS = 50;
   while (true) {
+    if (suffix > MAX_VENUE_ID_ATTEMPTS + 1) {
+      throw new Error("Could not generate a unique venue id. Try a more distinct venue name.");
+    }
     const { data, error } = await supabaseAdmin!.from("venues").select("id").eq("id", nextVenueId).maybeSingle();
     if (error) {
       throw new Error(error.message ?? "Failed to validate venue id uniqueness.");
@@ -2065,6 +2090,10 @@ export async function createAdminVenue(input: {
       screen_brand_primary: screenBrandPrimary || null,
       screen_brand_secondary: screenBrandSecondary || null,
       screen_sponsor_rotation_enabled: Boolean(input.screenSponsorRotationEnabled),
+      ...(input.hidden === undefined ? {} : { hidden: input.hidden }),
+      ...(input.selfServeCreatedAt === undefined
+        ? {}
+        : { self_serve_created_at: input.selfServeCreatedAt }),
     })
     .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, place_id, screen_enabled, screen_brand_image_url, screen_brand_primary, screen_brand_secondary, screen_sponsor_rotation_enabled")
     .single<VenueRow>();
@@ -2837,6 +2866,171 @@ export async function deleteOrphanedOwnerAccount(ownerId: string): Promise<Delet
   }
 
   return { blocked: false, ownerAccountDeleted: true, authUserDeleted };
+}
+
+// --- Hidden venues: lapsed re-hide visibility + manual override -------------
+//
+// docs/lapsed-venue-rehide-plan.md Phase 4. `listVenues()` filters `hidden`
+// rows out of the admin console entirely, so without this an ops person cannot
+// see a venue the lapsed-venue reconciler took out of the join list. Two calls:
+// one to LIST every hidden venue with enough context to tell "we hid this
+// because they lapsed" from "an admin hid this on purpose", and one to RESTORE
+// a lapsed one by hand.
+
+export type HiddenVenueClassification = "lapsed" | "admin-hidden" | "system-room";
+
+export type HiddenVenueRow = {
+  venueId: string;
+  name: string;
+  /** Non-null iff the lapsed-venue re-hide job (or the webhook) hid this row. */
+  rehiddenAt: string | null;
+  selfServeCreatedAt: string | null;
+  /** `billing_subscriptions.status` for this venue, or null if it never had one. */
+  billingStatus: string | null;
+  billingMethod: string | null;
+  classification: HiddenVenueClassification;
+};
+
+/**
+ * Every `venues.hidden = true` row, classified:
+ *   - `system-room`  — a (0, 0) placeholder (both Category Blitz global rooms).
+ *   - `lapsed`       — `rehidden_at` is set: this feature hid it, and it is
+ *                      restorable. This is the "Hidden — lapsed" badge.
+ *   - `admin-hidden` — hidden with no `rehidden_at`: an admin hid it on purpose;
+ *                      the reconciler never touches it, and neither does the
+ *                      manual restore below.
+ * Lapsed first, then admin-hidden, then system rooms; each group by name.
+ */
+export async function listHiddenVenues(): Promise<HiddenVenueRow[]> {
+  assertAdminConfigured();
+
+  const { data: venues, error: venuesError } = await supabaseAdmin!
+    .from("venues")
+    .select("id, name, latitude, longitude, self_serve_created_at, rehidden_at")
+    .eq("hidden", true)
+    .returns<
+      Array<{
+        id: string;
+        name: string;
+        latitude: number | null;
+        longitude: number | null;
+        self_serve_created_at: string | null;
+        rehidden_at: string | null;
+      }>
+    >();
+  if (venuesError) {
+    throw new Error(venuesError.message ?? "Failed to load hidden venues.");
+  }
+
+  const rows = venues ?? [];
+  if (rows.length === 0) return [];
+
+  const { data: billing, error: billingError } = await supabaseAdmin!
+    .from("billing_subscriptions")
+    .select("venue_id, status, billing_method, stripe_subscription_id")
+    .in(
+      "venue_id",
+      rows.map((row) => row.id)
+    )
+    .returns<
+      Array<{
+        venue_id: string;
+        status: string;
+        billing_method: string | null;
+        stripe_subscription_id: string | null;
+      }>
+    >();
+  if (billingError) {
+    throw new Error(billingError.message ?? "Failed to load billing for hidden venues.");
+  }
+
+  // A duplicate pair resolves to the one that still has a Stripe object, then
+  // to the last one seen — enough for a display label.
+  const billingByVenue = new Map<string, { status: string; billing_method: string | null }>();
+  for (const entry of billing ?? []) {
+    const existing = billingByVenue.get(entry.venue_id);
+    if (!existing || entry.stripe_subscription_id) {
+      billingByVenue.set(entry.venue_id, { status: entry.status, billing_method: entry.billing_method });
+    }
+  }
+
+  const classify = (row: (typeof rows)[number]): HiddenVenueClassification => {
+    if (row.latitude === 0 && row.longitude === 0) return "system-room";
+    if (typeof row.rehidden_at === "string" && row.rehidden_at.trim() !== "") return "lapsed";
+    return "admin-hidden";
+  };
+
+  const order: Record<HiddenVenueClassification, number> = {
+    lapsed: 0,
+    "admin-hidden": 1,
+    "system-room": 2,
+  };
+
+  return rows
+    .map((row) => {
+      const bill = billingByVenue.get(row.id) ?? null;
+      return {
+        venueId: row.id,
+        name: row.name,
+        rehiddenAt: row.rehidden_at,
+        selfServeCreatedAt: row.self_serve_created_at,
+        billingStatus: bill?.status ?? null,
+        billingMethod: bill?.billing_method ?? null,
+        classification: classify(row),
+      };
+    })
+    .sort((a, b) => {
+      const byGroup = order[a.classification] - order[b.classification];
+      return byGroup !== 0 ? byGroup : a.name.localeCompare(b.name);
+    });
+}
+
+export type RestoreLapsedVenueResult = {
+  restored: boolean;
+  /** Set when nothing was restored — the venue is not a lapsed row. */
+  reason?: "not-lapsed" | "venue-not-found";
+};
+
+/**
+ * Manual admin override: un-hide a lapsed venue and clear its `rehidden_at`
+ * stamp in the same write.
+ *
+ * DELIBERATELY BILLING-AGNOSTIC — that is the whole point of a manual override.
+ * The daily reconciler will only *keep* it visible if the billing row is live;
+ * if it is not, the re-hide job puts it back on the next run. The admin UI must
+ * say this. The real fix is re-granting access / the partner resubscribing.
+ *
+ * Guarded to a genuine lapsed row (`hidden = true` AND `rehidden_at IS NOT
+ * NULL` AND self-serve-stamped, `NOT (0,0)`): an admin-hidden venue and the two
+ * Category Blitz global rooms carry no `rehidden_at` and are refused here, so
+ * this can never publish a system room. Clearing `rehidden_at` on every un-hide
+ * is a standing rule (CLAUDE.md, Venue Visibility).
+ */
+export async function restoreLapsedVenue(venueId: string): Promise<RestoreLapsedVenueResult> {
+  assertAdminConfigured();
+  const id = venueId.trim();
+  if (!id) {
+    throw new Error("Venue id is required.");
+  }
+
+  const { data, error } = await supabaseAdmin!
+    .from("venues")
+    .update({ hidden: false, rehidden_at: null })
+    .eq("id", id)
+    .eq("hidden", true)
+    .not("rehidden_at", "is", null)
+    .not("self_serve_created_at", "is", null)
+    .or("latitude.neq.0,longitude.neq.0")
+    .select("id")
+    .returns<Array<{ id: string }>>();
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to restore venue.");
+  }
+  if ((data ?? []).length === 0) {
+    return { restored: false, reason: "not-lapsed" };
+  }
+  return { restored: true };
 }
 
 export async function bulkDeleteAdminAdvertisements(ids: string[]): Promise<number> {

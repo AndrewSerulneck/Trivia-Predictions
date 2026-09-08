@@ -11,6 +11,8 @@ import {
   repairOrphanedVenueOwnerLink,
   listOrphanedOwnerAccounts,
   deleteOrphanedOwnerAccount,
+  listHiddenVenues,
+  restoreLapsedVenue,
   deleteAdminVenueScreenSponsor,
   createAdminVenue,
   autoSettleResolvedPredictionMarkets,
@@ -311,6 +313,11 @@ export async function GET(request: Request) {
     if (resource === "orphaned-owner-accounts") {
       const accounts = await listOrphanedOwnerAccounts();
       return NextResponse.json({ ok: true, accounts });
+    }
+
+    if (resource === "hidden-venues") {
+      const venues = await listHiddenVenues();
+      return NextResponse.json({ ok: true, venues });
     }
 
     if (resource === "challenge-campaigns") {
@@ -680,7 +687,31 @@ export async function POST(request: Request) {
           resource: "accounts";
           action: "delete";
           accountId: string;
+        }
+      | {
+          resource: "venue-visibility";
+          action: "restore";
+          id: string;
         };
+
+    if (body.resource === "venue-visibility") {
+      const visibilityBody = body as { resource: "venue-visibility"; action: string; id?: string };
+      const venueId = String(visibilityBody.id ?? "").trim();
+      if (visibilityBody.action !== "restore") {
+        return NextResponse.json({ ok: false, error: "Unknown venue-visibility action." }, { status: 400 });
+      }
+      if (!venueId) {
+        return NextResponse.json({ ok: false, error: "id is required." }, { status: 400 });
+      }
+      const result = await restoreLapsedVenue(venueId);
+      if (!result.restored) {
+        return NextResponse.json(
+          { ok: false, error: "That venue is not a lapsed (re-hidden) venue — nothing to restore.", ...result },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json({ ok: true, ...result });
+    }
 
     if (body.resource === "accounts") {
       const accountsBody = body as { resource: "accounts"; action: string; accountId?: string; godMode?: boolean };

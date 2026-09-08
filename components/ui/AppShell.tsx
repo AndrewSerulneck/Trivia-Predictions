@@ -21,6 +21,12 @@ const FULLSCREEN_PATHS = [
   "/pending-challenges",
   "/info",
   "/coming-soon",
+  // Partner self-serve signup wizard — a full-bleed takeover that owns its own
+  // height (`--tp-vh`), safe areas and sticky footer. It must not inherit the
+  // 720px clamp, the `pb-24` or the decorative blobs.
+  // docs/partner-self-serve-signup-plan.md Phase 3. Rename the route and this
+  // entry moves with it.
+  "/owner/signup",
 ];
 
 // Subset of fullscreen routes that are pure game screens — these need a dark
