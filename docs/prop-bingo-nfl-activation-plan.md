@@ -319,6 +319,86 @@ NE @ SEA board.
 checklist doc + this doc changed by the write-up). No code change from Phase 2 — the flip is
 config-only, as the flag contract requires.
 
+#### Phase 2 — GAME-DAY RE-VERIFICATION (2026-09-09, Sonnet 5) — the two blockers cleared; flip + device pass still Andrew-only
+
+**Why this pass exists:** the 2026-09-05 partial had to *fake* game-day conditions (force the flag,
+widen the hardcoded 36h lookahead, seed a board by hand) and it left two items flagged as
+**Phase 2 blockers** by the Phase 1 handoff — finding #1 (thin prop pool → boards backfill 8–10
+`special` squares instead of the target 6) and finding #2 (off-roster players — A.J. Brown, Romeo
+Doubs, Rashid Shaheed — landing on NE @ SEA boards). The Phase 1 handoff said re-run the audit on
+game day and **do not flip the flag if either is still present.** Today (Wed 9/9, the opener is
+tonight 8:20pm ET) the opener is naturally inside the 36h window, so this pass re-ran the real
+pipeline with **no code edits of any kind** (working tree stayed clean throughout).
+
+**Both blockers are CLEARED for the opener (NE @ SEA, game id 1392216):**
+
+| Blocker | 2026-09-05 (4–8 days out) | 2026-09-09 (game day) | Verdict |
+|---|---|---|---|
+| **#1 thin prop pool** | prop pool 59; non-opener boards 4 prop / 8–10 special | prop pool **96 candidates**; all 6 audited boards hit the mix **exactly: 2 ML / 3 spread / 3 total / 2 team-total / 6 special / 8 prop** | ✅ self-resolved, exactly as the handoff predicted |
+| **#2 off-roster props** | A.J. Brown / Romeo Doubs / Rashid Shaheed (other rosters) seated as "star" props | all **33** prop `player_id`s in the feed resolve to a player **on NE or SEA**, `teamName` populated on every one (`/nfl/v1/players` join). In this timeline A.J. Brown & Romeo Doubs are Patriots, Rashid Shaheed & Cooper Kupp are Seahawks — the 09-05 feed was pre-roster-lock/stale, not the filter failing. `nfl_prop_eligibility` log: `dropped_off_roster: 0`, `dropped_inactive: 1` | ✅ feed corrected itself by kickoff week; the finding-#2 team-name filter is in place as the backstop if a future slate regresses |
+
+**What was run (all read-only, no source changes):**
+- `npm run bingo:probe:nfl` → **17 games** in the next 10 days, tier **GOAT** (games/odds/props/stats/plays all 200). Opener id 1392216, kickoff 2026-09-10T00:20Z.
+- `node … scripts/audit-nfl-week1-boards.cjs --games 1392216,1392218,1392219,1392221 --boards 6` →
+  only the **opener** audited; the three Sunday-9/13 games return `"The selected game is unavailable
+  right now."` because they are ~96h out, outside the 36h window. Artifact:
+  `docs/phase0-artifacts/nfl-week1-board-audit-2026-09-09.json`. Opener result: 6/6 boards exact mix,
+  predicted win rate **0.213–0.282** (median ≈ 0.25), `nfl_star_mix` seating 3–5 stars + ≥2 non-star
+  every board, no square outside the 0.18–0.82 core band.
+- `npm run bingo:simulate` (forward) → **NFL now scores** for the first time: `games: 1, boards: 4,
+  median 0.2624, mean 0.2458, inTargetBand 1.0` — meets the "median ∈ 20–30%, `inTargetBand`
+  comparable to MLB's ~0.97" bar (MLB today 0.93). Only 1 game because only the opener is in-window
+  and starting today; re-run on **Sun 9/13** for the full slate.
+
+**Not re-run (unchanged since 09-05, already verified then):** the Playwright board-render / label /
+`ExitBackButton` walk-through and the `GET /api/bingo/leagues` flag-on check. Phase 2's 09-05 block
+records those as PASS and no code touched by Phases 1/3/4 changed the board component, the picker, or
+the leagues route. The one honest gap in the 09-05 pass — "did it work through the *unmodified*
+pipeline?" — is what this game-day audit + simulate now answers: yes.
+
+**Findings #3 and #4 (decisions, NOT blockers — still open for Andrew):**
+- **#3 quarter-scoped TD markets:** the props feed carries `passing_tds_1q` etc. (confirmed live
+  today), so quarter-scoped anytime-TD markets exist and are still not turned into squares. Early
+  board movement still rides on ~2 first-TD squares. Accept, or add quarter TD squares (a
+  board-generation change, not in Phase 2's scope).
+- **#4 same player on two prop squares:** still happens by design (`pickCandidateSet` ≤2/player cap)
+  — game-day boards showed Jadarian Price on `first_td` + `anytime_td`, Drake Maye / Sam Darnold on
+  two passing props. Reconcile the Phase 1 checklist wording or change the shared cap — Andrew's
+  call, `pickCandidateSet` is out of scope here.
+
+**Gates (2026-09-09, vs the Phase 0 baseline — all green, one improvement):**
+| Gate | Result |
+|---|---|
+| `npx tsc --noEmit` | exit 0, clean (after `rm -rf .next`) |
+| `npm run lint` | exit 0, clean |
+| `npm run test:bingo-nfl` | **289/289** |
+| `npm run test:bingo-mlb` | 142/142 |
+| `npm run test:pwa-contract` | 20/20 |
+| `npm run test` | **2428 pass / 0 fail / 13 skip** — the pre-existing `tests/lib.billingDiscounts.test.ts` date time-bomb that Phases 0/1/3/4 all documented is **no longer failing** (fixed upstream or the date rolled). Baseline is now fully green; later phases should expect 0 failures, not 1. |
+
+**Working tree:** clean except the new artifact
+`docs/phase0-artifacts/nfl-week1-board-audit-2026-09-09.json` and this write-up. No source change —
+Phase 2 stays config-only, as the flag contract requires.
+
+**Still open — ALL of these are Andrew-only and cannot be done from a coding session:**
+1. **Flip `NEXT_PUBLIC_BINGO_NFL_ENABLED=true`** in Vercel → Production, then redeploy (a
+   `NEXT_PUBLIC_*` var is inlined at build time — the redeploy is required). Rollback = set the same
+   field to `false` and redeploy. There is no CLI path (`vercel env add`/`ls` are allowed but the
+   dashboard is cleaner for a one-field flip) and `.env.local` is a hard boundary.
+2. **Recommend flipping `NEXT_PUBLIC_BINGO_SEASON_GATING_ENABLED=true` in the same trip.** 09-05
+   verified this gives NBA `out_of_season · Returns October 2026` and WNBA/MLB/NFL `in_season`.
+   Without it, NBA stays clickable in September and dead-ends on "no upcoming games".
+3. **Real-device installed-PWA landscape pass** with a live NFL board — checklist §7 of
+   `docs/bingo-fullscreen-pwa-device-checklist.md` (7.1–7.7). Headless browsers have no PWA chrome,
+   so this is device-only. Openable windows: tonight (Wed 9/9 8:20pm ET) or the Sun 9/13 slate.
+4. **Run-log activation + rollback line**, and flip the header of `docs/prop-bingo-nfl-plan.md` off
+   "NFL is dark" — this is the Phase 7 tail that is blocked on step 1 actually happening.
+
+**Recommendation to Andrew:** the two things that were ever blockers (findings #1 and #2) are
+cleared and every automated gate is green, so the flag is **safe to flip for the Week 1 opener**.
+The remaining items are a config change, a phone check, and a doc line — none of them are code and
+none of them can be closed from here.
+
 ---
 
 ### Phase 3 — Make NFL boards pop: live-event parity

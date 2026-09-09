@@ -1,0 +1,2788 @@
+{
+  "ranAtUtc": "2026-09-09T18:53:18.841Z",
+  "lookaheadHours": "(default 36)",
+  "starIndex": {
+    "generatedAt": "2026-09-05T23:57:10.521Z",
+    "season": 2026,
+    "priorSeason": 2025,
+    "priorCount": 602,
+    "currentCount": 0
+  },
+  "coreBand": [
+    0.18,
+    0.82
+  ],
+  "targetMix": {
+    "moneyline": 2,
+    "spread": 3,
+    "total": 3,
+    "team-total": 2,
+    "special": 6,
+    "player-prop": 8
+  },
+  "games": [
+    {
+      "gameId": "1392216",
+      "matchup": "New England Patriots @ Seattle Seahawks",
+      "startsAt": "2026-09-10T00:20:00.000Z",
+      "candidatePool": {
+        "total": 252,
+        "byBucket": {
+          "total": 18,
+          "moneyline": 2,
+          "special": 88,
+          "player-prop": 96,
+          "spread": 12,
+          "team-total": 36
+        },
+        "propPlayers": [
+          "A.J. Brown",
+          "AJ Barner",
+          "Cooper Kupp",
+          "Corey Kiner",
+          "Drake Maye",
+          "Emanuel Wilson",
+          "George Holani",
+          "Hunter Henry",
+          "Jadarian Price",
+          "Jaxon Smith-Njigba",
+          "Rashid Shaheed",
+          "Rhamondre Stevenson",
+          "Romeo Doubs",
+          "Jadarian Price scores the game's",
+          "Jaxon Smith-Njigba scores the game's",
+          "Rhamondre Stevenson scores the game's",
+          "Sam Darnold",
+          "Drake Maye breaks off a run of",
+          "Drake Maye is held",
+          "George Holani breaks off a run of",
+          "George Holani is held",
+          "Sam Darnold breaks off a run of",
+          "Sam Darnold is held",
+          "DeMario Douglas",
+          "Elijah Arroyo",
+          "Mack Hollins"
+        ]
+      },
+      "boards": [
+        {
+          "trial": 0,
+          "boardProbability": 0.26,
+          "squareCount": 25,
+          "freeCount": 1,
+          "liveCount": 24,
+          "bucketMix": {
+            "team-total": 2,
+            "player-prop": 8,
+            "total": 3,
+            "spread": 3,
+            "special": 6,
+            "moneyline": 2
+          },
+          "mixVsTarget": {
+            "moneyline": "2/2",
+            "spread": "3/3",
+            "total": "3/3",
+            "team-total": "2/2",
+            "special": "6/6",
+            "player-prop": "8/8"
+          },
+          "propStarTierCounts": {
+            "star": 7,
+            "known": 1
+          },
+          "propPlayers": [
+            {
+              "player": "AJ Barner",
+              "tier": "star",
+              "matched": "AJ Barner",
+              "label": "AJ Barner: under 2.5 receptions."
+            },
+            {
+              "player": "Drake Maye",
+              "tier": "star",
+              "matched": "Drake Maye",
+              "label": "Drake Maye: under 1.5 passing touchdowns."
+            },
+            {
+              "player": "Jaxon Smith-Njigba",
+              "tier": "star",
+              "matched": "Jaxon Smith-Njigba",
+              "label": "Jaxon Smith-Njigba: at least 82 receiving yards."
+            },
+            {
+              "player": "AJ Barner",
+              "tier": "star",
+              "matched": "AJ Barner",
+              "label": "AJ Barner: under 25.5 receiving yards."
+            },
+            {
+              "player": "Sam Darnold",
+              "tier": "star",
+              "matched": "Sam Darnold",
+              "label": "Sam Darnold: at least 3 rushing attempts."
+            },
+            {
+              "player": "Sam Darnold",
+              "tier": "star",
+              "matched": "Sam Darnold",
+              "label": "Sam Darnold: at least 6 rushing yards."
+            },
+            {
+              "player": "Rhamondre Stevenson",
+              "tier": "star",
+              "matched": "Rhamondre Stevenson",
+              "label": "Rhamondre Stevenson: at least 87 rushing + receiving yards."
+            },
+            {
+              "player": "DeMario Douglas",
+              "tier": "known",
+              "matched": "DeMario Douglas",
+              "label": "DeMario Douglas: at least 2 receptions."
+            }
+          ],
+          "duplicatePropPlayers": [
+            "aj barner",
+            "sam darnold"
+          ],
+          "anyPlayerOnTwoSquares": true,
+          "probability": {
+            "min": 0.249,
+            "max": 0.751
+          },
+          "outOfBandCoreLadder": [],
+          "outOfBandAnySquare": [],
+          "labelLength": {
+            "max": 59,
+            "longest": [
+              "[59] Rhamondre Stevenson: at least 87 rushing + receiving yards.",
+              "[48] Jaxon Smith-Njigba: at least 82 receiving yards.",
+              "[41] Drake Maye: under 1.5 passing touchdowns.",
+              "[41] Sam Darnold: at least 3 rushing attempts.",
+              "[39] DeMario Douglas: at least 2 receptions.",
+              "[38] AJ Barner: under 25.5 receiving yards.",
+              "[38] Sam Darnold: at least 6 rushing yards.",
+              "[36] Seahawks score in all four quarters."
+            ]
+          },
+          "earlyResolvable": {
+            "definiteEarly": 0,
+            "canGoEarlyMid": 1,
+            "total": 24
+          },
+          "squares": [
+            {
+              "index": 0,
+              "key": "team_total_over:away:27.5",
+              "label": "Patriots: over 27.5 points.",
+              "labelLen": 27,
+              "probability": 0.2498,
+              "bucket": "team-total",
+              "resolverKind": "team_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 1,
+              "key": "player_prop:receptions:aj barner::278448:under:2.5",
+              "label": "AJ Barner: under 2.5 receptions.",
+              "labelLen": 32,
+              "probability": 0.4274,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "AJ Barner",
+              "starTier": "star",
+              "starMatched": "AJ Barner",
+              "early": false
+            },
+            {
+              "index": 2,
+              "key": "player_prop:passing_tds:drake maye::279866:under:1.5",
+              "label": "Drake Maye: under 1.5 passing touchdowns.",
+              "labelLen": 41,
+              "probability": 0.5915,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Drake Maye",
+              "starTier": "star",
+              "starMatched": "Drake Maye",
+              "early": "mid"
+            },
+            {
+              "index": 3,
+              "key": "player_prop:receiving_yards:jaxon smith-njigba::869:over:81.5",
+              "label": "Jaxon Smith-Njigba: at least 82 receiving yards.",
+              "labelLen": 48,
+              "probability": 0.5,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Jaxon Smith-Njigba",
+              "starTier": "star",
+              "starMatched": "Jaxon Smith-Njigba",
+              "early": false
+            },
+            {
+              "index": 4,
+              "key": "player_prop:receiving_yards:aj barner::278448:under:25.5",
+              "label": "AJ Barner: under 25.5 receiving yards.",
+              "labelLen": 38,
+              "probability": 0.5084,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "AJ Barner",
+              "starTier": "star",
+              "starMatched": "AJ Barner",
+              "early": false
+            },
+            {
+              "index": 5,
+              "key": "game_total_under:54.5",
+              "label": "Total points: under 54.5.",
+              "labelLen": 25,
+              "probability": 0.751,
+              "bucket": "total",
+              "resolverKind": "game_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 6,
+              "key": "spread_keep_close:away:1.5",
+              "label": "Final margin under 1.5 points.",
+              "labelLen": 30,
+              "probability": 0.4558,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 7,
+              "key": "nfl_game_total_stat_at_least:defensive_interceptions:2.0",
+              "label": "2+ interceptions in this game.",
+              "labelLen": 30,
+              "probability": 0.43,
+              "bucket": "special",
+              "resolverKind": "nfl_game_total_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 8,
+              "key": "player_prop:rushing_attempts:sam darnold::70:over:2.5",
+              "label": "Sam Darnold: at least 3 rushing attempts.",
+              "labelLen": 41,
+              "probability": 0.4409,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold",
+              "starTier": "star",
+              "starMatched": "Sam Darnold",
+              "early": false
+            },
+            {
+              "index": 9,
+              "key": "player_prop:rushing_yards:sam darnold::70:over:5.5",
+              "label": "Sam Darnold: at least 6 rushing yards.",
+              "labelLen": 38,
+              "probability": 0.4916,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold",
+              "starTier": "star",
+              "starMatched": "Sam Darnold",
+              "early": false
+            },
+            {
+              "index": 10,
+              "key": "nfl_team_stat_at_least:away:sacks:3.0",
+              "label": "Patriots are sacked 3+ times.",
+              "labelLen": 29,
+              "probability": 0.406,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 11,
+              "key": "game_total_over:54.5",
+              "label": "Total points: over 54.5.",
+              "labelLen": 24,
+              "probability": 0.249,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 13,
+              "key": "player_prop:rushing_receiving_yards:rhamondre stevenson::499:over:86.5",
+              "label": "Rhamondre Stevenson: at least 87 rushing + receiving yards.",
+              "labelLen": 59,
+              "probability": 0.5006,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Rhamondre Stevenson",
+              "starTier": "star",
+              "starMatched": "Rhamondre Stevenson",
+              "early": false
+            },
+            {
+              "index": 14,
+              "key": "spread_more_than:home:7.5",
+              "label": "Seahawks win by 7.5+ points.",
+              "labelLen": 28,
+              "probability": 0.3694,
+              "bucket": "spread",
+              "resolverKind": "spread_more_than",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 15,
+              "key": "player_prop:receptions:demario douglas::630:over:1.5",
+              "label": "DeMario Douglas: at least 2 receptions.",
+              "labelLen": 39,
+              "probability": 0.6141,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "DeMario Douglas",
+              "starTier": "known",
+              "starMatched": "DeMario Douglas",
+              "early": false
+            },
+            {
+              "index": 16,
+              "key": "nfl_team_stat_at_least:home:fourth_down_conversions:1.0",
+              "label": "Seahawks convert a fourth down.",
+              "labelLen": 31,
+              "probability": 0.568,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 17,
+              "key": "nfl_team_stat_at_least:away:first_downs:20.0",
+              "label": "Patriots pick up 20+ first downs.",
+              "labelLen": 33,
+              "probability": 0.479,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 18,
+              "key": "team_total_over:away:24.5",
+              "label": "Patriots: over 24.5 points.",
+              "labelLen": 27,
+              "probability": 0.3538,
+              "bucket": "team-total",
+              "resolverKind": "team_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 19,
+              "key": "moneyline:home",
+              "label": "Seahawks to beat Patriots.",
+              "labelLen": 26,
+              "probability": 0.6126,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 20,
+              "key": "game_total_over:50.5",
+              "label": "Total points: over 50.5.",
+              "labelLen": 24,
+              "probability": 0.3421,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 21,
+              "key": "nfl_game_max_stat_at_least:any_player:long_field_goal_made:50.0",
+              "label": "A made field goal of 50+ yards.",
+              "labelLen": 31,
+              "probability": 0.474,
+              "bucket": "special",
+              "resolverKind": "nfl_game_max_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 22,
+              "key": "spread_keep_close:away:9.5",
+              "label": "Final margin under 9.5 points.",
+              "labelLen": 30,
+              "probability": 0.6849,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 23,
+              "key": "moneyline:away",
+              "label": "Patriots to beat Seahawks.",
+              "labelLen": 26,
+              "probability": 0.3874,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 24,
+              "key": "nfl_team_scores_every_quarter:home",
+              "label": "Seahawks score in all four quarters.",
+              "labelLen": 36,
+              "probability": 0.3256,
+              "bucket": "special",
+              "resolverKind": "nfl_team_scores_every_quarter",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            }
+          ]
+        },
+        {
+          "trial": 1,
+          "boardProbability": 0.2132,
+          "squareCount": 25,
+          "freeCount": 1,
+          "liveCount": 24,
+          "bucketMix": {
+            "total": 3,
+            "player-prop": 8,
+            "spread": 3,
+            "moneyline": 2,
+            "special": 6,
+            "team-total": 2
+          },
+          "mixVsTarget": {
+            "moneyline": "2/2",
+            "spread": "3/3",
+            "total": "3/3",
+            "team-total": "2/2",
+            "special": "6/6",
+            "player-prop": "8/8"
+          },
+          "propStarTierCounts": {
+            "unknown": 3,
+            "star": 3,
+            "known": 2
+          },
+          "propPlayers": [
+            {
+              "player": "Jadarian Price scores the game's",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Jadarian Price scores the game's first TD."
+            },
+            {
+              "player": "Drake Maye",
+              "tier": "star",
+              "matched": "Drake Maye",
+              "label": "Drake Maye: at least 21 completions."
+            },
+            {
+              "player": "DeMario Douglas",
+              "tier": "known",
+              "matched": "DeMario Douglas",
+              "label": "DeMario Douglas: under 1.5 receptions."
+            },
+            {
+              "player": "Jadarian Price",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Jadarian Price: at least 14 rushing attempts."
+            },
+            {
+              "player": "Sam Darnold",
+              "tier": "star",
+              "matched": "Sam Darnold",
+              "label": "Sam Darnold: under 30.5 pass attempts."
+            },
+            {
+              "player": "Rashid Shaheed",
+              "tier": "known",
+              "matched": "Rashid Shaheed",
+              "label": "Rashid Shaheed: under 2.5 rushing yards."
+            },
+            {
+              "player": "Jaxon Smith-Njigba scores the game's",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Jaxon Smith-Njigba scores the game's first TD."
+            },
+            {
+              "player": "Drake Maye",
+              "tier": "star",
+              "matched": "Drake Maye",
+              "label": "Drake Maye: at least 2 passing touchdowns."
+            }
+          ],
+          "duplicatePropPlayers": [
+            "drake maye"
+          ],
+          "anyPlayerOnTwoSquares": true,
+          "probability": {
+            "min": 0.115,
+            "max": 0.7355
+          },
+          "outOfBandCoreLadder": [],
+          "outOfBandAnySquare": [
+            {
+              "label": "Jadarian Price scores the game's first TD.",
+              "p": 0.1227,
+              "bucket": "player-prop"
+            },
+            {
+              "label": "A receiver catches 10+ passes.",
+              "p": 0.14,
+              "bucket": "special"
+            },
+            {
+              "label": "Jaxon Smith-Njigba scores the game's first TD.",
+              "p": 0.115,
+              "bucket": "player-prop"
+            }
+          ],
+          "labelLength": {
+            "max": 46,
+            "longest": [
+              "[46] Seahawks are held to 300 total yards or fewer.",
+              "[46] Jaxon Smith-Njigba scores the game's first TD.",
+              "[45] Jadarian Price: at least 14 rushing attempts.",
+              "[42] Jadarian Price scores the game's first TD.",
+              "[42] Drake Maye: at least 2 passing touchdowns.",
+              "[40] Rashid Shaheed: under 2.5 rushing yards.",
+              "[38] DeMario Douglas: under 1.5 receptions.",
+              "[38] Sam Darnold: under 30.5 pass attempts."
+            ]
+          },
+          "earlyResolvable": {
+            "definiteEarly": 2,
+            "canGoEarlyMid": 1,
+            "total": 24
+          },
+          "squares": [
+            {
+              "index": 0,
+              "key": "game_total_over:50.5",
+              "label": "Total points: over 50.5.",
+              "labelLen": 24,
+              "probability": 0.3421,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 1,
+              "key": "nfl_player_first_td:jadarian price::33934144",
+              "label": "Jadarian Price scores the game's first TD.",
+              "labelLen": 42,
+              "probability": 0.1227,
+              "bucket": "player-prop",
+              "resolverKind": "nfl_player_first_td",
+              "supportLevel": "supported",
+              "player": "Jadarian Price scores the game's",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": true
+            },
+            {
+              "index": 2,
+              "key": "spread_more_than:home:7.5",
+              "label": "Seahawks win by 7.5+ points.",
+              "labelLen": 28,
+              "probability": 0.3694,
+              "bucket": "spread",
+              "resolverKind": "spread_more_than",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 3,
+              "key": "moneyline:home",
+              "label": "Seahawks to beat Patriots.",
+              "labelLen": 26,
+              "probability": 0.6126,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 4,
+              "key": "game_total_over:47.5",
+              "label": "Total points: over 47.5.",
+              "labelLen": 24,
+              "probability": 0.4194,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 5,
+              "key": "player_prop:passing_completions:drake maye::279866:over:20.5",
+              "label": "Drake Maye: at least 21 completions.",
+              "labelLen": 36,
+              "probability": 0.4865,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Drake Maye",
+              "starTier": "star",
+              "starMatched": "Drake Maye",
+              "early": false
+            },
+            {
+              "index": 6,
+              "key": "nfl_team_stat_at_most:away:turnovers:0.0",
+              "label": "Patriots never turn the ball over.",
+              "labelLen": 34,
+              "probability": 0.346,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_most",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 7,
+              "key": "nfl_game_max_stat_at_least:any_player:touchdowns:2.0",
+              "label": "A player scores 2+ touchdowns.",
+              "labelLen": 30,
+              "probability": 0.5249,
+              "bucket": "special",
+              "resolverKind": "nfl_game_max_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 8,
+              "key": "nfl_goal_line_touchdown:1",
+              "label": "A touchdown from the 1-yard line.",
+              "labelLen": 33,
+              "probability": 0.521,
+              "bucket": "special",
+              "resolverKind": "nfl_goal_line_touchdown",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 9,
+              "key": "team_total_over:away:15.5",
+              "label": "Patriots: over 15.5 points.",
+              "labelLen": 27,
+              "probability": 0.7002,
+              "bucket": "team-total",
+              "resolverKind": "team_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 10,
+              "key": "moneyline:away",
+              "label": "Patriots to beat Seahawks.",
+              "labelLen": 26,
+              "probability": 0.3874,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 11,
+              "key": "player_prop:receptions:demario douglas::630:under:1.5",
+              "label": "DeMario Douglas: under 1.5 receptions.",
+              "labelLen": 38,
+              "probability": 0.3859,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "DeMario Douglas",
+              "starTier": "known",
+              "starMatched": "DeMario Douglas",
+              "early": false
+            },
+            {
+              "index": 13,
+              "key": "player_prop:rushing_attempts:jadarian price::33934144:over:13.5",
+              "label": "Jadarian Price: at least 14 rushing attempts.",
+              "labelLen": 45,
+              "probability": 0.4651,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Jadarian Price",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 14,
+              "key": "spread_keep_close:away:11.5",
+              "label": "Final margin under 11.5 points.",
+              "labelLen": 31,
+              "probability": 0.7355,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 15,
+              "key": "game_total_over:54.5",
+              "label": "Total points: over 54.5.",
+              "labelLen": 24,
+              "probability": 0.249,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 16,
+              "key": "nfl_game_max_stat_at_least:any_player:receptions:10.0",
+              "label": "A receiver catches 10+ passes.",
+              "labelLen": 30,
+              "probability": 0.14,
+              "bucket": "special",
+              "resolverKind": "nfl_game_max_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 17,
+              "key": "nfl_team_stat_at_most:home:total_yards:300.0",
+              "label": "Seahawks are held to 300 total yards or fewer.",
+              "labelLen": 46,
+              "probability": 0.3737,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_most",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 18,
+              "key": "player_prop:passing_attempts:sam darnold::70:under:30.5",
+              "label": "Sam Darnold: under 30.5 pass attempts.",
+              "labelLen": 38,
+              "probability": 0.5048,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold",
+              "starTier": "star",
+              "starMatched": "Sam Darnold",
+              "early": false
+            },
+            {
+              "index": 19,
+              "key": "player_prop:rushing_yards:rashid shaheed::640:under:2.5",
+              "label": "Rashid Shaheed: under 2.5 rushing yards.",
+              "labelLen": 40,
+              "probability": 0.4921,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Rashid Shaheed",
+              "starTier": "known",
+              "starMatched": "Rashid Shaheed",
+              "early": false
+            },
+            {
+              "index": 20,
+              "key": "nfl_team_stat_at_least:away:turnovers:2.0",
+              "label": "Patriots turn the ball over 2+ times.",
+              "labelLen": 37,
+              "probability": 0.327,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 21,
+              "key": "nfl_player_first_td:jaxon smith-njigba::869",
+              "label": "Jaxon Smith-Njigba scores the game's first TD.",
+              "labelLen": 46,
+              "probability": 0.115,
+              "bucket": "player-prop",
+              "resolverKind": "nfl_player_first_td",
+              "supportLevel": "supported",
+              "player": "Jaxon Smith-Njigba scores the game's",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": true
+            },
+            {
+              "index": 22,
+              "key": "team_total_over:home:18.5",
+              "label": "Seahawks: over 18.5 points.",
+              "labelLen": 27,
+              "probability": 0.7002,
+              "bucket": "team-total",
+              "resolverKind": "team_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 23,
+              "key": "player_prop:passing_tds:drake maye::279866:over:1.5",
+              "label": "Drake Maye: at least 2 passing touchdowns.",
+              "labelLen": 42,
+              "probability": 0.4085,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Drake Maye",
+              "starTier": "star",
+              "starMatched": "Drake Maye",
+              "early": "mid"
+            },
+            {
+              "index": 24,
+              "key": "spread_more_than:home:3.5",
+              "label": "Seahawks win by 3.5+ points.",
+              "labelLen": 28,
+              "probability": 0.4852,
+              "bucket": "spread",
+              "resolverKind": "spread_more_than",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            }
+          ]
+        },
+        {
+          "trial": 2,
+          "boardProbability": 0.282,
+          "squareCount": 25,
+          "freeCount": 1,
+          "liveCount": 24,
+          "bucketMix": {
+            "player-prop": 8,
+            "moneyline": 2,
+            "total": 3,
+            "spread": 3,
+            "special": 6,
+            "team-total": 2
+          },
+          "mixVsTarget": {
+            "moneyline": "2/2",
+            "spread": "3/3",
+            "total": "3/3",
+            "team-total": "2/2",
+            "special": "6/6",
+            "player-prop": "8/8"
+          },
+          "propStarTierCounts": {
+            "known": 3,
+            "star": 3,
+            "unknown": 2
+          },
+          "propPlayers": [
+            {
+              "player": "Rashid Shaheed",
+              "tier": "known",
+              "matched": "Rashid Shaheed",
+              "label": "Rashid Shaheed scores a touchdown."
+            },
+            {
+              "player": "Cooper Kupp",
+              "tier": "known",
+              "matched": "Cooper Kupp",
+              "label": "Cooper Kupp: under 29.5 receiving yards."
+            },
+            {
+              "player": "Sam Darnold",
+              "tier": "star",
+              "matched": "Sam Darnold",
+              "label": "Sam Darnold: at least 2 passing touchdowns."
+            },
+            {
+              "player": "Hunter Henry",
+              "tier": "star",
+              "matched": "Hunter Henry",
+              "label": "Hunter Henry: at least 34 receiving yards."
+            },
+            {
+              "player": "Rashid Shaheed",
+              "tier": "known",
+              "matched": "Rashid Shaheed",
+              "label": "Rashid Shaheed: under 2.5 receptions."
+            },
+            {
+              "player": "Jadarian Price",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Jadarian Price: at least 2 receptions."
+            },
+            {
+              "player": "Sam Darnold is held",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Sam Darnold is held under 5.5 yards on his longest run."
+            },
+            {
+              "player": "Drake Maye",
+              "tier": "star",
+              "matched": "Drake Maye",
+              "label": "Drake Maye: under 20.5 completions."
+            }
+          ],
+          "duplicatePropPlayers": [
+            "rashid shaheed"
+          ],
+          "anyPlayerOnTwoSquares": true,
+          "probability": {
+            "min": 0.0634,
+            "max": 0.6849
+          },
+          "outOfBandCoreLadder": [],
+          "outOfBandAnySquare": [
+            {
+              "label": "The game goes to overtime.",
+              "p": 0.0634,
+              "bucket": "special"
+            }
+          ],
+          "labelLength": {
+            "max": 55,
+            "longest": [
+              "[55] Sam Darnold is held under 5.5 yards on his longest run.",
+              "[43] Sam Darnold: at least 2 passing touchdowns.",
+              "[42] Hunter Henry: at least 34 receiving yards.",
+              "[40] Cooper Kupp: under 29.5 receiving yards.",
+              "[38] Jadarian Price: at least 2 receptions.",
+              "[38] A score in the last 1 min of the half.",
+              "[37] Rashid Shaheed: under 2.5 receptions.",
+              "[35] Drake Maye: under 20.5 completions."
+            ]
+          },
+          "earlyResolvable": {
+            "definiteEarly": 0,
+            "canGoEarlyMid": 2,
+            "total": 24
+          },
+          "squares": [
+            {
+              "index": 0,
+              "key": "nfl_player_anytime_td:rashid shaheed::640",
+              "label": "Rashid Shaheed scores a touchdown.",
+              "labelLen": 34,
+              "probability": 0.2165,
+              "bucket": "player-prop",
+              "resolverKind": "nfl_player_anytime_td",
+              "supportLevel": "supported",
+              "player": "Rashid Shaheed",
+              "starTier": "known",
+              "starMatched": "Rashid Shaheed",
+              "early": "mid"
+            },
+            {
+              "index": 1,
+              "key": "player_prop:receiving_yards:cooper kupp::794:under:29.5",
+              "label": "Cooper Kupp: under 29.5 receiving yards.",
+              "labelLen": 40,
+              "probability": 0.5,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Cooper Kupp",
+              "starTier": "known",
+              "starMatched": "Cooper Kupp",
+              "early": false
+            },
+            {
+              "index": 2,
+              "key": "moneyline:home",
+              "label": "Seahawks to beat Patriots.",
+              "labelLen": 26,
+              "probability": 0.6126,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 3,
+              "key": "player_prop:passing_tds:sam darnold::70:over:1.5",
+              "label": "Sam Darnold: at least 2 passing touchdowns.",
+              "labelLen": 43,
+              "probability": 0.4462,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold",
+              "starTier": "star",
+              "starMatched": "Sam Darnold",
+              "early": "mid"
+            },
+            {
+              "index": 4,
+              "key": "game_total_over:54.5",
+              "label": "Total points: over 54.5.",
+              "labelLen": 24,
+              "probability": 0.249,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 5,
+              "key": "game_total_under:50.5",
+              "label": "Total points: under 50.5.",
+              "labelLen": 25,
+              "probability": 0.6579,
+              "bucket": "total",
+              "resolverKind": "game_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 6,
+              "key": "player_prop:receiving_yards:hunter henry::911:over:33.5",
+              "label": "Hunter Henry: at least 34 receiving yards.",
+              "labelLen": 42,
+              "probability": 0.5011,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Hunter Henry",
+              "starTier": "star",
+              "starMatched": "Hunter Henry",
+              "early": false
+            },
+            {
+              "index": 7,
+              "key": "player_prop:receptions:rashid shaheed::640:under:2.5",
+              "label": "Rashid Shaheed: under 2.5 receptions.",
+              "labelLen": 37,
+              "probability": 0.5142,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Rashid Shaheed",
+              "starTier": "known",
+              "starMatched": "Rashid Shaheed",
+              "early": false
+            },
+            {
+              "index": 8,
+              "key": "player_prop:receptions:jadarian price::33934144:over:1.5",
+              "label": "Jadarian Price: at least 2 receptions.",
+              "labelLen": 38,
+              "probability": 0.417,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Jadarian Price",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 9,
+              "key": "spread_more_than:home:7.5",
+              "label": "Seahawks win by 7.5+ points.",
+              "labelLen": 28,
+              "probability": 0.3694,
+              "bucket": "spread",
+              "resolverKind": "spread_more_than",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 10,
+              "key": "spread_keep_close:away:3.5",
+              "label": "Final margin under 3.5 points.",
+              "labelLen": 30,
+              "probability": 0.5148,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 11,
+              "key": "player_prop:longest_rush:sam darnold::70:under:5.5",
+              "label": "Sam Darnold is held under 5.5 yards on his longest run.",
+              "labelLen": 55,
+              "probability": 0.5298,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold is held",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 13,
+              "key": "moneyline:away",
+              "label": "Patriots to beat Seahawks.",
+              "labelLen": 26,
+              "probability": 0.3874,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 14,
+              "key": "player_prop:passing_completions:drake maye::279866:under:20.5",
+              "label": "Drake Maye: under 20.5 completions.",
+              "labelLen": 35,
+              "probability": 0.5135,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Drake Maye",
+              "starTier": "star",
+              "starMatched": "Drake Maye",
+              "early": false
+            },
+            {
+              "index": 15,
+              "key": "nfl_overtime",
+              "label": "The game goes to overtime.",
+              "labelLen": 26,
+              "probability": 0.0634,
+              "bucket": "special",
+              "resolverKind": "nfl_overtime",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 16,
+              "key": "spread_keep_close:away:9.5",
+              "label": "Final margin under 9.5 points.",
+              "labelLen": 30,
+              "probability": 0.6849,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 17,
+              "key": "nfl_score_in_final_minutes:first_half:1.0",
+              "label": "A score in the last 1 min of the half.",
+              "labelLen": 38,
+              "probability": 0.6457,
+              "bucket": "special",
+              "resolverKind": "nfl_score_in_final_minutes",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 18,
+              "key": "game_total_under:34.5",
+              "label": "Total points: under 34.5.",
+              "labelLen": 25,
+              "probability": 0.249,
+              "bucket": "total",
+              "resolverKind": "game_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 19,
+              "key": "team_total_under:home:24.5",
+              "label": "Seahawks: under 24.5 points.",
+              "labelLen": 28,
+              "probability": 0.5299,
+              "bucket": "team-total",
+              "resolverKind": "team_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 20,
+              "key": "nfl_team_stat_at_least:home:net_passing_yards:210.0",
+              "label": "Seahawks pass for 210+ yards.",
+              "labelLen": 29,
+              "probability": 0.475,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 21,
+              "key": "nfl_margin_at_most:3.5",
+              "label": "Final margin: 3.5 points or less.",
+              "labelLen": 33,
+              "probability": 0.2496,
+              "bucket": "special",
+              "resolverKind": "nfl_margin_at_most",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 22,
+              "key": "nfl_team_stat_at_least:away:net_passing_yards:210.0",
+              "label": "Patriots pass for 210+ yards.",
+              "labelLen": 29,
+              "probability": 0.475,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 23,
+              "key": "nfl_team_stat_at_least:away:third_down_conversions:5.0",
+              "label": "Patriots convert 5+ third downs.",
+              "labelLen": 32,
+              "probability": 0.568,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 24,
+              "key": "team_total_under:home:18.5",
+              "label": "Seahawks: under 18.5 points.",
+              "labelLen": 28,
+              "probability": 0.2998,
+              "bucket": "team-total",
+              "resolverKind": "team_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            }
+          ]
+        },
+        {
+          "trial": 3,
+          "boardProbability": 0.2512,
+          "squareCount": 25,
+          "freeCount": 1,
+          "liveCount": 24,
+          "bucketMix": {
+            "special": 6,
+            "player-prop": 8,
+            "total": 3,
+            "spread": 3,
+            "moneyline": 2,
+            "team-total": 2
+          },
+          "mixVsTarget": {
+            "moneyline": "2/2",
+            "spread": "3/3",
+            "total": "3/3",
+            "team-total": "2/2",
+            "special": "6/6",
+            "player-prop": "8/8"
+          },
+          "propStarTierCounts": {
+            "star": 5,
+            "unknown": 2,
+            "known": 1
+          },
+          "propPlayers": [
+            {
+              "player": "A.J. Brown",
+              "tier": "star",
+              "matched": "A.J. Brown",
+              "label": "A.J. Brown: under 5.5 receptions."
+            },
+            {
+              "player": "Sam Darnold breaks off a run of",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Sam Darnold breaks off a run of 6+ yards."
+            },
+            {
+              "player": "AJ Barner",
+              "tier": "star",
+              "matched": "AJ Barner",
+              "label": "AJ Barner: under 25.5 receiving yards."
+            },
+            {
+              "player": "Hunter Henry",
+              "tier": "star",
+              "matched": "Hunter Henry",
+              "label": "Hunter Henry scores a touchdown."
+            },
+            {
+              "player": "Sam Darnold",
+              "tier": "star",
+              "matched": "Sam Darnold",
+              "label": "Sam Darnold: under 1.5 passing touchdowns."
+            },
+            {
+              "player": "Rhamondre Stevenson scores the game's",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Rhamondre Stevenson scores the game's first TD."
+            },
+            {
+              "player": "Rashid Shaheed",
+              "tier": "known",
+              "matched": "Rashid Shaheed",
+              "label": "Rashid Shaheed: at least 32 receiving yards."
+            },
+            {
+              "player": "Jaxon Smith-Njigba",
+              "tier": "star",
+              "matched": "Jaxon Smith-Njigba",
+              "label": "Jaxon Smith-Njigba: under 6.5 receptions."
+            }
+          ],
+          "duplicatePropPlayers": [],
+          "anyPlayerOnTwoSquares": false,
+          "probability": {
+            "min": 0.1415,
+            "max": 0.6579
+          },
+          "outOfBandCoreLadder": [],
+          "outOfBandAnySquare": [
+            {
+              "label": "Rhamondre Stevenson scores the game's first TD.",
+              "p": 0.1415,
+              "bucket": "player-prop"
+            }
+          ],
+          "labelLength": {
+            "max": 47,
+            "longest": [
+              "[47] Rhamondre Stevenson scores the game's first TD.",
+              "[44] Rashid Shaheed: at least 32 receiving yards.",
+              "[42] Sam Darnold: under 1.5 passing touchdowns.",
+              "[41] Sam Darnold breaks off a run of 6+ yards.",
+              "[41] Jaxon Smith-Njigba: under 6.5 receptions.",
+              "[38] AJ Barner: under 25.5 receiving yards.",
+              "[38] A score in the last 1 min of the half.",
+              "[37] First score inside the opening 6 min."
+            ]
+          },
+          "earlyResolvable": {
+            "definiteEarly": 2,
+            "canGoEarlyMid": 2,
+            "total": 24
+          },
+          "squares": [
+            {
+              "index": 0,
+              "key": "nfl_first_score_within_minutes:6.0",
+              "label": "First score inside the opening 6 min.",
+              "labelLen": 37,
+              "probability": 0.4661,
+              "bucket": "special",
+              "resolverKind": "nfl_first_score_within_minutes",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": true
+            },
+            {
+              "index": 1,
+              "key": "player_prop:receptions:a.j. brown::811:under:5.5",
+              "label": "A.J. Brown: under 5.5 receptions.",
+              "labelLen": 33,
+              "probability": 0.5423,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "A.J. Brown",
+              "starTier": "star",
+              "starMatched": "A.J. Brown",
+              "early": false
+            },
+            {
+              "index": 2,
+              "key": "player_prop:longest_rush:sam darnold::70:over:5.5",
+              "label": "Sam Darnold breaks off a run of 6+ yards.",
+              "labelLen": 41,
+              "probability": 0.4702,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold breaks off a run of",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 3,
+              "key": "game_total_under:47.5",
+              "label": "Total points: under 47.5.",
+              "labelLen": 25,
+              "probability": 0.5806,
+              "bucket": "total",
+              "resolverKind": "game_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 4,
+              "key": "spread_more_than:home:1.5",
+              "label": "Seahawks win by 1.5+ points.",
+              "labelLen": 28,
+              "probability": 0.5442,
+              "bucket": "spread",
+              "resolverKind": "spread_more_than",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 5,
+              "key": "nfl_score_in_final_minutes:fourth_quarter:2.0",
+              "label": "A score in the last 2 min of Q4.",
+              "labelLen": 32,
+              "probability": 0.4112,
+              "bucket": "special",
+              "resolverKind": "nfl_score_in_final_minutes",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 6,
+              "key": "nfl_team_stat_at_least:home:penalty_yards:50.0",
+              "label": "Seahawks are penalized 50+ yards.",
+              "labelLen": 33,
+              "probability": 0.467,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 7,
+              "key": "moneyline:away",
+              "label": "Patriots to beat Seahawks.",
+              "labelLen": 26,
+              "probability": 0.3874,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 8,
+              "key": "player_prop:receiving_yards:aj barner::278448:under:25.5",
+              "label": "AJ Barner: under 25.5 receiving yards.",
+              "labelLen": 38,
+              "probability": 0.5084,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "AJ Barner",
+              "starTier": "star",
+              "starMatched": "AJ Barner",
+              "early": false
+            },
+            {
+              "index": 9,
+              "key": "nfl_team_stat_at_least:home:turnovers:2.0",
+              "label": "Seahawks turn the ball over 2+ times.",
+              "labelLen": 37,
+              "probability": 0.327,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 10,
+              "key": "nfl_player_anytime_td:hunter henry::911",
+              "label": "Hunter Henry scores a touchdown.",
+              "labelLen": 32,
+              "probability": 0.239,
+              "bucket": "player-prop",
+              "resolverKind": "nfl_player_anytime_td",
+              "supportLevel": "supported",
+              "player": "Hunter Henry",
+              "starTier": "star",
+              "starMatched": "Hunter Henry",
+              "early": "mid"
+            },
+            {
+              "index": 11,
+              "key": "spread_keep_close:away:5.5",
+              "label": "Final margin under 5.5 points.",
+              "labelLen": 30,
+              "probability": 0.5735,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 13,
+              "key": "team_total_over:away:27.5",
+              "label": "Patriots: over 27.5 points.",
+              "labelLen": 27,
+              "probability": 0.2498,
+              "bucket": "team-total",
+              "resolverKind": "team_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 14,
+              "key": "moneyline:home",
+              "label": "Seahawks to beat Patriots.",
+              "labelLen": 26,
+              "probability": 0.6126,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 15,
+              "key": "game_total_over:38.5",
+              "label": "Total points: over 38.5.",
+              "labelLen": 24,
+              "probability": 0.6579,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 16,
+              "key": "team_total_under:away:18.5",
+              "label": "Patriots: under 18.5 points.",
+              "labelLen": 28,
+              "probability": 0.411,
+              "bucket": "team-total",
+              "resolverKind": "team_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 17,
+              "key": "player_prop:passing_tds:sam darnold::70:under:1.5",
+              "label": "Sam Darnold: under 1.5 passing touchdowns.",
+              "labelLen": 42,
+              "probability": 0.5538,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold",
+              "starTier": "star",
+              "starMatched": "Sam Darnold",
+              "early": "mid"
+            },
+            {
+              "index": 18,
+              "key": "nfl_player_first_td:rhamondre stevenson::499",
+              "label": "Rhamondre Stevenson scores the game's first TD.",
+              "labelLen": 47,
+              "probability": 0.1415,
+              "bucket": "player-prop",
+              "resolverKind": "nfl_player_first_td",
+              "supportLevel": "supported",
+              "player": "Rhamondre Stevenson scores the game's",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": true
+            },
+            {
+              "index": 19,
+              "key": "nfl_score_in_final_minutes:first_half:1.0",
+              "label": "A score in the last 1 min of the half.",
+              "labelLen": 38,
+              "probability": 0.6457,
+              "bucket": "special",
+              "resolverKind": "nfl_score_in_final_minutes",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 20,
+              "key": "spread_more_than:home:9.5",
+              "label": "Seahawks win by 9.5+ points.",
+              "labelLen": 28,
+              "probability": 0.3151,
+              "bucket": "spread",
+              "resolverKind": "spread_more_than",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 21,
+              "key": "player_prop:receiving_yards:rashid shaheed::640:over:31.5",
+              "label": "Rashid Shaheed: at least 32 receiving yards.",
+              "labelLen": 44,
+              "probability": 0.5,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Rashid Shaheed",
+              "starTier": "known",
+              "starMatched": "Rashid Shaheed",
+              "early": false
+            },
+            {
+              "index": 22,
+              "key": "game_total_under:44.5",
+              "label": "Total points: under 44.5.",
+              "labelLen": 25,
+              "probability": 0.5,
+              "bucket": "total",
+              "resolverKind": "game_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 23,
+              "key": "player_prop:receptions:jaxon smith-njigba::869:under:6.5",
+              "label": "Jaxon Smith-Njigba: under 6.5 receptions.",
+              "labelLen": 41,
+              "probability": 0.5192,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Jaxon Smith-Njigba",
+              "starTier": "star",
+              "starMatched": "Jaxon Smith-Njigba",
+              "early": false
+            },
+            {
+              "index": 24,
+              "key": "nfl_lead_change_second_half",
+              "label": "A lead change in the second half.",
+              "labelLen": 33,
+              "probability": 0.379,
+              "bucket": "special",
+              "resolverKind": "nfl_lead_change_second_half",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            }
+          ]
+        },
+        {
+          "trial": 4,
+          "boardProbability": 0.248,
+          "squareCount": 25,
+          "freeCount": 1,
+          "liveCount": 24,
+          "bucketMix": {
+            "player-prop": 8,
+            "spread": 3,
+            "special": 6,
+            "total": 3,
+            "team-total": 2,
+            "moneyline": 2
+          },
+          "mixVsTarget": {
+            "moneyline": "2/2",
+            "spread": "3/3",
+            "total": "3/3",
+            "team-total": "2/2",
+            "special": "6/6",
+            "player-prop": "8/8"
+          },
+          "propStarTierCounts": {
+            "star": 5,
+            "unknown": 2,
+            "deep": 1
+          },
+          "propPlayers": [
+            {
+              "player": "Rhamondre Stevenson",
+              "tier": "star",
+              "matched": "Rhamondre Stevenson",
+              "label": "Rhamondre Stevenson: under 86.5 rushing + receiving yards."
+            },
+            {
+              "player": "A.J. Brown",
+              "tier": "star",
+              "matched": "A.J. Brown",
+              "label": "A.J. Brown scores a touchdown."
+            },
+            {
+              "player": "Sam Darnold is held",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Sam Darnold is held under 5.5 yards on his longest run."
+            },
+            {
+              "player": "Jadarian Price",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Jadarian Price scores a touchdown."
+            },
+            {
+              "player": "Sam Darnold",
+              "tier": "star",
+              "matched": "Sam Darnold",
+              "label": "Sam Darnold: under 20.5 completions."
+            },
+            {
+              "player": "George Holani",
+              "tier": "deep",
+              "matched": "George Holani",
+              "label": "George Holani: under 1.5 receptions."
+            },
+            {
+              "player": "Drake Maye",
+              "tier": "star",
+              "matched": "Drake Maye",
+              "label": "Drake Maye: at least 2 passing touchdowns."
+            },
+            {
+              "player": "Drake Maye",
+              "tier": "star",
+              "matched": "Drake Maye",
+              "label": "Drake Maye: under 32.5 pass attempts."
+            }
+          ],
+          "duplicatePropPlayers": [
+            "drake maye"
+          ],
+          "anyPlayerOnTwoSquares": true,
+          "probability": {
+            "min": 0.0634,
+            "max": 0.751
+          },
+          "outOfBandCoreLadder": [],
+          "outOfBandAnySquare": [
+            {
+              "label": "A non-quarterback throws a pass.",
+              "p": 0.074,
+              "bucket": "special"
+            },
+            {
+              "label": "The game goes to overtime.",
+              "p": 0.0634,
+              "bucket": "special"
+            }
+          ],
+          "labelLength": {
+            "max": 58,
+            "longest": [
+              "[58] Rhamondre Stevenson: under 86.5 rushing + receiving yards.",
+              "[55] Sam Darnold is held under 5.5 yards on his longest run.",
+              "[42] Drake Maye: at least 2 passing touchdowns.",
+              "[37] Drake Maye: under 32.5 pass attempts.",
+              "[36] Sam Darnold: under 20.5 completions.",
+              "[36] George Holani: under 1.5 receptions.",
+              "[34] Jadarian Price scores a touchdown.",
+              "[33] A lead change in the second half."
+            ]
+          },
+          "earlyResolvable": {
+            "definiteEarly": 0,
+            "canGoEarlyMid": 4,
+            "total": 24
+          },
+          "squares": [
+            {
+              "index": 0,
+              "key": "player_prop:rushing_receiving_yards:rhamondre stevenson::499:under:86.5",
+              "label": "Rhamondre Stevenson: under 86.5 rushing + receiving yards.",
+              "labelLen": 58,
+              "probability": 0.4994,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Rhamondre Stevenson",
+              "starTier": "star",
+              "starMatched": "Rhamondre Stevenson",
+              "early": false
+            },
+            {
+              "index": 1,
+              "key": "spread_keep_close:away:11.5",
+              "label": "Final margin under 11.5 points.",
+              "labelLen": 31,
+              "probability": 0.7355,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 2,
+              "key": "spread_keep_close:away:9.5",
+              "label": "Final margin under 9.5 points.",
+              "labelLen": 30,
+              "probability": 0.6849,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 3,
+              "key": "nfl_player_anytime_td:a.j. brown::811",
+              "label": "A.J. Brown scores a touchdown.",
+              "labelLen": 30,
+              "probability": 0.3505,
+              "bucket": "player-prop",
+              "resolverKind": "nfl_player_anytime_td",
+              "supportLevel": "supported",
+              "player": "A.J. Brown",
+              "starTier": "star",
+              "starMatched": "A.J. Brown",
+              "early": "mid"
+            },
+            {
+              "index": 4,
+              "key": "nfl_game_total_stat_at_least:defensive_sacks:5.0",
+              "label": "5+ sacks in this game.",
+              "labelLen": 22,
+              "probability": 0.507,
+              "bucket": "special",
+              "resolverKind": "nfl_game_total_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 5,
+              "key": "player_prop:longest_rush:sam darnold::70:under:5.5",
+              "label": "Sam Darnold is held under 5.5 yards on his longest run.",
+              "labelLen": 55,
+              "probability": 0.5298,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold is held",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 6,
+              "key": "game_total_over:44.5",
+              "label": "Total points: over 44.5.",
+              "labelLen": 24,
+              "probability": 0.5,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 7,
+              "key": "spread_more_than:home:7.5",
+              "label": "Seahawks win by 7.5+ points.",
+              "labelLen": 28,
+              "probability": 0.3694,
+              "bucket": "spread",
+              "resolverKind": "spread_more_than",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 8,
+              "key": "nfl_lead_change_second_half",
+              "label": "A lead change in the second half.",
+              "labelLen": 33,
+              "probability": 0.379,
+              "bucket": "special",
+              "resolverKind": "nfl_lead_change_second_half",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 9,
+              "key": "game_total_over:34.5",
+              "label": "Total points: over 34.5.",
+              "labelLen": 24,
+              "probability": 0.751,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 10,
+              "key": "game_total_over:54.5",
+              "label": "Total points: over 54.5.",
+              "labelLen": 24,
+              "probability": 0.249,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 11,
+              "key": "nfl_player_anytime_td:jadarian price::33934144",
+              "label": "Jadarian Price scores a touchdown.",
+              "labelLen": 34,
+              "probability": 0.4018,
+              "bucket": "player-prop",
+              "resolverKind": "nfl_player_anytime_td",
+              "supportLevel": "supported",
+              "player": "Jadarian Price",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": "mid"
+            },
+            {
+              "index": 13,
+              "key": "nfl_second_half_higher_scoring",
+              "label": "The 2nd half outscores the 1st.",
+              "labelLen": 31,
+              "probability": 0.4853,
+              "bucket": "special",
+              "resolverKind": "nfl_second_half_higher_scoring",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 14,
+              "key": "team_total_over:away:18.5",
+              "label": "Patriots: over 18.5 points.",
+              "labelLen": 27,
+              "probability": 0.589,
+              "bucket": "team-total",
+              "resolverKind": "team_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 15,
+              "key": "team_total_over:away:27.5",
+              "label": "Patriots: over 27.5 points.",
+              "labelLen": 27,
+              "probability": 0.2498,
+              "bucket": "team-total",
+              "resolverKind": "team_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 16,
+              "key": "player_prop:passing_completions:sam darnold::70:under:20.5",
+              "label": "Sam Darnold: under 20.5 completions.",
+              "labelLen": 36,
+              "probability": 0.5021,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold",
+              "starTier": "star",
+              "starMatched": "Sam Darnold",
+              "early": false
+            },
+            {
+              "index": 17,
+              "key": "nfl_non_quarterback_pass_attempt",
+              "label": "A non-quarterback throws a pass.",
+              "labelLen": 32,
+              "probability": 0.074,
+              "bucket": "special",
+              "resolverKind": "nfl_non_quarterback_pass_attempt",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": "mid"
+            },
+            {
+              "index": 18,
+              "key": "player_prop:receptions:george holani::278427:under:1.5",
+              "label": "George Holani: under 1.5 receptions.",
+              "labelLen": 36,
+              "probability": 0.4165,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "George Holani",
+              "starTier": "deep",
+              "starMatched": "George Holani",
+              "early": false
+            },
+            {
+              "index": 19,
+              "key": "moneyline:away",
+              "label": "Patriots to beat Seahawks.",
+              "labelLen": 26,
+              "probability": 0.3874,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 20,
+              "key": "nfl_overtime",
+              "label": "The game goes to overtime.",
+              "labelLen": 26,
+              "probability": 0.0634,
+              "bucket": "special",
+              "resolverKind": "nfl_overtime",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 21,
+              "key": "player_prop:passing_tds:drake maye::279866:over:1.5",
+              "label": "Drake Maye: at least 2 passing touchdowns.",
+              "labelLen": 42,
+              "probability": 0.4085,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Drake Maye",
+              "starTier": "star",
+              "starMatched": "Drake Maye",
+              "early": "mid"
+            },
+            {
+              "index": 22,
+              "key": "moneyline:home",
+              "label": "Seahawks to beat Patriots.",
+              "labelLen": 26,
+              "probability": 0.6126,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 23,
+              "key": "nfl_team_stat_at_least:away:fourth_down_conversions:1.0",
+              "label": "Patriots convert a fourth down.",
+              "labelLen": 31,
+              "probability": 0.568,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 24,
+              "key": "player_prop:passing_attempts:drake maye::279866:under:32.5",
+              "label": "Drake Maye: under 32.5 pass attempts.",
+              "labelLen": 37,
+              "probability": 0.5042,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Drake Maye",
+              "starTier": "star",
+              "starMatched": "Drake Maye",
+              "early": false
+            }
+          ]
+        },
+        {
+          "trial": 5,
+          "boardProbability": 0.28,
+          "squareCount": 25,
+          "freeCount": 1,
+          "liveCount": 24,
+          "bucketMix": {
+            "special": 6,
+            "player-prop": 8,
+            "total": 3,
+            "spread": 3,
+            "team-total": 2,
+            "moneyline": 2
+          },
+          "mixVsTarget": {
+            "moneyline": "2/2",
+            "spread": "3/3",
+            "total": "3/3",
+            "team-total": "2/2",
+            "special": "6/6",
+            "player-prop": "8/8"
+          },
+          "propStarTierCounts": {
+            "star": 5,
+            "unknown": 2,
+            "known": 1
+          },
+          "propPlayers": [
+            {
+              "player": "A.J. Brown",
+              "tier": "star",
+              "matched": "A.J. Brown",
+              "label": "A.J. Brown: under 5.5 receptions."
+            },
+            {
+              "player": "Rhamondre Stevenson",
+              "tier": "star",
+              "matched": "Rhamondre Stevenson",
+              "label": "Rhamondre Stevenson: under 23.5 receiving yards."
+            },
+            {
+              "player": "Drake Maye",
+              "tier": "star",
+              "matched": "Drake Maye",
+              "label": "Drake Maye: under 1.5 passing touchdowns."
+            },
+            {
+              "player": "George Holani is held",
+              "tier": "unknown",
+              "matched": null,
+              "label": "George Holani is held under 8.5 yards on his longest run."
+            },
+            {
+              "player": "Sam Darnold",
+              "tier": "star",
+              "matched": "Sam Darnold",
+              "label": "Sam Darnold: at least 3 rushing attempts."
+            },
+            {
+              "player": "Jaxon Smith-Njigba",
+              "tier": "star",
+              "matched": "Jaxon Smith-Njigba",
+              "label": "Jaxon Smith-Njigba: at least 82 receiving yards."
+            },
+            {
+              "player": "Drake Maye is held",
+              "tier": "unknown",
+              "matched": null,
+              "label": "Drake Maye is held under 11.5 yards on his longest run."
+            },
+            {
+              "player": "Rashid Shaheed",
+              "tier": "known",
+              "matched": "Rashid Shaheed",
+              "label": "Rashid Shaheed: under 2.5 rushing yards."
+            }
+          ],
+          "duplicatePropPlayers": [],
+          "anyPlayerOnTwoSquares": false,
+          "probability": {
+            "min": 0.05,
+            "max": 0.751
+          },
+          "outOfBandCoreLadder": [],
+          "outOfBandAnySquare": [
+            {
+              "label": "A safety is scored.",
+              "p": 0.05,
+              "bucket": "special"
+            }
+          ],
+          "labelLength": {
+            "max": 57,
+            "longest": [
+              "[57] George Holani is held under 8.5 yards on his longest run.",
+              "[55] Drake Maye is held under 11.5 yards on his longest run.",
+              "[48] Rhamondre Stevenson: under 23.5 receiving yards.",
+              "[48] Jaxon Smith-Njigba: at least 82 receiving yards.",
+              "[41] Drake Maye: under 1.5 passing touchdowns.",
+              "[41] Sam Darnold: at least 3 rushing attempts.",
+              "[40] Rashid Shaheed: under 2.5 rushing yards.",
+              "[37] Patriots turn the ball over 2+ times."
+            ]
+          },
+          "earlyResolvable": {
+            "definiteEarly": 2,
+            "canGoEarlyMid": 2,
+            "total": 24
+          },
+          "squares": [
+            {
+              "index": 0,
+              "key": "nfl_safety",
+              "label": "A safety is scored.",
+              "labelLen": 19,
+              "probability": 0.05,
+              "bucket": "special",
+              "resolverKind": "nfl_safety",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": "mid"
+            },
+            {
+              "index": 1,
+              "key": "player_prop:receptions:a.j. brown::811:under:5.5",
+              "label": "A.J. Brown: under 5.5 receptions.",
+              "labelLen": 33,
+              "probability": 0.5423,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "A.J. Brown",
+              "starTier": "star",
+              "starMatched": "A.J. Brown",
+              "early": false
+            },
+            {
+              "index": 2,
+              "key": "game_total_under:41.5",
+              "label": "Total points: under 41.5.",
+              "labelLen": 25,
+              "probability": 0.4194,
+              "bucket": "total",
+              "resolverKind": "game_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 3,
+              "key": "player_prop:receiving_yards:rhamondre stevenson::499:under:23.5",
+              "label": "Rhamondre Stevenson: under 23.5 receiving yards.",
+              "labelLen": 48,
+              "probability": 0.5,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Rhamondre Stevenson",
+              "starTier": "star",
+              "starMatched": "Rhamondre Stevenson",
+              "early": false
+            },
+            {
+              "index": 4,
+              "key": "spread_keep_close:away:5.5",
+              "label": "Final margin under 5.5 points.",
+              "labelLen": 30,
+              "probability": 0.5735,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 5,
+              "key": "player_prop:passing_tds:drake maye::279866:under:1.5",
+              "label": "Drake Maye: under 1.5 passing touchdowns.",
+              "labelLen": 41,
+              "probability": 0.5915,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Drake Maye",
+              "starTier": "star",
+              "starMatched": "Drake Maye",
+              "early": "mid"
+            },
+            {
+              "index": 6,
+              "key": "nfl_halftime_leader_loses",
+              "label": "The halftime leader does not win.",
+              "labelLen": 33,
+              "probability": 0.2024,
+              "bucket": "special",
+              "resolverKind": "nfl_halftime_leader_loses",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": true
+            },
+            {
+              "index": 7,
+              "key": "spread_keep_close:away:9.5",
+              "label": "Final margin under 9.5 points.",
+              "labelLen": 30,
+              "probability": 0.6849,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 8,
+              "key": "team_total_under:home:27.5",
+              "label": "Seahawks: under 27.5 points.",
+              "labelLen": 28,
+              "probability": 0.6462,
+              "bucket": "team-total",
+              "resolverKind": "team_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 9,
+              "key": "game_total_over:41.5",
+              "label": "Total points: over 41.5.",
+              "labelLen": 24,
+              "probability": 0.5806,
+              "bucket": "total",
+              "resolverKind": "game_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 10,
+              "key": "moneyline:away",
+              "label": "Patriots to beat Seahawks.",
+              "labelLen": 26,
+              "probability": 0.3874,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 11,
+              "key": "nfl_game_total_stat_at_least:defensive_sacks:5.0",
+              "label": "5+ sacks in this game.",
+              "labelLen": 22,
+              "probability": 0.507,
+              "bucket": "special",
+              "resolverKind": "nfl_game_total_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 13,
+              "key": "nfl_team_stat_at_least:away:turnovers:2.0",
+              "label": "Patriots turn the ball over 2+ times.",
+              "labelLen": 37,
+              "probability": 0.327,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 14,
+              "key": "player_prop:longest_rush:george holani::278427:under:8.5",
+              "label": "George Holani is held under 8.5 yards on his longest run.",
+              "labelLen": 57,
+              "probability": 0.4969,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "George Holani is held",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 15,
+              "key": "spread_keep_close:away:11.5",
+              "label": "Final margin under 11.5 points.",
+              "labelLen": 31,
+              "probability": 0.7355,
+              "bucket": "spread",
+              "resolverKind": "spread_keep_close",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 16,
+              "key": "player_prop:rushing_attempts:sam darnold::70:over:2.5",
+              "label": "Sam Darnold: at least 3 rushing attempts.",
+              "labelLen": 41,
+              "probability": 0.4409,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Sam Darnold",
+              "starTier": "star",
+              "starMatched": "Sam Darnold",
+              "early": false
+            },
+            {
+              "index": 17,
+              "key": "nfl_tied_after_halftime",
+              "label": "The game is tied after halftime.",
+              "labelLen": 32,
+              "probability": 0.268,
+              "bucket": "special",
+              "resolverKind": "nfl_tied_after_halftime",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": true
+            },
+            {
+              "index": 18,
+              "key": "nfl_team_stat_at_least:away:penalties:7.0",
+              "label": "Patriots commit 7+ penalties.",
+              "labelLen": 29,
+              "probability": 0.426,
+              "bucket": "special",
+              "resolverKind": "nfl_team_stat_at_least",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 19,
+              "key": "player_prop:receiving_yards:jaxon smith-njigba::869:over:81.5",
+              "label": "Jaxon Smith-Njigba: at least 82 receiving yards.",
+              "labelLen": 48,
+              "probability": 0.5,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Jaxon Smith-Njigba",
+              "starTier": "star",
+              "starMatched": "Jaxon Smith-Njigba",
+              "early": false
+            },
+            {
+              "index": 20,
+              "key": "team_total_over:away:27.5",
+              "label": "Patriots: over 27.5 points.",
+              "labelLen": 27,
+              "probability": 0.2498,
+              "bucket": "team-total",
+              "resolverKind": "team_total_over",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 21,
+              "key": "player_prop:longest_rush:drake maye::279866:under:11.5",
+              "label": "Drake Maye is held under 11.5 yards on his longest run.",
+              "labelLen": 55,
+              "probability": 0.4773,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Drake Maye is held",
+              "starTier": "unknown",
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 22,
+              "key": "game_total_under:54.5",
+              "label": "Total points: under 54.5.",
+              "labelLen": 25,
+              "probability": 0.751,
+              "bucket": "total",
+              "resolverKind": "game_total_under",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            },
+            {
+              "index": 23,
+              "key": "player_prop:rushing_yards:rashid shaheed::640:under:2.5",
+              "label": "Rashid Shaheed: under 2.5 rushing yards.",
+              "labelLen": 40,
+              "probability": 0.4921,
+              "bucket": "player-prop",
+              "resolverKind": "player_prop",
+              "supportLevel": "supported",
+              "player": "Rashid Shaheed",
+              "starTier": "known",
+              "starMatched": "Rashid Shaheed",
+              "early": false
+            },
+            {
+              "index": 24,
+              "key": "moneyline:home",
+              "label": "Seahawks to beat Patriots.",
+              "labelLen": 26,
+              "probability": 0.6126,
+              "bucket": "moneyline",
+              "resolverKind": "moneyline",
+              "supportLevel": "supported",
+              "player": null,
+              "starTier": null,
+              "starMatched": null,
+              "early": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "gameId": "1392218",
+      "error": "templates: The selected game is unavailable right now."
+    },
+    {
+      "gameId": "1392219",
+      "error": "templates: The selected game is unavailable right now."
+    },
+    {
+      "gameId": "1392221",
+      "error": "templates: The selected game is unavailable right now."
+    }
+  ]
+}
