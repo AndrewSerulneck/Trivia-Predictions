@@ -62,8 +62,39 @@ export const SIGNUP_RATE_LIMITS = {
    * Google tiers rather than maps-key's.
    */
   venueMap: { windowSeconds: 60, max: 10 },
-  /** POST /api/owner/signup (Phase 5) — creating accounts, deliberately strict. */
-  signupSubmit: { windowSeconds: 3600, max: 5 },
+  /**
+   * POST /api/owner/signup — the INNER, identity-keyed bucket.
+   *
+   * Keyed on `IP + normalised email`, not the IP alone (see
+   * `rateLimitSignupSubmit` below and
+   * docs/abandoned-signup-cleanup-plan.md §4.1b). It was 5/hour/IP, which fails
+   * CLOSED with a 429 and an hour-long wait — the single worst error this
+   * surface can show, because the person hitting it is an honest partner who
+   * fumbled: a mistyped ZIP that fails server validation, a dropped connection
+   * retried, a duplicate-venue 409 answered and resubmitted, a supersede. Six of
+   * those and they were locked out for an hour.
+   *
+   * 15 is generous for one fumbling human and still far below anything useful
+   * for scripted account creation — which is capped by `signupSubmitIp` below
+   * regardless of how many emails the caller varies through.
+   */
+  signupSubmit: { windowSeconds: 3600, max: 15 },
+  /**
+   * POST /api/owner/signup — the OUTER, IP-only bucket.
+   *
+   * The anti-abuse invariant. The inner bucket keys on the email, so an attacker
+   * who varies the email gets a fresh inner bucket every time; this one does not
+   * move, and is what actually caps account creation from a single address.
+   *
+   * 40/hour is deliberately well above one venue's plausible traffic (a bar with
+   * three staff fumbling on the same WiFi is ~15-20) and deliberately a hard
+   * ceiling. It widens worst-case scripted abuse from 5/hour to 40/hour; that is
+   * the price of the shared-NAT fix, accepted because account creation is
+   * additionally gated by the email-uniqueness check
+   * (lib/ownerEmailAvailability.ts) and every row it creates is a pending signup
+   * subject to the one-hour purge tier (lib/signupSweep.ts).
+   */
+  signupSubmitIp: { windowSeconds: 3600, max: 40 },
   /**
    * POST /api/signup/email-available — the step-2 "is this email taken?"
    * pre-check.
@@ -99,13 +130,27 @@ export function deriveRequesterIp(request: Request): string {
  * The bucket name is folded into the hash so one `ip_hash` column can carry
  * independent per-route windows without a second column or a migration.
  *
+ * `identity` (§4.1b) narrows the bucket below the IP — today only the normalised
+ * signup email, for `signupSubmit`. It is folded in ONLY when non-empty, so
+ * every existing bucket hashes exactly as it did before this parameter existed
+ * and no live window is reset by the deploy that adds it. An EMPTY identity is
+ * therefore the plain per-IP hash for that bucket, which is the conservative
+ * direction we want when the caller gave us nothing to key on (an unparseable or
+ * oversized body): every such caller from one IP collapses into ONE shared
+ * bucket rather than getting a fresh one each time.
+ *
+ * The identity is PII, and it never leaves this function un-hashed — it goes
+ * into the same salted digest the IP does, and `signup_attempts` stores only the
+ * digest.
+ *
  * With no SESSION_SECRET (local dev) a fixed literal is used. That is fine for
  * grouping — the salt exists to stop an IP being recovered from a database
  * dump, and local dev has no production IPs in it.
  */
-export function hashRequesterIp(bucket: string, ip: string): string {
+export function hashRequesterIp(bucket: string, ip: string, identity = ""): string {
   const salt = process.env.SESSION_SECRET?.trim() || "self-serve-signup-dev-salt";
-  return createHash("sha256").update(`${bucket}:${ip}:${salt}`).digest("hex");
+  const key = identity ? `${bucket}:${ip}:${identity}:${salt}` : `${bucket}:${ip}:${salt}`;
+  return createHash("sha256").update(key).digest("hex");
 }
 
 /** The ledger table itself is gone — the foundations migration never ran. */
@@ -156,12 +201,16 @@ type ClaimSignupAttemptRow = {
  * missing, or the RPC errors or answers with a shape we do not recognise, the
  * call is denied (`unavailable: true`). A public route that spends money on
  * every request must not degrade into an open one.
+ *
+ * `options.identity` (§4.1b) narrows the bucket below the IP — see
+ * `hashRequesterIp`. Only `rateLimitSignupSubmit` passes one today.
  */
 export async function rateLimit(
   request: Request,
   bucket: RateLimitBucket,
-  rule: RateLimitRule = SIGNUP_RATE_LIMITS[bucket]
+  options: { identity?: string; rule?: RateLimitRule } = {}
 ): Promise<RateLimitResult> {
+  const rule = options.rule ?? SIGNUP_RATE_LIMITS[bucket];
   const windowSeconds = Math.max(1, Math.floor(rule.windowSeconds));
   const max = Math.max(1, Math.floor(rule.max));
   const closed: RateLimitResult = {
@@ -175,7 +224,7 @@ export async function rateLimit(
     return closed;
   }
 
-  const ipHash = hashRequesterIp(bucket, deriveRequesterIp(request));
+  const ipHash = hashRequesterIp(bucket, deriveRequesterIp(request), options.identity ?? "");
 
   const { data, error } = await supabaseAdmin.rpc("claim_signup_attempt", {
     p_ip_hash: ipHash,
@@ -218,6 +267,53 @@ export async function rateLimit(
   }
 
   return { allowed: true, retryAfterSeconds: 0 };
+}
+
+/**
+ * The whole quota decision for `POST /api/owner/signup`, in one place.
+ * docs/abandoned-signup-cleanup-plan.md §4.1b.
+ *
+ * TWO buckets, and the ORDER IS LOAD-BEARING:
+ *
+ *   1. `signupSubmit`   — keyed on `IP + normalised email`. 15/hour.
+ *   2. `signupSubmitIp` — keyed on the IP alone.            40/hour.
+ *
+ * **Why two.** A single IP-only bucket has to be both things at once and cannot
+ * be: low enough to stop scripted account creation, and high enough that a
+ * fumbling human is not locked out for an hour. Worse, the IP is not the person
+ * — a bar's shared WiFi and mobile carrier-grade NAT both collapse many people
+ * into one bucket, and the partner signing up is *very often on the venue's own
+ * WiFi*, the single most likely place for two staff to try this on the same
+ * afternoon. Splitting the two concerns lets each get the right number.
+ *
+ * **Why the identity bucket goes FIRST.** `claim_signup_attempt` records only
+ * ALLOWED calls, so a denial consumes nothing. Checking the narrow bucket first
+ * means a partner who fumbles their way to 15 is stopped by their OWN bucket and
+ * burns at most 15 of the shared 40 — leaving room for the colleague on the next
+ * stool. Reverse the order and that same person quietly eats the whole venue's
+ * ceiling, which is the exact failure this phase exists to remove.
+ *
+ * **Why the IP bucket still exists.** The inner bucket is keyed on
+ * attacker-controlled input: vary the email and you get a fresh one every time.
+ * The outer bucket does not move, so it — not the inner one — is what actually
+ * caps account creation from a single address. Never drop it, and never reorder
+ * these so a request can reach the writes having claimed only the inner slot.
+ *
+ * `email` must already be trimmed and lowercased (the route derives it through
+ * `draftFromBody`, the same normalisation `classifyEmailForSignup` sees). An
+ * EMPTY email — an unparseable or oversized body — is not an escape hatch: it
+ * hashes to the plain per-IP key for the inner bucket, so every such caller from
+ * one IP shares one bucket. See `hashRequesterIp`.
+ *
+ * Fails CLOSED in both tiers, exactly as `rateLimit` does.
+ */
+export async function rateLimitSignupSubmit(request: Request, email: string): Promise<RateLimitResult> {
+  const identity = String(email ?? "").trim().toLowerCase();
+
+  const perIdentity = await rateLimit(request, "signupSubmit", { identity });
+  if (!perIdentity.allowed) return perIdentity;
+
+  return rateLimit(request, "signupSubmitIp");
 }
 
 /**

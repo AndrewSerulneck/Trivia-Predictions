@@ -57,6 +57,31 @@ export const OWNER_EMAIL_TAKEN_MESSAGE =
 export async function ownerEmailExists(
   email: string
 ): Promise<{ ok: true; exists: boolean } | { ok: false; message: string }> {
+  const found = await findOwnerIdByEmail(email);
+  if (!found.ok) return found;
+  return { ok: true, exists: found.ownerId !== null };
+}
+
+/**
+ * The same lookup, returning the owner's id instead of a boolean.
+ *
+ * THIS IS THE ONLY `venue_owners`-by-email query in the signup path, and
+ * `ownerEmailExists` is now a thin reading of it — the contract test
+ * ("venue_owners is queried by email in exactly one module") is what keeps it
+ * that way, so a caller that needs the id must come here rather than write its
+ * own `.eq("email", …)`.
+ *
+ * Added by docs/abandoned-signup-cleanup-plan.md Phase 1 for
+ * `findPendingSignupByEmail` in lib/pendingSignup.ts, which has to ask a second
+ * question about the row it finds ("is this an unpaid, never-finished signup?")
+ * and therefore needs its primary key.
+ *
+ * `null` for "no such owner". A lookup FAILURE is `ok: false` and must never be
+ * collapsed into either answer — see the note on `ownerEmailExists`.
+ */
+export async function findOwnerIdByEmail(
+  email: string
+): Promise<{ ok: true; ownerId: string | null } | { ok: false; message: string }> {
   if (!supabaseAdmin) return { ok: false, message: "supabase-admin-unavailable" };
 
   const existing = await supabaseAdmin
@@ -66,5 +91,5 @@ export async function ownerEmailExists(
     .maybeSingle<{ id: string }>();
 
   if (existing.error) return { ok: false, message: existing.error.message };
-  return { ok: true, exists: Boolean(existing.data) };
+  return { ok: true, ownerId: existing.data?.id ?? null };
 }

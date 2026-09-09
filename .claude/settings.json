@@ -28,7 +28,42 @@
       "Bash(npm run lint *)",
       "Bash(npx vitest *)",
       "Bash(npm run test *)",
-      "Bash(supabase migration list *)"
+      "Bash(supabase migration list *)",
+      "Bash(echo * >> .env.local)",
+      "Bash(printf * >> .env.local)",
+      "Bash(cut -d= -f1 .env.local*)",
+      "Bash(grep -o ^[A-Z_]*= .env.local*)",
+      "Bash(supabase migration new *)",
+      "Bash(supabase link *)",
+      "Bash(supabase gen types *)",
+      "Bash(vercel env ls *)",
+      "Bash(vercel env add *)"
+    ],
+    "deny": [
+      "Bash(vercel env rm *)",
+      "Bash(vercel env pull *)",
+      "Read(./.env.local)",
+      "Read(//Users/andrewserulneck/Documents/Trivia-Predictions/.env.local)",
+      "Edit(./.env.local)",
+      "Write(./.env.local)"
+    ],
+    "ask": [
+      "Bash(supabase db push *)",
+      "Bash(supabase db reset *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-env-local.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

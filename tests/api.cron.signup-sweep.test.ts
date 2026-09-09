@@ -30,6 +30,12 @@ const state = vi.hoisted(() => ({
   tables: {} as Record<string, Row[]>,
   /** table -> forced error on read. */
   readErrors: {} as Record<string, string>,
+  /**
+   * table -> forced error on the NEXT read only, then cleared. The venue sweep's
+   * missing-column fallback re-reads `venues` after the first select fails, so a
+   * sticky error cannot exercise it.
+   */
+  readErrorsOnce: {} as Record<string, string>,
   deleteErrors: {} as Record<string, string>,
   authUsers: [] as Array<{ id: string; email: string | null; created_at: string }>,
   listUsersError: null as string | null,
@@ -65,6 +71,11 @@ const makeBuilder = (record: QueryRecord, rows: () => Row[]) => {
         }
       }
       return { data: [], error: null };
+    }
+    const once = state.readErrorsOnce[record.table];
+    if (once) {
+      delete state.readErrorsOnce[record.table];
+      return { data: null, error: { message: once } };
     }
     const forced = state.readErrors[record.table];
     if (forced) return { data: null, error: { message: forced } };
@@ -147,12 +158,19 @@ vi.mock("@/lib/rateLimit", () => ({
 }));
 
 import { GET, POST } from "@/app/api/cron/signup-sweep/route";
-import { AUTH_USER_FK_CONSUMERS, SWEEP_ABANDON_AFTER_DAYS } from "@/lib/signupSweep";
+import {
+  AUTH_USER_FK_CONSUMERS,
+  PENDING_SIGNUP_TTL_MINUTES_DEFAULT,
+  PENDING_SIGNUP_TTL_MINUTES_FLOOR,
+  SWEEP_ABANDON_AFTER_DAYS,
+  SWEEP_MAX_VENUES_PER_RUN,
+} from "@/lib/signupSweep";
 
 const CRON_SECRET = "cron-secret-for-tests";
 
 const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 const hoursAgo = (hours: number) => new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
 
 const cronRequest = (query = "") =>
   new Request(`http://localhost/api/cron/signup-sweep${query}`, {
@@ -169,7 +187,18 @@ type SweepBody = {
     deleted: number;
     abortedOverCap: boolean;
     errors: string[];
-    venues: Array<{ venueId: string; ownerIdsDeleted: string[]; authUserIdsDeleted: string[]; ownerIdsKept: string[] }>;
+    scanned: number;
+    tierA: number;
+    tierB: number;
+    tierSplitActive: boolean;
+    ttlMinutes: number;
+    venues: Array<{
+      venueId: string;
+      tier: string;
+      ownerIdsDeleted: string[];
+      authUserIdsDeleted: string[];
+      ownerIdsKept: string[];
+    }>;
   };
   orphans?: {
     dryRun: boolean;
@@ -203,6 +232,7 @@ beforeEach(() => {
   vi.stubEnv("CRON_SECRET", CRON_SECRET);
   state.tables = {};
   state.readErrors = {};
+  state.readErrorsOnce = {};
   state.deleteErrors = {};
   state.authUsers = [];
   state.listUsersError = null;
@@ -474,6 +504,336 @@ describe("/api/cron/signup-sweep — abandoned venue sweep", () => {
       expect(body.venues?.errors.join(" ")).toContain("auth-guard-failed");
       expect(state.deletes).toHaveLength(0);
     });
+  });
+});
+
+/**
+ * Phase 4 of docs/abandoned-signup-cleanup-plan.md — the two retention tiers.
+ *
+ * One window for everything was wrong in both directions. `venues.checkout_started_at`
+ * splits the set on the only honest question: did this partner ever reach Stripe?
+ *
+ *   TIER A  never reached Stripe  -> PENDING_SIGNUP_TTL_MINUTES, default 60m
+ *   TIER B  reached Stripe        -> 7 days, and both stamps must clear it
+ *
+ * The tests below are mostly about Tier B, because Tier A is the easy half: the
+ * expensive mistake is deleting a venue whose card is still settling.
+ */
+describe("/api/cron/signup-sweep — the tier split (Phase 4)", () => {
+  /** One hidden self-serve venue with one owner, at whatever age the tiers need. */
+  const seedVenue = (createdAt: string, checkoutStartedAt: string | null) => {
+    state.tables.venues = [
+      {
+        id: "dead-bar",
+        name: "Dead Bar",
+        hidden: true,
+        self_serve_created_at: createdAt,
+        checkout_started_at: checkoutStartedAt,
+      },
+    ];
+    state.tables.venue_owner_venues = [{ id: "link-1", owner_id: "owner-1", venue_id: "dead-bar" }];
+    state.tables.venue_owners = [{ id: "owner-1", auth_id: "auth-1" }];
+    state.tables.billing_subscriptions = [];
+  };
+
+  const venueScans = () => state.queries.filter((q) => q.table === "venues" && q.op === "select");
+
+  it("asks for checkout_started_at — a fixture cannot prove a projection", async () => {
+    // The tier is read off this column. If it silently drops out of the select
+    // list every row looks like Tier A and gets the one-hour window, including
+    // partners with a payment in flight.
+    await run();
+
+    const columns = String(venueScans()[0]?.filters[0]?.args[0] ?? "");
+    expect(columns).toContain("checkout_started_at");
+    expect(columns).toContain("self_serve_created_at");
+  });
+
+  it("reports tierSplitActive: true on a normal tiered run", async () => {
+    seedVenue(minutesAgo(PENDING_SIGNUP_TTL_MINUTES_DEFAULT + 30), null);
+
+    const body = await run();
+
+    expect(body.venues?.tierSplitActive).toBe(true);
+  });
+
+  it("sweeps a Tier A and a Tier B venue in the SAME run without cross-contaminating tallies", async () => {
+    // Two different partners, two different clocks. Tier A's abandoner never
+    // touched Stripe; Tier B's reached it long enough ago that a card would have
+    // settled by now. Each must be judged under its OWN window in one pass.
+    vi.stubEnv("SIGNUP_SWEEP_DELETE_ENABLED", "1");
+    state.tables.venues = [
+      {
+        id: "never-reached",
+        name: "Never Reached",
+        hidden: true,
+        self_serve_created_at: minutesAgo(PENDING_SIGNUP_TTL_MINUTES_DEFAULT + 30),
+        checkout_started_at: null,
+      },
+      {
+        id: "reached-and-abandoned",
+        name: "Reached And Abandoned",
+        hidden: true,
+        self_serve_created_at: daysAgo(SWEEP_ABANDON_AFTER_DAYS + 3),
+        checkout_started_at: daysAgo(SWEEP_ABANDON_AFTER_DAYS + 1),
+      },
+    ];
+    state.tables.venue_owner_venues = [
+      { id: "link-1", owner_id: "owner-a", venue_id: "never-reached" },
+      { id: "link-2", owner_id: "owner-b", venue_id: "reached-and-abandoned" },
+    ];
+    state.tables.venue_owners = [
+      { id: "owner-a", auth_id: "auth-a" },
+      { id: "owner-b", auth_id: "auth-b" },
+    ];
+    state.tables.billing_subscriptions = [];
+
+    const body = await run();
+
+    expect(body.venues?.candidates).toBe(2);
+    expect(body.venues?.tierA).toBe(1);
+    expect(body.venues?.tierB).toBe(1);
+    expect(body.venues?.deleted).toBe(2);
+
+    const byId = new Map((body.venues?.venues ?? []).map((v) => [v.venueId, v]));
+    expect(byId.get("never-reached")?.tier).toBe("never-started-checkout");
+    expect(byId.get("reached-and-abandoned")?.tier).toBe("reached-checkout");
+    expect(state.deletedAuthUserIds.sort()).toEqual(["auth-a", "auth-b"]);
+  });
+
+  it("does NOT sweep a Tier A candidate alongside a Tier B venue that has not cleared ITS window", async () => {
+    // The mixed run above proves both tiers fire together; this proves one
+    // tier's clock cannot borrow the other's — the Tier B venue here is old
+    // enough for Tier A's TTL but not for its own 7-day window.
+    state.tables.venues = [
+      {
+        id: "never-reached",
+        name: "Never Reached",
+        hidden: true,
+        self_serve_created_at: minutesAgo(PENDING_SIGNUP_TTL_MINUTES_DEFAULT + 30),
+        checkout_started_at: null,
+      },
+      {
+        id: "recently-reached",
+        name: "Recently Reached",
+        hidden: true,
+        self_serve_created_at: daysAgo(SWEEP_ABANDON_AFTER_DAYS + 3),
+        checkout_started_at: hoursAgo(1),
+      },
+    ];
+    state.tables.venue_owner_venues = [{ id: "link-1", owner_id: "owner-a", venue_id: "never-reached" }];
+    state.tables.venue_owners = [{ id: "owner-a", auth_id: "auth-a" }];
+    state.tables.billing_subscriptions = [];
+
+    const body = await run();
+
+    expect(body.venues?.candidates).toBe(1);
+    expect(body.venues?.tierA).toBe(1);
+    expect(body.venues?.tierB).toBe(0);
+    expect(body.venues?.venues[0].venueId).toBe("never-reached");
+  });
+
+  describe("Tier A — never reached Stripe", () => {
+    it("sweeps a venue past the one-hour TTL", async () => {
+      seedVenue(minutesAgo(PENDING_SIGNUP_TTL_MINUTES_DEFAULT + 30), null);
+
+      const body = await run();
+
+      expect(body.venues?.candidates).toBe(1);
+      expect(body.venues?.tierA).toBe(1);
+      expect(body.venues?.tierB).toBe(0);
+      expect(body.venues?.venues[0].tier).toBe("never-started-checkout");
+    });
+
+    it("KEEPS a venue younger than the TTL — the partner may still be on the setup page", async () => {
+      seedVenue(minutesAgo(PENDING_SIGNUP_TTL_MINUTES_DEFAULT - 30), null);
+
+      const body = await run();
+
+      expect(body.venues?.candidates).toBe(0);
+      expect(body.venues?.tierA).toBe(0);
+      // Fetched by the looser scan cutoff, then correctly put back down.
+      expect(body.venues?.scanned).toBe(1);
+    });
+
+    it("honours PENDING_SIGNUP_TTL_MINUTES", async () => {
+      vi.stubEnv("PENDING_SIGNUP_TTL_MINUTES", "180");
+      seedVenue(hoursAgo(2), null);
+
+      const body = await run();
+
+      expect(body.venues?.ttlMinutes).toBe(180);
+      expect(body.venues?.candidates).toBe(0);
+    });
+
+    it("clamps a dangerously small TTL up to the floor", async () => {
+      // A one-minute TTL would reap a venue while its partner is still reading
+      // the page that pays for it.
+      vi.stubEnv("PENDING_SIGNUP_TTL_MINUTES", "1");
+
+      const body = await run();
+
+      expect(body.venues?.ttlMinutes).toBe(PENDING_SIGNUP_TTL_MINUTES_FLOOR);
+    });
+
+    it("falls back to the default on an unparseable TTL", async () => {
+      vi.stubEnv("PENDING_SIGNUP_TTL_MINUTES", "soon");
+
+      const body = await run();
+
+      expect(body.venues?.ttlMinutes).toBe(PENDING_SIGNUP_TTL_MINUTES_DEFAULT);
+    });
+  });
+
+  describe("Tier B — reached Stripe", () => {
+    it("KEEPS a long-abandoned venue whose partner reached Stripe an hour ago", async () => {
+      // THE sharp case, and the one the pre-Phase-4 predicate got wrong: the
+      // venue row is ten days old, but the partner came back, opened Checkout,
+      // and their card may be settling right now. Sweeping it would delete the
+      // venue the webhook is about to write a subscription against.
+      vi.stubEnv("SIGNUP_SWEEP_DELETE_ENABLED", "1");
+      seedVenue(daysAgo(SWEEP_ABANDON_AFTER_DAYS + 3), hoursAgo(1));
+
+      const body = await run();
+
+      expect(body.venues?.candidates).toBe(0);
+      expect(body.venues?.deleted).toBe(0);
+      expect(state.deletes).toHaveLength(0);
+    });
+
+    it("sweeps a venue once BOTH stamps clear the 7-day window", async () => {
+      seedVenue(daysAgo(SWEEP_ABANDON_AFTER_DAYS + 3), daysAgo(SWEEP_ABANDON_AFTER_DAYS + 1));
+
+      const body = await run();
+
+      expect(body.venues?.candidates).toBe(1);
+      expect(body.venues?.tierB).toBe(1);
+      expect(body.venues?.tierA).toBe(0);
+      expect(body.venues?.venues[0].tier).toBe("reached-checkout");
+    });
+
+    it("does NOT get Tier A's one-hour window just because it is old enough for it", async () => {
+      seedVenue(hoursAgo(6), hoursAgo(5));
+
+      const body = await run();
+
+      expect(body.venues?.candidates).toBe(0);
+    });
+
+    it("treats an unparseable checkout stamp as just-now — conservative, keeps the venue", async () => {
+      seedVenue(daysAgo(SWEEP_ABANDON_AFTER_DAYS + 3), "not-a-timestamp");
+
+      const body = await run();
+
+      expect(body.venues?.candidates).toBe(0);
+    });
+  });
+
+  describe("before the migration lands", () => {
+    const MISSING = "column venues.checkout_started_at does not exist";
+
+    it("falls back to the single 7-day window when the column is not deployed", async () => {
+      state.readErrorsOnce.venues = MISSING;
+      seedVenue(daysAgo(SWEEP_ABANDON_AFTER_DAYS + 1), null);
+
+      const body = await run();
+
+      expect(body.venues?.tierSplitActive).toBe(false);
+      expect(body.venues?.errors).toEqual([]);
+      expect(body.venues?.candidates).toBe(1);
+      // Not a tier — see SweepTier's doc comment. Neither counter attributes to it.
+      expect(body.venues?.tierA).toBe(0);
+      expect(body.venues?.tierB).toBe(0);
+      expect(body.venues?.venues[0].tier).toBe("stamp-column-missing");
+      // Second scan drops the column and re-applies the 7-day cutoff.
+      const scans = venueScans();
+      expect(String(scans[1]?.filters[0]?.args[0] ?? "")).not.toContain("checkout_started_at");
+      expect(scans[1]?.filters.some((f) => f.op === "lt")).toBe(true);
+    });
+
+    it("still fails CLOSED on any OTHER venues read error", async () => {
+      // Degrading a timeout into "run the legacy scan" is how a broken sweep
+      // looks healthy for a week.
+      state.readErrors.venues = "timeout";
+      seedVenue(daysAgo(SWEEP_ABANDON_AFTER_DAYS + 1), null);
+
+      const body = await run();
+
+      expect(body.venues?.tierSplitActive).toBe(true);
+      expect(body.venues?.errors.join(" ")).toContain("venues-read-failed");
+      expect(body.venues?.candidates).toBe(0);
+      expect(venueScans()).toHaveLength(1);
+    });
+  });
+
+  describe("the safety rail still applies to the tiered set", () => {
+    it("aborts when the ELIGIBLE candidates blow past the cap", async () => {
+      vi.stubEnv("SIGNUP_SWEEP_DELETE_ENABLED", "1");
+      state.tables.venues = Array.from({ length: SWEEP_MAX_VENUES_PER_RUN + 5 }, (_, i) => ({
+        id: `dead-${i}`,
+        name: `Dead ${i}`,
+        hidden: true,
+        self_serve_created_at: hoursAgo(5),
+        checkout_started_at: null,
+      }));
+
+      const body = await run();
+
+      expect(body.venues?.abortedOverCap).toBe(true);
+      expect(body.venues?.deleted).toBe(0);
+      expect(state.deletes).toHaveLength(0);
+    });
+
+    it("does NOT abort on rows the tier cutoffs put back down", async () => {
+      // The cap is a signal about how much this run would DELETE. Counting the
+      // not-yet-abandoned rows the wider scan drags in would make it fire on a
+      // healthy pipeline of in-flight signups.
+      state.tables.venues = [
+        ...Array.from({ length: SWEEP_MAX_VENUES_PER_RUN + 5 }, (_, i) => ({
+          id: `fresh-${i}`,
+          name: `Fresh ${i}`,
+          hidden: true,
+          self_serve_created_at: minutesAgo(5),
+          checkout_started_at: null,
+        })),
+        {
+          id: "dead-bar",
+          name: "Dead Bar",
+          hidden: true,
+          self_serve_created_at: hoursAgo(5),
+          checkout_started_at: null,
+        },
+      ];
+      state.tables.venue_owner_venues = [{ id: "link-1", owner_id: "owner-1", venue_id: "dead-bar" }];
+      state.tables.venue_owners = [{ id: "owner-1", auth_id: "auth-1" }];
+
+      const body = await run();
+
+      expect(body.venues?.abortedOverCap).toBe(false);
+      expect(body.venues?.candidates).toBe(1);
+      expect(body.venues?.venues[0].venueId).toBe("dead-bar");
+    });
+  });
+
+  it("a venue with an unparseable self_serve_created_at is left alone and reported", async () => {
+    seedVenue("whenever", null);
+
+    const body = await run();
+
+    expect(body.venues?.candidates).toBe(0);
+    expect(body.venues?.errors.join(" ")).toContain("venue-stamp-unparseable");
+  });
+
+  it("the billing exclusion still wins over both tiers", async () => {
+    seedVenue(hoursAgo(5), null);
+    state.tables.billing_subscriptions = [
+      { id: "sub-1", venue_id: "dead-bar", owner_id: "owner-1", status: "cancelled" },
+    ];
+
+    const body = await run();
+
+    expect(body.venues?.candidates).toBe(0);
+    expect(body.venues?.tierA).toBe(0);
   });
 });
 

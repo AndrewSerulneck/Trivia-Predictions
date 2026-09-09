@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { OWNER_EMAIL_TAKEN_MESSAGE, ownerEmailExists } from "@/lib/ownerEmailAvailability";
+import { OWNER_EMAIL_TAKEN_MESSAGE } from "@/lib/ownerEmailAvailability";
+import { classifyEmailForSignup } from "@/lib/pendingSignup";
 import { rateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { isSelfServeSignupEnabled, isValidSignupEmail, SIGNUP_FIELD_LIMITS } from "@/lib/selfServeSignup";
 
@@ -15,8 +16,14 @@ import { isSelfServeSignupEnabled, isValidSignupEmail, SIGNUP_FIELD_LIMITS } fro
 //
 // IT IS A UX CHECK, NOT A GATE. Nothing here creates, reserves, or locks
 // anything, and a caller can skip it entirely. `POST /api/owner/signup` re-runs
-// the same lookup through the same module and stays the authority — which also
-// covers the race where two people claim one email between check and submit.
+// the same classifier through the same module and stays the authority — which
+// also covers the race where two people claim one email between check and submit.
+//
+// A PENDING SIGNUP IS "AVAILABLE" (docs/abandoned-signup-cleanup-plan.md Phase
+// 2b). `classifyEmailForSignup` distinguishes a real account from an unpaid,
+// never-finished one; only the former blocks. The submit route supersedes a
+// pending collision synchronously, so surfacing it here as "taken" would strand
+// a returning partner on a dead end that no longer exists (plan §0.1).
 //
 // PUBLIC, UNAUTHENTICATED AND AN ENUMERATION ORACLE. Gated on the flag +
 // `rateLimit()` like its /api/signup/* siblings, never `requireAdminAuth`. The
@@ -49,15 +56,18 @@ export async function POST(request: Request) {
     return json({ ok: false, error: "That email doesn't look right — check for a typo." }, 400);
   }
 
-  const result = await ownerEmailExists(email);
+  const result = await classifyEmailForSignup(email);
   if (!result.ok) {
     console.error("[SignupEmailCheck] lookup-failed", { message: result.message });
     return json({ ok: false, error: "We couldn't check that email right now. Please try again." }, 503);
   }
 
+  // Only a real account blocks. A pending signup will be superseded at submit.
+  const blocked = result.exists && result.kind === "account";
+
   return json({
     ok: true,
-    available: !result.exists,
-    ...(result.exists ? { error: OWNER_EMAIL_TAKEN_MESSAGE } : {}),
+    available: !blocked,
+    ...(blocked ? { error: OWNER_EMAIL_TAKEN_MESSAGE } : {}),
   });
 }

@@ -401,6 +401,127 @@ describe("fail-closed", () => {
   });
 });
 
+describe("§4.1b — the signup submit is two buckets, identity then IP", () => {
+  /**
+   * docs/abandoned-signup-cleanup-plan.md §4.1b. The failure this replaces:
+   * `signupSubmit` was 5/hour keyed on the IP alone, and it fails CLOSED — so a
+   * partner who fumbled six times, or the second member of staff on the bar's
+   * own WiFi, got a 429 telling them to wait an hour. That is the exact error
+   * the abandoned-signup plan exists to remove.
+   *
+   * The replacement is two buckets whose ORDER is load-bearing, so each half is
+   * pinned separately below.
+   */
+
+  const submit = async (ip: string, email: string) => {
+    const { rateLimitSignupSubmit } = await import("@/lib/rateLimit");
+    return rateLimitSignupSubmit(req("http://localhost/api/owner/signup", { ip }), email);
+  };
+
+  it("claims the identity bucket first and the IP bucket second, with each rule's own numbers", async () => {
+    enableFlag();
+    const { SIGNUP_RATE_LIMITS } = await import("@/lib/rateLimit");
+
+    await expect(submit("203.0.113.9", "owner@bar.test")).resolves.toMatchObject({ allowed: true });
+
+    expect(mocks.rpcCalls).toHaveLength(2);
+    expect(mocks.rpcCalls[0]).toMatchObject({
+      p_window_seconds: SIGNUP_RATE_LIMITS.signupSubmit.windowSeconds,
+      p_max: SIGNUP_RATE_LIMITS.signupSubmit.max,
+    });
+    expect(mocks.rpcCalls[1]).toMatchObject({
+      p_window_seconds: SIGNUP_RATE_LIMITS.signupSubmitIp.windowSeconds,
+      p_max: SIGNUP_RATE_LIMITS.signupSubmitIp.max,
+    });
+    // Two DIFFERENT ledger keys, or they would share one window and the split
+    // would be decorative.
+    expect(mocks.rpcCalls[0].p_ip_hash).not.toBe(mocks.rpcCalls[1].p_ip_hash);
+  });
+
+  it("one person's fumbling does not lock out the next person on the same WiFi", async () => {
+    enableFlag();
+    const { SIGNUP_RATE_LIMITS } = await import("@/lib/rateLimit");
+    const ip = "198.51.100.20";
+
+    // Staff member one burns their whole identity bucket.
+    for (let i = 0; i < SIGNUP_RATE_LIMITS.signupSubmit.max; i += 1) {
+      await expect(submit(ip, "first@bar.test")).resolves.toMatchObject({ allowed: true });
+    }
+    await expect(submit(ip, "first@bar.test")).resolves.toMatchObject({ allowed: false });
+
+    // Staff member two, same IP, is unaffected — this is the whole point.
+    await expect(submit(ip, "second@bar.test")).resolves.toMatchObject({ allowed: true });
+  });
+
+  it("a denied identity bucket never spends an outer IP slot", async () => {
+    enableFlag();
+    const { SIGNUP_RATE_LIMITS } = await import("@/lib/rateLimit");
+    const ip = "198.51.100.21";
+
+    for (let i = 0; i < SIGNUP_RATE_LIMITS.signupSubmit.max; i += 1) {
+      await submit(ip, "first@bar.test");
+    }
+    const before = mocks.rpcCalls.length;
+    const outerRowsBefore = mocks.inserted.length;
+
+    await expect(submit(ip, "first@bar.test")).resolves.toMatchObject({ allowed: false });
+
+    // Exactly ONE further RPC — the inner one, which denied. The outer bucket
+    // was never consulted, so the fumbler cannot eat the venue's shared ceiling.
+    expect(mocks.rpcCalls).toHaveLength(before + 1);
+    expect(mocks.inserted).toHaveLength(outerRowsBefore);
+  });
+
+  it("varying the email does NOT escape the limiter — the IP bucket still caps it", async () => {
+    enableFlag();
+    const { SIGNUP_RATE_LIMITS } = await import("@/lib/rateLimit");
+    const ip = "198.51.100.22";
+    const cap = SIGNUP_RATE_LIMITS.signupSubmitIp.max;
+
+    // A fresh email every time, so the inner bucket always allows.
+    for (let i = 0; i < cap; i += 1) {
+      await expect(submit(ip, `throwaway${i}@spam.test`)).resolves.toMatchObject({ allowed: true });
+    }
+    await expect(submit(ip, `throwaway${cap}@spam.test`)).resolves.toMatchObject({
+      allowed: false,
+    });
+  });
+
+  it("normalises the email, so case and whitespace are one bucket, not three", async () => {
+    enableFlag();
+    await submit("198.51.100.23", "Owner@Bar.test");
+    await submit("198.51.100.23", "  owner@bar.test  ");
+
+    // Same inner key both times (calls 0 and 2 — 1 and 3 are the outer bucket).
+    expect(mocks.rpcCalls[0].p_ip_hash).toBe(mocks.rpcCalls[2].p_ip_hash);
+  });
+
+  it("an empty identity is one shared per-IP bucket, not a fresh one each time", async () => {
+    enableFlag();
+    // An unparseable or oversized body yields "" — it must be the conservative
+    // direction (everyone shares one bucket), never an escape hatch.
+    await submit("198.51.100.24", "");
+    await submit("198.51.100.24", "");
+
+    expect(mocks.rpcCalls[0].p_ip_hash).toBe(mocks.rpcCalls[2].p_ip_hash);
+  });
+
+  it("fails CLOSED in the outer tier too, not just the inner one", async () => {
+    enableFlag();
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    // Let the inner claim through, then break the RPC before the outer one.
+    const ip = "198.51.100.25";
+    await submit(ip, "owner@bar.test");
+    mocks.rpcError = { message: "connection reset" };
+
+    await expect(submit(ip, "owner@bar.test")).resolves.toMatchObject({
+      allowed: false,
+      unavailable: true,
+    });
+    errors.mockRestore();
+  });
+});
+
 describe("hash stability", () => {
   it("is deterministic per (bucket, ip) and differs across bucket, ip and salt", async () => {
     process.env.SESSION_SECRET = "salt-one";
@@ -412,6 +533,16 @@ describe("hash stability", () => {
     expect(a).not.toContain("203.0.113.7");
     expect(hashRequesterIp("placesPredict", "203.0.113.7")).not.toBe(a);
     expect(hashRequesterIp("mapsKey", "203.0.113.8")).not.toBe(a);
+
+    // §4.1b — an identity narrows the bucket below the IP, and is itself never
+    // recoverable from the digest.
+    const withIdentity = hashRequesterIp("signupSubmit", "203.0.113.7", "owner@bar.test");
+    expect(withIdentity).toBe(hashRequesterIp("signupSubmit", "203.0.113.7", "owner@bar.test"));
+    expect(withIdentity).not.toContain("owner@bar.test");
+    expect(hashRequesterIp("signupSubmit", "203.0.113.7", "other@bar.test")).not.toBe(withIdentity);
+    // An EMPTY identity must hash exactly as it did before the parameter
+    // existed, so adding it resets no live window.
+    expect(hashRequesterIp("mapsKey", "203.0.113.7", "")).toBe(a);
 
     vi.resetModules();
     process.env.SESSION_SECRET = "salt-two";

@@ -10,6 +10,7 @@ import {
   getCurrentOrNextScheduleWindow,
   utcIsoToDatetimeLocalValue,
 } from "@/lib/categoryBlitzScheduleTime";
+import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 import { gameDurationMinutes, isContinuousDefaultEnabled, roundsFromWindowMinutes } from "@/lib/categoryBlitzShared";
 import { liveTriviaDurationMinutes, roundsFromLiveTriviaWindowMinutes } from "@/lib/liveTriviaShared";
 import type { CategoryBlitzRecurringType, OwnerSchedule, OwnerScheduleGameType } from "@/types";
@@ -166,7 +167,8 @@ const OwnerSchedulePage = () => {
       try {
         const res = await fetch("/api/owner/venues");
         if (res.status === 401) {
-          router.push("/owner/login");
+          const body = (await res.json().catch(() => ({}))) as { code?: string };
+          router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
         const json = (await res.json()) as { ok: boolean; venues?: Venue[] };
@@ -193,7 +195,8 @@ const OwnerSchedulePage = () => {
         { cache: "no-store" },
       );
       if (res.status === 401) {
-        router.push("/owner/login");
+        const body = (await res.json().catch(() => ({}))) as { code?: string };
+        router.push(ownerAuthRecoveryPath(body.code));
         return;
       }
       const json = (await res.json()) as { ok: boolean; schedules?: OwnerSchedule[]; error?: string };

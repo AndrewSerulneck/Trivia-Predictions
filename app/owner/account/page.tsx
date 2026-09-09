@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 const INVALID_EMAIL_ERROR = "Enter a valid email address.";
@@ -76,7 +77,8 @@ const OwnerAccountPage = () => {
       try {
         const response = await fetch("/api/owner/account", { cache: "no-store" });
         if (response.status === 401) {
-          router.push("/owner/login");
+          const body = (await response.json().catch(() => ({}))) as { code?: string };
+          router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
 
@@ -137,7 +139,8 @@ const OwnerAccountPage = () => {
         }),
       });
       if (response.status === 401) {
-        router.push("/owner/login");
+        const body = (await response.json().catch(() => ({}))) as { code?: string };
+        router.push(ownerAuthRecoveryPath(body.code));
         return;
       }
 
@@ -189,7 +192,8 @@ const OwnerAccountPage = () => {
         }),
       });
       if (response.status === 401) {
-        router.push("/owner/login");
+        const body = (await response.json().catch(() => ({}))) as { code?: string };
+        router.push(ownerAuthRecoveryPath(body.code));
         return;
       }
 
@@ -219,7 +223,8 @@ const OwnerAccountPage = () => {
         method: "POST",
       });
       if (response.status === 401) {
-        router.push("/owner/login");
+        const body = (await response.json().catch(() => ({}))) as { code?: string };
+        router.push(ownerAuthRecoveryPath(body.code));
         return;
       }
 

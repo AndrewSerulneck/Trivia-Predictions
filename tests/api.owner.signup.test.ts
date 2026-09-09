@@ -43,7 +43,16 @@ const mocks = vi.hoisted(() => ({
   // --- table fixtures -------------------------------------------------------
   venues: [] as Array<Record<string, unknown>>,
   links: [] as Array<{ venue_id: string }>,
-  existingOwner: null as { id: string } | null,
+  existingOwner: null as { id: string; auth_id?: string | null; created_at?: string } | null,
+  // --- pending-signup predicate (lib/pendingSignup.ts, reached via
+  //     classifyEmailForSignup when `existingOwner` is set) ------------------
+  /** venue_owner_venues rows for the existing owner, by owner_id. Empty (the
+   *  default) means "no linked venue" -> not pending -> kind: "account". */
+  pendingLinks: [] as Array<{ venue_id: string }>,
+  /** venues rows the predicate's `.in("id", …)` read returns. */
+  pendingVenues: [] as Array<Record<string, unknown>>,
+  /** billing_subscriptions rows for the owner/venue. Any row -> not pending. */
+  pendingBilling: [] as Array<Record<string, unknown>>,
   // --- injected failures ----------------------------------------------------
   ownerLookupError: null as { message: string } | null,
   ownerInsertError: null as { message: string } | null,
@@ -75,12 +84,17 @@ type Builder = {
   select: () => Builder;
   order: (column: string, options?: { ascending?: boolean }) => Builder;
   eq: (column: string, value: unknown) => Builder;
+  neq: (column: string, value: unknown) => Builder;
+  in: (column: string, values: unknown[]) => Builder;
+  not: (column: string, operator: string, value: unknown) => Builder;
   gte: (column: string, value: unknown) => Builder;
   lte: (column: string, value: unknown) => Builder;
   insert: (payload: Record<string, unknown>) => Builder;
   update: (payload: Record<string, unknown>) => Builder;
   delete: () => Builder;
-  limit: () => Promise<QueryResult>;
+  /** Chainable AND thenable: `await q.limit(1)` and `q.limit(1).returns()` both work. */
+  limit: () => Builder;
+  returns: () => Promise<QueryResult>;
   maybeSingle: () => Promise<QueryResult>;
   single: () => Promise<QueryResult>;
   /** `.delete().eq(...)` and a bare `.insert(...)` are awaited with no terminal call. */
@@ -107,12 +121,33 @@ function resolveQuery(ctx: Ctx): QueryResult {
           ? { data: null, error: mocks.ownerInsertError }
           : { data: { id: "owner-1" }, error: null };
       }
+      // The auth.users FK guard (lib/signupSweep.ts) checks venue_owners by
+      // auth_id, with the pending owner's own row excluded via .neq — model that
+      // as "no other owner references this auth user".
+      if (ctx.filters.auth_id !== undefined) return { data: [], error: null };
       return mocks.ownerLookupError
         ? { data: null, error: mocks.ownerLookupError }
         : { data: mocks.existingOwner, error: null };
 
+    case "billing_subscriptions":
+      return { data: mocks.pendingBilling, error: null };
+
+    // The pending-signup predicate's auth-guard reference checks — none of these
+    // reference the auth user in this suite's fixtures.
+    case "accounts":
+    case "users":
+    case "username_change_attempts":
+    case "username_change_audit":
+    case "category_blitz_submissions":
+    case "category_blitz_session_participants":
+      return { data: [], error: null };
+
     case "venues": {
       if (mocks.venueScanError) return { data: null, error: mocks.venueScanError };
+      // The pending-signup predicate reads venues with `.in("id", venueIds)`.
+      if (Array.isArray(ctx.filters.id)) {
+        return { data: mocks.pendingVenues, error: null };
+      }
       if (typeof ctx.filters.id === "string") {
         return { data: mocks.venues.find((row) => row.id === ctx.filters.id) ?? null, error: null };
       }
@@ -125,6 +160,11 @@ function resolveQuery(ctx: Ctx): QueryResult {
     case "venue_owner_venues":
       if (ctx.mode === "insert") {
         return mocks.linkInsertError ? { data: null, error: mocks.linkInsertError } : { data: null, error: null };
+      }
+      // The pending-signup predicate reads this by owner_id; the route's own
+      // `venueHasOwner` reads it by venue_id.
+      if (ctx.filters.owner_id !== undefined) {
+        return { data: mocks.pendingLinks, error: null };
       }
       return { data: mocks.links.filter((link) => link.venue_id === ctx.filters.venue_id), error: null };
 
@@ -148,6 +188,12 @@ function builderFor(table: string): Builder {
       ctx.filters[column] = value;
       return builder;
     },
+    neq: () => builder,
+    in: (column: string, values: unknown[]) => {
+      ctx.filters[column] = values;
+      return builder;
+    },
+    not: () => builder,
     gte: (column: string, value: unknown) => {
       if (table === "venues") mocks.venueScanBounds[`gte:${column}`] = value;
       ctx.filters[column] = value;
@@ -172,7 +218,8 @@ function builderFor(table: string): Builder {
       ctx.mode = "delete";
       return builder;
     },
-    limit: settle,
+    limit: () => builder,
+    returns: settle,
     maybeSingle: settle,
     single: settle,
     then: (onOk, onErr) => settle().then(onOk, onErr),
@@ -223,6 +270,17 @@ vi.mock("@/lib/supabaseAdmin", () => ({
 // tests/lib.admin.create-venue-self-serve.test.ts.
 vi.mock("@/lib/admin", () => ({
   createAdminVenue: (...args: unknown[]) => mocks.createAdminVenue(...args),
+}));
+
+// docs/abandoned-signup-cleanup-plan.md Phase 2a: a pending-signup collision is
+// superseded by `purgePendingSignup`, which cancels abandoned Stripe objects
+// first. Stub that so this suite never reaches a real Stripe client.
+vi.mock("@/lib/stripeIncomplete", () => ({
+  sweepAbandonedIncompleteSubscriptions: vi.fn(async () => ({
+    ok: true,
+    cancelledSubscriptionIds: [],
+    errors: [],
+  })),
 }));
 
 const ORIGINAL_ENV = { ...process.env };
@@ -294,6 +352,9 @@ beforeEach(() => {
   mocks.venues = [];
   mocks.links = [];
   mocks.existingOwner = null;
+  mocks.pendingLinks = [];
+  mocks.pendingVenues = [];
+  mocks.pendingBilling = [];
   mocks.ownerLookupError = null;
   mocks.ownerInsertError = null;
   mocks.linkInsertError = null;
@@ -339,6 +400,33 @@ describe("gates", () => {
     expect(response.headers.get("Retry-After")).toBeTruthy();
     expect(mocks.createUser).not.toHaveBeenCalled();
     expect(mocks.createAdminVenue).not.toHaveBeenCalled();
+    // Denied by the INNER (identity) bucket, which is checked first — so the
+    // outer IP bucket was never consulted and spent nothing. §4.1b.
+    expect(mocks.rateLimitClaims).toHaveLength(1);
+  });
+
+  it("spends two buckets — identity first, then IP — and keys the first on the email (§4.1b)", async () => {
+    const { SIGNUP_RATE_LIMITS } = await import("@/lib/rateLimit");
+    const POST = await load();
+
+    await POST(post(VALID_BODY));
+    expect(mocks.rateLimitClaims).toHaveLength(2);
+    expect(mocks.rateLimitClaims[0].params).toMatchObject({
+      p_max: SIGNUP_RATE_LIMITS.signupSubmit.max,
+    });
+    expect(mocks.rateLimitClaims[1].params).toMatchObject({
+      p_max: SIGNUP_RATE_LIMITS.signupSubmitIp.max,
+    });
+
+    // Same IP, different email → a different inner key but the SAME outer key.
+    // The first half is why a fumbling partner cannot lock out their colleague;
+    // the second is why varying the email cannot escape the limiter.
+    const first = mocks.rateLimitClaims.slice();
+    mocks.rateLimitClaims = [];
+    await POST(post({ ...VALID_BODY, email: "someone.else@bar.test" }));
+
+    expect(mocks.rateLimitClaims[0].params.p_ip_hash).not.toBe(first[0].params.p_ip_hash);
+    expect(mocks.rateLimitClaims[1].params.p_ip_hash).toBe(first[1].params.p_ip_hash);
   });
 });
 
@@ -389,7 +477,34 @@ describe("validation", () => {
 });
 
 describe("existing account", () => {
-  it("409s with code email_taken and the shared, sign-in-shaped message", async () => {
+  /** Seed a pending-signup collision (docs/abandoned-signup-cleanup-plan.md
+   *  Phase 1's predicate): an owner row, one hidden self-serve venue, no billing
+   *  row ever. `classifyEmailForSignup` classifies this `kind: "pending"`. */
+  const seedPendingCollision = () => {
+    mocks.existingOwner = {
+      id: "owner-pending",
+      auth_id: "auth-pending",
+      created_at: "2026-09-01T00:00:00.000Z",
+    };
+    mocks.pendingLinks = [{ venue_id: "venue-pending" }];
+    mocks.pendingVenues = [
+      {
+        id: "venue-pending",
+        name: null,
+        address: null,
+        street: null,
+        city: null,
+        state: null,
+        latitude: 40.7,
+        longitude: -74,
+        hidden: true,
+        self_serve_created_at: "2026-09-01T00:00:00.000Z",
+      },
+    ];
+    mocks.pendingBilling = [];
+  };
+
+  it("409s with code email_taken for a REAL account (paid, ever paid, or admin-activated)", async () => {
     mocks.existingOwner = { id: "owner-existing" };
     const POST = await load();
     const response = await POST(post(VALID_BODY));
@@ -426,6 +541,49 @@ describe("existing account", () => {
     // The one thing this branch must NEVER do: adopt, delete or reset a
     // pre-existing auth.users row. It may belong to a PLAYER.
     expect(mocks.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("SUPERSEDES a pending-signup collision: purges it, then creates the new account", async () => {
+    // Phase 2a. A returning partner types the same email; there is no 409 and no
+    // branch shown to them. The old debris is destroyed synchronously first.
+    seedPendingCollision();
+    const POST = await load();
+    const response = await POST(post(VALID_BODY));
+
+    expect(response.status).toBe(200);
+    const payload = await response.json();
+    expect(payload.ok).toBe(true);
+    expect(payload.code).toBeUndefined();
+
+    // The pending signup was torn down: its venue, its owner row, its auth user.
+    expect(deletesTo("venues")).toContainEqual({ table: "venues", filters: { id: "venue-pending" } });
+    expect(deletesTo("venue_owners")).toContainEqual({
+      table: "venue_owners",
+      filters: { id: "owner-pending" },
+    });
+    expect(mocks.deleteUser).toHaveBeenCalledWith("auth-pending");
+
+    // ...and the new signup went through.
+    expect(mocks.createUser).toHaveBeenCalled();
+    expect(insertsTo("venue_owners")).toHaveLength(1);
+  });
+
+  it("a pending owner that ALSO has a billing row is a real account — 409s, never purged", async () => {
+    // The billing row is the durable "has ever paid" proof; it flips the
+    // classification from pending to account even though the venue is still
+    // hidden. Nothing is torn down.
+    seedPendingCollision();
+    mocks.pendingBilling = [
+      { id: "sub-1", status: "active", owner_id: "owner-pending", venue_id: "venue-pending" },
+    ];
+    const POST = await load();
+    const response = await POST(post(VALID_BODY));
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({ code: "email_taken" });
+    expect(deletesTo("venues")).toHaveLength(0);
+    expect(deletesTo("venue_owners")).toHaveLength(0);
+    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 });
 
@@ -763,9 +921,12 @@ describe("field length caps (Phase 5a §2)", () => {
 
     expect(response.status).toBe(413);
     expect(mocks.createUser).not.toHaveBeenCalled();
-    // It still costs a rate-limit slot: an oversized body is exactly the shape a
-    // scripted abuser sends, and the limiter runs before the body is read.
-    expect(mocks.rateLimitClaims.filter((claim) => claim.allowed)).toHaveLength(1);
+    // It still costs a rate-limit slot in BOTH tiers. §4.1b moved the body read
+    // in front of the limiter (the inner bucket keys on the submitted email), so
+    // the 413 is deliberately deferred until after the limiter has spoken —
+    // an oversized body is exactly the shape a scripted abuser sends, and it
+    // must not become the one request that is free.
+    expect(mocks.rateLimitClaims.filter((claim) => claim.allowed)).toHaveLength(2);
   });
 
   it("413s a body that is under the cap in UTF-16 units but over it in BYTES (Finding #12)", async () => {

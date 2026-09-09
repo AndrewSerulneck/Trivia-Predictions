@@ -40,8 +40,72 @@ export const isOrphanAuthDeleteEnabled = (): boolean =>
 
 // --- Constants ---------------------------------------------------------------
 
-/** A hidden, unpaid self-serve venue older than this is abandoned. */
+/**
+ * TIER B — the partner reached Stripe (`venues.checkout_started_at` is stamped).
+ *
+ * A hidden, unpaid, STAMPED self-serve venue older than this is abandoned. DO NOT
+ * SHORTEN IT (docs/abandoned-signup-cleanup-plan.md Phase 4): a card can settle
+ * late, 3-D Secure can take a while, and a bank can hold a charge overnight. The
+ * money can still arrive days after the tab was closed, and the webhook that
+ * receives it needs the venue to still exist.
+ *
+ * This was the ONLY tier before Phase 4, which is why the fallback path below —
+ * the one taken while `checkout_started_at` is not deployed yet — is exactly this
+ * window applied to everything.
+ */
 export const SWEEP_ABANDON_AFTER_DAYS = 7;
+
+/**
+ * TIER A — the partner never reached Stripe (`checkout_started_at IS NULL`).
+ *
+ * Nothing can settle late for a venue that never opened a Checkout Session:
+ * Stripe has no Subscription and no PaymentIntent for it, so there is no money in
+ * flight and no webhook that could arrive. One hour is generous for "they are
+ * still reading /owner/billing/setup", and after Phase 2 nothing user-facing
+ * depends on this row surviving — a partner who comes back retries from scratch
+ * and their own abandoned signup is superseded, not collided with.
+ *
+ * The safety net for the partner who IS still on that page at minute 61 is Phase
+ * 3.1: `requireOwnerAuth` answers `401 { code: "no_venue" }` and
+ * /owner/billing/setup routes them into a fresh signup rather than a login page
+ * for an account that no longer exists. If that ever regresses, this tier becomes
+ * a dead end and the TTL must go back up until it is fixed.
+ */
+export const PENDING_SIGNUP_TTL_MINUTES_DEFAULT = 60;
+
+/**
+ * Floor on the env override. `PENDING_SIGNUP_TTL_MINUTES=1` would reap a venue
+ * while its partner is still reading the page that pays for it; nothing about
+ * this job is urgent enough to be worth that, so a too-small value is clamped and
+ * logged rather than honoured.
+ */
+export const PENDING_SIGNUP_TTL_MINUTES_FLOOR = 15;
+
+/**
+ * Tier A's window, in minutes. Server-side env var (no `NEXT_PUBLIC_`), so it
+ * moves without a redeploy — same convention as SIGNUP_SWEEP_DELETE_ENABLED.
+ * Unset, unparseable, or non-positive all fall back to the default; anything
+ * below the floor is clamped up to it.
+ */
+export const pendingSignupTtlMinutes = (): number => {
+  const raw = (process.env.PENDING_SIGNUP_TTL_MINUTES ?? "").trim();
+  if (!raw) return PENDING_SIGNUP_TTL_MINUTES_DEFAULT;
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    console.warn(
+      `[SignupSweep] ttl-invalid value=${raw} — using default ${PENDING_SIGNUP_TTL_MINUTES_DEFAULT}m`
+    );
+    return PENDING_SIGNUP_TTL_MINUTES_DEFAULT;
+  }
+  if (parsed < PENDING_SIGNUP_TTL_MINUTES_FLOOR) {
+    console.warn(
+      `[SignupSweep] ttl-below-floor value=${parsed} floor=${PENDING_SIGNUP_TTL_MINUTES_FLOOR}m — clamped`
+    );
+    return PENDING_SIGNUP_TTL_MINUTES_FLOOR;
+  }
+  return parsed;
+};
 
 /** Safety rail on job 1. More candidates than this means something is wrong. */
 export const SWEEP_MAX_VENUES_PER_RUN = 50;
@@ -102,9 +166,21 @@ const hasReservedEmailDomain = (email: string): boolean => {
 
 // --- Result shapes -----------------------------------------------------------
 
+/**
+ * Which retention tier a candidate was judged under — the honest question *did
+ * this partner ever reach Stripe?*, answered by `venues.checkout_started_at`.
+ *
+ * `stamp-column-missing` is not a tier; it is the fallback state before the
+ * column is deployed, in which every row is judged under Tier B's 7 days (i.e.
+ * exactly the pre-Phase-4 behaviour).
+ */
+export type SweepTier = "never-started-checkout" | "reached-checkout" | "stamp-column-missing";
+
 export type SweptVenue = {
   venueId: string;
   venueName: string;
+  /** The tier whose window this venue was found abandoned under. */
+  tier: SweepTier;
   /**
    * Owners deleted alongside the venue (live run) or that WOULD be deleted (dry
    * run). The dry-run projection is real, not a placeholder — it comes from the
@@ -128,6 +204,26 @@ export type VenueSweepResult = {
   errors: string[];
   /** True when the candidate set blew past SWEEP_MAX_VENUES_PER_RUN and nothing ran. */
   abortedOverCap: boolean;
+  /**
+   * Rows the candidate scan fetched, BEFORE the per-tier cutoffs were applied.
+   * `scanned - candidates` is mostly Tier B venues that reached Stripe recently
+   * and are correctly being left alone — which is the number to watch when
+   * reading a day of dry-run lines.
+   */
+  scanned: number;
+  /** Eligible candidates that never reached Stripe (Tier A, `PENDING_SIGNUP_TTL_MINUTES`). */
+  tierA: number;
+  /** Eligible candidates that did reach Stripe (Tier B, SWEEP_ABANDON_AFTER_DAYS). */
+  tierB: number;
+  /**
+   * False when `venues.checkout_started_at` is not deployed yet: the scan fell
+   * back to the single pre-Phase-4 7-day window and `tierA`/`tierB` are both 0.
+   * Watch for this staying false after the migration ships — it means the sweep
+   * is running a week behind what the plan intends, silently.
+   */
+  tierSplitActive: boolean;
+  /** Tier A's window as actually resolved this run (env override included). */
+  ttlMinutes: number;
 };
 
 export type OrphanSweepResult = {
@@ -143,15 +239,59 @@ export type OrphanSweepResult = {
 
 // --- Job 1: abandoned self-serve venues --------------------------------------
 
-type CandidateVenueRow = { id: string; name: string; self_serve_created_at: string | null };
+/**
+ * `checkout_started_at` is optional on the TYPE, not merely nullable, because the
+ * fallback scan does not select it at all. `undefined` (column absent from the
+ * projection) and `null` (column present, never stamped) are deliberately treated
+ * the same by `tierOf` — but only the tiered scan's rows are ever tiered, so an
+ * absent column can never be mistaken for "never reached Stripe".
+ */
+type CandidateVenueRow = {
+  id: string;
+  name: string;
+  self_serve_created_at: string | null;
+  checkout_started_at?: string | null;
+};
+
+const CANDIDATE_COLUMNS_TIERED = "id, name, self_serve_created_at, checkout_started_at";
+const CANDIDATE_COLUMNS_LEGACY = "id, name, self_serve_created_at";
+
+/**
+ * Is this read error "the `checkout_started_at` column does not exist yet"?
+ *
+ * The column arrives in its own migration, applied by hand to the LINKED
+ * PRODUCTION database, so there is a window — however short — in which this code
+ * is deployed and the column is not. PostgREST answers a select on an unknown
+ * column with SQLSTATE 42703; a stale schema cache answers PGRST204 with the
+ * column name in the message. Both mean the same thing here.
+ *
+ * Narrow on purpose: it must match ONLY this column. Any other read failure is a
+ * real failure and must keep failing closed — silently degrading a timeout into
+ * "run the legacy scan" is how a broken sweep looks healthy for a week.
+ */
+const isMissingCheckoutStampColumn = (error: { message?: string; code?: string }): boolean => {
+  const code = String(error.code ?? "");
+  if (code === "42703") return true;
+  const message = String(error.message ?? "").toLowerCase();
+  if (!message.includes("checkout_started_at")) return false;
+  return (
+    message.includes("does not exist") ||
+    message.includes("schema cache") ||
+    message.includes("could not find")
+  );
+};
+
+/** Tier A iff the venue has no Checkout stamp. See SweepTier. */
+const tierOf = (row: CandidateVenueRow): SweepTier =>
+  row.checkout_started_at ? "reached-checkout" : "never-started-checkout";
 
 /**
  * Delete the venues a partner created and never paid for.
  *
  * Predicate — and every clause of it is load-bearing:
  *   hidden = true                                  (never touch a live venue)
- *   self_serve_created_at < now() - 7 days         (only rows THIS flow stamped,
- *                                                   and only once stale)
+ *   self_serve_created_at IS NOT NULL              (only rows THIS flow stamped)
+ *   older than its TIER's window                   (see below)
  *   no billing_subscriptions row for the venue     (never touch a payer, past or
  *                                                   present — a cancelled
  *                                                   subscriber keeps its row)
@@ -162,6 +302,30 @@ type CandidateVenueRow = { id: string; name: string; self_serve_created_at: stri
  * creates has a link row, so filtering on it would mean the sweep reaps nothing,
  * ever. The stamp is the clock (and a claim refreshes it — Phase 5 §5a).
  *
+ * ── The two tiers (Phase 4) ─────────────────────────────────────────────────
+ *
+ * One window for everything was wrong in both directions: a week is far too long
+ * to hold the details of somebody who never got near a payment page, and it is
+ * exactly right for somebody whose card may still be settling. So the set is
+ * split on `venues.checkout_started_at`, stamped by POST /api/owner/billing/checkout
+ * immediately before it hands back a Checkout URL:
+ *
+ *   TIER A  checkout_started_at IS NULL  → pendingSignupTtlMinutes(), default 60m
+ *   TIER B  checkout_started_at IS SET   → SWEEP_ABANDON_AFTER_DAYS (7d), and BOTH
+ *                                          timestamps must be past it
+ *
+ * Tier B measures the LATER of the two stamps, which is stricter than the
+ * pre-Phase-4 behaviour it replaces. A venue created ten days ago whose partner
+ * came back and reached Stripe an hour ago has a payment in flight; sweeping it
+ * on the strength of `self_serve_created_at` alone would delete the venue the
+ * webhook is about to write a subscription against. Every widening of this
+ * function has to survive that question: *could money still be moving?*
+ *
+ * The tier split degrades to the legacy single 7-day window whenever
+ * `venues.checkout_started_at` is not deployed (see `isMissingCheckoutStampColumn`).
+ * That is the conservative direction — it sweeps LATER, never sooner — and it is
+ * what makes this file safe to deploy before, after, or without the migration.
+ *
  * Deletion order matches `unwind()` in app/api/owner/signup/route.ts, which is the
  * tested reference teardown: venue → venue_owners → auth user. Deleting the venue
  * cascades every venue_id FK (`tests/lib.venue-fk-cascade-guard.test.ts` proves
@@ -171,6 +335,7 @@ export async function sweepAbandonedSignupVenues(
   options: { dryRun?: boolean } = {}
 ): Promise<VenueSweepResult> {
   const dryRun = options.dryRun ?? !isVenueSweepDeleteEnabled();
+  const ttlMinutes = pendingSignupTtlMinutes();
   const result: VenueSweepResult = {
     dryRun,
     candidates: 0,
@@ -178,6 +343,11 @@ export async function sweepAbandonedSignupVenues(
     venues: [],
     errors: [],
     abortedOverCap: false,
+    scanned: 0,
+    tierA: 0,
+    tierB: 0,
+    tierSplitActive: true,
+    ttlMinutes,
   };
 
   if (!supabaseAdmin) {
@@ -185,24 +355,93 @@ export async function sweepAbandonedSignupVenues(
     return result;
   }
 
-  const cutoff = new Date(Date.now() - SWEEP_ABANDON_AFTER_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const db = supabaseAdmin;
+  const now = Date.now();
+  const tierBCutoffMs = now - SWEEP_ABANDON_AFTER_DAYS * 24 * 60 * 60 * 1000;
+  const tierACutoffMs = now - ttlMinutes * 60 * 1000;
+  const tierBCutoff = new Date(tierBCutoffMs).toISOString();
 
-  const candidateQuery = await supabaseAdmin
-    .from("venues")
-    .select("id, name, self_serve_created_at")
-    .eq("hidden", true)
-    .not("self_serve_created_at", "is", null)
-    .lt("self_serve_created_at", cutoff)
-    .order("self_serve_created_at", { ascending: true })
-    .limit(SWEEP_MAX_VENUES_PER_RUN + 1)
-    .returns<CandidateVenueRow[]>();
+  // One scan, filtered on the LOOSER of the two windows, then partitioned in
+  // memory. `Math.min` rather than plain Tier A: if the TTL is ever configured
+  // above seven days, Tier A stops being the looser bound and a DB-side filter on
+  // it would silently hide every eligible Tier B row.
+  const scanCutoff = new Date(Math.min(tierACutoffMs, tierBCutoffMs)).toISOString();
+
+  const scanVenues = (columns: string, cutoff: string) =>
+    db
+      .from("venues")
+      .select(columns)
+      .eq("hidden", true)
+      .not("self_serve_created_at", "is", null)
+      .lt("self_serve_created_at", cutoff)
+      .order("self_serve_created_at", { ascending: true })
+      // Oldest first, so a not-yet-abandoned row (fetched by the looser scan
+      // cutoff and dropped by its tier's window below) can never crowd an older,
+      // genuinely abandoned row out of the page.
+      .limit(SWEEP_MAX_VENUES_PER_RUN + 1)
+      .returns<CandidateVenueRow[]>();
+
+  let candidateQuery = await scanVenues(CANDIDATE_COLUMNS_TIERED, scanCutoff);
+
+  if (candidateQuery.error && isMissingCheckoutStampColumn(candidateQuery.error)) {
+    // The migration has not been applied yet. Fall back to the pre-Phase-4
+    // behaviour — one 7-day window for everything — rather than failing the run:
+    // the legacy sweep is correct, merely slower, and refusing to run at all
+    // would let real debris pile up unreported while the column is pending.
+    result.tierSplitActive = false;
+    console.warn(
+      "[SignupSweep] checkout-stamp-column-missing — venues.checkout_started_at is not deployed; " +
+        `falling back to the single ${SWEEP_ABANDON_AFTER_DAYS}-day window (Tier A is inert)`
+    );
+    candidateQuery = await scanVenues(CANDIDATE_COLUMNS_LEGACY, tierBCutoff);
+  }
 
   if (candidateQuery.error) {
     result.errors.push(`venues-read-failed: ${candidateQuery.error.message}`);
     return result;
   }
 
-  let candidates = candidateQuery.data ?? [];
+  const scanned = candidateQuery.data ?? [];
+  result.scanned = scanned.length;
+
+  /**
+   * Apply each row's own tier window. The scan's cutoff is only the looser of the
+   * two, so a Tier B row fetched here may be days away from being abandoned —
+   * this is where it is put back down.
+   */
+  const tiers = new Map<string, SweepTier>();
+  let candidates = scanned.filter((venue) => {
+    if (!result.tierSplitActive) {
+      // Legacy path: the scan cutoff already WAS the 7-day window.
+      tiers.set(venue.id, "stamp-column-missing");
+      return true;
+    }
+
+    const created = Date.parse(venue.self_serve_created_at ?? "");
+    // Unparseable stamp: the clock this whole job runs on is unreadable, so
+    // nothing about this row's age is known. Fail closed and leave it.
+    if (!Number.isFinite(created)) {
+      result.errors.push(`venue-stamp-unparseable venue=${venue.id}`);
+      return false;
+    }
+
+    const tier = tierOf(venue);
+    if (tier === "never-started-checkout") {
+      if (created >= tierACutoffMs) return false;
+      tiers.set(venue.id, tier);
+      return true;
+    }
+
+    // Tier B: the later of the two stamps must clear the 7-day window. An
+    // unparseable checkout stamp is treated as "just now" — the strictly
+    // conservative reading, since the only thing it can do is keep the venue.
+    const startedCheckout = Date.parse(venue.checkout_started_at ?? "");
+    const startedCheckoutMs = Number.isFinite(startedCheckout) ? startedCheckout : now;
+    if (created >= tierBCutoffMs || startedCheckoutMs >= tierBCutoffMs) return false;
+    tiers.set(venue.id, tier);
+    return true;
+  });
+
   if (candidates.length > SWEEP_MAX_VENUES_PER_RUN) {
     // Over the rail. Do nothing at all rather than delete an arbitrary 50 of an
     // unexpected pile — a run this size is a signal, not a workload.
@@ -235,11 +474,19 @@ export async function sweepAbandonedSignupVenues(
   const paidVenueIds = new Set((paidQuery.data ?? []).map((row) => row.venue_id));
   candidates = candidates.filter((venue) => !paidVenueIds.has(venue.id));
   result.candidates = candidates.length;
+  // Counted AFTER the billing exclusion, so `tierA + tierB === candidates` and the
+  // dry-run reader is looking at the same set the live run would act on.
+  for (const venue of candidates) {
+    const tier = tiers.get(venue.id);
+    if (tier === "never-started-checkout") result.tierA += 1;
+    else if (tier === "reached-checkout") result.tierB += 1;
+  }
 
   for (const venue of candidates) {
     const swept: SweptVenue = {
       venueId: venue.id,
       venueName: venue.name,
+      tier: tiers.get(venue.id) ?? "stamp-column-missing",
       ownerIdsDeleted: [],
       authUserIdsDeleted: [],
       ownerIdsKept: [],
@@ -273,7 +520,8 @@ export async function sweepAbandonedSignupVenues(
         }
       }
       console.log(
-        `[SignupSweep] venue-sweep-dry-run venue=${venue.id} ` +
+        `[SignupSweep] venue-sweep-dry-run venue=${venue.id} tier=${swept.tier} ` +
+          `created=${venue.self_serve_created_at ?? "?"} checkoutStarted=${venue.checkout_started_at ?? "none"} ` +
           `ownersToDelete=${swept.ownerIdsDeleted.length} ownersToKeep=${swept.ownerIdsKept.length} ` +
           `authUsersToDelete=${swept.authUserIdsDeleted.length}`
       );
@@ -287,6 +535,13 @@ export async function sweepAbandonedSignupVenues(
       continue;
     }
     result.deleted += 1;
+    // The live counterpart of the dry-run line above, and the only record that
+    // survives the run: an irreversible delete should say which window justified
+    // it, so a wrong tier is auditable after the fact rather than only before it.
+    console.log(
+      `[SignupSweep] venue-swept venue=${venue.id} tier=${swept.tier} ` +
+        `created=${venue.self_serve_created_at ?? "?"} checkoutStarted=${venue.checkout_started_at ?? "none"}`
+    );
 
     for (const ownerId of ownerIds) {
       const plan = await classifyOwnerForSweep(ownerId, venue.id, result.errors);

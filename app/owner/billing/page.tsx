@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { effectiveAmountCents } from "@/lib/billingDisplay";
+import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 
 type Discount = {
   label: string;
@@ -113,7 +114,8 @@ const OwnerBillingPage = () => {
   const refresh = useCallback(async () => {
     const response = await fetch("/api/owner/billing");
     if (response.status === 401) {
-      router.push("/owner/login");
+      const body = (await response.json().catch(() => ({}))) as { code?: string };
+      router.push(ownerAuthRecoveryPath(body.code));
       return;
     }
     const data = (await response.json()) as { ok: boolean; subscriptions?: Subscription[]; invoices?: Invoice[] };
@@ -127,7 +129,11 @@ const OwnerBillingPage = () => {
     const load = async () => {
       const response = await fetch("/api/owner/billing");
       if (cancelled) return;
-      if (response.status === 401) { router.push("/owner/login"); return; }
+      if (response.status === 401) {
+        const body = (await response.json().catch(() => ({}))) as { code?: string };
+        router.push(ownerAuthRecoveryPath(body.code));
+        return;
+      }
       const data = (await response.json()) as { ok: boolean; subscriptions?: Subscription[]; invoices?: Invoice[] };
       if (cancelled) return;
       setSubscription(data.subscriptions?.[0] ?? null);

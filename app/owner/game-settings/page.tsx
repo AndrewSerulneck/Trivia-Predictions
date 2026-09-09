@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 
 type Venue = {
   id: string;
@@ -53,7 +54,8 @@ const OwnerGameSettingsPage = () => {
       try {
         const res = await fetch("/api/owner/venues");
         if (res.status === 401) {
-          router.push("/owner/login");
+          const body = (await res.json().catch(() => ({}))) as { code?: string };
+          router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
         const json = (await res.json()) as { ok: boolean; venues?: Venue[] };
@@ -83,7 +85,8 @@ const OwnerGameSettingsPage = () => {
           cache: "no-store",
         });
         if (res.status === 401) {
-          router.push("/owner/login");
+          const body = (await res.json().catch(() => ({}))) as { code?: string };
+          router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
         const json = (await res.json()) as {
@@ -136,7 +139,8 @@ const OwnerGameSettingsPage = () => {
         }),
       });
       if (res.status === 401) {
-        router.push("/owner/login");
+        const body = (await res.json().catch(() => ({}))) as { code?: string };
+        router.push(ownerAuthRecoveryPath(body.code));
         return;
       }
       const json = (await res.json()) as {

@@ -413,12 +413,18 @@ describe("self-serve signup — the owner-email lookup has exactly one home", ()
     expect(offenders.map(rel).sort()).toEqual([...ALLOWED_OTHER_LOOKUPS, LOOKUP_MODULE].sort());
   });
 
-  it("both callers go through ownerEmailExists", () => {
+  it("both callers go through the shared classifyEmailForSignup", () => {
+    // docs/abandoned-signup-cleanup-plan.md Phase 2b replaced the boolean
+    // `ownerEmailExists` call with the `kind`-returning `classifyEmailForSignup`,
+    // which is built ON TOP of the same one-home lookup (it calls
+    // `findOwnerIdByEmail` from lib/ownerEmailAvailability.ts). Both signup
+    // callers must still go through ONE function so a pending vs. real-account
+    // classification can never drift between the pre-check and the submit.
     for (const route of ["app/api/signup/email-available/route.ts", "app/api/owner/signup/route.ts"]) {
       const src = stripComments(read(route));
-      expect(src, `${route} must call the shared lookup`).toMatch(/ownerEmailExists\(/);
-      expect(src, `${route} must import it from @/lib/ownerEmailAvailability`).toMatch(
-        /from\s+["']@\/lib\/ownerEmailAvailability["']/,
+      expect(src, `${route} must call the shared classifier`).toMatch(/classifyEmailForSignup\(/);
+      expect(src, `${route} must import it from @/lib/pendingSignup`).toMatch(
+        /from\s+["']@\/lib\/pendingSignup["']/,
       );
     }
   });
@@ -435,6 +441,35 @@ describe("self-serve signup — the owner-email lookup has exactly one home", ()
     expect(definers.map(rel)).toEqual([LOOKUP_MODULE]);
   });
 
+  it("the submit spends two buckets, identity BEFORE ip, from one shared helper (§4.1b)", () => {
+    // docs/abandoned-signup-cleanup-plan.md §4.1b. The order is the whole
+    // design: `claim_signup_attempt` records only ALLOWED calls, so checking the
+    // narrow identity bucket first is what stops one fumbling partner from
+    // eating the venue's shared IP ceiling. Inverting these two lines is a
+    // silent regression — nothing else in the suite would notice.
+    const lib = stripComments(read("lib/rateLimit.ts"));
+    const inner = lib.indexOf('rateLimit(request, "signupSubmit", { identity })');
+    const outer = lib.indexOf('rateLimit(request, "signupSubmitIp")');
+    expect(inner, "the identity-keyed claim must exist").toBeGreaterThan(-1);
+    expect(outer, "the IP-keyed outer claim must exist").toBeGreaterThan(-1);
+    expect(inner, "the identity bucket must be claimed BEFORE the IP bucket").toBeLessThan(outer);
+
+    // And the route must go through the helper, so the ordering can never be
+    // re-derived (or half-derived) at the call site.
+    const route = stripComments(read("app/api/owner/signup/route.ts"));
+    expect(route).toMatch(/rateLimitSignupSubmit\(request,\s*draft\.email\)/);
+    expect(route, "the submit route must not claim a signup bucket itself").not.toMatch(
+      /rateLimit\(request,\s*["']signupSubmit/,
+    );
+  });
+
+  it("the emailCheck bucket keeps its deliberate hour-long anti-enumeration window", () => {
+    // Pinned in CLAUDE.md. §4.1b retuned `signupSubmit` and added
+    // `signupSubmitIp`; it must not have widened this one on the way past.
+    const lib = stripComments(read("lib/rateLimit.ts"));
+    expect(lib).toMatch(/emailCheck:\s*\{\s*windowSeconds:\s*3600\s*,/);
+  });
+
   it("the pre-check is rate limited on its own bucket, and the flag gates it first", () => {
     const src = stripComments(read("app/api/signup/email-available/route.ts"));
     expect(src).toMatch(/isSelfServeSignupEnabled\(\)/);
@@ -443,10 +478,129 @@ describe("self-serve signup — the owner-email lookup has exactly one home", ()
     // lookup — an enumeration oracle should cost nothing when it is switched off.
     const flagAt = src.indexOf("isSelfServeSignupEnabled");
     const limitAt = src.indexOf("rateLimit(request");
-    const lookupAt = src.indexOf("ownerEmailExists(");
+    const lookupAt = src.indexOf("classifyEmailForSignup(");
     expect(flagAt).toBeGreaterThan(-1);
     expect(flagAt).toBeLessThan(limitAt);
     expect(limitAt).toBeLessThan(lookupAt);
+  });
+});
+
+describe("abandoned-signup cleanup — the pending-signup predicate has exactly one home", () => {
+  /**
+   * docs/abandoned-signup-cleanup-plan.md Phase 5, same shape as the
+   * lib/venueClaim.ts guard in tests/api.owner.signup.claim-guard.test.ts.
+   *
+   * `lib/pendingSignup.ts` is the only thing standing between a public signup
+   * form and an `auth.users` row — a table SHARED WITH PLAYERS. The failure mode
+   * this guards is not a wrong answer but a SECOND answer: a caller that grows
+   * its own "is this owner unpaid?" test and drifts a clause looser than the
+   * library's. That is exactly how the original claim branch lost its (0, 0)
+   * placeholder clause (Finding #1/#2).
+   */
+  const PREDICATE_MODULE = "lib/pendingSignup.ts";
+
+  /** Everything that may decide, or destroy, a pending signup. */
+  const PREDICATE_EXPORTS = [
+    "findPendingSignupByEmail",
+    "findPendingSignupByOwnerId",
+    "classifyEmailForSignup",
+    "purgePendingSignup",
+  ] as const;
+
+  /** The routes that act on the predicate. Each may CALL it; none may re-derive it. */
+  const PREDICATE_CALLERS = [
+    "app/api/owner/signup/route.ts",
+    "app/api/signup/email-available/route.ts",
+    "app/api/owner/signup/abandon/route.ts",
+  ] as const;
+
+  it("each predicate export is defined in exactly one module", () => {
+    const files = [
+      ...collectFiles(join(REPO_ROOT, "app"), /\.ts$/),
+      ...collectFiles(join(REPO_ROOT, "lib"), /\.ts$/),
+    ];
+    for (const name of PREDICATE_EXPORTS) {
+      const definers = files.filter((file) =>
+        new RegExp(`export\\s+(?:async\\s+)?function\\s+${name}\\b`).test(
+          stripComments(readFileSync(file, "utf8")),
+        ),
+      );
+      expect(definers.map(rel), `${name} must be defined only in ${PREDICATE_MODULE}`).toEqual([
+        PREDICATE_MODULE,
+      ]);
+    }
+  });
+
+  it("the predicate imports its row-shape and auth guards rather than copying them", () => {
+    const src = stripComments(read(PREDICATE_MODULE));
+    // The (0, 0) placeholder / provenance / admin-hidden clauses live in
+    // lib/venueClaim.ts, and the seven-table auth.users check in
+    // lib/signupSweep.ts. A local re-derivation of any of them is the bug.
+    expect(src).toMatch(/from\s+["']@\/lib\/venueClaim["']/);
+    for (const helper of [
+      "VENUE_CLAIM_COLUMNS",
+      "isPlaceholderVenueRow",
+      "isSelfServeVenueRow",
+      "isAdminHiddenVenueRow",
+    ]) {
+      expect(src, `${PREDICATE_MODULE} must use the shared ${helper}`).toMatch(
+        new RegExp(`\\b${helper}\\b`),
+      );
+    }
+    expect(src).toMatch(/from\s+["']@\/lib\/signupSweep["']/);
+    expect(src).toMatch(/authUserIsUnreferenced\(/);
+    // One Stripe cancel helper, shared with POST /api/owner/billing/checkout.
+    expect(src).toMatch(/from\s+["']@\/lib\/stripeIncomplete["']/);
+  });
+
+  it("no caller hand-rolls the predicate", () => {
+    for (const route of PREDICATE_CALLERS) {
+      const src = stripComments(read(route));
+      expect(src, `${route} must import from @/lib/pendingSignup`).toMatch(
+        /from\s+["']@\/lib\/pendingSignup["']/,
+      );
+      // The three reads that MAKE the predicate. A route doing any of them is
+      // deciding "unpaid" for itself.
+      expect(src, `${route} must not query billing_subscriptions itself`).not.toMatch(
+        /from\(\s*["']billing_subscriptions["']\s*\)/,
+      );
+      expect(src, `${route} must not run the auth.users FK guard itself`).not.toMatch(
+        /authUserIsUnreferenced/,
+      );
+      expect(src, `${route} must not delete an auth user outside purgePendingSignup`).not.toMatch(
+        /AUTH_USER_FK_CONSUMERS/,
+      );
+    }
+  });
+
+  it("the owner-auth failure codes are defined once and never re-typed", () => {
+    // Phase 3.1. The server throws these and client pages route on them, so the
+    // string literally has to be the same on both sides — the same reason
+    // OWNER_EMAIL_TAKEN_MESSAGE has one home. A page comparing against its own
+    // "no_venue" literal would keep working until somebody renamed the constant.
+    const files = [
+      ...collectFiles(join(REPO_ROOT, "app"), /\.tsx?$/),
+      ...collectFiles(join(REPO_ROOT, "lib"), /\.tsx?$/),
+      ...collectFiles(join(REPO_ROOT, "components"), /\.tsx?$/),
+    ];
+    const offenders = files.filter((file) => {
+      if (rel(file) === "lib/ownerAuthCodes.ts") return false;
+      return /["'](?:no_venue|no_session)["']/.test(stripComments(readFileSync(file, "utf8")));
+    });
+    expect(offenders.map(rel)).toEqual([]);
+  });
+
+  it("the abandon route is authenticated by the owner session, never by an email", () => {
+    // The teardown behind it reaches an `auth.users` row. Taking an email in the
+    // body would hand a stranger holding somebody's address a delete button.
+    const src = stripComments(read("app/api/owner/signup/abandon/route.ts"));
+    expect(src).toMatch(/requireOwnerAuth\(/);
+    expect(src).toMatch(/findPendingSignupByOwnerId\(/);
+    expect(src, "the abandon route must not resolve an owner by email").not.toMatch(
+      /findPendingSignupByEmail|classifyEmailForSignup/,
+    );
+    // The owner row is deleted, so the session cookie must not survive it.
+    expect(src).toMatch(/clearOwnerSessionCookie\(/);
   });
 });
 

@@ -18,7 +18,13 @@ import {
  *      un-awaited delete is not reliable in serverless), so that ledger grows
  *      without bound until this runs. Always on — it deletes only expired
  *      rate-limit rows, which nothing reads.
- *   2. Sweep abandoned self-serve venues (hidden, stamped, stale, unpaid).
+ *   2. Sweep abandoned self-serve venues (hidden, stamped, stale, unpaid). Two
+ *      retention tiers since Phase 4 of docs/abandoned-signup-cleanup-plan.md:
+ *      a venue that never reached Stripe (`checkout_started_at IS NULL`) is
+ *      abandoned after PENDING_SIGNUP_TTL_MINUTES (default 60), one that did
+ *      keeps the 7-day window because a card can still be settling. The summary
+ *      line below carries the per-tier split — that is what a day of dry-run
+ *      logs is read for before SIGNUP_SWEEP_DELETE_ENABLED is set.
  *   3. Reconcile orphaned `auth.users` rows left by a failed signup unwind.
  *
  * Jobs 2 and 3 SHIP LOG-ONLY. Each reports what it would delete until its own
@@ -60,7 +66,10 @@ export async function POST(request: Request) {
     // back without reconstructing it from the JSON responses.
     console.log(
       `[SignupSweep] run attemptsPruned=${attemptsPruned} ` +
-        `venueCandidates=${venues.candidates} venuesDeleted=${venues.deleted} venueDryRun=${venues.dryRun} ` +
+        `venueScanned=${venues.scanned} venueCandidates=${venues.candidates} ` +
+        `venueTierA=${venues.tierA} venueTierB=${venues.tierB} ` +
+        `tierSplit=${venues.tierSplitActive} ttlMinutes=${venues.ttlMinutes} ` +
+        `venuesDeleted=${venues.deleted} venueDryRun=${venues.dryRun} ` +
         `orphanCandidates=${orphans.candidates} orphansDeleted=${orphans.deleted} orphanDryRun=${orphans.dryRun} ` +
         `errors=${venues.errors.length + orphans.errors.length}`
     );

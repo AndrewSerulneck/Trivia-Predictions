@@ -7,6 +7,7 @@ import { Dropdown } from "@/components/ui/Dropdown";
 import { CategoryBlitzContinuousSettings } from "@/components/category-blitz/CategoryBlitzContinuousSettings";
 import { CategoryPoolManager } from "@/components/category-blitz/CategoryPoolManager";
 import { LetterCoverageVisualizer } from "@/components/category-blitz/LetterCoverageVisualizer";
+import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 
 type Venue = { id: string; name: string };
 
@@ -31,7 +32,8 @@ export default function OwnerCategoryBlitzPage() {
       try {
         const res = await fetch("/api/owner/venues");
         if (res.status === 401) {
-          router.push("/owner/login");
+          const body = (await res.json().catch(() => ({}))) as { code?: string };
+          router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
         const json = await res.json();

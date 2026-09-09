@@ -250,3 +250,52 @@ off, and the reveal in particular has no other observable.
       stays invisible. It becomes sweep-eligible 7 days later; there is nothing
       to check on the phone that day, but note the venue id so the first enabled
       sweep can be verified against it.
+
+#### Retry & supersede (Phase 6 §7 — the partner-visible behaviour this plan exists to deliver)
+
+The four cases below must pass with **no waiting** — the supersede is synchronous
+at submit, not a garbage collector. Headless cannot verify the Stripe hop in the
+last one.
+
+- [ ] **Abandon at the review step → nothing written.** Fill the wizard through
+      to the review screen but do **not** tap "Start subscription". Close the
+      tab. In Supabase, confirm there is **no** `venue_owners`, `auth.users` or
+      `venues` row for that email/address — steps 1–5 write nothing (the draft
+      lives in `sessionStorage` only).
+- [ ] **Abandon on `/owner/billing/setup` via "Cancel and start over" → rows
+      gone immediately.** Tap "Start subscription" (rows now exist), land on
+      `/owner/billing/setup`, tap **"Cancel and start over"**, confirm the
+      `window.confirm`. The phone lands on `/info`, and in Supabase the
+      `venue_owners` / `auth.users` / hidden `venues` rows for that email are
+      **gone within the same second** — not 7 days later. The owner session
+      cookie is cleared (reloading `/owner/billing/setup` does not re-enter it).
+- [ ] **Abandon by closing the browser, then IMMEDIATELY retry the same email →
+      the wizard just proceeds.** Tap "Start subscription", force-quit the
+      browser. Reopen `/owner/signup` and run the wizard again with the **same
+      email**. It must advance past the email step with **no message** — no "an
+      account with this email already exists", no "sign in" link, no delay —
+      whether the retry is ten seconds or ten days later. This is the Phase 2
+      assertion; a message here is a failure.
+- [ ] **Abandon on the Stripe Checkout page itself, return, retry the same email
+      → proceeds, and the incomplete Stripe subscription is cancelled.** Tap
+      "Start subscription", tap through to Stripe Checkout, then abandon it
+      (browser back, or close the tab) — Stripe now holds an `incomplete`
+      subscription for that customer. Re-run `/owner/signup` with the same email:
+      the wizard proceeds, and in the Stripe **test-mode** dashboard the earlier
+      `incomplete` subscription shows **`canceled`** (the supersede's
+      `purgePendingSignup` runs `sweepAbandonedIncompleteSubscriptions` before
+      deleting the venue). If it is still `incomplete`, the cancel-before-delete
+      ordering broke.
+- [ ] **A purged pending signup lands on the WIZARD, not the login page**
+      *(Phase 3.1)*. With a pending signup sitting on `/owner/billing/setup`,
+      purge it from elsewhere — another device's "Start over", or
+      `npm run signup:purge-pending -- <email> --delete` — then reload the page
+      **without clearing cookies**. The stale owner cookie is still valid and
+      correctly signed, so `GET /api/owner/billing` answers
+      `401 { code: "no_venue" }` and the page must redirect to the signup flow
+      (`/owner/signup`, or `/owner/register` while
+      `NEXT_PUBLIC_SELF_SERVE_SIGNUP_ENABLED` is off). Landing on
+      `/owner/login` is the failure: that is a sign-in page for an account that
+      no longer exists. Note that the other 15 `/owner/*` pages still push to
+      `/owner/login` on 401 — a bookmark to `/owner/dashboard` reproducing the
+      old dead end is the known follow-up 3.1 names, not a regression.

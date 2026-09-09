@@ -317,7 +317,14 @@ describe("owner billing — resume vs. checkout state matrix", () => {
       const response = await checkout(post("/api/owner/billing/checkout"));
 
       expect(response.status).toBe(200);
-      expect(mocks.dbUpdate).not.toHaveBeenCalled();
+      // The Phase 4 `venues.checkout_started_at` stamp is an expected write on
+      // any successful checkout; what this test guards is that the MIRROR
+      // (billing_subscriptions status/cancel_at_period_end) is never written back
+      // on `resource_missing`.
+      const mirrorWrites = mocks.dbUpdate.mock.calls.filter(
+        ([payload]) => payload && !("checkout_started_at" in payload)
+      );
+      expect(mirrorWrites).toHaveLength(0);
       expect(mocks.checkoutCreate).toHaveBeenCalled();
     });
 
@@ -601,6 +608,50 @@ describe("owner billing — resume vs. checkout state matrix", () => {
 
       expect(response.status).toBe(404);
       expect(mocks.stripeUpdate).not.toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * Phase 4 of docs/abandoned-signup-cleanup-plan.md: the route stamps
+   * `venues.checkout_started_at` so the abandoned-signup sweep can tell a partner
+   * who reached Stripe (7-day window) from one who never did (60-minute window).
+   * The stamp is written AFTER `session.url` is confirmed and BEFORE the URL is
+   * returned; a stamp failure must not fail the request.
+   */
+  describe("checkout_started_at stamp (abandoned-signup Tier B)", () => {
+    it("stamps venues.checkout_started_at with an ISO timestamp on a successful checkout", async () => {
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(response.status).toBe(200);
+      const stamp = mocks.dbUpdate.mock.calls.find(
+        ([payload]) => payload && "checkout_started_at" in payload
+      );
+      expect(stamp).toBeDefined();
+      expect(Object.keys(stamp![0])).toEqual(["checkout_started_at"]);
+      expect(() => new Date(stamp![0].checkout_started_at as string).toISOString()).not.toThrow();
+      expect(Number.isNaN(Date.parse(stamp![0].checkout_started_at as string))).toBe(false);
+    });
+
+    it("stamps only after the Checkout session is created — a failed Stripe call never stamps", async () => {
+      mocks.checkoutCreate.mockRejectedValueOnce(new Error("stripe down"));
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(response.status).toBe(502);
+      expect(
+        mocks.dbUpdate.mock.calls.some(([payload]) => payload && "checkout_started_at" in payload)
+      ).toBe(false);
+    });
+
+    it("does not stamp when checkout is refused (existing live subscription)", async () => {
+      state.row = ACTIVE;
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(response.status).toBe(409);
+      expect(
+        mocks.dbUpdate.mock.calls.some(([payload]) => payload && "checkout_started_at" in payload)
+      ).toBe(false);
     });
   });
 });

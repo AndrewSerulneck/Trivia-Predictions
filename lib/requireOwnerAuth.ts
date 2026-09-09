@@ -1,4 +1,9 @@
 import "server-only";
+import {
+  OWNER_AUTH_NO_SESSION,
+  OWNER_AUTH_NO_VENUE,
+  type OwnerAuthFailureCode,
+} from "@/lib/ownerAuthCodes";
 import { readOwnerSession } from "@/lib/ownerSession";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -7,13 +12,21 @@ export type OwnerAuthContext = {
   venueIds: string[];
 };
 
+/**
+ * The 401 body, carrying WHY (lib/ownerAuthCodes.ts). `error` is unchanged and
+ * `code` is purely additive: every existing caller reads only `response.status`,
+ * so nothing has to be updated in step with this.
+ */
+const unauthorized = (code: OwnerAuthFailureCode): Response =>
+  new Response(JSON.stringify({ error: "Unauthorized", code }), {
+    status: 401,
+    headers: { "Content-Type": "application/json" },
+  });
+
 export async function requireOwnerAuth(request: Request): Promise<OwnerAuthContext> {
   const ownerId = readOwnerSession(request);
   if (!ownerId) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    throw unauthorized(OWNER_AUTH_NO_SESSION);
   }
 
   if (!supabaseAdmin) {
@@ -40,10 +53,9 @@ export async function requireOwnerAuth(request: Request): Promise<OwnerAuthConte
     .filter(Boolean);
 
   if (linkedVenueIds.length === 0) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    // A VALID session for an owner with no venue link at all — what a purged
+    // pending signup looks like from the browser. Not "please sign in".
+    throw unauthorized(OWNER_AUTH_NO_VENUE);
   }
 
   const { data: liveVenues, error: liveVenueError } = await supabaseAdmin
@@ -63,10 +75,9 @@ export async function requireOwnerAuth(request: Request): Promise<OwnerAuthConte
     .filter(Boolean);
 
   if (venueIds.length === 0) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    // Links survive but every venue they point at is gone — a partially applied
+    // purge, or an admin deletion. Same answer: there is nothing to sign in to.
+    throw unauthorized(OWNER_AUTH_NO_VENUE);
   }
 
   return { ownerId, venueIds };

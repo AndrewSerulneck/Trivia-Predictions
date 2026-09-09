@@ -6,6 +6,7 @@ import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { PartnerManual } from "@/components/owner/PartnerManual";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 
 type Venue = {
   id: string;
@@ -23,7 +24,8 @@ const OwnerDashboardPage = () => {
         const venuesRes = await fetch("/api/owner/venues");
 
         if (venuesRes.status === 401) {
-          router.push("/owner/login");
+          const body = (await venuesRes.json().catch(() => ({}))) as { code?: string };
+          router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
 

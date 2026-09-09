@@ -9,6 +9,7 @@ import {
   type CreateRewardSubmission,
   type RewardCreationContextDTO,
 } from "@/components/rewards/CreateRewardWizard";
+import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 import { OWNER_COMPETITION_TEMPLATES } from "@/lib/ownerCompetitionTemplates";
 import { getRewardDefinition } from "@/lib/rewardDefinitions";
 import { periodForCadence, renderTermsSentence } from "@/lib/rewardTerms";
@@ -87,7 +88,8 @@ const OwnerCompetitionsPage = () => {
       try {
         const res = await fetch("/api/owner/venues");
         if (res.status === 401) {
-          router.push("/owner/login");
+          const body = (await res.json().catch(() => ({}))) as { code?: string };
+          router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
         const json = (await res.json()) as { ok: boolean; venues?: Venue[] };
@@ -112,7 +114,8 @@ const OwnerCompetitionsPage = () => {
         cache: "no-store",
       });
       if (res.status === 401) {
-        router.push("/owner/login");
+        const body = (await res.json().catch(() => ({}))) as { code?: string };
+        router.push(ownerAuthRecoveryPath(body.code));
         return;
       }
       const json = (await res.json()) as { ok: boolean; competitions?: Competition[]; error?: string };

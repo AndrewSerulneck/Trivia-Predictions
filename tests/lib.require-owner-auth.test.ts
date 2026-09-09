@@ -79,4 +79,56 @@ describe("requireOwnerAuth", () => {
 
     await expect(requireOwnerAuth(request)).rejects.toMatchObject({ status: 401 });
   });
+
+  /**
+   * docs/abandoned-signup-cleanup-plan.md Phase 3.1. The two 401s mean different
+   * things and must be told apart: "not signed in" leads to /owner/login, while
+   * "signed in, no venue" — what a purged pending signup looks like from the
+   * browser — must lead to the signup flow instead. Before this, a purged
+   * partner was offered a sign-in page for an account that no longer existed.
+   */
+  describe("the 401 says WHY", () => {
+    const bodyOf = async (promise: Promise<unknown>): Promise<{ error?: string; code?: string }> => {
+      try {
+        await promise;
+      } catch (thrown) {
+        return (await (thrown as Response).json()) as { error?: string; code?: string };
+      }
+      throw new Error("expected requireOwnerAuth to reject");
+    };
+
+    it("no_session when the cookie is missing or fails its signature check", async () => {
+      mocks.readOwnerSession.mockReturnValue(null);
+
+      await expect(bodyOf(requireOwnerAuth(request))).resolves.toEqual({
+        error: "Unauthorized",
+        code: "no_session",
+      });
+    });
+
+    it("no_venue for a VALID session whose owner has no venue link", async () => {
+      mockOwnerVenueChains({ linkedVenueIds: [] });
+
+      await expect(bodyOf(requireOwnerAuth(request))).resolves.toEqual({
+        error: "Unauthorized",
+        code: "no_venue",
+      });
+    });
+
+    it("no_venue when the links survive but every venue is gone", async () => {
+      mockOwnerVenueChains({ linkedVenueIds: ["deleted-venue"], liveVenueIds: [] });
+
+      await expect(bodyOf(requireOwnerAuth(request))).resolves.toEqual({
+        error: "Unauthorized",
+        code: "no_venue",
+      });
+    });
+
+    it("keeps `error` unchanged — every existing caller reads only the status", async () => {
+      mocks.readOwnerSession.mockReturnValue(null);
+      const body = await bodyOf(requireOwnerAuth(request));
+
+      expect(body.error).toBe("Unauthorized");
+    });
+  });
 });

@@ -290,9 +290,21 @@ Ops reading:
 4. `POST https://<host>/api/owner/signup` with a deliberately incomplete body →
    **400** naming the first unmet step. An over-length field → **400** ("… is too
    long — use N characters or fewer", never a truncated write). A body over 16 KB
-   → **413**. Five valid-shaped submits from one IP in an hour → the sixth is
-   **429** (`signupSubmit` window is 5/hour/IP — a bar with staff behind one NAT
-   can hit this during a demo; the 429 copy is `rateLimitResponse`'s).
+   → **413** (and it still costs a rate-limit slot, deliberately).
+
+   **The submit is limited in two tiers** (`rateLimitSignupSubmit`,
+   docs/abandoned-signup-cleanup-plan.md §4.1b), and the smoke test is different
+   for each:
+   - **15/hour keyed on `IP + normalised email`.** Sixteen submits from one IP
+     using the SAME email in an hour → the sixteenth is **429**. This is the one
+     a fumbling partner can reach; 15 is sized so they realistically will not.
+   - **40/hour keyed on the IP alone.** Forty-one submits from one IP using
+     DIFFERENT emails → the forty-first is **429**. This is the anti-abuse
+     ceiling, and it is what a bar with several staff behind one NAT shares.
+
+   Both fail closed; the 429 copy is `rateLimitResponse`'s. If a demo hits
+   either, the fix is to wait out the hour or delete the `signup_attempts` rows —
+   do not raise the numbers to get past a demo.
 5. `https://<host>/owner/signup` renders the full-bleed wizard (no OwnerShell
    card, no 720px clamp); `/owner/register` 308-redirects to it.
 6. **The data-model smoke test:**

@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 
 import { createAdminVenue } from "@/lib/admin";
 import { DEFAULT_VENUE_COUNTRY } from "@/lib/adminVenueForm";
-import { OWNER_EMAIL_TAKEN_MESSAGE, ownerEmailExists } from "@/lib/ownerEmailAvailability";
+import { OWNER_EMAIL_TAKEN_MESSAGE } from "@/lib/ownerEmailAvailability";
 import { createOwnerSessionCookie } from "@/lib/ownerSession";
-import { rateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { classifyEmailForSignup, purgePendingSignup } from "@/lib/pendingSignup";
+import { rateLimitResponse, rateLimitSignupSubmit } from "@/lib/rateLimit";
 import {
   SIGNUP_DUPLICATE_RADIUS_METERS,
   SIGNUP_MAX_BODY_BYTES,
@@ -31,12 +32,17 @@ import {
 // each unwind is exercised by tests/api.owner.signup.test.ts. Read `unwind()`
 // before changing the order of anything below it.
 //
-// Gate order is flag → rate limiter → validation → duplicate check → writes.
-// Note this deliberately REVERSES the ordering of its /api/signup/* siblings,
-// which validate before the limiter so a malformed request never spends a
-// partner's Google quota. Here the limiter is not protecting a Google bill, it
-// is protecting the account table: a malformed body is exactly the shape a
-// scripted signup spammer sends, so it must cost a slot.
+// Gate order is flag → body read → rate limiter → validation → duplicate check
+// → writes. Note this deliberately REVERSES the ordering of its /api/signup/*
+// siblings, which validate before the limiter so a malformed request never
+// spends a partner's Google quota. Here the limiter is not protecting a Google
+// bill, it is protecting the account table: a malformed body is exactly the
+// shape a scripted signup spammer sends, so it must cost a slot — including an
+// oversized one, whose 413 is therefore returned after the limiter, not before.
+//
+// The body is read first only because the limiter's inner bucket keys on the
+// submitted email (docs/abandoned-signup-cleanup-plan.md §4.1b); nothing is
+// validated, looked up or written before the limiter has spoken.
 
 /** Client contract — components/signup/SignupWizard.tsx `submit()`. */
 type SignupBody = {
@@ -257,22 +263,42 @@ export async function POST(request: Request) {
     return fail("Server configuration error.", 500);
   }
 
-  const limit = await rateLimit(request, "signupSubmit");
+  // The body is read BEFORE the limiter (§4.1b), because the limiter now needs
+  // the email to key its inner bucket. That reordering is safe and costs
+  // nothing: `readBoundedBody` refuses an oversized request on `Content-Length`
+  // without buffering it, so an unlimited caller can still not make us hold a
+  // large body in memory.
+  //
+  // The 413 is deliberately deferred until AFTER the limiter so the module
+  // header's rule survives intact — here the limiter is not protecting a Google
+  // bill, it is protecting the account table, and a malformed body is exactly
+  // the shape a scripted signup spammer sends, so it must cost a slot.
+  const raw = await readBoundedBody(request);
+
+  let body: SignupBody = {};
+  if (raw !== null) {
+    try {
+      body = (JSON.parse(raw || "{}") ?? {}) as SignupBody;
+    } catch {
+      body = {};
+    }
+  }
+
+  const draft = draftFromBody(body);
+
+  // Two buckets, identity-keyed then IP-keyed, both fail-closed — the ordering
+  // and the numbers live in lib/rateLimit.ts's `rateLimitSignupSubmit`, not
+  // here. `draft.email` is already trimmed + lowercased by `draftFromBody`,
+  // which is the same normalisation `classifyEmailForSignup` sees below, so one
+  // person's retries land in one bucket. An unparseable or oversized body
+  // yields "" and shares a single per-IP bucket rather than a fresh one.
+  const limit = await rateLimitSignupSubmit(request, draft.email);
   if (!limit.allowed) return rateLimitResponse(limit);
 
-  const raw = await readBoundedBody(request);
   if (raw === null) {
     return fail("That request was too large. Shorten your venue name and address and try again.", 413);
   }
 
-  let body: SignupBody;
-  try {
-    body = (JSON.parse(raw || "{}") ?? {}) as SignupBody;
-  } catch {
-    body = {};
-  }
-
-  const draft = draftFromBody(body);
   const claimVenueId = text(body.claimVenueId);
 
   // The single rule set — the same function the wizard gates each step on, and
@@ -296,22 +322,53 @@ export async function POST(request: Request) {
   // --- Existing account -----------------------------------------------------
   //
   // Checked BEFORE the duplicate-venue scan, which is a deviation from the
-  // plan's step order and is deliberate: if this email already has a partner
-  // account, "sign in instead" is the only useful answer whatever the venue
-  // geometry says, and finding that out only after tapping through "Is this
-  // your venue?" would be two dead ends instead of one.
-  // Same module POST /api/signup/email-available uses for the step-2 pre-check,
-  // so the two can never answer differently. This one is the AUTHORITY: the
-  // pre-check is skippable and can be raced, so it is re-run here before any
+  // plan's step order and is deliberate twice over:
+  //
+  //   1. If this email already has a REAL partner account, "sign in instead" is
+  //      the only useful answer whatever the venue geometry says, and finding
+  //      that out only after tapping through "Is this your venue?" would be two
+  //      dead ends instead of one.
+  //   2. If this email is a PENDING signup (an unpaid, never-finished one — see
+  //      lib/pendingSignup.ts), it is superseded HERE, and the purge deletes
+  //      that pending venue. That MUST happen before `findNearbyVenue` below, or
+  //      the partner's own abandoned venue is rediscovered as a duplicate at
+  //      their own address and they get "Is this your venue?" instead of a clean
+  //      run.
+  //
+  // `classifyEmailForSignup` is the same discriminator POST
+  // /api/signup/email-available uses for the step-2 pre-check, so the two can
+  // never disagree about which emails are blocked. This route is the AUTHORITY:
+  // the pre-check is skippable and can be raced, so it is re-run here before any
   // write.
-  const existingOwner = await ownerEmailExists(draft.email);
+  const emailClass = await classifyEmailForSignup(draft.email);
 
-  if (!existingOwner.ok) {
-    console.error("[OwnerSignup] owner-lookup-failed", { message: existingOwner.message });
+  if (!emailClass.ok) {
+    console.error("[OwnerSignup] owner-lookup-failed", { message: emailClass.message });
     return fail("Something went wrong. Please try again.", 500);
   }
-  if (existingOwner.exists) {
+  if (emailClass.exists && emailClass.kind === "account") {
+    // The ONLY surviving path to OWNER_EMAIL_TAKEN_MESSAGE: a real account that
+    // has paid, ever paid, or was admin-activated.
     return fail(OWNER_EMAIL_TAKEN_MESSAGE, 409, { code: "email_taken" });
+  }
+  if (emailClass.exists && emailClass.kind === "pending") {
+    // Supersede at submit (docs/abandoned-signup-cleanup-plan.md Phase 2a). No
+    // 409, no branch shown to the partner, no latency — whether they came back
+    // after ten seconds or ten days. `purgePendingSignup` re-verifies the
+    // predicate itself before deleting anything and cancels any abandoned Stripe
+    // object first.
+    const purge = await purgePendingSignup(emailClass.ownerId);
+    if (!purge.ok) {
+      // The email is still taken, so proceeding would hit Supabase's "already
+      // registered" and land in the orphan-auth-user dead end this plan removes.
+      // Return the same generic 500 the owner-lookup failure above returns.
+      console.error("[OwnerSignup] pending-signup-purge-failed", {
+        ownerId: emailClass.ownerId,
+        errors: purge.errors,
+      });
+      return fail("Something went wrong. Please try again.", 500);
+    }
+    console.log("[OwnerSignup] pending-signup-superseded", { ownerId: emailClass.ownerId });
   }
 
   // --- Duplicate venue / claim resolution -----------------------------------

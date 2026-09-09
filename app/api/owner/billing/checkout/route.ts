@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import type Stripe from "stripe";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getStripePriceId, OFFLINE_BILLING_METHOD, stripe } from "@/lib/stripe";
+import { sweepAbandonedIncompleteSubscriptions } from "@/lib/stripeIncomplete";
 import { CLEARED_MIRROR } from "@/lib/billingDiscounts";
 import {
   classifyBillingRow,
@@ -20,69 +20,6 @@ type ExistingBillingRow = ClassifiableBillingRow & {
   cancel_at_period_end: boolean;
   billing_method: string;
 };
-
-/**
- * Cancel any `incomplete` Stripe subscription still carrying this venueId in its
- * metadata, before a fresh Checkout is started.
- *
- * Since Phase 8 an unfinished signup writes NO billing_subscriptions row (see
- * app/api/webhooks/stripe/route.ts), so there is no stored id to void the way the
- * mirrored branches in POST do. Stripe expires an `incomplete` subscription by
- * itself in ~23h, but inside that window a partner could return to a stale
- * Checkout tab and complete it AFTER paying through a fresh one — billed twice.
- * Every subscription this app creates sets subscription_data.metadata.venueId, so
- * the abandoned object is findable with nothing stored on our side.
- *
- * `subscriptions.search` does support `metadata['venueId']`, but its index lags up
- * to a minute and Stripe documents it as unsafe for read-after-write flows — which
- * is exactly this one (abandon, then immediately retry). `list` is strongly
- * consistent, and `incomplete` subscriptions are a small, self-expiring population
- * account-wide.
- *
- * Failure policy: log and proceed. Unlike the void inside POST — where the
- * abandoned object was the SAME subscription we were about to replace, so
- * proceeding blind would have been a known double-bill — this is a safety net on
- * top of Stripe's own expiry. Blocking a paying partner's signup because a sweep
- * call failed would trade a certain harm for an unlikely one. This is deliberate,
- * not an unhandled error.
- */
-async function sweepAbandonedIncompleteSubscriptions(
-  client: Stripe,
-  venueId: string
-): Promise<void> {
-  try {
-    // Auto-paged rather than a flat limit: this venue's abandoned subscription
-    // could sit past the first 100 account-wide incompletes and be missed,
-    // reopening the double-bill window this sweep exists to close. Mirrors
-    // app/api/admin/billing/promo-codes/route.ts's GET. The cap is a runaway
-    // guard, not an expected boundary — hitting it is logged below.
-    const incomplete = await client.subscriptions
-      .list({ status: "incomplete", limit: 100 })
-      .autoPagingToArray({ limit: 1000 });
-    if (incomplete.length === 1000) {
-      console.warn("Abandoned-subscription sweep hit its paging cap; some incompletes may be unswept.", {
-        venueId,
-      });
-    }
-    for (const sub of incomplete) {
-      if (sub.metadata?.venueId?.trim() !== venueId) continue;
-      try {
-        await client.subscriptions.cancel(sub.id);
-      } catch (error) {
-        console.warn("Could not cancel an abandoned incomplete subscription before checkout.", {
-          venueId,
-          subscriptionId: sub.id,
-          error: error instanceof Error ? error.message : "unknown",
-        });
-      }
-    }
-  } catch (error) {
-    console.warn("Could not list incomplete subscriptions before checkout.", {
-      venueId,
-      error: error instanceof Error ? error.message : "unknown",
-    });
-  }
-}
 
 /**
  * POST /api/owner/billing/checkout — start a Stripe Checkout Session (subscription
@@ -298,6 +235,12 @@ export async function POST(request: Request) {
 
   // No row is written for an unfinished signup any more, so an abandoned attempt
   // can only be found at Stripe. Close it before opening a new one.
+  //
+  // The result is deliberately ignored: this is a safety net on top of Stripe's
+  // own ~23h expiry, and blocking a paying partner because a sweep call failed
+  // would trade a certain harm for an unlikely one. `purgePendingSignup`, the
+  // other caller of the same helper, aborts on failure instead — see the policy
+  // note in lib/stripeIncomplete.ts.
   await sweepAbandonedIncompleteSubscriptions(stripe, venueId);
 
   try {
@@ -326,6 +269,36 @@ export async function POST(request: Request) {
 
     if (!session.url) {
       return NextResponse.json({ ok: false, error: "Could not create checkout session." }, { status: 502 });
+    }
+
+    // Stamp `venues.checkout_started_at` now — AFTER `session.url` is confirmed,
+    // BEFORE the URL is handed back. Placement is a correctness constraint, not
+    // style: the abandoned-signup sweep (lib/signupSweep.ts) and
+    // purgePendingSignup (docs/abandoned-signup-cleanup-plan.md §4.1a) both read
+    // a null value as "this partner never reached Stripe — nothing to wait for,
+    // nothing to cancel". That is only true because the stamp is written before
+    // the partner can act on the URL. Stamping earlier would mark a failed Stripe
+    // call as "reached checkout" (harmless, just a slower sweep); stamping later,
+    // from the client, or on the success webhook makes both readers wrong.
+    //
+    // Best-effort, same policy as sweepAbandonedIncompleteSubscriptions above: a
+    // partner holding a live Checkout URL must get it. A missed stamp costs one
+    // venue an early sweep; a refused Checkout costs a subscription. Re-stamped
+    // on every Checkout start (including a re-checkout) so Tier B's clock
+    // restarts for a partner who is trying again.
+    try {
+      const { error: stampError } = await supabaseAdmin
+        .from("venues")
+        .update({ checkout_started_at: new Date().toISOString() })
+        .eq("id", venueId);
+      if (stampError) {
+        console.error(`[OwnerCheckout] checkout-stamp-failed venue=${venueId}`, stampError.message);
+      }
+    } catch (stampError) {
+      console.error(
+        `[OwnerCheckout] checkout-stamp-failed venue=${venueId}`,
+        stampError instanceof Error ? stampError.message : stampError
+      );
     }
 
     return NextResponse.json({ ok: true, url: session.url });

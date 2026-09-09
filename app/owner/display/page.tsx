@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { gameUrl } from "@/lib/domainSplit";
+import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 import { normalizePairingCode } from "@/lib/tvPairingShared";
 
 // The venue screen is built for a TV/desktop 16:9 viewport, not a narrow mobile
@@ -39,7 +40,8 @@ const OwnerDisplayPage = () => {
       try {
         const res = await fetch("/api/owner/venues");
         if (res.status === 401) {
-          router.push("/owner/login");
+          const body = (await res.json().catch(() => ({}))) as { code?: string };
+          router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
         const json = (await res.json()) as { ok: boolean; venues?: Venue[] };
