@@ -557,6 +557,23 @@ describe("/api/cron/signup-sweep — the tier split (Phase 4)", () => {
     expect(body.venues?.tierSplitActive).toBe(true);
   });
 
+  it("scans on the LOOSER (Tier A) cutoff, not Tier B's — else Tier A never fires until 7 days", async () => {
+    // Regression, production-confirmed 2026-09-09: the scan cutoff was
+    // `Math.min(tierACutoffMs, tierBCutoffMs)`, which is the 7-day instant. A
+    // never-reached-Stripe venue is then invisible to the DB scan until it is
+    // ALSO seven days old, so Tier A's one-hour window did nothing. It must be
+    // `Math.max` — the more recent instant, the one that admits the union of
+    // both tiers' rows. (The shared mock does not model `.lt`, so this asserts
+    // the recorded filter arg directly rather than a row count.)
+    await run();
+
+    const lt = venueScans()[0]?.filters.find((f) => f.op === "lt");
+    expect(lt?.args[0]).toBe("self_serve_created_at");
+    const cutoffAgeMs = Date.now() - Date.parse(String(lt?.args[1]));
+    expect(cutoffAgeMs).toBeGreaterThan(50 * 60 * 1000); // ~1h, the Tier A default
+    expect(cutoffAgeMs).toBeLessThan(90 * 60 * 1000); // nowhere near 7 days
+  });
+
   it("sweeps a Tier A and a Tier B venue in the SAME run without cross-contaminating tallies", async () => {
     // Two different partners, two different clocks. Tier A's abandoner never
     // touched Stripe; Tier B's reached it long enough ago that a card would have
@@ -652,8 +669,11 @@ describe("/api/cron/signup-sweep — the tier split (Phase 4)", () => {
 
       expect(body.venues?.candidates).toBe(0);
       expect(body.venues?.tierA).toBe(0);
-      // Fetched by the looser scan cutoff, then correctly put back down.
-      expect(body.venues?.scanned).toBe(1);
+      // NB: against real Postgres the scan's `self_serve_created_at < now-1h`
+      // filter excludes this 30-minute-old row outright, so `scanned` would be 0.
+      // The shared mock does not model `.lt`, so it is fetched here and then put
+      // back down by the in-memory tier check — which is the behaviour under
+      // test. Either way it is never a candidate.
     });
 
     it("honours PENDING_SIGNUP_TTL_MINUTES", async () => {

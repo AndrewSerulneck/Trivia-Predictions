@@ -362,10 +362,14 @@ export async function sweepAbandonedSignupVenues(
   const tierBCutoff = new Date(tierBCutoffMs).toISOString();
 
   // One scan, filtered on the LOOSER of the two windows, then partitioned in
-  // memory. `Math.min` rather than plain Tier A: if the TTL is ever configured
-  // above seven days, Tier A stops being the looser bound and a DB-side filter on
-  // it would silently hide every eligible Tier B row.
-  const scanCutoff = new Date(Math.min(tierACutoffMs, tierBCutoffMs)).toISOString();
+  // memory. "Looser" = the cutoff that admits MORE rows, i.e. the more recent
+  // timestamp, i.e. `Math.max` of the two cutoff instants. Normally that is Tier
+  // A (60 min ago is later than 7 days ago); if the TTL is ever misconfigured
+  // above seven days it becomes Tier B, and `Math.max` still fetches the union
+  // of both tiers' eligible rows so neither is silently hidden by the DB filter.
+  // (Was `Math.min` — that pinned the scan to the 7-day cutoff and made Tier A
+  // inert until a venue was also 7 days old; production dry-run confirmed it.)
+  const scanCutoff = new Date(Math.max(tierACutoffMs, tierBCutoffMs)).toISOString();
 
   const scanVenues = (columns: string, cutoff: string) =>
     db
