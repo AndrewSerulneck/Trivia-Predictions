@@ -1261,7 +1261,21 @@ abandoned** (Tier B venues inside their window). Three things keep that safe:
   that difference is the in-flight population, and it is the number to sanity-check
   during the dry-run read.
 
-#### The fallback (this is the part that makes the split safe to ship early)
+#### BUG FOUND + FIXED IN PRODUCTION (2026-09-09, Sonnet 5) — the scan cutoff was inverted
+
+`scanCutoff` was `Math.min(tierACutoffMs, tierBCutoffMs)` — the **7-days-ago**
+instant. The DB-side `self_serve_created_at < scanCutoff` filter then never
+fetched a Tier A venue (never reached Stripe) until it was **also seven days
+old**, so Tier A's one-hour window did nothing. The unit tests missed it because
+the shared PostgREST mock in `tests/api.cron.signup-sweep.test.ts` does not model
+`.lt`. Caught by running the real `?dryRun=1` against production right after the
+migration landed: a 3-hour-old Tier A venue reported `scanned: 0`.
+
+Fixed to `Math.max` (the more recent instant — the cutoff that admits the *union*
+of both tiers' eligible rows; each row's own tier window is still applied in
+memory afterwards). Regression test added asserting the recorded scan `lt` arg is
+~1 h old, not ~7 d. Commit `042e356`, on `main`. **Needs a redeploy to take
+effect.**
 
 `isMissingCheckoutStampColumn` matches SQLSTATE `42703`, or a message naming
 `checkout_started_at` alongside "does not exist" / "schema cache" / "could not
