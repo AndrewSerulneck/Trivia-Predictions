@@ -15,6 +15,13 @@ function storageKey(sportKey: string, gameId: string): string {
   return `${KEY_PREFIX}${sportKey}:${gameId}`;
 }
 
+const localDateKey = (nowMs: number, tzOffsetMinutes: number): string => {
+  const local = new Date(nowMs - tzOffsetMinutes * 60_000);
+  return `${local.getUTCFullYear()}-${String(local.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    local.getUTCDate()
+  ).padStart(2, "0")}`;
+};
+
 function isValidGame(value: unknown): value is CachedBingoGame {
   if (!value || typeof value !== "object") {
     return false;
@@ -30,12 +37,16 @@ function isValidGame(value: unknown): value is CachedBingoGame {
   );
 }
 
-export function writeSelectedBingoGame(game: CachedBingoGame): void {
+export function writeSelectedBingoGame(
+  game: CachedBingoGame,
+  tzOffsetMinutes = new Date().getTimezoneOffset()
+): void {
   if (typeof window === "undefined" || !game.id || !game.sportKey) return;
   try {
+    const now = Date.now();
     window.sessionStorage.setItem(
       storageKey(game.sportKey, game.id),
-      JSON.stringify({ t: Date.now(), game })
+      JSON.stringify({ t: now, localDate: localDateKey(now, tzOffsetMinutes), tzOffsetMinutes, game })
     );
   } catch {
     // Session storage is an opportunistic handoff; failures should not block navigation.
@@ -45,6 +56,7 @@ export function writeSelectedBingoGame(game: CachedBingoGame): void {
 export function readSelectedBingoGame(params: {
   sportKey: string;
   gameId: string;
+  tzOffsetMinutes?: number;
 }): CachedBingoGame | null {
   if (typeof window === "undefined" || !params.sportKey || !params.gameId) return null;
 
@@ -53,9 +65,22 @@ export function readSelectedBingoGame(params: {
     const raw = window.sessionStorage.getItem(key);
     if (!raw) return null;
 
-    const parsed = JSON.parse(raw) as { t?: unknown; game?: unknown };
+    const parsed = JSON.parse(raw) as {
+      t?: unknown;
+      localDate?: unknown;
+      tzOffsetMinutes?: unknown;
+      game?: unknown;
+    };
     const timestamp = Number(parsed.t);
-    if (!Number.isFinite(timestamp) || Date.now() - timestamp > TTL_MS || !isValidGame(parsed.game)) {
+    const tzOffsetMinutes = params.tzOffsetMinutes ?? new Date().getTimezoneOffset();
+    const now = Date.now();
+    if (
+      !Number.isFinite(timestamp) ||
+      now - timestamp > TTL_MS ||
+      parsed.tzOffsetMinutes !== tzOffsetMinutes ||
+      parsed.localDate !== localDateKey(now, tzOffsetMinutes) ||
+      !isValidGame(parsed.game)
+    ) {
       window.sessionStorage.removeItem(key);
       return null;
     }
@@ -67,7 +92,11 @@ export function readSelectedBingoGame(params: {
     }
 
     const startsAtMs = Date.parse(game.startsAt);
-    if (!Number.isFinite(startsAtMs) || startsAtMs <= Date.now()) {
+    if (
+      !Number.isFinite(startsAtMs) ||
+      startsAtMs <= now ||
+      localDateKey(startsAtMs, tzOffsetMinutes) !== localDateKey(now, tzOffsetMinutes)
+    ) {
       window.sessionStorage.removeItem(key);
       return null;
     }
@@ -79,5 +108,14 @@ export function readSelectedBingoGame(params: {
   } catch {
     window.sessionStorage.removeItem(key);
     return null;
+  }
+}
+
+export function clearSelectedBingoGame(params: { sportKey: string; gameId: string }): void {
+  if (typeof window === "undefined" || !params.sportKey || !params.gameId) return;
+  try {
+    window.sessionStorage.removeItem(storageKey(params.sportKey, params.gameId));
+  } catch {
+    // Session storage is opportunistic; there is nothing else to clear.
   }
 }

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { auditSportsBingoBoardQuality } from "@/lib/sportsBingoQuality";
 
 vi.mock("server-only", () => ({}));
 
@@ -7,6 +8,14 @@ vi.mock("server-only", () => ({}));
 // like a spread ladder with a total bolted on.
 
 type SquarePreview = { key: string; label: string; probability: number; bucket: string; resolverKind: string };
+
+function seededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
 
 function jsonResponse(body: unknown): Response {
   return { ok: true, status: 200, json: async () => body } as Response;
@@ -40,14 +49,14 @@ const ODDS_ROWS = ["fanduel", "draftkings", "betmgm"].map((vendor) => ({
 }));
 
 const PLAYERS = [
-  { id: 11, first_name: "Jalen", last_name: "Hurts" },
-  { id: 12, first_name: "Saquon", last_name: "Barkley" },
-  { id: 13, first_name: "A.J.", last_name: "Brown" },
-  { id: 14, first_name: "DeVonta", last_name: "Smith" },
-  { id: 21, first_name: "Dak", last_name: "Prescott" },
-  { id: 22, first_name: "CeeDee", last_name: "Lamb" },
-  { id: 23, first_name: "Jake", last_name: "Ferguson" },
-  { id: 24, first_name: "Brandon", last_name: "Aubrey" },
+  { id: 11, first_name: "Jalen", last_name: "Hurts", team: NFL_GAME.home_team },
+  { id: 12, first_name: "Saquon", last_name: "Barkley", team: NFL_GAME.home_team },
+  { id: 13, first_name: "A.J.", last_name: "Brown", team: NFL_GAME.home_team },
+  { id: 14, first_name: "DeVonta", last_name: "Smith", team: NFL_GAME.home_team },
+  { id: 21, first_name: "Dak", last_name: "Prescott", team: NFL_GAME.visitor_team },
+  { id: 22, first_name: "CeeDee", last_name: "Lamb", team: NFL_GAME.visitor_team },
+  { id: 23, first_name: "Jake", last_name: "Ferguson", team: NFL_GAME.visitor_team },
+  { id: 24, first_name: "Brandon", last_name: "Aubrey", team: NFL_GAME.visitor_team },
 ];
 
 function overUnder(playerId: number, propType: string, line: number, overOdds = -110, underOdds = -110) {
@@ -171,7 +180,7 @@ describe("NFL prop mix (Phase 3)", () => {
     expect(longCatch!.label).toBe("CeeDee Lamb hauls in a catch of 25+ yards.");
   });
 
-  it("carries anytime-TD and first-TD milestone squares", async () => {
+  it("retains verified anytime-TD squares and excludes unverified first-TD squares", async () => {
     installFetchMock();
     const squares = await loadSquares();
 
@@ -182,10 +191,7 @@ describe("NFL prop mix (Phase 3)", () => {
     expect(anytime!.probability).toBeLessThan(0.6);
 
     const first = squares.find((square) => square.key === "nfl_player_first_td:saquon barkley::12");
-    expect(first).toBeDefined();
-    expect(first!.label).toBe("Saquon Barkley scores the game's first TD.");
-    // A first-TD price is a real long shot and must stay one — not get inflated to look fair.
-    expect(first!.probability).toBeLessThan(0.2);
+    expect(first).toBeUndefined();
   });
 
   it("drops prop types the box score cannot grade", async () => {
@@ -211,16 +217,13 @@ describe("NFL prop mix (Phase 3)", () => {
       "nfl_margin_at_most:3.5",
       "nfl_margin_at_least:16.5",
       "nfl_second_half_higher_scoring",
-      // Optional 3b.
-      "nfl_first_score_is_field_goal",
-      "nfl_first_scorer_wins",
-      "nfl_non_offensive_touchdown",
-      "nfl_fourth_down_conversion",
-      "nfl_long_touchdown:50",
     ]) {
       expect(squares.find((square) => square.key === key), `missing ${key}`).toBeDefined();
     }
 
+    for (const key of ["nfl_first_score_is_field_goal", "nfl_first_scorer_wins", "nfl_non_offensive_touchdown", "nfl_fourth_down_conversion", "nfl_long_touchdown:50"]) {
+      expect(squares.find((square) => square.key === key), `unverified ${key}`).toBeUndefined();
+    }
     expect(squares.some((square) => square.bucket === "player-prop")).toBe(false);
     // The board still builds: this is the whole point of team/game squares.
     const { generateSportsBingoBoard } = await import("@/lib/sportsBingo");
@@ -247,44 +250,55 @@ describe("NFL prop mix (Phase 3)", () => {
 
   it("assembles a mixed board and never lets one player own it", async () => {
     installFetchMock();
-    const { generateSportsBingoBoard } = await import("@/lib/sportsBingo");
+    const { buildSportsBingoBoardWithResolvers } = await import("@/lib/sportsBingo");
+    const originalRandom = Math.random;
+    Math.random = seededRandom(0x5eed2026);
 
-    for (let attempt = 0; attempt < 12; attempt += 1) {
-      const board = await generateSportsBingoBoard({
-        gameId: "424129",
-        sportKey: "americanfootball_nfl",
-        generationMode: "preview",
-      });
-      const keys = board.squares.filter((square) => !square.isFree).map((square) => square.key);
-      expect(keys).toHaveLength(24);
+    try {
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        const board = await buildSportsBingoBoardWithResolvers({
+          gameId: "424129",
+          sportKey: "americanfootball_nfl",
+        });
+        expect(board).not.toBeNull();
+        if (!board) continue;
+        const keys = board.squares.filter((square) => !square.isFree).map((square) => square.key);
+        expect(keys).toHaveLength(24);
 
-      const playerSquares = keys.filter(
-        (key) => key.startsWith("player_prop:") || key.startsWith("nfl_player_")
-      );
-      const specialSquares = keys.filter((key) => key.startsWith("nfl_") && !key.startsWith("nfl_player_"));
-      expect(playerSquares.length).toBeGreaterThanOrEqual(6);
-      expect(specialSquares.length).toBeGreaterThanOrEqual(4);
+        const playerSquares = board.squares.filter((square) => !square.isFree && square.bucket === "player-prop");
+        const specialSquares = keys.filter((key) => key.startsWith("nfl_") && !key.startsWith("nfl_player_"));
+        expect(playerSquares).toHaveLength(8);
+        expect(specialSquares.length).toBeGreaterThanOrEqual(4);
 
-      // Per-player cap: no quarterback may quietly become half the board's outcome.
-      const perPlayer = new Map<string, number>();
-      for (const key of playerSquares) {
-        // Resolver player refs are stored as `Display Name::<balldontlie id>`.
-        const player = /::(\d+)/.exec(key)?.[1] ?? key;
-        perPlayer.set(player, (perPlayer.get(player) ?? 0) + 1);
-      }
-      for (const [player, count] of perPlayer) {
-        expect(count, `${player} owns ${count} squares`).toBeLessThanOrEqual(2);
-      }
+        const quality = auditSportsBingoBoardQuality({ sportKey: "americanfootball_nfl", squares: board.squares });
+        expect(quality.eligible, quality.issues.join(", ")).toBe(true);
+        expect(quality.distinctPlayerPropSubjects).toBeGreaterThanOrEqual(6);
+        expect(quality.representedPlayerTeams).toEqual(["away", "home"]);
+        expect(quality.earlyProgressOpportunities).toBeGreaterThanOrEqual(3);
 
-      // Per-prop-type cap: not six receiving-yards squares.
-      const perMarket = new Map<string, number>();
-      for (const key of playerSquares) {
-        const market = key.startsWith("player_prop:") ? key.split(":")[1] : key.split(":")[0];
-        perMarket.set(market, (perMarket.get(market) ?? 0) + 1);
+        // Per-player cap: no quarterback may quietly become half the board's outcome.
+        const perPlayer = new Map<string, number>();
+        for (const { key } of playerSquares) {
+          // Resolver player refs are stored as `Display Name::<balldontlie id>`.
+          const player = /::(\d+)/.exec(key)?.[1] ?? key;
+          perPlayer.set(player, (perPlayer.get(player) ?? 0) + 1);
+        }
+        for (const [player, count] of perPlayer) {
+          expect(count, `${player} owns ${count} squares`).toBeLessThanOrEqual(2);
+        }
+
+        // Per-prop-type cap: not six receiving-yards squares.
+        const perMarket = new Map<string, number>();
+        for (const { key } of playerSquares) {
+          const market = key.startsWith("player_prop:") ? key.split(":")[1] : key.split(":")[0];
+          perMarket.set(market, (perMarket.get(market) ?? 0) + 1);
+        }
+        for (const [market, count] of perMarket) {
+          expect(count, `${market} appears ${count} times`).toBeLessThanOrEqual(2);
+        }
       }
-      for (const [market, count] of perMarket) {
-        expect(count, `${market} appears ${count} times`).toBeLessThanOrEqual(2);
-      }
+    } finally {
+      Math.random = originalRandom;
     }
   });
 

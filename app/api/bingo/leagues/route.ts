@@ -1,44 +1,36 @@
 import { NextResponse } from "next/server";
 import {
-  isNflGameplayEnabled,
-  isSeasonGatingEnabled,
-  NFL_SPORT_KEY,
-  resolveLeagueSeasonStatus,
-} from "@/lib/leagueSeasonStatus";
-import { SPORTS_BINGO_LEAGUES } from "@/lib/sportsBingoLeagues";
+  BINGO_AVAILABILITY_RETRY_MESSAGE,
+  BINGO_AVAILABILITY_UNAVAILABLE_MESSAGE,
+  resolveSportsBingoCreationAvailability,
+} from "@/lib/sportsBingoAvailability";
 
-// The static key/label/emoji catalog is now shared (`lib/sportsBingoLeagues.ts`). What stays
-// deliberately NOT shared is the fallback in components/bingo/SportsBingoSelectSport.tsx that
-// renders every league *enabled* if this route errors — that fail-open status behavior is the
-// intentional duplication, not the emoji table.
-const LEAGUES = SPORTS_BINGO_LEAGUES.map((league) => ({
-  key: league.sportKey,
-  label: league.label,
-  icon: league.emoji,
-}));
-
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const seasonGatingEnabled = isSeasonGatingEnabled();
-    const nflGameplayEnabled = isNflGameplayEnabled();
+    const { searchParams } = new URL(request.url);
+    const availability = await resolveSportsBingoCreationAvailability({
+      tzOffsetMinutes: searchParams.get("tzOffsetMinutes"),
+      evaluationTimeMs: Date.now(),
+    });
+    const leagues = availability.leagues
+      .filter((league) => league.games.length > 0)
+      .map((league) => ({ key: league.sportKey, label: league.label, icon: league.emoji }));
 
-    const leagues = await Promise.all(
-      LEAGUES.map(async (league) => {
-        if (league.key === NFL_SPORT_KEY && !nflGameplayEnabled) {
-          // Distinct from `out_of_season`: the flag being off is why NFL is dark, not the
-          // calendar — NFL is in season in September. Keeping this its own status stops the
-          // client from ever rendering the self-contradictory "Out of season · Coming soon".
-          return { ...league, status: "coming_soon" as const, note: "Coming soon" };
-        }
-        if (!seasonGatingEnabled) {
-          return { ...league, status: "in_season" as const, resumesLabel: undefined };
-        }
-        const info = await resolveLeagueSeasonStatus(league.key);
-        return { ...league, status: info.status, resumesLabel: info.resumesLabel };
-      })
-    );
+    if (availability.allFailed) {
+      return NextResponse.json(
+        { ok: false, leagues, error: BINGO_AVAILABILITY_UNAVAILABLE_MESSAGE },
+        { status: 503 }
+      );
+    }
 
-    return NextResponse.json({ ok: true, leagues });
+    return NextResponse.json({
+      ok: true,
+      leagues,
+      incomplete: availability.incomplete,
+      ...(availability.incomplete ? { warning: BINGO_AVAILABILITY_RETRY_MESSAGE } : {}),
+      evaluatedAt: availability.evaluatedAt,
+      tzOffsetMinutes: availability.tzOffsetMinutes,
+    });
   } catch (error) {
     return NextResponse.json(
       {

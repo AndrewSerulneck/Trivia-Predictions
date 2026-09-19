@@ -1808,6 +1808,15 @@ export function listPickEmSports(): PickEmSport[] {
   return PICKEM_SPORTS.map(({ sportKeys, ...rest }) => rest);
 }
 
+/**
+ * Sports offered by the regular daily Pick 'Em experience. NFL has its own
+ * week-based game at /nfl-pickem; keep its shared definition above because
+ * settlement and legacy pick history still depend on it.
+ */
+export function listRegularPickEmSports(): PickEmSport[] {
+  return listPickEmSports().filter((sport) => sport.slug !== "nfl");
+}
+
 export async function listPickEmGames(params: {
   sportSlug: string;
   date?: string;

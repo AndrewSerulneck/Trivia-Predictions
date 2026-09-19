@@ -234,18 +234,18 @@ describe("MLB player_prop voids on missing data instead of missing (Phase 2)", (
 
   it("voids when the MLB stats snapshot itself is missing at Final", () => {
     const result = evaluateResolver(playerPropResolver("Jose Altuve"), scoreSnapshot(true), null, null);
-    expect(result).toEqual({ status: "void", resolved: true });
+    expect(result).toMatchObject({ status: "void", resolved: true });
   });
 
   it("stays pending when the snapshot is missing before Final", () => {
     const result = evaluateResolver(playerPropResolver("Jose Altuve"), scoreSnapshot(false), null, null);
-    expect(result).toEqual({ status: "pending", resolved: false });
+    expect(result).toMatchObject({ status: "pending", resolved: false });
   });
 
   it("voids when the snapshot exists but has no stat line for the player at Final", () => {
     const snapshot = buildMLBGamePlayerStatsSnapshot(mlbCard, mlbGameRow, []);
     const result = evaluateResolver(playerPropResolver("Jose Altuve"), scoreSnapshot(true), null, snapshot);
-    expect(result).toEqual({ status: "void", resolved: true });
+    expect(result).toMatchObject({ status: "void", resolved: true });
   });
 
   it("voids when the player's line resolves to a non-finite value at Final", () => {
@@ -258,10 +258,10 @@ describe("MLB player_prop voids on missing data instead of missing (Phase 2)", (
     // Force the read-back value non-finite, simulating a stat line the box score genuinely can't parse.
     snapshot.lines[0].hits = Number.NaN;
     const result = evaluateResolver(playerPropResolver("Jose Altuve"), scoreSnapshot(true), null, snapshot);
-    expect(result).toEqual({ status: "void", resolved: true });
+    expect(result).toMatchObject({ status: "void", resolved: true });
   });
 
-  it("left the NBA arm alone — still misses (not voids) on a missing snapshot at Final", () => {
+  it("NBA missing final snapshots also remain unknown", () => {
     const nbaSnapshot = ({
       gameId: "990011",
       sportKey: "basketball_nba",
@@ -279,7 +279,7 @@ describe("MLB player_prop voids on missing data instead of missing (Phase 2)", (
       direction: "over",
     } as const;
     const result = evaluateResolver(nbaResolver, nbaSnapshot, null, null);
-    expect(result).toEqual({ status: "miss", resolved: true });
+    expect(result).toMatchObject({ status: "void", resolved: true });
   });
 });
 

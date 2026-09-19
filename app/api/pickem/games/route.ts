@@ -11,6 +11,15 @@ export async function GET(request: Request) {
     const venueId = (searchParams.get("venueId") ?? "").trim();
     const tzOffsetMinutes = searchParams.get("tzOffsetMinutes") ?? undefined;
 
+    // NFL is deliberately a separate, week-based game. Do not let a stale
+    // regular Pick 'Em selection silently revive its retired daily endpoint.
+    if (sportSlug === "nfl") {
+      return NextResponse.json(
+        { ok: false, error: "NFL Pick 'Em is available at /nfl-pickem." },
+        { status: 400 }
+      );
+    }
+
     if (userId) {
       await settlePendingPickEmPicks({ userId });
     }

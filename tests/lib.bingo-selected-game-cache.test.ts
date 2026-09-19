@@ -77,4 +77,19 @@ describe("bingo selected game cache", () => {
 
     expect(readSelectedBingoGame({ sportKey: "basketball_nba", gameId: "game-2" })).toBeNull();
   });
+
+  it("expires at the player's local midnight and when the timezone changes", () => {
+    vi.setSystemTime(new Date("2026-06-10T23:59:30.000Z"));
+    const game = makeGame({ startsAt: "2026-06-10T23:59:59.000Z" });
+    writeSelectedBingoGame(game, 0);
+
+    expect(readSelectedBingoGame({ sportKey: game.sportKey, gameId: game.id, tzOffsetMinutes: 0 })).toEqual(game);
+
+    vi.advanceTimersByTime(31_000);
+    expect(readSelectedBingoGame({ sportKey: game.sportKey, gameId: game.id, tzOffsetMinutes: 0 })).toBeNull();
+
+    vi.setSystemTime(new Date("2026-06-10T23:59:30.000Z"));
+    writeSelectedBingoGame(game, 0);
+    expect(readSelectedBingoGame({ sportKey: game.sportKey, gameId: game.id, tzOffsetMinutes: 240 })).toBeNull();
+  });
 });

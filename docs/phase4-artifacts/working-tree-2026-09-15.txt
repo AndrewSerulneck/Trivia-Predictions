@@ -1,0 +1,86 @@
+ M AGENTS.md
+ M CLAUDE.md
+ M SYSTEM_CONTEXT.md
+ M app/api/bingo/cards/route.ts
+ M app/api/bingo/games/route.ts
+ M app/api/bingo/leagues/route.ts
+ M app/api/bingo/squares/route.ts
+ M app/api/pickem/games/route.ts
+ M app/api/pickem/sports/route.ts
+ M app/api/webhooks/balldontlie/route.ts
+ M app/pickem/[sportSlug]/page.tsx
+ M app/pickem/page.tsx
+ M components/bingo/CreateBoardSheet.tsx
+ M components/bingo/SportsBingoHome.tsx
+ M components/bingo/SportsBingoSelectBoard.tsx
+ M components/bingo/SportsBingoSelectGame.tsx
+ M components/bingo/SportsBingoSelectSport.tsx
+ M components/bingo/bingoBoardShared.tsx
+ M components/nfl-pickem/WeekSelector.tsx
+ M components/pickem/PickEmGameList.tsx
+ M components/ui/Dropdown.tsx
+ M lib/ballDontLieClient.ts
+ M lib/bingoSelectedGameCache.ts
+ M lib/pickem.ts
+ M lib/sportsBingo.ts
+ M lib/sportsBingoNflFlavor.ts
+ M lib/sportsBingoOdds.ts
+ M tests/api.bingo.cards.test.ts
+ M tests/api.bingo.games.test.ts
+ M tests/api.bingo.leagues.test.ts
+ M tests/api.bingo.squares.test.ts
+ M tests/components.bingo.CreateBoardSheet.test.ts
+ M tests/components.bingo.SportsBingoSelectSport.test.ts
+ M tests/components.bingo.historyStack.test.ts
+ M tests/helpers/bingoSupabaseDouble.ts
+ M tests/lib.bingo-selected-game-cache.test.ts
+ M tests/lib.sportsBingo.balldontlie-date-params.test.ts
+ M tests/lib.sportsBingo.board-feasibility.test.ts
+ M "tests/lib.sportsBingo.missing-data-voids.test 2.ts"
+ M tests/lib.sportsBingo.missing-data-voids.test.ts
+ M "tests/lib.sportsBingo.mlb-row-shape.test 2.ts"
+ M tests/lib.sportsBingo.mlb-row-shape.test.ts
+ M tests/lib.sportsBingo.mlb-star-tilt.test.ts
+ M tests/lib.sportsBingo.nfl-flavor-squares.test.ts
+ M tests/lib.sportsBingo.nfl-inactives.test.ts
+ M tests/lib.sportsBingo.nfl-prop-mix.test.ts
+ M tests/lib.sportsBingo.nfl-settlement-confidence.test.ts
+ M tests/lib.sportsBingo.nfl-settlement.test.ts
+ M tests/lib.sportsBingo.nfl-star-tilt.test.ts
+ M tests/lib.sportsBingo.player-props.test.ts
+ M "tests/lib.sportsBingo.sport-path-keys.test 2.ts"
+ M tests/lib.sportsBingo.sport-path-keys.test.ts
+ M "tests/lib.sportsBingo.wnba-row-shape.test 2.ts"
+ M tests/lib.sportsBingo.wnba-row-shape.test.ts
+?? docs/bingo-brunswick-grove-2026-09-09-audit.md
+?? docs/bingo-grading-capability-matrix.md
+?? docs/bingo-pickem-reliability-plan.md
+?? docs/bingo-pickem-reliability-plan_PHASE_0_HANDOFF.md
+?? docs/bingo-pickem-reliability-plan_PHASE_1_HANDOFF.md
+?? docs/bingo-pickem-reliability-plan_PHASE_2_HANDOFF.md
+?? docs/bingo-pickem-reliability-plan_PHASE_3_HANDOFF.md
+?? docs/bingo-pickem-reliability-plan_PHASE_4_HANDOFF.md
+?? docs/phase1-artifacts/
+?? docs/phase4-artifacts/
+?? lib/sportsBingoAvailability.ts
+?? lib/sportsBingoCapabilities.ts
+?? lib/sportsBingoIdentity.ts
+?? lib/sportsBingoSettlement.ts
+?? scripts/audit-bingo-brunswick-incident.cjs
+?? scripts/replay-bingo-brunswick-incident.cjs
+?? scripts/test-bingo-atomic-grading.cjs
+?? supabase/migrations/20260914010000_bingo_atomic_grading.sql
+?? tests/api.bingo.availability-cache.test.ts
+?? tests/api.pickem-regular-discovery.test.ts
+?? tests/components.nfl-pickem-week-selector.test.ts
+?? tests/fixtures/bingo-brunswick-grove-2026-09-09.json
+?? tests/fixtures/bingo-capability-mlb-2026.json
+?? tests/fixtures/bingo-capability-nba-2026.json
+?? tests/fixtures/bingo-capability-wnba-2026.json
+?? tests/helpers/bingoProviderFixtures.ts
+?? tests/lib.pickem-regular-sports.test.ts
+?? tests/lib.sportsBingo-availability.test.ts
+?? tests/lib.sportsBingo-creation-games.test.ts
+?? tests/lib.sportsBingo.brunswick-incident.test.ts
+?? tests/lib.sportsBingo.phase4-capabilities.test.ts
+?? tests/lib.sportsBingo.phase4-recovery.test.ts

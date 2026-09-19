@@ -89,10 +89,7 @@ export const NFL_MONOTONE_TEAM_STAT_FIELDS: ReadonlySet<NFLTeamStatField> = new 
   "turnovers",
   "third_down_conversions",
   "fourth_down_conversions",
-  "total_yards",
   "first_downs",
-  "rushing_yards",
-  "net_passing_yards",
   "total_offensive_plays",
   "sacks",
   "defensive_touchdowns",
@@ -311,16 +308,16 @@ export function describeNFLPlayerStatMax(
     case "defensive_interceptions":
       return threshold <= 1 ? "A defender picks off a pass." : `A defender picks off ${value}+ passes.`;
     case "punts_inside_20":
-      return threshold <= 1 ? "A punt is downed inside the 20." : `${value}+ punts are downed inside the 20.`;
+      return threshold <= 1 ? "A punt finishes inside the 20." : `${value}+ punts finish inside the 20.`;
   }
 }
 
-/** The game-wide sum twin of the square above, e.g. `"4+ punts downed inside the 20."` */
+/** The game-wide sum twin of the square above, e.g. `"4+ punts finish inside the 20."` */
 export function describeNFLPlayerStatTotal(field: NFLPlayerStatField, threshold: number): string {
   const value = formatThreshold(threshold);
   switch (field) {
     case "punts_inside_20":
-      return `${value}+ punts downed inside the 20.`;
+      return `${value}+ punts finish inside the 20.`;
     case "defensive_sacks":
       return `${value}+ sacks in this game.`;
     case "defensive_interceptions":

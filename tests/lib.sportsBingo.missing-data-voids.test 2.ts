@@ -127,7 +127,7 @@ describe("evaluateResolver — missing stats snapshot voids instead of missing (
   it("reproduces production: force-finalized with no snapshot voids across a representative sample", () => {
     for (const { label, resolver } of REPRESENTATIVE_SAMPLE) {
       const result = evaluateResolver(resolver, FORCE_FINALIZED_NO_SCORE, null, null, null);
-      expect(result, label).toEqual({ status: "void", resolved: true });
+      expect(result, label).toMatchObject({ status: "void", resolved: true });
     }
   });
 
@@ -153,11 +153,11 @@ describe("evaluateResolver — missing stats snapshot voids instead of missing (
   it("no over-reach: a snapshot that has not arrived yet (game in progress) still stays pending, not void", () => {
     for (const { label, resolver } of REPRESENTATIVE_SAMPLE) {
       const result = evaluateResolver(resolver, IN_PROGRESS_NO_SCORE, null, null, null);
-      expect(result, label).toEqual({ status: "pending", resolved: false });
+      expect(result, label).toMatchObject({ status: "pending", resolved: false });
     }
   });
 
-  it("no over-reach: a present snapshot where the player/team is genuinely below threshold at Final still misses", () => {
+  it("no over-reach: an empty player/team snapshot is missing evidence at Final", () => {
     const finalizedSnapshot = {
       finalized: true,
       // Minimal shape — only the fields `findNBAPlayerStatLine` / `buildNBATeamAggregates` need to
@@ -181,10 +181,10 @@ describe("evaluateResolver — missing stats snapshot voids instead of missing (
     } as any;
 
     const playerResult = evaluateResolver(PLAYER_KIND, { ...FORCE_FINALIZED_NO_SCORE, completed: true }, finalizedSnapshot, null, null);
-    expect(playerResult.status).toBe("miss");
+    expect(playerResult.status).toBe("void");
 
     const teamResult = evaluateResolver(TEAM_KIND, { ...FORCE_FINALIZED_NO_SCORE, completed: true }, finalizedSnapshot, null, null);
-    expect(teamResult.status).toBe("miss");
+    expect(teamResult.status).toBe("void");
 
     const halftimeResult = evaluateResolver(HALFTIME_KIND, { ...FORCE_FINALIZED_NO_SCORE, completed: true }, finalizedSnapshot, null, null);
     expect(halftimeResult.status === "hit" || halftimeResult.status === "miss").toBe(true);
@@ -257,28 +257,28 @@ describe("evaluateResolver — nba_player_bench_scores does not settle before ti
   it("lineups present, player absent, game in progress -> pending (fails today with miss)", () => {
     const snapshot = snapshotWith(new Map());
     const result = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: false }, snapshot, null, null);
-    expect(result).toEqual({ status: "pending", resolved: false });
+    expect(result).toMatchObject({ status: "pending", resolved: false });
   });
 
-  it("lineups present, player absent, completed -> miss, not void", () => {
+  it("lineups present, player absent, completed -> unknown, not a fabricated miss", () => {
     const snapshot = snapshotWith(new Map());
     const result = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: true }, snapshot, null, null);
-    expect(result).toEqual({ status: "miss", resolved: true });
+    expect(result).toMatchObject({ status: "void", resolved: true });
   });
 
   it("player present and starter -> miss immediately, in progress or not", () => {
     const snapshot = snapshotWith(new Map([[1, { starter: true, teamSide: "home" }]]));
     const inProgress = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: false }, snapshot, null, null);
-    expect(inProgress).toEqual({ status: "miss", resolved: true });
+    expect(inProgress).toMatchObject({ status: "miss", resolved: true });
 
     const completed = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: true }, snapshot, null, null);
-    expect(completed).toEqual({ status: "miss", resolved: true });
+    expect(completed).toMatchObject({ status: "miss", resolved: true });
   });
 
   it("player present, not starter, above threshold -> hit", () => {
     const snapshot = snapshotWith(new Map([[1, { starter: false, teamSide: "home" }]]));
     const result = evaluateResolver(BENCH_RESOLVER, { ...FORCE_FINALIZED_NO_SCORE, completed: true }, snapshot, null, null);
-    expect(result).toEqual({ status: "hit", resolved: true });
+    expect(result).toMatchObject({ status: "hit", resolved: true });
   });
 });
 
@@ -356,7 +356,7 @@ describe("evaluateResolver — WNBA period-stat and bench-scores families void o
   it("all three period-stats families void, not miss, on a fully-populated WNBA snapshot at Final", () => {
     for (const { label, resolver } of PERIOD_STAT_RESOLVERS) {
       const result = evaluateResolver(resolver, WNBA_COMPLETED, wnbaSnapshot, null, null);
-      expect(result, label).toEqual({ status: "void", resolved: true });
+      expect(result, label).toMatchObject({ status: "void", resolved: true });
     }
   });
 
@@ -368,11 +368,11 @@ describe("evaluateResolver — WNBA period-stat and bench-scores families void o
       null,
       null
     );
-    expect(result).toEqual({ status: "void", resolved: true });
+    expect(result).toMatchObject({ status: "void", resolved: true });
   });
 
   it("an equivalent NBA snapshot (both flags true) is unaffected: same box score, families settle normally instead of voiding", () => {
-    const nbaSnapshot = { ...wnbaSnapshot, lineupDataAvailable: true, periodStatsAvailable: true };
+    const nbaSnapshot = { ...wnbaSnapshot, lineupDataAvailable: true, periodStatsAvailable: true, firstHalfByPlayerId: new Map([[wnbaLine.playerId, { pts: 6, ast: 1, stl: 0 }]]), maxQuarterAssistsByPlayerId: new Map([[wnbaLine.playerId, 1]]) };
     const nbaCompleted = { ...WNBA_COMPLETED, sportKey: "basketball_nba" };
     for (const { label, resolver } of PERIOD_STAT_RESOLVERS) {
       const result = evaluateResolver(resolver, nbaCompleted, nbaSnapshot, null, null);

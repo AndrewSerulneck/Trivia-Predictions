@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Regression guard for the missing Monday Night Football bug.
 //
@@ -183,6 +183,11 @@ const WEEK_1_GAMES = [
 ];
 
 beforeEach(() => {
+  // Keep the default cases on the pre-kickoff side of this historical Week 1
+  // fixture. Without a fixed clock, the suite changes meaning once the real
+  // calendar passes kickoff and stops exercising the odds-refresh path.
+  vi.useFakeTimers();
+  vi.setSystemTime("2026-09-09T12:00:00.000Z");
   vi.clearAllMocks();
   db.tables = { nfl_pickem_weeks: [WEEK_ROW], nfl_pickem_game_lines: [] };
 
@@ -210,6 +215,10 @@ beforeEach(() => {
 
     return WEEK_1_GAMES;
   });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("listNFLPickEmGames game fetching", () => {

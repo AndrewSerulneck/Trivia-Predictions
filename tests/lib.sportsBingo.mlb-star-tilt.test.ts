@@ -339,21 +339,12 @@ function installSeededRandom(seed: number): void {
  */
 const MLB_HISTORICAL_STATS_CALLS_PER_BUILD = 2;
 
-/**
- * Captured against the pre-hoist code. See "the star-tier hoist is a pure refactor" below.
- *
- * Board 1's `mlb_webhook_team_event_at_least` thresholds and player-prop mix were re-captured
- * 2026-08-18 for Phase 1 of docs/bingo-correctness-and-wnba-repair-plan.md: `predictMlbTeamEventRate`
- * now prices home/away sides off different base means (see `lib/mlbTeamEventRates.ts`), which is a
- * real, intended change to the rung thresholds this seeded run happens to land on — not a hoist
- * regression. Boards 2 and 3 came back byte-identical to the pre-Phase-1 snapshot, which is exactly
- * what you'd expect: only board 1's seeded draw happened to touch a team-event square whose
- * threshold moved.
- */
-const MLB_HOIST_SNAPSHOT: string[] = [
-  "player_prop:player_hits:nolan braddock::206:over:0.5|player_prop:player_runs:marcus ellwood::201:under:0.5|team_total_over:away:2.5|mlb_webhook_team_event_at_least:away:groundout:10.0|game_total_over:10.5|player_prop:player_home_runs:tobias rannick::202:over:0.5|mlb_webhook_team_event_at_least:away:flyout:7.0|team_total_over:away:1.5|spread_keep_close:away:4.5|spread_keep_close:away:5.5|team_total_under:away:3.5|player_prop:player_stolen_bases:desmond vail::203:under:0.5|free|player_prop:player_rbis:corbin reyes::204:over:0.5|moneyline:away|spread_more_than:home:4.5|game_total_over:6.5|mlb_webhook_team_event_at_least:away:strikeout:10.0|game_total_over:11.5|player_prop:player_home_runs:desmond vail::203:over:0.5|player_prop:player_runs:tobias rannick::202:under:0.5|moneyline:home|spread_more_than:home:5.5|mlb_webhook_team_event_at_least:away:flyout:5.0|player_prop:player_hits:silas ferren::207:under:0.5",
-  "team_total_under:away:0.5|player_prop:player_runs:marcus ellwood::201:over:0.5|mlb_webhook_team_event_at_least:away:groundout:10.0|mlb_webhook_team_event_at_least:home:flyout:5.0|game_total_over:6.5|moneyline:home|spread_keep_close:away:5.5|spread_keep_close:away:3.5|mlb_webhook_team_event_at_least:away:walk:4.0|player_prop:player_stolen_bases:tobias rannick::202:under:0.5|player_prop:player_rbis:elias thorne::205:over:0.5|moneyline:away|free|game_total_over:9.5|player_prop:player_stolen_bases:desmond vail::203:under:0.5|mlb_webhook_team_event_at_least:home:hit:10.0|game_total_over:11.5|player_prop:player_hits:nolan braddock::206:under:0.5|team_total_under:away:1.5|spread_more_than:home:4.5|player_prop:player_runs:desmond vail::203:under:0.5|team_total_over:home:6.5|player_prop:player_hits:tobias rannick::202:under:0.5|player_prop:player_rbis:corbin reyes::204:over:0.5|spread_more_than:home:3.5",
-  "player_prop:player_hits:elias thorne::205:over:0.5|mlb_webhook_team_event_at_least:home:groundout:9.0|player_prop:player_stolen_bases:marcus ellwood::201:under:0.5|spread_more_than:home:4.5|team_total_over:away:3.5|team_total_under:away:3.5|player_prop:player_runs:desmond vail::203:over:0.5|player_prop:player_runs:tobias rannick::202:over:0.5|game_total_under:9.5|spread_keep_close:away:3.5|player_prop:player_rbis:nolan braddock::206:over:0.5|spread_keep_close:away:4.5|free|spread_keep_close:away:5.5|moneyline:home|game_total_under:8.5|mlb_webhook_team_event_at_least:away:strikeout:9.0|moneyline:away|player_prop:player_hits:nolan braddock::206:under:0.5|mlb_webhook_team_event_at_least:away:flyout:5.0|mlb_webhook_team_event_at_least:home:flyout:6.0|player_prop:player_rbis:marcus ellwood::201:over:0.5|game_total_under:5.5|player_prop:player_stolen_bases:tobias rannick::202:over:0.5|team_total_under:home:4.5",
+/** Seeded regression baseline after Phase 4 removes the unverified quick-out event. */
+// Re-captured 2026-09-14: reliability Phase 4 intentionally excludes unverified resolver families.
+const MLB_PHASE4_CAPABILITY_SNAPSHOT: string[] = [
+  "player_prop:player_rbis:elias thorne::205:over:0.5|team_total_under:away:0.5|spread_keep_close:away:4.5|player_prop:player_runs:desmond vail::203:over:0.5|spread_keep_close:away:5.5|player_prop:player_stolen_bases:tobias rannick::202:over:0.5|moneyline:away|player_prop:player_stolen_bases:desmond vail::203:over:0.5|mlb_webhook_team_event_at_least:away:hit:10.0|player_prop:player_rbis:tobias rannick::202:under:0.5|moneyline:home|game_total_over:10.5|free|player_prop:player_hits:nolan braddock::206:under:0.5|team_total_over:home:6.5|player_prop:player_hits:desmond vail::203:under:0.5|mlb_webhook_team_event_at_least:home:hit_by_pitch:1.0|spread_more_than:home:3.5|game_total_under:8.5|mlb_webhook_team_event_at_least:away:flyout:5.0|game_total_over:11.5|mlb_webhook_team_event_at_least:home:strikeout:8.0|mlb_webhook_team_event_at_least:away:flyout:6.0|spread_more_than:home:4.5|team_total_over:away:1.5",
+  "game_total_over:11.5|mlb_webhook_team_event_at_least:home:strikeout:8.0|team_total_over:away:3.5|player_prop:player_rbis:tobias rannick::202:under:0.5|moneyline:home|player_prop:player_hits:silas ferren::207:under:0.5|team_total_over:away:1.5|game_total_under:9.5|player_prop:player_stolen_bases:desmond vail::203:under:0.5|team_total_under:away:4.5|moneyline:away|mlb_webhook_team_event_at_least:home:groundout:8.0|free|player_prop:player_rbis:nolan braddock::206:over:0.5|player_prop:player_hits:desmond vail::203:under:0.5|spread_keep_close:away:4.5|player_prop:player_stolen_bases:tobias rannick::202:over:0.5|game_total_under:5.5|player_prop:player_runs:desmond vail::203:under:0.5|mlb_webhook_team_event_at_least:home:flyout:6.0|mlb_webhook_team_event_at_least:away:groundout:8.0|spread_more_than:home:3.5|spread_keep_close:away:5.5|spread_more_than:home:4.5|game_total_over:10.5",
+  "player_prop:player_runs:tobias rannick::202:over:0.5|mlb_webhook_team_event_at_least:away:walk:4.0|game_total_under:6.5|player_prop:player_hits:oren kastle::208:under:0.5|moneyline:away|mlb_webhook_team_event_at_least:away:strikeout:9.0|spread_more_than:home:4.5|spread_more_than:home:5.5|player_prop:player_rbis:desmond vail::203:under:0.5|game_total_under:8.5|player_prop:player_stolen_bases:marcus ellwood::201:over:0.5|player_prop:player_rbis:corbin reyes::204:under:0.5|free|mlb_webhook_team_event_at_least:away:groundout:8.0|mlb_webhook_team_event_at_least:home:walk:3.0|player_prop:player_runs:desmond vail::203:over:0.5|team_total_over:home:5.5|moneyline:home|game_total_over:11.5|spread_keep_close:away:4.5|player_prop:player_hits:tobias rannick::202:under:0.5|spread_keep_close:away:5.5|mlb_webhook_team_event_at_least:home:flyout:6.0|team_total_over:away:0.5|team_total_under:away:2.5"
 ];
 
 describe("MLB star-tilted prop selection, through real board generation", () => {
@@ -376,14 +367,24 @@ describe("MLB star-tilted prop selection, through real board generation", () => 
    * identical" gate, MLB half. `buildMLBStarTiers` ran inside `pickCandidateSet` (up to 180 times
    * per board) on an O(n^2) percentile walk; hoisting it into `generateBoardForGame` must not move
    * a single square. `Math.random` is the generator's only entropy source, so a seeded stream makes
-   * the whole pipeline deterministic and the boards below were captured against the pre-hoist code.
+   * the whole pipeline deterministic. Phase 5 deliberately changes selection by removing repeated
+   * player-stat ideas; the old snapshot remains below as the explicit before-state, while two runs
+   * from the new generator must still be byte-identical.
    */
-  it("deals byte-identical boards off a seeded random stream (pre-hoist snapshot)", async () => {
+  it("deals byte-identical boards from the same stream and differs from the Phase 4 baseline", async () => {
     installFetchMock(REALISTIC_PROP_ROWS);
     installSeededRandom(0x5eed2);
     const boards = await generateBoards(3);
     const signatures = boards.map((board) => board.map((square) => square.key).join("|"));
-    expect(signatures).toEqual(MLB_HOIST_SNAPSHOT);
+    expect(signatures).not.toEqual(MLB_PHASE4_CAPABILITY_SNAPSHOT);
+
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    vi.resetModules();
+    installFetchMock(REALISTIC_PROP_ROWS);
+    installSeededRandom(0x5eed2);
+    const replay = await generateBoards(3);
+    expect(replay.map((board) => board.map((square) => square.key).join("|"))).toEqual(signatures);
   }, 60_000);
 
   /**

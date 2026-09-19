@@ -2,10 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   listSportsBingoSquareTemplates: vi.fn(),
+  requireCreationGame: vi.fn(),
+  availabilityErrorStatus: vi.fn(),
 }));
 
 vi.mock("@/lib/sportsBingo", () => ({
   listSportsBingoSquareTemplates: mocks.listSportsBingoSquareTemplates,
+}));
+
+vi.mock("@/lib/sportsBingoAvailability", () => ({
+  requireSportsBingoCreationGame: mocks.requireCreationGame,
+  sportsBingoAvailabilityErrorStatus: mocks.availabilityErrorStatus,
 }));
 
 import { GET } from "@/app/api/bingo/squares/route";
@@ -13,6 +20,10 @@ import { GET } from "@/app/api/bingo/squares/route";
 describe("/api/bingo/squares", () => {
   beforeEach(() => {
     mocks.listSportsBingoSquareTemplates.mockReset();
+    mocks.requireCreationGame.mockReset();
+    mocks.requireCreationGame.mockResolvedValue({ id: "game-1" });
+    mocks.availabilityErrorStatus.mockReset();
+    mocks.availabilityErrorStatus.mockReturnValue(null);
   });
 
   it("returns 400 when gameId is missing", async () => {
@@ -47,7 +58,9 @@ describe("/api/bingo/squares", () => {
       ],
     });
 
-    const response = await GET(new Request("http://localhost/api/bingo/squares?gameId=game-1&sportKey=basketball_nba"));
+    const response = await GET(
+      new Request("http://localhost/api/bingo/squares?gameId=game-1&sportKey=basketball_nba&tzOffsetMinutes=240")
+    );
     const body = (await response.json()) as {
       ok: boolean;
       supportSummary: { supported: number; possible: number };
@@ -62,6 +75,12 @@ describe("/api/bingo/squares", () => {
       gameId: "game-1",
       sportKey: "basketball_nba",
       includePlayerProps: true,
+    });
+    expect(mocks.requireCreationGame).toHaveBeenCalledWith({
+      gameId: "game-1",
+      sportKey: "basketball_nba",
+      tzOffsetMinutes: "240",
+      evaluationTimeMs: expect.any(Number),
     });
   });
 });

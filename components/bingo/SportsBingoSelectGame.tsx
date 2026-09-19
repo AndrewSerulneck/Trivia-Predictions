@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import { writeSelectedBingoGame } from "@/lib/bingoSelectedGameCache";
@@ -19,6 +19,8 @@ export type SportsBingoGame = {
 type GamesResponse = {
   ok: boolean;
   games?: SportsBingoGame[];
+  incomplete?: boolean;
+  warning?: string;
   error?: string;
 };
 
@@ -58,9 +60,11 @@ export type SportsBingoSelectGameProps = {
   /**
    * Sheet host (plan 4a). When supplied, picking a game calls this instead of navigating to
    * `/bingo/select-board`. The selected game is still written to the session cache either way,
-   * so step 3 can render its summary without a second `/api/bingo/games` round trip.
+   * so step 3 can render its summary while its required server revalidation is in flight.
    */
   onSelectGame?: (game: SportsBingoGame) => void;
+  /** Called when a once-selected league no longer has any verified creation game. */
+  onSportUnavailable?: () => void;
   /** The sheet header already says "Step 2 of 3"; suppress the in-card copy so it is not said twice. */
   hideStepHeading?: boolean;
 };
@@ -68,6 +72,7 @@ export type SportsBingoSelectGameProps = {
 export function SportsBingoSelectGame({
   sportKey: sportKeyProp,
   onSelectGame,
+  onSportUnavailable,
   hideStepHeading = false,
 }: SportsBingoSelectGameProps) {
   const router = useRouter();
@@ -77,12 +82,14 @@ export function SportsBingoSelectGame({
   // so the prop is the only thing that can resolve the league there.
   const routeSportKey = (searchParams.get("sportKey") ?? "").trim();
   const sportKey = (sportKeyProp ?? routeSportKey).trim() || "basketball_nba";
+  const localDateRef = useRef("");
 
   const [userId, setUserId] = useState("");
   const [games, setGames] = useState<SportsBingoGame[]>([]);
   const [activeGameIds, setActiveGameIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [warningMessage, setWarningMessage] = useState("");
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -91,6 +98,7 @@ export function SportsBingoSelectGame({
   const loadGames = useCallback(async () => {
     setLoading(true);
     setErrorMessage("");
+    setWarningMessage("");
 
     try {
       const response = await fetch(
@@ -103,17 +111,49 @@ export function SportsBingoSelectGame({
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to load available games.");
       }
-      setGames(payload.games ?? []);
+      const nextGames = payload.games ?? [];
+      if (nextGames.length === 0 && !payload.incomplete) {
+        setGames([]);
+        if (onSportUnavailable) {
+          onSportUnavailable();
+        } else {
+          router.replace("/bingo/select-sport");
+        }
+        return;
+      }
+      setGames(nextGames);
+      setWarningMessage(payload.incomplete ? payload.warning ?? "Some games could not be checked. Try again." : "");
     } catch (error) {
       setGames([]);
       setErrorMessage(error instanceof Error ? error.message : "Failed to load available games.");
     } finally {
       setLoading(false);
     }
-  }, [sportKey]);
+  }, [onSportUnavailable, router, sportKey]);
 
   useEffect(() => {
     void loadGames();
+  }, [loadGames]);
+
+  useEffect(() => {
+    localDateRef.current = new Date().toDateString();
+    const revalidate = () => {
+      if (document.visibilityState !== "hidden") void loadGames();
+    };
+    const checkLocalDate = () => {
+      const nextDate = new Date().toDateString();
+      if (nextDate === localDateRef.current) return;
+      localDateRef.current = nextDate;
+      void loadGames();
+    };
+    window.addEventListener("focus", revalidate);
+    document.addEventListener("visibilitychange", revalidate);
+    const dateTimer = window.setInterval(checkLocalDate, 60_000);
+    return () => {
+      window.removeEventListener("focus", revalidate);
+      document.removeEventListener("visibilitychange", revalidate);
+      window.clearInterval(dateTimer);
+    };
   }, [loadGames]);
 
   useEffect(() => {
@@ -149,7 +189,21 @@ export function SportsBingoSelectGame({
   return (
     <div className="tp-bingo-theme space-y-4">
       {errorMessage ? (
-        <div className="rounded-md border border-rose-500/40 bg-rose-950/30 p-3 text-sm text-rose-300">{errorMessage}</div>
+        <div className="rounded-md border border-rose-500/40 bg-rose-950/30 p-3 text-sm text-rose-300" role="alert">
+          <p>{errorMessage}</p>
+          <button
+            type="button"
+            onClick={() => void loadGames()}
+            className="tp-clean-button mt-2 rounded-lg border border-rose-300/30 px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em]"
+          >
+            Try Again
+          </button>
+        </div>
+      ) : null}
+      {warningMessage ? (
+        <div className="rounded-md border border-amber-300/35 bg-amber-300/10 p-3 text-sm text-amber-100" role="status">
+          {warningMessage}
+        </div>
       ) : null}
 
       <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
@@ -186,7 +240,7 @@ export function SportsBingoSelectGame({
                     if (unavailable) {
                       return;
                     }
-                    writeSelectedBingoGame(game);
+                    writeSelectedBingoGame(game, new Date().getTimezoneOffset());
                     if (onSelectGame) {
                       onSelectGame(game);
                       return;

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  BINGO_GAME_BUFFER_MS,
   mergeLiveCardUpdates,
   resolveHistoryStackEntry,
   type BingoCard,
@@ -55,23 +54,23 @@ describe("resolveHistoryStackEntry — past-day board stack", () => {
     expect(entry.card.status).toBe("active");
   });
 
-  it("normalizes a stale `active` row past the buffer to lost, and not live", () => {
-    const card = makeCard({ startsAt: new Date(now - BINGO_GAME_BUFFER_MS - 60_000).toISOString() });
+  it("preserves an active server row beyond the former six-hour cutoff", () => {
+    const card = makeCard({ startsAt: new Date(now - 6 * HOUR_MS - 60_000).toISOString() });
     const entry = resolveHistoryStackEntry(card, now);
-    expect(entry.card.status).toBe("lost");
-    expect(entry.isLive).toBe(false);
-    // Normalization copies; the caller's row is never mutated in place.
-    expect(entry.card).not.toBe(card);
+    expect(entry.card.status).toBe("active");
+    expect(entry.isLive).toBe(true);
+    // Age is not evidence of a loss.
+    expect(entry.card).toBe(card);
     expect(card.status).toBe("active");
   });
 
-  it("treats the buffer boundary itself as over (>=, matching the today-stack partition)", () => {
+  it("keeps the former six-hour boundary active until the server settles it", () => {
     const entry = resolveHistoryStackEntry(
-      makeCard({ startsAt: new Date(now - BINGO_GAME_BUFFER_MS).toISOString() }),
+      makeCard({ startsAt: new Date(now - 6 * HOUR_MS).toISOString() }),
       now
     );
-    expect(entry.card.status).toBe("lost");
-    expect(entry.isLive).toBe(false);
+    expect(entry.card.status).toBe("active");
+    expect(entry.isLive).toBe(true);
   });
 
   it("does not mark an unstarted board live", () => {

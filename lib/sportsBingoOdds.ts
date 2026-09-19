@@ -1,6 +1,6 @@
 import "server-only";
 
-import { fetchBallDontLieList } from "@/lib/ballDontLieClient";
+import { fetchBallDontLieList, type BallDontLieFailureBox } from "@/lib/ballDontLieClient";
 
 // Phase 2 of docs/prop-bingo-nfl-plan.md — NFL core squares off real market numbers.
 // Phase 3 extends it with the player-prop consensus feed and the team/game/quarter probability
@@ -254,7 +254,10 @@ export function computeNFLOddsConsensus(rows: BallDontLieNFLOddsRow[]): Map<stri
  * Never throws and never rejects: a provider outage returns an empty map, which drops NFL boards
  * back to the league-average fallback path rather than blanking the game list.
  */
-export async function fetchNFLOddsConsensus(gameIds: string[]): Promise<Map<string, SportsBingoMarketConsensus>> {
+export async function fetchNFLOddsConsensus(
+  gameIds: string[],
+  options: { failure?: BallDontLieFailureBox } = {}
+): Promise<Map<string, SportsBingoMarketConsensus>> {
   const requested = [...new Set(gameIds.map((id) => String(id ?? "").trim()).filter(Boolean))];
   if (requested.length === 0) {
     return new Map();
@@ -275,9 +278,11 @@ export async function fetchNFLOddsConsensus(gameIds: string[]): Promise<Map<stri
     rows = await fetchBallDontLieList<BallDontLieNFLOddsRow>("/nfl/v1/odds", query, {
       maxPages: NFL_ODDS_MAX_PAGES,
       truncation,
+      failure: options.failure,
     });
   } catch (error) {
     console.error("[sportsBingoOdds] Failed to fetch NFL odds consensus:", error);
+    if (options.failure) options.failure.failed = true;
     return new Map();
   }
 

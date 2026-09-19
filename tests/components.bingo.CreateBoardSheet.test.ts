@@ -19,9 +19,10 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
  */
 
 const routerPush = vi.fn();
+const routerReplace = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: routerPush }),
+  useRouter: () => ({ push: routerPush, replace: routerReplace }),
   useSearchParams: () => new URLSearchParams(""),
 }));
 
@@ -44,7 +45,20 @@ function stubBingoFetch(): void {
         return jsonResponse({ ok: true, leagues: [NBA_LEAGUE] });
       }
       if (url.includes("/api/bingo/games")) {
-        return jsonResponse({ ok: true, games: [] });
+        return jsonResponse({
+          ok: true,
+          games: [
+            {
+              id: "game-1",
+              sportKey: "basketball_nba",
+              homeTeam: "Boston Celtics",
+              awayTeam: "New York Knicks",
+              startsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+              gameLabel: "New York Knicks vs. Boston Celtics",
+              isLocked: false,
+            },
+          ],
+        });
       }
       return jsonResponse({ ok: true, cards: [] });
     })
@@ -53,6 +67,7 @@ function stubBingoFetch(): void {
 
 beforeEach(() => {
   routerPush.mockClear();
+  routerReplace.mockClear();
   stubBingoFetch();
   // jsdom ships no matchMedia; the sheet reads it to no-op its exit timer under reduced motion.
   vi.stubGlobal(
@@ -119,6 +134,70 @@ describe("CreateBoardSheet (plan 4b)", () => {
 
     expect(await screen.findByText("Step 1 of 3")).toBeTruthy();
     expect(routerPush).not.toHaveBeenCalled();
+  });
+
+  it("returns to league selection when the selected league loses its final eligible game", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/api/bingo/leagues")) {
+          return jsonResponse({ ok: true, leagues: [NBA_LEAGUE] });
+        }
+        if (url.includes("/api/bingo/games")) {
+          return jsonResponse({ ok: true, incomplete: false, games: [] });
+        }
+        return jsonResponse({ ok: true, cards: [] });
+      })
+    );
+
+    render(createElement(CreateBoardSheet, { onClose: vi.fn(), onCreated: vi.fn() }));
+    fireEvent.click(await screen.findByRole("button", { name: /NBA/ }));
+
+    await waitFor(() => expect(screen.getByText("Step 1 of 3")).toBeTruthy());
+    expect(screen.queryByText("Step 2 of 3")).toBeNull();
+  });
+
+  it("does not generate from a cached selection when server revalidation says the game is stale", async () => {
+    let gameRequests = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/bingo/leagues")) {
+        return jsonResponse({ ok: true, leagues: [NBA_LEAGUE] });
+      }
+      if (url.includes("/api/bingo/games")) {
+        gameRequests += 1;
+        return jsonResponse({
+          ok: true,
+          incomplete: false,
+          games:
+            gameRequests === 1
+              ? [
+                  {
+                    id: "game-stale",
+                    sportKey: "basketball_nba",
+                    homeTeam: "Boston Celtics",
+                    awayTeam: "New York Knicks",
+                    startsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                    gameLabel: "New York Knicks vs. Boston Celtics",
+                    isLocked: false,
+                  },
+                ]
+              : [],
+        });
+      }
+      return jsonResponse({ ok: true, cards: [] });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(createElement(CreateBoardSheet, { onClose: vi.fn(), onCreated: vi.fn() }));
+    fireEvent.click(await screen.findByRole("button", { name: /NBA/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /New York Knicks/ }));
+
+    await waitFor(() => expect(screen.getByText("Step 1 of 3")).toBeTruthy());
+    expect(
+      fetchMock.mock.calls.some(([, init]) => (init as RequestInit | undefined)?.method === "POST")
+    ).toBe(false);
   });
 
   it("has no step-back control on step 1 — Close is the only way out of the first step", async () => {

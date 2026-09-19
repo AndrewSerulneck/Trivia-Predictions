@@ -63,6 +63,7 @@
     "bingo:baseline": "node --env-file=.env.local --conditions react-server --import tsx scripts/baseline-bingo-win-rates.cjs",
     "bingo:simulate": "node --env-file=.env.local --conditions react-server --import tsx scripts/simulate-bingo-boards.cjs",
     "bingo:simulate:backtest": "node --env-file=.env.local --conditions react-server --import tsx scripts/simulate-bingo-boards.cjs --backtest",
+    "bingo:audit:phase5": "node --conditions react-server --import tsx scripts/audit-bingo-phase5.cjs",
     "live-showdown:seed": "node --env-file=.env.local --import tsx scripts/seedLiveShowdownPool.ts",
     "trivia:restore-speed": "node --env-file=.env.local scripts/restore-deleted-speed-trivia.cjs",
     "landmark:images": "node --env-file=.env.local scripts/enrich-landmark-images.cjs",

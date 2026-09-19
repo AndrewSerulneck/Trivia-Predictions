@@ -114,37 +114,71 @@ Before this, Back had 10 implementations across 5 visual treatments, Next had 2,
   - Generation/analysis model: Claude Opus 4.8 (rejects the deprecated `temperature` param). Scripts run via `node --env-file=.env.local` and accept `ANTHROPIC_USERNAME_MODERATOR_API_KEY` locally.
 
 ### Sports Bingo
-- Players mark off bingo squares based on real sports events tied to live NBA, WNBA, and MLB games.
-  **NFL boards are fully built but flag-gated off** (`NEXT_PUBLIC_BINGO_NFL_ENABLED`, single reader
-  `isNflGameplayEnabled()` in `lib/leagueSeasonStatus.ts`) pending the activation pass in
-  `docs/prop-bingo-nfl-activation-plan.md`. Off = NFL never appears in the picker, fully inert.
-- Each square has a `resolver` — a typed rule that defines what must happen for the square to be marked hit or miss. Resolver types include:
-  - **NBA/WNBA player stat milestones:** e.g. "LeBron scores 25+ points" (`nba_player_stat_at_least`)
-  - **NBA/WNBA team stats:** e.g. "team outrebounds opponent", "team scores first", "leads at halftime"
-  - **NBA/WNBA player achievements:** double-double, triple-double, perfect FT, zero turnovers, etc.
-  - **MLB webhook events:** batter/pitcher prop events delivered in real time (e.g. home run, strikeout)
-  - **NFL:** market-derived core ladder (moneyline/spread/total/team-total), quarter/half specials,
-    star-tilted player props (`player_prop`, `nfl_player_anytime_td`, `nfl_player_first_td`),
-    play-by-play squares, and flavor/team-stat squares. See `docs/prop-bingo-nfl-plan.md`.
-  - **Moneyline / spread / game total / team total / player prop:** settled when game is final
-- Squares resolve to `hit`, `miss`, or remain `pending` during live play.
 
-**Real-time update pipeline (latency goal: near-instant — same as Fantasy):**
-- BallDontLie webhooks → `/api/webhooks/balldontlie` → `resolveBingoSquares()` runs immediately on every NBA/WNBA player stat event, checking all pending squares for that game against the incoming stats.
-- MLB prop squares are resolved via `applyMlbWebhookPropEvent()` and `applyMlbPlayerSnapshotEvent()` on each MLB stat event.
-- `refreshSportsBingoProgress()` is called after every webhook event (with throttled invalidation) to push updated state to clients.
-- Fallback: `/api/cron/bingo-progress` runs every 1 minute.
-- Squares that depend on game outcome (moneyline, spread, totals) are resolved when the game-final event arrives via webhook, triggering `refreshSportsBingoProgress({ limit: 500, bypassCache: true })`.
-- **NFL has no BallDontLie webhook surface** — there is no `/api/webhooks/balldontlie` path for NFL.
-  Every NFL square (grading, settlement, and the `live-stats:americanfootball_nfl` ActionPop
-  broadcast) is driven entirely by the 1-minute `/api/cron/bingo-progress` sweep polling
-  `/nfl/v1/stats`. Late-scratch handling is also sweep-driven: `resolveNFLInjuryIndex`
-  (`/nfl/v1/player_injuries`, 24h-cached) filters inactive players out of board generation, and
-  `autoSwapInactiveNFLPropSquares` swaps a prop square inside the kickoff window if its player is
-  ruled out (mirrors MLB's `autoSwapLateScratchedStarSquares`).
+**Reliability plan complete and developer-accepted (2026-09-19).** Andrew confirmed authenticated
+Prop Bingo works after the atomic migration. Current plan:
+`docs/bingo-pickem-reliability-plan.md`; maintenance starts at
+`docs/bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md` and the dated release record.
+Andrew intentionally skipped Phase 6 historical reconciliation. The Brunswick Grove/game
+1392216 board still replays 25/25 with a winning third column, but its stored lost result,
+points and rewards remain unchanged by product decision.
+
+- Supported leagues remain NBA, WNBA, MLB and NFL. Create Board shows a league only when
+  it has a boardable game on the player's current local date before kickoff. Existing
+  36-hour upstream lookahead remains. `lib/sportsBingoAvailability.ts` shares this rule
+  across creation hosts/routes; season guesses and old NFL activation flags do not govern
+  this local implementation. Empty leagues do not block existing board viewing/history.
+- `lib/sportsBingoQuality.ts` makes selection and availability share the same quality floor:
+  24 supported non-free cells, unique player-stat ideas, no player above two cells, and at
+  least three NFL early-progress opportunities. Rich NFL boards preserve 10 core / 6 special /
+  8 props with six subjects and both teams; thin boards never exceed six specials.
+- `lib/sportsBingoCapabilities.ts` filters base/enriched catalogs and final selection.
+  37 typed kinds including FREE are admitted: shared score rules; NBA/WNBA cumulative
+  player milestones and three team totals; NFL verified player, score/quarter and box-score
+  families; MLB verified player props and box-score-derived events. New named-player
+  squares require provider IDs. NFL plays/first-TD, extra basketball achievement/period/
+  lineup families and MLB quick-outs are legacy-only. The matrix gives exact parameters:
+  `docs/bingo-grading-capability-matrix.md`. Odds alone never prove grading capability.
+- `lib/sportsBingo.ts:evaluateResolver` checks evidence before arithmetic. Failed or
+  truncated pagination is unavailable; explicit zero, sparse null and absent fields differ.
+  NFL missing participants require exact completed-game designation plus reconciled offenses.
+  NBA/WNBA minutes are normalized correctly; MLB pitching innings are outs notation.
+- Stored `nfl` and `nba` keys are normalized by `lib/sportsBingoIdentity.ts` at read/query/
+  dispatch boundaries. Shared SQL canonicalization stays unchanged.
+- Webhooks (NBA/WNBA/MLB) and cron wake the same snapshot grading sweep. Incremental MLB
+  `currentCount` and isolated NBA event payloads no longer directly finalize squares.
+  NFL has no corresponding webhook path and remains on the existing one-minute cron.
+  Live-stat animation broadcasts remain, alongside awaited `bingo-game:<id>/card_updated`.
+- `lib/sportsBingoSettlement.ts` keeps incomplete final evidence pending, confirms final
+  for at least 60 seconds, allows 2 hours for delayed final data, and caps no-final recovery
+  at 48 hours from kickoff. All provisional statuses are revisited; a winning line alone
+  does not finalize a board with pending evidence. Void reasons persist in grading_state.
+  Terminal won/lost correction requires explicit reviewed repair, not ordinary refresh.
+- Migration `20260914010000_bingo_atomic_grading.sql` adds grading_state and a
+  service-role-only RPC for locked/versioned whole-board updates plus notification. Points
+  remain in the existing reward-claim path. It was applied to linked Supabase project
+  `pkmxupsayzshvpirkaav` at 2026-09-19T23:48Z and its column/RPC were verified through
+  PostgREST; the application is not deployed. Row/resolver/version guards reject partial/stale observations.
+- Client cards refresh on broadcast, subscription/reconnection, focus/online/visibility
+  and every 30 seconds while visible. History trusts server status; no six-hour fake loss.
+- Final local gates pass: NFL 288 tests, MLB 142, full Vitest 2,620 pass / 13
+  environment-gated skip / zero fail, PWA 20, typecheck/lint and a 179-page build. A
+  read-only 16-game 2026 Week 1 provider replay reproduced every final score/quarter sum
+  and parsed every first-TD scorer. Physical-device review and real NFL plus webhook-driven
+  provider-to-client timing remain useful operational monitoring, but Andrew accepted them as
+  non-blocking and closed the plan.
+
+Maintain square support by updating the matrix, captured-provider/boundary/correction
+fixtures and capability gate before the generator; replay all four leagues and the
+original incident. Calibrate variety/win rates separately from grading correctness.
 
 ### Pick'Em
 - Users select the winner from a list of that day's games across one or more sports.
+- Regular Pick ’Em discovery (`/pickem`, `/api/pickem/sports`, `PickEmGameList` and the
+  alternate sport selector) excludes football. Legacy regular `/pickem/nfl` entry redirects
+  to `/nfl-pickem`. The dedicated NFL game remains fully supported with week navigation,
+  existing picks/history, spread locking, points, rewards and settlement. Its week chooser
+  uses the shared accessible `components/ui/Dropdown.tsx`; it is not a regular sport tab.
 - Pick outcomes are settled via `lib/pickem.ts`.
 - **Settlement latency goal: as close to instant as possible after a game ends.**
   - Primary fast path: BallDontLie sends a game-final webhook event → `/api/webhooks/balldontlie` detects `isGameFinal` (via event type or game status) → immediately calls `settlePendingPickEmPicks()`. This fires the moment the data provider registers the game as over.

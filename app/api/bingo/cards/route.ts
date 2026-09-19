@@ -6,22 +6,15 @@ import {
   listUserSportsBingoCardDates,
   listUserSportsBingoCards,
 } from "@/lib/sportsBingo";
-import { resolveLeagueBlockReason } from "@/lib/leagueSeasonStatus";
+import {
+  requireSportsBingoCreationGame,
+  sportsBingoAvailabilityErrorStatus,
+} from "@/lib/sportsBingoAvailability";
 import {
   maybeRequireActiveVenuePresence,
   maybeRequireActiveVenuePresenceForUser,
   venuePresenceErrorResponse,
 } from "@/lib/venuePresence";
-
-// Deep-link bypass protection: the picker already hides out-of-season (and not-yet-activated)
-// leagues, but a scripted client can POST straight here.
-async function rejectIfLeagueUnavailable(sportKey: string): Promise<NextResponse | null> {
-  const blockReason = await resolveLeagueBlockReason(sportKey);
-  if (!blockReason) {
-    return null;
-  }
-  return NextResponse.json({ ok: false, error: blockReason }, { status: 400 });
-}
 
 function normalizeBoolean(value: string | null, fallback = false): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -146,6 +139,7 @@ export async function POST(request: Request) {
           action?: string;
           gameId?: string;
           sportKey?: string;
+          tzOffsetMinutes?: number | string;
         }
       | {
           action?: string;
@@ -153,6 +147,7 @@ export async function POST(request: Request) {
           venueId?: string;
           gameId?: string;
           sportKey?: string;
+          tzOffsetMinutes?: number | string;
           squares?: unknown;
         };
 
@@ -165,10 +160,12 @@ export async function POST(request: Request) {
       }
 
       const sportKey = String(body.sportKey ?? "basketball_nba").trim().toLowerCase();
-      const leagueRejection = await rejectIfLeagueUnavailable(sportKey);
-      if (leagueRejection) {
-        return leagueRejection;
-      }
+      await requireSportsBingoCreationGame({
+        sportKey,
+        gameId,
+        tzOffsetMinutes: body.tzOffsetMinutes,
+        evaluationTimeMs: Date.now(),
+      });
 
       const board = await generateSportsBingoBoard({
         gameId,
@@ -194,10 +191,12 @@ export async function POST(request: Request) {
       const sportKey = String((body as { sportKey?: string }).sportKey ?? "basketball_nba")
         .trim()
         .toLowerCase();
-      const leagueRejection = await rejectIfLeagueUnavailable(sportKey);
-      if (leagueRejection) {
-        return leagueRejection;
-      }
+      await requireSportsBingoCreationGame({
+        sportKey,
+        gameId,
+        tzOffsetMinutes: (body as { tzOffsetMinutes?: number | string }).tzOffsetMinutes,
+        evaluationTimeMs: Date.now(),
+      });
 
       await maybeRequireActiveVenuePresence({ userId, venueId });
 
@@ -235,13 +234,14 @@ export async function POST(request: Request) {
   } catch (error) {
     const presenceResponse = venuePresenceErrorResponse(error);
     if (presenceResponse) return presenceResponse;
+    const availabilityStatus = sportsBingoAvailabilityErrorStatus(error);
 
     return NextResponse.json(
       {
         ok: false,
         error: error instanceof Error ? error.message : "Failed to process Sports Bingo request.",
       },
-      { status: 500 }
+      { status: availabilityStatus ?? 500 }
     );
   }
 }

@@ -6,8 +6,6 @@ import {
   parseMlbPlayerEvent,
   calcNbaFantasyPoints,
   calcMlbFantasyPoints,
-  normalizePlayerName,
-  getStatForBingoMetric,
   inferBasketballSportKeyFromEventType,
   type BdlNbaPlayerEvent,
   type BdlMlbPlayerEvent,
@@ -15,7 +13,7 @@ import {
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { settlePendingPickEmPicks } from "@/lib/pickem";
 import { refreshFantasyProgress } from "@/lib/fantasy";
-import { applyMlbPlayerSnapshotEvent, applyMlbWebhookPropEvent, refreshSportsBingoProgress } from "@/lib/sportsBingo";
+import { refreshSportsBingoProgress } from "@/lib/sportsBingo";
 
 const WEBHOOK_SECRET = process.env.BALLDONTLIE_WEBHOOK_SECRET?.trim() ?? "";
 
@@ -91,41 +89,11 @@ export async function POST(request: Request) {
       const mlbBatterEvent = parseMlbBatterEvent(body);
       const mlbPlayerEvent = parseMlbPlayerEvent(body);
       const gameId = mlbBatterEvent?.gameId || mlbPlayerEvent?.gameId || extractGameIdFromWebhook(root);
-      let propUpdates: { updatedSquares: number; completedSquares: number } | null = null;
-      if (mlbBatterEvent) {
-        propUpdates = await applyMlbWebhookPropEvent({
-          gameId: mlbBatterEvent.gameId,
-          eventType: mlbBatterEvent.eventType,
-          playerId: mlbBatterEvent.playerId,
-          playerName: mlbBatterEvent.playerName,
-          teamName: mlbBatterEvent.teamName,
-          pitchCount: mlbBatterEvent.pitchCount,
-        });
-      }
-      let mlbFantasyResult: { statsUpserted: boolean } | null = null;
-      let playerSnapshotBingoUpdates: { updatedSquares: number } | null = null;
-      if (mlbPlayerEvent) {
-        mlbFantasyResult = await handleMlbPlayerEvent(mlbPlayerEvent);
-        playerSnapshotBingoUpdates = await applyMlbPlayerSnapshotEvent({
-          gameId: mlbPlayerEvent.gameId,
-          playerId: mlbPlayerEvent.playerId,
-          playerName: mlbPlayerEvent.playerName,
-          gameStatus: mlbPlayerEvent.gameStatus,
-          batterStats: {
-            h: mlbPlayerEvent.batterStats.h,
-            homeRuns: mlbPlayerEvent.batterStats.homeRuns,
-            rbi: mlbPlayerEvent.batterStats.rbi,
-            stolenBases: mlbPlayerEvent.batterStats.stolenBases,
-            strikeoutsAsBatter: mlbPlayerEvent.batterStats.strikeoutsAsBatter,
-          },
-          pitcherStats: {
-            strikeouts: mlbPlayerEvent.pitcherStats.strikeouts,
-            outs: mlbPlayerEvent.pitcherStats.outs,
-            earnedRuns: mlbPlayerEvent.pitcherStats.earnedRuns,
-            hitsAllowed: mlbPlayerEvent.pitcherStats.hitsAllowed,
-          },
-        });
-      }
+      // Webhooks wake the shared snapshot grader. Event counters and a single player row
+      // cannot establish a complete final feed or safely handle replayed/reversed events.
+      const propUpdates = null;
+      const playerSnapshotBingoUpdates = null;
+      const mlbFantasyResult = mlbPlayerEvent ? await handleMlbPlayerEvent(mlbPlayerEvent) : null;
       const bingoResult = await refreshSportsBingoProgress({
         sportKey: "baseball_mlb",
         gameId: gameId || undefined,
@@ -277,7 +245,8 @@ async function handleNbaPlayerEvent(
     },
   });
 
-  const { hit, miss } = await resolveBingoSquares(event);
+  const hit = 0;
+  const miss = 0;
   await refreshSportsBingoProgress({
     sportKey,
     gameId: event.gameId,
@@ -365,97 +334,4 @@ function extractGameIdFromWebhook(root: Record<string, unknown>): string {
       "")
   ).trim();
   return fromNested;
-}
-
-function isGameCompleted(gameStatus: string): boolean {
-  const s = gameStatus.trim().toLowerCase();
-  return s === "final" || s === "ft" || s.startsWith("final") || s === "status_final" || s === "status_full_time";
-}
-
-async function resolveBingoSquares(event: BdlNbaPlayerEvent): Promise<{ hit: number; miss: number }> {
-  const { data: cards, error: cardsError } = await supabaseAdmin!
-    .from("sports_bingo_cards")
-    .select("id")
-    .eq("game_id", event.gameId)
-    .eq("status", "active");
-
-  if (cardsError) {
-    console.error("[bdl-webhook] bingo cards query failed:", cardsError.message);
-    return { hit: 0, miss: 0 };
-  }
-  if (!cards?.length) return { hit: 0, miss: 0 };
-
-  const cardIds = cards.map((c: Record<string, unknown>) => c.id);
-
-  const { data: squares, error: squaresError } = await supabaseAdmin!
-    .from("sports_bingo_squares")
-    .select("id, resolver")
-    .in("card_id", cardIds)
-    .eq("status", "pending");
-
-  if (squaresError) {
-    console.error("[bdl-webhook] bingo squares query failed:", squaresError.message);
-    return { hit: 0, miss: 0 };
-  }
-  if (!squares?.length) return { hit: 0, miss: 0 };
-
-  const hitIds: string[] = [];
-  const missIds: string[] = [];
-  const gameCompleted = isGameCompleted(event.gameStatus);
-  const now = new Date().toISOString();
-
-  for (const square of squares as Array<{ id: string; resolver: Record<string, unknown> }>) {
-    const resolver = square.resolver;
-    if (resolver.kind !== "nba_player_stat_at_least") continue;
-
-    const resolverPlayer = String(resolver.player ?? "");
-    if (!resolverPlayer) continue;
-    if (normalizePlayerName(resolverPlayer) !== event.normalizedPlayerName) continue;
-
-    const metric = String(resolver.metric ?? "");
-    const threshold = Number(resolver.threshold ?? 0);
-    if (!metric || threshold <= 0) continue;
-
-    const value = getStatForBingoMetric(event.stats, metric);
-
-    if (value >= threshold) {
-      hitIds.push(square.id);
-    } else if (gameCompleted) {
-      // Game is over and the player fell short — square is a confirmed miss.
-      missIds.push(square.id);
-    }
-    // If game is still live and threshold not yet reached, leave pending.
-  }
-
-  const resolvedAt = now;
-  const updates: PromiseLike<unknown>[] = [];
-
-  if (hitIds.length > 0) {
-    updates.push(
-      supabaseAdmin!
-        .from("sports_bingo_squares")
-        .update({ status: "hit", resolved_at: resolvedAt })
-        .in("id", hitIds)
-        .eq("status", "pending")
-        .then(({ error }) => {
-          if (error) console.error("[bdl-webhook] bingo hit update failed:", error.message);
-        })
-    );
-  }
-
-  if (missIds.length > 0) {
-    updates.push(
-      supabaseAdmin!
-        .from("sports_bingo_squares")
-        .update({ status: "miss", resolved_at: resolvedAt })
-        .in("id", missIds)
-        .eq("status", "pending")
-        .then(({ error }) => {
-          if (error) console.error("[bdl-webhook] bingo miss update failed:", error.message);
-        })
-    );
-  }
-
-  await Promise.all(updates);
-  return { hit: hitIds.length, miss: missIds.length };
 }

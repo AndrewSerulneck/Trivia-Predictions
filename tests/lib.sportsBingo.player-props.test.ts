@@ -24,6 +24,8 @@ function bdlList(data: unknown[]): Response {
 describe("sports bingo player props ingestion", () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2030-01-01T12:00:00Z"));
     process.env.ODDS_API_KEY = "test-odds-key";
     process.env.ODDS_API_BASE_URL = "https://api.the-odds-api.com/v4";
     process.env.BINGO_BOARD_SIM_TRIALS = "600";
@@ -31,15 +33,16 @@ describe("sports bingo player props ingestion", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it("builds NBA board using BallDontLie player profiles", async () => {
     const nbaGame = {
-      id: "nba-evt-1",
+      id: 90123,
       date: "2030-01-01T22:00:00Z",
       home_team: { id: 2, full_name: "Boston Celtics" },
       visitor_team: { id: 20, full_name: "New York Knicks" },
-      status: "Final",
+      status: "Scheduled",
     };
 
     const nbaPlayers = [
@@ -75,12 +78,12 @@ describe("sports bingo player props ingestion", () => {
     const { generateSportsBingoBoard } = await import("@/lib/sportsBingo");
 
     const board = await generateSportsBingoBoard({
-      gameId: "nba-evt-1",
+      gameId: "90123",
       sportKey: "basketball_nba",
     });
 
     expect(board.squares).toHaveLength(25);
-    expect(board.squares.some((sq) => sq.label.toLowerCase().includes("triple-double"))).toBe(true);
+    expect(board.squares.some((sq) => sq.label.toLowerCase().includes("triple-double"))).toBe(false);
     expect(board.squares.some((sq) => sq.label.includes("Jayson Tatum"))).toBe(true);
     expect(
       board.squares.some((sq) =>
@@ -91,11 +94,11 @@ describe("sports bingo player props ingestion", () => {
 
   it("builds NFL board using spread and total markets", async () => {
     const nflGame = {
-      id: "nfl-evt-1",
-      date: "2030-01-02T18:00:00Z",
+      id: 90345,
+      date: "2030-01-01T18:00:00Z",
       home_team: { id: 4, full_name: "Buffalo Bills" },
       visitor_team: { id: 19, full_name: "New York Jets" },
-      status: "Final",
+      status: "Scheduled",
     };
 
     // Since Phase 2 of docs/prop-bingo-nfl-plan.md, NFL spread/total squares are derived from the
@@ -103,8 +106,8 @@ describe("sports bingo player props ingestion", () => {
     // with no book-posted market no longer produces a board at all (see
     // tests/lib.sportsBingo.nfl-core-squares.test.ts), so this game needs real odds rows.
     const nflOdds = [
-      { game_id: "nfl-evt-1", vendor: "fanduel", spread_home_value: -3.5, total_value: 44.5, moneyline_home_odds: -180, moneyline_away_odds: 152 },
-      { game_id: "nfl-evt-1", vendor: "draftkings", spread_home_value: -3.5, total_value: 45, moneyline_home_odds: -175, moneyline_away_odds: 148 },
+      { game_id: 90345, vendor: "fanduel", spread_home_value: -3.5, total_value: 44.5, moneyline_home_odds: -180, moneyline_away_odds: 152 },
+      { game_id: 90345, vendor: "draftkings", spread_home_value: -3.5, total_value: 45, moneyline_home_odds: -175, moneyline_away_odds: 148 },
     ];
 
     const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
@@ -124,7 +127,7 @@ describe("sports bingo player props ingestion", () => {
     const { generateSportsBingoBoard } = await import("@/lib/sportsBingo");
 
     const board = await generateSportsBingoBoard({
-      gameId: "nfl-evt-1",
+      gameId: "90345",
       sportKey: "americanfootball_nfl",
     });
 

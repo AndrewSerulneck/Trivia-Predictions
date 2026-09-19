@@ -1,6 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { auditSportsBingoBoardQuality } from "@/lib/sportsBingoQuality";
 
 vi.mock("server-only", () => ({}));
+
+function seededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
 
 type MockResponsePayload = {
   status?: number;
@@ -209,6 +218,8 @@ function lineIsPossible(squareKeys: string[]): boolean {
 describe("sports bingo board feasibility", () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2030-01-01T12:00:00Z"));
     process.env.ODDS_API_KEY = "test-odds-key";
     process.env.ODDS_API_BASE_URL = "https://api.the-odds-api.com/v4";
     process.env.BINGO_BOARD_SIM_TRIALS = "600";
@@ -216,9 +227,14 @@ describe("sports bingo board feasibility", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
-  it("builds NBA boards with no impossible bingo lines and no combo-stat player props", async () => {
+  it.each([
+    ["NBA", "basketball_nba", "/nba/v1/games"],
+    ["WNBA", "basketball_wnba", "/wnba/v1/games"],
+  ] as const)("builds %s boards with no impossible bingo lines and no combo-stat player props", async (_, sportKey, gamesPath) => {
+    const gameId = `${sportKey}-evt-2`;
     const players = ["Jayson Tatum", "Jaylen Brown", "Jrue Holiday", "Derrick White", "Kristaps Porzingis"];
 
     const buildMarket = (key: string, baseLine: number) => ({
@@ -234,23 +250,23 @@ describe("sports bingo board feasibility", () => {
 
     const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.includes("/nba/v1/games")) {
+      if (url.includes(gamesPath)) {
         return Promise.resolve(
           jsonResponse({
             body: {
-              data: [{ id: "nba-evt-2", date: "2030-02-01T00:00:00Z", home_team: "Boston Celtics", visitor_team: "Miami Heat", status: "Final" }],
+              data: [{ id: gameId, date: "2030-02-01T00:00:00Z", home_team: "Boston Celtics", visitor_team: "Miami Heat", status: "Scheduled" }],
               meta: { next_cursor: null },
             },
           })
         );
       }
-      if (url.includes("/sports/basketball_nba/odds")) {
+      if (url.includes(`/sports/${sportKey}/odds`)) {
         return Promise.resolve(
           jsonResponse({
             body: [
               {
-                id: "nba-evt-2",
-                sport_key: "basketball_nba",
+                id: gameId,
+                sport_key: sportKey,
                 commence_time: "2030-02-01T00:00:00Z",
                 home_team: "Boston Celtics",
                 away_team: "Miami Heat",
@@ -290,7 +306,7 @@ describe("sports bingo board feasibility", () => {
       return Promise.resolve(
         jsonResponse({
           body: {
-            id: "nba-evt-2",
+            id: gameId,
             bookmakers: [
               {
                 title: "DraftKings",
@@ -310,30 +326,47 @@ describe("sports bingo board feasibility", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    const { generateSportsBingoBoard } = await import("@/lib/sportsBingo");
+    const { buildSportsBingoBoardWithResolvers } = await import("@/lib/sportsBingo");
+    const originalRandom = Math.random;
+    Math.random = seededRandom(sportKey === "basketball_nba" ? 0x5eed0206 : 0x5eed0712);
 
-    for (let run = 0; run < 4; run += 1) {
-      const board = await generateSportsBingoBoard({
-        gameId: "nba-evt-2",
-        sportKey: "basketball_nba",
-      });
+    try {
+      for (let run = 0; run < 4; run += 1) {
+        const board = await buildSportsBingoBoardWithResolvers({
+          gameId,
+          sportKey,
+        });
+        expect(board).not.toBeNull();
+        if (!board) continue;
+        expect(board.squares).toHaveLength(25);
+        expect(board.boardProbability).toBeGreaterThanOrEqual(0.2);
+        // This intentionally thin one-book fixture has no cumulative-stat achievements. WNBA can
+        // land above the ideal band, but must remain inside the generator's configured ±10-point
+        // tolerance rather than importing unsupported props to manufacture 30%.
+        expect(board.boardProbability).toBeLessThanOrEqual(0.35);
+        const quality = auditSportsBingoBoardQuality({ sportKey, squares: board.squares });
+        expect(quality.eligible, quality.issues.join(", ")).toBe(true);
+        expect(quality.maxSquaresForOnePlayer).toBeLessThanOrEqual(2);
 
-      expect(board.squares.some((square) => square.label.toLowerCase().includes("triple-double"))).toBe(true);
-      expect(
-        board.squares.some((square) =>
-          /points \+ rebounds|points \+ assists|rebounds \+ assists|points \+ rebounds \+ assists/i.test(square.label)
-        )
-      ).toBe(false);
+        expect(board.squares.some((square) => square.label.toLowerCase().includes("triple-double"))).toBe(false);
+        expect(
+          board.squares.some((square) =>
+            /points \+ rebounds|points \+ assists|rebounds \+ assists|points \+ rebounds \+ assists/i.test(square.label)
+          )
+        ).toBe(false);
 
-      const byIndex = new Map<number, string>();
-      for (const square of board.squares) {
-        byIndex.set(square.index, square.key);
+        const byIndex = new Map<number, string>();
+        for (const square of board.squares) {
+          byIndex.set(square.index, square.key);
+        }
+
+        for (const line of LINE_PATTERNS) {
+          const lineKeys = line.map((index) => byIndex.get(index) ?? "");
+          expect(lineIsPossible(lineKeys)).toBe(true);
+        }
       }
-
-      for (const line of LINE_PATTERNS) {
-        const lineKeys = line.map((index) => byIndex.get(index) ?? "");
-        expect(lineIsPossible(lineKeys)).toBe(true);
-      }
+    } finally {
+      Math.random = originalRandom;
     }
   });
 });

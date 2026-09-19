@@ -157,6 +157,19 @@ export const CreateBoardSheet = ({ onClose, onCreated }: CreateBoardSheetProps) 
     setStep("board");
   }, []);
 
+  const handleSportUnavailable = useCallback(() => {
+    setStepDirection(-1);
+    setSportKey("");
+    setGameId("");
+    setStep("sport");
+  }, []);
+
+  const handleGameUnavailable = useCallback(() => {
+    setStepDirection(-1);
+    setGameId("");
+    setStep("game");
+  }, []);
+
   const handleCreated = useCallback(
     (cardId: string) => {
       onCreated(cardId);
@@ -259,9 +272,20 @@ export const CreateBoardSheet = ({ onClose, onCreated }: CreateBoardSheetProps) 
               {step === "sport" ? (
                 <SportsBingoSelectSport hideStepHeading onSelectSport={handleSelectSport} />
               ) : step === "game" ? (
-                <SportsBingoSelectGame hideStepHeading sportKey={sportKey} onSelectGame={handleSelectGame} />
+                <SportsBingoSelectGame
+                  hideStepHeading
+                  sportKey={sportKey}
+                  onSelectGame={handleSelectGame}
+                  onSportUnavailable={handleSportUnavailable}
+                />
               ) : (
-                <SportsBingoSelectBoard hideStepHeading sportKey={sportKey} gameId={gameId} onCreated={handleCreated} />
+                <SportsBingoSelectBoard
+                  hideStepHeading
+                  sportKey={sportKey}
+                  gameId={gameId}
+                  onCreated={handleCreated}
+                  onGameUnavailable={handleGameUnavailable}
+                />
               )}
             </motion.div>
           </AnimatePresence>

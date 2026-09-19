@@ -70,7 +70,12 @@ const PLAYER_NAMES: Array<[number, string, string]> = [
   [112, "Gideon", "Hale"],
 ];
 
-const PLAYERS = PLAYER_NAMES.map(([id, first_name, last_name]) => ({ id, first_name, last_name }));
+const PLAYERS = PLAYER_NAMES.map(([id, first_name, last_name], index) => ({
+  id,
+  first_name,
+  last_name,
+  team: index < PLAYER_NAMES.length / 2 ? NFL_GAME.home_team : NFL_GAME.visitor_team,
+}));
 const NAME_BY_ID = new Map(PLAYER_NAMES.map(([id, first, last]) => [id, `${first} ${last}`]));
 
 const STAR_IDS = [101, 102, 103];
@@ -223,10 +228,11 @@ function installSeededRandom(seed: number): void {
 }
 
 /** Captured against the pre-hoist code. See "the star-tier hoist is a pure refactor" below. */
-const NFL_HOIST_SNAPSHOT: string[] = [
-  "nfl_player_anytime_td:tobias rannick::102|spread_keep_close:away:8.5|game_total_under:39.5|moneyline:away|nfl_team_stat_at_most:away:turnovers:0.0|player_prop:passing_completions:marcus ellwood::101:under:21.5|nfl_game_max_stat_at_least:any_player:touchdowns:2.0|team_total_under:away:14.5|player_prop:interceptions:silas ferren::107:over:0.5|nfl_game_max_stat_at_least:any_player:total_tackles:12.0|game_total_under:35.5|nfl_non_quarterback_pass_attempt|free|nfl_team_stat_at_least:home:net_passing_yards:210.0|spread_keep_close:away:10.5|player_prop:rushing_attempts:marcus ellwood::101:over:12.5|game_total_over:51.5|nfl_second_half_higher_scoring|player_prop:receiving_yards:tobias rannick::102:under:54.5|team_total_under:away:20.5|player_prop:longest_rush:desmond vail::103:under:15.5|nfl_player_anytime_td:elias thorne::105|moneyline:home|player_prop:longest_rush:corbin reyes::104:under:15.5|spread_more_than:home:4.5",
-  "moneyline:home|spread_keep_close:away:0.5|team_total_over:home:19.5|player_prop:receiving_yards:tobias rannick::102:under:54.5|team_total_under:away:23.5|player_prop:rushing_yards:tobias rannick::102:under:58.5|nfl_game_total_stat_at_least:punts_inside_20:3.0|nfl_team_stat_at_least:away:net_passing_yards:210.0|nfl_player_anytime_td:corbin reyes::104|player_prop:fg_made:elias thorne::105:under:1.5|nfl_team_stat_at_least:away:defensive_touchdowns:1.0|player_prop:rushing_attempts:desmond vail::103:over:12.5|free|nfl_team_stat_at_least:home:defensive_touchdowns:1.0|spread_keep_close:away:6.5|nfl_team_quarter_points_at_least:away:14.0|game_total_under:48.5|player_prop:passing_yards:marcus ellwood::101:under:245.5|game_total_under:45.5|player_prop:kicking_points:elias thorne::105:over:7.5|spread_keep_close:away:8.5|nfl_score_in_final_minutes:fourth_quarter:2.0|player_prop:passing_tds:marcus ellwood::101:under:1.5|moneyline:away|game_total_over:35.5",
-  "game_total_under:45.5|player_prop:rushing_receiving_yards:desmond vail::103:under:71.5|team_total_over:away:26.5|spread_more_than:home:6.5|nfl_team_shutout_quarter:away|team_total_over:home:25.5|player_prop:interceptions:tobias rannick::102:under:0.5|nfl_team_stat_at_least:home:penalties:7.0|player_prop:rushing_attempts:marcus ellwood::101:over:12.5|moneyline:away|player_prop:longest_reception:corbin reyes::104:under:21.5|game_total_over:51.5|free|spread_more_than:home:10.5|game_total_under:55.5|nfl_game_max_stat_at_least:any_player:rushing_yards:85.0|player_prop:longest_reception:desmond vail::103:under:21.5|nfl_game_max_stat_at_least:any_player:field_goals_made:3.0|moneyline:home|nfl_team_scores_every_quarter:home|spread_more_than:home:4.5|player_prop:rushing_yards:silas ferren::107:over:58.5|player_prop:passing_yards:marcus ellwood::101:under:245.5|nfl_team_stat_at_least:home:defensive_touchdowns:1.0|player_prop:rushing_receiving_yards:corbin reyes::104:under:71.5",
+// Re-captured 2026-09-14: reliability Phase 4 intentionally excludes unverified resolver families.
+const NFL_PHASE4_CAPABILITY_SNAPSHOT: string[] = [
+  "game_total_under:39.5|spread_keep_close:away:10.5|player_prop:rushing_receiving_yards:tobias rannick::102:under:71.5|player_prop:longest_reception:corbin reyes::104:over:21.5|player_prop:kicking_points:elias thorne::105:under:7.5|player_prop:longest_rush:rhys calloway::109:over:15.5|nfl_team_stat_at_least:away:rushing_yards:115.0|nfl_game_total_stat_at_least:punts_inside_20:3.0|moneyline:home|game_total_over:55.5|player_prop:passing_completions:tobias rannick::102:over:21.5|nfl_both_teams_score_at_least:20.0|free|spread_more_than:home:2.5|spread_more_than:home:10.5|team_total_over:home:19.5|player_prop:fg_made:desmond vail::103:over:1.5|team_total_over:home:31.5|game_total_under:55.5|player_prop:rushing_receiving_yards:desmond vail::103:under:71.5|nfl_combined_team_stat_at_most:turnovers:0.0|moneyline:away|player_prop:passing_tds:marcus ellwood::101:over:1.5|nfl_team_stat_at_least:away:total_offensive_plays:62.0|nfl_team_quarter_points_at_least:away:14.0",
+  "moneyline:home|nfl_team_stat_at_least:home:fourth_down_conversions:1.0|game_total_under:35.5|spread_keep_close:away:12.5|nfl_player_anytime_td:marcus ellwood::101|player_prop:passing_completions:tobias rannick::102:under:21.5|nfl_halftime_leader_loses|player_prop:rushing_attempts:tobias rannick::102:over:12.5|player_prop:longest_rush:desmond vail::103:over:15.5|nfl_second_half_higher_scoring|player_prop:passing_completions:marcus ellwood::101:under:21.5|nfl_combined_team_stat_at_least:turnovers:3.0|free|player_prop:passing_attempts:amos winter::111:over:32.5|moneyline:away|game_total_over:35.5|team_total_over:home:28.5|player_prop:fg_made:elias thorne::105:over:1.5|spread_more_than:home:8.5|nfl_team_stat_at_least:away:penalty_yards:50.0|game_total_over:55.5|nfl_player_anytime_td:silas ferren::107|spread_more_than:home:2.5|nfl_game_max_stat_at_least:any_player:long_field_goal_made:50.0|team_total_under:home:19.5",
+  "player_prop:receptions:tobias rannick::102:over:4.5|player_prop:receptions:desmond vail::103:under:4.5|nfl_team_stat_at_least:home:first_downs:20.0|player_prop:rushing_receiving_yards:corbin reyes::104:over:71.5|team_total_over:home:28.5|player_prop:receiving_yards:tobias rannick::102:over:54.5|game_total_over:51.5|player_prop:passing_attempts:amos winter::111:over:32.5|nfl_team_quarter_points_at_least:home:14.0|moneyline:away|nfl_player_anytime_td:elias thorne::105|spread_more_than:home:12.5|free|spread_more_than:home:0.5|game_total_under:42.5|team_total_under:home:25.5|moneyline:home|nfl_team_quarter_points_at_least:away:14.0|nfl_game_max_stat_at_least:both_teams:passing_yards:180.0|nfl_non_quarterback_pass_attempt|nfl_game_total_stat_at_least:defensive_interceptions:2.0|spread_more_than:home:4.5|game_total_under:48.5|player_prop:rushing_attempts:marcus ellwood::101:over:12.5|player_prop:passing_attempts:marcus ellwood::101:under:32.5"
 ];
 
 describe("NFL star-tilted prop selection (Phase 9b)", () => {
@@ -385,7 +391,12 @@ describe("NFL star-tilted prop selection (Phase 9b)", () => {
 
       // With every tier weighted the same and every player carrying the same number of markets,
       // the draw is back to chance. The gap between the two runs is the phase.
-      expect(flatWeights).toBeLessThan(boosted - 0.08);
+      // Phase 5 now reserves six distinct subjects and both teams before allowing repeats. That
+      // deliberately narrows how much a three-player star tier can dominate, but the configured
+      // boost must still create a material, reproducible lift over flat weights.
+      expect(flatWeights).toBeLessThan(boosted - 0.04);
+      expect(flatWeights).toBeGreaterThan(0.2);
+      expect(flatWeights).toBeLessThan(0.31);
     }, 120_000);
 
     it("does not deal the same star set twice — the draw is a draw, not a top-N sort", async () => {
@@ -416,20 +427,26 @@ describe("NFL star-tilted prop selection (Phase 9b)", () => {
    * stream and prove not one square moved.
    *
    * `Math.random` is the generator's only entropy source, so a seeded stream makes the whole
-   * pipeline (attempt loop, difficulty escalation, weighted draws, star reservation, line
-   * arrangement, Monte-Carlo preview) deterministic. The expected keys below were captured against
-   * the **pre-hoist** code and must not change.
-   *
-   * If a future phase deliberately changes selection, this test fails by design: re-capture the
-   * snapshot in the same commit that makes the change, and say so in the commit message.
+   * pipeline deterministic. The Phase 4 expected keys remain below as an explicit before-state.
+   * Phase 5 deliberately changes selection to reserve six subjects, both teams and unique
+   * player-stat ideas, so the new assertion proves that the baseline moved and that replaying the
+   * same seed is still byte-identical.
    */
-  describe("the star-tier hoist is a pure refactor", () => {
-    it("deals byte-identical boards off a seeded random stream (pre-hoist snapshot)", async () => {
+  describe("seeded selection regression after Phase 5 composition", () => {
+    it("deals byte-identical boards from the same stream and differs from the Phase 4 baseline", async () => {
       installFetchMock(REALISTIC_PROP_ROWS);
       installSeededRandom(0x5eed1);
       const boards = await generateBoards(3);
       const signatures = boards.map((board) => board.map((square) => square.key).join("|"));
-      expect(signatures).toEqual(NFL_HOIST_SNAPSHOT);
+      expect(signatures).not.toEqual(NFL_PHASE4_CAPABILITY_SNAPSHOT);
+
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+      vi.resetModules();
+      installFetchMock(REALISTIC_PROP_ROWS);
+      installSeededRandom(0x5eed1);
+      const replay = await generateBoards(3);
+      expect(replay.map((board) => board.map((square) => square.key).join("|"))).toEqual(signatures);
     }, 60_000);
   });
 

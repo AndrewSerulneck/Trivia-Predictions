@@ -18,6 +18,47 @@
 - Lint: `npm run lint`
 - Tests: `npm run test` (Runs Vitest)
 
+## Bingo / Pick ’Em reliability work (complete, 2026-09-19)
+
+Current plan: `docs/bingo-pickem-reliability-plan.md`; complete and developer-accepted after
+Andrew confirmed authenticated Prop Bingo works. Maintenance starts from
+`docs/bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md` and
+`docs/bingo-pickem-reliability-release-record-2026-09-19.md`. Andrew intentionally skipped
+Phase 6: do not repair historical boards, rewards or consequences. The atomic-grading migration
+was applied to linked Supabase project `pkmxupsayzshvpirkaav` on 2026-09-19; application changes
+remain uncommitted, unpushed and undeployed. Old NFL activation notes are dated history.
+
+- Creation leagues follow actual boardable games on the player's local day; no season/flag
+  override may make an empty league selectable. Shared eligibility lives in
+  `lib/sportsBingoAvailability.ts` and inherits capability-filtered candidates.
+- `lib/sportsBingoCapabilities.ts` admits only verified resolver/parameter families. Add
+  precise label/field/ID/closure/missing-data evidence and captured-data regression cases in
+  `docs/bingo-grading-capability-matrix.md` before admitting a new square. Preserve legacy parsing.
+- `lib/sportsBingoQuality.ts` enforces 24 supported non-free cells, unique player-stat axes,
+  max two cells per player, the NFL 10/6/8 mix, six prop subjects, both teams where possible
+  and at least three early-progress opportunities. Non-composable games are unavailable.
+- Normalize stored `nfl`/`nba` only at Bingo boundaries. Missing/partial data is unknown;
+  never restore a blanket zero conversion to satisfy a calibration test.
+- `lib/sportsBingoSettlement.ts` owns 60-second final confirmation, 2-hour delayed-final
+  grace and the 48-hour no-final deadline. Recheck provisional grades; terminal corrections
+  require reviewed explicit repair outside this plan. `bypassCache` never reopens won/lost cards.
+- `20260914010000_bingo_atomic_grading.sql` was applied to linked Supabase project
+  `pkmxupsayzshvpirkaav` at 2026-09-19T23:48Z. The column and service-only RPC were verified
+  through PostgREST; the RPC saves cells/card/notification atomically. Do not reapply, remove,
+  down-migrate or add a non-atomic fallback. Application rollout has not occurred.
+- Regular Pick ’Em excludes NFL from discovery; old regular NFL links redirect to the
+  dedicated game. Dedicated NFL types, scoring, rewards/history and shared week dropdown remain.
+
+Core checks: `npx tsc --noEmit`, `npm run lint`, `npm run test:bingo-nfl`,
+`npm run test:bingo-mlb`, `npm run test`, `npm run build`; exact captured-data and isolated
+SQL commands are in the Phase 4 handoff. Offline incident assertion:
+`node --conditions react-server --import tsx scripts/replay-bingo-brunswick-incident.cjs --assert-correct`.
+Final local gates: NFL 288/288, MLB 142/142, full Vitest 2,620 pass / 13 environment-gated
+skip / zero fail, PWA 20/20, clean typecheck/lint and 179-page build. The 16-game Week 1
+provider validator passes. Do not run typecheck concurrently with build because `.next/types`
+is regenerated. Physical-device UI and real NFL plus webhook-driven live→final observation
+remain optional operational monitoring, not unfinished plan work.
+
 ## Mental Model & Terminology
 - **Core Concept:** Users join a specific physical venue and earn points playing mini-games (Trivia, Pick'em, Bingo, Predictions, Fantasy) scoped strictly to that venue. 
 - **Data Scoping:** Authentication is global (passkeys/username), but points, leaderboards, and game states are entirely venue-specific. Users can belong to multiple venues with completely independent point totals.

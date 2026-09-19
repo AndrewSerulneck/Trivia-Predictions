@@ -1,5 +1,13 @@
 # Prop Bingo — Making NFL Boards Actually Playable
 
+> **Dated history / superseded follow-up (2026-09-19):** Do not execute this plan's unfinished live
+> observation or activation items as a separate workstream. The current reliability implementation,
+> verified evidence and remaining release/device/live-game checks are owned by
+> `docs/bingo-pickem-reliability-plan.md` and
+> `docs/bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md`. That work is a local release candidate,
+> not deployed. Bingo creation no longer uses the old NFL activation flag as an eligibility override;
+> actual local-day boardable games and capability/composability determine visibility.
+
 **Created:** 2026-09-05. **Owner doc for the activation half of `docs/prop-bingo-nfl-plan.md`.**
 
 That plan (Phases 0–9, all complete 2026-08-17) built the NFL board: market-derived core squares,

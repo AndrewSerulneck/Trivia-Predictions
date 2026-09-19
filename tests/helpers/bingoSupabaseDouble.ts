@@ -31,6 +31,8 @@ type Builder = {
 };
 
 export type SupabaseAdminDouble = {
+  rpc: (name: string, args: Row) => Promise<{ data: Row; error: null }>;
+  removeChannel: () => Promise<string>;
   from: (table: string) => {
     select: () => Builder;
     update: (patch: Row) => Builder;
@@ -122,6 +124,31 @@ export function createSupabaseAdminDouble(db: Record<string, Row[]>): SupabaseAd
   };
 
   return {
+    removeChannel: async () => "ok",
+    rpc: async (name, args) => {
+      if (name !== "apply_sports_bingo_grading") throw new Error(`Unexpected RPC ${name}`);
+      const card = db.sports_bingo_cards.find((row) => row.id === args.p_card_id);
+      const state = card?.grading_state as Row | undefined;
+      if (!card || card.status !== "active" || card.updated_at !== args.p_expected_updated_at || (state?.lastObservedAt && String(args.p_observed_at) <= String(state.lastObservedAt))) return { data: { applied: false }, error: null };
+      const proposed = args.p_squares as Row[];
+      const squares = db.sports_bingo_squares.filter((row) => row.card_id === card.id);
+      if (proposed.some((item) => !squares.some((square) => square.id === item.id && JSON.stringify(square.resolver) === JSON.stringify(item.expected_resolver)))) return { data: { applied: false }, error: null };
+      let changed = 0;
+      for (const next of proposed) {
+        const square = squares.find((row) => row.id === next.id)!;
+        if (square.status !== next.status) {
+          square.status = next.status;
+          square.resolved_at = next.status === "pending" ? null : args.p_observed_at;
+          changed += 1;
+        }
+      }
+      const notification = args.p_notification as Row | null;
+      if (notification && (args.p_status !== "active" || !card.near_win_notified_at)) db.notifications.push({ ...notification, user_id: card.user_id });
+      Object.assign(card, { status: args.p_status, grading_state: args.p_state, last_cron_processed_at: args.p_observed_at, updated_at: args.p_observed_at, settled_at: args.p_status === "active" ? null : args.p_observed_at, won_line: args.p_won_line });
+      if (args.p_status === "won") card.won_notified_at = args.p_observed_at;
+      if (args.p_status === "active" && notification) card.near_win_notified_at = args.p_observed_at;
+      return { data: { applied: true, updated_squares: changed }, error: null };
+    },
     from: (table: string) => ({
       select: () => makeBuilder(table, "select"),
       update: (patch: Row) => makeBuilder(table, "update", patch),

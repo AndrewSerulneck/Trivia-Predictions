@@ -241,32 +241,14 @@ export function getBoardProgress(squares: BingoCardSquare[]): {
 // rather than a running game. Moved here from `SportsBingoHome` in Phase 13 of
 // `docs/prop-bingo-code-review-fix-plan.md` so the history-stack rule below can be unit tested
 // against the same constant the page uses.
-export const BINGO_GAME_BUFFER_MS = 6 * 60 * 60 * 1000;
-
-// One row of the past-day ("history") board stack.
-//
-// Phase 13 fix (finding 1): the history stack used to hard-code `isLive: false` for every
-// entry, on the assumption that a past calendar day can only hold finished games. It cannot —
-// a 10pm game is still running at 12:05am, when its own `startsAt` day is already "yesterday",
-// and it rendered there with a "Starts 10:00 PM" badge and opened the "Final Board" modal.
-//
-// The two questions are separate and both answered here, from the card itself rather than from
-// which stack it came out of:
-//   - stale row?  `active` more than `BINGO_GAME_BUFFER_MS` after kickoff -> normalize to
-//     `lost`, exactly as the today-stack partition in `SportsBingoHome` does.
-//   - live?       still `active` after that normalization AND already started.
-// A malformed `startsAt` parses to NaN, which fails both comparisons: the card is left alone
-// and treated as not live.
+// The server owns finality, including delayed final-data recovery. Age alone never means loss.
 export function resolveHistoryStackEntry(
   card: BingoCard,
   now: number
 ): { card: BingoCard; isLive: boolean } {
   const startsAtMs = Date.parse(card.startsAt);
   const hasStarted = Number.isFinite(startsAtMs) && startsAtMs <= now;
-  const looksInactiveByTime = Number.isFinite(startsAtMs) && now - startsAtMs >= BINGO_GAME_BUFFER_MS;
-  const normalizedCard: BingoCard =
-    card.status === "active" && looksInactiveByTime ? { ...card, status: "lost" } : card;
-  return { card: normalizedCard, isLive: normalizedCard.status === "active" && hasStarted };
+  return { card, isLive: card.status === "active" && hasStarted };
 }
 
 // Patch already-present past-day ("history") rows in place from a fresh live `cards` fetch.

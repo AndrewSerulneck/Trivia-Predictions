@@ -27,7 +27,6 @@ import { BingoBoardCard } from "@/components/bingo/BingoBoardCard";
 import { CreateBoardSheet } from "@/components/bingo/CreateBoardSheet";
 import { getLeagueDisplay, toMascotMatchup } from "@/lib/sportsBingoLeagues";
 import {
-  BINGO_GAME_BUFFER_MS,
   BINGO_HEADER_LETTERS,
   LANDSCAPE_SQUARE_LABEL_MAX_LENGTH,
   getBoardProgress,
@@ -1336,10 +1335,21 @@ export function SportsBingoHome({
           if (!active) return;
           void loadCards({ background: true, refreshProgress: false });
         })
-        .subscribe()
+        .subscribe((status) => { if (active && status === "SUBSCRIBED") void loadCards({ background: true, refreshProgress: false }); })
     );
 
+    const reload = () => {
+      if (active && document.visibilityState !== "hidden") void loadCards({ background: true, refreshProgress: false });
+    };
+    const interval = window.setInterval(reload, 30_000);
+    window.addEventListener("focus", reload);
+    window.addEventListener("online", reload);
+    document.addEventListener("visibilitychange", reload);
     return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", reload);
+      window.removeEventListener("online", reload);
+      document.removeEventListener("visibilitychange", reload);
       active = false;
       channels.forEach((ch) => void client.removeChannel(ch));
     };
@@ -1427,16 +1437,7 @@ export function SportsBingoHome({
         finalById.set(card.id, card);
         continue;
       }
-      const startsAtMs = Date.parse(card.startsAt);
-      const looksInactiveByTime = Number.isFinite(startsAtMs) && now - startsAtMs >= BINGO_GAME_BUFFER_MS;
-      if (looksInactiveByTime) {
-        finalById.set(card.id, {
-          ...card,
-          status: "lost",
-        });
-      } else {
-        active.push(card);
-      }
+      active.push(card);
     }
     const finalized = Array.from(finalById.values())
       .filter((card) => {
@@ -1957,7 +1958,7 @@ export function SportsBingoHome({
       const historyEntry = historyStackCards.find((entry) => entry.card.id === cardId);
       // Settled is decided by the board's own (normalized) status, never by which stack it came
       // out of (plan 13c). Membership in the history stack only means "viewed on a past
-      // calendar day" — a board still inside `BINGO_GAME_BUFFER_MS` is running, and must open
+      // calendar day" — a board the server still marks active is running, and must open
       // the live board modal rather than the "Final Board / No bingo this game" one.
       const isSettledBoard = historyEntry
         ? historyEntry.card.status !== "active"

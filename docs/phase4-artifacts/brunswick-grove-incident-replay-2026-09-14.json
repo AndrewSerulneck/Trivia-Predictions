@@ -1,0 +1,279 @@
+{
+  "incident": "brunswick-grove-2026-09-09",
+  "storedSportKey": "nfl",
+  "replayScope": "Direct NFL grader with complete final provider input. Bypasses stored sport-key routing; see Vitest sweep reproduction.",
+  "counts": {
+    "stored": {
+      "void": 18,
+      "hit": 1,
+      "miss": 6
+    },
+    "expectedResolver": {
+      "miss": 14,
+      "hit": 11
+    },
+    "directNFLReplay": {
+      "miss": 14,
+      "hit": 11
+    }
+  },
+  "storedDiscrepancies": 21,
+  "directNFLDiscrepancies": 0,
+  "labelDisputes": 1,
+  "expectedWinningLine": true,
+  "squares": [
+    {
+      "index": 0,
+      "id": "4c5c76fd-059a-48b8-a03f-011fe79df0c8",
+      "label": "Patriots pass for 210+ yards.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "NE net passing 168 < 210 (gross 178 also below threshold)."
+    },
+    {
+      "index": 1,
+      "id": "535237b8-7dfe-404f-a4db-53d6fb0826d0",
+      "label": "3+ punts downed inside the 20.",
+      "stored": "void",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": {
+        "literalExpected": "miss",
+        "reason": "Only one punt explicitly downed, while punts_inside_20 includes fair catches and out-of-bounds punts. Keep original wording and resolver; Phase 6 must choose treatment explicitly."
+      },
+      "evidence": "6 punts inside the 20 (3 per punter). Literal downed wording differs: only one downed punt; see labelDispute."
+    },
+    {
+      "index": 2,
+      "id": "a577d075-3a89-426d-9646-35cd181532bd",
+      "label": "Final margin under 9.5 points.",
+      "stored": "void",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "Final margin 3 < 9.5; NE + 9.5 > SEA."
+    },
+    {
+      "index": 3,
+      "id": "c1e9ebe9-9ef1-4f3e-a6b7-732143351885",
+      "label": "Total points: over 50.5.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "Final combined score 23 <= 50.5."
+    },
+    {
+      "index": 4,
+      "id": "cb98a377-0022-4bc1-8077-36ef36d9bc1c",
+      "label": "Seahawks win by 5.5+ points.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "SEA wins by 3, not more than 5.5."
+    },
+    {
+      "index": 5,
+      "id": "29458800-c870-4a84-b906-997efada9861",
+      "label": "Patriots hold the ball for 30+ minutes.",
+      "stored": "void",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "NE possession 34:17 = 2057 seconds >= 1800."
+    },
+    {
+      "index": 6,
+      "id": "1d6447af-53c7-4e29-8961-512105433f7b",
+      "label": "First score inside the opening 6 min.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "First score Q2 9:11, elapsed 20:49, after opening six minutes."
+    },
+    {
+      "index": 7,
+      "id": "29ed638f-2f66-48f6-8ed8-4b0fc5ceda93",
+      "label": "Patriots: under 24.5 points.",
+      "stored": "void",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "NE final score 10 < 24.5."
+    },
+    {
+      "index": 8,
+      "id": "8564ac9b-0aa7-4d85-968d-18168de70a57",
+      "label": "Seahawks: over 18.5 points.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "SEA final score 13 <= 18.5."
+    },
+    {
+      "index": 9,
+      "id": "36c3b4f2-3345-40eb-b564-b41fb51a8d09",
+      "label": "The halftime leader does not win.",
+      "stored": "void",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "NE led 7-0 at half; SEA won 13-10."
+    },
+    {
+      "index": 10,
+      "id": "02832456-37b9-4077-ab46-2725b5d34cfe",
+      "label": "Patriots to beat Seahawks.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "NE lost 10-13."
+    },
+    {
+      "index": 11,
+      "id": "ba9d57f5-e4f1-4473-b202-8170df0a7ada",
+      "label": "Total points: under 44.5.",
+      "stored": "void",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "Final combined score 23 < 44.5."
+    },
+    {
+      "index": 12,
+      "id": "e4872204-17af-4a5e-b00d-022408beb99c",
+      "label": "FREE",
+      "stored": "hit",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "Original free center."
+    },
+    {
+      "index": 13,
+      "id": "da77da61-d92e-4576-819e-c2cec870db53",
+      "label": "George Holani is held under 8.5 yards on his longest run.",
+      "stored": "miss",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "Holani longest rush 9 >= 8.5."
+    },
+    {
+      "index": 14,
+      "id": "0fbaa82d-2de2-49dd-9427-70c5fd4990be",
+      "label": "Drake Maye scores a touchdown.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "Maye threw a TD but scored no rushing/receiving/return TD."
+    },
+    {
+      "index": 15,
+      "id": "f8427bca-245d-4726-85eb-da2b25344448",
+      "label": "Rashid Shaheed: at least 32 receiving yards.",
+      "stored": "miss",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "Shaheed receiving yards 4 <= 31.5."
+    },
+    {
+      "index": 16,
+      "id": "d7c141b8-40a6-4048-ad92-67d66ca6654d",
+      "label": "Seahawks win by 7.5+ points.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "SEA margin 3 <= 7.5."
+    },
+    {
+      "index": 17,
+      "id": "3ecbb999-957f-4808-b328-d7656c423806",
+      "label": "Elijah Arroyo: 0 receptions.",
+      "stored": "miss",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "Arroyo participated (gamebook substitutions; designation did_not_play=false), zero receptions; absent from stat rows."
+    },
+    {
+      "index": 18,
+      "id": "dcaab1a1-ca3a-4dae-bc1f-8e555fdc6cdf",
+      "label": "Sam Darnold: under 2.5 rushing attempts.",
+      "stored": "miss",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "Darnold started, attempted two passes, no rushes before injury; null provider rushing fields require corroboration."
+    },
+    {
+      "index": 19,
+      "id": "e3b79065-1345-4de7-91ff-e65946285361",
+      "label": "Total points: over 41.5.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "Final combined score 23 <= 41.5."
+    },
+    {
+      "index": 20,
+      "id": "729b5bb2-3ba4-4357-a106-5e2dff3bb6d1",
+      "label": "A non-quarterback throws a pass.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "Only Maye, Darnold and Lock attempted passes; all QBs."
+    },
+    {
+      "index": 21,
+      "id": "8f052a24-05dc-4066-8066-4aeef090b1a1",
+      "label": "Seahawks to beat Patriots.",
+      "stored": "void",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "SEA won 13-10."
+    },
+    {
+      "index": 22,
+      "id": "a29f0626-1a95-4d40-914d-5484d00db213",
+      "label": "Sam Darnold is held under 5.5 yards on his longest run.",
+      "stored": "miss",
+      "expected": "hit",
+      "replay": "hit",
+      "labelDispute": null,
+      "evidence": "Darnold had no rushing attempt; longest rush zero under milestone semantics, supported by complete gamebook."
+    },
+    {
+      "index": 23,
+      "id": "cffce68f-bd7b-4f56-ba91-0eb20c74ddc3",
+      "label": "Hunter Henry: at least 4 receptions.",
+      "stored": "miss",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "Henry caught 3, below 4."
+    },
+    {
+      "index": 24,
+      "id": "4f8e8688-b1f9-4bec-9b95-a2c289ff023d",
+      "label": "Rhamondre Stevenson scores the game's first TD.",
+      "stored": "void",
+      "expected": "miss",
+      "replay": "miss",
+      "labelDispute": null,
+      "evidence": "First touchdown scorer was Eli Raridon, not Stevenson."
+    }
+  ]
+}

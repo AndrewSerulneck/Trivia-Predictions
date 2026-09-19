@@ -5,6 +5,8 @@ const mocks = vi.hoisted(() => ({
   listUserSportsBingoCardDates: vi.fn(),
   generateSportsBingoBoard: vi.fn(),
   createSportsBingoCard: vi.fn(),
+  requireCreationGame: vi.fn(),
+  availabilityErrorStatus: vi.fn(),
 }));
 
 vi.mock("@/lib/sportsBingo", () => ({
@@ -12,6 +14,11 @@ vi.mock("@/lib/sportsBingo", () => ({
   listUserSportsBingoCardDates: mocks.listUserSportsBingoCardDates,
   generateSportsBingoBoard: mocks.generateSportsBingoBoard,
   createSportsBingoCard: mocks.createSportsBingoCard,
+}));
+
+vi.mock("@/lib/sportsBingoAvailability", () => ({
+  requireSportsBingoCreationGame: mocks.requireCreationGame,
+  sportsBingoAvailabilityErrorStatus: mocks.availabilityErrorStatus,
 }));
 
 import { GET, POST } from "@/app/api/bingo/cards/route";
@@ -22,18 +29,19 @@ describe("/api/bingo/cards", () => {
     mocks.listUserSportsBingoCardDates.mockReset();
     mocks.generateSportsBingoBoard.mockReset();
     mocks.createSportsBingoCard.mockReset();
+    mocks.requireCreationGame.mockReset();
+    mocks.requireCreationGame.mockResolvedValue({ id: "game-1" });
+    mocks.availabilityErrorStatus.mockReset();
+    mocks.availabilityErrorStatus.mockReturnValue(null);
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  // Regression for the code-review fix: an untrimmed/mis-cased sportKey must not bypass the NFL
-  // activation gate. Before the fix, " americanfootball_nfl" (leading space) or
-  // "AMERICANFOOTBALL_NFL" (upper case) failed the `=== NFL_SPORT_KEY` check in
-  // resolveLeagueBlockReason and sailed through even with the flag off.
-  it("POST generate normalizes sportKey before the league gate, blocking a disguised NFL key", async () => {
+  it("POST generate normalizes sportKey and uses game availability even when the old NFL flag is off", async () => {
     vi.stubEnv("NEXT_PUBLIC_BINGO_NFL_ENABLED", "");
+    mocks.generateSportsBingoBoard.mockResolvedValue({ game: { id: "game-1" }, squares: [] });
 
     const response = await POST(
       new Request("http://localhost/api/bingo/cards", {
@@ -44,14 +52,19 @@ describe("/api/bingo/cards", () => {
     );
     const body = (await response.json()) as { ok: boolean; error: string };
 
-    expect(response.status).toBe(400);
-    expect(body.ok).toBe(false);
-    expect(body.error).toBe("NFL Sports Bingo is coming soon.");
-    expect(mocks.generateSportsBingoBoard).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(mocks.requireCreationGame).toHaveBeenCalledWith({
+      sportKey: "americanfootball_nfl",
+      gameId: "game-1",
+      tzOffsetMinutes: undefined,
+      evaluationTimeMs: expect.any(Number),
+    });
   });
 
-  it("POST play normalizes sportKey before the league gate, blocking a disguised NFL key", async () => {
+  it("POST play normalizes sportKey and revalidates the selected game when the old NFL flag is off", async () => {
     vi.stubEnv("NEXT_PUBLIC_BINGO_NFL_ENABLED", "");
+    mocks.createSportsBingoCard.mockResolvedValue({ id: "card-2" });
 
     const response = await POST(
       new Request("http://localhost/api/bingo/cards", {
@@ -69,10 +82,14 @@ describe("/api/bingo/cards", () => {
     );
     const body = (await response.json()) as { ok: boolean; error: string };
 
-    expect(response.status).toBe(400);
-    expect(body.ok).toBe(false);
-    expect(body.error).toBe("NFL Sports Bingo is coming soon.");
-    expect(mocks.createSportsBingoCard).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(mocks.requireCreationGame).toHaveBeenCalledWith({
+      sportKey: "americanfootball_nfl",
+      gameId: "game-1",
+      tzOffsetMinutes: undefined,
+      evaluationTimeMs: expect.any(Number),
+    });
   });
 
   it("GET returns empty list when userId missing", async () => {
@@ -100,6 +117,7 @@ describe("/api/bingo/cards", () => {
       includeSettled: true,
       refreshProgress: false,
     });
+    expect(mocks.requireCreationGame).not.toHaveBeenCalled();
   });
 
   it("GET active view is read-only by default", async () => {
@@ -295,6 +313,29 @@ describe("/api/bingo/cards", () => {
       sportKey: "basketball_nba",
       generationMode: "preview",
     });
+  });
+
+  it("POST generate returns a readable conflict when the selected game became stale", async () => {
+    mocks.requireCreationGame.mockRejectedValue(new Error("That game is no longer available. Please pick another game."));
+    mocks.availabilityErrorStatus.mockReturnValue(409);
+
+    const response = await POST(
+      new Request("http://localhost/api/bingo/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "generate",
+          gameId: "game-1",
+          sportKey: "basketball_nba",
+          tzOffsetMinutes: 240,
+        }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error: string };
+
+    expect(response.status).toBe(409);
+    expect(body.error).toMatch(/no longer available/i);
+    expect(mocks.generateSportsBingoBoard).not.toHaveBeenCalled();
   });
 
   it("POST play returns 400 when payload missing", async () => {

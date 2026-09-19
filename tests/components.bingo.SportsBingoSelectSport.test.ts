@@ -1,27 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
-import { render, screen, cleanup, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 
-// Phase 6 of docs/prop-bingo-code-review-fix-plan.md flagged that the
-// `league.note ?? "Coming soon"` render (SportsBingoSelectSport.tsx:58) had no fixture — only the
-// route-level `/api/bingo/leagues` contract test (tests/api.bingo.leagues.test.ts) covered the
-// status strings the component consumes, never how it renders them. This is the one surface where
-// Phase 6's two statuses (`out_of_season`, `coming_soon`) could visibly recombine: a `coming_soon`
-// league with a custom `note` must show that note, and must never fall back to the
-// `out_of_season` copy ("Out of season · …").
-// No JSX (repo's vitest config only globs *.test.ts, not *.test.tsx) — createElement stands in,
-// same convention as tests/admin-modal-sheet.a11y.test.ts.
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
-}));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const { SportsBingoSelectSport } = await import("@/components/bingo/SportsBingoSelectSport");
 
-function jsonResponse(body: unknown): Response {
-  return { ok: true, status: 200, json: async () => body } as Response;
-}
+const jsonResponse = (body: unknown, ok = true, status = 200): Response =>
+  ({ ok, status, json: async () => body }) as Response;
 
 afterEach(() => {
   cleanup();
@@ -29,76 +16,66 @@ afterEach(() => {
 });
 
 describe("SportsBingoSelectSport", () => {
-  it("renders a coming_soon league's own note, not the out_of_season copy", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          ok: true,
-          leagues: [
-            {
-              key: "americanfootball_nfl",
-              label: "NFL",
-              icon: "🏈",
-              status: "coming_soon",
-              note: "Kicks off in September",
-            },
-          ],
-        })
-      )
+  it("renders only leagues returned as currently available and sends the timezone", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        ok: true,
+        incomplete: false,
+        leagues: [
+          { key: "basketball_nba", label: "NBA", icon: "🏀" },
+          { key: "americanfootball_nfl", label: "NFL", icon: "🏈" },
+        ],
+      })
     );
+    vi.stubGlobal("fetch", fetchMock);
 
     render(createElement(SportsBingoSelectSport));
 
-    await waitFor(() => {
-      expect(screen.getByText("Kicks off in September")).toBeTruthy();
-    });
-    expect(screen.queryByText(/Out of season/)).toBeNull();
+    expect(await screen.findByRole("button", { name: /NBA/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /NFL/ })).toBeTruthy();
+    expect(screen.queryByText("WNBA")).toBeNull();
+    expect(String(fetchMock.mock.calls[0]?.[0])).toMatch(/tzOffsetMinutes=/);
   });
 
-  it("falls back to 'Coming soon' when a coming_soon league carries no note", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          ok: true,
-          leagues: [
-            { key: "americanfootball_nfl", label: "NFL", icon: "🏈", status: "coming_soon" },
-          ],
-        })
-      )
-    );
-
+  it("renders a successful-empty message without static fallback leagues", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ ok: true, incomplete: false, leagues: [] })));
     render(createElement(SportsBingoSelectSport));
 
-    await waitFor(() => {
-      expect(screen.getByText("Coming soon")).toBeTruthy();
-    });
+    expect(await screen.findByText("No games are available for board creation today.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /NBA/ })).toBeNull();
   });
 
-  it("renders an out_of_season league's resumesLabel copy, not a coming_soon note", async () => {
+  it("keeps verified choices and shows a retryable warning for a partial failure", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
         jsonResponse({
           ok: true,
-          leagues: [
-            {
-              key: "baseball_mlb",
-              label: "MLB",
-              icon: "⚾",
-              status: "out_of_season",
-              resumesLabel: "Resumes April 2027",
-            },
-          ],
+          incomplete: true,
+          warning: "Some leagues could not be checked right now. Try again in a moment.",
+          leagues: [{ key: "baseball_mlb", label: "MLB", icon: "⚾" }],
         })
       )
     );
-
     render(createElement(SportsBingoSelectSport));
 
-    await waitFor(() => {
-      expect(screen.getByText("Out of season · Resumes April 2027")).toBeTruthy();
-    });
+    expect(await screen.findByRole("button", { name: /MLB/ })).toBeTruthy();
+    expect(screen.getByText(/Some leagues could not be checked/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Try Again" })).toBeTruthy();
+    expect(screen.queryByText(/No games are available/)).toBeNull();
+  });
+
+  it("shows a retryable failure and never makes static leagues clickable", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({ ok: false, error: "We could not check available Bingo games right now." }, false, 503)
+      )
+    );
+    render(createElement(SportsBingoSelectSport));
+
+    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+    expect(screen.getByRole("button", { name: "Try Again" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /NBA/ })).toBeNull();
   });
 });

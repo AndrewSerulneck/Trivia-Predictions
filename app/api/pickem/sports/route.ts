@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { listPickEmSports } from "@/lib/pickem";
+import { listRegularPickEmSports } from "@/lib/pickem";
 
 export async function GET() {
   try {
-    const sports = listPickEmSports();
+    const sports = listRegularPickEmSports();
     return NextResponse.json({ ok: true, sports });
   } catch (error) {
     return NextResponse.json(

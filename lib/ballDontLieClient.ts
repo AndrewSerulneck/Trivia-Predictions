@@ -4,14 +4,21 @@ import "server-only";
 // docs/prop-bingo-nfl-plan.md so lib/sportsBingoOdds.ts can reuse it without importing
 // lib/sportsBingo.ts (which imports the odds module — that would be a cycle).
 //
-// Behavior is deliberately unchanged from the original: a network error or a non-2xx response
-// logs and resolves to `{}` rather than throwing, so one bad provider minute degrades a board to
-// "no candidates" instead of surfacing a 500 to a player mid-game.
+// Requests degrade to an empty result on failure. List reads discard the entire partial walk
+// on failure/truncation; callers must treat absence as unavailable evidence, never zero.
 
 const BALLDONTLIE_API_BASE_URL = process.env.BALLDONTLIE_API_BASE_URL ?? "https://api.balldontlie.io";
 const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
 
 const DEFAULT_MAX_PAGES = 12;
+
+/** Aggregateable feed-family failures; never include query strings, payloads or player IDs. */
+function reportFeedFailure(path: string, reason: string): void {
+  const parts = path.split("/").filter(Boolean);
+  console.warn("[BallDontLie][feed_failure]", {
+    league: parts[0] ?? "unknown", feed_family: parts[2] ?? "unknown", reason, count: 1,
+  });
+}
 
 export type BallDontLieListResponse<T> = {
   data?: T[];
@@ -54,8 +61,8 @@ export async function fetchBallDontLieJson(
         : undefined,
       next: { revalidate: 15 },
     });
-  } catch (fetchError) {
-    console.error(`[BallDontLie] Network error fetching ${path}:`, fetchError);
+  } catch {
+    reportFeedFailure(path, "network_error");
     if (options?.failure) {
       options.failure.failed = true;
     }
@@ -63,6 +70,7 @@ export async function fetchBallDontLieJson(
   }
 
   if (!response.ok) {
+    reportFeedFailure(path, `http_${response.status}`);
     console.error(`[BallDontLie] Request failed (${response.status}) for ${path}. Returning empty result.`);
     if (options?.failure) {
       options.failure.failed = true;
@@ -70,7 +78,14 @@ export async function fetchBallDontLieJson(
     return {};
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    reportFeedFailure(path, "invalid_json");
+    if (options?.failure) options.failure.failed = true;
+    console.error(`[BallDontLie] Invalid JSON for ${path}.`);
+    return {};
+  }
 }
 
 /**
@@ -92,6 +107,8 @@ export async function fetchBallDontLieList<T>(
   const maxPages = Math.max(1, options?.maxPages ?? DEFAULT_MAX_PAGES);
   const allRows: T[] = [];
   let cursor: number | null = null;
+  const seenCursors = new Set<number>();
+  const failure = options?.failure ?? { failed: false };
 
   for (let page = 0; page < maxPages; page += 1) {
     const query = new URLSearchParams(baseQuery.toString());
@@ -100,20 +117,35 @@ export async function fetchBallDontLieList<T>(
     }
 
     const payload = (await fetchBallDontLieJson(path, query, {
-      failure: options?.failure,
+      failure,
     })) as BallDontLieListResponse<T>;
-    const rows = Array.isArray(payload?.data) ? payload.data : [];
+    if (failure.failed || !Array.isArray(payload?.data)) {
+      if (!failure.failed) reportFeedFailure(path, "malformed_list");
+      failure.failed = true;
+      if (options?.truncation) options.truncation.truncated = true;
+      return []; // A failed prefix is never a complete list, even for callers without boxes.
+    }
+    const rows = payload.data;
     allRows.push(...rows);
 
     const nextCursor = payload?.meta?.next_cursor;
     if (typeof nextCursor !== "number") {
       return allRows;
     }
+    if (seenCursors.has(nextCursor)) {
+      reportFeedFailure(path, "repeated_cursor");
+      failure.failed = true;
+      if (options?.truncation) options.truncation.truncated = true;
+      return [];
+    }
+    seenCursors.add(nextCursor);
     cursor = nextCursor;
   }
 
   if (options?.truncation) {
     options.truncation.truncated = true;
   }
-  return allRows;
+  reportFeedFailure(path, "page_limit");
+  failure.failed = true;
+  return [];
 }

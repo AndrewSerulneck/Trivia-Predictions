@@ -16,6 +16,8 @@ import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
 import { PickEmCollectAnimation } from "@/components/animations/PickEmCollectAnimation";
 import type { AdSlot } from "@/types";
 
+// Historical regular Pick 'Em rows can still be NFL rows from before the
+// dedicated game split, even though NFL is no longer a selectable sport here.
 type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma" | "tennis";
 
 type PickEmSport = {
@@ -114,7 +116,6 @@ const SPORT_ICONS: Record<string, string> = {
   nba: "🏀",
   mlb: "⚾",
   soccer: "⚽",
-  nfl: "🏈",
   nhl: "🏒",
   mma: "🥊",
   tennis: "🎾",
@@ -209,8 +210,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   const venuePresence = useVenuePresence();
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
-  const [nflWeekStartDate, setNflWeekStartDate] = useState("");
-  const [nflWeekOptions, setNflWeekOptions] = useState<Array<{ label: string; value: string }>>([]);
   const [loadingSports, setLoadingSports] = useState(true);
   const [loadingGames, setLoadingGames] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -339,9 +338,13 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         const nextSports = payload.sports ?? [];
         setSports(nextSports);
 
-        const initialMatch = nextSports.find((item) => item.slug === normalizedInitialSportSlug);
-        const nextDefault = initialMatch?.slug ?? nextSports.find((item) => item.isClickable)?.slug ?? nextSports[0]?.slug ?? "";
-        setSelectedSportSlug((current) => current || nextDefault);
+        const initialMatch = nextSports.find(
+          (item) => item.slug === normalizedInitialSportSlug && item.isClickable
+        );
+        const nextDefault = initialMatch?.slug ?? nextSports.find((item) => item.isClickable)?.slug ?? "";
+        setSelectedSportSlug((current) =>
+          nextSports.some((item) => item.slug === current && item.isClickable) ? current : nextDefault
+        );
       } catch (error) {
         setSports([]);
         setErrorMessage(error instanceof Error ? error.message : "Unable to load Pick 'Em sports right now.");
@@ -376,10 +379,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           date: selectedDate,
           tzOffsetMinutes: String(new Date().getTimezoneOffset()),
         });
-        if (selectedSportSlug === "nfl" && nflWeekStartDate) {
-          params.set("weekStartDate", nflWeekStartDate);
-        }
-
         if (userId) {
           params.set("userId", userId);
         }
@@ -404,10 +403,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         }
         setPointsBank(payload.pointsBank ?? null);
         setLastDebugProbes(payload.debug?.probes ?? []);
-        setNflWeekOptions(payload.weekOptions ?? []);
-        if (selectedSportSlug === "nfl" && payload.selectedWeekStartDate) {
-          setNflWeekStartDate(payload.selectedWeekStartDate);
-        }
         if (!background) {
           setErrorMessage("");
         }
@@ -415,20 +410,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         setLastDebugProbes([]);
         setPointsBank(null);
         const message = error instanceof Error ? error.message : "Failed to load Pick 'Em games.";
-        const looksLikeNflOutOfSeason =
-          selectedSportSlug === "nfl" && (message.includes("422") || message.toLowerCase().includes("odds api"));
-        if (looksLikeNflOutOfSeason) {
-          setErrorMessage("");
-          setGames([]);
-          setSport((current) => {
-            if (current && current.slug === "nfl") {
-              return { ...current, isClickable: true };
-            }
-            const nfl = sports.find((item) => item.slug === "nfl");
-            return nfl ? { ...nfl, isClickable: true } : current;
-          });
-          return;
-        }
         if (!background || gamesRef.current.length === 0) {
           setErrorMessage(message);
         }
@@ -438,7 +419,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         }
       }
     },
-    [nflWeekStartDate, selectedDate, selectedSportSlug, sports, userId, venueId]
+    [selectedDate, selectedSportSlug, userId, venueId]
   );
 
   useEffect(() => {
@@ -587,7 +568,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           gameId,
           pickTeam,
           date: selectedDate,
-          weekStartDate: selectedSportSlug === "nfl" ? nflWeekStartDate : undefined,
           tzOffsetMinutes: new Date().getTimezoneOffset(),
         }),
       });
@@ -601,7 +581,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         throw new Error(payload.error ?? "Failed to save your pick.");
       }
     },
-    [nflWeekStartDate, selectedDate, selectedSportSlug, userId, venueId, venuePresence]
+    [selectedDate, selectedSportSlug, userId, venueId, venuePresence]
   );
 
   const clearPickRequest = useCallback(
@@ -944,29 +924,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
               </button>
             </div>
 
-            {selectedSportSlug === "nfl" && nflWeekOptions.length > 0 ? (
-              <>
-                <label htmlFor="pickem-nfl-week" className="text-xs font-medium text-slate-400">
-                  NFL Week:
-                </label>
-                <select
-                  id="pickem-nfl-week"
-                  value={nflWeekStartDate}
-                  onChange={(event) => {
-                    setNflWeekStartDate(event.target.value);
-                    setSubmitMessage("");
-                  }}
-                  className="tp-clean-button rounded-lg border border-[#fde68a]/30 bg-slate-900 px-2 py-1 text-xs text-slate-200 sm:text-sm"
-                >
-                  {nflWeekOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </>
-            ) : null}
-
             {!userId || !venueId ? (
               <span className="rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-300">
                 Browse only
@@ -984,7 +941,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                 ) : (
                   sports.map((item) => {
                     const isSelected = selectedSportSlug === item.slug;
-                    const isDisabled = !item.isClickable && item.slug !== "nfl";
+                    const isDisabled = !item.isClickable;
                     return (
                       <button
                         key={item.slug}
@@ -1081,7 +1038,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           <div className="rounded-xl border border-amber-400/45 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
             Choose a sport to load today&apos;s games.
           </div>
-        ) : !sport.isClickable && sport.slug !== "nfl" ? (
+        ) : !sport.isClickable ? (
           <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
             {sport.label} Pick &apos;Em is coming soon.
           </div>

@@ -1,3 +1,4 @@
+import { completeSyntheticNFLStats } from "@/tests/helpers/bingoProviderFixtures";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Phase 2 of docs/prop-bingo-code-review-fix-plan.md — the `start_date`/`end_date` grading substrate.
@@ -180,7 +181,7 @@ function installProviderDouble(): void {
     }
     if (path === "/nfl/v1/stats") {
       const gameIds = url.searchParams.getAll("game_ids[]");
-      return Promise.resolve(bdlList(gameIds.includes(NFL_GAME_ID) ? NFL_STATS : []));
+      return Promise.resolve(bdlList(gameIds.includes(NFL_GAME_ID) ? completeSyntheticNFLStats(NFL_STATS, NFL_HOME, NFL_AWAY) : []));
     }
     return Promise.resolve(bdlList([]));
   });

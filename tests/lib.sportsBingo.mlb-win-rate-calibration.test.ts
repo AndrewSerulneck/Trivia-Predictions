@@ -137,11 +137,21 @@ vi.mock("@/lib/ballDontLieClient", () => ({
  * board, so this is enough to make a systematic miss obvious without making the suite slow.
  */
 const TRIALS_PER_GAME = 12;
+const PHASE_5_SEED = 0x5eed2026;
+
+function seededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
 
 type SlateResult = {
   boards: number;
   predicted: number[];
   wins: number;
+  unknownSquares: number;
   teamEventSquares: number;
   playableSquares: number;
   teamEventProbabilities: number[];
@@ -149,63 +159,74 @@ type SlateResult = {
 };
 
 const runSlate = async (): Promise<SlateResult> => {
+  const originalRandom = Math.random;
+  Math.random = seededRandom(PHASE_5_SEED);
   const predicted: number[] = [];
   const teamEventProbabilities: number[] = [];
   const thresholdsByEvent = new Map<string, Set<number>>();
   let wins = 0;
+  let unknownSquares = 0;
   let teamEventSquares = 0;
   let playableSquares = 0;
 
-  for (let index = 0; index < fixtureGames.length; index += 1) {
-    activeIndex = index;
-    const game = fixtureGames[index]!;
-    // The catalog and candidate caches are keyed by sport/game and would otherwise serve the first
-    // fixture game's board for all thirteen.
-    vi.resetModules();
-    const sportsBingo = await import("@/lib/sportsBingo");
+  try {
+    for (let index = 0; index < fixtureGames.length; index += 1) {
+      activeIndex = index;
+      const game = fixtureGames[index]!;
+      // The catalog and candidate caches are keyed by sport/game and would otherwise serve the first
+      // fixture game's board for all thirteen.
+      vi.resetModules();
+      const sportsBingo = await import("@/lib/sportsBingo");
 
-    for (let trial = 0; trial < TRIALS_PER_GAME; trial += 1) {
-      const built = await sportsBingo.buildSportsBingoBoardWithResolvers({
-        gameId: game.id,
-        sportKey: "baseball_mlb",
-      });
-      if (!built) continue;
+      for (let trial = 0; trial < TRIALS_PER_GAME; trial += 1) {
+        const built = await sportsBingo.buildSportsBingoBoardWithResolvers({
+          gameId: game.id,
+          sportKey: "baseball_mlb",
+        });
+        if (!built) continue;
 
-      const playable = built.squares.filter((square) => !square.isFree);
-      playableSquares += playable.length;
-      for (const square of playable) {
-        if (square.resolver.kind !== "mlb_webhook_team_event_at_least") continue;
-        teamEventSquares += 1;
-        teamEventProbabilities.push(square.probability);
-        const seen = thresholdsByEvent.get(square.resolver.event) ?? new Set<number>();
-        seen.add(square.resolver.threshold);
-        thresholdsByEvent.set(square.resolver.event, seen);
+        const playable = built.squares.filter((square) => !square.isFree);
+        playableSquares += playable.length;
+        for (const square of playable) {
+          if (square.resolver.kind !== "mlb_webhook_team_event_at_least") continue;
+          teamEventSquares += 1;
+          teamEventProbabilities.push(square.probability);
+          const seen = thresholdsByEvent.get(square.resolver.event) ?? new Set<number>();
+          seen.add(square.resolver.threshold);
+          thresholdsByEvent.set(square.resolver.event, seen);
+        }
+
+        const outcomes = sportsBingo.gradeResolversAgainstCompletedMLBGame({
+          gameId: game.id,
+          homeTeam: game.homeTeam,
+          awayTeam: game.awayTeam,
+          homeScore: game.homeScore,
+          awayScore: game.awayScore,
+          teamEventTotals: game.teamEventTotals,
+          resolvers: playable.map((square) => square.resolver),
+        });
+        unknownSquares += outcomes.filter(
+          (outcome) => outcome.status === "pending" || outcome.status === "void"
+        ).length;
+
+        const marks = playable.map((square, position) => ({
+          index: square.index,
+          hit: outcomes[position]!.status === "hit",
+        }));
+
+        predicted.push(built.boardProbability);
+        if (sportsBingo.boardStatusesMakeALine(marks)) wins += 1;
       }
-
-      const outcomes = sportsBingo.gradeResolversAgainstCompletedMLBGame({
-        gameId: game.id,
-        homeTeam: game.homeTeam,
-        awayTeam: game.awayTeam,
-        homeScore: game.homeScore,
-        awayScore: game.awayScore,
-        teamEventTotals: game.teamEventTotals,
-        resolvers: playable.map((square) => square.resolver),
-      });
-
-      const marks = playable.map((square, position) => ({
-        index: square.index,
-        hit: outcomes[position]!.status === "hit",
-      }));
-
-      predicted.push(built.boardProbability);
-      if (sportsBingo.boardStatusesMakeALine(marks)) wins += 1;
     }
+  } finally {
+    Math.random = originalRandom;
   }
 
   return {
     boards: predicted.length,
     predicted,
     wins,
+    unknownSquares,
     teamEventSquares,
     playableSquares,
     teamEventProbabilities,
@@ -223,6 +244,7 @@ describe("MLB win-rate calibration (Phase 7)", () => {
   it("builds a full board for every game on the slate", () => {
     expect(slate.boards).toBe(fixtureGames.length * TRIALS_PER_GAME);
     expect(slate.playableSquares / slate.boards).toBe(24);
+    expect(slate.unknownSquares).toBe(0);
   });
 
   it("predicts every board inside the 20-30% target band", () => {

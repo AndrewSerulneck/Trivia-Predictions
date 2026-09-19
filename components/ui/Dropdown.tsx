@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 export type DropdownOption<T extends string> = {
@@ -57,6 +57,8 @@ export function Dropdown<T extends string>({
 }: DropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const menuId = useId();
 
   const selected = options.find((o) => o.value === value);
@@ -64,16 +66,23 @@ export function Dropdown<T extends string>({
   useEffect(() => {
     if (!isOpen) return;
 
+    const close = ({ returnFocus = false }: { returnFocus?: boolean } = {}) => {
+      setIsOpen(false);
+      if (returnFocus) {
+        window.requestAnimationFrame(() => triggerRef.current?.focus());
+      }
+    };
     const closeOnOutsidePointer = (event: PointerEvent) => {
       const target = event.target;
       if (target instanceof Node && containerRef.current?.contains(target)) {
         return;
       }
-      setIsOpen(false);
+      close();
     };
-    const closeOnEscape = (event: KeyboardEvent) => {
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        event.preventDefault();
+        close({ returnFocus: true });
       }
     };
 
@@ -85,9 +94,52 @@ export function Dropdown<T extends string>({
     };
   }, [isOpen]);
 
+  const focusOption = (index: number, direction: 1 | -1 = 1) => {
+    const enabled = options
+      .map((option, optionIndex) => ({ option, optionIndex }))
+      .filter(({ option }) => !option.disabled)
+      .map(({ optionIndex }) => optionIndex);
+    if (enabled.length === 0) return;
+    const target = enabled.includes(index)
+      ? index
+      : direction === 1
+        ? enabled.find((optionIndex) => optionIndex > index) ?? enabled[0]
+        : [...enabled].reverse().find((optionIndex) => optionIndex < index) ?? enabled[enabled.length - 1];
+    optionRefs.current[target]?.focus();
+  };
+
+  const handleTriggerKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    event.preventDefault();
+    setIsOpen(true);
+    window.requestAnimationFrame(() => {
+      const selectedIndex = options.findIndex((option) => option.value === value);
+      focusOption(event.key === "ArrowUp" ? selectedIndex - 1 : selectedIndex, event.key === "ArrowUp" ? -1 : 1);
+    });
+  };
+
+  const handleOptionKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      focusOption(index + 1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      focusOption(index - 1, -1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      focusOption(-1);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      const lastIndex = options.length - 1;
+      const enabled = options.map((option, optionIndex) => (!option.disabled ? optionIndex : -1)).filter((optionIndex) => optionIndex >= 0);
+      focusOption(enabled[enabled.length - 1] ?? lastIndex);
+    }
+  };
+
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
         aria-label={ariaLabel}
@@ -95,6 +147,7 @@ export function Dropdown<T extends string>({
         aria-expanded={isOpen}
         aria-controls={menuId}
         onClick={() => setIsOpen((open) => !open)}
+        onKeyDown={handleTriggerKeyDown}
         className={
           renderTrigger
             ? className
@@ -121,15 +174,19 @@ export function Dropdown<T extends string>({
           aria-label={ariaLabel}
           className="absolute left-0 top-full z-[1400] mt-2 w-full max-h-64 overflow-y-auto rounded-ht-md border border-ht-elevated-2 bg-ht-elevated p-1 shadow-ht-modal"
         >
-          {options.map((option) => {
+          {options.map((option, index) => {
             const isSelected = option.value === value;
             return (
               <button
                 key={option.value}
+                ref={(element) => {
+                  optionRefs.current[index] = element;
+                }}
                 type="button"
                 role="option"
                 aria-selected={isSelected}
                 disabled={option.disabled}
+                onKeyDown={(event) => handleOptionKeyDown(event, index)}
                 onClick={() => {
                   onChange(option.value);
                   setIsOpen(false);

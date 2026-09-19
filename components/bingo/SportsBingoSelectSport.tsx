@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SPORTS_BINGO_LEAGUES } from "@/lib/sportsBingoLeagues";
 
@@ -8,36 +8,20 @@ type SportOption = {
   key: string;
   label: string;
   icon: string;
-  enabled: boolean;
-  note?: string;
 };
-
-// Static fallback: today's always-clickable list, used both when season gating is off
-// (NEXT_PUBLIC_BINGO_SEASON_GATING_ENABLED unset) and when the /api/bingo/leagues call fails —
-// fail open, never blank the picker over a flaky request. Key/label/icon come from the shared
-// catalog; only the fail-open `enabled`/`note` status stays local (see route.ts comment).
-const FALLBACK_STATUS: Record<string, { enabled: boolean; note?: string }> = {
-  basketball_nba: { enabled: true },
-  basketball_wnba: { enabled: true },
-  americanfootball_nfl: { enabled: false, note: "Coming soon" },
-  baseball_mlb: { enabled: true },
-};
-
-const FALLBACK_SPORT_OPTIONS: SportOption[] = SPORTS_BINGO_LEAGUES.map((league) => ({
-  key: league.sportKey,
-  label: league.label,
-  icon: league.emoji,
-  enabled: FALLBACK_STATUS[league.sportKey]?.enabled ?? true,
-  note: FALLBACK_STATUS[league.sportKey]?.note,
-}));
 
 type LeaguesApiLeague = {
   key: string;
   label: string;
   icon: string;
-  status: "in_season" | "out_of_season" | "coming_soon";
-  resumesLabel?: string;
-  note?: string;
+};
+
+type LeaguesResponse = {
+  ok: boolean;
+  leagues?: LeaguesApiLeague[];
+  incomplete?: boolean;
+  warning?: string;
+  error?: string;
 };
 
 export type SportsBingoSelectSportProps = {
@@ -53,44 +37,74 @@ export type SportsBingoSelectSportProps = {
 
 export function SportsBingoSelectSport({ onSelectSport, hideStepHeading = false }: SportsBingoSelectSportProps) {
   const router = useRouter();
+  const requestIdRef = useRef(0);
+  const localDateRef = useRef("");
+  const hasLoadedRef = useRef(false);
   const [sportOptions, setSportOptions] = useState<SportOption[] | null>(null);
+  const [warningMessage, setWarningMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadLeagues = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    if (!hasLoadedRef.current) {
+      setErrorMessage("");
+    } else {
+      setRefreshing(true);
+    }
+
+    try {
+      const tzOffsetMinutes = new Date().getTimezoneOffset();
+      const response = await fetch(
+        `/api/bingo/leagues?tzOffsetMinutes=${encodeURIComponent(String(tzOffsetMinutes))}`,
+        { cache: "no-store" }
+      );
+      const body = (await response.json()) as LeaguesResponse;
+      if (!response.ok || !body.ok || !Array.isArray(body.leagues)) {
+        throw new Error(body.error ?? "Failed to load available leagues.");
+      }
+      if (requestIdRef.current !== requestId) return;
+      hasLoadedRef.current = true;
+      setSportOptions(body.leagues);
+      setErrorMessage("");
+      setWarningMessage(body.incomplete ? body.warning ?? "Some leagues could not be checked. Try again." : "");
+    } catch (error) {
+      if (requestIdRef.current !== requestId) return;
+      hasLoadedRef.current = true;
+      setSportOptions([]);
+      setWarningMessage("");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to load available leagues.");
+    } finally {
+      if (requestIdRef.current === requestId) setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    localDateRef.current = new Date().toDateString();
+    void loadLeagues();
 
-    (async () => {
-      try {
-        const response = await fetch("/api/bingo/leagues");
-        const body = (await response.json()) as { ok: boolean; leagues?: LeaguesApiLeague[] };
-        if (!response.ok || !body.ok || !Array.isArray(body.leagues)) {
-          throw new Error("Failed to load leagues.");
-        }
-        if (cancelled) return;
-        setSportOptions(
-          body.leagues.map((league) => ({
-            key: league.key,
-            label: league.label,
-            icon: league.icon,
-            enabled: league.status === "in_season",
-            note:
-              league.status === "out_of_season"
-                ? `Out of season · ${league.resumesLabel ?? "TBD"}`
-                : league.status === "coming_soon"
-                  ? league.note ?? "Coming soon"
-                  : undefined,
-          }))
-        );
-      } catch {
-        if (!cancelled) {
-          setSportOptions(FALLBACK_SPORT_OPTIONS);
-        }
-      }
-    })();
+    const revalidate = () => {
+      if (document.visibilityState === "hidden") return;
+      void loadLeagues();
+    };
+    const checkLocalDate = () => {
+      const nextDate = new Date().toDateString();
+      if (nextDate === localDateRef.current) return;
+      localDateRef.current = nextDate;
+      void loadLeagues();
+    };
+    window.addEventListener("focus", revalidate);
+    document.addEventListener("visibilitychange", revalidate);
+    const dateTimer = window.setInterval(checkLocalDate, 60_000);
 
     return () => {
-      cancelled = true;
+      requestIdRef.current += 1;
+      window.removeEventListener("focus", revalidate);
+      document.removeEventListener("visibilitychange", revalidate);
+      window.clearInterval(dateTimer);
     };
-  }, []);
+  }, [loadLeagues]);
 
   const isLoading = sportOptions === null;
   const options = sportOptions ?? [];
@@ -110,9 +124,9 @@ export function SportsBingoSelectSport({ onSelectSport, hideStepHeading = false 
 
         <div className="mt-4 space-y-2">
           {isLoading
-            ? FALLBACK_SPORT_OPTIONS.map((sport) => (
+            ? SPORTS_BINGO_LEAGUES.map((sport) => (
                 <div
-                  key={sport.key}
+                  key={sport.sportKey}
                   aria-hidden="true"
                   className="flex w-full items-center gap-3 rounded-xl border border-slate-700/60 bg-slate-800/40 p-3.5"
                 >
@@ -125,45 +139,54 @@ export function SportsBingoSelectSport({ onSelectSport, hideStepHeading = false 
                   key={sport.key}
                   type="button"
                   onClick={() => {
-                    if (!sport.enabled) {
-                      return;
-                    }
                     if (onSelectSport) {
                       onSelectSport(sport.key);
                       return;
                     }
                     router.push(`/bingo/select-game?sportKey=${encodeURIComponent(sport.key)}`);
                   }}
-                  disabled={!sport.enabled}
-                  className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3.5 text-left transition-all ${
-                    sport.enabled
-                      ? "border-sky-300/25 bg-slate-800/60 hover:border-sky-300/60 active:scale-[0.99]"
-                      : "cursor-not-allowed border-slate-700/60 bg-slate-800/40 text-slate-400"
-                  }`}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-sky-300/25 bg-slate-800/60 p-3.5 text-left transition-all hover:border-sky-300/60 active:scale-[0.99]"
                 >
                   <span className="inline-flex items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl text-xl ${
-                        sport.enabled ? "bg-sky-300/[0.12] ring-1 ring-sky-300/30" : "bg-slate-800 ring-1 ring-slate-700"
-                      }`}
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-300/[0.12] text-xl ring-1 ring-sky-300/30"
                     >
                       {sport.icon}
                     </span>
                     <span className="text-base font-black text-slate-100">{sport.label}</span>
                   </span>
-                  {sport.enabled ? (
-                    <span aria-hidden="true" className="text-lg font-black text-sky-300">
-                      ›
-                    </span>
-                  ) : (
-                    <span className="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
-                      {sport.note ?? "Coming soon"}
-                    </span>
-                  )}
+                  <span aria-hidden="true" className="text-lg font-black text-sky-300">›</span>
                 </button>
               ))}
         </div>
+
+        {!isLoading && !errorMessage && !warningMessage && options.length === 0 ? (
+          <div className="mt-3 rounded-md border border-sky-300/25 bg-slate-800/60 p-3 text-sm text-sky-200">
+            No games are available for board creation today.
+          </div>
+        ) : null}
+
+        {errorMessage || warningMessage ? (
+          <div
+            role={errorMessage ? "alert" : "status"}
+            className={`mt-3 rounded-md border p-3 text-sm ${
+              errorMessage
+                ? "border-rose-500/40 bg-rose-950/30 text-rose-300"
+                : "border-amber-300/35 bg-amber-300/10 text-amber-100"
+            }`}
+          >
+            <p>{errorMessage || warningMessage}</p>
+            <button
+              type="button"
+              onClick={() => void loadLeagues()}
+              disabled={refreshing}
+              className="tp-clean-button mt-2 rounded-lg border border-current/30 px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em] disabled:opacity-60"
+            >
+              {refreshing ? "Checking…" : "Try Again"}
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

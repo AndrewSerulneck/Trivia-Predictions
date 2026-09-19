@@ -1,0 +1,1141 @@
+{
+  "asOfCommit": "783ebd2f07bffef05e086ef0687ec53f99377dbc",
+  "method": "TypeScript AST literal-kind inventory in reviewed generation functions; gates/league/parameter reachability manually documented in capability matrix. Not an executable capability check.",
+  "families": [
+    {
+      "kind": "free",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildBoardSquares",
+          "line": 7744
+        }
+      ]
+    },
+    {
+      "kind": "moneyline",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4684
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4685
+        }
+      ]
+    },
+    {
+      "kind": "spread_more_than",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4780
+        }
+      ]
+    },
+    {
+      "kind": "spread_keep_close",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4790
+        }
+      ]
+    },
+    {
+      "kind": "game_total_over",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4809
+        }
+      ]
+    },
+    {
+      "kind": "game_total_under",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4819
+        }
+      ]
+    },
+    {
+      "kind": "team_total_over",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4846
+        }
+      ]
+    },
+    {
+      "kind": "team_total_under",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4856
+        }
+      ]
+    },
+    {
+      "kind": "player_prop",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5836
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5942
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5992
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 6008
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 6119
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidates",
+          "line": 6302
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidates",
+          "line": 6330
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLPlayerPropCandidates",
+          "line": 6573
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_stat_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5326
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5327
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5328
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5329
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5330
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5331
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5332
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5333
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5334
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5335
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5336
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5337
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5338
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5339
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5340
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5341
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5347
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5401
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5402
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_double_double",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5342
+        }
+      ]
+    },
+    {
+      "kind": "team_triple_double",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4715
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4724
+        }
+      ]
+    },
+    {
+      "kind": "any_triple_double",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildGameAndCandidatesFromBallDontLie",
+          "line": 4733
+        }
+      ]
+    },
+    {
+      "kind": "nba_team_stat_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5407
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5409
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5410
+        }
+      ]
+    },
+    {
+      "kind": "nba_team_players_scored_at_least",
+      "classification": "legacy-only",
+      "origins": []
+    },
+    {
+      "kind": "nba_player_triple_double",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5343
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_perfect_ft",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5344
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_perfect_fg",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5345
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_triple_threat",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5346
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_zero_turnovers",
+      "classification": "legacy-only",
+      "origins": []
+    },
+    {
+      "kind": "nba_player_plus_minus_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5348
+        }
+      ]
+    },
+    {
+      "kind": "nba_team_has_double_double",
+      "classification": "legacy-only",
+      "origins": []
+    },
+    {
+      "kind": "nba_team_three_pt_scorers",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5408
+        }
+      ]
+    },
+    {
+      "kind": "nba_team_turnovers_at_most",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5412
+        }
+      ]
+    },
+    {
+      "kind": "nba_team_outrebounds",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5411
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_bench_scores",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5357
+        }
+      ]
+    },
+    {
+      "kind": "nba_team_scores_first",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5413
+        }
+      ]
+    },
+    {
+      "kind": "nba_team_leads_at_halftime",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5414
+        }
+      ]
+    },
+    {
+      "kind": "nba_team_points_in_any_quarter_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5415
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_points_first_half_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5362
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_assists_in_any_quarter_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5367
+        }
+      ]
+    },
+    {
+      "kind": "nba_player_steals_first_half_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNBAAchievementCandidates",
+          "line": 5372
+        }
+      ]
+    },
+    {
+      "kind": "mlb_webhook_player_event_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5852
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5867
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5898
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5913
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5928
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5960
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 5977
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 6140
+        }
+      ]
+    },
+    {
+      "kind": "mlb_webhook_player_event_at_most",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 6155
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 6170
+        }
+      ]
+    },
+    {
+      "kind": "mlb_webhook_team_event_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMlbTeamEventCandidateTemplatesForBacktest",
+          "line": 5593
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMlbTeamEventCandidateTemplatesForBacktest",
+          "line": 5611
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 6050
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildMLBPlayerPropCandidatesFromRecentStats",
+          "line": 6076
+        }
+      ]
+    },
+    {
+      "kind": "nfl_player_anytime_td",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLPlayerPropCandidates",
+          "line": 6537
+        }
+      ]
+    },
+    {
+      "kind": "nfl_player_first_td",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLPlayerPropCandidates",
+          "line": 6536
+        }
+      ]
+    },
+    {
+      "kind": "nfl_team_scores_every_quarter",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4579
+        }
+      ]
+    },
+    {
+      "kind": "nfl_team_shutout_quarter",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4582
+        }
+      ]
+    },
+    {
+      "kind": "nfl_team_quarter_points_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4585
+        }
+      ]
+    },
+    {
+      "kind": "nfl_any_quarter_scoreless",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4590
+        }
+      ]
+    },
+    {
+      "kind": "nfl_team_leads_at_halftime",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4583
+        }
+      ]
+    },
+    {
+      "kind": "nfl_halftime_leader_loses",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4591
+        }
+      ]
+    },
+    {
+      "kind": "nfl_overtime",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4592
+        }
+      ]
+    },
+    {
+      "kind": "nfl_both_teams_score_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4593
+        }
+      ]
+    },
+    {
+      "kind": "nfl_margin_at_most",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4594
+        },
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4595
+        }
+      ]
+    },
+    {
+      "kind": "nfl_margin_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4596
+        }
+      ]
+    },
+    {
+      "kind": "nfl_second_half_higher_scoring",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4599
+        }
+      ]
+    },
+    {
+      "kind": "nfl_first_score_is_field_goal",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4603
+        }
+      ]
+    },
+    {
+      "kind": "nfl_first_scorer_wins",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4606
+        }
+      ]
+    },
+    {
+      "kind": "nfl_non_offensive_touchdown",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4607
+        }
+      ]
+    },
+    {
+      "kind": "nfl_fourth_down_conversion",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4608
+        }
+      ]
+    },
+    {
+      "kind": "nfl_long_touchdown",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingo.ts",
+          "generator": "buildNFLTeamGameCandidates",
+          "line": 4610
+        }
+      ]
+    },
+    {
+      "kind": "nfl_team_stat_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 372
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 374
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 376
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 381
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 383
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 392
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 394
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 398
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 400
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 402
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 404
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 406
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 408
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 411
+        }
+      ]
+    },
+    {
+      "kind": "nfl_team_stat_at_most",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 379
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 396
+        }
+      ]
+    },
+    {
+      "kind": "nfl_combined_team_stat_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 427
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 429
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 431
+        }
+      ]
+    },
+    {
+      "kind": "nfl_combined_team_stat_at_most",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 433
+        }
+      ]
+    },
+    {
+      "kind": "nfl_team_perfect_red_zone",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 385
+        }
+      ]
+    },
+    {
+      "kind": "nfl_team_red_zone_trip_without_touchdown",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 388
+        }
+      ]
+    },
+    {
+      "kind": "nfl_team_possession_advantage",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflTeamFlavorSquares",
+          "line": 390
+        }
+      ]
+    },
+    {
+      "kind": "nfl_game_max_stat_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 437
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 439
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 441
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 443
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 445
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 447
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 449
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 451
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 467
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 469
+        }
+      ]
+    },
+    {
+      "kind": "nfl_game_total_stat_at_least",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 461
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 472
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 475
+        }
+      ]
+    },
+    {
+      "kind": "nfl_game_missed_field_goal",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 458
+        }
+      ]
+    },
+    {
+      "kind": "nfl_non_quarterback_pass_attempt",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 465
+        }
+      ]
+    },
+    {
+      "kind": "nfl_first_score_within_minutes",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 480
+        }
+      ]
+    },
+    {
+      "kind": "nfl_score_in_final_minutes",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 482
+        },
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 485
+        }
+      ]
+    },
+    {
+      "kind": "nfl_both_teams_lead",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 487
+        }
+      ]
+    },
+    {
+      "kind": "nfl_lead_change_second_half",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 489
+        }
+      ]
+    },
+    {
+      "kind": "nfl_tied_after_halftime",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 491
+        }
+      ]
+    },
+    {
+      "kind": "nfl_winner_trailed_in_fourth",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 493
+        }
+      ]
+    },
+    {
+      "kind": "nfl_two_point_conversion",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 500
+        }
+      ]
+    },
+    {
+      "kind": "nfl_safety",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 516
+        }
+      ]
+    },
+    {
+      "kind": "nfl_goal_line_touchdown",
+      "classification": "generated-including-conditional",
+      "origins": [
+        {
+          "file": "lib/sportsBingoNflFlavor.ts",
+          "generator": "nflGameFlavorSquares",
+          "line": 518
+        }
+      ]
+    },
+    {
+      "kind": "replacement_auto",
+      "classification": "legacy-only",
+      "origins": []
+    }
+  ]
+}

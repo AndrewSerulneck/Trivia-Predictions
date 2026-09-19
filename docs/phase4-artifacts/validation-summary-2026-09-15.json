@@ -1,0 +1,84 @@
+{
+  "completedDate": "2026-09-15",
+  "branch": "main",
+  "head": "783ebd2f07bffef05e086ef0687ec53f99377dbc",
+  "scope": "Local Phase 4 verification; no deployment, migration apply, historical repair or production mutation",
+  "focused": {
+    "filesPassed": 8,
+    "testsPassed": 197,
+    "testsFailed": 0,
+    "report": "tmp/bingo-phase4-verified-final.json"
+  },
+  "incident": {
+    "counts": {
+      "stored": {
+        "void": 18,
+        "hit": 1,
+        "miss": 6
+      },
+      "expectedResolver": {
+        "miss": 14,
+        "hit": 11
+      },
+      "directNFLReplay": {
+        "miss": 14,
+        "hit": 11
+      }
+    },
+    "storedDiscrepancies": 21,
+    "directNFLDiscrepancies": 0,
+    "labelDisputes": 1,
+    "expectedWinningLine": true
+  },
+  "typecheck": "passed",
+  "fullLint": "passed",
+  "productionBuild": "passed",
+  "isolatedPostgres": {
+    "passed": true,
+    "engine": "PGlite 0.5.8",
+    "migration": "20260914010000_bingo_atomic_grading.sql",
+    "limitation": "Single embedded connection; real multi-backend lock timing and deployed schema not verified"
+  },
+  "mlbSuite": {
+    "passedFiles": 11,
+    "passedTests": 142,
+    "failedTests": 0
+  },
+  "nflSuite": {
+    "passedFiles": 21,
+    "failedFiles": 1,
+    "passedTests": 286,
+    "failedTests": 2,
+    "failureFile": "tests/lib.sportsBingo.win-rate-calibration.test.ts",
+    "sampleBoards": 300,
+    "realizedWins": 46,
+    "ungradedCells": 1074,
+    "nonFreeCells": 7200
+  },
+  "fullSuite": {
+    "passedFiles": 246,
+    "failedFiles": 2,
+    "skippedFiles": 1,
+    "passedTests": 2606,
+    "failedTests": 8,
+    "skippedTests": 13,
+    "failures": [
+      "FAIL  tests/lib.nfl-pickem-game-fetch.test.ts > listNFLPickEmGames game fetching > fetches BallDontLie NFL spreads by season and week",
+      "FAIL  tests/lib.nfl-pickem-game-fetch.test.ts > listNFLPickEmGames game fetching > pages the odds fetch well past the old 4-page cap, which truncated a full week",
+      "FAIL  tests/lib.nfl-pickem-game-fetch.test.ts > listNFLPickEmGames game fetching > warns and still returns games when the odds fetch hits the page cap",
+      "FAIL  tests/lib.nfl-pickem-game-fetch.test.ts > listNFLPickEmGames game fetching > upserts unlocked spread lines using the stored Pick 'Em game id",
+      "FAIL  tests/lib.nfl-pickem-game-fetch.test.ts > listNFLPickEmGames spread-line refresh scoping and failure policy > still refreshes lines for a spread-mode venue",
+      "FAIL  tests/lib.nfl-pickem-game-fetch.test.ts > listNFLPickEmGames spread-line refresh scoping and failure policy > refreshes lines when there is no venue context at all",
+      "FAIL  tests/lib.sportsBingo.win-rate-calibration.test.ts > Prop Bingo win-rate calibration (Phase 5) > realizes a win rate inside the 20-30% band against the real settled outcomes",
+      "FAIL  tests/lib.sportsBingo.win-rate-calibration.test.ts > Prop Bingo win-rate calibration (Phase 5) > settles essentially every square on a completed game"
+    ]
+  },
+  "unverified": [
+    "Production migration compatibility and multi-backend concurrency",
+    "Historical board and consequence repair",
+    "Live webhook/cron provider-to-cell latency",
+    "Authenticated mobile/desktop/PWA device behavior",
+    "Supported-pool variety and win-rate calibration"
+  ],
+  "handoff": "docs/bingo-pickem-reliability-plan_PHASE_4_HANDOFF.md"
+}

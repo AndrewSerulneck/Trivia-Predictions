@@ -1,3 +1,4 @@
+import { completeSyntheticNFLStats, completeSyntheticNFLPlays } from "@/tests/helpers/bingoProviderFixtures";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Phase 4 of docs/prop-bingo-nfl-plan.md — NFL grading and settlement.
@@ -87,10 +88,10 @@ function installFetchMock(options: FeedOptions) {
   const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
     const url = String(input);
     if (url.includes("/nfl/v1/plays")) {
-      return Promise.resolve(bdlList(options.plays ?? []));
+      return Promise.resolve(bdlList(completeSyntheticNFLPlays(options.plays ?? [], options.game)));
     }
     if (url.includes("/nfl/v1/stats")) {
-      return Promise.resolve(bdlList(options.stats ?? []));
+      return Promise.resolve(bdlList(completeSyntheticNFLStats(options.stats ?? [], HOME, AWAY)));
     }
     if (url.includes("/nfl/v1/games")) {
       return Promise.resolve(bdlList([options.game]));
@@ -130,6 +131,8 @@ function seedCard(resolvers: unknown[], cardId = "card-1"): void {
     created_at: KICKOFF,
     updated_at: null,
     last_cron_processed_at: null,
+    // These tests isolate resolvers after the grace window; recovery timing has its own suite.
+    grading_state: { firstFinalAt: new Date(Date.now() - 2 * 60 * 60 * 1000 - 60_000).toISOString() },
   });
 
   resolvers.forEach((resolver, position) => {
@@ -230,7 +233,7 @@ afterEach(() => {
 });
 
 describe("NFL player props (Phase 4 settlement)", () => {
-  it("hits an over the moment the box score clears it, mid-game", async () => {
+  it("keeps yardage overs pending until final because totals can decrease", async () => {
     installFetchMock({
       game: nflGame({
         status: "3rd Quarter",
@@ -248,7 +251,7 @@ describe("NFL player props (Phase 4 settlement)", () => {
 
     await runRefresh();
 
-    expect(squareStatus(0)).toBe("hit");
+    expect(squareStatus(0)).toBe("pending");
     // Still short of the line with a quarter and a half to play — nothing is decided yet.
     expect(squareStatus(1)).toBe("pending");
   });
@@ -566,6 +569,11 @@ describe("NFL play-by-play squares (Phase 4 settlement)", () => {
       away: 7,
       yardage: 52,
     }),
+    play({ slug: "rushing-touchdown", home: 17, away: 7, yardage: 1 }),
+    play({ slug: "passing-touchdown", home: 17, away: 14, yardage: 1 }),
+    play({ slug: "rushing-touchdown", home: 24, away: 14, yardage: 1 }),
+    play({ slug: "passing-touchdown", home: 24, away: 20, yardage: 1 }),
+    play({ slug: "field-goal-good", home: 27, away: 20, yardage: 25 }),
   ];
 
   it("grades the first-score, first-scorer, non-offensive TD, 4th-down and long-TD squares", async () => {

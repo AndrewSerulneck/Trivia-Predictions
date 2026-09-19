@@ -186,7 +186,7 @@ describe("basketballStatsPathForSportKey — the box-score path is inverted, not
 });
 
 describe("buildNBAGamePlayerStatsSnapshot reads WNBA's null-as-zero stat rows correctly", () => {
-  it("a row with every counting stat null (WNBA's actual shape, not a hypothetical) parses to 0, not NaN or a dropped line", () => {
+  it("null counting stats without recorded playing time remain unknown", () => {
     const nullStatsRow = {
       player: { id: 1, first_name: "Null", last_name: "Stats" },
       team: { full_name: "Las Vegas Aces" },
@@ -209,13 +209,9 @@ describe("buildNBAGamePlayerStatsSnapshot reads WNBA's null-as-zero stat rows co
     const snapshot = buildNBAGamePlayerStatsSnapshot(wnbaCard, wnbaGameRow, [nullStatsRow as never]);
     expect(snapshot.lines).toHaveLength(1);
     const line = snapshot.lines[0]!;
-    expect(line.pts).toBe(0);
-    expect(line.reb).toBe(0);
-    expect(line.ast).toBe(0);
-    expect(line.stl).toBe(0);
-    expect(line.blk).toBe(0);
-    expect(line.threes).toBe(0);
-    expect(line.plusMinus).toBe(0);
+    for (const value of [line.pts, line.reb, line.ast, line.stl, line.blk, line.threes, line.plusMinus]) expect(value).toBeNaN();
+    const participant = buildNBAGamePlayerStatsSnapshot(wnbaCard, wnbaGameRow, [{ ...nullStatsRow, min: "12:00" } as never]).lines[0]!;
+    for (const value of [participant.pts, participant.reb, participant.ast, participant.stl, participant.blk, participant.threes, participant.plusMinus]) expect(value).toBe(0);
   });
 });
 

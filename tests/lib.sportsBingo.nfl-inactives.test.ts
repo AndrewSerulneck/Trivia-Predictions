@@ -361,7 +361,7 @@ describe("NFL DNP player voids at Final (Phase 4 safety net)", () => {
   it("voids (not misses) when the box score has no row for the player at Final", async () => {
     const { evaluateResolver } = await import("@/lib/sportsBingo");
     const result = evaluateResolver(NFL_PROP_RESOLVER, FINAL_NO_SNAPSHOT, null, null, null);
-    expect(result).toEqual({ status: "void", resolved: true });
+    expect(result).toMatchObject({ status: "void", resolved: true });
   });
 
   it("stays pending, not miss, while the game is still in progress", async () => {
@@ -373,6 +373,6 @@ describe("NFL DNP player voids at Final (Phase 4 safety net)", () => {
       null,
       null
     );
-    expect(result).toEqual({ status: "pending", resolved: false });
+    expect(result).toMatchObject({ status: "pending", resolved: false });
   });
 });

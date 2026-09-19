@@ -1,5 +1,13 @@
 # Prop Bingo — Season Gating, NFL Activation, Real Prop Squares, Win-Rate Calibration
 
+> **Dated history / superseded status (2026-09-19):** Statements below that NFL is dark, that the old
+> flag must be flipped, or that live observation belongs to an unfinished phase are historical. The
+> current implementation and remaining release checks are in
+> `docs/bingo-pickem-reliability-plan.md` and
+> `docs/bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md`. The new work is verified locally but not
+> deployed; current Bingo creation eligibility comes from actual local-day boardable games plus the
+> capability/composability gates, not the old activation flag.
+
 **Status: every phase in this plan is complete.** Phases 0, 1, 2, 3 (including Optional 3b), 4, 5
 and 6 complete (2026-08-16), **Phase 7 complete (2026-08-17)**, **Phase 8 complete end-to-end (8a,
 8b and 8c, 2026-08-17)**, and **Phase 9 complete end-to-end (9a, 9b, 9c and 9d, 2026-08-17)** — see

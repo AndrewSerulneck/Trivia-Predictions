@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Phase 3 of docs/prop-bingo-code-review-fix-plan.md — truncation and settlement confidence.
 //
 // Four findings, one class of bug: a confident `hit`/`miss` settled on data that is absent, partial
-// or ambiguous. Settled squares are **never reopened by the regrade path**, so a wrong settle is
-// permanent. The rule these tests pin down: *when the source signal is incomplete, `void`, never
-// grade.*
+// or ambiguous. Phase 4 reliability now rechecks provisional squares before terminal settlement.
+// This file isolates legacy resolver outcomes after the final grace interval; the incident and
+// phase4-recovery suites exercise multi-sweep recovery before that deadline.
 //
 //   1. a truncated `/nfl/v1/plays` walk used to grade its misses off a game it had only half seen
 //   2. a quarter breakdown with a hole read the missing columns as real zeros → phantom shutout,
@@ -23,6 +23,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // verbatim.
 
 import fixture from "./fixtures/nfl-settlement-confidence.json";
+import { completeSyntheticNFLPlays } from "./helpers/bingoProviderFixtures";
 
 type Row = Record<string, unknown>;
 
@@ -89,11 +90,15 @@ type FeedOptions = {
  * up at `maxPages`, which is the only way to exercise the truncation flag.
  */
 function installFetchMock(options: FeedOptions) {
+  // These are deliberately re-chained variants of captured fragments. Supply an explicit
+  // kickoff and final, reconcile the final score, and remove cross-game chronological metadata.
+  const last = options.plays?.at(-1);
+  const observedGame = last ? { ...options.game, home_team_score: last.home_score, visitor_team_score: last.away_score } : options.game;
   const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
     const url = new URL(String(input));
     const path = url.pathname;
     if (path === "/nfl/v1/plays") {
-      const plays = options.plays ?? [];
+      const plays = completeSyntheticNFLPlays((options.plays ?? []).map((row, index) => ({ ...row, id: `synthetic-${index}`, wallclock: undefined })), observedGame);
       if (options.playsNeverEnd) {
         const cursor = Number(url.searchParams.get("cursor") ?? 0);
         return Promise.resolve(jsonResponse({ data: plays, meta: { next_cursor: cursor + 100 } }));
@@ -107,7 +112,7 @@ function installFetchMock(options: FeedOptions) {
       return Promise.resolve(jsonResponse({ data: options.stats ?? [], meta: { next_cursor: null } }));
     }
     if (path === "/nfl/v1/games") {
-      return Promise.resolve(jsonResponse({ data: [options.game], meta: { next_cursor: null } }));
+      return Promise.resolve(jsonResponse({ data: [observedGame], meta: { next_cursor: null } }));
     }
     return Promise.resolve(jsonResponse({ data: [], meta: { next_cursor: null } }));
   });
@@ -131,6 +136,7 @@ function seedCard(resolvers: unknown[], cardId = "card-1"): void {
     away_team: AWAY,
     starts_at: KICKOFF,
     status: "active",
+    grading_state: { firstFinalAt: new Date(Date.now() - 2 * 60 * 60 * 1000 - 1).toISOString() },
     board_probability: 0.25,
     reward_points: 50,
     reward_claimed_at: null,
@@ -313,7 +319,11 @@ describe("attributing a +2", () => {
   it("ignores a safety-typed row the feed says was nullified, because it never scored", async () => {
     installFetchMock({
       game: gameRow(),
-      plays: [at("ordinaryRush", 0, 14), at("nullifiedSafety", 0, 14)],
+      plays: [
+        { type_slug: "passing-touchdown", scoring_play: true, home_score: 0, away_score: 7 },
+        { type_slug: "passing-touchdown", scoring_play: true, home_score: 0, away_score: 14 },
+        at("ordinaryRush", 0, 14), at("nullifiedSafety", 0, 14),
+      ],
     });
     seedCard([{ kind: "nfl_safety" }]);
 

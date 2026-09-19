@@ -1,0 +1,291 @@
+{
+  "generatedAt": "2026-09-19",
+  "mode": "offline_checked_in_real_provider_shapes",
+  "seed": 1592598566,
+  "games": 12,
+  "boardsPerGame": 25,
+  "limitations": [
+    "The checked-in 2025 player-stat fixture drops all-zero rows.",
+    "Historical player-prop odds and complete designation evidence are unavailable, so these are prop-free boards.",
+    "Unknown final inputs remain unknown; this audit never fills absent fields with zero.",
+    "Predicted estimates and realized outcomes are separate measurements; this slate cannot certify current-season live timing."
+  ],
+  "before": {
+    "qualityMode": "legacy-audit",
+    "boards": 300,
+    "predictedWinProbability": {
+      "min": 0.2008,
+      "mean": 0.2559426666666668,
+      "max": 0.2992
+    },
+    "realizedWins": 48,
+    "realizedWinRate": 0.16,
+    "realizedWinRateWilson95": {
+      "low": 0.12285294152977377,
+      "high": 0.20574459086868646
+    },
+    "estimatorAbsoluteError": 0.09594266666666681,
+    "outcomes": {
+      "hit": 2797,
+      "miss": 3380,
+      "void": 1023
+    },
+    "unknownSquares": 1023,
+    "totalSquares": 7200,
+    "unknownRate": 0.14208333333333334,
+    "unknownByFamilyAndReason": {
+      "nfl_game_max_stat_at_least:required_player_stat_missing": 659,
+      "nfl_non_quarterback_pass_attempt:passer_position_missing": 66,
+      "nfl_game_total_stat_at_least:required_player_stat_missing": 205,
+      "nfl_game_missed_field_goal:kicker_stats_incomplete": 68,
+      "nfl_team_stat_at_least:required_evidence_unavailable": 15,
+      "nfl_halftime_leader_loses:tied_halftime": 6,
+      "nfl_team_red_zone_trip_without_touchdown:required_evidence_unavailable": 2,
+      "nfl_team_perfect_red_zone:required_evidence_unavailable": 2
+    },
+    "bucketMixPerBoard": {
+      "moneyline": {
+        "min": 2,
+        "mean": 2,
+        "max": 2
+      },
+      "spread": {
+        "min": 3,
+        "mean": 3.816666666666667,
+        "max": 6
+      },
+      "total": {
+        "min": 3,
+        "mean": 4.09,
+        "max": 7
+      },
+      "team-total": {
+        "min": 2,
+        "mean": 4.026666666666666,
+        "max": 8
+      },
+      "player-prop": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      },
+      "special": {
+        "min": 6,
+        "mean": 10.066666666666666,
+        "max": 14
+      },
+      "achievement": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      },
+      "unknown": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      }
+    },
+    "quality": {
+      "eligibleBoards": 300,
+      "earlyProgressOpportunities": {
+        "min": 11,
+        "mean": 15.626666666666667,
+        "max": 19
+      },
+      "maxSquaresForOnePlayer": 0,
+      "maxLabelLength": 48,
+      "duplicateResolverKeyBoards": 0,
+      "duplicateDiversityAxisBoards": 0,
+      "unsupportedCandidateBoards": 0
+    },
+    "readableSample": {
+      "gameId": "423990",
+      "matchup": "Arizona Cardinals at San Francisco 49ers",
+      "predictedWinProbability": 0.2068,
+      "quality": {
+        "eligible": true,
+        "issues": [],
+        "nonFreeCount": 24,
+        "duplicateResolverKeys": [],
+        "duplicateDiversityAxes": [],
+        "unsupportedCount": 0,
+        "maxSquaresForOnePlayer": 0,
+        "distinctPlayers": 0,
+        "playerPropCount": 0,
+        "distinctPlayerPropSubjects": 0,
+        "representedPlayerTeams": [],
+        "earlyProgressOpportunities": 14,
+        "maxLabelLength": 46
+      },
+      "labels": [
+        "The 2nd half outscores the 1st.",
+        "Cardinals pass for 210+ yards.",
+        "Total points: over 49.5.",
+        "Neither team turns the ball over.",
+        "Total points: over 40.5.",
+        "Cardinals: over 15.5 points.",
+        "Total points: under 33.5.",
+        "49ers score in all four quarters.",
+        "The game goes to overtime.",
+        "A 75-yard receiver.",
+        "49ers win by 5.5+ points.",
+        "Total points: under 37.5.",
+        "FREE",
+        "A quarter ends with neither team scoring.",
+        "49ers to beat Cardinals.",
+        "49ers: under 16.5 points.",
+        "Cardinals win or lose by less than 3.5 points.",
+        "Cardinals to beat 49ers.",
+        "The halftime leader does not win.",
+        "Both quarterbacks throw for 180+ yards.",
+        "A made field goal of 50+ yards.",
+        "49ers run 62+ offensive plays.",
+        "A non-quarterback throws a pass.",
+        "49ers win by 1.5+ points.",
+        "Cardinals win or lose by less than 7.5 points."
+      ]
+    }
+  },
+  "after": {
+    "qualityMode": "enforced",
+    "boards": 300,
+    "predictedWinProbability": {
+      "min": 0.1472,
+      "mean": 0.2569773333333335,
+      "max": 0.356
+    },
+    "realizedWins": 66,
+    "realizedWinRate": 0.22,
+    "realizedWinRateWilson95": {
+      "low": 0.17682672204095912,
+      "high": 0.2702535987577729
+    },
+    "estimatorAbsoluteError": 0.0369773333333335,
+    "outcomes": {
+      "hit": 3095,
+      "miss": 3584,
+      "void": 521
+    },
+    "unknownSquares": 521,
+    "totalSquares": 7200,
+    "unknownRate": 0.07236111111111111,
+    "unknownByFamilyAndReason": {
+      "nfl_non_quarterback_pass_attempt:passer_position_missing": 53,
+      "nfl_game_total_stat_at_least:required_player_stat_missing": 94,
+      "nfl_game_max_stat_at_least:required_player_stat_missing": 318,
+      "nfl_game_missed_field_goal:kicker_stats_incomplete": 30,
+      "nfl_team_stat_at_least:required_evidence_unavailable": 18,
+      "nfl_halftime_leader_loses:tied_halftime": 2,
+      "nfl_team_perfect_red_zone:required_evidence_unavailable": 5,
+      "nfl_team_red_zone_trip_without_touchdown:required_evidence_unavailable": 1
+    },
+    "bucketMixPerBoard": {
+      "moneyline": {
+        "min": 2,
+        "mean": 2,
+        "max": 2
+      },
+      "spread": {
+        "min": 3,
+        "mean": 4.56,
+        "max": 7
+      },
+      "total": {
+        "min": 3,
+        "mean": 5.083333333333333,
+        "max": 8
+      },
+      "team-total": {
+        "min": 4,
+        "mean": 6.3566666666666665,
+        "max": 9
+      },
+      "player-prop": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      },
+      "special": {
+        "min": 6,
+        "mean": 6,
+        "max": 6
+      },
+      "achievement": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      },
+      "unknown": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      }
+    },
+    "quality": {
+      "eligibleBoards": 300,
+      "earlyProgressOpportunities": {
+        "min": 12,
+        "mean": 15.77,
+        "max": 19
+      },
+      "maxSquaresForOnePlayer": 0,
+      "maxLabelLength": 48,
+      "duplicateResolverKeyBoards": 0,
+      "duplicateDiversityAxisBoards": 0,
+      "unsupportedCandidateBoards": 0
+    },
+    "readableSample": {
+      "gameId": "423990",
+      "matchup": "Arizona Cardinals at San Francisco 49ers",
+      "predictedWinProbability": 0.2128,
+      "quality": {
+        "eligible": true,
+        "issues": [],
+        "nonFreeCount": 24,
+        "duplicateResolverKeys": [],
+        "duplicateDiversityAxes": [],
+        "unsupportedCount": 0,
+        "maxSquaresForOnePlayer": 0,
+        "distinctPlayers": 0,
+        "playerPropCount": 0,
+        "distinctPlayerPropSubjects": 0,
+        "representedPlayerTeams": [],
+        "earlyProgressOpportunities": 15,
+        "maxLabelLength": 46
+      },
+      "labels": [
+        "Cardinals win or lose by less than 5.5 points.",
+        "The game goes to overtime.",
+        "Total points: under 33.5.",
+        "Cardinals: over 24.5 points.",
+        "Total points: under 40.5.",
+        "49ers: under 19.5 points.",
+        "Total points: over 40.5.",
+        "Cardinals score 14+ in a single quarter.",
+        "49ers to beat Cardinals.",
+        "Cardinals: under 15.5 points.",
+        "Cardinals: under 18.5 points.",
+        "Cardinals to beat 49ers.",
+        "FREE",
+        "49ers are sacked 3+ times.",
+        "Cardinals: under 24.5 points.",
+        "49ers: over 16.5 points.",
+        "49ers: over 22.5 points.",
+        "49ers win by 5.5+ points.",
+        "49ers: over 25.5 points.",
+        "A non-quarterback throws a pass.",
+        "49ers win by 3.5+ points.",
+        "Cardinals win or lose by less than 7.5 points.",
+        "Final margin: 7.5 points or less.",
+        "Total points: over 46.5.",
+        "The halftime leader does not win."
+      ]
+    }
+  },
+  "delta": {
+    "predictedMean": 0.0010346666666666837,
+    "realizedWinRate": 0.06,
+    "unknownRate": -0.06972222222222223,
+    "eligibleBoards": 0
+  }
+}
