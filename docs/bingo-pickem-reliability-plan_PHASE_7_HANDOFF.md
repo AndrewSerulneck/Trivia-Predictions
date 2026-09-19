@@ -8,7 +8,7 @@ deterministic without loosening their assertions. A live provider replay also pa
 check across all 16 completed NFL Week 1 games, and current WNBA/MLB forward simulations landed fully
 inside the predicted 20–30% band.
 
-At the time this note was finalized for commit, application changes had not yet been pushed. Andrew authorized the
+Application changes were committed and pushed after Andrew's acceptance. Andrew authorized the
 additive atomic-grading migration, which was applied to linked Supabase project `pkmxupsayzshvpirkaav`
 at 2026-09-19T23:48Z and verified. Phase 6 was intentionally skipped, so past board results and rewards
 remain unchanged. Andrew then confirmed authenticated Prop Bingo works and explicitly closed the plan.
@@ -32,11 +32,13 @@ rollback of the additive migration; and claiming replay evidence as live-deliver
 ## Repository, commit, deployment and data state
 
 - Repository: `/Users/andrewserulneck/Documents/Trivia-Predictions`; branch `main`.
-- HEAD remains `783ebd2f07bffef05e086ef0687ec53f99377dbc`, subject `Prop Bingo NFL Phase 2:
+- Pre-plan base was `783ebd2f07bffef05e086ef0687ec53f99377dbc`, subject `Prop Bingo NFL Phase 2:
   game-day re-verification, blockers cleared`.
-- Phases 0–7 are uncommitted and unpushed in one dirty working tree. Preserve all modifications and
-  untracked artifacts. No candidate commit exists yet.
-- No Phase 0–7 code is deployed. No candidate deployment URL/ID or rollback commit exists.
+- Application release commit is `62f027cd46528d771e154ccb5cc75df24f6d8173`, subject
+  `Complete Bingo and Pick Em reliability plan`. It was pushed to `origin/main`; the remote branch was
+  verified at that hash and the working tree was clean before this documentation follow-up.
+- Hosting deployment status was not independently checked after the push; no new deployment URL/ID is
+  claimed here.
 - Last recorded old deployment: `dpl_4HKutJZ6hgaa7TCpcvQNh4PdC8kv`, source commit
   `d282bd35decbadbbf6d5924477361f6b82fe4e01`. Do not mistake it for this candidate.
 - No board, square status, point, reward, notification, feature flag or environment value was changed.
@@ -179,10 +181,9 @@ column, with one preserved label/resolver dispute.
 
 ## Optional operational monitoring
 
-1. **Andrew/release operator:** review and commit the entire Phase 0–7 dirty tree; do not cherry-pick
-   Phase 7 docs without their runtime dependencies.
-2. **Andrew/release operator:** the migration is complete; deploy the exact reviewed application commit
-   and add commit/deployment URL/ID/timestamp to this handoff and the release record.
+1. **Complete:** the entire Phase 0–7 tree was committed as `62f027c` and pushed to `origin/main`.
+2. **Optional release operations:** confirm the hosting deployment generated from `62f027c` and record
+   its URL/ID if needed; no separate deployment action was performed in this session.
 3. **Andrew:** complete iOS/Android and installed-PWA checks for Bingo creation/board labels and NFL week
    popup positioning/scrolling/focus. Record device/OS/browser and screenshots.
 4. **Release operator:** authenticate and verify standalone Bingo plus `CreateBoardSheet` at desktop and

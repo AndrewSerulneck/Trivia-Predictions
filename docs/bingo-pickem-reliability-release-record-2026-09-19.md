@@ -9,10 +9,12 @@ than release blockers.
 ## Release identity and scope
 
 - Branch: `main`.
-- Base HEAD: `783ebd2f07bffef05e086ef0687ec53f99377dbc` (`Prop Bingo NFL Phase 2:
+- Pre-plan base: `783ebd2f07bffef05e086ef0687ec53f99377dbc` (`Prop Bingo NFL Phase 2:
   game-day re-verification, blockers cleared`).
-- Candidate commit: none. Phases 0–7 remain uncommitted and unpushed in the shared dirty tree.
-- Deployment URL/ID: none for this candidate. Last recorded old deployment is
+- Application release commit: `62f027cd46528d771e154ccb5cc75df24f6d8173`
+  (`Complete Bingo and Pick Em reliability plan`). It was pushed to `origin/main` on 2026-09-19;
+  the remote branch was verified at that exact hash and the working tree was clean.
+- Deployment URL/ID was not independently checked after the push. Last previously recorded deployment is
   `dpl_4HKutJZ6hgaa7TCpcvQNh4PdC8kv` from commit
   `d282bd35decbadbbf6d5924477361f6b82fe4e01`; it is not this release.
 - Production data changes: none. Phase 6 historical reconciliation was intentionally skipped by
@@ -91,9 +93,9 @@ read or printed.
 The implementation has been accepted. These observations remain useful after release but do not keep
 the plan open:
 
-1. **Application commit and deployment — owner: Andrew/release operator.** The migration is complete.
-   Review and commit the dirty tree, then deploy the exact reviewed commit. Record the commit,
-   deployment URL/ID, timestamp and flag state in the Phase 7 handoff.
+1. **Deployment observation — owner: release operator.** The migration and `origin/main` push are
+   complete. Confirm the hosting deployment for application commit `62f027c`, if operationally useful,
+   and record its URL/ID; deployment status was not independently checked in this session.
 2. **Authenticated selector/UI review — owner: Andrew/release operator.** Verify standalone Bingo and
    `CreateBoardSheet` on desktop and narrow mobile, regular Pick ’Em without football, and dedicated
    NFL week selection/history. Automated component/route/PWA tests pass, but no authenticated browser
@@ -111,10 +113,12 @@ the plan open:
 
 ## Deployment and rollback sequence
 
-1. Create and review a single candidate commit from the current dirty tree; rerun the gates above.
+1. Complete: application release commit `62f027cd46528d771e154ccb5cc75df24f6d8173` was reviewed,
+   committed and pushed to `origin/main`.
 2. Confirm `npx supabase db push --dry-run` remains up to date; do not reapply or down-migrate the
    already-applied atomic-grading migration.
-3. Deploy that exact commit and record its URL/ID. Run authenticated selector/create-board smoke tests.
+3. The main push is complete; confirm the hosting deployment if required. Authenticated Prop Bingo was
+   already verified by Andrew against the dev server.
 4. If the application fails, roll the application back to the prior deployment. The additive column
    and service-only RPC may remain unused; do not attempt a destructive database down-migration during
    an incident.

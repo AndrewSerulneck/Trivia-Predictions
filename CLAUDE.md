@@ -26,7 +26,8 @@ Andrew confirmed authenticated Prop Bingo works. Maintenance starts from
 `docs/bingo-pickem-reliability-release-record-2026-09-19.md`. Andrew intentionally skipped
 Phase 6: do not repair historical boards, rewards or consequences. The atomic-grading migration
 was applied to linked Supabase project `pkmxupsayzshvpirkaav` on 2026-09-19; application changes
-remain uncommitted, unpushed and undeployed. Old NFL activation notes are dated history.
+were committed as `62f027cd46528d771e154ccb5cc75df24f6d8173` and pushed to `origin/main`.
+Deployment status was not independently checked. Old NFL activation notes are dated history.
 
 - Creation leagues follow actual boardable games on the player's local day; no season/flag
   override may make an empty league selectable. Shared eligibility lives in

@@ -122,6 +122,9 @@ Prop Bingo works after the atomic migration. Current plan:
 Andrew intentionally skipped Phase 6 historical reconciliation. The Brunswick Grove/game
 1392216 board still replays 25/25 with a winning third column, but its stored lost result,
 points and rewards remain unchanged by product decision.
+Application release commit `62f027cd46528d771e154ccb5cc75df24f6d8173` is pushed to
+`origin/main`; linked schema migration `20260914010000` is applied. Hosting deployment status was
+not independently checked after the push.
 
 - Supported leagues remain NBA, WNBA, MLB and NFL. Create Board shows a league only when
   it has a boardable game on the player's current local date before kickoff. Existing

@@ -29,6 +29,9 @@ are optional operational monitoring, not unfinished plan phases.** Final handoff
 `docs/bingo-grading-capability-matrix.md`. Preserve ignored private evidence under
 `tmp/bingo-incident-private/`; never commit player/consequence records.
 
+Application release commit `62f027cd46528d771e154ccb5cc75df24f6d8173` is pushed to
+`origin/main`. The linked database migration is applied; deployment status was not independently checked.
+
 Adding a supported square requires a precise label, provider fields and IDs, a sanitized
 real capture, hit/miss/boundary/missing/partial/correction regressions, and admission in
 `lib/sportsBingoCapabilities.ts` before generation. Run all-four-league grading checks
