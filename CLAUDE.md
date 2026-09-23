@@ -99,6 +99,19 @@ remain optional operational monitoring, not unfinished plan work.
 - `lib/supabaseAdmin.ts`: Security boundary. Do not modify without explicit instruction.
 - `vercel.json`: Cron configurations. Do not alter without instruction.
 
+## Supabase Data API grants (2026-10-30 Supabase change)
+
+From **2026-10-30**, Supabase stops auto-granting `anon`/`authenticated`/`service_role` on any
+NEW `public` table, view, materialized view or sequence (existing objects are unaffected;
+functions/RPCs are unaffected). Our server code reaches every table through `service_role`
+(`lib/supabaseAdmin.ts`), and no migration in this repo has ever granted it explicitly. **Every
+migration that creates a `public` table, view/materialized view, or sequence must grant
+`service_role` in the same file** (plus `anon`/`authenticated` only where the browser needs
+direct access, with RLS). Follow the template in
+`supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md`; `tests/supabase-migration-grants-contract.test.ts`
+(part of `npm run test`) enforces it for every migration newer than `20260914010000` (earlier
+migrations are grandfathered — see `docs/supabase-data-api-grants-plan.md`).
+
 ## Trivia Source of Truth
 - **Speed Trivia is Admin/Supabase canonical:** For Speed Trivia (`question_pool='anytime_blitz'`, `answer_format='multiple_choice'`), the Admin UI and `trivia_questions` table are the source of truth. Local files under `data/trivia/categories/` are export artifacts only.
 - **Live Trivia JSON is canonical:** Files under `data/live-trivia/categories/` remain the source of truth for Live Trivia question content.
