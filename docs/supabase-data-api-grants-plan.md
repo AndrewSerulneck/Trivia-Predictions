@@ -1,8 +1,10 @@
 # Supabase Data API grants: October 30, 2026 change
 
-**Status:** Phase 0 (audit) and Phase 1 (guardrails) complete 2026-09-23. See
-`docs/supabase-data-api-grants-plan_PHASE_1_HANDOFF.md` for the developer summary and the
-Phase 2 handoff. Phase 2 not started. Nothing committed, pushed or applied to the database yet.
+**Status:** Phases 0, 1 and 2 complete 2026-09-23. Phase 2's two migrations are **applied to
+production** (`pkmxupsayzshvpirkaav`) and verified; code is committed and pushed to
+`origin/main`. Phase 3 (read-only check) waits until after 2026-10-30. Start from
+`docs/supabase-data-api-grants-plan_PHASE_2_HANDOFF.md` (Phase 1's note:
+`docs/supabase-data-api-grants-plan_PHASE_1_HANDOFF.md`).
 
 ## Summary for Andrew
 
@@ -217,6 +219,17 @@ our schedule instead of on a date we don't control.
 7. Run the full gates (`npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run build`,
    not typecheck concurrently with build). Write the handoff note.
 
+**As built (2026-09-23):** `20260923130841_explicit_api_grants_baseline.sql` (138 generated
+grants: 126 table, 6 view, 3 matview, 3 sequence) and
+`20260923130842_adopt_explicit_grant_defaults.sql`, both applied. **Deviation:** step 3 uses
+`revoke all on tables/sequences` instead of Supabase's literal
+`revoke select, insert, update, delete` / `revoke usage, select`, because the literal form
+leaves `service_role=Dxtm` (tables) and `update` for all three roles (sequences) in the default
+ACL, which contradicts step 6's "no API-role entries" check. It is a strict superset of
+Supabase's change. **Step 4:** no Docker on this machine, so `supabase start` was not run and
+`auto_expose_new_tables` was **not** added to `config.toml`; a PGlite replay proof was used
+instead (details in the Phase 2 handoff). Steps 1, 5, 6, 7 done; results in the handoff.
+
 **Undo:** migration files are immutable history. To reverse step 3, add a new migration with
 the matching `alter default privileges … grant …` (only meaningful before Oct 30). Step 2 only
 grants what already exists, so it has nothing to undo.
@@ -228,19 +241,24 @@ grants what already exists, so it has nothing to undo.
 **Model / effort: Sonnet 5, low.** Read-only.
 
 1. Re-run the Phase 0 snapshot query. Expect `tables_missing_service_role_crud = 0`,
-   `seq_missing_service_role = 0`, and a default ACL with no API roles on tables/sequences.
+   `seq_missing_service_role = 0`, and a default ACL with no API roles on tables/sequences
+   **for owner `postgres`** (`postgres:r={postgres=arwdDxtm/postgres}`,
+   `postgres:S={postgres=rwU/postgres}` since Phase 2). The `supabase_admin` default ACL rows
+   still grant all three roles and are Supabase-managed; just record whether the cutover changed
+   them.
 2. Run `supabase db advisors --linked` (Security Advisor) and record any grant-related lint.
 3. If any migration created a table between Phase 1 and now, confirm through PostgREST (e.g.
    `node --env-file=.env.local` with the service-role client) that the server can read it.
-4. Remove `auto_expose_new_tables` from `supabase/config.toml` if Phase 2 added it (the CLI
-   drops the setting at the cutover).
+4. `auto_expose_new_tables` was **not** added to `supabase/config.toml` in Phase 2 (no
+   Docker), so there is nothing to remove; just confirm it is still absent.
 5. Mark this plan complete.
 
 ---
 
 ## Open questions for Andrew
 
-1. **Phase 2 go/no-go.** Phase 2 is insurance. It matters only if we ever rebuild the database
+1. **Phase 2 go/no-go. ANSWERED 2026-09-23: go.** Andrew asked for Phase 2 to be executed
+   and made live; it was applied that day. (Original text:) Phase 2 is insurance. It matters only if we ever rebuild the database
    from migrations (new project, staging, disaster recovery) and for flipping early. Skipping
    it doesn't break production. Recommendation: do it.
 2. **`anon` read access on 26 tables** was noticed but not reviewed. This plan copies it

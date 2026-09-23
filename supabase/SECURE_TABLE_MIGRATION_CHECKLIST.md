@@ -27,14 +27,17 @@ full access by default, which undoes this project's deny-by-default posture (see
 
 From **2026-10-30**, Supabase stops auto-granting `anon`, `authenticated` **and
 `service_role`** on any new `public` table, view, materialized view or sequence
-(Supabase discussion [#45329](https://github.com/orgs/supabase/discussions/45329)). Before
-that date the grant is still automatic in production, but the local CLI already simulates the
-post-cutover behavior (`auto_expose_new_tables = false` in `supabase/config.toml`).
+(Supabase discussion [#45329](https://github.com/orgs/supabase/discussions/45329)).
+**Our production project already runs this way: we switched it on early on 2026-09-23** with
+`20260923130842_adopt_explicit_grant_defaults.sql` (which revokes *all* default privileges
+for those three roles, a strict superset of Supabase's change).
 
 Our server code (`lib/supabaseAdmin.ts`) reaches every table through `service_role`. A
-migration that creates a table without granting `service_role` will work today and return
-`permission denied for table …` (Postgres code `42501`) once the cutover lands, or immediately
-on any fresh database replay (new project, preview branch, local `supabase db reset`).
+migration that creates a table without granting `service_role` returns
+`permission denied for table …` (Postgres code `42501`) **as soon as it is applied**, in
+production and on any fresh database replay (new project, preview branch, local
+`supabase db reset`). The grants of every object that existed before that switch are written
+down in `20260923130841_explicit_api_grants_baseline.sql`.
 
 `anon`/`authenticated` deny-by-default has been the rule since the 2026-05-27 migration
 (`20260527113000_explicit_api_grants_and_secure_defaults.sql`) — that part is unchanged.

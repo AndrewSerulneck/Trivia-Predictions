@@ -103,7 +103,10 @@ remain optional operational monitoring, not unfinished plan work.
 
 From **2026-10-30**, Supabase stops auto-granting `anon`/`authenticated`/`service_role` on any
 NEW `public` table, view, materialized view or sequence (existing objects are unaffected;
-functions/RPCs are unaffected). Our server code reaches every table through `service_role`
+functions/RPCs are unaffected). **Production already behaves this way since 2026-09-23**
+(`20260923130842_adopt_explicit_grant_defaults.sql`; every pre-existing object's grants are
+recorded in `20260923130841_explicit_api_grants_baseline.sql`), so a missing grant fails the
+moment the migration is applied. Our server code reaches every table through `service_role`
 (`lib/supabaseAdmin.ts`), and no migration in this repo has ever granted it explicitly. **Every
 migration that creates a `public` table, view/materialized view, or sequence must grant
 `service_role` in the same file** (plus `anon`/`authenticated` only where the browser needs
