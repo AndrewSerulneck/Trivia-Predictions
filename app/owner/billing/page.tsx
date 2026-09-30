@@ -248,7 +248,6 @@ const OwnerBillingPage = () => {
       maxWidth="lg"
       variant="dark"
       backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
-      showAccountMenu
     >
       {loading ? (
         <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>

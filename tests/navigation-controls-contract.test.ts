@@ -145,7 +145,8 @@ describe("navigation controls contract (Phase 7)", () => {
     // never a top-bar or gameplay control. These are its only hosts.
     const SANCTIONED = new Set([
       "components/navigation/AccountMenuList.tsx",
-      "components/owner/OwnerAccountMenu.tsx",
+      "components/owner/OwnerAccountMenu.tsx", // light OwnerShell only (orphan /owner/category-blitz)
+      "components/owner/OwnerAppBar.tsx", // the dashboard's logo-menu drawer (Partner Dashboard redesign Phase 2)
       "components/admin/AdminShell.tsx",
       "components/admin/AdminMobileShell.tsx",
       "components/join/JoinFlow.tsx", // the venue-list panel's sign-out (§3, Phase 3)

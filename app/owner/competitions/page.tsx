@@ -10,56 +10,18 @@ import {
   type RewardCreationContextDTO,
 } from "@/components/rewards/CreateRewardWizard";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
-import { OWNER_COMPETITION_TEMPLATES } from "@/lib/ownerCompetitionTemplates";
-import { getRewardDefinition } from "@/lib/rewardDefinitions";
-import { periodForCadence, renderTermsSentence } from "@/lib/rewardTerms";
-import { describeCampaignGameWinnerTerms } from "@/lib/rewardGameSlots";
+import {
+  formatDateLabel,
+  formatTimeLabel,
+  glyphForCompetition,
+  rewardTermsText,
+  splitCompetitions,
+  type OwnerCompetition,
+} from "@/lib/ownerRewardDisplay";
 import type { ChallengeCampaign, ChallengeLeaderboardEntry } from "@/types";
 
 type Venue = { id: string; name: string };
-type Competition = ChallengeCampaign & { progressPoints: number };
-
-const TEMPLATE_GLYPH: Record<string, string> = {
-  pickem_race: "🏈",
-  prop_bingo_night: "🎯",
-  fantasy_night: "🏆",
-  trivia_gauntlet: "🧠",
-  house_party: "🎉",
-};
-
-// Rewards (Phase 4+) stamp rewardDefinitionId directly — glyph comes straight
-// from the registry. Pre-Rewards owner Competitions never set that column
-// (templates were expanded at creation, not kept as a FK), so those fall back to
-// matching gameTypes + challengeMode against the retired OWNER_COMPETITION_TEMPLATES
-// registry, and anything unmatched gets a generic trophy.
-function glyphForCompetition(competition: Competition): string {
-  if (competition.rewardDefinitionId) {
-    return getRewardDefinition(competition.rewardDefinitionId)?.glyph ?? "🏆";
-  }
-  const sortedTypes = [...competition.gameTypes].sort().join(",");
-  const match = OWNER_COMPETITION_TEMPLATES.find(
-    (t) => [...t.gameTypes].sort().join(",") === sortedTypes && t.challengeMode === competition.challengeMode,
-  );
-  return match ? (TEMPLATE_GLYPH[match.id] ?? "🏆") : "🏆";
-}
-
-const formatDateLabel = (isoDate: string | undefined, timeZone: string): string => {
-  if (!isoDate) return "—";
-  try {
-    return new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-US", { timeZone, month: "short", day: "numeric" });
-  } catch {
-    return isoDate;
-  }
-};
-
-const formatTimeLabel = (time: string | undefined): string => {
-  if (!time) return "";
-  const [h, m] = time.split(":").map(Number);
-  if (!Number.isFinite(h)) return time;
-  const period = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${hour12}:${String(m ?? 0).padStart(2, "0")}${period}`;
-};
+type Competition = OwnerCompetition;
 
 /** Prize counts for the remove dialog — mirrors ChallengeCampaignRedemptionCounts. */
 type RedemptionCounts = { awarded: number; unredeemed: number; redeemed: number };
@@ -130,8 +92,7 @@ const OwnerCompetitionsPage = () => {
     void fetchCompetitions();
   }, [fetchCompetitions]);
 
-  const active = useMemo(() => competitions.filter((c) => c.isActive && !c.winnerUserId), [competitions]);
-  const ended = useMemo(() => competitions.filter((c) => !c.isActive || c.winnerUserId), [competitions]);
+  const { active, ended } = useMemo(() => splitCompetitions(competitions), [competitions]);
   const selectedVenue = venues.find((v) => v.id === selectedVenueId);
 
   const fetchRewardContext = useCallback(
@@ -215,7 +176,6 @@ const OwnerCompetitionsPage = () => {
       maxWidth="lg"
       variant="dark"
       backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
-      showAccountMenu
     >
       <div className="space-y-5">
         {venues.length > 1 ? (
@@ -472,16 +432,8 @@ function CompetitionList({
                     A slot-pinned game-winner reward (gameWinnerSlots set) restates the
                     actual games it's pinned to instead of a period, built from the
                     campaign's own gameWinnerSlots/winnerQuota — no live-schedule fetch needed. */}
-                {competition.rewardDefinitionId ? (
-                  <p className="mt-1.5 text-xs font-semibold text-ht-muted">
-                    {competition.winCondition === "game_winner" && competition.gameWinnerSlots
-                      ? describeCampaignGameWinnerTerms(competition)
-                      : renderTermsSentence(
-                          competition.winnerQuota,
-                          periodForCadence(competition.recurringType),
-                          competition.winCondition,
-                        )}
-                  </p>
+                {rewardTermsText(competition) ? (
+                  <p className="mt-1.5 text-xs font-semibold text-ht-muted">{rewardTermsText(competition)}</p>
                 ) : null}
               </div>
               {onDelete ? (

@@ -1866,11 +1866,109 @@ a[role="button"][class*="text-[11px]"] {
   animation: tp-fade-out 270ms ease-in both;
 }
 
+/* Partner Dashboard flow sheets (docs/partner-dashboard-app-redesign-plan.md
+   §4b/§4d). Step swap is sequential — the old step leaves, then the new one
+   arrives — so two questions are never on screen at once. Durations must
+   match STEP_OUT_MS / DRAWER_EXIT_MS in components/owner/sheet/sheetMotion.ts. */
+@keyframes tp-step-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes tp-step-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes tp-step-out-left {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+
+@keyframes tp-step-out-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+@keyframes tp-drawer-in {
+  from {
+    transform: translateX(calc(-100% - 24px));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes tp-drawer-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% - 24px));
+  }
+}
+
+.animate-tp-step-in-right {
+  animation: tp-step-in-right 240ms cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+.animate-tp-step-in-left {
+  animation: tp-step-in-left 240ms cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+.animate-tp-step-out-left {
+  animation: tp-step-out-left 120ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.animate-tp-step-out-right {
+  animation: tp-step-out-right 120ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.animate-tp-drawer-in {
+  animation: tp-drawer-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform;
+}
+
+.animate-tp-drawer-out {
+  animation: tp-drawer-out 240ms cubic-bezier(0.4, 0, 1, 1) both;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-tp-popup-sheet-up,
   .animate-tp-popup-sheet-down,
   .animate-tp-fade-in,
-  .animate-tp-fade-out {
+  .animate-tp-fade-out,
+  .animate-tp-step-in-right,
+  .animate-tp-step-in-left,
+  .animate-tp-step-out-left,
+  .animate-tp-step-out-right,
+  .animate-tp-drawer-in,
+  .animate-tp-drawer-out {
     animation-duration: 1ms;
   }
 }
@@ -2304,6 +2402,12 @@ a[role="button"][class*="text-[11px]"] {
   .animate-tp-popup-sheet-down,
   .animate-tp-fade-in,
   .animate-tp-fade-out,
+  .animate-tp-step-in-right,
+  .animate-tp-step-in-left,
+  .animate-tp-step-out-left,
+  .animate-tp-step-out-right,
+  .animate-tp-drawer-in,
+  .animate-tp-drawer-out,
   .bingo-square-pop,
   .animate-tp-surface-exit,
   .animate-tp-surface-enter,

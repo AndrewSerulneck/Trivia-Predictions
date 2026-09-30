@@ -168,7 +168,6 @@ const OwnerGameSettingsPage = () => {
       maxWidth="lg"
       variant="dark"
       backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
-      showAccountMenu
     >
       <div className="space-y-5">
         {venues.length > 1 ? (

@@ -1,5 +1,6 @@
 import { ExitBackButton, type ExitBackButtonProps } from "@/components/navigation/ExitBackButton";
 import { OwnerAccountMenu } from "@/components/owner/OwnerAccountMenu";
+import { OwnerAppBar } from "@/components/owner/OwnerAppBar";
 import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
 
 type OwnerShellProps = {
@@ -31,8 +32,17 @@ type OwnerShellProps = {
    * Show the account menu (leading slot of the header row) containing the
    * partner Sign Out action. Set on every authenticated /owner/* page; leave off on
    * the pre-auth pages (login / register / forgot-password / reset-password).
+   *
+   * Light variant only. The dark variant ignores it: Sign Out lives in the
+   * dashboard's logo menu (OwnerAppBar), one Back tap away from any sub-page.
    */
   showAccountMenu?: boolean;
+  /**
+   * Dark variant only: replaces the title in the compact bar's centre (the
+   * dashboard puts the venue name / switcher here). `title` is then kept as a
+   * screen-reader-only heading.
+   */
+  barCenter?: React.ReactNode;
 };
 
 export const OwnerShell = ({
@@ -43,8 +53,32 @@ export const OwnerShell = ({
   variant = "light",
   backTo,
   showAccountMenu = false,
+  barCenter,
 }: OwnerShellProps) => {
   const widthClass = maxWidth === "lg" ? "max-w-2xl" : "max-w-sm";
+
+  if (variant === "dark") {
+    // Compact app bar (redesign plan §4g): Back top-left (or the logo menu when
+    // there is no backTo, i.e. the dashboard), title in the bar, no big logo.
+    return (
+      <div className="min-h-screen bg-ht-canvas">
+        <OwnerAppBar leading={backTo ? <ExitBackButton {...backTo} /> : undefined}>
+          {barCenter ? (
+            <>
+              <h1 className="sr-only">{title}</h1>
+              {barCenter}
+            </>
+          ) : (
+            <h1 className="truncate text-base font-black text-ht-primary">{title}</h1>
+          )}
+        </OwnerAppBar>
+        <div className={`mx-auto w-full px-4 pb-16 pt-5 ${widthClass}`}>
+          {subtitle ? <p className="mb-5 text-sm font-semibold text-ht-muted">{subtitle}</p> : null}
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   const headerRow =
     backTo || showAccountMenu ? (
@@ -59,22 +93,6 @@ export const OwnerShell = ({
         {showAccountMenu && backTo ? <ExitBackButton {...backTo} /> : null}
       </div>
     ) : null;
-
-  if (variant === "dark") {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-start bg-ht-canvas px-4 pb-16 pt-8">
-        <div className={`w-full ${widthClass}`}>
-          {headerRow}
-          <div className="mb-6 text-center">
-            <ExplodingLogo width={220} variant="canvas" />
-            <h1 className="ht-h1 mt-1">{title}</h1>
-            {subtitle ? <p className="mt-1 text-sm font-semibold text-ht-muted">{subtitle}</p> : null}
-          </div>
-          {children}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-start bg-slate-900 px-4 py-10">

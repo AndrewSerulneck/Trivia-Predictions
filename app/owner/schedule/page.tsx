@@ -11,6 +11,16 @@ import {
   utcIsoToDatetimeLocalValue,
 } from "@/lib/categoryBlitzScheduleTime";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
+import {
+  dateChip,
+  displayWindow,
+  formatScheduleTime,
+  GAME_LABELS,
+  GAME_PILL_STYLES,
+  recurrenceLabel,
+  splitSchedules,
+  WEEKDAY_OPTIONS,
+} from "@/lib/ownerScheduleDisplay";
 import { gameDurationMinutes, isContinuousDefaultEnabled, roundsFromWindowMinutes } from "@/lib/categoryBlitzShared";
 import { liveTriviaDurationMinutes, roundsFromLiveTriviaWindowMinutes } from "@/lib/liveTriviaShared";
 import type { CategoryBlitzRecurringType, OwnerSchedule, OwnerScheduleGameType } from "@/types";
@@ -24,17 +34,6 @@ const roundsFromWindowMinutesFor = (gameType: OwnerScheduleGameType, windowMinut
   gameType === "live_trivia"
     ? roundsFromLiveTriviaWindowMinutes(windowMinutes)
     : roundsFromWindowMinutes(windowMinutes);
-
-const GAME_LABELS: Record<OwnerScheduleGameType, string> = {
-  category_blitz: "Category Blitz",
-  live_trivia: "Live Trivia",
-};
-
-// Per-game accent for list pills (matches the picker gradients / app/globals.css tokens).
-const GAME_PILL_STYLES: Record<OwnerScheduleGameType, string> = {
-  category_blitz: "bg-ht-cyan-500/15 text-ht-cyan-300",
-  live_trivia: "bg-sky-500/15 text-sky-300",
-};
 
 const TIMEZONES = [
   "America/New_York",
@@ -54,45 +53,6 @@ const RECURRING_OPTIONS: { value: CategoryBlitzRecurringType; label: string }[] 
   { value: "daily", label: "Daily" },
   { value: "weekly", label: "Weekly" },
 ];
-
-// Keys are the lowercase 3-letter codes the engine stores (sun..sat).
-const WEEKDAY_OPTIONS: { key: string; label: string }[] = [
-  { key: "sun", label: "Sun" },
-  { key: "mon", label: "Mon" },
-  { key: "tue", label: "Tue" },
-  { key: "wed", label: "Wed" },
-  { key: "thu", label: "Thu" },
-  { key: "fri", label: "Fri" },
-  { key: "sat", label: "Sat" },
-];
-
-const WEEKDAY_LABEL: Record<string, string> = Object.fromEntries(
-  WEEKDAY_OPTIONS.map((d) => [d.key, d.label]),
-);
-
-/** The next (or currently-open) occurrence window for a schedule, falling back to the stored one-off window. */
-function displayWindow(schedule: OwnerSchedule): { startTime: string; endTime: string } {
-  const occurrence = getCurrentOrNextScheduleWindow(schedule);
-  if (occurrence) {
-    return {
-      startTime: occurrence.windowStart.toISOString(),
-      endTime: occurrence.windowEnd.toISOString(),
-    };
-  }
-  return { startTime: schedule.startTime, endTime: schedule.endTime };
-}
-
-/** Short human label for a schedule's recurrence, or null for one-off. */
-function recurrenceLabel(schedule: OwnerSchedule): string | null {
-  if (schedule.recurringType === "daily") return "Daily";
-  if (schedule.recurringType === "weekly") {
-    const days = WEEKDAY_OPTIONS.filter((d) => schedule.recurringDays?.includes(d.key)).map(
-      (d) => d.label,
-    );
-    return days.length > 0 ? `Weekly · ${days.join(", ")}` : "Weekly";
-  }
-  return null;
-}
 
 type Venue = { id: string; name: string };
 
@@ -117,33 +77,6 @@ const ALL_GAME_TYPE_OPTIONS: GameTypeOption[] = [
 const GAME_TYPE_OPTIONS: GameTypeOption[] = isContinuousDefaultEnabled()
   ? ALL_GAME_TYPE_OPTIONS.filter((option) => option.value !== "category_blitz")
   : ALL_GAME_TYPE_OPTIONS;
-
-function formatScheduleTime(iso: string, timeZone: string): string {
-  try {
-    return new Date(iso).toLocaleString("en-US", {
-      timeZone,
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  } catch {
-    return iso;
-  }
-}
-
-function dateChip(iso: string, timeZone: string): { month: string; day: string } {
-  try {
-    const d = new Date(iso);
-    return {
-      month: d.toLocaleString("en-US", { timeZone, month: "short" }).toUpperCase(),
-      day: d.toLocaleString("en-US", { timeZone, day: "numeric" }),
-    };
-  } catch {
-    return { month: "—", day: "—" };
-  }
-}
 
 const OwnerSchedulePage = () => {
   const router = useRouter();
@@ -215,20 +148,7 @@ const OwnerSchedulePage = () => {
   // Bucket by the NEXT occurrence's window, not the stored (first) one — a weekly
   // series whose first occurrence has passed still has a future occurrence and
   // belongs in "Upcoming", not "Past".
-  const upcoming = useMemo(
-    () =>
-      schedules
-        .filter((s) => Date.parse(displayWindow(s).endTime) >= nowMs)
-        .sort((a, b) => Date.parse(displayWindow(a).startTime) - Date.parse(displayWindow(b).startTime)),
-    [schedules, nowMs],
-  );
-  const past = useMemo(
-    () =>
-      schedules
-        .filter((s) => Date.parse(displayWindow(s).endTime) < nowMs)
-        .sort((a, b) => Date.parse(displayWindow(b).startTime) - Date.parse(displayWindow(a).startTime)),
-    [schedules, nowMs],
-  );
+  const { upcoming, past } = useMemo(() => splitSchedules(schedules, nowMs), [schedules, nowMs]);
 
   const selectedVenue = venues.find((v) => v.id === selectedVenueId);
 
@@ -254,7 +174,6 @@ const OwnerSchedulePage = () => {
       maxWidth="lg"
       variant="dark"
       backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
-      showAccountMenu
     >
       <div className="space-y-5">
         {venues.length > 1 ? (

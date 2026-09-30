@@ -194,7 +194,6 @@ const OwnerBillingSetupPage = () => {
       maxWidth="lg"
       variant="dark"
       backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
-      showAccountMenu
     >
       <div className="space-y-5">
         {loading ? (
