@@ -124,7 +124,7 @@ Add to `REWARD_DEFINITIONS` in `lib/rewardDefinitions.ts`:
 ```ts
 {
   id: "nfl_pickem_challenge",
-  name: "NFL Pick 'Em Challenge",
+  name: "NFL Pick 'Em",
   gameType: "nfl-pickem",
   challengeMode: "progress",
   requiresScheduledGame: null,      // gates on the NFL season, not a venue schedule

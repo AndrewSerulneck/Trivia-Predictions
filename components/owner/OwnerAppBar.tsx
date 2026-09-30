@@ -3,10 +3,11 @@
 import { useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Menu } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { OwnerMenuDrawer } from "@/components/owner/menu/OwnerMenuDrawer";
 import { OWNER_MENU_ITEMS } from "@/components/owner/menu/ownerMenuItems";
+import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
 import { PartnerManual } from "@/components/owner/PartnerManual";
 import { menuHintForThisVisit } from "@/lib/ownerMenuHint";
 
@@ -50,8 +51,8 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
   // THIS page), then we navigate — otherwise the lock's cleanup restores the
   // dashboard's scroll offset onto the new page.
   const pendingHref = useRef<string | null>(null);
-  // First visit only: pulse the ☰ badge a few times so the logo reads as a button.
-  // Only where the logo is shown — a sub-page with `leading` must not spend the hint.
+  // First visit only: pulse the arrow button a few times so it reads as a button.
+  // Only where the arrow is shown — a sub-page with `leading` must not spend the hint.
   const hintPulse = useSyncExternalStore(subscribeNothing, leading ? noHint : menuHintForThisVisit, noHint);
 
   return (
@@ -70,33 +71,27 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
             aria-label="Open menu"
             aria-haspopup="dialog"
             aria-expanded={menuOpen}
-            className="relative -ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-ht-cyan-300"
+            className="relative -ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ht-cyan-300 text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ht-cyan-300"
           >
-            <img
-              src="/brand/HTC_Logo_Final_Transparent%20copy.png"
-              alt=""
-              width={36}
-              height={36}
-              draggable={false}
-              className="h-9 w-9 select-none rounded-full object-contain"
-            />
-            <span
-              aria-hidden="true"
-              className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ht-cyan-300 text-slate-950"
-            >
-              {hintPulse ? (
-                <span
-                  data-menu-hint-pulse
-                  className="absolute inset-0 rounded-full bg-ht-cyan-300 motion-safe:animate-[ping_1.2s_cubic-bezier(0,0,0.2,1)_3] motion-reduce:hidden"
-                />
-              ) : null}
-              <Menu className="relative h-2.5 w-2.5" strokeWidth={3} />
-            </span>
+            {hintPulse ? (
+              <span
+                aria-hidden="true"
+                data-menu-hint-pulse
+                className="absolute inset-0 rounded-full bg-ht-cyan-300 motion-safe:animate-[ping_1.2s_cubic-bezier(0,0,0.2,1)_3] motion-reduce:hidden"
+              />
+            ) : null}
+            <ChevronRight aria-hidden="true" className="relative h-6 w-6" strokeWidth={3} />
           </button>
         )}
         <div className="flex min-w-0 flex-1 items-center">{children}</div>
-        {/* Trailing slot intentionally empty (reserved for notifications). */}
-        <span aria-hidden="true" className="h-10 w-10 shrink-0" />
+        {/* Trailing slot: the brand logo on the dashboard (decorative, bounces like the sign-in logo). */}
+        {leading ? (
+          <span aria-hidden="true" className="h-10 w-10 shrink-0" />
+        ) : (
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center">
+            <ExplodingLogo width={36} />
+          </span>
+        )}
       </div>
 
       {leading ? null : (
@@ -112,7 +107,18 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
               if (href) router.push(href);
             }}
           >
-            <p className="px-5 pb-3 text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Menu</p>
+            <div className="mb-2 flex items-center gap-3 px-3">
+              {/* The same button, carried into the drawer and flipped to point left: tap it again to close. */}
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                aria-label="Close menu"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ht-cyan-300 text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ht-cyan-300"
+              >
+                <ChevronLeft aria-hidden="true" className="h-6 w-6" strokeWidth={3} />
+              </button>
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Menu</p>
+            </div>
             <nav aria-label="Partner menu" className="flex flex-col gap-1 px-2">
               {OWNER_MENU_ITEMS.map((item) => {
                 const Icon = item.icon;

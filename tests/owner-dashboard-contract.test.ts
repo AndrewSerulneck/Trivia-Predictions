@@ -48,7 +48,7 @@ describe("owner dashboard body", () => {
   });
 
   it("the dashboard hosts the rewards flow, one fresh instance per open, and no placeholder sheet", () => {
-    expect(dashboard).toMatch(/<RewardsFlow\s+key=\{rewardsSession\}/);
+    expect(dashboard).toMatch(/<RewardsFlow\s+key=\{`rewards-\$\{rewardsSession\}`\}/);
     expect(dashboard).not.toContain("Coming soon");
     expect(dashboard).not.toContain("<OwnerSheet");
   });
@@ -63,7 +63,7 @@ describe("owner dashboard body", () => {
   });
 
   it("the dashboard hosts the schedule flow, one fresh instance per open", () => {
-    expect(dashboard).toMatch(/<ScheduleGameFlow\s+key=\{scheduleSession\}/);
+    expect(dashboard).toMatch(/<ScheduleGameFlow\s+key=\{`schedule-\$\{scheduleSession\}`\}/);
     expect(dashboard).not.toContain("SHEET_TITLES");
   });
 
@@ -118,7 +118,7 @@ describe("owner dashboard body", () => {
 
   it("Phase 6: the Partner Manual describes the new navigation, not the old buttons", () => {
     const manual = read("lib/partnerManual.ts");
-    expect(manual).toContain("tap the logo in the top-left");
+    expect(manual).toContain("tap the arrow in the top-left");
     expect(manual).toContain("Tap Offer Rewards on your dashboard");
     expect(manual).not.toMatch(/[Cc]lick/);
   });

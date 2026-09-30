@@ -236,7 +236,7 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
       ) : null}
 
       <ScheduleGameFlow
-        key={scheduleSession}
+        key={`schedule-${scheduleSession}`}
         venueId={venueId}
         nav={sheet}
         games={games}
@@ -246,7 +246,7 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
       />
 
       <RewardsFlow
-        key={rewardsSession}
+        key={`rewards-${rewardsSession}`}
         venueId={venueId}
         venueName={venueName}
         nav={sheet}

@@ -709,7 +709,7 @@ export function CreateRewardWizard({
       {id === "definition" ? (
         <div className="space-y-3">
           <p className={s.heading} {...headingFocus}>
-            {animateSteps ? "Which reward?" : "Create Reward"}
+            {animateSteps ? "Which game should the reward be tied to?" : "Create Reward"}
           </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {REWARD_DEFINITIONS.map((def) => (

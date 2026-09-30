@@ -66,7 +66,7 @@ export const PARTNER_MANUAL: {
     },
     {
       heading: "Venue Display",
-      body: "A Hightop Challenge subscription includes the ability to display group games like Live Trivia and Category Blitz on your TV screens so people who aren't playing on their phones can still follow along. Just tap the logo in the top-left corner to open the menu, then tap Venue Display, and follow the instructions on your TV (or device connected to the TV).",
+      body: "A Hightop Challenge subscription includes the ability to display group games like Live Trivia and Category Blitz on your TV screens so people who aren't playing on their phones can still follow along. Just tap the arrow in the top-left corner to open the menu, then tap Venue Display, and follow the instructions on your TV (or device connected to the TV).",
     },
     {
       heading: "Billing",
