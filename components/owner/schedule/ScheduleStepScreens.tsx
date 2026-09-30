@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import type { SectionLoad } from "@/components/owner/dashboard/LiveGamesSection";
 import { ScheduleGameRow } from "@/components/owner/schedule/ScheduleGameRow";
+import { StepHeading } from "@/components/owner/sheet/StepHeading";
 import { Dropdown } from "@/components/ui/Dropdown";
 import {
   durationMinutesFor,
@@ -39,15 +40,6 @@ const STEPPER_BUTTON_CLASS =
 const TEXT_LINK_CLASS = "min-h-11 px-2 text-sm font-black text-ht-cyan-300 underline-offset-2 hover:underline";
 
 export type ScheduleFormChange = (patch: Partial<ScheduleFormState>) => void;
-
-const StepHeading = ({ children, hint }: { children: ReactNode; hint?: string }) => (
-  <div className="mb-4">
-    <h3 data-step-heading className="ht-h2 outline-none">
-      {children}
-    </h3>
-    {hint ? <p className="mt-1 text-sm font-semibold text-ht-muted">{hint}</p> : null}
-  </div>
-);
 
 const ErrorBox = ({ message }: { message: string }) => (
   <div

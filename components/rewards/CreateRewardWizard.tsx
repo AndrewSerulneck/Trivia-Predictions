@@ -3,7 +3,7 @@
 // Shared Create Reward wizard — ONE component that drives the canonical linear
 // flow, used by BOTH the admin Rewards section
 // (components/admin/sections/ChallengesSection.tsx) and the Partner Dashboard
-// Rewards page (app/owner/competitions/page.tsx).
+// Rewards sheet (components/owner/rewards/RewardsFlow.tsx).
 //
 // Flow (docs/rewards-terms-sentence-plan.md §1, superseding the original
 // definition → cadence → prize → quantity → confirm order):
@@ -38,9 +38,10 @@
 // slate/white Tailwind, owner/Partner Dashboard = dark ht-* design tokens), so
 // `variant` swaps a small class-token map rather than forking the component.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { NavTone } from "@/components/navigation/StepBackButton";
 import { WizardFooter } from "@/components/navigation/WizardFooter";
+import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
 import {
   REWARD_DEFINITIONS,
   isValidRewardThreshold,
@@ -71,6 +72,12 @@ import {
   type RewardGameSlot,
 } from "@/lib/rewardGameSlots";
 import type { RewardPrizeInput } from "@/lib/rewards";
+import {
+  REWARD_WIZARD_STEPS,
+  guardRewardWizardStep,
+  type RewardWizardStep,
+  type RewardWizardStepChange,
+} from "@/lib/rewardWizardSteps";
 import {
   NFL_REWARD_MIN_PICKERS,
   NFL_WEEK_SCOPE_INVALID_MESSAGE,
@@ -134,6 +141,28 @@ type CreateRewardWizardProps = {
   onSubmit: (submission: CreateRewardSubmission) => Promise<{ ok: true } | { ok: false; error: string }>;
   onCreated: () => void;
   onCancel: () => void;
+  /**
+   * OPT-IN, for the Partner Dashboard's Rewards sheet (docs/partner-dashboard-app-redesign-plan.md
+   * §4f). Sheet presentation: steps slide sideways (SlideSteps), every step has a
+   * `[data-step-heading]` for focus, and the card chrome is dropped because the
+   * sheet is already the card. Left out (the admin host), the markup is exactly
+   * what it was before — pinned by tests/components.create-reward-wizard.test.ts.
+   */
+  animateSteps?: boolean;
+  /**
+   * OPT-IN. When set, "Schedule Live Trivia" calls this instead of following
+   * `scheduleLinkHref`, so the dashboard can swap sheets without a page load.
+   */
+  onRequestSchedule?: () => void;
+  /**
+   * OPT-IN controlled step. The host (the Rewards sheet) mirrors it into the URL so
+   * the phone's Back gesture is the same thing as the wizard's Back button. The
+   * wizard still owns the answers; it only reports moves through `onStepChange`
+   * ("replace" = it corrected a step whose data a reload lost) and never leaves
+   * `step` pointing at a screen it cannot render.
+   */
+  step?: RewardWizardStep;
+  onStepChange?: (step: RewardWizardStep, change: RewardWizardStepChange) => void;
 };
 
 /** The one definition whose terms step replaces the period sentence with a
@@ -222,7 +251,6 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
   },
 };
 
-type Step = "venue" | "definition" | "terms" | "prize" | "confirm";
 type PrizeChoice = "menu_item" | "gift_card";
 
 const EMPTY_SHAPES: RewardScheduleShape[] = [];
@@ -237,6 +265,10 @@ export function CreateRewardWizard({
   onSubmit,
   onCreated,
   onCancel,
+  animateSteps = false,
+  onRequestSchedule,
+  step: controlledStep,
+  onStepChange,
 }: CreateRewardWizardProps) {
   const s = VARIANT_STYLES[variant];
   // The admin host is a light, non-player surface (navigation-unification-plan
@@ -301,7 +333,24 @@ export function CreateRewardWizard({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const needsVenueStep = venues.length > 1 && !defaultVenueId;
-  const [step, setStep] = useState<Step>(needsVenueStep ? "venue" : "definition");
+  const [internalStep, setInternalStep] = useState<RewardWizardStep>(needsVenueStep ? "venue" : "definition");
+  // A controlled step is guarded against data a reload lost; uncontrolled, the
+  // flow itself guarantees it, so the guard is only applied to a host's request.
+  const requestedStep = controlledStep ?? internalStep;
+  const step =
+    controlledStep === undefined
+      ? requestedStep
+      : guardRewardWizardStep(requestedStep, { definition: definition !== null, context: context !== null });
+
+  const goTo = (next: RewardWizardStep, change: RewardWizardStepChange) => {
+    setInternalStep(next);
+    onStepChange?.(next, change);
+  };
+
+  // The host asked for a step this wizard can't show (a reload, a hand-edited URL): say where it landed.
+  useEffect(() => {
+    if (controlledStep !== undefined && step !== controlledStep) onStepChange?.(step, "replace");
+  }, [controlledStep, step, onStepChange]);
 
   useEffect(() => {
     if (step !== "definition" || !venueId) return;
@@ -499,7 +548,7 @@ export function CreateRewardWizard({
         return;
       }
       setContext(cached);
-      setStep("terms");
+      goTo("terms", "forward");
       return;
     }
 
@@ -513,7 +562,7 @@ export function CreateRewardWizard({
         return;
       }
       setContext(ctx);
-      setStep("terms");
+      goTo("terms", "forward");
     } catch (err) {
       setContextError(err instanceof Error ? err.message : "Couldn't check that game's schedule.");
     } finally {
@@ -608,17 +657,31 @@ export function CreateRewardWizard({
     }
   };
 
-  const scheduleLink = (
+  const scheduleLink = onRequestSchedule ? (
+    <button
+      type="button"
+      onClick={onRequestSchedule}
+      className="inline !min-h-0 !border-0 bg-transparent p-0 font-bold underline"
+    >
+      Schedule Live Trivia
+    </button>
+  ) : (
     <a href={scheduleLinkHref} className="underline">
       Schedule Live Trivia
     </a>
   );
 
-  return (
-    <div className={s.card}>
-      {step === "venue" ? (
+  // Sheet mode only: SlideSteps moves focus to the new step's heading.
+  const headingFocus = animateSteps ? { "data-step-heading": "" } : {};
+
+  const renderStep = (id: RewardWizardStep): ReactNode => (
+    <>
+
+      {id === "venue" ? (
         <div className="space-y-2">
-          <p className={s.heading}>Which venue?</p>
+          <p className={s.heading} {...headingFocus}>
+            Which venue?
+          </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {venues.map((v) => (
               <button
@@ -626,7 +689,7 @@ export function CreateRewardWizard({
                 type="button"
                 onClick={() => {
                   setVenueId(v.id);
-                  setStep("definition");
+                  goTo("definition", "forward");
                 }}
                 className={`${s.optionCard} ${venueId === v.id ? s.optionCardActive : ""}`}
               >
@@ -640,9 +703,11 @@ export function CreateRewardWizard({
         </div>
       ) : null}
 
-      {step === "definition" ? (
+      {id === "definition" ? (
         <div className="space-y-3">
-          <p className={s.heading}>Create Reward</p>
+          <p className={s.heading} {...headingFocus}>
+            {animateSteps ? "Which reward?" : "Create Reward"}
+          </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {REWARD_DEFINITIONS.map((def) => (
               <button
@@ -678,8 +743,13 @@ export function CreateRewardWizard({
         </div>
       ) : null}
 
-      {step === "terms" && definition && context ? (
+      {id === "terms" && definition && context ? (
         <div className="space-y-4">
+          {animateSteps ? (
+            <p className={s.heading} {...headingFocus}>
+              {definition.name}
+            </p>
+          ) : null}
           {/* 1. The question that decides everything below it. */}
           {definition.supportsGameWinner ? (
             <div>
@@ -1023,7 +1093,7 @@ export function CreateRewardWizard({
           <WizardFooter
             variant="inline"
             tone={footerTone}
-            onBack={() => setStep("definition")}
+            onBack={() => goTo("definition", "back")}
             backLabel={definition.name}
             nextLabel="Next: Offer a Prize"
             nextDisabled={
@@ -1049,15 +1119,17 @@ export function CreateRewardWizard({
                 }
               }
               setThresholdError(null);
-              setStep("prize");
+              goTo("prize", "forward");
             }}
           />
         </div>
       ) : null}
 
-      {step === "prize" && definition ? (
+      {id === "prize" && definition ? (
         <div className="space-y-4">
-          <p className={s.heading}>Prize</p>
+          <p className={s.heading} {...headingFocus}>
+            Prize
+          </p>
 
           <div className="grid grid-cols-2 gap-2">
             {(["menu_item", "gift_card"] as PrizeChoice[]).map((choice) => (
@@ -1147,16 +1219,18 @@ export function CreateRewardWizard({
           <WizardFooter
             variant="inline"
             tone={footerTone}
-            onBack={() => setStep("terms")}
-            onNext={() => setStep("confirm")}
+            onBack={() => goTo("terms", "back")}
+            onNext={() => goTo("confirm", "forward")}
             nextLabel="Next: Confirm"
           />
         </div>
       ) : null}
 
-      {step === "confirm" && definition ? (
+      {id === "confirm" && definition ? (
         <div className="space-y-4">
-          <p className={s.heading}>Confirm</p>
+          <p className={s.heading} {...headingFocus}>
+            Confirm
+          </p>
 
           <div>
             <div className={s.summaryRow}>
@@ -1197,7 +1271,7 @@ export function CreateRewardWizard({
           <WizardFooter
             variant="inline"
             tone={footerTone}
-            onBack={() => setStep("prize")}
+            onBack={() => goTo("prize", "back")}
             onNext={() => void handleSubmit()}
             nextLabel="Create Reward"
             nextBusyLabel="Creating…"
@@ -1206,6 +1280,16 @@ export function CreateRewardWizard({
           />
         </div>
       ) : null}
+    </>
+  );
+
+  return (
+    <div className={animateSteps ? "" : s.card}>
+      {animateSteps ? (
+        <SlideSteps steps={REWARD_WIZARD_STEPS} current={step} renderStep={renderStep} />
+      ) : (
+        renderStep(step)
+      )}
     </div>
   );
 }

@@ -30,13 +30,36 @@ describe("owner dashboard body", () => {
     }
     expect(read("components/owner/schedule/ScheduleGameRow.tsx")).toContain("@/lib/ownerScheduleDisplay");
     expect(read("components/owner/schedule/ScheduleGameFlow.tsx")).toContain("@/lib/ownerScheduleForm");
-    expect(read("app/owner/competitions/page.tsx")).toContain("@/lib/ownerRewardDisplay");
+    expect(read("components/owner/rewards/RewardRow.tsx")).toContain("@/lib/ownerRewardDisplay");
+    expect(read("components/owner/rewards/RewardStepScreens.tsx")).toContain("@/lib/ownerRewardDisplay");
   });
 
   it("/owner/schedule redirects to the open sheet (server component, no proxy change)", () => {
     const page = read("app/owner/schedule/page.tsx");
     expect(page).not.toContain('"use client"');
     expect(page).toContain('redirect("/owner/dashboard?sheet=schedule")');
+  });
+
+  it("/owner/competitions redirects to the open Rewards sheet (server component, no proxy change)", () => {
+    const page = read("app/owner/competitions/page.tsx");
+    expect(page).not.toContain('"use client"');
+    expect(page).toContain('redirect("/owner/dashboard?sheet=rewards")');
+    expect(page).not.toContain("CreateRewardWizard");
+  });
+
+  it("the dashboard hosts the rewards flow, one fresh instance per open, and no placeholder sheet", () => {
+    expect(dashboard).toMatch(/<RewardsFlow\s+key=\{rewardsSession\}/);
+    expect(dashboard).not.toContain("Coming soon");
+    expect(dashboard).not.toContain("<OwnerSheet");
+  });
+
+  it("the Rewards sheet runs the shared wizard with its opt-in props, never a fork", () => {
+    const flow = read("components/owner/rewards/RewardsFlow.tsx");
+    expect(flow).toContain('import { CreateRewardWizard');
+    expect(flow).toMatch(/<CreateRewardWizard[\s\S]*animateSteps[\s\S]*onRequestSchedule=/);
+    // The admin host passes none of them: its markup must stay exactly as it was.
+    const admin = read("components/admin/sections/ChallengesSection.tsx");
+    for (const prop of ["animateSteps", "onRequestSchedule", "onStepChange"]) expect(admin).not.toContain(prop);
   });
 
   it("the dashboard hosts the schedule flow, one fresh instance per open", () => {

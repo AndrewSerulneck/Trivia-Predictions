@@ -31,7 +31,7 @@ export const DashboardNotice = ({
       {action ? (
         <>
           {" "}
-          <button type="button" onClick={action.onClick} className="min-h-11 underline">
+          <button type="button" onClick={action.onClick} className="min-h-11 !border-0 bg-transparent p-0 text-left underline">
             {action.label}
           </button>
         </>

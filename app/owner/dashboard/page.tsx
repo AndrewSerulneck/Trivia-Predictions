@@ -7,8 +7,8 @@ import { DashboardNotice } from "@/components/owner/dashboard/DashboardNotice";
 import { SectionSkeleton } from "@/components/owner/dashboard/DashboardSectionCard";
 import { LiveGamesSection, type SectionLoad } from "@/components/owner/dashboard/LiveGamesSection";
 import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
+import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/RewardsFlow";
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
-import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
@@ -19,6 +19,9 @@ type Venue = {
   id: string;
   name: string;
 };
+
+/** What the last save/cancel told the partner; `offerReward` adds "Now offer a reward for it →". */
+type DashboardNoticeState = { message: string; rewardNotice: string | null; offerReward: boolean };
 
 type ListResult<T> = { ok: true; items: T[] } | { ok: false; message: string };
 
@@ -46,7 +49,7 @@ const fetchList = async <T,>(
 
 
 // Keyed by venue at the call site: switching venues remounts it with fresh loading state.
-const DashboardBody = ({ venueId }: { venueId: string }) => {
+const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: string }) => {
   const router = useRouter();
   const sheet = useOwnerSheet();
   const [games, setGames] = useState<SectionLoad<OwnerSchedule>>({ status: "loading" });
@@ -54,11 +57,16 @@ const DashboardBody = ({ venueId }: { venueId: string }) => {
   const [gamesAsOfMs, setGamesAsOfMs] = useState(0);
   const [rewards, setRewards] = useState<SectionLoad<OwnerCompetition>>({ status: "loading" });
   // What the last save/cancel told the partner, shown above the cards until dismissed.
-  const [notice, setNotice] = useState<ScheduleChange | null>(null);
+  const [notice, setNotice] = useState<DashboardNoticeState | null>(null);
   // Each open of the schedule sheet mounts a fresh flow (a new `key`) so it never
   // inherits the last game's answers; `scheduleTarget` is the game that was tapped.
   const [scheduleSession, setScheduleSession] = useState(0);
   const [scheduleTarget, setScheduleTarget] = useState<OwnerSchedule | null>(null);
+  // Same for the rewards sheet; `rewardsTarget` is the reward that was tapped.
+  const [rewardsSession, setRewardsSession] = useState(0);
+  const [rewardsTarget, setRewardsTarget] = useState<OwnerCompetition | null>(null);
+  // The schedule sheet was opened from the wizard's "Schedule Live Trivia": once a game is saved, offer to continue the reward.
+  const [scheduleForReward, setScheduleForReward] = useState(false);
 
   const onUnauthorized = useCallback(
     (code?: string) => router.push(ownerAuthRecoveryPath(code)),
@@ -104,30 +112,48 @@ const DashboardBody = ({ venueId }: { venueId: string }) => {
     };
   }, [venueId, rewardsAttempt, onUnauthorized]);
 
-  const openSchedule = (target?: OwnerSchedule | "all") => {
+  const openSchedule = (target?: OwnerSchedule | "all", forReward = false) => {
     setScheduleSession((n) => n + 1);
     setScheduleTarget(target && target !== "all" ? target : null);
+    setScheduleForReward(forReward);
     sheet.openSheet("schedule", target === "all" ? "all" : target ? "detail" : null);
+  };
+
+  // "new" goes straight to the wizard, "all" to the list, a reward to its detail screen.
+  const openRewards = (target: OwnerCompetition | "all" | "new") => {
+    setRewardsSession((n) => n + 1);
+    setRewardsTarget(target === "all" || target === "new" ? null : target);
+    sheet.openSheet("rewards", target === "new" ? "definition" : target === "all" ? null : "detail");
   };
 
   // A game was saved or cancelled: show the result and refetch. The list keeps its
   // current rows until the new ones arrive (no skeleton flash).
   const handleScheduleChanged = (change: ScheduleChange) => {
-    setNotice(change);
+    setNotice({ ...change, offerReward: scheduleForReward });
     setGamesAttempt((n) => n + 1);
+  };
+
+  // A reward was created or removed: show the result and refetch its list.
+  const handleRewardsChanged = (change: RewardsChange) => {
+    setNotice({ message: change.message, rewardNotice: null, offerReward: false });
+    setRewardsAttempt((n) => n + 1);
   };
 
   return (
     <div className="space-y-4">
       {notice ? (
         <div className="space-y-2">
-          <DashboardNotice tone="success" onDismiss={() => setNotice(null)}>
+          <DashboardNotice
+            tone="success"
+            action={notice.offerReward ? { label: "Now offer a reward for it →", onClick: () => openRewards("new") } : undefined}
+            onDismiss={() => setNotice(null)}
+          >
             {notice.message}
           </DashboardNotice>
           {notice.rewardNotice ? (
             <DashboardNotice
               tone="advisory"
-              action={{ label: "View Rewards", onClick: () => sheet.openSheet("rewards") }}
+              action={{ label: "View Rewards", onClick: () => openRewards("all") }}
               onDismiss={() => setNotice(null)}
             >
               {notice.rewardNotice}
@@ -147,8 +173,8 @@ const DashboardBody = ({ venueId }: { venueId: string }) => {
       />
       <RewardsSection
         load={rewards}
-        onAdd={() => sheet.openSheet("rewards")}
-        onOpen={() => sheet.openSheet("rewards")}
+        onAdd={() => openRewards("new")}
+        onOpen={(reward) => openRewards(reward ?? "all")}
         onRetry={() => {
           setRewards({ status: "loading" });
           setRewardsAttempt((n) => n + 1);
@@ -165,10 +191,16 @@ const DashboardBody = ({ venueId }: { venueId: string }) => {
         onChanged={handleScheduleChanged}
       />
 
-      {/* Placeholder sheet: Phase 5 replaces the body with the rewards flow. */}
-      <OwnerSheet open={sheet.sheet === "rewards"} onRequestClose={sheet.closeSheet} title="Offer a reward">
-        <p className="text-sm font-semibold text-ht-muted">Coming soon.</p>
-      </OwnerSheet>
+      <RewardsFlow
+        key={rewardsSession}
+        venueId={venueId}
+        venueName={venueName}
+        nav={sheet}
+        rewards={rewards}
+        initialReward={rewardsTarget}
+        onChanged={handleRewardsChanged}
+        onRequestSchedule={() => openSchedule(undefined, true)}
+      />
     </div>
   );
 };
@@ -247,7 +279,7 @@ const OwnerDashboardPage = () => {
         </div>
       ) : (
         <Suspense fallback={<SectionSkeleton label="Loading dashboard" />}>
-          <DashboardBody key={selectedVenueId} venueId={selectedVenueId} />
+          <DashboardBody key={selectedVenueId} venueId={selectedVenueId} venueName={selectedVenue?.name ?? "This venue"} />
         </Suspense>
       )}
     </OwnerShell>
