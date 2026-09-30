@@ -1,12 +1,11 @@
 import type { ReactNode } from "react";
 
-// A dismissible line above the dashboard's section cards. "success" confirms a
-// change the partner just made; "advisory" is the server's note that a change
-// also retired or shrank rewards pinned to a game (not an error — the change
-// succeeded). Phase 6 replaces the success line with a toast.
+// A dismissible line above the dashboard's section cards: the server's note that
+// a change also retired or shrank rewards pinned to a game (not an error — the
+// change succeeded). It stays until dismissed because it explains a side effect.
+// The success confirmation itself is a DashboardToast.
 
 const TONE_CLASS = {
-  success: "border-ht-cyan-500/30 bg-ht-cyan-500/10 text-ht-cyan-200",
   advisory: "border-ht-amber-500/30 bg-ht-amber-500/10 text-ht-amber-200",
 } as const;
 

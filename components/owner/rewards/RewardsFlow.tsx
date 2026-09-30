@@ -10,6 +10,7 @@ import {
   RewardsListScreen,
   type RewardsLoad,
 } from "@/components/owner/rewards/RewardStepScreens";
+import { useDiscardGuard } from "@/components/owner/sheet/DiscardGuard";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
@@ -49,6 +50,8 @@ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 export type RewardsChange = {
   /** What to tell the partner, e.g. "Live Trivia Challenge reward created". */
   message: string;
+  /** The reward was ended (archived or deleted): nothing to ring. */
+  removed?: boolean;
 };
 
 type EndingState = { counts: RedemptionCounts | null; error: string | null; busy: boolean };
@@ -128,7 +131,7 @@ export const RewardsFlow = ({
     setEnding((prev) => ({ ...prev, busy: true, error: null }));
     try {
       const message = await removeReward(selected.id, mode);
-      onChanged({ message });
+      onChanged({ message, removed: true });
       nav.closeSheet();
     } catch (err) {
       setEnding((prev) => ({
@@ -209,14 +212,27 @@ export const RewardsFlow = ({
     <WizardFooter variant="inline" tone="dark" onBack={() => nav.goBack(backTarget)} />
   ) : undefined;
 
+  // The wizard keeps its answers inside itself, so "has the partner entered anything?" is
+  // wizard-agnostic: past the Definition step (they picked a reward and are answering questions).
+  const { closeGuard, dialog } = useDiscardGuard({
+    dirty: open && screen === "wizard" && step !== "definition",
+    title: "Discard this reward?",
+    message: "Nothing is saved until you create it.",
+    onDiscard: nav.closeSheet,
+  });
+
   return (
-    <OwnerSheet
-      open={open}
-      onRequestClose={nav.closeSheet}
-      title={screen === "wizard" ? "Offer a reward" : "Rewards"}
-      footer={footer}
-    >
-      <SlideSteps steps={REWARD_SLIDE_ORDER} current={screen} renderStep={renderScreen} />
-    </OwnerSheet>
+    <>
+      <OwnerSheet
+        open={open}
+        onRequestClose={nav.closeSheet}
+        closeGuard={closeGuard}
+        title={screen === "wizard" ? "Offer a reward" : "Rewards"}
+        footer={footer}
+      >
+        <SlideSteps steps={REWARD_SLIDE_ORDER} current={screen} renderStep={renderScreen} />
+      </OwnerSheet>
+      {dialog}
+    </>
   );
 };

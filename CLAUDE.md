@@ -539,10 +539,25 @@ shipped; only a real-device visual pass remains, §13c).
   `JoinFlow` dropping a stale Supabase session mid-login, and `VenueHubClient`'s
   arrival watchdog. Add teardown to the button, not to the call site.
 - **Host shells own the Back slot, not the pages.** Player content pages pass
-  `PageShell backTo={…}`; `/owner/*` pages pass `OwnerShell backTo={…}` (plus
-  `showAccountMenu` for Sign Out); the four `GameAppBar` games inherit it from
+  `PageShell backTo={…}`; dark `/owner/*` pages pass `OwnerShell backTo={…}` (the compact
+  app bar; **no Sign Out there** — see the Partner Dashboard bullet below); the four `GameAppBar` games inherit it from
   `components/venue/AppBar.tsx`'s defaulted `leading` slot. Do not add a page-level
   back link that bypasses its shell.
+- **Partner Dashboard app shell (2026-09-30, `docs/partner-dashboard-app-redesign-plan.md`).**
+  The dashboard's top-left is the **logo menu button** (`components/owner/OwnerAppBar.tsx`),
+  not Back; it opens `OwnerMenuDrawer`, where **Sign Out is the last row** — the only place a
+  dark `/owner/*` partner signs out (`OwnerAccountMenu` survives only for the orphan `/owner/category-blitz`, light variant). The
+  `SignOutButton` host allowlist is `OwnerAppBar.tsx`. Two overlay primitives, both built on
+  `components/owner/sheet/useModalOverlay.ts` (controlled `open`, topmost-only Escape, Tab trap,
+  popup scroll lock, portal): `OwnerSheet` (slide-up, flows) and `OwnerMenuDrawer` (left).
+  Flow sheets mirror their step in the URL (`?sheet=&step=`, `lib/useOwnerSheet.ts` — native
+  `history.pushState` with a depth counter, so Close pops every entry) so the phone's Back
+  steps back or closes; **never `router.push` a sheet step**. Do not hand-roll a modal, sheet
+  or toast for `/owner/*`: use those, `DiscardGuard` (closing a flow with entered answers asks
+  first) and `DashboardToast`. `CreateRewardWizard` stays one shared component — its owner
+  behaviour is four opt-in props and the admin snapshots pin that it is unchanged.
+  `tests/owner-menu-contract.test.ts` and `tests/owner-dashboard-contract.test.ts` are the
+  tripwires; `docs/partner-dashboard-app-redesign-device-checklist.md` is Andrew's device pass.
 - **Run `npm run test` after touching any navigation control** —
   `tests/navigation-controls-contract.test.ts` is the standing static tripwire (7
   assertions: no raw `←` in player-facing TSX, no retired warm-pill literals, the

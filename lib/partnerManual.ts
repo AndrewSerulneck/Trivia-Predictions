@@ -62,11 +62,11 @@ export const PARTNER_MANUAL: {
     },
     {
       heading: "Offer Rewards",
-      body: "Incentivize guests to visit by offering rewards for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Click \"Offer Rewards\" on the Partner Dashboard to get started.",
+      body: "Incentivize guests to visit by offering rewards for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Offer Rewards on your dashboard to get started.",
     },
     {
       heading: "Venue Display",
-      body: "A Hightop Challenge subscription includes the ability to display group games like Live Trivia and Category Blitz on your TV screens so people who aren't playing on their phones can still follow along. Just click the 'Venue Display' button in the Partner Dashboard and follow the instructions on your TV (or device connected to the TV).",
+      body: "A Hightop Challenge subscription includes the ability to display group games like Live Trivia and Category Blitz on your TV screens so people who aren't playing on their phones can still follow along. Just tap the logo in the top-left corner to open the menu, then tap Venue Display, and follow the instructions on your TV (or device connected to the TV).",
     },
     {
       heading: "Billing",

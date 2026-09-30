@@ -204,7 +204,10 @@ describe("RewardsFlow", () => {
 
     fireEvent.click(button(/Archive/));
     await waitFor(() => expect(onClosed).toHaveBeenCalled());
-    expect(onChanged).toHaveBeenCalledWith({ message: "Reward archived. Prizes already awarded still work." });
+    expect(onChanged).toHaveBeenCalledWith({
+      message: "Reward archived. Prizes already awarded still work.",
+      removed: true,
+    });
     const deleteCall = fetchMock.mock.calls.find(([, init]) => (init as RequestInit | undefined)?.method === "DELETE");
     expect(deleteCall?.[0]).toBe("/api/owner/competitions/reward-1?mode=archive");
   });
@@ -222,6 +225,7 @@ describe("RewardsFlow", () => {
     await waitFor(() =>
       expect(onChanged).toHaveBeenCalledWith({
         message: "Reward deleted. 1 already-redeemed prize kept for your records.",
+        removed: true,
       }),
     );
   });
@@ -325,5 +329,45 @@ describe("RewardsFlow", () => {
     render(createElement(Harness, { initialStep: "confirm", log }));
     await waitFor(() => expect(log).toContain("replace:definition"));
     await waitFor(() => expect(heading()).toBe("Which reward?"));
+  });
+
+  describe("Discard this reward?", () => {
+    it("closes at once on the Definition step and on the lists", async () => {
+      const onClosed = vi.fn();
+      routeFetch({ "/api/owner/rewards/context": () => ({ ok: true, context: SCHEDULED_CONTEXT }) });
+      render(createElement(Harness, { initialStep: "definition", onClosed }));
+      await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+      fireEvent.click(button("Close"));
+      expect(onClosed).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole("alertdialog")).toBeNull();
+    });
+
+    it("asks once the partner is past Definition; Keep editing stays, Discard closes", async () => {
+      const onClosed = vi.fn();
+      routeFetch({ "/api/owner/rewards/context": () => ({ ok: true, context: SCHEDULED_CONTEXT }) });
+      render(createElement(Harness, { initialStep: "definition", onClosed }));
+      await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+      fireEvent.click(button(/Live Trivia Challenge/));
+      await waitFor(() => expect(heading()).toBe("Live Trivia Challenge"));
+
+      fireEvent.click(button("Close"));
+      expect(screen.getByRole("alertdialog", { name: "Discard this reward?" })).toBeTruthy();
+      expect(onClosed).not.toHaveBeenCalled();
+
+      fireEvent.click(button("Keep editing"));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+      expect(heading()).toBe("Live Trivia Challenge");
+
+      fireEvent.click(button("Close"));
+      fireEvent.click(button("Discard"));
+      expect(onClosed).toHaveBeenCalledTimes(1);
+    });
+
+    it("never asks on a reward's detail screen", () => {
+      const onClosed = vi.fn();
+      render(createElement(Harness, { initialStep: "detail", initialReward: ACTIVE, onClosed }));
+      fireEvent.click(button("Close"));
+      expect(onClosed).toHaveBeenCalledTimes(1);
+    });
   });
 });

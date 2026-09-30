@@ -230,7 +230,11 @@ describe("ScheduleGameFlow", () => {
     expect(body).toMatchObject({ title: "Friday Night Trivia", recurringType: "weekly", recurringDays: ["fri"] });
     expect(body).not.toHaveProperty("venueId");
     expect(body).not.toHaveProperty("gameType");
-    expect(onChanged.mock.calls[0][0]).toEqual({ message: "Live Trivia updated", rewardNotice: "1 reward was updated." });
+    expect(onChanged.mock.calls[0][0]).toEqual({
+      message: "Live Trivia updated",
+      rewardNotice: "1 reward was updated.",
+      scheduleId: "sched-1",
+    });
   });
 
   it("cancels a game only after confirmation, and passes the reward notice up", async () => {
@@ -251,7 +255,11 @@ describe("ScheduleGameFlow", () => {
     fireEvent.click(button("Yes, cancel game"));
     await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledWith("/api/owner/schedule/sched-1", { method: "DELETE" });
-    expect(onChanged.mock.calls[0][0]).toEqual({ message: "Friday Trivia cancelled", rewardNotice: "2 rewards were retired." });
+    expect(onChanged.mock.calls[0][0]).toEqual({
+      message: "Friday Trivia cancelled",
+      rewardNotice: "2 rewards were retired.",
+      removed: true,
+    });
     expect(onClosed).toHaveBeenCalled();
   });
 
@@ -289,5 +297,73 @@ describe("ScheduleGameFlow", () => {
     fireEvent.click(button("+ Schedule another game"));
     await waitFor(() => expect(heading()).toBe("When does it start?"));
     expect((screen.getByLabelText(/Date & time/) as HTMLInputElement).value).toBe("");
+  });
+
+  describe("Discard this game?", () => {
+    it("closes at once while nothing has been entered", () => {
+      const onClosed = vi.fn();
+      render(createElement(Harness, { onClosed }));
+      fireEvent.click(button("Close"));
+      expect(onClosed).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole("alertdialog")).toBeNull();
+    });
+
+    it("asks once something is entered; Keep editing leaves the sheet and the answers alone", async () => {
+      const onClosed = vi.fn();
+      render(createElement(Harness, { onClosed }));
+      fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+      fireEvent.click(button("Close"));
+
+      expect(screen.getByRole("alertdialog", { name: "Discard this game?" })).toBeTruthy();
+      expect(onClosed).not.toHaveBeenCalled();
+
+      fireEvent.click(button("Keep editing"));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+      expect((screen.getByLabelText(/Date & time/) as HTMLInputElement).value).toBe("2099-10-09T20:00");
+      expect(onClosed).not.toHaveBeenCalled();
+    });
+
+    it("Discard closes the sheet; Escape asks instead of closing", async () => {
+      const onClosed = vi.fn();
+      render(createElement(Harness, { onClosed }));
+      fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+
+      fireEvent.keyDown(window, { key: "Escape" });
+      expect(screen.getByRole("alertdialog")).toBeTruthy();
+      expect(onClosed).not.toHaveBeenCalled();
+
+      fireEvent.click(button("Discard"));
+      expect(onClosed).toHaveBeenCalledTimes(1);
+    });
+
+    it("an edit asks only after a change, with its own wording", async () => {
+      const onClosed = vi.fn();
+      const game = makeSchedule();
+      render(createElement(Harness, { initialStep: "detail", initialSchedule: game, games: [game], onClosed }));
+      fireEvent.click(button("Edit game"));
+      await waitFor(() => expect(heading()).toBe("Review changes"));
+
+      fireEvent.click(button("Close"));
+      expect(onClosed).toHaveBeenCalledTimes(1);
+    });
+
+    it("an edit with a change asks 'Discard your changes?'", async () => {
+      const onClosed = vi.fn();
+      const game = makeSchedule();
+      render(createElement(Harness, { initialStep: "detail", initialSchedule: game, games: [game], onClosed }));
+      fireEvent.click(button("Edit game"));
+      await waitFor(() => expect(heading()).toBe("Review changes"));
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Renamed" } });
+      fireEvent.click(button("Close"));
+      expect(screen.getByRole("alertdialog", { name: "Discard your changes?" })).toBeTruthy();
+      expect(onClosed).not.toHaveBeenCalled();
+    });
+
+    it("the lists never ask (nothing to lose)", () => {
+      const onClosed = vi.fn();
+      render(createElement(Harness, { initialStep: "all", games: [makeSchedule()], onClosed }));
+      fireEvent.click(button("Close"));
+      expect(onClosed).toHaveBeenCalledTimes(1);
+    });
   });
 });

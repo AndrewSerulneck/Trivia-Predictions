@@ -1,3 +1,4 @@
+import { highlightRingClass, useScrollWhenHighlighted } from "@/components/owner/dashboard/useHighlightRing";
 import { glyphForCompetition, rewardTermsText, type OwnerCompetition } from "@/lib/ownerRewardDisplay";
 
 // One reward as a row: glyph, name, the terms sentence. Used by the dashboard's
@@ -7,12 +8,16 @@ export const RewardRow = ({
   competition,
   onClick,
   ended = false,
+  highlighted = false,
 }: {
   competition: OwnerCompetition;
   /** Omitted = not tappable (ended rewards in History). */
   onClick?: () => void;
   ended?: boolean;
+  /** Just created: ringed and scrolled into view for a moment. */
+  highlighted?: boolean;
 }) => {
+  const ref = useScrollWhenHighlighted<HTMLButtonElement & HTMLDivElement>(highlighted);
   const terms = rewardTermsText(competition);
   const body = (
     <>
@@ -36,10 +41,17 @@ export const RewardRow = ({
   const rowClass = `flex w-full items-center gap-3 rounded-[14px] border border-ht-hairline bg-ht-elevated/40 p-3 text-left ${ended ? "opacity-70" : ""}`;
 
   return onClick ? (
-    <button type="button" onClick={onClick} className={`${rowClass} transition active:translate-y-px`}>
+    <button
+      ref={ref}
+      type="button"
+      onClick={onClick}
+      className={`${rowClass} ${highlightRingClass(highlighted)} transition active:translate-y-px`}
+    >
       {body}
     </button>
   ) : (
-    <div className={rowClass}>{body}</div>
+    <div ref={ref} className={rowClass}>
+      {body}
+    </div>
   );
 };

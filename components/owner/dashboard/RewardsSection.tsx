@@ -15,6 +15,7 @@ export const RewardsSection = ({
   onAdd,
   onOpen,
   onRetry,
+  highlightId = null,
 }: {
   load: SectionLoad<OwnerCompetition>;
   /** Opens the rewards sheet on a new reward. */
@@ -22,6 +23,8 @@ export const RewardsSection = ({
   /** Opens the rewards sheet on an existing reward, or on the full list when omitted. */
   onOpen: (competition?: OwnerCompetition) => void;
   onRetry: () => void;
+  /** The reward just created: its row gets the highlight ring. */
+  highlightId?: string | null;
 }) => {
   const active = load.status === "ready" ? splitCompetitions(load.items).active : [];
   const shown = active.slice(0, DASHBOARD_LIST_LIMIT);
@@ -49,7 +52,7 @@ export const RewardsSection = ({
           <ul className="space-y-2">
             {shown.map((competition) => (
               <li key={competition.id}>
-                <RewardRow competition={competition} onClick={() => onOpen(competition)} />
+                <RewardRow competition={competition} onClick={() => onOpen(competition)} highlighted={competition.id === highlightId} />
               </li>
             ))}
           </ul>

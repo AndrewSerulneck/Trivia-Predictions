@@ -4,6 +4,8 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { DashboardNotice } from "@/components/owner/dashboard/DashboardNotice";
+import { DashboardToast } from "@/components/owner/dashboard/DashboardToast";
+import { HIGHLIGHT_MS } from "@/components/owner/dashboard/useHighlightRing";
 import { SectionSkeleton } from "@/components/owner/dashboard/DashboardSectionCard";
 import { LiveGamesSection, type SectionLoad } from "@/components/owner/dashboard/LiveGamesSection";
 import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
@@ -11,6 +13,7 @@ import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/Rewa
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
+import { knownItemIds, resolvePendingHighlight, type PendingHighlight } from "@/lib/ownerDashboardHighlight";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
 import { useOwnerSheet } from "@/lib/useOwnerSheet";
 import type { OwnerSchedule } from "@/types";
@@ -20,8 +23,13 @@ type Venue = {
   name: string;
 };
 
-/** What the last save/cancel told the partner; `offerReward` adds "Now offer a reward for it →". */
-type DashboardNoticeState = { message: string; rewardNotice: string | null; offerReward: boolean };
+/** The confirmation toast; `offerReward` adds "Now offer a reward for it →". */
+type ToastState = { message: string; offerReward: boolean };
+
+/** A row to ring once its list refetches (see lib/ownerDashboardHighlight.ts). */
+type PendingRing =
+  | ({ list: "games" } & PendingHighlight<SectionLoad<OwnerSchedule>>)
+  | ({ list: "rewards" } & PendingHighlight<SectionLoad<OwnerCompetition>>);
 
 type ListResult<T> = { ok: true; items: T[] } | { ok: false; message: string };
 
@@ -56,8 +64,10 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
   // "Now" for upcoming-vs-past bucketing, stamped when the games list arrives.
   const [gamesAsOfMs, setGamesAsOfMs] = useState(0);
   const [rewards, setRewards] = useState<SectionLoad<OwnerCompetition>>({ status: "loading" });
-  // What the last save/cancel told the partner, shown above the cards until dismissed.
-  const [notice, setNotice] = useState<DashboardNoticeState | null>(null);
+  // What the last save/cancel told the partner: a self-clearing toast, plus the server's
+  // advisory about pinned rewards (persistent, because it explains a side effect).
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const [advisory, setAdvisory] = useState<string | null>(null);
   // Each open of the schedule sheet mounts a fresh flow (a new `key`) so it never
   // inherits the last game's answers; `scheduleTarget` is the game that was tapped.
   const [scheduleSession, setScheduleSession] = useState(0);
@@ -67,6 +77,9 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
   const [rewardsTarget, setRewardsTarget] = useState<OwnerCompetition | null>(null);
   // The schedule sheet was opened from the wizard's "Schedule Live Trivia": once a game is saved, offer to continue the reward.
   const [scheduleForReward, setScheduleForReward] = useState(false);
+  // The row just saved gets a ring for HIGHLIGHT_MS; `pendingHighlight` waits for the refetch that contains it.
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [pendingHighlight, setPendingHighlight] = useState<PendingRing | null>(null);
 
   const onUnauthorized = useCallback(
     (code?: string) => router.push(ownerAuthRecoveryPath(code)),
@@ -112,6 +125,27 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
     };
   }, [venueId, rewardsAttempt, onUnauthorized]);
 
+  // Adjust-during-render (react-hooks/set-state-in-effect): the first refetched list after a
+  // change resolves which row to ring.
+  if (pendingHighlight) {
+    const resolution =
+      pendingHighlight.list === "games"
+        ? resolvePendingHighlight(pendingHighlight, games)
+        : resolvePendingHighlight(pendingHighlight, rewards);
+    if (resolution.resolved) {
+      setPendingHighlight(null);
+      setHighlightId(resolution.id);
+    }
+  }
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = window.setTimeout(() => setHighlightId(null), HIGHLIGHT_MS);
+    return () => window.clearTimeout(timer);
+  }, [highlightId]);
+
+  const dismissToast = useCallback(() => setToast(null), []);
+
   const openSchedule = (target?: OwnerSchedule | "all", forReward = false) => {
     setScheduleSession((n) => n + 1);
     setScheduleTarget(target && target !== "all" ? target : null);
@@ -129,41 +163,40 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
   // A game was saved or cancelled: show the result and refetch. The list keeps its
   // current rows until the new ones arrive (no skeleton flash).
   const handleScheduleChanged = (change: ScheduleChange) => {
-    setNotice({ ...change, offerReward: scheduleForReward });
+    setToast({ message: change.message, offerReward: scheduleForReward });
+    setAdvisory(change.rewardNotice);
+    // A cancel removes a row; a save adds or edits one, and that row gets the ring.
+    setPendingHighlight(
+      change.removed ? null : { list: "games", baseline: games, knownIds: knownItemIds(games), id: change.scheduleId ?? null },
+    );
     setGamesAttempt((n) => n + 1);
   };
 
   // A reward was created or removed: show the result and refetch its list.
   const handleRewardsChanged = (change: RewardsChange) => {
-    setNotice({ message: change.message, rewardNotice: null, offerReward: false });
+    setToast({ message: change.message, offerReward: false });
+    setAdvisory(null);
+    setPendingHighlight(
+      change.removed ? null : { list: "rewards", baseline: rewards, knownIds: knownItemIds(rewards), id: null },
+    );
     setRewardsAttempt((n) => n + 1);
   };
 
   return (
     <div className="space-y-4">
-      {notice ? (
-        <div className="space-y-2">
-          <DashboardNotice
-            tone="success"
-            action={notice.offerReward ? { label: "Now offer a reward for it →", onClick: () => openRewards("new") } : undefined}
-            onDismiss={() => setNotice(null)}
-          >
-            {notice.message}
-          </DashboardNotice>
-          {notice.rewardNotice ? (
-            <DashboardNotice
-              tone="advisory"
-              action={{ label: "View Rewards", onClick: () => openRewards("all") }}
-              onDismiss={() => setNotice(null)}
-            >
-              {notice.rewardNotice}
-            </DashboardNotice>
-          ) : null}
-        </div>
+      {advisory ? (
+        <DashboardNotice
+          tone="advisory"
+          action={{ label: "View Rewards", onClick: () => openRewards("all") }}
+          onDismiss={() => setAdvisory(null)}
+        >
+          {advisory}
+        </DashboardNotice>
       ) : null}
       <LiveGamesSection
         load={games}
         nowMs={gamesAsOfMs}
+        highlightId={highlightId}
         onAdd={() => openSchedule()}
         onOpen={(schedule) => openSchedule(schedule ?? "all")}
         onRetry={() => {
@@ -173,6 +206,7 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
       />
       <RewardsSection
         load={rewards}
+        highlightId={highlightId}
         onAdd={() => openRewards("new")}
         onOpen={(reward) => openRewards(reward ?? "all")}
         onRetry={() => {
@@ -180,6 +214,26 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
           setRewardsAttempt((n) => n + 1);
         }}
       />
+
+      {toast ? (
+        <DashboardToast
+          key={toast.message}
+          action={
+            toast.offerReward
+              ? {
+                  label: "Now offer a reward for it →",
+                  onClick: () => {
+                    setToast(null);
+                    openRewards("new");
+                  },
+                }
+              : undefined
+          }
+          onDismiss={dismissToast}
+        >
+          {toast.message}
+        </DashboardToast>
+      ) : null}
 
       <ScheduleGameFlow
         key={scheduleSession}

@@ -1,8 +1,9 @@
 # Partner Dashboard — App-Style Redesign Plan
 
-**Status:** Phases 1–5 complete 2026-09-30. Phases 1–3 committed as `c182c06`, Phase 4 as `a1e0974`, Phase 5 on top
-(nothing pushed or deployed). Andrew accepted every §3 recommended default and skipped Phase 0. Next: Phase 6 (polish, docs,
-verification). Start from `docs/partner-dashboard-app-redesign-plan_PHASE_5_HANDOFF.md`.
+**Status:** Phases 1–6 **build** complete 2026-09-30. Phases 1–3 committed as `c182c06`, Phase 4 as `a1e0974`, Phase 5 as
+`a97b56f`, Phase 6 on top (nothing pushed or deployed). Andrew accepted every §3 recommended default and skipped Phase 0.
+**Remaining:** the final `/code-review high` pass + fixes (Opus 5.5, **not started**), then Andrew's phone checklist
+(`docs/partner-dashboard-app-redesign-device-checklist.md`). Start from `docs/partner-dashboard-app-redesign-plan_PHASE_6_HANDOFF.md`.
 **Handoffs:** each phase ends with `docs/partner-dashboard-app-redesign-plan_PHASE_<N>_HANDOFF.md`
 (global rule in `~/.claude/CLAUDE.md`). Update this status line to point at the latest one.
 

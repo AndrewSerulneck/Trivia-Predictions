@@ -24,6 +24,7 @@ export const LiveGamesSection = ({
   onAdd,
   onOpen,
   onRetry,
+  highlightId = null,
 }: {
   load: SectionLoad<OwnerSchedule>;
   nowMs: number;
@@ -32,6 +33,8 @@ export const LiveGamesSection = ({
   /** Opens the schedule sheet on an existing game, or on the full list when omitted. */
   onOpen: (schedule?: OwnerSchedule) => void;
   onRetry: () => void;
+  /** The game just saved: its row gets the highlight ring. */
+  highlightId?: string | null;
 }) => {
   const upcoming = load.status === "ready" ? splitSchedules(load.items, nowMs).upcoming : [];
   const shown = upcoming.slice(0, DASHBOARD_LIST_LIMIT);
@@ -59,7 +62,7 @@ export const LiveGamesSection = ({
           <ul className="space-y-2">
             {shown.map((schedule) => (
               <li key={schedule.id}>
-                <ScheduleGameRow schedule={schedule} onClick={() => onOpen(schedule)} />
+                <ScheduleGameRow schedule={schedule} onClick={() => onOpen(schedule)} highlighted={schedule.id === highlightId} />
               </li>
             ))}
           </ul>

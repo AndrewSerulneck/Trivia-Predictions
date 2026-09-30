@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight, Menu } from "lucide-react";
 import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { OwnerMenuDrawer } from "@/components/owner/menu/OwnerMenuDrawer";
 import { OWNER_MENU_ITEMS } from "@/components/owner/menu/ownerMenuItems";
 import { PartnerManual } from "@/components/owner/PartnerManual";
+import { menuHintForThisVisit } from "@/lib/ownerMenuHint";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // OwnerAppBar — the slim sticky top bar of the Partner Dashboard
@@ -29,6 +30,8 @@ type OwnerAppBarProps = {
   className?: string;
 };
 
+const subscribeNothing = () => () => {};
+
 const MENU_ROW_CLASS =
   "flex min-h-14 w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ht-cyan-300";
 
@@ -36,6 +39,8 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
   const logoRef = useRef<HTMLButtonElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  // First visit only: pulse the ☰ badge a few times so the logo reads as a button.
+  const hintPulse = useSyncExternalStore(subscribeNothing, menuHintForThisVisit, () => false);
 
   return (
     <header
@@ -64,7 +69,13 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
               aria-hidden="true"
               className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ht-cyan-300 text-slate-950"
             >
-              <Menu className="h-2.5 w-2.5" strokeWidth={3} />
+              {hintPulse ? (
+                <span
+                  data-menu-hint-pulse
+                  className="absolute inset-0 rounded-full bg-ht-cyan-300 motion-safe:animate-[ping_1.2s_cubic-bezier(0,0,0.2,1)_3] motion-reduce:hidden"
+                />
+              ) : null}
+              <Menu className="relative h-2.5 w-2.5" strokeWidth={3} />
             </span>
           </button>
         )}

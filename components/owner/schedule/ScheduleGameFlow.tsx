@@ -13,6 +13,7 @@ import {
   type ScheduleFormChange,
   type ScheduleGames,
 } from "@/components/owner/schedule/ScheduleStepScreens";
+import { useDiscardGuard } from "@/components/owner/sheet/DiscardGuard";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
 import { isContinuousDefaultEnabled } from "@/lib/categoryBlitzShared";
@@ -57,6 +58,10 @@ export type ScheduleChange = {
   message: string;
   /** What the change did to rewards pinned to this game (retired, shrunk), built server-side. */
   rewardNotice: string | null;
+  /** The game that was edited, so the dashboard can ring its row. A new game's row is found by diffing the refetched list. */
+  scheduleId?: string;
+  /** A cancel: the row is gone, so there is nothing to ring. */
+  removed?: boolean;
 };
 
 type ServerReply = { ok: boolean; error?: string; rewardNotice?: string | null };
@@ -91,6 +96,8 @@ export const ScheduleGameFlow = ({
   onChanged: (change: ScheduleChange) => void;
 }) => {
   const [form, setForm] = useState<ScheduleFormState>(freshForm);
+  // What the form held when the partner started this game (or opened this edit): "dirty" = differs from it.
+  const [baseline, setBaseline] = useState<ScheduleFormState>(form);
   const [selected, setSelected] = useState<OwnerSchedule | null>(initialSchedule);
   // Set while an existing game is being edited (PATCH instead of POST).
   const [editing, setEditing] = useState<OwnerSchedule | null>(null);
@@ -141,6 +148,7 @@ export const ScheduleGameFlow = ({
   const startNew = () => {
     const blank = freshForm();
     setForm(blank);
+    setBaseline(blank);
     setEditing(null);
     setChangingStep(null);
     const first = scheduleSteps({ gameOptions: GAME_OPTIONS, gameType: blank.gameType })[0];
@@ -148,7 +156,9 @@ export const ScheduleGameFlow = ({
   };
 
   const startEdit = (schedule: OwnerSchedule) => {
-    setForm(scheduleFormStateFromSchedule(schedule));
+    const existing = scheduleFormStateFromSchedule(schedule);
+    setForm(existing);
+    setBaseline(existing);
     setEditing(schedule);
     setChangingStep(null);
     go("review");
@@ -186,6 +196,7 @@ export const ScheduleGameFlow = ({
         message: editing ? `${label} updated` : `${label} scheduled: ${formatScheduleTime(request.startIso, form.timezone)}`,
         // An edit that changes the days or the recurrence retires/shrinks rewards pinned to this game.
         rewardNotice: reply.rewardNotice ?? null,
+        scheduleId: editing?.id,
       });
       nav.closeSheet();
     } catch (err) {
@@ -203,7 +214,7 @@ export const ScheduleGameFlow = ({
       const reply = await readReply(res, "Couldn't cancel that game.");
       if (!reply.ok) throw new Error(reply.error ?? "Couldn't cancel that game.");
       // Cancelling a game retires the rewards pinned to it; this is the moment the partner sees why.
-      onChanged({ message: `${schedule.title} cancelled`, rewardNotice: reply.rewardNotice ?? null });
+      onChanged({ message: `${schedule.title} cancelled`, rewardNotice: reply.rewardNotice ?? null, removed: true });
       nav.closeSheet();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't cancel that game.");
@@ -320,9 +331,21 @@ export const ScheduleGameFlow = ({
       ? "Edit game"
       : "Schedule a live game";
 
+  // Only the form screens can hold unsaved answers; the lists and the detail screen cannot.
+  const onFormScreen = current === "game" || current === "when" || current === "repeat" || current === "review";
+  const { closeGuard, dialog } = useDiscardGuard({
+    dirty: open && onFormScreen && !busy && JSON.stringify(form) !== JSON.stringify(baseline),
+    title: isEditing ? "Discard your changes?" : "Discard this game?",
+    message: isEditing ? "Your edits to this game won't be saved." : "Nothing is saved until you schedule it.",
+    onDiscard: nav.closeSheet,
+  });
+
   return (
-    <OwnerSheet open={open} onRequestClose={nav.closeSheet} title={title} footer={footer}>
-      <SlideSteps steps={SCHEDULE_SLIDE_ORDER} current={current} renderStep={renderStep} />
-    </OwnerSheet>
+    <>
+      <OwnerSheet open={open} onRequestClose={nav.closeSheet} closeGuard={closeGuard} title={title} footer={footer}>
+        <SlideSteps steps={SCHEDULE_SLIDE_ORDER} current={current} renderStep={renderStep} />
+      </OwnerSheet>
+      {dialog}
+    </>
   );
 };

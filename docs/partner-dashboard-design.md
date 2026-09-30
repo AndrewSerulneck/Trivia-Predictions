@@ -113,6 +113,46 @@ inside a surface card, above a mono copyable-URL row with a one-tap Copy button.
 
 ## 3. Screen Specs
 
+> **Redesigned 2026-09-30** (app-style redesign, `docs/partner-dashboard-app-redesign-plan.md`).
+> The Hub below is superseded by §3a–§3e; the Section 1 and Section 2 stubs describe pages that
+> no longer exist as such (`/owner/schedule` and `/owner/competitions` now redirect to the
+> dashboard's sheets; `/owner/display` is still a page).
+
+### 3a. Top app bar  *(`components/owner/OwnerAppBar.tsx`)*
+Sticky `h-14`, `bg-ht-canvas/90` + blur, safe-area top padding. **Top-left is exactly one control:**
+on the dashboard it is the **logo menu button** (40px target, `aria-label="Open menu"`,
+`aria-haspopup="dialog"`, a ☰ badge that pulses three times on a browser's first visit —
+`lib/ownerMenuHint.ts`, `localStorage` flag, `motion-reduce` hides it); on every other dark
+`/owner/*` page it is `ExitBackButton` (passed as `leading` by `OwnerShell`). Centre: the venue
+name, which becomes the `Dropdown` switcher with 2+ venues. Trailing slot reserved (empty).
+
+### 3b. Menu drawer  *(`components/owner/menu/OwnerMenuDrawer.tsx`, rows in `ownerMenuItems.ts`)*
+Left drawer, `w-[82vw] max-w-xs`. Rows, in order: Venue Display, Billing, Partner Manual (opens
+the manual sheet after closing the drawer), Game Settings, Account Settings; divider; **Sign Out
+last** (`SignOutButton variant="partner"`, no arrow). Pinned by `tests/owner-menu-contract.test.ts`.
+
+### 3c. Section cards  *(`components/owner/dashboard/*`)*
+Two cards — **Live Games** (`bg-ht-game-live`) then **Offer Rewards** (`bg-ht-game-pickem`).
+Empty: the whole body is one dashed button with a cyan **+**. Populated: up to 3 rows, "See all
+(N)", then a dashed "+ … another" row. Dashed outlines use `border-slate-500` (≈3.8:1 on the
+card); `border-ht-soft` is ~1.3:1 and must not be used for an affordance. Skeleton and error
+(with Retry) live inside the card. The just-saved row gets a 2s `ring-ht-cyan-300`
+(`useHighlightRing.ts`, resolved by `lib/ownerDashboardHighlight.ts`).
+
+### 3d. Flow sheets  *(`components/owner/sheet/*`, `schedule/ScheduleGameFlow.tsx`, `rewards/RewardsFlow.tsx`)*
+`OwnerSheet size="tall"` (92svh on phones, grab handle, Close top-right), steps slide through
+`SlideSteps` (240ms in / 120ms out, instant under reduced motion). The URL mirrors the flow
+(`?sheet=schedule|rewards&step=…`, `lib/useOwnerSheet.ts`), so the phone's Back steps back or
+closes. **Closing a flow that holds entered answers asks "Discard this game?" / "Discard this
+reward?"** (`DiscardGuard.tsx`; Keep editing / Discard; no drafts). The phone's Back gesture
+does **not** ask (by decision — see the Phase 6 handoff).
+
+### 3e. Confirmation toast  *(`components/owner/dashboard/DashboardToast.tsx`)*
+After a save / cancel / create / end: a bottom toast, `role="status"` `aria-live="polite"`,
+6s (10s when it carries "Now offer a reward for it →"), bottom-anchored at
+`max(env(safe-area-inset-bottom),16px)`. The server's advisory about rewards pinned to a game is
+**not** a toast: it stays a dismissible `DashboardNotice` until dismissed.
+
 ### Hub  *(implemented — `app/owner/dashboard/page.tsx`)*
 Venue switcher (multi-venue owners get a native-select overlay; single-venue owners
 see a static header, no caret), then 3 tap targets, each with a live status line:
@@ -158,7 +198,7 @@ Stripe: `active`→emerald, `past_due`→rose "Payment due", `cancelled`→slate
 - Rose is errors only — never used for back/exit (which is the neutral dark circle).
 
 **Success**
-- Emerald toast, auto-dismiss ~3.5s, swipe/tap to clear.
+- Toast, auto-dismiss (as built: 6s, 10s with an action, tap × to clear — see §3e).
 - Echo the specifics (game name + time, copied URL, "Payment method updated").
 - Bottom-anchored, `max(env(safe-area-inset-bottom),16px)`.
 - Copy-to-clipboard fires a toast **and** flips the button to "Copied ✓" for 2s.
@@ -172,6 +212,9 @@ Stripe: `active`→emerald, `past_due`→rose "Payment due", `cancelled`→slate
   pages keep `variant="light"`.
 - ✅ Hub re-skinned to these tokens (`app/owner/dashboard/page.tsx`).
 - ✅ Live Games / Venue Display stubs re-skinned (dark, empty state).
+- ✅ App-style redesign, Phases 1–6 (2026-09-30): bar + drawer, section cards, Schedule and
+  Rewards sheets, discard prompt, toast, highlight ring. Device checklist:
+  `docs/partner-dashboard-app-redesign-device-checklist.md`.
 - ⏳ Billing UI (`app/owner/billing/*`) still light-themed — re-skin alongside Phase 4/5.
 - ✅ Nav unification (`docs/navigation-unification-plan.md` Phase 5): the per-page
   "← Dashboard" links collapsed into `OwnerShell`'s header back circle

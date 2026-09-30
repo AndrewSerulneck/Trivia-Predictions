@@ -75,4 +75,38 @@ describe("owner dashboard body", () => {
     expect(rewards).toContain("Offer your guests a reward");
     expect(rewards).toContain("+ Offer another reward");
   });
+
+  it("Phase 6: confirmations are a toast + ring; only the server advisory stays a banner", () => {
+    expect(dashboard).toContain("<DashboardToast");
+    expect(dashboard).toContain("highlightId={highlightId}");
+    expect(dashboard).toContain("HIGHLIGHT_MS");
+    expect(read("components/owner/dashboard/DashboardNotice.tsx")).not.toContain("success:");
+  });
+
+  it("Phase 6: both flows guard Close with the discard prompt (no drafts saved)", () => {
+    for (const file of ["components/owner/schedule/ScheduleGameFlow.tsx", "components/owner/rewards/RewardsFlow.tsx"]) {
+      const src = read(file);
+      expect(src).toContain("useDiscardGuard");
+      expect(src).toMatch(/closeGuard=\{closeGuard\}/);
+    }
+  });
+
+  it("Phase 6: the dashed add-cards use a border that clears 3:1 against the card", () => {
+    const card = read("components/owner/dashboard/DashboardSectionCard.tsx");
+    expect(card).not.toContain("border-ht-soft");
+    expect(card.match(/!border-dashed !border-slate-500/g)).toHaveLength(2);
+  });
+
+  it("Phase 6: the first-visit ☰ pulse respects reduced motion", () => {
+    const bar = read("components/owner/OwnerAppBar.tsx");
+    expect(bar).toContain("motion-safe:animate-");
+    expect(bar).toContain("motion-reduce:hidden");
+  });
+
+  it("Phase 6: the Partner Manual describes the new navigation, not the old buttons", () => {
+    const manual = read("lib/partnerManual.ts");
+    expect(manual).toContain("tap the logo in the top-left");
+    expect(manual).toContain("Tap Offer Rewards on your dashboard");
+    expect(manual).not.toMatch(/[Cc]lick/);
+  });
 });

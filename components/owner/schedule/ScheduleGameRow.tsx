@@ -1,3 +1,4 @@
+import { highlightRingClass, useScrollWhenHighlighted } from "@/components/owner/dashboard/useHighlightRing";
 import {
   dateChip,
   displayWindow,
@@ -20,12 +21,16 @@ export const ScheduleGameRow = ({
   schedule,
   onClick,
   ended = false,
+  highlighted = false,
 }: {
   schedule: OwnerSchedule;
   onClick?: () => void;
   /** Past game: dimmed, "Ended" instead of the game pill. */
   ended?: boolean;
+  /** Just saved: ringed and scrolled into view for a moment. */
+  highlighted?: boolean;
 }) => {
+  const ref = useScrollWhenHighlighted<HTMLButtonElement & HTMLDivElement>(highlighted);
   const window = displayWindow(schedule);
   const chip = dateChip(window.startTime, schedule.timezone);
   const recurrence = recurrenceLabel(schedule);
@@ -67,10 +72,19 @@ export const ScheduleGameRow = ({
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={`${ROW_CLASS} transition active:translate-y-px`}>
+      <button
+        ref={ref}
+        type="button"
+        onClick={onClick}
+        className={`${ROW_CLASS} ${highlightRingClass(highlighted)} transition active:translate-y-px`}
+      >
         {content}
       </button>
     );
   }
-  return <div className={`${ROW_CLASS} ${ended ? "opacity-70" : ""}`}>{content}</div>;
+  return (
+    <div ref={ref} className={`${ROW_CLASS} ${ended ? "opacity-70" : ""}`}>
+      {content}
+    </div>
+  );
 };
