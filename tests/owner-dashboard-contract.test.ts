@@ -28,8 +28,20 @@ describe("owner dashboard body", () => {
       const src = read(page);
       expect(src).not.toMatch(/function (displayWindow|recurrenceLabel|dateChip|glyphForCompetition)\b/);
     }
-    expect(read("app/owner/schedule/page.tsx")).toContain("@/lib/ownerScheduleDisplay");
+    expect(read("components/owner/schedule/ScheduleGameRow.tsx")).toContain("@/lib/ownerScheduleDisplay");
+    expect(read("components/owner/schedule/ScheduleGameFlow.tsx")).toContain("@/lib/ownerScheduleForm");
     expect(read("app/owner/competitions/page.tsx")).toContain("@/lib/ownerRewardDisplay");
+  });
+
+  it("/owner/schedule redirects to the open sheet (server component, no proxy change)", () => {
+    const page = read("app/owner/schedule/page.tsx");
+    expect(page).not.toContain('"use client"');
+    expect(page).toContain('redirect("/owner/dashboard?sheet=schedule")');
+  });
+
+  it("the dashboard hosts the schedule flow, one fresh instance per open", () => {
+    expect(dashboard).toMatch(/<ScheduleGameFlow\s+key=\{scheduleSession\}/);
+    expect(dashboard).not.toContain("SHEET_TITLES");
   });
 
   it("uses the plan's empty-state copy", () => {

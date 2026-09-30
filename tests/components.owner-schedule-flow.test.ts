@@ -1,0 +1,293 @@
+// @vitest-environment jsdom
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createElement, useState } from "react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
+import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
+import type { OwnerSchedule } from "@/types";
+
+// The flag is read once at module load (like the old page), so set it before the
+// component module is evaluated: Category Blitz hidden → Live Trivia is the only
+// game → the Game step is skipped.
+vi.hoisted(() => {
+  process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT = "true";
+});
+
+// docs/partner-dashboard-app-redesign-plan.md Phase 4: the Schedule Live Games
+// sheet end to end against a fake history — create, edit, cancel, history.
+
+const stubReducedMotion = () => {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: (query: string) => ({
+      matches: query.includes("reduce"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }),
+  });
+};
+
+const makeSchedule = (overrides: Partial<OwnerSchedule> = {}): OwnerSchedule =>
+  ({
+    id: "sched-1",
+    venueId: "venue-1",
+    title: "Friday Trivia",
+    startTime: "2099-10-03T00:00:00.000Z",
+    endTime: "2099-10-03T00:40:00.000Z",
+    timezone: "America/New_York",
+    recurringType: "none",
+    recurringDays: [],
+    windowMinutes: 40,
+    gameType: "live_trivia",
+    ...overrides,
+  }) as OwnerSchedule;
+
+type HarnessProps = {
+  initialStep?: string | null;
+  initialSchedule?: OwnerSchedule | null;
+  games?: OwnerSchedule[];
+  onChanged?: (change: ScheduleChange) => void;
+  onClosed?: () => void;
+  log?: string[];
+};
+
+// A stand-in for useOwnerSheet: a step, an open flag and a history stack, so
+// goBack pops the way the real driver does.
+const Harness = ({ initialStep = null, initialSchedule = null, games = [], onChanged = () => {}, onClosed, log }: HarnessProps) => {
+  const [step, setStep] = useState<string | null>(initialStep);
+  const [open, setOpen] = useState(true);
+  const [stack, setStack] = useState<(string | null)[]>([]);
+
+  const nav: UseOwnerSheetResult = {
+    sheet: open ? "schedule" : null,
+    step,
+    displaySheet: "schedule",
+    displayStep: step,
+    openSheet: () => {},
+    goToStep: (next) => {
+      log?.push(`go:${next}`);
+      setStack((prev) => [...prev, step]);
+      setStep(next);
+    },
+    replaceCurrentStep: (next) => {
+      log?.push(`replace:${next}`);
+      setStep(next);
+    },
+    goBack: (previous) => {
+      log?.push(`back:${previous}`);
+      if (stack.length > 0) {
+        setStep(stack[stack.length - 1] ?? null);
+        setStack(stack.slice(0, -1));
+      } else setStep(previous);
+    },
+    closeSheet: () => {
+      log?.push("close");
+      setOpen(false);
+      onClosed?.();
+    },
+  };
+
+  return createElement(ScheduleGameFlow, {
+    venueId: "venue-1",
+    nav,
+    games: { status: "ready", items: games },
+    nowMs: Date.parse("2099-09-01T00:00:00.000Z"),
+    initialSchedule,
+    onChanged,
+  });
+};
+
+const heading = () => document.body.querySelector<HTMLElement>("[data-step-heading]")?.textContent ?? null;
+const button = (name: string | RegExp) => screen.getByRole("button", { name });
+
+const fetchMock = vi.fn();
+
+describe("ScheduleGameFlow", () => {
+  beforeEach(() => {
+    stubReducedMotion();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    document.body.removeAttribute("style");
+    document.body.className = "";
+  });
+
+  it("opens on When (the Game step is skipped with one game) and blocks Next until a start is picked", () => {
+    render(createElement(Harness));
+    expect(heading()).toBe("When does it start?");
+    expect(button(/^Next/)).toHaveProperty("disabled", true);
+    expect(screen.getByText("Pick a date and time to continue.")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+    expect(button(/^Next/)).toHaveProperty("disabled", false);
+    expect(screen.getByText(/Ends around/)).toBeTruthy();
+  });
+
+  it("walks When → Repeat → Review and POSTs the same body the old form sent", async () => {
+    const onChanged = vi.fn();
+    const onClosed = vi.fn();
+    fetchMock.mockResolvedValue({ json: async () => ({ ok: true, rewardNotice: null }) });
+    render(createElement(Harness, { onChanged, onClosed }));
+
+    fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Does it repeat?"));
+
+    fireEvent.click(screen.getByRole("radio", { name: /Every week on/ }));
+    // Weekly with no day is blocked, like the old form.
+    expect(button(/^Next/)).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: "Fri" }));
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Review & name"));
+
+    // The title is prefilled with the game's name, so it can't block saving.
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Live Trivia");
+    fireEvent.click(button("Schedule game"));
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as [string, { method: string; body: string }];
+    expect(url).toBe("/api/owner/schedule");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toMatchObject({
+      venueId: "venue-1",
+      title: "Live Trivia",
+      startTime: "2099-10-09T20:00",
+      gameType: "live_trivia",
+      rounds: 3,
+      recurringType: "weekly",
+      recurringDays: ["fri"],
+    });
+    expect(onChanged.mock.calls[0][0]).toMatchObject({ rewardNotice: null });
+    expect(onChanged.mock.calls[0][0].message).toMatch(/^Live Trivia scheduled: /);
+    expect(onClosed).toHaveBeenCalled();
+  });
+
+  it("shows the server's error on Review and keeps the sheet open", async () => {
+    const onClosed = vi.fn();
+    fetchMock.mockResolvedValue({
+      json: async () => ({ ok: false, error: "That time overlaps another game." }),
+    });
+    render(createElement(Harness, { onClosed }));
+    fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Does it repeat?"));
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Review & name"));
+    fireEvent.click(button("Schedule game"));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("That time overlaps another game."));
+    expect(onClosed).not.toHaveBeenCalled();
+    expect(button("Schedule game")).toHaveProperty("disabled", false);
+  });
+
+  it("Change on Review jumps to a step, and Done returns to Review", async () => {
+    render(createElement(Harness));
+    fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Does it repeat?"));
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Review & name"));
+
+    fireEvent.click(button("Change repeats"));
+    await waitFor(() => expect(heading()).toBe("Does it repeat?"));
+    fireEvent.click(screen.getByRole("radio", { name: /Every day/ }));
+    fireEvent.click(button("Done"));
+    await waitFor(() => expect(heading()).toBe("Review & name"));
+    expect(screen.getByText("Every day")).toBeTruthy();
+  });
+
+  it("a deep link straight to Review with nothing filled in falls back to When", () => {
+    const log: string[] = [];
+    render(createElement(Harness, { initialStep: "review", log }));
+    expect(heading()).toBe("When does it start?");
+    expect(log).toContain("replace:when");
+  });
+
+  it("edits an existing game with a PATCH that has no venue or game type", async () => {
+    fetchMock.mockResolvedValue({ json: async () => ({ ok: true, rewardNotice: "1 reward was updated." }) });
+    const onChanged = vi.fn();
+    const game = makeSchedule({ recurringType: "weekly", recurringDays: ["fri"] });
+    render(createElement(Harness, { initialStep: "detail", initialSchedule: game, games: [game], onChanged }));
+
+    expect(heading()).toBe("Friday Trivia");
+    fireEvent.click(button("Edit game"));
+    await waitFor(() => expect(heading()).toBe("Review changes"));
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Friday Trivia");
+    expect(screen.getByText("Game type can't be changed")).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Friday Night Trivia" } });
+    fireEvent.click(button("Save changes"));
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, { method: string; body: string }];
+    expect(url).toBe("/api/owner/schedule/sched-1");
+    expect(init.method).toBe("PATCH");
+    const body = JSON.parse(init.body) as Record<string, unknown>;
+    expect(body).toMatchObject({ title: "Friday Night Trivia", recurringType: "weekly", recurringDays: ["fri"] });
+    expect(body).not.toHaveProperty("venueId");
+    expect(body).not.toHaveProperty("gameType");
+    expect(onChanged.mock.calls[0][0]).toEqual({ message: "Live Trivia updated", rewardNotice: "1 reward was updated." });
+  });
+
+  it("cancels a game only after confirmation, and passes the reward notice up", async () => {
+    fetchMock.mockResolvedValue({ json: async () => ({ ok: true, rewardNotice: "2 rewards were retired." }) });
+    const onChanged = vi.fn();
+    const onClosed = vi.fn();
+    const game = makeSchedule();
+    render(createElement(Harness, { initialStep: "detail", initialSchedule: game, games: [game], onChanged, onClosed }));
+
+    fireEvent.click(button("Cancel game"));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText(/Players will be returned to the lobby/)).toBeTruthy();
+
+    fireEvent.click(button("Keep game"));
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fireEvent.click(button("Cancel game"));
+    fireEvent.click(button("Yes, cancel game"));
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledWith("/api/owner/schedule/sched-1", { method: "DELETE" });
+    expect(onChanged.mock.calls[0][0]).toEqual({ message: "Friday Trivia cancelled", rewardNotice: "2 rewards were retired." });
+    expect(onClosed).toHaveBeenCalled();
+  });
+
+  it("a detail deep link with no game (after a reload) shows the upcoming list instead", () => {
+    render(createElement(Harness, { initialStep: "detail", games: [makeSchedule()] }));
+    expect(heading()).toBe("Upcoming games");
+  });
+
+  it("lists upcoming games, and Past games shows ended ones read-only", async () => {
+    const upcoming = makeSchedule();
+    const ended = makeSchedule({
+      id: "sched-old",
+      title: "Old Night",
+      startTime: "2099-08-01T00:00:00.000Z",
+      endTime: "2099-08-01T00:40:00.000Z",
+    });
+    render(createElement(Harness, { initialStep: "all", games: [upcoming, ended] }));
+    expect(heading()).toBe("Upcoming games");
+    expect(screen.getByText("Friday Trivia")).toBeTruthy();
+    expect(screen.queryByText("Old Night")).toBeNull();
+
+    fireEvent.click(button("Past games"));
+    await waitFor(() => expect(heading()).toBe("Past games"));
+    expect(screen.getByText("Old Night")).toBeTruthy();
+    expect(screen.getByText("Ended")).toBeTruthy();
+    // Read-only: no row buttons for an ended game.
+    expect(screen.queryByRole("button", { name: /Old Night/ })).toBeNull();
+
+    fireEvent.click(button("Back"));
+    await waitFor(() => expect(heading()).toBe("Upcoming games"));
+  });
+
+  it("'+ Schedule another game' starts a blank flow", async () => {
+    render(createElement(Harness, { initialStep: "all", games: [makeSchedule()] }));
+    fireEvent.click(button("+ Schedule another game"));
+    await waitFor(() => expect(heading()).toBe("When does it start?"));
+    expect((screen.getByLabelText(/Date & time/) as HTMLInputElement).value).toBe("");
+  });
+});

@@ -1,8 +1,8 @@
 # Partner Dashboard — App-Style Redesign Plan
 
-**Status:** Phases 1, 2 and 3 complete 2026-09-30 (all uncommitted). Andrew accepted every §3
-recommended default and skipped Phase 0. Next: Phase 4. Start from
-`docs/partner-dashboard-app-redesign-plan_PHASE_3_HANDOFF.md`.
+**Status:** Phases 1–4 complete 2026-09-30. Phases 1–3 committed as `c182c06`; Phase 4 committed on top
+(nothing pushed or deployed). Andrew accepted every §3 recommended default and skipped Phase 0. Next: Phase 5
+(Offer Rewards sheet). Start from `docs/partner-dashboard-app-redesign-plan_PHASE_4_HANDOFF.md`.
 **Handoffs:** each phase ends with `docs/partner-dashboard-app-redesign-plan_PHASE_<N>_HANDOFF.md`
 (global rule in `~/.claude/CLAUDE.md`). Update this status line to point at the latest one.
 

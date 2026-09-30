@@ -6,15 +6,8 @@ import {
   SectionSeeAll,
   SectionSkeleton,
 } from "@/components/owner/dashboard/DashboardSectionCard";
-import {
-  dateChip,
-  displayWindow,
-  formatScheduleTime,
-  GAME_LABELS,
-  GAME_PILL_STYLES,
-  recurrenceLabel,
-  splitSchedules,
-} from "@/lib/ownerScheduleDisplay";
+import { ScheduleGameRow } from "@/components/owner/schedule/ScheduleGameRow";
+import { splitSchedules } from "@/lib/ownerScheduleDisplay";
 import type { OwnerSchedule } from "@/types";
 
 /** Home screen shows this many upcoming games, then "See all (N)". */
@@ -34,7 +27,7 @@ export const LiveGamesSection = ({
 }: {
   load: SectionLoad<OwnerSchedule>;
   nowMs: number;
-  /** Opens the (Phase 4) schedule sheet on a new game. */
+  /** Opens the schedule sheet on a new game. */
   onAdd: () => void;
   /** Opens the schedule sheet on an existing game, or on the full list when omitted. */
   onOpen: (schedule?: OwnerSchedule) => void;
@@ -64,49 +57,11 @@ export const LiveGamesSection = ({
       {ready && upcoming.length > 0 ? (
         <>
           <ul className="space-y-2">
-            {shown.map((schedule) => {
-              const window = displayWindow(schedule);
-              const chip = dateChip(window.startTime, schedule.timezone);
-              const recurrence = recurrenceLabel(schedule);
-              return (
-                <li key={schedule.id}>
-                  <button
-                    type="button"
-                    onClick={() => onOpen(schedule)}
-                    className="flex w-full items-center gap-3 rounded-[14px] border border-ht-hairline bg-ht-elevated/40 p-3 text-left transition active:translate-y-px"
-                  >
-                    <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-ht-elevated">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-ht-cyan-300">
-                        {chip.month}
-                      </span>
-                      <span className="ht-h2 leading-none">{chip.day}</span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-black text-ht-primary">{schedule.title}</div>
-                      <div className="mt-0.5 text-sm font-bold text-ht-primary">
-                        {formatScheduleTime(window.startTime, schedule.timezone)} –{" "}
-                        {formatScheduleTime(window.endTime, schedule.timezone)}
-                      </div>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-[10.5px] font-black uppercase tracking-wider ${GAME_PILL_STYLES[schedule.gameType]}`}
-                        >
-                          {GAME_LABELS[schedule.gameType]}
-                        </span>
-                        {recurrence ? (
-                          <span className="inline-flex rounded-full bg-ht-elevated px-2.5 py-1 text-[10.5px] font-black uppercase tracking-wider text-ht-muted">
-                            🔁 {recurrence}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                    <span className="shrink-0 text-lg text-slate-500" aria-hidden>
-                      ›
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
+            {shown.map((schedule) => (
+              <li key={schedule.id}>
+                <ScheduleGameRow schedule={schedule} onClick={() => onOpen(schedule)} />
+              </li>
+            ))}
           </ul>
           {upcoming.length > DASHBOARD_LIST_LIMIT ? (
             <SectionSeeAll count={upcoming.length} onClick={() => onOpen()} />

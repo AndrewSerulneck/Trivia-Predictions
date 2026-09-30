@@ -3,9 +3,11 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { DashboardNotice } from "@/components/owner/dashboard/DashboardNotice";
 import { SectionSkeleton } from "@/components/owner/dashboard/DashboardSectionCard";
 import { LiveGamesSection, type SectionLoad } from "@/components/owner/dashboard/LiveGamesSection";
 import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
+import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
@@ -42,7 +44,6 @@ const fetchList = async <T,>(
   }
 };
 
-const SHEET_TITLES = { schedule: "Schedule a live game", rewards: "Offer a reward" } as const;
 
 // Keyed by venue at the call site: switching venues remounts it with fresh loading state.
 const DashboardBody = ({ venueId }: { venueId: string }) => {
@@ -52,6 +53,12 @@ const DashboardBody = ({ venueId }: { venueId: string }) => {
   // "Now" for upcoming-vs-past bucketing, stamped when the games list arrives.
   const [gamesAsOfMs, setGamesAsOfMs] = useState(0);
   const [rewards, setRewards] = useState<SectionLoad<OwnerCompetition>>({ status: "loading" });
+  // What the last save/cancel told the partner, shown above the cards until dismissed.
+  const [notice, setNotice] = useState<ScheduleChange | null>(null);
+  // Each open of the schedule sheet mounts a fresh flow (a new `key`) so it never
+  // inherits the last game's answers; `scheduleTarget` is the game that was tapped.
+  const [scheduleSession, setScheduleSession] = useState(0);
+  const [scheduleTarget, setScheduleTarget] = useState<OwnerSchedule | null>(null);
 
   const onUnauthorized = useCallback(
     (code?: string) => router.push(ownerAuthRecoveryPath(code)),
@@ -97,15 +104,42 @@ const DashboardBody = ({ venueId }: { venueId: string }) => {
     };
   }, [venueId, rewardsAttempt, onUnauthorized]);
 
-  const displaySheet = sheet.displaySheet;
+  const openSchedule = (target?: OwnerSchedule | "all") => {
+    setScheduleSession((n) => n + 1);
+    setScheduleTarget(target && target !== "all" ? target : null);
+    sheet.openSheet("schedule", target === "all" ? "all" : target ? "detail" : null);
+  };
+
+  // A game was saved or cancelled: show the result and refetch. The list keeps its
+  // current rows until the new ones arrive (no skeleton flash).
+  const handleScheduleChanged = (change: ScheduleChange) => {
+    setNotice(change);
+    setGamesAttempt((n) => n + 1);
+  };
 
   return (
     <div className="space-y-4">
+      {notice ? (
+        <div className="space-y-2">
+          <DashboardNotice tone="success" onDismiss={() => setNotice(null)}>
+            {notice.message}
+          </DashboardNotice>
+          {notice.rewardNotice ? (
+            <DashboardNotice
+              tone="advisory"
+              action={{ label: "View Rewards", onClick: () => sheet.openSheet("rewards") }}
+              onDismiss={() => setNotice(null)}
+            >
+              {notice.rewardNotice}
+            </DashboardNotice>
+          ) : null}
+        </div>
+      ) : null}
       <LiveGamesSection
         load={games}
         nowMs={gamesAsOfMs}
-        onAdd={() => sheet.openSheet("schedule")}
-        onOpen={() => sheet.openSheet("schedule")}
+        onAdd={() => openSchedule()}
+        onOpen={(schedule) => openSchedule(schedule ?? "all")}
         onRetry={() => {
           setGames({ status: "loading" });
           setGamesAttempt((n) => n + 1);
@@ -121,12 +155,18 @@ const DashboardBody = ({ venueId }: { venueId: string }) => {
         }}
       />
 
-      {/* Placeholder sheet: Phases 4 and 5 replace the body with the real flows. */}
-      <OwnerSheet
-        open={sheet.sheet !== null}
-        onRequestClose={sheet.closeSheet}
-        title={displaySheet ? SHEET_TITLES[displaySheet] : ""}
-      >
+      <ScheduleGameFlow
+        key={scheduleSession}
+        venueId={venueId}
+        nav={sheet}
+        games={games}
+        nowMs={gamesAsOfMs}
+        initialSchedule={scheduleTarget}
+        onChanged={handleScheduleChanged}
+      />
+
+      {/* Placeholder sheet: Phase 5 replaces the body with the rewards flow. */}
+      <OwnerSheet open={sheet.sheet === "rewards"} onRequestClose={sheet.closeSheet} title="Offer a reward">
         <p className="text-sm font-semibold text-ht-muted">Coming soon.</p>
       </OwnerSheet>
     </div>
