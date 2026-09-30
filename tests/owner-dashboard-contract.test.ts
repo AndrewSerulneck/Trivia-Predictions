@@ -81,6 +81,19 @@ describe("owner dashboard body", () => {
     expect(dashboard).toContain("highlightId={highlightId}");
     expect(dashboard).toContain("HIGHLIGHT_MS");
     expect(read("components/owner/dashboard/DashboardNotice.tsx")).not.toContain("success:");
+    // Keyed per change, not by text: a second identical confirmation needs a fresh timer.
+    expect(dashboard).toContain("key={toast.id}");
+    expect(dashboard).not.toContain("key={toast.message}");
+  });
+
+  it("Review: the flows' own closes skip the Back-gesture prompt; the user's closes stay guarded", () => {
+    for (const file of ["components/owner/schedule/ScheduleGameFlow.tsx", "components/owner/rewards/RewardsFlow.tsx"]) {
+      const src = read(file);
+      expect(src).toContain("closeWithoutAsking");
+      expect(src).toMatch(/onRequestClose=\{nav\.closeSheet\}/);
+      // Only the guard's own onDiscard and the sheet's onRequestClose may call closeSheet directly.
+      expect(src.match(/nav\.closeSheet/g)).toHaveLength(2);
+    }
   });
 
   it("Phase 6: both flows guard Close with the discard prompt (no drafts saved)", () => {

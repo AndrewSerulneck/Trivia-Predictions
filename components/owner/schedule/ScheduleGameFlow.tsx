@@ -102,15 +102,20 @@ export const ScheduleGameFlow = ({
   // Set while an existing game is being edited (PATCH instead of POST).
   const [editing, setEditing] = useState<OwnerSchedule | null>(null);
   // The step "Change" jumped to from Review; its Next becomes "Done" and returns there.
-  const [changingStep, setChangingStep] = useState<ScheduleFlowStep | null>(null);
+  // `reached` flips once that step is on screen; leaving it any other way (the phone's
+  // Back) ends the Change, so a later ordinary visit to the step reads "Next" again.
+  const [changing, setChanging] = useState<{ step: ScheduleFlowStep; reached: boolean } | null>(null);
   const [historyFrom, setHistoryFrom] = useState<ScheduleSheetStep>("when");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A save or cancel went through: once the sheet has slid away, start over, so the
+  // browser's Forward can't reopen a spent Review stuck on "Scheduling…".
+  const [finished, setFinished] = useState(false);
 
   const open = nav.sheet === "schedule";
   const isEditing = editing !== null;
   const steps = scheduleSteps({ gameOptions: GAME_OPTIONS, gameType: form.gameType, isEditing });
-  const rawStep = nav.displaySheet === "schedule" ? nav.displayStep : null;
+  const rawStep = nav.displayStepFor("schedule");
   const current = resolveScheduleStep({
     rawStep,
     steps,
@@ -118,12 +123,27 @@ export const ScheduleGameFlow = ({
     hasStartTime: form.startTime !== "",
   });
 
+  // Adjust-during-render (react-hooks/set-state-in-effect).
+  if (changing && !changing.reached && current === changing.step) setChanging({ ...changing, reached: true });
+  else if (changing && changing.reached && current !== changing.step) setChanging(null);
+  const changingStep = changing?.step ?? null;
+
   // A stale or hand-edited `?step=` (or one whose data a reload lost) is corrected in place.
   const urlStep = nav.step;
   const replaceCurrentStep = nav.replaceCurrentStep;
   useEffect(() => {
     if (open && urlStep !== null && urlStep !== current) replaceCurrentStep(current);
   }, [open, urlStep, current, replaceCurrentStep]);
+
+  // Only the form screens can hold unsaved answers; the lists and the detail screen cannot.
+  const onFormScreen = current === "game" || current === "when" || current === "repeat" || current === "review";
+  const { closeGuard, dialog, closeWithoutAsking } = useDiscardGuard({
+    open,
+    dirty: open && onFormScreen && !busy && JSON.stringify(form) !== JSON.stringify(baseline),
+    title: isEditing ? "Discard your changes?" : "Discard this game?",
+    message: isEditing ? "Your edits to this game won't be saved." : "Nothing is saved until you schedule it.",
+    onDiscard: nav.closeSheet,
+  });
 
   const change: ScheduleFormChange = (patch) => {
     setForm((prev) => ({ ...prev, ...patch }));
@@ -136,7 +156,7 @@ export const ScheduleGameFlow = ({
   };
 
   const returnToReview = () => {
-    setChangingStep(null);
+    setChanging(null);
     nav.goBack("review");
   };
 
@@ -150,7 +170,7 @@ export const ScheduleGameFlow = ({
     setForm(blank);
     setBaseline(blank);
     setEditing(null);
-    setChangingStep(null);
+    setChanging(null);
     const first = scheduleSteps({ gameOptions: GAME_OPTIONS, gameType: blank.gameType })[0];
     go(first);
   };
@@ -160,7 +180,7 @@ export const ScheduleGameFlow = ({
     setForm(existing);
     setBaseline(existing);
     setEditing(schedule);
-    setChangingStep(null);
+    setChanging(null);
     go("review");
   };
 
@@ -170,7 +190,7 @@ export const ScheduleGameFlow = ({
   };
 
   const changeStep = (step: ScheduleFlowStep) => {
-    setChangingStep(step);
+    setChanging({ step, reached: false });
     go(step);
   };
 
@@ -198,7 +218,8 @@ export const ScheduleGameFlow = ({
         rewardNotice: reply.rewardNotice ?? null,
         scheduleId: editing?.id,
       });
-      nav.closeSheet();
+      setFinished(true);
+      closeWithoutAsking();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't save that game.");
       setBusy(false);
@@ -215,7 +236,8 @@ export const ScheduleGameFlow = ({
       if (!reply.ok) throw new Error(reply.error ?? "Couldn't cancel that game.");
       // Cancelling a game retires the rewards pinned to it; this is the moment the partner sees why.
       onChanged({ message: `${schedule.title} cancelled`, rewardNotice: reply.rewardNotice ?? null, removed: true });
-      nav.closeSheet();
+      setFinished(true);
+      closeWithoutAsking();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't cancel that game.");
       setBusy(false);
@@ -331,18 +353,29 @@ export const ScheduleGameFlow = ({
       ? "Edit game"
       : "Schedule a live game";
 
-  // Only the form screens can hold unsaved answers; the lists and the detail screen cannot.
-  const onFormScreen = current === "game" || current === "when" || current === "repeat" || current === "review";
-  const { closeGuard, dialog } = useDiscardGuard({
-    dirty: open && onFormScreen && !busy && JSON.stringify(form) !== JSON.stringify(baseline),
-    title: isEditing ? "Discard your changes?" : "Discard this game?",
-    message: isEditing ? "Your edits to this game won't be saved." : "Nothing is saved until you schedule it.",
-    onDiscard: nav.closeSheet,
-  });
+  const resetIfFinished = () => {
+    if (!finished) return;
+    const blank = freshForm();
+    setForm(blank);
+    setBaseline(blank);
+    setEditing(null);
+    setSelected(null);
+    setChanging(null);
+    setBusy(false);
+    setError(null);
+    setFinished(false);
+  };
 
   return (
     <>
-      <OwnerSheet open={open} onRequestClose={nav.closeSheet} closeGuard={closeGuard} title={title} footer={footer}>
+      <OwnerSheet
+        open={open}
+        onRequestClose={nav.closeSheet}
+        closeGuard={closeGuard}
+        onExited={resetIfFinished}
+        title={title}
+        footer={footer}
+      >
         <SlideSteps steps={SCHEDULE_SLIDE_ORDER} current={current} renderStep={renderStep} />
       </OwnerSheet>
       {dialog}

@@ -2,8 +2,9 @@
 
 **Status:** Phases 1–6 **build** complete 2026-09-30. Phases 1–3 committed as `c182c06`, Phase 4 as `a1e0974`, Phase 5 as
 `a97b56f`, Phase 6 on top (nothing pushed or deployed). Andrew accepted every §3 recommended default and skipped Phase 0.
-**Remaining:** the final `/code-review high` pass + fixes (Opus 5.5, **not started**), then Andrew's phone checklist
-(`docs/partner-dashboard-app-redesign-device-checklist.md`). Start from `docs/partner-dashboard-app-redesign-plan_PHASE_6_HANDOFF.md`.
+**Final code review done** 2026-09-30 (Opus 5.5): 10 findings, all fixed, plus Andrew's "Back gesture asks too" — see
+`docs/partner-dashboard-app-redesign-plan_PHASE_7_REVIEW_NOTE.md` (the latest handoff).
+**Remaining:** Andrew pushes/deploys, then runs the phone checklist (`docs/partner-dashboard-app-redesign-device-checklist.md`).
 **Handoffs:** each phase ends with `docs/partner-dashboard-app-redesign-plan_PHASE_<N>_HANDOFF.md`
 (global rule in `~/.claude/CLAUDE.md`). Update this status line to point at the latest one.
 

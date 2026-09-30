@@ -13,6 +13,7 @@ import {
   readSheetDepth,
   replaceStep,
   resolveStep,
+  restoreSheetEntry,
   SHEET_DEPTH_KEY,
   stepBack,
   stepDirection,
@@ -222,6 +223,20 @@ describe("history driver", () => {
     replaceStep(browser.history, browser.location(), "schedule", "repeat");
     expect(readSheetDepth(browser.history.state)).toBe(2);
     expect(browser.entries()).toHaveLength(3);
+  });
+
+  it("restoreSheetEntry undoes a Back that left the sheet, keeping the depth true", () => {
+    const browser = fakeBrowser("/owner/dashboard");
+    pushSheet(browser.history, browser.location(), "schedule", "when");
+    const sheetUrl = browser.url();
+    browser.history.go(-1); // the phone's Back
+    expect(browser.url()).toBe("/owner/dashboard");
+
+    restoreSheetEntry(browser.history, sheetUrl);
+    expect(browser.url()).toBe(sheetUrl);
+    expect(readSheetDepth(browser.history.state)).toBe(1);
+    closeSheet(browser.history, browser.location());
+    expect(browser.url()).toBe("/owner/dashboard");
   });
 
   it("a deep link is normalised to a clean dashboard entry with the sheet on top", () => {

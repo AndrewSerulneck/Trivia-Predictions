@@ -145,7 +145,9 @@ card); `border-ht-soft` is ~1.3:1 and must not be used for an affordance. Skelet
 (`?sheet=schedule|rewards&step=…`, `lib/useOwnerSheet.ts`), so the phone's Back steps back or
 closes. **Closing a flow that holds entered answers asks "Discard this game?" / "Discard this
 reward?"** (`DiscardGuard.tsx`; Keep editing / Discard; no drafts). The phone's Back gesture
-does **not** ask (by decision — see the Phase 6 handoff).
+asks too when it would **leave** the sheet (Andrew, 2026-09-30): the guard re-pushes the sheet's
+history entry (`restoreSheetEntry`) and asks; Discard then finishes that Back. Back that stays
+inside the sheet (one question back) keeps the answers and never asks.
 
 ### 3e. Confirmation toast  *(`components/owner/dashboard/DashboardToast.tsx`)*
 After a save / cancel / create / end: a bottom toast, `role="status"` `aria-live="polite"`,

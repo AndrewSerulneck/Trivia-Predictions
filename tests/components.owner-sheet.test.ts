@@ -144,6 +144,50 @@ describe("OwnerSheet", () => {
     expect(outerClose).not.toHaveBeenCalled();
   });
 
+  it("ignores an Escape something inside already used (an open Dropdown closing)", () => {
+    const onRequestClose = vi.fn();
+    render(createElement(OwnerSheet, sheetProps({ onRequestClose }), createElement("input", { "aria-label": "Zone" })));
+    const input = screen.getByLabelText("Zone");
+    const swallow = (event: KeyboardEvent) => {
+      if (event.key === "Escape") event.preventDefault();
+    };
+    document.addEventListener("keydown", swallow);
+    fireEvent.keyDown(input, { key: "Escape" });
+    document.removeEventListener("keydown", swallow);
+    expect(onRequestClose).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(onRequestClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("doesn't pull focus back if the close handed it to another overlay (Menu → Partner Manual)", () => {
+    const opener = document.createElement("button");
+    document.body.appendChild(opener);
+    opener.focus();
+    const { rerender } = render(
+      createElement(
+        "div",
+        null,
+        createElement(OwnerSheet, sheetProps({ title: "First" }), "First body"),
+        createElement(OwnerSheet, sheetProps({ open: false, title: "Second" }), "Second body")
+      )
+    );
+    rerender(
+      createElement(
+        "div",
+        null,
+        createElement(OwnerSheet, sheetProps({ open: false, title: "First" }), "First body"),
+        createElement(OwnerSheet, sheetProps({ title: "Second" }), "Second body")
+      )
+    );
+    const second = screen.getByRole("dialog", { name: "Second" });
+    expect(document.activeElement).toBe(second);
+    act(() => {
+      vi.advanceTimersByTime(SHEET_EXIT_MS);
+    });
+    expect(document.activeElement).toBe(second);
+    opener.remove();
+  });
+
   it("tall sheets get a grab handle and a footer slot; card sheets do not get a handle", () => {
     render(
       createElement(OwnerSheet, sheetProps({ footer: createElement("span", null, "Footer here") }), "Body")

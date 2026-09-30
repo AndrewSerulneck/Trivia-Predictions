@@ -85,9 +85,15 @@ export const RewardsFlow = ({
   // Which reward definition the partner submitted, for the confirmation line. A ref, not state:
   // the wizard calls onCreated from the click's closure, which predates any state set in onSubmit.
   const submittedDefinitionId = useRef<string | null>(null);
+  // Which reward's End screen is showing: a prize-count reply for any other is ignored.
+  const endingRewardId = useRef<string | null>(null);
+  // A reward was ended: once the sheet has slid away, start over, so the browser's
+  // Forward can't reopen a spent End screen stuck busy. (The wizard needs no reset: it
+  // lives inside the sheet, which unmounts it after the exit.)
+  const [finished, setFinished] = useState(false);
 
   const open = nav.sheet === "rewards";
-  const rawStep = nav.displaySheet === "rewards" ? nav.displayStep : null;
+  const rawStep = nav.displayStepFor("rewards");
   const step = resolveRewardSheetStep({ rawStep, hasReward: selected !== null });
   const screen = rewardScreenFor(step);
 
@@ -105,6 +111,16 @@ export const RewardsFlow = ({
 
   const venues = useMemo(() => [{ id: venueId, name: venueName }], [venueId, venueName]);
 
+  // The wizard keeps its answers inside itself, so "has the partner entered anything?" is
+  // wizard-agnostic: past the Definition step (they picked a reward and are answering questions).
+  const { closeGuard, dialog, closeWithoutAsking } = useDiscardGuard({
+    open,
+    dirty: open && screen === "wizard" && step !== "definition",
+    title: "Discard this reward?",
+    message: "Nothing is saved until you create it.",
+    onDiscard: nav.closeSheet,
+  });
+
   const go = (target: string) => nav.goToStep(target);
 
   const openReward = (reward: OwnerCompetition) => {
@@ -115,14 +131,19 @@ export const RewardsFlow = ({
   const startEnding = (reward: OwnerCompetition) => {
     setSelected(reward);
     setEnding(IDLE_ENDING);
+    endingRewardId.current = reward.id;
     go("end");
     fetchRewardPrizeCounts(reward.id).then(
-      (counts) => setEnding((prev) => ({ ...prev, counts })),
-      (err: unknown) =>
+      (counts) => {
+        if (endingRewardId.current === reward.id) setEnding((prev) => ({ ...prev, counts }));
+      },
+      (err: unknown) => {
+        if (endingRewardId.current !== reward.id) return;
         setEnding((prev) => ({
           ...prev,
           error: err instanceof Error ? err.message : "Couldn't check this reward's prizes.",
-        })),
+        }));
+      },
     );
   };
 
@@ -132,7 +153,8 @@ export const RewardsFlow = ({
     try {
       const message = await removeReward(selected.id, mode);
       onChanged({ message, removed: true });
-      nav.closeSheet();
+      setFinished(true);
+      closeWithoutAsking();
     } catch (err) {
       setEnding((prev) => ({
         ...prev,
@@ -193,11 +215,12 @@ export const RewardsFlow = ({
               const definitionId = submittedDefinitionId.current;
               const name = definitionId ? getRewardDefinition(definitionId)?.name : null;
               onChanged({ message: name ? `${name} reward created` : "Reward created" });
-              nav.closeSheet();
+              closeWithoutAsking();
             }}
-            onCancel={() => (addedFromList ? nav.goBack("all") : nav.closeSheet())}
+            onCancel={() => (addedFromList ? nav.goBack("all") : closeWithoutAsking())}
             animateSteps
-            onRequestSchedule={onRequestSchedule}
+            // The swap to Schedule is the flow's own move, not a Back: don't ask.
+            onRequestSchedule={() => closeWithoutAsking(onRequestSchedule)}
             step={wizardStep}
             onStepChange={handleWizardStep}
           />
@@ -212,14 +235,14 @@ export const RewardsFlow = ({
     <WizardFooter variant="inline" tone="dark" onBack={() => nav.goBack(backTarget)} />
   ) : undefined;
 
-  // The wizard keeps its answers inside itself, so "has the partner entered anything?" is
-  // wizard-agnostic: past the Definition step (they picked a reward and are answering questions).
-  const { closeGuard, dialog } = useDiscardGuard({
-    dirty: open && screen === "wizard" && step !== "definition",
-    title: "Discard this reward?",
-    message: "Nothing is saved until you create it.",
-    onDiscard: nav.closeSheet,
-  });
+  const resetIfFinished = () => {
+    if (!finished) return;
+    endingRewardId.current = null;
+    setEnding(IDLE_ENDING);
+    setSelected(null);
+    setAddedFromList(false);
+    setFinished(false);
+  };
 
   return (
     <>
@@ -227,6 +250,7 @@ export const RewardsFlow = ({
         open={open}
         onRequestClose={nav.closeSheet}
         closeGuard={closeGuard}
+        onExited={resetIfFinished}
         title={screen === "wizard" ? "Offer a reward" : "Rewards"}
         footer={footer}
       >

@@ -195,6 +195,15 @@ export const closeSheet = (history: SheetHistory, location: SheetLocation): void
 };
 
 /**
+ * Undo a Back gesture that left a sheet holding unsaved answers: push the
+ * sheet's entry (`href`) again, one above wherever Back landed, so the depth
+ * count stays true and a later closeSheet() still pops every entry.
+ */
+export const restoreSheetEntry = (history: SheetHistory, href: string): void => {
+  history.pushState(depthState(readSheetDepth(history.state) + 1), "", href);
+};
+
+/**
  * A page that LOADS with `?sheet=` already in the URL (deep link, a redirect
  * from /owner/schedule, a shared link) has depth 0, so Back would leave the
  * dashboard entirely. Rewrite that entry to the plain dashboard and push the

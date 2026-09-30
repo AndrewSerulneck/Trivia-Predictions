@@ -23,8 +23,8 @@ type Venue = {
   name: string;
 };
 
-/** The confirmation toast; `offerReward` adds "Now offer a reward for it →". */
-type ToastState = { message: string; offerReward: boolean };
+/** The confirmation toast; `offerReward` adds "Now offer a reward for it →". `id` remounts it (fresh timer) per change. */
+type ToastState = { id: number; message: string; offerReward: boolean };
 
 /** A row to ring once its list refetches (see lib/ownerDashboardHighlight.ts). */
 type PendingRing =
@@ -163,7 +163,7 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
   // A game was saved or cancelled: show the result and refetch. The list keeps its
   // current rows until the new ones arrive (no skeleton flash).
   const handleScheduleChanged = (change: ScheduleChange) => {
-    setToast({ message: change.message, offerReward: scheduleForReward });
+    setToast((prev) => ({ id: (prev?.id ?? 0) + 1, message: change.message, offerReward: scheduleForReward }));
     setAdvisory(change.rewardNotice);
     // A cancel removes a row; a save adds or edits one, and that row gets the ring.
     setPendingHighlight(
@@ -174,7 +174,7 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
 
   // A reward was created or removed: show the result and refetch its list.
   const handleRewardsChanged = (change: RewardsChange) => {
-    setToast({ message: change.message, offerReward: false });
+    setToast((prev) => ({ id: (prev?.id ?? 0) + 1, message: change.message, offerReward: false }));
     setAdvisory(null);
     setPendingHighlight(
       change.removed ? null : { list: "rewards", baseline: rewards, knownIds: knownItemIds(rewards), id: null },
@@ -217,7 +217,7 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
 
       {toast ? (
         <DashboardToast
-          key={toast.message}
+          key={toast.id}
           action={
             toast.offerReward
               ? {

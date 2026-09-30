@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Menu } from "lucide-react";
 import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { OwnerMenuDrawer } from "@/components/owner/menu/OwnerMenuDrawer";
@@ -31,16 +32,27 @@ type OwnerAppBarProps = {
 };
 
 const subscribeNothing = () => () => {};
+const noHint = () => false;
+
+/** A plain left click (not a new-tab / new-window click), which we route ourselves. */
+const isPlainClick = (event: MouseEvent<HTMLAnchorElement>): boolean =>
+  event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 
 const MENU_ROW_CLASS =
   "flex min-h-14 w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ht-cyan-300";
 
 export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarProps) => {
+  const router = useRouter();
   const logoRef = useRef<HTMLButtonElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  // A menu link tapped: the drawer slides away first (releasing its scroll lock on
+  // THIS page), then we navigate — otherwise the lock's cleanup restores the
+  // dashboard's scroll offset onto the new page.
+  const pendingHref = useRef<string | null>(null);
   // First visit only: pulse the ☰ badge a few times so the logo reads as a button.
-  const hintPulse = useSyncExternalStore(subscribeNothing, menuHintForThisVisit, () => false);
+  // Only where the logo is shown — a sub-page with `leading` must not spend the hint.
+  const hintPulse = useSyncExternalStore(subscribeNothing, leading ? noHint : menuHintForThisVisit, noHint);
 
   return (
     <header
@@ -51,7 +63,10 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
           <button
             ref={logoRef}
             type="button"
-            onClick={() => setMenuOpen(true)}
+            onClick={() => {
+              pendingHref.current = null; // reopened mid-exit: that link was abandoned
+              setMenuOpen(true);
+            }}
             aria-label="Open menu"
             aria-haspopup="dialog"
             aria-expanded={menuOpen}
@@ -91,6 +106,11 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
             onRequestClose={() => setMenuOpen(false)}
             label="Menu"
             returnFocusRef={logoRef}
+            onExited={() => {
+              const href = pendingHref.current;
+              pendingHref.current = null;
+              if (href) router.push(href);
+            }}
           >
             <p className="px-5 pb-3 text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Menu</p>
             <nav aria-label="Partner menu" className="flex flex-col gap-1 px-2">
@@ -122,7 +142,17 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
                     {body}
                   </button>
                 ) : (
-                  <Link key={item.id} href={item.href} className={MENU_ROW_CLASS}>
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    onClick={(event) => {
+                      if (!isPlainClick(event)) return;
+                      event.preventDefault();
+                      pendingHref.current = item.href;
+                      setMenuOpen(false);
+                    }}
+                    className={MENU_ROW_CLASS}
+                  >
                     {body}
                   </Link>
                 );

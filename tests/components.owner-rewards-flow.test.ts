@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement, useState } from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/RewardsFlow";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
@@ -75,8 +75,7 @@ const Harness = ({
   const nav: UseOwnerSheetResult = {
     sheet: open ? "rewards" : null,
     step,
-    displaySheet: "rewards",
-    displayStep: step,
+    displayStepFor: (id) => (id === "rewards" ? step : null),
     openSheet: () => {},
     goToStep: (next) => {
       log?.push(`go:${next}`);
@@ -252,6 +251,44 @@ describe("RewardsFlow", () => {
     await screen.findByText("Counts unavailable.");
     expect(button(/Archive/)).toHaveProperty("disabled", true);
     expect(button("Delete anyway")).toHaveProperty("disabled", true);
+  });
+
+  it("a late prize-count reply for one reward never lands on another reward's End screen", async () => {
+    const OTHER = makeReward({ id: "reward-3", name: "Second Reward" });
+    let resolveFirst: (value: unknown) => void = () => {};
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/owner/competitions/reward-1") {
+        return new Promise((resolve) => {
+          resolveFirst = resolve;
+        });
+      }
+      if (url === "/api/owner/competitions/reward-3") {
+        return Promise.resolve(jsonReply({ ok: true, counts: { awarded: 0, unredeemed: 0, redeemed: 0 } }));
+      }
+      return Promise.reject(new Error(`unmocked fetch ${url}`));
+    });
+    render(createElement(Harness, { rewards: [ACTIVE, OTHER] }));
+
+    fireEvent.click(screen.getByText("Trivia Night Appetizer"));
+    await waitFor(() => expect(button("End reward")).toBeTruthy());
+    fireEvent.click(button("End reward"));
+    await waitFor(() => expect(heading()).toBe("Remove “Trivia Night Appetizer”?"));
+    fireEvent.click(button("Back"));
+    await waitFor(() => expect(button("End reward")).toBeTruthy());
+    fireEvent.click(button("Back"));
+    await waitFor(() => expect(screen.getByText("Second Reward")).toBeTruthy());
+
+    fireEvent.click(screen.getByText("Second Reward"));
+    await waitFor(() => expect(button("End reward")).toBeTruthy());
+    fireEvent.click(button("End reward"));
+    await screen.findByText(/nothing players hold is affected/);
+
+    await act(async () => {
+      resolveFirst(jsonReply({ ok: true, counts: { awarded: 3, unredeemed: 2, redeemed: 1 } }));
+    });
+    expect(heading()).toBe("Remove “Second Reward”?");
+    expect(screen.queryByText(/voids 2 unredeemed prizes/)).toBeNull();
+    expect(screen.getByText(/nothing players hold is affected/)).toBeTruthy();
   });
 
   it("hosts the wizard: each move is a history step, Cancel from the list returns to it", async () => {

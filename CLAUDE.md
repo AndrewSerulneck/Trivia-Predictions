@@ -554,7 +554,8 @@ shipped; only a real-device visual pass remains, §13c).
   `history.pushState` with a depth counter, so Close pops every entry) so the phone's Back
   steps back or closes; **never `router.push` a sheet step**. Do not hand-roll a modal, sheet
   or toast for `/owner/*`: use those, `DiscardGuard` (closing a flow with entered answers asks
-  first) and `DashboardToast`. `CreateRewardWizard` stays one shared component — its owner
+  first — Close, Escape, scrim, and a phone Back that would leave the sheet; a flow's own closes
+  go through `closeWithoutAsking`) and `DashboardToast`. `CreateRewardWizard` stays one shared component — its owner
   behaviour is four opt-in props and the admin snapshots pin that it is unchanged.
   `tests/owner-menu-contract.test.ts` and `tests/owner-dashboard-contract.test.ts` are the
   tripwires; `docs/partner-dashboard-app-redesign-device-checklist.md` is Andrew's device pass.

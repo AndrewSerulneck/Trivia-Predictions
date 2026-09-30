@@ -183,6 +183,41 @@ describe("CreateRewardWizard — controlled step", () => {
     expect(onStepChange).toHaveBeenLastCalledWith("definition", "back");
   });
 
+  it("an unscheduled pick drops the previous pick's context, so Forward to Terms can't mix them", async () => {
+    stubReducedMotion();
+    const onStepChange = vi.fn();
+    const ownerProps = (step: "definition" | "terms") =>
+      createElement(CreateRewardWizard, {
+        variant: "owner",
+        venues: [{ id: "venue-1", name: "The Pub" }],
+        defaultVenueId: "venue-1",
+        scheduleLinkHref: "/x",
+        fetchContext,
+        onSubmit: async () => ({ ok: true as const }),
+        onCreated: () => {},
+        onCancel: () => {},
+        animateSteps: true,
+        step,
+        onStepChange,
+      });
+    const view = render(ownerProps("definition"));
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+
+    fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
+    await waitFor(() => expect(onStepChange).toHaveBeenCalledWith("terms", "forward"));
+    view.rerender(ownerProps("terms"));
+    await waitFor(() => expect(view.container.querySelector("[data-step='terms']")).not.toBeNull());
+    view.rerender(ownerProps("definition"));
+    await waitFor(() => expect(view.container.querySelector("[data-step='definition']")).not.toBeNull());
+
+    // NFL Pick 'Em is unscheduled (and already cached from the prefetch).
+    fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
+    onStepChange.mockClear();
+    view.rerender(ownerProps("terms")); // the browser's Forward
+    await waitFor(() => expect(onStepChange).toHaveBeenCalledWith("definition", "replace"));
+    expect(view.container.querySelector("[data-step='terms']")).toBeNull();
+  });
+
   it("corrects a step whose data a reload lost back to Definition", async () => {
     stubReducedMotion();
     const onStepChange = vi.fn();

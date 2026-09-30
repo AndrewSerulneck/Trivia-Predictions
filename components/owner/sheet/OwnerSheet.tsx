@@ -25,7 +25,7 @@ import { useModalOverlay } from "@/components/owner/sheet/useModalOverlay";
 // CONTENT DURING EXIT. Children are kept mounted until the slide-down ends,
 // but they are whatever the host renders NOW. A host that derives content from
 // the URL must keep rendering the last content while `open` is false —
-// `useOwnerSheet()` exposes `displaySheet` / `displayStep` for exactly that.
+// `useOwnerSheet()` exposes `displayStepFor(sheet)` for exactly that.
 
 export type OwnerSheetSize = "card" | "tall";
 

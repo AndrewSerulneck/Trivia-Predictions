@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createElement, useState } from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { createElement, Fragment, useState } from "react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 import type { OwnerSchedule } from "@/types";
@@ -55,7 +55,14 @@ type HarnessProps = {
 
 // A stand-in for useOwnerSheet: a step, an open flag and a history stack, so
 // goBack pops the way the real driver does.
-const Harness = ({ initialStep = null, initialSchedule = null, games = [], onChanged = () => {}, onClosed, log }: HarnessProps) => {
+const Harness = ({
+  initialStep = null,
+  initialSchedule = null,
+  games = [],
+  onChanged = () => {},
+  onClosed,
+  log,
+}: HarnessProps) => {
   const [step, setStep] = useState<string | null>(initialStep);
   const [open, setOpen] = useState(true);
   const [stack, setStack] = useState<(string | null)[]>([]);
@@ -63,8 +70,7 @@ const Harness = ({ initialStep = null, initialSchedule = null, games = [], onCha
   const nav: UseOwnerSheetResult = {
     sheet: open ? "schedule" : null,
     step,
-    displaySheet: "schedule",
-    displayStep: step,
+    displayStepFor: (id) => (id === "schedule" ? step : null),
     openSheet: () => {},
     goToStep: (next) => {
       log?.push(`go:${next}`);
@@ -89,15 +95,34 @@ const Harness = ({ initialStep = null, initialSchedule = null, games = [], onCha
     },
   };
 
-  return createElement(ScheduleGameFlow, {
-    venueId: "venue-1",
-    nav,
-    games: { status: "ready", items: games },
-    nowMs: Date.parse("2099-09-01T00:00:00.000Z"),
-    initialSchedule,
-    onChanged,
-  });
+  // Test-only: the phone's Back (pops without the flow's say-so) and a reopen (the browser's Forward).
+  const phoneBack = () => {
+    if (stack.length === 0) {
+      setOpen(false); // Back from the sheet's first entry leaves it
+      return;
+    }
+    setStep(stack[stack.length - 1] ?? null);
+    setStack(stack.slice(0, -1));
+  };
+
+  return createElement(
+    Fragment,
+    null,
+    createElement(ScheduleGameFlow, {
+      venueId: "venue-1",
+      nav,
+      games: { status: "ready", items: games },
+      nowMs: Date.parse("2099-09-01T00:00:00.000Z"),
+      initialSchedule,
+      onChanged,
+    }),
+    createElement("button", { type: "button", hidden: true, onClick: phoneBack }, "test:phone-back"),
+    createElement("button", { type: "button", hidden: true, onClick: () => setOpen(true) }, "test:reopen"),
+  );
 };
+
+const phoneBack = () => fireEvent.click(screen.getByText("test:phone-back"));
+const reopen = () => fireEvent.click(screen.getByText("test:reopen"));
 
 const heading = () => document.body.querySelector<HTMLElement>("[data-step-heading]")?.textContent ?? null;
 const button = (name: string | RegExp) => screen.getByRole("button", { name });
@@ -364,6 +389,116 @@ describe("ScheduleGameFlow", () => {
       render(createElement(Harness, { initialStep: "all", games: [makeSchedule()], onClosed }));
       fireEvent.click(button("Close"));
       expect(onClosed).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("a Change left with the phone's Back ends the Change: the step's button reads Next again", async () => {
+    render(createElement(Harness));
+    fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Does it repeat?"));
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Review & name"));
+
+    fireEvent.click(button("Change repeats"));
+    await waitFor(() => expect(heading()).toBe("Does it repeat?"));
+    expect(button("Done")).toBeTruthy();
+    phoneBack();
+    await waitFor(() => expect(heading()).toBe("Review & name"));
+
+    fireEvent.click(button("Back"));
+    await waitFor(() => expect(heading()).toBe("Does it repeat?"));
+    expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
+    expect(button(/^Next/)).toBeTruthy();
+  });
+
+  it("after a save, the spent flow starts over once the sheet has gone (Forward can't reopen 'Scheduling…')", async () => {
+    fetchMock.mockResolvedValue({ json: async () => ({ ok: true, rewardNotice: null }) });
+    const onClosed = vi.fn();
+    render(createElement(Harness, { onClosed }));
+    fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Does it repeat?"));
+    fireEvent.click(button(/^Next/));
+    await waitFor(() => expect(heading()).toBe("Review & name"));
+    fireEvent.click(button("Schedule game"));
+    await waitFor(() => expect(onClosed).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
+    reopen();
+    await waitFor(() => expect(heading()).toBe("When does it start?"));
+    expect((screen.getByLabelText(/Date & time/) as HTMLInputElement).value).toBe("");
+    expect(screen.queryByText("Scheduling…")).toBeNull();
+  });
+
+  describe("the phone's Back gesture (Andrew, 2026-09-30: it asks too)", () => {
+    const SHEET_URL = "/owner/dashboard?sheet=schedule&step=when";
+
+    beforeEach(() => {
+      window.history.replaceState(null, "", SHEET_URL);
+    });
+
+    afterEach(() => {
+      window.history.replaceState(null, "", "/");
+      vi.restoreAllMocks();
+    });
+
+    it("Back that leaves the sheet with answers entered puts the sheet's entry back and asks", async () => {
+      const pushState = vi.spyOn(window.history, "pushState");
+      render(createElement(Harness));
+      fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+      phoneBack();
+
+      expect(screen.getByRole("alertdialog", { name: "Discard this game?" })).toBeTruthy();
+      expect(pushState).toHaveBeenCalledWith({ ownerSheetDepth: 1 }, "", SHEET_URL);
+
+      reopen(); // the router follows the restored URL
+      fireEvent.click(button("Keep editing"));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+      expect((screen.getByLabelText(/Date & time/) as HTMLInputElement).value).toBe("2099-10-09T20:00");
+    });
+
+    it("Discard after a Back finishes that Back (history.back), not a full close", () => {
+      vi.spyOn(window.history, "pushState").mockImplementation(() => {});
+      const back = vi.spyOn(window.history, "back").mockImplementation(() => {});
+      const onClosed = vi.fn();
+      render(createElement(Harness, { onClosed }));
+      fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+      phoneBack();
+      reopen();
+      fireEvent.click(button("Discard"));
+      expect(back).toHaveBeenCalledTimes(1);
+      expect(onClosed).not.toHaveBeenCalled();
+    });
+
+    it("never asks when nothing was entered", () => {
+      const pushState = vi.spyOn(window.history, "pushState");
+      render(createElement(Harness));
+      phoneBack();
+      expect(screen.queryByRole("alertdialog")).toBeNull();
+      expect(pushState).not.toHaveBeenCalled();
+    });
+
+    it("never asks when Back stays inside the sheet (the answers are still there)", async () => {
+      render(createElement(Harness));
+      fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+      fireEvent.click(button(/^Next/));
+      await waitFor(() => expect(heading()).toBe("Does it repeat?"));
+      phoneBack();
+      await waitFor(() => expect(heading()).toBe("When does it start?"));
+      expect(screen.queryByRole("alertdialog")).toBeNull();
+    });
+
+    it("the flow's own close (Discard from Close) never asks a second time", async () => {
+      const pushState = vi.spyOn(window.history, "pushState");
+      const onClosed = vi.fn();
+      render(createElement(Harness, { onClosed }));
+      fireEvent.change(screen.getByLabelText(/Date & time/), { target: { value: "2099-10-09T20:00" } });
+      fireEvent.click(button("Close"));
+      fireEvent.click(button("Discard"));
+      expect(onClosed).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+      expect(pushState).not.toHaveBeenCalled();
     });
   });
 });

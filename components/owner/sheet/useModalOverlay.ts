@@ -125,14 +125,20 @@ export const useModalOverlay = ({
     panelRef.current?.focus({ preventScroll: true });
   }, [isClient, open]);
 
-  // Exit: wait for the animation, unmount, then hand focus back.
+  // Exit: wait for the animation, unmount, then hand focus back — but only if
+  // focus is still ours (inside this panel, or dropped to <body>). If the close
+  // opened something else (Menu → Partner Manual), that overlay already took
+  // focus and pulling it back behind an aria-modal dialog would strand it.
   useEffect(() => {
     if (!isClosing) return;
     const timer = window.setTimeout(() => {
+      const active = document.activeElement;
+      const focusIsOurs =
+        !active || active === document.body || !active.isConnected || Boolean(panelRef.current?.contains(active));
       setIsMounted(false);
       const target = returnFocusRef?.current ?? openerRef.current;
       openerRef.current = null;
-      if (target && target.isConnected) target.focus({ preventScroll: true });
+      if (focusIsOurs && target && target.isConnected) target.focus({ preventScroll: true });
       latest.current.onExited?.();
     }, resolveExitMs(exitMs));
     return () => window.clearTimeout(timer);
@@ -144,6 +150,8 @@ export const useModalOverlay = ({
     const onKeyDown = (event: KeyboardEvent) => {
       if (!isTopOverlay(overlayId)) return;
       if (event.key === "Escape") {
+        // Something inside the panel (an open Dropdown) already used this Escape.
+        if (event.defaultPrevented) return;
         event.preventDefault();
         requestClose();
         return;

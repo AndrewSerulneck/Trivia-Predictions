@@ -30,9 +30,11 @@ import {
 // ride in history.state (router.push offers no way to attach it). Native
 // pushState never scrolls, which is what `{ scroll: false }` was for.
 //
-// `sheet` / `step` are the URL right now; `displaySheet` / `displayStep` hold
-// their last non-null values so a closing sheet keeps showing its content
-// while it slides down (the URL is already clean by then).
+// `sheet` / `step` are the URL right now; `displayStepFor(id)` is that sheet's
+// step, or the last one it showed, so a closing sheet keeps showing its content
+// while it slides down (the URL is already clean by then). It is PER SHEET: when
+// Rewards swaps straight to Schedule, the Rewards sheet slides away still on its
+// own step instead of borrowing Schedule's (or none, which is its list).
 //
 // `step` is the RAW parsed slug. The flow resolves it against its own step
 // list with `resolveStep()` and calls `replaceStep()` if it had to correct it.
@@ -40,8 +42,8 @@ import {
 export type UseOwnerSheetResult = {
   sheet: OwnerSheetId | null;
   step: string | null;
-  displaySheet: OwnerSheetId | null;
-  displayStep: string | null;
+  /** `id`'s step while it is open, else the last step it showed (null = never shown). */
+  displayStepFor: (id: OwnerSheetId) => string | null;
   /** Open a sheet (new history entry). */
   openSheet: (sheet: OwnerSheetId, step?: string | null) => void;
   /** Advance to a step inside the open sheet (new history entry). */
@@ -69,10 +71,12 @@ export const useOwnerSheet = (): UseOwnerSheetResult => {
   const sheet = parseSheetParam(searchParams.get(SHEET_PARAM));
   const step = sheet ? parseStepParam(searchParams.get(STEP_PARAM)) : null;
 
-  // Hold the last open sheet/step through the close animation.
-  const [display, setDisplay] = useState<{ sheet: OwnerSheetId | null; step: string | null }>({ sheet, step });
-  if (sheet !== null && (sheet !== display.sheet || step !== display.step)) {
-    setDisplay({ sheet, step });
+  // Hold each sheet's last step through its close animation.
+  const [lastSteps, setLastSteps] = useState<Partial<Record<OwnerSheetId, string | null>>>(() =>
+    sheet ? { [sheet]: step } : {}
+  );
+  if (sheet !== null && lastSteps[sheet] !== step) {
+    setLastSteps((prev) => ({ ...prev, [sheet]: step }));
   }
 
   // Once, on landing: a deep-linked sheet gets a clean dashboard entry under it.
@@ -112,11 +116,15 @@ export const useOwnerSheet = (): UseOwnerSheetResult => {
     closeSheetInHistory(window.history, browserLocation());
   }, []);
 
+  const displayStepFor = useCallback(
+    (id: OwnerSheetId): string | null => (sheet === id ? step : (lastSteps[id] ?? null)),
+    [sheet, step, lastSteps]
+  );
+
   return {
     sheet,
     step,
-    displaySheet: sheet ?? display.sheet,
-    displayStep: sheet ? step : display.step,
+    displayStepFor,
     openSheet,
     goToStep,
     replaceCurrentStep,

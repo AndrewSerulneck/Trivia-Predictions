@@ -55,9 +55,19 @@ game and one reward; for the "empty" checks use a venue with neither (or a fresh
 - [ ] `/owner/competitions` and `/owner/schedule` (type the address) open the dashboard with the
   matching sheet already up.
 
-## E. Back gesture, decided behaviour
-- [ ] The phone's Back gesture **does not** ask "Discard?" — it just steps back or closes. This is
-  deliberate (see the Phase 6 handoff). Tell me if you would rather it asked.
+## E. Back gesture asks too (your 2026-09-30 decision)
+- [ ] Schedule: enter a date on the first step, then use the phone's **Back** gesture. The sheet
+  stays up and asks **"Discard this game?"**. Keep editing keeps the date; Discard closes the sheet
+  and you are on the dashboard (one Back, not two).
+- [ ] With nothing entered, Back just closes. On a later step, Back goes back one question
+  without asking (your answers are still there).
+- [ ] Reward: pick a reward whose game isn't scheduled → **Schedule Live Trivia** → enter a date →
+  Back. It asks "Discard this game?"; Discard lands on the reward sheet, not the dashboard.
+- [ ] Watch for a flicker: when Back asks, the sheet should not visibly slide down and back up.
+  Note it if it does (it is cosmetic).
+- [ ] After scheduling a game, the browser's **Forward** button (desktop) must not reopen a
+  "Scheduling…" screen.
+- [ ] Menu → Billing (or any row): the menu slides away, then Billing opens **at the top of the page**.
 
 ## F. Display settings
 - [ ] **Landscape:** rotate the phone with a sheet open. Close, Next and the fields are all reachable.

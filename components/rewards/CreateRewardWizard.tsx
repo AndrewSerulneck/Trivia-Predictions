@@ -544,6 +544,9 @@ export function CreateRewardWizard({
     const cached = definitionContexts[picked.id];
     if (cached) {
       if (!cached.scheduled) {
+        // Drop the previous pick's context too, or a controlled `?step=terms` (browser
+        // Forward) would pass the guard and render this definition with that one's schedule.
+        setContext(null);
         setNotScheduledError(unavailableMessage);
         return;
       }
