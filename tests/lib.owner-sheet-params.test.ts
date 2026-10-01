@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildSheetSearch,
   closeSheet,
+  correctStep,
   nextStep,
   nextStepHref,
   normalizeLandedSheet,
@@ -27,13 +28,14 @@ import {
 const SCHEDULE_STEPS = ["game", "when", "repeat", "review"] as const;
 
 describe("parseSheetParam", () => {
-  it("accepts the two known sheets", () => {
+  it("accepts the three known sheets", () => {
     expect(parseSheetParam("schedule")).toBe("schedule");
     expect(parseSheetParam("rewards")).toBe("rewards");
+    expect(parseSheetParam("store")).toBe("store");
   });
 
   it("rejects anything else", () => {
-    for (const raw of [null, undefined, "", "Schedule", "manual", "schedule ", "billing", "__proto__"]) {
+    for (const raw of [null, undefined, "", "Schedule", "manual", "schedule ", "billing", "Store", "merch", "__proto__"]) {
       expect(parseSheetParam(raw)).toBeNull();
     }
   });
@@ -216,6 +218,52 @@ describe("history driver", () => {
     expect(browser.url()).toBe("/owner/dashboard");
   });
 
+  it("in-app StepBack to the first screen (null) leaves no `step` in the URL (F4)", () => {
+    const browser = fakeBrowser("/owner/dashboard");
+    pushSheet(browser.history, browser.location(), "store", "review"); // e.g. a deep link to Review
+    stepBack(browser.history, browser.location(), "store", null);
+    expect(browser.url()).toBe("/owner/dashboard?sheet=store");
+    expect(readSheetDepth(browser.history.state)).toBe(1);
+    expect(browser.entries()).toEqual(["/owner/dashboard", "/owner/dashboard?sheet=store"]);
+  });
+
+  it("correctStep on the sheet's first entry rewrites in place, keeping depth", () => {
+    const browser = fakeBrowser("/owner/dashboard");
+    pushSheet(browser.history, browser.location(), "rewards", "detail");
+    expect(correctStep(browser.history, browser.location(), "rewards", "all")).toBe("replaced");
+    expect(browser.entries()).toEqual(["/owner/dashboard", "/owner/dashboard?sheet=rewards&step=all"]);
+    expect(readSheetDepth(browser.history.state)).toBe(1);
+
+    const landed = fakeBrowser("/owner/dashboard?sheet=store&step=review"); // depth 0, before normalisation
+    expect(correctStep(landed.history, landed.location(), "store", null)).toBe("replaced");
+    expect(landed.entries()).toEqual(["/owner/dashboard?sheet=store"]);
+  });
+
+  it("store: a reload on Review with an empty cart pops to the Shop's entry, so one Back closes (F3)", () => {
+    const browser = fakeBrowser("/owner/dashboard");
+    pushSheet(browser.history, browser.location(), "store");
+    pushStep(browser.history, browser.location(), "store", "review");
+    // reload: the entry (and its depth) survive, the cart doesn't
+    expect(correctStep(browser.history, browser.location(), "store", null)).toBe("popped");
+    expect(browser.url()).toBe("/owner/dashboard?sheet=store");
+    expect(readSheetDepth(browser.history.state)).toBe(1);
+    browser.history.go(-1);
+    expect(browser.url()).toBe("/owner/dashboard");
+  });
+
+  it("correctStep unwinds a chain of lost screens one entry at a time (Schedule Review → Repeat → When)", () => {
+    const browser = fakeBrowser("/owner/dashboard");
+    pushSheet(browser.history, browser.location(), "schedule", "when");
+    pushStep(browser.history, browser.location(), "schedule", "repeat");
+    pushStep(browser.history, browser.location(), "schedule", "review");
+    expect(correctStep(browser.history, browser.location(), "schedule", "when")).toBe("popped");
+    expect(browser.url()).toBe("/owner/dashboard?sheet=schedule&step=repeat");
+    expect(correctStep(browser.history, browser.location(), "schedule", "when")).toBe("popped");
+    expect(browser.url()).toBe("/owner/dashboard?sheet=schedule&step=when");
+    closeSheet(browser.history, browser.location());
+    expect(browser.url()).toBe("/owner/dashboard");
+  });
+
   it("replaceStep keeps the depth", () => {
     const browser = fakeBrowser("/owner/dashboard");
     pushSheet(browser.history, browser.location(), "schedule", "game");
@@ -237,6 +285,30 @@ describe("history driver", () => {
     expect(readSheetDepth(browser.history.state)).toBe(1);
     closeSheet(browser.history, browser.location());
     expect(browser.url()).toBe("/owner/dashboard");
+  });
+
+  it("store: Shop → Review, phone Back steps to Shop then closed; Close pops both", () => {
+    const browser = fakeBrowser("/owner/dashboard");
+    pushSheet(browser.history, browser.location(), "store");
+    expect(browser.url()).toBe("/owner/dashboard?sheet=store");
+    pushStep(browser.history, browser.location(), "store", "review");
+    expect(browser.url()).toBe("/owner/dashboard?sheet=store&step=review");
+    browser.history.go(-1);
+    expect(browser.url()).toBe("/owner/dashboard?sheet=store");
+    browser.history.go(-1);
+    expect(browser.url()).toBe("/owner/dashboard");
+
+    const again = fakeBrowser("/owner/dashboard");
+    pushSheet(again.history, again.location(), "store");
+    pushStep(again.history, again.location(), "store", "review");
+    closeSheet(again.history, again.location());
+    expect(again.url()).toBe("/owner/dashboard");
+  });
+
+  it("a store deep link (re-order email) lands on a clean dashboard entry with the store on top", () => {
+    const browser = fakeBrowser("/owner/dashboard?sheet=store");
+    expect(normalizeLandedSheet(browser.history, browser.location())).toBe(true);
+    expect(browser.entries()).toEqual(["/owner/dashboard", "/owner/dashboard?sheet=store"]);
   });
 
   it("a deep link is normalised to a clean dashboard entry with the sheet on top", () => {

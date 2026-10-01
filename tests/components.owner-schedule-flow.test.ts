@@ -77,8 +77,8 @@ const Harness = ({
       setStack((prev) => [...prev, step]);
       setStep(next);
     },
-    replaceCurrentStep: (next) => {
-      log?.push(`replace:${next}`);
+    correctStep: (next) => {
+      log?.push(`correct:${next}`);
       setStep(next);
     },
     goBack: (previous) => {
@@ -229,7 +229,7 @@ describe("ScheduleGameFlow", () => {
     const log: string[] = [];
     render(createElement(Harness, { initialStep: "review", log }));
     expect(heading()).toBe("When does it start?");
-    expect(log).toContain("replace:when");
+    expect(log).toContain("correct:when");
   });
 
   it("edits an existing game with a PATCH that has no venue or game type", async () => {

@@ -4,6 +4,7 @@ import { createElement, type ComponentProps } from "react";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { DRAWER_EXIT_MS } from "@/components/owner/sheet/sheetMotion";
 import { OWNER_MENU_HINT_KEY, resetMenuHintDecision } from "@/lib/ownerMenuHint";
+import { SHEET_DEPTH_KEY } from "@/lib/ownerSheetParams";
 
 // Code-review fixes (docs/partner-dashboard-app-redesign-plan.md, final review):
 // the ☰ hint is only spent where the logo is shown, a menu link closes the
@@ -82,5 +83,59 @@ describe("OwnerAppBar", () => {
     });
     expect(drawer()).toBeNull();
     expect(manual.contains(document.activeElement)).toBe(true);
+  });
+
+  it("Order Join Merch closes the drawer first, then pushes ?sheet=store with a sheet depth (no router.push)", () => {
+    window.history.replaceState(null, "", "/owner/dashboard?venueId=v1");
+    render(bar({}, "Dashboard"));
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    const row = screen.getByRole("button", { name: /Order Join Merch/ });
+    expect(row.getAttribute("aria-haspopup")).toBe("dialog");
+    fireEvent.click(row);
+    expect(window.location.search).toBe("?venueId=v1");
+    expect(drawer()?.className).toContain("animate-tp-drawer-out");
+
+    act(() => {
+      vi.advanceTimersByTime(DRAWER_EXIT_MS);
+    });
+    expect(drawer()).toBeNull();
+    expect(document.body.classList.contains("tp-popup-open")).toBe(false);
+    expect(window.location.pathname).toBe("/owner/dashboard");
+    expect(window.location.search).toBe("?venueId=v1&sheet=store");
+    expect((window.history.state as Record<string, unknown>)[SHEET_DEPTH_KEY]).toBe(1);
+    expect(push).not.toHaveBeenCalled();
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("reopening the menu mid-exit abandons the pending store open", () => {
+    window.history.replaceState(null, "", "/owner/dashboard");
+    render(bar({}, "Dashboard"));
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    fireEvent.click(screen.getByRole("button", { name: /Order Join Merch/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    act(() => {
+      vi.advanceTimersByTime(DRAWER_EXIT_MS);
+    });
+    expect(window.location.search).toBe("");
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("off the dashboard, a sheet row does nothing — never a navigation to a sheet URL (join-merch Phase 4.1, F5)", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    window.history.replaceState(null, "", "/owner/somewhere");
+    const before = window.history.length;
+    render(bar({}, "Elsewhere"));
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    fireEvent.click(screen.getByRole("button", { name: /Order Join Merch/ }));
+    act(() => {
+      vi.advanceTimersByTime(DRAWER_EXIT_MS);
+    });
+    expect(push).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe("/owner/somewhere");
+    expect(window.location.search).toBe("");
+    expect(window.history.length).toBe(before);
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+    window.history.replaceState(null, "", "/");
   });
 });

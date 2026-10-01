@@ -18,6 +18,8 @@
     "signup:check-claim-precondition": "node --env-file=.env.local scripts/check-venue-owner-duplicates.cjs",
     "signup:check-orphan-auth-users": "node --env-file=.env.local scripts/check-orphaned-auth-users.cjs",
     "signup:purge-pending": "node --env-file=.env.local scripts/purge-pending-signup.cjs",
+    "store:images": "node scripts/optimize-store-images.cjs",
+    "store:qr": "node --import tsx scripts/generate-join-qr.cjs",
     "category-blitz:build": "node --env-file=.env.local scripts/build-category-blitz-letter-index.cjs",
     "category-blitz:build:dry-run": "node --env-file=.env.local scripts/build-category-blitz-letter-index.cjs --dry-run",
     "category-blitz:simulate": "node --env-file=.env.local --conditions react-server --import tsx scripts/simulate-category-blitz.cjs",

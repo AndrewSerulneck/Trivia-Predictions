@@ -82,8 +82,8 @@ const Harness = ({
       setStack((prev) => [...prev, step]);
       setStep(next);
     },
-    replaceCurrentStep: (next) => {
-      log?.push(`replace:${next}`);
+    correctStep: (next) => {
+      log?.push(`correct:${next}`);
       setStep(next);
     },
     goBack: (previous) => {
@@ -183,7 +183,7 @@ describe("RewardsFlow", () => {
     const log: string[] = [];
     render(createElement(Harness, { initialStep: "detail", initialReward: null, log }));
     expect(heading()).toBe("Your rewards");
-    await waitFor(() => expect(log).toContain("replace:all"));
+    await waitFor(() => expect(log).toContain("correct:all"));
   });
 
   it("End reward → counts → Archive sends DELETE mode=archive, tells the partner, and closes", async () => {
@@ -297,16 +297,16 @@ describe("RewardsFlow", () => {
     render(createElement(Harness, { log }));
 
     fireEvent.click(button("+ Offer another reward"));
-    await waitFor(() => expect(heading()).toBe("Which reward?"));
+    await waitFor(() => expect(heading()).toBe("Which game should the reward be tied to?"));
     await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
 
-    fireEvent.click(button(/Live Trivia Challenge/));
+    fireEvent.click(button(/Live Trivia$/));
     await waitFor(() => expect(heading()).toBe("Live Trivia Challenge"));
     expect(log).toEqual(["go:definition", "go:terms"]);
 
     // The wizard's Back (labelled with the reward) is the phone's Back.
     fireEvent.click(button(/Live Trivia Challenge/));
-    await waitFor(() => expect(heading()).toBe("Which reward?"));
+    await waitFor(() => expect(heading()).toBe("Which game should the reward be tied to?"));
     expect(log.at(-1)).toBe("back:definition");
 
     fireEvent.click(button("Cancel"));
@@ -333,7 +333,7 @@ describe("RewardsFlow", () => {
     render(createElement(Harness, { initialStep: "definition", onChanged, onClosed }));
     await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
 
-    fireEvent.click(button(/Live Trivia Challenge/));
+    fireEvent.click(button(/Live Trivia$/));
     await waitFor(() => expect(heading()).toBe("Live Trivia Challenge"));
     fireEvent.click(button(/Next: Offer a Prize/));
     await waitFor(() => expect(heading()).toBe("Prize"));
@@ -355,7 +355,7 @@ describe("RewardsFlow", () => {
     });
     render(createElement(Harness, { initialStep: "definition", onRequestSchedule }));
     await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
-    fireEvent.click(button(/Live Trivia Challenge/));
+    fireEvent.click(button(/Live Trivia$/));
     fireEvent.click(await screen.findByRole("button", { name: "Schedule Live Trivia" }));
     expect(onRequestSchedule).toHaveBeenCalledTimes(1);
   });
@@ -364,8 +364,8 @@ describe("RewardsFlow", () => {
     const log: string[] = [];
     routeFetch({ "/api/owner/rewards/context": () => ({ ok: true, context: SCHEDULED_CONTEXT }) });
     render(createElement(Harness, { initialStep: "confirm", log }));
-    await waitFor(() => expect(log).toContain("replace:definition"));
-    await waitFor(() => expect(heading()).toBe("Which reward?"));
+    await waitFor(() => expect(log).toContain("correct:definition"));
+    await waitFor(() => expect(heading()).toBe("Which game should the reward be tied to?"));
   });
 
   describe("Discard this reward?", () => {
@@ -384,7 +384,7 @@ describe("RewardsFlow", () => {
       routeFetch({ "/api/owner/rewards/context": () => ({ ok: true, context: SCHEDULED_CONTEXT }) });
       render(createElement(Harness, { initialStep: "definition", onClosed }));
       await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
-      fireEvent.click(button(/Live Trivia Challenge/));
+      fireEvent.click(button(/Live Trivia$/));
       await waitFor(() => expect(heading()).toBe("Live Trivia Challenge"));
 
       fireEvent.click(button("Close"));

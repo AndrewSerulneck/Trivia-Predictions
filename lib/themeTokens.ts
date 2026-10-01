@@ -261,3 +261,11 @@ export const GAME_THEME = {
 
 export type ThemeKey = keyof typeof THEME;
 export type GameThemeKey = keyof typeof GAME_THEME;
+
+/**
+ * Join Merch store panel paper colour. Mirrors `--ht-store-paper` in
+ * `app/globals.css` (use the `bg-ht-store-paper` class in components, never a
+ * hex). Matches the product photos' white, measured ≈ #FEFEFE.
+ * See docs/join-merch-store-plan.md §3a.
+ */
+export const STORE_PAPER_HEX = "#fefefe";

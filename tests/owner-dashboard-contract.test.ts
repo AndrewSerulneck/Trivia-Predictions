@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -20,7 +20,7 @@ describe("owner dashboard body", () => {
   it("loads schedules and rewards for the selected venue, in separate parallel effects", () => {
     expect(dashboard).toContain("/api/owner/schedule?venueId=");
     expect(dashboard).toContain("/api/owner/competitions?venueId=");
-    expect(dashboard).toMatch(/<DashboardBody key=\{selectedVenueId\}/);
+    expect(dashboard).toMatch(/<DashboardBody\s+key=\{selectedVenueId\}/);
   });
 
   it("keeps the list helpers in lib/, not in the pages", () => {
@@ -93,6 +93,40 @@ describe("owner dashboard body", () => {
       expect(src).toMatch(/onRequestClose=\{nav\.closeSheet\}/);
       // Only the guard's own onDiscard and the sheet's onRequestClose may call closeSheet directly.
       expect(src.match(/nav\.closeSheet/g)).toHaveLength(2);
+    }
+  });
+
+  it("Join Merch: the store is hosted by the PAGE in its own Suspense, outside the venue body (Phase 4.1, F2)", () => {
+    const body = dashboard.slice(dashboard.indexOf("const DashboardBody"), dashboard.indexOf("type MerchStoreHostProps"));
+    expect(body).not.toContain("MerchStoreSheet");
+    expect(body).not.toMatch(/merch/i);
+    expect(dashboard).toMatch(/const MerchStoreHost[\s\S]*useOwnerSheet\(\)[\s\S]*<MerchStoreSheet\s+nav=\{sheet\}/);
+    const page = dashboard.slice(dashboard.indexOf("const OwnerDashboardPage"));
+    // Rendered on every branch (loading / no venue / venue): after the conditional, not inside it.
+    expect(page).toMatch(/<\/Suspense>\s*\)\}\s*<Suspense fallback=\{null\}>\s*<MerchStoreHost/);
+    expect(page).toContain("venue={selectedVenue ?? null}");
+    expect(page).toContain("venueLoading={loading}");
+  });
+
+  it("Join Merch: the page owns one cart PER VENUE, so a venue switch never moves a cart (Phase 4.1, F1)", () => {
+    const page = dashboard.slice(dashboard.indexOf("const OwnerDashboardPage"));
+    expect(page).toContain("useVenueMerchCart(selectedVenue?.id ?? null)");
+    expect(dashboard).not.toContain("useState<MerchCart>");
+  });
+
+  it("Join Merch: the store is EXEMPT from the discard prompt (closing never loses the cart) and look-only", () => {
+    const store = read("components/owner/store/MerchStoreSheet.tsx");
+    expect(store).toContain('tone="light"');
+    // URL-driven: open exactly when ?sheet=store (hoisted into `open` since Phase 3).
+    expect(store).toMatch(/const open = nav\.sheet === "store";/);
+    expect(store).toMatch(/open=\{open\}/);
+    expect(store).toMatch(/onRequestClose=\{nav\.closeSheet\}/);
+    expect(store).not.toContain("useDiscardGuard");
+    expect(store).not.toContain("closeGuard");
+    for (const entry of readdirSync(join(process.cwd(), "components/owner/store"), { recursive: true })) {
+      const rel = `components/owner/store/${String(entry)}`;
+      if (!/\.tsx?$/.test(rel)) continue;
+      expect(read(rel), rel).not.toContain("fetch(");
     }
   });
 

@@ -5,15 +5,17 @@ import { OWNER_MENU_ITEMS } from "@/components/owner/menu/ownerMenuItems";
 
 /**
  * Partner Dashboard menu tripwire (docs/partner-dashboard-app-redesign-plan.md §4b, §4g).
- * Six rows, fixed order, Sign Out last with no arrow.
+ * Six rows (Order Join Merch added by docs/join-merch-store-plan.md), fixed order,
+ * then Sign Out last with no arrow.
  */
 
 const read = (path: string): string => readFileSync(join(__dirname, "..", path), "utf8");
 
 describe("owner menu contract", () => {
-  it("lists the five rows in the specified order", () => {
+  it("lists the six rows in the specified order", () => {
     expect(OWNER_MENU_ITEMS.map((item) => item.label)).toEqual([
       "Venue Display",
+      "Order Join Merch",
       "Billing",
       "Partner Manual",
       "Game Settings",
@@ -21,14 +23,34 @@ describe("owner menu contract", () => {
     ]);
   });
 
-  it("points each row at its page; only the Partner Manual opens a sheet", () => {
+  it("points each link row at its page; the store and the Partner Manual open sheets", () => {
     expect(OWNER_MENU_ITEMS.map((item) => item.href ?? null)).toEqual([
       "/owner/display",
+      null,
       "/owner/billing",
       null,
       "/owner/game-settings",
       "/owner/account",
     ]);
+  });
+
+  it("Order Join Merch opens the URL-mirrored store sheet, never a page or router.push", () => {
+    const store = OWNER_MENU_ITEMS.find((item) => item.id === "store");
+    expect(store?.sheet).toBe("store");
+    expect(store?.hint).toBe("QR coasters, tents & table cards");
+    expect(OWNER_MENU_ITEMS.filter((item) => item.sheet)).toHaveLength(1);
+    const src = read("components/owner/OwnerAppBar.tsx");
+    expect(src).toContain("pushSheet(window.history, window.location, sheet)");
+    expect(src).not.toMatch(/router\.push\([^)]*sheet=/);
+  });
+
+  it("OwnerAppBar never navigates to a sheet URL, however it is built (join-merch Phase 4.1, F5)", () => {
+    const src = read("components/owner/OwnerAppBar.tsx");
+    // sheetHref() builds `?sheet=` URLs; the regex above can't see one passed through a variable.
+    expect(src).not.toContain("sheetHref");
+    // The only router navigation left is the link rows' own href.
+    const navigations = src.match(/router\.(push|replace)\([^)]*\)/g) ?? [];
+    expect(navigations).toEqual(["router.push(href)"]);
   });
 
   it("renders Sign Out after the rows, once, in the partner variant, with no arrow", () => {

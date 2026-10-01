@@ -128,12 +128,13 @@ export const ScheduleGameFlow = ({
   else if (changing && changing.reached && current !== changing.step) setChanging(null);
   const changingStep = changing?.step ?? null;
 
-  // A stale or hand-edited `?step=` (or one whose data a reload lost) is corrected in place.
+  // A stale or hand-edited `?step=` (or one whose data a reload lost) is corrected: popped back
+  // to the screen under it when this sheet pushed one, so no screen gets two entries (F3).
   const urlStep = nav.step;
-  const replaceCurrentStep = nav.replaceCurrentStep;
+  const correctStep = nav.correctStep;
   useEffect(() => {
-    if (open && urlStep !== null && urlStep !== current) replaceCurrentStep(current);
-  }, [open, urlStep, current, replaceCurrentStep]);
+    if (open && urlStep !== null && urlStep !== current) correctStep(current);
+  }, [open, urlStep, current, correctStep]);
 
   // Only the form screens can hold unsaved answers; the lists and the detail screen cannot.
   const onFormScreen = current === "game" || current === "when" || current === "repeat" || current === "review";
@@ -375,6 +376,7 @@ export const ScheduleGameFlow = ({
         onExited={resetIfFinished}
         title={title}
         footer={footer}
+        scrollKey={current}
       >
         <SlideSteps steps={SCHEDULE_SLIDE_ORDER} current={current} renderStep={renderStep} />
       </OwnerSheet>

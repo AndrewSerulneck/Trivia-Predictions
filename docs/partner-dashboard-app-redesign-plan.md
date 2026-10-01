@@ -109,13 +109,19 @@ it calls the same endpoints, and the partner makes fewer page loads overall (see
   cheap, otherwise leave it out).
 - Rows (Lucide icon, label, one-line hint), **in this order:**
   1. Venue Display: `Tv`, "Put games on your TVs" → `/owner/display`
-  2. Billing: `CreditCard`, "Plan, card & invoices" → `/owner/billing`
-  3. Partner Manual: `BookOpen`, "How Hightop works" → closes the drawer, then opens the
+  2. Order Join Merch: `ShoppingBag`, "QR coasters, tents & table cards" → closes the drawer,
+     then opens the dashboard's `?sheet=store` sheet (added 2026-10-01 by
+     `docs/join-merch-store-plan.md` Phase 2)
+  3. Billing: `CreditCard`, "Plan, card & invoices" → `/owner/billing`
+  4. Partner Manual: `BookOpen`, "How Hightop works" → closes the drawer, then opens the
      Partner Manual sheet
-  4. Game Settings: `SlidersHorizontal`, "How games are scored" → `/owner/game-settings`
-  5. Account Settings: `UserRound`, "Email & password" → `/owner/account`
-  6. divider, then **Sign Out** (`SignOutButton variant="partner"`). It is the last item and has
+  5. Game Settings: `SlidersHorizontal`, "How games are scored" → `/owner/game-settings`
+  6. Account Settings: `UserRound`, "Email & password" → `/owner/account`
+  7. divider, then **Sign Out** (`SignOutButton variant="partner"`). It is the last item and has
      no arrow, as the nav rules require.
+- **`docs/join-merch-store-plan.md` supersedes this row order** (it inserted Order Join Merch
+  below Venue Display, making six rows before Sign Out). `components/owner/menu/ownerMenuItems.ts`
+  is the code source of truth; `tests/owner-menu-contract.test.ts` pins it.
 
 ### 4c. Dashboard body
 Two stacked **section cards** (`rounded-2xl bg-ht-surface shadow-ht-card`), in this order:

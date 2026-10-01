@@ -18,7 +18,8 @@
 // Pure: no React, no DOM globals. The history driver functions take a
 // History-like object so tests can run them against a fake.
 
-export const OWNER_SHEET_IDS = ["schedule", "rewards"] as const;
+// "store" = the Join Merch store (docs/join-merch-store-plan.md §3c): Shop, then `step=review`.
+export const OWNER_SHEET_IDS = ["schedule", "rewards", "store"] as const;
 
 export type OwnerSheetId = (typeof OWNER_SHEET_IDS)[number];
 
@@ -152,8 +153,9 @@ export const pushStep = (history: SheetHistory, location: SheetLocation, sheet: 
   pushSheet(history, location, sheet, step);
 
 /**
- * Swap the current entry's step without adding history — for corrections the
- * user didn't ask for (a skipped step, an invalid step normalised). Keeps depth.
+ * Swap the current entry's step without adding history. Keeps depth. Flows
+ * don't call this directly: a correction goes through correctStep(), which uses
+ * this only on a sheet's first entry.
  */
 export const replaceStep = (
   history: SheetHistory,
@@ -169,19 +171,53 @@ export const replaceStep = (
  * The in-sheet StepBack button. If the previous history entry is the previous
  * step (depth ≥ 2 — this sheet pushed both), pop it, so the in-app button and
  * the phone's Back gesture stay the same thing. Otherwise (first entry of the
- * sheet, or a deep link) rewrite this entry in place.
+ * sheet, or a deep link) rewrite this entry in place. `previous: null` = the
+ * sheet's first screen, which has no `step` (e.g. the store's Shop).
  */
 export const stepBack = (
   history: SheetHistory,
   location: SheetLocation,
   sheet: OwnerSheetId,
-  previous: string
+  previous: string | null
 ): void => {
   if (readSheetDepth(history.state) >= 2) {
     history.go(-1);
     return;
   }
   replaceStep(history, location, sheet, previous);
+};
+
+/**
+ * Correct a step the flow can't show (a reload lost its data, a skip rule now
+ * drops it, an invalid slug) to `target`. On the sheet's first entry (depth ≤ 1)
+ * this rewrites the entry in place. Deeper, the entry under this one is a screen
+ * this sheet pushed and the partner really saw, so POP instead (Phase 4.2, F3):
+ * rewriting would leave two entries for one screen — Shop → Review → reload
+ * gave [dashboard, Shop, Shop], and the first phone Back seemed to do nothing.
+ * The screen popped to resolves itself and, if it lost its data too, corrects
+ * again — so Schedule's Review → Repeat → When unwinds to When, one entry each.
+ *
+ * Why pop on depth alone rather than "only when `target` is the previous
+ * screen": the driver can't read the previous entry's URL, and a flow can't
+ * always know it either (Rewards' detail opens from the dashboard OR the list).
+ * Landing on a real earlier screen is never worse than a duplicate of `target`.
+ *
+ * Safe because only a sheet's FIRST entry can sit on another sheet's entry (the
+ * Rewards → Schedule swap opens Schedule on top), and a first entry opened that
+ * way has no `step`, which no flow ever corrects. Returns what it did.
+ */
+export const correctStep = (
+  history: SheetHistory,
+  location: SheetLocation,
+  sheet: OwnerSheetId,
+  target: string | null
+): "popped" | "replaced" => {
+  if (readSheetDepth(history.state) >= 2) {
+    history.go(-1);
+    return "popped";
+  }
+  replaceStep(history, location, sheet, target);
+  return "replaced";
 };
 
 /** Close: pop every entry the sheet pushed; rewrite in place if it pushed none. */

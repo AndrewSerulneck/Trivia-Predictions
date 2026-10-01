@@ -57,6 +57,7 @@ const config: Config = {
           surface: "var(--ht-surface)",
           elevated: "var(--ht-elevated)",
           "elevated-2": "var(--ht-elevated-2)",
+          "store-paper": "var(--ht-store-paper)",
           "border-hairline": "var(--ht-border-hairline)",
           "border-soft": "var(--ht-border-soft)",
           "border-strong": "var(--ht-border-strong)",
@@ -107,6 +108,7 @@ const config: Config = {
         "ht-canvas": "var(--ht-canvas)",
         "ht-surface": "var(--ht-surface)",
         "ht-elevated": "var(--ht-elevated)",
+        "ht-store-paper": "var(--ht-store-paper)",
       },
       backgroundImage: {
         "ht-game-live": "var(--ht-game-live)",

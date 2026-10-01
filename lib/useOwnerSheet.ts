@@ -1,15 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   closeSheet as closeSheetInHistory,
+  correctStep as correctStepInHistory,
   normalizeLandedSheet,
   parseSheetParam,
   parseStepParam,
   pushSheet,
   pushStep,
-  replaceStep,
+  readSheetDepth,
   SHEET_PARAM,
   STEP_PARAM,
   stepBack,
@@ -37,7 +38,7 @@ import {
 // own step instead of borrowing Schedule's (or none, which is its list).
 //
 // `step` is the RAW parsed slug. The flow resolves it against its own step
-// list with `resolveStep()` and calls `replaceStep()` if it had to correct it.
+// list with `resolveStep()` and calls `correctStep()` if it had to correct it.
 
 export type UseOwnerSheetResult = {
   sheet: OwnerSheetId | null;
@@ -48,14 +49,20 @@ export type UseOwnerSheetResult = {
   openSheet: (sheet: OwnerSheetId, step?: string | null) => void;
   /** Advance to a step inside the open sheet (new history entry). */
   goToStep: (step: string) => void;
-  /** Rewrite the current step in place (skip rules, invalid-step correction). */
-  replaceCurrentStep: (step: string | null) => void;
+  /**
+   * The URL's step can't be shown (a reload lost its data, a skip rule, an
+   * invalid slug): land on `step` instead (null = the sheet's first screen).
+   * Pops back to the screen under it when this sheet pushed one, else rewrites
+   * in place, so a correction never leaves a duplicate history entry
+   * (lib/ownerSheetParams.ts correctStep).
+   */
+  correctStep: (step: string | null) => void;
   /**
    * The in-sheet StepBack button. Pops history when the sheet pushed the
    * previous entry, so it matches the phone's Back; otherwise rewrites to
-   * `previous` in place.
+   * `previous` in place (null = the sheet's first screen, no `step`).
    */
-  goBack: (previous: string) => void;
+  goBack: (previous: string | null) => void;
   /** Close the sheet, popping every entry it pushed. */
   closeSheet: () => void;
 };
@@ -96,16 +103,34 @@ export const useOwnerSheet = (): UseOwnerSheetResult => {
     [sheet]
   );
 
-  const replaceCurrentStep = useCallback(
+  // The entry a correction is popping away from, until the pop lands. history.go()
+  // is asynchronous (it ends in popstate), so in between, a re-run of the flow's
+  // correction effect (its deps changed, e.g. venues finished loading) must not
+  // pop a second entry. Keyed by URL + depth (the entry popped to always has a
+  // smaller depth). Cleared on that popstate, so a later visit to the same entry
+  // (the browser's Forward) is corrected again.
+  const poppingFrom = useRef<string | null>(null);
+
+  const correctStep = useCallback(
     (targetStep: string | null) => {
       if (!sheet) return;
-      replaceStep(window.history, browserLocation(), sheet, targetStep);
+      const here = `${window.location.href}|${readSheetDepth(window.history.state)}`;
+      if (poppingFrom.current === here) return;
+      if (correctStepInHistory(window.history, browserLocation(), sheet, targetStep) !== "popped") return;
+      poppingFrom.current = here;
+      window.addEventListener(
+        "popstate",
+        () => {
+          poppingFrom.current = null;
+        },
+        { once: true }
+      );
     },
     [sheet]
   );
 
   const goBack = useCallback(
-    (previous: string) => {
+    (previous: string | null) => {
       if (!sheet) return;
       stepBack(window.history, browserLocation(), sheet, previous);
     },
@@ -127,7 +152,7 @@ export const useOwnerSheet = (): UseOwnerSheetResult => {
     displayStepFor,
     openSheet,
     goToStep,
-    replaceCurrentStep,
+    correctStep,
     goBack,
     closeSheet,
   };

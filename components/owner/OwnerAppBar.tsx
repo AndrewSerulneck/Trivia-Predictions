@@ -10,6 +10,7 @@ import { OWNER_MENU_ITEMS } from "@/components/owner/menu/ownerMenuItems";
 import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
 import { PartnerManual } from "@/components/owner/PartnerManual";
 import { menuHintForThisVisit } from "@/lib/ownerMenuHint";
+import { pushSheet, type OwnerSheetId } from "@/lib/ownerSheetParams";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // OwnerAppBar — the slim sticky top bar of the Partner Dashboard
@@ -19,6 +20,14 @@ import { menuHintForThisVisit } from "@/lib/ownerMenuHint";
 // passes `leading` (the dark sub-pages pass ExitBackButton), that instead. There
 // is exactly one control top-left, so the drawer only exists on the dashboard.
 // Centre: the title / venue switcher. Trailing: empty, reserved.
+//
+// Menu rows that open a dashboard sheet (Order Join Merch) wait for the drawer's
+// exit like the link rows, then push `?sheet=` with the native history driver
+// (never router.push — the depth counter rides in history.state). The
+// dashboard's useOwnerSheet() sees the new URL and opens the sheet. There is
+// no off-dashboard fallback: the drawer only exists on the dashboard, and a
+// navigation to a sheet URL is exactly what CLAUDE.md forbids
+// (join-merch-store-plan.md Phase 4.1, F5).
 //
 // This file is the SignOutButton host: Sign Out is the LAST drawer item, below a
 // divider, with no arrow (navigation-unification-plan.md §0).
@@ -39,6 +48,22 @@ const noHint = () => false;
 const isPlainClick = (event: MouseEvent<HTMLAnchorElement>): boolean =>
   event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 
+const DASHBOARD_PATH = "/owner/dashboard";
+
+/**
+ * Open a dashboard sheet from the menu: a push in place. The drawer only exists
+ * on the dashboard, so anywhere else this is a bug in the caller, not a reason to navigate.
+ */
+const openDashboardSheet = (sheet: OwnerSheetId): void => {
+  if (window.location.pathname !== DASHBOARD_PATH) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[OwnerAppBar] "${sheet}" sheet row used off ${DASHBOARD_PATH}; ignored.`);
+    }
+    return;
+  }
+  pushSheet(window.history, window.location, sheet);
+};
+
 const MENU_ROW_CLASS =
   "flex min-h-14 w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ht-cyan-300";
 
@@ -51,6 +76,8 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
   // THIS page), then we navigate — otherwise the lock's cleanup restores the
   // dashboard's scroll offset onto the new page.
   const pendingHref = useRef<string | null>(null);
+  // Same for a row that opens a dashboard sheet: push `?sheet=` only after the drawer is gone.
+  const pendingSheet = useRef<OwnerSheetId | null>(null);
   // First visit only: pulse the arrow button a few times so it reads as a button.
   // Only where the arrow is shown — a sub-page with `leading` must not spend the hint.
   const hintPulse = useSyncExternalStore(subscribeNothing, leading ? noHint : menuHintForThisVisit, noHint);
@@ -66,6 +93,7 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
             type="button"
             onClick={() => {
               pendingHref.current = null; // reopened mid-exit: that link was abandoned
+              pendingSheet.current = null;
               setMenuOpen(true);
             }}
             aria-label="Open menu"
@@ -103,8 +131,11 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
             returnFocusRef={logoRef}
             onExited={() => {
               const href = pendingHref.current;
+              const sheet = pendingSheet.current;
               pendingHref.current = null;
+              pendingSheet.current = null;
               if (href) router.push(href);
+              else if (sheet) openDashboardSheet(sheet);
             }}
           >
             <div className="mb-2 flex items-center gap-3 px-3">
@@ -134,6 +165,23 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
                     <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-slate-500" />
                   </>
                 );
+                if (item.sheet) {
+                  const sheet = item.sheet;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      aria-haspopup="dialog"
+                      onClick={() => {
+                        pendingSheet.current = sheet;
+                        setMenuOpen(false);
+                      }}
+                      className={MENU_ROW_CLASS}
+                    >
+                      {body}
+                    </button>
+                  );
+                }
                 return item.id === "manual" ? (
                   <button
                     key={item.id}

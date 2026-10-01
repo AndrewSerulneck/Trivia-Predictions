@@ -102,12 +102,13 @@ export const RewardsFlow = ({
   const [wizardStep, setWizardStep] = useState<RewardWizardStep>("definition");
   if (isRewardWizardStep(step) && step !== wizardStep) setWizardStep(step);
 
-  // A stale or hand-edited `?step=` (or one whose reward a reload lost) is corrected in place.
+  // A stale or hand-edited `?step=` (or one whose reward a reload lost) is corrected: popped back
+  // to the screen under it when this sheet pushed one, so no screen gets two entries (F3).
   const urlStep = nav.step;
-  const replaceCurrentStep = nav.replaceCurrentStep;
+  const correctStep = nav.correctStep;
   useEffect(() => {
-    if (open && urlStep !== null && urlStep !== step) replaceCurrentStep(step);
-  }, [open, urlStep, step, replaceCurrentStep]);
+    if (open && urlStep !== null && urlStep !== step) correctStep(step);
+  }, [open, urlStep, step, correctStep]);
 
   const venues = useMemo(() => [{ id: venueId, name: venueName }], [venueId, venueName]);
 
@@ -167,7 +168,7 @@ export const RewardsFlow = ({
   const handleWizardStep = (next: RewardWizardStep, change: RewardWizardStepChange) => {
     if (change === "forward") nav.goToStep(next);
     else if (change === "back") nav.goBack(next);
-    else nav.replaceCurrentStep(next);
+    else nav.correctStep(next); // "replace" = the wizard corrected a step whose data a reload lost
   };
 
   const renderScreen = (id: RewardScreen): ReactNode => {
@@ -253,6 +254,8 @@ export const RewardsFlow = ({
         onExited={resetIfFinished}
         title={screen === "wizard" ? "Offer a reward" : "Rewards"}
         footer={footer}
+        // `step`, not `screen`: the wizard slides its own steps inside one pane, and each starts at the top too.
+        scrollKey={step}
       >
         <SlideSteps steps={REWARD_SLIDE_ORDER} current={screen} renderStep={renderScreen} />
       </OwnerSheet>

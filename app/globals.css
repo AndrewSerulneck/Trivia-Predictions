@@ -16,6 +16,9 @@
   --ht-surface:         #0f172a;   /* card / panel default (slate-900)   */
   --ht-elevated:        #1e293b;   /* nested panel / input (slate-800)   */
   --ht-elevated-2:      #334155;   /* highest nested level (slate-700)   */
+  /* Join Merch store panel (light). Matches the product photos' white
+     (measured ≈ #FEFEFE). See docs/join-merch-store-plan.md §3a.        */
+  --ht-store-paper:     #fefefe;
 
   /* Borders — always rgba on dark, never pure slate-200 / gray-200       */
   --ht-border-hairline: rgba(255, 255, 255, 0.08);  /* default card edge  */
@@ -1013,8 +1016,21 @@ body.tp-pickem-force-scroll {
   }
 }
 
-button:not(:disabled),
-a[role="button"] {
+/* LIGHT SURFACES OPT OUT of the element-level dark form styling below.
+   The four rules marked "light-surface scoped" style bare `button`, `input`,
+   `select`, `textarea` and `.tp-clean-button` for the dark app (white/12%
+   borders, slate-700 field borders with !important, a cyan focus border,
+   weight 600). Inside an element with `ht-light-surface` — today the light
+   OwnerSheet, i.e. the Join Merch store — they do not apply, so the
+   controls' own Tailwind classes are the whole story and need no `!`.
+   `:where()` adds zero specificity, so every other surface matches exactly as
+   before. Only these rules are scoped; the small-phone sizing rules (min-height,
+   ≤380px padding) and the coarse-pointer 16px font still apply everywhere.
+   docs/join-merch-store-plan.md Phase 4.4 (F7). */
+
+/* light-surface scoped */
+button:not(:disabled):where(:not(.ht-light-surface *)),
+a[role="button"]:where(:not(.ht-light-surface *)) {
   @apply transition-all duration-150;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
@@ -1027,7 +1043,8 @@ a[role="button"]:active {
   transform: translateY(1px);
 }
 
-.tp-clean-button {
+/* light-surface scoped */
+.tp-clean-button:where(:not(.ht-light-surface *)) {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
   border-radius: 10px !important;
@@ -1038,9 +1055,10 @@ a[role="button"]:active {
   box-shadow: none !important;
 }
 
-input,
-select,
-textarea {
+/* light-surface scoped */
+input:where(:not(.ht-light-surface *)),
+select:where(:not(.ht-light-surface *)),
+textarea:where(:not(.ht-light-surface *)) {
   border: 1px solid #334155 !important;
   border-radius: 12px !important;
   box-shadow: none;
@@ -1067,10 +1085,11 @@ textarea {
   caret-color: #ffffff !important;
 }
 
-/* Cyan focus ring — higher specificity than bare `input` rule, overrides box-shadow: none */
-input:focus,
-select:focus,
-textarea:focus {
+/* Cyan focus ring — higher specificity than bare `input` rule, overrides box-shadow: none.
+   light-surface scoped */
+input:focus:where(:not(.ht-light-surface *)),
+select:focus:where(:not(.ht-light-surface *)),
+textarea:focus:where(:not(.ht-light-surface *)) {
   border-color: #22d3ee !important;
   box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.18);
   outline: none;

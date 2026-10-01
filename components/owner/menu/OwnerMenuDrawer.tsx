@@ -11,14 +11,17 @@ import { useModalOverlay } from "@/components/owner/sheet/useModalOverlay";
 // `open`, Escape on the topmost overlay only, Tab trap, focus return, popup
 // scroll lock, portal) with a slide-in-from-the-left entrance.
 //
-// Phase 1 ships the empty shell. Phase 2 fills `children` (inside a <nav>) with the six rows in
-// §4b's order (Venue Display, Billing, Partner Manual, Game Settings, Account
-// Settings, then a divider and SignOutButton LAST) and adds this file's host to
-// the SignOutButton allowlist in tests/navigation-controls-contract.test.ts.
+// The host (OwnerAppBar) fills `children` with a <nav> of the rows in
+// components/owner/menu/ownerMenuItems.ts: Venue Display, Order Join Merch,
+// Billing, Partner Manual, Game Settings, Account Settings (order per
+// docs/join-merch-store-plan.md, which supersedes §4b's), then a divider and
+// SignOutButton LAST. OwnerAppBar is on the SignOutButton allowlist in
+// tests/navigation-controls-contract.test.ts.
 //
 // Opening another overlay from a row (Partner Manual): close the drawer, and
 // pass the logo button as the sheet's `returnFocusRef` — the drawer row that
-// had focus is gone by the time the sheet closes.
+// had focus is gone by the time the sheet closes. A dashboard-sheet row (Order
+// Join Merch) instead waits for `onExited`, then pushes `?sheet=`.
 
 export type OwnerMenuDrawerProps = {
   open: boolean;

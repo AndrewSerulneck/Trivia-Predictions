@@ -203,6 +203,114 @@ describe("OwnerSheet", () => {
   });
 });
 
+describe("OwnerSheet scrollKey (join-merch-store-plan Phase 4.3, F6)", () => {
+  // Each flow step starts at the top: a changed key scrolls the body back up.
+  afterEach(() => {
+    cleanup();
+    document.body.removeAttribute("style");
+    document.body.className = "";
+  });
+
+  const body = () => dialog()?.querySelector<HTMLElement>(".overflow-y-auto") ?? null;
+  const renderKeyed = (scrollKey: string | undefined) =>
+    createElement(OwnerSheet, sheetProps({ scrollKey }), "Body");
+
+  it("a changed scrollKey resets the body to the top", () => {
+    const { rerender } = render(renderKeyed("shop"));
+    const scroller = body() as HTMLElement;
+    scroller.scrollTop = 480;
+    rerender(renderKeyed("review"));
+    expect(body()).toBe(scroller);
+    expect(scroller.scrollTop).toBe(0);
+  });
+
+  it("an unchanged scrollKey leaves the scroll position alone", () => {
+    const { rerender } = render(renderKeyed("shop"));
+    const scroller = body() as HTMLElement;
+    scroller.scrollTop = 480;
+    rerender(renderKeyed("shop"));
+    expect(scroller.scrollTop).toBe(480);
+  });
+
+  it("adds no markup", () => {
+    render(createElement(OwnerSheet, sheetProps({ titleId: "t" }), "Body"));
+    const without = dialog()?.parentElement?.outerHTML;
+    cleanup();
+    render(createElement(OwnerSheet, sheetProps({ titleId: "t", scrollKey: "when" }), "Body"));
+    expect(dialog()?.parentElement?.outerHTML).toBe(without);
+  });
+});
+
+describe("OwnerSheet tones (join-merch-store-plan Phase 2)", () => {
+  // The dark tone is the Partner Manual / Schedule / Rewards look. These
+  // snapshots were recorded BEFORE `tone` existed, so they pin that adding
+  // the light tone left dark output byte-for-byte unchanged.
+  afterEach(() => {
+    cleanup();
+    document.body.removeAttribute("style");
+    document.body.className = "";
+  });
+
+  const scrimHtml = () => dialog()?.parentElement?.outerHTML ?? "";
+
+  const variants: [string, Partial<SheetProps>][] = [
+    ["tall + eyebrow + footer", { eyebrow: "Hightop Challenge", footer: createElement("span", null, "Footer"), titleId: "t" }],
+    ["tall, no footer", { titleId: "t" }],
+    ["card + eyebrow", { size: "card", eyebrow: "Hightop Challenge", titleId: "t" }],
+  ];
+
+  for (const [name, overrides] of variants) {
+    it(`dark (default) markup is pinned: ${name}`, () => {
+      render(createElement(OwnerSheet, sheetProps(overrides), "Body"));
+      expect(scrimHtml()).toMatchSnapshot();
+    });
+  }
+
+  it('tone="dark" is the same markup as no tone', () => {
+    render(createElement(OwnerSheet, sheetProps({ titleId: "t", eyebrow: "E" }), "Body"));
+    const implicit = scrimHtml();
+    cleanup();
+    render(createElement(OwnerSheet, sheetProps({ titleId: "t", eyebrow: "E", tone: "dark" }), "Body"));
+    expect(scrimHtml()).toBe(implicit);
+  });
+
+  it("light: store-paper panel, slate hairlines and text, a white Close, light native controls, dark scrim", () => {
+    render(
+      createElement(
+        OwnerSheet,
+        sheetProps({ tone: "light", eyebrow: "Hightop Challenge Store", footer: createElement("span", null, "Bar") }),
+        "Body"
+      )
+    );
+    const panel = dialog() as HTMLElement;
+    expect(panel.className).toContain("bg-ht-store-paper");
+    expect(panel.className).toContain("[color-scheme:light]");
+    // Opts the whole panel (header, body, footer) out of globals.css's dark form CSS (Phase 4.4, F7).
+    expect(panel.className.split(" ")).toContain("ht-light-surface");
+    expect(panel.className).not.toContain("bg-ht-surface");
+    expect(panel.className).not.toContain("border-ht-hairline");
+    expect(panel.parentElement?.className).toContain("bg-slate-950/70");
+
+    const html = panel.outerHTML;
+    for (const dark of ["ht-hairline", "bg-ht-elevated", "text-ht-primary", "text-ht-cyan-300"]) {
+      expect(html).not.toContain(dark);
+    }
+    expect(screen.getByRole("heading", { name: "Schedule a live game" }).className).toContain("!text-slate-900");
+    expect(screen.getByText("Hightop Challenge Store").className).toContain("text-cyan-700");
+    const close = screen.getByRole("button", { name: "Close" });
+    expect(close.className).toContain("bg-white");
+    // Plain utilities, no `!`: the light surface keeps the global button border out.
+    expect(close.className.split(" ")).toContain("border-slate-300");
+    expect(close.className).not.toMatch(/(^|\s)!/);
+    // Same 12px / 600 the dark Close renders (there via the global button rule).
+    expect(close.className.split(" ")).toEqual(expect.arrayContaining(["rounded-xl", "font-semibold"]));
+    expect(close.className).toContain("text-slate-700");
+    expect(panel.querySelector("header")?.className).toContain("border-slate-200");
+    expect(screen.getByText("Bar").parentElement?.className).toContain("border-slate-200");
+    expect(panel.querySelector("span.rounded-full")?.className).toContain("bg-slate-300");
+  });
+});
+
 describe("OwnerMenuDrawer", () => {
   beforeEach(() => {
     vi.useFakeTimers();

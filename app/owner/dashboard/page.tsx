@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { DashboardNotice } from "@/components/owner/dashboard/DashboardNotice";
@@ -11,11 +11,14 @@ import { LiveGamesSection, type SectionLoad } from "@/components/owner/dashboard
 import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
 import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/RewardsFlow";
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
+import { MerchStoreSheet } from "@/components/owner/store/MerchStoreSheet";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
+import type { MerchCart, MerchVenueRef } from "@/lib/merchPricing";
 import { knownItemIds, resolvePendingHighlight, type PendingHighlight } from "@/lib/ownerDashboardHighlight";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
 import { useOwnerSheet } from "@/lib/useOwnerSheet";
+import { useVenueMerchCart } from "@/lib/useVenueMerchCart";
 import type { OwnerSchedule } from "@/types";
 
 type Venue = {
@@ -56,8 +59,13 @@ const fetchList = async <T,>(
 };
 
 
+type DashboardBodyProps = {
+  venueId: string;
+  venueName: string;
+};
+
 // Keyed by venue at the call site: switching venues remounts it with fresh loading state.
-const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: string }) => {
+const DashboardBody = ({ venueId, venueName }: DashboardBodyProps) => {
   const router = useRouter();
   const sheet = useOwnerSheet();
   const [games, setGames] = useState<SectionLoad<OwnerSchedule>>({ status: "loading" });
@@ -259,6 +267,31 @@ const DashboardBody = ({ venueId, venueName }: { venueId: string; venueName: str
   );
 };
 
+type MerchStoreHostProps = {
+  venue: MerchVenueRef | null;
+  venueLoading: boolean;
+  cart: MerchCart;
+  onCartChange: Dispatch<SetStateAction<MerchCart>>;
+};
+
+// The Join Merch store, opened from the menu's "Order Join Merch" row (?sheet=store).
+// Hosted by the PAGE, outside DashboardBody, so the row opens it while venues load and
+// on an account with no venue (join-merch-store-plan.md Phase 4.1, F2). Its own
+// useOwnerSheet (idempotent landing normalisation), so it sits in its own Suspense.
+// Look-only: no requests.
+const MerchStoreHost = ({ venue, venueLoading, cart, onCartChange }: MerchStoreHostProps) => {
+  const sheet = useOwnerSheet();
+  return (
+    <MerchStoreSheet
+      nav={sheet}
+      venue={venue}
+      venueLoading={venueLoading}
+      cart={cart}
+      onCartChange={onCartChange}
+    />
+  );
+};
+
 const OwnerDashboardPage = () => {
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -288,6 +321,8 @@ const OwnerDashboardPage = () => {
   }, [router]);
 
   const selectedVenue = useMemo(() => venues.find((v) => v.id === selectedVenueId), [venues, selectedVenueId]);
+  // Join Merch carts, one per venue: kept across the store closing, never moved by a venue switch (F1).
+  const [merchCart, setMerchCart] = useVenueMerchCart(selectedVenue?.id ?? null);
 
   // Bar centre: the venue name; with 2+ venues it is the switcher.
   const venueSwitcher = selectedVenue ? (
@@ -333,9 +368,21 @@ const OwnerDashboardPage = () => {
         </div>
       ) : (
         <Suspense fallback={<SectionSkeleton label="Loading dashboard" />}>
-          <DashboardBody key={selectedVenueId} venueId={selectedVenueId} venueName={selectedVenue?.name ?? "This venue"} />
+          <DashboardBody
+            key={selectedVenueId}
+            venueId={selectedVenueId}
+            venueName={selectedVenue?.name ?? "This venue"}
+          />
         </Suspense>
       )}
+      <Suspense fallback={null}>
+        <MerchStoreHost
+          venue={selectedVenue ?? null}
+          venueLoading={loading}
+          cart={merchCart}
+          onCartChange={setMerchCart}
+        />
+      </Suspense>
     </OwnerShell>
   );
 };
