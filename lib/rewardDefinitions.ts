@@ -26,6 +26,8 @@ export type RewardDefinition = {
   id: RewardDefinitionId;
   /** Reward name shown on the card and stored as the campaign name. */
   name: string;
+  /** Just the game's name, no "Challenge" — the wizard's "Which game…?" option buttons show this. */
+  gameName: string;
   /** The game whose points count toward the threshold. */
   gameType: ChallengeGameType;
   /** Rewards are threshold+quantity (progress) only — leaderboard mode is retired. */
@@ -68,6 +70,7 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
   {
     id: "live_trivia_challenge",
     name: "Live Trivia Challenge",
+    gameName: "Live Trivia",
     gameType: "live-trivia",
     challengeMode: "progress",
     requiresScheduledGame: "live_trivia",
@@ -83,6 +86,7 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
   {
     id: "nfl_pickem_challenge",
     name: "NFL Pick 'Em Challenge",
+    gameName: "NFL Pick 'Em",
     gameType: "nfl-pickem",
     challengeMode: "progress",
     // Gates on the NFL season calendar (nfl_pickem_weeks), not on anything the

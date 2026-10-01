@@ -722,7 +722,7 @@ export function CreateRewardWizard({
               >
                 <span className="text-lg">{def.glyph}</span>
                 <span className="min-w-0">
-                  <span className="block font-black">{def.name}</span>
+                  <span className="block font-black">{def.gameName}</span>
                 </span>
               </button>
             ))}

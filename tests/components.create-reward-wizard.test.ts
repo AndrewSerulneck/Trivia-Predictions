@@ -110,7 +110,7 @@ describe("CreateRewardWizard — sheet mode (animateSteps)", () => {
     const { container } = renderOwner({ animateSteps: true });
     await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
     expect(container.querySelector("[data-step='definition']")).not.toBeNull();
-    expect(container.querySelector("[data-step-heading]")?.textContent).toBe("Which reward?");
+    expect(container.querySelector("[data-step-heading]")?.textContent).toBe("Which game should the reward be tied to?");
     expect(container.firstElementChild?.className).toBe("");
 
     fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
