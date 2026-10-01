@@ -190,7 +190,7 @@ function VenueGamesPanelInner({
                       <div
                         className="text-[2rem] font-black uppercase leading-[0.95] text-white"
                         style={{
-                          fontFamily: "'Bree Serif', 'Nunito', serif",
+                          fontFamily: "var(--ht-font-display)",
                           letterSpacing: "0.045em",
                           textShadow: "0 1px 0 rgba(12,18,28,.8), 0 3px 0 rgba(12,18,28,.58)",
                         }}

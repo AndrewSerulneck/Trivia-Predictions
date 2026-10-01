@@ -69,10 +69,10 @@ export const GameMark = ({ game }: { game: GameChromeKey }) => {
       className="relative h-[26px] w-[26px] shrink-0 overflow-hidden rounded-[7px] border-[1.5px] border-amber-200/70 bg-[#0a3128] shadow-[0_0_0_1px_rgba(254,243,199,0.18)]"
     >
       <span className="absolute inset-0 bg-[linear-gradient(rgba(254,243,199,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(254,243,199,0.16)_1px,transparent_1px)] bg-[length:6px_6px]" />
-      <span className="absolute left-[3px] top-px -rotate-[10deg] text-[13px] font-black leading-none text-amber-200 [font-family:'Bree_Serif','Nunito',serif]">
+      <span className="absolute left-[3px] top-px -rotate-[10deg] text-[13px] font-black leading-none text-amber-200 [font-family:var(--ht-font-display)]">
         X
       </span>
-      <span className="absolute bottom-0 right-[3px] rotate-[8deg] text-[13px] font-black leading-none text-cyan-300 [font-family:'Bree_Serif','Nunito',serif]">
+      <span className="absolute bottom-0 right-[3px] rotate-[8deg] text-[13px] font-black leading-none text-cyan-300 [font-family:var(--ht-font-display)]">
         O
       </span>
     </span>

@@ -51,7 +51,14 @@ type VenueRow = { id: string; name: string };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
-/** Stub the dashboard's three list endpoints; `venues` resolves when `release` is called (default: at once). */
+/**
+ * Stub the dashboard's endpoints; the first load resolves when `release` is called
+ * (default: at once).
+ *
+ * `/api/owner/dashboard` is the ONE call the first paint makes (speed plan Phase 5):
+ * venue list + both sections behind one auth check. The per-list routes are still
+ * stubbed because a venue switch, a Retry and a post-save refetch use them.
+ */
 const stubApi = (venues: VenueRow[], options: { hold?: boolean } = {}) => {
   let release: () => void = () => undefined;
   const gate = options.hold ? new Promise<void>((resolve) => (release = resolve)) : Promise.resolve();
@@ -59,9 +66,15 @@ const stubApi = (venues: VenueRow[], options: { hold?: boolean } = {}) => {
     "fetch",
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.startsWith("/api/owner/venues")) {
+      if (url.startsWith("/api/owner/dashboard")) {
         await gate;
-        return json({ ok: true, venues });
+        return json({
+          ok: true,
+          venues,
+          venueId: venues[0]?.id ?? null,
+          schedules: venues.length > 0 ? { ok: true, items: [] } : null,
+          competitions: venues.length > 0 ? { ok: true, items: [] } : null,
+        });
       }
       if (url.startsWith("/api/owner/schedule")) return json({ ok: true, schedules: [] });
       if (url.startsWith("/api/owner/competitions")) return json({ ok: true, competitions: [] });
@@ -76,6 +89,24 @@ const go = (search: string) =>
     window.history.pushState(null, "", `/owner/dashboard${search}`);
     notifyHistory();
   });
+
+/**
+ * Wait until BOTH `useOwnerSheet` consumers are mounted — `MerchStoreHost` (first
+ * render) and `DashboardBody` (once the venue list lands).
+ *
+ * Why it matters: each one runs `normalizeLandedSheet` once, on mount. A `go()`
+ * that lands a `?sheet=` URL while `DashboardBody` has yet to mount is then
+ * normalised by it (depth 0 -> 1), and every push after that sits one level
+ * deeper than the test intends — which silently moves `stepBack` off the
+ * synchronous replace branch and onto the async `history.go(-1)` one. That is
+ * what made F4 flake under full-suite timing while passing in isolation. The
+ * venue switcher is NOT a sufficient gate: the page renders it, and it can
+ * commit before the body mounts. Wait for a section the body itself renders.
+ */
+const awaitDashboardMounted = async () => {
+  await screen.findByRole("button", { name: "Select venue" });
+  await screen.findByRole("heading", { name: "Offer Rewards" });
+};
 
 const store = () => screen.getByRole("dialog", { name: "Order Join Merch" });
 
@@ -128,7 +159,7 @@ describe("Partner Dashboard × Join Merch store (Phase 4.1)", () => {
       { id: "venue-b", name: "Bravo Bar" },
     ]);
     render(createElement(OwnerDashboardPage));
-    await screen.findByRole("button", { name: "Select venue" });
+    await awaitDashboardMounted();
 
     // Venue A: pick a pack, review it.
     await go("?sheet=store");
@@ -274,7 +305,7 @@ describe("Partner Dashboard × Join Merch store (Phase 4.1)", () => {
         { id: "venue-b", name: "Bravo Bar" },
       ]);
       render(createElement(OwnerDashboardPage));
-      await screen.findByRole("button", { name: "Select venue" });
+      await awaitDashboardMounted();
       const writes = spyHistoryWrites();
 
       await go("?sheet=store");
@@ -283,7 +314,9 @@ describe("Partner Dashboard × Join Merch store (Phase 4.1)", () => {
       notifyHistory();
       await within(store()).findByRole("heading", { name: "Review your order" });
       // `go()` pushed the Shop with no depth, so Review is the sheet's first pushed entry and
-      // Back rewrites it in place: the path where the old code wrote `step=shop`.
+      // Back rewrites it in place: the path where the old code wrote `step=shop`. Pinned,
+      // because at depth 2 `stepBack` pops instead and this test would assert nothing.
+      expect(window.history.state).toMatchObject({ ownerSheetDepth: 1 });
       fireEvent.click(within(store()).getByRole("button", { name: /Back to store/ }));
       notifyHistory();
       expect(window.location.search).toBe("?sheet=store");

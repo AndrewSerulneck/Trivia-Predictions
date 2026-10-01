@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { Bree_Serif, Nunito } from "next/font/google";
 import { Suspense } from "react";
-import { PopupAds } from "@/components/ui/PopupAds";
-import { MobileAdhesionAd } from "@/components/ui/MobileAdhesionAd";
-import { GlobalTransitionOverlay } from "@/components/ui/GlobalTransitionOverlay";
+import { PlayerRuntime } from "@/components/ui/PlayerRuntime";
 import { ScrollRecoverySentinel } from "@/components/ui/ScrollRecoverySentinel";
 import { ScrollRescueGuard } from "@/components/ui/ScrollRescueGuard";
 import { StandalonePwaRuntime } from "@/components/ui/StandalonePwaRuntime";
@@ -10,15 +9,45 @@ import { ViewportHeightSync } from "@/components/ui/ViewportHeightSync";
 import { AuthSessionProvider } from "@/components/auth/AuthSessionProvider";
 import { AuthNavigationGuard } from "@/components/auth/AuthNavigationGuard";
 import { LoginStuckStateBreaker } from "@/components/auth/LoginStuckStateBreaker";
-import { AnalyticsRuntime } from "@/components/analytics/AnalyticsRuntime";
 import { OwnerRecoveryRedirectGuard } from "@/components/owner/OwnerRecoveryRedirectGuard";
 import { AppShell } from "@/components/ui/AppShell";
-import { AnimationOverlay } from "@/components/animations/AnimationOverlay";
 import { AnimationTriggerProvider } from "@/components/animations/AnimationTriggerProvider";
 import { initializeScheduledTasks } from "@/lib/scheduledTasks";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hightopchallenge.com";
+
+// Self-hosted at build time by `next/font`, which emits the font files from our
+// own origin and preloads them from this layout. The previous
+// `@import url("https://fonts.googleapis.com/...")` at the top of globals.css
+// made every first load walk a three-step chain on two extra origins
+// (our CSS -> fonts.googleapis.com CSS -> fonts.gstatic.com files) before text
+// settled; see finding F3 in
+// docs/partner-dashboard-merch-button-loader-speed-plan.md.
+//
+// Next 16 keeps the REAL family names here ("Bree Serif", "Nunito"), so a bare
+// `font-family: "Bree Serif"` would still resolve. The reason every call site
+// was moved onto the --ht-font-display / --ht-font-body tokens in globals.css
+// anyway is that `next/font` also emits a metric-matched fallback face
+// ("Bree Serif Fallback" / "Nunito Fallback") whose ascent/descent/width are
+// adjusted to the real font. Only the `.variable` value below carries that
+// fallback, so a hand-written literal family silently gives up the
+// layout-shift protection it exists to provide. Go through the tokens.
+// tests/fonts-contract.test.ts fails the build if a literal comes back.
+const breeSerif = Bree_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-bree-serif",
+});
+
+// Nunito is a variable font: one file covers the 400/600/700/800/900 weights the
+// old @import listed separately, so this is also fewer bytes than before.
+const nunito = Nunito({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-nunito",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -92,9 +121,8 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className="m-0 p-0">
+    <html lang="en" className={`m-0 p-0 ${breeSerif.variable} ${nunito.variable}`}>
       <head>
-        <link rel="preload" href="/brand/htc-logo.png" as="image" fetchPriority="high" />
         {/* Next's `appleWebApp` metadata only emits the modern unprefixed
             `mobile-web-app-capable`, which WebKit only honors from iOS
             17.4+. Pre-17.4 iOS needs this legacy name to get the chromeless
@@ -114,11 +142,13 @@ export default async function RootLayout({
             <ScrollRescueGuard />
             <StandalonePwaRuntime />
             <ViewportHeightSync />
-            <AnimationOverlay />
-            <GlobalTransitionOverlay />
-            <AnalyticsRuntime />
-            <PopupAds />
-            <MobileAdhesionAd />
+            {/* The player-only runtime (gameplay animations, the venue-entry
+                transition overlay, analytics and the two ad surfaces). Mounted
+                through a wrapper so its code is never downloaded on /owner/* or
+                /admin — see lib/playerRuntimePaths.ts and finding F5 in
+                docs/partner-dashboard-merch-button-loader-speed-plan.md. Keep it
+                inside AnimationTriggerProvider: AnimationOverlay reads it. */}
+            <PlayerRuntime />
           </AnimationTriggerProvider>
         </AuthSessionProvider>
       </body>

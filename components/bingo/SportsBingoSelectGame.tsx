@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import { writeSelectedBingoGame } from "@/lib/bingoSelectedGameCache";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 
 export type SportsBingoGame = {
   id: string;
@@ -222,7 +222,7 @@ export function SportsBingoSelectGame({
 
         {loading ? (
           <div className="mt-3">
-            <BouncingBallLoader size="sm" label="Loading games..." />
+            <HightopLoader size="sm" variant="card" showLabel label="Loading games..." />
           </div>
         ) : games.length === 0 ? (
           <div className="mt-3 rounded-md border border-sky-300/25 bg-slate-800/60 p-3 text-sm text-sky-200">

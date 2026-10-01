@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
@@ -252,7 +253,7 @@ const OwnerAccountPage = () => {
     >
       <div className="space-y-5">
         {loading ? (
-          <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
+          <HightopLoader size="lg" className="py-10" />
         ) : !owner ? (
           <div className={cardClass}>
             <p className="text-sm font-semibold text-ht-muted">We couldn&apos;t load your account right now.</p>

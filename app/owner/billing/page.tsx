@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { effectiveAmountCents } from "@/lib/billingDisplay";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 
@@ -250,7 +251,7 @@ const OwnerBillingPage = () => {
       backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
     >
       {loading ? (
-        <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
+        <HightopLoader size="lg" className="py-10" />
       ) : !subscription ? (
         <div className="space-y-5">
           {urlBanner ? (

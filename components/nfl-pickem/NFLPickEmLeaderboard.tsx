@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronDown, Trophy } from "lucide-react";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { NFL_REWARD_MIN_PICKERS } from "@/lib/nflPickEmRewardWeeks";
 import { describeRewardPrize } from "@/lib/rewardDefinitions";
 import type { RewardDiscountKind, RewardMenuItem, RewardPrizeKind } from "@/types";
@@ -366,7 +366,7 @@ export function NFLPickEmLeaderboard({
 
       {loading && entries.length === 0 ? (
         <div className="flex items-center justify-center py-8">
-          <BouncingBallLoader size="sm" label="Loading leaderboard..." />
+          <HightopLoader size="sm" variant="card" showLabel label="Loading leaderboard..." />
         </div>
       ) : !error && entries.length === 0 ? (
         <p className="px-1 text-[12px] font-semibold text-slate-500">

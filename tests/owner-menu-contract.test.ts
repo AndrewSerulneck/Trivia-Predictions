@@ -69,4 +69,28 @@ describe("owner menu contract", () => {
     expect(dark).not.toContain("ExplodingLogo");
     expect(dark).not.toContain("OwnerAccountMenu");
   });
+
+  it("dashboard header: the store button replaces the logo, only where there is no `leading` (merch-button plan Phase 1)", () => {
+    const src = read("components/owner/OwnerAppBar.tsx");
+    expect(src).not.toContain("ExplodingLogo");
+    // Sub-pages (leading = ExitBackButton) keep the 40 px spacer; the dashboard gets the button.
+    expect(src).toContain('{leading ? <span aria-hidden="true" className="h-10 w-10 shrink-0" /> : <HeaderStoreButton />}');
+    expect(src.match(/<HeaderStoreButton \/>/g) ?? []).toHaveLength(1);
+  });
+
+  it("the header store button opens the store sheet in place, with dialog semantics and the agreed labels", () => {
+    const src = read("components/owner/OwnerAppBar.tsx");
+    const view = src.slice(src.indexOf("const HeaderStoreButtonView"), src.indexOf("const HeaderStoreButtonLive"));
+    expect(view).toContain('openDashboardSheet("store")');
+    expect(view).not.toContain("router.");
+    expect(view).toContain('aria-haspopup="dialog"');
+    expect(view).toContain("aria-expanded={expanded}");
+    expect(view).toContain('aria-label="Order Join Merch"');
+    expect(view).toContain("<ShoppingBag");
+    // One short label at every width (Andrew): "Shop".
+    expect(view).toMatch(/className="font-\[1000\]">\s*Shop\s*</);
+    // aria-expanded follows the URL-mirrored sheet, behind its own Suspense (useSearchParams).
+    expect(src).toContain('parseSheetParam(useSearchParams().get(SHEET_PARAM)) === "store"');
+    expect(src).toContain("<Suspense fallback={<HeaderStoreButtonView expanded={false} />}>");
+  });
 });

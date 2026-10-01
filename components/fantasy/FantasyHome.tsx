@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { getGodMode, getUserId, getVenueId } from "@/lib/storage";
 import { calculateDistanceMeters, getCurrentLocation, getGeofenceThresholdMeters } from "@/lib/geolocation";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { supabase } from "@/lib/supabase";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
@@ -604,7 +604,7 @@ function SpringPop({
 }
 
 function BasketballLoader({ label = "Loading Fantasy..." }: { label?: string }) {
-  return <BouncingBallLoader size="md" label={label} />;
+  return <HightopLoader size="md" variant="card" showLabel label={label} />;
 }
 
 function splitPlayerNameForLineup(name: string): { first: string; rest: string } {

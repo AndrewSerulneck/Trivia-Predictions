@@ -37,7 +37,7 @@ function VenueHubHeaderBarInner({
         </button>
         <h2
           className="truncate px-3 text-center text-[1.15rem] font-black uppercase tracking-[0.04em] text-cyan-300"
-          style={{ fontFamily: "'Bree Serif', 'Nunito', serif" }}
+          style={{ fontFamily: "var(--ht-font-display)" }}
         >
           {venueDisplayName}
         </h2>

@@ -1,16 +1,15 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from "react";
+import { Suspense, useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { OwnerMenuDrawer } from "@/components/owner/menu/OwnerMenuDrawer";
 import { OWNER_MENU_ITEMS } from "@/components/owner/menu/ownerMenuItems";
-import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
 import { PartnerManual } from "@/components/owner/PartnerManual";
 import { menuHintForThisVisit } from "@/lib/ownerMenuHint";
-import { pushSheet, type OwnerSheetId } from "@/lib/ownerSheetParams";
+import { parseSheetParam, pushSheet, SHEET_PARAM, type OwnerSheetId } from "@/lib/ownerSheetParams";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // OwnerAppBar — the slim sticky top bar of the Partner Dashboard
@@ -19,7 +18,10 @@ import { pushSheet, type OwnerSheetId } from "@/lib/ownerSheetParams";
 // Leading slot: the logo menu button (opens the left drawer) — or, when a page
 // passes `leading` (the dark sub-pages pass ExitBackButton), that instead. There
 // is exactly one control top-left, so the drawer only exists on the dashboard.
-// Centre: the title / venue switcher. Trailing: empty, reserved.
+// Centre: the title / venue switcher. Trailing: on the dashboard, the "Order Join
+// Merch" button (opens the store sheet in place, like the menu row); on sub-pages an
+// empty spacer so the title stays centred
+// (docs/partner-dashboard-merch-button-loader-speed-plan.md Phase 1).
 //
 // Menu rows that open a dashboard sheet (Order Join Merch) wait for the drawer's
 // exit like the link rows, then push `?sheet=` with the native history driver
@@ -63,6 +65,49 @@ const openDashboardSheet = (sheet: OwnerSheetId): void => {
   }
   pushSheet(window.history, window.location, sheet);
 };
+
+const STORE_BUTTON_CLASS =
+  "flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-ht-cyan-300 px-3 text-base font-black text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ht-cyan-300";
+
+type HeaderStoreButtonProps = { expanded: boolean };
+
+/**
+ * The dashboard's header way into the Join Merch store (the menu row stays too).
+ * Pushes `?sheet=store` in place — never router.push. Focus goes to the button
+ * first (Safari doesn't focus a tapped button), so the sheet's opener capture in
+ * useModalOverlay hands focus back here when the store closes.
+ */
+const HeaderStoreButtonView = ({ expanded }: HeaderStoreButtonProps) => (
+  <button
+    type="button"
+    data-header-store-button
+    aria-haspopup="dialog"
+    aria-expanded={expanded}
+    aria-label="Order Join Merch"
+    onClick={(event) => {
+      event.currentTarget.focus({ preventScroll: true });
+      openDashboardSheet("store");
+    }}
+    className={STORE_BUTTON_CLASS}
+  >
+    <ShoppingBag aria-hidden="true" className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+    <span aria-hidden="true" className="font-[1000]">
+      Shop
+    </span>
+  </button>
+);
+
+// useSearchParams needs a Suspense boundary (Next 16); the fallback is the same button, closed.
+const HeaderStoreButtonLive = () => {
+  const open = parseSheetParam(useSearchParams().get(SHEET_PARAM)) === "store";
+  return <HeaderStoreButtonView expanded={open} />;
+};
+
+const HeaderStoreButton = () => (
+  <Suspense fallback={<HeaderStoreButtonView expanded={false} />}>
+    <HeaderStoreButtonLive />
+  </Suspense>
+);
 
 const MENU_ROW_CLASS =
   "flex min-h-14 w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ht-cyan-300";
@@ -112,14 +157,8 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
           </button>
         )}
         <div className="flex min-w-0 flex-1 items-center">{children}</div>
-        {/* Trailing slot: the brand logo on the dashboard (decorative, bounces like the sign-in logo). */}
-        {leading ? (
-          <span aria-hidden="true" className="h-10 w-10 shrink-0" />
-        ) : (
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center">
-            <ExplodingLogo width={36} />
-          </span>
-        )}
+        {/* Trailing slot: the store button on the dashboard; a spacer on sub-pages keeps the title centred. */}
+        {leading ? <span aria-hidden="true" className="h-10 w-10 shrink-0" /> : <HeaderStoreButton />}
       </div>
 
       {leading ? null : (

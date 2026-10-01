@@ -94,7 +94,7 @@ const RoundStartReveal = ({
 
         <motion.div
           layoutId={CB_LETTER_BADGE_LAYOUT_ID}
-          className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)] font-['Bree_Serif',_Nunito,_serif] text-4xl font-black leading-none text-slate-950 shadow-lg shadow-emerald-500/20"
+          className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[linear-gradient(132deg,#10b981_0%,#22c55e_50%,#14b8a6_100%)] [font-family:var(--ht-font-display)] text-4xl font-black leading-none text-slate-950 shadow-lg shadow-emerald-500/20"
           initial={
             reduce
               ? { opacity: 0 }

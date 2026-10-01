@@ -10,7 +10,7 @@ vi.mock("framer-motion", () => ({
   useReducedMotion: () => true,
   motion: { div: ({ children, initial, animate, transition, onAnimationComplete, ...rest }: any) => React.createElement("div", rest, children) },
 }));
-vi.mock("@/components/ui/BouncingBallLoader", () => ({ BouncingBallLoader: () => React.createElement("div", null, "Transition loader") }));
+vi.mock("@/components/ui/HightopLoader", () => ({ HightopLoader: () => React.createElement("div", null, "Transition loader") }));
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 it("finalizes the global overlay immediately and emits its hidden lifecycle event", () => {

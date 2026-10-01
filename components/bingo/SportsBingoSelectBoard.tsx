@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { clearSelectedBingoGame, readSelectedBingoGame } from "@/lib/bingoSelectedGameCache";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { getLeagueDisplay, toMascotDisplayName } from "@/lib/sportsBingoLeagues";
 
@@ -559,7 +559,7 @@ export function SportsBingoSelectBoard({
           {BINGO_HEADER_LETTERS.map((item) => (
             <div
               key={item.letter}
-              className={`text-center text-lg font-black tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
+              className={`text-center text-lg font-black tracking-[0.1em] [font-family:var(--ht-font-display)] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
             >
               {item.letter}
             </div>
@@ -577,7 +577,7 @@ export function SportsBingoSelectBoard({
               <div
                 key={index}
                 title={square.label}
-                className={`flex aspect-square items-center justify-center rounded-md border px-1 text-center text-[8px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] ${getPreviewSquareStyle(
+                className={`flex aspect-square items-center justify-center rounded-md border px-1 text-center text-[8px] font-bold leading-tight [font-family:var(--ht-font-display)] ${getPreviewSquareStyle(
                   isFree
                 )}`}
               >
@@ -605,7 +605,7 @@ export function SportsBingoSelectBoard({
           {BINGO_HEADER_LETTERS.map((item) => (
             <div
               key={item.letter}
-              className={`text-center text-xl font-black tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] sm:text-2xl ${item.color}`}
+              className={`text-center text-xl font-black tracking-[0.1em] [font-family:var(--ht-font-display)] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] sm:text-2xl ${item.color}`}
             >
               {item.letter}
             </div>
@@ -622,7 +622,7 @@ export function SportsBingoSelectBoard({
             return (
               <div
                 key={index}
-                className={`flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getExpandedSquareStyle(
+                className={`flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-bold leading-tight [font-family:var(--ht-font-display)] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getExpandedSquareStyle(
                   isFree
                 )}`}
               >
@@ -684,7 +684,7 @@ export function SportsBingoSelectBoard({
 
         {loadingGame ? (
           <div className="mt-2">
-            <BouncingBallLoader size="sm" label="Loading game..." />
+            <HightopLoader size="sm" variant="card" showLabel label="Loading game..." />
           </div>
         ) : !game ? (
           <div className="mt-3 rounded-md border border-sky-300/30 bg-slate-800/60 p-3 text-sm text-sky-200">

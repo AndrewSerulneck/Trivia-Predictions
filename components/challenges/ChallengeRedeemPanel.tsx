@@ -7,7 +7,7 @@ import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import type { ChallengeCampaign } from "@/types";
@@ -446,7 +446,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
 
         {loading ? (
           <div className="mt-3">
-            <BouncingBallLoader size="sm" label="Loading redemption details..." />
+            <HightopLoader size="sm" variant="card" showLabel label="Loading redemption details..." />
           </div>
         ) : null}
 

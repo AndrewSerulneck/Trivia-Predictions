@@ -1866,7 +1866,7 @@ export const AnsweringScreen = memo(function AnsweringScreen({
   } ${theme.letterGradient} ${theme.letterGlow}`;
   const letterBadgeGlyph = (
     <span
-      className={`font-['Bree_Serif',_Nunito,_serif] font-black leading-none text-slate-950 ${
+      className={`[font-family:var(--ht-font-display)] font-black leading-none text-slate-950 ${
         compactChrome ? "text-2xl" : "text-4xl"
       }`}
     >

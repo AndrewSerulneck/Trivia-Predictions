@@ -44,13 +44,14 @@ export const ExplodingLogo = ({ width = 320, variant = "canvas" }: ExplodingLogo
       style={{ width: width, height: width }}
     >
       <img
-        src="/brand/HTC_Logo_Final_Transparent%20copy.png"
+        src={width > 120 ? "/brand/web/htc-logo-512.webp" : "/brand/web/htc-logo-192.webp"}
         alt="Hightop Challenge"
         width={width}
         className={`h-auto max-w-full select-none cursor-pointer ${animationClass}`}
         draggable={false}
         loading="eager"
-        decoding="sync"
+        decoding="async"
+        fetchPriority="high"
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}

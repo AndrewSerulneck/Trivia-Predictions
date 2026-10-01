@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { GameAppBar } from "@/components/venue/AppBar";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { formatCalendarDate } from "@/lib/formatCalendarDate";
 import { WeekSelector } from "@/components/nfl-pickem/WeekSelector";
@@ -452,7 +452,7 @@ export function NFLPickEmGameList({
             <span className="text-2xl">🏈</span>
             <h1
               className="text-[22px] leading-none text-[#fde68a]"
-              style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+              style={{ fontFamily: "var(--ht-font-display)" }}
             >
               NFL Pick &rsquo;Em
             </h1>
@@ -470,7 +470,7 @@ export function NFLPickEmGameList({
         {/* Week Selector */}
         {loadingWeeks ? (
           <div className="flex items-center justify-center py-8">
-            <BouncingBallLoader size="sm" label="Loading weeks..." />
+            <HightopLoader size="sm" variant="card" showLabel label="Loading weeks..." />
           </div>
         ) : weeks.length > 0 ? (
           <WeekSelector
@@ -519,7 +519,7 @@ export function NFLPickEmGameList({
         {/* Games Loading */}
         {loadingGames && !weekData && (
           <div className="flex items-center justify-center py-12">
-            <BouncingBallLoader size="md" label="Loading games..." />
+            <HightopLoader size="md" variant="card" showLabel label="Loading games..." />
           </div>
         )}
 

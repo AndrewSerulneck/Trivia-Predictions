@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@400;600;700;800;900&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -185,8 +183,15 @@
   /* -----------------------------------------------------------
      TYPOGRAPHY — primitives
      ----------------------------------------------------------- */
-  --ht-font-display: "Bree Serif", Georgia, serif;
-  --ht-font-body:    "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  /* Self-hosted by `next/font` in app/layout.tsx. These two variables carry the
+     real family PLUS the metric-matched fallback face next/font generates
+     ("Bree Serif Fallback" / "Nunito Fallback"), which is what keeps text from
+     shifting as the webfont swaps in. A hand-written `font-family: "Bree Serif"`
+     still resolves but loses that fallback, so these tokens are the only
+     supported way to reach either family
+     (tests/fonts-contract.test.ts enforces it). */
+  --ht-font-display: var(--font-bree-serif), Georgia, serif;
+  --ht-font-body:    var(--font-nunito), "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --ht-font-mono:    ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", monospace;
 
   /* Type scale — mobile-first */
@@ -1116,7 +1121,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: "Bree Serif", "Nunito", serif;
+  font-family: var(--ht-font-display);
 }
 
 /* =============================================================

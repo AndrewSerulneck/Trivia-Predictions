@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import type { Notification, PredictionStatus, UserPrediction } from "@/types";
 
 type PicksFilter = PredictionStatus | "all";
@@ -254,7 +254,7 @@ export function ActivityTimeline() {
           </div>
 
           {loadingPicks ? (
-            <BouncingBallLoader size="sm" label="Loading pick history..." />
+            <HightopLoader size="sm" variant="card" showLabel label="Loading pick history..." />
           ) : picks.length === 0 ? (
             <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface p-3 text-sm text-ht-fg-muted">
               No picks found for this filter.
@@ -338,7 +338,7 @@ export function ActivityTimeline() {
           </div>
 
           {loadingNotifications ? (
-            <BouncingBallLoader size="sm" label="Loading notifications..." />
+            <HightopLoader size="sm" variant="card" showLabel label="Loading notifications..." />
           ) : notifications.length === 0 ? (
             <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface p-3 text-sm text-ht-fg-muted">
               No notifications found for this filter.

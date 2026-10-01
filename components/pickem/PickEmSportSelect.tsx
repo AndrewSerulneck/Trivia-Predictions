@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 
 type PickEmSport = {
   slug: string;
@@ -77,7 +77,7 @@ export function PickEmSportSelect() {
 
         {loading ? (
           <div className="mt-4">
-            <BouncingBallLoader size="sm" label="Loading sports..." />
+            <HightopLoader size="sm" variant="card" showLabel label="Loading sports..." />
           </div>
         ) : (
           <div className="mt-4 space-y-2">

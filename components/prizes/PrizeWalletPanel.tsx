@@ -6,7 +6,7 @@ import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import type { ChallengeCampaignWin, PrizeType, PrizeWin, RewardMenuItem } from "@/types";
 
@@ -588,7 +588,7 @@ export function PrizeWalletPanel() {
   }
 
   if (loading) {
-    return <BouncingBallLoader size="sm" label="Loading prizes..." />;
+    return <HightopLoader size="sm" variant="card" showLabel label="Loading prizes..." />;
   }
 
   return (

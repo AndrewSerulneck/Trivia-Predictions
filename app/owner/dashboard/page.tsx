@@ -6,17 +6,18 @@ import { OwnerShell } from "@/components/owner/OwnerShell";
 import { DashboardNotice } from "@/components/owner/dashboard/DashboardNotice";
 import { DashboardToast } from "@/components/owner/dashboard/DashboardToast";
 import { HIGHLIGHT_MS } from "@/components/owner/dashboard/useHighlightRing";
-import { SectionSkeleton } from "@/components/owner/dashboard/DashboardSectionCard";
 import { LiveGamesSection, type SectionLoad } from "@/components/owner/dashboard/LiveGamesSection";
 import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
 import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/RewardsFlow";
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
 import { MerchStoreSheet } from "@/components/owner/store/MerchStoreSheet";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 import type { MerchCart, MerchVenueRef } from "@/lib/merchPricing";
 import { knownItemIds, resolvePendingHighlight, type PendingHighlight } from "@/lib/ownerDashboardHighlight";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
+import { useLoaderVisible } from "@/lib/useLoaderVisible";
 import { useOwnerSheet } from "@/lib/useOwnerSheet";
 import { useVenueMerchCart } from "@/lib/useVenueMerchCart";
 import type { OwnerSchedule } from "@/types";
@@ -59,19 +60,67 @@ const fetchList = async <T,>(
 };
 
 
+/**
+ * One section as `GET /api/owner/dashboard` sends it. `null` when the account has
+ * no venue, so nothing was asked for (plan Phase 5).
+ */
+type WireList<T> = { ok: true; items: T[] } | { ok: false; error?: string } | null;
+
+type DashboardPayload = {
+  ok: boolean;
+  error?: string;
+  venues?: Venue[];
+  venueId?: string | null;
+  schedules?: WireList<OwnerSchedule>;
+  competitions?: WireList<OwnerCompetition>;
+};
+
+/** The first load's answers, fetched with the page, handed to `DashboardBody` as its seed. */
+type InitialLists = {
+  /** The venue these answers are FOR. A venue switch must never inherit them.  */
+  venueId: string;
+  games: SectionLoad<OwnerSchedule>;
+  rewards: SectionLoad<OwnerCompetition>;
+  /** "Now" for upcoming-vs-past bucketing, stamped when the payload landed. */
+  asOfMs: number;
+};
+
+/** One wire list -> that section's state, keeping its own per-section error. */
+const toSectionLoad = <T,>(list: WireList<T> | undefined, fallbackMessage: string): SectionLoad<T> => {
+  if (!list) return { status: "error", message: fallbackMessage };
+  if (list.ok) return { status: "ready", items: list.items };
+  return { status: "error", message: list.error ?? fallbackMessage };
+};
+
 type DashboardBodyProps = {
   venueId: string;
   venueName: string;
+  /**
+   * Both lists, already answered by the page's single `/api/owner/dashboard` call
+   * (Phase 5). Present only for the venue they were fetched for; null otherwise,
+   * and then the two effects below fetch as they always did.
+   */
+  initial?: InitialLists | null;
+  /** Fired once both lists have answered, so the page can drop its first-load loader. */
+  onReady: () => void;
 };
 
 // Keyed by venue at the call site: switching venues remounts it with fresh loading state.
-const DashboardBody = ({ venueId, venueName }: DashboardBodyProps) => {
+const DashboardBody = ({ venueId, venueName, initial = null, onReady }: DashboardBodyProps) => {
   const router = useRouter();
   const sheet = useOwnerSheet();
-  const [games, setGames] = useState<SectionLoad<OwnerSchedule>>({ status: "loading" });
+  // The one-round-trip seed, accepted ONLY for the venue it was fetched for: this
+  // body is keyed by venue, so a switch remounts it while `initial` may still
+  // describe the venue the page first opened on. Belt and braces with the page,
+  // which clears the seed once this body reports ready (see `handleBodyReady`).
+  const seeded = initial && initial.venueId === venueId ? initial : null;
+  const [games, setGames] = useState<SectionLoad<OwnerSchedule>>(seeded?.games ?? { status: "loading" });
   // "Now" for upcoming-vs-past bucketing, stamped when the games list arrives.
-  const [gamesAsOfMs, setGamesAsOfMs] = useState(0);
-  const [rewards, setRewards] = useState<SectionLoad<OwnerCompetition>>({ status: "loading" });
+  const [gamesAsOfMs, setGamesAsOfMs] = useState(seeded?.asOfMs ?? 0);
+  const [rewards, setRewards] = useState<SectionLoad<OwnerCompetition>>(seeded?.rewards ?? { status: "loading" });
+  // Pinned at mount — state, not a ref, so nothing is read from a ref during render.
+  // True = the first load is already in hand and its effect must not refetch it.
+  const [prefetched] = useState(seeded !== null);
   // What the last save/cancel told the partner: a self-clearing toast, plus the server's
   // advisory about pinned rewards (persistent, because it explains a side effect).
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -98,8 +147,11 @@ const DashboardBody = ({ venueId, venueName }: DashboardBodyProps) => {
   const [gamesAttempt, setGamesAttempt] = useState(0);
   const [rewardsAttempt, setRewardsAttempt] = useState(0);
 
-  // The two lists load in parallel (separate effects), once per venue.
+  // The two lists load in parallel (separate effects), once per venue — unless the
+  // page already has them, in which case the first run is a no-op and only a Retry
+  // or a post-save refetch (attempt > 0) goes back to the per-list endpoint.
   useEffect(() => {
+    if (prefetched && gamesAttempt === 0) return;
     let cancelled = false;
     // No gameType -> merged calendar across both engines (Category Blitz + Live Trivia).
     void fetchList<OwnerSchedule>(
@@ -115,9 +167,10 @@ const DashboardBody = ({ venueId, venueName }: DashboardBodyProps) => {
     return () => {
       cancelled = true;
     };
-  }, [venueId, gamesAttempt, onUnauthorized]);
+  }, [venueId, gamesAttempt, onUnauthorized, prefetched]);
 
   useEffect(() => {
+    if (prefetched && rewardsAttempt === 0) return;
     let cancelled = false;
     void fetchList<OwnerCompetition>(
       `/api/owner/competitions?venueId=${encodeURIComponent(venueId)}`,
@@ -131,7 +184,7 @@ const DashboardBody = ({ venueId, venueName }: DashboardBodyProps) => {
     return () => {
       cancelled = true;
     };
-  }, [venueId, rewardsAttempt, onUnauthorized]);
+  }, [venueId, rewardsAttempt, onUnauthorized, prefetched]);
 
   // Adjust-during-render (react-hooks/set-state-in-effect): the first refetched list after a
   // change resolves which row to ring.
@@ -145,6 +198,15 @@ const DashboardBody = ({ venueId, venueName }: DashboardBodyProps) => {
       setHighlightId(resolution.id);
     }
   }
+
+  // "One loader, not loader-then-skeletons" (plan Phase 4, item 3): the page holds its
+  // loader until venues AND both lists have answered — success or error, either is an
+  // answer. The parent latches this, so a Retry (which puts one list back to "loading")
+  // keeps today's in-place SectionSkeleton instead of re-raising the full loader.
+  const sectionsAnswered = games.status !== "loading" && rewards.status !== "loading";
+  useEffect(() => {
+    if (sectionsAnswered) onReady();
+  }, [sectionsAnswered, onReady]);
 
   useEffect(() => {
     if (!highlightId) return;
@@ -297,22 +359,57 @@ const OwnerDashboardPage = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [selectedVenueId, setSelectedVenueId] = useState<string>("");
   const [loading, setLoading] = useState(true);
-
+  // Latched by DashboardBody's first pair of answers; never reset, so only the FIRST
+  // load gets the loader (a venue switch remounts the body and shows section skeletons).
+  const [bodyReady, setBodyReady] = useState(false);
+  // Both section lists for the venue this page opens on, answered by the SAME call
+  // that brought the venue list. Null = no venue, the call failed, or the seed has
+  // already been consumed.
+  const [initialLists, setInitialLists] = useState<InitialLists | null>(null);
+  const handleBodyReady = useCallback(() => {
+    setBodyReady(true);
+    // CONSUME the seed. It describes one venue at one moment — the venue this page
+    // opened on, as it was when it opened — and the body that just reported ready
+    // holds it in state now. Keeping it would re-seed a LATER mount of the same
+    // venue: switching A -> B -> A remounts the body with `initial` still matching
+    // A, which re-adopts this stale payload AND suppresses both refetches
+    // (`prefetched && attempt === 0`), so a game scheduled for A earlier in the
+    // session silently vanishes with no loading state, and `gamesAsOfMs` keeps the
+    // old "now" for upcoming-vs-past bucketing. Dropping it is safe: `initial` is
+    // only read in useState initialisers and in the pinned `prefetched`, so this
+    // never disturbs the mounted body.
+    setInitialLists(null);
+  }, []);
+  // ONE round trip for the whole first paint: the venue list and both sections,
+  // behind a single requireOwnerAuth (plan Phase 5 / finding F4). The three
+  // per-list routes are still what a venue switch, a Retry and a post-save
+  // refetch use — this only replaces the first load's three calls with one.
   useEffect(() => {
     const load = async () => {
       try {
-        const venuesRes = await fetch("/api/owner/venues");
+        const res = await fetch("/api/owner/dashboard", { cache: "no-store" });
 
-        if (venuesRes.status === 401) {
-          const body = (await venuesRes.json().catch(() => ({}))) as { code?: string };
+        if (res.status === 401) {
+          const body = (await res.json().catch(() => ({}))) as { code?: string };
           router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
 
-        const venuesData = (await venuesRes.json()) as { ok: boolean; venues?: Venue[] };
-        const loadedVenues = venuesData.venues ?? [];
+        const data = (await res.json()) as DashboardPayload;
+        const loadedVenues = data.venues ?? [];
         setVenues(loadedVenues);
-        setSelectedVenueId((prev) => prev || loadedVenues[0]?.id || "");
+        const venueId = data.venueId ?? loadedVenues[0]?.id ?? "";
+        setSelectedVenueId((prev) => prev || venueId);
+        // Both lists or neither: a partial seed would leave one section stuck on
+        // "loading" with nothing on the way, because its effect is suppressed.
+        if (venueId && data.schedules && data.competitions) {
+          setInitialLists({
+            venueId,
+            games: toSectionLoad(data.schedules, "Couldn't load your games."),
+            rewards: toSectionLoad(data.competitions, "Couldn't load your rewards."),
+            asOfMs: Date.now(),
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -323,6 +420,12 @@ const OwnerDashboardPage = () => {
   const selectedVenue = useMemo(() => venues.find((v) => v.id === selectedVenueId), [venues, selectedVenueId]);
   // Join Merch carts, one per venue: kept across the store closing, never moved by a venue switch (F1).
   const [merchCart, setMerchCart] = useVenueMerchCart(selectedVenue?.id ?? null);
+
+  // The loader is driven from the page (not from inside HightopLoader) because only the
+  // caller can hold it visible long enough not to blink — see lib/useLoaderVisible.ts.
+  const firstLoadPending = loading || (selectedVenueId !== "" && !bodyReady);
+  const showLoader = useLoaderVisible(firstLoadPending);
+  const revealed = !firstLoadPending && !showLoader;
 
   // Bar centre: the venue name; with 2+ venues it is the switcher.
   const venueSwitcher = selectedVenue ? (
@@ -357,24 +460,29 @@ const OwnerDashboardPage = () => {
       variant="dark"
       barCenter={venueSwitcher}
     >
-      {loading ? (
-        <div className="space-y-4">
-          <SectionSkeleton label="Loading dashboard" />
-          <SectionSkeleton label="Loading dashboard" />
-        </div>
-      ) : !selectedVenueId ? (
+      {showLoader ? <HightopLoader size="lg" delayMs={0} className="py-14" /> : null}
+      {revealed && !selectedVenueId ? (
         <div className="rounded-2xl border border-ht-hairline bg-ht-surface p-8 text-center shadow-ht-card">
           <p className="text-sm font-semibold text-ht-muted">No venue found for this account.</p>
         </div>
-      ) : (
-        <Suspense fallback={<SectionSkeleton label="Loading dashboard" />}>
-          <DashboardBody
-            key={selectedVenueId}
-            venueId={selectedVenueId}
-            venueName={selectedVenue?.name ?? "This venue"}
-          />
-        </Suspense>
-      )}
+      ) : null}
+      {!loading && selectedVenueId ? (
+        // Mounted (so its two fetches run) but display:none until both have answered —
+        // that is what makes the reveal one step instead of loader-then-skeletons. The
+        // Suspense fallback is null on purpose: DashboardBody is not mounted while it is
+        // suspended, so nothing has been requested yet and the loader above still stands.
+        <div className={revealed ? "space-y-4" : "hidden"}>
+          <Suspense fallback={null}>
+            <DashboardBody
+              key={selectedVenueId}
+              venueId={selectedVenueId}
+              venueName={selectedVenue?.name ?? "This venue"}
+              initial={initialLists}
+              onReady={handleBodyReady}
+            />
+          </Suspense>
+        </div>
+      ) : null}
       <Suspense fallback={null}>
         <MerchStoreHost
           venue={selectedVenue ?? null}

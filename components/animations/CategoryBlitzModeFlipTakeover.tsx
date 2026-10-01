@@ -105,7 +105,7 @@ const Face = ({ side }: { side: "standard" | "reverse" }) => {
         {isReverse ? "Reverse Round!" : "This round"}
       </p>
       <h1
-        className={`font-['Bree_Serif',_Georgia,_serif] text-[13vw] font-normal leading-[0.92] sm:text-6xl ${
+        className={`[font-family:var(--ht-font-display)] text-[13vw] font-normal leading-[0.92] sm:text-6xl ${
           isReverse
             ? "text-amber-50 drop-shadow-[0_0_60px_rgba(255,197,61,0.55)]"
             : "text-emerald-50 drop-shadow-[0_0_44px_rgba(16,185,129,0.55)]"

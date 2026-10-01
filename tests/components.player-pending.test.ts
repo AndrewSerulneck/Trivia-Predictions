@@ -8,7 +8,7 @@ import { PrizeWalletPanel } from "@/components/prizes/PrizeWalletPanel";
 vi.mock("@/lib/storage", () => ({ getUserId: () => "user", getVenueId: () => "venue" }));
 const presence = { capturePresenceFailure: () => null, isInteractionBlocked: false };
 vi.mock("@/components/venue/VenuePresenceBoundary", () => ({ useVenuePresence: () => presence }));
-vi.mock("@/components/ui/BouncingBallLoader", () => ({ BouncingBallLoader: () => React.createElement("p", null, "Loading") }));
+vi.mock("@/components/ui/HightopLoader", () => ({ HightopLoader: () => React.createElement("p", null, "Loading") }));
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const response = (body: unknown) => ({ ok: true, json: async () => body });
 

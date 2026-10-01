@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight, Download, ListChecks, Maximize2, Minimize2, Plus, Share, Trophy, X } from "lucide-react";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import type { CSSProperties, TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { getUserId } from "@/lib/storage";
@@ -304,7 +304,7 @@ function renderExpandedGrid(
         {BINGO_HEADER_LETTERS.map((item) => (
           <div
             key={item.letter}
-            className={`text-center text-xl font-black tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] sm:text-2xl ${item.color}`}
+            className={`text-center text-xl font-black tracking-[0.1em] [font-family:var(--ht-font-display)] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] sm:text-2xl ${item.color}`}
           >
             {item.letter}
           </div>
@@ -330,7 +330,7 @@ function renderExpandedGrid(
             <div
               key={index}
                 data-bingo-square-key={squareKey}
-                className={`relative flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
+                className={`relative flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-bold leading-tight [font-family:var(--ht-font-display)] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
                 square.status,
                 isFree
               )} ${
@@ -390,7 +390,7 @@ function renderLandscapeGrid(
         {BINGO_HEADER_LETTERS.map((item) => (
           <div
             key={item.letter}
-            className={`text-center text-lg font-black leading-none tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
+            className={`text-center text-lg font-black leading-none tracking-[0.1em] [font-family:var(--ht-font-display)] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
           >
             {item.letter}
           </div>
@@ -418,7 +418,7 @@ function renderLandscapeGrid(
               key={index}
               title={square.label}
               data-bingo-square-key={squareKey}
-              className={`relative flex min-h-0 items-center justify-center overflow-hidden rounded-md border px-1 py-1 text-center text-[10px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] ${getCardSquareStyle(
+              className={`relative flex min-h-0 items-center justify-center overflow-hidden rounded-md border px-1 py-1 text-center text-[10px] font-bold leading-tight [font-family:var(--ht-font-display)] ${getCardSquareStyle(
                 square.status,
                 isFree
               )} ${
@@ -459,7 +459,7 @@ function recoverBingoPageScrollState() {
 function LoadingState({ label }: { label: string }) {
   return (
     <div className="mt-3">
-      <BouncingBallLoader size="sm" label={label} />
+      <HightopLoader size="sm" variant="card" showLabel label={label} />
     </div>
   );
 }
@@ -2118,7 +2118,7 @@ export function SportsBingoHome({
                     <p className="text-[12px] font-black uppercase tracking-[0.16em] text-sky-300">
                       {isActiveLandscapeMode ? "No active boards" : "No scored boards"}
                     </p>
-                    <p className="mt-2 text-[22px] font-black leading-tight text-slate-50 [font-family:'Bree_Serif','Nunito',serif]">
+                    <p className="mt-2 text-[22px] font-black leading-tight text-slate-50 [font-family:var(--ht-font-display)]">
                       {isActiveLandscapeMode ? "Create a board to play live." : "Scored boards will appear after games finish."}
                     </p>
                     <div className="mt-4 flex items-center justify-center gap-2">
@@ -2151,7 +2151,7 @@ export function SportsBingoHome({
                 <p className="truncate text-[10px] font-black uppercase leading-none tracking-[0.16em] text-sky-300">
                   {landscapeEyebrow}
                 </p>
-                <h1 className="mt-1 flex items-center gap-1.5 truncate text-[16px] font-black leading-none text-slate-50 [font-family:'Bree_Serif','Nunito',serif]">
+                <h1 className="mt-1 flex items-center gap-1.5 truncate text-[16px] font-black leading-none text-slate-50 [font-family:var(--ht-font-display)]">
                   {landscapeCurrentCard ? (
                     <>
                       <span aria-hidden="true" className="shrink-0 text-[20px] leading-none">
@@ -2347,7 +2347,7 @@ export function SportsBingoHome({
           <div className="pt-4">
             <div className="relative overflow-hidden rounded-[18px] border-2 border-sky-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.12),transparent_60%),#0c3a2e] p-4 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.35),0_12px_26px_rgba(0,0,0,0.5)]">
               <p className="text-[11px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo</p>
-              <p className="mt-1.5 text-[26px] leading-[1.08] text-amber-100 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
+              <p className="mt-1.5 text-[26px] leading-[1.08] text-amber-100 [font-family:var(--ht-font-display)] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
                 You don&apos;t have an active board yet.
               </p>
               <p className="mt-1.5 text-[12px] font-bold leading-relaxed text-amber-100/60">
@@ -2528,7 +2528,7 @@ export function SportsBingoHome({
             <div className="sticky top-0 z-10 mb-3 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-white/10 bg-slate-950/95 px-3 py-2 backdrop-blur">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · Live Board</p>
-                <p className="truncate text-sm font-black text-slate-100 [font-family:'Bree_Serif','Nunito',serif]">
+                <p className="truncate text-sm font-black text-slate-100 [font-family:var(--ht-font-display)]">
                   {expandedActiveCard.gameLabel}
                 </p>
               </div>
@@ -2577,7 +2577,7 @@ export function SportsBingoHome({
             <div className="sticky top-0 z-10 mb-3 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-white/10 bg-slate-950/95 px-3 py-2 backdrop-blur">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · Final Board</p>
-                <p className="truncate text-sm font-black text-slate-100 [font-family:'Bree_Serif','Nunito',serif]">
+                <p className="truncate text-sm font-black text-slate-100 [font-family:var(--ht-font-display)]">
                   {expandedFinalCard.gameLabel}
                 </p>
               </div>

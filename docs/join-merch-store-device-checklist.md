@@ -98,3 +98,10 @@ account with **no** venue (or catch the store while the dashboard is still loadi
 ## L. Everything else is unchanged
 - [ ] Schedule a live game and Offer a reward sheets still look dark and as before.
 - [ ] Each step of Schedule and Rewards opens at the top (Phase 4.3 changed this for every sheet).
+
+## M. Header "Order Join Merch" button (docs/partner-dashboard-merch-button-loader-speed-plan.md Phase 1)
+- [ ] On the dashboard, top right shows a cyan **Order Join Merch** button with a bag icon (the small
+  bouncing logo is gone). Tapping it opens the store straight away — no menu first.
+- [ ] With the store open, the **phone's Back** closes it and leaves you on the dashboard (one Back,
+  not two). On a narrow phone (first-gen iPhone SE, 320 px) the button reads **Store** instead, and
+  the venue name still shows at least a few words.

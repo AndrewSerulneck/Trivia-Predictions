@@ -102,8 +102,9 @@ describe("owner dashboard body", () => {
     expect(body).not.toMatch(/merch/i);
     expect(dashboard).toMatch(/const MerchStoreHost[\s\S]*useOwnerSheet\(\)[\s\S]*<MerchStoreSheet\s+nav=\{sheet\}/);
     const page = dashboard.slice(dashboard.indexOf("const OwnerDashboardPage"));
-    // Rendered on every branch (loading / no venue / venue): after the conditional, not inside it.
-    expect(page).toMatch(/<\/Suspense>\s*\)\}\s*<Suspense fallback=\{null\}>\s*<MerchStoreHost/);
+    // Rendered on every branch (loading / no venue / venue): after the conditional, not
+    // inside it. (Phase 4 wrapped the venue body in the reveal div — still a sibling.)
+    expect(page).toMatch(/<\/Suspense>\s*<\/div>\s*\)\s*:\s*null\}\s*<Suspense fallback=\{null\}>\s*<MerchStoreHost/);
     expect(page).toContain("venue={selectedVenue ?? null}");
     expect(page).toContain("venueLoading={loading}");
   });
@@ -155,5 +156,76 @@ describe("owner dashboard body", () => {
     expect(manual).toContain("tap the arrow in the top-left");
     expect(manual).toContain("Tap Offer Rewards on your dashboard");
     expect(manual).not.toMatch(/[Cc]lick/);
+  });
+});
+
+// docs/partner-dashboard-merch-button-loader-speed-plan.md Phase 5 (finding F4): the
+// first paint was HTML -> JS -> /api/owner/venues -> THEN schedule + competitions.
+// Three invocations, three `requireOwnerAuth` calls, 9 queries. Now: one call.
+describe("Phase 5: the dashboard's first load is one round trip", () => {
+  const page = dashboard.slice(dashboard.indexOf("const OwnerDashboardPage"));
+  const body = dashboard.slice(dashboard.indexOf("const DashboardBody"), dashboard.indexOf("type MerchStoreHostProps"));
+
+  it("fetches /api/owner/dashboard from the page, and never the venues route", () => {
+    expect(page).toContain('fetch("/api/owner/dashboard"');
+    // The three-call sequence is what this phase removed.
+    expect(dashboard).not.toContain("/api/owner/venues");
+  });
+
+  it("hands both section lists to DashboardBody as a seed for the venue they belong to", () => {
+    expect(page).toContain("initial={initialLists}");
+    // A seed from another venue must never be adopted: the body is keyed by venue.
+    expect(body).toContain("initial && initial.venueId === venueId ? initial : null");
+  });
+
+  it("suppresses only the FIRST per-list fetch, so Retry and the post-save refetch still work", () => {
+    expect(body).toContain("if (prefetched && gamesAttempt === 0) return;");
+    expect(body).toContain("if (prefetched && rewardsAttempt === 0) return;");
+    // Still present, still the path a Retry / venue switch / post-save refetch takes.
+    expect(body).toContain("/api/owner/schedule?venueId=");
+    expect(body).toContain("/api/owner/competitions?venueId=");
+  });
+
+  it("still lifts the loader through onReady, which a seeded body satisfies at mount", () => {
+    expect(body).toMatch(/games\.status !== "loading" && rewards\.status !== "loading"/);
+    expect(body).toContain("if (sectionsAnswered) onReady();");
+  });
+});
+
+describe("Phase 5: GET /api/owner/dashboard", () => {
+  const route = read("app/api/owner/dashboard/route.ts");
+
+  it("runs requireOwnerAuth exactly once", () => {
+    expect(route.match(/requireOwnerAuth\(/g)).toHaveLength(1);
+  });
+
+  it("shares the venue query and the display_name fallback with /api/owner/venues", () => {
+    // One copy of the query, or the switcher can disagree with itself depending on
+    // which route filled it.
+    for (const file of ["app/api/owner/dashboard/route.ts", "app/api/owner/venues/route.ts"]) {
+      const src = read(file);
+      expect(src, file).toContain('from "@/lib/ownerVenueList"');
+      expect(src, file).not.toContain("display_name");
+      expect(src, file).not.toContain('.from("venues")');
+    }
+    expect(read("lib/ownerVenueList.ts")).toContain("display_name ?? v.name");
+  });
+
+  it("reuses the shared listers rather than copying their queries", () => {
+    expect(route).toContain('from "@/lib/ownerSchedule"');
+    expect(route).toContain('from "@/lib/ownerCompetitions"');
+    expect(route).toContain("listOwnerSchedules(venueId)");
+    expect(route).toContain("listOwnerCompetitions(auth.ownerId, venueId)");
+  });
+
+  it("gates an attacker-supplied venueId on the shared ownsVenue predicate", () => {
+    expect(route).toContain("ownsVenue(auth, requestedVenueId)");
+    // Never hand-rolled: `venueIds.includes` at a call site is the bug this avoids.
+    expect(route).not.toContain("venueIds.includes");
+  });
+
+  it("loads the two lists in parallel, each with its own ok/error", () => {
+    expect(route).toContain("Promise.all");
+    expect(route).toMatch(/type ListPayload<T> = \{ ok: true; items: T\[\] \} \| \{ ok: false; error: string \}/);
   });
 });

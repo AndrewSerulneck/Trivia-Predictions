@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { gameUrl } from "@/lib/domainSplit";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
@@ -129,7 +130,7 @@ const OwnerDisplayPage = () => {
         ) : null}
 
         {loading ? (
-          <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
+          <HightopLoader size="lg" className="py-10" />
         ) : !selectedVenueId ? (
           <div className="rounded-2xl border border-ht-hairline bg-ht-surface p-8 text-center shadow-ht-card">
             <p className="text-sm font-semibold text-ht-muted">No venue found for this account.</p>

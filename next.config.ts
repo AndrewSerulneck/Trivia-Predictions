@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Immutable by name: logo changes must ship under a new file name (see scripts/optimize-brand-logo.cjs).
+        source: "/brand/web/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         source: "/info",
         headers: [
           {

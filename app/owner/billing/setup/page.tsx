@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { marketingHref } from "@/lib/domainSplit";
 import { OWNER_AUTH_NO_VENUE, ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 import { isSelfServeSignupEnabled } from "@/lib/selfServeSignup";
@@ -197,14 +198,14 @@ const OwnerBillingSetupPage = () => {
     >
       <div className="space-y-5">
         {loading ? (
-          <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
+          <HightopLoader size="lg" className="py-10" />
         ) : error ? (
           <div className="rounded-xl bg-ht-rose-500/15 px-4 py-3 text-sm font-bold text-ht-rose-300">{error}</div>
         ) : !venueId ? (
           // load() has already redirected; this only covers the frame before the
           // router navigates. Phase 2d rendered a "Start over" card here, which
           // was unreachable — see the redirect in load().
-          <p className="text-center text-sm font-semibold text-ht-muted">Loading…</p>
+          <HightopLoader size="lg" className="py-10" />
         ) : (
           <div className="rounded-2xl border border-indigo-400/40 bg-ht-surface p-6 shadow-ht-card">
             <p className="text-[11px] font-black uppercase tracking-wider text-ht-indigo-300">Venue Pro</p>

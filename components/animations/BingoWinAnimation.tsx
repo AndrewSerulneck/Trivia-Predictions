@@ -192,7 +192,7 @@ function BingoLetters() {
             color,
             fontSize:   "4.5rem",    // text-7xl
             fontWeight: 900,
-            fontFamily: "'Bree Serif', 'Nunito', serif",
+            fontFamily: "var(--ht-font-display)",
             lineHeight: 1,
             textShadow: `0 0 30px ${color}`,
             willChange: "transform, opacity",

@@ -7,7 +7,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { GameAppBar } from "@/components/venue/AppBar";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { getUserId, getVenueId } from "@/lib/storage";
@@ -825,7 +825,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-3 py-3">
           <h2
             className="text-[20px] leading-none text-[#fde68a]"
-            style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+            style={{ fontFamily: "var(--ht-font-display)" }}
           >
             Hightop Pick &apos;Em
           </h2>
@@ -935,7 +935,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             <div className="mt-3 w-full overflow-x-auto pb-1 [scrollbar-width:thin]">
               <div className="grid min-w-full grid-cols-7 gap-2">
                 {loadingSports ? (
-                  <BouncingBallLoader size="sm" label="Loading sports..." />
+                  <HightopLoader size="sm" variant="card" showLabel label="Loading sports..." />
                 ) : sports.length === 0 ? (
                   <p className="text-xs text-slate-400">No sports available.</p>
                 ) : (
@@ -991,7 +991,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
 
         {!isViewingToday ? (
           loadingPickHistory ? (
-            <BouncingBallLoader size="sm" label="Loading your picks..." />
+            <HightopLoader size="sm" variant="card" showLabel label="Loading your picks..." />
           ) : historicalPicks.length === 0 ? (
             <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
               No picks found for this date.
@@ -1033,7 +1033,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             </section>
           )
         ) : loadingGames ? (
-          <BouncingBallLoader size="sm" label="Loading games..." />
+          <HightopLoader size="sm" variant="card" showLabel label="Loading games..." />
         ) : !sport ? (
           <div className="rounded-xl border border-amber-400/45 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
             Choose a sport to load today&apos;s games.

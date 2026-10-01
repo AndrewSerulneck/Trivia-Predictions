@@ -108,7 +108,7 @@ export function GameRuleCardPanel({
               ? "text-[clamp(2rem,6.2vw,3.35rem)] leading-[1.02]"
               : "text-[clamp(3.1rem,10.2vw,4.7rem)] leading-[0.98]"
           } font-black uppercase tracking-[0.045em] ${titleColorClass}`}
-          style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+          style={{ fontFamily: "var(--ht-font-display)" }}
         >
           {card.title}
         </div>
@@ -242,7 +242,7 @@ function GameScoringArtwork({ gameKey, accentClass }: { gameKey: VenueGameKey; a
           >
             <span
               className={`min-w-[2.6rem] text-center text-[1.6rem] font-black leading-none ${accentClass}`}
-              style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+              style={{ fontFamily: "var(--ht-font-display)" }}
             >
               {row.value}
             </span>
@@ -262,7 +262,7 @@ function GameScoringArtwork({ gameKey, accentClass }: { gameKey: VenueGameKey; a
     <div className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-white/25 bg-slate-950/40 px-4 py-5">
       <span
         className={`text-[clamp(3rem,13vw,4.6rem)] font-black leading-none ${accentClass} [text-shadow:0_0_18px_rgba(255,255,255,0.3)]`}
-        style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+        style={{ fontFamily: "var(--ht-font-display)" }}
       >
         {scoring.big}
       </span>
@@ -391,7 +391,7 @@ function BingoBoard({
             className={`flex items-center justify-center font-black ${BINGO_HEADER_COLORS[i]} ${
               compact ? "text-[0.5rem] leading-[1.15rem]" : "text-[0.7rem] leading-[1.5rem]"
             }`}
-            style={{ fontFamily: '"Bree Serif", serif' }}
+            style={{ fontFamily: "var(--ht-font-display)" }}
           >
             {letter}
           </div>
@@ -756,7 +756,7 @@ function FanPlayerRow({
       ) : (
         <span
           className="w-9 shrink-0 text-center text-[0.75rem] font-black leading-none text-[#fde68a]"
-          style={{ fontFamily: '"Bree Serif", serif' }}
+          style={{ fontFamily: "var(--ht-font-display)" }}
         >
           {pos}
         </span>
@@ -998,7 +998,7 @@ function CategoryBlitzIllustration({ stepIndex }: { stepIndex: number }) {
             <span className="text-[0.65rem] font-bold uppercase tracking-wider text-amber-200/80">Letter</span>
             <span
               className="text-4xl font-black text-amber-100"
-              style={{ fontFamily: '"Bree Serif", serif', textShadow: "0 0 16px rgba(251,191,36,0.5)" }}
+              style={{ fontFamily: "var(--ht-font-display)", textShadow: "0 0 16px rgba(251,191,36,0.5)" }}
             >
               A
             </span>
@@ -1091,7 +1091,7 @@ function CategoryBlitzIllustration({ stepIndex }: { stepIndex: number }) {
             <span className="text-[0.65rem] font-bold text-emerald-200">Unique answers:</span>
             <span
               className="text-lg font-black text-emerald-300"
-              style={{ fontFamily: '"Bree Serif", serif' }}
+              style={{ fontFamily: "var(--ht-font-display)" }}
             >
               2
             </span>
@@ -1114,7 +1114,7 @@ function CategoryBlitzIllustration({ stepIndex }: { stepIndex: number }) {
           <span className="text-lg">⚠️</span>
           <span
             className="text-[0.85rem] font-black uppercase tracking-wider text-amber-200"
-            style={{ fontFamily: '"Bree Serif", serif' }}
+            style={{ fontFamily: "var(--ht-font-display)" }}
           >
             Mode Switch!
           </span>
@@ -1264,7 +1264,7 @@ export function GameOnboardingCard({
       <div className="relative flex min-h-0 flex-1 flex-col gap-4">
         <div
           className={`text-[clamp(2rem,6.2vw,3.35rem)] leading-[1.02] font-black uppercase tracking-[0.045em] ${titleTextColor} ${titleTextShadow}`}
-          style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+          style={{ fontFamily: "var(--ht-font-display)" }}
         >
           {displayTitle}
         </div>
@@ -1276,7 +1276,7 @@ export function GameOnboardingCard({
             <div className="flex min-h-0 flex-1 flex-col justify-center gap-3">
               <div
                 className="text-[clamp(1.6rem,4.8vw,2.2rem)] leading-[1.08] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)]"
-                style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+                style={{ fontFamily: "var(--ht-font-display)" }}
               >
                 {step.heading}
               </div>
@@ -1302,7 +1302,7 @@ export function GameOnboardingCard({
                     ? "text-[clamp(1.2rem,3.8vw,1.7rem)] leading-[1.18]"
                     : "text-[clamp(1rem,3vw,1.35rem)] leading-[1.2]"
                 }`}
-                style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+                style={{ fontFamily: "var(--ht-font-display)" }}
               >
                 {step.heading}
               </div>
@@ -1343,7 +1343,7 @@ export function GameIdentityPanel({
       <div className="space-y-3">
         <div
           className="text-[1.28rem] leading-[1.02] font-black uppercase tracking-[0.045em] text-white [text-shadow:0_1px_0_rgba(12,18,28,0.8),0_3px_0_rgba(12,18,28,0.58),0_0_12px_rgba(255,255,255,0.5)]"
-          style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+          style={{ fontFamily: "var(--ht-font-display)" }}
         >
           {title}
         </div>

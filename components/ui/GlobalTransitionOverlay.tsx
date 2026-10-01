@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 
 type GlobalTransitionShowDetail = {
   targetPath?: string;
@@ -88,7 +88,7 @@ export function GlobalTransitionOverlay() {
       return;
     }
     const preload = new Image();
-    preload.src = "/brand/htc-logo.png";
+    preload.src = "/brand/web/htc-logo-192.webp";
     try {
       preload.decode?.().catch(() => {
         // Ignore decode failures.
@@ -197,7 +197,7 @@ export function GlobalTransitionOverlay() {
   if (!shouldRender) {
     return (
       <img
-        src="/brand/htc-logo.png"
+        src="/brand/web/htc-logo-192.webp"
         alt=""
         aria-hidden="true"
         className="pointer-events-none fixed left-0 top-0 h-px w-px opacity-0"
@@ -223,7 +223,7 @@ export function GlobalTransitionOverlay() {
         isFadingOut ? "pointer-events-none" : "pointer-events-auto"
       }`}
     >
-      <BouncingBallLoader label={overlayLabel} size="lg" dark />
+      <HightopLoader variant="plain" size="lg" delayMs={0} showLabel label={overlayLabel} />
     </motion.div>
   );
 }

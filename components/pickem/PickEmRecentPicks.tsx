@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getUserId } from "@/lib/storage";
-import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 
 type PickEmPick = {
@@ -113,7 +113,7 @@ export function PickEmRecentPicks() {
         {errorMessage ? (
           <p className="mt-2 text-sm text-rose-400">{errorMessage}</p>
         ) : loading ? (
-          <BouncingBallLoader size="sm" label="Loading your picks..." />
+          <HightopLoader size="sm" variant="card" showLabel label="Loading your picks..." />
         ) : recentPicks.length === 0 ? (
           <p className="mt-2 text-sm text-ht-fg-muted">No picks yet. Choose a sport above to start playing.</p>
         ) : (

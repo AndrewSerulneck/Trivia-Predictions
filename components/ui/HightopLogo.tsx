@@ -17,7 +17,7 @@ export function HightopLogo({ size = "md", className = "" }: HightopLogoProps) {
       className={`relative max-w-full ${SIZE_CLASSES[size]} ${className}`.trim()}
     >
       <img
-        src="/brand/htc-logo.png"
+        src="/brand/web/htc-logo-192.webp"
         alt="Hightop Challenge"
         className="h-full w-full object-contain object-center"
         loading="eager"

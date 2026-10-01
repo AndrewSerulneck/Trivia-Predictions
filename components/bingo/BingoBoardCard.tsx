@@ -73,7 +73,7 @@ function renderCompactGrid(
         {BINGO_HEADER_LETTERS.map((item) => (
           <div
             key={item.letter}
-            className={`text-center text-lg font-black tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
+            className={`text-center text-lg font-black tracking-[0.1em] [font-family:var(--ht-font-display)] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
           >
             {item.letter}
           </div>
@@ -100,7 +100,7 @@ function renderCompactGrid(
               key={index}
               title={square.label}
               data-bingo-square-key={squareKey}
-              className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] ${getCardSquareStyle(
+              className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-bold leading-tight [font-family:var(--ht-font-display)] ${getCardSquareStyle(
                 square.status,
                 isFree
               )} ${
@@ -164,7 +164,7 @@ const BingoBoardCardImpl = ({
     >
       {/* Header — sport emoji + mascot-only matchup, the loudest text on the card (Phase 3c).
           Full team names stay on `card.gameLabel` for the expanded modal. */}
-      <p className="flex items-center gap-1.5 truncate px-0.5 leading-tight text-amber-100 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
+      <p className="flex items-center gap-1.5 truncate px-0.5 leading-tight text-amber-100 [font-family:var(--ht-font-display)] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
         <span aria-hidden="true" className="shrink-0 text-[22px] leading-none">
           {league.emoji}
         </span>
