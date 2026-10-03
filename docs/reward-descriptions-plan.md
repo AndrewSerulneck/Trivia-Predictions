@@ -1,9 +1,10 @@
 # Reward Descriptions — Plan A (say when, how often, what to do, what you win)
 
-**Status:** Phase 3 done 2026-10-03 (the words are on every screen: venue card, details pop-up,
-redeem screen, prize wallet, wizard Confirm, Partner Dashboard rows; uncommitted, not deployed) —
-handoff: `docs/reward-descriptions-plan_PHASE_3_HANDOFF.md`. Earlier handoffs:
-`…_PHASE_2_HANDOFF.md`, `…_PHASE_1_HANDOFF.md`. **Next:** Phase 4 (review + device pass; Opus 5.5, medium).
+**Status:** Phase 4 done 2026-10-03 — code review run and fixed, phone checklist written
+(`docs/reward-descriptions-device-checklist.md`), committed locally as `3998529` (**not pushed, not
+deployed**) — handoff: `docs/reward-descriptions-plan_PHASE_4_HANDOFF.md`. Earlier handoffs:
+`…_PHASE_3_HANDOFF.md`, `…_PHASE_2_HANDOFF.md`, `…_PHASE_1_HANDOFF.md`. **Left:** Andrew's phone pass,
+push/deploy on his word, post-deploy duration check.
 **Handoffs:** each phase ends with `docs/reward-descriptions-plan_PHASE_<N>_HANDOFF.md` (global rule
 in `~/.claude/CLAUDE.md`). Update this status line to point at the latest handoff.
 **Part of:** `docs/rewards-trust-and-pos-roadmap.md` (Plan A of three; do this one first).
