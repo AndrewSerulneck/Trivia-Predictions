@@ -18,6 +18,11 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+/** What the guest won the coupon for ("You got the most NFL picks right in Week 2"); legacy rewards keep "Won from". */
+function wonForLine(win: ChallengeCampaignWin): string {
+  return win.winDescription ?? `Won from: ${win.challengeName}`;
+}
+
 function getExpiryInfo(expiresAt: string): {
   label: string;
   className: string;
@@ -90,7 +95,7 @@ function WineCoupon({ win, onRedeem, large }: CouponCardProps) {
         <p className={`mt-0.5 font-black tracking-wide text-rose-100 ${large ? "text-2xl" : "text-xl"}`}>
           BOTTLE OF WINE
         </p>
-        <p className="mt-1 text-xs text-rose-300/80">Won from: {win.challengeName}</p>
+        <p className="mt-1 text-xs text-rose-300/80">{wonForLine(win)}</p>
       </div>
       <div className="my-3 border-t border-dashed border-rose-700/50" />
       <div className="flex items-end justify-between">
@@ -129,7 +134,7 @@ function AppetizerCoupon({ win, onRedeem, large }: CouponCardProps) {
       <p className={`mt-0.5 font-black tracking-wide text-emerald-100 ${large ? "text-2xl" : "text-xl"}`}>
         FREE APPETIZER
       </p>
-      <p className="mt-1 text-xs text-emerald-300/80">Won from: {win.challengeName}</p>
+      <p className="mt-1 text-xs text-emerald-300/80">{wonForLine(win)}</p>
       <div className="my-3 border-t border-dashed border-emerald-700/50" />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
@@ -173,7 +178,7 @@ function GiftCertificateCoupon({ win, onRedeem, large }: CouponCardProps) {
       <p className={`font-black tracking-wide text-amber-100 ${large ? "text-xl" : "text-lg"}`}>
         GIFT CERTIFICATE
       </p>
-      <p className="mt-1 text-xs text-amber-300/80">Won from: {win.challengeName}</p>
+      <p className="mt-1 text-xs text-amber-300/80">{wonForLine(win)}</p>
       <div className="my-3 border-t border-dashed border-amber-500/40" />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
@@ -217,7 +222,7 @@ function GiftCardCoupon({ win, onRedeem, large }: CouponCardProps) {
       <p className={`font-black tracking-wide text-amber-100 ${large ? "text-xl" : "text-lg"}`}>
         GIFT CARD
       </p>
-      <p className="mt-1 text-xs text-amber-300/80">Won from: {win.challengeName}</p>
+      <p className="mt-1 text-xs text-amber-300/80">{wonForLine(win)}</p>
       <div className="my-3 border-t border-dashed border-amber-500/40" />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
@@ -298,7 +303,7 @@ function MenuItemCoupon({ win, onRedeem, large }: CouponCardProps) {
       <p className={`font-black tracking-wide ${theme.title} ${large ? "text-xl" : "text-lg"}`}>
         {menuItemLabel(win).toUpperCase()}
       </p>
-      <p className={`mt-1 text-xs ${theme.sub}`}>Won from: {win.challengeName}</p>
+      <p className={`mt-1 text-xs ${theme.sub}`}>{wonForLine(win)}</p>
       <div className={`my-3 border-t border-dashed ${theme.divider}`} />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">

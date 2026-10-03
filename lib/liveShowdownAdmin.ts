@@ -476,6 +476,47 @@ export async function listAdminLiveShowdownSchedules(limit = 30): Promise<AdminL
   return ((withRecurring.data ?? []) as TriviaScheduleRow[]).map(mapScheduleRow);
 }
 
+// A one-off game that started more than this long ago has certainly ended (no
+// Live Trivia game runs anywhere near a day), so it is never read.
+const VENUE_SCHEDULE_ONE_OFF_LOOKBACK_MS = 24 * 60 * 60_000;
+
+/**
+ * The Live Trivia schedules for the given venues that can still have a game, in
+ * ONE venue-filtered read: every recurring row, plus one-off rows that started
+ * within the last day or are still ahead.
+ *
+ * listAdminLiveShowdownSchedules reads the newest N rows platform-wide and leaves
+ * the venue filter to the caller, so its cost grows with the whole platform and an
+ * old recurring schedule can fall outside the window. This read is venue-scoped
+ * and drops long-ended one-offs in SQL, so a venue's years of past games can never
+ * crowd its recurring schedule out of the limit. Used by the reward picker,
+ * createReward and the reward descriptions on every venue-home load
+ * (docs/reward-descriptions-plan.md). The caller still decides which occurrences
+ * count (hasLiveOrUpcomingOccurrence in lib/rewards.ts).
+ */
+export async function listVenueLiveShowdownSchedules(
+  venueIds: readonly string[],
+  now: Date = new Date(),
+  limit = 200,
+): Promise<AdminLiveShowdownSchedule[]> {
+  const ids = [...new Set(venueIds.map((id) => String(id ?? "").trim()).filter(Boolean))];
+  if (ids.length === 0) return [];
+  const admin = getAdminClient();
+  const safeLimit = Math.max(1, Math.min(500, Math.floor(limit)));
+  const oneOffCutoff = new Date(now.getTime() - VENUE_SCHEDULE_ONE_OFF_LOOKBACK_MS).toISOString();
+  const { data, error } = await admin
+    .from("trivia_schedules")
+    .select("id, title, start_time, timezone, recurring_type, recurring_days, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
+    .in("venue_id", ids)
+    .or(`recurring_type.neq.none,start_time.gte.${oneOffCutoff}`)
+    .order("start_time", { ascending: false })
+    .limit(safeLimit);
+  if (error) {
+    throw new Error(error.message || "Failed to list venue Live Showdown schedules.");
+  }
+  return ((data ?? []) as TriviaScheduleRow[]).map(mapScheduleRow);
+}
+
 export async function createAdminLiveShowdownSchedule(params: {
   title: string;
   targetDate: string;

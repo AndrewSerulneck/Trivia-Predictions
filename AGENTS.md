@@ -75,7 +75,13 @@ another:
    `requiresScheduledGame` (the `OwnerScheduleGameType` the venue must already
    run, or `null` if the reward gates on nothing), `requirementTemplate`
    (player-facing copy, `{threshold}` substituted at expansion),
-   `thresholdOptions` + `defaultThreshold`, `accent`, and `glyph`.
+   `thresholdOptions` + `defaultThreshold`, `accent`, `glyph`, and
+   `description` — the guest-facing sentences (`RewardDescriptionTemplates`:
+   pick `calendar: "venue_schedule"` for a game the venue schedules or
+   `"nfl_season"` for the NFL calendar, then fill that shape's templates with
+   `{prize}`/`{threshold}`/… placeholders). `describeReward()` /
+   `describeRewardWin()` in `lib/rewardDescription.ts` compose them at read
+   time; never write "this venue" (docs/reward-descriptions-plan.md §3).
 2. **Only if `requiresScheduledGame` points at a game with no existing lookup
    yet**, add a schedule lookup in `lib/rewards.ts` (mirror
    `getVenueLiveTriviaSchedules`) and wire it into
@@ -90,7 +96,10 @@ another:
    redemption rendering are all definition-agnostic — they read the registry,
    not a hardcoded list.
 4. Add a Vitest case to `tests/lib.rewards-definitions.test.ts` for the new
-   definition's cadence resolution and `createReward` expansion.
+   definition's cadence resolution and `createReward` expansion, and its
+   description cases to `tests/lib.reward-description.test.ts`. A new
+   `calendar` kind (neither a venue schedule nor the NFL season) is the one
+   case that also needs a branch in `lib/rewardDescription.ts`.
 
 Full rationale, the prize/quota data model, and the multi-winner ledger design
 are in `docs/rewards-system-plan.md` (§3–§4).

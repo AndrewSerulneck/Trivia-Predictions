@@ -1725,8 +1725,20 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
               <h4 className="mt-3 w-[min(92vw,24rem)] break-words text-3xl font-black leading-9 text-white">
                 {selectedChallengeDetail.headline}
               </h4>
-              {selectedChallenge.rules ? (
-                <p className="mt-4 w-[min(92vw,24rem)] text-xl leading-8 text-slate-300">{selectedChallenge.rules}</p>
+              {selectedChallenge.description?.summary || selectedChallenge.rules ? (
+                <p className="mt-4 w-[min(92vw,24rem)] text-xl leading-8 text-slate-300">
+                  {selectedChallenge.description?.summary ?? selectedChallenge.rules}
+                </p>
+              ) : null}
+              {selectedChallenge.description?.when ? (
+                <p className="mt-3 w-[min(92vw,24rem)] text-lg leading-7 text-slate-400">
+                  {selectedChallenge.description.when}
+                </p>
+              ) : null}
+              {selectedChallenge.description?.fineprint ? (
+                <p className="mt-3 w-[min(92vw,24rem)] text-base leading-6 text-slate-500">
+                  {selectedChallenge.description.fineprint}
+                </p>
               ) : null}
 
               {selectedChallengeDetail.showGauge ? (
@@ -1738,12 +1750,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                     size="modal"
                   />
                 </div>
-              ) : selectedChallenge.winCondition === "game_winner" ? (
-                <p className="mt-5 w-[min(92vw,24rem)] text-lg text-slate-500">Awarded to the winner.</p>
-              ) : selectedChallengeDetail.upcomingStartDate ? (
+              ) : selectedChallenge.winCondition === "game_winner" ? null : selectedChallengeDetail.upcomingStartDate ? (
+                // The description's `when` line already says "Starts … Get your picks in early."
+                selectedChallenge.description?.when ? null : (
                 <p className="mt-5 w-[min(92vw,24rem)] text-lg text-amber-300/80">
                   Starts {formatCalendarDate(selectedChallengeDetail.upcomingStartDate)} — get your picks in early.
                 </p>
+                )
               ) : (
                 <p className="mt-5 w-[min(92vw,24rem)] text-lg text-slate-500">In progress — check back for results.</p>
               )}

@@ -72,6 +72,51 @@ describe("CreateRewardWizard — admin variant, no new props", () => {
   });
 });
 
+describe("CreateRewardWizard — Confirm shows what guests will see", () => {
+  it("composes the guest wording from the wizard's answers and the venue's schedule", async () => {
+    const withGame: RewardCreationContextDTO = {
+      ...LIVE_CONTEXT,
+      gameSlots: [
+        {
+          scheduleId: "sched-1",
+          weekday: "fri",
+          recurring: true,
+          title: "Trivia Night",
+          timeLabel: "8:00 PM",
+          dateLabel: null,
+          label: "Friday 8:00 PM — Trivia Night",
+        },
+      ],
+    };
+    const { container } = render(
+      createElement(CreateRewardWizard, {
+        variant: "admin",
+        venues: [{ id: "venue-1", name: "The Pub" }],
+        defaultVenueId: "venue-1",
+        scheduleLinkHref: "/admin/schedule",
+        fetchContext: async () => withGame,
+        onSubmit: async () => ({ ok: true as const }),
+        onCreated: () => {},
+        onCancel: () => {},
+      }),
+    );
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
+    await screen.findByText("How many, how often?");
+    fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
+    await screen.findByText("Prize");
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    await screen.findByText("Confirm");
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("What guests will see");
+    expect(text).toContain("Earn 500 points in Live Trivia this week and win 50% off an appetizer.");
+    expect(text).toMatch(/8(:00)? ?PM/);
+    expect(text).not.toContain("this venue");
+    expect(text).not.toContain("Awarded to the winner");
+  });
+});
+
 // ─── The opt-in props the Partner Dashboard's Rewards sheet uses ────────────
 
 const stubReducedMotion = () => {

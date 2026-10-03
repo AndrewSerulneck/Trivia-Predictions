@@ -5,21 +5,21 @@ import type { NFLWeek } from "@/lib/nflPickEm";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 // rewards.ts is server-only and leans on two module boundaries: the schedule
-// reader (listAdminLiveShowdownSchedules) and the engine (createChallengeCampaign).
+// reader (listVenueLiveShowdownSchedules) and the engine (createChallengeCampaign).
 // We stub both — the schedule reader returns fixtures, and createChallengeCampaign
 // captures the expansion input so we can assert the engine field mapping without a DB.
 // The NFL Pick 'Em Challenge adds a THIRD boundary: the season calendar
 // (listNFLWeeks over nfl_pickem_weeks). Stubbed the same way, so the NFL branch
 // is asserted without a DB and without the update_nfl_week_status RPC.
 const mocks = vi.hoisted(() => ({
-  listAdminLiveShowdownSchedules: vi.fn(async (): Promise<AdminLiveShowdownSchedule[]> => []),
+  listVenueLiveShowdownSchedules: vi.fn(async (): Promise<AdminLiveShowdownSchedule[]> => []),
   createChallengeCampaign: vi.fn(async (input: Record<string, unknown>) => ({ id: "reward-1", ...input })),
   listNFLWeeks: vi.fn(async (): Promise<NFLWeek[]> => []),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/liveShowdownAdmin", () => ({
-  listAdminLiveShowdownSchedules: mocks.listAdminLiveShowdownSchedules,
+  listVenueLiveShowdownSchedules: mocks.listVenueLiveShowdownSchedules,
 }));
 vi.mock("@/lib/nflPickEm", () => ({
   listNFLWeeks: mocks.listNFLWeeks,
@@ -81,7 +81,7 @@ const APPETIZER_PRIZE: RewardPrizeInput = {
 };
 
 beforeEach(() => {
-  mocks.listAdminLiveShowdownSchedules.mockReset();
+  mocks.listVenueLiveShowdownSchedules.mockReset();
   mocks.createChallengeCampaign.mockClear();
   mocks.listNFLWeeks.mockReset();
   mocks.listNFLWeeks.mockResolvedValue([]);
@@ -119,14 +119,14 @@ describe("reward definition registry", () => {
 
 describe("resolveRewardCreationContext", () => {
   it("blocks when Live Trivia is not scheduled at the venue", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
     expect(ctx.scheduled).toBe(false);
     expect(ctx.allowedCadences).toEqual([]);
   });
 
   it("offers every period a weekly schedule can fill, and anchors on its days", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
     expect(ctx.scheduled).toBe(true);
     expect(ctx.hasRecurringSchedule).toBe(true);
@@ -138,7 +138,7 @@ describe("resolveRewardCreationContext", () => {
   });
 
   it("offers a daily period only when the venue runs Live Trivia every day", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "daily", recurringDays: [] }),
     ]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
@@ -149,7 +149,7 @@ describe("resolveRewardCreationContext", () => {
     // Regression (found in Phase 6 browser verification): falling back to the
     // start_time weekday made a daily venue report scheduleDays ["tue"], which
     // became the reward's activeDays and killed accrual six days in seven.
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "daily", recurringDays: [] }),
     ]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
@@ -168,7 +168,7 @@ describe("resolveRewardCreationContext", () => {
     // resolvable weekday) while the context still reported the venue as
     // scheduled — stranding the partner on a "no games scheduled" step with a
     // dead Next button.
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "monthly", recurringDays: [] }),
     ]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
@@ -185,7 +185,7 @@ describe("resolveRewardCreationContext", () => {
     // A one-off Live Trivia game alongside the recurring weekly one adds a
     // winner in whichever week it lands, breaking the "same count every week"
     // promise a locked game-winner reward makes.
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule(),
       makeSchedule({
         id: "sched-2",
@@ -208,7 +208,7 @@ describe("resolveRewardCreationContext", () => {
   });
 
   it("offers only a one-off for a non-recurring schedule, anchoring on the start_time weekday", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "none", recurringDays: [] }),
     ]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
@@ -219,7 +219,7 @@ describe("resolveRewardCreationContext", () => {
   });
 
   it("filters schedules to the requested venue only", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ venueId: "other-venue" }),
     ]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
@@ -227,7 +227,7 @@ describe("resolveRewardCreationContext", () => {
   });
 
   it("drops a schedule with an unparseable start_time entirely (can't tell if it's live/upcoming)", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "weekly", recurringDays: [], startTime: "not-a-date" }),
     ]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
@@ -239,7 +239,7 @@ describe("resolveRewardCreationContext", () => {
     // Same shape as a real "no Live Trivia scheduled" venue: a past one-off
     // game whose trivia_schedules row was never deleted. This is the exact bug
     // reported in production — a stale row must NOT count as "scheduled".
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({
         recurringType: "none",
         recurringDays: [],
@@ -252,7 +252,7 @@ describe("resolveRewardCreationContext", () => {
   });
 
   it("allows a one-off game whose window is currently live (started before now, hasn't ended)", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({
         recurringType: "none",
         recurringDays: [],
@@ -264,7 +264,7 @@ describe("resolveRewardCreationContext", () => {
   });
 
   it("allows a recurring schedule whose first occurrence was in the past but future occurrences remain", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({
         recurringType: "weekly",
         recurringDays: ["tue"],
@@ -280,7 +280,7 @@ describe("resolveRewardCreationContext", () => {
 
 describe("createReward — expansion + validation", () => {
   it("expands a weekly Live Trivia Challenge into the proven engine field shape", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
 
     await createReward({
       venueId: "venue-1",
@@ -296,7 +296,7 @@ describe("createReward — expansion + validation", () => {
     expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "Live Trivia Challenge",
-        rules: "Earn 500 points in Live Trivia",
+        rules: "Earn 500 points in Live Trivia this week and win 50% off an appetizer.",
         venueIds: ["venue-1"],
         gameTypes: ["live-trivia"],
         challengeMode: "progress",
@@ -317,7 +317,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("expands a one-off reward with no day restriction", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
 
     await createReward({
       venueId: "venue-1",
@@ -356,7 +356,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("blocks creation when Live Trivia is not scheduled", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([]);
     await expect(
       createReward({
         venueId: "venue-1",
@@ -371,7 +371,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("blocks creation when the only schedule is a past one-off game (regression: stale trivia_schedules row)", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "none", recurringDays: [], startTime: "2026-07-10T23:00:00.000Z" }),
     ]);
     await expect(
@@ -389,7 +389,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("rejects a recurring period when the venue's schedule is a one-off", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "none", recurringDays: [] }),
     ]);
     await expect(
@@ -405,7 +405,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("rejects a weekly cadence when the only schedule has an unparseable start_time (dropped as unscheduled)", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "weekly", recurringDays: [], startTime: "not-a-date" }),
     ]);
     await expect(
@@ -422,7 +422,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("rejects an out-of-range winner quantity", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     await expect(
       createReward({
         venueId: "venue-1",
@@ -438,7 +438,7 @@ describe("createReward — expansion + validation", () => {
   // ── Terms sentence: "give out [N] rewards every [period]" ──────────────────
   it("rejects more game-winner rewards per week than the venue runs games", async () => {
     // One Tuesday game a week — a second weekly prize has no game to award it.
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     await expect(
       createReward({
         venueId: "venue-1",
@@ -454,7 +454,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("allows one game-winner reward per game when the venue runs two games a week", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringDays: ["tue", "thu"] }),
     ]);
     await createReward({
@@ -472,7 +472,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("rejects a monthly game-winner reward at a weekly venue (4 or 5 games a month is not a promise)", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     await expect(
       createReward({
         venueId: "venue-1",
@@ -489,7 +489,7 @@ describe("createReward — expansion + validation", () => {
   it("allows a monthly POINTS-TARGET reward at a weekly venue", async () => {
     // Several guests can clear a points target at the same game, so the quantity
     // is the partner's choice — only the period has to contain a game.
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     await createReward({
       venueId: "venue-1",
       definitionId: "live_trivia_challenge",
@@ -513,7 +513,7 @@ describe("createReward — expansion + validation", () => {
     // The counterpart to the scheduleDays regression above: a daily reward must
     // let points accrue every day, or its quota resets daily against progress
     // that can only be earned on one weekday.
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "daily", recurringDays: [] }),
     ]);
     await createReward({
@@ -529,7 +529,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("rejects a daily reward when the venue only runs Live Trivia on Tuesdays", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     await expect(
       createReward({
         venueId: "venue-1",
@@ -543,7 +543,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("rejects a one-off game-winner reward worth more than one prize", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "none", recurringDays: [] }),
     ]);
     await expect(
@@ -560,7 +560,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("rejects an invalid menu-item prize (percent over 100)", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     await expect(
       createReward({
         venueId: "venue-1",
@@ -574,7 +574,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("allows a game_winner reward", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     await createReward({
       venueId: "venue-1",
       definitionId: "live_trivia_challenge",
@@ -590,7 +590,7 @@ describe("createReward — expansion + validation", () => {
   });
 
   it("requires a free-text name when the menu item is 'other'", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     await expect(
       createReward({
         venueId: "venue-1",
@@ -641,7 +641,7 @@ describe("createReward — game-winner slots", () => {
     });
 
   it("exposes the venue's individual games as pickable slots", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([tueThu(), tueLate()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([tueThu(), tueLate()]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
     expect(ctx.gameSlots.map((slot) => `${slot.scheduleId}:${slot.weekday}`)).toEqual([
       "sched-1:tue",
@@ -652,7 +652,7 @@ describe("createReward — game-winner slots", () => {
   });
 
   it("derives weekly cadence, quota and activeDays from the picked games", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([tueThu()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([tueThu()]);
     await createWithSlots([
       { scheduleId: "sched-1", weekday: "tue" },
       { scheduleId: "sched-1", weekday: "thu" },
@@ -671,7 +671,7 @@ describe("createReward — game-winner slots", () => {
   });
 
   it("pins to one of two games on the same weekday and leaves the other out", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule(), tueLate()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule(), tueLate()]);
     await createWithSlots([{ scheduleId: "sched-2", weekday: "tue" }]);
     expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -684,7 +684,7 @@ describe("createReward — game-winner slots", () => {
   it("discards the client's own cadence and quota", async () => {
     // The wizard sends them; a hand-rolled request could send anything. The
     // selection is the only thing that decides how many prizes exist.
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([tueThu()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([tueThu()]);
     await createWithSlots(
       [{ scheduleId: "sched-1", weekday: "tue" }],
       { cadence: "none", winnerQuota: 99 },
@@ -695,7 +695,7 @@ describe("createReward — game-winner slots", () => {
   });
 
   it("creates a one-time reward worth exactly 1 for a single one-off game", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([tueThu(), oneOff()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([tueThu(), oneOff()]);
     await createWithSlots([{ scheduleId: "sched-off", weekday: "wed" }]);
     expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -708,7 +708,7 @@ describe("createReward — game-winner slots", () => {
   });
 
   it("rejects a game the venue doesn't actually have", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([tueThu()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([tueThu()]);
     await expect(createWithSlots([{ scheduleId: "sched-1", weekday: "mon" }])).rejects.toThrow(
       /no longer on your schedule/,
     );
@@ -716,7 +716,7 @@ describe("createReward — game-winner slots", () => {
   });
 
   it("rejects mixing a recurring game with a one-off game", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([tueThu(), oneOff()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([tueThu(), oneOff()]);
     await expect(
       createWithSlots([
         { scheduleId: "sched-1", weekday: "tue" },
@@ -726,12 +726,12 @@ describe("createReward — game-winner slots", () => {
   });
 
   it("rejects an empty selection instead of quietly meaning 'every game'", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([tueThu()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([tueThu()]);
     await expect(createWithSlots([])).rejects.toThrow(/at least one Live Trivia game/);
   });
 
   it("stores null when no selection is sent, keeping the legacy every-game reward", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([tueThu()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([tueThu()]);
     await createReward({
       venueId: "venue-1",
       definitionId: "live_trivia_challenge",
@@ -749,7 +749,7 @@ describe("createReward — game-winner slots", () => {
   it("ignores a selection sent for a points-target reward", async () => {
     // Slots only describe who wins a GAME. A points target is won by accrual, so
     // its terms sentence still governs.
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([tueThu()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([tueThu()]);
     await createWithSlots([{ scheduleId: "sched-1", weekday: "tue" }], {
       winCondition: "points_threshold",
       winnerQuota: 3,
@@ -833,7 +833,7 @@ describe("resolveRewardCreationContext — NFL season gate", () => {
       weeksRemaining: 2,
     });
     // The venue's Live Trivia schedule is irrelevant here and must not be read.
-    expect(mocks.listAdminLiveShowdownSchedules).not.toHaveBeenCalled();
+    expect(mocks.listVenueLiveShowdownSchedules).not.toHaveBeenCalled();
   });
 
   it("blocks when the season has no weeks left", async () => {
@@ -846,7 +846,7 @@ describe("resolveRewardCreationContext — NFL season gate", () => {
   });
 
   it("leaves nflSeason null for a schedule-gated definition", async () => {
-    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
     const ctx = await resolveRewardCreationContext("venue-1", "live_trivia_challenge");
     expect(ctx.nflSeason).toBeNull();
     expect(mocks.listNFLWeeks).not.toHaveBeenCalled();
@@ -967,5 +967,53 @@ describe("createReward — NFL Pick 'Em Challenge", () => {
     mocks.listNFLWeeks.mockResolvedValue([]);
     await expect(createNFLReward()).rejects.toThrow(REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE);
     expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+});
+
+// ── Frozen `rules` snapshot (docs/reward-descriptions-plan.md Phase 2) ──────────
+// Every reader that can composes the description fresh at read time
+// (attachRewardDescriptions); `rules` is the fallback an old client or a raw
+// reader sees, so it is written from the same composer's Line 1 — never the old
+// "…at this venue" requirement copy.
+describe("createReward — rules is the composer's Line 1", () => {
+  const rulesOf = () => String(mocks.createChallengeCampaign.mock.calls[0][0].rules);
+
+  it("names the pinned nights for a slot-pinned game-winner reward", async () => {
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule({ recurringDays: ["tue", "thu"] })]);
+    await createReward({
+      venueId: "venue-1",
+      definitionId: "live_trivia_challenge",
+      cadence: "weekly",
+      winCondition: "game_winner",
+      threshold: 500,
+      winnerQuota: 1,
+      gameWinnerSlots: [
+        { scheduleId: "sched-1", weekday: "tue" },
+        { scheduleId: "sched-1", weekday: "thu" },
+      ],
+      prize: APPETIZER_PRIZE,
+    });
+    expect(rulesOf()).toBe("Win Live Trivia on Tuesday and Thursday nights and win 50% off an appetizer.");
+  });
+
+  it("writes the weekly NFL most-picks sentence", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+    await createNFLReward({ nflWeekScope: { kind: "weekly", season: 2026 } });
+    expect(rulesOf()).toBe("Get the most NFL picks right this week and win 50% off an appetizer.");
+  });
+
+  it("writes the season-long NFL sentence from the server's own fromWeek", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+    await createNFLReward({ nflWeekScope: { kind: "season", season: 1999, fromWeek: 1 } });
+    expect(rulesOf()).toBe(
+      "Get the most NFL picks right from Week 3 through the end of the regular season and win 50% off an appetizer.",
+    );
+  });
+
+  it("never says 'this venue' or 'Awarded to the winner'", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+    await createNFLReward({ winCondition: "points_threshold", threshold: 25, winnerQuota: 3 });
+    expect(rulesOf()).toBe("Get 25 NFL picks right this week and win 50% off an appetizer.");
+    expect(rulesOf()).not.toMatch(/this venue|Awarded to the winner/i);
   });
 });

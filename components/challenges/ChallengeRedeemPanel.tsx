@@ -414,12 +414,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                     // Legacy leaderboard-mode reward — finishing out its current cycle.
                     // Standings are never rendered here anymore (Rewards is progress-only).
                     <p className="text-[11px] text-cyan-300/60">In progress — check back for results.</p>
-                  ) : isGameWinner ? (
-                    // No points target to bar-chart — the reward goes to whoever wins,
-                    // resolved by the winner-rewards cron once the contest ends. Which
-                    // game/contest is already named in campaign.rules, rendered below.
-                    <p className="text-[11px] text-cyan-300/60">Awarded to the winner.</p>
-                  ) : (
+                  ) : isGameWinner ? null : (
                     <GaugeBar
                       current={campaign.progressPoints}
                       target={campaign.pointsRequiredToWin}
@@ -427,8 +422,16 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                     />
                   )}
 
-                  {campaign.rules ? (
-                    <p className="text-[11px] leading-relaxed text-cyan-300/60">{campaign.rules}</p>
+                  {campaign.description?.summary || campaign.rules ? (
+                    <p className="text-[11px] leading-relaxed text-cyan-300/60">
+                      {campaign.description?.summary ?? campaign.rules}
+                    </p>
+                  ) : null}
+                  {campaign.description?.when ? (
+                    <p className="text-[11px] leading-relaxed text-cyan-300/60">{campaign.description.when}</p>
+                  ) : null}
+                  {campaign.description?.fineprint ? (
+                    <p className="text-[11px] leading-relaxed text-cyan-300/40">{campaign.description.fineprint}</p>
                   ) : null}
                 </li>
               );

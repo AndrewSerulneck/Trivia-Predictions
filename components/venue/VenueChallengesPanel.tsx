@@ -176,10 +176,10 @@ function VenueChallengesPanelInner({
                     </div>
 
                     {/* Rules */}
-                    {challenge.rules ? (
+                    {challenge.description?.summary || challenge.rules ? (
                       <div className="mt-3 rounded-lg px-3 py-2.5 text-base leading-relaxed text-slate-400"
                         style={{ background: "rgba(30,41,59,0.7)", border: "1px solid rgba(71,85,105,0.4)" }}>
-                        {challenge.rules}
+                        {challenge.description?.summary ?? challenge.rules}
                       </div>
                     ) : null}
 
@@ -216,9 +216,9 @@ function VenueChallengesPanelInner({
                       <p className="mt-3 text-base text-slate-500">In progress — check back for results.</p>
                     ) : challenge.winCondition === "game_winner" ? (
                       // No points target to bar-chart — the reward goes to whoever wins,
-                      // resolved by the winner-rewards cron once the contest ends. Which
-                      // game/contest is already named in the rules text rendered above.
-                      <p className="mt-3 text-base text-slate-500">Awarded to the winner.</p>
+                      // resolved by the winner-rewards cron once the contest ends. The
+                      // summary rendered above already says what to do and what you win.
+                      null
                     ) : (
                       <div className="mt-3">
                         <RewardProgressGauge progress={progress} target={target} barGradient={iconStyle.barGradient} />

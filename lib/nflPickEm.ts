@@ -729,29 +729,43 @@ export async function listNFLWeeks(
   return (data || []).map(mapNFLWeekRow);
 }
 
+/** One NFL week's calendar span — the light shape the reward surfaces read. */
+export type NFLWeekDates = { weekNumber: number; weekStartDate: string; weekEndDate: string };
+
 /**
- * The `week_start_date` of a season's earliest week, or null if that season has
- * no weeks synced yet.
+ * Every week of a season as `{weekNumber, weekStartDate, weekEndDate}`, ordered
+ * by week number, in ONE small read (~18–23 rows). Empty when the season has no
+ * weeks synced yet or the read fails.
+ *
+ * Feeds both the reward "Starts <date>" state (the season's first
+ * week_start_date) and the reward descriptions' off-season line (its last
+ * week_end_date) from the same rows, so the venue Rewards panel pays for one
+ * nfl_pickem_weeks read per season, not two (docs/reward-descriptions-plan.md
+ * Phase 2).
  *
  * Deliberately NOT listNFLWeeks: that helper fires the update_nfl_week_status
  * RPC (a write) on every call, which is far too heavy for a read this is used
- * for — deciding whether a reward is still "upcoming" on the venue Rewards
- * panel, on every panel load.
+ * for — on every panel load.
  */
-export async function getSeasonFirstWeekStartDate(season: number): Promise<string | null> {
-  if (!supabaseAdmin) return null;
-  if (!Number.isFinite(season)) return null;
+export async function listNFLSeasonWeekDates(season: number): Promise<NFLWeekDates[]> {
+  if (!supabaseAdmin) return [];
+  if (!Number.isFinite(season)) return [];
 
   const { data, error } = await supabaseAdmin
     .from("nfl_pickem_weeks")
-    .select("week_start_date")
+    .select("week_number, week_start_date, week_end_date")
     .eq("season", season)
-    .order("week_start_date", { ascending: true })
-    .limit(1)
-    .maybeSingle<Pick<NFLWeekRow, "week_start_date">>();
+    .order("week_number", { ascending: true })
+    .returns<Array<Pick<NFLWeekRow, "week_number" | "week_start_date" | "week_end_date">>>();
 
-  if (error || !data) return null;
-  return data.week_start_date ?? null;
+  if (error || !data) return [];
+  return data
+    .filter((row) => row.week_start_date && row.week_end_date)
+    .map((row) => ({
+      weekNumber: row.week_number,
+      weekStartDate: row.week_start_date,
+      weekEndDate: row.week_end_date,
+    }));
 }
 
 /**

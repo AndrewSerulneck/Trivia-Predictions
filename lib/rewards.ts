@@ -1,8 +1,12 @@
 import "server-only";
 
-import { createChallengeCampaign } from "@/lib/challengeCampaigns";
 import {
-  listAdminLiveShowdownSchedules,
+  computeUpcomingCycleStart,
+  createChallengeCampaign,
+  getVenueTimezone,
+} from "@/lib/challengeCampaigns";
+import {
+  listVenueLiveShowdownSchedules,
   type AdminLiveShowdownSchedule,
 } from "@/lib/liveShowdownAdmin";
 import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
@@ -12,7 +16,6 @@ import {
   getRewardDefinition,
   isSupportedRewardCadence,
   isValidRewardThreshold,
-  renderRewardRequirement,
   rewardThresholdStepMessage,
   type RewardDefinitionId,
 } from "@/lib/rewardDefinitions";
@@ -42,11 +45,13 @@ import {
   type NFLRewardWeekScope,
   type NFLWeekScopeTerms,
 } from "@/lib/nflPickEmRewardWeeks";
-import { getSeasonFirstWeekStartDate, listNFLWeeks } from "@/lib/nflPickEm";
+import { listNFLSeasonWeekDates, listNFLWeeks, type NFLWeekDates } from "@/lib/nflPickEm";
+import { describeReward, describeRewardWin, type RewardDescription } from "@/lib/rewardDescription";
 import { getLocalDateKey } from "@/lib/timezone";
 import type {
   CampaignRecurringType,
   ChallengeCampaign,
+  ChallengeCampaignWin,
   ChallengeGameWinnerSlot,
   ChallengeWinCondition,
   RewardDiscountKind,
@@ -64,7 +69,7 @@ import type {
 //
 // The Live Trivia Challenge gates on the venue already having Live Trivia
 // scheduled (source of truth: the `trivia_schedules` table, read via
-// lib/liveShowdownAdmin.listAdminLiveShowdownSchedules). The venue's schedule
+// lib/liveShowdownAdmin.listVenueLiveShowdownSchedules). The venue's schedule
 // also drives which cadence options are offered and the weekday anchor a weekly
 // reward's cycle math needs.
 //
@@ -89,9 +94,6 @@ export {
 
 export { REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE };
 
-// Live Trivia admin schedules are read across ALL venues then filtered here (a
-// venue won't have hundreds of upcoming schedules). Mirrors lib/ownerSchedule.ts.
-const LIVE_TRIVIA_SCHEDULE_FETCH_LIMIT = 200;
 const WINNER_QUOTA_CAP = 100;
 
 const VALID_MENU_ITEMS: readonly RewardMenuItem[] = [
@@ -211,7 +213,7 @@ export async function getVenueLiveTriviaSchedules(
 ): Promise<AdminLiveShowdownSchedule[]> {
   const vid = String(venueId ?? "").trim();
   if (!vid) return [];
-  const all = await listAdminLiveShowdownSchedules(LIVE_TRIVIA_SCHEDULE_FETCH_LIMIT);
+  const all = await listVenueLiveShowdownSchedules([vid], now);
   return all.filter(
     (schedule) => schedule.venueId === vid && hasLiveOrUpcomingOccurrence(schedule, now),
   );
@@ -301,6 +303,58 @@ async function resolveNFLSeasonContext(now: Date): Promise<NFLRewardSeasonContex
   };
 }
 
+/** Every week of each distinct season the campaigns' NFL scopes name — one read per season. */
+async function loadNFLSeasonWeekDates(
+  campaigns: ReadonlyArray<Pick<ChallengeCampaign, "nflWeekScope">>,
+): Promise<Map<number, NFLWeekDates[]>> {
+  const seasons = new Set<number>();
+  for (const campaign of campaigns) {
+    const scope = normalizeNFLWeekScope(campaign.nflWeekScope);
+    if (scope) seasons.add(scope.season);
+  }
+  const spansBySeason = new Map<number, NFLWeekDates[]>();
+  await Promise.all(
+    [...seasons].map(async (season) => {
+      spansBySeason.set(season, await listNFLSeasonWeekDates(season));
+    }),
+  );
+  return spansBySeason;
+}
+
+/** YYYY-MM-DD of a season's earliest week_start_date, or null when none are synced. */
+const seasonFirstWeekStartDate = (spans: readonly NFLWeekDates[] | undefined): string | null =>
+  spans && spans.length > 0
+    ? spans.reduce((earliest, week) => (week.weekStartDate < earliest ? week.weekStartDate : earliest), spans[0].weekStartDate)
+    : null;
+
+/** YYYY-MM-DD of a season's latest week_end_date, or null when none are synced. */
+const seasonLastWeekEndDate = (spans: readonly NFLWeekDates[] | undefined): string | null =>
+  spans && spans.length > 0
+    ? spans.reduce((latest, week) => (week.weekEndDate > latest ? week.weekEndDate : latest), spans[0].weekEndDate)
+    : null;
+
+function applyNFLRewardUpcomingState<T extends Pick<ChallengeCampaign, "nflWeekScope" | "startDate">>(
+  campaigns: T[],
+  spansBySeason: Map<number, NFLWeekDates[]>,
+  now: Date,
+): Array<T & { upcomingStartDate?: string }> {
+  const today = getLocalDateKey(now, NFL_SEASON_TIMEZONE);
+
+  return campaigns.map((campaign) => {
+    const scope = normalizeNFLWeekScope(campaign.nflWeekScope);
+    if (!scope) return campaign;
+
+    const startDate = resolveNFLRewardStartDate(scope, {
+      campaignStartDate: campaign.startDate ?? null,
+      seasonFirstWeekStartDate: seasonFirstWeekStartDate(spansBySeason.get(scope.season)),
+    });
+
+    // Calendar-date strings compare correctly lexicographically in YYYY-MM-DD.
+    if (!startDate || startDate <= today) return campaign;
+    return { ...campaign, upcomingStartDate: startDate };
+  });
+}
+
 /**
  * Attach `upcomingStartDate` to any NFL Pick 'Em reward whose first covered NFL
  * week has not started yet, so the venue Rewards panel can say "Starts Sept 10"
@@ -311,40 +365,211 @@ async function resolveNFLSeasonContext(now: Date): Promise<NFLRewardSeasonContex
  * season, or any non-NFL reward, comes back untouched. Costs zero queries when
  * the venue has no NFL rewards, and one cheap indexed read per distinct season
  * otherwise (never listNFLWeeks, which writes via update_nfl_week_status).
+ *
+ * attachRewardDescriptions does this too, from the same read — a caller that
+ * attaches descriptions must not ALSO call this, or the season is read twice.
  */
 export async function attachNFLRewardUpcomingState<
   T extends Pick<ChallengeCampaign, "nflWeekScope" | "startDate">,
 >(campaigns: T[], now: Date = new Date()): Promise<Array<T & { upcomingStartDate?: string }>> {
-  const nflCampaigns = campaigns.filter((campaign) => normalizeNFLWeekScope(campaign.nflWeekScope));
-  if (nflCampaigns.length === 0) return campaigns;
+  if (!campaigns.some((campaign) => normalizeNFLWeekScope(campaign.nflWeekScope))) return campaigns;
+  return applyNFLRewardUpcomingState(campaigns, await loadNFLSeasonWeekDates(campaigns), now);
+}
 
-  const seasons = new Set<number>();
-  for (const campaign of nflCampaigns) {
-    const scope = normalizeNFLWeekScope(campaign.nflWeekScope);
-    if (scope) seasons.add(scope.season);
+/**
+ * Each venue's live-or-upcoming Live Trivia games as description slot facts, from
+ * ONE venue-filtered trivia_schedules read. Returns null when the read fails —
+ * the composer then states no time at all ("Check the Live Trivia schedule…")
+ * rather than a stale or invented one, and the page still loads.
+ */
+async function loadVenueGameSlots(
+  venueIds: readonly string[],
+  now: Date,
+): Promise<Map<string, RewardGameSlot[]> | null> {
+  let schedules: AdminLiveShowdownSchedule[];
+  try {
+    schedules = await listVenueLiveShowdownSchedules(venueIds, now);
+  } catch (error) {
+    console.error("[RewardDescriptions] schedule-read-failed", error);
+    return null;
   }
-
-  const firstWeekBySeason = new Map<number, string | null>();
-  await Promise.all(
-    [...seasons].map(async (season) => {
-      firstWeekBySeason.set(season, await getSeasonFirstWeekStartDate(season));
-    }),
+  const byVenue = new Map<string, AdminLiveShowdownSchedule[]>(venueIds.map((id) => [id, []]));
+  for (const schedule of schedules) {
+    // Same "is this game still on" reading the reward picker uses
+    // (getVenueLiveTriviaSchedules), so a description never names a game the
+    // partner's own schedule page files under "Past".
+    if (!schedule.venueId || !hasLiveOrUpcomingOccurrence(schedule, now)) continue;
+    byVenue.get(schedule.venueId)?.push(schedule);
+  }
+  return new Map(
+    [...byVenue].map(([venueId, venueSchedules]) => [
+      venueId,
+      enumerateGameSlots(toGameScheduleShapes(venueSchedules)),
+    ]),
   );
+}
 
-  const today = getLocalDateKey(now, NFL_SEASON_TIMEZONE);
+/**
+ * Attach the guest-facing `description` (lib/rewardDescription.ts — when, how
+ * often, what to do, what you win) to every campaign, plus NFL rewards'
+ * `upcomingStartDate` (attachNFLRewardUpcomingState, from the same read). Use
+ * this INSTEAD of attachNFLRewardUpcomingState, never beside it.
+ *
+ * `venueId` is the venue being viewed; pass null for a cross-venue list (the
+ * admin Rewards list's "All venues"), and each campaign is described against its
+ * own first venue.
+ *
+ * Cost (docs/reward-descriptions-plan.md Phase 2): no per-campaign queries.
+ *  - trivia_schedules: ONE read, venue-filtered, only when a Live Trivia reward
+ *    is present.
+ *  - nfl_pickem_weeks: ONE read per distinct season (in practice one), only when
+ *    an NFL reward is present — the same read the upcoming state needs.
+ *  - venues.timezone: only when a recurring reward's quota is filled this cycle
+ *    (the "Next contest starts …" line), and cached per server instance by
+ *    getVenueTimezone — the snapshot path has already warmed it.
+ * A failed read degrades the wording, never the response.
+ */
+export async function attachRewardDescriptions<T extends ChallengeCampaign>(
+  campaigns: T[],
+  venueId: string | null,
+  now: Date = new Date(),
+): Promise<Array<T & { upcomingStartDate?: string; description: RewardDescription }>> {
+  if (campaigns.length === 0) return [];
+  const viewedVenueId = String(venueId ?? "").trim() || null;
+  const venueOf = (campaign: ChallengeCampaign): string | null =>
+    viewedVenueId ?? (String(campaign.venueIds?.[0] ?? "").trim() || null);
 
-  return campaigns.map((campaign) => {
+  const hasNFL = campaigns.some((campaign) => normalizeNFLWeekScope(campaign.nflWeekScope));
+  const scheduleVenueIds = [
+    ...new Set(
+      campaigns
+        .filter((campaign) => {
+          const definition = campaign.rewardDefinitionId
+            ? getRewardDefinition(campaign.rewardDefinitionId)
+            : null;
+          return definition?.requiresScheduledGame === "live_trivia";
+        })
+        .map(venueOf)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const timezoneVenueIds = [
+    ...new Set(
+      campaigns
+        .filter(
+          (campaign) =>
+            campaign.rewardDefinitionId &&
+            campaign.quotaRemaining === 0 &&
+            campaign.recurringType &&
+            campaign.recurringType !== "none",
+        )
+        .map(venueOf)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  const [spansBySeason, slotsByVenue, timezoneByVenue] = await Promise.all([
+    hasNFL ? loadNFLSeasonWeekDates(campaigns) : Promise.resolve(new Map<number, NFLWeekDates[]>()),
+    scheduleVenueIds.length > 0 ? loadVenueGameSlots(scheduleVenueIds, now) : Promise.resolve(null),
+    Promise.all(
+      timezoneVenueIds.map(async (id) => {
+        try {
+          return [id, await getVenueTimezone(id)] as const;
+        } catch (error) {
+          console.error("[RewardDescriptions] timezone-read-failed", error);
+          return [id, null] as const;
+        }
+      }),
+    ).then((entries) => new Map<string, string | null>(entries)),
+  ]);
+
+  const withUpcoming: Array<T & { upcomingStartDate?: string }> = hasNFL
+    ? applyNFLRewardUpcomingState(campaigns, spansBySeason, now)
+    : campaigns;
+
+  return withUpcoming.map((campaign) => {
+    const campaignVenueId = venueOf(campaign);
+    const timezone = campaignVenueId ? timezoneByVenue.get(campaignVenueId) ?? null : null;
     const scope = normalizeNFLWeekScope(campaign.nflWeekScope);
-    if (!scope) return campaign;
+    const slots = campaignVenueId && slotsByVenue ? slotsByVenue.get(campaignVenueId) ?? null : null;
+    const nextCycleStart = timezone ? computeUpcomingCycleStart(campaign, now, timezone)?.toISOString() ?? null : null;
+    const description = describeReward(
+      {
+        ...campaign,
+        schedule: slots ? { slots } : null,
+        nfl: scope
+          ? {
+              upcomingStartDate: campaign.upcomingStartDate ?? null,
+              seasonEndDate: seasonLastWeekEndDate(spansBySeason.get(scope.season)),
+            }
+          : null,
+        timezone,
+        nextCycleStart,
+      },
+      now,
+    );
+    return { ...campaign, description };
+  });
+}
 
-    const startDate = resolveNFLRewardStartDate(scope, {
-      campaignStartDate: campaign.startDate ?? null,
-      seasonFirstWeekStartDate: firstWeekBySeason.get(scope.season) ?? null,
-    });
+/**
+ * Attach `winDescription` — the past-tense "what you won it for" line
+ * (describeRewardWin: "You got the most NFL picks right in Week 5", "You won
+ * Live Trivia on Tue, Oct 7") — to each prize-wallet coupon. A coupon whose
+ * reward was deleted, or was never definition-based, gets null and keeps
+ * "Won from: {challengeName}".
+ *
+ * Cost: nothing at all when no coupon is definition-based. Otherwise one cached
+ * venues.timezone read (getVenueTimezone) and, only for weekly NFL coupons, one
+ * nfl_pickem_weeks read per distinct season to turn the cycle start into a week
+ * number. No per-coupon queries.
+ */
+export async function attachRewardWinDescriptions<T extends ChallengeCampaignWin>(
+  wins: T[],
+  venueId: string,
+): Promise<Array<T & { winDescription: string | null }>> {
+  const describable = (win: T) => {
+    const id = win.rewardTerms?.rewardDefinitionId;
+    return id ? getRewardDefinition(id) !== null : false;
+  };
+  if (!wins.some(describable)) return wins.map((win) => ({ ...win, winDescription: null }));
 
-    // Calendar-date strings compare correctly lexicographically in YYYY-MM-DD.
-    if (!startDate || startDate <= today) return campaign;
-    return { ...campaign, upcomingStartDate: startDate };
+  const weeklyNFL = wins.filter(
+    (win) => describable(win) && normalizeNFLWeekScope(win.rewardTerms?.nflWeekScope)?.kind === "weekly",
+  );
+  const [timezone, weeksBySeason] = await Promise.all([
+    getVenueTimezone(venueId).catch((error: unknown) => {
+      console.error("[RewardDescriptions] timezone-read-failed", error);
+      return null;
+    }),
+    weeklyNFL.length > 0
+      ? loadNFLSeasonWeekDates(weeklyNFL.map((win) => ({ nflWeekScope: win.rewardTerms?.nflWeekScope ?? null })))
+      : Promise.resolve(new Map<number, NFLWeekDates[]>()),
+  ]);
+
+  return wins.map((win) => {
+    const terms = win.rewardTerms;
+    if (!terms || !describable(win)) return { ...win, winDescription: null };
+
+    // A weekly NFL cycle starts on its week's first day in the venue's zone
+    // (nflWinnerCycleStart), so the week is the one whose dates contain it.
+    let nflWeekNumber: number | null = null;
+    const scope = normalizeNFLWeekScope(terms.nflWeekScope);
+    const cycleMs = Date.parse(String(win.cycleStart ?? ""));
+    if (scope?.kind === "weekly" && Number.isFinite(cycleMs) && cycleMs > 0) {
+      const day = getLocalDateKey(new Date(cycleMs), timezone || NFL_SEASON_TIMEZONE);
+      nflWeekNumber =
+        weeksBySeason.get(scope.season)?.find((week) => week.weekStartDate <= day && day <= week.weekEndDate)
+          ?.weekNumber ?? null;
+    }
+
+    return {
+      ...win,
+      winDescription: describeRewardWin(
+        { ...terms, rules: win.challengeRules },
+        { cycleStart: win.cycleStart ?? null, timezone, nflWeekNumber },
+      ),
+    };
   });
 }
 
@@ -781,7 +1006,25 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
 
   return createChallengeCampaign({
     name: definition.name,
-    rules: renderRewardRequirement(definition, threshold, winCondition),
+    // A frozen fallback snapshot of the guest-facing Line 1 — every reader that
+    // can, composes the description fresh at read time (attachRewardDescriptions);
+    // this is only what an old client or a raw `rules` reader sees.
+    rules: describeReward(
+      {
+        rules: "",
+        recurringType: cadence,
+        activeDays,
+        winnerQuota,
+        pointsRequiredToWin: threshold,
+        winCondition,
+        rewardDefinitionId: definition.id,
+        gameWinnerSlots: slots ? slots.slots : null,
+        nflWeekScope,
+        ...prize,
+        schedule: { slots: context.gameSlots },
+      },
+      new Date(),
+    ).summary,
     winCondition,
     // CRITICAL: non-empty venue_ids so the reward is scoped to this venue. Empty
     // venue_ids would make the engine treat it as a global campaign (see

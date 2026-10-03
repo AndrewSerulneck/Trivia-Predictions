@@ -18,6 +18,9 @@ export const RewardRow = ({
   highlighted?: boolean;
 }) => {
   const ref = useScrollWhenHighlighted<HTMLButtonElement & HTMLDivElement>(highlighted);
+  // The guest-facing summary says what to do and what it wins; the terms sentence
+  // below it still states how many prizes per period, which the summary does not.
+  const summary = competition.description?.summary ?? null;
   const terms = rewardTermsText(competition);
   const body = (
     <>
@@ -26,6 +29,7 @@ export const RewardRow = ({
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate font-black text-ht-primary">{competition.name}</div>
+        {summary ? <div className="mt-0.5 text-xs font-semibold leading-snug text-ht-muted">{summary}</div> : null}
         {terms ? <div className="mt-0.5 text-xs font-semibold text-ht-muted">{terms}</div> : null}
         {ended && competition.winnerUsername ? (
           <div className="mt-1 text-xs font-bold text-ht-emerald-300">🏆 Winner: {competition.winnerUsername}</div>

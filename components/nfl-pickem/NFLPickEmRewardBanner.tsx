@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { NFL_REWARD_MIN_PICKERS } from "@/lib/nflPickEmRewardWeeks";
 import { describeRewardPrize } from "@/lib/rewardDefinitions";
+import { describeReward } from "@/lib/rewardDescription";
 import type { ChallengeCampaign } from "@/types";
 
 type NFLRewardCampaign = ChallengeCampaign & { progressPoints: number };
@@ -76,6 +77,10 @@ export function NFLPickEmRewardBanner() {
         const progress = Math.max(0, Number(campaign.progressPoints ?? 0));
         const percent = Math.min(100, Math.round((progress / target) * 100));
         const belowMinimum = participantCount !== null && participantCount < NFL_REWARD_MIN_PICKERS;
+        // Same Line 1 the venue Rewards card shows (docs/reward-descriptions-plan.md).
+        // Composed here, not served: Line 1 needs no calendar facts, and this route
+        // is re-polled on every week switch, so it stays free of the extra read.
+        const summary = describeReward(campaign, new Date()).summary;
 
         return (
           <section
@@ -89,8 +94,8 @@ export function NFLPickEmRewardBanner() {
               </h2>
             </div>
             {prize ? <p className="mt-1.5 text-[15px] font-black text-white">{prize}</p> : null}
-            {campaign.rules ? (
-              <p className="mt-1 text-[12px] font-semibold leading-relaxed text-slate-400">{campaign.rules}</p>
+            {summary ? (
+              <p className="mt-1 text-[12px] font-semibold leading-relaxed text-slate-400">{summary}</p>
             ) : null}
 
             {isWon ? (

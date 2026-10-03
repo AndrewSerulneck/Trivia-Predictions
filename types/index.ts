@@ -250,6 +250,22 @@ export interface ChallengeLeaderboardViewer {
   inTop: boolean;
 }
 
+/**
+ * A reward's guest-facing description — when, how often, what to do, what you
+ * win — composed at READ time by describeReward (lib/rewardDescription.ts) and
+ * attached server-side by attachRewardDescriptions (lib/rewards.ts).
+ */
+export type RewardDescription = {
+  /** Line 1 — what to do + what you win. Shown on the card, the modal and the Confirm screen. */
+  summary: string;
+  /** When / how often. Modal + Confirm screen. Null for a legacy campaign. */
+  when: string | null;
+  /** Fine print (ties, minimums, how many win). Modal + Confirm screen. Null for a legacy campaign. */
+  fineprint: string | null;
+  /** True when `summary` is the campaign's own hand-written `rules` (no reward definition). */
+  isCustom: boolean;
+};
+
 export interface ChallengeCampaign {
   id: string;
   createdAt: string;
@@ -326,6 +342,11 @@ export interface ChallengeCampaign {
   quotaRemaining?: number;
   /** Whether the requesting viewer is among the current cycle's winners. */
   viewerWon?: boolean;
+  /**
+   * Guest-facing description, attached by the server (attachRewardDescriptions).
+   * Optional so an old server / new client skew falls back to `rules`.
+   */
+  description?: RewardDescription;
 }
 
 export interface ChallengeCampaignWin {
@@ -354,7 +375,25 @@ export interface ChallengeCampaignWin {
   prizeMenuItemName?: string | null;
   prizeDiscountKind?: RewardDiscountKind | null;
   prizeDiscountValue?: number | null;
+  /**
+   * The live reward's terms, for saying what the coupon was won FOR
+   * (describeRewardWin, lib/rewardDescription.ts). Null when the reward has been
+   * deleted (`challengeId` null) — that coupon keeps "Won from: {challengeName}".
+   */
+  rewardTerms?: ChallengeCampaignWinTerms | null;
+  /**
+   * Past-tense "what you won it for" line — "You got the most NFL picks right in
+   * Week 5". Attached server-side by attachRewardWinDescriptions (lib/rewards.ts);
+   * null/absent → show "Won from: {challengeName}".
+   */
+  winDescription?: string | null;
 }
+
+/** The slice of a reward's terms a prize-wallet coupon needs to describe its win. */
+export type ChallengeCampaignWinTerms = Pick<
+  ChallengeCampaign,
+  "rewardDefinitionId" | "winCondition" | "recurringType" | "pointsRequiredToWin" | "activeDays" | "winnerQuota" | "nflWeekScope"
+>;
 
 export interface ChallengeCampaignProgress {
   id: string;

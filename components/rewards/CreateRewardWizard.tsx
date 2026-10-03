@@ -42,6 +42,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { NavTone } from "@/components/navigation/StepBackButton";
 import { WizardFooter } from "@/components/navigation/WizardFooter";
 import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
+import { describeReward } from "@/lib/rewardDescription";
 import {
   REWARD_DEFINITIONS,
   isValidRewardThreshold,
@@ -600,6 +601,84 @@ export function CreateRewardWizard({
     const discountLabel = prize.discountKind === "percent" ? `${prize.discountValue}% off` : `$${prize.discountValue.toFixed(2)} off`;
     return `${discountLabel} ${itemLabel}`;
   }, [prize]);
+
+  // "What guests will see" — the same composer the server runs for the venue
+  // page, fed this wizard's in-progress answers (never an authored string), so the
+  // partner previews exactly the words guests will read. Mirrors createReward's
+  // derivation of cadence / activeDays / slots; the server stays the authority.
+  const guestPreview = useMemo(() => {
+    if (!definition || !context) return null;
+    const nflTerms = isNFLDefinition && nflTermsResult?.ok ? nflTermsResult.terms : null;
+    const pickedSlots = !isNFLDefinition && useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms : null;
+    if (isNFLDefinition && !nflTerms) return null;
+    if (!isNFLDefinition && !pickedSlots && !period) return null;
+    const cadence: CampaignRecurringType = nflTerms
+      ? nflTerms.cadence
+      : pickedSlots
+        ? pickedSlots.cadence
+        : cadenceForPeriod(period as RewardPeriod);
+    const activeDays: string[] = nflTerms
+      ? nflTerms.activeDays
+      : cadence === "none"
+        ? []
+        : pickedSlots
+          ? pickedSlots.weekdays
+          : context.scheduleDays;
+    const now = new Date();
+    // A reward that starts in a future NFL week reads "Starts Thu, Sep 4" until then.
+    // Compared as Eastern calendar days, exactly like the server's
+    // applyNFLRewardUpcomingState (lib/rewards.ts), so the preview flips on the same day.
+    const easternToday = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/New_York",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now);
+    const upcomingStartDate =
+      isNFLDefinition && nflSeason && nflSeason.fromWeekStartDate > easternToday
+        ? nflSeason.fromWeekStartDate
+        : null;
+    return describeReward(
+      {
+        rules: "",
+        recurringType: cadence,
+        activeDays,
+        winnerQuota: nflTerms ? nflTerms.quota : pickedSlots ? pickedSlots.quota : effectiveQuantity,
+        pointsRequiredToWin: effectiveThreshold,
+        winCondition,
+        rewardDefinitionId: definition.id,
+        gameWinnerSlots: pickedSlots
+          ? selectedSlots.map((slot) => ({ scheduleId: slot.scheduleId, weekday: slot.weekday }))
+          : null,
+        nflWeekScope: isNFLDefinition ? nflScope : null,
+        prizeKind: prize.prizeKind,
+        prizeMenuItem: prize.prizeKind === "menu_item" ? prize.menuItem : null,
+        prizeMenuItemName: prize.prizeKind === "menu_item" ? prize.menuItemName : null,
+        prizeDiscountKind: prize.prizeKind === "menu_item" ? prize.discountKind : null,
+        prizeDiscountValue: prize.prizeKind === "menu_item" ? prize.discountValue : null,
+        prizeGiftCertificateAmount: prize.prizeKind === "gift_card" ? prize.amount : null,
+        schedule: { slots: context.gameSlots },
+        nfl: isNFLDefinition ? { upcomingStartDate, seasonEndDate: nflSeason?.seasonEndDate ?? null } : null,
+        timezone: context.timezone,
+      },
+      now,
+    );
+  }, [
+    definition,
+    context,
+    isNFLDefinition,
+    nflTermsResult,
+    nflScope,
+    nflSeason,
+    useGamePicker,
+    gameWinnerTerms,
+    selectedSlots,
+    period,
+    effectiveQuantity,
+    effectiveThreshold,
+    winCondition,
+    prize,
+  ]);
 
   const handleSubmit = async () => {
     if (!definition) return;
@@ -1241,14 +1320,20 @@ export function CreateRewardWizard({
               <span className="font-bold">{definition.name}</span>
             </div>
             <div className={s.summaryRow}>
-              <span>Requirement</span>
-              <span className="font-bold">{renderRewardRequirement(definition, effectiveThreshold, winCondition)}</span>
-            </div>
-            <div className={s.summaryRow}>
               <span>Prize</span>
               <span className="font-bold">{prizeSummary}</span>
             </div>
           </div>
+
+          {/* The guest-facing wording, composed by the same function the venue page uses. */}
+          {guestPreview ? (
+            <div className={`space-y-1.5 ${s.notice}`}>
+              <p className="font-black uppercase tracking-wide">What guests will see</p>
+              <p className="text-sm font-black">{guestPreview.summary}</p>
+              {guestPreview.when ? <p>{guestPreview.when}</p> : null}
+              {guestPreview.fineprint ? <p className="opacity-80">{guestPreview.fineprint}</p> : null}
+            </div>
+          ) : null}
 
           {/* The terms the partner just agreed to, restated verbatim. */}
           <p className={s.sentence}>

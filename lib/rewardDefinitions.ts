@@ -22,6 +22,55 @@ import type {
 
 export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge";
 
+/**
+ * Guest-facing description templates, composed at READ time by describeReward /
+ * describeRewardWin (lib/rewardDescription.ts) — see
+ * docs/reward-descriptions-plan.md §3 for the approved copy. `calendar` picks the
+ * structural copy the composer wraps around these sentences (the When and Fine
+ * print lines): a reward that runs at the venue's own scheduled games, or one
+ * that runs on the NFL season calendar.
+ *
+ * Placeholders, substituted by the composer:
+ *   {prize}     — the prize with its article: "a $100 gift card", "20% off your whole order"
+ *   {threshold} — the points / picks target: "500", "1,000"
+ *   {nights}    — "Tuesday night", "Tuesday and Thursday nights", "any night"
+ *   {date}      — a game date: "Tue, Oct 7"
+ *   {period}    — "this week", "today", "this month", "this year"
+ *   {fromWeek}  — the first NFL week a season-long reward covers: "5"
+ *   {when}      — win lines only: "the week of Oct 6", "in Week 5", "in the 2026 season"
+ *
+ * Never write "this venue" — the guest is standing in it.
+ */
+export type RewardDescriptionTemplates =
+  | {
+      calendar: "venue_schedule";
+      /** Game winner, pinned to recurring games. */
+      gameWinnerRecurring: string;
+      /** Game winner, pinned to one dated game. */
+      gameWinnerOneOff: string;
+      /** Game winner with no pinned games (legacy "award at every game"). */
+      gameWinnerAnyGame: string;
+      /** Points target that resets every {period}. */
+      pointsRecurring: string;
+      /** Points target for one dated game. */
+      pointsOneOff: string;
+      /** Points target, one-time, with no single game to name. */
+      pointsUndated: string;
+      /** Prize-wallet coupon: what the guest won a game-winner reward for. */
+      wonGameWinner: string;
+      /** Prize-wallet coupon: what the guest won a points-target reward for. */
+      wonPoints: string;
+    }
+  | {
+      calendar: "nfl_season";
+      mostPicksWeekly: string;
+      mostPicksSeason: string;
+      picksTargetWeekly: string;
+      picksTargetSeason: string;
+      wonMostPicks: string;
+      wonPicksTarget: string;
+    };
+
 export type RewardDefinition = {
   id: RewardDefinitionId;
   /** Reward name shown on the card and stored as the campaign name. */
@@ -64,6 +113,8 @@ export type RewardDefinition = {
   accent: string;
   /** Glyph shown on the reward card / definition tile. */
   glyph: string;
+  /** Guest-facing description sentences — see RewardDescriptionTemplates. */
+  description: RewardDescriptionTemplates;
 };
 
 export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
@@ -82,6 +133,17 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
     thresholdStep: 10,
     accent: "trivia",
     glyph: "🧠",
+    description: {
+      calendar: "venue_schedule",
+      gameWinnerRecurring: "Win Live Trivia on {nights} and win {prize}.",
+      gameWinnerOneOff: "Win Live Trivia on {date} and win {prize}.",
+      gameWinnerAnyGame: "Win any Live Trivia game {period} and win {prize}.",
+      pointsRecurring: "Earn {threshold} points in Live Trivia {period} and win {prize}.",
+      pointsOneOff: "Earn {threshold} points at Live Trivia on {date} and win {prize}.",
+      pointsUndated: "Earn {threshold} points in Live Trivia and win {prize}.",
+      wonGameWinner: "You won Live Trivia on {date}",
+      wonPoints: "You earned {threshold} points in Live Trivia {when}",
+    },
   },
   {
     id: "nfl_pickem_challenge",
@@ -101,6 +163,16 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
     thresholdStep: 1,
     accent: "pickem",
     glyph: "🏈",
+    description: {
+      calendar: "nfl_season",
+      mostPicksWeekly: "Get the most NFL picks right this week and win {prize}.",
+      mostPicksSeason:
+        "Get the most NFL picks right from Week {fromWeek} through the end of the regular season and win {prize}.",
+      picksTargetWeekly: "Get {threshold} NFL picks right this week and win {prize}.",
+      picksTargetSeason: "Get {threshold} NFL picks right by the end of the regular season and win {prize}.",
+      wonMostPicks: "You got the most NFL picks right {when}",
+      wonPicksTarget: "You got {threshold} NFL picks right {when}",
+    },
   },
 ] as const;
 
@@ -218,4 +290,67 @@ export function describeRewardPrize(prize: RewardPrizeSummaryInput): string {
     return itemLabel;
   }
   return "";
+}
+
+// In-sentence nouns for the menu items, lowercase and article-ready. Kept beside
+// REWARD_MENU_ITEM_LABEL (the Title Case headline labels) so a new item is one
+// edit in one file.
+const REWARD_MENU_ITEM_NOUN: Record<Exclude<RewardMenuItem, "other">, { noun: string; phrase: string }> = {
+  whole_order: { noun: "whole order", phrase: "your whole order" },
+  appetizer: { noun: "appetizer", phrase: "an appetizer" },
+  entree: { noun: "entrée", phrase: "an entrée" },
+  dessert: { noun: "dessert", phrase: "a dessert" },
+  wine_bottle: { noun: "bottle of wine", phrase: "a bottle of wine" },
+};
+
+/** "$100", "$12.50" — whole-dollar amounts drop the cents in a sentence. */
+const formatPrizeMoney = (amount: number): string =>
+  Number.isInteger(amount) ? `$${amount}` : `$${amount.toFixed(2)}`;
+
+/**
+ * "a" / "an" in front of a noun phrase, by its first letter. A phrase that
+ * already starts with an article, a possessive or a number is returned as-is, so
+ * a partner's own "2 Tacos" or "The Big Burger" isn't turned into "a 2 Tacos".
+ * A plural-looking name ("Chicken Wings", "free Nachos" — last word ends in s,
+ * not "ss"/"us", and no "of" phrase like "Order of Wings") takes no article.
+ */
+export function withIndefiniteArticle(phrase: string): string {
+  const text = phrase.trim();
+  if (!text) return text;
+  if (/^(a|an|the|your|one|two|three)\s/i.test(text) || /^[\d$]/.test(text)) return text;
+  if (!/\sof\s/i.test(text) && /[^su]s$/i.test(text)) return text;
+  return /^[aeiou]/i.test(text) ? `an ${text}` : `a ${text}`;
+}
+
+/**
+ * The prize as it reads INSIDE a sentence — "…and win {prize}." — with its
+ * article: "a $100 gift card", "a free appetizer", "20% off your whole order".
+ * Same rules and field names as describeRewardPrize (the Title Case headline),
+ * which stays unchanged for its own callers. Never empty: a prize with nothing
+ * to describe reads "a prize".
+ */
+export function describeRewardPrizeInSentence(prize: RewardPrizeSummaryInput): string {
+  if (prize.prizeKind === "gift_card") {
+    const amount = Number(prize.prizeGiftCertificateAmount ?? 0);
+    return amount > 0 ? `a ${formatPrizeMoney(amount)} gift card` : "a gift card";
+  }
+  if (prize.prizeKind === "menu_item") {
+    const custom = prize.prizeMenuItem === "other" ? prize.prizeMenuItemName?.trim() ?? "" : "";
+    const known =
+      prize.prizeMenuItem && prize.prizeMenuItem !== "other" ? REWARD_MENU_ITEM_NOUN[prize.prizeMenuItem] : null;
+    const noun = known?.noun ?? (custom || "menu item");
+    const phrase = known?.phrase ?? withIndefiniteArticle(custom || "menu item");
+
+    if (prize.prizeDiscountKind === "percent" && prize.prizeDiscountValue != null) {
+      if (prize.prizeDiscountValue >= 100) {
+        return prize.prizeMenuItem === "whole_order" ? "your whole order free" : withIndefiniteArticle(`free ${noun}`);
+      }
+      return `${prize.prizeDiscountValue}% off ${phrase}`;
+    }
+    if (prize.prizeDiscountKind === "dollar" && prize.prizeDiscountValue != null) {
+      return `${formatPrizeMoney(prize.prizeDiscountValue)} off ${phrase}`;
+    }
+    return phrase;
+  }
+  return "a prize";
 }

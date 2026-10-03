@@ -699,6 +699,20 @@ export function computeCycleStart(campaign: ChallengeCampaign, now: Date, timezo
   return localDateTimeToUtc(cycleDate.getUTCFullYear(), cycleDate.getUTCMonth(), cycleDate.getUTCDate(), startH, startM, timezone);
 }
 
+/**
+ * The instant the NEXT cycle of a recurring campaign begins, as seen at `now` —
+ * the same boundary resolveCurrentCycleWinnersForSnapshot scopes the current
+ * quota to, so "Next contest starts …" (lib/rewardDescription.ts) names the
+ * moment the quota really refills. Null for a one-time campaign, or a weekly one
+ * whose cycle can't be anchored (computeCycleStart's epoch sentinel).
+ */
+export function computeUpcomingCycleStart(campaign: ChallengeCampaign, now: Date, timezone: string): Date | null {
+  if (!campaign.recurringType || campaign.recurringType === "none") return null;
+  const cycleStart = computeCycleStart(campaign, now, timezone);
+  if (cycleStart.getTime() === 0) return null;
+  return computeNextCycleStart(campaign, cycleStart, timezone);
+}
+
 // Returns the UTC timestamp when the cycle that started at cycleStart ends.
 // Exported alongside computeCycleStart for the cycle-boundary tests.
 export function computeCycleEnd(campaign: ChallengeCampaign, cycleStart: Date, timezone: string): Date {
@@ -1860,7 +1874,8 @@ export async function getChallengeFinalizedPrize(challengeId: string): Promise<C
 
 const venueTimezoneCache = new Map<string, string>();
 
-async function getVenueTimezone(venueId: string): Promise<string> {
+/** A venue's IANA timezone (America/New_York when unset), cached per server instance. */
+export async function getVenueTimezone(venueId: string): Promise<string> {
   const cached = venueTimezoneCache.get(venueId);
   if (cached) return cached;
   const { data } = await supabaseAdmin!
@@ -2515,7 +2530,7 @@ export async function listChallengeCampaignWinsForUser(params: {
   const { data: campaignRows } = await supabaseAdmin!
     .from("challenge_campaigns")
     .select(
-      "id, name, rules, prize_type, prize_gift_certificate_amount, winner_user_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value"
+      "id, name, rules, prize_type, prize_gift_certificate_amount, winner_user_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, reward_definition_id, win_condition, recurring_type, points_required_to_win, active_days, winner_quota, nfl_week_scope"
     )
     .in("id", challengeIds)
     .returns<
@@ -2526,6 +2541,13 @@ export async function listChallengeCampaignWinsForUser(params: {
           rules: string;
           prize_gift_certificate_amount: number | null;
           winner_user_id: string | null;
+          reward_definition_id: string | null;
+          win_condition: string | null;
+          recurring_type: CampaignRecurringType | null;
+          points_required_to_win: number | null;
+          active_days: string[] | null;
+          winner_quota: number | null;
+          nfl_week_scope: unknown;
         }
       >
     >();
@@ -2566,6 +2588,19 @@ export async function listChallengeCampaignWinsForUser(params: {
       prizeExpiresAt: row.prize_expires_at ?? null,
       prizeRedeemedAt: row.prize_redeemed_at ?? null,
       ...resolveRewardPrize(prizeSource),
+      // What the coupon was won FOR (describeRewardWin) needs the live reward's
+      // terms; a deleted reward has none, and its coupon keeps "Won from: …".
+      rewardTerms: campaign
+        ? {
+            rewardDefinitionId: campaign.reward_definition_id?.trim() || null,
+            winCondition: normalizeWinCondition(campaign.win_condition),
+            recurringType: campaign.recurring_type ?? "none",
+            pointsRequiredToWin: Math.max(1, Number(campaign.points_required_to_win ?? 1)),
+            activeDays: Array.isArray(campaign.active_days) ? campaign.active_days : [],
+            winnerQuota: Math.max(1, Number(campaign.winner_quota ?? 1)),
+            nflWeekScope: normalizeNFLWeekScope(campaign.nfl_week_scope),
+          }
+        : null,
     };
   });
 }

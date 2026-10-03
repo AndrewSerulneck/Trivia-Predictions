@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { claimChallengeCampaignPrize, listChallengeCampaignWinsForUser } from "@/lib/challengeCampaigns";
+import { attachRewardWinDescriptions } from "@/lib/rewards";
 
 function toClientErrorStatus(message: string): number {
   const normalized = message.toLowerCase();
@@ -19,7 +20,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: false, error: "userId and venueId are required." }, { status: 400 });
     }
 
-    const wins = await listChallengeCampaignWinsForUser({ userId, venueId });
+    // Each coupon also says what it was won FOR — see attachRewardWinDescriptions.
+    const wins = await attachRewardWinDescriptions(
+      await listChallengeCampaignWinsForUser({ userId, venueId }),
+      venueId,
+    );
     return NextResponse.json({ ok: true, wins });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load redeemable challenge wins.";

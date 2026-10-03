@@ -76,6 +76,7 @@ import {
   REWARD_UNSUPPORTED_CADENCE_MESSAGE,
   RewardTermsError,
   createReward,
+  attachRewardDescriptions,
   resolveRewardCreationContext,
   type RewardPrizeInput,
 } from "@/lib/rewards";
@@ -329,7 +330,9 @@ export async function GET(request: Request) {
       const allItems = await listChallengeCampaigns({ venueId, includeInactive, includeResolved });
       const total = allItems.length;
       const from = (page - 1) * pageSize;
-      const items = allItems.slice(from, from + pageSize);
+      // Described per page, not per list: the cost stays bounded by pageSize.
+      // A null venueId ("All venues") describes each reward against its own venue.
+      const items = await attachRewardDescriptions(allItems.slice(from, from + pageSize), venueId ?? null);
       return NextResponse.json({ ok: true, items, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) });
     }
 

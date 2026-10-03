@@ -6,6 +6,7 @@ import type {
   RewardPrizeKind,
   RewardMenuItem,
   RewardDiscountKind,
+  RewardDescription,
   ChallengeGameType as RewardDefinitionGameType,
 } from "@/types";
 import { describeRewardPrize, REWARD_DEFINITIONS } from "@/lib/rewardDefinitions";
@@ -66,6 +67,12 @@ export type ChallengeCampaignCard = {
    * panel would show "In Progress · 0 / N pts" for weeks.
    */
   upcomingStartDate?: string | null;
+  /**
+   * Guest-facing description (when, how often, what to do, what you win),
+   * composed server-side by attachRewardDescriptions (lib/rewards.ts). Optional:
+   * an old server / new client skew falls back to `rules`.
+   */
+  description?: RewardDescription;
   // ── Prize-first redesign (Phase 1) ── same fields as ChallengeCampaign;
   // needed here so the card/modal can render the prize headline directly
   // instead of the game name. See lib/rewardDefinitions.ts:describeRewardPrize.

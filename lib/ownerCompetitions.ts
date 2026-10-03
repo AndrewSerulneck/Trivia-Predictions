@@ -11,6 +11,7 @@ import {
   type DeleteChallengeCampaignResult,
 } from "@/lib/challengeCampaigns";
 import { datetimeLocalValueToUtcIso } from "@/lib/categoryBlitzScheduleTime";
+import { attachRewardDescriptions } from "@/lib/rewards";
 import { getOwnerCompetitionTemplate } from "@/lib/ownerCompetitionTemplates";
 import type { OwnerAuthContext } from "@/lib/requireOwnerAuth";
 import type { ChallengeCampaign, ChallengeGameType } from "@/types";
@@ -184,7 +185,10 @@ export async function listOwnerCompetitions(
   });
   if (campaigns.length === 0) return [];
   const withProgress = campaigns.map((c) => ({ ...c, progressPoints: 0 }));
-  return attachLeaderboardSnapshotsToCampaigns({ campaigns: withProgress, venueId });
+  const withLeaderboard = await attachLeaderboardSnapshotsToCampaigns({ campaigns: withProgress, venueId });
+  // The same guest-facing wording the venue card shows, so a partner reads
+  // exactly what their guests read (docs/reward-descriptions-plan.md Phase 2).
+  return attachRewardDescriptions(withLeaderboard, venueId);
 }
 
 export type DeleteOwnerCompetitionResult =

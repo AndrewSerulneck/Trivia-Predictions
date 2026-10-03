@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { NFLWeek } from "@/lib/nflPickEm";
+import type { NFLWeek, NFLWeekDates } from "@/lib/nflPickEm";
 
 // attachNFLRewardUpcomingState decides whether the venue Rewards panel shows an
 // NFL reward as "Upcoming · Starts <date>" instead of a live progress bar. A
@@ -9,19 +9,19 @@ import type { NFLWeek } from "@/lib/nflPickEm";
 // See docs/nfl-pickem-week1-early-access-plan.md.
 
 const mocks = vi.hoisted(() => ({
-  getSeasonFirstWeekStartDate: vi.fn(async (_season: number): Promise<string | null> => null),
+  listNFLSeasonWeekDates: vi.fn(async (_season: number): Promise<NFLWeekDates[]> => []),
   listNFLWeeks: vi.fn(async (): Promise<NFLWeek[]> => []),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/liveShowdownAdmin", () => ({
-  listAdminLiveShowdownSchedules: vi.fn(async () => []),
+  listVenueLiveShowdownSchedules: vi.fn(async () => []),
 }));
 vi.mock("@/lib/challengeCampaigns", () => ({
   createChallengeCampaign: vi.fn(async () => ({ id: "reward-1" })),
 }));
 vi.mock("@/lib/nflPickEm", () => ({
-  getSeasonFirstWeekStartDate: mocks.getSeasonFirstWeekStartDate,
+  listNFLSeasonWeekDates: mocks.listNFLSeasonWeekDates,
   listNFLWeeks: mocks.listNFLWeeks,
 }));
 
@@ -34,6 +34,19 @@ type TestCampaign = {
   startDate?: string;
 };
 
+/**
+ * A season whose opener is `openerDate` (null = no weeks synced). Week 2 is
+ * listed FIRST so the test also proves the opener is the earliest start date,
+ * not whichever row happens to come back first.
+ */
+const seasonOpeningOn = (openerDate: string | null): NFLWeekDates[] =>
+  openerDate
+    ? [
+        { weekNumber: 2, weekStartDate: "2026-09-17", weekEndDate: "2026-09-22" },
+        { weekNumber: 1, weekStartDate: openerDate, weekEndDate: "2026-09-15" },
+      ]
+    : [];
+
 const WEEKLY: NFLWeekScope = { kind: "weekly", season: 2026 };
 const SEASON: NFLWeekScope = { kind: "season", season: 2026, fromWeek: 7 };
 
@@ -43,8 +56,8 @@ const PRESEASON = new Date("2026-07-28T12:00:00.000Z");
 const IN_SEASON = new Date("2026-10-20T12:00:00.000Z");
 
 beforeEach(() => {
-  mocks.getSeasonFirstWeekStartDate.mockReset();
-  mocks.getSeasonFirstWeekStartDate.mockResolvedValue("2026-09-10");
+  mocks.listNFLSeasonWeekDates.mockReset();
+  mocks.listNFLSeasonWeekDates.mockResolvedValue(seasonOpeningOn("2026-09-10"));
 });
 
 afterEach(() => {
@@ -82,7 +95,7 @@ describe("attachNFLRewardUpcomingState", () => {
   it("treats a reward starting today as live, not upcoming", async () => {
     // Boundary: the panel must flip to a real progress bar on the start date
     // itself, in NFL Eastern time — not a day late.
-    mocks.getSeasonFirstWeekStartDate.mockResolvedValue("2026-09-10");
+    mocks.listNFLSeasonWeekDates.mockResolvedValue(seasonOpeningOn("2026-09-10"));
     const onOpeningDay = new Date("2026-09-10T16:00:00.000Z"); // noon ET
 
     const result = await attachNFLRewardUpcomingState<TestCampaign>(
@@ -102,7 +115,7 @@ describe("attachNFLRewardUpcomingState", () => {
     const result = await attachNFLRewardUpcomingState(campaigns, PRESEASON);
 
     expect(result).toEqual(campaigns);
-    expect(mocks.getSeasonFirstWeekStartDate).not.toHaveBeenCalled();
+    expect(mocks.listNFLSeasonWeekDates).not.toHaveBeenCalled();
   });
 
   it("looks each season up once, however many rewards share it", async () => {
@@ -115,12 +128,12 @@ describe("attachNFLRewardUpcomingState", () => {
       PRESEASON,
     );
 
-    expect(mocks.getSeasonFirstWeekStartDate).toHaveBeenCalledTimes(1);
-    expect(mocks.getSeasonFirstWeekStartDate).toHaveBeenCalledWith(2026);
+    expect(mocks.listNFLSeasonWeekDates).toHaveBeenCalledTimes(1);
+    expect(mocks.listNFLSeasonWeekDates).toHaveBeenCalledWith(2026);
   });
 
   it("leaves the reward alone when the season has no weeks synced yet", async () => {
-    mocks.getSeasonFirstWeekStartDate.mockResolvedValue(null);
+    mocks.listNFLSeasonWeekDates.mockResolvedValue(seasonOpeningOn(null));
 
     const result = await attachNFLRewardUpcomingState<TestCampaign>(
       [{ id: "r1", nflWeekScope: WEEKLY }],
