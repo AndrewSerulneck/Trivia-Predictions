@@ -489,7 +489,11 @@ const VENUE_SCHEDULE_ONE_OFF_LOOKBACK_MS = 24 * 60 * 60_000;
  * the venue filter to the caller, so its cost grows with the whole platform and an
  * old recurring schedule can fall outside the window. This read is venue-scoped
  * and drops long-ended one-offs in SQL, so a venue's years of past games can never
- * crowd its recurring schedule out of the limit. Used by the reward picker,
+ * crowd its recurring schedule out of the limit. Unlike
+ * listAdminLiveShowdownSchedules it has no missing-`recurring_type`-column
+ * fallback on purpose: production has `recurring_type` and `recurring_days`
+ * (checked 2026-10-04) and the SQL filter above needs them, so a missing column
+ * should fail loudly here (the description degrades to "no time"). Used by the reward picker,
  * createReward and the reward descriptions on every venue-home load
  * (docs/reward-descriptions-plan.md). The caller still decides which occurrences
  * count (hasLiveOrUpcomingOccurrence in lib/rewards.ts).
@@ -515,6 +519,30 @@ export async function listVenueLiveShowdownSchedules(
     throw new Error(error.message || "Failed to list venue Live Showdown schedules.");
   }
   return ((data ?? []) as TriviaScheduleRow[]).map(mapScheduleRow);
+}
+
+/**
+ * The IANA timezone of each given schedule, in ONE trivia_schedules read — for
+ * dating a Live Trivia game win in the game's own zone (attachRewardWinDescriptions,
+ * lib/rewards.ts). Blank zones are left out so the caller falls back; a read
+ * error throws so the caller can decide how to degrade.
+ */
+export async function listScheduleTimezones(scheduleIds: readonly string[]): Promise<Map<string, string>> {
+  const ids = [...new Set(scheduleIds.map((id) => String(id ?? "").trim()).filter(Boolean))];
+  const zones = new Map<string, string>();
+  if (ids.length === 0) return zones;
+  const { data, error } = await getAdminClient()
+    .from("trivia_schedules")
+    .select("id, timezone")
+    .in("id", ids);
+  if (error) {
+    throw new Error(error.message || "Failed to read Live Showdown schedule timezones.");
+  }
+  for (const row of (data ?? []) as Array<{ id: string; timezone: string | null }>) {
+    const zone = String(row.timezone ?? "").trim();
+    if (zone) zones.set(row.id, zone);
+  }
+  return zones;
 }
 
 export async function createAdminLiveShowdownSchedule(params: {

@@ -1,11 +1,8 @@
 import "server-only";
 
+import { computeUpcomingCycleStart, createChallengeCampaign } from "@/lib/challengeCampaigns";
 import {
-  computeUpcomingCycleStart,
-  createChallengeCampaign,
-  getVenueTimezone,
-} from "@/lib/challengeCampaigns";
-import {
+  listScheduleTimezones,
   listVenueLiveShowdownSchedules,
   type AdminLiveShowdownSchedule,
 } from "@/lib/liveShowdownAdmin";
@@ -22,6 +19,7 @@ import {
 import {
   allowedPeriodsFor,
   cadenceForPeriod,
+  deriveRewardTerms,
   periodForCadence,
   summarizeRewardSchedules,
   validateRewardTerms,
@@ -30,6 +28,7 @@ import {
 } from "@/lib/rewardTerms";
 import {
   enumerateGameSlots,
+  normalizeGameWinnerSlots,
   scheduleRunWeekdays,
   validateGameWinnerSlots,
   type RewardGameScheduleShape,
@@ -40,14 +39,14 @@ import {
   REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
   deriveNFLWeekScopeTerms,
   normalizeNFLWeekScope,
-  resolveNFLRewardStartDate,
+  nflRewardUpcomingStartDate,
   type NFLRewardSeasonContext,
   type NFLRewardWeekScope,
   type NFLWeekScopeTerms,
 } from "@/lib/nflPickEmRewardWeeks";
 import { listNFLSeasonWeekDates, listNFLWeeks, type NFLWeekDates } from "@/lib/nflPickEm";
 import { describeReward, describeRewardWin, type RewardDescription } from "@/lib/rewardDescription";
-import { getLocalDateKey } from "@/lib/timezone";
+import { getLocalDateKey, getVenueTimezone } from "@/lib/timezone";
 import type {
   CampaignRecurringType,
   ChallengeCampaign,
@@ -298,14 +297,82 @@ async function resolveNFLSeasonContext(now: Date): Promise<NFLRewardSeasonContex
     season,
     fromWeek: fromWeek.weekNumber,
     fromWeekStartDate: fromWeek.weekStartDate,
+    seasonFirstWeekStartDate: seasonFirstWeekStartDate(weeks),
     seasonEndDate,
     weeksRemaining: remaining.length,
   };
 }
 
+// ── Description read cache (docs/reward-descriptions-review-fixes-plan.md F3 / D2) ──
+//
+// The venue page re-fetches its rewards every 30 seconds per player
+// (VenueHubClient), and every fetch used to re-read the venue's Live Trivia
+// schedule and the NFL season's weeks to word the cards: one player for an hour
+// = 120 + 120 reads, 30 players = 3,600 + 3,600. Neither changes minute to
+// minute, so the polled guest route (`cachedReads: true`) reuses a recent read
+// per server instance instead — about 12 + 6 reads an hour per instance however
+// many players. The trade-off Andrew accepted: after a partner changes a game
+// time, guest cards can show the old time for up to 5 minutes. The admin and
+// partner lists always read fresh (and refresh the cache as they go), so a
+// partner never sees their own edit lag.
+//
+// Only successes are kept. A failed schedule read, or a season with no weeks
+// (listNFLSeasonWeekDates answers [] on a read error), is dropped so the next
+// poll retries — a failure must degrade to "no time", never stick. Concurrent
+// misses share one in-flight read. Expiry uses Date.now(), so tests drive it with
+// fake timers (same pattern as lib/timezone.ts).
+
+/** How long an instance reuses a venue's Live Trivia schedule rows for reward wording. */
+export const REWARD_SCHEDULE_CACHE_TTL_MS = 5 * 60_000;
+/** How long an instance reuses an NFL season's week dates for reward wording. */
+export const REWARD_NFL_WEEKS_CACHE_TTL_MS = 10 * 60_000;
+
+type ReadCacheEntry<V> = { value: Promise<V>; expiresAtMs: number };
+
+const venueScheduleCache = new Map<string, ReadCacheEntry<AdminLiveShowdownSchedule[]>>();
+const nflSeasonWeeksCache = new Map<number, ReadCacheEntry<NFLWeekDates[]>>();
+
+/** Test hook: forget every cached schedule and NFL season read. */
+export function clearRewardDescriptionCaches(): void {
+  venueScheduleCache.clear();
+  nflSeasonWeeksCache.clear();
+}
+
+/**
+ * `load()` through `cache`: reuse an unexpired entry when `reuse` is true, else
+ * read and store the result for `ttlMs` — unless the read throws or `keep`
+ * rejects the value, in which case the entry is dropped and the next call reads.
+ */
+function readThroughCache<K, V>(
+  cache: Map<K, ReadCacheEntry<V>>,
+  key: K,
+  ttlMs: number,
+  reuse: boolean,
+  load: () => Promise<V>,
+  keep: (value: V) => boolean = () => true,
+): Promise<V> {
+  const nowMs = Date.now();
+  const cached = cache.get(key);
+  if (reuse && cached && cached.expiresAtMs > nowMs) return cached.value;
+
+  for (const [staleKey, entry] of cache) {
+    if (entry.expiresAtMs <= nowMs) cache.delete(staleKey);
+  }
+  const entry: ReadCacheEntry<V> = { value: load(), expiresAtMs: nowMs + ttlMs };
+  cache.set(key, entry);
+  const forget = () => {
+    if (cache.get(key) === entry) cache.delete(key);
+  };
+  entry.value.then((value) => {
+    if (!keep(value)) forget();
+  }, forget);
+  return entry.value;
+}
+
 /** Every week of each distinct season the campaigns' NFL scopes name — one read per season. */
 async function loadNFLSeasonWeekDates(
   campaigns: ReadonlyArray<Pick<ChallengeCampaign, "nflWeekScope">>,
+  cachedReads = false,
 ): Promise<Map<number, NFLWeekDates[]>> {
   const seasons = new Set<number>();
   for (const campaign of campaigns) {
@@ -315,7 +382,17 @@ async function loadNFLSeasonWeekDates(
   const spansBySeason = new Map<number, NFLWeekDates[]>();
   await Promise.all(
     [...seasons].map(async (season) => {
-      spansBySeason.set(season, await listNFLSeasonWeekDates(season));
+      spansBySeason.set(
+        season,
+        await readThroughCache(
+          nflSeasonWeeksCache,
+          season,
+          REWARD_NFL_WEEKS_CACHE_TTL_MS,
+          cachedReads,
+          () => listNFLSeasonWeekDates(season),
+          (weeks) => weeks.length > 0,
+        ),
+      );
     }),
   );
   return spansBySeason;
@@ -333,28 +410,6 @@ const seasonLastWeekEndDate = (spans: readonly NFLWeekDates[] | undefined): stri
     ? spans.reduce((latest, week) => (week.weekEndDate > latest ? week.weekEndDate : latest), spans[0].weekEndDate)
     : null;
 
-function applyNFLRewardUpcomingState<T extends Pick<ChallengeCampaign, "nflWeekScope" | "startDate">>(
-  campaigns: T[],
-  spansBySeason: Map<number, NFLWeekDates[]>,
-  now: Date,
-): Array<T & { upcomingStartDate?: string }> {
-  const today = getLocalDateKey(now, NFL_SEASON_TIMEZONE);
-
-  return campaigns.map((campaign) => {
-    const scope = normalizeNFLWeekScope(campaign.nflWeekScope);
-    if (!scope) return campaign;
-
-    const startDate = resolveNFLRewardStartDate(scope, {
-      campaignStartDate: campaign.startDate ?? null,
-      seasonFirstWeekStartDate: seasonFirstWeekStartDate(spansBySeason.get(scope.season)),
-    });
-
-    // Calendar-date strings compare correctly lexicographically in YYYY-MM-DD.
-    if (!startDate || startDate <= today) return campaign;
-    return { ...campaign, upcomingStartDate: startDate };
-  });
-}
-
 /**
  * Attach `upcomingStartDate` to any NFL Pick 'Em reward whose first covered NFL
  * week has not started yet, so the venue Rewards panel can say "Starts Sept 10"
@@ -362,18 +417,30 @@ function applyNFLRewardUpcomingState<T extends Pick<ChallengeCampaign, "nflWeekS
  * weeks (docs/nfl-pickem-week1-early-access-plan.md, locked decisions).
  *
  * Set ONLY when the date is genuinely in the future — a campaign already in
- * season, or any non-NFL reward, comes back untouched. Costs zero queries when
- * the venue has no NFL rewards, and one cheap indexed read per distinct season
- * otherwise (never listNFLWeeks, which writes via update_nfl_week_status).
- *
- * attachRewardDescriptions does this too, from the same read — a caller that
- * attaches descriptions must not ALSO call this, or the season is read twice.
+ * season, or any non-NFL reward, comes back untouched. The rule itself is
+ * nflRewardUpcomingStartDate (lib/nflPickEmRewardWeeks.ts), shared with the
+ * Create Reward wizard's guest preview. Only attachRewardDescriptions calls
+ * this, from its own single nfl_pickem_weeks read.
  */
-export async function attachNFLRewardUpcomingState<
-  T extends Pick<ChallengeCampaign, "nflWeekScope" | "startDate">,
->(campaigns: T[], now: Date = new Date()): Promise<Array<T & { upcomingStartDate?: string }>> {
-  if (!campaigns.some((campaign) => normalizeNFLWeekScope(campaign.nflWeekScope))) return campaigns;
-  return applyNFLRewardUpcomingState(campaigns, await loadNFLSeasonWeekDates(campaigns), now);
+function applyNFLRewardUpcomingState<T extends Pick<ChallengeCampaign, "nflWeekScope" | "startDate">>(
+  campaigns: T[],
+  spansBySeason: Map<number, NFLWeekDates[]>,
+  now: Date,
+): Array<T & { upcomingStartDate?: string }> {
+  return campaigns.map((campaign) => {
+    const scope = normalizeNFLWeekScope(campaign.nflWeekScope);
+    if (!scope) return campaign;
+
+    const upcomingStartDate = nflRewardUpcomingStartDate(
+      scope,
+      {
+        campaignStartDate: campaign.startDate ?? null,
+        seasonFirstWeekStartDate: seasonFirstWeekStartDate(spansBySeason.get(scope.season)),
+      },
+      now,
+    );
+    return upcomingStartDate ? { ...campaign, upcomingStartDate } : campaign;
+  });
 }
 
 /**
@@ -381,14 +448,26 @@ export async function attachNFLRewardUpcomingState<
  * ONE venue-filtered trivia_schedules read. Returns null when the read fails —
  * the composer then states no time at all ("Check the Live Trivia schedule…")
  * rather than a stale or invented one, and the page still loads.
+ *
+ * With `cachedReads`, the raw schedule rows may come from the cache (keyed by
+ * the sorted venue ids); the "still on" filter and slot list below are always
+ * recomputed against `now`, so a game that just ended drops off at once.
  */
 async function loadVenueGameSlots(
   venueIds: readonly string[],
   now: Date,
+  cachedReads = false,
 ): Promise<Map<string, RewardGameSlot[]> | null> {
   let schedules: AdminLiveShowdownSchedule[];
   try {
-    schedules = await listVenueLiveShowdownSchedules(venueIds, now);
+    const sortedIds = [...new Set(venueIds)].sort();
+    schedules = await readThroughCache(
+      venueScheduleCache,
+      sortedIds.join(","),
+      REWARD_SCHEDULE_CACHE_TTL_MS,
+      cachedReads,
+      () => listVenueLiveShowdownSchedules(sortedIds, now),
+    );
   } catch (error) {
     console.error("[RewardDescriptions] schedule-read-failed", error);
     return null;
@@ -412,8 +491,7 @@ async function loadVenueGameSlots(
 /**
  * Attach the guest-facing `description` (lib/rewardDescription.ts — when, how
  * often, what to do, what you win) to every campaign, plus NFL rewards'
- * `upcomingStartDate` (attachNFLRewardUpcomingState, from the same read). Use
- * this INSTEAD of attachNFLRewardUpcomingState, never beside it.
+ * `upcomingStartDate` (applyNFLRewardUpcomingState, from the same read).
  *
  * `venueId` is the venue being viewed; pass null for a cross-venue list (the
  * admin Rewards list's "All venues"), and each campaign is described against its
@@ -424,15 +502,20 @@ async function loadVenueGameSlots(
  *    is present.
  *  - nfl_pickem_weeks: ONE read per distinct season (in practice one), only when
  *    an NFL reward is present — the same read the upcoming state needs.
+ *  - With `cachedReads` (the guest route, polled every 30 s per player), both of
+ *    the above are reused per server instance for 5 / 10 minutes — see the
+ *    description read cache above. Admin and partner lists leave it off.
  *  - venues.timezone: only when a recurring reward's quota is filled this cycle
- *    (the "Next contest starts …" line), and cached per server instance by
- *    getVenueTimezone — the snapshot path has already warmed it.
+ *    (the "Next contest starts …" line), and cached per server instance for
+ *    10 minutes by getVenueTimezone (lib/timezone.ts) — the snapshot path has
+ *    usually warmed it already.
  * A failed read degrades the wording, never the response.
  */
 export async function attachRewardDescriptions<T extends ChallengeCampaign>(
   campaigns: T[],
   venueId: string | null,
   now: Date = new Date(),
+  { cachedReads = false }: { cachedReads?: boolean } = {},
 ): Promise<Array<T & { upcomingStartDate?: string; description: RewardDescription }>> {
   if (campaigns.length === 0) return [];
   const viewedVenueId = String(venueId ?? "").trim() || null;
@@ -469,8 +552,8 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
   ];
 
   const [spansBySeason, slotsByVenue, timezoneByVenue] = await Promise.all([
-    hasNFL ? loadNFLSeasonWeekDates(campaigns) : Promise.resolve(new Map<number, NFLWeekDates[]>()),
-    scheduleVenueIds.length > 0 ? loadVenueGameSlots(scheduleVenueIds, now) : Promise.resolve(null),
+    hasNFL ? loadNFLSeasonWeekDates(campaigns, cachedReads) : Promise.resolve(new Map<number, NFLWeekDates[]>()),
+    scheduleVenueIds.length > 0 ? loadVenueGameSlots(scheduleVenueIds, now, cachedReads) : Promise.resolve(null),
     Promise.all(
       timezoneVenueIds.map(async (id) => {
         try {
@@ -519,10 +602,18 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
  * reward was deleted, or was never definition-based, gets null and keeps
  * "Won from: {challengeName}".
  *
- * Cost: nothing at all when no coupon is definition-based. Otherwise one cached
- * venues.timezone read (getVenueTimezone) and, only for weekly NFL coupons, one
- * nfl_pickem_weeks read per distinct season to turn the cycle start into a week
- * number. No per-coupon queries.
+ * A Live Trivia game win is dated in its GAME's timezone — the schedule its
+ * pinned slots point at — because cycle_start is the game's start instant and an
+ * 11:30 PM Central game read in another zone lands on the wrong day. No pinned
+ * slots, an unreadable schedule, or slots on schedules in different zones → the
+ * venue's zone; describeRewardWin then defaults to America/New_York, never UTC.
+ *
+ * Cost: nothing at all when no coupon is definition-based. Otherwise one
+ * venues.timezone read (getVenueTimezone, cached 10 minutes); only when a Live
+ * Trivia game-winner coupon has pinned slots, ONE trivia_schedules read for all
+ * their schedules; and only for weekly NFL coupons, one nfl_pickem_weeks read
+ * per distinct season to turn the cycle start into a week number. No per-coupon
+ * queries.
  */
 export async function attachRewardWinDescriptions<T extends ChallengeCampaignWin>(
   wins: T[],
@@ -537,7 +628,15 @@ export async function attachRewardWinDescriptions<T extends ChallengeCampaignWin
   const weeklyNFL = wins.filter(
     (win) => describable(win) && normalizeNFLWeekScope(win.rewardTerms?.nflWeekScope)?.kind === "weekly",
   );
-  const [timezone, weeksBySeason] = await Promise.all([
+  const gameSlotsOf = (win: T) => {
+    const terms = win.rewardTerms;
+    if (!terms || !describable(win) || terms.winCondition !== "game_winner") return [];
+    const definition = getRewardDefinition(terms.rewardDefinitionId ?? "");
+    if (!definition || definition.description.calendar === "nfl_season") return [];
+    return normalizeGameWinnerSlots(terms.gameWinnerSlots) ?? [];
+  };
+  const scheduleIds = wins.flatMap((win) => gameSlotsOf(win).map((slot) => slot.scheduleId));
+  const [timezone, weeksBySeason, scheduleZones] = await Promise.all([
     getVenueTimezone(venueId).catch((error: unknown) => {
       console.error("[RewardDescriptions] timezone-read-failed", error);
       return null;
@@ -545,7 +644,23 @@ export async function attachRewardWinDescriptions<T extends ChallengeCampaignWin
     weeklyNFL.length > 0
       ? loadNFLSeasonWeekDates(weeklyNFL.map((win) => ({ nflWeekScope: win.rewardTerms?.nflWeekScope ?? null })))
       : Promise.resolve(new Map<number, NFLWeekDates[]>()),
+    scheduleIds.length > 0
+      ? listScheduleTimezones(scheduleIds).catch((error: unknown) => {
+          console.error("[RewardDescriptions] schedule-timezone-read-failed", error);
+          return new Map<string, string>();
+        })
+      : Promise.resolve(new Map<string, string>()),
   ]);
+
+  /** The one zone every pinned game's schedule shares, else the venue's. */
+  const winTimezone = (win: T): string | null => {
+    const zones = new Set(
+      gameSlotsOf(win)
+        .map((slot) => scheduleZones.get(slot.scheduleId))
+        .filter((zone): zone is string => Boolean(zone)),
+    );
+    return zones.size === 1 ? [...zones][0] : timezone;
+  };
 
   return wins.map((win) => {
     const terms = win.rewardTerms;
@@ -567,7 +682,7 @@ export async function attachRewardWinDescriptions<T extends ChallengeCampaignWin
       ...win,
       winDescription: describeRewardWin(
         { ...terms, rules: win.challengeRules },
-        { cycleStart: win.cycleStart ?? null, timezone, nflWeekNumber },
+        { cycleStart: win.cycleStart ?? null, timezone: winTimezone(win), nflWeekNumber },
       ),
     };
   });
@@ -923,7 +1038,19 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     nflTerms = derived.terms;
   }
 
-  const cadence = nflTerms ? nflTerms.cadence : slots ? slots.terms.cadence : params.cadence ?? "none";
+  // cadence / activeDays / winnerQuota come from ONE shared derivation
+  // (lib/rewardTerms.ts) — the same one the wizard previews and submits with.
+  // An NFL scope or a picked-games selection IS the terms; only the terms
+  // sentence uses the client's cadence and N, and both are validated below.
+  // activeDays rules (slot-pinned = the pinned weekdays only, never every day the
+  // venue plays; NFL = all seven days for both cadences) live on deriveRewardTerms.
+  const { cadence, activeDays, winnerQuota } = deriveRewardTerms({
+    nflTerms,
+    pickedSlots: slots ? slots.terms : null,
+    sentenceCadence: params.cadence ?? "none",
+    sentenceQuantity: Math.round(Number(params.winnerQuota)),
+    scheduleDays: context.scheduleDays,
+  });
   if (!isSupportedRewardCadence(cadence)) {
     throw new Error(REWARD_UNSUPPORTED_CADENCE_MESSAGE);
   }
@@ -960,11 +1087,6 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // has none. Its quota is already range-checked inside deriveNFLWeekScopeTerms
   // (1…REWARD_MAX_QUANTITY for a picks target, exactly 1 for a week winner —
   // refused, never clamped).
-  const winnerQuota = nflTerms
-    ? nflTerms.quota
-    : slots
-      ? slots.terms.quota
-      : Math.round(Number(params.winnerQuota));
   if (!slots && !nflTerms) {
     const termsError = validateRewardTerms(rewardScheduleFacts(context), {
       winCondition,
@@ -978,22 +1100,6 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   }
 
   const prize = normalizeRewardPrize(params.prize);
-  const isRecurring = cadence !== "none";
-  // A slot-pinned reward is live on the weekdays it was pinned to — NOT on every
-  // weekday the venue runs a game, which is what context.scheduleDays would say.
-  // These become activeDays, the accrual/eligibility gate, so widening them here
-  // would re-open the games the partner deliberately left out.
-  //
-  // An NFL reward's days come from the scope for BOTH cadences, including the
-  // season-long one ("none"): activeDays is also the accrual gate, and an NFL
-  // week settles Thu/Sun/Mon, so all seven days must be present either way.
-  const activeDays = nflTerms
-    ? nflTerms.activeDays
-    : isRecurring
-      ? slots
-        ? slots.terms.weekdays
-        : context.scheduleDays
-      : [];
 
   // Defense in depth: a WEEKLY reward must never expand with activeDays: [] —
   // computeCycleStart anchors the weekly cycle on activeDays[0] and silently

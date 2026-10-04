@@ -48,8 +48,13 @@ export async function GET(request: Request) {
       });
       // Each card's guest-facing description (when / how often / what to do /
       // what you win), plus an NFL reward's "Starts <date>" state from the same
-      // read — see attachRewardDescriptions in lib/rewards.ts.
-      return NextResponse.json({ ok: true, campaigns: await attachRewardDescriptions(filtered, venueId) });
+      // read — see attachRewardDescriptions in lib/rewards.ts. The venue page
+      // polls this every 30 s per player, so the schedule / NFL-week reads behind
+      // the wording are reused for a few minutes per server instance.
+      return NextResponse.json({
+        ok: true,
+        campaigns: await attachRewardDescriptions(filtered, venueId, new Date(), { cachedReads: true }),
+      });
     }
 
     const campaigns = await listChallengeCampaigns({
@@ -65,7 +70,7 @@ export async function GET(request: Request) {
     });
     return NextResponse.json({
       ok: true,
-      campaigns: await attachRewardDescriptions(withLeaderboard, venueId),
+      campaigns: await attachRewardDescriptions(withLeaderboard, venueId, new Date(), { cachedReads: true }),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load challenge campaigns.";

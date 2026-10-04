@@ -56,6 +56,7 @@ import {
   REWARD_TERMS_NOT_SCHEDULED_MESSAGE,
   allowedPeriodsFor,
   cadenceForPeriod,
+  deriveRewardTerms,
   lockedQuantityFor,
   renderTermsSentence,
   summarizeRewardSchedules,
@@ -85,6 +86,7 @@ import {
   REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
   deriveNFLWeekScopeTerms,
   describeNFLWeekScope,
+  nflRewardUpcomingStartDate,
   type NFLRewardSeasonContext,
   type NFLRewardWeekScope,
   type NFLRewardWeekScopeKind,
@@ -256,6 +258,7 @@ type PrizeChoice = "menu_item" | "gift_card";
 
 const EMPTY_SHAPES: RewardScheduleShape[] = [];
 const EMPTY_GAME_SLOTS: RewardGameSlot[] = [];
+const EMPTY_SCHEDULE_DAYS: string[] = [];
 
 export function CreateRewardWizard({
   variant,
@@ -602,52 +605,60 @@ export function CreateRewardWizard({
     return `${discountLabel} ${itemLabel}`;
   }, [prize]);
 
+  // cadence / activeDays / winnerQuota for the preview AND the submission — the
+  // same deriveRewardTerms (lib/rewardTerms.ts) createReward runs, so what the
+  // partner previews is what the server stores. null while an NFL scope is
+  // invalid; the server re-derives its own copy and never trusts these.
+  const nflTerms = isNFLDefinition && nflTermsResult?.ok ? nflTermsResult.terms : null;
+  const pickedSlotTerms = useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms : null;
+  const derivedTerms = useMemo(
+    () =>
+      isNFLDefinition && !nflTerms
+        ? null
+        : deriveRewardTerms({
+            nflTerms,
+            pickedSlots: pickedSlotTerms,
+            sentenceCadence: cadenceForPeriod(period),
+            sentenceQuantity: effectiveQuantity,
+            scheduleDays: context?.scheduleDays ?? EMPTY_SCHEDULE_DAYS,
+          }),
+    [isNFLDefinition, nflTerms, pickedSlotTerms, period, effectiveQuantity, context],
+  );
+
   // "What guests will see" — the same composer the server runs for the venue
   // page, fed this wizard's in-progress answers (never an authored string), so the
-  // partner previews exactly the words guests will read. Mirrors createReward's
-  // derivation of cadence / activeDays / slots; the server stays the authority.
+  // partner previews exactly the words guests will read. The server stays the authority.
   const guestPreview = useMemo(() => {
-    if (!definition || !context) return null;
-    const nflTerms = isNFLDefinition && nflTermsResult?.ok ? nflTermsResult.terms : null;
-    const pickedSlots = !isNFLDefinition && useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms : null;
-    if (isNFLDefinition && !nflTerms) return null;
-    if (!isNFLDefinition && !pickedSlots && !period) return null;
-    const cadence: CampaignRecurringType = nflTerms
-      ? nflTerms.cadence
-      : pickedSlots
-        ? pickedSlots.cadence
-        : cadenceForPeriod(period as RewardPeriod);
-    const activeDays: string[] = nflTerms
-      ? nflTerms.activeDays
-      : cadence === "none"
-        ? []
-        : pickedSlots
-          ? pickedSlots.weekdays
-          : context.scheduleDays;
+    if (!definition || !context || !derivedTerms) return null;
+    // A one-off-only venue has no period, but its reward still submits (cadence
+    // "none") and describeReward words it, so the preview shows there too.
+    if (!isNFLDefinition && !pickedSlotTerms && !period && !isOneOffOnly) return null;
     const now = new Date();
-    // A reward that starts in a future NFL week reads "Starts Thu, Sep 4" until then.
-    // Compared as Eastern calendar days, exactly like the server's
-    // applyNFLRewardUpcomingState (lib/rewards.ts), so the preview flips on the same day.
-    const easternToday = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "America/New_York",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(now);
+    // "Starts Thu, Sep 10" until the reward's first covered NFL week begins — the
+    // exact rule the venue page uses (nflRewardUpcomingStartDate), fed the dates
+    // the server would store: a season scope's own start, else the season's first
+    // week. A weekly reward created mid-season is already running.
     const upcomingStartDate =
-      isNFLDefinition && nflSeason && nflSeason.fromWeekStartDate > easternToday
-        ? nflSeason.fromWeekStartDate
+      isNFLDefinition && nflTerms && nflSeason
+        ? nflRewardUpcomingStartDate(
+            nflScope,
+            {
+              campaignStartDate: nflTerms.startDate,
+              seasonFirstWeekStartDate: nflSeason.seasonFirstWeekStartDate,
+            },
+            now,
+          )
         : null;
     return describeReward(
       {
         rules: "",
-        recurringType: cadence,
-        activeDays,
-        winnerQuota: nflTerms ? nflTerms.quota : pickedSlots ? pickedSlots.quota : effectiveQuantity,
+        recurringType: derivedTerms.cadence,
+        activeDays: derivedTerms.activeDays,
+        winnerQuota: derivedTerms.winnerQuota,
         pointsRequiredToWin: effectiveThreshold,
         winCondition,
         rewardDefinitionId: definition.id,
-        gameWinnerSlots: pickedSlots
+        gameWinnerSlots: pickedSlotTerms
           ? selectedSlots.map((slot) => ({ scheduleId: slot.scheduleId, weekday: slot.weekday }))
           : null,
         nflWeekScope: isNFLDefinition ? nflScope : null,
@@ -666,15 +677,15 @@ export function CreateRewardWizard({
   }, [
     definition,
     context,
+    derivedTerms,
     isNFLDefinition,
-    nflTermsResult,
+    nflTerms,
     nflScope,
     nflSeason,
-    useGamePicker,
-    gameWinnerTerms,
+    pickedSlotTerms,
     selectedSlots,
     period,
-    effectiveQuantity,
+    isOneOffOnly,
     effectiveThreshold,
     winCondition,
     prize,
@@ -700,29 +711,21 @@ export function CreateRewardWizard({
       setSubmitError("Enter a name for the menu item.");
       return;
     }
+    // Only null for an invalid NFL scope, which returned above.
+    if (!derivedTerms) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
       const result = await onSubmit({
         venueId,
         definitionId: definition.id,
-        cadence:
-          isNFLDefinition && nflTermsResult?.ok
-            ? nflTermsResult.terms.cadence
-            : useGamePicker && gameWinnerTerms.ok
-              ? gameWinnerTerms.terms.cadence
-              : cadenceForPeriod(period),
+        cadence: derivedTerms.cadence,
         winCondition,
         threshold: effectiveThreshold,
-        winnerQuota:
-          isNFLDefinition && nflTermsResult?.ok
-            ? nflTermsResult.terms.quota
-            : useGamePicker && gameWinnerTerms.ok
-              ? gameWinnerTerms.terms.quota
-              : effectiveQuantity,
+        winnerQuota: derivedTerms.winnerQuota,
         prize,
         gameWinnerSlots:
-          !isNFLDefinition && useGamePicker && gameWinnerTerms.ok
+          pickedSlotTerms
             ? selectedSlots.map((slot) => ({ scheduleId: slot.scheduleId, weekday: slot.weekday }))
             : undefined,
         // The server only honors `kind` — season/fromWeek are re-derived from

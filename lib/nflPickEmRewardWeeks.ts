@@ -133,6 +133,14 @@ export type NFLRewardSeasonContext = {
   fromWeek: number;
   /** `week_start_date` of `fromWeek` (YYYY-MM-DD). */
   fromWeekStartDate: string;
+  /**
+   * The season's earliest `week_start_date` (YYYY-MM-DD) — where a WEEKLY reward's
+   * first covered week begins (resolveNFLRewardStartDate), so the wizard's guest
+   * preview can say "Starts …" on exactly the days the venue page will. null when
+   * no week is synced; an older server's response simply lacks it, which reads
+   * the same (no "Starts" line).
+   */
+  seasonFirstWeekStartDate: string | null;
   /** `week_end_date` of the season's final week (YYYY-MM-DD). */
   seasonEndDate: string;
   /** Weeks from `fromWeek` to the end of the season, inclusive — wizard readback. */
@@ -286,6 +294,43 @@ export const resolveNFLRewardStartDate = (
   if (normalized.kind === "weekly") return seasonFirst;
 
   return toCalendarDate(dates.campaignStartDate) ?? seasonFirst;
+};
+
+/** The NFL calendar is published in US Eastern time; "today" is asked in that zone. */
+const NFL_CALENDAR_TIMEZONE = "America/New_York";
+
+/** YYYY-MM-DD for `now` on the NFL calendar's clock, or null for an invalid Date. */
+const nflCalendarToday = (now: Date): string | null => {
+  if (!Number.isFinite(now.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: NFL_CALENDAR_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  return toCalendarDate(`${part("year")}-${part("month")}-${part("day")}`);
+};
+
+/**
+ * The date guests are told an NFL reward "Starts …", or null when its first
+ * covered week has already begun (or can't be determined). The ONE rule both the
+ * venue page (applyNFLRewardUpcomingState, lib/rewards.ts) and the Create Reward
+ * wizard's guest preview use, so the two never disagree — e.g. a weekly reward
+ * created on a Tuesday mid-season is already running (its first covered week is
+ * the season's first), even though the next NFL week starts Thursday.
+ *
+ * Compared as Eastern calendar days: a reward starting today is live, not upcoming.
+ */
+export const nflRewardUpcomingStartDate = (
+  scope: unknown,
+  dates: { campaignStartDate?: string | null; seasonFirstWeekStartDate?: string | null },
+  now: Date,
+): string | null => {
+  const startDate = resolveNFLRewardStartDate(scope, dates);
+  const today = nflCalendarToday(now);
+  // Calendar-date strings compare correctly lexicographically in YYYY-MM-DD.
+  return startDate && today && startDate > today ? startDate : null;
 };
 
 // ── Copy ────────────────────────────────────────────────────────────────────

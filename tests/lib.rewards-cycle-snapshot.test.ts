@@ -11,13 +11,27 @@ type Row = Record<string, unknown>;
 // scales with campaign count / historical cycle count (Phase 5 batching).
 let fromCallCounts: Record<string, number> = {};
 
+// Columns a test pretends are not in the database yet (a migration not applied):
+// a select naming one answers PostgREST's 42703, like the real thing.
+let missingColumns: Record<string, string[]> = {};
+// Every select column list, per table — lets a test see the retry.
+let selectLog: Array<{ table: string; cols: string }> = [];
+
 function createFakeSupabase(store: Record<string, Row[]>) {
   class Builder {
     private filters: Array<(row: Row) => boolean> = [];
+    private selectError: { code: string; message: string } | null = null;
 
     constructor(private table: string) {}
 
-    select(_cols?: string) {
+    select(cols?: string) {
+      selectLog.push({ table: this.table, cols: cols ?? "*" });
+      const missing = (missingColumns[this.table] ?? []).find((col) =>
+        String(cols ?? "").split(",").map((c) => c.trim()).includes(col),
+      );
+      if (missing) {
+        this.selectError = { code: "42703", message: `column ${this.table}.${missing} does not exist` };
+      }
       return this;
     }
     eq(col: string, val: unknown) {
@@ -86,8 +100,14 @@ function createFakeSupabase(store: Record<string, Row[]>) {
       return { data: rows[0] ?? null, error: null };
     }
 
-    then(resolve: (v: { data: Row[]; error: null }) => unknown, reject?: (e: unknown) => unknown) {
-      return Promise.resolve({ data: this.filtered(), error: null }).then(resolve, reject);
+    then(
+      resolve: (v: { data: Row[] | null; error: { code: string; message: string } | null }) => unknown,
+      reject?: (e: unknown) => unknown,
+    ) {
+      const result = this.selectError
+        ? { data: null, error: this.selectError }
+        : { data: this.filtered(), error: null };
+      return Promise.resolve(result).then(resolve, reject);
     }
 
     upsert(_payload: Row, _opts?: Record<string, unknown>) {
@@ -190,6 +210,8 @@ beforeEach(() => {
     challenge_campaign_redemptions: [],
   };
   fromCallCounts = {};
+  missingColumns = {};
+  selectLog = [];
   vi.useFakeTimers();
   vi.setSystemTime(new Date(NOW_ISO));
 });
@@ -625,5 +647,83 @@ describe("listChallengeCampaignWinsForUser — one-time reward epoch handling", 
     const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
 
     expect(win.cycleStart).toBe("2026-07-13T00:00:00+00:00");
+  });
+});
+
+describe("listChallengeCampaignWinsForUser — a coupon only describes terms it was won under (F6)", () => {
+  // The redemption's created_at is the award time; terms_updated_at is stamped by
+  // a trigger only when the terms the "You won …" sentence reads change
+  // (supabase/migrations/20261004170244_challenge_campaigns_terms_updated_at.sql).
+  const redemption = (overrides: Row = {}): Row => ({
+    challenge_id: "camp-1",
+    winner_user_id: "u1",
+    venue_id: VENUE_ID,
+    cycle_start: "2026-07-13T00:00:00+00:00",
+    created_at: "2026-07-13T12:00:00+00:00",
+    // Claiming later moves claimed_at; it must not be read as the win time.
+    claimed_at: "2026-07-19T12:00:00+00:00",
+    prize_expires_at: "2026-07-27T00:00:00.000Z",
+    prize_redeemed_at: null,
+    ...overrides,
+  });
+
+  it("never-edited terms → describes the win, carrying the pinned game slots", async () => {
+    store.challenge_campaigns = [
+      campaignRow({
+        recurring_type: "weekly",
+        win_condition: "game_winner",
+        terms_updated_at: null,
+        game_winner_slots: [{ scheduleId: "sched-1", weekday: "mon" }],
+      }),
+    ];
+    store.challenge_campaign_redemptions.push(redemption());
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.rewardTerms).toMatchObject({
+      rewardDefinitionId: "live_trivia_challenge",
+      winCondition: "game_winner",
+      gameWinnerSlots: [{ scheduleId: "sched-1", weekday: "mon" }],
+    });
+  });
+
+  it("terms edited before the win → still describes it", async () => {
+    store.challenge_campaigns = [campaignRow({ terms_updated_at: "2026-07-10T00:00:00+00:00" })];
+    store.challenge_campaign_redemptions.push(redemption());
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.rewardTerms).not.toBeNull();
+  });
+
+  it("terms edited after the win → no terms, so the coupon says 'Won from: {name}'", async () => {
+    // Edited between the award (Jul 13) and the claim (Jul 19): the award time decides.
+    store.challenge_campaigns = [campaignRow({ terms_updated_at: "2026-07-15T00:00:00+00:00" })];
+    store.challenge_campaign_redemptions.push(redemption());
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.rewardTerms).toBeNull();
+    // Everything else on the coupon still comes from the live reward.
+    expect(win.challengeName).toBe("Live Trivia Challenge");
+    expect(win.prizeType).toBe("free_appetizer");
+  });
+
+  it("column not migrated yet → retries once without it and behaves as before", async () => {
+    missingColumns = { challenge_campaigns: ["terms_updated_at"] };
+    store.challenge_campaigns = [campaignRow()];
+    store.challenge_campaign_redemptions.push(redemption());
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.rewardTerms).not.toBeNull();
+    expect(win.challengeName).toBe("Live Trivia Challenge");
+    const campaignSelects = selectLog.filter((entry) => entry.table === "challenge_campaigns");
+    expect(campaignSelects).toHaveLength(2);
+    expect(campaignSelects[0].cols).toContain("terms_updated_at");
+    expect(campaignSelects[1].cols).not.toContain("terms_updated_at");
+    expect(warn).toHaveBeenCalledWith("[ChallengeWallet] terms-updated-at-column-missing");
+    warn.mockRestore();
   });
 });

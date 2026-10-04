@@ -1,12 +1,13 @@
 # Reward Descriptions — phone checklist (Andrew)
 
-**Plan:** `docs/reward-descriptions-plan.md` (Plan A) · **Written:** 2026-10-03 (Phase 4)
+**Plan:** `docs/reward-descriptions-plan.md` (Plan A) · **Written:** 2026-10-03 (Phase 4) ·
+**Updated:** 2026-10-04 for the review fixes (`docs/reward-descriptions-review-fixes-plan.md`)
 **Who closes it:** Andrew, on a real phone. Tick each box, or write what you saw next to it.
 
 ## Before you start
 
 1. **The new code must be live** where you test: either deployed, or `npm run dev` on your Mac and the
-   phone pointed at it. As of 2026-10-03 it is committed locally only (not pushed, not deployed).
+   phone pointed at it. As of 2026-10-04 it is committed locally only (not pushed, not deployed).
 2. Use a **test venue** you can sign in to as a partner (Partner Dashboard) and join as a player.
    Give it a Live Trivia schedule with:
    - a **weekly Tuesday 8:00 PM** game,
@@ -50,17 +51,26 @@ check the **"What guests will see"** box says the same words you then see on the
 | ☐ | **Game moved or deleted:** after creating the "Tuesday game" reward, delete (or move) that Tuesday schedule | Pop-up "when" line becomes **"Check the Live Trivia schedule for the next game."** — never the old time. |
 | ☐ | **Prize already won this week** (a recurring reward whose winner is already picked) | The "Congrats to …" line as before, and the pop-up "when" line says **"Next contest starts Tue, Oct 6."** (the next game's date). |
 | ☐ | **NFL reward that hasn't started yet** (only possible before a season / before its first week) | Pop-up "when" line: **"Starts Thu, Sep 4. Get your picks in early."** — shown **once**, not twice. |
+| ☐ | **Ended reward:** a recurring reward whose winner is already picked, then End it (or let its end date pass) | The pop-up **never** says "Next contest starts …". The normal "when" line shows instead. |
+| ☐ | **Game changed from weekly to one-off:** after creating the "Tuesday game" reward, edit that Tuesday schedule to a one-off game | Pop-up "when" line becomes **"Check the Live Trivia schedule for the next game."** — never "8:00 PM every Tuesday". |
+| ☐ | **NFL weekly reward created mid-season:** on the Confirm step | "What guests will see" says **"A new contest starts every Thursday of the NFL season."** — not "Starts Thu, Oct 9". |
+| ☐ | **Venue whose only Live Trivia game is a one-off:** create a "win the game" reward | The Confirm step shows the **"What guests will see"** box (it used to be missing). |
+| ☐ | **Partner changes a game time** for a reward that is already live | Guests' cards may show the old time for **up to 5 minutes** (expected — saves database reads). The Partner Dashboard and admin page show the new time straight away. |
 | ☐ | **Plural custom prize**: create a reward whose prize is a custom menu item named "Chicken Wings" at 20% off | First sentence ends **"…and win 20% off Chicken Wings."** (not "a Chicken Wings"). |
 
 ## C. Every other screen
 
 | ✓ | Screen | What you should see |
 |---|---|---|
-| ☐ | Any reward card / pop-up / Redeem screen | The words **"Awarded to the winner."** appear **nowhere**. |
+| ☐ | Reward card / pop-up / Redeem screen for a **new-style** "win the game" reward | The words **"Awarded to the winner."** do **not** appear. |
+| ☐ | Same screens for an **older hand-written** "win the game" reward | **"Awarded to the winner."** **does** appear (it says how the prize is won). |
+| ☐ | **Admin → Rewards → edit** a new-style reward | Instead of an editable Rules box: the guest wording, read-only, and the note **"Guests see this automatic description. Change the schedule, prize or target to change it."** An older hand-written reward still has the editable box. |
 | ☐ | Any reward wording anywhere | Never says **"this venue"** or **"at this venue"**. |
 | ☐ | **NFL Pick 'Em page** banner (the 🏆 box at the top of /nfl-pickem) | The same first sentence as the venue card (e.g. "Get the most NFL picks right this week and win a $50 gift card."). |
 | ☐ | **Prize wallet** (Redeem Prizes) coupon from a new-style reward | Says what you won it for, e.g. **"You got the most NFL picks right in Week 5"** or **"You won Live Trivia on Tue, Oct 7"** — not "Won from: …". *(Needs a real win; skip if none yet.)* |
 | ☐ | Prize wallet coupon from an older hand-written reward | Still **"Won from: {reward name}"**. |
+| ☐ | Prize wallet coupon whose reward was **edited after the win** (e.g. points target or NFL scope changed) | Goes back to **"Won from: {reward name}"** instead of a possibly wrong sentence. |
+| ☐ | Prize wallet coupon from a **late Live Trivia game** (e.g. 11:30 PM in a Central-time venue) | The win date is the **game's** day (e.g. "Tue, Oct 6"), not the next day. |
 | ☐ | **Partner Dashboard** Rewards rows | Under each reward's name: the guest first sentence, then the terms line (e.g. "… — 1 per week"). |
 | ☐ | **Create reward → Confirm step** (partner) | A **"What guests will see"** box with the first sentence, when line and fine print, matching the card after publishing. |
 | ☐ | Long words on a small phone (iPhone SE size, if you have one) | No text runs off the card or pop-up. |

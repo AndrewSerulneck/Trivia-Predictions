@@ -1,12 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NFLWeek, NFLWeekDates } from "@/lib/nflPickEm";
 
-// attachNFLRewardUpcomingState decides whether the venue Rewards panel shows an
-// NFL reward as "Upcoming · Starts <date>" instead of a live progress bar. A
-// weekly NFL reward created before the season has REAL cycles running from the
-// moment it is created (deriveNFLWeekScopeTerms → cadence "weekly", startDate
-// null), so without this it would read as "In Progress · 0 / N pts" for weeks.
+// The upcoming state decides whether the venue Rewards panel shows an NFL reward
+// as "Upcoming · Starts <date>" instead of a live progress bar. A weekly NFL
+// reward created before the season has REAL cycles running from the moment it is
+// created (deriveNFLWeekScopeTerms → cadence "weekly", startDate null), so
+// without this it would read as "In Progress · 0 / N pts" for weeks.
 // See docs/nfl-pickem-week1-early-access-plan.md.
+//
+// attachRewardDescriptions is its only production caller (the standalone
+// attachNFLRewardUpcomingState export was deleted in the review-fixes plan,
+// Phase 1), so the cases are pinned through it.
 
 const mocks = vi.hoisted(() => ({
   listNFLSeasonWeekDates: vi.fn(async (_season: number): Promise<NFLWeekDates[]> => []),
@@ -25,14 +29,44 @@ vi.mock("@/lib/nflPickEm", () => ({
   listNFLWeeks: mocks.listNFLWeeks,
 }));
 
-import { attachNFLRewardUpcomingState } from "@/lib/rewards";
-import type { NFLWeekScope } from "@/types";
+import { attachRewardDescriptions } from "@/lib/rewards";
+import type { ChallengeCampaign, NFLWeekScope } from "@/types";
 
 type TestCampaign = {
   id: string;
   nflWeekScope?: NFLWeekScope | null;
   startDate?: string;
 };
+
+/** A full NFL reward row; `rewardDefinitionId: null` makes it a legacy (non-definition) one. */
+const reward = ({ id, nflWeekScope, startDate }: TestCampaign, overrides: Partial<ChallengeCampaign> = {}): ChallengeCampaign => ({
+  id,
+  createdAt: "2026-07-01T00:00:00.000Z",
+  name: "NFL Pick 'Em Challenge",
+  rules: "",
+  venueIds: ["venue-1"],
+  scheduleType: "single_day",
+  activeDays: ["thu", "fri", "sat", "sun", "mon", "tue", "wed"],
+  gameTypes: ["nfl-pickem"],
+  challengeMode: "progress",
+  leaderboardDisplayLimit: 10,
+  leaderboardTiebreaker: "first_to_score",
+  pointMultiplier: 1,
+  pointsRequiredToWin: 1,
+  recurringType: nflWeekScope?.kind === "season" ? "none" : "weekly",
+  winCondition: "game_winner",
+  winnerQuota: 1,
+  rewardDefinitionId: nflWeekScope ? "nfl_pickem_challenge" : null,
+  prizeKind: "gift_card",
+  prizeGiftCertificateAmount: 25,
+  isActive: true,
+  nflWeekScope: nflWeekScope ?? null,
+  ...(startDate ? { startDate } : {}),
+  ...overrides,
+});
+
+const attachUpcoming = (campaigns: TestCampaign[], now: Date) =>
+  attachRewardDescriptions(campaigns.map((campaign) => reward(campaign)), "venue-1", now);
 
 /**
  * A season whose opener is `openerDate` (null = no weeks synced). Week 2 is
@@ -64,18 +98,20 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("attachNFLRewardUpcomingState", () => {
+describe("attachRewardDescriptions — NFL upcoming state", () => {
   it("marks a weekly NFL reward upcoming before the season opens", async () => {
-    const result = await attachNFLRewardUpcomingState<TestCampaign>(
+    const result = await attachUpcoming(
       [{ id: "r1", nflWeekScope: WEEKLY }],
       PRESEASON,
     );
 
     expect(result[0].upcomingStartDate).toBe("2026-09-10");
+    // …and the guest-facing When line says the same thing.
+    expect(result[0].description.when).toBe("Starts Thu, Sep 10. Get your picks in early.");
   });
 
   it("drops the flag once the season has started", async () => {
-    const result = await attachNFLRewardUpcomingState<TestCampaign>(
+    const result = await attachUpcoming(
       [{ id: "r1", nflWeekScope: WEEKLY }],
       IN_SEASON,
     );
@@ -84,7 +120,7 @@ describe("attachNFLRewardUpcomingState", () => {
   });
 
   it("uses a season-long reward's own startDate, not the season opener", async () => {
-    const result = await attachNFLRewardUpcomingState<TestCampaign>(
+    const result = await attachUpcoming(
       [{ id: "r1", nflWeekScope: SEASON, startDate: "2026-10-22" }],
       IN_SEASON,
     );
@@ -98,7 +134,7 @@ describe("attachNFLRewardUpcomingState", () => {
     mocks.listNFLSeasonWeekDates.mockResolvedValue(seasonOpeningOn("2026-09-10"));
     const onOpeningDay = new Date("2026-09-10T16:00:00.000Z"); // noon ET
 
-    const result = await attachNFLRewardUpcomingState<TestCampaign>(
+    const result = await attachUpcoming(
       [{ id: "r1", nflWeekScope: WEEKLY }],
       onOpeningDay,
     );
@@ -112,14 +148,14 @@ describe("attachNFLRewardUpcomingState", () => {
       { id: "r2", nflWeekScope: null },
     ];
 
-    const result = await attachNFLRewardUpcomingState(campaigns, PRESEASON);
+    const result = await attachUpcoming(campaigns, PRESEASON);
 
-    expect(result).toEqual(campaigns);
+    expect(result.map((campaign) => campaign.upcomingStartDate)).toEqual([undefined, undefined]);
     expect(mocks.listNFLSeasonWeekDates).not.toHaveBeenCalled();
   });
 
   it("looks each season up once, however many rewards share it", async () => {
-    await attachNFLRewardUpcomingState<TestCampaign>(
+    await attachUpcoming(
       [
         { id: "r1", nflWeekScope: WEEKLY },
         { id: "r2", nflWeekScope: WEEKLY },
@@ -135,7 +171,7 @@ describe("attachNFLRewardUpcomingState", () => {
   it("leaves the reward alone when the season has no weeks synced yet", async () => {
     mocks.listNFLSeasonWeekDates.mockResolvedValue(seasonOpeningOn(null));
 
-    const result = await attachNFLRewardUpcomingState<TestCampaign>(
+    const result = await attachUpcoming(
       [{ id: "r1", nflWeekScope: WEEKLY }],
       PRESEASON,
     );
@@ -144,11 +180,12 @@ describe("attachNFLRewardUpcomingState", () => {
   });
 
   it("preserves every other field on the campaign", async () => {
-    const result = await attachNFLRewardUpcomingState<TestCampaign & { name: string }>(
-      [{ id: "r1", name: "NFL Weekly Winner", nflWeekScope: WEEKLY }],
+    const result = await attachRewardDescriptions(
+      [reward({ id: "r1", nflWeekScope: WEEKLY }, { name: "NFL Weekly Winner" })],
+      "venue-1",
       PRESEASON,
     );
 
-    expect(result[0]).toMatchObject({ id: "r1", name: "NFL Weekly Winner" });
+    expect(result[0]).toMatchObject({ id: "r1", name: "NFL Weekly Winner", upcomingStartDate: "2026-09-10" });
   });
 });

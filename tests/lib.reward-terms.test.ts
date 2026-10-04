@@ -13,6 +13,7 @@ import {
   allowedPeriodsFor,
   cadenceForPeriod,
   computeScheduleGameCounts,
+  deriveRewardTerms,
   exactGameCountForPeriod,
   lockedQuantityFor,
   periodForCadence,
@@ -324,5 +325,60 @@ describe("engine mapping", () => {
     expect(cadenceForPeriod(null)).toBe("none");
     expect(periodForCadence("monthly")).toBe("monthly");
     expect(periodForCadence("none")).toBeNull();
+  });
+});
+
+// One derivation for the wizard preview, the wizard submission and createReward
+// (review-fixes plan Phase 1, F9). Behaviour pinned to what all three computed
+// inline before the extraction.
+describe("deriveRewardTerms", () => {
+  const NFL_DAYS = ["thu", "fri", "sat", "sun", "mon", "tue", "wed"];
+  const base = {
+    nflTerms: null,
+    pickedSlots: null,
+    sentenceCadence: "weekly" as const,
+    sentenceQuantity: 3,
+    scheduleDays: ["tue", "fri"],
+  };
+
+  it("sentence, recurring: the sentence's cadence and N, on every day the venue plays", () => {
+    expect(deriveRewardTerms(base)).toEqual({ cadence: "weekly", activeDays: ["tue", "fri"], winnerQuota: 3 });
+  });
+
+  it("sentence, one-off: no day restriction", () => {
+    expect(deriveRewardTerms({ ...base, sentenceCadence: "none", sentenceQuantity: 1 })).toEqual({
+      cadence: "none",
+      activeDays: [],
+      winnerQuota: 1,
+    });
+  });
+
+  it("picked games replace the sentence entirely, and narrow the days to the picked ones", () => {
+    expect(
+      deriveRewardTerms({
+        ...base,
+        sentenceCadence: "monthly",
+        pickedSlots: { cadence: "weekly", weekdays: ["fri"], quota: 1 },
+      }),
+    ).toEqual({ cadence: "weekly", activeDays: ["fri"], winnerQuota: 1 });
+  });
+
+  it("a single picked one-off game: one-off cadence, no day restriction", () => {
+    expect(
+      deriveRewardTerms({ ...base, pickedSlots: { cadence: "none", weekdays: ["sat"], quota: 1 } }),
+    ).toEqual({ cadence: "none", activeDays: [], winnerQuota: 1 });
+  });
+
+  it("NFL scope wins over everything, and keeps its seven days even for a season-long one-off", () => {
+    const nflTerms = { cadence: "none" as const, activeDays: NFL_DAYS, quota: 2 };
+    expect(
+      deriveRewardTerms({ ...base, nflTerms, pickedSlots: { cadence: "weekly", weekdays: ["fri"], quota: 1 } }),
+    ).toEqual({ cadence: "none", activeDays: NFL_DAYS, winnerQuota: 2 });
+  });
+
+  it("returns a copy of activeDays, never the caller's array", () => {
+    const scheduleDays = ["tue"];
+    const terms = deriveRewardTerms({ ...base, scheduleDays });
+    expect(terms.activeDays).not.toBe(scheduleDays);
   });
 });

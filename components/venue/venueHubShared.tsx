@@ -61,7 +61,8 @@ export type ChallengeCampaignCard = {
   rewardDefinitionId?: string | null;
   /**
    * YYYY-MM-DD the reward's first NFL week begins — present ONLY while that
-   * date is still in the future (attachNFLRewardUpcomingState, lib/rewards.ts).
+   * date is still in the future (nflRewardUpcomingStartDate, attached by
+   * attachRewardDescriptions in lib/rewards.ts).
    * Its presence is the "upcoming" signal: an NFL reward created before the
    * season has live weekly cycles running immediately, so without this the
    * panel would show "In Progress · 0 / N pts" for weeks.

@@ -16,6 +16,7 @@ import {
   deriveNFLWeekScopeTerms,
   describeNFLWeekScope,
   resolveNFLRewardStartDate,
+  nflRewardUpcomingStartDate,
   isNFLRewardWeekScopeKind,
   normalizeNFLWeekScope,
   serializeNFLWeekScope,
@@ -278,5 +279,38 @@ describe("resolveNFLRewardStartDate", () => {
     expect(
       resolveNFLRewardStartDate(SEASON, { campaignStartDate: "2026-02-31" }),
     ).toBeNull();
+  });
+});
+
+// The one "Starts …" rule shared by the venue page (applyNFLRewardUpcomingState)
+// and the Create Reward wizard's preview — review-fixes plan Phase 1, F1.
+describe("nflRewardUpcomingStartDate", () => {
+  const dates = { campaignStartDate: "2026-10-08", seasonFirstWeekStartDate: "2026-09-10" };
+  // Tue Oct 6 2026, noon ET: between Week 4 (ended Mon) and Week 5 (starts Thu Oct 8).
+  const TUESDAY_MID_SEASON = new Date("2026-10-06T16:00:00.000Z");
+
+  it("weekly, mid-season: already running, even on the Tuesday before the next week", () => {
+    expect(nflRewardUpcomingStartDate(WEEKLY, dates, TUESDAY_MID_SEASON)).toBeNull();
+  });
+
+  it("weekly, preseason: the season's first week", () => {
+    expect(nflRewardUpcomingStartDate(WEEKLY, dates, new Date("2026-08-20T16:00:00.000Z"))).toBe("2026-09-10");
+  });
+
+  it("season scope: its own first week while that is still ahead", () => {
+    expect(nflRewardUpcomingStartDate(SEASON, dates, TUESDAY_MID_SEASON)).toBe("2026-10-08");
+  });
+
+  it("a reward starting today is live, judged on the Eastern calendar", () => {
+    // 11:30 PM Eastern on Oct 7 is already Oct 8 in UTC — still upcoming in ET.
+    expect(nflRewardUpcomingStartDate(SEASON, dates, new Date("2026-10-08T03:30:00.000Z"))).toBe("2026-10-08");
+    // Noon Eastern on Oct 8 — the start date itself is live.
+    expect(nflRewardUpcomingStartDate(SEASON, dates, new Date("2026-10-08T16:00:00.000Z"))).toBeNull();
+  });
+
+  it("null for an unreadable scope, missing dates, or an invalid clock", () => {
+    expect(nflRewardUpcomingStartDate(null, dates, TUESDAY_MID_SEASON)).toBeNull();
+    expect(nflRewardUpcomingStartDate(WEEKLY, { seasonFirstWeekStartDate: null }, TUESDAY_MID_SEASON)).toBeNull();
+    expect(nflRewardUpcomingStartDate(WEEKLY, dates, new Date("nope"))).toBeNull();
   });
 });

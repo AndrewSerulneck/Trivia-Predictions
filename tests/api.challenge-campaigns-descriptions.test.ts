@@ -75,7 +75,14 @@ vi.mock("@/lib/challengeCampaigns", async (importOriginal) => ({
 
 import { GET } from "@/app/api/challenge-campaigns/route";
 import { GET as GET_WINS } from "@/app/api/challenge-campaigns/redeem/route";
-import { attachRewardDescriptions } from "@/lib/rewards";
+import { liveTriviaDurationMinutes } from "@/lib/liveTriviaShared";
+import {
+  REWARD_NFL_WEEKS_CACHE_TTL_MS,
+  REWARD_SCHEDULE_CACHE_TTL_MS,
+  attachRewardDescriptions,
+  clearRewardDescriptionCaches,
+} from "@/lib/rewards";
+import { clearVenueTimezoneCache } from "@/lib/timezone";
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -167,6 +174,9 @@ const getJson = async (query: string) => {
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(NOW);
+  // The guest route reuses schedule / NFL-week reads (F3); every test starts cold
+  // so its read counts are its own.
+  clearRewardDescriptionCaches();
   fake.state.rows = {
     trivia_schedules: [tuesdaySchedule(), tuesdaySchedule({ id: "sched-other", venue_id: "venue-2" })],
     nfl_pickem_weeks: NFL_2026_WEEKS,
@@ -393,6 +403,155 @@ describe("attachRewardDescriptions — facts and fallbacks", () => {
   });
 });
 
+// ── Polling cost (review-fixes plan F3 / D2) ────────────────────────────────
+
+describe("F3 — the 30-second venue poll reuses recent schedule / NFL-week reads", () => {
+  const atSeconds = (seconds: number) => vi.setSystemTime(new Date(NOW.getTime() + seconds * 1000));
+
+  it("one player polling for an hour costs 12 schedule reads and 6 NFL-week reads, not 120 + 120", async () => {
+    routeMocks.getChallengeCampaignSnapshotForUser.mockResolvedValue([campaign(), nflWeekly()]);
+
+    for (let poll = 0; poll < 120; poll += 1) {
+      atSeconds(poll * 30);
+      const body = await getJson("venueId=venue-1&userId=user-1");
+      expect(body.campaigns[0].description?.when).toBe(
+        "Live Trivia starts at 8:00 PM every Tuesday. Be here and signed in when it starts.",
+      );
+    }
+
+    expect(readsOf("trivia_schedules")).toHaveLength(12);
+    expect(readsOf("nfl_pickem_weeks")).toHaveLength(6);
+  });
+
+  it("serves both caches within their TTLs on both route branches, and re-reads after", async () => {
+    routeMocks.getChallengeCampaignSnapshotForUser.mockResolvedValue([campaign(), nflWeekly()]);
+    routeMocks.listChallengeCampaigns.mockResolvedValue([campaign(), nflWeekly()]);
+
+    await getJson("venueId=venue-1&userId=user-1");
+    atSeconds(REWARD_SCHEDULE_CACHE_TTL_MS / 1000 - 1);
+    await getJson("venueId=venue-1");
+    expect(readsOf("trivia_schedules")).toHaveLength(1);
+    expect(readsOf("nfl_pickem_weeks")).toHaveLength(1);
+
+    atSeconds(REWARD_SCHEDULE_CACHE_TTL_MS / 1000);
+    await getJson("venueId=venue-1&userId=user-1");
+    expect(readsOf("trivia_schedules")).toHaveLength(2);
+    expect(readsOf("nfl_pickem_weeks")).toHaveLength(1);
+
+    atSeconds(REWARD_NFL_WEEKS_CACHE_TTL_MS / 1000);
+    await getJson("venueId=venue-1&userId=user-1");
+    expect(readsOf("nfl_pickem_weeks")).toHaveLength(2);
+  });
+
+  it("picks up a partner's new game time once the schedule entry expires", async () => {
+    routeMocks.getChallengeCampaignSnapshotForUser.mockResolvedValue([campaign()]);
+
+    await getJson("venueId=venue-1&userId=user-1");
+    // 9:00 PM Chicago instead of 8:00 PM.
+    fake.state.rows.trivia_schedules = [tuesdaySchedule({ start_time: "2026-09-02T02:00:00.000Z" })];
+
+    atSeconds(60);
+    const stale = await getJson("venueId=venue-1&userId=user-1");
+    expect(stale.campaigns[0].description?.when).toContain("8:00 PM");
+
+    atSeconds(REWARD_SCHEDULE_CACHE_TTL_MS / 1000);
+    const fresh = await getJson("venueId=venue-1&userId=user-1");
+    expect(fresh.campaigns[0].description?.when).toContain("9:00 PM");
+  });
+
+  it("never caches a failed schedule read: the next poll retries, and the wording recovers", async () => {
+    routeMocks.getChallengeCampaignSnapshotForUser.mockResolvedValue([campaign()]);
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    fake.state.errors.trivia_schedules = { message: "boom" };
+
+    const failed = await getJson("venueId=venue-1&userId=user-1");
+    expect(failed.campaigns[0].description?.when).toBe("Check the Live Trivia schedule for the next game.");
+
+    fake.state.errors = {};
+    atSeconds(30);
+    const recovered = await getJson("venueId=venue-1&userId=user-1");
+    expect(recovered.campaigns[0].description?.when).toContain("8:00 PM every Tuesday");
+    expect(readsOf("trivia_schedules")).toHaveLength(2);
+
+    atSeconds(60);
+    await getJson("venueId=venue-1&userId=user-1");
+    expect(readsOf("trivia_schedules")).toHaveLength(2);
+    consoleError.mockRestore();
+  });
+
+  it("never caches an empty NFL season (a failed weeks read looks the same)", async () => {
+    routeMocks.getChallengeCampaignSnapshotForUser.mockResolvedValue([nflWeekly()]);
+    fake.state.errors.nfl_pickem_weeks = { message: "boom" };
+
+    await getJson("venueId=venue-1&userId=user-1");
+    fake.state.errors = {};
+    atSeconds(30);
+    await getJson("venueId=venue-1&userId=user-1");
+    atSeconds(60);
+    await getJson("venueId=venue-1&userId=user-1");
+
+    expect(readsOf("nfl_pickem_weeks")).toHaveLength(2);
+  });
+
+  it("keys the schedule cache by the sorted venue ids", async () => {
+    const pair = (first: string, second: string) => [
+      campaign({ id: "a", venueIds: [first] }),
+      campaign({ id: "b", venueIds: [second], gameWinnerSlots: null }),
+    ];
+
+    await attachRewardDescriptions(pair("venue-2", "venue-1"), null, NOW, { cachedReads: true });
+    await attachRewardDescriptions(pair("venue-1", "venue-2"), null, NOW, { cachedReads: true });
+    expect(readsOf("trivia_schedules")).toHaveLength(1);
+    expect(readsOf("trivia_schedules")[0].ops).toContainEqual(["in", ["venue_id", ["venue-1", "venue-2"]]]);
+
+    await attachRewardDescriptions([campaign()], "venue-1", NOW, { cachedReads: true });
+    expect(readsOf("trivia_schedules")).toHaveLength(2);
+  });
+
+  it("admin / partner lists (no cachedReads) always read fresh, and refresh what the poll reuses", async () => {
+    await attachRewardDescriptions([campaign(), nflWeekly()], "venue-1", NOW);
+    await attachRewardDescriptions([campaign(), nflWeekly()], "venue-1", NOW);
+    expect(readsOf("trivia_schedules")).toHaveLength(2);
+    expect(readsOf("nfl_pickem_weeks")).toHaveLength(2);
+
+    await attachRewardDescriptions([campaign(), nflWeekly()], "venue-1", NOW, { cachedReads: true });
+    expect(readsOf("trivia_schedules")).toHaveLength(2);
+    expect(readsOf("nfl_pickem_weeks")).toHaveLength(2);
+  });
+
+  it("shares one in-flight read between concurrent polls", async () => {
+    routeMocks.getChallengeCampaignSnapshotForUser.mockResolvedValue([campaign(), nflWeekly()]);
+
+    await Promise.all(Array.from({ length: 5 }, () => getJson("venueId=venue-1&userId=user-1")));
+
+    expect(readsOf("trivia_schedules")).toHaveLength(1);
+    expect(readsOf("nfl_pickem_weeks")).toHaveLength(1);
+  });
+
+  it("drops a cached one-off game the moment it ends, without a re-read", async () => {
+    const durationMs = liveTriviaDurationMinutes(3) * 60_000;
+    // Started so that it ends 2 minutes after NOW — inside the 5-minute schedule TTL.
+    const startTime = new Date(NOW.getTime() - durationMs + 2 * 60_000).toISOString();
+    fake.state.rows.trivia_schedules = [
+      tuesdaySchedule({ id: "sched-once", recurring_type: "none", recurring_days: [], start_time: startTime }),
+    ];
+    const oneOff = campaign({
+      recurringType: "none",
+      activeDays: [],
+      gameWinnerSlots: [{ scheduleId: "sched-once", weekday: "sat" }],
+    });
+
+    const [during] = await attachRewardDescriptions([oneOff], "venue-1", NOW, { cachedReads: true });
+    expect(during.description.when).not.toBe("Check the Live Trivia schedule for the next game.");
+
+    const later = new Date(NOW.getTime() + 3 * 60_000);
+    vi.setSystemTime(later);
+    const [after] = await attachRewardDescriptions([oneOff], "venue-1", later, { cachedReads: true });
+    expect(after.description.when).toBe("Check the Live Trivia schedule for the next game.");
+    expect(readsOf("trivia_schedules")).toHaveLength(1);
+  });
+});
+
 // ── Prize-wallet coupons: what the guest won it FOR ─────────────────────────
 
 describe("GET /api/challenge-campaigns/redeem — winDescription", () => {
@@ -457,6 +616,100 @@ describe("GET /api/challenge-campaigns/redeem — winDescription", () => {
       "You got the most NFL picks right in Week 1",
     ]);
     expect(readsOf("nfl_pickem_weeks")).toHaveLength(1);
+  });
+
+  describe("F7 — a Live Trivia game win is dated in its schedule's zone", () => {
+    // Wed Oct 7 2026, 11:30 PM Central = Thu 04:30Z: Thursday in the venue's
+    // New York zone, Wednesday where the game was actually played.
+    const lateCentralWin = (overrides: Partial<ChallengeCampaignWin> = {}) =>
+      win({
+        cycleStart: "2026-10-08T04:30:00.000Z",
+        rewardTerms: terms({ gameWinnerSlots: [{ scheduleId: "sched-late", weekday: "wed" }] }),
+        ...overrides,
+      });
+
+    beforeEach(() => {
+      clearVenueTimezoneCache();
+      fake.state.rows.venues = [{ id: "venue-1", timezone: "America/New_York" }];
+      fake.state.rows.trivia_schedules = [
+        tuesdaySchedule({ id: "sched-late", timezone: "America/Chicago" }),
+        tuesdaySchedule({ id: "sched-east", timezone: "America/New_York" }),
+      ];
+    });
+    afterEach(() => clearVenueTimezoneCache());
+
+    it("uses the pinned game's schedule zone, from ONE trivia_schedules read for every coupon", async () => {
+      routeMocks.listChallengeCampaignWinsForUser.mockResolvedValue([
+        lateCentralWin(),
+        lateCentralWin({ challengeId: "camp-2" }),
+        lateCentralWin({ challengeId: "camp-3" }),
+      ]);
+
+      const coupons = await getWins();
+
+      expect(coupons.map((coupon) => coupon.winDescription)).toEqual([
+        "You won Live Trivia on Wed, Oct 7",
+        "You won Live Trivia on Wed, Oct 7",
+        "You won Live Trivia on Wed, Oct 7",
+      ]);
+      const reads = readsOf("trivia_schedules");
+      expect(reads).toHaveLength(1);
+      expect(reads[0].ops).toContainEqual(["in", ["id", ["sched-late"]]]);
+    });
+
+    it("falls back to the venue's zone when the schedule read fails", async () => {
+      fake.state.errors.trivia_schedules = { message: "boom" };
+      routeMocks.listChallengeCampaignWinsForUser.mockResolvedValue([lateCentralWin()]);
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const [coupon] = await getWins();
+
+      expect(coupon.winDescription).toBe("You won Live Trivia on Thu, Oct 8");
+      expect(errorSpy).toHaveBeenCalledWith("[RewardDescriptions] schedule-timezone-read-failed", expect.any(Error));
+      errorSpy.mockRestore();
+    });
+
+    it("falls back to the venue's zone when the pinned games' schedules disagree", async () => {
+      routeMocks.listChallengeCampaignWinsForUser.mockResolvedValue([
+        lateCentralWin({
+          rewardTerms: terms({
+            gameWinnerSlots: [
+              { scheduleId: "sched-late", weekday: "wed" },
+              { scheduleId: "sched-east", weekday: "wed" },
+            ],
+          }),
+        }),
+      ]);
+
+      const [coupon] = await getWins();
+
+      expect(coupon.winDescription).toBe("You won Live Trivia on Thu, Oct 8");
+    });
+
+    it("reads no schedule for an unpinned game-winner, a points reward or an NFL reward", async () => {
+      routeMocks.listChallengeCampaignWinsForUser.mockResolvedValue([
+        lateCentralWin({ rewardTerms: terms({ gameWinnerSlots: null }) }),
+        lateCentralWin({
+          rewardTerms: terms({ winCondition: "points_threshold", recurringType: "daily", pointsRequiredToWin: 500 }),
+        }),
+        lateCentralWin({
+          rewardTerms: terms({
+            rewardDefinitionId: "nfl_pickem_challenge",
+            // Keeps the inherited pinned slot: an NFL reward must still not read schedules.
+            nflWeekScope: { kind: "season", season: 2026, fromWeek: 1 },
+          }),
+        }),
+      ]);
+
+      const coupons = await getWins();
+
+      expect(coupons.map((coupon) => coupon.winDescription)).toEqual([
+        "You won Live Trivia on Thu, Oct 8",
+        "You earned 500 points in Live Trivia on Thu, Oct 8",
+        "You got the most NFL picks right in the 2026 season",
+      ]);
+      expect(readsOf("trivia_schedules")).toHaveLength(0);
+    });
   });
 
   it("leaves a deleted or legacy reward's coupon on 'Won from' with no reads", async () => {

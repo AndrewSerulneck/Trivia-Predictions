@@ -829,6 +829,8 @@ describe("resolveRewardCreationContext — NFL season gate", () => {
       season: 2026,
       fromWeek: 3,
       fromWeekStartDate: "2026-07-16",
+      // The season's first week — a weekly reward's first covered week (F1).
+      seasonFirstWeekStartDate: "2026-07-02",
       seasonEndDate: "2026-07-29",
       weeksRemaining: 2,
     });

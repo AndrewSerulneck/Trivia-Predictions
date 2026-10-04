@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import type { Venue } from "@/types";
+import type { RewardDescription, Venue } from "@/types";
 import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/AdminShell";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import { ExitBackButton } from "@/components/navigation/ExitBackButton";
@@ -70,6 +70,9 @@ type AdminChallengeCampaign = {
   isActive: boolean;
   // ── Rewards: game-winner win condition ──
   winCondition?: "points_threshold" | "game_winner";
+  // Composed server-side (attachRewardDescriptions). `isCustom: false` means guests see this
+  // automatic wording instead of `rules`.
+  description?: RewardDescription;
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -550,6 +553,11 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     return { ok: true as const };
   }, []);
 
+  // A reward made from a definition shows composed wording to guests, so its stored `rules`
+  // are not editable here (they still submit unchanged, keeping "Rules are required" satisfied).
+  const editedDescription = campaigns.find((c) => c.id === editingCampaignId)?.description;
+  const automaticDescription = editedDescription && !editedDescription.isCustom ? editedDescription : null;
+
   function beginEdit(campaign: AdminChallengeCampaign) {
     setEditingCampaignId(campaign.id);
     setEditingWinCondition(campaign.winCondition ?? "points_threshold");
@@ -696,12 +704,30 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             <input className={field} value={formName} onChange={(e) => setFormName(e.target.value)} />
           </div>
           <div className="col-span-2">
-            <label className={lbl}>Rules *</label>
-            <textarea
-              className={`${field} h-24 resize-none`}
-              value={formRules}
-              onChange={(e) => setFormRules(e.target.value)}
-            />
+            {automaticDescription ? (
+              <>
+                <label className={lbl}>What guests see</label>
+                <div className="space-y-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                  <p>{automaticDescription.summary}</p>
+                  {automaticDescription.when ? <p>{automaticDescription.when}</p> : null}
+                  {automaticDescription.fineprint ? (
+                    <p className="text-xs text-slate-500">{automaticDescription.fineprint}</p>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  Guests see this automatic description. Change the schedule, prize or target to change it.
+                </p>
+              </>
+            ) : (
+              <>
+                <label className={lbl}>Rules *</label>
+                <textarea
+                  className={`${field} h-24 resize-none`}
+                  value={formRules}
+                  onChange={(e) => setFormRules(e.target.value)}
+                />
+              </>
+            )}
           </div>
 
           {/* Game types */}

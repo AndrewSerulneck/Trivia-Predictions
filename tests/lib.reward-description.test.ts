@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   describeReward,
   describeRewardWin,
+  rewardTermsUnchangedSinceWin,
   type RewardDescription,
   type RewardDescriptionInput,
   type RewardScheduleSlotFact,
@@ -332,6 +333,31 @@ describe("describeReward — Live Trivia game winner (§3 rows 5–7)", () => {
       expect(allText(description)).not.toMatch(/\d:\d\d/);
     });
 
+    it("a pinned weekly game that has become a one-off no longer reads as 'every Thursday'", () => {
+      // Same schedule id and weekday (so the slot key still matches), but the
+      // schedule now plays once: recurring: false.
+      const nowOneOff: RewardGameScheduleShape = { ...tue8pm, recurringType: "none" };
+      const description = describeClean(liveTrivia({ schedule: { slots: slotsOf(nowOneOff) } }));
+      expect(description.summary).toBe("Win Live Trivia on Tuesday night and win a $100 gift card.");
+      expect(description.when).toBe("Check the Live Trivia schedule for the next game.");
+      expect(allText(description)).not.toMatch(/\d:\d\d/);
+      expect(allText(description)).not.toContain("every Tuesday");
+    });
+
+    it("a pinned one-off game that has become weekly no longer reads as 'one game only'", () => {
+      const nowWeekly: RewardGameScheduleShape = { ...oneOffTue, recurringType: "weekly" };
+      const description = describeClean(
+        liveTrivia({
+          recurringType: "none",
+          activeDays: [],
+          gameWinnerSlots: [{ scheduleId: "sched-once", weekday: "tue" }],
+          schedule: { slots: slotsOf(nowWeekly) },
+        }),
+      );
+      expect(description.when).toBe("Check the Live Trivia schedule for the next game.");
+      expect(allText(description)).not.toContain("One game only");
+    });
+
     it("the schedule couldn't be read at all", () => {
       const description = describeClean(liveTrivia({ schedule: null }));
       expect(description.when).toBe("Check the Live Trivia schedule for the next game.");
@@ -357,6 +383,45 @@ describe("describeReward — Live Trivia game winner (§3 rows 5–7)", () => {
     );
     expect(description.when).toBe("Next contest starts Tue, Oct 13.");
     expect(description.summary).toBe("Win Live Trivia on Tuesday night and win a $100 gift card.");
+  });
+
+  describe("a filled reward that won't run again says nothing about a next contest", () => {
+    const filled = { quotaRemaining: 0, nextCycleStart: "2026-10-14T01:00:00.000Z" } as const; // Tue Oct 13, 8 PM CDT
+
+    it("paused (inactive): keeps the normal When line", () => {
+      const description = describeClean(liveTrivia({ ...filled, isActive: false }));
+      expect(description.when).toBe("Live Trivia starts at 8:00 PM every Tuesday. Be here and signed in when it starts.");
+    });
+
+    it("active: unknown isActive counts as active", () => {
+      expect(describeClean(liveTrivia({ ...filled })).when).toBe("Next contest starts Tue, Oct 13.");
+      expect(describeClean(liveTrivia({ ...filled, isActive: true })).when).toBe("Next contest starts Tue, Oct 13.");
+    });
+
+    it("next cycle falls after the end date", () => {
+      const description = describeClean(liveTrivia({ ...filled, endDate: "2026-10-12" }));
+      expect(description.when).not.toContain("Next contest");
+    });
+
+    it("the end date's own day still counts, in the venue's zone (not UTC)", () => {
+      // 01:00Z on Oct 14 is still Oct 13 in Chicago, so an Oct 13 end date allows it.
+      const description = describeClean(liveTrivia({ ...filled, endDate: "2026-10-13" }));
+      expect(description.when).toBe("Next contest starts Tue, Oct 13.");
+    });
+
+    it("NFL: paused reward drops the next-contest line too", () => {
+      const description = describeClean(
+        nfl({
+          winCondition: "points_threshold",
+          pointsRequiredToWin: 10,
+          winnerQuota: 2,
+          quotaRemaining: 0,
+          nextCycleStart: "2026-10-08T04:00:00.000Z",
+          isActive: false,
+        }),
+      );
+      expect(description.when).toBe("Resets every Thursday during the NFL season.");
+    });
   });
 
   it("a filled one-off reward has no next contest", () => {
@@ -595,12 +660,59 @@ describe("describeRewardWin — the prize-wallet coupon line", () => {
     );
   });
 
+  it("an 11:30 PM Central game win is dated in the schedule's zone, not the next day (F7)", () => {
+    // Wed Oct 7 2026, 11:30 PM CDT = Thu 04:30Z — Thursday in New York and UTC.
+    const lateGame = { cycleStart: "2026-10-08T04:30:00.000Z" };
+    expect(describeRewardWin(liveTrivia(), { ...lateGame, timezone: SCHEDULE_TZ })).toBe(
+      "You won Live Trivia on Wed, Oct 7",
+    );
+  });
+
+  it("an unknown zone falls back to New York, never UTC (F7)", () => {
+    // Wed Oct 7 2026, 10:30 PM EDT = Thu 02:30Z — UTC would print Thursday.
+    const win = { cycleStart: "2026-10-08T02:30:00.000Z" };
+    expect(describeRewardWin(liveTrivia(), win)).toBe("You won Live Trivia on Wed, Oct 7");
+    expect(describeRewardWin(liveTrivia(), { ...win, timezone: null })).toBe("You won Live Trivia on Wed, Oct 7");
+    expect(
+      describeRewardWin(
+        liveTrivia({ winCondition: "points_threshold", pointsRequiredToWin: 500, gameWinnerSlots: null, recurringType: "daily" }),
+        win,
+      ),
+    ).toBe("You earned 500 points in Live Trivia on Wed, Oct 7");
+  });
+
   it("legacy campaigns keep 'Won from: …' (null)", () => {
     expect(describeRewardWin(liveTrivia({ rewardDefinitionId: null }), { cycleStart: "2026-10-07T01:00:00.000Z" })).toBeNull();
   });
 
   it("an undatable game win returns null rather than a half sentence", () => {
     expect(describeRewardWin(liveTrivia(), { cycleStart: null })).toBeNull();
+  });
+});
+
+describe("rewardTermsUnchangedSinceWin — may a coupon describe its win from today's terms? (F6)", () => {
+  const wonAt = "2026-10-07T03:00:00+00:00"; // PostgREST-style offset text
+
+  it("never edited (no stamp) → yes, today's behaviour", () => {
+    expect(rewardTermsUnchangedSinceWin(null, wonAt)).toBe(true);
+    expect(rewardTermsUnchangedSinceWin(undefined, wonAt)).toBe(true);
+    expect(rewardTermsUnchangedSinceWin(null, null)).toBe(true);
+  });
+
+  it("edited before the win → yes; at the same instant → yes", () => {
+    expect(rewardTermsUnchangedSinceWin("2026-10-01T12:00:00.000Z", wonAt)).toBe(true);
+    expect(rewardTermsUnchangedSinceWin("2026-10-07T03:00:00.000Z", wonAt)).toBe(true);
+  });
+
+  it("edited after the win → no, the coupon falls back to 'Won from'", () => {
+    expect(rewardTermsUnchangedSinceWin("2026-10-07T03:00:00.001Z", wonAt)).toBe(false);
+    expect(rewardTermsUnchangedSinceWin("2026-10-20T00:00:00+00:00", wonAt)).toBe(false);
+  });
+
+  it("a stamp that can't be compared → no (fail toward the safe label)", () => {
+    expect(rewardTermsUnchangedSinceWin("2026-10-20T00:00:00Z", null)).toBe(false);
+    expect(rewardTermsUnchangedSinceWin("2026-10-20T00:00:00Z", "not a date")).toBe(false);
+    expect(rewardTermsUnchangedSinceWin("garbage", wonAt)).toBe(false);
   });
 });
 

@@ -1750,7 +1750,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                     size="modal"
                   />
                 </div>
-              ) : selectedChallenge.winCondition === "game_winner" ? null : selectedChallengeDetail.upcomingStartDate ? (
+              ) : selectedChallenge.winCondition === "game_winner" ? (
+                // Only a legacy hand-written reward (isCustom) needs this; composed ones say it.
+                selectedChallenge.description?.isCustom !== false ? (
+                  <p className="mt-5 w-[min(92vw,24rem)] text-lg text-slate-500">Awarded to the winner.</p>
+                ) : null
+              ) : selectedChallengeDetail.upcomingStartDate ? (
                 // The description's `when` line already says "Starts … Get your picks in early."
                 selectedChallenge.description?.when ? null : (
                 <p className="mt-5 w-[min(92vw,24rem)] text-lg text-amber-300/80">

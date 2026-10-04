@@ -271,3 +271,272 @@ describe("CreateRewardWizard — controlled step", () => {
     expect(container.querySelector("[data-step='definition']")).not.toBeNull();
   });
 });
+
+// ─── What the wizard SUBMITS (review-fixes plan Phase 1, F9) ────────────────
+// Pinned before cadence/activeDays/quota derivation moved into the shared
+// deriveRewardTerms (lib/rewardTerms.ts), so the refactor provably changes no
+// payload. The server re-derives all of it; these pin the client's copy.
+
+const NFL_CONTEXT: RewardCreationContextDTO = {
+  scheduled: true,
+  hasRecurringSchedule: true,
+  scheduleDays: [],
+  timezone: null,
+  allowedCadences: ["none", "weekly"],
+  scheduleShapes: [],
+  gameSlots: [],
+  nflSeason: {
+    season: 2026,
+    fromWeek: 5,
+    fromWeekStartDate: "2026-10-08",
+    seasonFirstWeekStartDate: "2026-09-10",
+    seasonEndDate: "2027-01-11",
+    weeksRemaining: 14,
+  },
+};
+
+const PICKER_CONTEXT: RewardCreationContextDTO = {
+  ...LIVE_CONTEXT,
+  scheduleDays: ["tue", "fri"],
+  scheduleShapes: [{ recurringType: "weekly", weekdayCount: 2 }],
+  gameSlots: [
+    {
+      scheduleId: "sched-1",
+      weekday: "tue",
+      recurring: true,
+      title: "Trivia Night",
+      timeLabel: "8:00 PM",
+      dateLabel: null,
+      label: "Tuesday 8:00 PM — Trivia Night",
+    },
+    {
+      scheduleId: "sched-1",
+      weekday: "fri",
+      recurring: true,
+      title: "Trivia Night",
+      timeLabel: "8:00 PM",
+      dateLabel: null,
+      label: "Friday 8:00 PM — Trivia Night",
+    },
+  ],
+};
+
+const renderForSubmit = (context: RewardCreationContextDTO) => {
+  const onSubmit = vi.fn(async () => ({ ok: true as const }));
+  const view = render(
+    createElement(CreateRewardWizard, {
+      variant: "admin",
+      venues: [{ id: "venue-1", name: "The Pub" }],
+      defaultVenueId: "venue-1",
+      scheduleLinkHref: "/admin/schedule",
+      fetchContext: async (_venueId: string, definitionId: string) =>
+        definitionId === "nfl_pickem_challenge"
+          ? context.nflSeason
+            ? context
+            : { ...context, scheduled: false }
+          : context.nflSeason
+            ? { ...context, scheduled: false }
+            : context,
+      onSubmit,
+      onCreated: () => {},
+      onCancel: () => {},
+    }),
+  );
+  return { ...view, onSubmit };
+};
+
+const walkToConfirm = async () => {
+  fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
+  await screen.findByText("Prize");
+  fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+  await screen.findByText("Confirm");
+};
+
+const PRIZE = {
+  prizeKind: "menu_item",
+  menuItem: "appetizer",
+  menuItemName: null,
+  discountKind: "percent",
+  discountValue: 50,
+};
+
+describe("CreateRewardWizard — submitted terms", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+
+  it("points target: weekly sentence cadence, the chosen quantity, no slots or scope", async () => {
+    const { onSubmit } = renderForSubmit(LIVE_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
+    await screen.findByText("How many, how often?");
+    await walkToConfirm();
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith({
+      venueId: "venue-1",
+      definitionId: "live_trivia_challenge",
+      cadence: "weekly",
+      winCondition: "points_threshold",
+      threshold: 500,
+      winnerQuota: 1,
+      prize: PRIZE,
+      gameWinnerSlots: undefined,
+      nflWeekScope: undefined,
+    });
+  });
+
+  it("game picker: cadence and quota come from the picked games", async () => {
+    vi.stubEnv("NEXT_PUBLIC_REWARD_GAME_PICKER_ENABLED", "true");
+    const { onSubmit } = renderForSubmit(PICKER_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
+    await screen.findByText("How many, how often?");
+    fireEvent.click(screen.getByRole("button", { name: /Winner of the game/ }));
+    // Recurring games render as one time chip per weekday column (Sun…Sat).
+    const [tuesday, friday] = await screen.findAllByRole("button", { name: "8:00 PM" });
+    fireEvent.click(tuesday);
+    fireEvent.click(friday);
+    await walkToConfirm();
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cadence: "weekly",
+        winCondition: "game_winner",
+        winnerQuota: 2,
+        gameWinnerSlots: [
+          { scheduleId: "sched-1", weekday: "tue" },
+          { scheduleId: "sched-1", weekday: "fri" },
+        ],
+        nflWeekScope: undefined,
+      }),
+    );
+  });
+
+  it("NFL every week, most picks right: weekly cadence, exactly 1 winner, the server's season", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-06T16:00:00.000Z"));
+    const { onSubmit } = renderForSubmit(NFL_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Most picks right/ }));
+    await walkToConfirm();
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        definitionId: "nfl_pickem_challenge",
+        cadence: "weekly",
+        winCondition: "game_winner",
+        winnerQuota: 1,
+        gameWinnerSlots: undefined,
+        nflWeekScope: { kind: "weekly", season: 2026 },
+      }),
+    );
+  });
+
+  it("NFL whole season: a one-off cadence from the server's fromWeek", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-06T16:00:00.000Z"));
+    const { onSubmit } = renderForSubmit(NFL_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Whole season/ }));
+    await walkToConfirm();
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cadence: "none",
+        winCondition: "points_threshold",
+        threshold: 10,
+        winnerQuota: 1,
+        nflWeekScope: { kind: "season", season: 2026, fromWeek: 5 },
+      }),
+    );
+  });
+});
+
+// ─── F1: the NFL preview's "Starts …" follows the server's rule ─────────────
+// A weekly reward's first covered week is the SEASON's first week
+// (resolveNFLRewardStartDate), so mid-season it is already running — even on a
+// Tuesday between NFL weeks, when the next week (fromWeek) hasn't begun.
+
+describe("CreateRewardWizard — NFL guest preview start date", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const previewFor = async (now: string, scope: RegExp, context: RewardCreationContextDTO = NFL_CONTEXT) => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(now));
+    const { container } = renderForSubmit(context);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Most picks right/ }));
+    fireEvent.click(screen.getByRole("button", { name: scope }));
+    await walkToConfirm();
+    return container.textContent ?? "";
+  };
+
+  it("weekly, Tuesday mid-season: no 'Starts', the every-Thursday line the server shows", async () => {
+    // Tue Oct 6 2026, noon ET — Week 5 starts Thu Oct 8; the season opened Sep 10.
+    const text = await previewFor("2026-10-06T16:00:00.000Z", /Every week/);
+    expect(text).not.toContain("Starts ");
+    expect(text).toContain("A new contest starts every Thursday of the NFL season.");
+  });
+
+  it("weekly, before the season: 'Starts' the season's first week", async () => {
+    // Preseason the server's "current, else next" week IS Week 1.
+    const preseason: RewardCreationContextDTO = {
+      ...NFL_CONTEXT,
+      nflSeason: { ...NFL_CONTEXT.nflSeason!, fromWeek: 1, fromWeekStartDate: "2026-09-10", weeksRemaining: 18 },
+    };
+    const text = await previewFor("2026-08-20T16:00:00.000Z", /Every week/, preseason);
+    expect(text).toContain("Starts Thu, Sep 10.");
+  });
+
+  it("whole season, Tuesday between weeks: 'Starts' the reward's own first week", async () => {
+    const text = await previewFor("2026-10-06T16:00:00.000Z", /Whole season/);
+    expect(text).toContain("Starts Thu, Oct 8.");
+  });
+});
+
+// F11: a venue whose only Live Trivia game is a one-off has no period to pick,
+// but the reward still submits (cadence "none") — so the preview must show too.
+
+describe("CreateRewardWizard — guest preview at a one-off-only venue", () => {
+  const ONE_OFF_SLOT = {
+    scheduleId: "sched-once",
+    weekday: "tue" as const,
+    recurring: false,
+    title: "Halloween Special",
+    timeLabel: "8:00 PM",
+    dateLabel: "Tue, Oct 13",
+    label: "Tue, Oct 13 8:00 PM — Halloween Special",
+  };
+  const ONE_OFF_CONTEXT: RewardCreationContextDTO = {
+    ...LIVE_CONTEXT,
+    hasRecurringSchedule: false,
+    scheduleDays: ["tue"],
+    allowedCadences: [],
+    scheduleShapes: [{ recurringType: "none", weekdayCount: 1 }],
+    gameSlots: [ONE_OFF_SLOT],
+  };
+
+  it("points target: shows the one-off wording and still submits as a one-off", async () => {
+    const { container, onSubmit } = renderForSubmit(ONE_OFF_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
+    await screen.findByText("How many, how often?");
+    await walkToConfirm();
+    expect(container.textContent).toContain("What guests will see");
+    expect(container.textContent).toContain("Earn 500 points at Live Trivia on Tue, Oct 13");
+    expect(container.textContent).toContain("It starts at 8:00 PM.");
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ cadence: "none", winnerQuota: 1 }));
+  });
+});

@@ -2,6 +2,8 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notifications";
+import { getVenueTimezone } from "@/lib/timezone";
+import { rewardTermsUnchangedSinceWin } from "@/lib/rewardDescription";
 import {
   normalizeGameWinnerSlots,
   serializeGameWinnerSlots,
@@ -1872,22 +1874,6 @@ export async function getChallengeFinalizedPrize(challengeId: string): Promise<C
   };
 }
 
-const venueTimezoneCache = new Map<string, string>();
-
-/** A venue's IANA timezone (America/New_York when unset), cached per server instance. */
-export async function getVenueTimezone(venueId: string): Promise<string> {
-  const cached = venueTimezoneCache.get(venueId);
-  if (cached) return cached;
-  const { data } = await supabaseAdmin!
-    .from("venues")
-    .select("timezone")
-    .eq("id", venueId)
-    .maybeSingle<{ timezone: string }>();
-  const tz = data?.timezone ?? "America/New_York";
-  venueTimezoneCache.set(venueId, tz);
-  return tz;
-}
-
 export async function getActiveChallengeMultiplier(
   venueId: string,
   gameType: ChallengeGameType,
@@ -2511,12 +2497,12 @@ export async function listChallengeCampaignWinsForUser(params: {
   const { data: redemptionRows, error: redemptionError } = await supabaseAdmin!
     .from("challenge_campaign_redemptions")
     .select(
-      "challenge_id, winner_user_id, venue_id, claimed_at, prize_expires_at, prize_redeemed_at, cycle_start, reward_name, prize_type, prize_gift_certificate_amount, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value"
+      "challenge_id, winner_user_id, venue_id, claimed_at, created_at, prize_expires_at, prize_redeemed_at, cycle_start, reward_name, prize_type, prize_gift_certificate_amount, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value"
     )
     .eq("winner_user_id", userId)
     .eq("venue_id", venueId)
     .order("cycle_start", { ascending: false })
-    .returns<Array<ChallengeCampaignRedemptionRow & ChallengeCampaignRedemptionSnapshotRow>>();
+    .returns<Array<ChallengeCampaignRedemptionRow & ChallengeCampaignRedemptionSnapshotRow & { created_at?: string | null }>>();
 
   if (redemptionError) throw new Error(redemptionError.message ?? "Failed to load challenge wins.");
   if (!redemptionRows || redemptionRows.length === 0) return [];
@@ -2527,31 +2513,7 @@ export async function listChallengeCampaignWinsForUser(params: {
   const challengeIds = Array.from(
     new Set(redemptionRows.map((r) => r.challenge_id).filter((id): id is string => Boolean(id)))
   );
-  const { data: campaignRows } = await supabaseAdmin!
-    .from("challenge_campaigns")
-    .select(
-      "id, name, rules, prize_type, prize_gift_certificate_amount, winner_user_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, reward_definition_id, win_condition, recurring_type, points_required_to_win, active_days, winner_quota, nfl_week_scope"
-    )
-    .in("id", challengeIds)
-    .returns<
-      Array<
-        RewardPrizeSourceRow & {
-          id: string;
-          name: string;
-          rules: string;
-          prize_gift_certificate_amount: number | null;
-          winner_user_id: string | null;
-          reward_definition_id: string | null;
-          win_condition: string | null;
-          recurring_type: CampaignRecurringType | null;
-          points_required_to_win: number | null;
-          active_days: string[] | null;
-          winner_quota: number | null;
-          nfl_week_scope: unknown;
-        }
-      >
-    >();
-
+  const campaignRows = await loadWalletCampaignRows(challengeIds);
   const campaignById = new Map((campaignRows ?? []).map((c) => [c.id, c]));
 
   return redemptionRows.map((row) => {
@@ -2589,8 +2551,12 @@ export async function listChallengeCampaignWinsForUser(params: {
       prizeRedeemedAt: row.prize_redeemed_at ?? null,
       ...resolveRewardPrize(prizeSource),
       // What the coupon was won FOR (describeRewardWin) needs the live reward's
-      // terms; a deleted reward has none, and its coupon keeps "Won from: …".
-      rewardTerms: campaign
+      // terms; a deleted reward has none, and a reward whose terms changed after
+      // this win (terms_updated_at > the redemption's created_at, the award
+      // time) would describe terms the guest never played under. Both keep
+      // "Won from: …".
+      rewardTerms:
+        campaign && rewardTermsUnchangedSinceWin(campaign.terms_updated_at, row.created_at ?? row.claimed_at)
         ? {
             rewardDefinitionId: campaign.reward_definition_id?.trim() || null,
             winCondition: normalizeWinCondition(campaign.win_condition),
@@ -2599,10 +2565,72 @@ export async function listChallengeCampaignWinsForUser(params: {
             activeDays: Array.isArray(campaign.active_days) ? campaign.active_days : [],
             winnerQuota: Math.max(1, Number(campaign.winner_quota ?? 1)),
             nflWeekScope: normalizeNFLWeekScope(campaign.nfl_week_scope),
+            gameWinnerSlots: normalizeGameWinnerSlots(campaign.game_winner_slots),
           }
         : null,
     };
   });
+}
+
+const WALLET_CAMPAIGN_COLUMNS =
+  "id, name, rules, prize_type, prize_gift_certificate_amount, winner_user_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, reward_definition_id, win_condition, recurring_type, points_required_to_win, active_days, winner_quota, nfl_week_scope, game_winner_slots";
+
+type WalletCampaignRow = RewardPrizeSourceRow & {
+  id: string;
+  name: string;
+  rules: string;
+  prize_gift_certificate_amount: number | null;
+  winner_user_id: string | null;
+  reward_definition_id: string | null;
+  win_condition: string | null;
+  recurring_type: CampaignRecurringType | null;
+  points_required_to_win: number | null;
+  active_days: string[] | null;
+  winner_quota: number | null;
+  nfl_week_scope: unknown;
+  game_winner_slots: unknown;
+  /** Absent when read before migration 20261004170244 is applied. */
+  terms_updated_at?: string | null;
+};
+
+/**
+ * Is this read error "`terms_updated_at` does not exist yet"? The column arrives
+ * in its own migration, applied by hand, so this code can be live before it.
+ * PostgREST answers an unknown column with 42703, or PGRST204 + the column name
+ * on a stale schema cache. Same shape as signupSweep's isMissingCheckoutStampColumn.
+ */
+const isMissingTermsStampColumn = (error: { message?: string; code?: string }): boolean => {
+  if (String(error.code ?? "") === "42703") return true;
+  const message = String(error.message ?? "").toLowerCase();
+  return (
+    message.includes("terms_updated_at") &&
+    (message.includes("does not exist") || message.includes("schema cache") || message.includes("could not find"))
+  );
+};
+
+/**
+ * The prize wallet's ONE campaign read. A missing `terms_updated_at` column
+ * (code deployed before the migration) retries once without it — the coupons
+ * then behave exactly as before the column existed. Any other read error keeps
+ * the long-standing wallet behaviour: no live campaigns, every coupon reads from
+ * its award-time snapshot.
+ */
+async function loadWalletCampaignRows(challengeIds: string[]): Promise<WalletCampaignRow[]> {
+  const withStamp = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select(`${WALLET_CAMPAIGN_COLUMNS}, terms_updated_at`)
+    .in("id", challengeIds)
+    .returns<WalletCampaignRow[]>();
+  if (!withStamp.error) return withStamp.data ?? [];
+  if (!isMissingTermsStampColumn(withStamp.error)) return [];
+
+  console.warn("[ChallengeWallet] terms-updated-at-column-missing");
+  const legacy = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select(WALLET_CAMPAIGN_COLUMNS)
+    .in("id", challengeIds)
+    .returns<WalletCampaignRow[]>();
+  return legacy.data ?? [];
 }
 
 export async function redeemChallengePrize(params: {

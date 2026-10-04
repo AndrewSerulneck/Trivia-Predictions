@@ -378,7 +378,8 @@ export interface ChallengeCampaignWin {
   /**
    * The live reward's terms, for saying what the coupon was won FOR
    * (describeRewardWin, lib/rewardDescription.ts). Null when the reward has been
-   * deleted (`challengeId` null) — that coupon keeps "Won from: {challengeName}".
+   * deleted (`challengeId` null), or when its terms changed after this coupon was
+   * won (rewardTermsUnchangedSinceWin) — that coupon keeps "Won from: {challengeName}".
    */
   rewardTerms?: ChallengeCampaignWinTerms | null;
   /**
@@ -389,10 +390,21 @@ export interface ChallengeCampaignWin {
   winDescription?: string | null;
 }
 
-/** The slice of a reward's terms a prize-wallet coupon needs to describe its win. */
+/**
+ * The slice of a reward's terms a prize-wallet coupon needs to describe its win.
+ * `gameWinnerSlots` only locates the schedule whose timezone dates a Live Trivia
+ * game win (attachRewardWinDescriptions, lib/rewards.ts).
+ */
 export type ChallengeCampaignWinTerms = Pick<
   ChallengeCampaign,
-  "rewardDefinitionId" | "winCondition" | "recurringType" | "pointsRequiredToWin" | "activeDays" | "winnerQuota" | "nflWeekScope"
+  | "rewardDefinitionId"
+  | "winCondition"
+  | "recurringType"
+  | "pointsRequiredToWin"
+  | "activeDays"
+  | "winnerQuota"
+  | "nflWeekScope"
+  | "gameWinnerSlots"
 >;
 
 export interface ChallengeCampaignProgress {

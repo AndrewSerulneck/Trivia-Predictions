@@ -65,7 +65,8 @@ export type RewardDescriptionSchedule = {
 export type RewardDescriptionNFLFacts = {
   /**
    * YYYY-MM-DD the reward's first covered NFL week begins, present ONLY while it
-   * is still in the future — exactly attachNFLRewardUpcomingState's value.
+   * is still in the future — exactly nflRewardUpcomingStartDate's value
+   * (lib/nflPickEmRewardWeeks.ts), which the server and the wizard preview share.
    */
   upcomingStartDate?: string | null;
   /** YYYY-MM-DD `week_end_date` of the scope season's last week. Drives the off-season line. */
@@ -84,7 +85,7 @@ export type RewardDescriptionInput = Pick<
   Partial<
     Pick<
       ChallengeCampaign,
-      "rewardDefinitionId" | "gameWinnerSlots" | "nflWeekScope" | "quotaRemaining"
+      "rewardDefinitionId" | "gameWinnerSlots" | "nflWeekScope" | "quotaRemaining" | "isActive" | "endDate"
     >
   > &
   RewardPrizeSummaryInput & {
@@ -106,11 +107,42 @@ export type RewardDescriptionInput = Pick<
 export type RewardWinFacts = {
   /** The redemption's `cycle_start` (for a Live Trivia game winner, the game's start instant). */
   cycleStart: string | null;
-  /** The venue's IANA timezone, for turning `cycleStart` into a local date. */
+  /**
+   * IANA timezone for turning `cycleStart` into a local date: the game's own
+   * schedule zone for a Live Trivia game win, else the venue's. Missing →
+   * America/New_York (the venue default), never UTC.
+   */
   timezone?: string | null;
   /** The NFL week the win belongs to, resolved by the caller from `nfl_pickem_weeks`. */
   nflWeekNumber?: number | null;
 };
+
+/** lib/timezone.ts getVenueTimezone's default — the zone a date falls back to, so never UTC. */
+const DEFAULT_VENUE_TIMEZONE = "America/New_York";
+
+/**
+ * May a coupon still describe its win from the reward's CURRENT terms?
+ *
+ * `termsUpdatedAt` is `challenge_campaigns.terms_updated_at`, stamped by a
+ * trigger only when a column the "You won …" sentence reads changes
+ * (supabase/migrations/20261004170244_challenge_campaigns_terms_updated_at.sql).
+ * `wonAt` is the coupon's award time (`challenge_campaign_redemptions.created_at`).
+ *
+ * No stamp → never edited since the column existed → true (earlier edits are
+ * unknowable; that is today's behaviour). A stamp we can't compare against the
+ * win → false, so the coupon says "Won from: {name}" rather than risk describing
+ * terms the guest never played under.
+ */
+export function rewardTermsUnchangedSinceWin(
+  termsUpdatedAt: string | null | undefined,
+  wonAt: string | null | undefined,
+): boolean {
+  if (!termsUpdatedAt) return true;
+  const editedMs = Date.parse(termsUpdatedAt);
+  const wonMs = Date.parse(String(wonAt ?? ""));
+  if (!Number.isFinite(editedMs) || !Number.isFinite(wonMs)) return false;
+  return editedMs <= wonMs;
+}
 
 // ── Shared copy ─────────────────────────────────────────────────────────────
 
@@ -315,8 +347,18 @@ const describeScheduleReward = (
     // Resolve every pinned game against the venue's real schedule. One missing
     // game (deleted, moved, or the schedule unreadable) and NO time is shown —
     // a stale time is worse than none.
+    // A pinned game must also still be the KIND of game the reward was made for: a
+    // weekly reward's game that has since become a one-off (same schedule id and
+    // weekday, so the key still matches) would otherwise read "8:00 PM every
+    // Thursday" for a game that no longer repeats — and the reverse for a one-off
+    // reward. The weekday itself is covered by the key: enumerateGameSlots only
+    // emits a slot for a weekday the schedule still runs on.
+    const wantsRecurring = input.recurringType !== "none";
     const byKey = new Map((allSlots ?? []).map((slot) => [slotKey(slot), slot] as const));
-    const matched = sortByWeekday(pinned).map((slot) => byKey.get(slotKey(slot)) ?? null);
+    const matched = sortByWeekday(pinned).map((slot) => {
+      const current = byKey.get(slotKey(slot)) ?? null;
+      return current && current.recurring === wantsRecurring ? current : null;
+    });
     const resolved = matched.every((slot): slot is RewardScheduleSlotFact => slot !== null)
       ? (matched as RewardScheduleSlotFact[])
       : null;
@@ -459,10 +501,24 @@ const describeNFLReward = (
   return { summary, when, fineprint, isCustom: false };
 };
 
-/** "Next contest starts Thu, Oct 9." — only when this cycle's quota is filled on a recurring reward. */
+/**
+ * "Next contest starts Thu, Oct 9." — only when this cycle's quota is filled on a
+ * recurring reward that will actually run again: never for a paused reward
+ * (`isActive === false`), and never when the next cycle begins after its
+ * `endDate` (a local calendar date, inclusive). `isActive` undefined = unknown =
+ * active, so the wizard's not-yet-saved reward is unaffected.
+ */
 const nextContestLine = (input: RewardDescriptionInput, fallbackZone: string | null): string | null => {
   if (input.quotaRemaining !== 0 || !isRecurringCadence(input.recurringType)) return null;
-  const date = formatInstantDate(input.nextCycleStart, input.timezone || fallbackZone);
+  if (input.isActive === false) return null;
+  const zone = input.timezone || fallbackZone;
+  const endDate = String(input.endDate ?? "").trim();
+  if (endDate) {
+    const nextMs = Date.parse(String(input.nextCycleStart ?? ""));
+    const nextDay = Number.isFinite(nextMs) ? calendarDateKey(new Date(nextMs), zone || "UTC") : null;
+    if (nextDay && nextDay > endDate) return null;
+  }
+  const date = formatInstantDate(input.nextCycleStart, zone);
   return date ? `Next contest starts ${date}.` : null;
 };
 
@@ -536,7 +592,7 @@ export function describeRewardWin(input: RewardDescriptionInput, win: RewardWinF
     return fill(template, { threshold, when });
   }
 
-  const zone = win.timezone || null;
+  const zone = win.timezone || DEFAULT_VENUE_TIMEZONE;
   if (input.winCondition === "game_winner") {
     const date = formatInstantDate(cycleStart, zone);
     return date ? fill(templates.wonGameWinner, { date }) : null;

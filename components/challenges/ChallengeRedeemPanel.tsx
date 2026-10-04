@@ -414,7 +414,13 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                     // Legacy leaderboard-mode reward — finishing out its current cycle.
                     // Standings are never rendered here anymore (Rewards is progress-only).
                     <p className="text-[11px] text-cyan-300/60">In progress — check back for results.</p>
-                  ) : isGameWinner ? null : (
+                  ) : isGameWinner ? (
+                    // Legacy hand-written rewards (isCustom) never said how the prize is won;
+                    // composed descriptions already do, so only the legacy card gets this line.
+                    campaign.description?.isCustom !== false ? (
+                      <p className="text-[11px] text-cyan-300/60">Awarded to the winner.</p>
+                    ) : null
+                  ) : (
                     <GaugeBar
                       current={campaign.progressPoints}
                       target={campaign.pointsRequiredToWin}

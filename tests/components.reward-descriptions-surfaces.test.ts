@@ -7,7 +7,7 @@ import { RewardRow } from "@/components/owner/rewards/RewardRow";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
 
 // Phase 3 of docs/reward-descriptions-plan.md: the server's `description` is what
-// every surface prints, and the hardcoded "Awarded to the winner." is gone.
+// every surface prints, and "Awarded to the winner." survives only on legacy game-winner cards.
 
 afterEach(cleanup);
 
@@ -62,8 +62,19 @@ describe("guest surfaces", () => {
     "components/challenges/ChallengeRedeemPanel.tsx",
   ];
 
-  it("no longer prints the hardcoded 'Awarded to the winner.'", () => {
-    for (const path of venueSurfaces) expect(read(path)).not.toContain("Awarded to the winner");
+  it("prints 'Awarded to the winner.' only for legacy (isCustom) game-winner cards", () => {
+    for (const path of venueSurfaces) {
+      const src = read(path);
+      expect(src.match(/Awarded to the winner\./g)).toHaveLength(1);
+      expect(src).toMatch(/description\?\.isCustom !== false/);
+    }
+  });
+
+  it("the admin edit form shows composed wording read-only for definition-based rewards", () => {
+    const src = read("components/admin/sections/ChallengesSection.tsx");
+    expect(src).toContain("Guests see this automatic description. Change the schedule, prize or target to change it.");
+    expect(src).toMatch(/editedDescription && !editedDescription\.isCustom/);
+    expect(src).toContain("rules: formRules.trim()");
   });
 
   it("each venue surface reads description with a rules fallback", () => {

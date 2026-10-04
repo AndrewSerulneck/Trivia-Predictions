@@ -216,9 +216,12 @@ function VenueChallengesPanelInner({
                       <p className="mt-3 text-base text-slate-500">In progress — check back for results.</p>
                     ) : challenge.winCondition === "game_winner" ? (
                       // No points target to bar-chart — the reward goes to whoever wins,
-                      // resolved by the winner-rewards cron once the contest ends. The
-                      // summary rendered above already says what to do and what you win.
-                      null
+                      // resolved by the winner-rewards cron once the contest ends. A composed
+                      // summary above already says what to do and what you win; only a legacy
+                      // hand-written reward (isCustom) needs this line.
+                      challenge.description?.isCustom !== false ? (
+                        <p className="mt-3 text-base text-slate-500">Awarded to the winner.</p>
+                      ) : null
                     ) : (
                       <div className="mt-3">
                         <RewardProgressGauge progress={progress} target={target} barGradient={iconStyle.barGradient} />

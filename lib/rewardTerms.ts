@@ -356,3 +356,54 @@ export function cadenceForPeriod(period: RewardPeriod | null): CampaignRecurring
 export function periodForCadence(cadence: CampaignRecurringType): RewardPeriod | null {
   return isRewardPeriod(cadence) ? cadence : null;
 }
+
+/**
+ * A reward's terms as the engine stores them. Whichever answer the partner gave
+ * — an NFL week scope, a set of picked games, or the terms sentence — collapses
+ * to these three fields.
+ */
+export type DerivedRewardTerms = {
+  cadence: CampaignRecurringType;
+  /** The accrual gate and the weekly cycle anchor (activeDays[0]). Empty for a one-off. */
+  activeDays: string[];
+  winnerQuota: number;
+};
+
+export type DeriveRewardTermsInput = {
+  /** An NFL reward's scope terms (deriveNFLWeekScopeTerms). Wins over everything else. */
+  nflTerms: { cadence: CampaignRecurringType; activeDays: readonly string[]; quota: number } | null;
+  /** A slot-pinned game-winner reward's picked games (deriveGameWinnerTerms). */
+  pickedSlots: { cadence: CampaignRecurringType; weekdays: readonly string[]; quota: number } | null;
+  /** The terms sentence's cadence — used only when neither of the above applies. */
+  sentenceCadence: CampaignRecurringType;
+  /** The terms sentence's N — used only when neither of the above applies. */
+  sentenceQuantity: number;
+  /** Every weekday the venue's Live Trivia runs (the sentence path's activeDays). */
+  scheduleDays: readonly string[];
+};
+
+/**
+ * The ONE place cadence / activeDays / winnerQuota are derived from a reward's
+ * answers — the wizard's preview and submission and the server's createReward
+ * all call it, so the partner previews exactly the terms the server stores.
+ * Pure: the caller validates the inputs (and the server re-derives them from its
+ * own context, never the client's).
+ *
+ * activeDays:
+ *  - NFL: the scope's days for BOTH cadences — an NFL week settles Thu/Sun/Mon,
+ *    and activeDays is the accrual gate, so a season-long reward needs them too.
+ *  - otherwise a one-off reward has no day restriction;
+ *  - a slot-pinned recurring reward is live only on the weekdays it was pinned
+ *    to — NOT every day the venue runs a game, which would re-open the games the
+ *    partner deliberately left out;
+ *  - a sentence-based recurring reward runs on every day the venue's game does.
+ */
+export function deriveRewardTerms(input: DeriveRewardTermsInput): DerivedRewardTerms {
+  const { nflTerms, pickedSlots } = input;
+  if (nflTerms) {
+    return { cadence: nflTerms.cadence, activeDays: [...nflTerms.activeDays], winnerQuota: nflTerms.quota };
+  }
+  const cadence = pickedSlots ? pickedSlots.cadence : input.sentenceCadence;
+  const activeDays = cadence === "none" ? [] : [...(pickedSlots ? pickedSlots.weekdays : input.scheduleDays)];
+  return { cadence, activeDays, winnerQuota: pickedSlots ? pickedSlots.quota : input.sentenceQuantity };
+}
