@@ -1,17 +1,18 @@
 # Reward Descriptions — Code Review Fixes Plan
 
 **Status:** **All phases done 2026-10-04** — Phase 6 review was clean, all gates green, phone
-checklist updated, committed locally (**not pushed, not deployed**). Latest handoff:
+checklist updated, committed as `5e34fdd`, **pushed and deployed to production 2026-10-04** on
+Andrew's word (Vercel `hightop-challenge-3inwf4x8d`). Latest handoff:
 `docs/reward-descriptions-review-fixes-plan_PHASE_6_HANDOFF.md`. Andrew answered D1–D3
 on 2026-10-04: **use the defaults** (§5) — except D3, re-decided in Phase 4 (see §5). Migration
 `20261004170244_challenge_campaigns_terms_updated_at.sql` **was applied to production** (linked
 project `pkmxupsayzshvpirkaav`) on 2026-10-04 on Andrew's instruction, during Phase 5.
-**Left:** Andrew's phone pass, push/deploy on his word.
+**Left:** Andrew's phone pass; post-deploy read-count and duration checks (Phase 6 handoff §1).
 **Handoffs:** each phase ends with `docs/reward-descriptions-review-fixes-plan_PHASE_<N>_HANDOFF.md`
 (global rule in `~/.claude/CLAUDE.md`). Update this status line to point at the latest one.
 **Fixes the review of:** commit `3998529` ("Rewards: say when, how often, what to do and what you
-win") from `docs/reward-descriptions-plan.md`. That commit is **local only, not pushed, not
-deployed**. These fixes should land **before** it ships, so guests never see the bugs.
+win") from `docs/reward-descriptions-plan.md`. It shipped **together with** these fixes in one
+push on 2026-10-04, so guests never saw the bugs.
 
 ---
 

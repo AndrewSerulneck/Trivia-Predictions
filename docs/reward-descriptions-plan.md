@@ -1,12 +1,13 @@
 # Reward Descriptions — Plan A (say when, how often, what to do, what you win)
 
 **Status:** Phase 4 done 2026-10-03, committed locally as `3998529`; its code review findings were
-fixed by `docs/reward-descriptions-review-fixes-plan.md` (all 6 phases done 2026-10-04, committed
-locally, **not pushed, not deployed** — latest handoff
+fixed by `docs/reward-descriptions-review-fixes-plan.md` (all 6 phases done 2026-10-04, commit
+`5e34fdd`). **Pushed and deployed to production 2026-10-04** on Andrew's word (Vercel `hightop-challenge-3inwf4x8d`,
+Ready, aliased to hightopchallenge.com / www / play) — latest handoff
 `docs/reward-descriptions-review-fixes-plan_PHASE_6_HANDOFF.md`). This plan's own handoffs:
 `docs/reward-descriptions-plan_PHASE_4_HANDOFF.md` (and 3, 2, 1). Phone checklist (updated for the
-fixes): `docs/reward-descriptions-device-checklist.md`. **Left:** Andrew's phone pass, push/deploy
-on his word, post-deploy duration check.
+fixes): `docs/reward-descriptions-device-checklist.md`. **Left:** Andrew's phone pass, and a few days
+after 2026-10-04 the post-deploy duration check (Phase 4 handoff §2).
 **Handoffs:** each phase ends with `docs/reward-descriptions-plan_PHASE_<N>_HANDOFF.md` (global rule
 in `~/.claude/CLAUDE.md`). Update this status line to point at the latest handoff.
 **Part of:** `docs/rewards-trust-and-pos-roadmap.md` (Plan A of three; do this one first).

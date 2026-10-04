@@ -7,7 +7,7 @@
 ## Before you start
 
 1. **The new code must be live** where you test: either deployed, or `npm run dev` on your Mac and the
-   phone pointed at it. As of 2026-10-04 it is committed locally only (not pushed, not deployed).
+   phone pointed at it. **Deployed to production 2026-10-04** — test on the live site.
 2. Use a **test venue** you can sign in to as a partner (Partner Dashboard) and join as a player.
    Give it a Live Trivia schedule with:
    - a **weekly Tuesday 8:00 PM** game,

@@ -9,29 +9,29 @@
 
 **What changed in this phase:** nothing in the app's behaviour. A final code review of all the
 Phase 1–5 fixes found no bugs. All checks pass. The phone checklist now also covers what the
-fixes changed (see below), and everything is saved in one local commit.
+fixes changed (see below), and everything is saved in one commit (`5e34fdd`).
 
-**Live?** The database change (the "terms changed at" stamp) has been live in production since
-Phase 5. The code is **committed on your Mac only — not pushed, not deployed.** That covers both
-this fix commit and the earlier reward-wording commit `3998529`. Guests see none of it until you
-push and deploy.
+**Live? Yes.** The database change (the "terms changed at" stamp) has been live since Phase 5.
+On your word the code was **pushed and deployed on 2026-10-04**: the earlier reward-wording commit
+`3998529` and this fix commit `5e34fdd` went out together, so guests never saw the bugs. Vercel
+deployment `hightop-challenge-3inwf4x8d` is Ready and serves hightopchallenge.com,
+www.hightopchallenge.com and play.hightopchallenge.com (`/info` returned 200).
 
 **What needs you:**
-1. Say the word to push and deploy (both commits go together; the fixes should ship with the
-   wording, never after it).
-2. The phone pass: `docs/reward-descriptions-device-checklist.md`. New rows were added for: ended
+1. The phone pass: `docs/reward-descriptions-device-checklist.md`. New rows were added for: ended
    rewards (no "Next contest starts"), a weekly game changed to one-off, the NFL mid-season
    preview, a one-off-only venue's preview, the up-to-5-minute lag after a partner changes a game
    time, "Awarded to the winner." on older hand-written rewards only, the admin's read-only
    wording, and the two coupon fixes (edited reward → "Won from: …"; late-night game → right day).
+   Test against the live site — the checklist's "before you start" step 1 is already satisfied.
 
 ---
 
 ## For the next agent
 
 ### 1. Next work
-No phase remains in this plan. What's left is Andrew's: push/deploy (his word only) and the phone
-checklist. After deploy, the Plan A post-deploy duration check (`docs/reward-descriptions-plan.md`)
+No phase remains in this plan. Push/deploy is **done** (2026-10-04). What's left: Andrew's phone
+checklist, and from ~2026-10-07 the Plan A post-deploy duration check (`docs/reward-descriptions-plan.md`)
 and comparing real `/api/challenge-campaigns` read counts with the Phase 5 baseline (global cost
 rule — Phase 5 handoff §6 has the table: 12 `trivia_schedules` + 6 `nfl_pickem_weeks` reads per
 warm instance-hour expected). Out of scope unless Andrew asks: the unrelated untracked plans
@@ -39,9 +39,11 @@ warm instance-hour expected). Out of scope unless Andrew asks: the unrelated unt
 `docs/rewards-trust-and-pos-roadmap.md` (left uncommitted on purpose).
 
 ### 2. Starting state
-- Branch `main`. Commits on top of `origin/main`: two earlier (`3998529`, `ee64a3d`) plus this
-  phase's commit "Rewards: review fixes for reward descriptions (F1–F11)" (check `git log -1`).
-  Nothing pushed or deployed.
+- Branch `main`, in sync with `origin/main`. Code commit `5e34fdd` "Rewards: review fixes for
+  reward descriptions (F1–F11)" (on top of `3998529`, `ee64a3d`), then a docs-only commit
+  recording the deploy. Pushed 2026-10-04; Vercel production deployment
+  `hightop-challenge-3inwf4x8d` built from `5e34fdd`, status Ready, aliased to the three
+  production hosts. (The docs-only commit triggers one more identical-code build.)
 - Production DB: migration `20261004170244_challenge_campaigns_terms_updated_at.sql` applied
   2026-10-04 (Phase 5). No data was written in Phase 6. Do not re-run `supabase db push`.
 
@@ -74,7 +76,7 @@ and deliberately did not flag (accepted, not bugs):
 - Unverified: real device/browser; real cache hit rates after deploy.
 
 ### 7. Open questions
-None. Waiting on Andrew for push/deploy and the phone pass.
+None. Waiting on Andrew for the phone pass only.
 
 ### 8. Traps (still true)
 Never `git checkout -- <file>` / `git stash` to undo work. Never typecheck and build at once.
