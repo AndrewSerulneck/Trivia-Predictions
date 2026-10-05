@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { NFLTiebreakerCard } from "@/components/nfl-pickem/NFLTiebreakerCard";
 import { PrizeWalletPanel } from "@/components/prizes/PrizeWalletPanel";
 
-vi.mock("@/lib/storage", () => ({ getUserId: () => "user", getVenueId: () => "venue" }));
+vi.mock("@/lib/storage", () => ({ getUserId: () => "user", getUsername: () => "guest", getVenueId: () => "venue" }));
 const presence = { capturePresenceFailure: () => null, isInteractionBlocked: false };
 vi.mock("@/components/venue/VenuePresenceBoundary", () => ({ useVenuePresence: () => presence }));
 vi.mock("@/components/ui/HightopLoader", () => ({ HightopLoader: () => React.createElement("p", null, "Loading") }));

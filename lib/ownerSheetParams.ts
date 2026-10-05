@@ -19,7 +19,8 @@
 // History-like object so tests can run them against a fake.
 
 // "store" = the Join Merch store (docs/join-merch-store-plan.md §3c): Shop, then `step=review`.
-export const OWNER_SHEET_IDS = ["schedule", "rewards", "store"] as const;
+// "pos" = Point of Sale connections (docs/pos-rewards-integration-plan.md Phase 1), one screen.
+export const OWNER_SHEET_IDS = ["schedule", "rewards", "store", "pos"] as const;
 
 export type OwnerSheetId = (typeof OWNER_SHEET_IDS)[number];
 

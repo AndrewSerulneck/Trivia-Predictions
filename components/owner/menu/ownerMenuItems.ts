@@ -1,6 +1,7 @@
 import {
   BookOpen,
   CreditCard,
+  ReceiptText,
   ShoppingBag,
   SlidersHorizontal,
   Tv,
@@ -8,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { OwnerSheetId } from "@/lib/ownerSheetParams";
+import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 
 // The Partner Dashboard menu rows, in display order
 // (docs/partner-dashboard-app-redesign-plan.md §4b; Order Join Merch added by
@@ -29,12 +31,14 @@ export type OwnerMenuItem =
       sheet?: undefined;
     })
   | (OwnerMenuRowBase & { id: "manual"; href?: undefined; sheet?: undefined })
-  | (OwnerMenuRowBase & { id: "store"; sheet: OwnerSheetId; href?: undefined });
+  | (OwnerMenuRowBase & { id: "store" | "pos"; sheet: OwnerSheetId; href?: undefined });
 
 export const OWNER_MENU_ITEMS: readonly OwnerMenuItem[] = [
   { id: "display", label: "Venue Display", hint: "Put games on your TVs", icon: Tv, href: "/owner/display" },
   { id: "store", label: "Order Join Merch", hint: "QR coasters, tents & table cards", icon: ShoppingBag, sheet: "store" },
   { id: "billing", label: "Billing", hint: "Plan, card & invoices", icon: CreditCard, href: "/owner/billing" },
+  // docs/pos-rewards-integration-plan.md Phase 1. Hidden while the POS flag is off (see below).
+  { id: "pos", label: "Point of Sale", hint: "Prizes off the bill in Square & Clover", icon: ReceiptText, sheet: "pos" },
   { id: "manual", label: "Partner Manual", hint: "How Hightop works", icon: BookOpen },
   {
     id: "game-settings",
@@ -45,3 +49,10 @@ export const OWNER_MENU_ITEMS: readonly OwnerMenuItem[] = [
   },
   { id: "account", label: "Account Settings", hint: "Email & password", icon: UserRound, href: "/owner/account" },
 ];
+
+/**
+ * The rows the drawer actually renders. "Point of Sale" shows only while
+ * NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED is on; every other row always shows.
+ */
+export const visibleOwnerMenuItems = (posEnabled: boolean = isPosIntegrationsEnabled()): readonly OwnerMenuItem[] =>
+  posEnabled ? OWNER_MENU_ITEMS : OWNER_MENU_ITEMS.filter((item) => item.id !== "pos");

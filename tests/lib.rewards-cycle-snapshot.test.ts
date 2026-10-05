@@ -648,6 +648,36 @@ describe("listChallengeCampaignWinsForUser — one-time reward epoch handling", 
 
     expect(win.cycleStart).toBe("2026-07-13T00:00:00+00:00");
   });
+
+  // docs/reward-live-redemption-plan.md Phase 1: the wallet sends this id back on Redeem so the
+  // server redeems exactly the coupon on screen.
+  it("carries each coupon's redemptionId (null for a row read without one)", async () => {
+    store.challenge_campaign_redemptions.push(
+      {
+        id: "red-1",
+        challenge_id: "camp-1",
+        winner_user_id: "u1",
+        venue_id: VENUE_ID,
+        cycle_start: "2026-07-13T00:00:00+00:00",
+        claimed_at: "2026-07-13T12:00:00.000Z",
+        prize_expires_at: "2026-07-20T00:00:00.000Z",
+        prize_redeemed_at: null,
+      },
+      {
+        challenge_id: "camp-1",
+        winner_user_id: "u1",
+        venue_id: VENUE_ID,
+        cycle_start: "2026-07-06T00:00:00+00:00",
+        claimed_at: "2026-07-06T12:00:00.000Z",
+        prize_expires_at: "2026-07-13T00:00:00.000Z",
+        prize_redeemed_at: null,
+      },
+    );
+
+    const wins = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(wins.map((win) => win.redemptionId).sort()).toEqual([null, "red-1"].sort());
+  });
 });
 
 describe("listChallengeCampaignWinsForUser — a coupon only describes terms it was won under (F6)", () => {

@@ -5,6 +5,7 @@ import {
   listChallengeCampaigns,
 } from "@/lib/challengeCampaigns";
 import { attachRewardDescriptions } from "@/lib/rewards";
+import { resolveRequestUserId } from "@/lib/serverSession";
 
 function toClientErrorStatus(message: string): number {
   const normalized = message.toLowerCase();
@@ -30,7 +31,11 @@ function normalizeBoolean(value: string | null, fallback: boolean): boolean {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = String(searchParams.get("userId") ?? "").trim();
+    // The query's userId is an unverified claim — a player's progress is theirs alone. A claim
+    // the signed session doesn't back gets the public listing (no progress), not a 403, so the
+    // venue page this route polls never goes blank (docs/reward-live-redemption-plan.md Phase 3).
+    const viewer = resolveRequestUserId(request, searchParams.get("userId"));
+    const userId = viewer.forbidden ? "" : String(viewer.userId ?? "").trim();
     const venueId = String(searchParams.get("venueId") ?? "").trim();
     const includeInactive = normalizeBoolean(searchParams.get("includeInactive"), true);
     const includeResolved = normalizeBoolean(searchParams.get("includeResolved"), true);

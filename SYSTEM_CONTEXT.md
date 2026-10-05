@@ -55,9 +55,26 @@
     they receive an in-app notification routed to `/redeem-prizes`.
   - Non-winners see a "quota exhausted, congrats to `<winners>`" message once the cycle's quota
     fills.
-  - Prize delivery is in-app coupon + staff-taps-redeemed (no POS/gift-card-issuance
-    integration): the coupon (menu item discount or gift card) renders on `/redeem-prizes`
-    (`components/prizes/PrizeWalletPanel.tsx`) until staff mark it redeemed or it expires.
+  - Prize delivery is an in-app coupon (Plan C, `docs/pos-rewards-integration-plan.md`, adds
+    POS delivery behind `NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED`, off by default: at a
+    Square-connected venue a **gift-card** coupon can become a real Square gift card — Phase 2,
+    `lib/pos/squareGiftCards.ts`; menu-item coupons are unchanged): the coupon (menu item discount or gift card)
+    renders on `/redeem-prizes` (`components/prizes/PrizeWalletPanel.tsx`) until it is
+    redeemed or expires. The guest taps **Redeem**, shows the coupon to staff, then taps
+    **Confirm Redemption** themselves (no staff PIN/scan — Andrew, 2026-10-03).
+  - **The coupon shown to staff is LIVE** (`components/prizes/LiveCouponFrame.tsx`, inside
+    `RedeemModal` only; the wallet list stays still), because a web page can't block
+    screenshots: a never-stopping shimmer band, a ticking clock + date on the **server's** time
+    (the wallet `GET /api/challenge-campaigns/redeem` returns `serverNowMs` + `venueName`; offset
+    math in `lib/liveCouponClock.ts`), the guest's username + venue name, a tap → sparkle burst +
+    border flash, and a screen wake lock. Staff are told on the coupon to tap it and check the
+    clock. Reduce Motion drops the band/sparkle travel but keeps the clock and the flash.
+    Plan: `docs/reward-live-redemption-plan.md`.
+  - **Redeeming is once-only and session-bound.** Every prize route binds the claimed `userId`
+    to the signed `tp_sess` cookie (`resolveRequestUserId`; forged → 403). The redeem itself is
+    one call to the service-role-only `redeem_challenge_prize` RPC (conditional UPDATE, names the
+    exact coupon by `redemptionId`); a second confirm gets 409 `already_redeemed`, and the
+    wallet closes the live coupon and refreshes. Missing RPC → 503, never a plain UPDATE.
 
 ## 3. Component Architecture (UI Layering Model)
 - Root shell (`app/layout.tsx`):
@@ -272,11 +289,13 @@ original incident. Calibrate variety/win rates separately from grading correctne
   (`winner_quota`, `reward_definition_id`, `prize_kind`, etc. — see the plan §3a) and a
   count-guarded, atomically-capped multi-winner ledger (`challenge_cycle_winners` +
   `award_cycle_winner` RPC — see the plan §3b).
-- Prize delivery is **in-app coupon + staff-taps-redeemed**: winners see a coupon on
-  `/redeem-prizes` (`components/prizes/PrizeWalletPanel.tsx`); staff visually verify and mark
-  it redeemed, or it expires. No POS or gift-card-issuance integration in scope.
-- Rollout flag: `NEXT_PUBLIC_REWARDS_ENABLED` (`lib/rewardsFlags.ts`) — off clamps every
-  reward to single-winner behavior (today's Challenges/Competitions parity), fully reversible.
+- Prize delivery is an **in-app live coupon**: winners see a coupon on `/redeem-prizes`
+  (`components/prizes/PrizeWalletPanel.tsx`); staff check the live coupon (tap → sparkle,
+  clock matches now) and the guest confirms, once-only via `redeem_challenge_prize` — see §2
+  "Prize flow". POS redemption is Plan C (`docs/pos-rewards-integration-plan.md`): Square
+  gift cards built in Phase 2 (flag-gated off); Clover is Phase 3.
+- Multi-winner Rewards is live unconditionally — `NEXT_PUBLIC_REWARDS_ENABLED` /
+  `lib/rewardsFlags.ts` were deleted in commit 9abbb1b (2026-07-22).
 - `/redeem-prizes` page is accessible from the hamburger menu.
 
 ## 9. Admin Panel

@@ -1383,6 +1383,11 @@ export async function createChallengeCampaign(input: {
   prizeMenuItemName?: string | null;
   prizeDiscountKind?: RewardDiscountKind | null;
   prizeDiscountValue?: number | null;
+  /**
+   * POS plan Phase 1: a percent-off prize's value at the register, in cents
+   * (lib/pos/prizeValue.ts). Written ONLY when set — see the insert below.
+   */
+  prizePosValueCents?: number | null;
   isActive?: boolean;
   /** Phase 9a: stamp the creating owner (null/absent = admin-created). */
   createdByOwnerId?: string | null;
@@ -1465,6 +1470,12 @@ export async function createChallengeCampaign(input: {
         : null,
     is_active: input.isActive ?? true,
     created_by_owner_id: input.createdByOwnerId ?? null,
+    // Only when set: the column arrives in 20261004192844_pos_foundation.sql, and a cap can
+    // only be asked for once a venue has a POS connection (which needs that migration), so a
+    // deploy that runs ahead of the migration never sends an unknown column.
+    ...(Number.isInteger(input.prizePosValueCents) && prizeKind === "menu_item"
+      ? { prize_pos_value_cents: input.prizePosValueCents }
+      : {}),
   };
 
   const { data, error } = await supabaseAdmin!
@@ -2497,12 +2508,12 @@ export async function listChallengeCampaignWinsForUser(params: {
   const { data: redemptionRows, error: redemptionError } = await supabaseAdmin!
     .from("challenge_campaign_redemptions")
     .select(
-      "challenge_id, winner_user_id, venue_id, claimed_at, created_at, prize_expires_at, prize_redeemed_at, cycle_start, reward_name, prize_type, prize_gift_certificate_amount, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value"
+      "id, challenge_id, winner_user_id, venue_id, claimed_at, created_at, prize_expires_at, prize_redeemed_at, cycle_start, reward_name, prize_type, prize_gift_certificate_amount, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value"
     )
     .eq("winner_user_id", userId)
     .eq("venue_id", venueId)
     .order("cycle_start", { ascending: false })
-    .returns<Array<ChallengeCampaignRedemptionRow & ChallengeCampaignRedemptionSnapshotRow & { created_at?: string | null }>>();
+    .returns<Array<ChallengeCampaignRedemptionRow & ChallengeCampaignRedemptionSnapshotRow & { id?: string | null; created_at?: string | null }>>();
 
   if (redemptionError) throw new Error(redemptionError.message ?? "Failed to load challenge wins.");
   if (!redemptionRows || redemptionRows.length === 0) return [];
@@ -2537,6 +2548,8 @@ export async function listChallengeCampaignWinsForUser(params: {
     };
     const prizeType = campaign?.prize_type ?? row.prize_type;
     return {
+      // The exact coupon a Redeem tap names (redeemChallengePrize) — never another cycle's.
+      redemptionId: row.id ?? null,
       challengeId: row.challenge_id,
       venueId: row.venue_id,
       challengeName: campaign?.name ?? row.reward_name ?? "Challenge",
@@ -2633,57 +2646,98 @@ async function loadWalletCampaignRows(challengeIds: string[]): Promise<WalletCam
   return legacy.data ?? [];
 }
 
+/** How a coupon was redeemed — `challenge_campaign_redemptions.redeemed_method`. */
+export type PrizeRedeemMethod = "guest_confirm" | "pos_square" | "pos_clover" | "pos_toast";
+
+/** Thrown when redeeming is impossible for a reason that is not the guest's (→ 503). */
+export class PrizeRedeemUnavailableError extends Error {
+  constructor() {
+    super("Redeeming prizes is temporarily unavailable. Please try again in a minute.");
+    this.name = "PrizeRedeemUnavailableError";
+  }
+}
+
+type RedeemPrizeRpcRow = {
+  outcome: "redeemed" | "already_redeemed" | "expired" | "not_found";
+  redemption_id: string | null;
+  redeemed_at: string | null;
+  cycle_start: string | null;
+};
+
+/**
+ * Is this RPC error "`redeem_challenge_prize` does not exist yet"? The function arrives in
+ * migration 20261005123950_reward_redeem_once.sql, applied by hand, so this code can be live
+ * before it. PostgREST answers PGRST202 (not in its schema cache); Postgres answers 42883.
+ */
+const isMissingRedeemRpc = (error: { message?: string; code?: string }): boolean => {
+  const code = String(error.code ?? "");
+  if (code === "PGRST202" || code === "42883") return true;
+  const message = String(error.message ?? "").toLowerCase();
+  return message.includes("redeem_challenge_prize") && message.includes("could not find");
+};
+
+/**
+ * Mark ONE prize coupon redeemed — once. The write is the `redeem_challenge_prize` RPC's single
+ * conditional UPDATE, so two simultaneous taps can never both succeed (the old read-then-update
+ * could). Scoped to the guest, the reward AND the venue the coupon was won at.
+ *
+ * `redemptionId` names the exact coupon on screen; without it (a client from before Phase 1)
+ * the oldest still-valid coupon for this reward is taken.
+ *
+ * Returns `{ redeemed: false }` when the coupon was already redeemed — callers must not show
+ * that as a fresh success. Throws for expired / not found, and `PrizeRedeemUnavailableError`
+ * when the RPC is missing or fails: never falls back to an unguarded write.
+ */
 export async function redeemChallengePrize(params: {
   userId: string;
   venueId: string;
   challengeId: string;
+  redemptionId?: string | null;
+  method?: PrizeRedeemMethod;
 }): Promise<{ redeemed: boolean; redeemedAt: string }> {
   assertConfigured();
   const userId = String(params.userId ?? "").trim();
   const venueId = String(params.venueId ?? "").trim();
   const challengeId = String(params.challengeId ?? "").trim();
+  const redemptionId = String(params.redemptionId ?? "").trim() || null;
   if (!userId || !venueId || !challengeId) {
     throw new Error("userId, venueId, and challengeId are required.");
   }
 
-  const { data: campaign } = await supabaseAdmin!
-    .from("challenge_campaigns")
-    .select("id, winner_user_id, prize_type")
-    .eq("id", challengeId)
-    .maybeSingle<{ id: string; winner_user_id: string | null; prize_type: string | null }>();
+  const { data, error } = await supabaseAdmin!.rpc("redeem_challenge_prize", {
+    p_challenge_id: challengeId,
+    p_user_id: userId,
+    p_venue_id: venueId,
+    p_method: params.method ?? "guest_confirm",
+    p_redemption_id: redemptionId,
+  });
 
-  if (!campaign?.id) throw new Error("Challenge not found.");
-  if (!campaign.prize_type) throw new Error("This challenge does not have a prize coupon.");
-
-  // Find the oldest unredeemed prize row for this user/challenge (or the most recent if all redeemed).
-  const { data: rows } = await supabaseAdmin!
-    .from("challenge_campaign_redemptions")
-    .select("cycle_start, prize_expires_at, prize_redeemed_at")
-    .eq("challenge_id", challengeId)
-    .eq("winner_user_id", userId)
-    .is("prize_redeemed_at", null)
-    .order("cycle_start", { ascending: true })
-    .limit(1)
-    .returns<Array<{ cycle_start: string; prize_expires_at: string | null; prize_redeemed_at: string | null }>>();
-
-  const row = rows?.[0] ?? null;
-  if (!row) throw new Error("No redemption record found for this prize.");
-  if (row.prize_expires_at && new Date(row.prize_expires_at) < new Date()) {
-    throw new Error("This prize has expired.");
-  }
-  if (row.prize_redeemed_at) {
-    return { redeemed: false, redeemedAt: row.prize_redeemed_at };
+  if (error) {
+    // A malformed id (not a uuid) can't name anyone's coupon.
+    if (String(error.code ?? "") === "22P02") throw new Error("No redemption record found for this prize.");
+    if (isMissingRedeemRpc(error)) {
+      console.error("[RewardRedeem] rpc-missing", { code: error.code });
+    } else {
+      console.error("[RewardRedeem] rpc-failed", { code: error.code, message: error.message });
+    }
+    throw new PrizeRedeemUnavailableError();
   }
 
-  const nowIso = new Date().toISOString();
-  await supabaseAdmin!
-    .from("challenge_campaign_redemptions")
-    .update({ prize_redeemed_at: nowIso })
-    .eq("challenge_id", challengeId)
-    .eq("winner_user_id", userId)
-    .eq("cycle_start", row.cycle_start);
-
-  return { redeemed: true, redeemedAt: nowIso };
+  const row = (Array.isArray(data) ? data[0] : data) as RedeemPrizeRpcRow | null;
+  switch (row?.outcome) {
+    case "redeemed":
+    case "already_redeemed":
+      if (row.redeemed_at) {
+        return { redeemed: row.outcome === "redeemed", redeemedAt: row.redeemed_at };
+      }
+      break;
+    case "expired":
+      throw new Error("This prize has expired.");
+    case "not_found":
+      throw new Error("No redemption record found for this prize.");
+  }
+  console.error("[RewardRedeem] rpc-unexpected-result", { outcome: row?.outcome ?? null });
+  throw new PrizeRedeemUnavailableError();
 }
 
 export async function claimChallengeCampaignPrize(params: {

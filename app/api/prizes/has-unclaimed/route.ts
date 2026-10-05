@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
+import { resolveRequestUserId } from "@/lib/serverSession";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = String(searchParams.get("userId") ?? "").trim();
+    // The query's userId is an unverified claim — bind it to the signed session.
+    const viewer = resolveRequestUserId(request, searchParams.get("userId"));
+    if (viewer.forbidden) {
+      return NextResponse.json({ ok: false, hasUnclaimed: false, error: "Forbidden." }, { status: 403 });
+    }
+    const userId = viewer.userId ?? "";
     const venueId = String(searchParams.get("venueId") ?? "").trim();
 
     if (!userId || !venueId || !supabaseAdmin) {
@@ -18,6 +24,8 @@ export async function GET(request: Request) {
         .from("challenge_campaign_redemptions")
         .select("challenge_id", { count: "exact", head: true })
         .eq("winner_user_id", userId)
+        // Venue-scoped like the wallet it badges: a coupon from another venue isn't redeemable here.
+        .eq("venue_id", venueId)
         .is("prize_redeemed_at", null)
         .not("prize_expires_at", "is", null)
         .gt("prize_expires_at", now),

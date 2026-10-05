@@ -351,6 +351,12 @@ export interface ChallengeCampaign {
 
 export interface ChallengeCampaignWin {
   /**
+   * This coupon's `challenge_campaign_redemptions.id`. The wallet sends it back on Redeem so
+   * the server redeems exactly this coupon (redeem_challenge_prize RPC) — a double tap can't
+   * spill onto the guest's next coupon for the same reward. Belongs only to its winner.
+   */
+  redemptionId?: string | null;
+  /**
    * Null when the reward this coupon came from has been deleted by the partner.
    * Such a coupon is always already-redeemed history (a hard delete voids the
    * unredeemed ones), so it renders as a REDEEMED badge and is never the subject
@@ -388,7 +394,17 @@ export interface ChallengeCampaignWin {
    * null/absent → show "Won from: {challengeName}".
    */
   winDescription?: string | null;
+  /**
+   * Gift-card coupons at a Square-connected venue (docs/pos-rewards-integration-plan.md
+   * Phase 2), attached server-side by attachSquareGiftCardStates (lib/pos/squareGiftCards.ts):
+   * "available" = can become a Square gift card; "issued" = already is one (redeemed, method
+   * pos_square — show its number); "used" = is one with a $0 last-known balance.
+   * Absent everywhere else, including whenever the POS flag is off.
+   */
+  squareGiftCard?: SquareGiftCardState | null;
 }
+
+export type SquareGiftCardState = "available" | "issued" | "used";
 
 /**
  * The slice of a reward's terms a prize-wallet coupon needs to describe its win.

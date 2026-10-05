@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { DashboardNotice } from "@/components/owner/dashboard/DashboardNotice";
 import { DashboardToast } from "@/components/owner/dashboard/DashboardToast";
@@ -10,12 +10,14 @@ import { LiveGamesSection, type SectionLoad } from "@/components/owner/dashboard
 import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
 import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/RewardsFlow";
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
+import { PosConnectionsSheet } from "@/components/owner/pos/PosConnectionsSheet";
 import { MerchStoreSheet } from "@/components/owner/store/MerchStoreSheet";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 import type { MerchCart, MerchVenueRef } from "@/lib/merchPricing";
 import { knownItemIds, resolvePendingHighlight, type PendingHighlight } from "@/lib/ownerDashboardHighlight";
+import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
 import { useLoaderVisible } from "@/lib/useLoaderVisible";
 import { useOwnerSheet } from "@/lib/useOwnerSheet";
@@ -354,6 +356,16 @@ const MerchStoreHost = ({ venue, venueLoading, cart, onCartChange }: MerchStoreH
   );
 };
 
+// The Point of Sale sheet (?sheet=pos), hosted like the store: by the page, in its own
+// Suspense, so the menu row opens it while venues load. Mounted only while the POS flag is
+// on (docs/pos-rewards-integration-plan.md Phase 1); one request per open, none while closed.
+const PosSheetHost = ({ venue }: { venue: Venue | null }) => {
+  const sheet = useOwnerSheet();
+  // Set by the Square connect redirect (lib/pos/squareRoutes.ts); the sheet shows one sentence.
+  const posResult = useSearchParams().get("posResult");
+  return <PosConnectionsSheet nav={sheet} venue={venue} posResult={posResult} />;
+};
+
 const OwnerDashboardPage = () => {
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -491,6 +503,11 @@ const OwnerDashboardPage = () => {
           onCartChange={setMerchCart}
         />
       </Suspense>
+      {isPosIntegrationsEnabled() ? (
+        <Suspense fallback={null}>
+          <PosSheetHost venue={selectedVenue ?? null} />
+        </Suspense>
+      ) : null}
     </OwnerShell>
   );
 };

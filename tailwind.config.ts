@@ -135,6 +135,22 @@ const config: Config = {
           "0%, 100%": { opacity: "0.45" },
           "50%": { opacity: "1" },
         },
+        // LiveCouponFrame (docs/reward-live-redemption-plan.md Phase 2) — the motion a screenshot
+        // can't fake. Transform/opacity only. `coupon-spark` reads its direction from the
+        // `--sx` / `--sy` custom properties each dot sets through an arbitrary-property class.
+        "coupon-shimmer": {
+          "0%": { transform: "translateX(-160%) skewX(-18deg)" },
+          "100%": { transform: "translateX(560%) skewX(-18deg)" },
+        },
+        "coupon-spark": {
+          "0%": { opacity: "1", transform: "translate(0, 0) scale(0.3)" },
+          "70%": { opacity: "1" },
+          "100%": { opacity: "0", transform: "translate(var(--sx), var(--sy)) scale(1)" },
+        },
+        "coupon-flash": {
+          "0%": { opacity: "0.95" },
+          "100%": { opacity: "0" },
+        },
       },
       animation: {
         shake: "shake 0.55s ease-in-out",
@@ -149,6 +165,9 @@ const config: Config = {
         "logo-loader-spin": "logo-arrive-spin 0.95s ease-out both, logo-spin 2.6s linear 0.95s infinite",
         "logo-loader-shadow": "logo-arrive-shadow 0.95s ease-out both, logo-hop-shadow 2.6s linear 0.95s infinite",
         "logo-pulse": "logo-pulse 1.6s ease-in-out infinite",
+        "coupon-shimmer": "coupon-shimmer 2.6s linear infinite",
+        "coupon-spark": "coupon-spark 0.6s ease-out forwards",
+        "coupon-flash": "coupon-flash 0.5s ease-out forwards",
       },
       colors: {
         ht: {

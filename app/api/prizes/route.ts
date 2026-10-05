@@ -5,6 +5,7 @@ import {
   getWeeklyPrizeForVenue,
   listUserPrizeWins,
 } from "@/lib/competition";
+import { resolveRequestUserId } from "@/lib/serverSession";
 
 function toClientErrorStatus(message: string): number {
   const normalized = message.toLowerCase();
@@ -22,7 +23,12 @@ function toClientErrorStatus(message: string): number {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = String(searchParams.get("userId") ?? "").trim();
+    // The query's userId is an unverified claim — bind it to the signed session.
+    const viewer = resolveRequestUserId(request, searchParams.get("userId"));
+    if (viewer.forbidden) {
+      return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
+    }
+    const userId = viewer.userId ?? "";
     const venueId = String(searchParams.get("venueId") ?? "").trim();
     const weekStart = String(searchParams.get("weekStart") ?? "").trim() || getCurrentWeekStartDate();
 
@@ -55,8 +61,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: 'Unknown action. Use action="claim".' }, { status: 400 });
     }
 
+    const actor = resolveRequestUserId(request, body.userId);
+    if (actor.forbidden) {
+      return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
+    }
+
     const result = await claimPrizeWin({
-      userId: String(body.userId ?? "").trim(),
+      userId: actor.userId ?? "",
       prizeWinId: String(body.prizeWinId ?? "").trim(),
     });
 

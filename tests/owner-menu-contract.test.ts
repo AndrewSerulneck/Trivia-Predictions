@@ -1,19 +1,20 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { OWNER_MENU_ITEMS } from "@/components/owner/menu/ownerMenuItems";
+import { OWNER_MENU_ITEMS, visibleOwnerMenuItems } from "@/components/owner/menu/ownerMenuItems";
 
 /**
  * Partner Dashboard menu tripwire (docs/partner-dashboard-app-redesign-plan.md §4b, §4g).
  * Six rows (Order Join Merch added by docs/join-merch-store-plan.md), fixed order,
- * then Sign Out last with no arrow.
+ * then Sign Out last with no arrow. A seventh, Point of Sale, sits after Billing only
+ * while NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED is on (docs/pos-rewards-integration-plan.md).
  */
 
 const read = (path: string): string => readFileSync(join(__dirname, "..", path), "utf8");
 
 describe("owner menu contract", () => {
-  it("lists the six rows in the specified order", () => {
-    expect(OWNER_MENU_ITEMS.map((item) => item.label)).toEqual([
+  it("lists the six rows in the specified order (POS flag off, the default)", () => {
+    expect(visibleOwnerMenuItems(false).map((item) => item.label)).toEqual([
       "Venue Display",
       "Order Join Merch",
       "Billing",
@@ -23,8 +24,22 @@ describe("owner menu contract", () => {
     ]);
   });
 
+  it("adds Point of Sale after Billing only when the POS flag is on", () => {
+    expect(OWNER_MENU_ITEMS.map((item) => item.label)).toEqual([
+      "Venue Display",
+      "Order Join Merch",
+      "Billing",
+      "Point of Sale",
+      "Partner Manual",
+      "Game Settings",
+      "Account Settings",
+    ]);
+    expect(visibleOwnerMenuItems(true)).toEqual(OWNER_MENU_ITEMS);
+    expect(OWNER_MENU_ITEMS.find((item) => item.id === "pos")?.sheet).toBe("pos");
+  });
+
   it("points each link row at its page; the store and the Partner Manual open sheets", () => {
-    expect(OWNER_MENU_ITEMS.map((item) => item.href ?? null)).toEqual([
+    expect(visibleOwnerMenuItems(false).map((item) => item.href ?? null)).toEqual([
       "/owner/display",
       null,
       "/owner/billing",
@@ -38,7 +53,7 @@ describe("owner menu contract", () => {
     const store = OWNER_MENU_ITEMS.find((item) => item.id === "store");
     expect(store?.sheet).toBe("store");
     expect(store?.hint).toBe("QR coasters, tents & table cards");
-    expect(OWNER_MENU_ITEMS.filter((item) => item.sheet)).toHaveLength(1);
+    expect(OWNER_MENU_ITEMS.filter((item) => item.sheet).map((item) => item.id)).toEqual(["store", "pos"]);
     const src = read("components/owner/OwnerAppBar.tsx");
     expect(src).toContain("pushSheet(window.history, window.location, sheet)");
     expect(src).not.toMatch(/router\.push\([^)]*sheet=/);
@@ -58,7 +73,8 @@ describe("owner menu contract", () => {
     const signOuts = src.match(/<SignOutButton/g) ?? [];
     expect(signOuts).toHaveLength(1);
     expect(src).toContain('<SignOutButton variant="partner" />');
-    expect(src.indexOf("<SignOutButton")).toBeGreaterThan(src.indexOf("OWNER_MENU_ITEMS.map"));
+    expect(src.indexOf("<SignOutButton")).toBeGreaterThan(src.indexOf("visibleOwnerMenuItems().map"));
+    expect(src.indexOf("visibleOwnerMenuItems().map")).toBeGreaterThan(-1);
     expect(src.indexOf("<SignOutButton")).toBeGreaterThan(src.indexOf("</nav>"));
   });
 

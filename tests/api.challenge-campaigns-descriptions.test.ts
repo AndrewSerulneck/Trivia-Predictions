@@ -65,6 +65,10 @@ const routeMocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: fake.client }));
+// The wallet payload also carries the venue's name for the live coupon (Phase 2 of
+// docs/reward-live-redemption-plan.md). It has its own read + cache, tested in
+// tests/api.live-coupon-wallet.test.ts; here it must not pollute the description read counts.
+vi.mock("@/lib/venueDisplayName", () => ({ getVenueDisplayName: async () => "Test Venue" }));
 vi.mock("@/lib/challengeCampaigns", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/challengeCampaigns")>()),
   listChallengeCampaigns: routeMocks.listChallengeCampaigns,

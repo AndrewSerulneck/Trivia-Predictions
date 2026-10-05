@@ -18,6 +18,7 @@
     "signup:check-claim-precondition": "node --env-file=.env.local scripts/check-venue-owner-duplicates.cjs",
     "signup:check-orphan-auth-users": "node --env-file=.env.local scripts/check-orphaned-auth-users.cjs",
     "signup:purge-pending": "node --env-file=.env.local scripts/purge-pending-signup.cjs",
+    "pos:spike": "node --env-file=.env.local scripts/pos-sandbox-spike.cjs",
     "store:images": "node scripts/optimize-store-images.cjs",
     "brand:images": "node scripts/optimize-brand-logo.cjs",
     "loader:preview": "node --import tsx scripts/capture-hightop-loader.cjs",

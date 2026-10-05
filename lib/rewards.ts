@@ -45,6 +45,7 @@ import {
   type NFLWeekScopeTerms,
 } from "@/lib/nflPickEmRewardWeeks";
 import { listNFLSeasonWeekDates, listNFLWeeks, type NFLWeekDates } from "@/lib/nflPickEm";
+import { POS_VALUE_MAX_CENTS } from "@/lib/pos/prizeValue";
 import { describeReward, describeRewardWin, type RewardDescription } from "@/lib/rewardDescription";
 import { getLocalDateKey, getVenueTimezone } from "@/lib/timezone";
 import type {
@@ -849,6 +850,12 @@ export type RewardPrizeInput =
       menuItemName?: string | null;
       discountKind: RewardDiscountKind;
       discountValue: number;
+      /**
+       * POS plan Phase 1: what a percent-off prize is worth at the register, in cents
+       * (lib/pos/prizeValue.ts). The wizard sends it only when the venue has a POS
+       * connected; ignored for dollar-off prizes, whose discount already is the value.
+       */
+      posValueCents?: number | null;
     }
   | { prizeKind: "gift_card"; amount: number };
 
@@ -859,6 +866,7 @@ type NormalizedRewardPrize = {
   prizeDiscountKind: RewardDiscountKind | null;
   prizeDiscountValue: number | null;
   prizeGiftCertificateAmount: number | null;
+  prizePosValueCents: number | null;
 };
 
 const round2 = (value: number): number => Math.round(value * 100) / 100;
@@ -877,6 +885,7 @@ function normalizeRewardPrize(prize: RewardPrizeInput | undefined): NormalizedRe
       prizeDiscountKind: null,
       prizeDiscountValue: null,
       prizeGiftCertificateAmount: round2(amount),
+      prizePosValueCents: null,
     };
   }
 
@@ -895,6 +904,16 @@ function normalizeRewardPrize(prize: RewardPrizeInput | undefined): NormalizedRe
     const menuItemName =
       prize.menuItem === "other" ? String(prize.menuItemName ?? "").trim() : null;
     if (prize.menuItem === "other" && !menuItemName) throw new Error(REWARD_INVALID_PRIZE_MESSAGE);
+    // Optional "value at the register" — kept only where it means something (percent off).
+    // A value that is present but out of range is refused, never silently dropped.
+    let prizePosValueCents: number | null = null;
+    if (prize.discountKind === "percent" && prize.posValueCents !== undefined && prize.posValueCents !== null) {
+      const cents = Number(prize.posValueCents);
+      if (!Number.isInteger(cents) || cents < 1 || cents > POS_VALUE_MAX_CENTS) {
+        throw new Error(REWARD_INVALID_PRIZE_MESSAGE);
+      }
+      prizePosValueCents = cents;
+    }
     return {
       prizeKind: "menu_item",
       prizeMenuItem: prize.menuItem,
@@ -902,6 +921,7 @@ function normalizeRewardPrize(prize: RewardPrizeInput | undefined): NormalizedRe
       prizeDiscountKind: prize.discountKind,
       prizeDiscountValue: prize.discountKind === "dollar" ? round2(discountValue) : Math.round(discountValue),
       prizeGiftCertificateAmount: null,
+      prizePosValueCents,
     };
   }
 
@@ -1163,6 +1183,7 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     prizeDiscountKind: prize.prizeDiscountKind,
     prizeDiscountValue: prize.prizeDiscountValue,
     prizeGiftCertificateAmount: prize.prizeGiftCertificateAmount,
+    prizePosValueCents: prize.prizePosValueCents,
     createdByOwnerId: params.createdByOwnerId ?? null,
   });
 }

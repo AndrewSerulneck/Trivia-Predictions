@@ -1019,3 +1019,38 @@ describe("createReward — rules is the composer's Line 1", () => {
     expect(rulesOf()).not.toMatch(/this venue|Awarded to the winner/i);
   });
 });
+
+// docs/pos-rewards-integration-plan.md Phase 1 — the "value at the register" cap.
+describe("createReward — POS value at the register", () => {
+  const create = (prize: RewardPrizeInput) =>
+    createReward({
+      venueId: "venue-1",
+      definitionId: "live_trivia_challenge",
+      cadence: "weekly",
+      threshold: 500,
+      winnerQuota: 1,
+      prize,
+    });
+
+  beforeEach(() => {
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+  });
+
+  it("passes a percent-off prize's cap through in cents", async () => {
+    await create({ ...APPETIZER_PRIZE, posValueCents: 1250 });
+    expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(expect.objectContaining({ prizePosValueCents: 1250 }));
+  });
+
+  it("leaves it null when not sent (no POS) and for dollar-off prizes", async () => {
+    await create(APPETIZER_PRIZE);
+    expect(mocks.createChallengeCampaign).toHaveBeenLastCalledWith(expect.objectContaining({ prizePosValueCents: null }));
+    await create({ ...APPETIZER_PRIZE, discountKind: "dollar", discountValue: 5, posValueCents: 900 });
+    expect(mocks.createChallengeCampaign).toHaveBeenLastCalledWith(expect.objectContaining({ prizePosValueCents: null }));
+  });
+
+  it("refuses an out-of-range or fractional cap instead of dropping it", async () => {
+    for (const posValueCents of [0, -5, 12.5, 1_000_001]) {
+      await expect(create({ ...APPETIZER_PRIZE, posValueCents })).rejects.toThrow(REWARD_INVALID_PRIZE_MESSAGE);
+    }
+  });
+});

@@ -13,8 +13,9 @@ import { useModalOverlay } from "@/components/owner/sheet/useModalOverlay";
 //
 // The host (OwnerAppBar) fills `children` with a <nav> of the rows in
 // components/owner/menu/ownerMenuItems.ts: Venue Display, Order Join Merch,
-// Billing, Partner Manual, Game Settings, Account Settings (order per
-// docs/join-merch-store-plan.md, which supersedes §4b's), then a divider and
+// Billing, Point of Sale (only while the POS flag is on), Partner Manual, Game
+// Settings, Account Settings (order per docs/join-merch-store-plan.md, which
+// supersedes §4b's), then a divider and
 // SignOutButton LAST. OwnerAppBar is on the SignOutButton allowlist in
 // tests/navigation-controls-contract.test.ts.
 //

@@ -1,0 +1,80 @@
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createElement } from "react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { PosConnectionsSheet, posConnectHref } from "@/components/owner/pos/PosConnectionsSheet";
+import type { PosConnectionStatus } from "@/lib/pos/types";
+import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
+
+// docs/pos-rewards-integration-plan.md Phase 1 — the Point of Sale sheet (?sheet=pos).
+// createElement instead of JSX (*.test.ts glob).
+
+const fakeNav = (overrides: Partial<UseOwnerSheetResult> = {}): UseOwnerSheetResult => ({
+  sheet: null,
+  step: null,
+  displayStepFor: () => null,
+  openSheet: vi.fn(),
+  goToStep: vi.fn(),
+  correctStep: vi.fn(),
+  goBack: vi.fn(),
+  closeSheet: vi.fn(),
+  ...overrides,
+});
+
+const VENUE = { id: "venue-1", name: "The Pub" };
+
+const status = (overrides: Partial<PosConnectionStatus>): PosConnectionStatus => ({
+  provider: "square",
+  label: "Square",
+  pitch: "Square pitch",
+  state: "coming_soon",
+  merchantName: null,
+  connectedAt: null,
+  ...overrides,
+});
+
+const stubFetch = (body: unknown, ok = true) => {
+  const fetchMock = vi.fn(async () => ({ ok, json: async () => body }) as Response);
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+};
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+
+describe("PosConnectionsSheet", () => {
+  it("renders nothing and fetches nothing unless ?sheet=pos", () => {
+    const fetchMock = stubFetch({ ok: true, statuses: [] });
+    render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "store" }), venue: VENUE }));
+    expect(screen.queryByText("Point of Sale")).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("loads this venue's statuses once on open and shows each state", async () => {
+    const fetchMock = stubFetch({
+      ok: true,
+      statuses: [
+        status({ provider: "square", label: "Square", state: "connected", merchantName: "Pub LLC" }),
+        status({ provider: "clover", label: "Clover", state: "not_connected" }),
+        status({ provider: "toast", label: "Toast", state: "coming_soon" }),
+      ],
+    });
+    render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE }));
+    expect(await screen.findByText("Connected to Pub LLC")).toBeTruthy();
+    expect(screen.getByText("Connected")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Connect" }).getAttribute("href")).toBe(posConnectHref("clover", "venue-1"));
+    expect(screen.getByText("Coming soon")).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith("/api/owner/pos?venueId=venue-1", { cache: "no-store" });
+  });
+
+  it("shows the error with a Retry that asks again", async () => {
+    const fetchMock = stubFetch({ ok: false, error: "nope" }, false);
+    render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE }));
+    expect(await screen.findByText("nope")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+  });
+});

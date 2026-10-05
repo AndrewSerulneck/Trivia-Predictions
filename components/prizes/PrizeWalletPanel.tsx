@@ -4,9 +4,12 @@ import { haptic } from "@/lib/haptics";
 
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getUserId, getVenueId } from "@/lib/storage";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { getUserId, getUsername, getVenueId } from "@/lib/storage";
+import { clockOffsetFromServer } from "@/lib/liveCouponClock";
 import { HightopLoader } from "@/components/ui/HightopLoader";
+import { LiveCouponFrame } from "@/components/prizes/LiveCouponFrame";
+import { SquareGiftCardPanel } from "@/components/prizes/SquareGiftCardPanel";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import type { ChallengeCampaignWin, PrizeType, PrizeWin, RewardMenuItem } from "@/types";
 
@@ -209,6 +212,9 @@ function GiftCardCoupon({ win, onRedeem, large }: CouponCardProps) {
   const expiry = win.prizeExpiresAt ? getExpiryInfo(win.prizeExpiresAt) : null;
   const redeemed = Boolean(win.prizeRedeemedAt);
   const amount = win.prizeGiftCertificateAmount;
+  // Turned into a Square gift card (docs/pos-rewards-integration-plan.md Phase 2): redeemed in
+  // our records, but the card lives on at Square until its balance is spent.
+  const squareIssued = win.squareGiftCard === "issued";
 
   return (
     <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/60 bg-gradient-to-br from-amber-950 to-amber-900/80 p-4">
@@ -231,9 +237,17 @@ function GiftCardCoupon({ win, onRedeem, large }: CouponCardProps) {
             <p className={`text-[11px] ${expiry.className}`}>{expiry.label}</p>
           )}
         </div>
-        {redeemed ? (
+        {squareIssued && !large ? (
+          <button
+            type="button"
+            onClick={() => onRedeem(win)}
+            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-4 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
+          >
+            Show gift card
+          </button>
+        ) : redeemed ? (
           <span className="rounded-full border border-amber-500/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-400/60">
-            Redeemed
+            {win.squareGiftCard === "used" ? "Used" : "Redeemed"}
           </span>
         ) : !large ? (
           <button
@@ -350,18 +364,67 @@ type RedeemModalProps = {
   confirming: boolean;
   confirmed: boolean;
   errorMessage: string;
+  /** What the live coupon proves: the server's clock, and whose coupon it is, where. */
+  clockOffsetMs: number;
+  username: string | null;
+  venueName: string | null;
+  /** Square gift card path (docs/pos-rewards-integration-plan.md Phase 2) — used only when `win.squareGiftCard` is set. */
+  userId: string;
+  venueId: string;
+  onSquareIssued: () => void;
+  onSquareAlreadyRedeemed: (message: string) => void;
+  presenceMessage: (payload: unknown) => string | null;
 };
 
-function RedeemModal({ win, onConfirm, onClose, confirming, confirmed, errorMessage }: RedeemModalProps) {
+function RedeemModal({
+  win,
+  onConfirm,
+  onClose,
+  confirming,
+  confirmed,
+  errorMessage,
+  clockOffsetMs,
+  username,
+  venueName,
+  userId,
+  venueId,
+  onSquareIssued,
+  onSquareAlreadyRedeemed,
+  presenceMessage,
+}: RedeemModalProps) {
+  // A gift card at a Square-connected venue opens on the Square path; "Redeem the normal way"
+  // drops back to the classic coupon + Confirm Redemption (only before a card exists).
+  const [useNormalCoupon, setUseNormalCoupon] = useState(false);
+  const frame = (node: ReactNode) => (
+    <LiveCouponFrame clockOffsetMs={clockOffsetMs} username={username} venueName={venueName}>
+      {node}
+    </LiveCouponFrame>
+  );
+  const squarePath = Boolean(win.squareGiftCard) && !useNormalCoupon;
   return (
     <div
       role="dialog" aria-modal="true" aria-label="Confirm redemption"
-      className="fixed inset-0 z-[6200] flex items-end justify-center bg-black/75 p-4 pb-[max(env(safe-area-inset-bottom),16px)] sm:items-center"
+      className="fixed inset-0 z-[6200] flex flex-col items-center overflow-y-auto bg-black/75 p-4 pb-[max(env(safe-area-inset-bottom),16px)]"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-sm animate-in slide-in-from-bottom-4 duration-200 space-y-4">
+      {/* The live coupon makes this taller than a short phone: auto margins pin it to the bottom
+          (centred from sm up) when it fits, and let the whole sheet scroll when it doesn't. */}
+      <div className="mt-auto w-full max-w-sm animate-in slide-in-from-bottom-4 duration-200 space-y-4 sm:my-auto">
         {errorMessage ? <p role="alert" className="text-sm text-rose-300">{errorMessage}</p> : null}
-        {confirmed ? (
+        {squarePath ? (
+          <SquareGiftCardPanel
+            win={win}
+            userId={userId}
+            venueId={venueId}
+            coupon={<ChallengeCoupon win={win} onRedeem={() => {}} large />}
+            frame={frame}
+            onIssued={onSquareIssued}
+            onAlreadyRedeemed={onSquareAlreadyRedeemed}
+            presenceMessage={presenceMessage}
+            onUseNormalCoupon={() => setUseNormalCoupon(true)}
+            onClose={onClose}
+          />
+        ) : confirmed ? (
           <div className="rounded-2xl border border-emerald-500/50 bg-emerald-950/80 p-6 text-center">
             <p role="status" className="text-xl font-black text-emerald-300">Redeemed!</p>
             <p className="mt-2 text-sm text-emerald-400/80">Your prize has been recorded. Enjoy!</p>
@@ -376,7 +439,7 @@ function RedeemModal({ win, onConfirm, onClose, confirming, confirmed, errorMess
                 Tap &ldquo;Confirm Redemption&rdquo; once the staff member has acknowledged it.
               </p>
             </div>
-            <ChallengeCoupon win={win} onRedeem={() => {}} large />
+            {frame(<ChallengeCoupon win={win} onRedeem={() => {}} large />)}
             <div className="flex gap-3">
               <button
                 type="button"
@@ -408,7 +471,11 @@ function RedeemModal({ win, onConfirm, onClose, confirming, confirmed, errorMess
 export function PrizeWalletPanel() {
   const venuePresence = useVenuePresence();
   const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
   const [venueId, setVenueId] = useState("");
+  // Live coupon: the wallet response carries the server's time and the venue's name (zero extra requests).
+  const [clockOffsetMs, setClockOffsetMs] = useState(0);
+  const [venueName, setVenueName] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
@@ -429,6 +496,7 @@ export function PrizeWalletPanel() {
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
+    setUsername(getUsername() ?? "");
     setVenueId(getVenueId() ?? "");
   }, []);
 
@@ -443,10 +511,13 @@ export function PrizeWalletPanel() {
       const params = new URLSearchParams({ venueId });
       if (userId) params.set("userId", userId);
 
-      const [weeklyRes, challengeRes] = await Promise.all([
+      // The clock offset is measured when THIS response lands, not after Promise.all, or a
+      // slow /api/prizes would make the live coupon's clock run behind.
+      const [weeklyRes, challenge] = await Promise.all([
         fetch(`/api/prizes?${params.toString()}`, { cache: "no-store" }),
         userId
           ? fetch(`/api/challenge-campaigns/redeem?userId=${userId}&venueId=${venueId}`, { cache: "no-store" })
+              .then((res) => ({ res, receivedAtMs: Date.now() }))
           : Promise.resolve(null),
       ]);
 
@@ -458,14 +529,18 @@ export function PrizeWalletPanel() {
       if (!weeklyPayload.ok) throw new Error(weeklyPayload.error ?? "Failed to load prizes.");
       setWins(weeklyPayload.wins ?? []);
 
-      if (challengeRes) {
-        const challengePayload = (await challengeRes.json()) as {
+      if (challenge) {
+        const challengePayload = (await challenge.res.json()) as {
           ok: boolean;
           wins?: ChallengeCampaignWin[];
+          serverNowMs?: number;
+          venueName?: string | null;
           error?: string;
         };
         if (challengePayload.ok) {
           setChallengeWins(challengePayload.wins ?? []);
+          setClockOffsetMs(clockOffsetFromServer(challengePayload.serverNowMs, challenge.receivedAtMs));
+          setVenueName(challengePayload.venueName ?? "");
         }
       }
     } catch (error) {
@@ -482,6 +557,8 @@ export function PrizeWalletPanel() {
     const now = Date.now();
     return challengeWins.filter((win) => {
       if (!win.prizeType && !win.prizeKind) return false;
+      // A coupon already turned into a Square gift card stays: the card outlives the coupon's expiry.
+      if (win.squareGiftCard === "issued") return true;
       if (win.prizeExpiresAt && new Date(win.prizeExpiresAt).getTime() < now) return false;
       return true;
     });
@@ -559,12 +636,26 @@ export function PrizeWalletPanel() {
         const res = await fetch("/api/prizes/redeem-challenge", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, venueId, challengeId: redeemingWin.challengeId }),
+          // redemptionId names this exact coupon, so a second tap can't redeem the next one.
+          body: JSON.stringify({
+            userId,
+            venueId,
+            challengeId: redeemingWin.challengeId,
+            redemptionId: redeemingWin.redemptionId ?? undefined,
+          }),
         });
         const payload = (await res.json()) as { ok: boolean; code?: string; error?: string; userMessage?: string };
         const presenceFailure = venuePresence.capturePresenceFailure(payload);
         if (presenceFailure) {
           throw new Error(presenceFailure.userMessage);
+        }
+        if (!payload.ok && payload.code === "already_redeemed") {
+          // A spent coupon must not stay on screen looking live to staff: close it and
+          // refresh the list (load() clears the message, so it is set afterwards).
+          setRedeemingWin(null);
+          await load(false);
+          setErrorMessage(payload.error ?? "This prize was already redeemed.");
+          return;
         }
         if (!payload.ok) throw new Error(payload.error ?? "Failed to redeem prize.");
         setRedeemConfirmed(true);
@@ -581,6 +672,27 @@ export function PrizeWalletPanel() {
       setRedeemConfirming(false);
     }
   }, [redeemingWin, userId, venueId, load, venuePresence]);
+
+  // ── Square gift card (docs/pos-rewards-integration-plan.md Phase 2) ───────
+  const handleSquareIssued = useCallback(() => {
+    // The coupon is now redeemed (method pos_square); refresh the list behind the sheet so it
+    // shows "Show gift card". The sheet itself stays open on the card.
+    void load(false);
+  }, [load]);
+
+  const handleSquareAlreadyRedeemed = useCallback(
+    async (message: string) => {
+      setRedeemingWin(null);
+      await load(false);
+      setErrorMessage(message);
+    },
+    [load]
+  );
+
+  const presenceMessage = useCallback(
+    (payload: unknown) => venuePresence.capturePresenceFailure(payload)?.userMessage ?? null,
+    [venuePresence]
+  );
 
   // ── Render ───────────────────────────────────────────────────────────────
 
@@ -606,6 +718,14 @@ export function PrizeWalletPanel() {
           confirming={redeemConfirming}
           confirmed={redeemConfirmed}
           errorMessage={errorMessage}
+          clockOffsetMs={clockOffsetMs}
+          username={username || null}
+          venueName={venueName || null}
+          userId={userId}
+          venueId={venueId}
+          onSquareIssued={handleSquareIssued}
+          onSquareAlreadyRedeemed={(message) => void handleSquareAlreadyRedeemed(message)}
+          presenceMessage={presenceMessage}
         />
       )}
 

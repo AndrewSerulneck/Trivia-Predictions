@@ -73,6 +73,7 @@ import {
   slotKey,
   type RewardGameSlot,
 } from "@/lib/rewardGameSlots";
+import { parsePosValueDollars, prizeNeedsPosValue } from "@/lib/pos/prizeValue";
 import type { RewardPrizeInput } from "@/lib/rewards";
 import {
   REWARD_WIZARD_STEPS,
@@ -115,6 +116,11 @@ export type RewardCreationContextDTO = {
    * cached context response still type-checks.
    */
   nflSeason?: NFLRewardSeasonContext | null;
+  /**
+   * POS plan Phase 1: the venue has a live POS connection, so a percent-off prize also
+   * needs its value at the register (lib/pos/prizeValue.ts). Optional: absent = false.
+   */
+  posConnected?: boolean;
 };
 
 export type CreateRewardSubmission = {
@@ -171,6 +177,8 @@ type CreateRewardWizardProps = {
 /** The one definition whose terms step replaces the period sentence with a
  *  week-scope picker. Every NFL-specific branch below is gated on this id. */
 const NFL_PICKEM_DEFINITION_ID = "nfl_pickem_challenge";
+
+const POS_VALUE_REQUIRED_MESSAGE = "Enter what this prize is worth at the register, like 12 or 12.50.";
 
 const MENU_ITEM_OPTIONS: Array<{ value: RewardMenuItem; label: string }> = [
   { value: "whole_order", label: "Whole Order" },
@@ -332,6 +340,9 @@ export function CreateRewardWizard({
   const [discountKind, setDiscountKind] = useState<RewardDiscountKind>("percent");
   const [discountValue, setDiscountValue] = useState("50");
   const [giftCardAmount, setGiftCardAmount] = useState("25");
+  // "Value at the register ($)" — asked only when the venue has a POS and the prize is % off.
+  const [posValue, setPosValue] = useState("");
+  const [posValueError, setPosValueError] = useState<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -582,6 +593,9 @@ export function CreateRewardWizard({
     return Number.isFinite(custom) && custom > 0 ? custom : threshold;
   }, [customThreshold, threshold]);
 
+  const asksPosValue = Boolean(context?.posConnected) && prizeNeedsPosValue(prizeChoice, discountKind);
+  const posValueCents = asksPosValue ? parsePosValueDollars(posValue) : null;
+
   const prize: RewardPrizeInput = useMemo(() => {
     if (prizeChoice === "gift_card") {
       return { prizeKind: "gift_card", amount: Math.max(0.01, Number(giftCardAmount) || 0) };
@@ -592,8 +606,10 @@ export function CreateRewardWizard({
       menuItemName: menuItem === "other" ? menuItemName.trim() : null,
       discountKind,
       discountValue: Math.max(0.01, Number(discountValue) || 0),
+      // Sent only when asked, so a venue without a POS submits exactly what it did before.
+      ...(posValueCents !== null ? { posValueCents } : {}),
     };
-  }, [prizeChoice, giftCardAmount, menuItem, menuItemName, discountKind, discountValue]);
+  }, [prizeChoice, giftCardAmount, menuItem, menuItemName, discountKind, discountValue, posValueCents]);
 
   const prizeSummary = useMemo(() => {
     if (prize.prizeKind === "gift_card") return `$${prize.amount.toFixed(2)} gift card`;
@@ -709,6 +725,10 @@ export function CreateRewardWizard({
     }
     if (prize.prizeKind === "menu_item" && prize.menuItem === "other" && !prize.menuItemName) {
       setSubmitError("Enter a name for the menu item.");
+      return;
+    }
+    if (asksPosValue && posValueCents === null) {
+      setSubmitError(POS_VALUE_REQUIRED_MESSAGE);
       return;
     }
     // Only null for an invalid NFL scope, which returned above.
@@ -1286,6 +1306,29 @@ export function CreateRewardWizard({
                   className={s.input}
                 />
               </div>
+              {asksPosValue ? (
+                <div>
+                  <label className={s.label} htmlFor="reward-pos-value">
+                    Value at the register ($)
+                  </label>
+                  <input
+                    id="reward-pos-value"
+                    type="text"
+                    inputMode="decimal"
+                    value={posValue}
+                    onChange={(e) => {
+                      setPosValue(e.target.value);
+                      setPosValueError(null);
+                    }}
+                    placeholder="e.g. 12"
+                    className={s.input}
+                  />
+                  <p className={`mt-1 ${s.helpText}`}>
+                    Your register takes off dollars, not items. Enter the most this prize is worth.
+                  </p>
+                  {posValueError ? <p className={`mt-2 ${s.error}`}>{posValueError}</p> : null}
+                </div>
+              ) : null}
             </div>
           ) : (
             <div>
@@ -1305,7 +1348,13 @@ export function CreateRewardWizard({
             variant="inline"
             tone={footerTone}
             onBack={() => goTo("terms", "back")}
-            onNext={() => goTo("confirm", "forward")}
+            onNext={() => {
+              if (asksPosValue && posValueCents === null) {
+                setPosValueError(POS_VALUE_REQUIRED_MESSAGE);
+                return;
+              }
+              goTo("confirm", "forward");
+            }}
             nextLabel="Next: Confirm"
           />
         </div>
@@ -1326,6 +1375,12 @@ export function CreateRewardWizard({
               <span>Prize</span>
               <span className="font-bold">{prizeSummary}</span>
             </div>
+            {posValueCents !== null ? (
+              <div className={s.summaryRow}>
+                <span>Value at the register</span>
+                <span className="font-bold">${(posValueCents / 100).toFixed(2)}</span>
+              </div>
+            ) : null}
           </div>
 
           {/* The guest-facing wording, composed by the same function the venue page uses. */}

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { OwnerMenuDrawer } from "@/components/owner/menu/OwnerMenuDrawer";
-import { OWNER_MENU_ITEMS } from "@/components/owner/menu/ownerMenuItems";
+import { visibleOwnerMenuItems } from "@/components/owner/menu/ownerMenuItems";
 import { PartnerManual } from "@/components/owner/PartnerManual";
 import { menuHintForThisVisit } from "@/lib/ownerMenuHint";
 import { parseSheetParam, pushSheet, SHEET_PARAM, type OwnerSheetId } from "@/lib/ownerSheetParams";
@@ -190,7 +190,7 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
               <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Menu</p>
             </div>
             <nav aria-label="Partner menu" className="flex flex-col gap-1 px-2">
-              {OWNER_MENU_ITEMS.map((item) => {
+              {visibleOwnerMenuItems().map((item) => {
                 const Icon = item.icon;
                 const body = (
                   <>

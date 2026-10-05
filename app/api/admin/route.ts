@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { venueHasActivePos } from "@/lib/pos/connections";
 import {
   applyPlaceholderAdToAllInlineSlots,
   bulkDeleteAdminAdvertisements,
@@ -380,8 +381,13 @@ export async function GET(request: Request) {
         return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });
       }
       try {
-        const context = await resolveRewardCreationContext(venueId, definitionId);
-        return NextResponse.json({ ok: true, context });
+        // posConnected (POS plan Phase 1): the wizard asks a percent-off prize's value at the
+        // register only when the venue has a live POS connection.
+        const [resolved, posConnected] = await Promise.all([
+          resolveRewardCreationContext(venueId, definitionId),
+          venueHasActivePos(venueId),
+        ]);
+        return NextResponse.json({ ok: true, context: { ...resolved, posConnected } });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to resolve reward context.";
         const status = message === REWARD_UNKNOWN_DEFINITION_MESSAGE ? 400 : 500;

@@ -540,3 +540,50 @@ describe("CreateRewardWizard — guest preview at a one-off-only venue", () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ cadence: "none", winnerQuota: 1 }));
   });
 });
+
+// docs/pos-rewards-integration-plan.md Phase 1: a percent-off prize at a venue with a POS
+// connected also needs its value at the register. Without a POS the step is unchanged
+// (the snapshots above pin that), and dollar-off / gift-card prizes never ask.
+describe("CreateRewardWizard — value at the register (POS)", () => {
+  const POS_CONTEXT: RewardCreationContextDTO = { ...LIVE_CONTEXT, posConnected: true };
+
+  const toPrize = async () => {
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
+    await screen.findByText("How many, how often?");
+    fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
+    await screen.findByText("Prize");
+  };
+
+  it("is not asked when the venue has no POS", async () => {
+    renderForSubmit(LIVE_CONTEXT);
+    await toPrize();
+    expect(screen.queryByLabelText(/Value at the register/)).toBeNull();
+  });
+
+  it("is required for a percent-off prize, and submitted in cents", async () => {
+    const { onSubmit } = renderForSubmit(POS_CONTEXT);
+    await toPrize();
+    const input = screen.getByLabelText(/Value at the register/);
+
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    expect(await screen.findByText(/Enter what this prize is worth at the register/)).toBeTruthy();
+    expect(screen.queryByText("Confirm")).toBeNull();
+
+    fireEvent.change(input, { target: { value: "12.50" } });
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    await screen.findByText("Confirm");
+    expect(screen.getByText("$12.50")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(((onSubmit.mock.calls[0] as unknown[])[0] as { prize: unknown }).prize).toEqual({ ...PRIZE, posValueCents: 1250 });
+  });
+
+  it("is not asked for a dollar-off prize (the discount is the value)", async () => {
+    renderForSubmit(POS_CONTEXT);
+    await toPrize();
+    fireEvent.click(screen.getByRole("button", { name: "Dollar amount off" }));
+    expect(screen.queryByLabelText(/Value at the register/)).toBeNull();
+  });
+});
