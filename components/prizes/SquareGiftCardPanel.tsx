@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { Code128Barcode } from "@/components/prizes/Code128Barcode";
 import { haptic } from "@/lib/haptics";
+import { GUEST_SQUARE_GIFT_CARD_LINE } from "@/lib/posStaffInstructions";
 import type { ChallengeCampaignWin } from "@/types";
 
 // The Square gift card inside the prize wallet's redeem sheet
@@ -123,7 +124,7 @@ export const SquareGiftCardPanel = ({
             <p className="text-sm font-semibold text-ht-fg-primary">Pay with a Square gift card</p>
             <p className="text-xs text-ht-fg-muted">
               We&apos;ll turn this prize into a {amount != null ? `$${amount.toFixed(2)} ` : ""}Square gift card. Staff ring
-              it up at the register like any gift card, and you can use it over more than one visit.
+              it up at the register like any gift card, and you can use it over more than one visit. {GUEST_SQUARE_GIFT_CARD_LINE}
             </p>
           </div>
           {frame(coupon)}

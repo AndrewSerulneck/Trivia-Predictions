@@ -636,7 +636,7 @@ Committed `27f5eea`, deployed 2026-10-05 with the flag OFF. **Phase 3 (Clover) =
 Dashboard login); a QR + typed code on the coupon is OK. Sub-phases 3a–3f in the plan. Never build the original
 web staff page. Device routes use Clover's token, never `requireOwnerAuth`.
 
-Plan: `docs/pos-rewards-integration-plan.md`; latest handoff `docs/pos-rewards-integration-plan_PHASE_2d_HANDOFF.md` (2c: no pilot gate; revoked webhook → `error` + "Reconnect needed"; Disconnect never calls RevokeToken while another venue shares the Square merchant. 2d: menu-item prizes → one ready-made Square discount per prize; register cap optional).
+Plan: `docs/pos-rewards-integration-plan.md`; latest handoff `docs/pos-rewards-integration-plan_PHASE_2e_HANDOFF.md` (2e: all Square staff/partner copy lives in `lib/posStaffInstructions.ts`; printable sheet at `/owner/pos-staff-sheet`; 2c: no pilot gate; revoked webhook → `error` + "Reconnect needed"; Disconnect never calls RevokeToken while another venue shares the Square merchant. 2d: menu-item prizes → one ready-made Square discount per prize; register cap optional).
 - **Flag `NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED`, off by default**, single reader `isPosIntegrationsEnabled()`
   in `lib/pos/providers.ts`. Off = no "Point of Sale" menu row, no `?sheet=pos` host, `/api/owner/pos*` 404s.
 - **POS OAuth tokens are only ever stored encrypted** via `lib/pos/crypto.ts` (`POS_TOKEN_KEY`, AES-256-GCM,

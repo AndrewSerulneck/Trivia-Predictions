@@ -1,8 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RedeemedRewardsList } from "@/components/owner/pos/RedeemedRewardsList";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { HightopLoader } from "@/components/ui/HightopLoader";
+import {
+  SQUARE_SETUP_STEPS,
+  STAFF_DISCOUNT_STEPS,
+  STAFF_FALLBACK_TEXT,
+  STAFF_GIFT_CARD_STEPS,
+  STAFF_SHEET_LINK_LABEL,
+  STAFF_SHEET_PATH,
+} from "@/lib/posStaffInstructions";
 import type { PosConnectionStatus } from "@/lib/pos/types";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 
@@ -205,6 +214,45 @@ export const SQUARE_MENU_PRIZE_RECONNECT_TEXT =
 export const SQUARE_ATTENTION_TEXT =
   "Square isn't accepting this connection right now, so gift card prizes use the normal coupon. Reconnect to turn Square gift cards back on.";
 
+/** Square setup checklist, and once connected the "How staff take a prize" card (Phase 2e). */
+const SquareHelp = ({ connected }: { connected: boolean }) => (
+  <div className="space-y-3">
+    {!connected ? (
+      <section data-pos-setup className="rounded-xl border border-ht-hairline bg-ht-elevated/50 p-4">
+        <p className="font-black text-ht-primary">Set up Square</p>
+        <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs font-semibold text-ht-muted">
+          {SQUARE_SETUP_STEPS.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+      </section>
+    ) : (
+      <section data-pos-staff-help className="rounded-xl border border-ht-hairline bg-ht-elevated/50 p-4">
+        <p className="font-black text-ht-primary">How staff take a prize</p>
+        <p className="mt-2 text-xs font-black text-ht-primary">Square gift card</p>
+        <ol className="list-decimal space-y-1 pl-5 text-xs font-semibold text-ht-muted">
+          {STAFF_GIFT_CARD_STEPS.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+        <p className="mt-3 text-xs font-black text-ht-primary">Green box: Square discount</p>
+        <ol className="list-decimal space-y-1 pl-5 text-xs font-semibold text-ht-muted">
+          {STAFF_DISCOUNT_STEPS.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+        <p className="mt-3 text-xs font-semibold text-ht-muted">{STAFF_FALLBACK_TEXT}</p>
+        <a
+          href={STAFF_SHEET_PATH}
+          className="mt-3 inline-block rounded-full bg-ht-cyan-300 px-3 py-1.5 text-xs font-black text-slate-950"
+        >
+          {STAFF_SHEET_LINK_LABEL}
+        </a>
+      </section>
+    )}
+  </div>
+);
+
 const StatusBadge = ({ status, venueId }: { status: PosConnectionStatus; venueId: string }) => {
   if (status.state === "connected") {
     return (
@@ -370,6 +418,14 @@ export const PosConnectionsSheet = ({ nav, venue, posResult = null }: PosConnect
             ))}
           </ul>
         ) : null}
+
+        {venue && load.status === "ready" ? (
+          <SquareHelp
+            connected={load.statuses.some((status) => status.provider === "square" && status.state === "connected")}
+          />
+        ) : null}
+
+        {venue && load.status === "ready" ? <RedeemedRewardsList venueId={venue.id} /> : null}
 
         <p className="text-xs font-semibold text-ht-muted">
           Prizes keep working with the normal coupon whether or not a register is connected.

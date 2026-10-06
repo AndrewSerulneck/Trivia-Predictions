@@ -1,3 +1,5 @@
+import { PARTNER_MANUAL_POS_BODY } from "@/lib/posStaffInstructions";
+
 type PartnerManualSubsection = {
   heading: string;
   body: string;
@@ -63,6 +65,10 @@ export const PARTNER_MANUAL: {
     {
       heading: "Offer Rewards",
       body: "Incentivize guests to visit by offering rewards for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Offer Rewards on your dashboard to get started.",
+    },
+    {
+      heading: "Point of Sale (Square)",
+      body: PARTNER_MANUAL_POS_BODY,
     },
     {
       heading: "Venue Display",

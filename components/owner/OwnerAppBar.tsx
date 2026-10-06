@@ -129,7 +129,7 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b border-ht-hairline bg-ht-canvas/90 pt-[env(safe-area-inset-top)] backdrop-blur ${className}`}
+      className={`sticky top-0 z-40 print:hidden border-b border-ht-hairline bg-ht-canvas/90 pt-[env(safe-area-inset-top)] backdrop-blur ${className}`}
     >
       <div className="mx-auto flex h-14 w-full max-w-2xl items-center gap-3 px-4">
         {leading ?? (

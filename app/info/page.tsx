@@ -548,6 +548,9 @@ export default function InfoPage() {
               Digital games that can only be accessed at your bar, played on your guests&apos; phones.
              
             </p>
+            <p className="text-sm font-bold text-slate-300 mb-4">
+              Works with your Square register!
+            </p>
 
           </div>
 
