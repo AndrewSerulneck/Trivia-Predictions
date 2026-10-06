@@ -631,7 +631,12 @@ step opens at the top — don't hand-roll a scroll reset.
 
 ## POS Rewards Integration (Square / Clover; Toast deferred) — Phases 1–2 built 2026-10-04/05
 
-Plan: `docs/pos-rewards-integration-plan.md`; latest handoff `docs/pos-rewards-integration-plan_PHASE_2_HANDOFF.md`.
+Committed `27f5eea`, deployed 2026-10-05 with the flag OFF. **Phase 3 (Clover) = our own Clover register app** (Andrew,
+2026-10-05): staff scan or type the coupon's code in our app on the Clover register (no staff phones, no Partner
+Dashboard login); a QR + typed code on the coupon is OK. Sub-phases 3a–3f in the plan. Never build the original
+web staff page. Device routes use Clover's token, never `requireOwnerAuth`.
+
+Plan: `docs/pos-rewards-integration-plan.md`; latest handoff `docs/pos-rewards-integration-plan_PHASE_2d_HANDOFF.md` (2c: no pilot gate; revoked webhook → `error` + "Reconnect needed"; Disconnect never calls RevokeToken while another venue shares the Square merchant. 2d: menu-item prizes → one ready-made Square discount per prize; register cap optional).
 - **Flag `NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED`, off by default**, single reader `isPosIntegrationsEnabled()`
   in `lib/pos/providers.ts`. Off = no "Point of Sale" menu row, no `?sheet=pos` host, `/api/owner/pos*` 404s.
 - **POS OAuth tokens are only ever stored encrypted** via `lib/pos/crypto.ts` (`POS_TOKEN_KEY`, AES-256-GCM,
@@ -653,6 +658,15 @@ Plan: `docs/pos-rewards-integration-plan.md`; latest handoff `docs/pos-rewards-i
   the number is fetched from Square per open and returned only to its winner (`Cache-Control: no-store`).
   Square's webhook payload also carries the GAN — never log a raw webhook body. Tripwire:
   `tests/lib.pos-square.test.ts`. `SQUARE_*` env vars have one reader, `lib/pos/squareConfig.ts`.
+- **Square menu-item prizes (Phase 2d, Andrew 2026-10-06: "preset discount per prize").** Each $-off / %-off /
+  free-item prize becomes ONE catalog discount in the partner's Square, named by its terms
+  (`squareDiscountSpec` in `lib/pos/squareDiscountSpec.ts`: "Hightop prize: 50% off Appetizer (max $12)").
+  **The name is the identity** — `lib/pos/squareDiscounts.ts` searches the catalog for it and creates it when
+  missing; nothing is stored, no migration. Changing the name wording mints new discounts at every partner.
+  The coupon only shows staff the name (`POST /api/prizes/square-discount`); it is still redeemed ONLY by
+  "Confirm Redemption" (method `guest_confirm`). Needs `ITEMS_READ ITEMS_WRITE`: connections from before 2d
+  show "Reconnect Square" (`needsMenuPrizeReconnect`); a reconnect keeps the chosen location. The wizard's
+  register cap is **optional** (Andrew, §6 item 3): `prize_pos_value_cents` null = no limit, never "can't use POS".
 
 ## Loading screen, brand images & the dashboard's one round trip (2026-10-01)
 

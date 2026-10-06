@@ -6,6 +6,7 @@ import { TH, TD, TR } from "@/components/admin/AdminShell";
 import { GeofenceEditor } from "@/components/admin/GeofenceEditor";
 import { DeleteVenueModal, useVenueDeletion } from "@/components/admin/DeleteVenueModal";
 import { HiddenVenuesPanel } from "@/components/admin/sections/HiddenVenuesPanel";
+import { PosStuckClaimsPanel } from "@/components/admin/sections/PosStuckClaimsPanel";
 import { useAddressLookup, type AddressPrediction } from "@/components/admin/useAddressLookup";
 import { adminField, adminLabel, adminFieldReadOnly } from "@/lib/adminStyles";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
@@ -1037,6 +1038,8 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
       </div>
 
       <HiddenVenuesPanel />
+
+      <PosStuckClaimsPanel />
 
       <DeleteVenueModal deletion={deletion} />
     </div>

@@ -230,12 +230,12 @@ export function redemptionPrizeSnapshot(
  *   free_appetizer   → 100% off appetizer
  *   wine_bottle      → 100% off (free) bottle of wine
  */
-type RewardPrizeSourceRow = Pick<
+export type RewardPrizeSourceRow = Pick<
   ChallengeCampaignRow,
   "prize_kind" | "prize_menu_item" | "prize_menu_item_name" | "prize_discount_kind" | "prize_discount_value" | "prize_type"
 >;
 
-function resolveRewardPrize(row: RewardPrizeSourceRow): {
+export function resolveRewardPrize(row: RewardPrizeSourceRow): {
   prizeKind: RewardPrizeKind | null;
   prizeMenuItem: RewardMenuItem | null;
   prizeMenuItemName: string | null;

@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { isPosTokenKeyConfigured } from "@/lib/pos/crypto";
 import { clearPosOAuthCookie, verifyPosOAuthState } from "@/lib/pos/oauthState";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
-import { exchangeSquareCode, listSquareLocations, retrieveSquareMerchant } from "@/lib/pos/square";
+import { exchangeSquareCode, isSquareGiftCardLocation, listSquareLocations, retrieveSquareMerchant } from "@/lib/pos/square";
 import { squareAppConfig } from "@/lib/pos/squareConfig";
-import { saveSquareConnection } from "@/lib/pos/squareConnection";
+import { discardSquareGrant, saveSquareConnection } from "@/lib/pos/squareConnection";
 import { redirectToPosSheet } from "@/lib/pos/squareRoutes";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 
@@ -18,7 +18,14 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * replayed callback never fetches a token. The nonce cookie is cleared on every outcome.
  *
  * One active Square location → used automatically. Several → saved with no location and the
- * sheet asks which one ("choose_location"); until then no gift card can be issued.
+ * sheet asks which one ("choose_location"); until then no gift card can be issued. A reconnect
+ * to the same Square account keeps the location already chosen while it is still eligible
+ * (Phase 2d: partners reconnect once to grant the catalog scopes for menu prizes).
+ *
+ * Eligibility (Phase 2c): prize amounts are US dollars, so at least one location must be a US
+ * location in USD (isSquareGiftCardLocation; both fields come with the locations list, no extra
+ * call). An account with none isn't saved at all — we give the grant back to Square
+ * (discardSquareGrant) and the sheet says why ("not_eligible"). We don't keep a token we can't use.
  */
 export async function GET(request: Request) {
   if (!isPosIntegrationsEnabled()) {
@@ -69,6 +76,16 @@ export async function GET(request: Request) {
     return redirectToPosSheet(request, "error", clear);
   }
   if (locations.length === 0) return redirectToPosSheet(request, "no_location", clear);
+  if (!locations.some(isSquareGiftCardLocation)) {
+    await discardSquareGrant({ config, accessToken: tokens.accessToken, merchantId: tokens.merchantId, venueId: state.venueId });
+    console.info("[PosSquare] callback-not-eligible", {
+      venueId: state.venueId,
+      currencies: [...new Set(locations.map((location) => location.currency))],
+    });
+    return redirectToPosSheet(request, "not_eligible", clear);
+  }
+  // Exactly one location, and it is eligible (checked above): use it without asking.
+  const onlyLocation = locations.length === 1 ? locations[0].id : null;
 
   const saved = await saveSquareConnection({
     venueId: state.venueId,
@@ -76,10 +93,12 @@ export async function GET(request: Request) {
     environment: config.environment,
     tokens,
     merchantName: "code" in merchant ? null : merchant.businessName,
-    locationId: locations.length === 1 ? locations[0].id : null,
+    locationId: onlyLocation,
+    // A reconnect to the same account keeps its chosen location if it is still eligible.
+    eligibleLocationIds: locations.filter(isSquareGiftCardLocation).map((location) => location.id),
   });
   if (!saved.ok) return redirectToPosSheet(request, "error", clear);
 
   console.info("[PosSquare] connected", { venueId: state.venueId, environment: config.environment, locations: locations.length });
-  return redirectToPosSheet(request, locations.length === 1 ? "connected" : "choose_location", clear);
+  return redirectToPosSheet(request, saved.locationId ? "connected" : "choose_location", clear);
 }

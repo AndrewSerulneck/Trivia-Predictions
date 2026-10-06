@@ -14,7 +14,7 @@ import { CODE128_PATTERNS, code128Modules, code128Values } from "@/lib/pos/code1
 import { createPosOAuthState, POS_OAUTH_COOKIE, verifyPosOAuthState } from "@/lib/pos/oauthState";
 import { verifySquareSignature } from "@/lib/pos/squareWebhook";
 import { isSquareConfigured, squareAppConfig, squareWebhookConfig } from "@/lib/pos/squareConfig";
-import { exchangeSquareCode, squareAdapter, squareAuthorizeUrl } from "@/lib/pos/square";
+import { exchangeSquareCode, isSquareGiftCardLocation, listSquareLocations, squareAdapter, squareAuthorizeUrl } from "@/lib/pos/square";
 import { getPosAdapter } from "@/lib/pos/registry";
 
 const ROOT = join(__dirname, "..");
@@ -178,7 +178,8 @@ describe("Square REST client (lib/pos/square.ts)", () => {
     expect(url.origin).toBe("https://connect.squareupsandbox.com");
     expect(url.pathname).toBe("/oauth2/authorize");
     expect(url.searchParams.get("client_id")).toBe("app-id");
-    expect(url.searchParams.get("scope")).toBe("MERCHANT_PROFILE_READ GIFTCARDS_READ GIFTCARDS_WRITE");
+    // Phase 2d added the catalog pair for the ready-made menu-prize discounts.
+    expect(url.searchParams.get("scope")).toBe("MERCHANT_PROFILE_READ GIFTCARDS_READ GIFTCARDS_WRITE ITEMS_READ ITEMS_WRITE");
     expect(url.searchParams.get("session")).toBe("false");
     expect(url.searchParams.get("state")).toBe("STATE");
   });
@@ -212,9 +213,9 @@ describe("Square REST client (lib/pos/square.ts)", () => {
   it("prepare creates a DIGITAL card with a derived idempotency key; apply needs it", async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ gift_card: { id: "gftc:1", gan: "7783000011112222", state: "PENDING" } }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
-    const credentials = { connectionId: "c", venueId: "v", provider: "square" as const, environment: "sandbox" as const, merchantId: "M", locationId: "L1", accessToken: "AT" };
+    const credentials = { connectionId: "c", venueId: "v", provider: "square" as const, environment: "sandbox" as const, merchantId: "M", locationId: "L1", accessToken: "AT", scopes: [] as string[] };
     const prepared = await squareAdapter.prepareReward!({ credentials, idempotencyKey: "r1:square:apply", redemptionId: "r1" });
-    expect(prepared).toEqual({ ok: true, externalRef: "gftc:1", amountCents: 0, detail: { location_id: "L1", environment: "sandbox" } });
+    expect(prepared).toEqual({ ok: true, externalRef: "gftc:1", amountCents: 0, detail: { location_id: "L1", environment: "sandbox", currency: null } });
     const body = JSON.parse(String((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body));
     expect(body).toEqual({ idempotency_key: "r1:square:apply:create", location_id: "L1", gift_card: { type: "DIGITAL" } });
     expect(JSON.stringify(prepared)).not.toContain("7783000011112222");
@@ -225,9 +226,47 @@ describe("Square REST client (lib/pos/square.ts)", () => {
     expect(noLocation).toMatchObject({ ok: false, code: "invalid" });
   });
 
+  it("Phase 2c: a 2xx with an empty body is a retryable failure, not a success or a hard refusal", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 200 })));
+    expect(await exchangeSquareCode(config, "c")).toMatchObject({ ok: false, code: "provider_error", retryable: true });
+  });
+
+  it("Phase 2c: locations carry currency + country, and only a US location in USD can issue our cards", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+      locations: [
+        { id: "L1", name: "Main", status: "ACTIVE", currency: "USD", country: "US" },
+        { id: "L2", name: "Toronto", status: "ACTIVE", currency: "cad", country: "ca" },
+        { id: "L3", name: "Closed", status: "INACTIVE", currency: "USD", country: "US" },
+      ],
+    }), { status: 200 })));
+    const locations = await listSquareLocations("sandbox", "AT");
+    expect(locations).toEqual([
+      { id: "L1", name: "Main", address: null, currency: "USD", country: "US" },
+      { id: "L2", name: "Toronto", address: null, currency: "CAD", country: "CA" },
+    ]);
+    expect(isSquareGiftCardLocation({ currency: "USD", country: "US" })).toBe(true);
+    expect(isSquareGiftCardLocation({ currency: "CAD", country: "CA" })).toBe(false);
+    expect(isSquareGiftCardLocation({ currency: "USD", country: null })).toBe(false);
+    expect(isSquareGiftCardLocation({ currency: null, country: "US" })).toBe(false);
+  });
+
+  it("Phase 2c: prepare reports the new card's currency; apply recovers a funded card after an empty-body reply", async () => {
+    const credentials = { connectionId: "c", venueId: "v", provider: "square" as const, environment: "sandbox" as const, merchantId: "M", locationId: "L1", accessToken: "AT", scopes: [] as string[] };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ gift_card: { id: "gftc:1", gan: "7783000011112222", state: "PENDING", balance_money: { amount: 0, currency: "USD" } } }), { status: 200 })));
+    expect(await squareAdapter.prepareReward!({ credentials, idempotencyKey: "k", redemptionId: "r1" })).toMatchObject({ ok: true, detail: { currency: "USD" } });
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response("", { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ gift_card: { id: "gftc:1", gan: "7783000011112222", state: "ACTIVE", balance_money: { amount: 2500, currency: "USD" } } }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const applied = await squareAdapter.applyReward({ credentials, idempotencyKey: "k", redemptionId: "r1", preparedRef: "gftc:1", value: { amountCents: 2500, currency: "USD", label: "x" } });
+    expect(applied).toMatchObject({ ok: true, detail: { balance_cents: 2500, activate_recovered: true } });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("is registered, and never logs or stores a card number", () => {
     expect(getPosAdapter("square")).toBe(squareAdapter);
-    for (const file of ["lib/pos/square.ts", "lib/pos/squareGiftCards.ts", "lib/pos/squareWebhook.ts", "lib/pos/squareConnection.ts", "app/api/webhooks/square/route.ts", "app/api/prizes/square-gift-card/route.ts"]) {
+    for (const file of ["lib/pos/square.ts", "lib/pos/squareGiftCards.ts", "lib/pos/squareWebhook.ts", "lib/pos/squareConnection.ts", "app/api/webhooks/square/route.ts", "app/api/prizes/square-gift-card/route.ts", "lib/pos/squareStuckClaims.ts", "lib/pos/squareDiscounts.ts", "app/api/prizes/square-discount/route.ts"]) {
       const src = read(file);
       const logLines = src.split("\n").filter((line) => /console\.(log|info|warn|error)/.test(line));
       for (const line of logLines) expect(line, `${file}: ${line.trim()}`).not.toMatch(/\bgan\b|giftCard\b|rawBody|card\.gan/i);

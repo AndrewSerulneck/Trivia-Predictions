@@ -2,7 +2,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { PosConnectionsSheet, POS_RESULT_MESSAGES } from "@/components/owner/pos/PosConnectionsSheet";
+import {
+  PosConnectionsSheet,
+  POS_RESULT_MESSAGES,
+  SQUARE_CONNECTED_TEXT,
+  SQUARE_MENU_PRIZE_RECONNECT_TEXT,
+} from "@/components/owner/pos/PosConnectionsSheet";
 import type { PosConnectionStatus } from "@/lib/pos/types";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 import type { ChallengeCampaignWin } from "@/types";
@@ -131,6 +136,68 @@ describe("Prize wallet — Square gift card", () => {
 
 // ── Partner: Point of Sale sheet ─────────────────────────────────────────────────────────
 
+// Phase 2d: a menu-item coupon at a Square venue shows staff which ready-made discount to tap.
+describe("Prize wallet — Square discount (menu-item prize)", () => {
+  const MENU_WIN = win({
+    prizeKind: "menu_item",
+    prizeGiftCertificateAmount: null,
+    prizeMenuItem: "appetizer",
+    prizeDiscountKind: "percent",
+    prizeDiscountValue: 50,
+    squareDiscount: true,
+  });
+  const NAME = "Hightop prize: 50% off Appetizer (max $12)";
+
+  const stub = (wins: ChallengeCampaignWin[], discountReply: { status: number; body: unknown }) => {
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        calls.push({ url, init });
+        const reply = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
+        if (url.startsWith("/api/prizes/square-discount")) return reply(discountReply.status, discountReply.body);
+        if (url.startsWith("/api/challenge-campaigns/redeem")) return reply(200, { ok: true, wins, serverNowMs: Date.now(), venueName: "The Tap Room" });
+        return reply(200, { ok: true, wins: [] });
+      }),
+    );
+    return calls;
+  };
+
+  it("asks for the discount when the coupon opens and shows its name above Confirm Redemption", async () => {
+    const calls = stub([MENU_WIN], { status: 200, body: { ok: true, discount: { name: NAME } } });
+    render(createElement(PrizeWalletPanel));
+    expect(calls.some((c) => c.url.startsWith("/api/prizes/square-discount"))).toBe(false);
+    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    const dialog = screen.getByRole("dialog", { name: "Confirm redemption" });
+    expect(await within(dialog).findByText(NAME)).not.toBeNull();
+    expect(dialog.querySelector("[data-square-discount]")).not.toBeNull();
+    // Staff still confirm the normal way.
+    expect(within(dialog).getByRole("button", { name: "Confirm Redemption" })).not.toBeNull();
+    const posts = calls.filter((c) => c.url.startsWith("/api/prizes/square-discount"));
+    expect(posts).toHaveLength(1);
+    expect(JSON.parse(String(posts[0].init?.body))).toEqual({ userId: "user-1", venueId: "venue-1", redemptionId: "red-1" });
+  });
+
+  it("shows nothing extra when Square can't be reached — the normal coupon still works", async () => {
+    const calls = stub([MENU_WIN], { status: 502, body: { ok: false, code: "square_error" } });
+    render(createElement(PrizeWalletPanel));
+    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    const dialog = screen.getByRole("dialog", { name: "Confirm redemption" });
+    await waitFor(() => expect(calls.some((c) => c.url.startsWith("/api/prizes/square-discount"))).toBe(true));
+    expect(dialog.querySelector("[data-square-discount]")).toBeNull();
+    expect(within(dialog).getByRole("button", { name: "Confirm Redemption" })).not.toBeNull();
+  });
+
+  it("never asks for a coupon without the flag", async () => {
+    const calls = stub([{ ...MENU_WIN, squareDiscount: undefined }], { status: 200, body: { ok: true, discount: { name: NAME } } });
+    render(createElement(PrizeWalletPanel));
+    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    expect(screen.getByRole("button", { name: "Confirm Redemption" })).not.toBeNull();
+    expect(calls.some((c) => c.url.startsWith("/api/prizes/square-discount"))).toBe(false);
+  });
+});
+
 const fakeNav = (): UseOwnerSheetResult => ({
   sheet: "pos",
   step: null,
@@ -173,7 +240,18 @@ describe("Point of Sale sheet — Square", () => {
     routeFetch({ "/api/owner/pos?": { ok: true, statuses: [square({})] } });
     render(createElement(PosConnectionsSheet, { nav: fakeNav(), venue: VENUE, posResult: "denied" }));
     expect(screen.getByText(POS_RESULT_MESSAGES.denied.text).getAttribute("role")).toBe("status");
-    expect(await screen.findByText(/Menu-item prizes keep the normal coupon/)).not.toBeNull();
+    expect(await screen.findByText(SQUARE_CONNECTED_TEXT)).not.toBeNull();
+    expect(screen.queryByRole("link", { name: "Reconnect Square" })).toBeNull();
+  });
+
+  it("Phase 2d: a connection made before menu-item discounts asks for one reconnect", async () => {
+    routeFetch({ "/api/owner/pos?": { ok: true, statuses: [square({ needsMenuPrizeReconnect: true })] } });
+    render(createElement(PosConnectionsSheet, { nav: fakeNav(), venue: VENUE }));
+    expect(await screen.findByText(SQUARE_MENU_PRIZE_RECONNECT_TEXT)).not.toBeNull();
+    const link = screen.getByRole("link", { name: "Reconnect Square" });
+    expect(link.getAttribute("href")).toBe("/api/owner/pos/square/connect?venueId=venue-1");
+    // Still connected: Disconnect stays available.
+    expect(screen.getByRole("button", { name: "Disconnect" })).not.toBeNull();
   });
 
   it("asks a multi-location account which location issues gift cards, then reloads", async () => {

@@ -24,6 +24,8 @@ export type PosConnectionCredentials = {
   merchantId: string;
   locationId: string | null;
   accessToken: string;
+  /** The OAuth scopes this connection was granted (pos_connections.scopes). */
+  scopes: string[];
 };
 
 /** What a prize is worth at the register, already resolved by lib/pos/prizeValue.ts. */
@@ -130,4 +132,9 @@ export type PosConnectionStatus = {
   connectedAt: string | null;
   /** Connected, but the partner hasn't chosen which Square location issues gift cards yet. */
   needsLocation?: boolean;
+  /**
+   * Square, connected before Phase 2d: the grant lacks the catalog scopes, so menu-item prizes
+   * can't get their ready-made Square discount until the partner reconnects once.
+   */
+  needsMenuPrizeReconnect?: boolean;
 };

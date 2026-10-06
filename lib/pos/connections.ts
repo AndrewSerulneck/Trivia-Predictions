@@ -1,6 +1,6 @@
 import "server-only";
 import { isPosIntegrationsEnabled, POS_PROVIDERS, type PosProviderId, type PosProviderInfo } from "@/lib/pos/providers";
-import { isSquareConfigured, squareAppConfig } from "@/lib/pos/squareConfig";
+import { hasSquareMenuPrizeScopes, isSquareConfigured, squareAppConfig } from "@/lib/pos/squareConfig";
 import type { PosConnectionState, PosConnectionStatus } from "@/lib/pos/types";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -16,7 +16,9 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // location_id is read only to answer "has a Square location been chosen?" — it never leaves
 // the server (PosConnectionStatus carries the boolean `needsLocation`, not the id).
-const PUBLIC_CONNECTION_COLUMNS = "provider, status, merchant_name, connected_at, location_id, environment";
+// scopes (Phase 2d) is the list of permission NAMES the partner granted — not a credential — read
+// only to say "reconnect once to turn on menu prizes".
+const PUBLIC_CONNECTION_COLUMNS = "provider, status, merchant_name, connected_at, location_id, environment, scopes";
 
 type PublicConnectionRow = {
   provider: string;
@@ -25,6 +27,7 @@ type PublicConnectionRow = {
   connected_at: string | null;
   location_id: string | null;
   environment: string;
+  scopes?: string[] | null;
 };
 
 /**
@@ -111,6 +114,8 @@ export const listPosConnectionStatuses = async (
         connectedAt: live ? row?.connected_at ?? null : null,
         // Square issues gift cards at ONE location; a multi-location account must pick it.
         needsLocation: state === "connected" && info.id === "square" && !row?.location_id,
+        // Connected before Phase 2d: gift cards work, menu prizes wait for one reconnect.
+        needsMenuPrizeReconnect: state === "connected" && info.id === "square" && !hasSquareMenuPrizeScopes(row?.scopes),
       };
     }),
   };
@@ -137,4 +142,27 @@ export const activePosProviders = async (venueId: string): Promise<PosProviderId
 export const venueHasActivePos = async (venueId: string): Promise<boolean> => {
   if (!isPosIntegrationsEnabled()) return false;
   return (await activePosProviders(venueId)).length > 0;
+};
+
+/**
+ * The owner's venues whose point-of-sale connection needs attention (Square removed our access,
+ * a refresh was refused, or a row from the other Square environment) — the Partner Dashboard's
+ * one-line nudge (Phase 2c). Rides inside GET /api/owner/dashboard: one indexed read for ALL of
+ * the owner's venues, so a venue switch needs no request. Zero queries with the flag off. Fails
+ * to [] (no nudge) on any error: the Point of Sale sheet still tells the truth.
+ */
+export const venuesNeedingPosAttention = async (venueIds: string[]): Promise<string[]> => {
+  if (!isPosIntegrationsEnabled() || venueIds.length === 0 || !supabaseAdmin) return [];
+  const { data, error } = await supabaseAdmin
+    .from("pos_connections")
+    .select("venue_id, provider, status, environment")
+    .in("venue_id", venueIds)
+    .neq("status", "revoked")
+    .returns<Array<PublicConnectionRow & { venue_id: string }>>();
+  if (error) {
+    if (!isMissingPosTable(error)) console.error("[Pos] attention-read-failed", error.message);
+    return [];
+  }
+  const flagged = (data ?? []).filter((row) => row.status === "error" || isWrongEnvironment(row));
+  return [...new Set(flagged.map((row) => row.venue_id))];
 };

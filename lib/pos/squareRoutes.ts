@@ -13,6 +13,7 @@ export type PosConnectResult =
   | "denied"
   | "expired"
   | "no_location"
+  | "not_eligible"
   | "not_configured"
   | "error";
 

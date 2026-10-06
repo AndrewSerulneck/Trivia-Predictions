@@ -18,7 +18,8 @@ import type { ChallengeCampaignWin, SquareGiftCardState } from "@/types";
 //   1. ledger row     pos_reward_applications, idempotency_key "<redemptionId>:square:apply",
 //                     inserted BEFORE any Square call (a duplicate = "already started; resume").
 //   2. prepare        CreateGiftCard DIGITAL → a PENDING card with a $0 balance. Worthless.
-//                     Its id is saved on the ledger row straight away.
+//                     Its id is saved on the ledger row straight away. Its currency must be
+//                     USD, or we stop here with nothing claimed (Phase 2c).
 //   3. claim          redeem_challenge_prize(p_method 'pos_square') — the once-only RPC.
 //   4. fund           ACTIVATE the card with the prize amount.
 //   5. show           RetrieveGiftCard → the card number (GAN) and balance, to this guest only.
@@ -42,6 +43,13 @@ import type { ChallengeCampaignWin, SquareGiftCardState } from "@/types";
 // open = 1 Square call. Nothing runs on a schedule.
 
 const PROVIDER = "square";
+
+/**
+ * Prize amounts are US dollars. A card is funded only after its OWN currency (from Square) is
+ * checked against this, before the coupon is claimed (Phase 2c) — the connect flow already
+ * refuses non-USD locations, this is the last line.
+ */
+const PRIZE_CURRENCY = "USD";
 
 type CouponRow = {
   id: string;
@@ -162,7 +170,7 @@ const insertLedger = async (input: {
       action: "apply",
       status: "pending",
       amount_cents: input.amountCents,
-      currency: "USD",
+      currency: PRIZE_CURRENCY,
       actor: "guest",
     })
     .select(LEDGER_COLUMNS)
@@ -194,6 +202,23 @@ const recordFailure = (row: LedgerRow, failure: PosFailure, terminal: boolean) =
 
 const groupGan = (gan: string): string => gan.replace(/\s+/g, "").replace(/(.{4})(?=.)/g, "$1 ");
 
+/**
+ * The prepared card's currency: from the ledger (saved at prepare), else one Square read, saved
+ * for next time (a row prepared before Phase 2c). `null` = Square couldn't be reached.
+ */
+const preparedCardCurrency = async (row: LedgerRow, credentials: PosConnectionCredentials): Promise<string | null> => {
+  const saved = row.external_detail?.currency;
+  if (typeof saved === "string" && saved) return saved;
+  const card = await retrieveSquareGiftCard(credentials, row.external_ref!);
+  if ("ok" in card) {
+    console.error("[PosSquare] currency-read-failed", { ledgerId: row.id, code: card.code });
+    return null;
+  }
+  const currency = card.currency ?? "";
+  await updateLedger(row.id, { external_detail: { ...(row.external_detail ?? {}), currency } });
+  return currency;
+};
+
 // ── Fund + show ──────────────────────────────────────────────────────────────────────────
 
 const fundAndShow = async (
@@ -213,7 +238,7 @@ const fundAndShow = async (
       idempotencyKey: squareApplyKey(redemptionId),
       redemptionId,
       preparedRef: giftCardId,
-      value: { amountCents, currency: "USD", label: "Hightop Challenge prize" },
+      value: { amountCents, currency: PRIZE_CURRENCY, label: "Hightop Challenge prize" },
     });
     if (!applied.ok) {
       console.error("[PosSquare] activate-failed", { ledgerId: row.id, code: applied.code });
@@ -330,6 +355,18 @@ export const openSquareGiftCard = async (params: {
     }
     await updateLedger(row.id, { external_ref: prepared.externalRef, external_detail: prepared.detail });
     row = { ...row, external_ref: prepared.externalRef, external_detail: prepared.detail };
+  }
+
+  // 2c. The card must be in the prize's currency. Checked BEFORE the claim, so a refusal leaves
+  //     the guest's normal coupon untouched (and the worthless PENDING card is all that exists).
+  const cardCurrency = await preparedCardCurrency(row, credentials);
+  if (cardCurrency === null) return fail("square_error", SQUARE_ERROR_MESSAGE);
+  // Keep the local copy in step, or fundAndShow's later detail write would drop it.
+  row = { ...row, external_detail: { ...(row.external_detail ?? {}), currency: cardCurrency } };
+  if (cardCurrency !== PRIZE_CURRENCY) {
+    console.warn("[PosSquare] currency-not-supported", { ledgerId: row.id, currency: cardCurrency || null });
+    await recordFailure(row, { ok: false, code: "invalid", message: `currency_not_supported:${cardCurrency || "unknown"}`, retryable: false }, true);
+    return fail("not_eligible", "This venue's Square account can't issue these gift cards. Use the normal coupon instead.");
   }
 
   // 3. Claim — the once-only RPC decides between this path and "Confirm Redemption".

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { claimChallengeCampaignPrize, listChallengeCampaignWinsForUser } from "@/lib/challengeCampaigns";
+import { attachSquareDiscountStates } from "@/lib/pos/squareDiscounts";
 import { attachSquareGiftCardStates } from "@/lib/pos/squareGiftCards";
 import { attachRewardWinDescriptions } from "@/lib/rewards";
 import { resolveRequestUserId } from "@/lib/serverSession";
@@ -30,12 +31,15 @@ export async function GET(request: Request) {
     }
 
     // Each coupon also says what it was won FOR — see attachRewardWinDescriptions — and, for a
-    // gift card at a Square-connected venue, its Square state (attachSquareGiftCardStates: no
-    // query at all while NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED is off).
+    // gift card at a Square-connected venue, its Square state (attachSquareGiftCardStates), and
+    // for a menu-item prize there, whether it has a ready-made Square discount
+    // (attachSquareDiscountStates, Phase 2d). Neither queries anything while
+    // NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED is off.
     const [wins, venueName] = await Promise.all([
       listChallengeCampaignWinsForUser({ userId, venueId })
         .then((rows) => attachRewardWinDescriptions(rows, venueId))
-        .then((rows) => attachSquareGiftCardStates(rows, venueId)),
+        .then((rows) => attachSquareGiftCardStates(rows, venueId))
+        .then((rows) => attachSquareDiscountStates(rows, venueId)),
       getVenueDisplayName(venueId),
     ]);
     // `serverNowMs` + `venueName` feed the live coupon (docs/reward-live-redemption-plan.md

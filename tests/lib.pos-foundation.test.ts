@@ -121,8 +121,9 @@ describe("POS reads never touch a token", () => {
     const src = read("lib/pos/connections.ts");
     const select = src.match(/PUBLIC_CONNECTION_COLUMNS = "([^"]+)"/)?.[1] ?? "";
     // Phase 2 added location_id (non-secret) to answer "location chosen?"; it never leaves
-    // the server — the status carries a boolean.
-    expect(select).toBe("provider, status, merchant_name, connected_at, location_id, environment");
+    // the server — the status carries a boolean. Phase 2d added scopes (permission NAMES, not a
+    // credential) to answer "reconnect for menu prizes?" — also a boolean on the status.
+    expect(select).toBe("provider, status, merchant_name, connected_at, location_id, environment, scopes");
     expect(src).not.toMatch(/token_enc|merchant_id/);
     expect(src).not.toMatch(/locationId:/);
     expect(src).not.toContain('select("*")');

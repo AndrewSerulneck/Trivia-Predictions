@@ -16,7 +16,9 @@ const mocks = vi.hoisted(() => ({
   listOwnerVenues: vi.fn(),
   listOwnerSchedules: vi.fn(),
   listOwnerCompetitions: vi.fn(),
+  venuesNeedingPosAttention: vi.fn(),
 }));
+vi.mock("@/lib/pos/connections", () => ({ venuesNeedingPosAttention: mocks.venuesNeedingPosAttention }));
 
 vi.mock("@/lib/requireOwnerAuth", () => ({ requireOwnerAuth: mocks.requireOwnerAuth }));
 vi.mock("@/lib/ownerVenueList", () => ({ listOwnerVenues: mocks.listOwnerVenues }));
@@ -60,6 +62,7 @@ type Body = {
   venueId?: string | null;
   schedules?: { ok: boolean; items?: unknown[]; error?: string } | null;
   competitions?: { ok: boolean; items?: unknown[]; error?: string } | null;
+  posAttentionVenueIds?: string[];
 };
 
 beforeEach(() => {
@@ -72,6 +75,26 @@ beforeEach(() => {
   mocks.listOwnerVenues.mockResolvedValue(VENUES);
   mocks.listOwnerSchedules.mockResolvedValue([schedule("sched-1")]);
   mocks.listOwnerCompetitions.mockResolvedValue([{ id: "camp-1" }]);
+  mocks.venuesNeedingPosAttention.mockReset().mockResolvedValue([]);
+});
+
+describe("POS nudge (POS plan Phase 2c)", () => {
+  it("rides the same call: one read for ALL the owner's venues, so a venue switch needs nothing", async () => {
+    mocks.venuesNeedingPosAttention.mockResolvedValue(["venue-2"]);
+    const body = (await (await get()).json()) as Body;
+    expect(body.posAttentionVenueIds).toEqual(["venue-2"]);
+    expect(mocks.venuesNeedingPosAttention).toHaveBeenCalledOnce();
+    expect(mocks.venuesNeedingPosAttention).toHaveBeenCalledWith(["venue-1", "venue-2"]);
+  });
+
+  it("never fails the dashboard: a broken read is just 'no nudge'", async () => {
+    mocks.venuesNeedingPosAttention.mockRejectedValue(new Error("boom"));
+    const res = await get();
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Body;
+    expect(body.posAttentionVenueIds).toEqual([]);
+    expect(body.schedules).toMatchObject({ ok: true });
+  });
 });
 
 describe("GET /api/owner/dashboard — one round trip", () => {

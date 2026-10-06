@@ -1,10 +1,11 @@
 # Live Coupon — Plan B (make a screenshot of a reward obviously fake)
 
-**Status:** Phases 1–3 code done 2026-10-05 (review + fixes, security review clean) — **all code
-uncommitted/undeployed; migration `20261005123950_reward_redeem_once.sql` APPLIED to production
-2026-10-05.** **Phone check PASSED (Andrew, 2026-10-05: "Everything was done properly").** Left:
-delete the seeded test coupon (the agent's delete was blocked by the safety filter — Andrew runs the SQL in
-the Phase 3 handoff §2), then commit + deploy. Latest handoff: `docs/reward-live-redemption-plan_PHASE_3_HANDOFF.md`.
+**Status:** **COMPLETE — committed `27f5eea` and deployed to production 2026-10-05** (Vercel
+`hightop-challenge-ayzjanpqm`, on Andrew's word). Migration `20261005123950_reward_redeem_once.sql` applied
+2026-10-05. Phone check passed (Andrew, 2026-10-05). **One leftover:** the seeded test coupon still exists —
+the agent's delete was blocked twice by the safety filter, even with Andrew's OK; Andrew runs the two lines in
+the Phase 3 handoff §2 (it is hidden, unredeemable by anyone but Andrew, and expires 2026-10-19).
+Latest handoff: `docs/reward-live-redemption-plan_PHASE_3_HANDOFF.md`.
 **2026-10-05 09:15 CDT — "nothing on the checklist shows" was NOT a code bug.** Andrew tested on
 hightopchallenge.com. That site runs the 2026-10-04 14:18 CDT production build
 (`hightop-challenge-k99hfyqpv`), which is older than the live-coupon code (written 2026-10-05 ~08:30).

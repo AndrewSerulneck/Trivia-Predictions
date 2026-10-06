@@ -17,12 +17,18 @@ const mocks = vi.hoisted(() => ({
   openSquareGiftCard: vi.fn(),
   recordSquareGiftCardActivity: vi.fn(),
   maybeRequireActiveVenuePresence: vi.fn(),
+  discardSquareGrant: vi.fn(),
+  rateLimitSquareGiftCard: vi.fn(),
+  rateLimitSquareDiscount: vi.fn(),
+  ensureSquarePrizeDiscount: vi.fn(),
+  recordSquareRevocation: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: null }));
 vi.mock("@/lib/requireOwnerAuth", () => ({ requireOwnerAuth: mocks.requireOwnerAuth }));
-vi.mock("@/lib/pos/square", () => ({
+vi.mock("@/lib/pos/square", async (importOriginal) => ({
+  isSquareGiftCardLocation: (await importOriginal<typeof import("@/lib/pos/square")>()).isSquareGiftCardLocation,
   squareAuthorizeUrl: (config: { applicationId: string }, state: string) =>
     `https://connect.squareupsandbox.com/oauth2/authorize?client_id=${config.applicationId}&state=${encodeURIComponent(state)}`,
   exchangeSquareCode: mocks.exchangeSquareCode,
@@ -34,11 +40,18 @@ vi.mock("@/lib/pos/squareConnection", () => ({
   disconnectSquare: mocks.disconnectSquare,
   loadSquareTokenForSetup: mocks.loadSquareTokenForSetup,
   setSquareLocation: mocks.setSquareLocation,
+  discardSquareGrant: mocks.discardSquareGrant,
 }));
+vi.mock("@/lib/rateLimit", () => ({
+  rateLimitSquareGiftCard: mocks.rateLimitSquareGiftCard,
+  rateLimitSquareDiscount: mocks.rateLimitSquareDiscount,
+}));
+vi.mock("@/lib/pos/squareDiscounts", () => ({ ensureSquarePrizeDiscount: mocks.ensureSquarePrizeDiscount }));
 vi.mock("@/lib/pos/squareGiftCards", () => ({ openSquareGiftCard: mocks.openSquareGiftCard }));
 vi.mock("@/lib/pos/squareWebhook", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/pos/squareWebhook")>()),
   recordSquareGiftCardActivity: mocks.recordSquareGiftCardActivity,
+  recordSquareRevocation: mocks.recordSquareRevocation,
 }));
 vi.mock("@/lib/venuePresence", () => ({
   maybeRequireActiveVenuePresence: mocks.maybeRequireActiveVenuePresence,
@@ -49,12 +62,17 @@ import { GET as CONNECT } from "@/app/api/owner/pos/square/connect/route";
 import { GET as CALLBACK } from "@/app/api/owner/pos/square/callback/route";
 import { POST as DISCONNECT } from "@/app/api/owner/pos/square/disconnect/route";
 import { GET as LOCATIONS, POST as SET_LOCATION } from "@/app/api/owner/pos/square/locations/route";
+import { POST as DISCOUNT } from "@/app/api/prizes/square-discount/route";
 import { POST as GIFT_CARD } from "@/app/api/prizes/square-gift-card/route";
 import { POST as WEBHOOK } from "@/app/api/webhooks/square/route";
 import { createPosOAuthState, POS_OAUTH_COOKIE } from "@/lib/pos/oauthState";
 import { createSessionCookie } from "@/lib/serverSession";
 
 const BASE = "http://localhost";
+
+/** A Square location that can issue our gift cards (US, USD), and one that can't. */
+const US = (id: string, name = id) => ({ id, name, address: null, currency: "USD", country: "US" });
+const CA = (id: string, name = id) => ({ id, name, address: null, currency: "CAD", country: "CA" });
 
 beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED", "true");
@@ -67,8 +85,9 @@ beforeEach(() => {
   mocks.requireOwnerAuth.mockResolvedValue({ ownerId: "owner-1", venueIds: ["venue-1"] });
   mocks.exchangeSquareCode.mockResolvedValue({ accessToken: "AT", refreshToken: "RT", expiresAt: "2026-11-04T00:00:00Z", merchantId: "M1" });
   mocks.retrieveSquareMerchant.mockResolvedValue({ id: "M1", businessName: "Pub LLC", currency: "USD" });
-  mocks.listSquareLocations.mockResolvedValue([{ id: "L1", name: "Main", address: null }]);
-  mocks.saveSquareConnection.mockResolvedValue({ ok: true });
+  mocks.listSquareLocations.mockResolvedValue([US("L1", "Main")]);
+  mocks.saveSquareConnection.mockImplementation(async (input: { locationId: string | null }) => ({ ok: true, locationId: input.locationId }));
+  mocks.rateLimitSquareGiftCard.mockResolvedValue({ allowed: true, retryAfterSeconds: 0 });
 });
 
 afterEach(() => vi.unstubAllEnvs());
@@ -131,14 +150,41 @@ describe("GET /api/owner/pos/square/callback", () => {
   });
 
   it("asks the partner to choose when the account has several locations", async () => {
-    mocks.listSquareLocations.mockResolvedValue([
-      { id: "L1", name: "A", address: null },
-      { id: "L2", name: "B", address: null },
-    ]);
+    mocks.listSquareLocations.mockResolvedValue([US("L1", "A"), US("L2", "B")]);
     const { state, cookie } = started();
     const res = await callback(`code=CODE&state=${encodeURIComponent(state)}`, cookie);
     expect(posResult(res)).toBe("choose_location");
     expect(mocks.saveSquareConnection).toHaveBeenCalledWith(expect.objectContaining({ locationId: null }));
+  });
+
+  it("Phase 2c: an account with no US-dollar location is not saved, and the grant is given back", async () => {
+    mocks.listSquareLocations.mockResolvedValue([CA("L1"), { ...US("L2"), country: null }]);
+    const { state, cookie } = started();
+    const res = await callback(`code=CODE&state=${encodeURIComponent(state)}`, cookie);
+    expect(posResult(res)).toBe("not_eligible");
+    expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
+    expect(mocks.saveSquareConnection).not.toHaveBeenCalled();
+    expect(mocks.discardSquareGrant).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: "AT", merchantId: "M1", venueId: "venue-1" }),
+    );
+  });
+
+  it("Phase 2c: one eligible location among several still asks which one", async () => {
+    mocks.listSquareLocations.mockResolvedValue([CA("L1"), US("L2")]);
+    const { state, cookie } = started();
+    expect(posResult(await callback(`code=CODE&state=${encodeURIComponent(state)}`, cookie))).toBe("choose_location");
+    expect(mocks.saveSquareConnection).toHaveBeenCalledWith(expect.objectContaining({ locationId: null }));
+    expect(mocks.discardSquareGrant).not.toHaveBeenCalled();
+  });
+
+  it("Phase 2d: a reconnect that keeps its saved location lands on 'connected', not the picker", async () => {
+    mocks.listSquareLocations.mockResolvedValue([US("L1"), CA("L3"), US("L2")]);
+    mocks.saveSquareConnection.mockResolvedValue({ ok: true, locationId: "L2" });
+    const { state, cookie } = started();
+    expect(posResult(await callback(`code=CODE&state=${encodeURIComponent(state)}`, cookie))).toBe("connected");
+    expect(mocks.saveSquareConnection).toHaveBeenCalledWith(
+      expect.objectContaining({ locationId: null, eligibleLocationIds: ["L1", "L2"] }),
+    );
   });
 
   it("never exchanges a code without the nonce cookie, for another owner, or another owner's venue", async () => {
@@ -178,10 +224,20 @@ describe("POST disconnect + locations", () => {
 
   it("only accepts a location that Square lists for this account", async () => {
     mocks.loadSquareTokenForSetup.mockResolvedValue({ ok: true, environment: "sandbox", accessToken: "AT", merchantId: "M1" });
-    mocks.listSquareLocations.mockResolvedValue([{ id: "L1", name: "Main", address: null }]);
+    mocks.listSquareLocations.mockResolvedValue([US("L1", "Main"), CA("L2", "Toronto")]);
     mocks.setSquareLocation.mockResolvedValue({ ok: true });
     const list = await LOCATIONS(new Request(`${BASE}/x?venueId=venue-1`));
-    expect(await list.json()).toEqual({ ok: true, locations: [{ id: "L1", name: "Main", address: null }] });
+    // Phase 2c: an `eligible` flag instead of the raw currency/country.
+    expect(await list.json()).toEqual({
+      ok: true,
+      locations: [
+        { id: "L1", name: "Main", address: null, eligible: true },
+        { id: "L2", name: "Toronto", address: null, eligible: false },
+      ],
+    });
+    const ineligible = await post(SET_LOCATION, { venueId: "venue-1", locationId: "L2" });
+    expect(ineligible.status).toBe(400);
+    expect((await ineligible.json()).error).toContain("US dollars");
     expect((await post(SET_LOCATION, { venueId: "venue-1", locationId: "L-OTHER" })).status).toBe(400);
     expect(mocks.setSquareLocation).not.toHaveBeenCalled();
     expect((await post(SET_LOCATION, { venueId: "venue-1", locationId: "L1" })).status).toBe(200);
@@ -203,6 +259,25 @@ describe("POST /api/prizes/square-gift-card", () => {
     expect((await call({ userId: "user-2", venueId: "venue-1", redemptionId: "r" })).status).toBe(403);
     expect((await call({ venueId: "venue-1" })).status).toBe(400);
     expect(mocks.openSquareGiftCard).not.toHaveBeenCalled();
+    // A forged or incomplete request never spends a rate-limit slot.
+    expect(mocks.rateLimitSquareGiftCard).not.toHaveBeenCalled();
+  });
+
+  it("Phase 2c: is rate-limited per signed-in user before any work, and fails closed", async () => {
+    mocks.rateLimitSquareGiftCard.mockResolvedValueOnce({ allowed: false, retryAfterSeconds: 1200 });
+    const limited = await call({ userId: "user-1", venueId: "venue-1", redemptionId: "r" });
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("retry-after")).toBe("1200");
+    expect(await limited.json()).toMatchObject({ ok: false, code: "rate_limited" });
+    expect(mocks.rateLimitSquareGiftCard).toHaveBeenCalledWith(expect.any(Request), "user-1");
+
+    mocks.rateLimitSquareGiftCard.mockResolvedValueOnce({ allowed: false, retryAfterSeconds: 3600, unavailable: true });
+    const down = await call({ userId: "user-1", venueId: "venue-1", redemptionId: "r" });
+    expect(down.status).toBe(503);
+    expect(await down.json()).toMatchObject({ ok: false, code: "unavailable" });
+
+    expect(mocks.maybeRequireActiveVenuePresence).not.toHaveBeenCalled();
+    expect(mocks.openSquareGiftCard).not.toHaveBeenCalled();
   });
 
   it("returns the card with no-store, and maps refusals to statuses", async () => {
@@ -215,6 +290,52 @@ describe("POST /api/prizes/square-gift-card", () => {
 
     for (const [code, status] of [["already_redeemed", 409], ["not_found", 404], ["expired", 410], ["unavailable", 503], ["square_error", 502]] as const) {
       mocks.openSquareGiftCard.mockResolvedValueOnce({ ok: false, code, message: "m" });
+      const res = await call({ userId: "user-1", venueId: "venue-1", redemptionId: "r" });
+      expect(res.status).toBe(status);
+      expect(await res.json()).toEqual({ ok: false, code, error: "m" });
+    }
+  });
+});
+
+describe("POST /api/prizes/square-discount (Phase 2d)", () => {
+  const call = (body: unknown, cookieUser: string | null = "user-1") =>
+    DISCOUNT(
+      new Request(`${BASE}/api/prizes/square-discount`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: cookieUser ? { cookie: createSessionCookie(cookieUser).split(";")[0] } : {},
+      }),
+    );
+
+  it("binds the guest to the signed session before spending a rate-limit slot", async () => {
+    expect((await call({ userId: "user-2", venueId: "venue-1", redemptionId: "r" })).status).toBe(403);
+    expect((await call({ venueId: "venue-1" })).status).toBe(400);
+    expect(mocks.rateLimitSquareDiscount).not.toHaveBeenCalled();
+    expect(mocks.ensureSquarePrizeDiscount).not.toHaveBeenCalled();
+  });
+
+  it("is rate-limited per user before any work, and fails closed", async () => {
+    mocks.rateLimitSquareDiscount.mockResolvedValueOnce({ allowed: false, retryAfterSeconds: 900 });
+    const limited = await call({ userId: "user-1", venueId: "venue-1", redemptionId: "r" });
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("retry-after")).toBe("900");
+    mocks.rateLimitSquareDiscount.mockResolvedValueOnce({ allowed: false, retryAfterSeconds: 60, unavailable: true });
+    expect((await call({ userId: "user-1", venueId: "venue-1", redemptionId: "r" })).status).toBe(503);
+    expect(mocks.ensureSquarePrizeDiscount).not.toHaveBeenCalled();
+  });
+
+  it("returns the discount name with no-store, maps refusals, and has no presence gate", async () => {
+    mocks.rateLimitSquareDiscount.mockResolvedValue({ allowed: true, retryAfterSeconds: 0 });
+    mocks.ensureSquarePrizeDiscount.mockResolvedValueOnce({ ok: true, discount: { name: "Hightop prize: free Appetizer" } });
+    const ok = await call({ userId: "user-1", venueId: "venue-1", redemptionId: "r" });
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get("cache-control")).toBe("no-store");
+    expect(await ok.json()).toEqual({ ok: true, discount: { name: "Hightop prize: free Appetizer" } });
+    expect(mocks.ensureSquarePrizeDiscount).toHaveBeenCalledWith({ userId: "user-1", venueId: "venue-1", redemptionId: "r" });
+    expect(mocks.maybeRequireActiveVenuePresence).not.toHaveBeenCalled();
+
+    for (const [code, status] of [["not_eligible", 409], ["already_redeemed", 409], ["not_found", 404], ["expired", 410], ["unavailable", 503], ["square_error", 502]] as const) {
+      mocks.ensureSquarePrizeDiscount.mockResolvedValueOnce({ ok: false, code, message: "m" });
       const res = await call({ userId: "user-1", venueId: "venue-1", redemptionId: "r" });
       expect(res.status).toBe(status);
       expect(await res.json()).toEqual({ ok: false, code, error: "m" });
@@ -256,5 +377,30 @@ describe("POST /api/webhooks/square", () => {
     mocks.recordSquareGiftCardActivity.mockResolvedValue({ ok: false });
     const body = JSON.stringify({ type: "gift_card.activity.created", data: { object: { gift_card_activity: { id: "a", gift_card_id: "g" } } } });
     expect((await send(body, sign(body))).status).toBe(500);
+  });
+
+  describe("oauth.authorization.revoked (Phase 2c)", () => {
+    const revoked = JSON.stringify({
+      merchant_id: "M1",
+      type: "oauth.authorization.revoked",
+      event_id: "e1",
+      created_at: "2026-10-06T15:51:04.246373287Z",
+      data: { type: "revocation", id: "r1", object: { revocation: { revoked_at: "2026-10-06T15:51:00.246373287Z", revoker_type: "MERCHANT" } } },
+    });
+
+    it("is signature-verified: a bad signature does nothing", async () => {
+      expect((await send(revoked, "nope")).status).toBe(401);
+      expect(mocks.recordSquareRevocation).not.toHaveBeenCalled();
+    });
+
+    it("records the revocation (flag off too), and 500s a database failure so Square retries", async () => {
+      vi.stubEnv("NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED", "");
+      mocks.recordSquareRevocation.mockResolvedValueOnce({ ok: true, changed: 1 });
+      expect((await send(revoked, sign(revoked))).status).toBe(200);
+      expect(mocks.recordSquareRevocation).toHaveBeenCalledWith(expect.objectContaining({ merchant_id: "M1" }));
+      expect(mocks.recordSquareGiftCardActivity).not.toHaveBeenCalled();
+      mocks.recordSquareRevocation.mockResolvedValueOnce({ ok: false });
+      expect((await send(revoked, sign(revoked))).status).toBe(500);
+    });
   });
 });

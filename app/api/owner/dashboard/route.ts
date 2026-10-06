@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listOwnerCompetitions } from "@/lib/ownerCompetitions";
+import { venuesNeedingPosAttention } from "@/lib/pos/connections";
 import { listOwnerSchedules, ownsVenue } from "@/lib/ownerSchedule";
 import { listOwnerVenues } from "@/lib/ownerVenueList";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
@@ -81,10 +82,16 @@ export async function GET(request: Request) {
 
   // No gameType -> merged calendar across both engines, exactly as
   // GET /api/owner/schedule with no filter.
-  const [schedules, competitions] = await Promise.all([
+  //
+  // `posAttentionVenueIds` (POS plan Phase 2c): which of the owner's venues have a register
+  // connection that needs reconnecting, for the dashboard's one-line nudge. One indexed read for
+  // every venue at once, none while NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED is off; never fails
+  // the dashboard (an error is just "no nudge").
+  const [schedules, competitions, posAttentionVenueIds] = await Promise.all([
     settle(listOwnerSchedules(venueId), "Failed to load schedules."),
     settle(listOwnerCompetitions(auth.ownerId, venueId), "Failed to load competitions."),
+    venuesNeedingPosAttention(venues.map((venue) => venue.id)).catch((): string[] => []),
   ]);
 
-  return NextResponse.json({ ok: true, venues, venueId, schedules, competitions });
+  return NextResponse.json({ ok: true, venues, venueId, schedules, competitions, posAttentionVenueIds });
 }

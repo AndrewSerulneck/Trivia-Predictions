@@ -1,10 +1,12 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { PrizeRedeemUnavailableError, redeemChallengePrize } from "@/lib/challengeCampaigns";
+import { squareEnvironment } from "@/lib/pos/squareConfig";
+import { markSquareMerchantRevoked } from "@/lib/pos/squareConnection";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // Square webhook: signature check + gift card activity recording
-// (docs/pos-rewards-integration-plan.md Phase 2).
+// (docs/pos-rewards-integration-plan.md Phase 2) + OAuth revocations (Phase 2c).
 //
 // Subscribe the Square app to `gift_card.activity.created`. Square sends it for EVERY gift
 // card activity at every merchant that connected our app — including the partner's own gift
@@ -135,4 +137,38 @@ const claimIfUnclaimed = async (redemptionId: string): Promise<void> => {
     if (!(error instanceof PrizeRedeemUnavailableError)) return;
     console.error("[PosSquare] webhook-backstop-claim-unavailable", { redemptionId });
   }
+};
+
+export type SquareRevocationEvent = {
+  merchant_id?: string;
+  created_at?: string;
+  data?: { object?: { revocation?: { revoked_at?: string; revoker_type?: string } } };
+};
+
+export type RecordRevocationResult =
+  | { ok: true; changed: number; skipped?: "no_merchant" | "no_environment" | "no_time" }
+  | { ok: false };
+
+/**
+ * `oauth.authorization.revoked` (Phase 2c): our access to a merchant ended — the partner removed
+ * our app in Square, Square did, or our own Disconnect's RevokeToken did. Matches that merchant's
+ * live rows in THIS server's Square environment that were connected before the revocation
+ * (lib/pos/squareConnection.ts markSquareMerchantRevoked). Our own Disconnect already marked its
+ * row revoked, so the usual case is a no-op. Square sends nanosecond timestamps; Date.parse
+ * reads them (to the millisecond).
+ */
+export const recordSquareRevocation = async (event: SquareRevocationEvent): Promise<RecordRevocationResult> => {
+  const merchantId = String(event.merchant_id ?? "").trim();
+  if (!merchantId) return { ok: true, changed: 0, skipped: "no_merchant" };
+  const environment = squareEnvironment();
+  if (!environment) return { ok: true, changed: 0, skipped: "no_environment" };
+  const revocation = event.data?.object?.revocation;
+  const whenMs = Date.parse(revocation?.revoked_at ?? event.created_at ?? "");
+  if (!Number.isFinite(whenMs)) return { ok: true, changed: 0, skipped: "no_time" };
+  return markSquareMerchantRevoked({
+    merchantId,
+    environment,
+    revokedAt: new Date(whenMs).toISOString(),
+    revokerType: revocation?.revoker_type ?? null,
+  });
 };

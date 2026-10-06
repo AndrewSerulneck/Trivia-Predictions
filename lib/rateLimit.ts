@@ -106,6 +106,32 @@ export const SIGNUP_RATE_LIMITS = {
    * hour is generous for that and slow for enumeration.
    */
   emailCheck: { windowSeconds: 3600, max: 15 },
+  /**
+   * POST /api/prizes/square-gift-card (docs/pos-rewards-integration-plan.md Phase 2c) — the
+   * guest's "Get my Square gift card" / "Show gift card". Not a signup route, but the same
+   * atomic limiter. Every call can reach Square (create once per coupon; one read per later
+   * open), so it is capped per signed-in USER (keyed on the user alone, not the IP, so moving
+   * from bar Wi-Fi to cellular doesn't reset it) and per IP.
+   *
+   * 30/hour per user is far above a real guest (open the card, show it at the register a few
+   * times) and far below anything that would trouble Square's limits.
+   */
+  squareGiftCardUser: { windowSeconds: 3600, max: 30 },
+  /**
+   * The per-IP ceiling for the same route. A bar's shared Wi-Fi puts every guest behind one IP:
+   * a busy night is ~50 winners x a few opens, so 300/hour leaves room for that and still caps
+   * one address hammering with many accounts.
+   */
+  squareGiftCardIp: { windowSeconds: 3600, max: 300 },
+  /**
+   * POST /api/prizes/square-discount (POS plan Phase 2d) — a menu-item coupon at a Square venue
+   * asking for its ready-made Square discount's name. One Square search per call (plus one
+   * create the first time a prize is used at a merchant). Per signed-in user, like the gift card
+   * route: 30/hour is far above a guest opening a coupon a few times.
+   */
+  squareDiscountUser: { windowSeconds: 3600, max: 30 },
+  /** The per-IP ceiling for the same route; same reasoning as `squareGiftCardIp`. */
+  squareDiscountIp: { windowSeconds: 3600, max: 300 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitBucket = keyof typeof SIGNUP_RATE_LIMITS;
@@ -208,7 +234,7 @@ type ClaimSignupAttemptRow = {
 export async function rateLimit(
   request: Request,
   bucket: RateLimitBucket,
-  options: { identity?: string; rule?: RateLimitRule } = {}
+  options: { identity?: string; rule?: RateLimitRule; ignoreIp?: boolean } = {}
 ): Promise<RateLimitResult> {
   const rule = options.rule ?? SIGNUP_RATE_LIMITS[bucket];
   const windowSeconds = Math.max(1, Math.floor(rule.windowSeconds));
@@ -224,7 +250,10 @@ export async function rateLimit(
     return closed;
   }
 
-  const ipHash = hashRequesterIp(bucket, deriveRequesterIp(request), options.identity ?? "");
+  // `ignoreIp` keys the bucket on the identity alone (a signed-in user id): the same person on
+  // two networks shares one bucket. Only meaningful with a non-empty identity.
+  const ip = options.ignoreIp && options.identity ? "" : deriveRequesterIp(request);
+  const ipHash = hashRequesterIp(bucket, ip, options.identity ?? "");
 
   const { data, error } = await supabaseAdmin.rpc("claim_signup_attempt", {
     p_ip_hash: ipHash,
@@ -314,6 +343,28 @@ export async function rateLimitSignupSubmit(request: Request, email: string): Pr
   if (!perIdentity.allowed) return perIdentity;
 
   return rateLimit(request, "signupSubmitIp");
+}
+
+/**
+ * `POST /api/prizes/square-gift-card` (POS plan Phase 2c): the signed-in user's bucket FIRST,
+ * then the IP's — same reasoning as `rateLimitSignupSubmit`: a denial records nothing, so one
+ * guest tapping too often is stopped by their own bucket without eating the bar's shared IP
+ * ceiling. `userId` must already be bound to the signed session. Fails CLOSED in both tiers.
+ */
+export async function rateLimitSquareGiftCard(request: Request, userId: string): Promise<RateLimitResult> {
+  const perUser = await rateLimit(request, "squareGiftCardUser", { identity: userId, ignoreIp: true });
+  if (!perUser.allowed) return perUser;
+  return rateLimit(request, "squareGiftCardIp");
+}
+
+/**
+ * `POST /api/prizes/square-discount` (POS plan Phase 2d): user bucket first, then IP — same
+ * order and reasoning as `rateLimitSquareGiftCard`. Fails CLOSED in both tiers.
+ */
+export async function rateLimitSquareDiscount(request: Request, userId: string): Promise<RateLimitResult> {
+  const perUser = await rateLimit(request, "squareDiscountUser", { identity: userId, ignoreIp: true });
+  if (!perUser.allowed) return perUser;
+  return rateLimit(request, "squareDiscountIp");
 }
 
 /**

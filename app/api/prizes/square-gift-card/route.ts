@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { openSquareGiftCard } from "@/lib/pos/squareGiftCards";
+import { rateLimitSquareGiftCard } from "@/lib/rateLimit";
 import { resolveRequestUserId } from "@/lib/serverSession";
 import { maybeRequireActiveVenuePresence, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
@@ -12,6 +13,10 @@ import { maybeRequireActiveVenuePresence, venuePresenceErrorResponse } from "@/l
  * winner only: the caller is bound to the signed session (a body userId that disagrees → 403),
  * and the coupon must belong to that user at that venue. Same venue-presence gate as
  * "Confirm Redemption". The number is never logged.
+ *
+ * Rate-limited per signed-in user and per IP (Phase 2c, lib/rateLimit.ts
+ * rateLimitSquareGiftCard), after the session check and before any database or Square work.
+ * Fails closed: a limiter outage answers 503 and the guest keeps the normal coupon.
  */
 
 const STATUS: Record<string, number> = {
@@ -38,6 +43,23 @@ export async function POST(request: Request) {
     const redemptionId = String(body?.redemptionId ?? "").trim();
     if (!userId || !venueId || !redemptionId) {
       return NextResponse.json({ ok: false, error: "userId, venueId, and redemptionId are required." }, { status: 400 });
+    }
+
+    const limit = await rateLimitSquareGiftCard(request, userId);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: limit.unavailable ? "unavailable" : "rate_limited",
+          error: limit.unavailable
+            ? "Square gift cards are unavailable right now. Please try again in a minute."
+            : "Too many tries. Please wait a few minutes and try again.",
+        },
+        {
+          status: limit.unavailable ? 503 : 429,
+          headers: { "Retry-After": String(Math.max(1, limit.retryAfterSeconds)), "Cache-Control": "no-store" },
+        },
+      );
     }
 
     await maybeRequireActiveVenuePresence({ userId, venueId });

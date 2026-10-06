@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { squareWebhookConfig } from "@/lib/pos/squareConfig";
-import { recordSquareGiftCardActivity, verifySquareSignature, type SquareGiftCardActivity } from "@/lib/pos/squareWebhook";
+import {
+  recordSquareGiftCardActivity,
+  recordSquareRevocation,
+  verifySquareSignature,
+  type SquareGiftCardActivity,
+  type SquareRevocationEvent,
+} from "@/lib/pos/squareWebhook";
 
 // The signature is computed over the exact raw body — read it as text, never re-serialise.
 export const runtime = "nodejs";
@@ -14,8 +20,10 @@ export const runtime = "nodejs";
  * configured signature key it answers 503 (Square retries) rather than accepting unverifiable
  * events.
  *
- * Handles `gift_card.activity.created` (and `.updated`); every other verified event is a 200
- * no-op so Square doesn't retry it. One log line per event, no per-event table scans.
+ * Handles `gift_card.activity.created` (and `.updated`) and, since Phase 2c,
+ * `oauth.authorization.revoked` (the partner removed our app → "Reconnect needed"). Every other
+ * verified event is a 200 no-op so Square doesn't retry it. One log line per event, no
+ * per-event table scans, never the raw body.
  */
 export async function POST(request: Request) {
   const config = squareWebhookConfig();
@@ -36,11 +44,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid signature." }, { status: 401 });
   }
 
-  let event: { type?: string; event_id?: string; data?: { object?: { gift_card_activity?: SquareGiftCardActivity } } };
+  let event: SquareRevocationEvent & {
+    type?: string;
+    event_id?: string;
+    data?: { object?: { gift_card_activity?: SquareGiftCardActivity } };
+  };
   try {
     event = JSON.parse(rawBody) as typeof event;
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid JSON." }, { status: 400 });
+  }
+
+  if (event.type === "oauth.authorization.revoked") {
+    const revoked = await recordSquareRevocation(event);
+    if (!revoked.ok) return NextResponse.json({ ok: false }, { status: 500 });
+    console.info("[PosSquare] webhook-revoked", {
+      eventId: event.event_id ?? null,
+      revokerType: event.data?.object?.revocation?.revoker_type ?? null,
+      changed: revoked.changed,
+      ...(revoked.skipped ? { skipped: revoked.skipped } : {}),
+    });
+    return NextResponse.json({ ok: true });
   }
 
   if (event.type !== "gift_card.activity.created" && event.type !== "gift_card.activity.updated") {

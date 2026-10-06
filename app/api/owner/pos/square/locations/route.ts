@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
-import { listSquareLocations } from "@/lib/pos/square";
+import { isSquareGiftCardLocation, listSquareLocations } from "@/lib/pos/square";
 import { loadSquareTokenForSetup, setSquareLocation } from "@/lib/pos/squareConnection";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 
@@ -13,6 +13,10 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * Owner-only, venue-scoped, 404 with the flag off. The POST re-lists locations from Square and
  * refuses an id that isn't one of them, so a partner can't point the venue at a location from
  * someone else's account. One Square call per request; only while the partner is choosing.
+ *
+ * Phase 2c: each location carries `eligible` (US location, USD — isSquareGiftCardLocation), the
+ * picker greys out the rest, and the POST refuses an ineligible one. Currency and country
+ * themselves aren't sent.
  */
 
 type Auth = { ownerId: string; venueIds: string[] };
@@ -35,6 +39,7 @@ const guard = async (request: Request, venueId: string): Promise<{ auth: Auth } 
 };
 
 const LOAD_ERROR = "Couldn't load your Square locations.";
+const NOT_ELIGIBLE_LOCATION = "That location can't issue Hightop gift cards: it must be a US location that uses US dollars.";
 
 const loadLocations = async (venueId: string) => {
   const token = await loadSquareTokenForSetup(venueId);
@@ -50,7 +55,15 @@ export async function GET(request: Request) {
 
   const locations = await loadLocations(venueId);
   if (!locations) return NextResponse.json({ ok: false, error: LOAD_ERROR }, { status: 502 });
-  return NextResponse.json({ ok: true, locations });
+  return NextResponse.json({
+    ok: true,
+    locations: locations.map((location) => ({
+      id: location.id,
+      name: location.name,
+      address: location.address,
+      eligible: isSquareGiftCardLocation(location),
+    })),
+  });
 }
 
 export async function POST(request: Request) {
@@ -64,8 +77,12 @@ export async function POST(request: Request) {
 
   const locations = await loadLocations(venueId);
   if (!locations) return NextResponse.json({ ok: false, error: LOAD_ERROR }, { status: 502 });
-  if (!locations.some((location) => location.id === locationId)) {
+  const chosen = locations.find((location) => location.id === locationId);
+  if (!chosen) {
     return NextResponse.json({ ok: false, error: "That location isn't on your Square account." }, { status: 400 });
+  }
+  if (!isSquareGiftCardLocation(chosen)) {
+    return NextResponse.json({ ok: false, error: NOT_ELIGIBLE_LOCATION }, { status: 400 });
   }
 
   const saved = await setSquareLocation(venueId, locationId);

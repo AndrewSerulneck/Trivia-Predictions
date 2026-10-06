@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { PosConnectionsSheet, posConnectHref } from "@/components/owner/pos/PosConnectionsSheet";
+import { POS_RESULT_MESSAGES, PosConnectionsSheet, posConnectHref, SQUARE_ATTENTION_TEXT } from "@/components/owner/pos/PosConnectionsSheet";
 import type { PosConnectionStatus } from "@/lib/pos/types";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 
@@ -68,6 +68,36 @@ describe("PosConnectionsSheet", () => {
     expect(screen.getByText("Coming soon")).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith("/api/owner/pos?venueId=venue-1", { cache: "no-store" });
+  });
+
+  it("Phase 2c: a Square connection that needs attention explains itself and offers Reconnect and Disconnect", async () => {
+    stubFetch({ ok: true, statuses: [status({ provider: "square", state: "needs_attention", merchantName: "Pub LLC" })] });
+    render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE }));
+    expect(await screen.findByText(SQUARE_ATTENTION_TEXT)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Reconnect" }).getAttribute("href")).toBe(posConnectHref("square", "venue-1"));
+    expect(screen.getByRole("button", { name: "Disconnect" })).toBeTruthy();
+  });
+
+  it("Phase 2c: says why an account that can't issue US-dollar gift cards wasn't connected", () => {
+    stubFetch({ ok: true, statuses: [] });
+    render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE, posResult: "not_eligible" }));
+    expect(screen.getByText(POS_RESULT_MESSAGES.not_eligible.text)).toBeTruthy();
+    expect(POS_RESULT_MESSAGES.not_eligible.text).toContain("US dollars");
+  });
+
+  it("Phase 2c: the location picker greys out a location that can't issue our gift cards", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      const body = url.startsWith("/api/owner/pos/square/locations")
+        ? { ok: true, locations: [{ id: "L1", name: "Main", address: null, eligible: true }, { id: "L2", name: "Toronto", address: null, eligible: false }] }
+        : { ok: true, statuses: [status({ provider: "square", state: "connected", needsLocation: true })] };
+      return { ok: true, json: async () => body } as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE }));
+    const toronto = (await screen.findByText(/Toronto/)) as HTMLOptionElement;
+    expect(toronto.disabled).toBe(true);
+    expect(toronto.textContent).toContain("not US dollars");
+    expect((screen.getByText("Main") as HTMLOptionElement).disabled).toBe(false);
   });
 
   it("shows the error with a Retry that asks again", async () => {

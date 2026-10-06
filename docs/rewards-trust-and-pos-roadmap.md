@@ -30,11 +30,11 @@ and Clover first, apply to Toast later with real results (2026-10-03, Plan C §1
 | A4 code review + phone check | agent + Andrew | Opus 5.5 · medium |
 | B1 fix redemption bugs (session check, once-only) — **done 2026-10-05** (uncommitted; migration **applied to production 2026-10-05** together with the POS foundation one; `docs/reward-live-redemption-plan_PHASE_1_HANDOFF.md`) | agent | Opus 5.5 · high |
 | B2 live coupon (shimmer, ticking clock, tap sparkle) — **done 2026-10-05** (uncommitted; `docs/reward-live-redemption-plan_PHASE_2_HANDOFF.md`) | agent | Sonnet 5.5 · high |
-| B3 code + security review, phone check — **review done 2026-10-05; phone check passed (Andrew, 2026-10-05)**. Left: delete the test coupon, commit + deploy (`docs/reward-live-redemption-plan_PHASE_3_HANDOFF.md`) | agent + Andrew | Opus 5.5 · medium |
+| B3 code + security review, phone check — **COMPLETE — committed `27f5eea`, deployed 2026-10-05.** Only the test-coupon delete is left (Andrew runs it; `docs/reward-live-redemption-plan_PHASE_3_HANDOFF.md` §2) | agent + Andrew | Opus 5.5 · medium |
 | C0 business setup (Square dev account now, Clover later; who funds prizes) | Andrew — **start now** | — |
-| C1 POS foundation — **done 2026-10-04** (uncommitted; `docs/pos-rewards-integration-plan_PHASE_1_HANDOFF.md`) | agent | Opus 5.5 · high |
-| C2 Square gift cards — **built 2026-10-05** (uncommitted, flag off; sandbox end-to-end pending Andrew's Square app keys; `docs/pos-rewards-integration-plan_PHASE_2_HANDOFF.md`) | agent | Opus 5.5 · high |
-| C3 Clover discounts on open checks | agent | Opus 5.5 · high |
+| C1 POS foundation — **done 2026-10-04** (committed `27f5eea`, deployed 2026-10-05 behind the off switch; `docs/pos-rewards-integration-plan_PHASE_1_HANDOFF.md`) | agent | Opus 5.5 · high |
+| C2 Square gift cards — **built 2026-10-05** (committed `27f5eea`, deployed with the switch off; sandbox keys verified 2026-10-05; the browser connect → card → spend run still needs Andrew at the keyboard; `docs/pos-rewards-integration-plan_PHASE_2_HANDOFF.md`) | agent | Opus 5.5 · high |
+| C3 Clover — **re-planned 2026-10-05 as a Clover register app** (Andrew: build it now; a scannable code on the coupon is OK). Staff scan or type the coupon in our app on the Clover register; no staff phones or logins. Sub-phases 3a–3f in the plan §4 Phase 3; next is **3a** (spike + toolchain), which needs Andrew to create the Clover Android app in the sandbox dashboard and pick test hardware first | Andrew (two setup items), then agent | Opus 5.5 · high |
 | C4 Toast — **deferred**; re-plan after Square/Clover are live and Toast accepts us | — | — |
 | C5 partner reporting + review | agent | Sonnet 5.5 · medium, then Opus 5.5 · medium |
 

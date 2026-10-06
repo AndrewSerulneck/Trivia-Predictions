@@ -74,6 +74,7 @@ type OneShot = {
   venueId?: string | null;
   schedules?: unknown;
   competitions?: unknown;
+  posAttentionVenueIds?: string[];
 };
 
 /** Stub fetch with a one-shot payload; per-list routes answer empty unless overridden. */
@@ -234,5 +235,48 @@ describe("Partner Dashboard first load (speed plan Phase 5)", () => {
     render(createElement(OwnerDashboardPage));
     await waitFor(() => expect(screen.getByText("No venue found for this account.")).toBeTruthy());
     expect(calls).toEqual(["/api/owner/dashboard"]);
+  });
+});
+
+// POS plan Phase 2c — the one-line nudge when a venue's Square connection needs attention.
+// It comes from the SAME first-load payload (all venues at once), so it adds no request.
+describe("Partner Dashboard POS nudge (POS plan Phase 2c)", () => {
+  const NUDGE = /Square needs reconnecting/;
+
+  beforeAll(() => {
+    vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+  });
+
+  beforeEach(() => {
+    window.history.replaceState(null, "", "/owner/dashboard");
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    document.body.removeAttribute("style");
+    document.body.className = "";
+  });
+
+  it("shows only for the flagged venue, follows a venue switch with no new request, and opens Point of Sale", async () => {
+    vi.stubEnv("NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED", "true");
+    const calls = stubApi({ posAttentionVenueIds: ["venue-2"] });
+    await openDashboard();
+    expect(screen.queryByText(NUDGE)).toBeNull();
+
+    await switchVenue("Second Spot");
+    expect(await screen.findByText(NUDGE)).toBeTruthy();
+    expect(calls.filter((url) => url.startsWith("/api/owner/pos"))).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open Point of Sale" }));
+    await waitFor(() => expect(new URLSearchParams(window.location.search).get("sheet")).toBe("pos"));
+  });
+
+  it("never shows with the POS flag off", async () => {
+    stubApi({ posAttentionVenueIds: ["venue-1"] });
+    await openDashboard();
+    expect(screen.queryByText(NUDGE)).toBeNull();
   });
 });

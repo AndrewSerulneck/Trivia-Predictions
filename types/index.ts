@@ -402,6 +402,14 @@ export interface ChallengeCampaignWin {
    * Absent everywhere else, including whenever the POS flag is off.
    */
   squareGiftCard?: SquareGiftCardState | null;
+  /**
+   * Menu-item coupons that can use a ready-made Square discount (POS plan Phase 2d), attached
+   * server-side by attachSquareDiscountStates (lib/pos/squareDiscounts.ts): unredeemed,
+   * unexpired, at a venue whose Square connection granted the catalog scopes. The open coupon
+   * then asks POST /api/prizes/square-discount for the discount's name to show staff. Absent
+   * everywhere else, including whenever the POS flag is off.
+   */
+  squareDiscount?: boolean;
 }
 
 export type SquareGiftCardState = "available" | "issued" | "used";

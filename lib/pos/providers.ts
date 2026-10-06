@@ -36,7 +36,7 @@ export const POS_PROVIDERS: readonly PosProviderInfo[] = [
   {
     id: "square",
     label: "Square",
-    pitch: "Gift card prizes become real Square gift cards your register accepts.",
+    pitch: "Gift card prizes become real Square gift cards; other prizes get a ready-made Square discount for staff to tap.",
     availability: "available",
   },
   {

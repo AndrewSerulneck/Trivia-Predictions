@@ -37,6 +37,9 @@ type PendingRing =
   | ({ list: "games" } & PendingHighlight<SectionLoad<OwnerSchedule>>)
   | ({ list: "rewards" } & PendingHighlight<SectionLoad<OwnerCompetition>>);
 
+/** The dashboard's one line when a venue's register connection needs attention (Phase 2c). */
+const POS_NUDGE_TEXT = "Square needs reconnecting. Until then, gift card prizes use the normal coupon.";
+
 type ListResult<T> = { ok: true; items: T[] } | { ok: false; message: string };
 
 /** GET a list endpoint, or hand a 401 to `onUnauthorized` (returns `null` = redirecting). */
@@ -75,6 +78,8 @@ type DashboardPayload = {
   venueId?: string | null;
   schedules?: WireList<OwnerSchedule>;
   competitions?: WireList<OwnerCompetition>;
+  /** Venues whose register connection needs reconnecting (POS plan Phase 2c). Absent = none. */
+  posAttentionVenueIds?: string[];
 };
 
 /** The first load's answers, fetched with the page, handed to `DashboardBody` as its seed. */
@@ -105,10 +110,12 @@ type DashboardBodyProps = {
   initial?: InitialLists | null;
   /** Fired once both lists have answered, so the page can drop its first-load loader. */
   onReady: () => void;
+  /** This venue's register (Square) connection needs reconnecting: show the one-line nudge. */
+  posNeedsAttention?: boolean;
 };
 
 // Keyed by venue at the call site: switching venues remounts it with fresh loading state.
-const DashboardBody = ({ venueId, venueName, initial = null, onReady }: DashboardBodyProps) => {
+const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAttention = false }: DashboardBodyProps) => {
   const router = useRouter();
   const sheet = useOwnerSheet();
   // The one-round-trip seed, accepted ONLY for the venue it was fetched for: this
@@ -127,6 +134,9 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady }: Dashboar
   // advisory about pinned rewards (persistent, because it explains a side effect).
   const [toast, setToast] = useState<ToastState | null>(null);
   const [advisory, setAdvisory] = useState<string | null>(null);
+  // The POS nudge, dismissible for this mount (it comes back on the next dashboard load while
+  // the connection still needs attention).
+  const [posNudgeDismissed, setPosNudgeDismissed] = useState(false);
   // Each open of the schedule sheet mounts a fresh flow (a new `key`) so it never
   // inherits the last game's answers; `scheduleTarget` is the game that was tapped.
   const [scheduleSession, setScheduleSession] = useState(0);
@@ -265,6 +275,15 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady }: Dashboar
           {advisory}
         </DashboardNotice>
       ) : null}
+      {posNeedsAttention && !posNudgeDismissed ? (
+        <DashboardNotice
+          tone="advisory"
+          action={{ label: "Open Point of Sale", onClick: () => sheet.openSheet("pos") }}
+          onDismiss={() => setPosNudgeDismissed(true)}
+        >
+          {POS_NUDGE_TEXT}
+        </DashboardNotice>
+      ) : null}
       <LiveGamesSection
         load={games}
         nowMs={gamesAsOfMs}
@@ -378,6 +397,8 @@ const OwnerDashboardPage = () => {
   // that brought the venue list. Null = no venue, the call failed, or the seed has
   // already been consumed.
   const [initialLists, setInitialLists] = useState<InitialLists | null>(null);
+  // From the same first-load call; covers every venue, so a venue switch needs no request.
+  const [posAttentionVenueIds, setPosAttentionVenueIds] = useState<string[]>([]);
   const handleBodyReady = useCallback(() => {
     setBodyReady(true);
     // CONSUME the seed. It describes one venue at one moment — the venue this page
@@ -412,6 +433,7 @@ const OwnerDashboardPage = () => {
         setVenues(loadedVenues);
         const venueId = data.venueId ?? loadedVenues[0]?.id ?? "";
         setSelectedVenueId((prev) => prev || venueId);
+        setPosAttentionVenueIds(Array.isArray(data.posAttentionVenueIds) ? data.posAttentionVenueIds : []);
         // Both lists or neither: a partial seed would leave one section stuck on
         // "loading" with nothing on the way, because its effect is suppressed.
         if (venueId && data.schedules && data.competitions) {
@@ -491,6 +513,7 @@ const OwnerDashboardPage = () => {
               venueName={selectedVenue?.name ?? "This venue"}
               initial={initialLists}
               onReady={handleBodyReady}
+              posNeedsAttention={isPosIntegrationsEnabled() && posAttentionVenueIds.includes(selectedVenueId)}
             />
           </Suspense>
         </div>

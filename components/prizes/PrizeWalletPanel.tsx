@@ -9,6 +9,7 @@ import { getUserId, getUsername, getVenueId } from "@/lib/storage";
 import { clockOffsetFromServer } from "@/lib/liveCouponClock";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { LiveCouponFrame } from "@/components/prizes/LiveCouponFrame";
+import { SquareDiscountHint } from "@/components/prizes/SquareDiscountHint";
 import { SquareGiftCardPanel } from "@/components/prizes/SquareGiftCardPanel";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import type { ChallengeCampaignWin, PrizeType, PrizeWin, RewardMenuItem } from "@/types";
@@ -368,7 +369,7 @@ type RedeemModalProps = {
   clockOffsetMs: number;
   username: string | null;
   venueName: string | null;
-  /** Square gift card path (docs/pos-rewards-integration-plan.md Phase 2) — used only when `win.squareGiftCard` is set. */
+  /** Square paths (docs/pos-rewards-integration-plan.md Phase 2 / 2d) — used only when `win.squareGiftCard` or `win.squareDiscount` is set. */
   userId: string;
   venueId: string;
   onSquareIssued: () => void;
@@ -440,6 +441,8 @@ function RedeemModal({
               </p>
             </div>
             {frame(<ChallengeCoupon win={win} onRedeem={() => {}} large />)}
+            {/* Menu-item prize at a Square venue (POS plan Phase 2d): which Square discount staff tap. */}
+            {win.squareDiscount ? <SquareDiscountHint win={win} userId={userId} venueId={venueId} /> : null}
             <div className="flex gap-3">
               <button
                 type="button"

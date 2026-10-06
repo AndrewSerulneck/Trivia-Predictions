@@ -16,6 +16,8 @@ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 // consent screen, then back here with `?posResult=`, which the page passes in as `posResult`).
 // A connected Square account with several locations asks which one issues gift cards; a
 // connected one offers Disconnect (two taps). Clover/Toast still read "Coming soon".
+// Phase 2d: a Square account connected before menu-item discounts existed shows "Reconnect
+// Square" once (same link; a reconnect keeps the chosen location) to grant the catalog scopes.
 //
 // One GET per open (`/api/owner/pos?venueId=`), nothing while closed, no polling. The location
 // list is fetched only while a location still has to be chosen.
@@ -35,16 +37,21 @@ export type PosConnectionsSheetProps = {
 
 /** One sentence per connect outcome (PosConnectResult in lib/pos/squareRoutes.ts). */
 export const POS_RESULT_MESSAGES: Record<string, { tone: "good" | "bad"; text: string }> = {
-  connected: { tone: "good", text: "Square is connected. Gift card prizes can now become Square gift cards." },
+  connected: { tone: "good", text: "Square is connected. Guests' prizes can now be taken at your Square register." },
   choose_location: { tone: "good", text: "Square is connected. Choose which location issues gift cards." },
   denied: { tone: "bad", text: "Square wasn't connected — access was declined." },
   expired: { tone: "bad", text: "That connection attempt expired. Please tap Connect again." },
   no_location: { tone: "bad", text: "Your Square account has no active location, so it can't issue gift cards." },
+  not_eligible: {
+    tone: "bad",
+    text: "Square gift cards need a US Square location that uses US dollars, so this account wasn't connected. Guests keep the normal coupon.",
+  },
   not_configured: { tone: "bad", text: "Square connections aren't set up yet. Please contact Hightop support." },
   error: { tone: "bad", text: "Square couldn't be connected. Please try again." },
 };
 
-type SquareLocationOption = { id: string; name: string; address: string | null };
+/** `eligible` = a US location in US dollars (Phase 2c); the others are shown but can't be picked. */
+type SquareLocationOption = { id: string; name: string; address: string | null; eligible: boolean };
 
 /** Pick the Square location that issues gift cards (multi-location accounts only). */
 const SquareLocationPicker = ({ venueId, onSaved }: { venueId: string; onSaved: () => void }) => {
@@ -106,8 +113,9 @@ const SquareLocationPicker = ({ venueId, onSaved }: { venueId: string; onSaved: 
         >
           <option value="">Choose a location</option>
           {locations.map((location) => (
-            <option key={location.id} value={location.id}>
+            <option key={location.id} value={location.id} disabled={!location.eligible}>
               {location.address ? `${location.name} — ${location.address}` : location.name}
+              {location.eligible ? "" : " (not US dollars)"}
             </option>
           ))}
         </select>
@@ -184,6 +192,18 @@ export const posConnectHref = (provider: string, venueId: string): string =>
   `/api/owner/pos/${encodeURIComponent(provider)}/connect?venueId=${encodeURIComponent(venueId)}`;
 
 const LOAD_ERROR = "Couldn't load your point-of-sale connections.";
+
+/** Under a connected Square account that granted everything (Phase 2d). */
+export const SQUARE_CONNECTED_TEXT =
+  "Gift card prizes become Square gift cards. Free-item and $ or % off prizes add a ready-made \"Hightop prize\" discount to your Square for staff to tap.";
+
+/** Under a Square account connected before Phase 2d (no catalog permission yet). */
+export const SQUARE_MENU_PRIZE_RECONNECT_TEXT =
+  "Gift card prizes become Square gift cards. Reconnect once to also give free-item and $ or % off prizes a ready-made discount staff can tap in Square. Until then they use the normal coupon.";
+
+/** Shown under a Square connection that needs attention (Square removed our access, etc.). */
+export const SQUARE_ATTENTION_TEXT =
+  "Square isn't accepting this connection right now, so gift card prizes use the normal coupon. Reconnect to turn Square gift cards back on.";
 
 const StatusBadge = ({ status, venueId }: { status: PosConnectionStatus; venueId: string }) => {
   if (status.state === "connected") {
@@ -312,8 +332,16 @@ export const PosConnectionsSheet = ({ nav, venue, posResult = null }: PosConnect
                   {status.provider === "square" && status.state === "connected" ? (
                     <>
                       <p className="mt-1 text-xs font-semibold text-ht-muted">
-                        Gift card prizes become Square gift cards. Menu-item prizes keep the normal coupon.
+                        {status.needsMenuPrizeReconnect ? SQUARE_MENU_PRIZE_RECONNECT_TEXT : SQUARE_CONNECTED_TEXT}
                       </p>
+                      {status.needsMenuPrizeReconnect ? (
+                        <a
+                          href={posConnectHref("square", venue.id)}
+                          className="mt-2 inline-block rounded-full bg-ht-cyan-300 px-3 py-1.5 text-xs font-black text-slate-950"
+                        >
+                          Reconnect Square
+                        </a>
+                      ) : null}
                       {status.needsLocation ? (
                         <SquareLocationPicker venueId={venue.id} onSaved={() => setAttempt((n) => n + 1)} />
                       ) : null}
@@ -321,12 +349,18 @@ export const PosConnectionsSheet = ({ nav, venue, posResult = null }: PosConnect
                     </>
                   ) : null}
                   {status.provider === "square" && status.state === "needs_attention" ? (
-                    <a
-                      href={posConnectHref("square", venue.id)}
-                      className="mt-2 inline-block rounded-full bg-ht-cyan-300 px-3 py-1.5 text-xs font-black text-slate-950"
-                    >
-                      Reconnect
-                    </a>
+                    <>
+                      <p className="mt-1 text-xs font-semibold text-ht-muted">
+                        {SQUARE_ATTENTION_TEXT}
+                      </p>
+                      <a
+                        href={posConnectHref("square", venue.id)}
+                        className="mt-2 inline-block rounded-full bg-ht-cyan-300 px-3 py-1.5 text-xs font-black text-slate-950"
+                      >
+                        Reconnect
+                      </a>
+                      <SquareDisconnect venueId={venue.id} onDone={() => setAttempt((n) => n + 1)} />
+                    </>
                   ) : null}
                 </div>
                 <div className="shrink-0 pt-0.5">

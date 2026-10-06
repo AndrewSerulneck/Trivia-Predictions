@@ -8,8 +8,11 @@ import type { RewardDiscountKind, RewardPrizeKind } from "@/types";
 //   - "$5 off an entrée"   → $5 (the dollar discount IS the value);
 //   - "50% off appetizer"  → unknown until the partner says what it's worth. That figure is
 //                            `prize_pos_value_cents`, asked by the reward wizard only when the
-//                            venue has a POS connected. Null here = this prize can't go on a
-//                            POS; the guest keeps the normal coupon.
+//                            venue has a POS connected. OPTIONAL since Phase 2d (Andrew, plan §6
+//                            item 3): null = no limit. Square takes a percent prize without one
+//                            (lib/pos/squareDiscountSpec.ts); a future POS path that needs a
+//                            dollar figure (Clover, Phase 3) must treat null as "no cap", not
+//                            as "can't go on a POS".
 //
 // Pure and client-safe: the wizard and the Phase 2/3 apply services share it. Phase 3 still
 // caps the result by the open check's total.

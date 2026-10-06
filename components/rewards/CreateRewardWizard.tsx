@@ -178,7 +178,7 @@ type CreateRewardWizardProps = {
  *  week-scope picker. Every NFL-specific branch below is gated on this id. */
 const NFL_PICKEM_DEFINITION_ID = "nfl_pickem_challenge";
 
-const POS_VALUE_REQUIRED_MESSAGE = "Enter what this prize is worth at the register, like 12 or 12.50.";
+const POS_VALUE_INVALID_MESSAGE = "Enter a dollar amount, like 12 or 12.50, or leave it blank for no limit.";
 
 const MENU_ITEM_OPTIONS: Array<{ value: RewardMenuItem; label: string }> = [
   { value: "whole_order", label: "Whole Order" },
@@ -340,7 +340,7 @@ export function CreateRewardWizard({
   const [discountKind, setDiscountKind] = useState<RewardDiscountKind>("percent");
   const [discountValue, setDiscountValue] = useState("50");
   const [giftCardAmount, setGiftCardAmount] = useState("25");
-  // "Value at the register ($)" — asked only when the venue has a POS and the prize is % off.
+  // "Most it takes off at the register ($, optional)" — asked only when the venue has a POS and the prize is % off.
   const [posValue, setPosValue] = useState("");
   const [posValueError, setPosValueError] = useState<string | null>(null);
 
@@ -595,6 +595,9 @@ export function CreateRewardWizard({
 
   const asksPosValue = Boolean(context?.posConnected) && prizeNeedsPosValue(prizeChoice, discountKind);
   const posValueCents = asksPosValue ? parsePosValueDollars(posValue) : null;
+  // The register limit is OPTIONAL (Andrew, POS plan §6 item 3, 2026-10-06): blank = no limit.
+  // Only something typed that isn't a dollar amount stops the partner.
+  const posValueInvalid = asksPosValue && posValue.trim() !== "" && posValueCents === null;
 
   const prize: RewardPrizeInput = useMemo(() => {
     if (prizeChoice === "gift_card") {
@@ -727,8 +730,8 @@ export function CreateRewardWizard({
       setSubmitError("Enter a name for the menu item.");
       return;
     }
-    if (asksPosValue && posValueCents === null) {
-      setSubmitError(POS_VALUE_REQUIRED_MESSAGE);
+    if (posValueInvalid) {
+      setSubmitError(POS_VALUE_INVALID_MESSAGE);
       return;
     }
     // Only null for an invalid NFL scope, which returned above.
@@ -1309,7 +1312,7 @@ export function CreateRewardWizard({
               {asksPosValue ? (
                 <div>
                   <label className={s.label} htmlFor="reward-pos-value">
-                    Value at the register ($)
+                    Most it takes off at the register ($, optional)
                   </label>
                   <input
                     id="reward-pos-value"
@@ -1324,7 +1327,7 @@ export function CreateRewardWizard({
                     className={s.input}
                   />
                   <p className={`mt-1 ${s.helpText}`}>
-                    Your register takes off dollars, not items. Enter the most this prize is worth.
+                    Leave blank for no limit. With a limit, your register never takes off more than this.
                   </p>
                   {posValueError ? <p className={`mt-2 ${s.error}`}>{posValueError}</p> : null}
                 </div>
@@ -1349,8 +1352,8 @@ export function CreateRewardWizard({
             tone={footerTone}
             onBack={() => goTo("terms", "back")}
             onNext={() => {
-              if (asksPosValue && posValueCents === null) {
-                setPosValueError(POS_VALUE_REQUIRED_MESSAGE);
+              if (posValueInvalid) {
+                setPosValueError(POS_VALUE_INVALID_MESSAGE);
                 return;
               }
               goTo("confirm", "forward");
@@ -1377,7 +1380,7 @@ export function CreateRewardWizard({
             </div>
             {posValueCents !== null ? (
               <div className={s.summaryRow}>
-                <span>Value at the register</span>
+                <span>Most off at the register</span>
                 <span className="font-bold">${(posValueCents / 100).toFixed(2)}</span>
               </div>
             ) : null}

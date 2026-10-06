@@ -72,7 +72,7 @@ import { recordSquareGiftCardActivity } from "@/lib/pos/squareWebhook";
 import type { ChallengeCampaignWin } from "@/types";
 
 const RID = "11111111-1111-1111-1111-111111111111";
-const CREDS = { connectionId: "conn-1", venueId: "venue-1", provider: "square", environment: "sandbox", merchantId: "M", locationId: "L1", accessToken: "AT" };
+const CREDS = { connectionId: "conn-1", venueId: "venue-1", provider: "square", environment: "sandbox", merchantId: "M", locationId: "L1", accessToken: "AT", scopes: [] as string[] };
 
 const coupon = (overrides: Row = {}): Row => ({
   id: RID,
@@ -99,9 +99,9 @@ beforeEach(() => {
   vi.stubEnv("SQUARE_APPLICATION_SECRET", "secret");
   db.challenge_campaign_redemptions = [coupon()];
   mocks.loadSquareCredentials.mockReset().mockResolvedValue({ ok: true, credentials: CREDS });
-  mocks.prepareReward.mockReset().mockResolvedValue({ ok: true, externalRef: "gftc:1", amountCents: 0, detail: { location_id: "L1" } });
+  mocks.prepareReward.mockReset().mockResolvedValue({ ok: true, externalRef: "gftc:1", amountCents: 0, detail: { location_id: "L1", currency: "USD" } });
   mocks.applyReward.mockReset().mockResolvedValue({ ok: true, externalRef: "gftc:1", amountCents: 2500, detail: { balance_cents: 2500 } });
-  mocks.retrieveSquareGiftCard.mockReset().mockResolvedValue({ id: "gftc:1", gan: "7783320012345678", state: "ACTIVE", balanceCents: 2500 });
+  mocks.retrieveSquareGiftCard.mockReset().mockResolvedValue({ id: "gftc:1", gan: "7783320012345678", state: "ACTIVE", balanceCents: 2500, currency: "USD" });
   mocks.redeemChallengePrize.mockReset().mockImplementation(async () => {
     const row = db.challenge_campaign_redemptions[0];
     if (row.prize_redeemed_at) return { redeemed: false, redeemedAt: row.prize_redeemed_at };
@@ -207,6 +207,42 @@ describe("openSquareGiftCard", () => {
   it("says not eligible when the venue's Square isn't usable", async () => {
     mocks.loadSquareCredentials.mockResolvedValue({ ok: false, reason: "needs_location" });
     expect(await open()).toMatchObject({ ok: false, code: "not_eligible" });
+  });
+
+  describe("Phase 2c: the card's own currency is checked before the coupon is claimed", () => {
+    it("a non-USD card claims nothing and funds nothing; the guest keeps the normal coupon", async () => {
+      mocks.prepareReward.mockResolvedValue({ ok: true, externalRef: "gftc:1", amountCents: 0, detail: { location_id: "L1", currency: "CAD" } });
+      expect(await open()).toMatchObject({ ok: false, code: "not_eligible" });
+      expect(mocks.redeemChallengePrize).not.toHaveBeenCalled();
+      expect(mocks.applyReward).not.toHaveBeenCalled();
+      expect(db.challenge_campaign_redemptions[0].prize_redeemed_at).toBeNull();
+      expect(ledger()).toMatchObject({ status: "failed", error_message: "currency_not_supported:CAD" });
+      // Tapping again re-checks from the ledger: no second card, no Square call, still refused.
+      mocks.prepareReward.mockClear();
+      expect(await open()).toMatchObject({ ok: false, code: "not_eligible" });
+      expect(mocks.prepareReward).not.toHaveBeenCalled();
+      expect(mocks.retrieveSquareGiftCard).not.toHaveBeenCalled();
+    });
+
+    it("funds in USD, the prize currency", async () => {
+      await open();
+      expect(mocks.applyReward).toHaveBeenCalledWith(expect.objectContaining({ value: expect.objectContaining({ currency: "USD" }) }));
+      expect(ledger()).toMatchObject({ currency: "USD" });
+    });
+
+    it("a card prepared before Phase 2c (no saved currency) is read once from Square, then claimed", async () => {
+      mocks.prepareReward.mockResolvedValue({ ok: true, externalRef: "gftc:1", amountCents: 0, detail: { location_id: "L1" } });
+      expect((await open()).ok).toBe(true);
+      expect(mocks.retrieveSquareGiftCard.mock.invocationCallOrder[0]).toBeLessThan(mocks.redeemChallengePrize.mock.invocationCallOrder[0]);
+      expect(ledger().external_detail).toMatchObject({ currency: "USD" });
+    });
+
+    it("if that read fails, nothing is claimed", async () => {
+      mocks.prepareReward.mockResolvedValue({ ok: true, externalRef: "gftc:1", amountCents: 0, detail: { location_id: "L1" } });
+      mocks.retrieveSquareGiftCard.mockResolvedValueOnce({ ok: false, code: "network", message: "down", retryable: true });
+      expect(await open()).toMatchObject({ ok: false, code: "square_error" });
+      expect(mocks.redeemChallengePrize).not.toHaveBeenCalled();
+    });
   });
 });
 

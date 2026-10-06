@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { venueHasActivePos } from "@/lib/pos/connections";
+import { listStuckSquareClaims, retrySquareFunding } from "@/lib/pos/squareStuckClaims";
 import {
   applyPlaceholderAdToAllInlineSlots,
   bulkDeleteAdminAdvertisements,
@@ -320,6 +321,12 @@ export async function GET(request: Request) {
     if (resource === "hidden-venues") {
       const venues = await listHiddenVenues();
       return NextResponse.json({ ok: true, venues });
+    }
+
+    // Square gift card attempts that never finished (POS plan Phase 2c). On demand only.
+    if (resource === "pos-stuck-claims") {
+      const claims = await listStuckSquareClaims();
+      return NextResponse.json({ ok: true, claims });
     }
 
     if (resource === "challenge-campaigns") {
@@ -701,7 +708,26 @@ export async function POST(request: Request) {
           resource: "venue-visibility";
           action: "restore";
           id: string;
+        }
+      | {
+          resource: "pos-stuck-claims";
+          action: "retry";
+          redemptionId: string;
         };
+
+    if (body.resource === "pos-stuck-claims") {
+      const retryBody = body as { resource: "pos-stuck-claims"; action: string; redemptionId?: string };
+      const redemptionId = String(retryBody.redemptionId ?? "").trim();
+      if (retryBody.action !== "retry") {
+        return NextResponse.json({ ok: false, error: "Unknown pos-stuck-claims action." }, { status: 400 });
+      }
+      if (!redemptionId) {
+        return NextResponse.json({ ok: false, error: "redemptionId is required." }, { status: 400 });
+      }
+      const result = await retrySquareFunding(redemptionId);
+      if (!result.ok) return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
+      return NextResponse.json({ ok: true });
+    }
 
     if (body.resource === "venue-visibility") {
       const visibilityBody = body as { resource: "venue-visibility"; action: string; id?: string };
