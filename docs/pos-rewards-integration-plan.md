@@ -18,7 +18,7 @@ partner/staff instructions → reporting → production setup → real-money pil
 2026-10-06, uncommitted** (eligibility, revoked webhook proven live in the sandbox, rate limit, admin stuck-claim
 list, dashboard nudge; no pilot gate per Andrew). **Phase 2d BUILT 2026-10-06 (committed `164241d` with 2c)** (menu-item prizes → one
 ready-made Square discount per prize; register cap optional; partners reconnect once). **Phase 2e BUILT 2026-10-06, uncommitted** (setup checklist,
-"How staff take a prize" card, printable staff sheet, Partner Manual section, guest line). **Phase 2f BUILT 2026-10-06, uncommitted** ("Rewards redeemed" list in the Point of Sale sheet; `/info` line "Works with your Square register!" added). **Next: 2g** (production setup; Opus review first). Latest handoff: `docs/pos-rewards-integration-plan_PHASE_2f_HANDOFF.md`.
+"How staff take a prize" card, printable staff sheet, Partner Manual section, guest line). **Phase 2e+2f committed `c138376` 2026-10-06** ("Rewards redeemed" list in the Point of Sale sheet; `/info` line "Works with your Square register!" added). **Phase 2g agent half done 2026-10-06** (`docs/square-go-live-runbook.md`); still needs the one code/security review, Andrew's console + env steps, and a deploy. Latest handoff: `docs/pos-rewards-integration-plan_PHASE_2g_HANDOFF.md`.
 (Written 2026-10-03.) **Scope decision 2026-10-03 (Andrew): Square and Clover
 only. Toast is DEFERRED** — see §1a. Phase 0 (Andrew's business setup, §4) is partly done:
 developer accounts exist; §6 decisions 2–3 are still open. **Square first** (Andrew, 2026-10-03). Phase 1 did not need
