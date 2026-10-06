@@ -17,20 +17,44 @@ const query = (table: string) => {
   let op: "select" | "update" = "select";
   let payload: Row | null = null;
   let limit = Infinity;
+  let sort: { col: string; ascending: boolean } | null = null;
+  // `challenge_campaign_redemptions!inner(...)`: attach each row's coupon, drop rows without one.
+  let embedCoupon = false;
   const rows = () => (db[table] ??= []);
+  const withEmbed = (row: Row): Row =>
+    embedCoupon
+      ? { ...row, challenge_campaign_redemptions: (db.challenge_campaign_redemptions ?? []).find((c) => c.id === row.redemption_id) ?? null }
+      : row;
   const run = () => {
-    const matched = rows().filter((row) => filters.every((f) => f(row)));
+    let matched = rows()
+      .map(withEmbed)
+      .filter((row) => (!embedCoupon || row.challenge_campaign_redemptions) && filters.every((f) => f(row)));
+    // Without an embed, `matched` holds the stored rows themselves.
     if (op === "update") matched.forEach((row) => Object.assign(row, payload));
+    if (sort) {
+      const { col, ascending } = sort;
+      matched = [...matched].sort((a, b) => (String(a[col]) < String(b[col]) ? -1 : 1) * (ascending ? 1 : -1));
+    }
     return { data: matched.slice(0, limit).map((row) => ({ ...row })), error: null };
   };
+  const field = (row: Row, col: string): unknown => {
+    const [head, tail] = col.split(".");
+    return tail ? (row[head] as Row | null)?.[tail] : row[col];
+  };
   const builder = {
-    select: () => builder,
+    select: (columns?: string) => ((embedCoupon = String(columns ?? "").includes("challenge_campaign_redemptions!inner")), builder),
     update: (value: Row) => ((op = "update"), (payload = value), builder),
-    eq: (col: string, value: unknown) => (filters.push((row) => row[col] === value), builder),
+    eq: (col: string, value: unknown) => (filters.push((row) => field(row, col) === value), builder),
     neq: (col: string, value: unknown) => (filters.push((row) => row[col] !== value), builder),
+    not: (col: string, operator: string, value: unknown) => {
+      if (operator !== "is" || value !== null) throw new Error(`mock: unsupported not(${col}, ${operator})`);
+      filters.push((row) => field(row, col) !== null && field(row, col) !== undefined);
+      return builder;
+    },
     lt: (col: string, value: string) => (filters.push((row) => String(row[col]) < value), builder),
+    gte: (col: string, value: string) => (filters.push((row) => String(row[col]) >= value), builder),
     in: (col: string, values: unknown[]) => (filters.push((row) => values.includes(row[col])), builder),
-    order: () => builder,
+    order: (col: string, options?: { ascending?: boolean }) => ((sort = { col, ascending: options?.ascending !== false }), builder),
     limit: (n: number) => ((limit = n), builder),
     returns: () => builder,
     maybeSingle: async () => ({ data: run().data[0] ?? null, error: null }),
@@ -186,6 +210,43 @@ describe("Disconnect when one Square account serves two venues", () => {
     await discardSquareGrant({ config, accessToken: "AT2", merchantId: "M1", venueId: "venue-9" });
     expect(revokeCalls()).toHaveLength(1);
   });
+
+  // Review fix R2 (#2): RevokeToken ends every token for the merchant, so a refused RECONNECT
+  // must not revoke — it would kill the venue's own working connection.
+  it("discardSquareGrant never revokes when this venue already holds a connection to that merchant", async () => {
+    const config = { environment: "sandbox" as const, applicationId: "app", applicationSecret: "secret" };
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    db.pos_connections = [connection({ venue_id: "venue-9" })];
+    await discardSquareGrant({ config, accessToken: "AT2", merchantId: "M1", venueId: "venue-9" });
+    expect(revokeCalls()).toHaveLength(0);
+    expect(info).toHaveBeenCalledWith("[PosSquare] discard-skipped-own-connection", { venueId: "venue-9" });
+    // An `error` row of its own (e.g. waiting on a reconnect) is still a connection we leave alone.
+    db.pos_connections = [connection({ venue_id: "venue-9", status: "error" })];
+    await discardSquareGrant({ config, accessToken: "AT2", merchantId: "M1", venueId: "venue-9" });
+    expect(revokeCalls()).toHaveLength(0);
+    info.mockRestore();
+  });
+
+  // R4 review: a row Square already revoked (tokens wiped) holds nothing RevokeToken could end,
+  // so a refused reconnect after it is given back, not left live at Square.
+  it("discardSquareGrant revokes when the venue's own row is one Square already revoked (token wiped)", async () => {
+    const config = { environment: "sandbox" as const, applicationId: "app", applicationSecret: "secret" };
+    db.pos_connections = [connection({ venue_id: "venue-9", status: "error", access_token_enc: "revoked" })];
+    await discardSquareGrant({ config, accessToken: "AT2", merchantId: "M1", venueId: "venue-9" });
+    expect(revokeCalls()).toHaveLength(1);
+  });
+
+  it("discardSquareGrant still revokes when the venue's only rows are revoked, for another merchant, or another environment", async () => {
+    const config = { environment: "sandbox" as const, applicationId: "app", applicationSecret: "secret" };
+    db.pos_connections = [
+      connection({ venue_id: "venue-9", status: "revoked" }),
+      connection({ venue_id: "venue-9", merchant_id: "M2" }),
+      connection({ venue_id: "venue-9", environment: "production" }),
+      connection({ venue_id: "venue-2", status: "error" }),
+    ];
+    await discardSquareGrant({ config, accessToken: "AT2", merchantId: "M1", venueId: "venue-9" });
+    expect(revokeCalls()).toHaveLength(1);
+  });
 });
 
 describe("Dashboard nudge (venuesNeedingPosAttention)", () => {
@@ -198,6 +259,12 @@ describe("Dashboard nudge (venuesNeedingPosAttention)", () => {
       connection({ venue_id: "not-mine", status: "error" }),
     ];
     expect((await venuesNeedingPosAttention(["ok", "err", "wrong-env", "gone"])).sort()).toEqual(["err", "wrong-env"]);
+  });
+
+  // Review fix R2 (#5): the nudge's copy says "Square", so only Square rows may raise it.
+  it("ignores another provider's error row", async () => {
+    db.pos_connections = [connection({ venue_id: "clover-err", provider: "clover", status: "error" })];
+    expect(await venuesNeedingPosAttention(["clover-err"])).toEqual([]);
   });
 
   it("asks nothing with the flag off or no venues", async () => {
@@ -254,10 +321,53 @@ describe("Admin stuck-claim list + Retry funding", () => {
       coupon("d", { prize_redeemed_at: OLD, redeemed_method: "guest_confirm" }),
     ];
     db.venues = [{ id: "venue-1", name: "Pacific Street" }];
-    const claims = await listStuckSquareClaims();
+    const { claims, needsAction } = await listStuckSquareClaims();
     expect(claims.map((claim) => [claim.redemptionId, claim.kind])).toEqual([["a", "claimed_unfunded"], ["d", "lost"]]);
+    expect(needsAction).toEqual({ count: 1, capped: false });
     expect(claims[0]).toMatchObject({ venueName: "Pacific Street", amountCents: 2500, errorCode: "network" });
-    expect(JSON.stringify(claims)).not.toMatch(/gftc:|external_ref/);
+    expect(JSON.stringify(claims)).not.toMatch(/gftc:|external_ref|challenge_campaign_redemptions/);
+  });
+
+  it("R1 #3: 60 harmless rows newer than a claimed-unfunded one never push it out of view or out of the count", async () => {
+    const OLDER = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    const harmless = Array.from({ length: 60 }, (_, i) =>
+      ledger(`h${i}`, { created_at: new Date(Date.now() - (20 + i) * 60 * 1000).toISOString(), external_ref: i % 2 ? null : `gftc:h${i}` }),
+    );
+    db.pos_reward_applications = [...harmless, ledger("stuck", { created_at: OLDER, status: "failed", error_message: "claim failed" })];
+    db.challenge_campaign_redemptions = [
+      ...harmless.map((row) => coupon(String(row.redemption_id))),
+      coupon("stuck", { prize_redeemed_at: OLDER, redeemed_method: "pos_square" }),
+    ];
+    const { claims, needsAction } = await listStuckSquareClaims();
+    expect(claims[0]).toMatchObject({ redemptionId: "stuck", kind: "claimed_unfunded", status: "failed" });
+    expect(needsAction).toEqual({ count: 1, capped: false });
+    // The harmless rest: newest 50 only, never duplicated.
+    expect(claims).toHaveLength(51);
+    expect(claims.filter((claim) => claim.redemptionId === "stuck")).toHaveLength(1);
+    expect(claims[1].redemptionId).toBe("h0");
+  });
+
+  it("R1 #3: harmless rows older than 14 days age out of view; need-action rows never do", async () => {
+    const ANCIENT = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    db.pos_reward_applications = [ledger("old-harmless", { created_at: ANCIENT }), ledger("old-stuck", { created_at: ANCIENT })];
+    db.challenge_campaign_redemptions = [coupon("old-harmless"), coupon("old-stuck", { prize_redeemed_at: ANCIENT, redeemed_method: "pos_square" })];
+    const { claims } = await listStuckSquareClaims();
+    expect(claims.map((claim) => claim.redemptionId)).toEqual(["old-stuck"]);
+  });
+
+  it("R4 review: the need-action count agrees with the badges (a pos_square method without a redeemed time is not counted)", async () => {
+    db.pos_reward_applications = [ledger("odd")];
+    db.challenge_campaign_redemptions = [coupon("odd", { prize_redeemed_at: null, redeemed_method: "pos_square" })];
+    const { claims, needsAction } = await listStuckSquareClaims();
+    expect(needsAction).toEqual({ count: 0, capped: false });
+    expect(claims.map((claim) => [claim.redemptionId, claim.kind])).toEqual([["odd", "unclaimed"]]);
+  });
+
+  it("R1 #3: says 100+ when the need-action read hits its limit", async () => {
+    db.pos_reward_applications = Array.from({ length: 101 }, (_, i) => ledger(`s${i}`));
+    db.challenge_campaign_redemptions = Array.from({ length: 101 }, (_, i) => coupon(`s${i}`, { prize_redeemed_at: OLD, redeemed_method: "pos_square" }));
+    const { needsAction } = await listStuckSquareClaims();
+    expect(needsAction).toEqual({ count: 100, capped: true });
   });
 
   it("retries only a claimed-but-unfunded coupon, as its winner, and drops the card number", async () => {
@@ -277,6 +387,23 @@ describe("Admin stuck-claim list + Retry funding", () => {
 
     mocks.openSquareGiftCard.mockResolvedValue({ ok: false, code: "square_error", message: "Couldn't reach Square" });
     expect(await retrySquareFunding("a")).toEqual({ ok: false, status: 502, error: "Couldn't reach Square" });
+  });
+
+  it("R1 #1: retries a claimed coupon whose ledger row was wrongly marked failed; still refuses a lost one", async () => {
+    db.pos_reward_applications = [
+      ledger("f", { status: "failed", error_message: "claim failed" }),
+      ledger("l", { status: "failed", error_message: "lost_to_guest_confirm" }),
+    ];
+    db.challenge_campaign_redemptions = [
+      coupon("f", { prize_redeemed_at: OLD, redeemed_method: "pos_square" }),
+      coupon("l", { prize_redeemed_at: OLD, redeemed_method: "guest_confirm" }),
+    ];
+    mocks.openSquareGiftCard.mockResolvedValue({ ok: true, giftCard: { gan: "7783 0000 1111 2222", amountCents: 2500, balanceCents: 2500, state: "ACTIVE" } });
+    expect(await retrySquareFunding("f")).toEqual({ ok: true });
+    expect(mocks.openSquareGiftCard).toHaveBeenCalledWith({ userId: "user-1", venueId: "venue-1", redemptionId: "f" });
+    mocks.openSquareGiftCard.mockClear();
+    expect(await retrySquareFunding("l")).toMatchObject({ ok: false, status: 409 });
+    expect(mocks.openSquareGiftCard).not.toHaveBeenCalled();
   });
 });
 

@@ -124,7 +124,7 @@ const SquareLocationPicker = ({ venueId, onSaved }: { venueId: string; onSaved: 
           {locations.map((location) => (
             <option key={location.id} value={location.id} disabled={!location.eligible}>
               {location.address ? `${location.name} — ${location.address}` : location.name}
-              {location.eligible ? "" : " (not US dollars)"}
+              {location.eligible ? "" : " (must be a US location using US dollars)"}
             </option>
           ))}
         </select>

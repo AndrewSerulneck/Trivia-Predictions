@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type Row = Record<string, unknown>;
 const db: Record<string, Row[]> = {};
+// Tables whose next selects fail, as a PostgREST read error would.
+const failingReads = new Set<string>();
 
 // A tiny PostgREST look-alike: select/insert/update with eq/neq/in filters, maybeSingle/single.
 type Filter = (row: Row) => boolean;
@@ -22,6 +24,7 @@ const query = (table: string) => {
       rows().push(row);
       return { data: [row], error: null };
     }
+    if (op === "select" && failingReads.has(table)) return { data: [], error: { message: "read failed" } };
     const matched = rows().filter((row) => filters.every((f) => f(row)));
     if (op === "update") matched.forEach((row) => Object.assign(row, payload));
     return { data: matched.map((row) => ({ ...row })), error: null };
@@ -92,6 +95,7 @@ const open = () => openSquareGiftCard({ userId: "user-1", venueId: "venue-1", re
 const ledger = () => (db.pos_reward_applications ?? [])[0];
 
 beforeEach(() => {
+  failingReads.clear();
   for (const key of Object.keys(db)) delete db[key];
   vi.stubEnv("NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED", "true");
   vi.stubEnv("SQUARE_ENVIRONMENT", "sandbox");
@@ -209,6 +213,71 @@ describe("openSquareGiftCard", () => {
     expect(await open()).toMatchObject({ ok: false, code: "not_eligible" });
   });
 
+  describe("Review fix R1 (#1): a claim that landed is always fundable", () => {
+    const claimThenThrow = (error: Error) =>
+      mocks.redeemChallengePrize.mockImplementationOnce(async () => {
+        const row = db.challenge_campaign_redemptions[0];
+        row.prize_redeemed_at = new Date().toISOString();
+        row.redeemed_method = "pos_square";
+        throw error;
+      });
+
+    it("the claim RPC commits, then throws: the guest still gets a funded card, and the ledger never says failed", async () => {
+      claimThenThrow(new Error("fetch failed: socket hang up"));
+      const result = await open();
+      expect(result.ok).toBe(true);
+      expect(mocks.applyReward).toHaveBeenCalledTimes(1);
+      expect(ledger()).toMatchObject({ status: "succeeded", external_ref: "gftc:1" });
+    });
+
+    it("same, when the RPC error is the 'unavailable' kind", async () => {
+      const { PrizeRedeemUnavailableError } = await import("@/lib/challengeCampaigns");
+      claimThenThrow(new PrizeRedeemUnavailableError());
+      expect((await open()).ok).toBe(true);
+      expect(ledger()).toMatchObject({ status: "succeeded" });
+    });
+
+    it("a claim error on a coupon still unredeemed records the failure and leaves the coupon alone", async () => {
+      mocks.redeemChallengePrize.mockRejectedValueOnce(new Error("This prize has expired."));
+      expect(await open()).toMatchObject({ ok: false, code: "expired" });
+      expect(mocks.applyReward).not.toHaveBeenCalled();
+      expect(db.challenge_campaign_redemptions[0].prize_redeemed_at).toBeNull();
+      expect(ledger()).toMatchObject({ status: "failed" });
+    });
+
+    it("a `failed` ledger row on a coupon we claimed (pos_square) resumes and funds — no new card, no second claim", async () => {
+      db.challenge_campaign_redemptions = [coupon({ prize_redeemed_at: "2026-10-05T00:00:00Z", redeemed_method: "pos_square" })];
+      db.pos_reward_applications = [
+        { id: "led-1", idempotency_key: squareApplyKey(RID), redemption_id: RID, provider: "square", action: "apply", status: "failed", external_ref: "gftc:1", external_detail: { currency: "USD" }, amount_cents: 2500, error_message: "claim failed" },
+      ];
+      const result = await open();
+      expect(result.ok).toBe(true);
+      expect(mocks.prepareReward).not.toHaveBeenCalled();
+      expect(mocks.redeemChallengePrize).not.toHaveBeenCalled();
+      expect(mocks.applyReward).toHaveBeenCalledWith(expect.objectContaining({ preparedRef: "gftc:1", idempotencyKey: squareApplyKey(RID) }));
+      expect(ledger()).toMatchObject({ status: "succeeded", error_message: null });
+    });
+
+    it("a lost_to_guest_confirm row is still refused (another method won)", async () => {
+      db.challenge_campaign_redemptions = [coupon({ prize_redeemed_at: "2026-10-05T00:00:00Z", redeemed_method: "guest_confirm" })];
+      db.pos_reward_applications = [
+        { id: "led-1", idempotency_key: squareApplyKey(RID), redemption_id: RID, provider: "square", action: "apply", status: "failed", external_ref: "gftc:1", external_detail: { currency: "USD" }, error_message: "lost_to_guest_confirm" },
+      ];
+      expect(await open()).toMatchObject({ ok: false, code: "already_redeemed" });
+      expect(mocks.applyReward).not.toHaveBeenCalled();
+      expect(ledger()).toMatchObject({ status: "failed" });
+    });
+
+    it("resuming never funds a card whose saved currency isn't USD", async () => {
+      db.challenge_campaign_redemptions = [coupon({ prize_redeemed_at: "2026-10-05T00:00:00Z", redeemed_method: "pos_square" })];
+      db.pos_reward_applications = [
+        { id: "led-1", idempotency_key: squareApplyKey(RID), redemption_id: RID, provider: "square", action: "apply", status: "pending", external_ref: "gftc:1", external_detail: { currency: "CAD" } },
+      ];
+      expect(await open()).toMatchObject({ ok: false, code: "square_error" });
+      expect(mocks.applyReward).not.toHaveBeenCalled();
+    });
+  });
+
   describe("Phase 2c: the card's own currency is checked before the coupon is claimed", () => {
     it("a non-USD card claims nothing and funds nothing; the guest keeps the normal coupon", async () => {
       mocks.prepareReward.mockResolvedValue({ ok: true, externalRef: "gftc:1", amountCents: 0, detail: { location_id: "L1", currency: "CAD" } });
@@ -285,6 +354,15 @@ describe("attachSquareGiftCardStates", () => {
       { redemption_id: "issued", provider: "square", action: "apply", status: "succeeded", external_ref: "gftc:a", external_detail: { balance_cents: 900 } },
       { redemption_id: "used", provider: "square", action: "apply", status: "succeeded", external_ref: "gftc:b", external_detail: { balance_cents: 0 } },
       { redemption_id: "lost", provider: "square", action: "apply", status: "failed", external_ref: "gftc:c", external_detail: {} },
+      // R1 #1: claimed by us but never funded (even marked failed) → resumable, so "issued".
+      { redemption_id: "stuck", provider: "square", action: "apply", status: "failed", external_ref: "gftc:d", external_detail: {} },
+      // Left pending, then redeemed the normal way → not a Square card.
+      { redemption_id: "pending-lost", provider: "square", action: "apply", status: "pending", external_ref: "gftc:e", external_detail: {} },
+    ];
+    db.challenge_campaign_redemptions = [
+      { id: "lost", redeemed_method: "guest_confirm" },
+      { id: "stuck", redeemed_method: "pos_square" },
+      { id: "pending-lost", redeemed_method: "guest_confirm" },
     ];
     const redeemed = "2026-10-01T00:00:00Z";
     const result = await attachSquareGiftCardStates(
@@ -293,12 +371,34 @@ describe("attachSquareGiftCardStates", () => {
         win({ redemptionId: "issued", prizeRedeemedAt: redeemed }),
         win({ redemptionId: "used", prizeRedeemedAt: redeemed }),
         win({ redemptionId: "lost", prizeRedeemedAt: redeemed }),
+        win({ redemptionId: "stuck", prizeRedeemedAt: redeemed }),
+        win({ redemptionId: "pending-lost", prizeRedeemedAt: redeemed }),
         win({ redemptionId: "expired", prizeExpiresAt: "2020-01-01T00:00:00Z" }),
         win({ redemptionId: "menu", prizeKind: "menu_item" }),
       ],
       "venue-1",
     );
-    expect(result.map((w) => w.squareGiftCard ?? null)).toEqual(["available", "issued", "used", null, null, null]);
+    expect(result.map((w) => w.squareGiftCard ?? null)).toEqual(["available", "issued", "used", null, "issued", null, null, null]);
+  });
+
+  // R4 review: if the coupon-method read fails, a claimed-but-unfunded coupon must keep its
+  // resume button (the pre-R1 ledger-only rule); the tap itself re-checks the method.
+  it("falls back to the ledger alone when the coupon-method read fails", async () => {
+    db.pos_connections = [{ id: "conn-1", venue_id: "venue-1", provider: "square", status: "active", location_id: "L1", environment: "sandbox" }];
+    db.pos_reward_applications = [
+      { redemption_id: "pending", provider: "square", action: "apply", status: "pending", external_ref: "gftc:a", external_detail: {} },
+      { redemption_id: "failed", provider: "square", action: "apply", status: "failed", external_ref: "gftc:b", external_detail: {} },
+    ];
+    failingReads.add("challenge_campaign_redemptions");
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const redeemed = "2026-10-01T00:00:00Z";
+    const result = await attachSquareGiftCardStates(
+      [win({ redemptionId: "pending", prizeRedeemedAt: redeemed }), win({ redemptionId: "failed", prizeRedeemedAt: redeemed })],
+      "venue-1",
+    );
+    expect(result.map((w) => w.squareGiftCard ?? null)).toEqual(["issued", null]);
+    expect(error).toHaveBeenCalledWith("[PosSquare] wallet-coupon-read-failed", "read failed");
+    error.mockRestore();
   });
 });
 

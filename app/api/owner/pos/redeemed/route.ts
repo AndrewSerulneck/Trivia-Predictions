@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
+import { guardOwnerPosVenue } from "@/lib/pos/ownerPosGuard";
 import { listRedeemedRewards } from "@/lib/pos/redeemedRewards";
-import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
-import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 
 /**
  * GET /api/owner/pos/redeemed?venueId= — the newest 50 redeemed rewards at this venue for the
@@ -11,22 +10,9 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * calls. Never returns a gift card id, card number, merchant id or user id.
  */
 export async function GET(request: Request) {
-  if (!isPosIntegrationsEnabled()) {
-    return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
-  }
-
-  let auth;
-  try {
-    auth = await requireOwnerAuth(request);
-  } catch (response) {
-    return response as Response;
-  }
-
   const venueId = new URL(request.url).searchParams.get("venueId")?.trim() ?? "";
-  if (!venueId) return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });
-  if (!auth.venueIds.includes(venueId)) {
-    return NextResponse.json({ ok: false, error: "You do not have access to this venue." }, { status: 403 });
-  }
+  const checked = await guardOwnerPosVenue(request, venueId);
+  if ("response" in checked) return checked.response;
 
   try {
     const rewards = await listRedeemedRewards(venueId);

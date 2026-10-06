@@ -8,6 +8,8 @@ import { TH, TD, TR } from "@/components/admin/AdminShell";
 // Loaded once when the Venues section opens (and on Refresh); no polling. The server
 // (lib/pos/squareStuckClaims.ts) never sends a card number, token or gift card id. Only a
 // "claimed, not funded" row — the guest has neither a coupon nor a card — gets Retry funding.
+// The "need action" count comes from the server's own need-action read, so harmless rows can
+// never hide it (docs/square-review-fixes-plan.md R1).
 
 type StuckKind = "claimed_unfunded" | "unclaimed" | "lost";
 
@@ -25,6 +27,8 @@ type StuckClaim = {
   updatedAt: string;
 };
 
+type NeedsAction = { count: number; capped: boolean };
+
 const BADGE: Record<StuckKind, { label: string; className: string }> = {
   claimed_unfunded: { label: "Claimed, not funded", className: "bg-red-100 text-red-800" },
   unclaimed: { label: "Not claimed — guest keeps coupon", className: "bg-slate-200 text-slate-700" },
@@ -41,6 +45,7 @@ const formatDollars = (cents: number | null): string => (cents === null ? "—" 
 
 export function PosStuckClaimsPanel() {
   const [rows, setRows] = useState<StuckClaim[]>([]);
+  const [needsAction, setNeedsAction] = useState<NeedsAction>({ count: 0, capped: false });
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -51,9 +56,12 @@ export function PosStuckClaimsPanel() {
     setError("");
     try {
       const res = await fetch("/api/admin?resource=pos-stuck-claims", { cache: "no-store" });
-      const payload = (await res.json()) as { ok: boolean; claims?: StuckClaim[]; error?: string };
+      const payload = (await res.json()) as { ok: boolean; claims?: StuckClaim[]; needsAction?: NeedsAction; error?: string };
       if (!res.ok || !payload.ok || !payload.claims) throw new Error(payload.error ?? "Failed to load Square claims.");
       setRows(payload.claims);
+      setNeedsAction(
+        payload.needsAction ?? { count: payload.claims.filter((row) => row.kind === "claimed_unfunded").length, capped: false },
+      );
       setState("ready");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load Square claims.");
@@ -87,15 +95,13 @@ export function PosStuckClaimsPanel() {
     }
   };
 
-  const needsAction = rows.filter((row) => row.kind === "claimed_unfunded").length;
-
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col items-start justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:px-6">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">Stuck Square gift cards</h2>
           <p className="text-xs text-slate-500">
-            {state === "loading" ? "Loading…" : `${rows.length} unfinished (older than 15 min) · ${needsAction} need action`}
+            {state === "loading" ? "Loading…" : `${rows.length} unfinished shown (older than 15 min) · ${needsAction.count}${needsAction.capped ? "+" : ""} need action`}
           </p>
         </div>
         <button
@@ -114,6 +120,7 @@ export function PosStuckClaimsPanel() {
         A guest&apos;s gift card prize becomes a Square gift card in steps. <strong>Claimed, not funded</strong> means the
         coupon is used up but the Square card has no money on it yet — Retry funding finishes it (no second card, no
         double payout). The other rows need nothing: the guest still has the normal coupon, or redeemed it another way.
+        Those are listed for the last 14 days only (newest 50); every claimed-not-funded row is always listed.
       </div>
 
       {state === "ready" && rows.length === 0 ? (

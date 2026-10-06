@@ -1,4 +1,5 @@
 import "server-only";
+import { isOurSquareClaim, squareApplyKey } from "@/lib/pos/squareClaim";
 import { openSquareGiftCard } from "@/lib/pos/squareGiftCards";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -11,18 +12,25 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 //   claimed_unfunded — the coupon IS redeemed (pos_square) but the card was never funded:
 //                      the guest has neither a usable coupon nor a usable card. The one case
 //                      that needs us. "Retry funding" runs the same idempotent path the guest's
-//                      next tap would.
+//                      next tap would — whatever the ledger row's status (isOurSquareClaim).
 //   unclaimed        — Square or the claim failed before the coupon was taken; the guest still
 //                      has the normal coupon and can tap again. Nothing to do.
 //   lost             — "Confirm Redemption" (or another method) won the race; harmless, the card
 //                      left behind was never funded.
 //
-// On demand only (the admin opens the Venues section); no cron. One bounded ledger read
-// (newest 50) + one coupon read + one venue-name read. Never returns a card number, token or
-// gift card id.
+// TWO bounded reads, so harmless rows can never push a claimed-unfunded one out of view
+// (docs/square-review-fixes-plan.md R1, finding #3):
+//   1. need action — claimed_unfunded rows only (inner join on the coupon), oldest first, ≤100.
+//      These should stay near zero.
+//   2. the rest    — newest first, ≤50, last 14 days only, so abandoned rows age out of view.
+//                    Never deleted: the ledger is the audit record.
+// Plus one coupon read (for read 2's rows) and one venue-name read. On demand only (the admin
+// opens the Venues section); no cron. Never returns a card number, token or gift card id.
 
 const STUCK_AFTER_MS = 15 * 60 * 1000;
-const LIMIT = 50;
+const HARMLESS_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
+const NEEDS_ACTION_LIMIT = 100;
+const HARMLESS_LIMIT = 50;
 
 export type StuckSquareClaimKind = "claimed_unfunded" | "unclaimed" | "lost";
 
@@ -40,6 +48,13 @@ export type StuckSquareClaim = {
   updatedAt: string;
 };
 
+export type StuckSquareClaimList = {
+  /** Need-action rows first (oldest first), then the harmless rest (newest first). */
+  claims: StuckSquareClaim[];
+  /** From read 1 alone. `capped` = it hit its limit; show "100+". */
+  needsAction: { count: number; capped: boolean };
+};
+
 type LedgerRow = {
   id: string;
   redemption_id: string | null;
@@ -53,7 +68,13 @@ type LedgerRow = {
   updated_at: string;
 };
 
+const LEDGER_COLUMNS =
+  "id, redemption_id, venue_id, status, external_ref, amount_cents, error_code, error_message, created_at, updated_at";
+
 type CouponRow = { id: string; prize_redeemed_at: string | null; redeemed_method: string | null };
+
+/** PostgREST embeds a many-to-one as an object; tolerate an array too. */
+type NeedsActionRow = LedgerRow & { challenge_campaign_redemptions: CouponRow | CouponRow[] | null };
 
 /** Pure: what a stuck row means, from the ledger row and its coupon. */
 export const classifyStuckSquareClaim = (
@@ -61,45 +82,79 @@ export const classifyStuckSquareClaim = (
   coupon: Pick<CouponRow, "prize_redeemed_at" | "redeemed_method"> | null,
 ): StuckSquareClaimKind => {
   if (!coupon?.prize_redeemed_at) return "unclaimed";
-  if (coupon.redeemed_method === "pos_square" && row.external_ref) return "claimed_unfunded";
+  if (isOurSquareClaim(row, coupon)) return "claimed_unfunded";
   return "lost";
 };
 
-export const listStuckSquareClaims = async (): Promise<StuckSquareClaim[]> => {
+export const listStuckSquareClaims = async (): Promise<StuckSquareClaimList> => {
   if (!supabaseAdmin) throw new Error("Supabase admin client is not configured.");
-  const cutoff = new Date(Date.now() - STUCK_AFTER_MS).toISOString();
-  const { data: rows, error } = await supabaseAdmin
-    .from("pos_reward_applications")
-    .select("id, redemption_id, venue_id, status, external_ref, amount_cents, error_code, error_message, created_at, updated_at")
-    .eq("provider", "square")
-    .eq("action", "apply")
-    .neq("status", "succeeded")
-    .lt("created_at", cutoff)
-    .order("created_at", { ascending: false })
-    .limit(LIMIT)
-    .returns<LedgerRow[]>();
-  if (error) throw new Error(`Failed to load stuck Square claims: ${error.message}`);
-  const ledger = rows ?? [];
-  if (ledger.length === 0) return [];
+  const nowMs = Date.now();
+  const cutoff = new Date(nowMs - STUCK_AFTER_MS).toISOString();
+  const harmlessSince = new Date(nowMs - HARMLESS_WINDOW_MS).toISOString();
 
-  const redemptionIds = [...new Set(ledger.map((row) => row.redemption_id).filter((id): id is string => Boolean(id)))];
-  const venueIds = [...new Set(ledger.map((row) => row.venue_id))];
+  const [needsActionRead, restRead] = await Promise.all([
+    supabaseAdmin
+      .from("pos_reward_applications")
+      .select(`${LEDGER_COLUMNS}, challenge_campaign_redemptions!inner(id, prize_redeemed_at, redeemed_method)`)
+      .eq("provider", "square")
+      .eq("action", "apply")
+      .neq("status", "succeeded")
+      .not("external_ref", "is", null)
+      .eq("challenge_campaign_redemptions.redeemed_method", "pos_square")
+      // Same rule as classifyStuckSquareClaim (isOurSquareClaim), so the count matches the badges.
+      .not("challenge_campaign_redemptions.prize_redeemed_at", "is", null)
+      .lt("created_at", cutoff)
+      .order("created_at", { ascending: true })
+      .limit(NEEDS_ACTION_LIMIT)
+      .returns<NeedsActionRow[]>(),
+    supabaseAdmin
+      .from("pos_reward_applications")
+      .select(LEDGER_COLUMNS)
+      .eq("provider", "square")
+      .eq("action", "apply")
+      .neq("status", "succeeded")
+      .lt("created_at", cutoff)
+      .gte("created_at", harmlessSince)
+      .order("created_at", { ascending: false })
+      .limit(HARMLESS_LIMIT)
+      .returns<LedgerRow[]>(),
+  ]);
+  if (needsActionRead.error) throw new Error(`Failed to load stuck Square claims: ${needsActionRead.error.message}`);
+  if (restRead.error) throw new Error(`Failed to load stuck Square claims: ${restRead.error.message}`);
+
+  const needsAction = needsActionRead.data ?? [];
+  const needsActionIds = new Set(needsAction.map((row) => row.id));
+  const rest = (restRead.data ?? []).filter((row) => !needsActionIds.has(row.id));
+  const needsActionSummary = { count: needsAction.length, capped: needsAction.length >= NEEDS_ACTION_LIMIT };
+  if (needsAction.length === 0 && rest.length === 0) return { claims: [], needsAction: needsActionSummary };
+
+  const couponById = new Map<string, CouponRow>();
+  for (const row of needsAction) {
+    const embedded = Array.isArray(row.challenge_campaign_redemptions)
+      ? row.challenge_campaign_redemptions[0]
+      : row.challenge_campaign_redemptions;
+    if (embedded) couponById.set(embedded.id, embedded);
+  }
+  const restRedemptionIds = [
+    ...new Set(rest.map((row) => row.redemption_id).filter((id): id is string => Boolean(id) && !couponById.has(id as string))),
+  ];
+  const venueIds = [...new Set([...needsAction, ...rest].map((row) => row.venue_id))];
   const [coupons, venues] = await Promise.all([
-    redemptionIds.length
+    restRedemptionIds.length
       ? supabaseAdmin
           .from("challenge_campaign_redemptions")
           .select("id, prize_redeemed_at, redeemed_method")
-          .in("id", redemptionIds)
+          .in("id", restRedemptionIds)
           .returns<CouponRow[]>()
       : Promise.resolve({ data: [] as CouponRow[], error: null }),
     supabaseAdmin.from("venues").select("id, name").in("id", venueIds).returns<Array<{ id: string; name: string | null }>>(),
   ]);
   if (coupons.error) throw new Error(`Failed to load coupons: ${coupons.error.message}`);
+  for (const coupon of coupons.data ?? []) couponById.set(coupon.id, coupon);
   // A missing venue name is cosmetic; the id is still shown.
-  const couponById = new Map((coupons.data ?? []).map((coupon) => [coupon.id, coupon]));
   const nameById = new Map((venues.data ?? []).map((venue) => [venue.id, venue.name]));
 
-  return ledger.map((row) => ({
+  const claims = [...needsAction, ...rest].map((row) => ({
     ledgerId: row.id,
     redemptionId: row.redemption_id,
     venueId: row.venue_id,
@@ -112,6 +167,7 @@ export const listStuckSquareClaims = async (): Promise<StuckSquareClaim[]> => {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }));
+  return { claims, needsAction: needsActionSummary };
 };
 
 export type RetrySquareFundingResult =
@@ -137,7 +193,7 @@ export const retrySquareFunding = async (redemptionId: string): Promise<RetrySqu
   const { data: row } = await supabaseAdmin
     .from("pos_reward_applications")
     .select("external_ref, status")
-    .eq("idempotency_key", `${redemptionId}:square:apply`)
+    .eq("idempotency_key", squareApplyKey(redemptionId))
     .maybeSingle<{ external_ref: string | null; status: string }>();
   if (!row || row.status === "succeeded" || classifyStuckSquareClaim(row, coupon) !== "claimed_unfunded") {
     return { ok: false, status: 409, error: "Only a coupon claimed for a Square gift card but never funded can be retried." };

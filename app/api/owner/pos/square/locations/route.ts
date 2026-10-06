@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
+import { guardOwnerPosVenue } from "@/lib/pos/ownerPosGuard";
 import { isSquareGiftCardLocation, listSquareLocations } from "@/lib/pos/square";
 import { loadSquareTokenForSetup, setSquareLocation } from "@/lib/pos/squareConnection";
-import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 
 /**
  * GET  /api/owner/pos/square/locations?venueId=      → this venue's ACTIVE Square locations
@@ -19,25 +18,6 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * themselves aren't sent.
  */
 
-type Auth = { ownerId: string; venueIds: string[] };
-
-const guard = async (request: Request, venueId: string): Promise<{ auth: Auth } | { response: Response }> => {
-  if (!isPosIntegrationsEnabled()) {
-    return { response: NextResponse.json({ ok: false, error: "Not found." }, { status: 404 }) };
-  }
-  let auth: Auth;
-  try {
-    auth = await requireOwnerAuth(request);
-  } catch (response) {
-    return { response: response as Response };
-  }
-  if (!venueId) return { response: NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 }) };
-  if (!auth.venueIds.includes(venueId)) {
-    return { response: NextResponse.json({ ok: false, error: "You do not have access to this venue." }, { status: 403 }) };
-  }
-  return { auth };
-};
-
 const LOAD_ERROR = "Couldn't load your Square locations.";
 const NOT_ELIGIBLE_LOCATION = "That location can't issue Hightop gift cards: it must be a US location that uses US dollars.";
 
@@ -50,7 +30,7 @@ const loadLocations = async (venueId: string) => {
 
 export async function GET(request: Request) {
   const venueId = new URL(request.url).searchParams.get("venueId")?.trim() ?? "";
-  const checked = await guard(request, venueId);
+  const checked = await guardOwnerPosVenue(request, venueId);
   if ("response" in checked) return checked.response;
 
   const locations = await loadLocations(venueId);
@@ -69,7 +49,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { venueId?: string; locationId?: string } | null;
   const venueId = String(body?.venueId ?? "").trim();
-  const checked = await guard(request, venueId);
+  const checked = await guardOwnerPosVenue(request, venueId);
   if ("response" in checked) return checked.response;
 
   const locationId = String(body?.locationId ?? "").trim();

@@ -8,6 +8,10 @@ scannable code on the coupon is OK."): sub-phases **3a–3f** below. **Phase 3a 
 `billing_info` ✓); device checks **blocked** by Clover's broken GDE emulator sign-in → Dev Kit / Clover support
 (handoff: `docs/pos-rewards-integration-plan_PHASE_3a_HANDOFF.md`). A throwaway $25 gift-card test coupon exists at `venue-pacific-street`
 (§6 note). Clover handoff: `docs/pos-rewards-integration-plan_PHASE_3a_HANDOFF.md`.
+**Square review fixes (2g's code/security review) — R1–R4 done 2026-10-06, uncommitted** (stuck-claim recovery;
+Square connection safety; shared helpers; #10 rule narrowed; `/code-review high` fixed, `/security-review` clean; plan
+`docs/square-review-fixes-plan.md`, latest handoff `docs/square-review-fixes-plan_PHASE_R4_HANDOFF.md`). Waiting on
+Andrew's commit/push/deploy OK (flag stays off); then 2g's console/env steps → flag on → 2h.
 **Phase 2 deviation:** the coupon is marked redeemed when it becomes a Square gift card, not on the first spend
 (Phase 2 handoff §3).
 **Re-ordered 2026-10-06 (Andrew): "Since I don't want to order a Clover dev kit, let's focus on becoming fully
@@ -18,7 +22,7 @@ partner/staff instructions → reporting → production setup → real-money pil
 2026-10-06, uncommitted** (eligibility, revoked webhook proven live in the sandbox, rate limit, admin stuck-claim
 list, dashboard nudge; no pilot gate per Andrew). **Phase 2d BUILT 2026-10-06 (committed `164241d` with 2c)** (menu-item prizes → one
 ready-made Square discount per prize; register cap optional; partners reconnect once). **Phase 2e BUILT 2026-10-06, uncommitted** (setup checklist,
-"How staff take a prize" card, printable staff sheet, Partner Manual section, guest line). **Phase 2e+2f committed `c138376` 2026-10-06** ("Rewards redeemed" list in the Point of Sale sheet; `/info` line "Works with your Square register!" added). **Phase 2g agent half done 2026-10-06** (`docs/square-go-live-runbook.md`); still needs the one code/security review, Andrew's console + env steps, and a deploy. Latest handoff: `docs/pos-rewards-integration-plan_PHASE_2g_HANDOFF.md`.
+"How staff take a prize" card, printable staff sheet, Partner Manual section, guest line). **Phase 2e+2f committed `c138376` 2026-10-06** ("Rewards redeemed" list in the Point of Sale sheet; `/info` line "Works with your Square register!" added). **Phase 2g agent half done 2026-10-06** (`docs/square-go-live-runbook.md`); still needs the one code/security review, Andrew's console + env steps, and a deploy. Latest handoff: `docs/pos-rewards-integration-plan_PHASE_2g_HANDOFF.md`. **2026-10-06: `/code-review` found 10 issues → fix plan `docs/square-review-fixes-plan.md` (R1–R4). Review step DONE 2026-10-06: all fixed, `/security-review` clean (`docs/square-review-fixes-plan_PHASE_R4_HANDOFF.md`); 2g continues with Andrew's console/env steps → flag on → 2h.**
 (Written 2026-10-03.) **Scope decision 2026-10-03 (Andrew): Square and Clover
 only. Toast is DEFERRED** — see §1a. Phase 0 (Andrew's business setup, §4) is partly done:
 developer accounts exist; §6 decisions 2–3 are still open. **Square first** (Andrew, 2026-10-03). Phase 1 did not need
@@ -103,8 +107,12 @@ agent should start it, and no Toast application is part of Phase 0.
   `connected_by_owner_id`, timestamps. Tokens **encrypted at rest** (AES-256-GCM, key in new env var
   `POS_TOKEN_KEY`; never returned to any client). Grants per `SECURE_TABLE_MIGRATION_CHECKLIST.md`.
 - `pos_reward_applications` ledger: one row per attempt (`redemption key`, provider, external ids —
-  Square gift card id/GAN, Clover order+discount id, Toast transaction guid — amount, status,
+  Square gift card id (never the GAN), Clover order+discount id, Toast transaction guid — amount, status,
   error). It is the idempotency key: a retried apply never double-discounts.
+  **Scope (narrowed 2026-10-06, Andrew, `docs/square-review-fixes-plan.md` #10):** a row is written for every POS
+  attempt that moves value for a coupon (gift card create/fund, register discount application). Partner-catalog
+  setup writes (the Phase 2d named discount) get no row, because their name is their identity: the discount
+  carries no money until staff apply it, and the coupon is still redeemed only via "Confirm Redemption".
 - `lib/pos/` with one adapter per provider behind a single interface
   (`applyReward`, `reverse`, `describeConnection`); routes never call a provider SDK directly.
   Use `fetch` against REST APIs unless an official SDK is clearly lighter — justify in the handoff.

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { listPosConnectionStatuses } from "@/lib/pos/connections";
-import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
-import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
+import { guardOwnerPosVenue } from "@/lib/pos/ownerPosGuard";
 
 /**
  * GET /api/owner/pos?venueId= — this venue's point-of-sale connection statuses for the
@@ -11,22 +10,9 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * merchant name and connected-at only — never a token, merchant id or location id.
  */
 export async function GET(request: Request) {
-  if (!isPosIntegrationsEnabled()) {
-    return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
-  }
-
-  let auth;
-  try {
-    auth = await requireOwnerAuth(request);
-  } catch (response) {
-    return response as Response;
-  }
-
   const venueId = new URL(request.url).searchParams.get("venueId")?.trim() ?? "";
-  if (!venueId) return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });
-  if (!auth.venueIds.includes(venueId)) {
-    return NextResponse.json({ ok: false, error: "You do not have access to this venue." }, { status: 403 });
-  }
+  const checked = await guardOwnerPosVenue(request, venueId);
+  if ("response" in checked) return checked.response;
 
   const result = await listPosConnectionStatuses(venueId);
   if (!result.ok) {

@@ -249,30 +249,6 @@ export const setSquareLocation = async (venueId: string, locationId: string): Pr
 };
 
 /**
- * Other venues' ACTIVE connections to the same Square merchant (one partner, two venues, one
- * Square account). `null` = the read failed.
- */
-const otherActiveVenuesForMerchant = async (
-  merchantId: string,
-  environment: PosEnvironment,
-  venueId: string,
-): Promise<number | null> => {
-  const { data, error } = await supabaseAdmin!
-    .from("pos_connections")
-    .select("id")
-    .eq("provider", PROVIDER)
-    .eq("merchant_id", merchantId)
-    .eq("environment", environment)
-    .eq("status", "active")
-    .neq("venue_id", venueId);
-  if (error) {
-    console.error("[PosSquare] shared-merchant-read-failed", error.message);
-    return null;
-  }
-  return (data ?? []).length;
-};
-
-/**
  * Disconnect: revoke at Square (best effort — the partner can also remove the app in Square
  * Dashboard), then mark the row revoked and overwrite both token columns so no usable
  * credential stays in our database. The row stays as history; ledger rows keep pointing at it.
@@ -294,7 +270,8 @@ export const disconnectSquare = async (venueId: string): Promise<{ ok: true; rev
   // A row Square already revoked (markSquareMerchantRevoked) has no token left to revoke.
   const hasToken = read.row.access_token_enc !== REVOKED_TOKEN_PLACEHOLDER;
   if (config && config.environment === read.row.environment && hasToken) {
-    const sharedWith = await otherActiveVenuesForMerchant(read.row.merchant_id, read.row.environment, venueId);
+    const live = await liveConnectionsForMerchant(read.row.merchant_id, read.row.environment, venueId);
+    const sharedWith = live ? live.others : null;
     if (sharedWith !== 0) {
       // null = the read failed; skip rather than risk cutting off another venue.
       console.info("[PosSquare] revoke-skipped-shared-merchant", { connectionId: read.row.id, otherVenues: sharedWith });
@@ -374,9 +351,46 @@ export const markSquareMerchantRevoked = async (input: {
 };
 
 /**
+ * Connections we already hold to this Square merchant that a RevokeToken would end: any venue's
+ * ACTIVE row, plus THIS venue's own non-revoked row (a reconnect whose new grant we refuse must
+ * not kill the connection the venue already had). A row whose token is already wiped
+ * (markSquareMerchantRevoked) holds nothing a revoke could end, so it doesn't count. Shared by
+ * Disconnect (`others`) and discardSquareGrant (both), so the two revoke rules can't drift.
+ * `null` = the read failed. One indexed read.
+ */
+const liveConnectionsForMerchant = async (
+  merchantId: string,
+  environment: PosEnvironment,
+  venueId: string,
+): Promise<{ own: number; others: number } | null> => {
+  const { data, error } = await supabaseAdmin!
+    .from("pos_connections")
+    .select("venue_id, status")
+    .eq("provider", PROVIDER)
+    .eq("merchant_id", merchantId)
+    .eq("environment", environment)
+    .neq("status", "revoked")
+    .neq("access_token_enc", REVOKED_TOKEN_PLACEHOLDER)
+    .returns<Array<{ venue_id: string; status: string }>>();
+  if (error) {
+    console.error("[PosSquare] shared-merchant-read-failed", error.message);
+    return null;
+  }
+  const rows = data ?? [];
+  return {
+    own: rows.filter((row) => row.venue_id === venueId).length,
+    others: rows.filter((row) => row.venue_id !== venueId && row.status === "active").length,
+  };
+};
+
+/**
  * Give back a grant we won't keep (an account that can't issue our gift cards, Phase 2c): revoke
- * it at Square unless another venue is connected to the same merchant — RevokeToken would end
- * that venue's tokens too. Best effort; nothing is stored either way.
+ * it at Square unless we already hold another connection to the same merchant. RevokeToken ends
+ * EVERY token our app holds for that merchant, whichever one is sent (Square docs, re-checked
+ * 2026-10-06), so revoking would also cut off another venue sharing the account, or this venue's
+ * own earlier connection when the refused grant was a reconnect. In those cases the new grant is
+ * simply dropped unused. If the read fails we also skip: an unused grant left at Square is
+ * harmless. Best effort; nothing is stored either way.
  */
 export const discardSquareGrant = async (input: {
   config: SquareAppConfig;
@@ -385,8 +399,16 @@ export const discardSquareGrant = async (input: {
   venueId: string;
 }): Promise<void> => {
   if (!supabaseAdmin) return;
-  const sharedWith = await otherActiveVenuesForMerchant(input.merchantId, input.config.environment, input.venueId);
-  if (sharedWith !== 0) return;
+  const live = await liveConnectionsForMerchant(input.merchantId, input.config.environment, input.venueId);
+  if (!live) return;
+  if (live.own > 0) {
+    console.info("[PosSquare] discard-skipped-own-connection", { venueId: input.venueId });
+    return;
+  }
+  if (live.others > 0) {
+    console.info("[PosSquare] discard-skipped-shared-merchant", { venueId: input.venueId, otherVenues: live.others });
+    return;
+  }
   const revoked = await revokeSquareToken(input.config, input.accessToken);
   if ("code" in revoked) console.warn("[PosSquare] discard-revoke-failed", { code: revoked.code });
 };

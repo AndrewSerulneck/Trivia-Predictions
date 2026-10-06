@@ -145,7 +145,7 @@ export const venueHasActivePos = async (venueId: string): Promise<boolean> => {
 };
 
 /**
- * The owner's venues whose point-of-sale connection needs attention (Square removed our access,
+ * The owner's venues whose SQUARE connection needs attention (Square removed our access,
  * a refresh was refused, or a row from the other Square environment) — the Partner Dashboard's
  * one-line nudge (Phase 2c). Rides inside GET /api/owner/dashboard: one indexed read for ALL of
  * the owner's venues, so a venue switch needs no request. Zero queries with the flag off. Fails
@@ -157,6 +157,9 @@ export const venuesNeedingPosAttention = async (venueIds: string[]): Promise<str
     .from("pos_connections")
     .select("venue_id, provider, status, environment")
     .in("venue_id", venueIds)
+    // Square only: the dashboard's nudge copy names Square. Clover (Phase 3) must add its own
+    // provider-specific nudge rather than widen this filter.
+    .eq("provider", "square")
     .neq("status", "revoked")
     .returns<Array<PublicConnectionRow & { venue_id: string }>>();
   if (error) {

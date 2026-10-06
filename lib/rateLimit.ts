@@ -346,26 +346,30 @@ export async function rateLimitSignupSubmit(request: Request, email: string): Pr
 }
 
 /**
- * `POST /api/prizes/square-gift-card` (POS plan Phase 2c): the signed-in user's bucket FIRST,
- * then the IP's — same reasoning as `rateLimitSignupSubmit`: a denial records nothing, so one
- * guest tapping too often is stopped by their own bucket without eating the bar's shared IP
- * ceiling. `userId` must already be bound to the signed session. Fails CLOSED in both tiers.
+ * Two-tier limiter for a signed-in user's route: the user's bucket FIRST, then the IP's — same
+ * reasoning as `rateLimitSignupSubmit`: a denial records nothing, so one guest tapping too often
+ * is stopped by their own bucket without eating the bar's shared IP ceiling. `userId` must
+ * already be bound to the signed session; the user bucket is keyed on the user alone (no IP).
+ * Fails CLOSED in both tiers.
  */
-export async function rateLimitSquareGiftCard(request: Request, userId: string): Promise<RateLimitResult> {
-  const perUser = await rateLimit(request, "squareGiftCardUser", { identity: userId, ignoreIp: true });
+export async function rateLimitUserThenIp(
+  request: Request,
+  userId: string,
+  userBucket: RateLimitBucket,
+  ipBucket: RateLimitBucket,
+): Promise<RateLimitResult> {
+  const perUser = await rateLimit(request, userBucket, { identity: userId, ignoreIp: true });
   if (!perUser.allowed) return perUser;
-  return rateLimit(request, "squareGiftCardIp");
+  return rateLimit(request, ipBucket);
 }
 
-/**
- * `POST /api/prizes/square-discount` (POS plan Phase 2d): user bucket first, then IP — same
- * order and reasoning as `rateLimitSquareGiftCard`. Fails CLOSED in both tiers.
- */
-export async function rateLimitSquareDiscount(request: Request, userId: string): Promise<RateLimitResult> {
-  const perUser = await rateLimit(request, "squareDiscountUser", { identity: userId, ignoreIp: true });
-  if (!perUser.allowed) return perUser;
-  return rateLimit(request, "squareDiscountIp");
-}
+/** `POST /api/prizes/square-gift-card` (POS plan Phase 2c): user bucket first, then IP. */
+export const rateLimitSquareGiftCard = (request: Request, userId: string): Promise<RateLimitResult> =>
+  rateLimitUserThenIp(request, userId, "squareGiftCardUser", "squareGiftCardIp");
+
+/** `POST /api/prizes/square-discount` (POS plan Phase 2d): user bucket first, then IP. */
+export const rateLimitSquareDiscount = (request: Request, userId: string): Promise<RateLimitResult> =>
+  rateLimitUserThenIp(request, userId, "squareDiscountUser", "squareDiscountIp");
 
 /**
  * Standard 429 (or 503, when the limiter itself is down) for a denied call.

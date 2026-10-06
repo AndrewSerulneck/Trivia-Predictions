@@ -646,8 +646,11 @@ Plan: `docs/pos-rewards-integration-plan.md`; latest handoff `docs/pos-rewards-i
   its provider to `available` in `lib/pos/providers.ts` in the same change.
 - A prize's register value has one home: `prizePosValueCents()` in `lib/pos/prizeValue.ts`.
   `prize_pos_value_cents` is written only when set and not in `CAMPAIGN_SELECT_COLUMNS` (deploy-skew safety).
-- Every POS attempt is a `pos_reward_applications` row with a UNIQUE `idempotency_key`, inserted BEFORE the
-  provider call. No polling crons; token refresh is lazy (Clover refresh tokens are single-use — serialise).
+- Every POS attempt that moves value for a coupon (gift card create/fund, register discount application) is a
+  `pos_reward_applications` row with a UNIQUE `idempotency_key`, inserted BEFORE the provider call.
+  Partner-catalog setup writes (the Phase 2d named discount) are not, because their name is their identity
+  (Andrew, 2026-10-06, `docs/square-review-fixes-plan.md` #10). No polling crons; token refresh is lazy (Clover
+  refresh tokens are single-use — serialise).
 - **Square (Phase 2): a gift-card coupon becomes a real Square gift card** when the guest taps "Get my Square
   gift card" (`openSquareGiftCard` in `lib/pos/squareGiftCards.ts`). Order is load-bearing: ledger row →
   create an UNFUNDED card → claim via `redeem_challenge_prize(p_method 'pos_square')` → fund (ACTIVATE) → show.

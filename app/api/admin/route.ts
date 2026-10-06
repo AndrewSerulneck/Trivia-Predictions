@@ -325,8 +325,8 @@ export async function GET(request: Request) {
 
     // Square gift card attempts that never finished (POS plan Phase 2c). On demand only.
     if (resource === "pos-stuck-claims") {
-      const claims = await listStuckSquareClaims();
-      return NextResponse.json({ ok: true, claims });
+      const { claims, needsAction } = await listStuckSquareClaims();
+      return NextResponse.json({ ok: true, claims, needsAction });
     }
 
     if (resource === "challenge-campaigns") {

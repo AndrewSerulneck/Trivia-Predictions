@@ -98,7 +98,7 @@ describe("PosConnectionsSheet", () => {
     render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE }));
     const toronto = (await screen.findByText(/Toronto/)) as HTMLOptionElement;
     expect(toronto.disabled).toBe(true);
-    expect(toronto.textContent).toContain("not US dollars");
+    expect(toronto.textContent).toContain("(must be a US location using US dollars)");
     expect((screen.getByText("Main") as HTMLOptionElement).disabled).toBe(false);
   });
 

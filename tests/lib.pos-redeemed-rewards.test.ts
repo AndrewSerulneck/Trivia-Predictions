@@ -15,10 +15,13 @@ describe("Phase 2f redeemed rewards", () => {
   });
 
   it("the route is flag-gated, owner-authed, venue-checked", () => {
+    // The flag + owner-auth + venue-ownership gate is the shared guard (lib/pos/ownerPosGuard.ts).
     const route = read("app/api/owner/pos/redeemed/route.ts");
-    expect(route).toContain("isPosIntegrationsEnabled()");
-    expect(route).toContain("requireOwnerAuth");
-    expect(route).toContain("auth.venueIds.includes(venueId)");
+    expect(route).toContain("guardOwnerPosVenue(request, venueId)");
+    const guard = read("lib/pos/ownerPosGuard.ts");
+    expect(guard).toContain("isPosIntegrationsEnabled()");
+    expect(guard).toContain("requireOwnerAuth");
+    expect(guard).toContain("auth.venueIds.includes(venueId)");
   });
 
   it("never selects or returns card ids, merchant ids or user ids, and makes no Square call", () => {

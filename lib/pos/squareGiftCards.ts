@@ -4,8 +4,11 @@ import { prizePosValueCents } from "@/lib/pos/prizeValue";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 import { getPosAdapter } from "@/lib/pos/registry";
 import { retrieveSquareGiftCard } from "@/lib/pos/square";
+import { isOurSquareClaim, squareApplyKey } from "@/lib/pos/squareClaim";
 import { isSquareConfigured, squareAppConfig } from "@/lib/pos/squareConfig";
 import { loadSquareCredentials } from "@/lib/pos/squareConnection";
+import { isCouponExpired, loadOwnedCoupon, NO_PRIZE_MESSAGE, squareFail } from "@/lib/pos/squareCoupon";
+import { squareWalletConnectionLoader, type SquareWalletConnectionLoader } from "@/lib/pos/squareWalletConnection";
 import type { PosConnectionCredentials, PosFailure } from "@/lib/pos/types";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { ChallengeCampaignWin, SquareGiftCardState } from "@/types";
@@ -78,7 +81,9 @@ type LedgerRow = {
 
 const LEDGER_COLUMNS = "id, redemption_id, status, external_ref, external_detail, amount_cents";
 
-export const squareApplyKey = (redemptionId: string): string => `${redemptionId}:${PROVIDER}:apply`;
+// The key and the "did our claim win?" rule live in lib/pos/squareClaim.ts (pure, shared with the
+// admin stuck-claim list). Re-exported so existing imports keep working.
+export { squareApplyKey };
 
 export type SquareGiftCardView = {
   /** The card number, grouped for reading. Shown to the winning guest only. */
@@ -97,10 +102,7 @@ export type OpenSquareGiftCardResult =
       message: string;
     };
 
-const fail = (
-  code: Extract<OpenSquareGiftCardResult, { ok: false }>["code"],
-  message: string,
-): OpenSquareGiftCardResult => ({ ok: false, code, message });
+const fail: (code: Extract<OpenSquareGiftCardResult, { ok: false }>["code"], message: string) => OpenSquareGiftCardResult = squareFail;
 
 const SQUARE_ERROR_MESSAGE = "Couldn't reach Square right now. Please try again in a minute.";
 
@@ -200,6 +202,23 @@ const recordFailure = (row: LedgerRow, failure: PosFailure, terminal: boolean) =
     error_message: failure.message.slice(0, 300),
   });
 
+/**
+ * The coupon's redeemed method, read fresh. Used after the claim RPC answers ambiguously (lost,
+ * or threw) to tell "our claim landed" from "someone else's did". `ok: false` = couldn't read.
+ */
+const readRedeemedMethod = async (redemptionId: string): Promise<{ ok: true; method: string | null } | { ok: false }> => {
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaign_redemptions")
+    .select("redeemed_method")
+    .eq("id", redemptionId)
+    .maybeSingle<{ redeemed_method: string | null }>();
+  if (error) {
+    console.error("[PosSquare] coupon-reread-failed", error.message);
+    return { ok: false };
+  }
+  return { ok: true, method: data?.redeemed_method ?? null };
+};
+
 const groupGan = (gan: string): string => gan.replace(/\s+/g, "").replace(/(.{4})(?=.)/g, "$1 ");
 
 /**
@@ -288,21 +307,17 @@ export const openSquareGiftCard = async (params: {
   if (!supabaseAdmin) return fail("unavailable", SQUARE_ERROR_MESSAGE);
   const { userId, venueId, redemptionId } = params;
 
-  const { data: coupon, error: couponError } = await supabaseAdmin
-    .from("challenge_campaign_redemptions")
-    .select(COUPON_COLUMNS)
-    .eq("id", redemptionId)
-    .maybeSingle<CouponRow>();
-  if (couponError) {
-    // A malformed id (not a uuid) can't name anyone's coupon.
-    if (String(couponError.code) === "22P02") return fail("not_found", "No prize found.");
-    console.error("[PosSquare] coupon-read-failed", couponError.message);
-    return fail("unavailable", SQUARE_ERROR_MESSAGE);
+  const loaded = await loadOwnedCoupon<CouponRow>({
+    userId,
+    venueId,
+    redemptionId,
+    columns: COUPON_COLUMNS,
+    readFailedLog: "coupon-read-failed",
+  });
+  if (!loaded.ok) {
+    return loaded.code === "not_found" ? fail("not_found", NO_PRIZE_MESSAGE) : fail("unavailable", SQUARE_ERROR_MESSAGE);
   }
-  // Someone else's coupon reads exactly like a missing one.
-  if (!coupon || coupon.winner_user_id !== userId || coupon.venue_id !== venueId) {
-    return fail("not_found", "No prize found.");
-  }
+  const coupon = loaded.coupon;
   if (!coupon.challenge_id) return fail("not_eligible", "This prize can't become a Square gift card.");
 
   const amountCents = await couponGiftCardCents(coupon);
@@ -321,17 +336,31 @@ export const openSquareGiftCard = async (params: {
   if (!existing.ok) return fail("unavailable", SQUARE_ERROR_MESSAGE);
   let row = existing.row;
 
-  // Already redeemed: only a coupon WE turned into a Square card can be shown/resumed.
+  // Already redeemed: only a coupon WE turned into a Square card can be shown/resumed — and
+  // such a coupon always can be, even if its ledger row says `failed` (isOurSquareClaim).
   if (coupon.prize_redeemed_at) {
-    if (coupon.redeemed_method !== "pos_square" || !row?.external_ref || row.status === "failed") {
+    if (!row || !isOurSquareClaim(row, coupon)) {
       return fail("already_redeemed", "This prize was already redeemed.");
+    }
+    if (row.status !== "succeeded") {
+      if (row.status === "failed") {
+        console.warn("[PosSquare] resume-claimed-failed-row", { ledgerId: row.id });
+        await updateLedger(row.id, { status: "pending" });
+        row = { ...row, status: "pending" };
+      }
+      // Never fund a card in a currency the prize isn't in. Saved at prepare, so normally no call.
+      const resumeCurrency = await preparedCardCurrency(row, credentials);
+      if (resumeCurrency === null) return fail("square_error", SQUARE_ERROR_MESSAGE);
+      row = { ...row, external_detail: { ...(row.external_detail ?? {}), currency: resumeCurrency } };
+      if (resumeCurrency !== PRIZE_CURRENCY) {
+        console.error("[PosSquare] resume-currency-not-supported", { ledgerId: row.id, currency: resumeCurrency || null });
+        return fail("square_error", SQUARE_ERROR_MESSAGE);
+      }
     }
     return fundAndShow(row, credentials, redemptionId, amountCents);
   }
 
-  if (coupon.prize_expires_at && new Date(coupon.prize_expires_at).getTime() <= Date.now()) {
-    return fail("expired", "This prize has expired.");
-  }
+  if (isCouponExpired(coupon)) return fail("expired", "This prize has expired.");
 
   // 1. Ledger row first.
   if (!row) {
@@ -380,23 +409,29 @@ export const openSquareGiftCard = async (params: {
     });
     if (!claim.redeemed) {
       // Someone claimed it first. If that was this same path (a double tap), carry on.
-      const { data: after } = await supabaseAdmin
-        .from("challenge_campaign_redemptions")
-        .select("redeemed_method")
-        .eq("id", redemptionId)
-        .maybeSingle<{ redeemed_method: string | null }>();
-      if (after?.redeemed_method !== "pos_square") {
+      const after = await readRedeemedMethod(redemptionId);
+      // Couldn't tell who won: record nothing; the next tap decides.
+      if (!after.ok) return fail("unavailable", SQUARE_ERROR_MESSAGE);
+      if (after.method !== "pos_square") {
         await recordFailure(row, { ok: false, code: "invalid", message: "lost_to_guest_confirm", retryable: false }, true);
         return fail("already_redeemed", "This prize was already redeemed.");
       }
     }
   } catch (error) {
-    if (error instanceof PrizeRedeemUnavailableError) return fail("unavailable", SQUARE_ERROR_MESSAGE);
-    const message = error instanceof Error ? error.message : "claim failed";
-    await recordFailure(row, { ok: false, code: "invalid", message, retryable: false }, true);
-    return message.toLowerCase().includes("expired")
-      ? fail("expired", "This prize has expired.")
-      : fail("not_found", "No prize found.");
+    // The RPC may have committed before the error reached us (e.g. a timeout after commit).
+    // Look before recording anything: if our claim landed, the guest's card must still be funded.
+    const after = await readRedeemedMethod(redemptionId);
+    if (after.ok && after.method === "pos_square") {
+      console.warn("[PosSquare] claim-error-but-claimed", { ledgerId: row.id });
+    } else {
+      if (error instanceof PrizeRedeemUnavailableError || !after.ok) return fail("unavailable", SQUARE_ERROR_MESSAGE);
+      // Still unredeemed, or another method won: this attempt is over.
+      const message = error instanceof Error ? error.message : "claim failed";
+      await recordFailure(row, { ok: false, code: "invalid", message, retryable: false }, true);
+      return message.toLowerCase().includes("expired")
+        ? fail("expired", "This prize has expired.")
+        : fail("not_found", NO_PRIZE_MESSAGE);
+    }
   }
 
   // 4 + 5. Fund and show.
@@ -413,33 +448,22 @@ export const openSquareGiftCard = async (params: {
  * Everything else is left untouched (no `squareGiftCard` field).
  *
  * Cost: zero queries while the flag is off or there's no gift-card coupon; otherwise one
- * indexed pos_connections read, plus one ledger read when Square is connected.
+ * indexed pos_connections read (shared with attachSquareDiscountStates through `loadConnection`), plus one ledger read when Square is connected, plus — only
+ * when a redeemed coupon's card was never funded (rare) — one coupon read to see whose claim won.
  */
 export const attachSquareGiftCardStates = async (
   wins: ChallengeCampaignWin[],
   venueId: string,
+  loadConnection: SquareWalletConnectionLoader = squareWalletConnectionLoader(venueId),
 ): Promise<ChallengeCampaignWin[]> => {
-  const config = squareAppConfig();
-  if (!isPosIntegrationsEnabled() || !config || !supabaseAdmin) return wins;
+  if (!isPosIntegrationsEnabled() || !squareAppConfig() || !supabaseAdmin) return wins;
   const candidates = wins.filter(
     (win) => win.redemptionId && win.challengeId && isGiftCardKind(win.prizeKind, win.prizeType),
   );
   if (candidates.length === 0) return wins;
 
-  const { data: connection, error: connectionError } = await supabaseAdmin
-    .from("pos_connections")
-    .select("id, location_id")
-    .eq("venue_id", venueId)
-    .eq("provider", PROVIDER)
-    .eq("status", "active")
-    // Only a connection made in THIS server's Square environment (see loadSquareCredentials).
-    .eq("environment", config.environment)
-    .maybeSingle<{ id: string; location_id: string | null }>();
-  if (connectionError) {
-    console.error("[PosSquare] wallet-connection-read-failed", connectionError.message);
-    return wins;
-  }
-  if (!connection?.location_id) return wins;
+  const read = await loadConnection();
+  if (!read.ok || !read.connection?.location_id) return wins;
 
   const ids = candidates.map((win) => win.redemptionId as string);
   const { data: ledgerRows, error: ledgerError } = await supabaseAdmin
@@ -457,13 +481,50 @@ export const attachSquareGiftCardStates = async (
   const candidateIds = new Set(ids);
   const nowMs = Date.now();
 
+  // A funded card (`succeeded`) proves our claim won — funding only ever follows it. Any other
+  // ledger row on a redeemed coupon might be ours (resumable: "Show gift card" funds it) or a
+  // card left behind when "Confirm Redemption" won; only the coupon's method can tell.
+  const unsureIds = candidates
+    .filter((win) => {
+      const ledger = ledgerByRedemption.get(win.redemptionId as string);
+      return win.prizeRedeemedAt && ledger?.external_ref && ledger.status !== "succeeded";
+    })
+    .map((win) => win.redemptionId as string);
+  const methodById = new Map<string, string | null>();
+  let methodReadFailed = false;
+  if (unsureIds.length > 0) {
+    const { data: coupons, error: couponError } = await supabaseAdmin
+      .from("challenge_campaign_redemptions")
+      .select("id, redeemed_method")
+      .in("id", unsureIds)
+      .returns<Array<{ id: string; redeemed_method: string | null }>>();
+    if (couponError) {
+      console.error("[PosSquare] wallet-coupon-read-failed", couponError.message);
+      methodReadFailed = true;
+    }
+    for (const coupon of coupons ?? []) methodById.set(coupon.id, coupon.redeemed_method);
+  }
+
   return wins.map((win) => {
     if (!win.redemptionId || !candidateIds.has(win.redemptionId)) return win;
     const ledger = ledgerByRedemption.get(win.redemptionId);
     let state: SquareGiftCardState | null = null;
     if (win.prizeRedeemedAt) {
-      if (ledger?.external_ref && ledger.status !== "failed") {
-        state = ledger.external_detail?.balance_cents === 0 ? "used" : "issued";
+      // If the method read failed, fall back to the ledger alone (a card ref on a row not
+      // marked failed): a claimed-but-unfunded coupon must never lose its "Show gift card"
+      // resume button to a transient error. The badge is only a hint; the tap
+      // (openSquareGiftCard) re-checks the method and refuses a coupon we didn't claim.
+      const ours =
+        ledger?.status === "succeeded"
+          ? Boolean(ledger.external_ref)
+          : methodReadFailed
+            ? Boolean(ledger?.external_ref) && ledger?.status !== "failed"
+            : isOurSquareClaim(ledger, {
+                prize_redeemed_at: win.prizeRedeemedAt,
+                redeemed_method: methodById.get(win.redemptionId) ?? null,
+              });
+      if (ours) {
+        state = ledger?.external_detail?.balance_cents === 0 ? "used" : "issued";
       }
     } else if (!win.prizeExpiresAt || new Date(win.prizeExpiresAt).getTime() > nowMs) {
       state = "available";

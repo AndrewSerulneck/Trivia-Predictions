@@ -5,7 +5,9 @@ import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 import { createSquareDiscount, findSquareDiscountByName } from "@/lib/pos/square";
 import { hasSquareMenuPrizeScopes, isSquareConfigured, squareAppConfig } from "@/lib/pos/squareConfig";
 import { loadSquareCredentials } from "@/lib/pos/squareConnection";
+import { isCouponExpired, loadOwnedCoupon, NO_PRIZE_MESSAGE, squareFail } from "@/lib/pos/squareCoupon";
 import { squareDiscountSpec } from "@/lib/pos/squareDiscountSpec";
+import { squareWalletConnectionLoader, type SquareWalletConnectionLoader } from "@/lib/pos/squareWalletConnection";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { ChallengeCampaignWin } from "@/types";
 
@@ -52,10 +54,7 @@ export type SquarePrizeDiscountResult =
       message: string;
     };
 
-const fail = (
-  code: Extract<SquarePrizeDiscountResult, { ok: false }>["code"],
-  message: string,
-): SquarePrizeDiscountResult => ({ ok: false, code, message });
+const fail: (code: Extract<SquarePrizeDiscountResult, { ok: false }>["code"], message: string) => SquarePrizeDiscountResult = squareFail;
 
 const SQUARE_ERROR_MESSAGE = "Couldn't reach Square right now. Staff can still take the prize off by hand.";
 
@@ -92,25 +91,19 @@ export const ensureSquarePrizeDiscount = async (params: {
   if (!supabaseAdmin) return fail("unavailable", SQUARE_ERROR_MESSAGE);
   const { userId, venueId, redemptionId } = params;
 
-  const { data: coupon, error: couponError } = await supabaseAdmin
-    .from("challenge_campaign_redemptions")
-    .select(COUPON_COLUMNS)
-    .eq("id", redemptionId)
-    .maybeSingle<CouponRow>();
-  if (couponError) {
-    // A malformed id (not a uuid) can't name anyone's coupon.
-    if (String(couponError.code) === "22P02") return fail("not_found", "No prize found.");
-    console.error("[PosSquare] discount-coupon-read-failed", couponError.message);
-    return fail("unavailable", SQUARE_ERROR_MESSAGE);
+  const loaded = await loadOwnedCoupon<CouponRow>({
+    userId,
+    venueId,
+    redemptionId,
+    columns: COUPON_COLUMNS,
+    readFailedLog: "discount-coupon-read-failed",
+  });
+  if (!loaded.ok) {
+    return loaded.code === "not_found" ? fail("not_found", NO_PRIZE_MESSAGE) : fail("unavailable", SQUARE_ERROR_MESSAGE);
   }
-  // Someone else's coupon reads exactly like a missing one.
-  if (!coupon || coupon.winner_user_id !== userId || coupon.venue_id !== venueId) {
-    return fail("not_found", "No prize found.");
-  }
+  const coupon = loaded.coupon;
   if (coupon.prize_redeemed_at) return fail("already_redeemed", "This prize was already redeemed.");
-  if (coupon.prize_expires_at && new Date(coupon.prize_expires_at).getTime() <= Date.now()) {
-    return fail("expired", "This prize has expired.");
-  }
+  if (isCouponExpired(coupon)) return fail("expired", "This prize has expired.");
 
   const spec = squareDiscountSpec(await couponPrize(coupon));
   if (!spec) return fail("not_eligible", "This prize doesn't use a Square discount.");
@@ -153,14 +146,14 @@ export const ensureSquarePrizeDiscount = async (params: {
  * asks for the discount's name when it opens. Everything else is left untouched.
  *
  * Cost: zero queries while the flag is off or there is no such coupon; otherwise one indexed
- * pos_connections read. No Square call.
+ * pos_connections read — shared with attachSquareGiftCardStates through `loadConnection`. No Square call.
  */
 export const attachSquareDiscountStates = async (
   wins: ChallengeCampaignWin[],
   venueId: string,
+  loadConnection: SquareWalletConnectionLoader = squareWalletConnectionLoader(venueId),
 ): Promise<ChallengeCampaignWin[]> => {
-  const config = squareAppConfig();
-  if (!isPosIntegrationsEnabled() || !config || !supabaseAdmin) return wins;
+  if (!isPosIntegrationsEnabled() || !squareAppConfig() || !supabaseAdmin) return wins;
   const nowMs = Date.now();
   const candidates = new Set(
     wins
@@ -183,18 +176,9 @@ export const attachSquareDiscountStates = async (
   );
   if (candidates.size === 0) return wins;
 
-  const { data: connection, error } = await supabaseAdmin
-    .from("pos_connections")
-    .select("id, location_id, scopes")
-    .eq("venue_id", venueId)
-    .eq("provider", "square")
-    .eq("status", "active")
-    .eq("environment", config.environment)
-    .maybeSingle<{ id: string; location_id: string | null; scopes: string[] | null }>();
-  if (error) {
-    console.error("[PosSquare] wallet-discount-connection-read-failed", error.message);
-    return wins;
-  }
+  const read = await loadConnection();
+  if (!read.ok) return wins;
+  const connection = read.connection;
   if (!connection?.location_id || !hasSquareMenuPrizeScopes(connection.scopes)) return wins;
 
   return wins.map((win) => (win.redemptionId && candidates.has(win.redemptionId) ? { ...win, squareDiscount: true } : win));

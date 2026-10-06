@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { claimChallengeCampaignPrize, listChallengeCampaignWinsForUser } from "@/lib/challengeCampaigns";
 import { attachSquareDiscountStates } from "@/lib/pos/squareDiscounts";
 import { attachSquareGiftCardStates } from "@/lib/pos/squareGiftCards";
+import { squareWalletConnectionLoader } from "@/lib/pos/squareWalletConnection";
 import { attachRewardWinDescriptions } from "@/lib/rewards";
 import { resolveRequestUserId } from "@/lib/serverSession";
 import { getVenueDisplayName } from "@/lib/venueDisplayName";
@@ -35,11 +36,14 @@ export async function GET(request: Request) {
     // for a menu-item prize there, whether it has a ready-made Square discount
     // (attachSquareDiscountStates, Phase 2d). Neither queries anything while
     // NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED is off.
+    // Both Square steps share one loader, so the venue's pos_connections row is read at most once
+    // per wallet load — and not at all when neither step has a coupon to act on.
+    const loadSquareConnection = squareWalletConnectionLoader(venueId);
     const [wins, venueName] = await Promise.all([
       listChallengeCampaignWinsForUser({ userId, venueId })
         .then((rows) => attachRewardWinDescriptions(rows, venueId))
-        .then((rows) => attachSquareGiftCardStates(rows, venueId))
-        .then((rows) => attachSquareDiscountStates(rows, venueId)),
+        .then((rows) => attachSquareGiftCardStates(rows, venueId, loadSquareConnection))
+        .then((rows) => attachSquareDiscountStates(rows, venueId, loadSquareConnection)),
       getVenueDisplayName(venueId),
     ]);
     // `serverNowMs` + `venueName` feed the live coupon (docs/reward-live-redemption-plan.md

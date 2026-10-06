@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
+import { guardOwnerPosVenue } from "@/lib/pos/ownerPosGuard";
 import { disconnectSquare } from "@/lib/pos/squareConnection";
-import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 
 /**
  * POST /api/owner/pos/square/disconnect { venueId } — "Disconnect Square"
@@ -12,23 +11,10 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * in the app until the venue reconnects the same Square account.
  */
 export async function POST(request: Request) {
-  if (!isPosIntegrationsEnabled()) {
-    return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
-  }
-
-  let auth;
-  try {
-    auth = await requireOwnerAuth(request);
-  } catch (response) {
-    return response as Response;
-  }
-
   const body = (await request.json().catch(() => null)) as { venueId?: string } | null;
   const venueId = String(body?.venueId ?? "").trim();
-  if (!venueId) return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });
-  if (!auth.venueIds.includes(venueId)) {
-    return NextResponse.json({ ok: false, error: "You do not have access to this venue." }, { status: 403 });
-  }
+  const checked = await guardOwnerPosVenue(request, venueId);
+  if ("response" in checked) return checked.response;
 
   const result = await disconnectSquare(venueId);
   if (!result.ok) {
