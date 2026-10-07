@@ -44,4 +44,10 @@ describe("POS staff instructions (Phase 2e)", () => {
     expect(read("components/prizes/SquareGiftCardPanel.tsx")).toContain("GUEST_SQUARE_GIFT_CARD_LINE");
     expect(GUEST_SQUARE_GIFT_CARD_LINE).toContain("Square gift card");
   });
+
+  it("scannable dollar-off prizes are explained in the manual and the wizard choice reads from one home", () => {
+    expect(PARTNER_MANUAL_POS_BODY).toContain("Scannable gift card");
+    expect(read("components/rewards/CreateRewardWizard.tsx")).toContain("SCANNABLE_CHOICE_GIFT_CARD");
+    expect(read("components/prizes/PrizeWalletPanel.tsx")).toContain("SCANNABLE_COUPON_LINE");
+  });
 });

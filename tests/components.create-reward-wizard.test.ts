@@ -603,3 +603,77 @@ describe("CreateRewardWizard — register limit (POS)", () => {
     expect(screen.queryByLabelText(/Most it takes off at the register/)).toBeNull();
   });
 });
+
+// docs/square-scannable-prizes-plan.md S3: a dollar-off prize gets a per-prize choice of how
+// staff take it at a Square register, for everyone while the POS switch is on. Default = discount.
+describe("CreateRewardWizard — scannable gift card choice (POS)", () => {
+  const toPrize = async () => {
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
+    await screen.findByText("How many, how often?");
+    fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
+    await screen.findByText("Prize");
+  };
+
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("is hidden when the POS switch is off", async () => {
+    vi.stubEnv("NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED", "");
+    renderForSubmit(LIVE_CONTEXT);
+    await toPrize();
+    fireEvent.click(screen.getByRole("button", { name: "Dollar amount off" }));
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+  });
+
+  it("is hidden for percent-off, shown for dollar-off, even with no Square connected", async () => {
+    vi.stubEnv("NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED", "true");
+    renderForSubmit(LIVE_CONTEXT);
+    await toPrize();
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Dollar amount off" }));
+    expect(screen.getByRole("radiogroup")).toBeTruthy();
+    expect(screen.getByRole("radio", { name: /Apply a discount/ }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "Percentage off" }));
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+  });
+
+  it("sends posDelivery only when the gift card is chosen; the default submits no field", async () => {
+    vi.stubEnv("NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED", "true");
+    const first = renderForSubmit(LIVE_CONTEXT);
+    await toPrize();
+    fireEvent.click(screen.getByRole("button", { name: "Dollar amount off" }));
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    await screen.findByText("Confirm");
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(first.onSubmit).toHaveBeenCalledTimes(1));
+    const defaultPrize = (first.onSubmit.mock.calls[0] as unknown[])[0] as { prize: Record<string, unknown> };
+    expect("posDelivery" in defaultPrize.prize).toBe(false);
+    cleanup();
+
+    const second = renderForSubmit(LIVE_CONTEXT);
+    await toPrize();
+    fireEvent.click(screen.getByRole("button", { name: "Dollar amount off" }));
+    fireEvent.click(screen.getByRole("radio", { name: /Scannable gift card/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    await screen.findByText("Confirm");
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(second.onSubmit).toHaveBeenCalledTimes(1));
+    const chosen = (second.onSubmit.mock.calls[0] as unknown[])[0] as { prize: Record<string, unknown> };
+    expect(chosen.prize.posDelivery).toBe("gift_card");
+    expect(chosen.prize.discountKind).toBe("dollar");
+  });
+
+  it("switching back to percent-off drops a chosen gift card", async () => {
+    vi.stubEnv("NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED", "true");
+    const { onSubmit } = renderForSubmit(LIVE_CONTEXT);
+    await toPrize();
+    fireEvent.click(screen.getByRole("button", { name: "Dollar amount off" }));
+    fireEvent.click(screen.getByRole("radio", { name: /Scannable gift card/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Percentage off" }));
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    await screen.findByText("Confirm");
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect("posDelivery" in ((onSubmit.mock.calls[0] as unknown[])[0] as { prize: object }).prize).toBe(false);
+  });
+});

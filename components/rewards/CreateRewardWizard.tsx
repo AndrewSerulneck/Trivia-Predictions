@@ -73,7 +73,14 @@ import {
   slotKey,
   type RewardGameSlot,
 } from "@/lib/rewardGameSlots";
+import { prizeCanBeScannableGiftCard } from "@/lib/pos/prizeDelivery";
+import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 import { parsePosValueDollars, prizeNeedsPosValue } from "@/lib/pos/prizeValue";
+import {
+  SCANNABLE_CHOICE_DISCOUNT,
+  SCANNABLE_CHOICE_GIFT_CARD,
+  SCANNABLE_CHOICE_QUESTION,
+} from "@/lib/posStaffInstructions";
 import type { RewardPrizeInput } from "@/lib/rewards";
 import {
   REWARD_WIZARD_STEPS,
@@ -343,6 +350,7 @@ export function CreateRewardWizard({
   // "Most it takes off at the register ($, optional)" — asked only when the venue has a POS and the prize is % off.
   const [posValue, setPosValue] = useState("");
   const [posValueError, setPosValueError] = useState<string | null>(null);
+  const [scannableGiftCard, setScannableGiftCard] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -594,6 +602,9 @@ export function CreateRewardWizard({
   }, [customThreshold, threshold]);
 
   const asksPosValue = Boolean(context?.posConnected) && prizeNeedsPosValue(prizeChoice, discountKind);
+  // Dollar-off prizes only, for everyone while the POS switch is on (Andrew, 2026-10-06).
+  const asksPosDelivery = isPosIntegrationsEnabled() && prizeChoice === "menu_item" && prizeCanBeScannableGiftCard("menu_item", discountKind);
+  const posDeliveryGiftCard = asksPosDelivery && scannableGiftCard;
   const posValueCents = asksPosValue ? parsePosValueDollars(posValue) : null;
   // The register limit is OPTIONAL (Andrew, POS plan §6 item 3, 2026-10-06): blank = no limit.
   // Only something typed that isn't a dollar amount stops the partner.
@@ -611,8 +622,10 @@ export function CreateRewardWizard({
       discountValue: Math.max(0.01, Number(discountValue) || 0),
       // Sent only when asked, so a venue without a POS submits exactly what it did before.
       ...(posValueCents !== null ? { posValueCents } : {}),
+      // Same rule: only when chosen, so every other submission is byte-for-byte what it was.
+      ...(posDeliveryGiftCard ? { posDelivery: "gift_card" as const } : {}),
     };
-  }, [prizeChoice, giftCardAmount, menuItem, menuItemName, discountKind, discountValue, posValueCents]);
+  }, [prizeChoice, giftCardAmount, menuItem, menuItemName, discountKind, discountValue, posValueCents, posDeliveryGiftCard]);
 
   const prizeSummary = useMemo(() => {
     if (prize.prizeKind === "gift_card") return `$${prize.amount.toFixed(2)} gift card`;
@@ -621,7 +634,7 @@ export function CreateRewardWizard({
         ? prize.menuItemName || "Item"
         : MENU_ITEM_OPTIONS.find((o) => o.value === prize.menuItem)?.label ?? prize.menuItem;
     const discountLabel = prize.discountKind === "percent" ? `${prize.discountValue}% off` : `$${prize.discountValue.toFixed(2)} off`;
-    return `${discountLabel} ${itemLabel}`;
+    return `${discountLabel} ${itemLabel}${prize.posDelivery === "gift_card" ? " (Square gift card)" : ""}`;
   }, [prize]);
 
   // cadence / activeDays / winnerQuota for the preview AND the submission — the
@@ -1309,6 +1322,27 @@ export function CreateRewardWizard({
                   className={s.input}
                 />
               </div>
+              {asksPosDelivery ? (
+                <div role="radiogroup" aria-label={SCANNABLE_CHOICE_QUESTION} className="space-y-2">
+                  <p className={s.label}>{SCANNABLE_CHOICE_QUESTION}</p>
+                  {[
+                    { value: false, ...SCANNABLE_CHOICE_DISCOUNT },
+                    { value: true, ...SCANNABLE_CHOICE_GIFT_CARD },
+                  ].map((option) => (
+                    <button
+                      key={option.label}
+                      type="button"
+                      role="radio"
+                      aria-checked={scannableGiftCard === option.value}
+                      onClick={() => setScannableGiftCard(option.value)}
+                      className={`${s.chip} w-full text-left ${scannableGiftCard === option.value ? s.chipActive : ""}`}
+                    >
+                      <span className="block font-bold">{option.label}</span>
+                      <span className="block text-xs font-normal opacity-80">{option.help}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               {asksPosValue ? (
                 <div>
                   <label className={s.label} htmlFor="reward-pos-value">

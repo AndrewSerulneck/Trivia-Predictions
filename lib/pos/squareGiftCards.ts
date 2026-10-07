@@ -1,5 +1,6 @@
 import "server-only";
 import { PrizeRedeemUnavailableError, redeemChallengePrize } from "@/lib/challengeCampaigns";
+import { isScannableGiftCardPrize, isSquareGiftCardPrize } from "@/lib/pos/prizeDelivery";
 import { prizePosValueCents } from "@/lib/pos/prizeValue";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 import { getPosAdapter } from "@/lib/pos/registry";
@@ -14,6 +15,10 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { ChallengeCampaignWin, SquareGiftCardState } from "@/types";
 
 // Gift-card prizes as real Square gift cards (docs/pos-rewards-integration-plan.md Phase 2).
+// Since Phase 2i, also a dollar-off menu prize the partner set to "Scannable gift card"
+// (docs/square-scannable-prizes-plan.md): a card for the dollar amount, spendable on anything.
+// Which coupons qualify is isSquareGiftCardPrize (lib/pos/prizeDelivery.ts), one rule for both
+// the tap and the wallet.
 //
 // LAZY: nothing is created at Square until the guest opens a gift-card coupon at a
 // Square-connected venue and taps "Get my Square gift card". Then, in this order:
@@ -65,10 +70,15 @@ type CouponRow = {
   prize_kind: string | null;
   prize_type: string | null;
   prize_gift_certificate_amount: number | null;
+  prize_discount_kind: string | null;
+  prize_discount_value: number | null;
+  prize_pos_delivery: string | null;
 };
 
+// prize_pos_delivery needs 20261007030714_square_scannable_prizes.sql (applied to production
+// 2026-10-07 03:15 UTC, before this code shipped).
 const COUPON_COLUMNS =
-  "id, challenge_id, winner_user_id, venue_id, prize_redeemed_at, redeemed_method, prize_expires_at, prize_kind, prize_type, prize_gift_certificate_amount";
+  "id, challenge_id, winner_user_id, venue_id, prize_redeemed_at, redeemed_method, prize_expires_at, prize_kind, prize_type, prize_gift_certificate_amount, prize_discount_kind, prize_discount_value, prize_pos_delivery";
 
 type LedgerRow = {
   id: string;
@@ -109,13 +119,34 @@ const SQUARE_ERROR_MESSAGE = "Couldn't reach Square right now. Please try again 
 // ── Prize: is this coupon a gift card, and for how much? ──────────────────────────────────
 
 const isGiftCardKind = (prizeKind: string | null | undefined, prizeType: string | null | undefined): boolean =>
-  prizeKind === "gift_card" || (!prizeKind && prizeType === "gift_certificate");
+  isSquareGiftCardPrize({ prizeKind, prizeType, prizeDiscountKind: null, prizePosDelivery: null });
 
 /**
  * The amount in cents, from the coupon's award-time snapshot — what was actually won. A row
  * from before the snapshot columns falls back to the live reward (one extra read).
+ *
+ * A scannable dollar-off menu prize (docs/square-scannable-prizes-plan.md) is decided and priced
+ * from the coupon's OWN columns only — never the live reward. Such a coupon was awarded after the
+ * snapshot columns existed, so nothing is missing; and how a prize is taken was fixed when it was won.
  */
 const couponGiftCardCents = async (coupon: CouponRow): Promise<number | null> => {
+  if (
+    isScannableGiftCardPrize({
+      prizeKind: coupon.prize_kind,
+      prizeDiscountKind: coupon.prize_discount_kind,
+      prizePosDelivery: coupon.prize_pos_delivery,
+    })
+  ) {
+    return prizePosValueCents({
+      prizeKind: "menu_item",
+      prizeDiscountKind: "dollar",
+      prizeDiscountValue: coupon.prize_discount_value === null ? null : Number(coupon.prize_discount_value),
+      prizeGiftCertificateAmount: null,
+      prizePosValueCents: null,
+    });
+  }
+  // Any other snapshotted kind (a discount-delivered menu prize) is not a card: no read needed.
+  if (coupon.prize_kind && !isGiftCardKind(coupon.prize_kind, coupon.prize_type)) return null;
   let kindOk = isGiftCardKind(coupon.prize_kind, coupon.prize_type);
   let amount = coupon.prize_gift_certificate_amount;
   if ((!coupon.prize_kind || amount === null) && coupon.challenge_id && supabaseAdmin) {
@@ -441,7 +472,7 @@ export const openSquareGiftCard = async (params: {
 // ── The prize wallet's list ──────────────────────────────────────────────────────────────
 
 /**
- * Tag each gift-card coupon with its Square state:
+ * Tag each gift-card coupon (including a scannable dollar-off menu prize) with its Square state:
  *   "available" — Square is connected here; the coupon can still become a Square gift card.
  *   "issued"    — it already is one; "Show gift card" fetches the number.
  *   "used"      — it is one, and its last known balance is $0.
@@ -458,7 +489,16 @@ export const attachSquareGiftCardStates = async (
 ): Promise<ChallengeCampaignWin[]> => {
   if (!isPosIntegrationsEnabled() || !squareAppConfig() || !supabaseAdmin) return wins;
   const candidates = wins.filter(
-    (win) => win.redemptionId && win.challengeId && isGiftCardKind(win.prizeKind, win.prizeType),
+    (win) =>
+      win.redemptionId &&
+      win.challengeId &&
+      isSquareGiftCardPrize({
+        prizeKind: win.prizeKind,
+        prizeType: win.prizeType,
+        prizeDiscountKind: win.prizeDiscountKind,
+        // The coupon's own snapshot (listChallengeCampaignWinsForUser), never the live reward.
+        prizePosDelivery: win.prizePosDelivery,
+      }),
   );
   if (candidates.length === 0) return wins;
 

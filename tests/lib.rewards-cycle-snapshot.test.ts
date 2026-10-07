@@ -757,3 +757,90 @@ describe("listChallengeCampaignWinsForUser — a coupon only describes terms it 
     warn.mockRestore();
   });
 });
+
+// docs/square-scannable-prizes-plan.md Phase S1 — how the coupon is taken at a Square register.
+describe("listChallengeCampaignWinsForUser — prizePosDelivery comes from the coupon's own snapshot", () => {
+  const redemption = (overrides: Row = {}): Row => ({
+    id: "red-1",
+    challenge_id: "camp-1",
+    winner_user_id: "u1",
+    venue_id: VENUE_ID,
+    cycle_start: "2026-07-13T00:00:00+00:00",
+    created_at: "2026-07-13T12:00:00+00:00",
+    claimed_at: "2026-07-13T12:00:00+00:00",
+    prize_expires_at: "2026-07-27T00:00:00.000Z",
+    prize_redeemed_at: null,
+    ...overrides,
+  });
+
+  it("carries 'gift_card' from the coupon, whatever the live reward now says", async () => {
+    store.challenge_campaigns = [campaignRow({ prize_pos_delivery: null })];
+    store.challenge_campaign_redemptions.push(redemption({ prize_pos_delivery: "gift_card" }));
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.prizePosDelivery).toBe("gift_card");
+  });
+
+  it("null and unknown values read as null (= discount)", async () => {
+    store.challenge_campaigns = [campaignRow({ prize_pos_delivery: "gift_card" })];
+    store.challenge_campaign_redemptions.push(
+      redemption({ prize_pos_delivery: null }),
+      redemption({ id: "red-2", cycle_start: "2026-07-06T00:00:00+00:00", prize_pos_delivery: "bogus" }),
+    );
+
+    const wins = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(wins.map((win) => win.prizePosDelivery)).toEqual([null, null]);
+  });
+
+  it("column not migrated yet → retries once without it, every coupon reads as discount", async () => {
+    missingColumns = { challenge_campaign_redemptions: ["prize_pos_delivery"] };
+    store.challenge_campaigns = [campaignRow()];
+    // Before the migration the column does not exist, so the row cannot carry it.
+    store.challenge_campaign_redemptions.push(redemption());
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.prizePosDelivery).toBeNull();
+    expect(win.challengeName).toBe("Live Trivia Challenge");
+    const reads = selectLog.filter((entry) => entry.table === "challenge_campaign_redemptions");
+    expect(reads).toHaveLength(2);
+    expect(reads[0].cols).toContain("prize_pos_delivery");
+    expect(reads[1].cols).not.toContain("prize_pos_delivery");
+    expect(warn).toHaveBeenCalledWith("[ChallengeWallet] pos-delivery-column-missing");
+    warn.mockRestore();
+  });
+
+  it("a scannable coupon shows its OWN prize (what the money path funds), not the live reward's", async () => {
+    store.challenge_campaigns = [
+      campaignRow({ prize_kind: "menu_item", prize_menu_item: "appetizer", prize_discount_kind: "percent", prize_discount_value: 50 }),
+    ];
+    store.challenge_campaign_redemptions.push(
+      redemption({
+        prize_kind: "menu_item",
+        prize_menu_item: "appetizer",
+        prize_discount_kind: "dollar",
+        prize_discount_value: 5,
+        prize_pos_delivery: "gift_card",
+      }),
+    );
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win).toMatchObject({ prizeKind: "menu_item", prizeDiscountKind: "dollar", prizeDiscountValue: 5, prizePosDelivery: "gift_card" });
+  });
+
+  it("an unrelated missing column is not mistaken for prize_pos_delivery", async () => {
+    missingColumns = { challenge_campaign_redemptions: ["reward_name"] };
+    store.challenge_campaigns = [campaignRow()];
+    store.challenge_campaign_redemptions.push(redemption());
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await expect(listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID })).rejects.toThrow(/reward_name/);
+    expect(warn).not.toHaveBeenCalledWith("[ChallengeWallet] pos-delivery-column-missing");
+    expect(selectLog.filter((entry) => entry.table === "challenge_campaign_redemptions")).toHaveLength(1);
+    warn.mockRestore();
+  });
+});

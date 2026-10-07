@@ -307,6 +307,37 @@ describe("ensureSquarePrizeDiscount", () => {
     expect(squareCalls).toHaveLength(0);
   });
 
+  // docs/square-scannable-prizes-plan.md Phase S2: the coupon's OWN delivery decides.
+  it("Phase S2: a scannable dollar prize is refused before any Square call — even if the live reward says discount", async () => {
+    db.pos_connections = [connection()];
+    db.challenge_campaign_redemptions = [
+      coupon({ challenge_id: "camp-1", prize_discount_kind: "dollar", prize_discount_value: 5, prize_pos_value_cents: null, prize_pos_delivery: "gift_card" }),
+    ];
+    db.challenge_campaigns = [
+      { id: "camp-1", prize_type: null, prize_kind: "menu_item", prize_menu_item: "appetizer", prize_menu_item_name: null, prize_discount_kind: "dollar", prize_discount_value: 5, prize_pos_value_cents: null, prize_pos_delivery: null },
+    ];
+    expect(await call()).toMatchObject({ ok: false, code: "not_eligible" });
+    expect(squareCalls).toHaveLength(0);
+  });
+
+  it("Phase S2: a discount-delivered dollar prize (null or 'discount') still gets its named discount", async () => {
+    db.pos_connections = [connection()];
+    squareReply = (c) => (c.url.endsWith("/search") ? { status: 200, body: { objects: [discountObject("D5", "Hightop prize: $5 off Appetizer")] } } : { status: 500, body: {} });
+    for (const delivery of [null, "discount"]) {
+      db.challenge_campaign_redemptions = [
+        coupon({ prize_discount_kind: "dollar", prize_discount_value: 5, prize_pos_value_cents: null, prize_pos_delivery: delivery }),
+      ];
+      expect(await call()).toEqual({ ok: true, discount: { name: "Hightop prize: $5 off Appetizer" } });
+    }
+  });
+
+  it("Phase S2: a forged 'gift_card' on a percent prize is ignored — it stays a discount", async () => {
+    db.pos_connections = [connection()];
+    db.challenge_campaign_redemptions = [coupon({ prize_pos_delivery: "gift_card" })];
+    squareReply = (c) => (c.url.endsWith("/search") ? { status: 200, body: { objects: [discountObject("D1", "Hightop prize: 50% off Appetizer (max $12)")] } } : { status: 500, body: {} });
+    expect(await call()).toEqual({ ok: true, discount: { name: "Hightop prize: 50% off Appetizer (max $12)" } });
+  });
+
   it("a Square failure is a square_error, never a crash", async () => {
     db.pos_connections = [connection()];
     db.challenge_campaign_redemptions = [coupon()];
@@ -359,6 +390,30 @@ describe("attachSquareDiscountStates", () => {
     expect((await attachSquareDiscountStates([win({})], "venue-1"))[0].squareDiscount).toBeUndefined();
     db.pos_connections = [connection({ environment: "production" })];
     expect((await attachSquareDiscountStates([win({})], "venue-1"))[0].squareDiscount).toBeUndefined();
+  });
+
+  it("Phase S2: never tags a scannable dollar prize (it is offered as a Square gift card instead)", async () => {
+    db.pos_connections = [connection()];
+    const dollar = { prizeDiscountKind: "dollar", prizeDiscountValue: 5 } as const;
+    const result = await attachSquareDiscountStates(
+      [
+        win({ ...dollar, redemptionId: "scan", prizePosDelivery: "gift_card" }),
+        win({ ...dollar, redemptionId: "discount", prizePosDelivery: "discount" }),
+        win({ ...dollar, redemptionId: "legacy", prizePosDelivery: null }),
+        win({ redemptionId: "percent-forged", prizePosDelivery: "gift_card" }),
+      ],
+      "venue-1",
+    );
+    expect(result.map((w) => [w.redemptionId, w.squareDiscount ?? null])).toEqual([
+      ["scan", null],
+      ["discount", true],
+      ["legacy", true],
+      ["percent-forged", true],
+    ]);
+    // Only scannable coupons: no connection read at all.
+    const only = [win({ ...dollar, prizePosDelivery: "gift_card" })];
+    db.pos_connections = [];
+    expect(await attachSquareDiscountStates(only, "venue-1")).toBe(only);
   });
 
   it("reads nothing with the flag off or with no menu-item coupon", async () => {

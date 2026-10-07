@@ -14,6 +14,7 @@ flag still off). **R5** (a refused reconnect retires the old connection; Andrew 
 Console + 4 secrets + flag in Vercel, then "go" → agent pushes R5 (= the flag-on redeploy) → smoke test → Andrew's
 iPhone test with two seeded pilot coupons ($2 gift card, $1-off menu prize). Latest handoff:
 **`docs/pos-rewards-integration-plan_PHASE_2h_HANDOFF.md`**.
+**Phase 2i** (Andrew, 2026-10-06): dollar-off menu prizes can be delivered as a **scannable Square gift card**, partner's choice per prize (preset discount stays the default). Plan: `docs/square-scannable-prizes-plan.md` (S1–S4). **S1 done 2026-10-06**: migration `20261007030714` applied to production. **S2 done 2026-10-06** (money path; code uncommitted, ships in S4). **S3 done 2026-10-06** (wizard choice + wallet fixes). **S4 in progress**: reviewed, committed locally, not pushed (waiting on Andrew). Handoff: `docs/square-scannable-prizes-plan_PHASE_S4_HANDOFF.md`.
 **Phase 2 deviation:** the coupon is marked redeemed when it becomes a Square gift card, not on the first spend
 (Phase 2 handoff §3).
 **Re-ordered 2026-10-06 (Andrew): "Since I don't want to order a Clover dev kit, let's focus on becoming fully
@@ -555,6 +556,8 @@ sync, any other POS.
 14. Pilot merchant for real-money testing: Andrew's own free Square seller account + the free Square app on his
     iPhone (recommended first), then a friendly partner bar. **Assumed 2026-10-06 = the recommendation** (Andrew asked
     for simple next steps; he can override).
+15. Scannable prizes at Square venues: **Andrew, 2026-10-06:** Option 1 (dollar-off prizes as Square gift cards), keeping the
+    preset discount too; **the partner picks per prize** in the wizard. Plan: `docs/square-scannable-prizes-plan.md`.
 
 **Test coupon (seeded 2026-10-05 with Andrew's OK, "Ok to create a test coupon"):** campaign
 `da65ec0f-ad34-4e01-8a0c-6666e00c4ca0` ("TEST — POS gift card / Clover check (delete me)", `is_active=false`,

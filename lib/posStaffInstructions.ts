@@ -38,6 +38,20 @@ export const STAFF_SHEET_PATH = "/owner/pos-staff-sheet";
 /** One line on the guest's Square gift card offer. */
 export const GUEST_SQUARE_GIFT_CARD_LINE = "At the register, tell staff you'll pay with a Square gift card.";
 
+/** Shown on a dollar-off coupon the partner set to "Scannable gift card" (Square plan S3). */
+export const SCANNABLE_COUPON_LINE = "Paid as a Square gift card. Use it on anything.";
+
+/** The wizard's per-prize choice for a dollar-off prize at a Square register (Square plan S3). */
+export const SCANNABLE_CHOICE_QUESTION = "How should staff take this prize at a Square register?";
+export const SCANNABLE_CHOICE_DISCOUNT = {
+  label: "Apply a discount",
+  help: "Staff tap the ready-made Hightop discount. Works only on this item.",
+};
+export const SCANNABLE_CHOICE_GIFT_CARD = {
+  label: "Scannable gift card",
+  help: "Staff scan or type a Square gift card for the dollar amount. It can be used on anything, and leftover balance stays on the card.",
+};
+
 /** Partner Manual section copy (lib/partnerManual.ts). */
 export const PARTNER_MANUAL_POS_BODY =
-  "If you use Square, connect it so guests' prizes work right at your register. Tap the arrow in the top-left corner to open the menu, then tap Point of Sale and connect Square. Gift card prizes become real Square gift cards. Free-item and dollar or percent off prizes get a ready-made \"Hightop prize\" discount in your Square for staff to tap. The Point of Sale screen has a staff sheet you can print and tape by the register. Prizes always still work with the normal coupon, connected or not.";
+  "If you use Square, connect it so guests' prizes work right at your register. Tap the arrow in the top-left corner to open the menu, then tap Point of Sale and connect Square. Gift card prizes become real Square gift cards. Free-item and dollar or percent off prizes get a ready-made \"Hightop prize\" discount in your Square for staff to tap. A dollar off prize can instead be set to \"Scannable gift card\", which staff scan or type like any Square gift card. The Point of Sale screen has a staff sheet you can print and tape by the register. Prizes always still work with the normal coupon, connected or not.";

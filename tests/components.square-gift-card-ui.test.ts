@@ -97,6 +97,56 @@ describe("Prize wallet — Square gift card", () => {
     expect(within(dialog).getByRole("button", { name: "Confirm Redemption" })).not.toBeNull();
   });
 
+  it("a scannable dollar-off coupon: offer names the dollars, issued card reopens, used card says Used", async () => {
+    const scannable = {
+      prizeKind: "menu_item" as const,
+      prizeGiftCertificateAmount: null,
+      prizeMenuItem: "appetizer" as const,
+      prizeDiscountKind: "dollar" as const,
+      prizeDiscountValue: 5,
+      prizePosDelivery: "gift_card" as const,
+    };
+    installFetch([win({ ...scannable, squareGiftCard: "available" })], { status: 200, body: { ok: true, giftCard: GIFT_CARD } });
+    render(createElement(PrizeWalletPanel));
+    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    expect(await screen.findByText(/into a \$5\.00 Square gift card/)).toBeTruthy();
+    cleanup();
+
+    installFetch(
+      [win({ ...scannable, squareGiftCard: "issued", prizeRedeemedAt: new Date().toISOString() })],
+      { status: 200, body: { ok: true, giftCard: GIFT_CARD } },
+    );
+    render(createElement(PrizeWalletPanel));
+    expect(await screen.findByRole("button", { name: "Show gift card" })).toBeTruthy();
+    cleanup();
+
+    installFetch([win({ ...scannable, squareGiftCard: "used", prizeRedeemedAt: new Date().toISOString() })], { status: 200, body: {} });
+    render(createElement(PrizeWalletPanel));
+    expect(await screen.findByText("Used")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Show gift card" })).toBeNull();
+  });
+
+  it("the 'Paid as a Square gift card' line appears only where the coupon can really become one", async () => {
+    const scannable = {
+      prizeKind: "menu_item" as const,
+      prizeGiftCertificateAmount: null,
+      prizeMenuItem: "appetizer" as const,
+      prizeDiscountKind: "dollar" as const,
+      prizeDiscountValue: 5,
+      prizePosDelivery: "gift_card" as const,
+    };
+    // No squareGiftCard state = no Square here (or POS off): an ordinary coupon.
+    installFetch([win(scannable)], { status: 200, body: {} });
+    render(createElement(PrizeWalletPanel));
+    expect(await screen.findByRole("button", { name: "Redeem" })).toBeTruthy();
+    expect(screen.queryByText(/Paid as a Square gift card/)).toBeNull();
+    cleanup();
+
+    installFetch([win({ ...scannable, squareGiftCard: "available" })], { status: 200, body: {} });
+    render(createElement(PrizeWalletPanel));
+    expect(await screen.findByText(/Paid as a Square gift card/)).toBeTruthy();
+  });
+
   it("an issued card shows 'Show gift card' in the list — even past the coupon's expiry — and opens onto its number", async () => {
     const calls = installFetch(
       [win({ squareGiftCard: "issued", prizeRedeemedAt: new Date().toISOString(), prizeExpiresAt: new Date(Date.now() - DAY_MS).toISOString() })],

@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notifications";
 import { getVenueTimezone } from "@/lib/timezone";
 import { rewardTermsUnchangedSinceWin } from "@/lib/rewardDescription";
+import { isScannableGiftCardPrize, normalizePrizePosDelivery, prizeCanBeScannableGiftCard } from "@/lib/pos/prizeDelivery";
 import {
   normalizeGameWinnerSlots,
   serializeGameWinnerSlots,
@@ -23,6 +24,7 @@ import type {
   ChallengeMode,
   ChallengeWinCondition,
   NFLWeekScope,
+  PrizePosDelivery,
   PrizeType,
   RewardPrizeKind,
   RewardMenuItem,
@@ -115,6 +117,8 @@ type ChallengeCampaignRedemptionSnapshotRow = {
   prize_menu_item_name: string | null;
   prize_discount_kind: string | null;
   prize_discount_value: number | null;
+  /** Absent when read before migration 20261007030714 is applied (listChallengeCampaignWinsForUser). */
+  prize_pos_delivery?: string | null;
 };
 
 type ChallengeLeaderboardProgressRow = {
@@ -184,6 +188,10 @@ export function campaignHasPrize(
 
 const PRIZE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
+/** createChallengeCampaign / updateChallengeCampaign refuse "gift_card" delivery on any other prize. */
+export const PRIZE_POS_DELIVERY_INVALID_MESSAGE =
+  "A scannable Square gift card is only available for a dollar-off menu prize.";
+
 /**
  * The reward's name/prize, snapshotted onto the coupon row at award time.
  *
@@ -196,6 +204,11 @@ const PRIZE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
  * Written at award time, never reconstructed at delete time: by then the
  * campaign may already be gone, and a reward edited between the win and the
  * delete would misreport what the player was actually promised.
+ *
+ * Deliberately WITHOUT prize_pos_delivery (docs/square-scannable-prizes-plan.md S1): only the
+ * leaderboard finalizers use this, leaderboard rewards can no longer be created, and the one
+ * way to set "gift_card" (the reward wizard → createReward) mints its coupons through the
+ * award_cycle_winner RPC, which copies the column. Null here = "discount" = today.
  */
 export function redemptionPrizeSnapshot(
   campaign: Pick<
@@ -1388,6 +1401,12 @@ export async function createChallengeCampaign(input: {
    * (lib/pos/prizeValue.ts). Written ONLY when set — see the insert below.
    */
   prizePosValueCents?: number | null;
+  /**
+   * Square scannable prizes S1: "gift_card" = this dollar-off menu prize becomes a scannable
+   * Square gift card. Written ONLY when "gift_card" (null/"discount" mean the same thing and
+   * write nothing) — see the insert below. Refused on any other prize shape.
+   */
+  prizePosDelivery?: PrizePosDelivery | null;
   isActive?: boolean;
   /** Phase 9a: stamp the creating owner (null/absent = admin-created). */
   createdByOwnerId?: string | null;
@@ -1419,6 +1438,13 @@ export async function createChallengeCampaign(input: {
     (input.prizeType === "gift_certificate" || prizeKind === "gift_card") && Number.isFinite(input.prizeGiftCertificateAmount)
       ? Math.max(0.01, Number(input.prizeGiftCertificateAmount))
       : null;
+  const prizePosDelivery = normalizePrizePosDelivery(input.prizePosDelivery);
+  if (
+    prizePosDelivery === "gift_card" &&
+    !prizeCanBeScannableGiftCard(prizeKind, prizeKind === "menu_item" ? normalizeDiscountKind(input.prizeDiscountKind) : null)
+  ) {
+    throw new Error(PRIZE_POS_DELIVERY_INVALID_MESSAGE);
+  }
 
   const row = {
     name,
@@ -1476,6 +1502,9 @@ export async function createChallengeCampaign(input: {
     ...(Number.isInteger(input.prizePosValueCents) && prizeKind === "menu_item"
       ? { prize_pos_value_cents: input.prizePosValueCents }
       : {}),
+    // Same rule for the delivery (20261007030714_square_scannable_prizes.sql): only "gift_card"
+    // is ever sent, so a deploy ahead of the migration still saves every ordinary reward.
+    ...(prizePosDelivery === "gift_card" ? { prize_pos_delivery: "gift_card" } : {}),
   };
 
   const { data, error } = await supabaseAdmin!
@@ -1533,6 +1562,12 @@ export async function updateChallengeCampaign(input: {
   gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
   /** NFL Pick 'Em rewards only. Pass null to clear. Absent leaves the column untouched. */
   nflWeekScope?: NFLWeekScope | null;
+  /**
+   * Square scannable prizes S1. Must come WITH `prizeKind` (the rule depends on the prize
+   * shape); null/"discount" clears it. Absent leaves the column untouched — the database
+   * shape check refuses a prize edit that would strand "gift_card" on a non-dollar prize.
+   */
+  prizePosDelivery?: PrizePosDelivery | null;
   isActive?: boolean;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
@@ -1613,6 +1648,19 @@ export async function updateChallengeCampaign(input: {
       kind === "gift_card" && Number.isFinite(input.prizeGiftCertificateAmount)
         ? Math.max(0.01, Number(input.prizeGiftCertificateAmount))
         : null;
+    if (input.prizePosDelivery !== undefined) {
+      const delivery = normalizePrizePosDelivery(input.prizePosDelivery);
+      if (delivery === "gift_card" && !prizeCanBeScannableGiftCard(kind, update.prize_discount_kind as RewardDiscountKind | null)) {
+        throw new Error(PRIZE_POS_DELIVERY_INVALID_MESSAGE);
+      }
+      update.prize_pos_delivery = delivery === "gift_card" ? "gift_card" : null;
+    } else if (!prizeCanBeScannableGiftCard(kind, update.prize_discount_kind as RewardDiscountKind | null)) {
+      // A new prize shape that can't be scannable clears a stored "gift_card" rather than
+      // failing on challenge_campaigns_prize_pos_delivery_shape_check.
+      update.prize_pos_delivery = null;
+    }
+  } else if (input.prizePosDelivery !== undefined) {
+    throw new Error("prizePosDelivery must be sent together with prizeKind.");
   }
   if (typeof input.isActive === "boolean") update.is_active = input.isActive;
 
@@ -2505,15 +2553,22 @@ export async function listChallengeCampaignWinsForUser(params: {
   // Read directly from redemptions — covers both one-time and per-cycle recurring prizes.
   // The award-time snapshot columns come along so a coupon whose reward has since
   // been deleted (challenge_id = null) still shows what was won.
-  const { data: redemptionRows, error: redemptionError } = await supabaseAdmin!
-    .from("challenge_campaign_redemptions")
-    .select(
-      "id, challenge_id, winner_user_id, venue_id, claimed_at, created_at, prize_expires_at, prize_redeemed_at, cycle_start, reward_name, prize_type, prize_gift_certificate_amount, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value"
-    )
-    .eq("winner_user_id", userId)
-    .eq("venue_id", venueId)
-    .order("cycle_start", { ascending: false })
-    .returns<Array<ChallengeCampaignRedemptionRow & ChallengeCampaignRedemptionSnapshotRow & { id?: string | null; created_at?: string | null }>>();
+  const readRedemptions = (columns: string) =>
+    supabaseAdmin!
+      .from("challenge_campaign_redemptions")
+      .select(columns)
+      .eq("winner_user_id", userId)
+      .eq("venue_id", venueId)
+      .order("cycle_start", { ascending: false })
+      .returns<Array<ChallengeCampaignRedemptionRow & ChallengeCampaignRedemptionSnapshotRow & { id?: string | null; created_at?: string | null }>>();
+  // prize_pos_delivery arrives in its own migration (20261007030714); code live ahead of it
+  // retries once without the column, and every coupon then reads as "discount" — today.
+  let redemptionRead = await readRedemptions(`${WALLET_REDEMPTION_COLUMNS}, prize_pos_delivery`);
+  if (redemptionRead.error && isMissingColumn(redemptionRead.error, "prize_pos_delivery")) {
+    console.warn("[ChallengeWallet] pos-delivery-column-missing");
+    redemptionRead = await readRedemptions(WALLET_REDEMPTION_COLUMNS);
+  }
+  const { data: redemptionRows, error: redemptionError } = redemptionRead;
 
   if (redemptionError) throw new Error(redemptionError.message ?? "Failed to load challenge wins.");
   if (!redemptionRows || redemptionRows.length === 0) return [];
@@ -2538,7 +2593,7 @@ export async function listChallengeCampaignWinsForUser(params: {
     // keeps a coupon readable after its reward is deleted. Older rows predate the
     // snapshot columns, so every field still falls back to null rather than
     // assuming one of the two sources is populated.
-    const prizeSource: RewardPrizeSourceRow = campaign ?? {
+    const snapshotPrize: RewardPrizeSourceRow = {
       prize_type: row.prize_type,
       prize_kind: row.prize_kind,
       prize_menu_item: row.prize_menu_item,
@@ -2546,6 +2601,14 @@ export async function listChallengeCampaignWinsForUser(params: {
       prize_discount_kind: row.prize_discount_kind,
       prize_discount_value: row.prize_discount_value,
     };
+    // Except a scannable Square gift-card coupon: the money path (lib/pos/squareGiftCards.ts)
+    // decides and prices it from the coupon's OWN columns, so the wallet must show the same.
+    const snapshotScannable = isScannableGiftCardPrize({
+      prizeKind: row.prize_kind,
+      prizeDiscountKind: row.prize_discount_kind,
+      prizePosDelivery: row.prize_pos_delivery,
+    });
+    const prizeSource: RewardPrizeSourceRow = (snapshotScannable ? undefined : campaign) ?? snapshotPrize;
     const prizeType = campaign?.prize_type ?? row.prize_type;
     return {
       // The exact coupon a Redeem tap names (redeemChallengePrize) — never another cycle's.
@@ -2563,6 +2626,9 @@ export async function listChallengeCampaignWinsForUser(params: {
       prizeExpiresAt: row.prize_expires_at ?? null,
       prizeRedeemedAt: row.prize_redeemed_at ?? null,
       ...resolveRewardPrize(prizeSource),
+      // Always the coupon's OWN snapshot, never the live reward: how the prize is taken at a
+      // Square register was fixed when it was won.
+      prizePosDelivery: normalizePrizePosDelivery(row.prize_pos_delivery),
       // What the coupon was won FOR (describeRewardWin) needs the live reward's
       // terms; a deleted reward has none, and a reward whose terms changed after
       // this win (terms_updated_at > the redemption's created_at, the award
@@ -2584,6 +2650,9 @@ export async function listChallengeCampaignWinsForUser(params: {
     };
   });
 }
+
+const WALLET_REDEMPTION_COLUMNS =
+  "id, challenge_id, winner_user_id, venue_id, claimed_at, created_at, prize_expires_at, prize_redeemed_at, cycle_start, reward_name, prize_type, prize_gift_certificate_amount, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value";
 
 const WALLET_CAMPAIGN_COLUMNS =
   "id, name, rules, prize_type, prize_gift_certificate_amount, winner_user_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, reward_definition_id, win_condition, recurring_type, points_required_to_win, active_days, winner_quota, nfl_week_scope, game_winner_slots";
@@ -2607,17 +2676,21 @@ type WalletCampaignRow = RewardPrizeSourceRow & {
 };
 
 /**
- * Is this read error "`terms_updated_at` does not exist yet"? The column arrives
- * in its own migration, applied by hand, so this code can be live before it.
- * PostgREST answers an unknown column with 42703, or PGRST204 + the column name
- * on a stale schema cache. Same shape as signupSweep's isMissingCheckoutStampColumn.
+ * Is this read error "`column` does not exist yet"? Such columns arrive in their own
+ * migration, applied by hand, so this code can be live before it. PostgREST answers an
+ * unknown column with 42703, or PGRST204 + the column name on a stale schema cache. Same
+ * shape as signupSweep's isMissingCheckoutStampColumn.
  */
-const isMissingTermsStampColumn = (error: { message?: string; code?: string }): boolean => {
-  if (String(error.code ?? "") === "42703") return true;
+const isMissingColumn = (error: { message?: string; code?: string }, column: string): boolean => {
+  // 42703 names the column too ("column x.prize_pos_delivery does not exist"); requiring it keeps
+  // an unrelated missing column from triggering this column's fallback.
   const message = String(error.message ?? "").toLowerCase();
+  if (!message.includes(column)) return false;
   return (
-    message.includes("terms_updated_at") &&
-    (message.includes("does not exist") || message.includes("schema cache") || message.includes("could not find"))
+    String(error.code ?? "") === "42703" ||
+    message.includes("does not exist") ||
+    message.includes("schema cache") ||
+    message.includes("could not find")
   );
 };
 
@@ -2635,7 +2708,7 @@ async function loadWalletCampaignRows(challengeIds: string[]): Promise<WalletCam
     .in("id", challengeIds)
     .returns<WalletCampaignRow[]>();
   if (!withStamp.error) return withStamp.data ?? [];
-  if (!isMissingTermsStampColumn(withStamp.error)) return [];
+  if (!isMissingColumn(withStamp.error, "terms_updated_at")) return [];
 
   console.warn("[ChallengeWallet] terms-updated-at-column-missing");
   const legacy = await supabaseAdmin!

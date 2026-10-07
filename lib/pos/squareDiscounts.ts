@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { resolveRewardPrize, type RewardPrizeSourceRow } from "@/lib/challengeCampaigns";
+import { isScannableGiftCardPrize } from "@/lib/pos/prizeDelivery";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 import { createSquareDiscount, findSquareDiscountByName } from "@/lib/pos/square";
 import { hasSquareMenuPrizeScopes, isSquareConfigured, squareAppConfig } from "@/lib/pos/squareConfig";
@@ -36,10 +37,13 @@ type CouponRow = RewardPrizeSourceRow & {
   prize_redeemed_at: string | null;
   prize_expires_at: string | null;
   prize_pos_value_cents: number | null;
+  prize_pos_delivery: string | null;
 };
 
+// prize_pos_delivery needs 20261007030714_square_scannable_prizes.sql (applied to production
+// 2026-10-07 03:15 UTC, before this code shipped).
 const COUPON_COLUMNS =
-  "id, challenge_id, winner_user_id, venue_id, prize_redeemed_at, prize_expires_at, prize_type, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, prize_pos_value_cents";
+  "id, challenge_id, winner_user_id, venue_id, prize_redeemed_at, prize_expires_at, prize_type, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, prize_pos_value_cents, prize_pos_delivery";
 
 type CampaignPrizeRow = RewardPrizeSourceRow & { prize_pos_value_cents: number | null };
 
@@ -102,6 +106,17 @@ export const ensureSquarePrizeDiscount = async (params: {
     return loaded.code === "not_found" ? fail("not_found", NO_PRIZE_MESSAGE) : fail("unavailable", SQUARE_ERROR_MESSAGE);
   }
   const coupon = loaded.coupon;
+  // A scannable prize becomes a Square gift card instead (lib/pos/squareGiftCards.ts), decided by
+  // the coupon's OWN snapshot — the same columns that path reads — so a coupon never offers both.
+  if (
+    isScannableGiftCardPrize({
+      prizeKind: coupon.prize_kind,
+      prizeDiscountKind: coupon.prize_discount_kind,
+      prizePosDelivery: coupon.prize_pos_delivery,
+    })
+  ) {
+    return fail("not_eligible", "This prize is a Square gift card, not a discount.");
+  }
   if (coupon.prize_redeemed_at) return fail("already_redeemed", "This prize was already redeemed.");
   if (isCouponExpired(coupon)) return fail("expired", "This prize has expired.");
 
@@ -140,7 +155,8 @@ export const ensureSquarePrizeDiscount = async (params: {
 };
 
 /**
- * Tag each unredeemed, unexpired menu-item coupon that can become a Square discount with
+ * Tag each unredeemed, unexpired menu-item coupon that can become a Square discount (and is not a
+ * scannable gift-card prize) with
  * `squareDiscount: true`, when this venue's Square connection is active, has a location, was
  * made in this server's Square environment, and granted the catalog scopes. The coupon then
  * asks for the discount's name when it opens. Everything else is left untouched.
@@ -162,6 +178,12 @@ export const attachSquareDiscountStates = async (
           win.redemptionId &&
           !win.prizeRedeemedAt &&
           (!win.prizeExpiresAt || new Date(win.prizeExpiresAt).getTime() > nowMs) &&
+          // A scannable prize is offered as a Square gift card (attachSquareGiftCardStates), never both.
+          !isScannableGiftCardPrize({
+            prizeKind: win.prizeKind,
+            prizeDiscountKind: win.prizeDiscountKind,
+            prizePosDelivery: win.prizePosDelivery,
+          }) &&
           // The cap doesn't decide whether a prize CAN be a discount, only its name.
           squareDiscountSpec({
             prizeKind: win.prizeKind ?? null,

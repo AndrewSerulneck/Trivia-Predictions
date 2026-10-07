@@ -10,8 +10,10 @@ import { clockOffsetFromServer } from "@/lib/liveCouponClock";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { LiveCouponFrame } from "@/components/prizes/LiveCouponFrame";
 import { SquareDiscountHint } from "@/components/prizes/SquareDiscountHint";
+import { SCANNABLE_COUPON_LINE } from "@/lib/posStaffInstructions";
 import { SquareGiftCardPanel } from "@/components/prizes/SquareGiftCardPanel";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
+import { isScannableGiftCardPrize } from "@/lib/pos/prizeDelivery";
 import type { ChallengeCampaignWin, PrizeType, PrizeWin, RewardMenuItem } from "@/types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -308,6 +310,10 @@ function MenuItemCoupon({ win, onRedeem, large }: CouponCardProps) {
         };
 
   const discount = discountLabel(win);
+  // A dollar-off prize the partner set to "Scannable gift card": it becomes a Square gift card
+  // (redeemed in our records the moment it does), so the badge mirrors GiftCardCoupon.
+  const scannable = isScannableGiftCardPrize(win);
+  const squareIssued = scannable && win.squareGiftCard === "issued";
 
   return (
     <div className={`relative overflow-hidden rounded-2xl border-2 ${theme.border} bg-gradient-to-br ${theme.gradient} p-4`}>
@@ -319,6 +325,11 @@ function MenuItemCoupon({ win, onRedeem, large }: CouponCardProps) {
         {menuItemLabel(win).toUpperCase()}
       </p>
       <p className={`mt-1 text-xs ${theme.sub}`}>{wonForLine(win)}</p>
+      {/* Only where it really can be a card (Square connected here, attachSquareGiftCardStates); otherwise
+          it is an ordinary coupon and must not promise one. */}
+      {scannable && win.squareGiftCard ? (
+        <p className={`mt-1 text-xs font-bold ${theme.sub}`}>{SCANNABLE_COUPON_LINE}</p>
+      ) : null}
       <div className={`my-3 border-t border-dashed ${theme.divider}`} />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
@@ -327,9 +338,17 @@ function MenuItemCoupon({ win, onRedeem, large }: CouponCardProps) {
             <p className={`text-[11px] ${expiry.className}`}>{expiry.label}</p>
           )}
         </div>
-        {redeemed ? (
+        {squareIssued && !large ? (
+          <button
+            type="button"
+            onClick={() => onRedeem(win)}
+            className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button rounded-lg border px-4 py-3 text-sm font-bold ${theme.buttonBorder}`)}
+          >
+            Show gift card
+          </button>
+        ) : redeemed ? (
           <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${theme.redeemedText}`}>
-            Redeemed
+            {scannable && win.squareGiftCard === "used" ? "Used" : "Redeemed"}
           </span>
         ) : !large ? (
           <button

@@ -202,6 +202,13 @@ export type RewardMenuItem =
   | "wine_bottle"
   | "other";
 export type RewardDiscountKind = "dollar" | "percent";
+/**
+ * How a dollar-off menu-item prize is taken at a Square register
+ * (docs/square-scannable-prizes-plan.md): "discount" = staff apply the ready-made Hightop
+ * discount (the default; null means this too), "gift_card" = the coupon becomes a scannable
+ * Square gift card for the dollar amount. Rules: lib/pos/prizeDelivery.ts.
+ */
+export type PrizePosDelivery = "discount" | "gift_card";
 
 export type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
 export type ChallengeScheduleType = "single_day" | "multi_day" | "recurring" | "one_time";
@@ -381,6 +388,13 @@ export interface ChallengeCampaignWin {
   prizeMenuItemName?: string | null;
   prizeDiscountKind?: RewardDiscountKind | null;
   prizeDiscountValue?: number | null;
+  /**
+   * How this coupon is taken at a Square register — from the coupon's OWN award-time
+   * snapshot, never the live reward, so editing a reward never changes a coupon already
+   * won. Null = "discount" (every coupon won before the column existed). Only meaningful on
+   * a dollar-off menu prize; use isScannableGiftCardPrize (lib/pos/prizeDelivery.ts).
+   */
+  prizePosDelivery?: PrizePosDelivery | null;
   /**
    * The live reward's terms, for saying what the coupon was won FOR
    * (describeRewardWin, lib/rewardDescription.ts). Null when the reward has been

@@ -1054,3 +1054,47 @@ describe("createReward — POS value at the register", () => {
     }
   });
 });
+
+// docs/square-scannable-prizes-plan.md Phase S1 — "scannable Square gift card" delivery.
+describe("createReward — Square delivery for a dollar-off prize", () => {
+  const create = (prize: RewardPrizeInput) =>
+    createReward({
+      venueId: "venue-1",
+      definitionId: "live_trivia_challenge",
+      cadence: "weekly",
+      threshold: 500,
+      winnerQuota: 1,
+      prize,
+    });
+  const DOLLAR_PRIZE: RewardPrizeInput = { ...APPETIZER_PRIZE, discountKind: "dollar", discountValue: 5 };
+
+  beforeEach(() => {
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+  });
+
+  it("passes 'gift_card' through for a dollar-off menu prize", async () => {
+    await create({ ...DOLLAR_PRIZE, posDelivery: "gift_card" });
+    expect(mocks.createChallengeCampaign).toHaveBeenLastCalledWith(expect.objectContaining({ prizePosDelivery: "gift_card" }));
+  });
+
+  it("stores absent, null and 'discount' all as null (today's behaviour)", async () => {
+    for (const prize of [DOLLAR_PRIZE, { ...DOLLAR_PRIZE, posDelivery: null }, { ...DOLLAR_PRIZE, posDelivery: "discount" as const }]) {
+      await create(prize);
+      expect(mocks.createChallengeCampaign).toHaveBeenLastCalledWith(expect.objectContaining({ prizePosDelivery: null }));
+    }
+    await create({ prizeKind: "gift_card", amount: 25 });
+    expect(mocks.createChallengeCampaign).toHaveBeenLastCalledWith(expect.objectContaining({ prizePosDelivery: null }));
+  });
+
+  it("refuses 'gift_card' on a percent-off or gift-card prize, and unknown values", async () => {
+    mocks.createChallengeCampaign.mockClear();
+    await expect(create({ ...APPETIZER_PRIZE, discountKind: "percent", posDelivery: "gift_card" })).rejects.toThrow(
+      REWARD_INVALID_PRIZE_MESSAGE,
+    );
+    const forgedGiftCard = { prizeKind: "gift_card", amount: 25, posDelivery: "gift_card" } as unknown as RewardPrizeInput;
+    await expect(create(forgedGiftCard)).rejects.toThrow(REWARD_INVALID_PRIZE_MESSAGE);
+    const unknown = { ...DOLLAR_PRIZE, posDelivery: "scan" } as unknown as RewardPrizeInput;
+    await expect(create(unknown)).rejects.toThrow(REWARD_INVALID_PRIZE_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+});

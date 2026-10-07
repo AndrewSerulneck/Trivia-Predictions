@@ -45,6 +45,7 @@ import {
   type NFLWeekScopeTerms,
 } from "@/lib/nflPickEmRewardWeeks";
 import { listNFLSeasonWeekDates, listNFLWeeks, type NFLWeekDates } from "@/lib/nflPickEm";
+import { normalizePrizePosDelivery, prizeCanBeScannableGiftCard } from "@/lib/pos/prizeDelivery";
 import { POS_VALUE_MAX_CENTS } from "@/lib/pos/prizeValue";
 import { describeReward, describeRewardWin, type RewardDescription } from "@/lib/rewardDescription";
 import { getLocalDateKey, getVenueTimezone } from "@/lib/timezone";
@@ -54,6 +55,7 @@ import type {
   ChallengeCampaignWin,
   ChallengeGameWinnerSlot,
   ChallengeWinCondition,
+  PrizePosDelivery,
   RewardDiscountKind,
   RewardMenuItem,
   RewardPrizeKind,
@@ -856,6 +858,13 @@ export type RewardPrizeInput =
        * connected; ignored for dollar-off prizes, whose discount already is the value.
        */
       posValueCents?: number | null;
+      /**
+       * Square plan S1 (docs/square-scannable-prizes-plan.md): how a DOLLAR-off prize is taken
+       * at a Square register. Absent/null/"discount" = the ready-made discount (today);
+       * "gift_card" = a scannable Square gift card for the dollar amount. "gift_card" on any
+       * other prize is refused (400), never silently dropped.
+       */
+      posDelivery?: PrizePosDelivery | null;
     }
   | { prizeKind: "gift_card"; amount: number };
 
@@ -867,6 +876,8 @@ type NormalizedRewardPrize = {
   prizeDiscountValue: number | null;
   prizeGiftCertificateAmount: number | null;
   prizePosValueCents: number | null;
+  /** "gift_card" or null — "discount" is stored as null (the same meaning, and no write). */
+  prizePosDelivery: PrizePosDelivery | null;
 };
 
 const round2 = (value: number): number => Math.round(value * 100) / 100;
@@ -874,6 +885,20 @@ const round2 = (value: number): number => Math.round(value * 100) / 100;
 /** Validate the prize input and normalize it into engine (createChallengeCampaign) fields. */
 function normalizeRewardPrize(prize: RewardPrizeInput | undefined): NormalizedRewardPrize {
   if (!prize) throw new Error(REWARD_INVALID_PRIZE_MESSAGE);
+
+  // Read off the raw body, whatever the prize kind: a forged value on a gift-card prize must be
+  // refused too. Present-but-unknown is refused; "gift_card" only on a dollar-off menu prize.
+  const rawDelivery = (prize as { posDelivery?: unknown }).posDelivery;
+  const posDelivery = normalizePrizePosDelivery(rawDelivery);
+  if (rawDelivery !== undefined && rawDelivery !== null && posDelivery === null) {
+    throw new Error(REWARD_INVALID_PRIZE_MESSAGE);
+  }
+  if (
+    posDelivery === "gift_card" &&
+    !(prize.prizeKind === "menu_item" && prizeCanBeScannableGiftCard(prize.prizeKind, prize.discountKind))
+  ) {
+    throw new Error(REWARD_INVALID_PRIZE_MESSAGE);
+  }
 
   if (prize.prizeKind === "gift_card") {
     const amount = Number(prize.amount);
@@ -886,6 +911,7 @@ function normalizeRewardPrize(prize: RewardPrizeInput | undefined): NormalizedRe
       prizeDiscountValue: null,
       prizeGiftCertificateAmount: round2(amount),
       prizePosValueCents: null,
+      prizePosDelivery: null,
     };
   }
 
@@ -922,6 +948,7 @@ function normalizeRewardPrize(prize: RewardPrizeInput | undefined): NormalizedRe
       prizeDiscountValue: prize.discountKind === "dollar" ? round2(discountValue) : Math.round(discountValue),
       prizeGiftCertificateAmount: null,
       prizePosValueCents,
+      prizePosDelivery: posDelivery === "gift_card" ? "gift_card" : null,
     };
   }
 
@@ -1184,6 +1211,7 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     prizeDiscountValue: prize.prizeDiscountValue,
     prizeGiftCertificateAmount: prize.prizeGiftCertificateAmount,
     prizePosValueCents: prize.prizePosValueCents,
+    prizePosDelivery: prize.prizePosDelivery,
     createdByOwnerId: params.createdByOwnerId ?? null,
   });
 }

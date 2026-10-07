@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // docs/pos-rewards-integration-plan.md Phase 2 — the Square gift card service
@@ -315,6 +317,106 @@ describe("openSquareGiftCard", () => {
   });
 });
 
+// docs/square-scannable-prizes-plan.md Phase S2 — a dollar-off menu prize the partner set to
+// "Scannable gift card" becomes a Square gift card for its dollar value, decided and priced from
+// the coupon's OWN award-time snapshot (never the live reward).
+describe("Phase S2: scannable dollar-off menu prizes", () => {
+  const menuCoupon = (overrides: Row = {}): Row =>
+    coupon({
+      prize_kind: "menu_item",
+      prize_gift_certificate_amount: null,
+      prize_discount_kind: "dollar",
+      prize_discount_value: 5,
+      prize_pos_delivery: "gift_card",
+      ...overrides,
+    });
+
+  beforeEach(() => {
+    mocks.applyReward.mockResolvedValue({ ok: true, externalRef: "gftc:1", amountCents: 500, detail: { balance_cents: 500 } });
+    mocks.retrieveSquareGiftCard.mockResolvedValue({ id: "gftc:1", gan: "7783320012345678", state: "ACTIVE", balanceCents: 500, currency: "USD" });
+  });
+
+  it("creates, claims (pos_square) and funds a card for the dollar value, in the load-bearing order", async () => {
+    db.challenge_campaign_redemptions = [menuCoupon()];
+    expect(await open()).toEqual({ ok: true, giftCard: { gan: "7783 3200 1234 5678", amountCents: 500, balanceCents: 500, state: "ACTIVE" } });
+    const order = [mocks.prepareReward, mocks.redeemChallengePrize, mocks.applyReward].map((fn) => fn.mock.invocationCallOrder[0]);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+    expect(mocks.redeemChallengePrize).toHaveBeenCalledWith(expect.objectContaining({ method: "pos_square", redemptionId: RID }));
+    expect(mocks.applyReward).toHaveBeenCalledWith(expect.objectContaining({ value: expect.objectContaining({ amountCents: 500, currency: "USD" }) }));
+    expect(ledger()).toMatchObject({ status: "succeeded", amount_cents: 500, external_ref: "gftc:1" });
+  });
+
+  it("prices from the coupon, never the live reward (which may have changed since the win)", async () => {
+    db.challenge_campaign_redemptions = [menuCoupon({ prize_discount_value: 7.5 })];
+    mocks.applyReward.mockImplementationOnce(async (input: { value: { amountCents: number } }) => ({
+      ok: true,
+      externalRef: "gftc:1",
+      amountCents: input.value.amountCents,
+      detail: { balance_cents: input.value.amountCents },
+    }));
+    db.challenge_campaigns = [
+      { id: "chal-1", prize_kind: "menu_item", prize_type: null, prize_gift_certificate_amount: 99, prize_discount_kind: "dollar", prize_discount_value: 50, prize_pos_delivery: null },
+    ];
+    expect((await open()).ok).toBe(true);
+    expect(mocks.applyReward).toHaveBeenCalledWith(expect.objectContaining({ value: expect.objectContaining({ amountCents: 750 }) }));
+    expect(ledger()).toMatchObject({ amount_cents: 750 });
+  });
+
+  it("resumes a claimed scannable coupon at the same amount, without a new card or a second claim", async () => {
+    db.challenge_campaign_redemptions = [menuCoupon()];
+    mocks.applyReward.mockResolvedValueOnce({ ok: false, code: "network", message: "down", retryable: true });
+    expect(await open()).toMatchObject({ ok: false, code: "square_error" });
+    expect((await open()).ok).toBe(true);
+    expect(mocks.prepareReward).toHaveBeenCalledTimes(1);
+    expect(mocks.redeemChallengePrize).toHaveBeenCalledTimes(1);
+    expect(mocks.applyReward.mock.calls.map(([input]) => (input as { value: { amountCents: number } }).value.amountCents)).toEqual([500, 500]);
+  });
+
+  it("a discount-delivered dollar prize (null or 'discount') is never a card — even if the live reward now says scannable", async () => {
+    db.challenge_campaigns = [
+      { id: "chal-1", prize_kind: "menu_item", prize_type: null, prize_gift_certificate_amount: null, prize_discount_kind: "dollar", prize_discount_value: 5, prize_pos_delivery: "gift_card" },
+    ];
+    for (const delivery of [null, "discount"]) {
+      db.challenge_campaign_redemptions = [menuCoupon({ prize_pos_delivery: delivery })];
+      expect(await open()).toMatchObject({ ok: false, code: "not_eligible" });
+    }
+    expect(mocks.loadSquareCredentials).not.toHaveBeenCalled();
+    expect(mocks.prepareReward).not.toHaveBeenCalled();
+    expect(mocks.redeemChallengePrize).not.toHaveBeenCalled();
+    expect(db.pos_reward_applications ?? []).toHaveLength(0);
+  });
+
+  it("a forged 'gift_card' on a percent-off or free-item prize is never a card", async () => {
+    for (const overrides of [
+      { prize_discount_kind: "percent", prize_discount_value: 50 },
+      { prize_discount_kind: "percent", prize_discount_value: 100 },
+      { prize_discount_kind: null, prize_discount_value: null },
+    ]) {
+      db.challenge_campaign_redemptions = [menuCoupon(overrides)];
+      expect(await open()).toMatchObject({ ok: false, code: "not_eligible" });
+    }
+    expect(mocks.prepareReward).not.toHaveBeenCalled();
+    expect(mocks.redeemChallengePrize).not.toHaveBeenCalled();
+  });
+
+  it("a scannable coupon with no usable dollar value is refused before any Square call", async () => {
+    for (const value of [null, 0, -5]) {
+      db.challenge_campaign_redemptions = [menuCoupon({ prize_discount_value: value })];
+      expect(await open()).toMatchObject({ ok: false, code: "not_eligible" });
+    }
+    expect(mocks.loadSquareCredentials).not.toHaveBeenCalled();
+    expect(mocks.prepareReward).not.toHaveBeenCalled();
+  });
+
+  it("the coupon read asks for the delivery and the dollar terms", () => {
+    const source = readFileSync(join(__dirname, "..", "lib/pos/squareGiftCards.ts"), "utf8");
+    const columns = /const COUPON_COLUMNS =\s*"([^"]+)"/.exec(source)?.[1] ?? "";
+    for (const column of ["prize_kind", "prize_discount_kind", "prize_discount_value", "prize_pos_delivery"]) {
+      expect(columns.split(", ")).toContain(column);
+    }
+  });
+});
+
 describe("attachSquareGiftCardStates", () => {
   const win = (overrides: Partial<ChallengeCampaignWin>): ChallengeCampaignWin => ({
     redemptionId: RID,
@@ -379,6 +481,36 @@ describe("attachSquareGiftCardStates", () => {
       "venue-1",
     );
     expect(result.map((w) => w.squareGiftCard ?? null)).toEqual(["available", "issued", "used", null, "issued", null, null, null]);
+  });
+
+  it("Phase S2: a scannable dollar menu coupon is offered as a card; discount-delivered or forged ones are not", async () => {
+    db.pos_connections = [{ id: "conn-1", venue_id: "venue-1", provider: "square", status: "active", location_id: "L1", environment: "sandbox" }];
+    db.pos_reward_applications = [
+      { redemption_id: "scan-issued", provider: "square", action: "apply", status: "succeeded", external_ref: "gftc:s", external_detail: { balance_cents: 200 } },
+    ];
+    const menu = { prizeKind: "menu_item", prizeDiscountKind: "dollar", prizeDiscountValue: 5 } as const;
+    const result = await attachSquareGiftCardStates(
+      [
+        win({ ...menu, redemptionId: "scan", prizePosDelivery: "gift_card" }),
+        win({ ...menu, redemptionId: "scan-issued", prizePosDelivery: "gift_card", prizeRedeemedAt: "2026-10-01T00:00:00Z" }),
+        win({ ...menu, redemptionId: "discount", prizePosDelivery: "discount" }),
+        win({ ...menu, redemptionId: "legacy", prizePosDelivery: null }),
+        win({ ...menu, redemptionId: "percent", prizeDiscountKind: "percent", prizePosDelivery: "gift_card" }),
+      ],
+      "venue-1",
+    );
+    expect(result.map((w) => [w.redemptionId, w.squareGiftCard ?? null])).toEqual([
+      ["scan", "available"],
+      ["scan-issued", "issued"],
+      ["discount", null],
+      ["legacy", null],
+      ["percent", null],
+    ]);
+  });
+
+  it("Phase S2: a wallet with only discount-delivered menu coupons reads nothing", async () => {
+    const wins = [win({ prizeKind: "menu_item", prizeDiscountKind: "dollar", prizePosDelivery: null })];
+    expect(await attachSquareGiftCardStates(wins, "venue-1")).toBe(wins);
   });
 
   // R4 review: if the coupon-method read fails, a claimed-but-unfunded coupon must keep its

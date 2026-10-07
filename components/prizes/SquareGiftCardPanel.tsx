@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { Code128Barcode } from "@/components/prizes/Code128Barcode";
 import { haptic } from "@/lib/haptics";
+import { squareGiftCardDollars } from "@/lib/pos/prizeDelivery";
 import { GUEST_SQUARE_GIFT_CARD_LINE } from "@/lib/posStaffInstructions";
 import type { ChallengeCampaignWin } from "@/types";
 
@@ -114,7 +115,7 @@ export const SquareGiftCardPanel = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const amount = win.prizeGiftCertificateAmount;
+  const amount = squareGiftCardDollars(win);
 
   return (
     <div className="space-y-4">
