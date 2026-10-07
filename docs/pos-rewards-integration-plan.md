@@ -8,10 +8,12 @@ scannable code on the coupon is OK."): sub-phases **3a–3f** below. **Phase 3a 
 `billing_info` ✓); device checks **blocked** by Clover's broken GDE emulator sign-in → Dev Kit / Clover support
 (handoff: `docs/pos-rewards-integration-plan_PHASE_3a_HANDOFF.md`). A throwaway $25 gift-card test coupon exists at `venue-pacific-street`
 (§6 note). Clover handoff: `docs/pos-rewards-integration-plan_PHASE_3a_HANDOFF.md`.
-**Square review fixes (2g's code/security review) — R1–R4 done 2026-10-06, uncommitted** (stuck-claim recovery;
-Square connection safety; shared helpers; #10 rule narrowed; `/code-review high` fixed, `/security-review` clean; plan
-`docs/square-review-fixes-plan.md`, latest handoff `docs/square-review-fixes-plan_PHASE_R4_HANDOFF.md`). Waiting on
-Andrew's commit/push/deploy OK (flag stays off); then 2g's console/env steps → flag on → 2h.
+**Square review fixes R1–R4 committed `12bfa6b`, pushed and deployed to production 2026-10-06** (`dpl_6ngtBVrxU4PGScpA1nYB21hGXRqp`,
+flag still off). **R5** (a refused reconnect retires the old connection; Andrew asked for it) is built and tested,
+**uncommitted**; it ships with the flag-on push. **Phase 2h STARTED 2026-10-06 (Andrew's go-ahead), paused on Andrew:** Square
+Console + 4 secrets + flag in Vercel, then "go" → agent pushes R5 (= the flag-on redeploy) → smoke test → Andrew's
+iPhone test with two seeded pilot coupons ($2 gift card, $1-off menu prize). Latest handoff:
+**`docs/pos-rewards-integration-plan_PHASE_2h_HANDOFF.md`**.
 **Phase 2 deviation:** the coupon is marked redeemed when it becomes a Square gift card, not on the first spend
 (Phase 2 handoff §3).
 **Re-ordered 2026-10-06 (Andrew): "Since I don't want to order a Clover dev kit, let's focus on becoming fully
@@ -342,7 +344,11 @@ redemption path.
 - Write `docs/square-go-live-runbook.md`: the steps above, how to turn it back off (unset the public flag +
   redeploy; issued cards keep working and the webhook keeps recording, by design), and where the logs are.
 
-#### Phase 2h — Real-money pilot (no hardware)
+#### Phase 2h — Real-money pilot (no hardware) — STARTED 2026-10-06
+**As run so far:** agent added the non-secret production env vars (`SQUARE_ENVIRONMENT`,
+`SQUARE_WEBHOOK_NOTIFICATION_URL`), seeded a $2 gift-card and a $1-off menu-prize coupon for Andrew at Pacific Street
+(ids + undo in the 2h handoff), and assumed §6 item 14 = Andrew's own account first. Waiting on Andrew's console and
+secret steps. Handoff: `docs/pos-rewards-integration-plan_PHASE_2h_HANDOFF.md`.
 **Model / effort:** Opus 5.5, **medium**. Ask Andrew §6 item 14 at the start.
 - **Step 1, Andrew's own Square:** a free production Square seller account (or a friendly partner's, §6 item 14),
   the free Square register app on his iPhone, connected to Pacific Street in production. With Andrew's OK, seed a
@@ -547,11 +553,13 @@ sync, any other POS.
 13. Square pilot: a server-side venue allowlist so only pilot venues can connect, or open to every partner the day
     the flag turns on. **Andrew, 2026-10-06: every partner** (no allowlist built).
 14. Pilot merchant for real-money testing: Andrew's own free Square seller account + the free Square app on his
-    iPhone (recommended first), then a friendly partner bar. _pending — ask at 2h start._
+    iPhone (recommended first), then a friendly partner bar. **Assumed 2026-10-06 = the recommendation** (Andrew asked
+    for simple next steps; he can override).
 
 **Test coupon (seeded 2026-10-05 with Andrew's OK, "Ok to create a test coupon"):** campaign
 `da65ec0f-ad34-4e01-8a0c-6666e00c4ca0` ("TEST — POS gift card / Clover check (delete me)", `is_active=false`,
 `venue_ids={hc-cbz-live}`, gift card $25) and redemption `643500aa-f8c9-4ef4-b4e0-e36872bf993f` for Andrew's
 `users` row `ecaececc-7b47-4d8d-9a5c-f28e44f976de` at `venue-pacific-street`, expires 2026-10-19 15:53 UTC, expiry
 notices pre-stamped. Delete when Square + Clover testing is done (redemption first, then campaign; check
-`pos_reward_applications` for rows pointing at it first).
+`pos_reward_applications` for rows pointing at it first). **2h pilot coupons (seeded 2026-10-06):** ids in the 2h
+handoff §2; delete them the same way at 2h exit.

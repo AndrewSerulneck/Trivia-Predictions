@@ -1,8 +1,8 @@
 # Square review fixes — before Phase 2h
 
-**Status:** **R1–R4 done 2026-10-06 (uncommitted; awaiting Andrew's commit/push/deploy OK)** — #10 = (A) narrow the rule;
+**Status:** **R1–R4 committed `12bfa6b`, pushed and deployed to production 2026-10-06** (`dpl_6ngtBVrxU4PGScpA1nYB21hGXRqp`, flag off). **R5 (refused-reconnect follow-up, added 2026-10-06 on Andrew's request) BUILT, uncommitted**; it ships with the flag-on push. Latest handoff `docs/square-review-fixes-plan_PHASE_R5_HANDOFF.md`. Earlier: #10 = (A) narrow the rule;
 `/code-review high` 5 fixed / 2 dismissed; `/security-review` clean. Handoffs `docs/square-review-fixes-plan_PHASE_R1_HANDOFF.md`,
-`…_PHASE_R2_HANDOFF.md`, `…_PHASE_R3_HANDOFF.md`, `docs/square-review-fixes-plan_PHASE_R4_HANDOFF.md` (latest). Fixes the 10 findings from the `/code-review` run on
+`…_PHASE_R2_HANDOFF.md`, `…_PHASE_R3_HANDOFF.md`, `…_PHASE_R4_HANDOFF.md`, `…_PHASE_R5_HANDOFF.md` (latest). Fixes the 10 findings from the `/code-review` run on
 2026-10-06 over the Square track (everything since `27f5eea`, HEAD `1130914`). **This plan is the "one
 code/security review" step of POS Phase 2g** (`docs/pos-rewards-integration-plan.md`). Do these fixes before the
 production flag turns on and before Phase 2h, the real-money pilot. Andrew's Square Console and Vercel env steps
@@ -39,6 +39,7 @@ No database migration is needed. No new cron or polling. All costs stay the same
 | R2 — Square connection safety | #2, #5, #4 | **Opus 5.5, high** (#2 revokes real tokens) | No |
 | R3 — Shared helpers and one read | #6, #7, #9 | **Sonnet 5.5, high** (#7 moves the coupon ownership check; medium would do for #6/#9 alone) | No |
 | R4 — Rule decision, re-review, commit | #10 + gate | **Opus 5.5, high** (runs `/code-review high` + `/security-review`) | **Yes**: the #10 decision, and approval to commit/push/deploy |
+| R5 — Refused reconnect retires the old connection | R4 open question 3 | **Opus 5.5, medium** (small; touches a token-holding row but never revokes) | Only the commit OK |
 
 R1 and R2 are independent and can run in either order. R3 touches `lib/pos/squareGiftCards.ts`, so run it **after
 R1**, or the two will conflict. R4 is always last.
@@ -211,6 +212,44 @@ duplicates from two simultaneous first opens are harmless.
 **Plan exit:** both reviews are clean or have their dismissals recorded, everything is committed, and Andrew has
 said 2h may start.
 
+### Phase R5 — A refused reconnect retires the old connection (added 2026-10-06)
+
+**Why (Andrew, 2026-10-06: "Let's plan something to fix this as well"):** R2 made a refused reconnect leave the
+venue's existing connection alone (revoking would kill it). But the callback only refuses when the account it just
+read has **no active location** (`no_location`) or **none that is a US location in USD** (`not_eligible`). If that
+account is the SAME Square merchant the venue is already connected to, the list it read is every active location
+that merchant has, so the venue's saved location can't qualify any more either (in practice: it was closed or
+deactivated in Square). Before R5 the old row stayed `active`: the sheet said "Connected", guests kept getting
+"Get my Square gift card", and each tap created an unfunded card at Square before failing (no money lost: the
+card-currency check and Square's own refusal come before the claim). The `not_eligible` banner's promise
+("Guests keep the normal coupon") was false for a reconnect.
+
+**Fix (built):** `markSquareLocationIneligible({ venueId, merchantId, environment })` in
+`lib/pos/squareConnection.ts`: one conditional UPDATE, `status 'active' → 'error'`, `last_error =
+'location_not_eligible'`, matching venue + provider + **same merchant** + same environment. It is called in both
+refusal branches of `app/api/owner/pos/square/callback/route.ts`. The sheet then shows "Reconnect needed" and the
+wallet falls back to the normal coupon (staff use "Confirm Redemption").
+- **Token kept**, so `discardSquareGrant` still counts the row and never revokes, and the partner can reconnect
+  once they fix their Square locations (saveSquareConnection reuses the non-revoked row).
+- **A different merchant's refusal changes nothing:** it says nothing about the old account.
+- **Other venues sharing the merchant are untouched:** only this venue's grant was refused. (Their location is
+  their own choice; a shared closed location shows up at their next reconnect or card attempt.)
+- **Accepted trade-off:** like every "Reconnect needed" state, "Show gift card" for cards ALREADY issued at that
+  venue stops working until the partner reconnects (it goes through `loadSquareCredentials`, which needs an
+  active row). The cards still work at the register, and a guest who saved the number can still use it.
+- **Out of scope:** a location that closes with no reconnect at all. That is still caught only at card time
+  (no money lost; the guest sees an error). Fixing it would need a Square read per card open. Revisit only if
+  the pilot shows it happening.
+
+**Cost:** zero extra Square calls (it reuses the locations list the callback already fetched), no read, one
+UPDATE only on a refused reconnect (a handful a year).
+
+**Tests:** `tests/lib.pos-square-hardening.test.ts` ("Refused reconnect retires the old connection (R5)": flips
+own same-merchant active row and keeps its token, revoke still blocked; leaves other merchant / environment /
+revoked rows and other venues alone). `tests/api.square-routes.test.ts`: both refusal branches call it, a
+successful connect doesn't.
+
 ## Open questions for Andrew
 1. **#10:** narrow the rule (A, recommended) or add a ledger row (B)? Asked at the start of R4.
-2. Commit, push and deploy approval at the end of R4.
+2. Commit, push and deploy approval at the end of R4. **Approved and done 2026-10-06 (`12bfa6b`).**
+3. R5: OK to commit and push it with the flag-on deploy (it is uncommitted).

@@ -80,7 +80,7 @@ vi.mock("@/lib/pos/squareGiftCards", () => ({ openSquareGiftCard: mocks.openSqua
 
 import { venuesNeedingPosAttention } from "@/lib/pos/connections";
 import { encryptPosToken, posTokenContext } from "@/lib/pos/crypto";
-import { discardSquareGrant, disconnectSquare, markSquareMerchantRevoked } from "@/lib/pos/squareConnection";
+import { discardSquareGrant, disconnectSquare, markSquareLocationIneligible, markSquareMerchantRevoked } from "@/lib/pos/squareConnection";
 import { classifyStuckSquareClaim, listStuckSquareClaims, retrySquareFunding } from "@/lib/pos/squareStuckClaims";
 import { recordSquareRevocation } from "@/lib/pos/squareWebhook";
 import { hashRequesterIp, rateLimitSquareGiftCard } from "@/lib/rateLimit";
@@ -246,6 +246,38 @@ describe("Disconnect when one Square account serves two venues", () => {
     ];
     await discardSquareGrant({ config, accessToken: "AT2", merchantId: "M1", venueId: "venue-9" });
     expect(revokeCalls()).toHaveLength(1);
+  });
+});
+
+describe("Refused reconnect retires the old connection (R5)", () => {
+  const refuse = (overrides: { merchantId?: string; environment?: "sandbox" | "production" } = {}) =>
+    markSquareLocationIneligible({ venueId: "venue-9", merchantId: overrides.merchantId ?? "M1", environment: overrides.environment ?? "sandbox" });
+
+  it("flips this venue's active row for the same account to error, keeping its token", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const own = connection({ venue_id: "venue-9" });
+    const token = own.access_token_enc;
+    db.pos_connections = [own, connection({ venue_id: "venue-2" })];
+    await refuse();
+    expect(db.pos_connections[0]).toMatchObject({ status: "error", last_error: "location_not_eligible", access_token_enc: token });
+    // Another venue sharing the account is untouched: this refusal was about venue-9's grant.
+    expect(db.pos_connections[1]).toMatchObject({ status: "active" });
+    expect(info).toHaveBeenCalledWith("[PosSquare] reconnect-location-ineligible", { venueId: "venue-9" });
+    // The kept token still blocks a revoke on the next refused attempt.
+    const config = { environment: "sandbox" as const, applicationId: "app", applicationSecret: "secret" };
+    await discardSquareGrant({ config, accessToken: "AT2", merchantId: "M1", venueId: "venue-9" });
+    expect(revokeCalls()).toHaveLength(0);
+    info.mockRestore();
+  });
+
+  it("leaves a different account, another environment, and non-active rows alone", async () => {
+    db.pos_connections = [connection({ venue_id: "venue-9" })];
+    await refuse({ merchantId: "M2" });
+    await refuse({ environment: "production" });
+    expect(db.pos_connections[0]).toMatchObject({ status: "active" });
+    db.pos_connections = [connection({ venue_id: "venue-9", status: "revoked" })];
+    await refuse();
+    expect(db.pos_connections[0]).toMatchObject({ status: "revoked" });
   });
 });
 

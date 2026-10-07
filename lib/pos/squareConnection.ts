@@ -412,3 +412,36 @@ export const discardSquareGrant = async (input: {
   const revoked = await revokeSquareToken(input.config, input.accessToken);
   if ("code" in revoked) console.warn("[PosSquare] discard-revoke-failed", { code: revoked.code });
 };
+
+/**
+ * A refused RECONNECT to the SAME Square account (the callback found no active location, or none
+ * that is a US location in USD) proves the venue's saved location no longer qualifies either:
+ * the list it just read is every ACTIVE location that account has. Leaving the old row active
+ * would keep offering "Get my Square gift card" at a location that can't issue one, and the sheet
+ * would still say "Connected". So flip it to `error`: the sheet shows "Reconnect needed", and
+ * guests get the normal coupon, as the `not_eligible` banner promises. The token is kept (the
+ * account is still ours to reconnect), so discardSquareGrant still won't revoke. A DIFFERENT
+ * account's refusal says nothing about the old one, so that row is left alone. One conditional
+ * update, no read, only on this rare path (docs/square-review-fixes-plan.md R5).
+ */
+export const markSquareLocationIneligible = async (input: {
+  venueId: string;
+  merchantId: string;
+  environment: PosEnvironment;
+}): Promise<void> => {
+  if (!supabaseAdmin) return;
+  const { data, error } = await supabaseAdmin
+    .from("pos_connections")
+    .update({ status: "error", last_error: "location_not_eligible", updated_at: new Date().toISOString() })
+    .eq("venue_id", input.venueId)
+    .eq("provider", PROVIDER)
+    .eq("merchant_id", input.merchantId)
+    .eq("environment", input.environment)
+    .eq("status", "active")
+    .select("id");
+  if (error) {
+    console.error("[PosSquare] ineligible-save-failed", error.message);
+    return;
+  }
+  if ((data ?? []).length > 0) console.info("[PosSquare] reconnect-location-ineligible", { venueId: input.venueId });
+};

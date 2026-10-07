@@ -15,6 +15,8 @@ production currently has **no** `POS_*` / `SQUARE_*` variables and the flag is o
   - Production API version should be left at default; the code pins its own `Square-Version` on calls.
 
 ## 2. Vercel production env (Andrew pastes values; never `vercel env pull`)
+**2026-10-06:** `SQUARE_ENVIRONMENT=production` and `SQUARE_WEBHOOK_NOTIFICATION_URL` are already added (agent, non-secret).
+§0.1 (the review) is done: `docs/square-review-fixes-plan.md`, R1–R4 deployed in `12bfa6b`. The flag-on redeploy is the push of R5.
 ```
 vercel env add POS_TOKEN_KEY production                  # fresh 32-byte key (below)
 vercel env add SQUARE_ENVIRONMENT production             # production

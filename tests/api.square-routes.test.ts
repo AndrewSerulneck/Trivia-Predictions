@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   recordSquareGiftCardActivity: vi.fn(),
   maybeRequireActiveVenuePresence: vi.fn(),
   discardSquareGrant: vi.fn(),
+  markSquareLocationIneligible: vi.fn(),
   rateLimitSquareGiftCard: vi.fn(),
   rateLimitSquareDiscount: vi.fn(),
   ensureSquarePrizeDiscount: vi.fn(),
@@ -41,6 +42,7 @@ vi.mock("@/lib/pos/squareConnection", () => ({
   loadSquareTokenForSetup: mocks.loadSquareTokenForSetup,
   setSquareLocation: mocks.setSquareLocation,
   discardSquareGrant: mocks.discardSquareGrant,
+  markSquareLocationIneligible: mocks.markSquareLocationIneligible,
 }));
 vi.mock("@/lib/rateLimit", () => ({
   rateLimitSquareGiftCard: mocks.rateLimitSquareGiftCard,
@@ -167,6 +169,8 @@ describe("GET /api/owner/pos/square/callback", () => {
     expect(mocks.discardSquareGrant).toHaveBeenCalledWith(
       expect.objectContaining({ accessToken: "AT", merchantId: "M1", venueId: "venue-1" }),
     );
+    // R5: a refused reconnect to this same account retires the venue's old connection too.
+    expect(mocks.markSquareLocationIneligible).toHaveBeenCalledWith({ venueId: "venue-1", merchantId: "M1", environment: "sandbox" });
   });
 
   it("Phase 2c: one eligible location among several still asks which one", async () => {
@@ -174,6 +178,7 @@ describe("GET /api/owner/pos/square/callback", () => {
     const { state, cookie } = started();
     expect(posResult(await callback(`code=CODE&state=${encodeURIComponent(state)}`, cookie))).toBe("choose_location");
     expect(mocks.saveSquareConnection).toHaveBeenCalledWith(expect.objectContaining({ locationId: null }));
+    expect(mocks.markSquareLocationIneligible).not.toHaveBeenCalled();
     expect(mocks.discardSquareGrant).not.toHaveBeenCalled();
   });
 
@@ -208,6 +213,9 @@ describe("GET /api/owner/pos/square/callback", () => {
     s = started();
     expect(posResult(await callback(`code=X&state=${encodeURIComponent(s.state)}`, s.cookie))).toBe("no_location");
     expect(mocks.saveSquareConnection).not.toHaveBeenCalled();
+    // R5: no active location at all also means the old saved location is gone.
+    expect(mocks.markSquareLocationIneligible).toHaveBeenCalledTimes(1);
+    expect(mocks.markSquareLocationIneligible).toHaveBeenCalledWith({ venueId: "venue-1", merchantId: "M1", environment: "sandbox" });
   });
 });
 

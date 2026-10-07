@@ -4,7 +4,7 @@ import { clearPosOAuthCookie, verifyPosOAuthState } from "@/lib/pos/oauthState";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 import { exchangeSquareCode, isSquareGiftCardLocation, listSquareLocations, retrieveSquareMerchant } from "@/lib/pos/square";
 import { squareAppConfig } from "@/lib/pos/squareConfig";
-import { discardSquareGrant, saveSquareConnection } from "@/lib/pos/squareConnection";
+import { discardSquareGrant, markSquareLocationIneligible, saveSquareConnection } from "@/lib/pos/squareConnection";
 import { redirectToPosSheet } from "@/lib/pos/squareRoutes";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 
@@ -26,6 +26,8 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * location in USD (isSquareGiftCardLocation; both fields come with the locations list, no extra
  * call). An account with none isn't saved at all — we give the grant back to Square
  * (discardSquareGrant) and the sheet says why ("not_eligible"). We don't keep a token we can't use.
+ * A refused RECONNECT to the same account also flips the venue's old row to "Reconnect needed"
+ * (markSquareLocationIneligible, R5): that account no longer has a location that can issue cards.
  */
 export async function GET(request: Request) {
   if (!isPosIntegrationsEnabled()) {
@@ -75,9 +77,15 @@ export async function GET(request: Request) {
     console.error("[PosSquare] callback-locations-failed", { code: locations.code });
     return redirectToPosSheet(request, "error", clear);
   }
-  if (locations.length === 0) return redirectToPosSheet(request, "no_location", clear);
+  // A refused reconnect to the same account also retires the venue's old connection (R5).
+  const refused = { venueId: state.venueId, merchantId: tokens.merchantId, environment: config.environment };
+  if (locations.length === 0) {
+    await markSquareLocationIneligible(refused);
+    return redirectToPosSheet(request, "no_location", clear);
+  }
   if (!locations.some(isSquareGiftCardLocation)) {
     await discardSquareGrant({ config, accessToken: tokens.accessToken, merchantId: tokens.merchantId, venueId: state.venueId });
+    await markSquareLocationIneligible(refused);
     console.info("[PosSquare] callback-not-eligible", {
       venueId: state.venueId,
       currencies: [...new Set(locations.map((location) => location.currency))],
