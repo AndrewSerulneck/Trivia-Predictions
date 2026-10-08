@@ -211,7 +211,7 @@ Run from the repo root; don't run typecheck concurrently with build.
 - Operator script: `node --env-file=.env.local --conditions react-server --import tsx
   scripts/delete-player-account.cjs --username <name> [--confirm]` (dry run verified with a
   non-existent name). It refuses an account with no venue profile ("ask a developer").
-- **Deploy check:** see the line appended below after the push.
+- **Deploy check (2026-10-08, commit `4849397`):** https://hightopchallenge.com/privacy, /terms, /rules, /support and /delete-account all return 200; /terms shows "Hightop Challenge LLC" and "New Jersey" and no US$100 cap.
 - **Not verified:** a real phone (iOS Safari / Android Chrome); the success path in a browser against a
   real account (only proven at the RPC level in production and in unit tests); the `auth.admin.deleteUser`
   branch against production (the throwaway had no auth id); live FK rules beyond those exercised by the
