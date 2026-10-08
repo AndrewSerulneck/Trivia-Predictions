@@ -1,7 +1,8 @@
 # Square dev testing: test venue + environment guard — plan
 
 Date: 2026-10-07. Owner: Andrew. Status: **Phase 1 done** (environment guard, committed locally on `main`,
-not pushed/deployed) — handoff `docs/square-dev-test-venue-plan_PHASE_1_HANDOFF.md`. Next: Phase 2.
+not pushed/deployed) — handoff `docs/square-dev-test-venue-plan_PHASE_1_HANDOFF.md`. **Phase 2 done**
+(hidden `venue-hightop-test` created 2026-10-07) — handoff `docs/square-dev-test-venue-plan_PHASE_2_HANDOFF.md`. **Phase 3 closed without a sandbox run** (2026-10-07): Square's sandbox consent page stayed blank ("first launch the seller test account from the Developer Console"); Andrew decided to test Square changes on the live site instead — handoff `docs/square-dev-test-venue-plan_PHASE_3_HANDOFF.md`. Plan complete.
 Update this line with each phase's handoff (`docs/square-dev-test-venue-plan_PHASE_<N>_HANDOFF.md`).
 
 ## For Andrew (plain English)

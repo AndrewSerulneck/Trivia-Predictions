@@ -42,3 +42,24 @@ Unset (or set `false`) `NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED` and redeploy. The 
 
 ## 5. Logs
 Vercel → project → Logs, filter `[PosSquare]` and `[Pos]`. Key lines: `webhook-bad-signature` (wrong key/URL), `webhook-not-configured` (missing env), `token-decrypt-failed` (wrong `POS_TOKEN_KEY`), `environment-mismatch`, `webhook-redeem-on-unclaimed-coupon`, `webhook-backstop-claim-unavailable`, `ledger-*-failed`. Stuck claims: admin stuck-claim list (2c).
+
+## 6. Testing Square on the dev server (sandbox, hidden test venue)
+
+> **Not working as of 2026-10-07.** The sandbox consent page stays blank (page data: "first launch the seller
+> test account from the Developer Console") even in Chrome; the credentials themselves were verified good.
+> Andrew's decision: **test Square changes on the live site** instead. Kept for a future attempt.
+
+Dev and live share one database and a venue holds one Square connection, so **test only on the hidden
+venue `venue-hightop-test` ("Hightop Test Bar")** — never on Pacific Street. The environment guard
+refuses cross-environment changes. Plan: `docs/square-dev-test-venue-plan.md`.
+
+1. Square Developer Console → the app → **Sandbox** test account → **Open in Square Dashboard**. Do this
+   first, in the same browser, or Square's sandbox consent page is a blank white screen.
+2. Dev server needs `NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED` on and `SQUARE_ENVIRONMENT=sandbox` with sandbox
+   credentials; sandbox redirect URL `http://localhost:3000/api/owner/pos/square/callback` is registered.
+3. `npm run dev` → `http://localhost:3000/owner/login` → switch to Hightop Test Bar → menu → Point of Sale
+   → Connect → Allow.
+4. Create a reward on the test venue with a gift-card prize and a $-off menu prize; seed a win for a God
+   Mode player (delete it afterwards); open the venue by direct URL (hidden venues are not in the join list).
+5. Open the gift card and the discount; confirm the card / discount appears in the sandbox Square dashboard.
+6. To clean up, use the app's Disconnect on the test venue (not raw SQL).
