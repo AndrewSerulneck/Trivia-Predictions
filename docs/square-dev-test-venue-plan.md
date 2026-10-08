@@ -1,7 +1,8 @@
 # Square dev testing: test venue + environment guard — plan
 
-Date: 2026-10-07. Owner: Andrew. Status: **not started** (plan only). Update this line with each phase's
-handoff (`docs/square-dev-test-venue-plan_PHASE_<N>_HANDOFF.md`).
+Date: 2026-10-07. Owner: Andrew. Status: **Phase 1 done** (environment guard, committed locally on `main`,
+not pushed/deployed) — handoff `docs/square-dev-test-venue-plan_PHASE_1_HANDOFF.md`. Next: Phase 2.
+Update this line with each phase's handoff (`docs/square-dev-test-venue-plan_PHASE_<N>_HANDOFF.md`).
 
 ## For Andrew (plain English)
 

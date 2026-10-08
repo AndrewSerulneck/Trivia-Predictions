@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import {
+  SQUARE_OTHER_ENVIRONMENT_RESULT_TEXT,
   SQUARE_SETUP_STEPS,
   STAFF_SHEET_LINK_LABEL,
   STAFF_SHEET_PATH,
 } from "@/lib/posStaffInstructions";
-import type { PosConnectionStatus } from "@/lib/pos/types";
+import type { PosConnectionStatus, PosEnvironment } from "@/lib/pos/types";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 
 // The Partner Dashboard's "Point of Sale" sheet (docs/pos-rewards-integration-plan.md Phase 1).
@@ -23,6 +24,9 @@ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 // connected one offers Disconnect (two taps). Clover/Toast still read "Coming soon".
 // Phase 2d: a Square account connected before menu-item discounts existed shows "Reconnect
 // Square" once (same link; a reconnect keeps the chosen location) to grant the catalog scopes.
+// Environment guard (docs/square-dev-test-venue-plan.md Phase 1): a Square row made by the other
+// server (the live site's real connection seen on the dev server, or a dev sandbox row seen on
+// the live site) gets one line of explanation and a neutral badge — no Reconnect, no Disconnect.
 //
 // One GET per open (`/api/owner/pos?venueId=`), nothing while closed, no polling. The location
 // list is fetched only while a location still has to be chosen.
@@ -52,6 +56,7 @@ export const POS_RESULT_MESSAGES: Record<string, { tone: "good" | "bad"; text: s
     text: "Square gift cards need a US Square location that uses US dollars, so this account wasn't connected. Guests keep the normal coupon.",
   },
   not_configured: { tone: "bad", text: "Square connections aren't set up yet. Please contact Hightop support." },
+  other_environment: { tone: "bad", text: SQUARE_OTHER_ENVIRONMENT_RESULT_TEXT },
   error: { tone: "bad", text: "Square couldn't be connected. Please try again." },
 };
 
@@ -206,6 +211,22 @@ export const SQUARE_MENU_PRIZE_RECONNECT_TEXT =
 export const SQUARE_ATTENTION_TEXT =
   "Square isn't accepting this connection right now, so gift card prizes use the normal coupon. Reconnect to turn Square gift cards back on.";
 
+/** Seen on the DEV server: the venue's Square row is the live site's real (production) connection. */
+export const SQUARE_OTHER_ENV_DEV_TEXT = {
+  title: "Connected on the live site.",
+  body: "Test Square on your test venue — reconnecting here would replace this venue's real Square connection.",
+} as const;
+
+/** Seen on the LIVE site: the venue's Square row is a sandbox test connection made from the dev server. */
+export const SQUARE_OTHER_ENV_LIVE_TEXT = {
+  title: "Test connection from the dev server.",
+  body: "It only works there and never touches real money.",
+} as const;
+
+/** Which line to show is decided by the ROW's environment: a production row is the live site's. */
+const otherEnvironmentText = (environment: PosEnvironment | undefined) =>
+  environment === "sandbox" ? SQUARE_OTHER_ENV_LIVE_TEXT : SQUARE_OTHER_ENV_DEV_TEXT;
+
 /** Shown once Square is connected: the full staff steps live in the Partner Manual (Andrew, 2026-10-07). */
 export const SQUARE_STAFF_HELP_TEXT = "Staff steps for taking a prize are in the Partner Manual.";
 
@@ -244,6 +265,14 @@ const StatusBadge = ({ status, venueId }: { status: PosConnectionStatus; venueId
   if (status.state === "needs_attention") {
     return (
       <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-black text-amber-300">Reconnect needed</span>
+    );
+  }
+  if (status.state === "other_environment") {
+    // Neutral, not the amber "needs attention" style: nothing is broken.
+    return (
+      <span className="rounded-full border border-ht-hairline px-2.5 py-1 text-xs font-black text-ht-muted">
+        {status.otherEnvironment === "sandbox" ? "Test" : "Live site"}
+      </span>
     );
   }
   if (status.state === "not_connected") {
@@ -354,11 +383,18 @@ export const PosConnectionsSheet = ({ nav, venue, posResult = null }: PosConnect
               >
                 <div className="min-w-0">
                   <p className="font-black text-ht-primary">{status.label}</p>
-                  <p className="mt-0.5 text-xs font-semibold text-ht-muted">
-                    {status.state === "connected" && status.merchantName
-                      ? `Connected to ${status.merchantName}`
-                      : status.pitch}
-                  </p>
+                  {status.state === "other_environment" ? (
+                    <div data-pos-other-environment={status.otherEnvironment ?? "production"} className="mt-0.5 text-xs">
+                      <p className="font-black text-ht-primary">{otherEnvironmentText(status.otherEnvironment).title}</p>
+                      <p className="font-semibold text-ht-muted">{otherEnvironmentText(status.otherEnvironment).body}</p>
+                    </div>
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-ht-muted">
+                      {status.state === "connected" && status.merchantName
+                        ? `Connected to ${status.merchantName}`
+                        : status.pitch}
+                    </p>
+                  )}
                   {status.provider === "square" && status.state === "connected" ? (
                     <>
                       {status.needsMenuPrizeReconnect ? (
@@ -401,7 +437,10 @@ export const PosConnectionsSheet = ({ nav, venue, posResult = null }: PosConnect
           </ul>
         ) : null}
 
-        {venue && load.status === "ready" ? (
+        {/* No setup checklist under another server's Square row: there is nothing to set up here. */}
+        {venue &&
+        load.status === "ready" &&
+        !load.statuses.some((status) => status.provider === "square" && status.state === "other_environment") ? (
           <SquareHelp
             connected={load.statuses.some((status) => status.provider === "square" && status.state === "connected")}
           />

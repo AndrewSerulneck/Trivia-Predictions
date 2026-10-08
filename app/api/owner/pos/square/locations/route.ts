@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { guardOwnerPosVenue } from "@/lib/pos/ownerPosGuard";
 import { isSquareGiftCardLocation, listSquareLocations } from "@/lib/pos/square";
 import { loadSquareTokenForSetup, setSquareLocation } from "@/lib/pos/squareConnection";
+import { refuseOtherSquareEnvironment } from "@/lib/pos/squareRoutes";
 
 /**
  * GET  /api/owner/pos/square/locations?venueId=      → this venue's ACTIVE Square locations
@@ -16,6 +17,10 @@ import { loadSquareTokenForSetup, setSquareLocation } from "@/lib/pos/squareConn
  * Phase 2c: each location carries `eligible` (US location, USD — isSquareGiftCardLocation), the
  * picker greys out the rest, and the POST refuses an ineligible one. Currency and country
  * themselves aren't sent.
+ *
+ * The POST answers 409 `other_environment` when the venue's Square row was made by the other
+ * server (docs/square-dev-test-venue-plan.md Phase 1). The GET writes nothing, and
+ * loadSquareTokenForSetup already refuses that row.
  */
 
 const LOAD_ERROR = "Couldn't load your Square locations.";
@@ -54,6 +59,9 @@ export async function POST(request: Request) {
 
   const locationId = String(body?.locationId ?? "").trim();
   if (!locationId) return NextResponse.json({ ok: false, error: "Choose a location." }, { status: 400 });
+
+  const refused = await refuseOtherSquareEnvironment(venueId, "choose_location");
+  if (refused) return refused;
 
   const locations = await loadLocations(venueId);
   if (!locations) return NextResponse.json({ ok: false, error: LOAD_ERROR }, { status: 502 });

@@ -23,11 +23,13 @@ const mocks = vi.hoisted(() => ({
   rateLimitSquareDiscount: vi.fn(),
   ensureSquarePrizeDiscount: vi.fn(),
   recordSquareRevocation: vi.fn(),
+  squareEnvironmentConflict: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: null }));
 vi.mock("@/lib/requireOwnerAuth", () => ({ requireOwnerAuth: mocks.requireOwnerAuth }));
+vi.mock("@/lib/pos/connections", () => ({ squareEnvironmentConflict: mocks.squareEnvironmentConflict }));
 vi.mock("@/lib/pos/square", async (importOriginal) => ({
   isSquareGiftCardLocation: (await importOriginal<typeof import("@/lib/pos/square")>()).isSquareGiftCardLocation,
   squareAuthorizeUrl: (config: { applicationId: string }, state: string) =>
@@ -68,6 +70,7 @@ import { POST as DISCOUNT } from "@/app/api/prizes/square-discount/route";
 import { POST as GIFT_CARD } from "@/app/api/prizes/square-gift-card/route";
 import { POST as WEBHOOK } from "@/app/api/webhooks/square/route";
 import { createPosOAuthState, POS_OAUTH_COOKIE } from "@/lib/pos/oauthState";
+import { SQUARE_OTHER_ENVIRONMENT_RESULT_TEXT } from "@/lib/posStaffInstructions";
 import { createSessionCookie } from "@/lib/serverSession";
 
 const BASE = "http://localhost";
@@ -90,6 +93,7 @@ beforeEach(() => {
   mocks.listSquareLocations.mockResolvedValue([US("L1", "Main")]);
   mocks.saveSquareConnection.mockImplementation(async (input: { locationId: string | null }) => ({ ok: true, locationId: input.locationId }));
   mocks.rateLimitSquareGiftCard.mockResolvedValue({ allowed: true, retryAfterSeconds: 0 });
+  mocks.squareEnvironmentConflict.mockResolvedValue({ ok: true, conflict: null });
 });
 
 afterEach(() => vi.unstubAllEnvs());
@@ -119,6 +123,28 @@ describe("GET /api/owner/pos/square/connect", () => {
     vi.stubEnv("POS_TOKEN_KEY", Buffer.alloc(32, 7).toString("base64"));
     vi.stubEnv("SQUARE_APPLICATION_SECRET", "");
     expect(posResult(await connect())).toBe("not_configured");
+  });
+
+  // docs/square-dev-test-venue-plan.md Phase 1: the dev server must never start replacing the
+  // live site's connection (or the reverse).
+  it("environment guard: refuses when the venue's Square row belongs to the other server, before any state is minted", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mocks.squareEnvironmentConflict.mockResolvedValueOnce({ ok: true, conflict: "production" });
+    const res = await connect();
+    expect(res.status).toBe(303);
+    expect(posResult(res)).toBe("other_environment");
+    expect(new URL(res.headers.get("location") ?? "").pathname).toBe("/owner/dashboard");
+    expect(res.headers.get("set-cookie")).toBeNull();
+    expect(mocks.squareEnvironmentConflict).toHaveBeenCalledWith("venue-1");
+    expect(warn).toHaveBeenCalledWith("[PosSquare] connect-other-environment", { venueId: "venue-1", row: "production", server: "sandbox" });
+    warn.mockRestore();
+  });
+
+  it("environment guard fails closed: a failed check is 'error', never a trip to Square", async () => {
+    mocks.squareEnvironmentConflict.mockResolvedValueOnce({ ok: false });
+    const res = await connect();
+    expect(posResult(res)).toBe("error");
+    expect(res.headers.get("set-cookie")).toBeNull();
   });
 
   it("redirects to Square with a state and sets the single-use nonce cookie", async () => {
@@ -192,6 +218,42 @@ describe("GET /api/owner/pos/square/callback", () => {
     );
   });
 
+  describe("environment guard (docs/square-dev-test-venue-plan.md Phase 1)", () => {
+    // Every location shape the callback can see, including the two that normally retire the
+    // venue's old row (R5): none of them may write anything on a conflict.
+    const shapes = [[US("L1")], [US("L1"), US("L2")], [], [CA("L1")]];
+
+    it("re-checks before any write: on a conflict the grant is given back and nothing is saved or retired", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      for (const locations of shapes) {
+        mocks.listSquareLocations.mockResolvedValueOnce(locations);
+        mocks.squareEnvironmentConflict.mockResolvedValueOnce({ ok: true, conflict: "production" });
+        const { state, cookie } = started();
+        const res = await callback(`code=CODE&state=${encodeURIComponent(state)}`, cookie);
+        expect(posResult(res)).toBe("other_environment");
+        expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
+      }
+      expect(mocks.squareEnvironmentConflict).toHaveBeenCalledWith("venue-1");
+      expect(mocks.saveSquareConnection).not.toHaveBeenCalled();
+      expect(mocks.markSquareLocationIneligible).not.toHaveBeenCalled();
+      expect(mocks.discardSquareGrant).toHaveBeenCalledTimes(shapes.length);
+      expect(mocks.discardSquareGrant).toHaveBeenCalledWith(
+        expect.objectContaining({ accessToken: "AT", merchantId: "M1", venueId: "venue-1", config: expect.objectContaining({ environment: "sandbox" }) }),
+      );
+      expect(warn).toHaveBeenCalledWith("[PosSquare] callback-other-environment", { venueId: "venue-1", row: "production", server: "sandbox" });
+      warn.mockRestore();
+    });
+
+    it("fails closed: a failed check gives the grant back and writes nothing", async () => {
+      mocks.squareEnvironmentConflict.mockResolvedValueOnce({ ok: false });
+      const { state, cookie } = started();
+      expect(posResult(await callback(`code=CODE&state=${encodeURIComponent(state)}`, cookie))).toBe("error");
+      expect(mocks.saveSquareConnection).not.toHaveBeenCalled();
+      expect(mocks.markSquareLocationIneligible).not.toHaveBeenCalled();
+      expect(mocks.discardSquareGrant).toHaveBeenCalledOnce();
+    });
+  });
+
   it("never exchanges a code without the nonce cookie, for another owner, or another owner's venue", async () => {
     const { state, cookie } = started();
     expect(posResult(await callback(`code=CODE&state=${encodeURIComponent(state)}`))).toBe("expired");
@@ -228,6 +290,34 @@ describe("POST disconnect + locations", () => {
     expect((await post(DISCONNECT, { venueId: "venue-9" })).status).toBe(403);
     expect((await post(DISCONNECT, { venueId: "venue-1" })).status).toBe(200);
     expect(mocks.disconnectSquare).toHaveBeenCalledWith("venue-1");
+  });
+
+  it("environment guard: disconnect and choosing a location refuse another server's Square row with a 409", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mocks.squareEnvironmentConflict.mockResolvedValue({ ok: true, conflict: "production" });
+    const disconnect = await post(DISCONNECT, { venueId: "venue-1" });
+    expect(disconnect.status).toBe(409);
+    expect(await disconnect.json()).toEqual({ ok: false, code: "other_environment", error: SQUARE_OTHER_ENVIRONMENT_RESULT_TEXT });
+    const location = await post(SET_LOCATION, { venueId: "venue-1", locationId: "L1" });
+    expect(location.status).toBe(409);
+    expect(await location.json()).toMatchObject({ ok: false, code: "other_environment" });
+    expect(mocks.disconnectSquare).not.toHaveBeenCalled();
+    expect(mocks.loadSquareTokenForSetup).not.toHaveBeenCalled();
+    expect(mocks.listSquareLocations).not.toHaveBeenCalled();
+    expect(mocks.setSquareLocation).not.toHaveBeenCalled();
+    // Venue access is still checked first: another owner's venue never reaches the guard.
+    mocks.squareEnvironmentConflict.mockClear();
+    expect((await post(DISCONNECT, { venueId: "venue-9" })).status).toBe(403);
+    expect(mocks.squareEnvironmentConflict).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("environment guard fails closed: a failed check is a 503 and changes nothing", async () => {
+    mocks.squareEnvironmentConflict.mockResolvedValue({ ok: false });
+    expect((await post(DISCONNECT, { venueId: "venue-1" })).status).toBe(503);
+    expect((await post(SET_LOCATION, { venueId: "venue-1", locationId: "L1" })).status).toBe(503);
+    expect(mocks.disconnectSquare).not.toHaveBeenCalled();
+    expect(mocks.setSquareLocation).not.toHaveBeenCalled();
   });
 
   it("only accepts a location that Square lists for this account", async () => {

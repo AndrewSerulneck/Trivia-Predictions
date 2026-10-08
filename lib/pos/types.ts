@@ -120,8 +120,12 @@ export type PosAdapter = {
  *   not_connected   — connectable, no live connection.
  *   connected       — an active connection.
  *   needs_attention — the provider refused us last time; reconnect.
+ *   other_environment — Square only: the live row was made by the OTHER server (the live site's
+ *                     real connection seen from the dev server, or a dev sandbox row seen from the
+ *                     live site). Not this server's to change: no Reconnect, no Disconnect
+ *                     (docs/square-dev-test-venue-plan.md Phase 1).
  */
-export type PosConnectionState = "coming_soon" | "not_connected" | "connected" | "needs_attention";
+export type PosConnectionState = "coming_soon" | "not_connected" | "connected" | "needs_attention" | "other_environment";
 
 export type PosConnectionStatus = {
   provider: PosProviderId;
@@ -137,4 +141,6 @@ export type PosConnectionStatus = {
    * can't get their ready-made Square discount until the partner reconnects once.
    */
   needsMenuPrizeReconnect?: boolean;
+  /** Set exactly when `state` is "other_environment": the environment that row was made in. */
+  otherEnvironment?: PosEnvironment;
 };

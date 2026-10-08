@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { squareEnvironmentConflict } from "@/lib/pos/connections";
 import { isPosTokenKeyConfigured } from "@/lib/pos/crypto";
 import { clearPosOAuthCookie, verifyPosOAuthState } from "@/lib/pos/oauthState";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
@@ -28,6 +29,12 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * (discardSquareGrant) and the sheet says why ("not_eligible"). We don't keep a token we can't use.
  * A refused RECONNECT to the same account also flips the venue's old row to "Reconnect needed"
  * (markSquareLocationIneligible, R5): that account no longer has a location that can issue cards.
+ *
+ * Environment guard (docs/square-dev-test-venue-plan.md Phase 1): checked again here, BEFORE any
+ * write, because a state minted by connect can outlive a change (the other server may have
+ * connected the venue in between). If the venue's live row belongs to the other server, the
+ * fresh grant is given back (discardSquareGrant, as for an ineligible account) and nothing is
+ * written — in particular the R5 retire path never runs. A failed check refuses the same way.
  */
 export async function GET(request: Request) {
   if (!isPosIntegrationsEnabled()) {
@@ -77,6 +84,14 @@ export async function GET(request: Request) {
     console.error("[PosSquare] callback-locations-failed", { code: locations.code });
     return redirectToPosSheet(request, "error", clear);
   }
+  const guard = await squareEnvironmentConflict(state.venueId);
+  if (!guard.ok || guard.conflict) {
+    await discardSquareGrant({ config, accessToken: tokens.accessToken, merchantId: tokens.merchantId, venueId: state.venueId });
+    if (!guard.ok) return redirectToPosSheet(request, "error", clear);
+    console.warn("[PosSquare] callback-other-environment", { venueId: state.venueId, row: guard.conflict, server: config.environment });
+    return redirectToPosSheet(request, "other_environment", clear);
+  }
+
   // A refused reconnect to the same account also retires the venue's old connection (R5).
   const refused = { venueId: state.venueId, merchantId: tokens.merchantId, environment: config.environment };
   if (locations.length === 0) {

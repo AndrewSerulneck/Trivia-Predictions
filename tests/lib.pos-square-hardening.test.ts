@@ -10,6 +10,8 @@ type Row = Record<string, unknown>;
 const db: Record<string, Row[]> = {};
 const rpcCalls: Array<Record<string, unknown>> = [];
 let rpcAllowed: (params: Record<string, unknown>) => boolean = () => true;
+/** A table whose reads and writes fail, to prove a caller fails closed. */
+let failTable: string | null = null;
 
 type Filter = (row: Row) => boolean;
 const query = (table: string) => {
@@ -25,7 +27,8 @@ const query = (table: string) => {
     embedCoupon
       ? { ...row, challenge_campaign_redemptions: (db.challenge_campaign_redemptions ?? []).find((c) => c.id === row.redemption_id) ?? null }
       : row;
-  const run = () => {
+  const run = (): { data: Row[] | null; error: { message: string; code: string } | null } => {
+    if (failTable === table) return { data: null, error: { message: "boom", code: "XX000" } };
     let matched = rows()
       .map(withEmbed)
       .filter((row) => (!embedCoupon || row.challenge_campaign_redemptions) && filters.every((f) => f(row)));
@@ -57,8 +60,11 @@ const query = (table: string) => {
     order: (col: string, options?: { ascending?: boolean }) => ((sort = { col, ascending: options?.ascending !== false }), builder),
     limit: (n: number) => ((limit = n), builder),
     returns: () => builder,
-    maybeSingle: async () => ({ data: run().data[0] ?? null, error: null }),
-    then: (resolve: (value: { data: Row[]; error: unknown }) => unknown) => Promise.resolve(run()).then(resolve),
+    maybeSingle: async () => {
+      const result = run();
+      return { data: result.data?.[0] ?? null, error: result.error };
+    },
+    then: (resolve: (value: { data: Row[] | null; error: unknown }) => unknown) => Promise.resolve(run()).then(resolve),
   };
   return builder;
 };
@@ -78,9 +84,18 @@ vi.mock("@/lib/supabaseAdmin", () => ({
 vi.mock("@/lib/challengeCampaigns", () => ({ PrizeRedeemUnavailableError: class extends Error {}, redeemChallengePrize: vi.fn() }));
 vi.mock("@/lib/pos/squareGiftCards", () => ({ openSquareGiftCard: mocks.openSquareGiftCard }));
 
-import { venuesNeedingPosAttention } from "@/lib/pos/connections";
+import { listPosConnectionStatuses, squareEnvironmentConflict, venuesNeedingPosAttention } from "@/lib/pos/connections";
 import { encryptPosToken, posTokenContext } from "@/lib/pos/crypto";
-import { discardSquareGrant, disconnectSquare, markSquareLocationIneligible, markSquareMerchantRevoked } from "@/lib/pos/squareConnection";
+import {
+  discardSquareGrant,
+  disconnectSquare,
+  loadSquareCredentials,
+  markSquareLocationIneligible,
+  markSquareMerchantRevoked,
+  saveSquareConnection,
+  setSquareLocation,
+} from "@/lib/pos/squareConnection";
+import { readSquareWalletConnection } from "@/lib/pos/squareWalletConnection";
 import { classifyStuckSquareClaim, listStuckSquareClaims, retrySquareFunding } from "@/lib/pos/squareStuckClaims";
 import { recordSquareRevocation } from "@/lib/pos/squareWebhook";
 import { hashRequesterIp, rateLimitSquareGiftCard } from "@/lib/rateLimit";
@@ -110,6 +125,7 @@ beforeEach(() => {
   for (const key of Object.keys(db)) delete db[key];
   rpcCalls.length = 0;
   rpcAllowed = () => true;
+  failTable = null;
   vi.stubEnv("NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED", "true");
   vi.stubEnv("SQUARE_ENVIRONMENT", "sandbox");
   vi.stubEnv("SQUARE_APPLICATION_ID", "app");
@@ -282,15 +298,27 @@ describe("Refused reconnect retires the old connection (R5)", () => {
 });
 
 describe("Dashboard nudge (venuesNeedingPosAttention)", () => {
-  it("lists venues whose connection needs attention: error rows and other-environment rows", async () => {
+  it("lists venues whose connection needs attention: this server's error rows only", async () => {
     db.pos_connections = [
       connection({ venue_id: "ok" }),
       connection({ venue_id: "err", status: "error" }),
-      connection({ venue_id: "wrong-env", environment: "production" }),
       connection({ venue_id: "gone", status: "revoked" }),
       connection({ venue_id: "not-mine", status: "error" }),
     ];
-    expect((await venuesNeedingPosAttention(["ok", "err", "wrong-env", "gone"])).sort()).toEqual(["err", "wrong-env"]);
+    expect((await venuesNeedingPosAttention(["ok", "err", "gone"])).sort()).toEqual(["err"]);
+  });
+
+  // docs/square-dev-test-venue-plan.md Phase 1: the other server's row isn't broken, and the
+  // partner can't fix it here — no "Square needs reconnecting" nudge for it (active or error).
+  it("ignores rows made by the other server, in either direction", async () => {
+    db.pos_connections = [
+      connection({ venue_id: "live-row", environment: "production" }),
+      connection({ venue_id: "live-row-error", environment: "production", status: "error" }),
+    ];
+    expect(await venuesNeedingPosAttention(["live-row", "live-row-error"])).toEqual([]);
+    vi.stubEnv("SQUARE_ENVIRONMENT", "production");
+    db.pos_connections = [connection({ venue_id: "dev-row", status: "error" }), connection({ venue_id: "live-err", environment: "production", status: "error" })];
+    expect(await venuesNeedingPosAttention(["dev-row", "live-err"])).toEqual(["live-err"]);
   });
 
   // Review fix R2 (#5): the nudge's copy says "Square", so only Square rows may raise it.
@@ -459,5 +487,126 @@ describe("Gift card route rate limit (rateLimitSquareGiftCard)", () => {
     rpcAllowed = (params) => params.p_max !== 30;
     expect(await rateLimitSquareGiftCard(request("1.1.1.1"), "user-1")).toEqual({ allowed: false, retryAfterSeconds: 600 });
     expect(rpcCalls).toHaveLength(1);
+  });
+});
+
+describe("Environment guard (docs/square-dev-test-venue-plan.md Phase 1)", () => {
+  // The dev server runs SQUARE_ENVIRONMENT=sandbox (this file's default); Pacific Street's real
+  // row is `production`.
+  const liveRow = () => connection({ environment: "production", merchant_name: "Hightop Challenge" });
+
+  describe("squareEnvironmentConflict", () => {
+    it("names the other server's environment, for any live status, and nothing for this server's rows", async () => {
+      db.pos_connections = [liveRow()];
+      expect(await squareEnvironmentConflict("venue-1")).toEqual({ ok: true, conflict: "production" });
+      db.pos_connections = [connection({ environment: "production", status: "error" })];
+      expect(await squareEnvironmentConflict("venue-1")).toEqual({ ok: true, conflict: "production" });
+      db.pos_connections = [connection()];
+      expect(await squareEnvironmentConflict("venue-1")).toEqual({ ok: true, conflict: null });
+      // A revoked row (history) and another provider's row don't count; nor does no row.
+      db.pos_connections = [connection({ environment: "production", status: "revoked" }), connection({ provider: "clover", environment: "production" })];
+      expect(await squareEnvironmentConflict("venue-1")).toEqual({ ok: true, conflict: null });
+      db.pos_connections = [];
+      expect(await squareEnvironmentConflict("venue-1")).toEqual({ ok: true, conflict: null });
+    });
+
+    it("works the other way round on the live site: a dev sandbox row is the conflict", async () => {
+      vi.stubEnv("SQUARE_ENVIRONMENT", "production");
+      db.pos_connections = [connection()];
+      expect(await squareEnvironmentConflict("venue-1")).toEqual({ ok: true, conflict: "sandbox" });
+    });
+
+    it("a server with no Square app configured may touch no row", async () => {
+      vi.stubEnv("SQUARE_APPLICATION_SECRET", "");
+      db.pos_connections = [connection()];
+      expect(await squareEnvironmentConflict("venue-1")).toEqual({ ok: true, conflict: "sandbox" });
+    });
+
+    it("fails closed on a read error", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      failTable = "pos_connections";
+      expect(await squareEnvironmentConflict("venue-1")).toEqual({ ok: false });
+      error.mockRestore();
+    });
+  });
+
+  describe("listPosConnectionStatuses", () => {
+    it("shows the other server's row as other_environment, without its merchant, and leaves this server's rows alone", async () => {
+      db.pos_connections = [liveRow()];
+      const result = await listPosConnectionStatuses("venue-1");
+      if (!result.ok) throw new Error("read failed");
+      const square = result.statuses.find((status) => status.provider === "square");
+      expect(square).toMatchObject({ state: "other_environment", otherEnvironment: "production", merchantName: null, connectedAt: null });
+      expect(square?.needsLocation).toBe(false);
+      expect(square?.needsMenuPrizeReconnect).toBe(false);
+
+      db.pos_connections = [connection({ merchant_name: "Test Bar", scopes: ["MERCHANT_PROFILE_READ", "GIFTCARDS_READ", "GIFTCARDS_WRITE", "ITEMS_READ", "ITEMS_WRITE"] })];
+      const own = await listPosConnectionStatuses("venue-1");
+      if (!own.ok) throw new Error("read failed");
+      const ownSquare = own.statuses.find((status) => status.provider === "square");
+      expect(ownSquare).toMatchObject({ state: "connected", merchantName: "Test Bar" });
+      expect(ownSquare).not.toHaveProperty("otherEnvironment");
+
+      db.pos_connections = [connection({ status: "error" })];
+      const broken = await listPosConnectionStatuses("venue-1");
+      if (!broken.ok) throw new Error("read failed");
+      expect(broken.statuses.find((status) => status.provider === "square")?.state).toBe("needs_attention");
+    });
+  });
+
+  describe("write backstops (the routes check first; these hold even if a route forgets)", () => {
+    it("disconnectSquare refuses the other server's row: no write, no RevokeToken", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      db.pos_connections = [liveRow()];
+      const before = JSON.stringify(db.pos_connections);
+      expect(await disconnectSquare("venue-1")).toEqual({ ok: false });
+      expect(JSON.stringify(db.pos_connections)).toBe(before);
+      expect(fetchMock).not.toHaveBeenCalled();
+      error.mockRestore();
+    });
+
+    it("saveSquareConnection never overwrites the other server's row", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      db.pos_connections = [liveRow()];
+      const before = JSON.stringify(db.pos_connections);
+      const saved = await saveSquareConnection({
+        venueId: "venue-1",
+        ownerId: "owner-1",
+        environment: "sandbox",
+        tokens: { accessToken: "SANDBOX", refreshToken: "R", expiresAt: "2099-01-01T00:00:00.000Z", merchantId: "SANDBOX-M" },
+        merchantName: "Sandbox",
+        locationId: "LS",
+      });
+      expect(saved).toEqual({ ok: false });
+      expect(JSON.stringify(db.pos_connections)).toBe(before);
+      error.mockRestore();
+    });
+
+    it("setSquareLocation only moves this server's row", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      db.pos_connections = [liveRow()];
+      expect(await setSquareLocation("venue-1", "L-OTHER")).toEqual({ ok: false });
+      expect(db.pos_connections[0].location_id).toBe("L1");
+      db.pos_connections = [connection()];
+      expect(await setSquareLocation("venue-1", "L2")).toEqual({ ok: true });
+      expect(db.pos_connections[0].location_id).toBe("L2");
+      error.mockRestore();
+    });
+  });
+
+  // Plan item 9: guests already fall back to the normal coupon — pinned here in both directions.
+  describe("guest side", () => {
+    it("never hands out the other server's credentials or offers its Square coupon", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      db.pos_connections = [liveRow()];
+      expect(await loadSquareCredentials("venue-1")).toEqual({ ok: false, reason: "needs_attention" });
+      expect(await readSquareWalletConnection("venue-1")).toEqual({ ok: true, connection: null });
+      vi.stubEnv("SQUARE_ENVIRONMENT", "production");
+      db.pos_connections = [connection()];
+      expect(await loadSquareCredentials("venue-1")).toEqual({ ok: false, reason: "needs_attention" });
+      expect(await readSquareWalletConnection("venue-1")).toEqual({ ok: true, connection: null });
+      expect(fetchMock).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
   });
 });

@@ -59,3 +59,11 @@ export const PARTNER_MANUAL_STAFF_INTRO =
 /** Partner Manual section copy (lib/partnerManual.ts). */
 export const PARTNER_MANUAL_POS_BODY =
   "If you use Square, connect it so guests' prizes work right at your register. Tap the arrow in the top-left corner to open the menu, then tap Point of Sale and connect Square. Gift card prizes become real Square gift cards. Free-item and dollar or percent off prizes get a ready-made \"Hightop prize\" discount in your Square for staff to tap. A dollar off prize can instead be set to \"Scannable gift card\", which staff scan or type like any Square gift card. The Point of Sale screen has a staff sheet you can print and tape by the register. Prizes always still work with the normal coupon, connected or not.";
+
+/**
+ * Why a Square change was refused: the venue's Square connection belongs to the other server
+ * (dev sandbox vs the live site — docs/square-dev-test-venue-plan.md Phase 1). The connect
+ * banner (`?posResult=other_environment`) and the disconnect / location routes' 409 both say it.
+ */
+export const SQUARE_OTHER_ENVIRONMENT_RESULT_TEXT =
+  "This venue's Square is managed from the other server, so nothing was changed. Use your test venue to test Square.";

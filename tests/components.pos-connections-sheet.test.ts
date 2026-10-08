@@ -2,7 +2,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { POS_RESULT_MESSAGES, PosConnectionsSheet, posConnectHref, SQUARE_ATTENTION_TEXT } from "@/components/owner/pos/PosConnectionsSheet";
+import {
+  POS_RESULT_MESSAGES,
+  PosConnectionsSheet,
+  posConnectHref,
+  SQUARE_ATTENTION_TEXT,
+  SQUARE_OTHER_ENV_DEV_TEXT,
+  SQUARE_OTHER_ENV_LIVE_TEXT,
+} from "@/components/owner/pos/PosConnectionsSheet";
+import { SQUARE_OTHER_ENVIRONMENT_RESULT_TEXT } from "@/lib/posStaffInstructions";
 import type { PosConnectionStatus } from "@/lib/pos/types";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 
@@ -77,6 +85,57 @@ describe("PosConnectionsSheet", () => {
     expect(await screen.findByText(SQUARE_ATTENTION_TEXT)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Reconnect" }).getAttribute("href")).toBe(posConnectHref("square", "venue-1"));
     expect(screen.getByRole("button", { name: "Disconnect" })).toBeTruthy();
+  });
+
+  // docs/square-dev-test-venue-plan.md Phase 1 — the exact copy is the plan's.
+  describe("environment guard", () => {
+    it("on the dev server, the live site's connection gets one line, a neutral badge, and no Reconnect/Disconnect", async () => {
+      stubFetch({ ok: true, statuses: [status({ provider: "square", state: "other_environment", otherEnvironment: "production" })] });
+      render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE }));
+      expect(await screen.findByText("Connected on the live site.")).toBeTruthy();
+      expect(
+        screen.getByText("Test Square on your test venue — reconnecting here would replace this venue's real Square connection."),
+      ).toBeTruthy();
+      expect(SQUARE_OTHER_ENV_DEV_TEXT.title).toBe("Connected on the live site.");
+      const badge = screen.getByText("Live site");
+      expect(badge.className).not.toContain("amber");
+      expect(badge.className).not.toContain("rose");
+      expect(screen.queryByRole("link", { name: /Connect|Reconnect/ })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Disconnect" })).toBeNull();
+      expect(screen.queryByText(SQUARE_ATTENTION_TEXT)).toBeNull();
+      expect(screen.queryByText("Reconnect needed")).toBeNull();
+      // Nothing to set up from this server either.
+      expect(screen.queryByText("Set up Square")).toBeNull();
+    });
+
+    it("on the live site, a dev sandbox row says it is a test connection", async () => {
+      stubFetch({ ok: true, statuses: [status({ provider: "square", state: "other_environment", otherEnvironment: "sandbox" })] });
+      render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE }));
+      expect(await screen.findByText("Test connection from the dev server.")).toBeTruthy();
+      expect(screen.getByText("It only works there and never touches real money.")).toBeTruthy();
+      expect(SQUARE_OTHER_ENV_LIVE_TEXT.body).toBe("It only works there and never touches real money.");
+      expect(screen.getByText("Test")).toBeTruthy();
+      expect(screen.queryByRole("link", { name: /Connect|Reconnect/ })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Disconnect" })).toBeNull();
+    });
+
+    it("a normal Square row still offers Connect and the setup checklist", async () => {
+      stubFetch({ ok: true, statuses: [status({ provider: "square", state: "not_connected" })] });
+      render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE }));
+      expect((await screen.findByRole("link", { name: "Connect" })).getAttribute("href")).toBe(posConnectHref("square", "venue-1"));
+      expect(screen.getByText("Set up Square")).toBeTruthy();
+      expect(screen.queryByText("Live site")).toBeNull();
+    });
+
+    it("the connect banner explains a refused cross-server connect", () => {
+      stubFetch({ ok: true, statuses: [] });
+      render(createElement(PosConnectionsSheet, { nav: fakeNav({ sheet: "pos" }), venue: VENUE, posResult: "other_environment" }));
+      expect(SQUARE_OTHER_ENVIRONMENT_RESULT_TEXT).toBe(
+        "This venue's Square is managed from the other server, so nothing was changed. Use your test venue to test Square.",
+      );
+      expect(screen.getByText(SQUARE_OTHER_ENVIRONMENT_RESULT_TEXT).getAttribute("role")).toBe("status");
+      expect(POS_RESULT_MESSAGES.other_environment.tone).toBe("bad");
+    });
   });
 
   it("Phase 2c: says why an account that can't issue US-dollar gift cards wasn't connected", () => {

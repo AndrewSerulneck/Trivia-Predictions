@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { squareEnvironmentConflict } from "@/lib/pos/connections";
 import { isPosTokenKeyConfigured } from "@/lib/pos/crypto";
 import { createPosOAuthState } from "@/lib/pos/oauthState";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
@@ -15,6 +16,11 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * ("not_configured") when the Square app or POS_TOKEN_KEY is missing — tokens must never be
  * fetched if they can't be encrypted. Otherwise sets the single-use nonce cookie and sends the
  * partner to Square's consent screen.
+ *
+ * Environment guard (docs/square-dev-test-venue-plan.md Phase 1): when the venue's live Square
+ * row was made by the OTHER server (the live site's real connection, seen from the dev server's
+ * sandbox), nothing starts — back to the sheet with "other_environment". A failed check is
+ * "error", never a go-ahead. The callback checks again before it writes anything.
  */
 export async function GET(request: Request) {
   if (!isPosIntegrationsEnabled()) {
@@ -37,6 +43,13 @@ export async function GET(request: Request) {
   if (!config || !isPosTokenKeyConfigured()) {
     console.error("[PosSquare] connect-not-configured", { app: Boolean(config), tokenKey: isPosTokenKeyConfigured() });
     return redirectToPosSheet(request, "not_configured");
+  }
+
+  const guard = await squareEnvironmentConflict(venueId);
+  if (!guard.ok) return redirectToPosSheet(request, "error");
+  if (guard.conflict) {
+    console.warn("[PosSquare] connect-other-environment", { venueId, row: guard.conflict, server: config.environment });
+    return redirectToPosSheet(request, "other_environment");
   }
 
   const started = createPosOAuthState({ ownerId: auth.ownerId, venueId, provider: "square" });

@@ -1,7 +1,7 @@
 import "server-only";
 import { isPosIntegrationsEnabled, POS_PROVIDERS, type PosProviderId, type PosProviderInfo } from "@/lib/pos/providers";
 import { hasSquareMenuPrizeScopes, isSquareConfigured, squareAppConfig } from "@/lib/pos/squareConfig";
-import type { PosConnectionState, PosConnectionStatus } from "@/lib/pos/types";
+import type { PosConnectionState, PosConnectionStatus, PosEnvironment } from "@/lib/pos/types";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // POS connection reads for the Partner Dashboard and the reward wizard
@@ -73,18 +73,43 @@ const readLiveConnections = async (venueId: string): Promise<PosReadResult> => {
 };
 
 /**
- * A Square row made in the other Square environment (a sandbox test row on a production server,
- * or the reverse) can't be used here: lib/pos/squareConnection.ts refuses it. Show it as
- * "Reconnect needed" rather than "Connected".
+ * The environment of a Square row made in the OTHER Square environment from this server's (a
+ * sandbox test row on the live site, or the live row on the dev server), else null. Any live
+ * status counts, not just `active`: an `error` row from the other server is still not this
+ * server's to replace. A server whose Square app isn't configured owns no environment, so every
+ * row is "other" — it may not touch any of them (docs/square-dev-test-venue-plan.md Phase 1).
+ * lib/pos/squareConnection.ts refuses such a row for gift cards and discounts too.
  */
-const isWrongEnvironment = (row: PublicConnectionRow | undefined): boolean =>
-  row?.provider === "square" && row.status === "active" && squareAppConfig()?.environment !== row.environment;
+const otherSquareEnvironment = (row: PublicConnectionRow | undefined): PosEnvironment | null => {
+  if (row?.provider !== "square") return null;
+  if (row.environment === squareAppConfig()?.environment) return null;
+  // The column is CHECKed to these two values; anything else still reads as "not ours".
+  return row.environment === "sandbox" ? "sandbox" : "production";
+};
+
+/**
+ * The environment guard (docs/square-dev-test-venue-plan.md Phase 1). Dev and the live site share
+ * one database and a venue holds ONE live Square row, so a server must never create, replace,
+ * retire, disconnect or re-locate a row the other server made: a sandbox reconnect from dev would
+ * overwrite the venue's real Square connection. `conflict` = that row's environment, or null when
+ * the venue has no live Square row or it is this server's. `ok: false` = the read failed, and
+ * every caller REFUSES (fails closed). One indexed read, only on a connect / callback /
+ * disconnect / location change.
+ */
+export const squareEnvironmentConflict = async (
+  venueId: string,
+): Promise<{ ok: true; conflict: PosEnvironment | null } | { ok: false }> => {
+  const read = await readLiveConnections(venueId);
+  if (!read.ok) return { ok: false };
+  return { ok: true, conflict: otherSquareEnvironment(read.rows.find((row) => row.provider === "square")) };
+};
 
 const stateFor = (
   availability: "available" | "coming_soon",
   row: PublicConnectionRow | undefined,
 ): PosConnectionState => {
-  if (isWrongEnvironment(row)) return "needs_attention";
+  // Not this server's to change: shown with one line of explanation and no Reconnect/Disconnect.
+  if (otherSquareEnvironment(row)) return "other_environment";
   // A connection that already exists is shown as it is, even for a provider we've since
   // marked coming_soon — the partner must still be able to see (and later disconnect) it.
   if (row?.status === "active") return "connected";
@@ -104,6 +129,7 @@ export const listPosConnectionStatuses = async (
     statuses: POS_PROVIDERS.map((info) => {
       const row = byProvider.get(info.id);
       const state = stateFor(isConnectable(info) ? "available" : "coming_soon", row);
+      const otherEnvironment = otherSquareEnvironment(row);
       const live = state === "connected" || state === "needs_attention";
       return {
         provider: info.id,
@@ -116,6 +142,8 @@ export const listPosConnectionStatuses = async (
         needsLocation: state === "connected" && info.id === "square" && !row?.location_id,
         // Connected before Phase 2d: gift cards work, menu prizes wait for one reconnect.
         needsMenuPrizeReconnect: state === "connected" && info.id === "square" && !hasSquareMenuPrizeScopes(row?.scopes),
+        // Which server the row belongs to, so the sheet can say "live site" or "dev server".
+        ...(otherEnvironment ? { otherEnvironment } : {}),
       };
     }),
   };
@@ -130,7 +158,7 @@ export const activePosProviders = async (venueId: string): Promise<PosProviderId
   const read = await readLiveConnections(venueId);
   if (!read.ok) return [];
   return read.rows
-    .filter((row) => row.status === "active" && !isWrongEnvironment(row))
+    .filter((row) => row.status === "active" && !otherSquareEnvironment(row))
     .map((row) => row.provider)
     .filter((provider): provider is PosProviderId => POS_PROVIDERS.some((info) => info.id === provider));
 };
@@ -145,9 +173,10 @@ export const venueHasActivePos = async (venueId: string): Promise<boolean> => {
 };
 
 /**
- * The owner's venues whose SQUARE connection needs attention (Square removed our access,
- * a refresh was refused, or a row from the other Square environment) — the Partner Dashboard's
- * one-line nudge (Phase 2c). Rides inside GET /api/owner/dashboard: one indexed read for ALL of
+ * The owner's venues whose SQUARE connection needs attention (Square removed our access, or
+ * a refresh was refused) — the Partner Dashboard's one-line nudge (Phase 2c). A row from the
+ * other Square environment is NOT flagged: it isn't broken, and the partner can't fix it from
+ * this server (the guard refuses a reconnect here — docs/square-dev-test-venue-plan.md Phase 1). Rides inside GET /api/owner/dashboard: one indexed read for ALL of
  * the owner's venues, so a venue switch needs no request. Zero queries with the flag off. Fails
  * to [] (no nudge) on any error: the Point of Sale sheet still tells the truth.
  */
@@ -166,6 +195,6 @@ export const venuesNeedingPosAttention = async (venueIds: string[]): Promise<str
     if (!isMissingPosTable(error)) console.error("[Pos] attention-read-failed", error.message);
     return [];
   }
-  const flagged = (data ?? []).filter((row) => row.status === "error" || isWrongEnvironment(row));
+  const flagged = (data ?? []).filter((row) => row.status === "error" && !otherSquareEnvironment(row));
   return [...new Set(flagged.map((row) => row.venue_id))];
 };

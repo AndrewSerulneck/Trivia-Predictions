@@ -79,6 +79,12 @@ export const saveSquareConnection = async (input: {
   if (!existing.ok) return { ok: false };
 
   const previous = existing.row;
+  // Backstop for the environment guard (the callback checks first — docs/square-dev-test-venue-plan.md
+  // Phase 1): never overwrite a live row the other Square environment made.
+  if (previous && previous.environment !== input.environment) {
+    console.error("[PosSquare] save-refused-other-environment", { connectionId: previous.id, row: previous.environment, server: input.environment });
+    return { ok: false };
+  }
   const keptLocation =
     previous &&
     previous.merchant_id === input.tokens.merchantId &&
@@ -233,13 +239,16 @@ export const loadSquareTokenForSetup = async (
 };
 
 export const setSquareLocation = async (venueId: string, locationId: string): Promise<{ ok: true } | { ok: false }> => {
-  if (!supabaseAdmin) return { ok: false };
+  const config = squareAppConfig();
+  if (!supabaseAdmin || !config) return { ok: false };
   const { data, error } = await supabaseAdmin
     .from("pos_connections")
     .update({ location_id: locationId, updated_at: new Date().toISOString() })
     .eq("venue_id", venueId)
     .eq("provider", PROVIDER)
     .eq("status", "active")
+    // Only this server's own row (environment guard backstop, docs/square-dev-test-venue-plan.md).
+    .eq("environment", config.environment)
     .select("id");
   if (error || !data || data.length === 0) {
     if (error) console.error("[PosSquare] location-save-failed", error.message);
@@ -265,11 +274,18 @@ export const disconnectSquare = async (venueId: string): Promise<{ ok: true; rev
   if (!read.ok) return { ok: false };
   if (!read.row) return { ok: true, revokedAtSquare: false };
 
-  let revokedAtSquare = false;
   const config = squareAppConfig();
+  // Backstop for the environment guard (the route checks first — docs/square-dev-test-venue-plan.md
+  // Phase 1): a row the other Square environment made is that server's to disconnect, not ours.
+  if (!config || config.environment !== read.row.environment) {
+    console.error("[PosSquare] disconnect-refused-other-environment", { connectionId: read.row.id, row: read.row.environment });
+    return { ok: false };
+  }
+
+  let revokedAtSquare = false;
   // A row Square already revoked (markSquareMerchantRevoked) has no token left to revoke.
   const hasToken = read.row.access_token_enc !== REVOKED_TOKEN_PLACEHOLDER;
-  if (config && config.environment === read.row.environment && hasToken) {
+  if (hasToken) {
     const live = await liveConnectionsForMerchant(read.row.merchant_id, read.row.environment, venueId);
     const sharedWith = live ? live.others : null;
     if (sharedWith !== 0) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { guardOwnerPosVenue } from "@/lib/pos/ownerPosGuard";
 import { disconnectSquare } from "@/lib/pos/squareConnection";
+import { refuseOtherSquareEnvironment } from "@/lib/pos/squareRoutes";
 
 /**
  * POST /api/owner/pos/square/disconnect { venueId } — "Disconnect Square"
@@ -9,12 +10,19 @@ import { disconnectSquare } from "@/lib/pos/squareConnection";
  * Revokes our access at Square (best effort) and wipes the stored tokens. Gift cards already
  * issued keep working at the register — they are Square's — but guests can no longer open them
  * in the app until the venue reconnects the same Square account.
+ *
+ * 409 `other_environment` when the venue's Square row was made by the other server (dev sandbox
+ * vs live — docs/square-dev-test-venue-plan.md Phase 1): disconnecting from here would wipe that
+ * server's connection, and RevokeToken would go out with the wrong environment's app.
  */
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { venueId?: string } | null;
   const venueId = String(body?.venueId ?? "").trim();
   const checked = await guardOwnerPosVenue(request, venueId);
   if ("response" in checked) return checked.response;
+
+  const refused = await refuseOtherSquareEnvironment(venueId, "disconnect");
+  if (refused) return refused;
 
   const result = await disconnectSquare(venueId);
   if (!result.ok) {
