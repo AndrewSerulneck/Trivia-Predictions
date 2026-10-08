@@ -637,6 +637,7 @@ Dashboard login); a QR + typed code on the coupon is OK. Sub-phases 3a–3f in t
 web staff page. Device routes use Clover's token, never `requireOwnerAuth`.
 
 Plan: `docs/pos-rewards-integration-plan.md`; latest handoff `docs/pos-rewards-integration-plan_PHASE_2h_HANDOFF.md` (2h real-money pilot started 2026-10-06; review fixes `docs/square-review-fixes-plan.md` R1–R5). Earlier (2e: all Square staff/partner copy lives in `lib/posStaffInstructions.ts`; printable sheet at `/owner/pos-staff-sheet`; 2c: no pilot gate; revoked webhook → `error` + "Reconnect needed"; Disconnect never calls RevokeToken while another venue shares the Square merchant. 2d: menu-item prizes → one ready-made Square discount per prize; register cap optional).
+- **Dev server ≠ Pacific Street for Square.** Dev and live share one database and a venue holds one Square connection, so a sandbox reconnect from dev would replace the real one. Test Square only on the hidden test venue. Plan: `docs/square-dev-test-venue-plan.md` (not started 2026-10-07).
 - **Flag `NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED`, off by default**, single reader `isPosIntegrationsEnabled()`
   in `lib/pos/providers.ts`. Off = no "Point of Sale" menu row, no `?sheet=pos` host, `/api/owner/pos*` 404s.
 - **POS OAuth tokens are only ever stored encrypted** via `lib/pos/crypto.ts` (`POS_TOKEN_KEY`, AES-256-GCM,
