@@ -44,7 +44,7 @@ const isPassThrough = (res: ReturnType<typeof proxy>): boolean =>
 
 describe("proxy auth-gate (domain split off — default/production)", () => {
   it("passes public routes straight through", () => {
-    for (const path of ["/", "/info", "/join", "/faqs", "/advertise", "/owner/dashboard", "/api/trivia", "/admin"]) {
+    for (const path of ["/", "/info", "/join", "/faqs", "/advertise", "/privacy", "/terms", "/rules", "/support", "/owner/dashboard", "/api/trivia", "/admin"]) {
       expect(isPassThrough(proxy(makeRequest(path))), `expected pass-through for ${path}`).toBe(true);
     }
   });

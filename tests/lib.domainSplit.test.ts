@@ -42,7 +42,7 @@ const enableSplit = () => {
 
 describe("classifyPage", () => {
   it("treats marketing surfaces as marketing", () => {
-    for (const p of ["/info", "/info/pricing", "/faqs", "/advertise", "/owner", "/owner/dashboard"]) {
+    for (const p of ["/info", "/info/pricing", "/faqs", "/advertise", "/owner", "/owner/dashboard", "/privacy", "/terms", "/rules", "/support"]) {
       expect(classifyPage(p)).toBe("marketing");
     }
   });

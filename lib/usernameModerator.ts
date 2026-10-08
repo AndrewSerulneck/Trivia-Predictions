@@ -220,6 +220,8 @@ Do not include any other text.`;
 type HaikuResponse = { allowed: true } | { allowed: false; reason: string };
 
 export async function checkUsernameAI(username: string): Promise<ModerationResult> {
+  // Unset in Vercel as of 2026-10-08, and /privacy promises usernames are never
+  // sent to Anthropic. Setting this key sends them — update app/privacy first.
   const apiKey = process.env.ANTHROPIC_USERNAME_MODERATOR_API_KEY;
   if (!apiKey) {
     console.warn("[usernameModerator] ANTHROPIC_USERNAME_MODERATOR_API_KEY not set — skipping AI check");

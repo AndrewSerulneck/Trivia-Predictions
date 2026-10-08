@@ -8,6 +8,7 @@ import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { OwnerMenuDrawer } from "@/components/owner/menu/OwnerMenuDrawer";
 import { visibleOwnerMenuItems } from "@/components/owner/menu/ownerMenuItems";
 import { PartnerManual } from "@/components/owner/PartnerManual";
+import { LEGAL_LINKS } from "@/lib/legalInfo";
 import { menuHintForThisVisit } from "@/lib/ownerMenuHint";
 import { parseSheetParam, pushSheet, SHEET_PARAM, type OwnerSheetId } from "@/lib/ownerSheetParams";
 
@@ -251,6 +252,15 @@ export const OwnerAppBar = ({ leading, children, className = "" }: OwnerAppBarPr
                 );
               })}
             </nav>
+            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 px-2 text-footnote font-semibold text-ht-muted">
+              {LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a href={link.href} className="underline underline-offset-2 hover:text-ht-primary">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
             <div className="mt-3 border-t border-ht-hairline px-2 pt-3">
               <SignOutButton variant="partner" />
             </div>

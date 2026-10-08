@@ -22,7 +22,8 @@ type CycleWinnerRecord = {
   id: string;
   challengeId: string;
   cycleStart: string;
-  winnerUserId: string;
+  /** Null when the winner deleted their account (the slot stays used). */
+  winnerUserId: string | null;
   winnerUsername: string | null;
   venueId: string;
   pointsEarned: number;
@@ -1395,7 +1396,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                             <div className="flex flex-wrap gap-8 text-xs">
                               <div>
                                 <p className="font-semibold text-slate-600">Winner</p>
-                                <p className="text-slate-900">{p.winnerUsername ?? p.winnerUserId}</p>
+                                <p className="text-slate-900">{p.winnerUsername ?? "Deleted player"}</p>
                               </div>
                               <div>
                                 <p className="font-semibold text-slate-600">Prize</p>
@@ -1455,7 +1456,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                                   <td className="py-1 pr-6 text-slate-700">
                                     {new Date(w.cycleStart).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}
                                   </td>
-                                  <td className="py-1 pr-6 font-medium text-slate-900">{w.winnerUsername ?? w.winnerUserId}</td>
+                                  <td className="py-1 pr-6 font-medium text-slate-900">{w.winnerUsername ?? "Deleted player"}</td>
                                   <td className="py-1 pr-6 text-slate-700">{w.pointsEarned}</td>
                                   <td className="py-1 pr-6 capitalize text-slate-700">
                                     {w.prizeType ? w.prizeType.replace(/_/g, " ") : "—"}

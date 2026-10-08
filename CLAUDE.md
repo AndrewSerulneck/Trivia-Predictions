@@ -18,6 +18,26 @@
 - Lint: `npm run lint`
 - Tests: `npm run test` (Runs Vitest)
 
+## Native app (App Store / Google Play) — planned 2026-10-08
+
+Plan: `docs/native-app-store-plan.md` (phases, models, Andrew's decisions). One Capacitor app over
+the live site for players AND partners; partner signup/Stripe/`/admin` always open in the system
+browser, never in-app. Read the plan before any native/app-store work.
+
+- **Player account deletion is live (Phase 1b, 2026-10-08).** One all-or-nothing RPC,
+  `delete_player_account` (migration `20261008044524`), called only by `lib/playerAccountDeletion.ts`
+  from `POST /api/account/delete` (signed session only; 503 without `SESSION_SECRET`, because dev
+  shares the production DB). Andrew: REMOVE, don't anonymise — except a won reward keeps its
+  `challenge_cycle_winners` slot with `winner_user_id` NULL (else sweeps re-award the prize), and the
+  Square ledger is kept unlinked. `challenge_campaigns.winner_user_id` has NO FK on purpose (a
+  "resolved" marker). A new `users` FK that is ON DELETE SET NULL must be deleted explicitly in the
+  function — `tests/account-deletion-contract.test.ts` fails until it is. SQL is proven on PGlite by
+  `npm run test:account-deletion-sql`. Emailed requests: `scripts/delete-player-account.cjs`.
+- **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
+  `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
+  `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep
+  `ANTHROPIC_USERNAME_MODERATOR_API_KEY` unset in Vercel unless the policy changes first.
+
 ## Bingo / Pick ’Em reliability work (complete, 2026-09-19)
 
 Current plan: `docs/bingo-pickem-reliability-plan.md`; complete and developer-accepted after

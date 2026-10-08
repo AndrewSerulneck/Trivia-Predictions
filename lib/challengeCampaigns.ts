@@ -1829,7 +1829,8 @@ export type ChallengeCycleWinnerRecord = {
   id: string;
   challengeId: string;
   cycleStart: string;
-  winnerUserId: string;
+  /** Null when the winner deleted their account: the slot stays used, the name is gone. */
+  winnerUserId: string | null;
   winnerUsername: string | null;
   venueId: string;
   pointsEarned: number;
@@ -1849,13 +1850,13 @@ export async function listChallengeCycleWinners(challengeId: string): Promise<Ch
     .eq("challenge_id", cid)
     .order("cycle_start", { ascending: false })
     .returns<Array<{
-      id: string; challenge_id: string; cycle_start: string; winner_user_id: string;
+      id: string; challenge_id: string; cycle_start: string; winner_user_id: string | null;
       venue_id: string; points_earned: number; finalized_at: string; prize_type: string | null;
     }>>();
   if (error) throw new Error(error.message ?? "Failed to load cycle winners.");
   if (!data || data.length === 0) return [];
 
-  const userIds = [...new Set(data.map((r) => r.winner_user_id))];
+  const userIds = [...new Set(data.flatMap((r) => (r.winner_user_id ? [r.winner_user_id] : [])))];
   const { data: users } = await supabaseAdmin!
     .from("users")
     .select("id, username")
@@ -1877,12 +1878,12 @@ export async function listChallengeCycleWinners(challengeId: string): Promise<Ch
     challengeId: r.challenge_id,
     cycleStart: r.cycle_start,
     winnerUserId: r.winner_user_id,
-    winnerUsername: usernameById.get(r.winner_user_id) ?? null,
+    winnerUsername: r.winner_user_id ? usernameById.get(r.winner_user_id) ?? null : null,
     venueId: r.venue_id,
     pointsEarned: r.points_earned,
     finalizedAt: r.finalized_at,
     prizeType: r.prize_type,
-    prizeRedeemedAt: redemptionMap.get(`${r.winner_user_id}:${r.cycle_start}`) ?? null,
+    prizeRedeemedAt: r.winner_user_id ? redemptionMap.get(`${r.winner_user_id}:${r.cycle_start}`) ?? null : null,
   }));
 }
 
@@ -2269,7 +2270,7 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
   const targetIsos = [...new Set(targetIsoById.values())];
 
   type CycleWinnerRow = {
-    id: string; challenge_id: string; cycle_start: string; winner_user_id: string;
+    id: string; challenge_id: string; cycle_start: string; winner_user_id: string | null;
     venue_id: string; points_earned: number; finalized_at: string; prize_type: string | null;
   };
   const CYCLE_WINNER_COLUMNS =
@@ -2383,7 +2384,7 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
 
   // One username read across BOTH paths.
   const allRows = [...rows, ...gameWinnerResolved.flatMap((entry) => entry.rows)];
-  const userIds = [...new Set(allRows.map((r) => r.winner_user_id))];
+  const userIds = [...new Set(allRows.flatMap((r) => (r.winner_user_id ? [r.winner_user_id] : [])))];
   let usernameById = new Map<string, string>();
   if (userIds.length > 0) {
     const { data: users } = await supabaseAdmin!
@@ -2399,7 +2400,7 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
     challengeId: r.challenge_id,
     cycleStart: r.cycle_start,
     winnerUserId: r.winner_user_id,
-    winnerUsername: usernameById.get(r.winner_user_id) ?? null,
+    winnerUsername: r.winner_user_id ? usernameById.get(r.winner_user_id) ?? null : null,
     venueId: r.venue_id,
     pointsEarned: r.points_earned,
     finalizedAt: r.finalized_at,

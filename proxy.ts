@@ -5,6 +5,8 @@ import { apexHost, decideDomainSplit } from "@/lib/domainSplit";
 
 export { isVenueScreenPath };
 
+const LEGAL_PUBLIC_PREFIXES = ["/privacy", "/terms", "/rules", "/support", "/delete-account"];
+
 function isPublicPath(pathname: string): boolean {
   if (pathname === "/") {
     return true;
@@ -22,6 +24,10 @@ function isPublicPath(pathname: string): boolean {
     return true;
   }
   if (pathname === "/faqs" || pathname.startsWith("/faqs/")) {
+    return true;
+  }
+  // Public legal/support pages (docs/native-app-store-plan.md Phase 1a).
+  if (LEGAL_PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
     return true;
   }
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {

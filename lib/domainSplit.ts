@@ -94,7 +94,20 @@ export const hostKind = (host: string | null | undefined): HostKind => {
 export type PageKind = "marketing" | "game" | "neutral";
 
 // User-facing marketing pages that live on the apex.
-const MARKETING_PAGE_PREFIXES = ["/info", "/faqs", "/advertise", "/owner"];
+const MARKETING_PAGE_PREFIXES = [
+  "/info",
+  "/faqs",
+  "/advertise",
+  "/owner",
+  // Legal/support pages the app stores require (docs/native-app-store-plan.md Phase 1a).
+  "/privacy",
+  "/terms",
+  "/rules",
+  "/support",
+  // Public account-deletion explainer Google Play requires (Phase 1b). The signed-in
+  // deletion screen itself, /account/delete, is a game page.
+  "/delete-account",
+];
 
 const hasFileExtension = (pathname: string): boolean => /\.[a-z0-9]+$/i.test(pathname);
 

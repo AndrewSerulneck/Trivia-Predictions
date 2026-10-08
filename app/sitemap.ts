@@ -13,6 +13,11 @@ const MARKETING_PATHS: {
   { path: "/", priority: 1.0, changeFrequency: "weekly" },
   { path: "/faqs", priority: 0.5, changeFrequency: "monthly" },
   { path: "/advertise", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/rules", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/support", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/delete-account", priority: 0.3, changeFrequency: "yearly" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

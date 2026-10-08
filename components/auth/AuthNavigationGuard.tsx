@@ -4,7 +4,9 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { getSelectedVenueLock, setSelectedVenueLock } from "@/lib/authFastPath";
+import { PLAYER_DELETE_ACCOUNT_PATH } from "@/lib/accountDeletionShared";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
+import { LEGAL_PAGE_PATHS } from "@/lib/legalInfo";
 import { isVenueScreenPath } from "@/lib/venueScreenPaths";
 
 function getVenueIdFromPath(pathname: string): string {
@@ -33,7 +35,11 @@ function isInSessionGameRoute(pathname: string): boolean {
     pathname.startsWith("/advertise") ||
     pathname.startsWith("/coming-soon") ||
     pathname.startsWith("/info") ||
-    pathname.startsWith("/category-blitz")
+    pathname.startsWith("/category-blitz") ||
+    pathname.startsWith(PLAYER_DELETE_ACCOUNT_PATH) ||
+    // Legal/support pages (native app store plan Phase 1a/1b): linked from the player drawer,
+    // so a signed-in player must not be bounced to their venue home when they open one.
+    LEGAL_PAGE_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
   );
 }
 

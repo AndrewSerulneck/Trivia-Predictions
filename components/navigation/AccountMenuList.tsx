@@ -1,7 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { SignOutButton } from "@/components/navigation/SignOutButton";
+import { marketingHref } from "@/lib/domainSplit";
+import { PLAYER_DELETE_ACCOUNT_PATH } from "@/lib/accountDeletionShared";
+import { LEGAL_LINKS } from "@/lib/legalInfo";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AccountMenuList — THE player account menu.
@@ -106,6 +110,31 @@ export function AccountMenuList({ onNavigate, hasUnclaimedPrize = false }: Accou
             </li>
           );
         })}
+        {/* Account deletion (Apple 5.1.1(v) / Google Play). Deliberately a quiet text
+            link, and kept away from Sign Out: the legal row and the divider sit between
+            them. The page behind it asks for typed confirmation. */}
+        <li className="!mt-4">
+          <Link
+            href={PLAYER_DELETE_ACCOUNT_PATH}
+            onClick={onNavigate}
+            className="text-footnote font-bold text-ht-fg-muted underline underline-offset-2 hover:text-rose-300"
+          >
+            Delete my account
+          </Link>
+        </li>
+        {/* Legal/support links: small, plain anchors (apex pages; a full navigation
+            is right because they live on a different host than the game). */}
+        <li className="!mt-4">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-footnote text-ht-fg-muted">
+            {LEGAL_LINKS.map((link) => (
+              <li key={link.href}>
+                <a href={marketingHref(link.href)} className="underline underline-offset-2 hover:text-ht-fg-secondary">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </li>
         {/* Below a divider — Sign Out is deliberately separated from the
             navigation items so it can never be tapped by muscle memory. */}
         <li className="!mt-4 border-t border-ht-border-hairline pt-4">

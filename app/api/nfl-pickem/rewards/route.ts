@@ -84,7 +84,8 @@ export async function GET(request: Request) {
             // String equality on a Postgres-returned timestamptz can't be trusted
             // to match a freshly-formatted toISOString() — compare parsed instants.
             const match = cycleWinners.find((winner) => Date.parse(winner.cycleStart) === cycleStartMs);
-            if (!match) {
+            // A winner who deleted their account keeps the slot but has no name to show.
+            if (!match?.winnerUserId) {
               return null;
             }
             return {

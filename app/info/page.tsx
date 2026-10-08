@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ContactForm } from "@/components/info/ContactForm";
 import { GameShowcaseBlock, type GameShowcase } from "@/components/info/AnnotatedScreenshot";
 import { gameHref } from "@/lib/domainSplit";
+import { LEGAL_LINKS } from "@/lib/legalInfo";
 import { signupEntryPath } from "@/lib/selfServeSignup";
 
 // Game CTAs point at the player game, which moves to `play.` under the domain
@@ -831,6 +832,13 @@ export default function InfoPage() {
             </div>
             <div className="border-t border-white/8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
               <p>© {new Date().getFullYear()} Hightop Challenge. All rights reserved.</p>
+              <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+                {LEGAL_LINKS.map((link) => (
+                  <a key={link.href} href={link.href} className="text-slate-400 hover:text-white transition-colors">
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
             </div>
           </div>
         </footer>

@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:account-deletion-sql": "PLAYER_DELETE_PGLITE_MODULE=../tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite node scripts/test-player-account-deletion.cjs",
     "test:god-mode-join": "vitest run tests/god-mode-join-contract.test.ts tests/lib.join-venue-entry.test.ts tests/api.join.venue-profile-with-account.test.ts tests/api.join.profile.test.ts tests/lib.venue-presence-god-mode.test.ts",
     "test:venue-fk-guard": "vitest run tests/lib.venue-fk-cascade-guard.test.ts",
     "test:pwa-contract": "vitest run tests/pwa-contract.test.ts",
