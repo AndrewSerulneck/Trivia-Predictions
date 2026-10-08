@@ -57,7 +57,7 @@ export const LiveTriviaLeaderboardRow = ({
         <div className="flex items-center gap-2">
           <span className="font-bold text-slate-100">{player.username}</span>
           {isViewer ? (
-            <span className="rounded bg-fuchsia-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
+            <span className="rounded bg-fuchsia-500 px-1.5 py-0.5 text-caption font-black uppercase tracking-wide text-white">
               You
             </span>
           ) : null}
@@ -66,7 +66,7 @@ export const LiveTriviaLeaderboardRow = ({
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: [0, 1.3, 1], opacity: 1 }}
               transition={{ duration: 0.4, ease: "easeOut", delay: 0.3 + index * 0.06 }}
-              className="inline-block text-[10px] font-black tabular-nums text-emerald-400"
+              className="inline-block text-caption font-black tabular-nums text-emerald-400"
             >
               ▲{movement}
             </motion.span>
@@ -75,7 +75,7 @@ export const LiveTriviaLeaderboardRow = ({
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: [0, 1.3, 1], opacity: 1 }}
               transition={{ duration: 0.4, ease: "easeOut", delay: 0.3 + index * 0.06 }}
-              className="inline-block text-[10px] font-black tabular-nums text-rose-400"
+              className="inline-block text-caption font-black tabular-nums text-rose-400"
             >
               ▼{Math.abs(movement)}
             </motion.span>

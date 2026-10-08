@@ -943,7 +943,7 @@ export function PredictionMarketList() {
           </p>
         ) : null}
         {limitPopups[market.id] ? (
-          <div className="pointer-events-none absolute right-3 top-3 z-20 max-w-[240px] rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-[11px] font-semibold text-rose-400 shadow-sm">
+          <div className="pointer-events-none absolute right-3 top-3 z-20 max-w-[240px] rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-caption font-semibold text-rose-400 shadow-sm">
             {limitPopups[market.id]}
           </div>
         ) : null}

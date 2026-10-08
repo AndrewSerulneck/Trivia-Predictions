@@ -38,7 +38,7 @@ export const ScheduleGameRow = ({
   const content = (
     <>
       <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-ht-elevated">
-        <span className="text-[10px] font-black uppercase tracking-wider text-ht-cyan-300">{chip.month}</span>
+        <span className="text-caption font-black uppercase tracking-wider text-ht-cyan-300">{chip.month}</span>
         <span className="ht-h2 leading-none">{chip.day}</span>
       </div>
       <div className="min-w-0 flex-1">
@@ -49,14 +49,14 @@ export const ScheduleGameRow = ({
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
           <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-[10.5px] font-black uppercase tracking-wider ${
+            className={`inline-flex rounded-full px-2.5 py-1 text-caption font-black uppercase tracking-wider ${
               ended ? "bg-ht-elevated text-ht-muted" : GAME_PILL_STYLES[schedule.gameType]
             }`}
           >
             {ended ? "Ended" : GAME_LABELS[schedule.gameType]}
           </span>
           {recurrence ? (
-            <span className="inline-flex rounded-full bg-ht-elevated px-2.5 py-1 text-[10.5px] font-black uppercase tracking-wider text-ht-muted">
+            <span className="inline-flex rounded-full bg-ht-elevated px-2.5 py-1 text-caption font-black uppercase tracking-wider text-ht-muted">
               🔁 {recurrence}
             </span>
           ) : null}

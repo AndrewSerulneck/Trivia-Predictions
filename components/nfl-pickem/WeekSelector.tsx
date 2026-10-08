@@ -34,7 +34,7 @@ export function WeekSelector({
       value={selectedWeekId}
       options={options}
       onChange={onSelect}
-      className="w-full rounded-xl border border-[#fde68a]/30 bg-slate-900 px-3 py-2.5 text-[13px] font-bold text-[#fde68a] focus:outline-none focus:ring-2 focus:ring-[#fde68a]/40"
+      className="w-full rounded-xl border border-[#fde68a]/30 bg-slate-900 px-3 py-2.5 text-footnote font-bold text-[#fde68a] focus:outline-none focus:ring-2 focus:ring-[#fde68a]/40"
       ariaLabel="Select week"
       size="sm"
     />

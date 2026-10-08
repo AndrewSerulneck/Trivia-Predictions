@@ -159,7 +159,7 @@ export const LiveCouponFrame = ({ children, clockOffsetMs, username, venueName }
             {holder.join(" · ")}
           </p>
         ) : null}
-        <p className="mt-2 text-[11px] leading-snug text-ht-fg-muted">
+        <p className="mt-2 text-caption leading-snug text-ht-fg-muted">
           Staff: tap the coupon — it should sparkle, and the clock should match the time now.
         </p>
       </div>

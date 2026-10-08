@@ -21,7 +21,7 @@ export function QuestionImage({ src, credit }: { src: string; credit?: string })
         style={{ maxHeight: isMap ? "248px" : "176px" }}
       />
       {displayCredit && loaded ? (
-        <p className="mt-1 text-right text-[9px] text-white/30">{displayCredit}</p>
+        <p className="mt-1 text-right text-caption text-white/30">{displayCredit}</p>
       ) : null}
     </div>
   );

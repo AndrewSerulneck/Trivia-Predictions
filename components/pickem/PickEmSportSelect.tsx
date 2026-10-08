@@ -108,7 +108,7 @@ export function PickEmSportSelect() {
                   <span className="mt-0.5 text-xs text-ht-fg-muted">{sport.subtitle}</span>
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+                  className={`rounded-full px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.08em] ${
                     sport.isClickable
                       ? "bg-emerald-500/15 text-emerald-400"
                       : "bg-ht-elevated text-ht-fg-muted"

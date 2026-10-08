@@ -139,11 +139,11 @@ const RoundStartReveal = ({
             onAnimationComplete={i === categories.length - 1 ? fire : undefined}
             className="relative flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/40 px-3 py-2.5"
           >
-            <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
+            <span className="w-5 shrink-0 text-center text-caption font-black text-slate-500">
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[0.68rem] font-black uppercase tracking-widest text-slate-400">
+              <p className="text-caption font-black uppercase tracking-widest text-slate-400">
                 {c}
               </p>
               <p className="mt-0.5 text-sm font-bold text-slate-600">{letter}…</p>

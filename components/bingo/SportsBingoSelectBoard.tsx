@@ -577,7 +577,7 @@ export function SportsBingoSelectBoard({
               <div
                 key={index}
                 title={square.label}
-                className={`flex aspect-square items-center justify-center rounded-md border px-1 text-center text-[8px] font-bold leading-tight [font-family:var(--ht-font-display)] ${getPreviewSquareStyle(
+                className={`flex aspect-square items-center justify-center rounded-md border px-1 text-center text-caption font-bold leading-tight [font-family:var(--ht-font-display)] ${getPreviewSquareStyle(
                   isFree
                 )}`}
               >
@@ -622,7 +622,7 @@ export function SportsBingoSelectBoard({
             return (
               <div
                 key={index}
-                className={`flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-bold leading-tight [font-family:var(--ht-font-display)] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getExpandedSquareStyle(
+                className={`flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-caption font-bold leading-tight [font-family:var(--ht-font-display)] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-caption ${getExpandedSquareStyle(
                   isFree
                 )}`}
               >
@@ -734,7 +734,7 @@ export function SportsBingoSelectBoard({
                 <p className="text-sm font-bold text-slate-200">{generatingLoader.title}</p>
                 <p className="mt-0.5 text-xs text-slate-400">{generatingLoader.subtitle}</p>
               </div>
-              <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${generatingLoader.badgeClassName}`}>
+              <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-caption font-bold uppercase tracking-[0.08em] ${generatingLoader.badgeClassName}`}>
                 Loading
               </span>
             </div>
@@ -801,7 +801,7 @@ export function SportsBingoSelectBoard({
                 <span>Close</span>
               </button>
             </div>
-            <p className="mb-2 mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-sky-300">
+            <p className="mb-2 mt-1 text-center text-caption font-semibold uppercase tracking-[0.08em] text-sky-300">
               Expanded Board Preview
             </p>
             {renderExpandedGrid(preview.squares)}

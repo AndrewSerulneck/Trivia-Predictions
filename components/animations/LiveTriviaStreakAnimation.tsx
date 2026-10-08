@@ -235,7 +235,7 @@ function StreakBadge() {
         <p
           style={{
             margin: "0.35rem 0 0",
-            fontSize: "0.875rem",
+            fontSize: "max(0.875rem, 13px)",
             fontWeight: 800,
             textTransform: "uppercase",
             letterSpacing: "0.18em",

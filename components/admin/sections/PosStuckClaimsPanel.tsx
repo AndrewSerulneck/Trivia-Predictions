@@ -145,13 +145,13 @@ export function PosStuckClaimsPanel() {
                   <tr key={row.ledgerId} className={TR}>
                     <td className={TD}>
                       <span className="font-medium text-slate-900">{row.venueName ?? row.venueId}</span>
-                      <span className="block text-[11px] text-slate-400">coupon {row.redemptionId ?? "deleted"}</span>
+                      <span className="block text-caption text-slate-400">coupon {row.redemptionId ?? "deleted"}</span>
                     </td>
                     <td className={TD}>
                       <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-semibold ${badge.className}`}>
                         {badge.label}
                       </span>
-                      <span className="block text-[11px] text-slate-400">ledger {row.status}</span>
+                      <span className="block text-caption text-slate-400">ledger {row.status}</span>
                     </td>
                     <td className={`${TD} text-slate-600`}>{formatDollars(row.amountCents)}</td>
                     <td className={`${TD} max-w-xs text-xs text-slate-600`}>

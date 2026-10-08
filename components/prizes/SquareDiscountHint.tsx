@@ -54,7 +54,7 @@ export const SquareDiscountHint = ({ win, userId, venueId }: SquareDiscountHintP
       data-square-discount
       className="rounded-2xl border border-emerald-500/40 bg-emerald-950/60 p-4 text-left space-y-1.5"
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/80">For staff · Square register</p>
+      <p className="text-caption font-bold uppercase tracking-[0.2em] text-emerald-400/80">For staff · Square register</p>
       <p className="text-xs text-emerald-200/80">In Square, add this discount to the sale:</p>
       <p className="text-base font-black leading-snug text-emerald-100">{name}</p>
       <p className="text-xs text-emerald-200/80">Square takes off the right amount. Then tap &ldquo;Confirm Redemption&rdquo;.</p>

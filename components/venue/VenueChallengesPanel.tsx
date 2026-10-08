@@ -40,7 +40,7 @@ function VenueChallengesPanelInner({
       <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
         <div className="mx-auto w-full max-w-[26rem] space-y-3">
           <div>
-            <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-400">
+            <p className="mb-3 text-caption font-black uppercase tracking-[0.14em] text-cyan-400">
               {isChallengesLoading
                 ? "Rewards"
                 : challengeCards.length > 0
@@ -125,7 +125,7 @@ function VenueChallengesPanelInner({
                       <ChallengeIconBadge gameType={gameType} />
                       <div className="min-w-0 flex-1">
                         {gameLabel ? (
-                          <div className="text-[11px] font-black uppercase leading-tight tracking-[0.14em] text-slate-400">
+                          <div className="text-caption font-black uppercase leading-tight tracking-[0.14em] text-slate-400">
                             {gameLabel}
                           </div>
                         ) : null}
@@ -235,7 +235,7 @@ function VenueChallengesPanelInner({
                 <button
                   type="button"
                   onClick={onRetryChallenges}
-                  className="rounded-md border border-rose-400/60 bg-rose-950/30 px-2 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-rose-300"
+                  className="rounded-md border border-rose-400/60 bg-rose-950/30 px-2 py-1 text-caption font-black uppercase tracking-[0.08em] text-rose-300"
                 >
                   {challengesError} Tap to retry
                 </button>

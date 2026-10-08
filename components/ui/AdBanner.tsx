@@ -93,10 +93,10 @@ export function AdBanner({ ad, variant = "default" }: { ad: Advertisement; varia
       }
     >
       <div className={isAdhesion ? "mb-1 flex items-center justify-between" : "mb-2 flex items-center justify-between"}>
-        <p className={isAdhesion ? "text-[9px] font-semibold uppercase tracking-wide text-ht-fg-muted" : "text-[10px] font-semibold uppercase tracking-wide text-ht-fg-muted"}>
+        <p className={isAdhesion ? "text-caption font-semibold uppercase tracking-wide text-ht-fg-muted" : "text-caption font-semibold uppercase tracking-wide text-ht-fg-muted"}>
           Sponsored
         </p>
-        <span className="rounded bg-indigo-500/15 px-1.5 py-0.5 font-mono text-[10px] font-bold text-indigo-300">
+        <span className="rounded bg-indigo-500/15 px-1.5 py-0.5 font-mono text-caption font-bold text-indigo-300">
           {slotLabel}
         </span>
       </div>

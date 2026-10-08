@@ -153,14 +153,14 @@ const DevAnimationPanel = () => {
         {open && (
           <>
             <div className="flex flex-col gap-1 border-b border-amber-400/20 px-2 pb-2 pt-1">
-              <p className="text-[0.65rem] font-black uppercase tracking-wide text-slate-400">Live mode-flip variant</p>
+              <p className="text-caption font-black uppercase tracking-wide text-slate-400">Live mode-flip variant</p>
               <div className="flex gap-1">
                 {MODE_FLIP_VARIANTS.map((v) => (
                   <button
                     key={v}
                     type="button"
                     onClick={() => { setModeFlipTakeoverVariant(v); setLiveVariant(v); }}
-                    className={`flex-1 rounded px-1.5 py-1 text-[0.65rem] font-bold ${
+                    className={`flex-1 rounded px-1.5 py-1 text-caption font-bold ${
                       liveVariant === v ? "bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                     }`}
                   >

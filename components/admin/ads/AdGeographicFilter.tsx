@@ -38,7 +38,7 @@ function countKey(level: AdGeoSelectionLevel, parts: string[]): string {
 }
 
 function CountBadge({ value }: { value: number }) {
-  return <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">{value}</span>;
+  return <span className="rounded-full bg-slate-100 px-2 py-0.5 text-caption text-slate-600">{value}</span>;
 }
 
 function Arrow({ open }: { open: boolean }) {

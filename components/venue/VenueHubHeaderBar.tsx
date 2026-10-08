@@ -52,7 +52,7 @@ function VenueHubHeaderBarInner({
               <button
                 type="button"
                 onClick={() => onGoToScreen(0)}
-                className={`tp-clean-button tp-player-hit-target tp-player-pressable rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                className={`tp-clean-button tp-player-hit-target tp-player-pressable rounded-full px-2 py-2 text-caption font-black uppercase tracking-[0.08em] ${
                   activeScreen === 0 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
                 }`}
               >
@@ -61,7 +61,7 @@ function VenueHubHeaderBarInner({
               <button
                 type="button"
                 onClick={() => onGoToScreen(1)}
-                className={`tp-clean-button tp-player-hit-target tp-player-pressable rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                className={`tp-clean-button tp-player-hit-target tp-player-pressable rounded-full px-2 py-2 text-caption font-black uppercase tracking-[0.08em] ${
                   activeScreen === 1 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
                 }`}
               >
@@ -70,13 +70,13 @@ function VenueHubHeaderBarInner({
               <button
                 type="button"
                 onClick={() => onGoToScreen(2)}
-                className={`tp-clean-button tp-player-hit-target tp-player-pressable relative rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                className={`tp-clean-button tp-player-hit-target tp-player-pressable relative rounded-full px-2 py-2 text-caption font-black uppercase tracking-[0.08em] ${
                   activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
                 }`}
               >
                 Rewards
                 {challengeBadgeCount > 0 ? (
-                  <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black leading-none text-white">
+                  <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-caption font-black leading-none text-white">
                     {formatBadgeCount(challengeBadgeCount)}
                   </span>
                 ) : null}

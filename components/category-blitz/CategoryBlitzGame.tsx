@@ -456,7 +456,7 @@ function CategoryBlitzLayoutDebugPanel({ phase }: { phase?: CategoryBlitzPhase }
   return (
     <div
       data-category-blitz-layout-debug
-      className="fixed right-2 top-[max(env(safe-area-inset-top),0.5rem)] z-[99999] max-w-[18rem] rounded-lg border border-cyan-300/50 bg-slate-950/90 px-2 py-2 font-mono text-[10px] leading-tight text-cyan-100 shadow-2xl"
+      className="fixed right-2 top-[max(env(safe-area-inset-top),0.5rem)] z-[99999] max-w-[18rem] rounded-lg border border-cyan-300/50 bg-slate-950/90 px-2 py-2 font-mono text-caption leading-tight text-cyan-100 shadow-2xl"
     >
       <p>v {snapshot.version}</p>
       <p>phase {snapshot.phase}</p>
@@ -599,7 +599,7 @@ function InviteBanner({ playerCount }: { playerCount?: number }) {
       : `Playing with ${playerCount} friends — you'll score in Majority Rules rounds by matching answers, but other rounds need 3+ players. Invite a friend!`;
 
   return (
-    <div className="mx-auto w-full max-w-sm rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-center text-[0.65rem] font-semibold leading-snug text-amber-200/90">
+    <div className="mx-auto w-full max-w-sm rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-center text-caption font-semibold leading-snug text-amber-200/90">
       {message}
     </div>
   );
@@ -1000,7 +1000,7 @@ function CompleteScreen({
           <p className={`text-3xl font-black tabular-nums leading-none ${TEXT_ACCENT}`}>
             {viewerEntry?.points ?? 0}
           </p>
-          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-600/80">Points</p>
+          <p className="text-caption font-black uppercase tracking-[0.12em] text-emerald-600/80">Points</p>
         </div>
       </div>
 
@@ -1027,7 +1027,7 @@ function CompleteScreen({
                 <RankBadge rank={entry.rank} />
                 <p className="w-full truncate text-xs font-bold text-slate-100">
                   {entry.username}
-                  {isMe && <span className="ml-1 text-[9px] font-black uppercase text-emerald-400/80">you</span>}
+                  {isMe && <span className="ml-1 text-caption font-black uppercase text-emerald-400/80">you</span>}
                 </p>
                 <p className="text-lg font-black tabular-nums text-white">{entry.points}</p>
               </div>
@@ -1040,7 +1040,7 @@ function CompleteScreen({
             <RankBadge rank={viewerRank + 1} />
             <span className="min-w-0 flex-1 truncate text-sm font-bold text-emerald-100">
               {viewerEntry.username}
-              <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400/70">you</span>
+              <span className="ml-1.5 text-caption font-bold uppercase tracking-wide text-emerald-400/70">you</span>
             </span>
             <span className="shrink-0 text-base font-black tabular-nums text-white">{viewerEntry.points}</span>
           </div>
@@ -1059,13 +1059,13 @@ function CompleteScreen({
                 : "—"
               : "—"}
           </span>
-          <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Rank Gained</span>
+          <span className="mt-0.5 text-caption font-black uppercase tracking-[0.1em] text-emerald-600">Rank Gained</span>
         </div>
         <div className="flex flex-col items-center rounded-2xl border border-cyan-400/30 bg-cyan-600/15 py-3">
           <span className="text-xl font-black tabular-nums text-cyan-300">
             {viewerRank > -1 ? `#${viewerRank + 1}` : "—"}
           </span>
-          <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Final Rank</span>
+          <span className="mt-0.5 text-caption font-black uppercase tracking-[0.1em] text-cyan-600">Final Rank</span>
         </div>
       </div>
 
@@ -1185,7 +1185,7 @@ function ResultsScreen({
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-[0.7rem] font-black uppercase tracking-widest text-slate-400">
+                  <p className="text-caption font-black uppercase tracking-widest text-slate-400">
                     {cat.category}
                   </p>
                   {viewerAnswer ? (
@@ -1207,7 +1207,7 @@ function ResultsScreen({
                   )}
                   {viewerAnswer && reason && reason !== "correct" ? (
                     <div>
-                      <p className={`mt-0.5 text-[0.65rem] font-semibold ${
+                      <p className={`mt-0.5 text-caption font-semibold ${
                         reason === "insufficient_players"
                           ? "text-amber-300/80"
                           : reason === "too_obscure"
@@ -1217,7 +1217,7 @@ function ResultsScreen({
                         {REASON_LABEL[reason] ?? reason}
                       </p>
                       {viewerAnswer.explanation && (
-                        <p className="mt-0.5 text-[0.6rem] leading-snug text-slate-500">
+                        <p className="mt-0.5 text-caption leading-snug text-slate-500">
                           {viewerAnswer.explanation}
                         </p>
                       )}
@@ -1226,31 +1226,31 @@ function ResultsScreen({
                 </div>
                 <div className="shrink-0 text-right">
                   {reason === "correct" ? (
-                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[0.65rem] font-black ${
+                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-caption font-black ${
                       glow ? glow.badge : "border-emerald-400/50 bg-emerald-500/20 text-emerald-300"
                     }`}>
                       +{viewerAnswer?.pointsAwarded ?? 0}
                     </span>
                   ) : reason === "too_obscure" ? (
-                    <span className="inline-flex items-center rounded-md border border-slate-600 bg-slate-700/30 px-2 py-0.5 text-[0.65rem] font-black text-slate-300">
+                    <span className="inline-flex items-center rounded-md border border-slate-600 bg-slate-700/30 px-2 py-0.5 text-caption font-black text-slate-300">
                       +{viewerAnswer?.pointsAwarded ?? 0}
                     </span>
                   ) : reason === "wrong_letter" ? (
-                    <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[0.65rem] font-black text-rose-400">
+                    <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-caption font-black text-rose-400">
                       wrong letter
                     </span>
                   ) : reason === "invalid" ? (
-                    <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[0.65rem] font-black text-rose-400">
+                    <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-caption font-black text-rose-400">
                       invalid
                     </span>
                   ) : reason === "moderated" ? (
-                    <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[0.65rem] font-black text-rose-400">
+                    <span className="inline-flex items-center rounded-md border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-caption font-black text-rose-400">
                       flagged
                     </span>
                   ) : reason === "duplicate" ? (
-                    <span className="text-[0.65rem] font-black text-slate-500">dup</span>
+                    <span className="text-caption font-black text-slate-500">dup</span>
                   ) : reason === "insufficient_players" ? (
-                    <span className="inline-flex items-center rounded-md border border-amber-400/50 bg-amber-500/20 px-2 py-0.5 text-[0.65rem] font-black text-amber-300">
+                    <span className="inline-flex items-center rounded-md border border-amber-400/50 bg-amber-500/20 px-2 py-0.5 text-caption font-black text-amber-300">
                       no contest
                     </span>
                   ) : null}
@@ -1264,7 +1264,7 @@ function ResultsScreen({
                     .map((a) => (
                       <span
                         key={a.userId}
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-[0.6rem] font-semibold ${
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-caption font-semibold ${
                           a.isUnique
                             ? (isReverse ? "border-fuchsia-700/50 text-fuchsia-400/70" : "border-emerald-700/50 text-emerald-400/70")
                             : "border-slate-700 text-slate-600"
@@ -1399,11 +1399,11 @@ const AnswerRow = memo(function AnswerRow({
     >
       {/* Valid answer glow + checkmark pop feedback */}
       {isValid ? <ValidAnswerGlow key={glowToken} /> : null}
-      <span className="w-5 shrink-0 text-center text-[0.65rem] font-black text-slate-500">
+      <span className="w-5 shrink-0 text-center text-caption font-black text-slate-500">
         {index + 1}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[0.68rem] font-black uppercase tracking-widest text-slate-400">
+        <p className="text-caption font-black uppercase tracking-widest text-slate-400">
           {category}
         </p>
         <input
@@ -1453,7 +1453,7 @@ const AnswerRow = memo(function AnswerRow({
         />
       </div>
       {wrongLetter && (
-        <span className="shrink-0 text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
+        <span className="shrink-0 text-caption font-black uppercase tracking-widest text-rose-400">
           wrong letter
         </span>
       )}
@@ -1957,7 +1957,7 @@ export const AnsweringScreen = memo(function AnsweringScreen({
             transition={CHROME_ENTRANCE_TRANSITION}
           >
             <TimerUrgency timeRemaining={timeRemaining} label={formatMmSs(timeRemaining)} />
-            <p className="text-[0.6rem] font-black uppercase tracking-widest text-slate-500">remaining</p>
+            <p className="text-caption font-black uppercase tracking-widest text-slate-500">remaining</p>
           </motion.div>
         </div>
         {/* Progress bar */}
@@ -2094,7 +2094,7 @@ function Header({
       <div className="flex items-center gap-2">
         {onBack ? <ExitBackButton onExit={onBack} label="Back to venue" /> : null}
         {error && (
-          <span className="ml-auto text-[0.6rem] font-black uppercase tracking-widest text-rose-400">
+          <span className="ml-auto text-caption font-black uppercase tracking-widest text-rose-400">
             Reconnecting…
           </span>
         )}

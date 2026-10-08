@@ -125,7 +125,7 @@ export function SignupShell({
           label={exitLabel}
           {...(onExit ? { onExit } : {})}
         />
-        <span className="text-[11px] font-black uppercase tracking-[0.14em] text-ht-fg-dim">
+        <span className="text-caption font-black uppercase tracking-[0.14em] text-ht-fg-dim">
           Step {stepNumber} of {stepCount}
         </span>
       </div>

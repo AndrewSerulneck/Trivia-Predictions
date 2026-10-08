@@ -88,7 +88,7 @@ const bannerStyles = {
   warn: "bg-ht-amber-500/15 text-ht-amber-300",
 };
 
-const cardLabelClass = "text-[11px] font-black uppercase tracking-wider text-ht-muted";
+const cardLabelClass = "text-caption font-black uppercase tracking-wider text-ht-muted";
 
 const OwnerBillingPage = () => {
   const router = useRouter();

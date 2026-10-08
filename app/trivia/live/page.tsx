@@ -1317,11 +1317,11 @@ function LiveShowdownPageContent() {
                         className="h-12 w-12 shrink-0 rounded-xl object-cover"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">
+                        <p className="text-caption font-black uppercase tracking-[0.14em] text-amber-500">
                           {postGameLeaderboard.isChampion ? "Game Over · Champion" : "Game Over"}
                         </p>
                         <p className="truncate text-xl font-black leading-tight text-white">{viewerUsername}</p>
-                        <p className="truncate text-[11px] text-slate-500">
+                        <p className="truncate text-caption text-slate-500">
                           {state.venueName ?? state.scheduleTitle ?? "Live Trivia Showdown"}
                           {state.totalRounds
                             ? ` · ${state.totalRounds * QUESTIONS_PER_ROUND} questions · ${state.totalRounds} round${
@@ -1334,13 +1334,13 @@ function LiveShowdownPageContent() {
                         <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
                           {postGameLeaderboard.viewerScore}
                         </p>
-                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
+                        <p className="text-caption font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
                       </div>
                     </div>
 
                     {/* Section 2 — Final standings podium (left = 2nd, center = 1st, right = 3rd) */}
                     <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-4">
-                      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Final Standings</p>
+                      <p className="mb-3 text-caption font-black uppercase tracking-[0.14em] text-slate-500">Final Standings</p>
                       <div className="flex items-end justify-center gap-2">
                         {[postGameLeaderboard.podium[1], postGameLeaderboard.podium[0], postGameLeaderboard.podium[2]].map(
                           (entry, slot) => {
@@ -1364,7 +1364,7 @@ function LiveShowdownPageContent() {
                                 className={`flex flex-1 flex-col items-center justify-end rounded-xl border px-2 pb-3 pt-3 text-center ${cardClass}`}
                               >
                                 <span
-                                  className={`inline-flex items-center justify-center rounded-md px-2 py-0.5 text-[10px] font-black tracking-wider ${badgeClass}`}
+                                  className={`inline-flex items-center justify-center rounded-md px-2 py-0.5 text-caption font-black tracking-wider ${badgeClass}`}
                                 >
                                   {ordinal}
                                 </span>
@@ -1390,7 +1390,7 @@ function LiveShowdownPageContent() {
                     {/* Section 3 — Your round-by-round */}
                     {state.viewerRoundByRound && state.viewerRoundByRound.length > 0 ? (
                       <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-4">
-                        <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                        <p className="mb-3 text-caption font-black uppercase tracking-[0.14em] text-slate-500">
                           Your Round-by-Round{state.viewerRank ? ` · #${state.viewerRank}` : ""}
                         </p>
                         <div className="space-y-4">
@@ -1403,7 +1403,7 @@ function LiveShowdownPageContent() {
                                   <div className="min-w-0">
                                     <p className="text-sm font-black text-slate-200">Round {round.roundNumber}</p>
                                     {round.category ? (
-                                      <p className="truncate text-[11px] text-slate-500">{round.category}</p>
+                                      <p className="truncate text-caption text-slate-500">{round.category}</p>
                                     ) : null}
                                   </div>
                                   <span className="shrink-0 text-xl font-black tabular-nums text-slate-100">{round.points}</span>
@@ -1414,7 +1414,7 @@ function LiveShowdownPageContent() {
                                     style={{ width: `${pct}%` }}
                                   />
                                 </div>
-                                <p className="mt-1 text-[11px] text-slate-600">
+                                <p className="mt-1 text-caption text-slate-600">
                                   {round.correctCount} of {QUESTIONS_PER_ROUND} correct
                                 </p>
                               </div>
@@ -1436,15 +1436,15 @@ function LiveShowdownPageContent() {
                               : "—"
                             : "—"}
                         </span>
-                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Rank Gained</span>
+                        <span className="mt-0.5 text-caption font-black uppercase tracking-[0.1em] text-emerald-600">Rank Gained</span>
                       </div>
                       <div className="flex flex-col items-center rounded-2xl border border-cyan-400/30 bg-cyan-600/15 py-3">
                         <span className="text-xl font-black tabular-nums text-cyan-300">{postGameLeaderboard.correctRate}%</span>
-                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Correct Rate</span>
+                        <span className="mt-0.5 text-caption font-black uppercase tracking-[0.1em] text-cyan-600">Correct Rate</span>
                       </div>
                       <div className="flex flex-col items-center rounded-2xl border border-amber-400/30 bg-amber-900/20 py-3">
                         <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
-                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
+                        <span className="mt-0.5 text-caption font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
                       </div>
                     </div>
 
@@ -1481,9 +1481,9 @@ function LiveShowdownPageContent() {
                         ⭐
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
+                        <p className="text-caption font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
                         <p className="truncate text-xl font-black leading-tight text-white">{viewerUsername}</p>
-                        <p className="truncate text-[11px] text-slate-500">
+                        <p className="truncate text-caption text-slate-500">
                           {state.venueName ?? state.scheduleTitle ?? "Live Trivia Showdown"}
                           {state.totalRounds
                             ? ` · ${state.totalRounds * QUESTIONS_PER_ROUND} questions · ${state.totalRounds} round${
@@ -1496,7 +1496,7 @@ function LiveShowdownPageContent() {
                         <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
                           {postGameStats.correct * 10}
                         </p>
-                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
+                        <p className="text-caption font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
                       </div>
                     </div>
 
@@ -1506,7 +1506,7 @@ function LiveShowdownPageContent() {
                         className="rounded-2xl px-4 py-4"
                         style={{ background: "#111827", border: "1px solid rgba(51,65,85,0.7)" }}
                       >
-                        <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                        <p className="mb-3 text-caption font-black uppercase tracking-[0.14em] text-slate-500">
                           Your Round-by-Round
                         </p>
                         <div className="space-y-4">
@@ -1533,7 +1533,7 @@ function LiveShowdownPageContent() {
                                       style={{ width: `${pct}%`, background: barBg }}
                                     />
                                   </div>
-                                  <p className="mt-1 text-[11px] text-slate-600">
+                                  <p className="mt-1 text-caption text-slate-600">
                                     {data.correct} of {data.total} correct
                                   </p>
                                 </div>
@@ -1550,21 +1550,21 @@ function LiveShowdownPageContent() {
                         style={{ background: "rgba(5,150,105,0.15)", border: "1px solid rgba(52,211,153,0.3)" }}
                       >
                         <span className="text-xl font-black tabular-nums text-emerald-300">{postGameStats.correctRate}%</span>
-                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Correct Rate</span>
+                        <span className="mt-0.5 text-caption font-black uppercase tracking-[0.1em] text-emerald-600">Correct Rate</span>
                       </div>
                       <div
                         className="flex flex-col items-center rounded-2xl py-3"
                         style={{ background: "rgba(8,145,178,0.15)", border: "1px solid rgba(34,211,238,0.3)" }}
                       >
                         <span className="text-xl font-black tabular-nums text-cyan-300">{postGameStats.total}</span>
-                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Answered</span>
+                        <span className="mt-0.5 text-caption font-black uppercase tracking-[0.1em] text-cyan-600">Answered</span>
                       </div>
                       <div
                         className="flex flex-col items-center rounded-2xl py-3"
                         style={{ background: "rgba(120,53,15,0.2)", border: "1px solid rgba(251,191,36,0.3)" }}
                       >
                         <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
-                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
+                        <span className="mt-0.5 text-caption font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
                       </div>
                     </div>
 
@@ -1839,7 +1839,7 @@ function LiveShowdownPageContent() {
             {/* Header: round label + title + break countdown (no card border — sits on page bg) */}
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-fuchsia-400">
+                <p className="text-caption font-black uppercase tracking-[0.16em] text-fuchsia-400">
                   {typeof state.currentRound === "number" && state.totalRounds
                     ? `Round ${state.currentRound} of ${state.totalRounds} · Intermission`
                     : "Intermission"}
@@ -1849,7 +1849,7 @@ function LiveShowdownPageContent() {
                 </p>
               </div>
               <div className="shrink-0 pt-0.5 text-right">
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-500">Break</p>
+                <p className="text-caption font-black uppercase tracking-[0.16em] text-amber-500">Break</p>
                 <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
                   {formatMmSs(state.secondsRemaining)}
                 </p>
@@ -1860,14 +1860,14 @@ function LiveShowdownPageContent() {
             {(typeof state.currentRound === "number" || typeof state.upcomingRoundNumber === "number") ? (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {typeof state.currentRound === "number" ? (
-                  <div className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">
+                  <div className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-caption font-black uppercase tracking-[0.1em] text-slate-400">
                     R{state.currentRound}
                     {state.currentRoundCategory ? <span className="ml-1 text-slate-500">· {state.currentRoundCategory}</span> : null}
                   </div>
                 ) : null}
                 {typeof state.upcomingRoundNumber === "number" ? (
                   <div
-                    className="flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-black uppercase tracking-[0.1em] text-fuchsia-200"
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-caption font-black uppercase tracking-[0.1em] text-fuchsia-200"
                     style={{ borderColor: "rgba(168,85,247,0.6)", background: "rgba(88,28,135,0.35)" }}
                   >
                     R{state.upcomingRoundNumber}
@@ -1890,13 +1890,13 @@ function LiveShowdownPageContent() {
                 className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900"
               >
                 <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Leaderboard</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">This game only</p>
+                  <p className="text-caption font-black uppercase tracking-[0.16em] text-slate-400">Leaderboard</p>
+                  <p className="text-caption font-bold uppercase tracking-[0.12em] text-slate-600">This game only</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-left text-sm">
                     <thead>
-                      <tr className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
+                      <tr className="text-caption font-black uppercase tracking-[0.1em] text-slate-500">
                         <th className="px-3 py-2">Rank</th>
                         <th className="px-3 py-2">Player</th>
                         {Array.from({ length: state.currentRound ?? 0 }, (_, i) => (
@@ -1925,7 +1925,7 @@ function LiveShowdownPageContent() {
                 {state.viewerRank && state.viewerRank > 10 ? (
                   <div className="flex items-center gap-2 border-t border-slate-800 bg-fuchsia-950/30 px-3 py-2.5 ring-1 ring-inset ring-fuchsia-500/50">
                     <RankBadge rank={state.viewerRank} />
-                    <span className="rounded bg-fuchsia-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
+                    <span className="rounded bg-fuchsia-500 px-1.5 py-0.5 text-caption font-black uppercase tracking-wide text-white">
                       You
                     </span>
                     <span className="text-xs font-semibold text-slate-400">

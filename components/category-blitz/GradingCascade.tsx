@@ -195,7 +195,7 @@ const Row = ({ data, shown, reduce }: RowProps) => {
       {isCorrect && <CorrectBurst points={`+${data.points}`} />}
 
       <div className={resolved ? "tp-verdict-pop" : ""}>
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+        <p className="text-caption font-semibold uppercase tracking-widest text-slate-400">
           {data.category}
         </p>
 
@@ -227,7 +227,7 @@ const Row = ({ data, shown, reduce }: RowProps) => {
                   />
                 ) : (
                   <span
-                    className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                    className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-caption font-bold uppercase tracking-wide ${
                       glow ? glow.badge : meta?.badge ?? ""
                     }`}
                   >
@@ -238,7 +238,7 @@ const Row = ({ data, shown, reduce }: RowProps) => {
               </div>
             </div>
             {(isDup || isTooObscure || (isCorrect && data.mode === "reverse")) && data.explanation && (
-              <p className="mt-1 text-[0.65rem] leading-snug text-slate-500">
+              <p className="mt-1 text-caption leading-snug text-slate-500">
                 {data.explanation}
               </p>
             )}

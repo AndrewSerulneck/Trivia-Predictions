@@ -1304,7 +1304,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                     <td className={TD}>
                       <span className="font-medium text-slate-900">{c.name}</span>
                       {c.winCondition === "game_winner" ? (
-                        <span className="ml-2 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                        <span className="ml-2 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-caption font-semibold uppercase tracking-wide text-amber-700">
                           Game Winner
                         </span>
                       ) : null}

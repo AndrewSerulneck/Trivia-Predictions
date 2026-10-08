@@ -89,39 +89,39 @@ export function NFLPickEmRewardBanner() {
           >
             <div className="flex items-center gap-2">
               <span className="text-lg">🏆</span>
-              <h2 className="text-[13px] font-black uppercase tracking-[0.1em] text-[#fde68a]">
+              <h2 className="text-footnote font-black uppercase tracking-[0.1em] text-[#fde68a]">
                 {campaign.name}
               </h2>
             </div>
             {prize ? <p className="mt-1.5 text-[15px] font-black text-white">{prize}</p> : null}
             {summary ? (
-              <p className="mt-1 text-[12px] font-semibold leading-relaxed text-slate-400">{summary}</p>
+              <p className="mt-1 text-caption font-semibold leading-relaxed text-slate-400">{summary}</p>
             ) : null}
 
             {isWon ? (
-              <p className="mt-3 text-[12px] font-bold text-amber-300">
+              <p className="mt-3 text-caption font-bold text-amber-300">
                 You won! Find your coupon under Redeem Prizes.
               </p>
             ) : isExhausted ? (
-              <p className="mt-3 text-[12px] font-semibold text-slate-500">
+              <p className="mt-3 text-caption font-semibold text-slate-500">
                 All prizes for this cycle have been claimed — check back next cycle.
               </p>
             ) : isGameWinner ? (
               <div className="mt-3 space-y-1.5">
                 {participantCount !== null ? (
                   belowMinimum ? (
-                    <p className="text-[12px] font-bold text-amber-300">
+                    <p className="text-caption font-bold text-amber-300">
                       {participantCount} of {NFL_REWARD_MIN_PICKERS} players needed — at least{" "}
                       {NFL_REWARD_MIN_PICKERS} people must make picks this week for a winner to be crowned. Tell a
                       friend!
                     </p>
                   ) : (
-                    <p className="text-[12px] font-bold text-emerald-300">
+                    <p className="text-caption font-bold text-emerald-300">
                       {participantCount} players in — a winner will be crowned this week.
                     </p>
                   )
                 ) : null}
-                <p className="text-[11px] text-slate-500">
+                <p className="text-caption text-slate-500">
                   Tied on correct picks? The tiebreaker question decides it.
                 </p>
               </div>
@@ -133,7 +133,7 @@ export function NFLPickEmRewardBanner() {
                     style={{ width: `${percent}%` }}
                   />
                 </div>
-                <p className="mt-1.5 text-[12px] font-semibold tabular-nums text-slate-400">
+                <p className="mt-1.5 text-caption font-semibold tabular-nums text-slate-400">
                   {progress.toLocaleString()} of {target.toLocaleString()} picks right
                 </p>
               </div>

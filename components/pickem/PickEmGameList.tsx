@@ -829,7 +829,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           >
             Hightop Pick &apos;Em
           </h2>
-          <p className="mt-2 text-[13px] font-semibold leading-relaxed text-slate-400">
+          <p className="mt-2 text-footnote font-semibold leading-relaxed text-slate-400">
             Select winners by checking a team. Picks lock at scheduled start time and are final.
           </p>
 
@@ -843,9 +843,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             }`}
           >
             <div className="flex items-center justify-between border-b border-[#fde68a]/20 bg-black/20 px-3 py-1.5">
-              <span className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Pick Tracker</span>
+              <span className="text-caption font-black uppercase tracking-[0.16em] text-slate-400">Pick Tracker</span>
               <span
-                className={`text-[9px] font-black uppercase tracking-[0.16em] ${
+                className={`text-caption font-black uppercase tracking-[0.16em] ${
                   pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-[#fde68a]"
                 } ${pickCount >= PICKEM_PICK_LIMIT && limitPulse ? "pickem-limit-pulse" : ""}`}
               >
@@ -877,7 +877,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                 }`}
               >
                 {pickCount}
-                <span className="text-[11px] font-semibold text-slate-400">/{PICKEM_PICK_LIMIT}</span>
+                <span className="text-caption font-semibold text-slate-400">/{PICKEM_PICK_LIMIT}</span>
               </motion.span>
             </div>
           </motion.div>
@@ -925,7 +925,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             </div>
 
             {!userId || !venueId ? (
-              <span className="rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-300">
+              <span className="rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.08em] text-amber-300">
                 Browse only
               </span>
             ) : null}
@@ -999,8 +999,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           ) : (
             <section className="space-y-3">
               <div className="flex items-end justify-between gap-2">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Your Picks</h3>
-                <span className="text-[10px] font-bold tracking-[0.03em] text-slate-500">{historicalPicks.length} picks</span>
+                <h3 className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">Your Picks</h3>
+                <span className="text-caption font-bold tracking-[0.03em] text-slate-500">{historicalPicks.length} picks</span>
               </div>
               <ul className="space-y-2.5">
                 {historicalPicks.map((pick) => {
@@ -1019,13 +1019,13 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                           <span className="mr-1" aria-hidden="true">{getSportIcon(pick.sportSlug)}</span>
                           {pick.league}
                         </p>
-                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] ${statusClass}`}>
+                        <span className={`rounded-full border px-2 py-0.5 text-caption font-black uppercase tracking-[0.08em] ${statusClass}`}>
                           {pick.status}
                         </span>
                       </div>
                       <p className="mt-1 text-xs font-semibold text-slate-300">{pick.awayTeam} at {pick.homeTeam}</p>
-                      <p className="mt-1 text-[11px] text-slate-500">{formatLocalStartTime(pick.startsAt)}</p>
-                      <p className="mt-1.5 text-[11px] font-semibold text-slate-400">Your pick: {pick.selectedTeam}</p>
+                      <p className="mt-1 text-caption text-slate-500">{formatLocalStartTime(pick.startsAt)}</p>
+                      <p className="mt-1.5 text-caption font-semibold text-slate-400">Your pick: {pick.selectedTeam}</p>
                     </li>
                   );
                 })}
@@ -1051,8 +1051,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             {grouped.map(([league, leagueGames]) => (
               <section key={league}>
                 <div className="mb-2 flex items-end justify-between">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</h3>
-                  <span className="text-[10px] font-bold tracking-[0.03em] text-slate-500">{leagueGames.length} games</span>
+                  <h3 className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</h3>
+                  <span className="text-caption font-bold tracking-[0.03em] text-slate-500">{leagueGames.length} games</span>
                 </div>
 
                 <ul className="space-y-2.5">
@@ -1078,9 +1078,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                       <Fragment key={game.id}>
                         <li className="overflow-hidden rounded-xl border border-[#fde68a]/45 bg-[linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)]">
                           <div className="flex items-center justify-between border-b border-dashed border-[#fde68a]/45 px-4 py-2">
-                            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</span>
+                            <span className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</span>
                             <span
-                              className={`inline-flex items-center gap-1 text-[11px] font-extrabold ${
+                              className={`inline-flex items-center gap-1 text-caption font-extrabold ${
                                 game.status === "live" ? "text-emerald-300" : "text-slate-300"
                               }`}
                             >
@@ -1197,7 +1197,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
 
                           {resultLabel(game) ? (
                             <div
-                              className={`px-4 py-1.5 text-[11px] font-extrabold tracking-[0.04em] ${
+                              className={`px-4 py-1.5 text-caption font-extrabold tracking-[0.04em] ${
                                 game.userPickStatus === "won"
                                   ? "bg-emerald-500/15 text-emerald-300"
                                   : "bg-rose-500/15 text-rose-300"

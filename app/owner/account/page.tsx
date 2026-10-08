@@ -40,7 +40,7 @@ type FormFeedback = {
 };
 
 const cardClass = "rounded-2xl border border-ht-hairline bg-ht-surface p-5 shadow-ht-card";
-const labelClass = "text-[11px] font-black uppercase tracking-wider text-ht-muted";
+const labelClass = "text-caption font-black uppercase tracking-wider text-ht-muted";
 const inputClass =
   "min-h-11 w-full rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 text-sm font-semibold text-ht-primary outline-none transition focus:border-ht-cyan-400";
 const primaryButtonClass =
@@ -274,7 +274,7 @@ const OwnerAccountPage = () => {
                     Use your current password to move this Partner Dashboard login to a new email address.
                   </p>
                 </div>
-                <div className="rounded-full bg-ht-cyan-500/15 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-ht-cyan-300">
+                <div className="rounded-full bg-ht-cyan-500/15 px-3 py-1 text-caption font-black uppercase tracking-wider text-ht-cyan-300">
                   Secure change
                 </div>
               </div>
@@ -331,7 +331,7 @@ const OwnerAccountPage = () => {
                     Choose a new password with at least {MIN_PASSWORD_LENGTH} characters.
                   </p>
                 </div>
-                <div className="rounded-full bg-ht-indigo-500/15 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-ht-indigo-300">
+                <div className="rounded-full bg-ht-indigo-500/15 px-3 py-1 text-caption font-black uppercase tracking-wider text-ht-indigo-300">
                   Password required
                 </div>
               </div>

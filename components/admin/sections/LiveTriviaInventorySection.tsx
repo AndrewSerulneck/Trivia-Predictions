@@ -55,7 +55,7 @@ function ExhaustionBar({ pct }: { pct: number }) {
       <div className="relative h-1.5 w-24 overflow-hidden rounded-full bg-slate-200">
         <div className={`absolute inset-y-0 left-0 rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="tabular-nums text-[11px] text-slate-500">{pct}%</span>
+      <span className="tabular-nums text-caption text-slate-500">{pct}%</span>
     </div>
   );
 }
@@ -63,27 +63,27 @@ function ExhaustionBar({ pct }: { pct: number }) {
 function StatusBadge({ pct }: { pct: number }) {
   if (pct >= 90) {
     return (
-      <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+      <span className="rounded-full bg-red-100 px-2 py-0.5 text-caption font-semibold text-red-700">
         Critical
       </span>
     );
   }
   if (pct >= 70) {
     return (
-      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-caption font-semibold text-amber-700">
         Low
       </span>
     );
   }
   if (pct >= 50) {
     return (
-      <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold text-yellow-700">
+      <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-caption font-semibold text-yellow-700">
         Moderate
       </span>
     );
   }
   return (
-    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-caption font-semibold text-emerald-700">
       Healthy
     </span>
   );
@@ -140,7 +140,7 @@ function VenueCard({ venue }: { venue: VenueCategoryInventory }) {
         <div className="border-t border-slate-100 px-5 pb-5 pt-4 space-y-4">
           {/* Per-category table */}
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <p className="mb-2 text-caption font-semibold uppercase tracking-wide text-slate-400">
               Category Breakdown
             </p>
             <div className="overflow-x-auto rounded-lg border border-slate-100">
@@ -178,7 +178,7 @@ function VenueCard({ venue }: { venue: VenueCategoryInventory }) {
           {/* Recent warnings */}
           {venue.warnings.length > 0 && (
             <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-2 text-caption font-semibold uppercase tracking-wide text-slate-400">
                 Recent Repeat Events
               </p>
               <div className="space-y-1">
@@ -192,17 +192,17 @@ function VenueCard({ venue }: { venue: VenueCategoryInventory }) {
                       {w.seededCount}/{w.neededCount} slots filled
                     </span>
                     {w.repeatedQuestions && (
-                      <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                      <span className="rounded bg-red-100 px-1.5 py-0.5 text-caption font-semibold text-red-700">
                         Questions repeated
                       </span>
                     )}
                     {w.usedOverflow && (
-                      <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+                      <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-caption font-semibold text-indigo-700">
                         Cross-category overflow
                       </span>
                     )}
                     {w.usedSeen && !w.repeatedQuestions && !w.usedOverflow && (
-                      <span className="rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                      <span className="rounded bg-amber-200 px-1.5 py-0.5 text-caption font-semibold text-amber-800">
                         Used seen questions
                       </span>
                     )}
@@ -222,7 +222,7 @@ function VenueCard({ venue }: { venue: VenueCategoryInventory }) {
           {/* Per-category epoch resets */}
           {venue.resets.length > 0 && (
             <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-2 text-caption font-semibold uppercase tracking-wide text-slate-400">
                 Category Resets (full rotation completed)
               </p>
               <div className="space-y-1">
@@ -278,7 +278,7 @@ export function LiveTriviaInventorySection() {
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-900">Live Trivia Question Inventory</h2>
           {loadState === "loaded" && (
-            <span className="text-[11px] text-slate-400">
+            <span className="text-caption text-slate-400">
               Questions exhausted before all others means repeats may occur sooner.
             </span>
           )}

@@ -496,7 +496,7 @@ export function StoryCaptureModal({
       <div className="tp-story-capture-shell mx-auto flex h-full min-h-0 w-full max-w-[30rem] flex-col">
         <header className="flex shrink-0 items-center justify-between gap-3 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)]">
           <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase leading-none tracking-[0.14em] text-cyan-100/80">
+            <p className="text-caption font-black uppercase leading-none tracking-[0.14em] text-cyan-100/80">
               Story capture
             </p>
             <h1 className="mt-1 truncate text-xl font-black leading-tight text-white">{title}</h1>

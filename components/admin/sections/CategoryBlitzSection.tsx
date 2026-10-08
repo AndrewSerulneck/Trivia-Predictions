@@ -214,7 +214,7 @@ function LiveSessionPanel({ venueId }: { venueId: string }) {
             <p className="mt-0.5 text-sm text-slate-400">Checking...</p>
           ) : isLive ? (
             <div className="mt-0.5 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700">
+              <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-caption font-black uppercase tracking-wider text-emerald-700">
                 {sessionStatusLabel(session!.status)}
               </span>
               <span className="text-xs text-slate-500">source: {session!.source}</span>
@@ -531,13 +531,13 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
                   {formatScheduleTime(schedule.startTime, schedule.timezone)} to {formatScheduleTime(schedule.endTime, schedule.timezone)}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700">
+                  <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-caption font-black uppercase tracking-wider text-emerald-700">
                     {formatRecurringLabel(schedule)}
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                  <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-caption font-semibold text-slate-500">
                     {formatDuration(schedule.windowMinutes)}
                   </span>
-                  <span className="text-[10px] text-slate-400">{schedule.timezone}</span>
+                  <span className="text-caption text-slate-400">{schedule.timezone}</span>
                 </div>
               </div>
 
@@ -545,14 +545,14 @@ function SchedulesPanel({ venueId }: { venueId: string }) {
                 <button
                   type="button"
                   onClick={() => (editingId === schedule.id ? cancelEdit() : openEdit(schedule))}
-                  className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-slate-100"
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-caption font-black uppercase tracking-wider text-slate-600 hover:bg-slate-100"
                 >
                   {editingId === schedule.id ? "Cancel" : "Edit"}
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleDelete(schedule.id)}
-                  className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100"
+                  className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-caption font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100"
                 >
                   Delete
                 </button>
@@ -755,9 +755,9 @@ function ScheduleEditor({
             {safeRounds > 1 ? ` (3 min/round, 7 min between rounds)` : ""}
           </p>
           {endsAtLabel ? (
-            <p className="mt-0.5 text-[11px] text-emerald-700">Game will end at {endsAtLabel} ({timezone})</p>
+            <p className="mt-0.5 text-caption text-emerald-700">Game will end at {endsAtLabel} ({timezone})</p>
           ) : (
-            <p className="mt-0.5 text-[11px] text-emerald-700">Pick a start time to see when the game ends.</p>
+            <p className="mt-0.5 text-caption text-emerald-700">Pick a start time to see when the game ends.</p>
           )}
         </div>
       </div>

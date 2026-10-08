@@ -381,7 +381,7 @@ function Sidebar({ activeSection, onSelect, onSignedOut, onSwitchToMobile, mobil
       <div className="flex-1 overflow-y-auto py-2">
         {ADMIN_NAV_GROUPS.map((group) => (
           <div key={group.label} className="mb-1">
-            <div className="px-5 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <div className="px-5 pb-1 pt-4 text-caption font-bold uppercase tracking-widest text-slate-500">
               {group.label}
             </div>
             {group.items.map((item) => {
@@ -400,11 +400,11 @@ function Sidebar({ activeSection, onSelect, onSignedOut, onSwitchToMobile, mobil
                 >
                   <span>{item.label}</span>
                   {item.status?.label ? (
-                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${item.status.tone === 'live' ? 'bg-emerald-700 text-emerald-100' : 'bg-slate-700 text-slate-400'}`}>
+                    <span className={`rounded px-1.5 py-0.5 text-caption font-semibold ${item.status.tone === 'live' ? 'bg-emerald-700 text-emerald-100' : 'bg-slate-700 text-slate-400'}`}>
                       {item.status.label}
                     </span>
                   ) : !isMigrated ? (
-                    <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+                    <span className="rounded bg-slate-700 px-1.5 py-0.5 text-caption font-medium text-slate-400">
                       Planned
                     </span>
                   ) : null}

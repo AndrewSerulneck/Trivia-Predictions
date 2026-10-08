@@ -99,7 +99,7 @@ function VenueGamesPanelInner({
         {showFastPathSkeleton ? (
           <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-slate-700 bg-slate-800/80 px-3 py-2 text-center text-xs font-semibold text-slate-300">
             <p>{arrivalStatusText}</p>
-            <p className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-slate-400">
+            <p className="mt-0.5 text-caption uppercase tracking-[0.08em] text-slate-400">
               {arrivalStage} · {Math.round(arrivalProgress)}%
             </p>
           </div>
@@ -114,7 +114,7 @@ function VenueGamesPanelInner({
                   if (liveTriviaStatus.live) {
                     return (
                       <>
-                        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
+                        <p className="text-caption font-black uppercase tracking-[0.14em] text-amber-300">
                           {recurringLabel ?? "Live Trivia in progress!"}
                         </p>
                         <p className="mt-1 font-black text-amber-200 text-[2.2rem] leading-none">
@@ -135,7 +135,7 @@ function VenueGamesPanelInner({
                   }
                   return (
                     <>
-                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
+                      <p className="text-caption font-black uppercase tracking-[0.14em] text-amber-300">
                         {recurringLabel ?? "Next Live Trivia Showdown In"}
                       </p>
                       <p className="mt-1 font-black tabular-nums text-amber-200 text-[2.2rem] leading-none">
@@ -238,14 +238,14 @@ function VenueGamesPanelInner({
                   </div>
 
                   {statusLabel ? (
-                    <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-rose-200">
+                    <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-caption font-black uppercase tracking-[0.12em] text-rose-200">
                       <span className="h-[7px] w-[7px] rounded-full bg-rose-500" />
                       {statusLabel}
                     </span>
                   ) : null}
 
                   {badge ? (
-                    <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">
+                    <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-caption font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">
                       {badge}
                     </span>
                   ) : null}
@@ -259,7 +259,7 @@ function VenueGamesPanelInner({
           <button
             type="button"
             onClick={onRetryBadges}
-            className="tp-player-hit-target tp-player-pressable mx-auto mt-2 block max-w-[24rem] rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-300"
+            className="tp-player-hit-target tp-player-pressable mx-auto mt-2 block max-w-[24rem] rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-center text-caption font-semibold text-slate-300"
           >
             {badgeError} Tap to retry
           </button>

@@ -100,7 +100,7 @@ function renderCompactGrid(
               key={index}
               title={square.label}
               data-bingo-square-key={squareKey}
-              className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-bold leading-tight [font-family:var(--ht-font-display)] ${getCardSquareStyle(
+              className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-caption font-bold leading-tight [font-family:var(--ht-font-display)] ${getCardSquareStyle(
                 square.status,
                 isFree
               )} ${
@@ -119,7 +119,7 @@ function renderCompactGrid(
               {renderSquareStatusGlyph(square)}
               <span>{isFree ? "FREE" : shortenLabel(square.label)}</span>
               {progressText ? (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] font-black text-sky-200/90">
+                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-caption font-black text-sky-200/90">
                   {progressText}
                 </span>
               ) : null}
@@ -175,7 +175,7 @@ const BingoBoardCardImpl = ({
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5 px-0.5">
         {isSettled ? (
           <span
-            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${
+            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-caption font-black uppercase tracking-[0.1em] ${
               isWon
                 ? "border-emerald-300/45 bg-emerald-500/[0.16] text-emerald-300"
                 : "border-white/[0.08] bg-white/[0.04] text-slate-400"
@@ -184,16 +184,16 @@ const BingoBoardCardImpl = ({
             {isWon ? "Bingo · Won" : card.status === "canceled" ? "Canceled" : "Final · No bingo"}
           </span>
         ) : isLive ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-500/[0.14] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-300">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-500/[0.14] px-2.5 py-1 text-caption font-black uppercase tracking-[0.12em] text-emerald-300">
             <LiveDot />
             Live
           </span>
         ) : (
-          <span className="inline-flex items-center rounded-full border border-sky-300/35 bg-sky-300/[0.08] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-sky-300">
+          <span className="inline-flex items-center rounded-full border border-sky-300/35 bg-sky-300/[0.08] px-2.5 py-1 text-caption font-black uppercase tracking-[0.1em] text-sky-300">
             Starts {formatLocalDateTime(card.startsAt)}
           </span>
         )}
-        <span className="inline-flex items-center rounded-full border border-sky-300/30 bg-sky-300/10 px-2.5 py-1 text-[9.5px] font-bold text-sky-300 [font-family:ui-monospace,monospace]">
+        <span className="inline-flex items-center rounded-full border border-sky-300/30 bg-sky-300/10 px-2.5 py-1 text-caption font-bold text-sky-300 [font-family:ui-monospace,monospace]">
           {progress.hitCount}/25 marked
         </span>
       </div>
@@ -222,14 +222,14 @@ const BingoBoardCardImpl = ({
           }`}
         >
           <p
-            className={`text-[9px] font-black uppercase tracking-[0.14em] ${
+            className={`text-caption font-black uppercase tracking-[0.14em] ${
               isSettled ? "text-slate-400" : "text-sky-300"
             }`}
           >
             {isSettled ? "Points" : "Closest line"}
           </p>
           <p
-            className={`mt-0.5 text-[13px] font-black [font-family:ui-monospace,monospace] ${
+            className={`mt-0.5 text-footnote font-black [font-family:ui-monospace,monospace] ${
               isSettled ? (isWon ? "text-emerald-300" : "text-slate-600") : "text-amber-400"
             }`}
           >
@@ -253,7 +253,7 @@ const BingoBoardCardImpl = ({
             }}
             disabled={claimDisabled || isClaiming}
             aria-busy={isClaiming}
-            className="tp-clean-button inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-emerald-300/60 bg-emerald-500/[0.16] px-4 text-[11px] font-black uppercase tracking-[0.04em] text-emerald-300 disabled:opacity-60"
+            className="tp-clean-button inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-emerald-300/60 bg-emerald-500/[0.16] px-4 text-caption font-black uppercase tracking-[0.04em] text-emerald-300 disabled:opacity-60"
           >
             {isClaiming ? (
               <>
@@ -270,7 +270,7 @@ const BingoBoardCardImpl = ({
               event.stopPropagation();
               onOpen(card.id);
             }}
-            className="tp-clean-button inline-flex shrink-0 items-center rounded-xl border border-sky-300/45 bg-sky-300/10 px-4 text-[11px] font-black uppercase tracking-[0.04em] text-sky-300"
+            className="tp-clean-button inline-flex shrink-0 items-center rounded-xl border border-sky-300/45 bg-sky-300/10 px-4 text-caption font-black uppercase tracking-[0.04em] text-sky-300"
           >
             Expand
           </button>

@@ -52,7 +52,7 @@ const SIZES: Record<HightopLoaderSize, {
   text: string;
 }> = {
   // `stage` leaves room above the logo for a hop of 45% of its own height.
-  sm: { stage: "h-14 w-14", logo: "h-8 w-8", shadow: "w-7", px: 32, gap: "gap-1.5", text: "text-[10px]" },
+  sm: { stage: "h-14 w-14", logo: "h-8 w-8", shadow: "w-7", px: 32, gap: "gap-1.5", text: "text-caption" },
   md: { stage: "h-20 w-20", logo: "h-12 w-12", shadow: "w-10", px: 48, gap: "gap-2.5", text: "text-xs" },
   lg: { stage: "h-28 w-28", logo: "h-16 w-16", shadow: "w-14", px: 64, gap: "gap-3.5", text: "text-sm" },
 };

@@ -989,7 +989,7 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
                         {venue.iconEmoji ? <span>{venue.iconEmoji}</span> : null}
                         <span className="font-medium text-slate-900">{venue.name}</span>
                         {isVenueAddressIncomplete(venue) ? (
-                          <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                          <span className="rounded bg-amber-100 px-2 py-0.5 text-caption font-semibold text-amber-800">
                             Address incomplete
                           </span>
                         ) : null}

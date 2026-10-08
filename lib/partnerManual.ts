@@ -1,8 +1,16 @@
-import { PARTNER_MANUAL_POS_BODY } from "@/lib/posStaffInstructions";
+import {
+  PARTNER_MANUAL_POS_BODY,
+  PARTNER_MANUAL_STAFF_INTRO,
+  STAFF_DISCOUNT_STEPS,
+  STAFF_FALLBACK_TEXT,
+  STAFF_GIFT_CARD_STEPS,
+} from "@/lib/posStaffInstructions";
 
 type PartnerManualSubsection = {
   heading: string;
-  body: string;
+  body?: string;
+  /** Numbered steps, shown under the body. */
+  steps?: readonly string[];
 };
 
 type PartnerManualSection = PartnerManualSubsection & {
@@ -69,6 +77,15 @@ export const PARTNER_MANUAL: {
     {
       heading: "Point of Sale (Square)",
       body: PARTNER_MANUAL_POS_BODY,
+    },
+    {
+      heading: "How Staff Take a Prize (Square)",
+      body: PARTNER_MANUAL_STAFF_INTRO,
+      subsections: [
+        { heading: "Square gift card", steps: STAFF_GIFT_CARD_STEPS },
+        { heading: "Green box: Square discount", steps: STAFF_DISCOUNT_STEPS },
+        { heading: "No green box or gift card?", body: STAFF_FALLBACK_TEXT },
+      ],
     },
     {
       heading: "Venue Display",

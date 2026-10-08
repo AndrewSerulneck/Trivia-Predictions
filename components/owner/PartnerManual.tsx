@@ -68,13 +68,22 @@ export const PartnerManual = ({
         {PARTNER_MANUAL.sections.map((section) => (
           <section key={section.heading} className="border-t border-ht-hairline pt-5">
             <h3 className="text-lg font-black text-ht-primary">{section.heading}</h3>
-            <p className="mt-2 text-sm font-semibold leading-6 text-ht-muted">{section.body}</p>
+            {section.body ? <p className="mt-2 text-sm font-semibold leading-6 text-ht-muted">{section.body}</p> : null}
             {section.subsections?.length ? (
               <div className="mt-5 space-y-4 border-l-2 border-ht-cyan-500/30 pl-4">
                 {section.subsections.map((subsection) => (
                   <section key={subsection.heading}>
                     <h4 className="font-black text-ht-secondary">{subsection.heading}</h4>
-                    <p className="mt-1 text-sm font-semibold leading-6 text-ht-muted">{subsection.body}</p>
+                    {subsection.body ? (
+                      <p className="mt-1 text-sm font-semibold leading-6 text-ht-muted">{subsection.body}</p>
+                    ) : null}
+                    {subsection.steps?.length ? (
+                      <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm font-semibold leading-6 text-ht-muted">
+                        {subsection.steps.map((step) => (
+                          <li key={step}>{step}</li>
+                        ))}
+                      </ol>
+                    ) : null}
                   </section>
                 ))}
               </div>

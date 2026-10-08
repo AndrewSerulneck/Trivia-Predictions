@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { FIXED_TEXT_SIZES, MIN_TEXT_PX } from "./lib/textSizeFloor";
 
 const config: Config = {
   content: [
@@ -8,6 +9,14 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Text-size floor (lib/textSizeFloor.ts). `xs`/`sm` keep Tailwind's rem sizes but never
+      // drop below a readable px size on the 13px-root small-phone layout.
+      fontSize: {
+        xs: [`max(0.75rem, ${MIN_TEXT_PX}px)`, { lineHeight: "1rem" }],
+        sm: [`max(0.875rem, ${FIXED_TEXT_SIZES.footnote})`, { lineHeight: "1.25rem" }],
+        caption: FIXED_TEXT_SIZES.caption,
+        footnote: FIXED_TEXT_SIZES.footnote,
+      },
       keyframes: {
         shake: {
           "0%, 100%": { transform: "translateX(0)" },

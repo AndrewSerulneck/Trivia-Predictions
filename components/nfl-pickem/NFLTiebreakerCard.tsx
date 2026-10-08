@@ -122,8 +122,8 @@ export function NFLTiebreakerCard({
 
   return (
     <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-4 py-4">
-      <h2 className="text-[12px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Tiebreaker</h2>
-      <p className="mt-1 text-[12px] font-semibold text-slate-400">
+      <h2 className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">Tiebreaker</h2>
+      <p className="mt-1 text-caption font-semibold text-slate-400">
         If you tie for the most correct picks this week, this decides the winner.
       </p>
       <p className="mt-3 text-[14px] font-bold text-white">
@@ -131,10 +131,10 @@ export function NFLTiebreakerCard({
       </p>
 
       <p role="status" className="sr-only">{saveMessage}</p>
-      {error && <p role="alert" className="mt-2 text-[12px] font-semibold text-rose-400">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-caption font-semibold text-rose-400">{error}</p>}
 
       {game.isLocked ? (
-        <p className="mt-3 text-[13px] font-bold text-slate-300">
+        <p className="mt-3 text-footnote font-bold text-slate-300">
           {savedGuess !== null ? `Your guess: ${savedGuess}` : "You didn't answer the tiebreaker."}
         </p>
       ) : (
@@ -155,13 +155,13 @@ export function NFLTiebreakerCard({
               type="button"
               onClick={handleSave}
               disabled={saving || inputValue === ""}
-              className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-xl bg-[#fde68a] px-4 py-2 text-[13px] font-black text-[#1a2f72] disabled:opacity-50" aria-busy={saving}
+              className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-xl bg-[#fde68a] px-4 py-2 text-footnote font-black text-[#1a2f72] disabled:opacity-50" aria-busy={saving}
             >
               {(saving) ? <ButtonSpinner /> : null}
               {saving ? "Saving…" : "Save"}
             </button>
           </div>
-          <p className="mt-2 text-[11px] font-semibold text-slate-500">Locks at {formatKickoff(game.startsAt)}</p>
+          <p className="mt-2 text-caption font-semibold text-slate-500">Locks at {formatKickoff(game.startsAt)}</p>
         </>
       )}
     </section>

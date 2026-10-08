@@ -197,14 +197,14 @@ export function MobileVenuesSection({
                   <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-semibold text-slate-900">{venue.name}</span>
                     {isVenueAddressIncomplete(venue) ? (
-                      <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                      <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-caption font-semibold text-amber-800">
                         Needs address
                       </span>
                     ) : null}
                   </div>
                   <p className="truncate text-xs text-slate-500">{formatAddressDisplay(venue) || "No address on file"}</p>
                   {venue.screenEnabled === false ? (
-                    <p className="mt-0.5 text-[11px] font-semibold text-slate-500">TV display off</p>
+                    <p className="mt-0.5 text-caption font-semibold text-slate-500">TV display off</p>
                   ) : null}
                 </div>
                 <span aria-hidden className="text-slate-300">

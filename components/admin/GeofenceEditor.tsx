@@ -199,7 +199,7 @@ export function GeofenceEditor({
               <p className="text-sm font-semibold text-slate-900">{pinLabel(hasPin, source, accuracyMeters)}</p>
               <p className="mt-0.5 text-xs text-slate-600">Geofence radius: {value} m</p>
               {hasPin ? (
-                <p className="mt-0.5 font-mono text-[11px] text-slate-400">
+                <p className="mt-0.5 font-mono text-caption text-slate-400">
                   {latitude.toFixed(5)}, {longitude.toFixed(5)}
                 </p>
               ) : null}
@@ -265,7 +265,7 @@ export function GeofenceEditor({
                 : "The geofence runs off this pin, not the street address."}
             </p>
             {hasPin ? (
-              <p className="mt-0.5 font-mono text-[11px] text-slate-400">
+              <p className="mt-0.5 font-mono text-caption text-slate-400">
                 {latitude.toFixed(5)}, {longitude.toFixed(5)}
               </p>
             ) : null}

@@ -141,7 +141,7 @@ export function HiddenVenuesPanel() {
                   <tr key={row.venueId} className={TR}>
                     <td className={TD}>
                       <span className="font-medium text-slate-900">{row.name}</span>
-                      <span className="block text-[11px] text-slate-400">{row.venueId}</span>
+                      <span className="block text-caption text-slate-400">{row.venueId}</span>
                     </td>
                     <td className={TD}>
                       <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-semibold ${badge.className}`}>

@@ -159,7 +159,7 @@ export function RadiusDial({
           <span className="text-2xl font-semibold tabular-nums text-slate-900">{value} m</span>
           <span className="ml-2 text-xs text-slate-500">{description}</span>
         </div>
-        <span className="text-[11px] uppercase tracking-wide text-slate-400">
+        <span className="text-caption uppercase tracking-wide text-slate-400">
           {min}–{max} m
         </span>
       </div>
@@ -204,7 +204,7 @@ export function RadiusDial({
               }`}
             >
               <span className="block text-sm font-semibold">{preset.label}</span>
-              <span className="block text-[11px] text-slate-500">{preset.value} m</span>
+              <span className="block text-caption text-slate-500">{preset.value} m</span>
             </button>
           );
         })}

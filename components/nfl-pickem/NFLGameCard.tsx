@@ -77,16 +77,16 @@ export function NFLGameCard({
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-dashed border-[#fde68a]/45 px-4 py-2">
-        <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
+        <span className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">
           {game.isThursdayGame ? "🏈 Thursday Night" : "NFL"}
         </span>
         <span className="flex items-center gap-1.5">
           {isLocked && game.status !== "final" && (
-            <span className="text-[10px] text-slate-400" title="Picks locked at kickoff">
+            <span className="text-caption text-slate-400" title="Picks locked at kickoff">
               🔒
             </span>
           )}
-          <span className={`text-[11px] font-extrabold ${
+          <span className={`text-caption font-extrabold ${
             game.status === "live" ? "text-emerald-300" : "text-slate-300"
           }`}>
             {game.status === "final" ? "Final" :
@@ -122,7 +122,7 @@ export function NFLGameCard({
             {game.awayTeam}
           </span>
           {awaySpreadLabel && (
-            <span className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[#fde68a]">
+            <span className="text-caption font-extrabold uppercase tracking-[0.08em] text-[#fde68a]">
               {awaySpreadLabel}
             </span>
           )}
@@ -161,7 +161,7 @@ export function NFLGameCard({
             {game.homeTeam}
           </span>
           {homeSpreadLabel && (
-            <span className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[#fde68a]">
+            <span className="text-caption font-extrabold uppercase tracking-[0.08em] text-[#fde68a]">
               {homeSpreadLabel}
             </span>
           )}
@@ -178,7 +178,7 @@ export function NFLGameCard({
 
       {/* Result Banner */}
       {game.status === "final" && game.userPickTeam && (
-        <div className={`px-4 py-1.5 text-[11px] font-extrabold tracking-[0.04em] ${
+        <div className={`px-4 py-1.5 text-caption font-extrabold tracking-[0.04em] ${
           isCorrect
             ? "bg-emerald-500/20 text-emerald-300"
             : isWrong

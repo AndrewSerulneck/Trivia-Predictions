@@ -171,7 +171,7 @@ function ImageCard({
           /* ── Edit mode ── */
           <div className="space-y-2">
             <div>
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Question</label>
+              <label className="block text-caption font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Question</label>
               <textarea
                 value={editQuestion}
                 onChange={(e) => setEditQuestion(e.target.value)}
@@ -180,7 +180,7 @@ function ImageCard({
               />
             </div>
             <div>
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Answer</label>
+              <label className="block text-caption font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Answer</label>
               <input
                 value={editAnswer}
                 onChange={(e) => setEditAnswer(e.target.value)}
@@ -188,7 +188,7 @@ function ImageCard({
               />
             </div>
             <div>
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Difficulty</label>
+              <label className="block text-caption font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Difficulty</label>
               <select
                 value={editDifficulty}
                 onChange={(e) => setEditDifficulty(e.target.value)}
@@ -200,7 +200,7 @@ function ImageCard({
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-0.5">
+              <label className="block text-caption font-semibold text-slate-500 uppercase tracking-wide mb-0.5">
                 Acceptable Answers <span className="normal-case font-normal text-slate-400">(one per line)</span>
               </label>
               <textarea
@@ -211,19 +211,19 @@ function ImageCard({
                 className="w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 resize-y"
               />
             </div>
-            {saveError && <p className="text-[10px] text-red-500">{saveError}</p>}
+            {saveError && <p className="text-caption text-red-500">{saveError}</p>}
             <div className="flex gap-1.5 pt-1">
               <button
                 onClick={() => void handleSaveEdit()}
                 disabled={saving}
-                className="text-[11px] font-semibold rounded px-2 py-1 border bg-indigo-600 border-indigo-700 text-white hover:bg-indigo-700 disabled:opacity-60 cursor-pointer transition-colors"
+                className="text-caption font-semibold rounded px-2 py-1 border bg-indigo-600 border-indigo-700 text-white hover:bg-indigo-700 disabled:opacity-60 cursor-pointer transition-colors"
               >
                 {saving ? "Saving…" : "✓ Save"}
               </button>
               <button
                 onClick={handleCancelEdit}
                 disabled={saving}
-                className="text-[11px] font-semibold rounded px-2 py-1 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-60 cursor-pointer transition-colors"
+                className="text-caption font-semibold rounded px-2 py-1 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-60 cursor-pointer transition-colors"
               >
                 Cancel
               </button>
@@ -236,12 +236,12 @@ function ImageCard({
             <div className="flex items-center justify-between gap-2">
               <span className="font-bold text-slate-900 text-sm truncate">{q.answer}</span>
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${diffColor}`}>
+                <span className={`rounded border px-1.5 py-0.5 text-caption font-semibold uppercase tracking-wide ${diffColor}`}>
                   {q.difficulty}
                 </span>
                 <button
                   onClick={() => setEditing(true)}
-                  className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors cursor-pointer"
+                  className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-caption text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors cursor-pointer"
                   title="Edit question"
                 >
                   ✎ Edit
@@ -254,7 +254,7 @@ function ImageCard({
 
             {/* Acceptable answers */}
             {q.acceptableAnswers && q.acceptableAnswers.length > 0 && (
-              <p className="text-[10px] text-slate-400 leading-relaxed">
+              <p className="text-caption text-slate-400 leading-relaxed">
                 Also: {q.acceptableAnswers.join(", ")}
               </p>
             )}
@@ -265,7 +265,7 @@ function ImageCard({
                 href={q.imageUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block truncate text-[10px] text-blue-500 hover:underline"
+                className="block truncate text-caption text-blue-500 hover:underline"
               >
                 {q.imageUrl}
               </a>
@@ -273,11 +273,11 @@ function ImageCard({
 
             {/* Credit */}
             {q.imageCredit && (
-              <p className="text-[10px] text-slate-400 truncate">{q.imageCredit}</p>
+              <p className="text-caption text-slate-400 truncate">{q.imageCredit}</p>
             )}
 
             {/* Slug */}
-            <p className="text-[10px] text-slate-300 font-mono truncate">{q.slug}</p>
+            <p className="text-caption text-slate-300 font-mono truncate">{q.slug}</p>
 
             {/* Action buttons */}
             <div className="flex flex-wrap gap-1.5 pt-1">
@@ -313,7 +313,7 @@ function ImageCard({
               />
             </div>
             {swapError && (
-              <p className="text-[10px] text-red-500 leading-tight">{swapError}</p>
+              <p className="text-caption text-red-500 leading-tight">{swapError}</p>
             )}
           </>
         )}
@@ -335,7 +335,7 @@ function SwapButton({
   onClick: () => void;
   disabled: boolean;
 }) {
-  const base = "text-[11px] font-semibold rounded px-2 py-1 border transition-colors";
+  const base = "text-caption font-semibold rounded px-2 py-1 border transition-colors";
   const colorMap = {
     indigo: loading
       ? "bg-indigo-100 border-indigo-200 text-indigo-400 cursor-wait"

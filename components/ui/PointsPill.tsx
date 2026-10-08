@@ -49,7 +49,7 @@ export function PointsPill({ summary, size = "md" }: { summary: PointsSummary; s
 
   const sizing =
     size === "sm"
-      ? { wrap: "h-9 min-w-[5.75rem] px-2 text-[13px]", chest: "h-5 w-5", coin: "h-4 w-4", burst: "text-[11px]" }
+      ? { wrap: "h-9 min-w-[5.75rem] px-2 text-footnote", chest: "h-5 w-5", coin: "h-4 w-4", burst: "text-caption" }
       : { wrap: "h-9 min-w-[6.25rem] px-2 text-sm", chest: "h-5 w-5", coin: "h-4 w-4", burst: "text-xs" };
 
   return (

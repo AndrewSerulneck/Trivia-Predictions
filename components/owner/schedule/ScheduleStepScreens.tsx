@@ -84,7 +84,7 @@ export const GameStep = ({
           <span className="min-w-0 flex-1">
             <span className="block truncate font-black text-ht-primary">{option.label}</span>
             {!option.supported ? (
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-ht-muted">Coming soon</span>
+              <span className="block text-caption font-bold uppercase tracking-wider text-ht-muted">Coming soon</span>
             ) : null}
           </span>
           <span className="shrink-0 text-lg text-slate-500" aria-hidden>
@@ -197,7 +197,7 @@ export const WhenStep = ({
         <p className="text-xs font-bold text-ht-cyan-300">
           {rounds} round{rounds === 1 ? "" : "s"} · about {Math.round(durationMinutes)} min total
         </p>
-        <p className="mt-0.5 text-[11px] font-semibold text-ht-cyan-300/80">
+        <p className="mt-0.5 text-caption font-semibold text-ht-cyan-300/80">
           {endsAt ? `Ends around ${formatLocalDateTime(endsAt)}` : "Pick a start time to see when it ends."}
         </p>
       </div>
@@ -296,7 +296,7 @@ const SummaryRow = ({
 }) => (
   <div className="flex items-start gap-3 py-2.5">
     <div className="min-w-0 flex-1">
-      <p className="text-[11px] font-black uppercase tracking-wider text-ht-muted">{label}</p>
+      <p className="text-caption font-black uppercase tracking-wider text-ht-muted">{label}</p>
       <p className="font-bold text-ht-primary">{value}</p>
       {detail ? <p className="text-xs font-semibold text-ht-muted">{detail}</p> : null}
     </div>

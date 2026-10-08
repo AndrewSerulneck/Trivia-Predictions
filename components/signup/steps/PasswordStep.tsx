@@ -112,7 +112,7 @@ export function PasswordStep({ value, onChange, onEnter }: PasswordStepProps) {
             />
           ))}
         </div>
-        <span className="w-12 shrink-0 text-right text-[11px] font-black uppercase tracking-[0.1em] text-ht-fg-dim">
+        <span className="w-12 shrink-0 text-right text-caption font-black uppercase tracking-[0.1em] text-ht-fg-dim">
           {RAIL_LABEL[strength]}
         </span>
       </div>

@@ -237,7 +237,7 @@ export const CreateBoardSheet = ({ onClose, onCreated }: CreateBoardSheetProps) 
 
           <h2
             id={titleId}
-            className="min-w-0 truncate text-[12px] font-black uppercase tracking-[0.14em] text-sky-300"
+            className="min-w-0 truncate text-caption font-black uppercase tracking-[0.14em] text-sky-300"
           >
             Step {STEP_NUMBER[step]} of 3
           </h2>

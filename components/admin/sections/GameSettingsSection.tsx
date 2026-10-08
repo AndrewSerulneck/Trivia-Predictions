@@ -222,7 +222,7 @@ export function GameSettingsSection({ venues }: GameSettingsSectionProps) {
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-semibold text-slate-900">{option.label}</span>
                       <span
-                        className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-bold ${
+                        className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-caption font-bold ${
                           selected
                             ? "border-indigo-500 bg-indigo-600 text-white"
                             : "border-slate-300 text-slate-400"

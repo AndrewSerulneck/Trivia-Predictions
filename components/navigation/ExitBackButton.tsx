@@ -108,7 +108,7 @@ export function ExitBackButton({
       {button}
       <span
         aria-hidden="true"
-        className={`truncate text-[13px] font-black uppercase tracking-[0.11em] ${EXIT_BACK_LABEL_TONE_CLASS[tone]}`}
+        className={`truncate text-footnote font-black uppercase tracking-[0.11em] ${EXIT_BACK_LABEL_TONE_CLASS[tone]}`}
       >
         {label}
       </span>

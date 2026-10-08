@@ -279,12 +279,12 @@ export const DateCalendarPopover = ({
         onClick={openSheet}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-sky-300/30 bg-slate-900 px-3 text-[13px] font-black tracking-[0.01em] text-slate-100"
+        className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-sky-300/30 bg-slate-900 px-3 text-footnote font-black tracking-[0.01em] text-slate-100"
       >
         <CalendarDays aria-hidden="true" className="h-4 w-4 shrink-0 text-sky-300" />
         <span className="truncate">{formatRailLabel(selectedDate)}</span>
         {selectedDate === today ? (
-          <span className="shrink-0 rounded-full border border-sky-300/40 bg-sky-300/[0.14] px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.08em] text-sky-300">
+          <span className="shrink-0 rounded-full border border-sky-300/40 bg-sky-300/[0.14] px-2 py-0.5 text-caption font-black uppercase tracking-[0.08em] text-sky-300">
             Today
           </span>
         ) : null}
@@ -350,7 +350,7 @@ export const DateCalendarPopover = ({
                   <span
                     key={`${weekday}-${index}`}
                     aria-hidden="true"
-                    className="py-1 text-center text-[10px] font-black uppercase tracking-[0.08em] text-slate-500"
+                    className="py-1 text-center text-caption font-black uppercase tracking-[0.08em] text-slate-500"
                   >
                     {weekday}
                   </span>
@@ -374,7 +374,7 @@ export const DateCalendarPopover = ({
                       disabled={disabled}
                       aria-current={isSelected ? "date" : undefined}
                       aria-label={`${formatFullLabel(key)}${markedSet.has(key) ? ", has boards" : ""}`}
-                      className={`relative flex h-11 items-center justify-center rounded-xl text-[13px] font-black transition-colors ${
+                      className={`relative flex h-11 items-center justify-center rounded-xl text-footnote font-black transition-colors ${
                         isSelected
                           ? "bg-sky-300 text-[#08233a]"
                           : disabled
@@ -401,14 +401,14 @@ export const DateCalendarPopover = ({
               <button
                 type="button"
                 onClick={() => pick(today)}
-                className="inline-flex h-11 items-center rounded-xl border border-sky-300/40 bg-sky-300/[0.12] px-3.5 text-[12px] font-black uppercase tracking-[0.06em] text-sky-300"
+                className="inline-flex h-11 items-center rounded-xl border border-sky-300/40 bg-sky-300/[0.12] px-3.5 text-caption font-black uppercase tracking-[0.06em] text-sky-300"
               >
                 Jump to today
               </button>
               <button
                 type="button"
                 onClick={closeSheet}
-                className="inline-flex h-11 items-center rounded-xl border border-slate-700 bg-slate-800 px-3.5 text-[12px] font-black uppercase tracking-[0.06em] text-slate-300"
+                className="inline-flex h-11 items-center rounded-xl border border-slate-700 bg-slate-800 px-3.5 text-caption font-black uppercase tracking-[0.06em] text-slate-300"
               >
                 Close
               </button>

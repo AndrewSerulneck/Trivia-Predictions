@@ -545,7 +545,7 @@ html.tp-standalone .tp-bingo-landscape-shell {
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-board [data-bingo-square-key] {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.1;
     padding: 0.15rem;
   }
@@ -576,7 +576,7 @@ html.tp-standalone .tp-bingo-landscape-shell {
   }
 
   .tp-bingo-landscape-shell .tp-bingo-landscape-legend li {
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.15;
   }
 }
@@ -1195,7 +1195,7 @@ h4 {
 .ht-eyebrow {
   font-family: var(--ht-font-body);
   font-weight: 900;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: var(--ht-track-eyebrow);
   text-transform: uppercase;
   color: var(--ht-cyan-300);
@@ -1665,8 +1665,8 @@ h4 {
 
 button[class*="text-xs"],
 a[role="button"][class*="text-xs"],
-button[class*="text-[11px]"],
-a[role="button"][class*="text-[11px]"] {
+button[class*="text-caption"],
+a[role="button"][class*="text-caption"] {
   font-family: var(--ht-font-body);
   font-weight: 500;
   line-height: 1.25;

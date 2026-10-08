@@ -50,7 +50,7 @@ export function PointsLedger({
               isLive ? "animate-pulse bg-cyan-500" : "bg-ht-border-soft"
             }`}
           />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ht-cyan-400">
+          <span className="text-caption font-semibold uppercase tracking-[0.08em] text-ht-cyan-400">
             {isLive ? "Live" : "Waiting"}
           </span>
         </div>
@@ -82,11 +82,11 @@ export function PointsLedger({
                     <span className="ml-1 font-normal text-ht-fg-muted">·</span>
                     <span className="ml-1 font-normal text-ht-fg-muted">{entry.teamName}</span>
                   </p>
-                  <p className="mt-0.5 text-[11px] text-ht-fg-muted">{entry.actionLabel}</p>
-                  <p className="mt-0.5 text-[10px] text-ht-fg-muted">{formatTime(entry.timestamp)}</p>
+                  <p className="mt-0.5 text-caption text-ht-fg-muted">{entry.actionLabel}</p>
+                  <p className="mt-0.5 text-caption text-ht-fg-muted">{formatTime(entry.timestamp)}</p>
                 </div>
                 <span
-                  className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums ${
+                  className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-caption font-bold tabular-nums ${
                     entry.pointsDelta >= 0
                       ? "bg-emerald-500/15 text-emerald-400"
                       : "bg-rose-500/15 text-rose-400"

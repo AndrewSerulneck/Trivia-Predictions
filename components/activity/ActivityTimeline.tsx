@@ -265,7 +265,7 @@ export function ActivityTimeline() {
                 <li key={pick.id} className="rounded-ht-md border border-ht-border-hairline bg-ht-elevated p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs uppercase tracking-wide text-ht-fg-muted">Prediction</p>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusBadgeClass(pick.status)}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-caption font-medium ${statusBadgeClass(pick.status)}`}>
                       {pick.status}
                     </span>
                   </div>

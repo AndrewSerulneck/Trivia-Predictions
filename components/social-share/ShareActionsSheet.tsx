@@ -132,7 +132,7 @@ export function ShareActionsSheet({
     <section className={`rounded-2xl border border-white/[0.12] bg-slate-950/[0.96] p-4 text-white shadow-[0_18px_44px_rgba(0,0,0,0.44)] ${className}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase leading-none tracking-[0.14em] text-cyan-100/80">
+          <p className="text-caption font-black uppercase leading-none tracking-[0.14em] text-cyan-100/80">
             Share options
           </p>
           <h2 className="mt-1 text-lg font-black leading-tight text-white">Keep your story image</h2>

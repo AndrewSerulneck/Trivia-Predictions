@@ -646,7 +646,7 @@ function PlayerHeadshot({
         className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-[#0a3128] ${ringClass} flex items-center justify-center`}
         aria-label={`${name} avatar`}
       >
-        <span className="text-[#fef3c7] font-bold leading-none select-none" style={{ fontSize: "40%" }}>
+        <span className="text-caption font-bold leading-none text-[#fef3c7] select-none">
           {jerseyNumber ?? playerInitials(name)}
         </span>
       </div>
@@ -2476,7 +2476,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                     type="button"
                     disabled={!sport.available}
                     onClick={() => sport.available && setSelectedSport(sport.key)}
-                    className={"tp-player-hit-target tp-player-pressable " + (`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-black tracking-[0.03em] transition-colors disabled:cursor-not-allowed ${
+                    className={"tp-player-hit-target tp-player-pressable " + (`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-caption font-black tracking-[0.03em] transition-colors disabled:cursor-not-allowed ${
                       on
                         ? "border-amber-200 bg-amber-200 text-[#0a3128]"
                         : sport.available
@@ -2489,7 +2489,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                     {status && !on ? <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}`} /> : null}
                     {sport.label}
                     {!sport.available ? (
-                      <span className={`text-[8px] font-extrabold uppercase tracking-[0.1em] ${on ? "text-[#0a3128]/70" : "text-slate-500"}`}>
+                      <span className={`text-caption font-extrabold uppercase tracking-[0.1em] ${on ? "text-[#0a3128]/70" : "text-slate-500"}`}>
                         Soon
                       </span>
                     ) : null}
@@ -2497,7 +2497,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                 );
               })}
             </div>
-            <span className="shrink-0 pr-1 text-[9px] font-black uppercase tracking-[0.08em] text-amber-200/55">
+            <span className="shrink-0 pr-1 text-caption font-black uppercase tracking-[0.08em] text-amber-200/55">
               {totalEntryCount} {totalEntryCount === 1 ? "entry" : "entries"}
             </span>
           </div>
@@ -2509,7 +2509,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
             <button
               type="button"
               onClick={navigateToPrevDay}
-              className="tp-player-hit-target tp-player-pressable flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-black/25 text-[10px] font-black text-amber-200 "
+              className="tp-player-hit-target tp-player-pressable flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-black/25 text-caption font-black text-amber-200 "
               aria-label="Previous day"
             >
               ◀
@@ -2521,13 +2521,13 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
               type="button"
               onClick={navigateToNextDay}
               disabled={isToday}
-              className="tp-player-hit-target tp-player-pressable flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-black/25 text-[10px] font-black text-amber-200  disabled:opacity-30"
+              className="tp-player-hit-target tp-player-pressable flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-black/25 text-caption font-black text-amber-200  disabled:opacity-30"
               aria-label="Next day"
             >
               ▶
             </button>
             <span
-              className={`shrink-0 whitespace-nowrap pr-1 text-[9px] font-black uppercase tracking-[0.06em] ${
+              className={`shrink-0 whitespace-nowrap pr-1 text-caption font-black uppercase tracking-[0.06em] ${
                 isPastSelectedDate ? "text-slate-400" : "text-amber-200"
               }`}
             >
@@ -2552,7 +2552,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
             className="tp-player-hit-target tp-player-pressable flex w-full items-center gap-2 rounded-[10px] border border-emerald-300/30 bg-emerald-500/[0.07] px-3 py-2 text-left"
           >
             <span className="h-1.5 w-1.5 shrink-0 animate-pulse motion-reduce:animate-none rounded-full bg-emerald-400" />
-            <span className="text-[10.5px] font-bold leading-snug text-emerald-200">
+            <span className="text-caption font-bold leading-snug text-emerald-200">
               Your <b className="text-[#6ee7b7]">{crossSportLiveSport.label}</b> roster is live right now — tap to sweat it.
             </span>
           </button>
@@ -2599,9 +2599,9 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
               <ChalkGrid />
               <div className="relative z-[2]">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Live Game</p>
+                  <p className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">Live Game</p>
                   {hasLiveEntry ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#6ee7b7]/45 bg-emerald-500/15 px-2 py-1 text-[9.5px] font-black uppercase tracking-[0.16em] text-[#6ee7b7]">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#6ee7b7]/45 bg-emerald-500/15 px-2 py-1 text-caption font-black uppercase tracking-[0.16em] text-[#6ee7b7]">
                       <span className="h-1.5 w-1.5 animate-pulse motion-reduce:animate-none rounded-full bg-emerald-400" />
                       Live
                     </span>
@@ -2614,7 +2614,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                     }`}>
                       {liveTrackedEntryPoints.toFixed(1)}
                     </span>
-                    <span className="pb-1.5 text-[11px] font-extrabold uppercase leading-tight tracking-[0.08em] text-[#fef3c7]/55">
+                    <span className="pb-1.5 text-caption font-extrabold uppercase leading-tight tracking-[0.08em] text-[#fef3c7]/55">
                       fantasy
                       <br />
                       points
@@ -2646,9 +2646,9 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                     },
                   ].map((stat) => (
                     <div key={stat.l} className="flex-1 rounded-[10px] border border-[#fef3c7]/[0.18] bg-black/30 px-2 py-1.5">
-                      <div className="text-[8px] font-black uppercase tracking-[0.12em] text-[#fef3c7]/55">{stat.l}</div>
+                      <div className="text-caption font-black uppercase tracking-[0.12em] text-[#fef3c7]/55">{stat.l}</div>
                       <div className={`mt-0.5 font-mono text-[15px] font-[900] tabular-nums ${stat.c}`}>{stat.v}</div>
-                      <div className="text-[9px] font-bold text-slate-500">{stat.sub}</div>
+                      <div className="text-caption font-bold text-slate-500">{stat.sub}</div>
                     </div>
                   ))}
                 </div>
@@ -2662,7 +2662,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
                   <circle cx="12" cy="10" r="2.5" />
                 </svg>
-                <span className="text-[10px] font-bold leading-snug text-sky-200">At the venue — live scoring active. Leave and scoring pauses.</span>
+                <span className="text-caption font-bold leading-snug text-sky-200">At the venue — live scoring active. Leave and scoring pauses.</span>
               </div>
             ) : null}
 
@@ -2671,15 +2671,15 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
               <div className="rounded-xl border border-[#6ee7b7]/[0.28] bg-emerald-500/[0.06] px-3 py-2.5">
                 <div className="mb-2 flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 animate-pulse motion-reduce:animate-none rounded-full bg-emerald-400" />
-                  <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#6ee7b7]">Points ticker</p>
+                  <p className="text-caption font-black uppercase tracking-[0.16em] text-[#6ee7b7]">Points ticker</p>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {statFlashes.map((flash) => (
                     <div key={flash.id} className="flex items-center gap-2">
-                      <span className="min-w-[72px] shrink-0 rounded border border-[#6ee7b7]/35 bg-emerald-500/15 px-1.5 py-0.5 text-center text-[8px] font-black tracking-[0.08em] text-[#6ee7b7]">
+                      <span className="min-w-[72px] shrink-0 rounded border border-[#6ee7b7]/35 bg-emerald-500/15 px-1.5 py-0.5 text-center text-caption font-black tracking-[0.08em] text-[#6ee7b7]">
                         {flash.label}
                       </span>
-                      <span className={`shrink-0 font-mono text-[11px] font-[900] tabular-nums ${flash.pointsDelta >= 0 ? "text-[#6ee7b7]" : "text-rose-300"}`}>
+                      <span className={`shrink-0 font-mono text-caption font-[900] tabular-nums ${flash.pointsDelta >= 0 ? "text-[#6ee7b7]" : "text-rose-300"}`}>
                         {flash.pointsDelta >= 0 ? "+" : ""}{flash.pointsDelta.toFixed(1)} FP
                       </span>
                     </div>
@@ -2690,7 +2690,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
 
             {/* Your roster */}
             <div>
-                <p className="mb-2.5 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
+                <p className="mb-2.5 text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">
                   {canEditExistingEntryLineup ? "Your roster" : "Your roster · locked"}
                 </p>
                 <div className="flex flex-col gap-2.5">
@@ -2743,7 +2743,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                             }`}>
                               {player.playerName}
                             </span>
-                            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-[0.08em] ${
+                            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-caption font-black uppercase tracking-[0.08em] ${
                               isScoring
                                 ? "border border-[#6ee7b7]/40 bg-emerald-500/15 text-[#6ee7b7]"
                                 : "border border-white/10 bg-white/5 text-slate-400"
@@ -2752,14 +2752,14 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                               {isScoring ? "Live" : "Pending"}
                             </span>
                           </div>
-                          <div className="mt-1 truncate text-[11px] font-bold text-[#fef3c7]/55">
+                          <div className="mt-1 truncate text-caption font-bold text-[#fef3c7]/55">
                             {poolItem?.position ? <span className="text-[#fde68a]">{poolItem.position}</span> : null}
                             {poolItem?.position && poolItem?.team ? " · " : null}
                             {poolItem?.team ?? trackedEntry.gameLabel}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[9px] font-black uppercase tracking-[0.14em] text-[#fef3c7]/45">FP</div>
+                          <div className="text-caption font-black uppercase tracking-[0.14em] text-[#fef3c7]/45">FP</div>
                           <SpringPop
                             popKey={playerPopTickById[String(player.playerId)] ?? 0}
                             glowSize={12}
@@ -2779,7 +2779,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   <button
                     type="button"
                     onClick={startEditingRoster}
-                    className="tp-player-hit-target tp-player-pressable mt-3 flex min-h-[44px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-[12.5px] font-black uppercase tracking-[0.08em] text-[#fde68a] "
+                    className="tp-player-hit-target tp-player-pressable mt-3 flex min-h-[44px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-caption font-black uppercase tracking-[0.08em] text-[#fde68a] "
                   >
                     Edit Roster
                   </button>
@@ -2789,7 +2789,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
             {hasLiveEntry ? (
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 animate-pulse motion-reduce:animate-none rounded-full bg-emerald-400" />
-                <p className="text-[11px] font-semibold text-[#6ee7b7]">Live · Streaming updates</p>
+                <p className="text-caption font-semibold text-[#6ee7b7]">Live · Streaming updates</p>
               </div>
             ) : null}
               </>
@@ -2805,10 +2805,10 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         className={`flex items-center justify-between px-3.5 py-3 ${i ? "border-t border-white/5" : ""} ${isMe ? "bg-[#fef3c7]/[0.06]" : ""}`}
                       >
                         <div className="flex min-w-0 items-center gap-2.5">
-                          <span className={`w-5 font-mono text-[13px] font-[900] tabular-nums ${row.rank <= 3 ? "text-[#fde68a]" : "text-slate-500"}`}>
+                          <span className={`w-5 font-mono text-footnote font-[900] tabular-nums ${row.rank <= 3 ? "text-[#fde68a]" : "text-slate-500"}`}>
                             {row.rank}
                           </span>
-                          <span className={`truncate text-[13px] ${isMe ? "font-black text-[#fef3c7]" : "font-bold text-slate-300"}`}>
+                          <span className={`truncate text-footnote ${isMe ? "font-black text-[#fef3c7]" : "font-bold text-slate-300"}`}>
                             {isMe ? "You" : row.username}
                           </span>
                         </div>
@@ -2820,7 +2820,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   })}
                 </div>
               ) : (
-                <div className="rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a] p-5 text-center text-[12px] font-bold text-slate-400">
+                <div className="rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a] p-5 text-center text-caption font-bold text-slate-400">
                   No venue entries yet.
                 </div>
               )
@@ -2863,7 +2863,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                       <p className="text-xs text-[#fef3c7]/50">Check back on a game day or browse another sport</p>
                     </div>
                   ) : (
-                    <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#fde68a]">
+                    <p className="text-caption font-black uppercase tracking-[0.12em] text-[#fde68a]">
                       {`${selectedSportLabel} · ${nextUnlockedGame ? "Next game" : "First game"} ${formatLocalDateTime((nextUnlockedGame ?? sportGames[0])!.startsAt)}`}
                     </p>
                   )}
@@ -2889,15 +2889,15 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   <div className="relative z-[2]">
                     <div className="mb-2.5 flex items-center justify-between">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
+                        <p className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">
                           Your lineup · {selectedPlayers.length}/{requiredLineupSize}
                         </p>
                         {selectedSport === "baseball" ? (
                           <>
-                            <span className="inline-flex items-center rounded-full border border-sky-300/35 bg-sky-400/10 px-2 py-1 text-[8.5px] font-black uppercase tracking-[0.1em] text-sky-200">
+                            <span className="inline-flex items-center rounded-full border border-sky-300/35 bg-sky-400/10 px-2 py-1 text-caption font-black uppercase tracking-[0.1em] text-sky-200">
                               Pitchers {selectedMlbPitchers.length}/{FANTASY_MLB_PITCHER_COUNT}
                             </span>
-                            <span className="inline-flex items-center rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-1 text-[8.5px] font-black uppercase tracking-[0.1em] text-amber-200">
+                            <span className="inline-flex items-center rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-1 text-caption font-black uppercase tracking-[0.1em] text-amber-200">
                               Hitters {selectedMlbHitters.length}/{FANTASY_MLB_HITTER_COUNT}
                             </span>
                           </>
@@ -2907,7 +2907,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         <button
                           type="button"
                           onClick={startEditingRoster}
-                          className="tp-player-hit-target tp-player-pressable text-[10px] font-bold text-[#fde68a] underline"
+                          className="tp-player-hit-target tp-player-pressable text-caption font-bold text-[#fde68a] underline"
                         >
                           Edit
                         </button>
@@ -2935,10 +2935,10 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         ].map((section) => (
                           <div key={section.title}>
                             <div className="mb-2 flex items-center justify-between">
-                              <p className={`text-[9px] font-black uppercase tracking-[0.16em] ${section.accent}`}>
+                              <p className={`text-caption font-black uppercase tracking-[0.16em] ${section.accent}`}>
                                 {section.title}
                               </p>
-                              <span className="text-[9px] font-bold text-slate-400">
+                              <span className="text-caption font-bold text-slate-400">
                                 {section.players.length}/{section.total}
                               </span>
                             </div>
@@ -2971,11 +2971,11 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                       <span className="text-base font-black text-[#fef3c7]/55">+</span>
                                     )}
                                     {filled ? (
-                                      <span className="w-full truncate px-1 text-[9px] font-black leading-tight text-[#fef3c7]">
+                                      <span className="w-full truncate px-1 text-caption font-black leading-tight text-[#fef3c7]">
                                         {name}
                                       </span>
                                     ) : null}
-                                    <span className={`text-[8.5px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
+                                    <span className={`text-caption font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
                                       {item?.position ?? (section.title === "Pitchers" ? "P" : "BAT")}
                                     </span>
                                   </button>
@@ -3013,12 +3013,12 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                 <span className="text-base font-black text-[#fef3c7]/55">+</span>
                               )}
                               {filled ? (
-                                <span className="grid w-full min-w-0 px-0.5 text-center text-[8.5px] font-black leading-[0.95] text-[#fef3c7]">
+                                <span className="grid w-full min-w-0 px-0.5 text-center text-caption font-black leading-[0.95] text-[#fef3c7]">
                                   <span className="truncate">{lineupName.first}</span>
                                   {lineupName.rest ? <span className="truncate">{lineupName.rest}</span> : null}
                                 </span>
                               ) : null}
-                              <span className={`text-[8px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
+                              <span className={`text-caption font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
                                 {poolItem?.position ?? "—"}
                               </span>
                             </button>
@@ -3030,19 +3030,19 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                       <button
                         type="button"
                         onClick={startEditingRoster}
-                        className="tp-player-hit-target tp-player-pressable mt-2.5 flex min-h-[42px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-[12px] font-black uppercase tracking-[0.08em] text-[#fde68a] "
+                        className="tp-player-hit-target tp-player-pressable mt-2.5 flex min-h-[42px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-caption font-black uppercase tracking-[0.08em] text-[#fde68a] "
                       >
                         Edit Roster
                       </button>
                     ) : null}
                     {!canModifyRosterSelections ? (
-                      <p className="mt-2.5 text-[10.5px] text-[#fef3c7]/55">
+                      <p className="mt-2.5 text-caption text-[#fef3c7]/55">
                         {canEditExistingEntryLineup
                           ? "Roster locked in. Tap Edit to make changes before tipoff."
                           : "Roster locked — games have started."}
                       </p>
                     ) : selectedSport === "baseball" ? (
-                      <p className="mt-2.5 text-[10.5px] text-[#fef3c7]/60">
+                      <p className="mt-2.5 text-caption text-[#fef3c7]/60">
                         Draft exactly 3 pitchers and 3 hitters for your MLB roster.
                       </p>
                     ) : null}
@@ -3054,13 +3054,13 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   <div className="space-y-2.5">
                     {/* Sort + filter controls */}
                     <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-                      <span className="shrink-0 self-center text-[9px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Sort</span>
+                      <span className="shrink-0 self-center text-caption font-extrabold uppercase tracking-[0.12em] text-slate-500">Sort</span>
                       {(["projected", "alpha", "position", "team"] as const).map((mode) => (
                         <button
                           key={mode}
                           type="button"
                           onClick={() => setSortBy(mode)}
-                          className={"tp-player-hit-target tp-player-pressable " + (`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-[10.5px] font-extrabold tracking-[0.04em] transition-colors ${
+                          className={"tp-player-hit-target tp-player-pressable " + (`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-caption font-extrabold tracking-[0.04em] transition-colors ${
                             sortBy === mode
                               ? "border-[#fef3c7]/40 bg-[#fef3c7]/15 text-[#fef3c7]"
                               : "border-white/[0.12] bg-transparent text-slate-400"
@@ -3073,7 +3073,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                       <select
                         value={filterPosition}
                         onChange={(e) => setFilterPosition(e.target.value)}
-                        className="shrink-0 rounded-full border-white/[0.12] bg-transparent px-2.5 py-1.5 text-[10.5px] font-extrabold text-slate-300 focus:outline-none"
+                        className="shrink-0 rounded-full border-white/[0.12] bg-transparent px-2.5 py-1.5 text-caption font-extrabold text-slate-300 focus:outline-none"
                       >
                         <option value="all">All positions</option>
                         {CANONICAL_POSITIONS.map((pos) => (
@@ -3083,7 +3083,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                       <select
                         value={filterTeam}
                         onChange={(e) => setFilterTeam(e.target.value)}
-                        className="shrink-0 rounded-full border-white/[0.12] bg-transparent px-2.5 py-1.5 text-[10.5px] font-extrabold text-slate-300 focus:outline-none"
+                        className="shrink-0 rounded-full border-white/[0.12] bg-transparent px-2.5 py-1.5 text-caption font-extrabold text-slate-300 focus:outline-none"
                       >
                         <option value="all">All teams</option>
                         {uniqueTeams.map((team) => (
@@ -3149,9 +3149,9 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                 <PlayerHeadshot src={item.headshotUrl} name={item.playerName} jerseyNumber={item.jerseyNumber ?? null} />
                                 <div className="min-w-0 leading-[1.15]">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="truncate text-[13px] font-black text-[#fef3c7]">{item.playerName}</span>
+                                    <span className="truncate text-footnote font-black text-[#fef3c7]">{item.playerName}</span>
                                     {selectedSport === "baseball" ? (
-                                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] ${
+                                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-caption font-black uppercase tracking-[0.08em] ${
                                         rosterRole === "pitcher"
                                           ? "border border-sky-300/35 bg-sky-400/10 text-sky-200"
                                           : "border border-amber-300/35 bg-amber-400/10 text-amber-200"
@@ -3160,10 +3160,10 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                       </span>
                                     ) : null}
                                     {isTop ? (
-                                      <span className="shrink-0 rounded-full border border-[#fcd34d]/40 bg-[#fcd34d]/15 px-1.5 text-[8px] font-black uppercase tracking-[0.06em] text-[#fcd34d]">★ Top</span>
+                                      <span className="shrink-0 rounded-full border border-[#fcd34d]/40 bg-[#fcd34d]/15 px-1.5 text-caption font-black uppercase tracking-[0.06em] text-[#fcd34d]">★ Top</span>
                                     ) : null}
                                   </div>
-                                  <div className="mt-0.5 truncate text-[10px] font-bold text-[#fef3c7]/55">
+                                  <div className="mt-0.5 truncate text-caption font-bold text-[#fef3c7]/55">
                                     {item.position ? <span className="text-[#fde68a]">{item.position}</span> : null}
                                     {item.position && item.team ? " · " : null}
                                     {item.team ?? ""}
@@ -3179,7 +3179,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                   type="button"
                                   disabled={disableDraft}
                                   onClick={() => togglePlayer(item)}
-                                  className={"tp-player-hit-target tp-player-pressable " + (`h-8 min-w-[64px] rounded-full text-[10.5px] font-black uppercase tracking-[0.04em] transition-colors disabled:opacity-40 ${
+                                  className={"tp-player-hit-target tp-player-pressable " + (`h-8 min-w-[64px] rounded-full text-caption font-black uppercase tracking-[0.04em] transition-colors disabled:opacity-40 ${
                                     isSelected
                                       ? "border border-[#6ee7b7]/55 bg-emerald-500/15 text-[#6ee7b7]"
                                       : "border border-[#fef3c7]/45 bg-[#fef3c7]/10 text-[#fde68a]"
@@ -3195,7 +3195,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                           <button
                             type="button"
                             onClick={() => setVisibleCount((n) => n + 25)}
-                            className="tp-player-hit-target tp-player-pressable w-full rounded-[10px] border border-white/10 bg-white/[0.02] py-2.5 text-[11px] font-extrabold tracking-[0.04em] text-slate-400"
+                            className="tp-player-hit-target tp-player-pressable w-full rounded-[10px] border border-white/10 bg-white/[0.02] py-2.5 text-caption font-extrabold tracking-[0.04em] text-slate-400"
                           >
                             Load more players ({sortedFilteredPool.length - visibleCount})
                           </button>

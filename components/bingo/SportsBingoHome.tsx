@@ -240,7 +240,7 @@ const BingoProgressRing = ({
 }) => {
   const { hitCount, pctFilled, toBingo } = getBoardProgress(squares);
   const ringClass = size === "sm" ? "h-10 w-10" : "h-12 w-12";
-  const innerClass = size === "sm" ? "h-[30px] w-[30px] text-[10px]" : "h-9 w-9 text-[11px]";
+  const innerClass = size === "sm" ? "h-[30px] w-[30px] text-caption" : "h-9 w-9 text-caption";
   const toBingoLabel =
     toBingo === null ? "every line blocked" : toBingo === 0 ? "Bingo!" : `${toBingo} to bingo`;
   return (
@@ -259,7 +259,7 @@ const BingoProgressRing = ({
       </div>
       <div className="leading-tight">
         <p className="text-sm font-extrabold text-slate-100">Squares hit</p>
-        <p className="mt-0.5 text-[11px] font-semibold text-slate-400">
+        <p className="mt-0.5 text-caption font-semibold text-slate-400">
           {pctFilled}% filled · {toBingoLabel}
         </p>
       </div>
@@ -269,7 +269,7 @@ const BingoProgressRing = ({
 
 // Legend panel — explains the three square states on the felt board.
 const BingoLegend = () => (
-  <ul className="space-y-2 text-[11.5px] font-semibold text-slate-200">
+  <ul className="space-y-2 text-caption font-semibold text-slate-200">
     <li className="flex items-center gap-2">
       <span className="h-3.5 w-3.5 shrink-0 rounded border border-amber-300/60 bg-[linear-gradient(135deg,rgba(252,211,77,0.4),rgba(217,119,6,0.3))]" />
       Center FREE — auto-filled
@@ -330,7 +330,7 @@ function renderExpandedGrid(
             <div
               key={index}
                 data-bingo-square-key={squareKey}
-                className={`relative flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-bold leading-tight [font-family:var(--ht-font-display)] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
+                className={`relative flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-caption font-bold leading-tight [font-family:var(--ht-font-display)] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-caption ${getCardSquareStyle(
                 square.status,
                 isFree
               )} ${
@@ -350,7 +350,7 @@ function renderExpandedGrid(
               {renderSquareStatusGlyph(square)}
               <span>{isFree ? "FREE" : square.label}</span>
               {progressText ? (
-                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black text-sky-200/90 sm:text-[10px]">
+                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-caption font-black text-sky-200/90 sm:text-caption">
                   {progressText}
                 </span>
               ) : null}
@@ -418,7 +418,7 @@ function renderLandscapeGrid(
               key={index}
               title={square.label}
               data-bingo-square-key={squareKey}
-              className={`relative flex min-h-0 items-center justify-center overflow-hidden rounded-md border px-1 py-1 text-center text-[10px] font-bold leading-tight [font-family:var(--ht-font-display)] ${getCardSquareStyle(
+              className={`relative flex min-h-0 items-center justify-center overflow-hidden rounded-md border px-1 py-1 text-center text-caption font-bold leading-tight [font-family:var(--ht-font-display)] ${getCardSquareStyle(
                 square.status,
                 isFree
               )} ${
@@ -440,7 +440,7 @@ function renderLandscapeGrid(
                 {isFree ? "FREE" : shortenLabel(square.label, LANDSCAPE_SQUARE_LABEL_MAX_LENGTH)}
               </span>
               {progressText ? (
-                <span className="absolute bottom-0.5 left-1/2 z-[2] -translate-x-1/2 rounded bg-slate-950/55 px-1 text-[8px] font-black text-sky-200/90">
+                <span className="absolute bottom-0.5 left-1/2 z-[2] -translate-x-1/2 rounded bg-slate-950/55 px-1 text-caption font-black text-sky-200/90">
                   {progressText}
                 </span>
               ) : null}
@@ -2115,7 +2115,7 @@ export function SportsBingoHome({
               ) : (
                 <div className="tp-bingo-landscape-empty flex h-full w-full items-center justify-center rounded-[18px] border border-sky-300/45 bg-slate-950/82 px-5 text-center shadow-[0_0_24px_rgba(125,211,252,0.12)]">
                   <div className="max-w-[24rem]">
-                    <p className="text-[12px] font-black uppercase tracking-[0.16em] text-sky-300">
+                    <p className="text-caption font-black uppercase tracking-[0.16em] text-sky-300">
                       {isActiveLandscapeMode ? "No active boards" : "No scored boards"}
                     </p>
                     <p className="mt-2 text-[22px] font-black leading-tight text-slate-50 [font-family:var(--ht-font-display)]">
@@ -2124,7 +2124,7 @@ export function SportsBingoHome({
                     <div className="mt-4 flex items-center justify-center gap-2">
                       <Link
                         href="/bingo/select-sport"
-                        className="tp-clean-button inline-flex h-10 items-center gap-2 rounded-full border border-sky-300/55 bg-sky-300/14 px-4 text-[12px] font-black text-sky-100"
+                        className="tp-clean-button inline-flex h-10 items-center gap-2 rounded-full border border-sky-300/55 bg-sky-300/14 px-4 text-caption font-black text-sky-100"
                       >
                         <Plus aria-hidden="true" className="h-4 w-4" />
                         Create Board
@@ -2133,7 +2133,7 @@ export function SportsBingoHome({
                         <button
                           type="button"
                           onClick={() => selectLandscapeBoardAt("scored", normalizedLandscapeScoredIndex)}
-                          className="tp-clean-button inline-flex h-10 items-center gap-2 rounded-full border border-amber-300/45 bg-amber-300/12 px-4 text-[12px] font-black text-amber-100 disabled:opacity-40"
+                          className="tp-clean-button inline-flex h-10 items-center gap-2 rounded-full border border-amber-300/45 bg-amber-300/12 px-4 text-caption font-black text-amber-100 disabled:opacity-40"
                           disabled={landscapeScoredCards.length === 0}
                         >
                           <Trophy aria-hidden="true" className="h-4 w-4" />
@@ -2148,7 +2148,7 @@ export function SportsBingoHome({
 
             <aside className="tp-bingo-landscape-aside grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-2">
               <div className="tp-bingo-landscape-headline rounded-[18px] border border-sky-300/55 bg-slate-950/82 p-3 shadow-[0_0_24px_rgba(125,211,252,0.16)]">
-                <p className="truncate text-[10px] font-black uppercase leading-none tracking-[0.16em] text-sky-300">
+                <p className="truncate text-caption font-black uppercase leading-none tracking-[0.16em] text-sky-300">
                   {landscapeEyebrow}
                 </p>
                 <h1 className="mt-1 flex items-center gap-1.5 truncate text-[16px] font-black leading-none text-slate-50 [font-family:var(--ht-font-display)]">
@@ -2171,7 +2171,7 @@ export function SportsBingoHome({
                     type="button"
                     onClick={() => selectLandscapeBoardAt("active", normalizedLandscapeActiveIndex)}
                     aria-label="Active boards"
-                    className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition ${
+                    className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-caption font-black uppercase tracking-[0.1em] transition ${
                       isActiveLandscapeMode
                         ? "border-sky-300/70 bg-sky-300/15 text-sky-200"
                         : "border-white/10 bg-white/[0.04] text-slate-300"
@@ -2184,7 +2184,7 @@ export function SportsBingoHome({
                     type="button"
                     onClick={() => selectLandscapeBoardAt("scored", normalizedLandscapeScoredIndex)}
                     aria-label="Scored boards"
-                    className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition ${
+                    className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-caption font-black uppercase tracking-[0.1em] transition ${
                       !isActiveLandscapeMode
                         ? "border-amber-300/70 bg-amber-300/15 text-amber-100"
                         : "border-white/10 bg-white/[0.04] text-slate-300"
@@ -2194,7 +2194,7 @@ export function SportsBingoHome({
                     <span className="tp-bingo-landscape-control-label">Scored</span>
                   </button>
                   {landscapeCurrentCard ? (
-                    <span className="tp-bingo-landscape-status inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-[10px] font-black uppercase tracking-[0.1em] text-sky-200">
+                    <span className="tp-bingo-landscape-status inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-caption font-black uppercase tracking-[0.1em] text-sky-200">
                       <span className={`h-1.5 w-1.5 rounded-full ${currentCardIsLive && isActiveLandscapeMode ? "animate-pulse motion-reduce:animate-none bg-sky-300" : "bg-slate-400"}`} />
                       {isActiveLandscapeMode ? (currentCardIsLive ? "Live" : "Upcoming") : landscapeCurrentCard.status}
                     </span>
@@ -2202,7 +2202,7 @@ export function SportsBingoHome({
                   {isFullscreenSupported ? (
                     <div className="relative">
                       {showFullscreenHint ? (
-                        <div className="pointer-events-none absolute bottom-[calc(100%+0.45rem)] right-0 z-10 w-max max-w-[15rem] rounded-full border border-sky-300/45 bg-slate-950/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-sky-100 shadow-[0_0_18px_rgba(125,211,252,0.18)]">
+                        <div className="pointer-events-none absolute bottom-[calc(100%+0.45rem)] right-0 z-10 w-max max-w-[15rem] rounded-full border border-sky-300/45 bg-slate-950/95 px-3 py-1.5 text-caption font-black uppercase tracking-[0.08em] text-sky-100 shadow-[0_0_18px_rgba(125,211,252,0.18)]">
                           Tap anywhere for full screen
                         </div>
                       ) : null}
@@ -2217,7 +2217,7 @@ export function SportsBingoHome({
                       </button>
                     </div>
                   ) : showInstallCoachCard ? (
-                    <div className="tp-bingo-install-coach-card inline-flex items-center gap-1.5 rounded-full border border-sky-300/45 bg-slate-950/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-sky-100 shadow-[0_0_18px_rgba(125,211,252,0.18)]">
+                    <div className="tp-bingo-install-coach-card inline-flex items-center gap-1.5 rounded-full border border-sky-300/45 bg-slate-950/95 px-3 py-1.5 text-caption font-black uppercase tracking-[0.08em] text-sky-100 shadow-[0_0_18px_rgba(125,211,252,0.18)]">
                       <Share aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                       <span>Add to Home Screen for full screen</span>
                       <button
@@ -2234,7 +2234,7 @@ export function SportsBingoHome({
                     <button
                       type="button"
                       onClick={promptInstall}
-                      className="tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-[10px] font-black uppercase tracking-[0.1em] text-sky-200 transition"
+                      className="tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-caption font-black uppercase tracking-[0.1em] text-sky-200 transition"
                       aria-label="Install app"
                       title="Install app"
                     >
@@ -2252,7 +2252,7 @@ export function SportsBingoHome({
                     tell players about a control they cannot see. Dropped. */}
                 {fullscreenFeedback ? (
                   <p
-                    className="mt-1.5 text-[9px] font-black uppercase leading-tight tracking-[0.06em] text-slate-300"
+                    className="mt-1.5 text-caption font-black uppercase leading-tight tracking-[0.06em] text-slate-300"
                     role="status"
                   >
                     {fullscreenFeedback}
@@ -2260,7 +2260,7 @@ export function SportsBingoHome({
                 ) : null}
               </div>
               <div className="tp-bingo-landscape-panel min-h-0 rounded-[18px] border border-sky-300/35 bg-slate-950/82 p-3 shadow-[0_0_22px_rgba(125,211,252,0.1)]">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-300">Board Progress</p>
+                <p className="text-caption font-black uppercase tracking-[0.16em] text-sky-300">Board Progress</p>
                 {landscapeCurrentCard && landscapeProgress ? (
                   <div className="tp-bingo-landscape-progress mt-3 space-y-3">
                     <BingoProgressRing squares={landscapeCurrentCard.squares} size="sm" />
@@ -2273,7 +2273,7 @@ export function SportsBingoHome({
                     {/* Duplicates BingoProgressRing's own "N to bingo" subtitle; hidden on
                         short landscape displays where the panel has to fit the Collect
                         button too (see .tp-bingo-landscape-to-bingo in globals.css). */}
-                    <p className="tp-bingo-landscape-to-bingo text-[11px] font-bold leading-snug text-slate-300">
+                    <p className="tp-bingo-landscape-to-bingo text-caption font-bold leading-snug text-slate-300">
                       {landscapeProgress.toBingo === null
                         ? "Every line is blocked."
                         : landscapeProgress.toBingo === 0
@@ -2286,20 +2286,20 @@ export function SportsBingoHome({
                         disabled={Boolean(claimingCardId) || isCollectingAllBingo}
                         aria-busy={claimingCardId === landscapeCurrentCard.id}
                         onClick={(event) => void claimPoints(landscapeCurrentCard, event.currentTarget)}
-                        className="tp-clean-button flex h-10 w-full items-center justify-center rounded-[10px] bg-amber-400 px-3 text-[12px] font-black uppercase text-slate-950"
+                        className="tp-clean-button flex h-10 w-full items-center justify-center rounded-[10px] bg-amber-400 px-3 text-caption font-black uppercase text-slate-950"
                       >
                         {claimingCardId === landscapeCurrentCard.id ? <><ButtonSpinner /> Collecting…</> : `Collect ${landscapeCurrentCard.rewardPoints} Points`}
                       </button>
                     ) : null}
                   </div>
                 ) : (
-                  <p className="mt-3 text-[11px] font-bold leading-snug text-slate-300">
+                  <p className="mt-3 text-caption font-bold leading-snug text-slate-300">
                     Active boards show live progress here once you create one.
                   </p>
                 )}
               </div>
               <div className="tp-bingo-landscape-panel tp-bingo-landscape-legend rounded-[18px] border border-sky-300/35 bg-slate-950/82 p-3 shadow-[0_0_22px_rgba(125,211,252,0.1)]">
-                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-sky-300">Legend</p>
+                <p className="mb-2 text-caption font-black uppercase tracking-[0.16em] text-sky-300">Legend</p>
                 <BingoLegend />
               </div>
             </aside>
@@ -2346,11 +2346,11 @@ export function SportsBingoHome({
           /* ════════ FIRST RUN — no boards yet ════════ */
           <div className="pt-4">
             <div className="relative overflow-hidden rounded-[18px] border-2 border-sky-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.12),transparent_60%),#0c3a2e] p-4 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.35),0_12px_26px_rgba(0,0,0,0.5)]">
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo</p>
+              <p className="text-caption font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo</p>
               <p className="mt-1.5 text-[26px] leading-[1.08] text-amber-100 [font-family:var(--ht-font-display)] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
                 You don&apos;t have an active board yet.
               </p>
-              <p className="mt-1.5 text-[12px] font-bold leading-relaxed text-amber-100/60">
+              <p className="mt-1.5 text-caption font-bold leading-relaxed text-amber-100/60">
                 Click the button below to create a 5×5 board of player props and box-score calls. Plays happen, squares
                 light up automatically. Five in a row wins 100 points.
               </p>
@@ -2380,7 +2380,7 @@ export function SportsBingoHome({
                 Get your first board
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </button>
-              <p className="mt-2.5 text-center text-[10px] font-black tracking-[0.04em] text-sky-300">
+              <p className="mt-2.5 text-center text-caption font-black tracking-[0.04em] text-sky-300">
                 Turn your phone sideways for a better view of your boards.
               </p>
             </div>
@@ -2391,8 +2391,8 @@ export function SportsBingoHome({
             {unclaimedWonBingoCards.length > 0 ? (
               <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/40 bg-[linear-gradient(180deg,rgba(251,191,36,0.10),#0f172a)] px-3 py-2.5">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-amber-300">🎉 Points ready</p>
-                  <p className="mt-0.5 text-[12px] font-bold text-slate-200">
+                  <p className="text-caption font-black uppercase tracking-[0.12em] text-amber-300">🎉 Points ready</p>
+                  <p className="mt-0.5 text-caption font-bold text-slate-200">
                     {unclaimedWonBingoCards.length} winning board{unclaimedWonBingoCards.length !== 1 ? "s" : ""} · +
                     {totalUnclaimedBingoPoints} pts
                   </p>
@@ -2403,7 +2403,7 @@ export function SportsBingoHome({
                   onClick={() => void collectAllBingoPoints()}
                   disabled={isCollectingAllBingo || Boolean(claimingCardId)}
                   aria-busy={isCollectingAllBingo}
-                  className="tp-clean-button inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-300/60 bg-emerald-500/[0.16] px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.04em] text-emerald-300 disabled:opacity-60"
+                  className="tp-clean-button inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-300/60 bg-emerald-500/[0.16] px-3.5 py-2 text-caption font-black uppercase tracking-[0.04em] text-emerald-300 disabled:opacity-60"
                 >
                   {isCollectingAllBingo ? <><ButtonSpinner /> Collecting…</> : `Collect +${totalUnclaimedBingoPoints}`}
                 </button>
@@ -2422,7 +2422,7 @@ export function SportsBingoHome({
             </div>
 
             {historyError ? (
-              <div className="mt-3 rounded-xl border border-rose-500/40 bg-rose-950/40 p-3 text-[12px] font-bold text-rose-300" role="alert">
+              <div className="mt-3 rounded-xl border border-rose-500/40 bg-rose-950/40 p-3 text-caption font-bold text-rose-300" role="alert">
                 {historyError}
               </div>
             ) : null}
@@ -2433,14 +2433,14 @@ export function SportsBingoHome({
               </div>
             ) : visibleStackCards.length === 0 ? (
               <div className="mt-4 rounded-2xl border border-sky-300/25 bg-slate-900 p-5 text-center">
-                <p className="text-[13px] font-bold text-slate-300">
+                <p className="text-footnote font-bold text-slate-300">
                   {isViewingToday ? "No active boards right now." : "No boards on this day."}
                 </p>
                 {isViewingToday ? (
                   <button
                     type="button"
                     onClick={openCreateBoardSheet}
-                    className="tp-clean-button mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-sky-300 px-5 py-2.5 text-[12.5px] font-black uppercase tracking-[0.03em] text-[#08233a]"
+                    className="tp-clean-button mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-sky-300 px-5 py-2.5 text-caption font-black uppercase tracking-[0.03em] text-[#08233a]"
                   >
                     Get a board <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
                   </button>
@@ -2448,7 +2448,7 @@ export function SportsBingoHome({
                   <button
                     type="button"
                     onClick={() => setSelectedDate(todayKey)}
-                    className="tp-clean-button mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-sky-300/40 bg-sky-300/[0.12] px-5 py-2.5 text-[12.5px] font-black uppercase tracking-[0.03em] text-sky-300"
+                    className="tp-clean-button mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-sky-300/40 bg-sky-300/[0.12] px-5 py-2.5 text-caption font-black uppercase tracking-[0.03em] text-sky-300"
                   >
                     Back to today
                   </button>
@@ -2491,7 +2491,7 @@ export function SportsBingoHome({
                     <button
                       type="button"
                       onClick={triggerLimitReachedFeedback}
-                      className={`tp-clean-button mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em] text-sky-300 ${
+                      className={`tp-clean-button mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-4 py-3 text-caption font-black uppercase tracking-[0.06em] text-sky-300 ${
                         limitPulse ? "pickem-limit-pulse" : ""
                       }`}
                     >
@@ -2502,7 +2502,7 @@ export function SportsBingoHome({
                     <button
                       type="button"
                       onClick={openCreateBoardSheet}
-                      className="tp-clean-button mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em] text-sky-300"
+                      className="tp-clean-button mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-sky-300/40 bg-sky-300/[0.06] px-4 py-3 text-caption font-black uppercase tracking-[0.06em] text-sky-300"
                     >
                       <Plus aria-hidden="true" className="h-4 w-4" />
                       Add a board
@@ -2527,7 +2527,7 @@ export function SportsBingoHome({
           <div className="relative max-h-[92vh] w-full max-w-[1000px] overflow-y-auto rounded-2xl border border-sky-300/45 bg-slate-950 p-3 shadow-2xl shadow-black/60">
             <div className="sticky top-0 z-10 mb-3 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-white/10 bg-slate-950/95 px-3 py-2 backdrop-blur">
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · Live Board</p>
+                <p className="text-caption font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · Live Board</p>
                 <p className="truncate text-sm font-black text-slate-100 [font-family:var(--ht-font-display)]">
                   {expandedActiveCard.gameLabel}
                 </p>
@@ -2547,15 +2547,15 @@ export function SportsBingoHome({
               </div>
               <aside className="space-y-3">
                 <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Board progress</p>
+                  <p className="mb-2 text-caption font-black uppercase tracking-[0.14em] text-sky-300">Board progress</p>
                   <BingoProgressRing squares={expandedActiveCard.squares} />
                 </div>
                 <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Legend</p>
+                  <p className="mb-2 text-caption font-black uppercase tracking-[0.14em] text-sky-300">Legend</p>
                   <BingoLegend />
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 text-[11px] font-semibold leading-relaxed text-slate-300">
-                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">How to win</p>
+                <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 text-caption font-semibold leading-relaxed text-slate-300">
+                  <p className="mb-1 text-caption font-black uppercase tracking-[0.14em] text-sky-300">How to win</p>
                   Squares auto-mark as plays happen. Complete five in a row — line, column, or diagonal — to win points.
                 </div>
               </aside>
@@ -2576,7 +2576,7 @@ export function SportsBingoHome({
           <div className="relative max-h-[92vh] w-full max-w-[1000px] overflow-y-auto rounded-2xl border border-sky-300/35 bg-slate-950 p-3 shadow-2xl shadow-black/60">
             <div className="sticky top-0 z-10 mb-3 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-white/10 bg-slate-950/95 px-3 py-2 backdrop-blur">
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · Final Board</p>
+                <p className="text-caption font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · Final Board</p>
                 <p className="truncate text-sm font-black text-slate-100 [font-family:var(--ht-font-display)]">
                   {expandedFinalCard.gameLabel}
                 </p>
@@ -2596,16 +2596,16 @@ export function SportsBingoHome({
               </div>
               <aside className="space-y-3">
                 <div className="rounded-2xl border border-sky-300/25 bg-slate-900 p-4">
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Final progress</p>
+                  <p className="mb-2 text-caption font-black uppercase tracking-[0.14em] text-sky-300">Final progress</p>
                   <BingoProgressRing squares={expandedFinalCard.squares} />
-                  <p className="mt-3 text-[11px] font-semibold text-slate-400">
+                  <p className="mt-3 text-caption font-semibold text-slate-400">
                     {expandedFinalCard.status === "won"
                       ? `Winning board · +${expandedFinalCard.rewardPoints} pts`
                       : "No bingo this game — better luck next board."}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-sky-300/25 bg-slate-900 p-4">
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Legend</p>
+                  <p className="mb-2 text-caption font-black uppercase tracking-[0.14em] text-sky-300">Legend</p>
                   <BingoLegend />
                 </div>
               </aside>

@@ -342,7 +342,7 @@ function WinBadge({ subtitle }: WinBadgeProps) {
         </span>
         <span
           style={{
-            fontSize:      "0.875rem",  // text-sm
+            fontSize:      "max(0.875rem, 13px)",  // text-sm
             fontWeight:    700,
             color:         "rgba(250,204,21,0.75)",
             textTransform: "uppercase",

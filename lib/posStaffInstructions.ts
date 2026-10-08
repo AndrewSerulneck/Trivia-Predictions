@@ -52,6 +52,10 @@ export const SCANNABLE_CHOICE_GIFT_CARD = {
   help: "Staff scan or type a Square gift card for the dollar amount. It can be used on anything, and leftover balance stays on the card.",
 };
 
+/** Partner Manual "How Staff Take a Prize" section intro (lib/partnerManual.ts). */
+export const PARTNER_MANUAL_STAFF_INTRO =
+  "Once Square is connected, a guest's prize shows one of two things at the register. Here's what staff do for each. You can print these steps from the Point of Sale screen and keep them by the register.";
+
 /** Partner Manual section copy (lib/partnerManual.ts). */
 export const PARTNER_MANUAL_POS_BODY =
   "If you use Square, connect it so guests' prizes work right at your register. Tap the arrow in the top-left corner to open the menu, then tap Point of Sale and connect Square. Gift card prizes become real Square gift cards. Free-item and dollar or percent off prizes get a ready-made \"Hightop prize\" discount in your Square for staff to tap. A dollar off prize can instead be set to \"Scannable gift card\", which staff scan or type like any Square gift card. The Point of Sale screen has a staff sheet you can print and tape by the register. Prizes always still work with the normal coupon, connected or not.";

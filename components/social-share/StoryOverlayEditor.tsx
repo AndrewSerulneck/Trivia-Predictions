@@ -33,7 +33,7 @@ export function StoryOverlayPreview({ preparedStory, caption }: StoryOverlayPrev
         <div className="flex flex-wrap gap-2">
           {preparedStory.stats.map((stat) => (
             <div key={`${stat.label}:${stat.value}`} className="tp-story-stat-chip rounded-full border px-3 py-1">
-              <span className="tp-story-stat-label text-[10px] font-black uppercase tracking-[0.12em]">{stat.label}</span>
+              <span className="tp-story-stat-label text-caption font-black uppercase tracking-[0.12em]">{stat.label}</span>
               <span className="ml-1.5 text-sm font-black tabular-nums text-white">{stat.value}</span>
             </div>
           ))}
@@ -58,7 +58,7 @@ export function StoryOverlayEditor({
 
   return (
     <section className="tp-story-caption-editor rounded-2xl border p-3">
-      <label className="tp-story-caption-label flex items-center gap-2 text-[11px] font-black uppercase leading-none tracking-[0.14em]">
+      <label className="tp-story-caption-label flex items-center gap-2 text-caption font-black uppercase leading-none tracking-[0.14em]">
         <MessageSquareText className="h-4 w-4" aria-hidden="true" />
         Caption
       </label>
@@ -74,7 +74,7 @@ export function StoryOverlayEditor({
       />
       <div className="mt-2 flex items-center justify-between gap-3">
         <p className="min-w-0 truncate text-xs font-bold text-slate-400">{visibleCaption || preparedStory.headline}</p>
-        <span className="shrink-0 text-[11px] font-black tabular-nums text-slate-500">{remaining}</span>
+        <span className="shrink-0 text-caption font-black tabular-nums text-slate-500">{remaining}</span>
       </div>
     </section>
   );

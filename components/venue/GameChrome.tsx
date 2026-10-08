@@ -69,10 +69,10 @@ export const GameMark = ({ game }: { game: GameChromeKey }) => {
       className="relative h-[26px] w-[26px] shrink-0 overflow-hidden rounded-[7px] border-[1.5px] border-amber-200/70 bg-[#0a3128] shadow-[0_0_0_1px_rgba(254,243,199,0.18)]"
     >
       <span className="absolute inset-0 bg-[linear-gradient(rgba(254,243,199,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(254,243,199,0.16)_1px,transparent_1px)] bg-[length:6px_6px]" />
-      <span className="absolute left-[3px] top-px -rotate-[10deg] text-[13px] font-black leading-none text-amber-200 [font-family:var(--ht-font-display)]">
+      <span className="absolute left-[3px] top-px -rotate-[10deg] text-footnote font-black leading-none text-amber-200 [font-family:var(--ht-font-display)]">
         X
       </span>
-      <span className="absolute bottom-0 right-[3px] rotate-[8deg] text-[13px] font-black leading-none text-cyan-300 [font-family:var(--ht-font-display)]">
+      <span className="absolute bottom-0 right-[3px] rotate-[8deg] text-footnote font-black leading-none text-cyan-300 [font-family:var(--ht-font-display)]">
         O
       </span>
     </span>
@@ -132,13 +132,13 @@ export const ViewTabs = ({
             key={tab.id}
             type="button"
             onClick={() => onPick(tab.id)}
-            className={`tp-clean-button inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-1 py-2 text-[11.5px] font-black uppercase tracking-[0.09em] transition-colors ${buttonTone}`}
+            className={`tp-clean-button inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-1 py-2 text-caption font-black uppercase tracking-[0.09em] transition-colors ${buttonTone}`}
           >
             {live ? <LiveDot /> : null}
             {tab.label}
             {tab.count != null ? (
               <span
-                className={`inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-black tabular-nums ${badgeTone}`}
+                className={`inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-caption font-black tabular-nums ${badgeTone}`}
               >
                 {tab.count}
               </span>
@@ -154,7 +154,7 @@ export const ViewTabs = ({
 export const FoldLine = () => (
   <div className="flex items-center gap-2 px-0.5">
     <span className="h-px flex-1 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.18)_0_6px,transparent_6px_12px)]" />
-    <span className="inline-flex items-center gap-1 text-[8.5px] font-black uppercase tracking-[0.14em] text-slate-600">
+    <span className="inline-flex items-center gap-1 text-caption font-black uppercase tracking-[0.14em] text-slate-600">
       Scroll
       <ChevronDown aria-hidden="true" className="h-2.5 w-2.5" />
     </span>

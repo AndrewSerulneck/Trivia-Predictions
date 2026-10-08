@@ -389,16 +389,16 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold leading-tight text-white">{campaign.name}</p>
-                      <p className="text-[11px] text-cyan-400/70">{gameTypeLabel(campaign.gameTypes)}</p>
+                      <p className="text-caption text-cyan-400/70">{gameTypeLabel(campaign.gameTypes)}</p>
                       {!isLeaderboard && !isGameWinner && progressDelta > 0 ? (
-                        <span className="mt-1 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-300 animate-pulse">
+                        <span className="mt-1 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-caption font-black uppercase tracking-[0.08em] text-emerald-300 animate-pulse">
                           +{progressDelta.toLocaleString()} pts since last visit
                         </span>
                       ) : null}
                     </div>
                     {campaign.pointMultiplier > 1 && (
                       <span
-                        className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black"
+                        className="shrink-0 rounded-full px-2 py-0.5 text-caption font-black"
                         style={{
                           background: "linear-gradient(135deg, #d79000, #f4b400)",
                           color: "#1a0a00",
@@ -413,12 +413,12 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                   {isLeaderboard ? (
                     // Legacy leaderboard-mode reward — finishing out its current cycle.
                     // Standings are never rendered here anymore (Rewards is progress-only).
-                    <p className="text-[11px] text-cyan-300/60">In progress — check back for results.</p>
+                    <p className="text-caption text-cyan-300/60">In progress — check back for results.</p>
                   ) : isGameWinner ? (
                     // Legacy hand-written rewards (isCustom) never said how the prize is won;
                     // composed descriptions already do, so only the legacy card gets this line.
                     campaign.description?.isCustom !== false ? (
-                      <p className="text-[11px] text-cyan-300/60">Awarded to the winner.</p>
+                      <p className="text-caption text-cyan-300/60">Awarded to the winner.</p>
                     ) : null
                   ) : (
                     <GaugeBar
@@ -429,15 +429,15 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                   )}
 
                   {campaign.description?.summary || campaign.rules ? (
-                    <p className="text-[11px] leading-relaxed text-cyan-300/60">
+                    <p className="text-caption leading-relaxed text-cyan-300/60">
                       {campaign.description?.summary ?? campaign.rules}
                     </p>
                   ) : null}
                   {campaign.description?.when ? (
-                    <p className="text-[11px] leading-relaxed text-cyan-300/60">{campaign.description.when}</p>
+                    <p className="text-caption leading-relaxed text-cyan-300/60">{campaign.description.when}</p>
                   ) : null}
                   {campaign.description?.fineprint ? (
-                    <p className="text-[11px] leading-relaxed text-cyan-300/40">{campaign.description.fineprint}</p>
+                    <p className="text-caption leading-relaxed text-cyan-300/40">{campaign.description.fineprint}</p>
                   ) : null}
                 </li>
               );
@@ -471,7 +471,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                 <li key={key} className="rounded-ht-lg border border-amber-400/40 bg-amber-500/10 p-3">
                   <p className="text-sm font-semibold text-amber-300">{win.challengeName}</p>
                   {win.cycleStart ? (
-                    <p className="mt-0.5 text-[11px] text-amber-400/60">
+                    <p className="mt-0.5 text-caption text-amber-400/60">
                       Week of {new Date(win.cycleStart).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </p>
                   ) : null}
@@ -500,7 +500,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
               <li key={claimKey(win)} className="rounded-ht-lg border border-slate-700/50 bg-slate-800/30 p-3 opacity-70">
                 <p className="text-sm font-semibold text-slate-400">{win.challengeName}</p>
                 {win.cycleStart ? (
-                  <p className="mt-0.5 text-[11px] text-slate-500">
+                  <p className="mt-0.5 text-caption text-slate-500">
                     Week of {new Date(win.cycleStart).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </p>
                 ) : null}

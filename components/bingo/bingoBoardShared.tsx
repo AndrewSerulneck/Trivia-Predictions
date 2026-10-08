@@ -111,14 +111,14 @@ export function getCardSquareStyle(status: BingoCardSquare["status"], isFree: bo
 export function renderSquareStatusGlyph(square: BingoCardSquare) {
   if (square.isFree || square.status === "hit") {
     return (
-      <span className="absolute right-0.5 top-0.5 text-[11px] font-black leading-none text-amber-200 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+      <span className="absolute right-0.5 top-0.5 text-caption font-black leading-none text-amber-200 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
         ✓
       </span>
     );
   }
   if (square.status === "miss") {
     return (
-      <span className="absolute right-1 top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white">
+      <span className="absolute right-1 top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-caption font-black text-white">
         ✕
       </span>
     );

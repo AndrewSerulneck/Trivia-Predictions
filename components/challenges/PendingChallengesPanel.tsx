@@ -227,7 +227,7 @@ export function PendingChallengesPanel() {
                     {challenge.challengeDetails ? (
                       <p className="mt-1 text-xs text-ht-fg-secondary">{challenge.challengeDetails}</p>
                     ) : null}
-                    <p className="mt-1 text-[11px] text-ht-fg-muted">
+                    <p className="mt-1 text-caption text-ht-fg-muted">
                       Sent {formatLocalDateTime(challenge.createdAt)}
                     </p>
                   </div>

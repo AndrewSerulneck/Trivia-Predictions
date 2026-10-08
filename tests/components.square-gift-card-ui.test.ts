@@ -5,7 +5,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import {
   PosConnectionsSheet,
   POS_RESULT_MESSAGES,
-  SQUARE_CONNECTED_TEXT,
+  SQUARE_STAFF_HELP_TEXT,
   SQUARE_MENU_PRIZE_RECONNECT_TEXT,
 } from "@/components/owner/pos/PosConnectionsSheet";
 import type { PosConnectionStatus } from "@/lib/pos/types";
@@ -290,7 +290,9 @@ describe("Point of Sale sheet — Square", () => {
     routeFetch({ "/api/owner/pos?": { ok: true, statuses: [square({})] } });
     render(createElement(PosConnectionsSheet, { nav: fakeNav(), venue: VENUE, posResult: "denied" }));
     expect(screen.getByText(POS_RESULT_MESSAGES.denied.text).getAttribute("role")).toBe("status");
-    expect(await screen.findByText(SQUARE_CONNECTED_TEXT)).not.toBeNull();
+    // The long staff copy moved to the Partner Manual; the sheet keeps a pointer + print link.
+    expect(await screen.findByText(SQUARE_STAFF_HELP_TEXT)).not.toBeNull();
+    expect(screen.queryByText("How staff take a prize")).toBeNull();
     expect(screen.queryByRole("link", { name: "Reconnect Square" })).toBeNull();
   });
 

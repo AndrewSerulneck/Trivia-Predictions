@@ -28,11 +28,11 @@ export function WeeklySummary({
       className="rounded-xl border border-[#fde68a]/30 bg-[#020617]/80 p-4" transition={reducedMotion ? { duration: 0 } : undefined}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-[13px] font-black text-[#fde68a]">
+        <h3 className="text-footnote font-black text-[#fde68a]">
           Week {weekNumber} Summary
         </h3>
         {isComplete && (
-          <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+          <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-caption font-bold text-emerald-400">
             Complete
           </span>
         )}
@@ -43,7 +43,7 @@ export function WeeklySummary({
           <div className="text-[18px] font-black text-white">
             {summary.picksCount}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="text-caption font-bold uppercase tracking-wider text-slate-400">
             Picks
           </div>
         </div>
@@ -52,7 +52,7 @@ export function WeeklySummary({
           <div className="text-[18px] font-black text-emerald-400">
             {summary.correctPicks}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider text-emerald-500/70">
+          <div className="text-caption font-bold uppercase tracking-wider text-emerald-500/70">
             Correct
           </div>
         </div>
@@ -61,7 +61,7 @@ export function WeeklySummary({
           <div className="text-[18px] font-black text-rose-400">
             {summary.incorrectPicks}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider text-rose-500/70">
+          <div className="text-caption font-bold uppercase tracking-wider text-rose-500/70">
             Wrong
           </div>
         </div>
@@ -70,7 +70,7 @@ export function WeeklySummary({
           <div className="text-[18px] font-black text-[#fde68a]">
             {summary.totalPoints}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider text-[#fde68a]/70">
+          <div className="text-caption font-bold uppercase tracking-wider text-[#fde68a]/70">
             Points
           </div>
         </div>
@@ -78,7 +78,7 @@ export function WeeklySummary({
 
       {summary.picksCount > 0 && (
         <div className="mt-3">
-          <div className="flex items-center justify-between text-[10px] text-slate-400">
+          <div className="flex items-center justify-between text-caption text-slate-400">
             <span>Accuracy</span>
             <span className="font-bold text-white">{accuracy}%</span>
           </div>

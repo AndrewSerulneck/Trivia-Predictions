@@ -69,9 +69,9 @@ function formatTime(iso: string): string {
 function SummaryCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-900 p-4">
-      <p className="text-[0.65rem] font-medium uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="text-caption font-medium uppercase tracking-wider text-slate-400">{label}</p>
       <p className="mt-1 text-2xl font-bold text-white">{value}</p>
-      {sub && <p className="mt-0.5 text-[0.6rem] text-slate-500">{sub}</p>}
+      {sub && <p className="mt-0.5 text-caption text-slate-500">{sub}</p>}
     </div>
   );
 }
@@ -79,7 +79,7 @@ function SummaryCard({ label, value, sub }: { label: string; value: string; sub?
 function BreakdownTable({ columns, rows }: { columns: string[]; rows: (string | number)[][] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left text-[0.7rem]">
+      <table className="w-full text-left text-caption">
         <thead>
           <tr className="border-b border-slate-700 text-slate-400">
             {columns.map((col) => (
@@ -140,7 +140,7 @@ export function LlmCostSection() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-white">LLM Cost Observability</h2>
-          <p className="mt-1 max-w-md text-[0.65rem] text-slate-500">
+          <p className="mt-1 max-w-md text-caption text-slate-500">
             Tracks Username Moderation (Haiku) and Live Trivia rewrite (Gemini). Any other LLM
             usage in the app is not instrumented and will not appear here.
           </p>
@@ -150,7 +150,7 @@ export function LlmCostSection() {
             <button
               key={opt.value}
               onClick={() => setRange(opt.value)}
-              className={`rounded px-3 py-1 text-[0.7rem] font-medium transition-colors ${
+              className={`rounded px-3 py-1 text-caption font-medium transition-colors ${
                 range === opt.value
                   ? "bg-blue-600 text-white"
                   : "bg-slate-800 text-slate-400 hover:bg-slate-700"
@@ -163,12 +163,12 @@ export function LlmCostSection() {
       </div>
 
       {loading && (
-        <p className="text-[0.75rem] text-slate-400">Loading cost data…</p>
+        <p className="text-caption text-slate-400">Loading cost data…</p>
       )}
 
       {error && (
         <div className="rounded-lg border border-red-800 bg-red-900/30 p-4">
-          <p className="text-[0.75rem] text-red-400">{error}</p>
+          <p className="text-caption text-red-400">{error}</p>
         </div>
       )}
 
@@ -195,7 +195,7 @@ export function LlmCostSection() {
           {/* Breakdown by Feature */}
           {data.byFeature.length > 0 && (
             <section>
-              <h3 className="mb-2 text-[0.75rem] font-semibold uppercase tracking-wider text-slate-300">
+              <h3 className="mb-2 text-caption font-semibold uppercase tracking-wider text-slate-300">
                 By Feature
               </h3>
               <BreakdownTable
@@ -214,7 +214,7 @@ export function LlmCostSection() {
           {/* Breakdown by Model */}
           {data.byModel.length > 0 && (
             <section>
-              <h3 className="mb-2 text-[0.75rem] font-semibold uppercase tracking-wider text-slate-300">
+              <h3 className="mb-2 text-caption font-semibold uppercase tracking-wider text-slate-300">
                 By Model
               </h3>
               <BreakdownTable
@@ -233,11 +233,11 @@ export function LlmCostSection() {
           {/* Recent Calls */}
           {data.recent.length > 0 && (
             <section>
-              <h3 className="mb-2 text-[0.75rem] font-semibold uppercase tracking-wider text-slate-300">
+              <h3 className="mb-2 text-caption font-semibold uppercase tracking-wider text-slate-300">
                 Recent Calls
               </h3>
               <div className="max-h-64 overflow-y-auto rounded-lg border border-slate-700">
-                <table className="w-full text-left text-[0.65rem]">
+                <table className="w-full text-left text-caption">
                   <thead className="sticky top-0 bg-slate-900">
                     <tr className="border-b border-slate-700 text-slate-400">
                       <th className="px-3 py-2 font-medium uppercase tracking-wider">Time</th>
@@ -271,7 +271,7 @@ export function LlmCostSection() {
           )}
 
           {data.totalCalls === 0 && !loading && (
-            <p className="text-[0.75rem] text-slate-500 italic">
+            <p className="text-caption text-slate-500 italic">
               No LLM usage recorded in this period. Calls will appear here once the new `llm_usage_logs` migration
               has been applied and LLM calls are made.
             </p>

@@ -157,7 +157,7 @@ const Row = ({ entry, rank, isMe, reduce, exiting, settled = false }: RowProps) 
       >
         {entry.username}
         {isMe && (
-          <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400/70">
+          <span className="ml-1.5 text-caption font-bold uppercase tracking-wide text-emerald-400/70">
             you
           </span>
         )}
@@ -228,7 +228,7 @@ const LiveLeaderboard = ({ entries, meId, exiting = false, settled = false }: Li
       {mePinned && (
         <>
           <div
-            className="py-0.5 text-center text-[0.65rem] font-bold uppercase tracking-wide text-slate-500"
+            className="py-0.5 text-center text-caption font-bold uppercase tracking-wide text-slate-500"
             aria-hidden
           >
             ··· you&apos;re ranked #{meIndex + 1} ···

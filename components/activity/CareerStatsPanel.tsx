@@ -63,7 +63,7 @@ function formatSigned(value: number): string {
 function metricRow(label: string, value: string | number) {
   return (
     <div className="flex items-center justify-between gap-3 py-1.5 border-b border-slate-800 last:border-0">
-      <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">{label}</span>
+      <span className="text-caption font-black uppercase tracking-[0.1em] text-slate-500">{label}</span>
       <span className="text-sm font-black tabular-nums text-slate-100">{value}</span>
     </div>
   );
@@ -73,7 +73,7 @@ function statCell(value: string | number, label: string) {
   return (
     <div className="rounded-xl bg-slate-800/60 p-3">
       <div className="text-2xl font-black tabular-nums text-slate-50">{value}</div>
-      <div className="mt-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 leading-tight">{label}</div>
+      <div className="mt-0.5 text-caption font-black uppercase tracking-[0.1em] text-slate-500 leading-tight">{label}</div>
     </div>
   );
 }
@@ -87,7 +87,7 @@ function progressBar(pct: number, color = "bg-cyan-500") {
 }
 
 function sectionHeader(label: string) {
-  return <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-400">{label}</p>;
+  return <p className="mb-3 text-caption font-black uppercase tracking-[0.14em] text-cyan-400">{label}</p>;
 }
 
 export function CareerStatsPanel() {
@@ -205,8 +205,8 @@ export function CareerStatsPanel() {
         </div>
         <div className="mt-3">
           <div className="mb-1.5 flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">Win Rate · Last 50</span>
-            <span className="text-[10px] font-black tabular-nums text-slate-300">{overallWinRate}%</span>
+            <span className="text-caption font-black uppercase tracking-[0.1em] text-slate-500">Win Rate · Last 50</span>
+            <span className="text-caption font-black tabular-nums text-slate-300">{overallWinRate}%</span>
           </div>
           {progressBar(overallWinRate)}
         </div>
@@ -220,8 +220,8 @@ export function CareerStatsPanel() {
         {metricRow("Incorrect", stats.trivia.incorrect)}
         <div className="mt-2">
           <div className="mb-1 flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">Accuracy</span>
-            <span className="text-[10px] font-black tabular-nums text-slate-300">{stats.trivia.accuracyPct.toFixed(1)}%</span>
+            <span className="text-caption font-black uppercase tracking-[0.1em] text-slate-500">Accuracy</span>
+            <span className="text-caption font-black tabular-nums text-slate-300">{stats.trivia.accuracyPct.toFixed(1)}%</span>
           </div>
           {progressBar(stats.trivia.accuracyPct, "bg-cyan-500")}
         </div>
@@ -237,8 +237,8 @@ export function CareerStatsPanel() {
         {metricRow("Claimed points", stats.bingo.totalClaimedPoints)}
         <div className="mt-2">
           <div className="mb-1 flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">Win Rate</span>
-            <span className="text-[10px] font-black tabular-nums text-slate-300">{stats.bingo.winRatePct.toFixed(1)}%</span>
+            <span className="text-caption font-black uppercase tracking-[0.1em] text-slate-500">Win Rate</span>
+            <span className="text-caption font-black tabular-nums text-slate-300">{stats.bingo.winRatePct.toFixed(1)}%</span>
           </div>
           {progressBar(stats.bingo.winRatePct, "bg-amber-500")}
         </div>
@@ -255,8 +255,8 @@ export function CareerStatsPanel() {
         {metricRow("Claimed points", stats.pickem.totalClaimedPoints)}
         <div className="mt-2">
           <div className="mb-1 flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">Win Rate</span>
-            <span className="text-[10px] font-black tabular-nums text-slate-300">{stats.pickem.winRatePct.toFixed(1)}%</span>
+            <span className="text-caption font-black uppercase tracking-[0.1em] text-slate-500">Win Rate</span>
+            <span className="text-caption font-black tabular-nums text-slate-300">{stats.pickem.winRatePct.toFixed(1)}%</span>
           </div>
           {progressBar(stats.pickem.winRatePct, "bg-violet-500")}
         </div>
@@ -275,7 +275,7 @@ export function CareerStatsPanel() {
         {metricRow("Claimed points", stats.fantasy.totalClaimedPoints)}
       </div>
 
-      <p className="px-1 text-[10px] text-slate-600">
+      <p className="px-1 text-caption text-slate-600">
         Updated {new Date(stats.generatedAt).toLocaleString()}
       </p>
     </div>

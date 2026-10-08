@@ -151,7 +151,7 @@ function reorder<T>(list: T[], from: number, to: number): T[] {
 
 function EmptyBadge() {
   return (
-    <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-600">
+    <span className="rounded-full bg-red-100 px-2 py-0.5 text-caption font-bold uppercase tracking-wide text-red-600">
       EMPTY
     </span>
   );
@@ -183,7 +183,7 @@ function AdCard({
       className="flex cursor-grab items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm active:cursor-grabbing hover:border-indigo-300 hover:shadow-md transition-all"
     >
       {/* Priority badge */}
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-[10px] font-bold tabular-nums text-slate-500">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-caption font-bold tabular-nums text-slate-500">
         {index + 1}
       </span>
 
@@ -201,7 +201,7 @@ function AdCard({
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-semibold text-slate-800">{ad.advertiserName}</p>
-        <p className="truncate text-[10px] text-slate-400">{ad.id.slice(0, 8)}…</p>
+        <p className="truncate text-caption text-slate-400">{ad.id.slice(0, 8)}…</p>
       </div>
 
       <button
@@ -255,13 +255,13 @@ function SlotPanel({
               {slot.id ? <span className="mr-1.5 font-mono text-slate-400">{slot.id}</span> : null}
               {slot.label}
             </p>
-          <p className="text-[10px] text-slate-400">{slot.description}</p>
+          <p className="text-caption text-slate-400">{slot.description}</p>
         </div>
         <div className="flex items-center gap-1">
           {ads.length === 0 ? (
             <EmptyBadge />
           ) : (
-            <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+            <span className="rounded-full bg-green-100 px-2 py-0.5 text-caption font-semibold text-green-700">
               {ads.length} ad{ads.length !== 1 ? "s" : ""}
             </span>
           )}
@@ -282,7 +282,7 @@ function SlotPanel({
           />
         ))}
         {ads.length === 0 && (
-          <div className={`rounded-lg border-2 border-dashed py-4 text-center text-[11px] text-slate-400 transition-colors ${isDragTarget ? "border-indigo-400" : "border-slate-300"}`}>
+          <div className={`rounded-lg border-2 border-dashed py-4 text-center text-caption text-slate-400 transition-colors ${isDragTarget ? "border-indigo-400" : "border-slate-300"}`}>
             Drop an ad here
           </div>
         )}
@@ -666,7 +666,7 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
                     const count = adsByPageType.get(`${pageKey}:${adType}`) ?? 0;
                     return (
                       <div key={`${pageKey}-${adType}`} className="rounded-md border border-slate-200 bg-white px-2 py-2">
-                        <p className="text-[11px] font-semibold text-slate-700">{formatAdType(adType)}</p>
+                        <p className="text-caption font-semibold text-slate-700">{formatAdType(adType)}</p>
                         <p className={`text-xs ${count > 0 ? "text-emerald-700" : "text-red-600"}`}>
                           {count > 0 ? `${count} ad${count === 1 ? "" : "s"}` : "No ads"}
                         </p>
@@ -704,7 +704,7 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
                   {page.label}
                   {emptyCount > 0 && (
                     <span
-                      className={`absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold ${
+                      className={`absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-caption font-bold ${
                         selectedPage === page.id ? "bg-red-500 text-white" : "bg-red-100 text-red-600"
                       }`}
                     >
@@ -744,12 +744,12 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
         <div className="flex w-64 shrink-0 flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="border-b border-slate-100 pb-2">
             <p className="text-xs font-semibold text-slate-700">Unassigned Ads</p>
-            <p className="text-[10px] text-slate-400">Drag onto a slot to assign</p>
+            <p className="text-caption text-slate-400">Drag onto a slot to assign</p>
           </div>
 
           <div className="flex-1 space-y-2 overflow-y-auto">
             {unassigned.length === 0 && (
-              <p className="py-6 text-center text-[11px] text-slate-400">All ads are assigned.</p>
+              <p className="py-6 text-center text-caption text-slate-400">All ads are assigned.</p>
             )}
             {unassigned.map((ad) => (
               <div
@@ -771,10 +771,10 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-semibold text-slate-800">{ad.advertiserName}</p>
-                    <p className="truncate text-[10px] text-slate-400">{ad.id.slice(0, 8)}…</p>
+                    <p className="truncate text-caption text-slate-400">{ad.id.slice(0, 8)}…</p>
                   </div>
                 </div>
-                <p className="mt-1 truncate text-[10px] text-slate-400 font-mono">{ad.slotKey}</p>
+                <p className="mt-1 truncate text-caption text-slate-400 font-mono">{ad.slotKey}</p>
               </div>
             ))}
           </div>

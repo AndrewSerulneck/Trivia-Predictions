@@ -33,7 +33,7 @@ export async function SlotAd({
           <span className="mb-2 rounded bg-indigo-500/15 px-2 py-1 font-mono text-sm font-bold text-indigo-300">
             {slot}
           </span>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ht-fg-muted">Ad Placeholder</p>
+          <p className="text-caption font-semibold uppercase tracking-wide text-ht-fg-muted">Ad Placeholder</p>
           <p className="mt-2 max-w-md text-sm text-ht-fg-secondary">
             To advertise on Hightop Challenge, please reach out to adinfo@hightopchallenge.com.
           </p>

@@ -773,6 +773,10 @@ Partner Dashboard **2,056 KB → 352 KB** and **10.4 s → 2.1 s** to the load e
 - **Imports:** Always use absolute path alias `@/` (e.g., `@/lib/supabase`, `@/components/ui/PageShell`). No relative imports (`../`).
 - **Styling:** Tailwind utility classes only. No custom CSS, no CSS modules, no inline `style={{}}`. Design tokens reside in `lib/themeTokens.ts`.
   - **Exception — `components/venue-screen/*` (the venue TV display):** inline `style={{}}` is permitted for dynamic/animated values — framer-motion keyframes, computed gradients, per-rank/per-entry colors — that Tailwind utility classes genuinely can't express. `lib/venueScreenBrand.ts` is the intentional second token source for this feature area (mirrors `lib/themeTokens.ts`'s role but scoped to the TV surface). Static, non-dynamic styling on this surface should still prefer Tailwind classes where practical.
+- **Text-size floor — no text smaller than 12px, anywhere** (Andrew, 2026-10-07: mobile users must be able to read it). Numbers live in `lib/textSizeFloor.ts`; `tests/text-size-floor-contract.test.ts` (in `npm run test`) fails on any arbitrary `text-[…]`, inline `fontSize` or `app/globals.css` `font-size` that renders under 12px — rem is judged at the 13px root that phones ≤380px use.
+  - Use the scale, not arbitrary sizes. Smallest sizes: `text-caption` (12px fixed) and `text-footnote` (13px fixed); `text-xs`/`text-sm` are floored with `max()` in `tailwind.config.ts`.
+  - **Inside a venue game, use `text-caption`/`text-footnote` for small labels, not `text-xs`/`text-sm`** — `.tp-game-page .tp-page-main .text-xs` is inflated to 1.2rem in `app/globals.css`, so `text-xs` there renders ~19px.
+  - If text can't fit at 12px (e.g. labels inside a decorative mini board), it shouldn't be text — drop it rather than shrink it.
 
 ## Manual Testing & Auth Storage
 - **Dual-layer auth identity:** User identity (`tp_user_id`, `tp_venue_id`) and session (`tp_sess` when `SESSION_SECRET` is configured) are stored **both in cookies and localStorage** by the client.

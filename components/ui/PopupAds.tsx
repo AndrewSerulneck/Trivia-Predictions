@@ -731,7 +731,7 @@ export function PopupAds() {
         <div className="flex items-center justify-between border-b border-ht-border-hairline bg-ht-surface px-3 py-2">
           <div className="flex items-center gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">Sponsored</p>
-            <span className="rounded bg-indigo-500/15 px-1.5 py-0.5 font-mono text-[11px] font-bold text-indigo-300">
+            <span className="rounded bg-indigo-500/15 px-1.5 py-0.5 font-mono text-caption font-bold text-indigo-300">
               {popupSlotLabel}
             </span>
           </div>

@@ -295,7 +295,7 @@ export function NotificationBell() {
       >
         <Bell aria-hidden="true" className="h-4 w-4" />
         {unreadCount > 0 ? (
-          <span className="absolute -right-1 -top-1 inline-flex min-h-[1.05rem] min-w-[1.05rem] items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white shadow">
+          <span className="absolute -right-1 -top-1 inline-flex min-h-[1.05rem] min-w-[1.05rem] items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-caption font-black leading-none text-white shadow">
             {unreadBadgeLabel}
           </span>
         ) : null}
@@ -313,7 +313,7 @@ export function NotificationBell() {
           }
         >
           <div className="px-4 pt-4 pb-2">
-            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-400">Recent Activity</p>
+            <p className="text-caption font-black uppercase tracking-[0.14em] text-cyan-400">Recent Activity</p>
           </div>
           {items.length === 0 ? (
             <div className="space-y-1 px-4 py-5 text-center">
@@ -365,7 +365,7 @@ export function NotificationBell() {
                         <span className={`block text-sm leading-snug ${item.read ? "text-slate-400" : "text-slate-100"}`}>
                           {item.message}
                         </span>
-                        <span className="mt-0.5 block text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
+                        <span className="mt-0.5 block text-caption font-black uppercase tracking-[0.1em] text-slate-500">
                           {timeLabel}
                         </span>
                       </span>
@@ -394,7 +394,7 @@ export function NotificationBell() {
               onClick={() => { void markRead(); }}
               disabled={markingRead}
               aria-busy={markingRead}
-              className="tp-player-hit-target tp-player-pressable tp-clean-button text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-slate-300 transition-colors"
+              className="tp-player-hit-target tp-player-pressable tp-clean-button text-caption font-black uppercase tracking-[0.1em] text-slate-500 hover:text-slate-300 transition-colors"
             >
               {markingRead ? <><ButtonSpinner /> Updating…</> : "Mark all read"}
             </button>

@@ -308,7 +308,7 @@ function AnswerButton({
       >
         {letter}
       </span>
-      <span className="text-[13px] font-extrabold">{option}</span>
+      <span className="text-footnote font-extrabold">{option}</span>
       {busy ? <ButtonSpinner /> : isRevealedCorrect ? (
         <span className="text-[14px] font-black text-[#34d399]">✓</span>
       ) : (
@@ -1459,7 +1459,7 @@ export function TriviaGame({
       <div className="flex h-full min-h-0 flex-col items-center justify-center gap-4 bg-transparent">
         <div className="relative h-20 w-20">
           <div className="absolute inset-0 animate-spin motion-reduce:animate-none rounded-full border-4 border-[rgba(250,204,21,0.2)] border-t-[#facc15]" />
-          <div className="absolute inset-2 flex items-center justify-center rounded-full bg-[#0f0f17] font-black tracking-[0.2em] text-[#facc15] text-[11px]">
+          <div className="absolute inset-2 flex items-center justify-center rounded-full bg-[#0f0f17] font-black tracking-[0.2em] text-[#facc15] text-caption">
             HC
           </div>
         </div>
@@ -1471,7 +1471,7 @@ export function TriviaGame({
   if (loadError) {
     return (
       <div className="flex h-full min-h-0 items-center justify-center bg-transparent p-4">
-        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-[12px] text-rose-400" role="alert">
+        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-caption text-rose-400" role="alert">
           {loadError}
         </div>
       </div>
@@ -1483,7 +1483,7 @@ export function TriviaGame({
       <div className="flex h-full min-h-0 items-center justify-center bg-transparent">
         <div className="flex flex-col items-center gap-3">
           <div className="h-7 w-7 animate-spin motion-reduce:animate-none rounded-full border-2 border-[rgba(250,204,21,0.25)] border-t-[#facc15]" />
-          <p className="font-black uppercase tracking-[0.12em] text-[#facc15] text-[10px]">Tallying results…</p>
+          <p className="font-black uppercase tracking-[0.12em] text-[#facc15] text-caption">Tallying results…</p>
         </div>
       </div>
     );
@@ -1507,8 +1507,8 @@ export function TriviaGame({
             >
               Speed Trivia
             </div>
-            <div className="flex items-center gap-1 rounded-[10px] border border-[rgba(250,204,21,0.4)] bg-[#0a0a0f] px-2.5 py-1.5 font-mono font-black tracking-[0.04em] text-[#facc15] text-[10px]">
-              <span className="text-[rgba(250,204,21,0.7)] text-[8px]">WINDOW</span>
+            <div className="flex items-center gap-1 rounded-[10px] border border-[rgba(250,204,21,0.4)] bg-[#0a0a0f] px-2.5 py-1.5 font-mono font-black tracking-[0.04em] text-[#facc15] text-caption">
+              <span className="text-[rgba(250,204,21,0.7)] text-caption">WINDOW</span>
               {formatCountdown(quota?.windowSecondsRemaining ?? 0)}
             </div>
           </div>
@@ -1516,22 +1516,22 @@ export function TriviaGame({
           {/* Content */}
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3.5">
             <div className="pt-2 pb-4">
-              <p className="font-black uppercase tracking-[0.16em] text-[#84cc16] text-[10.5px]">Round Complete 🎉</p>
+              <p className="font-black uppercase tracking-[0.16em] text-[#84cc16] text-caption">Round Complete 🎉</p>
               <h1 className="mt-1 font-black text-white text-[22px]">Nice work!</h1>
             </div>
 
             {/* Stats cards */}
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
-                <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Score</div>
+                <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-caption">Score</div>
                 <div className="mt-0.5 font-mono font-black text-[#facc15] text-[20px]">{correctAnswers}/{attempted}</div>
-                <div className="mt-0.5 text-[10px] text-slate-400">{accuracy}% accuracy</div>
+                <div className="mt-0.5 text-caption text-slate-400">{accuracy}% accuracy</div>
               </div>
               <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
-                <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Points Earned</div>
+                <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-caption">Points Earned</div>
                 <div className="mt-0.5 font-mono font-black text-[#facc15] text-[20px]">+{pointsWon}</div>
                 {roundPointsAwarded > correctAnswers * POINTS_PER_CORRECT ? (
-                  <span className="mt-0.5 inline-flex items-center rounded-full border border-[rgba(250,204,21,0.4)] bg-[rgba(250,204,21,0.15)] px-2 py-px font-black uppercase tracking-[0.1em] text-[#facc15] text-[9px]">
+                  <span className="mt-0.5 inline-flex items-center rounded-full border border-[rgba(250,204,21,0.4)] bg-[rgba(250,204,21,0.15)] px-2 py-px font-black uppercase tracking-[0.1em] text-[#facc15] text-caption">
                     ⚡ Challenge Bonus
                   </span>
                 ) : null}
@@ -1543,7 +1543,7 @@ export function TriviaGame({
                     : "border-[rgba(250,204,21,0.3)]"
                 }`}
               >
-                <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Total Points</div>
+                <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-caption">Total Points</div>
                 <div
                   className={`mt-0.5 font-mono font-black text-[#facc15] text-[20px] transition-transform duration-150 ${
                     totalCardPulsing ? "scale-110" : "scale-100"
@@ -1551,7 +1551,7 @@ export function TriviaGame({
                 >
                   {displayTotal}
                 </div>
-                <div className="mt-0.5 text-[10px] text-slate-400">+{roundGain} this round</div>
+                <div className="mt-0.5 text-caption text-slate-400">+{roundGain} this round</div>
               </div>
             </div>
 
@@ -1607,7 +1607,7 @@ export function TriviaGame({
   if (!question) {
     return (
       <div className="flex h-full min-h-0 items-center justify-center bg-transparent p-4">
-        <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.05)] p-4 text-[12px] text-[#facc15]">
+        <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.05)] p-4 text-caption text-[#facc15]">
           No new trivia questions available right now.
         </div>
       </div>
@@ -1633,8 +1633,8 @@ export function TriviaGame({
             >
               Speed Trivia
             </div>
-            <div className="flex items-center gap-1 rounded-[10px] border border-[rgba(250,204,21,0.4)] bg-[#0a0a0f] px-2.5 py-1.5 font-mono font-black tracking-[0.04em] text-[#facc15] text-[10px]">
-              <span className="text-[rgba(250,204,21,0.7)] text-[8px]">WINDOW</span>
+            <div className="flex items-center gap-1 rounded-[10px] border border-[rgba(250,204,21,0.4)] bg-[#0a0a0f] px-2.5 py-1.5 font-mono font-black tracking-[0.04em] text-[#facc15] text-caption">
+              <span className="text-[rgba(250,204,21,0.7)] text-caption">WINDOW</span>
               {formatCountdown(quota?.windowSecondsRemaining ?? 0)}
             </div>
           </div>
@@ -1643,19 +1643,19 @@ export function TriviaGame({
           <div className="flex min-h-0 flex-1 flex-col justify-center px-3.5">
             {roundEndedMessage ? (
               <div className="mb-4 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2.5">
-                <p className="text-[12px] font-extrabold text-rose-400">{roundEndedMessage}</p>
+                <p className="text-caption font-extrabold text-rose-400">{roundEndedMessage}</p>
               </div>
             ) : null}
 
             <div className="mb-5">
-              <p className="font-black uppercase tracking-[0.16em] text-[#84cc16] text-[10.5px]">
+              <p className="font-black uppercase tracking-[0.16em] text-[#84cc16] text-caption">
                 Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}
               </p>
               <h1 className="mt-1 font-black text-white text-[24px]">Ready to start trivia?</h1>
             </div>
 
             <div className="mb-5 rounded-[14px] border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] px-4 py-4">
-              <p className="mb-3 font-black uppercase tracking-[0.14em] text-[#84cc16] text-[13px]">Rules</p>
+              <p className="mb-3 font-black uppercase tracking-[0.14em] text-[#84cc16] text-footnote">Rules</p>
               <ul className="space-y-3">
                 {([
                   [`${QUESTIONS_PER_ROUND}`, "questions per round"],
@@ -1689,7 +1689,7 @@ export function TriviaGame({
                 <>
                   <div className="mb-1 rounded-[12px] border border-[rgba(250,204,21,0.2)] bg-[rgba(250,204,21,0.06)] px-4 py-3 text-center">
                     <p className="font-black text-[#facc15] text-[15px] uppercase tracking-[0.06em]">No questions available</p>
-                    <p className="mt-1 text-[13px] text-slate-400 leading-snug">
+                    <p className="mt-1 text-footnote text-slate-400 leading-snug">
                       You&apos;ve answered all the questions in this category. Try a different one.
                     </p>
                   </div>
@@ -1731,7 +1731,7 @@ export function TriviaGame({
     return (
       <div className="relative flex h-full min-h-0 flex-col items-center justify-center bg-transparent text-center">
         <div className="relative z-10 px-6 pb-4">
-          <p className="font-black uppercase tracking-[0.12em] text-[#84cc16] text-[11px]">Get Ready</p>
+          <p className="font-black uppercase tracking-[0.12em] text-[#84cc16] text-caption">Get Ready</p>
           <p className="mt-1 font-black text-white text-[24px]">Round {upcomingRoundNumber}</p>
           <p
             key={`count-${preRoundCountdown}`}
@@ -1823,16 +1823,16 @@ export function TriviaGame({
             Speed Trivia
           </div>
           <div
-            className="flex items-center gap-1 rounded-[10px] border border-[rgba(250,204,21,0.4)] bg-[#0a0a0f] px-2.5 py-1.5 font-mono font-black tracking-[0.04em] text-[#facc15] text-[10px]"
+            className="flex items-center gap-1 rounded-[10px] border border-[rgba(250,204,21,0.4)] bg-[#0a0a0f] px-2.5 py-1.5 font-mono font-black tracking-[0.04em] text-[#facc15] text-caption"
           >
-            <span className="text-[rgba(250,204,21,0.7)] text-[8px]">WINDOW</span>
+            <span className="text-[rgba(250,204,21,0.7)] text-caption">WINDOW</span>
             {formatCountdown(quota?.windowSecondsRemaining ?? 0)}
           </div>
         </div>
 
         {/* ─── Round + question counter + pip strip ─── */}
         <div className="flex shrink-0 items-center justify-between px-3.5">
-          <div className="flex gap-2 font-black uppercase tracking-[0.16em] text-[10.5px]">
+          <div className="flex gap-2 font-black uppercase tracking-[0.16em] text-caption">
             <span className="text-[#84cc16]">Round {upcomingRoundNumber} / {ROUND_LIMIT_PER_WINDOW}</span>
             <span className="text-white/20">·</span>
             <span className="text-[#facc15]">Q {index + 1} / {questions.length}</span>
@@ -1850,7 +1850,7 @@ export function TriviaGame({
         </div>
 
         {triviaQuotaLocked ? (
-          <p className="px-3.5 pt-1 text-[11px] font-black text-rose-300">
+          <p className="px-3.5 pt-1 text-caption font-black text-rose-300">
             Limit reached. Unlocks in {formatCountdown(quotaSecondsRemaining)}.
           </p>
         ) : null}
@@ -1906,7 +1906,7 @@ export function TriviaGame({
                         style={{ textShadow: "0 0 12px rgba(250,204,21,0.7)" }}
                       >
                         {secondsRemaining}
-                        <span className="ml-px text-[9px] font-black text-[rgba(250,204,21,0.7)]">s</span>
+                        <span className="ml-px text-caption font-black text-[rgba(250,204,21,0.7)]">s</span>
                       </div>
                     </div>
 
@@ -1914,12 +1914,12 @@ export function TriviaGame({
                     <div className="min-w-0 flex-1">
                       <div className="mb-1.5 flex items-center gap-1.5">
                         {question.category ? (
-                          <span className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">
+                          <span className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-caption">
                             {question.category}
                           </span>
                         ) : null}
                         {question.difficulty ? (
-                          <span className="rounded-full border border-[rgba(250,204,21,0.4)] px-1.5 py-px font-black uppercase tracking-[0.1em] text-[#facc15] text-[8px]">
+                          <span className="rounded-full border border-[rgba(250,204,21,0.4)] px-1.5 py-px font-black uppercase tracking-[0.1em] text-[#facc15] text-caption">
                             {question.difficulty}
                           </span>
                         ) : null}
@@ -1977,7 +1977,7 @@ export function TriviaGame({
                   >
                     <div className="min-w-0 flex-1">
                       <div
-                        className={`text-[12px] font-extrabold leading-snug ${
+                        className={`text-caption font-extrabold leading-snug ${
                           feedbackKind === "correct"
                             ? "text-[#6ee7b7]"
                             : feedbackKind === "incorrect" || feedbackKind === "timeout"
@@ -1988,11 +1988,11 @@ export function TriviaGame({
                         {feedback}
                       </div>
                       {feedbackKind === "correct" ? (
-                        <div className="mt-0.5 text-[10px] font-extrabold text-slate-400">added to your profile</div>
+                        <div className="mt-0.5 text-caption font-extrabold text-slate-400">added to your profile</div>
                       ) : null}
                     </div>
                     {feedbackKind === "correct" ? (
-                      <span className="shrink-0 whitespace-nowrap font-black text-[#fde68a] text-[11px]">
+                      <span className="shrink-0 whitespace-nowrap font-black text-[#fde68a] text-caption">
                         🔥 +{POINTS_PER_CORRECT} pts
                       </span>
                     ) : null}
@@ -2003,11 +2003,11 @@ export function TriviaGame({
               {/* Mini scoreboard */}
               <div className="grid grid-cols-2 gap-2 px-3.5 pt-2 pb-3">
                 <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
-                  <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Correct</div>
+                  <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-caption">Correct</div>
                   <div className="mt-0.5 font-mono font-black text-[#facc15] text-[14px]">{correctAnswers} / {attempted}</div>
                 </div>
                 <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
-                  <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Accuracy</div>
+                  <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-caption">Accuracy</div>
                   <div className="mt-0.5 font-mono font-black text-[#facc15] text-[14px]">{accuracy}%</div>
                 </div>
               </div>

@@ -103,7 +103,7 @@ function difficultyBadge(difficulty: string | null) {
     hard: "bg-red-100 text-red-800",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${colors[difficulty] ?? "bg-slate-100 text-slate-600"}`}>
+    <span className={`inline-block rounded-full px-2 py-0.5 text-caption font-medium ${colors[difficulty] ?? "bg-slate-100 text-slate-600"}`}>
       {difficulty}
     </span>
   );
@@ -187,14 +187,14 @@ function RoundBlock({
               type="button"
               onClick={(e) => { e.stopPropagation(); setShowCategoryPicker((v) => !v); }}
               disabled={replacing || categories.length === 0}
-              className="rounded px-2 py-1 text-[11px] font-medium text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
+              className="rounded px-2 py-1 text-caption font-medium text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
               title="Replace round questions with a different category"
             >
               {replacing ? "…" : "Replace"}
             </button>
             {showCategoryPicker && (
               <div className="absolute right-0 top-full z-50 mt-1 max-h-60 w-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-                <div className="border-b border-slate-100 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                <div className="border-b border-slate-100 px-3 py-1.5 text-caption font-semibold uppercase tracking-wide text-slate-500">
                   Pick a category
                 </div>
                 {categories.map((cat) => (
@@ -209,7 +209,7 @@ function RoundBlock({
                     className="flex w-full items-center justify-between px-3 py-2 text-left text-xs text-slate-700 hover:bg-indigo-50"
                   >
                     <span>{cat.category}</span>
-                    <span className="text-[10px] text-slate-400">{cat.count}</span>
+                    <span className="text-caption text-slate-400">{cat.count}</span>
                   </button>
                 ))}
               </div>
@@ -287,7 +287,7 @@ function RoundBlock({
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
                           </button>
-                          <span className="text-[10px] font-medium text-slate-400 select-none">
+                          <span className="text-caption font-medium text-slate-400 select-none">
                             {q.questionIndex}
                           </span>
                           <button
@@ -310,7 +310,7 @@ function RoundBlock({
                         {/* Meta badges & actions */}
                         <div className="flex items-center gap-1.5 shrink-0">
                           {difficultyBadge(q.difficulty)}
-                          <span className="text-[10px] text-slate-400">idx:{q.questionIndex}</span>
+                          <span className="text-caption text-slate-400">idx:{q.questionIndex}</span>
                           <button
                             type="button"
                             onClick={() => onSwapQuestion(q.questionId, q.roundNumber, q.questionIndex, q.category)}
@@ -1202,7 +1202,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
               {/* Category summary */}
               {rounds.length > 0 && (
                 <div className="mb-4 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Categories</p>
+                  <p className="mb-2 text-caption font-semibold uppercase tracking-wide text-slate-400">Categories</p>
                   <div className="flex flex-wrap gap-2">
                     {rounds.map((round) => {
                       const categoryCounts = new Map<string, number>();

@@ -5,6 +5,7 @@ import {
   GUEST_SQUARE_GIFT_CARD_LINE,
   PARTNER_MANUAL_POS_BODY,
   STAFF_DISCOUNT_STEPS,
+  STAFF_FALLBACK_TEXT,
   STAFF_GIFT_CARD_STEPS,
   STAFF_SHEET_PATH,
 } from "@/lib/posStaffInstructions";
@@ -18,16 +19,28 @@ describe("POS staff instructions (Phase 2e)", () => {
     expect(PARTNER_MANUAL_POS_BODY).not.toMatch(/[Cc]lick/);
   });
 
+  it("the Partner Manual carries the staff steps as their own section, from the shared copy", () => {
+    const section = PARTNER_MANUAL.sections.find((s) => s.heading === "How Staff Take a Prize (Square)");
+    expect(section?.subsections?.map((sub) => sub.steps ?? sub.body)).toEqual([
+      STAFF_GIFT_CARD_STEPS,
+      STAFF_DISCOUNT_STEPS,
+      STAFF_FALLBACK_TEXT,
+    ]);
+  });
+
   it("staff copy names the real register taps and the discount prefix", () => {
     expect(STAFF_GIFT_CARD_STEPS.join(" ")).toContain("Gift card");
     expect(STAFF_DISCOUNT_STEPS.join(" ")).toContain("Hightop prize");
     expect(STAFF_DISCOUNT_STEPS.join(" ")).toContain("Confirm Redemption");
   });
 
-  it("the sheet shows the checklist before connecting and the staff card after, with a print link", () => {
+  it("the sheet shows the checklist before connecting and a short staff pointer after, with a print link", () => {
     const sheet = read("components/owner/pos/PosConnectionsSheet.tsx");
     expect(sheet).toContain("SQUARE_SETUP_STEPS");
     expect(sheet).toContain("data-pos-staff-help");
+    // The full steps live in the Partner Manual, not the sheet (Andrew, 2026-10-07).
+    expect(sheet).not.toContain("STAFF_GIFT_CARD_STEPS");
+    expect(sheet).not.toContain("RedeemedRewardsList");
     expect(sheet).toContain("STAFF_SHEET_PATH");
     expect(STAFF_SHEET_PATH).toBe("/owner/pos-staff-sheet");
   });

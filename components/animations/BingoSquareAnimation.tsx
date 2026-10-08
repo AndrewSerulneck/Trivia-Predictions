@@ -193,7 +193,7 @@ export function BingoSquareAnimation({ onComplete }: GameplayAnimationProps) {
           // the element's own width — correct centering on the origin point.
           color:         "#facc15",
           fontWeight:    900,
-          fontSize:      "0.875rem",   // text-sm
+          fontSize:      "max(0.875rem, 13px)",   // text-sm
           textTransform: "uppercase",
           letterSpacing: "0.1em",
           textShadow:    "0 0 12px rgba(250,204,21,0.9)",

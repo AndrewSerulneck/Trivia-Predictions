@@ -189,7 +189,7 @@ export const SquareGiftCardPanel = ({
           {frame(
           <div className="space-y-3 rounded-2xl border-2 border-amber-500/60 bg-gradient-to-br from-amber-950 to-amber-900/80 p-4" data-square-gift-card>
             <div className="flex items-baseline justify-between gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/70">Square gift card</p>
+              <p className="text-caption font-bold uppercase tracking-[0.2em] text-amber-400/70">Square gift card</p>
               <p className="text-xs font-bold text-amber-200">
                 {phase.giftCard.state === "ACTIVE" ? `${dollars(phase.giftCard.balanceCents)} left` : "Not active"}
               </p>

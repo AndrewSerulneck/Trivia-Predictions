@@ -66,10 +66,9 @@ describe("PosConnectionsSheet", () => {
     expect(screen.getByText("Connected")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Connect" }).getAttribute("href")).toBe(posConnectHref("clover", "venue-1"));
     expect(screen.getByText("Coming soon")).toBeTruthy();
-    // Statuses once, plus the Phase 2f "Rewards redeemed" list's single read.
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // Statuses once. The Phase 2f "Rewards redeemed" list was removed (Andrew, 2026-10-07).
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith("/api/owner/pos?venueId=venue-1", { cache: "no-store" });
-    expect(fetchMock).toHaveBeenCalledWith("/api/owner/pos/redeemed?venueId=venue-1", { cache: "no-store" });
   });
 
   it("Phase 2c: a Square connection that needs attention explains itself and offers Reconnect and Disconnect", async () => {

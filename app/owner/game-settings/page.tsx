@@ -223,7 +223,7 @@ const OwnerGameSettingsPage = () => {
                     Standard uses the game winner. Spread mode uses the locked line at kickoff.
                   </p>
                 </div>
-                <span className="rounded-full border border-ht-soft bg-ht-elevated px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-ht-secondary">
+                <span className="rounded-full border border-ht-soft bg-ht-elevated px-3 py-1 text-caption font-black uppercase tracking-[0.12em] text-ht-secondary">
                   {savedSettings?.nflPickEmScoringMode === "spread" ? "Spread live" : "Standard live"}
                 </span>
               </div>
@@ -246,7 +246,7 @@ const OwnerGameSettingsPage = () => {
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm font-black text-ht-primary">{option.label}</span>
                         <span
-                          className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-black ${
+                          className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-caption font-black ${
                             selected
                               ? "border-ht-cyan-300 bg-ht-cyan-400 text-slate-950"
                               : "border-ht-elevated-2 text-ht-muted"

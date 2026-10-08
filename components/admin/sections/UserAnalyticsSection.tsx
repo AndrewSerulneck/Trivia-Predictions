@@ -344,7 +344,7 @@ function ActivityTimeline({
           <div className="grid min-w-[760px] grid-cols-[44px_repeat(24,minmax(24px,1fr))] gap-1">
             <div />
             {Array.from({ length: 24 }, (_, hour) => (
-              <div key={hour} className="text-center text-[10px] font-medium text-slate-400">{hour}</div>
+              <div key={hour} className="text-center text-caption font-medium text-slate-400">{hour}</div>
             ))}
             {DAY_LABELS.map((day, dayIndex) => (
               <div key={day} className="contents">
@@ -501,7 +501,7 @@ function GeographicMap({ nodes }: { nodes: GeoNode[] }) {
                 <button
                   key={state}
                   type="button"
-                  className="aspect-square rounded border border-white text-[11px] font-bold text-slate-900 shadow-sm"
+                  className="aspect-square rounded border border-white text-caption font-bold text-slate-900 shadow-sm"
                   style={{ backgroundColor: `rgba(22, 163, 74, ${intensity})` }}
                   title={`${state}: ${node?.active_users ?? 0} users`}
                 >

@@ -102,7 +102,7 @@ export function TriviaAppFrame() {
 
     return (
       <div className="rounded-2xl border border-[rgba(250,204,21,0.45)] bg-[#0a0a0f]/90 px-4 py-3 text-center shadow-[0_10px_24px_rgba(0,0,0,0.35)]">
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#84cc16]">
+        <p className="text-caption font-black uppercase tracking-[0.14em] text-[#84cc16]">
           Speed Trivia refresh
         </p>
         <p className="mt-1 text-sm font-extrabold text-white">

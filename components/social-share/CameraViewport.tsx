@@ -98,7 +98,7 @@ export function CameraViewport({
 
       <div className="pointer-events-none absolute inset-0 z-[2]">
         <div className="tp-story-preview-top-card absolute inset-x-5 top-5 rounded-2xl border px-4 py-3 text-white shadow-[0_12px_28px_rgba(0,0,0,0.34)] backdrop-blur-md">
-          <p className="tp-story-preview-kicker text-[11px] font-black uppercase leading-none tracking-[0.14em]">
+          <p className="tp-story-preview-kicker text-caption font-black uppercase leading-none tracking-[0.14em]">
             {subtitle}
           </p>
           <h2 className="mt-1 text-2xl font-black leading-none text-white">{title}</h2>

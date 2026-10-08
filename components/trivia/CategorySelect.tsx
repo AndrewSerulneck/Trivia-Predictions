@@ -74,7 +74,7 @@ export function CategorySelect({ onSelect }: Props) {
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}
         >
           <div className="mb-4">
-            <p className="font-black uppercase tracking-[0.16em] text-[#84cc16] text-[10.5px]">
+            <p className="font-black uppercase tracking-[0.16em] text-[#84cc16] text-caption">
               Speed Trivia
             </p>
             <h1 className="mt-1 font-black text-white text-[24px]">Choose a Category</h1>
@@ -97,7 +97,7 @@ export function CategorySelect({ onSelect }: Props) {
               <p className="font-black text-white text-[15px] leading-tight">
                 {ALL_CATEGORIES_SENTINEL.label}
               </p>
-              <p className="mt-0.5 text-[11px] text-slate-400">Mix of every category</p>
+              <p className="mt-0.5 text-caption text-slate-400">Mix of every category</p>
             </div>
           </button>
 
@@ -118,7 +118,7 @@ export function CategorySelect({ onSelect }: Props) {
                   <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[rgba(250,204,21,0.25)] bg-[rgba(250,204,21,0.1)]">
                     <Icon size={20} className="text-[#facc15]" />
                   </div>
-                  <p className="font-black text-white text-[13px] leading-tight text-center">
+                  <p className="font-black text-white text-footnote leading-tight text-center">
                     {cat.label}
                   </p>
                 </button>

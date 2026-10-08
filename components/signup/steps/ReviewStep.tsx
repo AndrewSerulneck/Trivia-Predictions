@@ -118,7 +118,7 @@ export function ReviewStep({ draft, duplicate, submitting, onClaim, onEditLocati
 function ReviewRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3">
-      <dt className="shrink-0 text-[11px] font-black uppercase tracking-[0.12em] text-ht-fg-dim">{label}</dt>
+      <dt className="shrink-0 text-caption font-black uppercase tracking-[0.12em] text-ht-fg-dim">{label}</dt>
       <dd className="text-right text-sm font-bold leading-snug text-ht-primary">{value}</dd>
     </div>
   );

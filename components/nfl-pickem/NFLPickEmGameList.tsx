@@ -457,7 +457,7 @@ export function NFLPickEmGameList({
               NFL Pick &rsquo;Em
             </h1>
           </div>
-          <p className="mt-2 text-[13px] font-semibold leading-relaxed text-slate-400">
+          <p className="mt-2 text-footnote font-semibold leading-relaxed text-slate-400">
             {previewWeek && selectedWeekId === previewWeek.id
               ? `Pick winners for every NFL matchup. The season kicks off ${previewWeekKickoffLabel}. Correct picks are worth 10 points. Picks lock at kickoff.`
               : "Pick winners for every NFL matchup this week. Correct picks are worth 10 points. Picks lock at kickoff."}
@@ -481,7 +481,7 @@ export function NFLPickEmGameList({
         ) : (
           <section className="rounded-2xl border border-amber-300/30 bg-amber-950/20 px-4 py-5 text-center">
             <h2 className="text-[15px] font-black text-amber-100">NFL weeks are not available yet</h2>
-            <p className="mt-2 text-[12px] font-semibold leading-relaxed text-amber-100/70">
+            <p className="mt-2 text-caption font-semibold leading-relaxed text-amber-100/70">
               Check back once the current week opens on Thursday.
             </p>
           </section>
@@ -505,10 +505,10 @@ export function NFLPickEmGameList({
               exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
               className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-4 py-3" transition={reducedMotion ? { duration: 0 } : undefined}
             >
-              <p className="text-[12px] font-semibold text-rose-300" role="alert">{error}</p>
+              <p className="text-caption font-semibold text-rose-300" role="alert">{error}</p>
               <button
                 onClick={() => setError("")}
-                className="mt-1 text-[11px] text-rose-400 underline"
+                className="mt-1 text-caption text-rose-400 underline"
               >
                 Dismiss
               </button>
@@ -526,7 +526,7 @@ export function NFLPickEmGameList({
         {/* Degraded scoring-mode/spread-line surface — week-wide, not per-card */}
         {weekData && spreadsBannerState && (
           <section className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-3">
-            <p className="text-[12px] font-semibold leading-relaxed text-amber-200">
+            <p className="text-caption font-semibold leading-relaxed text-amber-200">
               {SPREADS_BANNER_COPY[spreadsBannerState]}
             </p>
           </section>
@@ -538,7 +538,7 @@ export function NFLPickEmGameList({
             {dayGroups.map((group) => (
               <section key={group.key}>
                 <h2
-                  className={`mb-2 flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.16em] ${
+                  className={`mb-2 flex items-center gap-2 text-caption font-black uppercase tracking-[0.16em] ${
                     group.isThursdayNight ? "text-[#fde68a]" : "text-slate-400"
                   }`}
                 >

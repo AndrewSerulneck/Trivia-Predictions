@@ -208,7 +208,7 @@ const OwnerBillingSetupPage = () => {
           <HightopLoader size="lg" className="py-10" />
         ) : (
           <div className="rounded-2xl border border-indigo-400/40 bg-ht-surface p-6 shadow-ht-card">
-            <p className="text-[11px] font-black uppercase tracking-wider text-ht-indigo-300">Venue Pro</p>
+            <p className="text-caption font-black uppercase tracking-wider text-ht-indigo-300">Venue Pro</p>
             <div className="mt-1 font-black text-ht-primary">
               <span className="text-4xl">$100</span>
               <span className="text-base text-ht-muted"> /mo</span>

@@ -89,7 +89,7 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
         aria-expanded={isExpanded}
         className="tp-clean-button flex w-full items-center gap-2 px-3 py-2.5 text-left"
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#fde68a]/40 text-[11px] font-black text-[#fde68a]">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#fde68a]/40 text-caption font-black text-[#fde68a]">
           {entry.rank}
         </span>
         {winner && (
@@ -100,15 +100,15 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
             />
           </span>
         )}
-        <span className="min-w-0 flex-1 truncate text-[13px] font-black text-white">
+        <span className="min-w-0 flex-1 truncate text-footnote font-black text-white">
           {entry.username}
           {entry.isCurrentUser && (
-            <span className="ml-1.5 rounded-full bg-[#fde68a]/20 px-1.5 py-0.5 text-[9px] font-bold text-[#fde68a]">
+            <span className="ml-1.5 rounded-full bg-[#fde68a]/20 px-1.5 py-0.5 text-caption font-bold text-[#fde68a]">
               You
             </span>
           )}
         </span>
-        <span className="flex shrink-0 items-center gap-2 text-[11px] font-black tabular-nums">
+        <span className="flex shrink-0 items-center gap-2 text-caption font-black tabular-nums">
           <span className="text-slate-400" title="Picks">
             {entry.picksCount}
           </span>
@@ -139,26 +139,26 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
           >
             <div className="space-y-1.5 px-3 py-2.5">
               {winner && (
-                <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#fde68a]">
+                <p className="flex items-center gap-1.5 text-caption font-bold text-[#fde68a]">
                   <Trophy aria-hidden="true" className="h-3 w-3 shrink-0" />
                   Won this week&apos;s reward{prize ? `: ${prize}` : ""}
                 </p>
               )}
               {entry.tiebreaker && (
-                <p className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
+                <p className="flex items-center gap-1.5 text-caption font-bold text-slate-400">
                   Tiebreaker:{" "}
                   {entry.tiebreaker.isHidden
                     ? "Hidden until kickoff"
                     : entry.tiebreaker.predictedTotal ?? "—"}
                   {entry.isTiebreakerWinner && (
-                    <span className="rounded-full bg-[#fde68a]/20 px-1.5 py-0.5 text-[9px] font-bold text-[#fde68a]">
+                    <span className="rounded-full bg-[#fde68a]/20 px-1.5 py-0.5 text-caption font-bold text-[#fde68a]">
                       Closest guess
                     </span>
                   )}
                 </p>
               )}
               {entry.picks.length === 0 ? (
-                <p className="text-[11px] text-slate-500">No picks.</p>
+                <p className="text-caption text-slate-500">No picks.</p>
               ) : (
                 entry.picks.map((pick) => {
                   const hidden = pick.isHidden || !pick.selectedTeam;
@@ -166,7 +166,7 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
                   return (
                     <div
                       key={pick.gameId}
-                      className="flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2.5 py-1.5 text-[11px]"
+                      className="flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2.5 py-1.5 text-caption"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-bold text-slate-200">{pick.gameLabel}</p>
@@ -320,8 +320,8 @@ export function NFLPickEmLeaderboard({
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
-        <h2 className="text-[12px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Leaderboard</h2>
-        <div className="inline-flex rounded-full border border-[#fde68a]/30 bg-slate-900 p-0.5 text-[11px] font-bold">
+        <h2 className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">Leaderboard</h2>
+        <div className="inline-flex rounded-full border border-[#fde68a]/30 bg-slate-900 p-0.5 text-caption font-bold">
           <button
             type="button"
             aria-pressed={mode === "week"}
@@ -353,13 +353,13 @@ export function NFLPickEmLeaderboard({
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
             className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-4 py-3" transition={reducedMotion ? { duration: 0 } : undefined}
           >
-            <p className="text-[12px] font-semibold text-rose-300" role="alert">{error}</p>
+            <p className="text-caption font-semibold text-rose-300" role="alert">{error}</p>
           </motion.div>
         )}
       </AnimatePresence>
 
       {showNoRewardNote && (
-        <p className="px-1 text-[11px] font-semibold text-slate-500">
+        <p className="px-1 text-caption font-semibold text-slate-500">
           No reward this week — fewer than {NFL_REWARD_MIN_PICKERS} players made picks.
         </p>
       )}
@@ -369,7 +369,7 @@ export function NFLPickEmLeaderboard({
           <HightopLoader size="sm" variant="card" showLabel label="Loading leaderboard..." />
         </div>
       ) : !error && entries.length === 0 ? (
-        <p className="px-1 text-[12px] font-semibold text-slate-500">
+        <p className="px-1 text-caption font-semibold text-slate-500">
           {mode === "week" ? "No picks yet this week." : "No picks yet this season."}
         </p>
       ) : (

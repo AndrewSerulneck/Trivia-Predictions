@@ -71,10 +71,10 @@ export function LeftHamburgerMenu({ showAlerts = true }: LeftHamburgerMenuProps)
             className="inline-flex min-h-9 min-w-0 max-w-[13.5rem] cursor-pointer items-center gap-1.5 rounded-lg border border-ht-border-soft bg-ht-elevated px-2 py-1 text-sm font-semibold text-ht-fg-primary sm:max-w-[16rem]"
             aria-label="Open venue home"
           >
-            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ht-border-strong bg-ht-elevated-2 text-[11px] font-black text-ht-fg-primary">
+            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ht-border-strong bg-ht-elevated-2 text-caption font-black text-ht-fg-primary">
               {(username.trim()[0] ?? "G").toUpperCase()}
             </span>
-            <span className="break-all text-[13px] leading-tight">{username}</span>
+            <span className="break-all text-footnote leading-tight">{username}</span>
           </div>
 
           <PointsPill summary={summary} size="md" />

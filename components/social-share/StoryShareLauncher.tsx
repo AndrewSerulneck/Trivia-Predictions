@@ -40,7 +40,7 @@ export function StoryShareLauncher({
             <Camera className="h-5 w-5" aria-hidden="true" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black uppercase leading-none tracking-[0.14em] text-cyan-300">{eyebrow}</p>
+            <p className="text-caption font-black uppercase leading-none tracking-[0.14em] text-cyan-300">{eyebrow}</p>
             <p className="mt-1 text-base font-black leading-tight text-white">{launcherTitle}</p>
           </div>
           <button

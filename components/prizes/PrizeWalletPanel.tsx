@@ -97,7 +97,7 @@ function WineCoupon({ win, onRedeem, large }: CouponCardProps) {
         ))}
       </div>
       <div className="mt-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-400/70">Prize Coupon</p>
+        <p className="text-caption font-bold uppercase tracking-[0.2em] text-rose-400/70">Prize Coupon</p>
         <p className={`mt-0.5 font-black tracking-wide text-rose-100 ${large ? "text-2xl" : "text-xl"}`}>
           BOTTLE OF WINE
         </p>
@@ -106,9 +106,9 @@ function WineCoupon({ win, onRedeem, large }: CouponCardProps) {
       <div className="my-3 border-t border-dashed border-rose-700/50" />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
-          <p className="text-[11px] text-rose-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
+          <p className="text-caption text-rose-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
           {expiry && !redeemed && (
-            <p className={`text-[11px] ${expiry.className}`}>{expiry.label}</p>
+            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
           )}
         </div>
         {redeemed ? (
@@ -136,7 +136,7 @@ function AppetizerCoupon({ win, onRedeem, large }: CouponCardProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-700/60 bg-gradient-to-br from-emerald-950 to-emerald-900/80 p-4">
       <div className="absolute inset-0 rounded-2xl border-4 border-emerald-700/20 m-1.5 pointer-events-none" />
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/70">Prize Coupon</p>
+      <p className="text-caption font-bold uppercase tracking-[0.2em] text-emerald-400/70">Prize Coupon</p>
       <p className={`mt-0.5 font-black tracking-wide text-emerald-100 ${large ? "text-2xl" : "text-xl"}`}>
         FREE APPETIZER
       </p>
@@ -144,9 +144,9 @@ function AppetizerCoupon({ win, onRedeem, large }: CouponCardProps) {
       <div className="my-3 border-t border-dashed border-emerald-700/50" />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
-          <p className="text-[11px] text-emerald-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
+          <p className="text-caption text-emerald-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
           {expiry && !redeemed && (
-            <p className={`text-[11px] ${expiry.className}`}>{expiry.label}</p>
+            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
           )}
         </div>
         {redeemed ? (
@@ -175,7 +175,7 @@ function GiftCertificateCoupon({ win, onRedeem, large }: CouponCardProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/60 bg-gradient-to-br from-amber-950 to-amber-900/80 p-4">
       <div className="absolute inset-0 rounded-2xl border-4 border-double border-amber-500/30 m-1 pointer-events-none" />
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/70">Prize Coupon</p>
+      <p className="text-caption font-bold uppercase tracking-[0.2em] text-amber-400/70">Prize Coupon</p>
       {amount != null && (
         <p className={`font-black text-amber-300 ${large ? "text-4xl" : "text-3xl"}`}>
           ${amount.toFixed(2)}
@@ -188,9 +188,9 @@ function GiftCertificateCoupon({ win, onRedeem, large }: CouponCardProps) {
       <div className="my-3 border-t border-dashed border-amber-500/40" />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
-          <p className="text-[11px] text-amber-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
+          <p className="text-caption text-amber-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
           {expiry && !redeemed && (
-            <p className={`text-[11px] ${expiry.className}`}>{expiry.label}</p>
+            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
           )}
         </div>
         {redeemed ? (
@@ -222,7 +222,7 @@ function GiftCardCoupon({ win, onRedeem, large }: CouponCardProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/60 bg-gradient-to-br from-amber-950 to-amber-900/80 p-4">
       <div className="absolute inset-0 rounded-2xl border-4 border-double border-amber-500/30 m-1 pointer-events-none" />
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/70">Prize Coupon</p>
+      <p className="text-caption font-bold uppercase tracking-[0.2em] text-amber-400/70">Prize Coupon</p>
       {amount != null && (
         <p className={`font-black text-amber-300 ${large ? "text-4xl" : "text-3xl"}`}>
           ${amount.toFixed(2)}
@@ -235,9 +235,9 @@ function GiftCardCoupon({ win, onRedeem, large }: CouponCardProps) {
       <div className="my-3 border-t border-dashed border-amber-500/40" />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
-          <p className="text-[11px] text-amber-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
+          <p className="text-caption text-amber-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
           {expiry && !redeemed && (
-            <p className={`text-[11px] ${expiry.className}`}>{expiry.label}</p>
+            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
           )}
         </div>
         {squareIssued && !large ? (
@@ -317,7 +317,7 @@ function MenuItemCoupon({ win, onRedeem, large }: CouponCardProps) {
 
   return (
     <div className={`relative overflow-hidden rounded-2xl border-2 ${theme.border} bg-gradient-to-br ${theme.gradient} p-4`}>
-      <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${theme.eyebrow}`}>Prize Coupon</p>
+      <p className={`text-caption font-bold uppercase tracking-[0.2em] ${theme.eyebrow}`}>Prize Coupon</p>
       {discount && (
         <p className={`font-black text-amber-300 ${large ? "text-3xl" : "text-2xl"}`}>{discount}</p>
       )}
@@ -333,9 +333,9 @@ function MenuItemCoupon({ win, onRedeem, large }: CouponCardProps) {
       <div className={`my-3 border-t border-dashed ${theme.divider}`} />
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
-          <p className={`text-[11px] ${theme.awarded}`}>Awarded {formatDate(win.claimedAt ?? "")}</p>
+          <p className={`text-caption ${theme.awarded}`}>Awarded {formatDate(win.claimedAt ?? "")}</p>
           {expiry && !redeemed && (
-            <p className={`text-[11px] ${expiry.className}`}>{expiry.label}</p>
+            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
           )}
         </div>
         {squareIssued && !large ? (
@@ -807,7 +807,7 @@ export function PrizeWalletPanel() {
                           {win.prizeDescription && (
                             <p className="mt-0.5 text-xs text-ht-fg-secondary">{win.prizeDescription}</p>
                           )}
-                          <p className="mt-1 text-[11px] text-ht-fg-muted">Awarded {formatDate(win.awardedAt)}</p>
+                          <p className="mt-1 text-caption text-ht-fg-muted">Awarded {formatDate(win.awardedAt)}</p>
                           {win.rewardPoints > 0 && (
                             <p className="mt-0.5 text-xs font-semibold text-ht-fg-secondary">
                               +{win.rewardPoints} points
@@ -815,7 +815,7 @@ export function PrizeWalletPanel() {
                           )}
                         </div>
                         <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-caption font-semibold ${
                             win.status === "claimed"
                               ? "bg-emerald-500/15 text-emerald-400"
                               : "bg-amber-500/15 text-amber-300"

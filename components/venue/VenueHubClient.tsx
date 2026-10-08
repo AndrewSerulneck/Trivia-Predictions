@@ -1638,12 +1638,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 <p className="truncate text-[1.15rem] font-black leading-tight text-ht-fg-primary">
                   {menuUsername || "Guest"}
                 </p>
-                <p className="mt-0.5 truncate text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-cyan-400">
+                <p className="mt-0.5 truncate text-caption font-semibold uppercase tracking-[0.1em] text-cyan-400">
                   {venueDisplayName}
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-amber-200/85">Points</p>
+                <p className="text-caption font-black uppercase tracking-[0.12em] text-amber-200/85">Points</p>
                 <p
                   className="text-[1.02rem] font-black leading-tight"
                   style={{ color: "var(--ht-accent-gold, #fbbf24)", fontVariantNumeric: "tabular-nums" }}
@@ -1717,7 +1717,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
               <div className="flex w-[min(92vw,24rem)] items-center gap-3 pr-24">
                 <ChallengeIconBadge gameType={selectedChallengeDetail.gameType} />
                 {selectedChallengeDetail.gameLabel ? (
-                  <span className="min-w-0 flex-1 text-[11px] font-black uppercase leading-tight tracking-[0.14em] text-slate-400">
+                  <span className="min-w-0 flex-1 text-caption font-black uppercase leading-tight tracking-[0.14em] text-slate-400">
                     {selectedChallengeDetail.gameLabel}
                   </span>
                 ) : null}

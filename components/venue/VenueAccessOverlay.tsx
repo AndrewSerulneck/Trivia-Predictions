@@ -75,7 +75,7 @@ export function VenueAccessOverlay({
             </div>
 
             <div className="relative flex flex-col items-center text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-100/90">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1 text-caption font-black uppercase tracking-[0.18em] text-cyan-100/90">
                 <span className="inline-flex h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(252,211,77,0.85)]" />
                 {venuePresenceKindLabel(content.kind)}
               </div>

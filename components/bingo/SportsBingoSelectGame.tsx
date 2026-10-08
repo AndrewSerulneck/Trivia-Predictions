@@ -214,7 +214,7 @@ export function SportsBingoSelectGame({
             )}
             <h2 className={`text-lg font-semibold text-slate-200 ${hideStepHeading ? "" : "mt-1"}`}>Choose A Game</h2>
           </div>
-          <span className="shrink-0 rounded-full border border-sky-300/40 bg-sky-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-sky-200">
+          <span className="shrink-0 rounded-full border border-sky-300/40 bg-sky-300/10 px-2.5 py-1 text-caption font-black uppercase tracking-[0.08em] text-sky-200">
             {activeGameIds.size} of 4 boards active
           </span>
         </div>
@@ -259,7 +259,7 @@ export function SportsBingoSelectGame({
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-black text-slate-100">{game.awayTeam} vs {game.homeTeam}</p>
                     {unavailable ? (
-                      <span className="shrink-0 rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                      <span className="shrink-0 rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.08em] text-slate-400">
                         Active
                       </span>
                     ) : (
@@ -270,7 +270,7 @@ export function SportsBingoSelectGame({
                   </div>
                   <p className="mt-1 text-xs text-slate-400">Starts {formatLocalDateTime(game.startsAt)}</p>
                   {unavailable ? (
-                    <p className="mt-1 text-[11px] text-slate-400">You already have an active Bingo card for this game.</p>
+                    <p className="mt-1 text-caption text-slate-400">You already have an active Bingo card for this game.</p>
                   ) : null}
                 </button>
               );

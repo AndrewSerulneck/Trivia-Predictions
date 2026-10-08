@@ -97,7 +97,7 @@ export const RewardHistoryScreen = ({ rewards }: { rewards: RewardsLoad }) => {
 
 const DetailRow = ({ label, value }: { label: string; value: string }) => (
   <div className="py-2.5">
-    <p className="text-[11px] font-black uppercase tracking-wider text-ht-muted">{label}</p>
+    <p className="text-caption font-black uppercase tracking-wider text-ht-muted">{label}</p>
     <p className="font-bold text-ht-primary">{value}</p>
   </div>
 );
@@ -130,7 +130,7 @@ export const RewardDetailScreen = ({
 
       {topEntries.length > 0 ? (
         <div className="space-y-1 rounded-xl border border-ht-hairline bg-ht-elevated/40 p-3">
-          <p className="text-[11px] font-black uppercase tracking-wider text-ht-muted">Top players</p>
+          <p className="text-caption font-black uppercase tracking-wider text-ht-muted">Top players</p>
           {topEntries.slice(0, 3).map((entry) => (
             <div key={entry.userId} className="flex items-center justify-between text-xs">
               <span className="font-bold text-ht-secondary">
@@ -235,7 +235,7 @@ export const EndRewardScreen = ({
         >
           Archive — stop it, keep prizes
         </button>
-        <p className="px-1 text-[11px] font-semibold text-ht-muted">
+        <p className="px-1 text-caption font-semibold text-ht-muted">
           The reward stops running. Every prize already awarded still works.
         </p>
 
@@ -247,7 +247,7 @@ export const EndRewardScreen = ({
         >
           Delete anyway
         </button>
-        <p className="px-1 text-[11px] font-semibold text-ht-muted">
+        <p className="px-1 text-caption font-semibold text-ht-muted">
           {!counts || counts.unredeemed === 0
             ? "Removes the reward for good. Prizes already redeemed stay in your records."
             : `Removes the reward for good and voids ${counts.unredeemed} unredeemed ${counts.unredeemed === 1 ? "prize" : "prizes"}. Prizes already redeemed stay in your records.`}

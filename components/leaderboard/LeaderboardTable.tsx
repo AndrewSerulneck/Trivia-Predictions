@@ -528,7 +528,7 @@ export function LeaderboardTable({
                             {entry.username}
                           </span>
                           {isCurrentUser ? (
-                            <span className="ml-2 rounded-ht-pill border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
+                            <span className="ml-2 rounded-ht-pill border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-caption font-semibold text-amber-300">
                               You
                             </span>
                           ) : null}

@@ -34,7 +34,7 @@ export function PointsBank(props: {
     <section className="mt-3 rounded-ht-2xl border border-ht-cyan-600/40 bg-ht-elevated p-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-ht-cyan-400">Points Bank</p>
+          <p className="text-caption font-black uppercase tracking-[0.12em] text-ht-cyan-400">Points Bank</p>
           <p className="text-xs font-semibold text-ht-fg-secondary">{statusLine}</p>
         </div>
         <button
