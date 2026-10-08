@@ -4,6 +4,18 @@
 **State:** 2h **started, paused waiting on Andrew**. Everything the agent can do before Andrew's Square Console and
 secret-pasting steps is done. Step 1 (Andrew's own Square, real money) has not run yet.
 
+## UPDATE 2026-10-06 ~20:21 ET — Square is ON in production
+
+- Agent generated `POS_TOKEN_KEY` (never printed). Copy: macOS Keychain item "Hightop POS_TOKEN_KEY (production)"
+  (32 bytes, base64, verified). Andrew's three Square values went to Vercel straight from his clipboard. A sandbox
+  Application ID was caught and refused first. All 7 names are present in production.
+- R5 + docs committed `e2bf1e6` and pushed. Production deploy `dpl_5JAih4xzgz7Sw7PRHeJzPm215eyu` is Ready and aliased to
+  `hightopchallenge.com` + `play.`.
+- Smoke: unsigned `POST /api/webhooks/square` → **401**; `/api/owner/pos` signed out → **401** (it was 404 with the flag off);
+  `/info` 200.
+- Next: Andrew's steps 5–8 below (Square seller + app, Connect, $2 card test, menu prize test). Optional: "Send test event"
+  in the Square console webhooks page, then look for a `[PosSquare] webhook-…` log line.
+
 ## For Andrew (plain English)
 
 **Done today:**

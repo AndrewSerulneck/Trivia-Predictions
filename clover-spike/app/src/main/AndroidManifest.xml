@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phase 3a throwaway spike: proves the four device facts in docs/pos-rewards-integration-plan.md (3a). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Same set Clover's own SDK examples declare for CloverAccount / CloverAuth. -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:allowBackup="false"
+        android:label="Hightop Spike"
+        android:usesCleartextTraffic="false">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="Hightop Spike">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Fact 2: Register shows this activity's label as a button on the order/payment screen
+             and starts it with Intents.EXTRA_ORDER_ID (docs: intents-and-broadcasts). -->
+        <activity
+            android:name=".ModifyOrderActivity"
+            android:exported="true"
+            android:label="Hightop Reward">
+            <intent-filter>
+                <action android:name="clover.intent.action.MODIFY_ORDER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
