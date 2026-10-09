@@ -48,8 +48,16 @@ export type NativePlatform = "ios" | "android";
  * - `Haptics`: @capacitor/haptics (taps and buzzes; Phase 4a).
  * - `Filesystem`: @capacitor/filesystem (saves the story picture to the app's cache so the share
  *   sheet can attach it on Android; Phase 4a.1).
+ * - `CapacitorBarcodeScanner`: @capacitor/barcode-scanner (the in-app QR scanner; Phase 4b).
  */
-export type NativeCapability = "App" | "Geolocation" | "HightopShell" | "Share" | "Haptics" | "Filesystem";
+export type NativeCapability =
+  | "App"
+  | "Geolocation"
+  | "HightopShell"
+  | "Share"
+  | "Haptics"
+  | "Filesystem"
+  | "CapacitorBarcodeScanner";
 
 const UA_TOKEN_PATTERN = /HightopChallengeApp\/(\d+(?:\.\d+){0,2})\s*\((ios|android)\)/;
 

@@ -53,4 +53,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Camera: the QR scanner only (Phase 4b). Asked for when a player taps "Scan QR code", never at launch. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Not required: phones and tablets without a camera can still install and play. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>
