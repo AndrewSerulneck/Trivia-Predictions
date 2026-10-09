@@ -25,8 +25,9 @@ Andrew's decision that partners never use the app (§2 item 12) — it runs BEFO
 **2D, 2E and 3 were committed locally as ONE commit `4706072` (2026-10-09, not pushed).** **Phase 3B.1
 (player-only app) is built and verified 2026-10-09, committed locally as its own commit, NOT pushed or
 deployed** — handoff `docs/native-app-store-plan_PHASE_3B1_HANDOFF.md`.
-**Next: Phase 3B.2 (`/info` Partner Login + the Square badge — Andrew supplied the badge, guidelines and
-copy OK on 2026-10-09; see 3B.2), then push 2D+2E+3+3B together, rebuild the shell, Andrew's device
+**Phase 3B.2 (`/info` Partner Login + the Square badge) is built and verified 2026-10-09, committed locally,
+NOT pushed or deployed** — handoff `docs/native-app-store-plan_PHASE_3B2_HANDOFF.md`.
+**Next: Andrew decides when to push 2D+2E+3+3B together, rebuild the shell, his device
 checklist (3B.3), then Phases 4a and 4b** (4c, 5 and Part B wait for the paid Apple
 account; Universal Links also switch on then). Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
 this line.
@@ -663,7 +664,7 @@ via the page, the geolocation plugin, and replacing `SpikeViewController` with `
 ### Phase 3B — Player-only app, clearer partner sign-in on `/info`, Square logo (before Phase 4)
 
 **Status: 3B.0 done (2D+2E+3 committed as one local commit `4706072`); 3B.1 built and verified
-2026-10-09, committed locally (handoff `docs/native-app-store-plan_PHASE_3B1_HANDOFF.md`); 3B.2 next.**
+2026-10-09, committed locally (handoff `docs/native-app-store-plan_PHASE_3B1_HANDOFF.md`); 3B.2 built and verified 2026-10-09, committed locally (handoff `docs/native-app-store-plan_PHASE_3B2_HANDOFF.md`); 3B.3 (Andrew) next.**
 Andrew's decision: §2 item 12. Each sub-phase writes
 `docs/native-app-store-plan_PHASE_3B<N>_HANDOFF.md` (for example `…_PHASE_3B1_HANDOFF.md`) and updates
 the status line at the top of this file.
@@ -819,6 +820,12 @@ shows in the app.
 `tests/text-size-floor-contract.test.ts`; lint, typecheck, test, build. Screenshots at 390 px and
 1280 px (Playwright on `npm run dev`) for Andrew in the handoff. **Cost:** one small static SVG on
 `/info`, CDN-cached.
+
+**As built (2026-10-09):** phone header "Partner Login" button (`md:hidden`, 44 px) + outlined desktop
+button; solid white hero button + the approved line; the badge shown whole (`public/brand/partners/
+built-with-square-badge.webp`, 352×100, 3 KB, from `assets/partner-src/…png` via `npm run
+square-badge:image`) on its own row with 40 px clear space, not a link. Test:
+`tests/info-partner-login-contract.test.ts`. Screenshots: `docs/native-app-store-plan_PHASE_3B2_screenshots/`.
 
 #### Phase 3B.3 — Device check (Andrew, ~15 minutes)
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { LogIn } from "lucide-react";
 import { ContactForm } from "@/components/info/ContactForm";
 import { GameShowcaseBlock, type GameShowcase } from "@/components/info/AnnotatedScreenshot";
 import { gameHref } from "@/lib/domainSplit";
@@ -413,8 +414,9 @@ export default function InfoPage() {
             <div className="hidden md:flex items-center gap-3">
               <a
                 href="/owner/login"
-                className="text-sm font-semibold text-slate-300 hover:text-white transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/25 px-4 py-2 text-sm font-bold text-white hover:border-white/50 hover:bg-white/10 transition-colors whitespace-nowrap"
               >
+                <LogIn aria-hidden className="h-4 w-4" />
                 Partner Login
               </a>
               <a
@@ -424,6 +426,13 @@ export default function InfoPage() {
                 Get Started
               </a>
             </div>
+            <a
+              href="/owner/login"
+              className="md:hidden ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-white/30 px-3 text-footnote font-bold text-white whitespace-nowrap hover:bg-white/10 transition-colors"
+            >
+              <LogIn aria-hidden className="h-4 w-4" />
+              Partner Login
+            </a>
             <button
               className="md:hidden flex flex-col gap-[5px] p-2"
               aria-label="Toggle menu"
@@ -519,7 +528,7 @@ export default function InfoPage() {
                   Get Your Venue Started
                 </a>
               </div>
-              {/* Row 2: See the Games + an unobtrusive route back to Partner Login */}
+              {/* Row 2: See the Games + Partner Login (Phase 3B.2) */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <a
                   href="#games"
@@ -539,11 +548,15 @@ export default function InfoPage() {
                 </a>
                 <a
                   href="/owner/login"
-                  className="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-4 text-base font-bold text-slate-200 hover:border-white/40 hover:text-white transition-colors"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-base font-black text-slate-950 shadow-lg shadow-white/10 hover:bg-slate-200 transition-colors"
                 >
-                  Already a partner? Sign in
+                  <LogIn aria-hidden className="h-5 w-5" />
+                  Partner Login
                 </a>
               </div>
+              <p className="mx-auto max-w-md text-footnote text-slate-400 leading-relaxed">
+                Venue partners: schedule games, set rewards and manage billing from any web browser — no app needed.
+              </p>
             </div>
             <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
               Digital games that can only be accessed at your bar, played on your guests&apos; phones.
@@ -552,6 +565,16 @@ export default function InfoPage() {
             <p className="text-sm font-bold text-slate-300 mb-4">
               Works with your Square register!
             </p>
+            {/* Square's official badge, shown whole (never cropped/recoloured/re-worded) with >= 40 px clear space (my-10 = 40 px). */}
+            <div className="my-10 flex justify-center">
+              <Image
+                src="/brand/partners/built-with-square-badge.webp"
+                alt="Built with Square"
+                width={352}
+                height={100}
+                className="h-auto w-44"
+              />
+            </div>
 
           </div>
 
