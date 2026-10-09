@@ -3,6 +3,7 @@ import type {
   StorySharePipelineResult,
   StoryShareRequest,
 } from "./contracts";
+import { shareImageNatively } from "@/lib/nativeImageShare";
 
 export type {
   StoryShareFileInput,
@@ -89,6 +90,19 @@ export async function shareStoryImage({
 
   const file = createStoryShareFile({ blob, fileName, fileType });
   const nav = getNavigator();
+
+  // Inside the app, Android's web view can't hand a picture to the share sheet, so the shell does it
+  // (Phase 4a.1). Only when the web view itself can't: iPhone keeps its working web path.
+  if (!canShareStoryFile(file)) {
+    const native = await shareImageNatively({ blob: file, fileName: file.name, title, text });
+    if (native !== "unavailable") {
+      return native === "shared"
+        ? { status: "shared", fallbackRecommended: false, file }
+        : native === "canceled"
+          ? { status: "canceled", fallbackRecommended: true, file, reason: "Share was canceled." }
+          : { status: "failed", fallbackRecommended: true, file, reason: "Native share failed." };
+    }
+  }
 
   if (typeof nav?.share !== "function") {
     return {

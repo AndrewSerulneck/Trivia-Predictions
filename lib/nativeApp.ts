@@ -46,8 +46,10 @@ export type NativePlatform = "ios" | "android";
  *   in the phone's browser.
  * - `Share`: @capacitor/share (the phone's share sheet; Phase 4a).
  * - `Haptics`: @capacitor/haptics (taps and buzzes; Phase 4a).
+ * - `Filesystem`: @capacitor/filesystem (saves the story picture to the app's cache so the share
+ *   sheet can attach it on Android; Phase 4a.1).
  */
-export type NativeCapability = "App" | "Geolocation" | "HightopShell" | "Share" | "Haptics";
+export type NativeCapability = "App" | "Geolocation" | "HightopShell" | "Share" | "Haptics" | "Filesystem";
 
 const UA_TOKEN_PATTERN = /HightopChallengeApp\/(\d+(?:\.\d+){0,2})\s*\((ios|android)\)/;
 

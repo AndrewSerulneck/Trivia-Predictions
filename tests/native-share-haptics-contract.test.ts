@@ -37,13 +37,13 @@ describe("native share", () => {
   it("an old shell without the plugin falls back to the website share, then to copying", async () => {
     stubApp([], vi.fn());
     const share = vi.fn().mockResolvedValue(undefined);
-    (window.navigator as Record<string, unknown>).share = share;
+    (window.navigator as unknown as Record<string, unknown>).share = share;
     expect(await sharePayload(INVITE_FRIEND_PAYLOAD)).toBe("shared");
     expect(share).toHaveBeenCalled();
 
-    delete (window.navigator as Record<string, unknown>).share;
+    delete (window.navigator as unknown as Record<string, unknown>).share;
     const writeText = vi.fn().mockResolvedValue(undefined);
-    (window.navigator as Record<string, unknown>).clipboard = { writeText };
+    (window.navigator as unknown as Record<string, unknown>).clipboard = { writeText };
     expect(await sharePayload(INVITE_FRIEND_PAYLOAD)).toBe("copied");
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining(INVITE_FRIEND_PAYLOAD.url));
   });
