@@ -29,8 +29,13 @@ deployed** — handoff `docs/native-app-store-plan_PHASE_3B1_HANDOFF.md`.
 NOT pushed or deployed** — handoff `docs/native-app-store-plan_PHASE_3B2_HANDOFF.md`.
 **Phase 4a (native share + haptics) is built and verified by tests and both shell builds, 2026-10-09, NOT pushed or
 deployed, not yet tried on a device** — handoff `docs/native-app-store-plan_PHASE_4A_HANDOFF.md`.
-**Next: Andrew decides when to push 2D+2E+3+3B+4a together, rebuild the shell, his device
-checklist (3B.3 + 4a), then Phase 4b** (4c, 5 and Part B wait for the paid Apple
+**Phase 4a.1 (Android story-picture share via `@capacitor/filesystem`) and Phase 4b (in-app QR scanner,
+`@capacitor/barcode-scanner`; Android minSdk now 26) are built and verified 2026-10-09 (tests, build, both shell builds,
+Android emulator), committed locally, NOT pushed or deployed** — handoff `docs/native-app-store-plan_PHASE_4B_HANDOFF.md`
+(also: where "Invite a friend" should go next = unscheduled Phase 4d, and how to review the whole plan:
+`git diff native-app-plan-base..HEAD`).
+**Next: Andrew decides when to push 2D+2E+3+3B+4a+4b together, rebuild the shell, his device checklist (3B.3 + section I
+of `docs/native-app-device-checklist.md`)** (4c, 5 and Part B wait for the paid Apple
 account; Universal Links also switch on then). Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
 this line.
 
@@ -212,6 +217,7 @@ Model rule (Andrew): **never more capable than Opus 5.5.** Models: `claude-opus-
 | 3B.3 | Rebuild the shell, Andrew's device + phone-browser check | Andrew (+ Sonnet 5.5, low) | low | ~15 min |
 | 4a | Native share + haptics | Sonnet 5.5 | medium | 1 session |
 | 4b | In-app QR scanner | Sonnet 5.5 | high | 1 session |
+| 4d | "Invite a friend" on the venue home, after a win, short leaderboards, account drawer (placement list in the 4B handoff) | Sonnet 5.5 | low–medium | short |
 | 4c | Face ID passkeys in the app (based on the Phase 2 result) | **Opus 5.5** | **xhigh** | 1–2 sessions |
 | 5 | Push notifications (device registry, sending, preferences) | **Opus 5.5** | high | 2 sessions |
 | 6 | Store listings, privacy labels, reviewer account, TestFlight/internal test, submit | Sonnet 5.5 (copy) + Andrew (clicks) | medium | 1 session + review wait |

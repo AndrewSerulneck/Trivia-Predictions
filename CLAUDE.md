@@ -69,6 +69,15 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   Native env vars (`NATIVE_APP_*`, `APPLE_TEAM_ID`, `ANDROID_APP_CERT_SHA256`) are server-side but
   need a Vercel **Redeploy** to apply. App version lives in four places, pinned equal by
   `tests/native-app-contract.test.ts`.
+- **Native share, haptics and the QR scanner (Phase 4, 2026-10-09; handoffs `…_PHASE_4A_HANDOFF.md`,
+  `…_PHASE_4B_HANDOFF.md`).** Plugins are capability-checked (`NativeCapability` in `lib/nativeApp.ts`:
+  `Share`, `Haptics`, `Filesystem`, `CapacitorBarcodeScanner`); old app builds fall back. Share: `lib/nativeShare.ts`
+  (link/text) and `lib/nativeImageShare.ts` (story picture; Android only, via Filesystem cache). Haptics fire from
+  ONE place, `triggerAnimation` (`lib/nativeHaptics.ts`). **QR scanner:** `lib/nativeQrScan.ts` — `parseHightopQr`
+  accepts ONLY https `play.hightopchallenge.com` / `hightopchallenge.com` at `/` or `/join` (optional `?v=`), and the
+  app navigates to a path it BUILDS (`joinPathForScan`), never to the scanned text. Plugin is
+  `@capacitor/barcode-scanner` (the MLKit one has no Swift Package Manager support — don't swap it in);
+  Android minSdk is 26 because of it. Camera is asked for only on tap. No partner surface (player-only app).
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
   `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
   `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep

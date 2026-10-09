@@ -86,6 +86,26 @@ These need the paid Apple account and the Play Console (plan Phase 0), plus two 
   sideways**. (The 2E remembered-partner launch was removed in Phase 3B.1 — skip those steps.)
 - The Phase 2A per-item checklist (`docs/native-app-store-plan_PHASE_2A_DEVICE_CHECKLIST.md`, A1–A14).
 
+## I. Phase 4 — share, buzz and QR scanner (rebuild the app AFTER the web deploy)
+
+The buttons only appear once the website is deployed AND the app is rebuilt (`cd native && npx cap sync`,
+then run from Xcode / Android Studio). The Android shell now needs Android 8 or newer (API 26).
+
+20. **Invite a friend:** Category Blitz alone at a venue → "Invite a friend" opens the phone's share sheet
+    with the join link. Cancel → nothing happens. In a phone browser → share sheet or "Link copied".
+21. **Buzz:** a right Speed Trivia answer, a Bingo square, a Bingo win → a tap/buzz. With iOS Reduce Motion
+    on → silence.
+22. **Story picture (Android):** finish Live Trivia / Category Blitz, tap share on your story → the share
+    sheet opens **with the picture attached** (Messages/WhatsApp show it). iPhone: same as before.
+23. **Scan QR code** (player sign-in screen and venue list; app only, never in a browser): tap it → the
+    camera permission question appears **now, not at launch** → allow → point at the printed join QR
+    (`https://play.hightopchallenge.com`, e.g. `public/store/qr/hightop-challenge-qr.png` on another
+    screen) → you stay put and see "That's the Hightop join code…".
+24. Scan a QR for something else (a website, a Wi-Fi code) → "That's not a Hightop code." Nothing opens.
+25. Tap the X to close the scanner → no message. Refuse the camera → "Camera access is off…".
+26. (Optional) Scan a venue link `https://play.hightopchallenge.com/?v=<a real venue id>` → the app opens
+    that venue's join step, same as the phone's Camera app does today.
+
 ## Results
 
 | # | iPhone | Android | Notes |

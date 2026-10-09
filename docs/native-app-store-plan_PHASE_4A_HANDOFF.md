@@ -1,5 +1,9 @@
 # Native App Store Plan — Phase 4a Handoff (native share + haptics)
 
+> **Update 2026-10-09:** Andrew approved `@capacitor/filesystem`, so Android now shares the story picture natively
+> (Phase 4a.1, `lib/nativeImageShare.ts`) — "no `@capacitor/filesystem`" below is superseded. Phase 4a is committed
+> (`1aac107`, `92f6304`). Next-phase notes and the "where else Invite a friend" answer: `…_PHASE_4B_HANDOFF.md`.
+
 **Date:** 2026-10-09. **Phase:** 4a of `docs/native-app-store-plan.md` (Sonnet 5.5, medium).
 **State:** built and verified by automated tests and by compiling both shells. **Not committed by this
 phase's author unless `git log` shows it; NOT pushed, NOT deployed. Not tried on a real phone.**
