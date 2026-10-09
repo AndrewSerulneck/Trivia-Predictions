@@ -68,7 +68,7 @@ link-out rules in web code). That is Phase 3, which consumes §8 below.
 - Branch `main`, HEAD `ea4ca4d` at the start; **nothing from Part A is committed or pushed** (Andrew
   hasn't asked). Uncommitted: `docs/native-app-store-plan.md` (Part A/B split, emulator decision),
   `tsconfig.json` (`exclude` += `native`), `eslint.config.mjs` (ignores `native/**`), new
-  `.vercelignore` (`native`), new `native/`, this file and the device checklist.
+  `.vercelignore` (`/native` — anchored; an unanchored `native` also dropped `components/native/` and broke the 2026-10-09 deploy), new `native/`, this file and the device checklist.
 - No production data was written. No env vars, no migrations, no `vercel.json` change, no deploy.
 - Emulator state: an AVD **`hightop_api36`** (Pixel 8, `system-images;android-36;google_apis_playstore;arm64-v8a`,
   WebView 133) was created and left running with the debug app installed. SDK platform 36 and
@@ -125,7 +125,7 @@ link-out rules in web code). That is Phase 3, which consumes §8 below.
   - `build.gradle` (root): `allprojects { layout.buildDirectory = ~/Library/Caches/hightop-native/android/<project> }`.
     See the iCloud trap in §5. The debug APK is at
     `~/Library/Caches/hightop-native/android/app/outputs/apk/debug/app-debug.apk`.
-- Repo root: `.vercelignore` (`native`), `tsconfig.json`, `eslint.config.mjs`.
+- Repo root: `.vercelignore` (`/native` — anchored; an unanchored `native` also dropped `components/native/` and broke the 2026-10-09 deploy), `tsconfig.json`, `eslint.config.mjs`.
 - Docs: `docs/native-app-store-plan.md` (status line, §1, §2 item 4, Phase 0 item 8, Phase 2 split,
   §6), this file, `docs/native-app-store-plan_PHASE_2A_DEVICE_CHECKLIST.md`, and one `CLAUDE.md`
   bullet.

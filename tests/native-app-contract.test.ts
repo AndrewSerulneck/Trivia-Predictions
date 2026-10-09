@@ -384,3 +384,16 @@ describe("web side of the app: runtime, geolocation, install prompt", () => {
   });
 });
 
+
+describe(".vercelignore keeps only the root native/ shell out of deploys", () => {
+  it("anchors every entry to the repo root, so components/native/ still uploads", () => {
+    // An unanchored `native` also matched components/native/ and broke the
+    // 2026-10-09 production build (Module not found: @/components/native/...).
+    const entries = readFileSync(path.join(repoRoot, ".vercelignore"), "utf8")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"));
+    expect(entries).toContain("/native");
+    for (const entry of entries) expect(entry.startsWith("/")).toBe(true);
+  });
+});
