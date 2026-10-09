@@ -9,7 +9,10 @@ progress (D-U-N-S requested, Xcode and Android Studio installed). **Phase 2 is s
 Apple account is approved: passkeys and the 7-day login test)** — see Phase 2. **Part A: automated
 simulator/emulator checks done 2026-10-08; waiting on Andrew's device checklist**
 (`docs/native-app-store-plan_PHASE_2A_DEVICE_CHECKLIST.md`); handoff
-`docs/native-app-store-plan_PHASE_2A_HANDOFF.md`. Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
+`docs/native-app-store-plan_PHASE_2A_HANDOFF.md`. **Andrew's first device report (2026-10-08) added Phases 2C, 2D and 2E** (see "Andrew's first
+device report" under Phase 2). **Phase 2C (venue-list leak) is DONE locally, 2026-10-08 — not yet
+committed or deployed** (Andrew's call); handoff `docs/native-app-store-plan_PHASE_2C_HANDOFF.md`.
+2D or 2E is next (either order). Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
 this line.
 
 **Goal:** one "Hightop Challenge" app, live on the Apple App Store and Google Play. Players get the
@@ -171,6 +174,9 @@ Model rule (Andrew): **never more capable than Opus 5.5.** Models: `claude-opus-
 | 1a | Privacy Policy, Terms, Official Contest Rules, Support pages | Sonnet 5.5 | medium | 1 session |
 | 1b | Player self-serve account deletion (in-app + web URL) | **Opus 5.5** | **high** | 1–2 sessions |
 | 2 | Native shell spike on iPhone + Android phone (prove the risky parts) | **Opus 5.5** | **xhigh** | 1–2 sessions + Andrew's iPhone test |
+| 2C | Venue-list leak fix (website bug found in Andrew's device test) | **Opus 5.5** | medium | 1 session |
+| 2D | App fits the screen: safe areas, venue-home gap, smaller logos | **Opus 5.5** | high | 1 session + Andrew's iPhone |
+| 2E | App front door (guests → games, partners → dashboard), no `/info`, false-offline fix | **Opus 5.5** | high | 1–2 sessions + Andrew's iPhone |
 | 3 | Production shell: icons, offline screen, native detection, partner/billing link-outs, Universal Links, minimum-version gate | **Opus 5.5** | high | 2 sessions |
 | 4a | Native share + haptics | Sonnet 5.5 | medium | 1 session |
 | 4b | In-app QR scanner | Sonnet 5.5 | high | 1 session |
@@ -351,6 +357,187 @@ Prove each item, recording pass or fail:
 
 **Done when:** every item has a recorded result and the handoff names the approach Phase 3 uses
 for each one.
+
+---
+
+### Andrew's first device report (2026-10-08) and the fix phases it created
+
+Andrew ran the Part A test app on his iPhone and reported seven things. The first agent to start
+2C, 2D or 2E copies this list into `docs/native-app-store-plan_PHASE_2A_HANDOFF.md` §9.
+
+| # | What Andrew saw | Cause (what was checked) | Fixed in |
+|---|---|---|---|
+| R1 | On the iPhone, everything sits too high. The sign-in logo, the venue-home menu and alerts buttons, and the Back buttons are cut off under the status bar, so Back can't be tapped. | iOS draws the web page under the status bar (`contentInset: "never"` in `native/capacitor.config.json` + `viewportFit: "cover"` in `app/layout.tsx`). Some screens add `env(safe-area-inset-top)` padding and some don't. The venue-home header (`components/venue/VenueHubHeaderBar.tsx`) *does* add it but is still cut off, so on the real phone the inset may be read as 0. Not yet diagnosed on the device; the simulator looked fine. | **2D** |
+| R2 | Big gap between the game buttons and the Games / Leaderboard / Rewards bar; the "Next Live Trivia Showdown in…" box is pushed far down. | The venue home leaves a fixed-height gap for its pinned header (`components/venue/VenueHubClient.tsx`, `h-[calc(max(env(safe-area-inset-top),0px)+8rem)]`) instead of measuring the header. A guessed height is wrong whenever the header's real height differs. | **2D** |
+| R3 | Signed in as **Rick** (not Andrew), all venues show, wherever he is. | **Working as designed.** Production `accounts` has `god_mode = true` for exactly three accounts: `Andrew`, `marc` and **`Rick`** (checked 2026-10-08). God Mode sees every venue. To test as a normal player, use a fresh account. If Rick should be a normal player, turn God Mode off for him in the admin. Andrew to decide; nothing to build. | none |
+| R4 | A **new** player briefly sees every venue behind the "share your location" question. After they allow location, only the nearby ones remain. | **Real bug, on the website too, not only the app.** In `components/join/JoinFlow.tsx`, sign-out (`handleSignedOut`) and going back to the sign-in choice (`handleBackToAuthMethodSelection`) reset `venueListBuiltRef` but **not the `venueList` state**. The previous account's God Mode list (Rick's) stays on screen while `buildVenueListAfterAuth` waits for the new player's location. The deep-link path also fills `venueList` with every venue (`setVenueList(venues)` before the geofence check). Only phones where a God Mode account signed out are affected, but a non-God Mode player must never see an out-of-range venue. | **2C** |
+| R5 | `/info` shouldn't be part of the app. The app should send guests to the games and partners to the dashboard. | A design change: today every "home" control points at `/info` (`marketingHref("/info")` in `LegalPage`, `app/owner/login`, `JoinFlow`, `SignupShell`, `SignupWizard`, `DeleteAccountPanel`, `app/owner/billing/setup`). | **2E** |
+| R6 | Back from a legal page shows "No connection… check your connection" while the internet is fine. "Try again" then goes to the player sign-in. | Back on legal pages goes to `https://hightopchallenge.com/info` (domain split is live). Most likely cause: `useExitNavigation` calls `history.back()` and then, 150 ms later, its fallback navigation. The cancelled first navigation is reported as a failed load, and the shell shows `server.errorPath`. "Try again" in `native/www/offline.html` reloads the app's start URL, not the page that failed. To confirm on the device. | **2E** |
+| R7 | The app still works with Wi-Fi off. | Expected: the phone switched to mobile data. There is no offline caching (no service worker, by rule). To test the real offline screen, use **Airplane Mode**. | 2E re-tests |
+
+All three phases change only the shell and the web pages' layout and routing. No database changes,
+no new env vars, no new cron jobs, and no new recurring cost (2E adds no request; see its cost
+note).
+
+---
+
+### Phase 2C — Venue-list leak fix (Opus 5.5, medium) — ships to the website now
+
+**Status: built and tested 2026-10-08, not yet committed/deployed. As-built:
+`docs/native-app-store-plan_PHASE_2C_HANDOFF.md`** (generation-tagged list in `lib/joinVenueList.ts`).
+
+**Goal:** a player who isn't God Mode never sees a venue outside their range, not even for a
+moment, and not after a God Mode account used the same phone. This is a website bug, so it ships
+on its own without waiting for the app.
+
+- In `components/join/JoinFlow.tsx`, **clear `venueList` (set it to `[]`) everywhere
+  `venueListBuiltRef` is reset** (`handleSignedOut`, `handleBackToAuthMethodSelection`, and any
+  other reset), **and** at the start of `buildVenueListAfterAuth` before it awaits anything. While
+  the location check runs, show the "Finding venues near you…" loading state, never a list.
+- Deep-link path (`setVenueList(venues)` around line 946): stop putting every venue into
+  `venueList`. Use a local variable for that path's own single-venue check, or clear the list before
+  the venue-list panel can show.
+- Belt and braces: the venue-list panel renders a list only when it was built **for the current
+  sign-in**. For example, keep a build id or owner (account id + God Mode) next to the list and
+  render nothing when it doesn't match.
+- Don't touch God Mode's server path (`/api/join/profile`), and don't add any god-mode lookup before
+  sign-in (CLAUDE.md: that would let anyone find out which usernames exist).
+
+**Tests:** a new test that signs in as God Mode, signs out, then signs up a normal player, and checks
+that the venue list is empty until location resolves and then shows only in-range venues. Also the
+deep-link case. Run `npm run test:god-mode-join`, `npm run test`, `npx tsc --noEmit`,
+`npm run lint` and `npm run build`. Andrew's device check: sign out of Rick, create a new player, and
+confirm that no venue shows behind the location question.
+
+---
+
+### Phase 2D — Fit the screen inside the app: safe areas, header gap, smaller logos (Opus 5.5, high)
+
+**Goal:** inside the iPhone app, nothing sits under the status bar or the notch / Dynamic Island,
+every Back and menu button can be tapped, and the venue home has no dead gap. The website must
+look the same as today, or better.
+
+**Needs Andrew's iPhone plugged into the Mac** (Safari → Develop menu → the phone → the app's page;
+`webContentsDebuggingEnabled` is already on in the debug build).
+
+1. **Diagnose first, on the real phone.** On the sign-in page, the venue home and a legal page, read
+   the real value of `env(safe-area-inset-top)`. For example, set a test element's `padding-top`
+   to it and read `getComputedStyle`. Also read `window.scrollY` and the header's
+   `getBoundingClientRect().top`. Also say what Andrew's iPhone model is. This tells which of the two
+   problems we have:
+   - **(a) the inset reads as 0** inside the app → fix the shell (step 2);
+   - **(b) the inset is right, but some screens ignore it** → fix the web pages (step 3).
+   It may be both.
+2. **Shell option (try first; fixes every screen at once).** Make the iPhone app start the page
+   *below* the status bar, the way Android already does. Try either `ios.contentInset: "always"`, or
+   the `@capacitor/status-bar` plugin with the web view not drawn under the bar, then set the bar's
+   colour to the site's dark navy `#020617`. Check that it doesn't break the fixed headers, the
+   bottom bars, the keyboard, or **Bingo landscape fullscreen**
+   (`docs/bingo-fullscreen-pwa-device-checklist.md`). A shell change needs `npx cap sync ios`
+   and a rebuild on the phone, but **no website deploy**. If it causes layout side effects, fall
+   back to step 3.
+3. **Web option.** Audit every top-of-screen element for safe-area padding. Known: the join /
+   sign-in screens (`components/join/JoinFlow.tsx`) and the `/owner/login` page. Check also
+   `ExitBackButton`'s host shells (`PageShell`, `OwnerShell` / `OwnerAppBar`, `AppBar`,
+   `LegalPage`). Use one shared Tailwind pattern (`pt-[max(env(safe-area-inset-top),Xpx)]`) rather
+   than per-page guesses. Add a contract test that every host shell carries it.
+4. **Venue-home gap (R2):** replace the fixed `8rem` spacer in `VenueHubClient.tsx` with the
+   header's **measured** height (a `ResizeObserver` on `VenueHubHeaderBar` writing a CSS variable),
+   or make the header `sticky` so the page flows under it with no spacer. Inline `style` isn't allowed
+   outside the TV display, so set the CSS variable through a ref (`element.style.setProperty`) or a
+   Tailwind arbitrary value. Then the game buttons sit right under the Games / Leaderboard / Rewards
+   bar, and the "Next Live Trivia Showdown" box sits right under the buttons. Check this on the
+   **website too**: if the same gap shows in mobile Safari, this fixes it there as well.
+5. **Smaller logos (Andrew asked):** shrink the logo on the **player sign-in** screen and on the
+   **Partner Dashboard and partner sign-in** (`components/owner/OwnerAppBar.tsx`,
+   `app/owner/login/page.tsx`) so they fit neatly. Roughly 15–25% smaller; show Andrew before/after
+   screenshots. Use the existing `/brand/web/*.webp` files, so no new artwork is needed.
+6. Android: the page already starts below the status bar there. Check that nothing regressed, and
+   colour the white status bar dark if step 2 adds the status-bar plugin (Phase 3 would otherwise do
+   it).
+
+**Tests:** `npm run test:pwa-contract` (landscape CSS must not leak into portrait), the new
+safe-area contract test, `npm run test`, typecheck, lint and build. Andrew's device check: the
+sign-in logo, the menu and alerts buttons and every Back button are fully visible and tappable on
+the sign-in page, the venue home, a game, a legal page and the Partner Dashboard; and the venue home
+has no gap. Also confirm the website in mobile Safari looks unchanged or better.
+
+---
+
+### Phase 2E — App front door: guests to games, partners to the dashboard, no `/info` (Opus 5.5, high)
+
+**Goal (R5, R6, R7):** inside the app, there is no marketing page. The app opens on a front door
+that sends a **bar guest** to the player sign-in and games, and a **venue partner** to the Partner
+Dashboard. Back never leads to `/info` or to a false "No connection" screen. The website, including
+`hightopchallenge.com/info`, is unchanged.
+
+**How other apps do it, and the recommendation (Andrew asked).** Big two-sided products usually ship
+**two apps**: Uber and Uber Driver, DoorDash and DoorDash Merchant, Yelp and Yelp for Business,
+OpenTable and OpenTable for Restaurants. They do this because each side is a large audience with its
+own daily workflow. Smaller products, and ones whose business side is just "manage your account",
+usually ship **one app with two sign-in doors**. **Recommendation: keep one app (§2 item 2), with a
+clear front door, and revisit a separate "Hightop Partner" app only if partners grow into the
+hundreds and ask for one.** Reasons:
+- Apple rejects thin "just a website" apps (guideline 4.2). A partner-only app would be mostly a
+  dashboard and is the likelier one to be rejected. It would also be judged as a near-copy of the
+  player app (4.3).
+- Two apps means two listings, two reviews, two sets of screenshots and privacy labels, and twice the
+  release work, all for a small partner group.
+- Partners pay on the web anyway (Stripe in the system browser), so a partner app adds little.
+- Going to two apps later is easy (a second shell over the same site). Merging two apps into one
+  later is hard.
+
+**Build:**
+1. **`lib/nativeApp.ts`** (pulled forward from Phase 3): `isNativeApp()` reads the
+   `HightopChallengeApp/<ver>` user-agent token or `window.Capacitor`. It is the only reader, pinned
+   by a contract test. Phase 3 then adds `nativePlatform()`, `nativeAppVersion()` and
+   `hasNativeCapability()` to this file, not a second helper.
+2. **One "home" for the app.** Add one helper, for example `homeHref()` in `lib/domainSplit.ts`
+   beside `marketingHref`: on the website it returns `marketingHref("/info")` (today's behaviour,
+   CLAUDE.md rule unchanged), and **in the app** it returns the app front door. Switch every
+   current `marketingHref("/info")` "home" control to it (list in R5). A contract test forbids a bare
+   `marketingHref("/info")` in those files. CLAUDE.md's "`/info` IS the home page" rule gets a
+   one-line note: *on the website*.
+3. **Front door = the player sign-in screen** (`play.` `/`, `JoinFlow`'s
+   `auth-method-selection`), which guests already see first, plus a plain **"Venue partner? Sign
+   in"** link at the bottom that goes to `/owner/login`. In the app, the `/owner/login` Back goes to
+   that same front door.
+4. **Remember the side.** When a partner signs in inside the app, remember "partner" on the phone
+   (localStorage, a convenience only, never trusted for access). On the next launch, if the partner's
+   session is still valid, open straight on `/owner/dashboard`. Otherwise show the front door. A
+   partner who signs out goes back to the front door. Do it in the web page, not `proxy.ts` (never
+   change its default gate behaviour).
+5. **Marketing pages leave the app.** In the app, `/info`, `/faqs`, `/advertise` and any other
+   apex marketing page open in the system browser (same link-out mechanism Phase 3 uses for Stripe
+   and `/admin`). Legal pages (`/privacy`, `/terms`, `/rules`, `/support`, `/delete-account`) stay
+   **inside** the app, because Apple wants them reachable in the app.
+6. **R6: the false "No connection" screen.** On the phone, reproduce Back from a legal page with the
+   Safari inspector open. Check whether the cancelled `history.back()` plus the fallback navigation is
+   what trips `server.errorPath`. Fix both ends:
+   - web: with item 2 in place, Back in the app goes to the app home by one navigation, not two
+     racing ones;
+   - shell: show the offline page only for real network errors (ignore "navigation cancelled",
+     iOS `NSURLErrorCancelled` −999 and the Android equivalent), and make "Try again" in
+     `native/www/offline.html` reload **the page that failed** (pass its URL in), not the start URL.
+
+   Phase 3's "Offline screen" bullet is then mostly done; Phase 3 only polishes its look.
+7. **R7:** re-test the offline screen in **Airplane Mode** on the iPhone and the emulator, and record
+   it.
+
+**Cost note:** no new requests; item 4 reuses the dashboard's existing single first-load call
+(`GET /api/owner/dashboard`).
+
+**Tests:** contract tests for `isNativeApp()`'s single-reader rule and for `homeHref()`; a unit test
+for the front-door choice (no stored side → front door; "partner" + valid session → dashboard;
+"partner" + expired session → front door); `npm run test:god-mode-join` (JoinFlow is touched); and
+the full checks. Andrew's device check: the app opens on the front door; the partner link works;
+relaunching as a signed-in partner opens the dashboard; no in-app control reaches `/info`; Back from
+each legal page works with no "No connection"; Airplane Mode shows the offline screen and "Try
+again" returns to the same page.
+
+**Order:** 2C first (it's a live website bug and independent). 2D and 2E can then run in either
+order; both need Andrew's iPhone for the final check. Phase 3 follows and skips whatever 2E already
+built.
 
 ---
 

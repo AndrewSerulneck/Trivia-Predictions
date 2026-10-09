@@ -45,7 +45,7 @@ describe("God Mode join contract static guard", () => {
   it("does not run browser geolocation on a direct venue link before auth", () => {
     const directVenueLoadBranch = sourceBetween(
       joinFlowSource,
-      "const venues = await listVenues();",
+      "// Direct venue link (pre-auth): warm the venue cache only.",
       "} catch (error) {"
     );
 
@@ -81,5 +81,87 @@ describe("God Mode join contract static guard", () => {
   it("lets the server apply God Mode presence bypass when browser location fails", () => {
     expect(venuePresenceBoundarySource).toContain("const serverAllowed = await sendHeartbeat(null");
     expect(venuePresenceBoundarySource).toContain("await sendHeartbeat(null);");
+  });
+});
+
+// Phase 2C (docs/native-app-store-plan.md, device report R4): a player who is
+// not God Mode must never see a venue outside their range — not for a moment,
+// and not after a God Mode account used the same phone.
+describe("Venue-list leak guard (Phase 2C)", () => {
+  it("renders only the generation-checked list, and never sets the raw list directly", () => {
+    expect(joinFlowSource).toContain("const venueList = visibleJoinVenueList(venueListState);");
+    expect(joinFlowSource).not.toMatch(/\bsetVenueList\(/);
+    // The only writers of the list state: the empty reset and the guarded commit.
+    const writers = joinFlowSource.match(/setVenueListState\(/g) ?? [];
+    expect(writers).toHaveLength(2);
+    expect(joinFlowSource).toContain("setVenueListState(emptyJoinVenueList(generation));");
+    expect(joinFlowSource).toContain(
+      "setVenueListState((current) => commitJoinVenueList(current, generation, venues));"
+    );
+  });
+
+  it("drops the old list everywhere the builder guard is reset", () => {
+    // Exactly one `venueListBuiltRef.current = false`, inside discardVenueList,
+    // which also empties the list. Sign-out and back-to-sign-in both call it.
+    const resets = joinFlowSource.match(/venueListBuiltRef\.current = false/g) ?? [];
+    expect(resets).toHaveLength(1);
+    const discard = sourceBetween(
+      joinFlowSource,
+      "const discardVenueList = useCallback(() => {",
+      "}, [beginVenueListBuild]);"
+    );
+    expect(discard).toContain("venueListBuiltRef.current = false;");
+    expect(discard).toContain("beginVenueListBuild();");
+
+    const signedOut = sourceBetween(
+      joinFlowSource,
+      "const handleSignedOut = useCallback(() => {",
+      "}, [refreshAuthSession, discardVenueList]);"
+    );
+    expect(signedOut).toContain("discardVenueList();");
+
+    const backToAuth = sourceBetween(
+      joinFlowSource,
+      "const handleBackToAuthMethodSelection = useCallback(() => {",
+      "}, [discardVenueList]);"
+    );
+    expect(backToAuth).toContain("discardVenueList();");
+  });
+
+  it("empties the list before the builder awaits anything, and drops a stale build", () => {
+    const builder = sourceBetween(
+      joinFlowSource,
+      "const buildVenueListAfterAuth = useCallback(async () => {",
+      "}, [beginVenueListBuild, commitVenueList]);"
+    );
+    const begin = builder.indexOf("const generation = beginVenueListBuild();");
+    expect(begin).toBeGreaterThanOrEqual(0);
+    expect(begin).toBeLessThan(builder.indexOf("await "));
+    expect(builder).toContain("if (!isCurrentBuild()) return;");
+    expect(builder).toContain("commitVenueList(generation, nearbyVenues);");
+    expect(builder).toContain("const nearbyVenues = filterVenuesInRange(venues, coords);");
+  });
+
+  it("starts a fresh build for a venue-list location retry", () => {
+    const retry = sourceBetween(
+      joinFlowSource,
+      "const handleGrantLocation = useCallback(async (intent",
+      "}, [venue, beginVenueListBuild, commitVenueList]);"
+    );
+    const begin = retry.indexOf('const listGeneration = intent === "venue-list" ? beginVenueListBuild() : null;');
+    expect(begin).toBeGreaterThanOrEqual(0);
+    expect(begin).toBeLessThan(retry.indexOf("await "));
+    expect(retry).toContain("if (isStaleListRetry()) return;");
+  });
+
+  it("never fills the list from the direct-venue-link load path", () => {
+    const directVenueLoadBranch = sourceBetween(
+      joinFlowSource,
+      "// Direct venue link (pre-auth): warm the venue cache only.",
+      "} catch (error) {"
+    );
+    expect(directVenueLoadBranch).toContain("await listVenues();");
+    expect(directVenueLoadBranch).not.toContain("commitVenueList(");
+    expect(directVenueLoadBranch).not.toContain("setVenueListState(");
   });
 });

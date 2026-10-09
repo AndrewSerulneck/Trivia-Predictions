@@ -55,6 +55,13 @@ import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { WizardFooter } from "@/components/navigation/WizardFooter";
 import { getVenueById, listVenues, readCachedVenues } from "@/lib/venues";
 import {
+  commitJoinVenueList,
+  emptyJoinVenueList,
+  filterVenuesInRange,
+  INITIAL_JOIN_VENUE_LIST,
+  visibleJoinVenueList,
+} from "@/lib/joinVenueList";
+import {
   setVenueHomeRouteIntent,
   setVenueHomeEntryHandoff,
   writeVenueHomeBootstrap,
@@ -770,7 +777,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [status, setStatus] = useState<Status>("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [venue, setVenue] = useState<Venue | null>(null);
-  const [venueList, setVenueList] = useState<Venue[]>([]);
+  // Never read venueListState directly: render `venueList`, which is empty unless
+  // the list was built for the current sign-in (lib/joinVenueList.ts).
+  const [venueListState, setVenueListState] = useState(INITIAL_JOIN_VENUE_LIST);
+  const venueList = visibleJoinVenueList(venueListState);
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
@@ -830,6 +840,27 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   // session (not on every re-render or back-nav to the list). Reset when the user
   // returns to auth-method-selection (sign out / back) so the next login rebuilds.
   const venueListBuiltRef = useRef(false);
+  // Authority for which venue-list build is current. Bumped (and the list
+  // emptied) at the start of every build and on every sign-out / back-to-sign-in,
+  // so a slower, older build can never land on screen for a newer sign-in.
+  const venueListGenerationRef = useRef(INITIAL_JOIN_VENUE_LIST.generation);
+  const beginVenueListBuild = useCallback((): number => {
+    const generation = venueListGenerationRef.current + 1;
+    venueListGenerationRef.current = generation;
+    setVenueListState(emptyJoinVenueList(generation));
+    return generation;
+  }, []);
+  const commitVenueList = useCallback((generation: number, venues: Venue[]): boolean => {
+    if (generation !== venueListGenerationRef.current) return false;
+    setVenueListState((current) => commitJoinVenueList(current, generation, venues));
+    return true;
+  }, []);
+  // Every `venueListBuiltRef` reset goes through here so the old list is
+  // dropped in the same breath (pinned by tests/god-mode-join-contract.test.ts).
+  const discardVenueList = useCallback(() => {
+    venueListBuiltRef.current = false;
+    beginVenueListBuild();
+  }, [beginVenueListBuild]);
   const enrollmentOptionsRef = useRef<{
     challengeId: string;
     options: Parameters<typeof startRegistration>[0]["optionsJSON"];
@@ -942,8 +973,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           return;
         }
 
-        const venues = await listVenues();
-        setVenueList(venues);
+        // Direct venue link (pre-auth): warm the venue cache only. The list is
+        // NEVER filled here — it would show every venue, unfiltered, the moment
+        // the venue-list panel opens. buildVenueListAfterAuth owns the list.
+        await listVenues();
 
         const venueData = await getVenueById(venueParam);
         if (!venueData) {
@@ -1151,33 +1184,32 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   // therefore no username-enumeration surface. God-mode accounts see ALL venues with
   // no geolocation at all; everyone else gets a single geolocation check and the
   // in-range venues only.
+  // The list is emptied before anything is awaited, so while the location check
+  // runs the panel shows the loading state — never a previous sign-in's list.
   const buildVenueListAfterAuth = useCallback(async () => {
+    const generation = beginVenueListBuild();
+    const isCurrentBuild = () => generation === venueListGenerationRef.current;
     const isGod = DISABLE_GEOFENCE_FOR_TESTING || getGodMode();
+    setLocationLoading(true);
+    setLocationFailureReason(null);
     try {
       const venues = await listVenues();
+      if (!isCurrentBuild()) return;
       if (isGod) {
-        setVenueList(venues);
+        commitVenueList(generation, venues);
         setLocationVerified(true);
         setVerifiedLocation(null);
         setLastLocationVerifiedAt(Date.now());
         setLocationNotice(getGodMode() ? "God mode: showing all venues." : "Testing mode: location checks are disabled.");
-        setLocationLoading(false);
         return;
       }
 
-      setLocationLoading(true);
       setLocationNotice("Finding venues near you…");
       const { coords, failureReason } = await getInitialLocation();
+      if (!isCurrentBuild()) return;
       if (coords) {
-        const nearbyVenues = venues
-          .map((item) => ({
-            venue: item,
-            distance: calculateDistanceMeters(coords, { latitude: item.latitude, longitude: item.longitude }),
-          }))
-          .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
-          .sort((a, b) => a.distance - b.distance)
-          .map((item) => item.venue);
-        setVenueList(nearbyVenues);
+        const nearbyVenues = filterVenuesInRange(venues, coords);
+        commitVenueList(generation, nearbyVenues);
         setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
         setLocationNotice(
           nearbyVenues.length > 0
@@ -1185,11 +1217,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             : "No venue is currently in range from your location."
         );
       } else {
-        setVenueList([]);
         setVerifiedLocation(null);
         setLocationFailureReason(failureReason);
         if (failureReason === "denied") {
-          setLocationPermissionState(await resolveDeniedPermissionState());
+          const permissionState = await resolveDeniedPermissionState();
+          if (!isCurrentBuild()) return;
+          setLocationPermissionState(permissionState);
         }
         setLocationNotice(
           failureReason === "denied"
@@ -1198,19 +1231,19 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         );
       }
     } catch (error) {
+      if (!isCurrentBuild()) return;
       // getInitialLocation() has its own internal try/catch and never throws, so
       // anything caught here came from listVenues() or venue processing — not a
       // geolocation error. Don't run it through getLocationFailureReason(), and
       // clear any failure reason from a prior attempt so the venue-list UI
       // doesn't show stale location-specific messaging for an unrelated failure.
-      setVenueList([]);
       setVerifiedLocation(null);
       setLocationFailureReason(null);
       setLocationNotice(getLocationErrorMessage(error, "Unable to load venues right now. Please try again."));
     } finally {
-      setLocationLoading(false);
+      if (isCurrentBuild()) setLocationLoading(false);
     }
-  }, []);
+  }, [beginVenueListBuild, commitVenueList]);
 
   // Trigger the builder the moment any path shows the venue list. The ref guard keeps
   // it to once per authenticated session (no rebuild on re-render or back-nav).
@@ -1272,10 +1305,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const handleGrantLocation = useCallback(async (intent: "venue-specific" | "venue-list") => {
     if (handleGrantLocationPendingRef.current) return;
     handleGrantLocationPendingRef.current = true;
+    // A venue-list retry is a fresh build: drop the old list now so nothing
+    // stale shows while the location check runs, and so a sign-out mid-retry
+    // makes this retry's result land nowhere.
+    const listGeneration = intent === "venue-list" ? beginVenueListBuild() : null;
+    const isStaleListRetry = () =>
+      listGeneration !== null && listGeneration !== venueListGenerationRef.current;
     try {
       setLocationLoading(true);
       setLocationPermissionState(null);
       const { coords, failureReason } = await getInitialLocation();
+      if (isStaleListRetry()) return;
       setLocationFailureReason(failureReason);
       if (failureReason === "denied") {
         setLocationPermissionState(await resolveDeniedPermissionState());
@@ -1318,18 +1358,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       // be empty from the prior denied attempt, so it can't be trusted here).
       if (coords) {
         const venues = await listVenues();
-        const nearbyVenues = venues
-          .map((item) => ({
-            venue: item,
-            distance: calculateDistanceMeters(coords, {
-              latitude: item.latitude,
-              longitude: item.longitude,
-            }),
-          }))
-          .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
-          .sort((a, b) => a.distance - b.distance)
-          .map((item) => item.venue);
-        setVenueList(nearbyVenues);
+        if (isStaleListRetry()) return;
+        const nearbyVenues = filterVenuesInRange(venues, coords);
+        if (listGeneration !== null) commitVenueList(listGeneration, nearbyVenues);
         setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
         setLocationNotice(
           nearbyVenues.length > 0
@@ -1337,7 +1368,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             : "No venue is currently in range from your location."
         );
       } else {
-        setVenueList([]);
         setVerifiedLocation(null);
         setLocationNotice("Location check unavailable right now. Retry to see nearby venues.");
       }
@@ -1359,7 +1389,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     } finally {
       handleGrantLocationPendingRef.current = false;
     }
-  }, [venue]);
+  }, [venue, beginVenueListBuild, commitVenueList]);
 
   const navigateToResolvedVenue = useCallback(
     async (selectedVenue: Venue, user: User) => {
@@ -2028,7 +2058,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   // ── Account-first handlers ──────────────────────────────────────────────────
 
   const handleBackToAuthMethodSelection = useCallback(() => {
-    venueListBuiltRef.current = false;
+    discardVenueList();
     setPanelDirection(-1);
     setActivePanel("auth-method-selection");
     setLoginStep("username");
@@ -2036,7 +2066,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setPin("");
     setAccountAuthError("");
     setIsAdvancingToPin(false);
-  }, []);
+  }, [discardVenueList]);
 
   const handleAccountGoToPinStep = useCallback(
     async (usernameValue: string) => {
@@ -2360,13 +2390,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   // to `auth-method-selection`, so the next login rebuilds the venue list (and
   // re-runs the single post-auth geolocation check) from scratch.
   const handleSignedOut = useCallback(() => {
-    venueListBuiltRef.current = false;
+    discardVenueList();
     setAccountIdState(null);
     setAccountUsername("");
     refreshAuthSession();
     setPanelDirection(-1);
     setActivePanel("auth-method-selection");
-  }, [refreshAuthSession]);
+  }, [refreshAuthSession, discardVenueList]);
 
   // ── End account-first handlers ──────────────────────────────────────────────
 

@@ -253,7 +253,19 @@ Setup (once): `cd native && npm install`.
 
 ### 9. Andrew's device results
 
-To be filled in when Andrew reports the checklist results.
+**First device report (Andrew, 2026-10-08)** — free-form, not yet per checklist item A1–A14. Copied
+here from the plan ("Andrew's first device report") by the Phase 2C agent, as the plan asks. The
+per-item checklist results are still to come.
+
+| # | What Andrew saw | Cause | Fixed in |
+|---|---|---|---|
+| R1 | iPhone: content sits too high — sign-in logo, venue-home menu/alerts buttons and Back buttons are under the status bar; Back can't be tapped. | `contentInset: "never"` + `viewport-fit=cover`; safe-area padding is inconsistent and may read as 0 on the device. Undiagnosed on the phone. | 2D |
+| R2 | Venue home: big gap between the game buttons and the Games / Leaderboard / Rewards bar. | Fixed `8rem` spacer in `components/venue/VenueHubClient.tsx` instead of the header's measured height. | 2D |
+| R3 | Signed in as Rick, every venue shows. | Working as designed: `Rick` is one of three God Mode accounts (`Andrew`, `marc`, `Rick`). Andrew to decide whether Rick stays God Mode. | none |
+| R4 | A new player briefly sees every venue behind the "share your location" question. | Real website bug in `components/join/JoinFlow.tsx`: sign-out / back reset `venueListBuiltRef` but not the list, so the previous God Mode list stayed on screen while the new player's location loaded; the deep-link path also filled the list with every venue. | **2C — fixed 2026-10-08** (`…_PHASE_2C_HANDOFF.md`) |
+| R5 | `/info` shouldn't be part of the app. | Design change: every "home" control points at `/info`. | 2E |
+| R6 | Back from a legal page shows a false "No connection"; "Try again" goes to the sign-in. | Probably the cancelled `history.back()` + 150 ms fallback navigation tripping `server.errorPath`; "Try again" reloads the start URL. To confirm on the device. | 2E |
+| R7 | The app still works with Wi-Fi off. | Expected (mobile data). Use Airplane Mode to test the offline screen. | 2E re-tests |
 
 ### 10. Recommended next steps
 
