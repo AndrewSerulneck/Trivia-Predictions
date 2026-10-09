@@ -10,6 +10,7 @@ import {
   rewardHeadline,
   type ChallengeCampaignCard,
 } from "@/components/venue/venueHubShared";
+import { playHaptic } from "@/lib/nativeHaptics";
 import { formatCalendarDate as formatUpcomingDate } from "@/lib/formatCalendarDate";
 
 type VenueChallengesPanelProps = {
@@ -35,6 +36,17 @@ function VenueChallengesPanelInner({
   onGoToChallengeRedeem,
   onRetryChallenges,
 }: VenueChallengesPanelProps) {
+  // Buzz when a prize is won while this panel is open. The first batch of cards is the baseline, so
+  // opening the panel on a prize you already won stays quiet.
+  const wonIdsRef = React.useRef<Set<string> | null>(null);
+  React.useEffect(() => {
+    if (isChallengesLoading) return;
+    const wonNow = new Set(challengeCards.filter((card) => card.viewerWon).map((card) => card.id));
+    const before = wonIdsRef.current;
+    wonIdsRef.current = wonNow;
+    if (before && [...wonNow].some((id) => !before.has(id))) playHaptic("celebrate");
+  }, [challengeCards, isChallengesLoading]);
+
   return (
     <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
       <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>

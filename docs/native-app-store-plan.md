@@ -27,8 +27,10 @@ Andrew's decision that partners never use the app (§2 item 12) — it runs BEFO
 deployed** — handoff `docs/native-app-store-plan_PHASE_3B1_HANDOFF.md`.
 **Phase 3B.2 (`/info` Partner Login + the Square badge) is built and verified 2026-10-09, committed locally,
 NOT pushed or deployed** — handoff `docs/native-app-store-plan_PHASE_3B2_HANDOFF.md`.
-**Next: Andrew decides when to push 2D+2E+3+3B together, rebuild the shell, his device
-checklist (3B.3), then Phases 4a and 4b** (4c, 5 and Part B wait for the paid Apple
+**Phase 4a (native share + haptics) is built and verified by tests and both shell builds, 2026-10-09, NOT pushed or
+deployed, not yet tried on a device** — handoff `docs/native-app-store-plan_PHASE_4A_HANDOFF.md`.
+**Next: Andrew decides when to push 2D+2E+3+3B+4a together, rebuild the shell, his device
+checklist (3B.3 + 4a), then Phase 4b** (4c, 5 and Part B wait for the paid Apple
 account; Universal Links also switch on then). Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
 this line.
 

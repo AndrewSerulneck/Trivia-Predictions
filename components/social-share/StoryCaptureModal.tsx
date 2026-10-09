@@ -20,6 +20,7 @@ import {
 } from "@/lib/socialShare/cameraSession";
 import { setScrollLock } from "@/lib/scrollLock";
 import { StoryCanvasRenderError } from "@/lib/socialShare/storyCanvas";
+import { JOIN_QR_URL } from "@/lib/joinQr";
 import { webStoryPlatform } from "@/lib/socialShare/platform/webStoryPlatform";
 import type { StorySharePipelineResult } from "@/lib/socialShare/sharePipeline";
 import {
@@ -554,6 +555,11 @@ export function StoryCaptureModal({
               onRetryNativeShare={shareCapturedStory}
               sharing={nativeShareState === "sharing"}
               onClose={() => setFallbackOpen(false)}
+              linkShare={{
+                title: activePreparedStory.headline,
+                text: activePreparedStory.caption ?? activePreparedStory.subheadline,
+                url: JOIN_QR_URL,
+              }}
             />
           ) : null}
         </main>

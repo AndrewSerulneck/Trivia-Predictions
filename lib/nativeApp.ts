@@ -44,8 +44,10 @@ export type NativePlatform = "ios" | "android";
  * - `Geolocation`: @capacitor/geolocation (one location prompt on iOS, not two).
  * - `HightopShell`: our own plugin (native/…/HightopShellPlugin) — opens a URL
  *   in the phone's browser.
+ * - `Share`: @capacitor/share (the phone's share sheet; Phase 4a).
+ * - `Haptics`: @capacitor/haptics (taps and buzzes; Phase 4a).
  */
-export type NativeCapability = "App" | "Geolocation" | "HightopShell";
+export type NativeCapability = "App" | "Geolocation" | "HightopShell" | "Share" | "Haptics";
 
 const UA_TOKEN_PATTERN = /HightopChallengeApp\/(\d+(?:\.\d+){0,2})\s*\((ios|android)\)/;
 

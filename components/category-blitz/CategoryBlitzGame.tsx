@@ -30,7 +30,9 @@ import { useAnimationTrigger } from "@/components/animations/AnimationTriggerPro
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import DevAnimationPanel from "@/components/category-blitz/DevAnimationPanel";
 import { RankBadge } from "@/components/trivia/RankBadge";
+import { ShareLinkButton } from "@/components/social-share/ShareLinkButton";
 import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
+import { INVITE_FRIEND_PAYLOAD } from "@/lib/nativeShare";
 import { buildCategoryBlitzStorySharePayload } from "@/lib/socialShare/storyPayloads";
 import { GAME_THEME } from "@/lib/themeTokens";
 import { MODE_CONFIG, getModeFlipTakeoverVariant, type CategoryBlitzThemeKey } from "@/lib/categoryBlitzModes";
@@ -599,8 +601,9 @@ function InviteBanner({ playerCount }: { playerCount?: number }) {
       : `Playing with ${playerCount} friends — you'll score in Majority Rules rounds by matching answers, but other rounds need 3+ players. Invite a friend!`;
 
   return (
-    <div className="mx-auto w-full max-w-sm rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-center text-caption font-semibold leading-snug text-amber-200/90">
+    <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-center text-caption font-semibold leading-snug text-amber-200/90">
       {message}
+      <ShareLinkButton payload={INVITE_FRIEND_PAYLOAD} label="Invite a friend" />
     </div>
   );
 }

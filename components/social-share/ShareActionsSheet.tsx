@@ -8,6 +8,8 @@ import type {
   StoryExternalAppTarget,
   StoryShareCapabilitySnapshot,
 } from "@/lib/socialShare/contracts";
+import { ShareLinkButton } from "@/components/social-share/ShareLinkButton";
+import type { SharePayload } from "@/lib/nativeShare";
 import { webStoryPlatform } from "@/lib/socialShare/platform/webStoryPlatform";
 import type { StorySharePipelineResult } from "@/lib/socialShare/sharePipeline";
 
@@ -20,6 +22,8 @@ interface ShareActionsSheetProps {
   onRetryNativeShare?: () => void;
   sharing?: boolean;
   onClose?: () => void;
+  /** When set, a "Share a link instead" button (phone share sheet in the app) is shown. */
+  linkShare?: SharePayload;
   className?: string;
 }
 
@@ -58,6 +62,7 @@ export function ShareActionsSheet({
   onRetryNativeShare,
   sharing = false,
   onClose,
+  linkShare,
   className = "",
 }: ShareActionsSheetProps) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
@@ -184,6 +189,12 @@ export function ShareActionsSheet({
           ) : null}
         </div>
       </div>
+
+      {linkShare ? (
+        <div className="mt-4 flex justify-center">
+          <ShareLinkButton payload={linkShare} label="Share a link instead" />
+        </div>
+      ) : null}
 
       <div className="mt-4 space-y-2">
         {deepLinkOptions.map((option) => (

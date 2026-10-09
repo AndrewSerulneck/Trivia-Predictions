@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useReducer } from "react";
+import { hapticForAnimation, playHaptic } from "@/lib/nativeHaptics";
 import type { AnimationPayload, AnimationType } from "@/types/animation";
 
 type QueuedAnimation = {
@@ -64,6 +65,8 @@ export function AnimationTriggerProvider({ children }: { children: React.ReactNo
   const [state, dispatch] = useReducer(animationReducer, INITIAL_STATE);
 
   const triggerAnimation = useCallback((type: AnimationType, payload?: AnimationPayload) => {
+    const haptic = hapticForAnimation(type);
+    if (haptic) playHaptic(haptic);
     dispatch({
       type: "TRIGGER",
       payload: { id: nextAnimationId(), type, payload },
