@@ -343,13 +343,9 @@ type VenueAccessResult = {
   location?: Coordinates;
 };
 
-// Asks the app (iPhone) or navigator.permissions (website) — queryLocationPermission
-// in lib/geolocation.ts. Falls back to "granted" when nothing can answer.
-const checkPermissionState = (): Promise<PermissionState> => queryLocationPermission();
-
 // Only called after geolocation has already failed with a permission-denied
 // error, so the browser genuinely won't cooperate right now regardless of what
-// this reports. checkPermissionState() falls back to "granted" both when the
+// this reports. queryLocationPermission() (lib/geolocation.ts; asks the app or navigator.permissions) falls back to "granted" both when the
 // Permissions API is unavailable and when querying "geolocation" throws (a
 // real WebKit/Safari gap) — neither of those is trustworthy evidence that a
 // retry can re-prompt the user. Only a positive "prompt" report justifies the
@@ -358,7 +354,7 @@ const checkPermissionState = (): Promise<PermissionState> => queryLocationPermis
 // retry that silently fails forever is worse than an instruction shown when
 // it wasn't strictly needed.
 async function resolveDeniedPermissionState(): Promise<PermissionState | null> {
-  const permissionState = await checkPermissionState();
+  const permissionState = await queryLocationPermission();
   return permissionState === "prompt" ? null : "denied";
 }
 

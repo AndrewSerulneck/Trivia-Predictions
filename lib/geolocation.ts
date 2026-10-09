@@ -44,13 +44,36 @@ export const nativeLocationErrorCode = (error: unknown): 1 | 2 | 3 => {
 const nativeLocationError = (error: unknown): Error & { code: 1 | 2 | 3 } =>
   Object.assign(new Error("Unable to determine location."), { code: nativeLocationErrorCode(error) });
 
+// The plugin enforces its own timeout; this JS deadline (a little later) is the
+// backstop if a fix never comes back over the bridge, so the budget below holds.
+const NATIVE_DEADLINE_GRACE_MS = 1000;
+
+const withNativeDeadline = <T>(promise: Promise<T>, ms: number): Promise<T> =>
+  new Promise((resolve, reject) => {
+    const timer = globalThis.setTimeout(() => reject({ code: "OS-PLUG-GLOC-0010" }), ms);
+    promise.then(
+      (value) => {
+        globalThis.clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        globalThis.clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+
 const getNativePosition = async (options: PositionOptions): Promise<Coordinates> => {
+  const timeout = options.timeout ?? 10000;
   try {
-    const position = (await callNative("Geolocation", "getCurrentPosition", {
-      enableHighAccuracy: options.enableHighAccuracy ?? false,
-      timeout: options.timeout ?? 10000,
-      maximumAge: options.maximumAge ?? 0,
-    })) as NativePosition;
+    const position = (await withNativeDeadline(
+      callNative("Geolocation", "getCurrentPosition", {
+        enableHighAccuracy: options.enableHighAccuracy ?? false,
+        timeout,
+        maximumAge: options.maximumAge ?? 0,
+      }),
+      timeout + NATIVE_DEADLINE_GRACE_MS
+    )) as NativePosition;
     const latitude = Number(position?.coords?.latitude);
     const longitude = Number(position?.coords?.longitude);
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
@@ -121,6 +144,8 @@ export async function getCurrentLocation(): Promise<Coordinates> {
   return getCurrentPositionWithOptions({ enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
 }
 
+const NATIVE_FALLBACK_MIN_MS = 3000;
+
 export type BestLocationOptions = {
   sampleDurationMs?: number;
   timeoutMs?: number;
@@ -150,11 +175,20 @@ export async function getBestCurrentLocation(options: BestLocationOptions = {}):
 
   // Inside the iPhone app: one high-accuracy native fix (Core Location already
   // refines it), then a quick low-accuracy one, instead of sampling a watch.
+  // Same budget as the web path: the high-accuracy fix gets sampleDurationMs,
+  // the fallback gets what is left of timeoutMs (never under
+  // NATIVE_FALLBACK_MIN_MS, so a short budget still gets a usable fallback).
   if (usesNativeLocation()) {
+    const startedAt = Date.now();
     try {
-      return await getNativePosition({ enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 });
+      return await getNativePosition({ enableHighAccuracy: true, timeout: sampleDurationMs, maximumAge: 0 });
     } catch {
-      return getNativePosition({ enableHighAccuracy: false, timeout: Math.max(6000, Math.min(timeoutMs, 14000)), maximumAge: 120000 });
+      const remainingMs = timeoutMs - (Date.now() - startedAt);
+      return getNativePosition({
+        enableHighAccuracy: false,
+        timeout: Math.max(NATIVE_FALLBACK_MIN_MS, remainingMs),
+        maximumAge: 120000,
+      });
     }
   }
 

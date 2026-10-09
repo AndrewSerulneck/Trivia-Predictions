@@ -24,13 +24,14 @@ const safeFileName = (name: string): string => {
 };
 
 const blobToBase64 = async (blob: Blob): Promise<string> => {
-  const bytes = new Uint8Array(await blob.arrayBuffer());
-  let binary = "";
-  // In slices: String.fromCharCode(...bytes) overflows the call stack on a full-size story picture.
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  }
-  return btoa(binary);
+  // Native conversion: no per-byte string building for a full-size story picture.
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read the picture."));
+    reader.readAsDataURL(blob);
+  });
+  return dataUrl.slice(dataUrl.indexOf(",") + 1);
 };
 
 const isCancel = (error: unknown): boolean => {

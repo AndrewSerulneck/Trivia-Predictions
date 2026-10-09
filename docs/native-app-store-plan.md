@@ -38,7 +38,7 @@ Android emulator), committed locally, NOT pushed or deployed** — handoff `docs
 of `docs/native-app-device-checklist.md`)** (4c, 5 and Part B wait for the paid Apple
 account; Universal Links also switch on then). **Code-review fixes for 2D–4b (Android Back, QR scan on the venue list,
 haptics, iPhone location timeout, tidy-ups) are planned as Phases R1–R5 in `docs/native-app-review-fixes-plan.md`
-(2026-10-09). R1 (Android Back), R2 (venue-list QR scan) and R3 (one haptics path) are done, uncommitted — latest handoff `docs/native-app-review-fixes-plan_PHASE_R3_HANDOFF.md`.** Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
+(2026-10-09). R1 (Android Back), R2 (venue-list QR scan) and R3 (one haptics path) are committed (`0d0c745`, not pushed); R4 (iPhone location budget) and R5 (code tidy-ups) are done, uncommitted — latest handoff `docs/native-app-review-fixes-plan_PHASE_R5_HANDOFF.md`.** Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
 this line.
 
 **Goal:** one "Hightop Challenge" app, live on the Apple App Store and Google Play. Players get the

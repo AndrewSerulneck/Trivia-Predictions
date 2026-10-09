@@ -141,8 +141,9 @@ export const classifyPage = (pathname: string): PageKind => {
     pathname.startsWith("/api") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/brand") ||
-    // App-link / passkey trust files: served on BOTH hosts, each with its own
-    // content (lib/nativeAppLinks.ts) — never bounced across hosts.
+    // Defence in depth: the matcher skips dotted paths, so this rarely runs. Keeps the
+    // app-link / passkey trust files (served on BOTH hosts, each with its own content,
+    // lib/nativeAppLinks.ts) from being bounced across hosts if the matcher changes.
     pathname.startsWith("/.well-known/") ||
     // TV pairing page (Phase 5b): owners type the apex URL (hightopchallenge.com/tv)
     // into TV browsers, so /tv must be served on whatever host receives it and

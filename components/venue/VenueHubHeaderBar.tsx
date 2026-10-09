@@ -66,8 +66,7 @@ function VenueHubHeaderBarInner({
             </svg>
           </button>
           <h2
-            className="truncate px-3 text-center text-[1.15rem] font-black uppercase tracking-[0.04em] text-cyan-300"
-            style={{ fontFamily: "var(--ht-font-display)" }}
+            className="truncate px-3 text-center text-[1.15rem] font-black uppercase tracking-[0.04em] text-cyan-300 [font-family:var(--ht-font-display)]"
           >
             {venueDisplayName}
           </h2>

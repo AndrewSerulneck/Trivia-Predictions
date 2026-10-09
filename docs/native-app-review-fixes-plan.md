@@ -9,7 +9,12 @@ website code only, checks green, **not committed / pushed / deployed**. Handoff:
 `docs/native-app-review-fixes-plan_PHASE_R2_HANDOFF.md`.
 **R3 done 2026-10-09** (one `haptic()` path that uses the native plugin in the app; "prize won" buzz baselines only on a
 successful load) — website code only, checks green, **not committed / pushed / deployed**. Handoff:
-`docs/native-app-review-fixes-plan_PHASE_R3_HANDOFF.md`. Next: R4.
+`docs/native-app-review-fixes-plan_PHASE_R3_HANDOFF.md`.
+**R1–R3 committed together as `0d0c745` on 2026-10-09** (Andrew: push + deploy once the whole plan is done).
+**R4 done 2026-10-09** (iPhone app location check uses the web path's time budget) — `lib/geolocation.ts` only,
+checks green, **not committed / pushed / deployed**. Handoff: `docs/native-app-review-fixes-plan_PHASE_R4_HANDOFF.md`.
+**R5 done 2026-10-09** (four code tidy-ups, no behaviour change) — checks green, **not committed / pushed / deployed**. Handoff: `docs/native-app-review-fixes-plan_PHASE_R5_HANDOFF.md`.
+Plan complete; remaining: Andrew's Back-button answer, commit, push + deploy (his go-ahead), device checks.
 
 Parent plan: `docs/native-app-store-plan.md`. Every fix here is **website code** (the app loads the
 live site), so each phase ships with a normal web deploy. No new app build is needed.
@@ -219,6 +224,7 @@ at `sampleDurationMs`, then the fallback succeeds; both fail within `timeoutMs`.
 2. **R1 default: Back on the venue hub minimises the app** (Android root-screen convention). Andrew
    can override this, for example by making Back go to the player sign-in. If he does, change only
    the venue hub's registered handler.
+   *(2026-10-09: explained to Andrew with a recommendation to keep it; his answer is pending — see the R4 handoff §2.7.)*
 3. A QR scan never bypasses the geofence (R2).
 4. The website's behaviour must not change in R1, R3 or R4. Every change is gated on
    `isNativeApp()` or `hasNativeCapability()`.

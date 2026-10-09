@@ -21,9 +21,33 @@ const stubApp = (plugins: string[], nativePromise: NativeCall | ReturnType<typeo
   return navigatorStub;
 };
 
+// The tests run in Node, which has no FileReader; this stands in for readAsDataURL.
+class FakeFileReader {
+  result: string | null = null;
+  error: Error | null = null;
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  readAsDataURL(file: Blob) {
+    void file.arrayBuffer().then(
+      (buffer) => {
+        this.result = `data:${file.type};base64,${Buffer.from(buffer).toString("base64")}`;
+        this.onload?.();
+      },
+      (error: Error) => {
+        this.error = error;
+        this.onerror?.();
+      },
+    );
+  }
+}
+vi.stubGlobal("FileReader", FakeFileReader);
+
 const blob = () => new Blob(["png-bytes"], { type: "image/png" });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.stubGlobal("FileReader", FakeFileReader);
+});
 
 describe("native image share", () => {
   it("writes the picture to the cache, then shares its file URI", async () => {
