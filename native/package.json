@@ -1,0 +1,21 @@
+{
+  "name": "hightop-challenge-native",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Capacitor shell for the Hightop Challenge iOS and Android apps (loads the live site). Separate from the Next.js build — see docs/native-app-store-plan.md.",
+  "scripts": {
+    "sync": "cap sync",
+    "ios": "cap open ios",
+    "android": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/geolocation": "^8.2.3",
+    "@capacitor/ios": "8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}

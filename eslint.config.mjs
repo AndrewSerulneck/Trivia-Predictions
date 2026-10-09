@@ -4,6 +4,7 @@ const config = [
   {
     ignores: [
       'design-system/**',
+      'native/**',
     ],
   },
   ...nextVitals,

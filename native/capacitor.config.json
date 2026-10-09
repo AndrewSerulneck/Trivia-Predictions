@@ -1,0 +1,19 @@
+{
+  "appId": "com.hightopchallenge.app",
+  "appName": "Hightop Challenge",
+  "webDir": "www",
+  "server": {
+    "url": "https://play.hightopchallenge.com",
+    "allowNavigation": ["play.hightopchallenge.com", "hightopchallenge.com"],
+    "errorPath": "offline.html"
+  },
+  "ios": {
+    "appendUserAgent": "HightopChallengeApp/0.1.0 (ios)",
+    "contentInset": "never",
+    "webContentsDebuggingEnabled": true
+  },
+  "android": {
+    "appendUserAgent": "HightopChallengeApp/0.1.0 (android)",
+    "webContentsDebuggingEnabled": true
+  }
+}

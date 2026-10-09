@@ -33,6 +33,11 @@ browser, never in-app. Read the plan before any native/app-store work.
   "resolved" marker). A new `users` FK that is ON DELETE SET NULL must be deleted explicitly in the
   function — `tests/account-deletion-contract.test.ts` fails until it is. SQL is proven on PGlite by
   `npm run test:account-deletion-sql`. Emailed requests: `scripts/delete-player-account.cjs`.
+- **`native/` is the Capacitor shell (Phase 2 spike, 2026-10-08)** — its own `package.json`, excluded
+  from `tsconfig`/eslint/Vercel (`.vercelignore`). Build Android with `JAVA_HOME=/opt/homebrew/opt/openjdk@21`
+  (Gradle can't run on Android Studio's Java 25); Gradle output goes to `~/Library/Caches/hightop-native/`
+  because iCloud syncs `~/Documents` and makes `name 2` copies that break builds. Findings and commands:
+  `docs/native-app-store-plan_PHASE_2A_HANDOFF.md`.
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
   `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
   `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep

@@ -4,8 +4,12 @@
 **Phases 1a and 1b are DONE and deployed (2026-10-08)** — latest handoff
 `docs/native-app-store-plan_PHASE_1B_HANDOFF.md` (1a: `…_PHASE_1A_HANDOFF.md`). Migration
 `20261008044524_player_account_deletion.sql` is applied to production. Phase 0 is Andrew's, in
-progress. Next code phase: **Phase 2** (native shell spike, Opus 5.5, xhigh; needs Xcode and the
-devices). Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
+progress (D-U-N-S requested, Xcode and Android Studio installed). **Phase 2 is split into Part A
+(now: Xcode free provisioning + Andrew's iPhone + the Android emulator) and Part B (after the paid
+Apple account is approved: passkeys and the 7-day login test)** — see Phase 2. **Part A: automated
+simulator/emulator checks done 2026-10-08; waiting on Andrew's device checklist**
+(`docs/native-app-store-plan_PHASE_2A_DEVICE_CHECKLIST.md`); handoff
+`docs/native-app-store-plan_PHASE_2A_HANDOFF.md`. Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
 this line.
 
 **Goal:** one "Hightop Challenge" app, live on the Apple App Store and Google Play. Players get the
@@ -67,7 +71,7 @@ nothing (estimate in Phase 5). You already have the Mac you need for Xcode.
 
 **What needs you.** You'll need to do these yourself:
 - the business and account paperwork (Phase 0);
-- testing on your iPhone and on a cheap Android phone you'll buy (Phase 0);
+- testing on your iPhone, and on the free Android Studio emulator for Android (Phase 2 onward);
 - legal review of the privacy policy, terms and contest rules (Phase 1a). You will do this yourself
   once admitted to the New York bar;
 - the final "Submit for review" clicks.
@@ -86,10 +90,15 @@ nothing (estimate in Phase 5). You already have the Mac you need for Xcode.
    reachable in the app; it opens in the system browser.
 3. **First-version native features: all four.** Push notifications, an in-app QR scanner, Face ID
    passkey sign-in, and native share plus haptics.
-4. **Test devices: Andrew's iPhone plus a cheap Android phone Andrew buys in Phase 0.** The Android
-   Studio emulator covers quick checks. Every device checklist item is run on the real Android
-   phone too, and the emulator never counts as a pass. No outside testers are needed: the
-   Organization account skips Google's 12-tester rule.
+4. **Test devices: Andrew's iPhone plus the free Android Studio emulator** (revised by Andrew
+   2026-10-08: "we'll probably want to use an Android simulator since it's free" — no Android phone
+   is bought for now). Use a **Google Play** emulator image (Android 16 / API 36, arm64), signed in
+   to a Google account where a check needs one (passkeys). The emulator counts as a pass for Android.
+   Known emulator blind spots, to note in each checklist: real GPS (the emulator's location is set
+   by hand), real camera for the QR scanner (the emulator has a virtual scene), and low-end phone
+   performance. If a store reviewer or a player reports an Android-only bug the emulator can't
+   reproduce, revisit buying a phone. No outside testers are needed: the Organization account skips
+   Google's 12-tester rule.
 5. **Approach: Capacitor shell over the live site** (`server.url`). There is no React Native or Expo
    rewrite, and no bundled copy of the site. Recommended by Claude and accepted with this plan.
 6. **Launch in the United States only** (confirmed by Andrew 2026-10-08). Other countries are a
@@ -196,10 +205,8 @@ be built behind a flag earlier.
    your Apple ID.
 6. **Create a Firebase project** (free) named "Hightop Challenge". It is used for push in Phase 5.
 7. **Pick a support email** that the store listing will show, for example `support@hightopchallenge.com`.
-8. **Buy a cheap Android phone** for testing: Android 14 or newer, with Google Play (not a Fire
-   tablet or a no-Google phone). A used or new Google Pixel "a" model, around $150–$300, is the
-   safest pick because it gets updates longest and runs plain Android. A budget Samsung Galaxy A is
-   also fine and is closer to what many players own.
+8. ~~Buy a cheap Android phone~~ — **dropped 2026-10-08 (Andrew): Android testing uses the Android
+   Studio emulator** (§2 item 4). Phase 2 Part A creates the emulator.
 9. **Decide the app's display name** (default "Hightop Challenge") and confirm nobody else has it in
    either store (search both).
 
@@ -290,8 +297,24 @@ Re-run `npm run test` (the FK guard), `npm run test:god-mode-join`, and the full
 
 ### Phase 2 — Native shell spike (Opus 5.5, xhigh)
 
-**Goal:** prove the risky parts on Andrew's real iPhone and real Android phone **before** building
-the polished shell. Whatever is learned goes in the handoff. Some spike code may be thrown away.
+**Goal:** prove the risky parts on Andrew's real iPhone and on the Android emulator **before**
+building the polished shell. Whatever is learned goes in the handoff. Some spike code may be thrown
+away.
+
+**Split into two parts (Andrew, 2026-10-08)** so the spike doesn't sit idle while Apple processes
+the D-U-N-S number and the paid developer account:
+
+- **Part A — now.** Needs only Xcode (free "Personal Team" provisioning puts a build on Andrew's own
+  iPhone) and the Android emulator. Covers: the setup below; item 1's *kill-and-relaunch* half;
+  items 2, 3, 4, 6, 7 and 8; and a look at the menu → "Delete my account" screen (typing DELETE with
+  the native keyboard, never pressing the button on a real account) and the legal pages inside the
+  app. Handoff: `docs/native-app-store-plan_PHASE_2A_HANDOFF.md`.
+- **Part B — after the paid Apple Developer account is approved.** Covers item 5 (passkeys, iOS and
+  Android) and item 1's *7+ days* half. Why it must wait: a free Personal Team **cannot** use the
+  Associated Domains entitlement that passkeys need, and a free-provisioned build **expires after 7
+  days**, which would end the 7-day test early. Android passkeys sit in Part B too because both
+  platforms need `/.well-known/*` files served from the live site (a narrow `proxy.ts` allow), so
+  one web change serves both. Handoff: `docs/native-app-store-plan_PHASE_2B_HANDOFF.md`.
 
 Setup:
 - Create a separate folder **`native/`** with its own `package.json`, the current Capacitor major
@@ -509,7 +532,7 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
 1. **App id `com.hightopchallenge.app`:** reconfirm before the first store upload (§2 item 11).
 
 Answered 2026-10-08 and moved to §2: US-only, remove deleted accounts, retire the PWA prompt and
-keep the browser path, Andrew does the legal review, Andrew buys an Android phone. Answered in
+keep the browser path, Andrew does the legal review, Android testing on the emulator (no phone). Answered in
 Phase 1b (2026-10-08): a deleted winner keeps the reward slot with the name blanked; the Square
 gift-card ledger is kept, unlinked. Legal: New Jersey LLC, New Jersey governing law, no liability
 dollar cap.
