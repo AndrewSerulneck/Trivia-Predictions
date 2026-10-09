@@ -13,17 +13,21 @@ simulator/emulator checks done 2026-10-08; waiting on Andrew's device checklist*
 device report" under Phase 2). **2A and 2C are committed and pushed** (`f96c386`, `858660c`,
 2026-10-08); 2C's handoff is `docs/native-app-store-plan_PHASE_2C_HANDOFF.md`. **Phase 2D (fit the
 screen) is built and verified on Andrew's iPhone 16 Pro, the simulator and the emulator, 2026-10-09 —
-not yet committed** (Andrew's call); handoff `docs/native-app-store-plan_PHASE_2D_HANDOFF.md`.
+committed in `4706072`**; handoff `docs/native-app-store-plan_PHASE_2D_HANDOFF.md`.
 **Phase 2E (front door, no `/info` in the app, false-offline fix) is built and verified on the simulator,
-the emulator and in a local browser, 2026-10-09 — not yet committed, and its device check waits for the
+the emulator and in a local browser, 2026-10-09 — committed in `4706072`; its device check waits for the
 web deploy**; handoff `docs/native-app-store-plan_PHASE_2E_HANDOFF.md`. **Phase 3 (production shell) is
 built and verified on the emulator, the simulator, Andrew's iPhone (install + probe) and a local production
-build, 2026-10-09 — not yet committed (2D, 2E and 3 all wait on Andrew's commit/push)**; handoff
+build, 2026-10-09 — committed with 2D and 2E in `4706072`, not pushed**; handoff
 `docs/native-app-store-plan_PHASE_3_HANDOFF.md`, device checklist `docs/native-app-device-checklist.md`.
 **Phase 3B (player-only app, clearer partner sign-in on `/info`, Square logo) was added 2026-10-09 on
 Andrew's decision that partners never use the app (§2 item 12) — it runs BEFORE Phase 4.**
-**Next: Andrew commits 2D/2E/3 locally (push optional), then Phase 3B (3B.1 and 3B.2 in either order),
-then Andrew's device checklist, then Phases 4a and 4b** (4c, 5 and Part B wait for the paid Apple
+**2D, 2E and 3 were committed locally as ONE commit `4706072` (2026-10-09, not pushed).** **Phase 3B.1
+(player-only app) is built and verified 2026-10-09, committed locally as its own commit, NOT pushed or
+deployed** — handoff `docs/native-app-store-plan_PHASE_3B1_HANDOFF.md`.
+**Next: Phase 3B.2 (`/info` Partner Login + the Square badge — Andrew supplied the badge, guidelines and
+copy OK on 2026-10-09; see 3B.2), then push 2D+2E+3+3B together, rebuild the shell, Andrew's device
+checklist (3B.3), then Phases 4a and 4b** (4c, 5 and Part B wait for the paid Apple
 account; Universal Links also switch on then). Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
 this line.
 
@@ -497,7 +501,8 @@ has no gap. Also confirm the website in mobile Safari looks unchanged or better.
 
 ### Phase 2E — App front door: guests to games, partners to the dashboard, no `/info` (Opus 5.5, high)
 
-**Status: built 2026-10-09, not yet committed. As-built: `docs/native-app-store-plan_PHASE_2E_HANDOFF.md`.**
+**Status: built 2026-10-09, committed in `4706072`. As-built: `docs/native-app-store-plan_PHASE_2E_HANDOFF.md`.
+The remembered-partner launch and the "Venue partner? Sign in" link were removed in Phase 3B.1 (§2 item 12).**
 Deviations from the spec below: the remembered side is a **cookie** (`htc_app_side`, shared
 `.hightopchallenge.com` domain), not localStorage, because the partner signs in on the apex and the
 launch choice runs on `play.`; and the link-out for marketing pages is **native** (one list in
@@ -657,7 +662,9 @@ via the page, the geolocation plugin, and replacing `SpikeViewController` with `
 
 ### Phase 3B — Player-only app, clearer partner sign-in on `/info`, Square logo (before Phase 4)
 
-**Status: planned 2026-10-09, not started.** Andrew's decision: §2 item 12. Each sub-phase writes
+**Status: 3B.0 done (2D+2E+3 committed as one local commit `4706072`); 3B.1 built and verified
+2026-10-09, committed locally (handoff `docs/native-app-store-plan_PHASE_3B1_HANDOFF.md`); 3B.2 next.**
+Andrew's decision: §2 item 12. Each sub-phase writes
 `docs/native-app-store-plan_PHASE_3B<N>_HANDOFF.md` (for example `…_PHASE_3B1_HANDOFF.md`) and updates
 the status line at the top of this file.
 
@@ -674,6 +681,15 @@ Never `git checkout -- <file>` in this tree.
 website-only and can ship on its own. 3B.3 comes after both.
 
 #### Phase 3B.1 — The app is player-only (Opus 5.5, high)
+
+**As built (2026-10-09), deviations from the steps below:** the in-app gate for `/owner`, `/tv` and
+`/admin` is in **`proxy.ts`** (an app-UA request for a web-only page is rewritten to the static page
+`app/in-app-notice/[page]`, URL unchanged), **not** an `app/owner/layout.tsx` + `WebOnlyInApp`. A layout
+that reads the User-Agent would have turned all ~14 static `/owner/*` pages and `/tv` into per-visit
+renders; the proxy already runs on every request, so this costs nothing and browsers keep the static
+pages. `WebOnlyInApp` and all four per-page layouts (including `app/admin/layout.tsx`) are deleted.
+`nativeLaunchUrl()` was removed (no caller left). iOS Universal Links on `play.` also exclude
+`/owner`, `/tv`, `/admin`. Details: the 3B.1 handoff.
 
 **Goal:** inside the app there is no partner surface. The website is unchanged for every browser visitor,
 including partners on phones.
@@ -768,6 +784,22 @@ shows in the app.
    partners: schedule games, set rewards and manage billing from any web browser — no app needed."*
    This is the line that answers the "do partners use the app?" question on the page itself. When
    Phase 7 adds the store badges, label them "For players".
+**Andrew's inputs (2026-10-09) — don't re-ask:**
+- **Copy approved:** the "Venue partners: schedule games, set rewards and manage billing from any web
+  browser — no app needed." line in item 2, as written.
+- **Square artwork supplied:** `public/info/Square-brand_white.png` (untracked until 3B.2 commits it).
+  It is Square's official **"Built with Square" badge**: a white rounded button, black Square mark and
+  black "Built with Square" text, 1125×320 px PNG with transparency, **1.46 MB**.
+- **Square's guidelines, as Andrew pasted them:** "Do not alter the button or badge. Do not change the
+  proposition. Do not change the color. Give a good amount of clear space around the logo: at least 40
+  pixels."
+- What that changes in item 3 below: it is a **badge, used whole** — never cropped to the square mark,
+  recoloured, redrawn or re-worded, and never fused into one line with our own text. Keep at least
+  **40 px clear space** on every side, so it sits on its own row near "Works with your Square
+  register!", not inline at text height (the ~20–24 px inline idea below is superseded). Scaling it down
+  for the web is fine (that is not altering it); serve an optimized copy (for example a 2× WebP/PNG at
+  the display size, well under 50 KB) under a new path, keeping the original as the source.
+
 3. **Square logo next to "Works with your Square register!"** (~line 553):
    - Use **official Square artwork only** (Square's press / brand-assets page), never a redrawn or
      recoloured mark. On the dark hero, use their white / reversed version. Andrew downloads the file
@@ -935,9 +967,9 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
 ## 6. Open questions for Andrew
 
 1. **App id `com.hightopchallenge.app`:** reconfirm before the first store upload (§2 item 11).
-2. **Square logo (Phase 3B.2):** approve the official artwork and confirm Square's brand guidelines
-   allow the "Works with your Square register" use.
-3. **Phase 3B.2 copy:** approve the "no app needed" line for partners.
+2. ~~Square logo (Phase 3B.2)~~ — answered 2026-10-09: Andrew supplied Square's "Built with Square"
+   badge and its guidelines (Phase 3B.2 "Andrew's inputs").
+3. ~~Phase 3B.2 copy~~ — answered 2026-10-09: approved as written.
 
 Answered 2026-10-08 and moved to §2: US-only, remove deleted accounts, retire the PWA prompt and
 keep the browser path, Andrew does the legal review, Android testing on the emulator (no phone). Answered in

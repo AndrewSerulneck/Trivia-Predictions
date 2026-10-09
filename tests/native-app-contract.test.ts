@@ -3,7 +3,14 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { classifyPage, gameHref, homeHref, marketingHref } from "@/lib/domainSplit";
 import { isNativeApp, isNativeUserAgent } from "@/lib/nativeApp";
-import { APP_LINK_OUT_PATHS, APP_MARKETING_LINK_OUT_PATHS, APP_WEB_ONLY_PATHS, isAppLinkOutPath } from "@/lib/nativeLinkOut";
+import {
+  APP_LINK_OUT_PATHS,
+  APP_MARKETING_LINK_OUT_PATHS,
+  APP_WEB_ONLY_PATHS,
+  isAppLinkOutPath,
+  webOnlyNoticePath,
+  webOnlyPageFor,
+} from "@/lib/nativeLinkOut";
 import { NATIVE_APP_ID } from "@/lib/nativeAppLinks";
 
 // Tripwire for docs/native-app-store-plan.md Phase 2E (the app's front door).
@@ -16,6 +23,9 @@ import { NATIVE_APP_ID } from "@/lib/nativeAppLinks";
 //  3. The shell's link-out list (marketing pages → system browser) and offline-page
 //     settings live once in native/capacitor.config.json, and the native code reads
 //     them from there. Legal pages stay IN the app (Apple wants them reachable).
+//  4. Phase 3B.1: the app is for PLAYERS ONLY — no partner link on its sign-in,
+//     every `/owner/*` page (and `/tv`, `/admin`) leaves the app, no remembered
+//     partner launch.
 
 const repoRoot = process.cwd();
 const read = (relativePath: string): string => readFileSync(path.resolve(repoRoot, relativePath), "utf8");
@@ -121,8 +131,10 @@ describe("homeHref", () => {
     expect(read("components/account/DeleteAccountPanel.tsx")).toContain("homeHref(inNativeApp)");
     const joinFlow = read("components/join/JoinFlow.tsx");
     expect(joinFlow).toContain("homeHref(false)");
-    expect(joinFlow).toContain('marketingHref("/owner/login")');
-    expect(joinFlow).toContain("Venue partner? Sign in");
+    // The app's sign-in shows neither Home nor a partner link (Phase 3B.1).
+    expect(joinFlow).toContain("{inNativeApp ? null : (");
+    expect(joinFlow).not.toContain("/owner/login");
+    expect(joinFlow).not.toContain("Venue partner");
   });
 
   it("Back's home option resolves through homeHref, and in the app Back is one navigation", () => {
@@ -134,18 +146,24 @@ describe("homeHref", () => {
   });
 });
 
-describe("the app's front door", () => {
-  it("app/page.tsx wraps the sign-in in AppFrontDoor only for the app's User-Agent", () => {
-    const page = read("app/page.tsx");
-    expect(page).toContain('isNativeUserAgent((await headers()).get("user-agent"))');
-    expect(page).toContain("inNativeApp ? <AppFrontDoor>{joinFlow}</AppFrontDoor> : joinFlow");
+describe("the app's front door is the player sign-in, and nothing else (Phase 3B.1)", () => {
+  it("app/page.tsx renders JoinFlow for everyone; the UA only hides the website's Home link", () => {
+    for (const file of ["app/page.tsx", "app/join/page.tsx"]) {
+      const page = read(file);
+      expect(page, file).toContain('isNativeUserAgent((await headers()).get("user-agent"))');
+      expect(page, file).toContain("nativeAppRequest={nativeAppRequest}");
+    }
+    expect(read("components/join/JoinFlow.tsx")).toContain("useIsNativeApp() || nativeAppRequest");
   });
 
-  it("the partner side is remembered on sign-in and forgotten on sign-out", () => {
-    expect(read("app/owner/login/page.tsx")).toContain("rememberPartnerSide();");
-    expect(read("app/owner/dashboard/page.tsx")).toContain("rememberPartnerSide();");
-    expect(read("app/owner/dashboard/page.tsx")).toContain("forgetAppSide();");
-    expect(read("components/navigation/SignOutButton.tsx")).toContain("forgetAppSide();");
+  it("no remembered-partner launch is left anywhere", () => {
+    for (const gone of ["components/join/AppFrontDoor.tsx", "lib/appFrontDoor.ts", "components/native/ManageBillingOnWeb.tsx"]) {
+      expect(() => statSync(path.resolve(repoRoot, gone)), gone).toThrow();
+    }
+    const offenders = webSources().filter((file) =>
+      /appFrontDoor|AppFrontDoor|htc_app_side|rememberPartnerSide|forgetAppSide|ManageBillingOnWeb/.test(read(file)),
+    );
+    expect(offenders).toEqual([]);
   });
 });
 
@@ -155,59 +173,60 @@ describe("native shell: link-outs and the offline page", () => {
     expect(rule?.host).toBe("hightopchallenge.com");
     expect(rule?.paths ?? []).toEqual([...APP_LINK_OUT_PATHS]);
     expect([...APP_MARKETING_LINK_OUT_PATHS]).toEqual(["/", "/info", "/faqs", "/advertise"]);
-    expect([...APP_WEB_ONLY_PATHS].sort()).toEqual(["/admin", "/owner/billing/setup", "/owner/register", "/owner/signup"]);
+    // Phase 3B.1: every partner page, the TV pairing page and /admin leave the app.
+    expect([...APP_WEB_ONLY_PATHS].sort()).toEqual(["/admin", "/owner", "/tv"]);
     // Every marketing entry but the apex root (which rewrites to /info) is a marketing page.
     for (const entry of APP_MARKETING_LINK_OUT_PATHS.filter((p) => p !== "/")) {
       expect(classifyPage(entry)).toBe("marketing");
     }
   });
 
-  it("partner sign-in, the dashboard, Billing's status page and legal pages stay IN the app", () => {
-    for (const stays of [
-      "/privacy",
-      "/terms",
-      "/rules",
-      "/support",
-      "/delete-account",
+  it("legal pages stay IN the app; every partner page, /tv and /admin leave it", () => {
+    for (const stays of ["/privacy", "/terms", "/rules", "/support", "/delete-account", "/ownership", "/tvguide", "/administrator"]) {
+      expect(isAppLinkOutPath(stays), stays).toBe(false);
+      expect(webOnlyPageFor(stays), stays).toBeNull();
+    }
+    for (const leaves of ["/", "/info", "/faqs/x", "/admin", "/admin/venues"]) {
+      expect(isAppLinkOutPath(leaves), leaves).toBe(true);
+    }
+    for (const partnerPage of [
       "/owner",
+      "/owner/",
       "/owner/login",
       "/owner/dashboard",
       "/owner/billing",
+      "/owner/billing/setup",
+      "/owner/signup",
+      "/owner/register",
       "/owner/forgot-password",
       "/owner/display",
     ]) {
-      expect(isAppLinkOutPath(stays), stays).toBe(false);
+      expect(isAppLinkOutPath(partnerPage), partnerPage).toBe(true);
+      expect(webOnlyPageFor(partnerPage), partnerPage).toBe("/owner");
     }
-    for (const leaves of ["/", "/info", "/faqs/x", "/owner/signup", "/owner/signup/", "/owner/register", "/owner/billing/setup", "/admin", "/admin/venues"]) {
-      expect(isAppLinkOutPath(leaves), leaves).toBe(true);
-    }
-    expect(isAppLinkOutPath("/administrator")).toBe(false);
+    expect(webOnlyPageFor("/tv")).toBe("/tv");
   });
 
-  it("every web-only page renders WebOnlyInApp from its own layout", () => {
-    for (const pagePath of APP_WEB_ONLY_PATHS) {
-      const layout = read(`app${pagePath}/layout.tsx`);
-      expect(layout, pagePath).toContain(`<WebOnlyInApp path="${pagePath}">{children}</WebOnlyInApp>`);
+  it("never a Subscribe/Pay button in the app: /owner is web-only in BOTH lists and gated at the edge", () => {
+    expect(shellConfig().plugins?.HightopShell?.openInBrowser?.paths).toContain("/owner");
+    expect([...APP_WEB_ONLY_PATHS]).toContain("/owner");
+    // proxy.ts rewrites an app request for any web-only page to its static notice
+    // page — this catches Next router navigations the shell never sees, and keeps
+    // the real pages static for browsers (no per-page layout gate any more).
+    const proxySource = read("proxy.ts");
+    expect(proxySource).toContain('webOnlyPage && isNativeUserAgent(request.headers.get("user-agent"))');
+    expect(proxySource).toContain("noticeUrl.pathname = webOnlyNoticePath(webOnlyPage);");
+    expect(webOnlyNoticePath("/owner")).toBe("/in-app-notice/owner");
+    const notice = read("app/in-app-notice/[page]/page.tsx");
+    expect(notice).toContain("export const dynamicParams = false;");
+    expect(notice).toContain("APP_WEB_ONLY_PATHS.map((entry) => ({ page: entry.slice(1) }))");
+    expect(notice).not.toMatch(/\bheaders\(/);
+    expect(() => statSync(path.resolve(repoRoot, "components/native/WebOnlyInApp.tsx"))).toThrow();
+    for (const layout of ["app/owner/layout.tsx", "app/owner/signup/layout.tsx", "app/owner/billing/setup/layout.tsx", "app/admin/layout.tsx"]) {
+      expect(() => statSync(path.resolve(repoRoot, layout)), layout).toThrow();
     }
-    const gate = read("components/native/WebOnlyInApp.tsx");
-    expect(gate).toContain('isNativeUserAgent((await headers()).get("user-agent"))');
-    expect(gate).toContain("inNativeApp ? <WebOnlyNotice path={path} /> : <>{children}</>");
-  });
-
-  it("Billing in the app: status and invoices only, every action is 'Manage billing on the web'", () => {
-    const billing = read("app/owner/billing/page.tsx");
-    // Each money action on the website is behind the in-app check.
-    expect(billing).toContain("{inNativeApp ? (\n              <ManageBillingOnWeb className=\"mt-5\" />");
-    expect(billing).toContain("{inNativeApp ? null : subscription.status === \"cancelled\" ? (");
-    expect(billing).toContain("{subscription.isManual || inNativeApp ? null : (\n                <button\n                  type=\"button\"\n                  onClick={handleUpdateCard}");
-    expect(billing).toContain("!inNativeApp && subscription.status !== \"cancelled\" && !subscription.cancelAtPeriodEnd ? (");
-    expect(billing).toContain("{inNativeApp && !subscription.isManual ? <ManageBillingOnWeb /> : null}");
-    expect(billing.match(/href="\/owner\/billing\/setup"/g)?.length).toBe(2);
-    const manage = read("components/native/ManageBillingOnWeb.tsx");
-    expect(manage).toContain('openInSystemBrowser(marketingUrl("/owner/billing"))');
-    // Code only (the header comment names the rule it follows).
-    const manageCode = manage.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-    expect(manageCode).not.toMatch(/Subscribe\b|Pay now|\$\d/);
+    // The website's Billing page has no in-app branch left: the app never renders it.
+    expect(read("app/owner/billing/page.tsx")).not.toMatch(/inNativeApp|useIsNativeApp/);
   });
 
   it("the offline page is shown by our wrappers, not by Capacitor's errorPath", () => {
@@ -311,7 +330,7 @@ describe("native shell: Phase 3 production pieces", () => {
     const activity = read("native/android/app/src/main/java/com/hightopchallenge/app/MainActivity.java");
     const verified = activity.match(/VERIFIED_CAPACITOR_ANDROID = "([^"]+)"/)?.[1];
     // If this fails you upgraded @capacitor/android: check window.Capacitor exists on
-    // https://hightopchallenge.com/owner/dashboard in the emulator, then bump the constant.
+    // an apex page (e.g. https://hightopchallenge.com/privacy) in the emulator, then bump the constant.
     expect(nativePackage().dependencies["@capacitor/android"]).toBe(verified);
   });
 

@@ -32,10 +32,11 @@ afterEach(() => {
   }
 });
 
-const makeRequest = (path: string, opts: { host?: string; cookie?: string } = {}): NextRequest => {
+const makeRequest = (path: string, opts: { host?: string; cookie?: string; userAgent?: string } = {}): NextRequest => {
   const host = opts.host ?? "hightopchallenge.com";
   const headers: Record<string, string> = { host };
   if (opts.cookie) headers.cookie = opts.cookie;
+  if (opts.userAgent) headers["user-agent"] = opts.userAgent;
   return new NextRequest(new URL(`https://${host}${path}`), { headers });
 };
 
@@ -184,3 +185,63 @@ describe("proxy: app-link trust files (native app Phase 3)", () => {
   });
 });
 
+
+describe("proxy: the native app is player-only (Phase 3B.1)", () => {
+  const APP_UA =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 HightopChallengeApp/1.0.0 (ios)";
+  const SAFARI_UA =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+  const rewriteTarget = (res: Response): string | null => {
+    const header = res.headers.get("x-middleware-rewrite");
+    return header ? new URL(header).pathname : null;
+  };
+
+  it("rewrites every partner page, /tv and /admin to its static notice inside the app, on both hosts", () => {
+    const cases: Array<[string, string]> = [
+      ["/owner/login", "/in-app-notice/owner"],
+      ["/owner/dashboard?sheet=store", "/in-app-notice/owner"],
+      ["/owner/billing/setup", "/in-app-notice/owner"],
+      ["/owner/signup", "/in-app-notice/owner"],
+      ["/owner/display?code=AB12", "/in-app-notice/owner"],
+      ["/owner", "/in-app-notice/owner"],
+      ["/tv", "/in-app-notice/tv"],
+      ["/admin", "/in-app-notice/admin"],
+    ];
+    for (const host of ["hightopchallenge.com", "play.hightopchallenge.com"]) {
+      for (const [path, notice] of cases) {
+        expect(rewriteTarget(proxy(makeRequest(path, { host, userAgent: APP_UA }))), `${host}${path}`).toBe(notice);
+      }
+    }
+    // The rewrite drops the query, so the notice page stays one static page.
+    const header = proxy(makeRequest("/owner/display?code=AB12", { userAgent: APP_UA })).headers.get("x-middleware-rewrite");
+    expect(new URL(header ?? "https://x").search).toBe("");
+  });
+
+  it("browsers are untouched: the same pages pass straight through, with or without a UA", () => {
+    for (const userAgent of [SAFARI_UA, undefined]) {
+      for (const path of ["/owner/login", "/owner/dashboard", "/owner/billing/setup", "/tv", "/admin"]) {
+        const res = proxy(makeRequest(path, { userAgent }));
+        expect(isPassThrough(res), `${path} ua=${userAgent ? "safari" : "none"}`).toBe(true);
+        expect(res.headers.get("x-middleware-rewrite")).toBeNull();
+      }
+    }
+  });
+
+  it("player pages, legal pages and lookalikes are not rewritten in the app", () => {
+    for (const path of ["/", "/privacy", "/support", "/delete-account", "/ownership", "/tvguide", "/administrator"]) {
+      expect(rewriteTarget(proxy(makeRequest(path, { userAgent: APP_UA }))), path).toBeNull();
+    }
+  });
+
+  it("with the split on, a partner page on play. still goes to the apex first (the shell then opens the browser)", () => {
+    process.env.NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED = "true";
+    process.env.NEXT_PUBLIC_APEX_HOST = "hightopchallenge.com";
+    process.env.NEXT_PUBLIC_PLAY_HOST = "play.hightopchallenge.com";
+    const res = proxy(makeRequest("/owner/login", { host: "play.hightopchallenge.com", userAgent: APP_UA }));
+    expect(res.status).toBe(308);
+    expect(res.headers.get("location")).toBe("https://hightopchallenge.com/owner/login");
+    expect(rewriteTarget(proxy(makeRequest("/owner/login", { host: "hightopchallenge.com", userAgent: APP_UA })))).toBe(
+      "/in-app-notice/owner",
+    );
+  });
+});

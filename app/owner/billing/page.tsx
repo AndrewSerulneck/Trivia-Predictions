@@ -7,8 +7,6 @@ import { OwnerShell } from "@/components/owner/OwnerShell";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { effectiveAmountCents } from "@/lib/billingDisplay";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
-import { ManageBillingOnWeb } from "@/components/native/ManageBillingOnWeb";
-import { useIsNativeApp } from "@/lib/useIsNativeApp";
 
 type Discount = {
   label: string;
@@ -102,9 +100,6 @@ const OwnerBillingPage = () => {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [resuming, setResuming] = useState(false);
   const [urlBanner, setUrlBanner] = useState<ReturnType<typeof bannerFromParams>>(null);
-  // Inside the native app this page shows status and invoices only; every
-  // billing action is one "Manage billing on the web" button (plan §5).
-  const inNativeApp = useIsNativeApp();
 
   useEffect(() => {
     const parsed = bannerFromParams(searchParams.get("success"), searchParams.get("error"));
@@ -270,16 +265,12 @@ const OwnerBillingPage = () => {
             <p className="mt-2 text-sm font-semibold text-ht-muted">
               Subscribe to unlock the geofenced app for your venue and let your guests play.
             </p>
-            {inNativeApp ? (
-              <ManageBillingOnWeb className="mt-5" />
-            ) : (
-              <Link
-                href="/owner/billing/setup"
-                className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-ht-cyan-500 px-4 font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px"
-              >
-                Set up subscription
-              </Link>
-            )}
+            <Link
+              href="/owner/billing/setup"
+              className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-ht-cyan-500 px-4 font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px"
+            >
+              Set up subscription
+            </Link>
           </div>
         </div>
       ) : (
@@ -311,7 +302,7 @@ const OwnerBillingPage = () => {
                       </span>
                     );
                   })()}
-                  {inNativeApp ? null : subscription.status === "cancelled" ? (
+                  {subscription.status === "cancelled" ? (
                     <Link
                       href="/owner/billing/setup"
                       className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ht-cyan-500 px-3 py-1 text-sm font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px"
@@ -385,7 +376,7 @@ const OwnerBillingPage = () => {
                     ? "Card on file"
                     : "No card on file"}
               </span>
-              {subscription.isManual || inNativeApp ? null : (
+              {subscription.isManual ? null : (
                 <button
                   type="button"
                   onClick={handleUpdateCard}
@@ -433,9 +424,7 @@ const OwnerBillingPage = () => {
             </div>
           </div>
 
-          {inNativeApp && !subscription.isManual ? <ManageBillingOnWeb /> : null}
-
-          {subscription.isManual ? null : !inNativeApp && subscription.status !== "cancelled" && !subscription.cancelAtPeriodEnd ? (
+          {subscription.isManual ? null : subscription.status !== "cancelled" && !subscription.cancelAtPeriodEnd ? (
             <button
               type="button"
               onClick={handleCancel}

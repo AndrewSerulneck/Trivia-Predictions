@@ -1,5 +1,6 @@
 import "server-only";
 import { hostKind } from "@/lib/domainSplit";
+import { APP_WEB_ONLY_PATHS } from "@/lib/nativeLinkOut";
 
 // The two files phones fetch to trust the app with our links and passkeys
 // (docs/native-app-store-plan.md Phase 3; passkeys are Part B / Phase 4c):
@@ -18,7 +19,12 @@ import { hostKind } from "@/lib/domainSplit";
 // Only `play.` opens in the app. The apex holds the marketing pages, which the app
 // sends OUT to the browser — claiming them would bounce a link between the two.
 // The apex file still names the app for passkeys (RP ID hightopchallenge.com,
-// lib/webauthn.ts).
+// lib/webauthn.ts). Partner pages live on the apex, so partner emails and links
+// always open the browser; on iOS `play.` also excludes the web-only pages
+// (`/owner`, `/tv`, `/admin` — the app is for players, Phase 3B.1). Android's
+// App Links can't exclude paths, so a stray `play.` partner link opens the app,
+// where proxy.ts's notice (or the split's apex redirect + the shell's link-out)
+// sends it on to the browser.
 
 /** The permanent store id (plan §2 item 11). Must equal native/capacitor.config.json appId. */
 export const NATIVE_APP_ID = "com.hightopchallenge.app";
@@ -60,6 +66,10 @@ export const buildAppleAppSiteAssociation = (
               appIDs: [appId],
               components: [
                 { "/": "/api/*", exclude: true, comment: "API calls are never app links" },
+                ...APP_WEB_ONLY_PATHS.flatMap((entry) => [
+                  { "/": entry, exclude: true, comment: "Web-only: the app is for players" },
+                  { "/": `${entry}/*`, exclude: true, comment: "Web-only: the app is for players" },
+                ]),
                 { "/": "/*", comment: "Every game page, including / (the printed join QR)" },
               ],
             },

@@ -199,6 +199,13 @@ describe("app-link trust files", () => {
     expect(play?.applinks.details[0].appIDs).toEqual(["ABCDE12345.com.hightopchallenge.app"]);
     expect(play?.applinks.details[0].components).toEqual([
       expect.objectContaining({ "/": "/api/*", exclude: true }),
+      // Phase 3B.1: the app is for players — partner pages, /tv and /admin never open it.
+      expect.objectContaining({ "/": "/owner", exclude: true }),
+      expect.objectContaining({ "/": "/owner/*", exclude: true }),
+      expect.objectContaining({ "/": "/tv", exclude: true }),
+      expect.objectContaining({ "/": "/tv/*", exclude: true }),
+      expect.objectContaining({ "/": "/admin", exclude: true }),
+      expect.objectContaining({ "/": "/admin/*", exclude: true }),
       expect.objectContaining({ "/": "/*" }),
     ]);
     expect(play?.webcredentials.apps).toEqual(["ABCDE12345.com.hightopchallenge.app"]);

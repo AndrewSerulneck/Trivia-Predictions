@@ -39,7 +39,8 @@ export default function SupportPage() {
               see it, email us the reward and date.
             </>,
             <>
-              <strong>Venue partners.</strong> Billing and subscription changes live in the Partner Dashboard under
+              <strong>Venue partners.</strong> The Partner Dashboard is on our website, not in the app: sign in
+              in your web browser at hightopchallenge.com. Billing and subscription changes live there under
               Billing. To close a partner account, email us from the account email.
             </>,
           ]}

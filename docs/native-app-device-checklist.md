@@ -1,6 +1,7 @@
 # Native App — Device Checklist (Andrew)
 
-Created in Phase 3 of `docs/native-app-store-plan.md` (2026-10-09). This is the standing check for the
+Created in Phase 3 of `docs/native-app-store-plan.md` (2026-10-09); updated in Phase 3B.1 (same day) for
+the **player-only app** (partners use the website, never the app). This is the standing check for the
 iPhone and Android apps. Run it **after the website changes are deployed** (Vercel deploys `main`): most of
 the app *is* the live website, so a test before the deploy tests the old site.
 
@@ -16,7 +17,7 @@ Steps marked **(iPhone)** or **(Android)** apply to that phone only.
 
 1. Tap the app icon. The **icon** is the Hightop Challenge logo on dark navy (not the blue Capacitor
    default). While it opens you see a **navy screen with the logo**, never a white flash.
-2. It opens on the player sign-in, with **"Venue partner? Sign in"** at the bottom and no "Home" button.
+2. It opens on the player sign-in, with **no "Home" button and no partner link** at the bottom (Phase 3B.1).
 3. The status bar (clock, battery) is dark navy with white text, and nothing on the page sits under it.
 
 ## B. Location (iPhone: one question, not two)
@@ -37,25 +38,27 @@ Steps marked **(iPhone)** or **(Android)** apply to that phone only.
 7. **(Android)** Open Privacy from the player menu, press Back: you return to where you were.
 8. **(Android)** On the player sign-in with nothing to go back to, press Back: the app goes to the
    background (like Home). Reopen it: it's where you left it.
-9. **(Android)** As a partner, open the dashboard menu, then a sheet (Schedule or Rewards). Press Back:
-   the sheet closes first. If you typed something into it, you're asked "Discard…?" first.
+9. **(Android)** As a player, open the venue menu (or any game's sheet/overlay). Press Back: the
+   overlay closes first, before the page goes back.
 
 ## D. Things that open in the browser, not the app
 
-10. Partner sign-in → **"Create an account"** (or "New venue owner?"): either Safari/Chrome opens on our
-    sign-up page, or the app shows **"Partner sign-up is on our website"** with an **Open in browser**
-    button that opens it.
-11. As a signed-in partner: menu → **Billing**. You see your plan, status and invoices, and **one** button,
-    **"Manage billing on the web"**. No Subscribe, Update card, Resume or Cancel buttons in the app. The
-    button opens the Billing page in Safari/Chrome (you may need to sign in there once).
+10. **No partner page in the app.** Any link to a partner page (for example
+    `hightopchallenge.com/owner/login`, or the TV page `hightopchallenge.com/tv`) opens in Safari/Chrome.
+    If one is reached from inside the app some other way, the app shows **"The Partner Dashboard is on our
+    website"** (or "The venue TV screen is on our website") with an **Open in browser** button that opens
+    it. There is no sign-in, dashboard, billing or Subscribe screen anywhere in the app.
+11. **Partners on the website are unchanged:** in mobile Safari/Chrome (not the app), sign in at
+    `hightopchallenge.com/owner/login` and use the dashboard and Billing exactly as before.
 12. Any link to `/info`, the FAQ or Advertise opens in Safari/Chrome. Privacy, Terms, Rules, Support and
     Delete Account stay **inside** the app.
 13. A God Mode admin sign-in that goes to `/admin`: the app shows **"Admin opens in your browser"**.
 
-## E. Partner pages keep app features (Android)
+## E. Legal pages keep app features (Android)
 
-14. **(Android)** Sign in as a partner. On the dashboard, the phone's Back still works as in step 9. (This
-    proves the app's bridge reaches the partner pages, which live on `hightopchallenge.com`.)
+14. **(Android)** Open Privacy or Support from the player menu, press the phone's Back: you return to
+    where you were. (Once the domain split is on, these pages live on `hightopchallenge.com`; this proves
+    the app's bridge still reaches them.)
 
 ## F. Links and the join QR (only after the paid accounts — skip until then)
 
@@ -63,9 +66,9 @@ These need the paid Apple account and the Play Console (plan Phase 0), plus two 
 (`APPLE_TEAM_ID`, `ANDROID_APP_CERT_SHA256`). Until then, links open the browser as before.
 
 15. With the app installed, scan the **join QR** on a coaster with the phone's Camera app: the **app**
-    opens on the player sign-in — even on a phone where a partner signed in.
-16. With the app already open on the Partner Dashboard, scan the QR again: the app switches to the
-    player sign-in.
+    opens on the player sign-in.
+16. Tap a partner link (a `hightopchallenge.com/owner/…` link in an email): it opens in **Safari/Chrome**,
+    never the app.
 17. Tap a `play.hightopchallenge.com` link in Messages: it opens in the app.
 
 ## G. Offline and the update screen
@@ -80,7 +83,7 @@ These need the paid Apple account and the Play Console (plan Phase 0), plus two 
 ## H. Still open from earlier phases
 
 - Phase 2D/2E checks (`docs/native-app-store-plan_PHASE_2E_HANDOFF.md` §6), especially **Bingo turned
-  sideways** and the remembered-partner launch.
+  sideways**. (The 2E remembered-partner launch was removed in Phase 3B.1 — skip those steps.)
 - The Phase 2A per-item checklist (`docs/native-app-store-plan_PHASE_2A_DEVICE_CHECKLIST.md`, A1–A14).
 
 ## Results

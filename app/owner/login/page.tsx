@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell, ownerInputClass, ownerLabelClass, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
 import { HightopLoader } from "@/components/ui/HightopLoader";
-import { rememberPartnerSide } from "@/lib/appFrontDoor";
 import { signupEntryPath } from "@/lib/selfServeSignup";
 
 const EyeIcon = ({ open }: { open: boolean }) =>
@@ -74,8 +73,6 @@ const OwnerLoginPage = () => {
         setSubmitting(false);
         return;
       }
-      // Inside the native app, open on the dashboard next launch (no-op on the website).
-      rememberPartnerSide();
       setNavigating(true);
       router.push("/owner/dashboard");
     } catch {

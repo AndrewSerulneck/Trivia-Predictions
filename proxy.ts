@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isVenueScreenPath } from "@/lib/venueScreenPaths";
 import { apexHost, decideDomainSplit } from "@/lib/domainSplit";
+import { isNativeUserAgent } from "@/lib/nativeApp";
+import { webOnlyNoticePath, webOnlyPageFor } from "@/lib/nativeLinkOut";
 
 export { isVenueScreenPath };
 
@@ -120,6 +122,20 @@ export function proxy(request: NextRequest) {
   if (split.action === "redirect") {
     const redirectUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, `https://${split.host}`);
     return NextResponse.redirect(redirectUrl, 308);
+  }
+
+  // Native app only (docs/native-app-store-plan.md Phase 3B.1, §5 "No partner
+  // surface in the app"): a web-only page (`/owner/*`, `/tv`, `/admin` —
+  // lib/nativeLinkOut.ts) is rewritten to its static "this is on our website"
+  // notice, URL unchanged. Catches Next router navigations, which never reach
+  // the shell's link-out list. A browser's User-Agent never matches, so every
+  // website request falls through exactly as before.
+  const webOnlyPage = webOnlyPageFor(pathname);
+  if (webOnlyPage && isNativeUserAgent(request.headers.get("user-agent"))) {
+    const noticeUrl = request.nextUrl.clone();
+    noticeUrl.pathname = webOnlyNoticePath(webOnlyPage);
+    noticeUrl.search = "";
+    return NextResponse.rewrite(noticeUrl);
   }
 
   if (isPublicPath(pathname)) {

@@ -16,16 +16,17 @@ public class MainActivity extends BridgeActivity {
 
     // Capacitor injects its JS bridge only into the server.url origin
     // (play.hightopchallenge.com), although its message listener already accepts every
-    // allowNavigation origin. The Partner Dashboard lives on the apex, so inject the same
-    // bridge script there too (Phase 2A finding).
+    // allowNavigation origin. Once the domain split is on, the legal pages the app keeps
+    // (/privacy, /support, …) are served from the apex, so inject the same bridge script
+    // there too (Phase 2A finding; partner pages leave the app since Phase 3B.1).
     //
     // Capacitor 8.5.3 has no public way to get that script, so this reads it through two
     // private methods (Bridge.getJSInjector → JSInjector.getScriptString). If a Capacitor
     // upgrade renames either, the injection fails and logs "apex bridge injection FAILED":
-    // the partner pages still load, but the app's native features (Back button, browser
+    // the apex pages still load, but the app's native features (Back button, browser
     // link-outs) stop working on them. tests/native-app-contract.test.ts pins the
     // Capacitor version below, so an upgrade must re-check this on the emulator first
-    // (device checklist: "window.Capacitor on /owner/dashboard").
+    // (device checklist: "window.Capacitor on an apex page").
     static final String VERIFIED_CAPACITOR_ANDROID = "8.5.3";
     private static final String APEX_ORIGIN = "https://hightopchallenge.com";
 
@@ -45,9 +46,9 @@ public class MainActivity extends BridgeActivity {
     // Phase 3: App Links (the join QR, a shared game link) open the app ON THAT PAGE.
     // Covers both cases: BridgeActivity.load() passes the launch intent through here on a
     // cold launch, and launchMode singleTask delivers a link here while the app runs.
-    // super notifies @capacitor/app ("appUrlOpen"); loading the page is ours. The web's
-    // front door treats it as a link launch, so a QR scan lands on the player sign-in
-    // (Andrew's QR rule, lib/appFrontDoor.ts).
+    // super notifies @capacitor/app ("appUrlOpen"); loading the page is ours. The app is
+    // for players only (Phase 3B.1), so a QR scan lands on the player sign-in (Andrew's
+    // QR rule).
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);

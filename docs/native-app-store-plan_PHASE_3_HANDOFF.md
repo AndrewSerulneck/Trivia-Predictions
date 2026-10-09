@@ -45,6 +45,8 @@ Links going live (§3 "Universal Links") and the permanent iOS bundle id.
    2D/2E checks it points to.
 3. Still open from 2E: if a partner also plays as a guest on the same phone, should the app switch back to
    opening on the player side? Today the partner shortcut stays until they sign out.
+   **Answered 2026-10-09 (plan §2 item 12): moot — the app is player-only, partners never sign in inside
+   it, and Phase 3B.1 removed the partner shortcut.**
 4. When the paid accounts arrive (Phase 0): the steps in §7 below (bundle id, entitlements, two Vercel
    settings).
 

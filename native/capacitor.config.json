@@ -36,9 +36,8 @@
           "/info",
           "/faqs",
           "/advertise",
-          "/owner/signup",
-          "/owner/register",
-          "/owner/billing/setup",
+          "/owner",
+          "/tv",
           "/admin"
         ]
       }

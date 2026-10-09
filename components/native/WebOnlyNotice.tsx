@@ -4,16 +4,25 @@ import { ExternalLink } from "lucide-react";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { marketingUrl } from "@/lib/domainSplit";
 import { openInSystemBrowser } from "@/lib/nativeApp";
-import { APP_WEB_ONLY_PAGES, type WebOnlyPagePath } from "@/lib/nativeLinkOut";
+import { APP_WEB_ONLY_PAGES, webOnlyPageFor, type WebOnlyPagePath } from "@/lib/nativeLinkOut";
 
-// What the app shows in place of a web-only page (components/native/WebOnlyInApp.tsx).
-// "Open in browser" opens the same page on the website. The link itself is the
-// fallback: every web-only path is in the shell's link-out list, so a plain
-// full-page load to it leaves the app on any app version.
+// What the app shows in place of a web-only page (app/in-app-notice/[page]/page.tsx,
+// reached through proxy.ts's rewrite). "Open in browser" opens the page the
+// player actually tried (the URL bar still holds it after the rewrite) on the
+// website. The link itself is the fallback: every web-only path is in the
+// shell's link-out list, so a plain full-page load to the apex leaves the app on
+// any app version.
+
+/** The website URL to open: the page that was asked for, or the entry's own page. */
+const targetUrl = (path: WebOnlyPagePath): string => {
+  const fallback = marketingUrl(APP_WEB_ONLY_PAGES[path].openPath);
+  if (typeof window === "undefined") return fallback;
+  const { pathname, search } = window.location;
+  return webOnlyPageFor(pathname) === path ? marketingUrl(`${pathname}${search}`) : fallback;
+};
 
 export const WebOnlyNotice = ({ path }: { path: WebOnlyPagePath }) => {
-  const { title, body } = APP_WEB_ONLY_PAGES[path];
-  const url = marketingUrl(path);
+  const { title, body, openPath } = APP_WEB_ONLY_PAGES[path];
 
   return (
     <OwnerShell title={title} variant="dark" backTo={{ home: true, label: "Back" }}>
@@ -23,9 +32,10 @@ export const WebOnlyNotice = ({ path }: { path: WebOnlyPagePath }) => {
         </div>
         <p className="mt-4 text-sm font-semibold text-ht-muted">{body}</p>
         <a
-          href={url}
+          href={marketingUrl(openPath)}
           onClick={(event) => {
             event.preventDefault();
+            const url = targetUrl(path);
             void openInSystemBrowser(url).then((opened) => {
               if (!opened) window.location.assign(url);
             });

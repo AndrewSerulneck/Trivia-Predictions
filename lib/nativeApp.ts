@@ -40,7 +40,7 @@ export type NativePlatform = "ios" | "android";
 /**
  * Native plugins the web may ask about. Each is compiled into the shell; a
  * shell from before a plugin was added doesn't have it.
- * - `App`: @capacitor/app (back button, launch URL, minimise).
+ * - `App`: @capacitor/app (back button, minimise).
  * - `Geolocation`: @capacitor/geolocation (one location prompt on iOS, not two).
  * - `HightopShell`: our own plugin (native/…/HightopShellPlugin) — opens a URL
  *   in the phone's browser.
@@ -108,29 +108,6 @@ export const isNativeApp = (): boolean => {
     return readBridge()?.isNativePlatform?.() === true;
   } catch {
     return false;
-  }
-};
-
-/**
- * The URL that launched the app (a Universal Link / App Link or a custom
- * scheme), or null for a plain launch from the app icon. Asks the shell's
- * `@capacitor/app` plugin; any failure, a missing plugin or a slow answer
- * (`timeoutMs`) reads as null, never as a link. Before Phase 3 wires Universal
- * Links nothing can launch the app from a link, so this is null in practice.
- */
-export const nativeLaunchUrl = async (timeoutMs = 500): Promise<string | null> => {
-  const bridge = readBridge();
-  if (!isNativeApp() || !bridge?.nativePromise) return null;
-  try {
-    if (bridge.isPluginAvailable && !bridge.isPluginAvailable("App")) return null;
-    const answer = await Promise.race([
-      bridge.nativePromise("App", "getLaunchUrl", {}),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
-    ]);
-    const url = (answer as { url?: unknown } | null)?.url;
-    return typeof url === "string" && url.trim() ? url.trim() : null;
-  } catch {
-    return null;
   }
 };
 

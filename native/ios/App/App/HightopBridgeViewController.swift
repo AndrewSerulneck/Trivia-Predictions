@@ -10,9 +10,8 @@ import Capacitor
 //  - Universal Links: a tapped play.hightopchallenge.com link or a scanned join QR
 //    opens the app ON THAT PAGE, both on a cold launch and when the app is already
 //    running. Capacitor only reports the link (App "appUrlOpen"); loading it is ours.
-//    The web's front door treats such a launch as "from a link", so a QR scan always
-//    lands on the player sign-in, never the remembered partner dashboard (Andrew's
-//    QR rule; lib/appFrontDoor.ts). Needs the Associated Domains entitlement,
+//    The app is for players only (Phase 3B.1), so a QR scan always lands on the
+//    player sign-in (Andrew's QR rule). Needs the Associated Domains entitlement,
 //    which only the paid Apple team can sign (App/App.entitlements; see the Phase 3
 //    handoff) — until then no link can reach this code.
 //
@@ -114,8 +113,8 @@ class HightopBridgeViewController: CAPBridgeViewController {
 
 /// The page-callable side of the shell (`Capacitor.Plugins.HightopShell`), read by
 /// lib/nativeApp.ts. `openInBrowser({ url })` opens an https URL in Safari and leaves
-/// the app where it is — partner billing, signup and /admin happen on the website
-/// (docs/native-app-store-plan.md §2 item 2). Same plugin, same method on Android
+/// the app where it is — every partner page (`/owner/*`), `/tv` and /admin happen on
+/// the website (docs/native-app-store-plan.md §2 items 2 and 12). Same plugin, same method on Android
 /// (HightopShellPlugin.java). The web checks `hasNativeCapability("HightopShell")`.
 @objc(HightopShellPlugin)
 public class HightopShellPlugin: CAPPlugin, CAPBridgedPlugin {

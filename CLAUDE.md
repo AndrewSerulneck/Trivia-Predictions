@@ -21,8 +21,9 @@
 ## Native app (App Store / Google Play) — planned 2026-10-08
 
 Plan: `docs/native-app-store-plan.md` (phases, models, Andrew's decisions). One Capacitor app over
-the live site for players AND partners; partner signup/Stripe/`/admin` always open in the system
-browser, never in-app. Read the plan before any native/app-store work.
+the live site, for **PLAYERS ONLY** (Andrew, plan §2 item 12): every `/owner/*` page, `/tv` and
+`/admin` open in the system browser, never in-app — no partner link, sign-in, dashboard or billing
+screen anywhere in the app. Partners use the website. Read the plan before any native/app-store work.
 
 - **Player account deletion is live (Phase 1b, 2026-10-08).** One all-or-nothing RPC,
   `delete_player_account` (migration `20261008044524`), called only by `lib/playerAccountDeletion.ts`
@@ -44,12 +45,12 @@ browser, never in-app. Read the plan before any native/app-store work.
   overlaying: half the player screens ignore `env(safe-area-inset-top)`. Never put safe-area top padding
   on a `<section>`/`<article>`: `.tp-page-main section` gets `0.625rem !important` on phones and silently
   replaces it (`tests/native-safe-area-contract.test.ts`).
-- **The app's front door + link-outs (Phase 2E, 2026-10-09).** `lib/nativeApp.ts` is the ONLY reader
-  of the `HightopChallengeApp/` UA token and `window.Capacitor` (`isNativeApp()`, `isNativeUserAgent()`,
-  `nativeLaunchUrl()`); contract test. In the app `/` is wrapped in `AppFrontDoor` (server checks the UA):
-  a phone that remembered "partner" (cookie `htc_app_side`, `lib/appFrontDoor.ts`, a hint never an
-  access check) opens on `/owner/dashboard` on a plain icon launch only — a link/QR/`?v=` launch always
-  gets the player sign-in (Andrew's QR rule). Marketing pages (`plugins.HightopShell.openInBrowser` in
+- **The app's front door + link-outs (Phase 2E, 2026-10-09; 3B.1).** `lib/nativeApp.ts` is the ONLY
+  reader of the `HightopChallengeApp/` UA token and `window.Capacitor` (`isNativeApp()`,
+  `isNativeUserAgent()`); contract test. In the app `/` is the player sign-in and nothing else: no Home
+  link, no partner link (`app/page.tsx` passes the server's UA check as `JoinFlow`'s `nativeAppRequest`
+  so even the first paint has no Home). The 2E remembered-partner launch (`AppFrontDoor`,
+  `lib/appFrontDoor.ts`, cookie `htc_app_side`) was deleted in 3B.1 — don't bring it back. Marketing pages (`plugins.HightopShell.openInBrowser` in
   `native/capacitor.config.json`) open in the system browser; legal pages stay in the app. The offline
   page is shown by our own native wrappers (`HightopBridgeViewController.swift`,
   `HightopWebViewClient.java`) only for real network errors — `server.errorPath` is deliberately unset.
@@ -57,9 +58,13 @@ browser, never in-app. Read the plan before any native/app-store work.
   `@capacitor/*` package in the website — `lib/nativeApp.ts` talks to the injected bridge
   (`hasNativeCapability()`, `callNative()`, `addNativeListener()`, `openInSystemBrowser()`); check the
   capability first, old app versions stay in use. Link-outs are ONE list: `lib/nativeLinkOut.ts` =
-  `native/capacitor.config.json` `openInBrowser.paths`; web-only pages (`/owner/signup|register`,
-  `/owner/billing/setup`, `/admin`) also render `WebOnlyInApp` from their layout. Never a Subscribe/Pay
-  button in the app (`ManageBillingOnWeb`). Android Back runs the on-screen control
+  `native/capacitor.config.json` `openInBrowser.paths`; the web-only entries are **`/owner`, `/tv`,
+  `/admin`** (each = itself and everything below). The shell catches full page loads on the apex;
+  everything else (Next router hops, `/owner` on `play.` while the split is off) is caught by
+  **`proxy.ts`**, which rewrites an app-UA request for a web-only page to the static notice page
+  `app/in-app-notice/[page]` (URL unchanged) — browsers never match, so the partner pages stay static.
+  Don't add a per-page `WebOnlyInApp` layout gate (deleted in 3B.1: it made every page it wrapped a
+  per-visit render). Never a Subscribe/Pay button in the app — guaranteed by `/owner` being web-only. Android Back runs the on-screen control
   (`components/navigation/nativeBackButton.ts`: overlay > step > exit) — never new navigation logic.
   Native env vars (`NATIVE_APP_*`, `APPLE_TEAM_ID`, `ANDROID_APP_CERT_SHA256`) are server-side but
   need a Vercel **Redeploy** to apply. App version lives in four places, pinned equal by

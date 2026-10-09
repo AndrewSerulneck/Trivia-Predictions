@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { AppFrontDoor } from "@/components/join/AppFrontDoor";
 import { JoinFlow } from "@/components/join/JoinFlow";
 import { isNativeUserAgent } from "@/lib/nativeApp";
 
@@ -18,9 +17,13 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
   // The page is already dynamic (searchParams), so reading the UA costs nothing.
-  // Inside the native app `/` is the app's front door (docs/native-app-store-plan.md
-  // Phase 2E); every browser gets exactly the page it always did.
-  const inNativeApp = isNativeUserAgent((await headers()).get("user-agent"));
-  const joinFlow = <JoinFlow initialVenueId={params.v ?? ""} />;
-  return <div className="space-y-4">{inNativeApp ? <AppFrontDoor>{joinFlow}</AppFrontDoor> : joinFlow}</div>;
+  // Inside the native app this is the app's only front door, the player sign-in
+  // (docs/native-app-store-plan.md Phase 3B.1); the UA only keeps the website's
+  // Home link out of the app's first paint. Browsers get the page they always did.
+  const nativeAppRequest = isNativeUserAgent((await headers()).get("user-agent"));
+  return (
+    <div className="space-y-4">
+      <JoinFlow initialVenueId={params.v ?? ""} nativeAppRequest={nativeAppRequest} />
+    </div>
+  );
 }

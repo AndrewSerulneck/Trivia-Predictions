@@ -11,8 +11,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 /**
  * The page-callable side of the shell (`Capacitor.Plugins.HightopShell`), read by
  * lib/nativeApp.ts. `openInBrowser({ url })` opens an https URL in the phone's browser
- * and leaves the app where it is — partner billing, signup and /admin happen on the
- * website (docs/native-app-store-plan.md §2 item 2). Same plugin, same method on iOS
+ * and leaves the app where it is — every partner page (`/owner/*`), `/tv` and /admin
+ * happen on the website (docs/native-app-store-plan.md §2 items 2 and 12). Same plugin, same method on iOS
  * (HightopBridgeViewController.swift). Registered in MainActivity.
  */
 @CapacitorPlugin(name = "HightopShell")
