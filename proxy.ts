@@ -58,6 +58,12 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/brand/")) {
     return true;
   }
+  // App-link / passkey trust files (docs/native-app-store-plan.md Phase 3):
+  // /.well-known/apple-app-site-association has no file extension, so the
+  // static-file rule below would not cover it. Phones fetch these with no cookies.
+  if (pathname.startsWith("/.well-known/")) {
+    return true;
+  }
   if (/\.[a-z0-9]+$/i.test(pathname)) {
     return true;
   }

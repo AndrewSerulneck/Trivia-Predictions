@@ -14,6 +14,8 @@ import { PosConnectionsSheet } from "@/components/owner/pos/PosConnectionsSheet"
 import { MerchStoreSheet } from "@/components/owner/store/MerchStoreSheet";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { HightopLoader } from "@/components/ui/HightopLoader";
+import { forgetAppSide, isAppLaunchEntry, readRememberedAppSide, rememberPartnerSide } from "@/lib/appFrontDoor";
+import { homeHref } from "@/lib/domainSplit";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 import type { MerchCart, MerchVenueRef } from "@/lib/merchPricing";
 import { knownItemIds, resolvePendingHighlight, type PendingHighlight } from "@/lib/ownerDashboardHighlight";
@@ -424,10 +426,21 @@ const OwnerDashboardPage = () => {
 
         if (res.status === 401) {
           const body = (await res.json().catch(() => ({}))) as { code?: string };
+          // Native app, cold launch straight here because the phone remembered
+          // "partner" (lib/appFrontDoor.ts): the session is gone, so forget the
+          // side and show the app's front door, not a sign-in for an account the
+          // phone no longer holds. Everywhere else, today's recovery path.
+          if (isAppLaunchEntry() && readRememberedAppSide() === "partner") {
+            forgetAppSide();
+            window.location.replace(homeHref(true));
+            return;
+          }
           router.push(ownerAuthRecoveryPath(body.code));
           return;
         }
 
+        // Signed in: inside the native app, open here on the next launch (no-op on the website).
+        rememberPartnerSide();
         const data = (await res.json()) as DashboardPayload;
         const loadedVenues = data.venues ?? [];
         setVenues(loadedVenues);

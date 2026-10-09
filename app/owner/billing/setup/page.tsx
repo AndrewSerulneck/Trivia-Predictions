@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { HightopLoader } from "@/components/ui/HightopLoader";
-import { marketingHref } from "@/lib/domainSplit";
+import { homeHref } from "@/lib/domainSplit";
+import { isNativeApp } from "@/lib/nativeApp";
 import { OWNER_AUTH_NO_VENUE, ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 import { isSelfServeSignupEnabled } from "@/lib/selfServeSignup";
 
@@ -175,7 +176,7 @@ const OwnerBillingSetupPage = () => {
         setAbandoning(false);
         return;
       }
-      window.location.href = marketingHref("/info");
+      window.location.href = homeHref(isNativeApp());
     } catch {
       setAbandonError("Network error. Please try again.");
       setAbandoning(false);

@@ -13,7 +13,7 @@ import { createPortal } from "react-dom";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
-import { isInstallPromptEnabled, isIOSSafari, useIsRunningAsInstalledPwa, usePwaInstallPrompt } from "@/lib/pwa";
+import { isIOSSafari, shouldOfferInstallPrompt, useIsRunningAsInstalledPwa, usePwaInstallPrompt } from "@/lib/pwa";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
@@ -808,7 +808,7 @@ export function SportsBingoHome({
       !isLandscapeGameView ||
       isFullscreenSupported ||
       isInstalledPwa ||
-      !isInstallPromptEnabled() ||
+      !shouldOfferInstallPrompt() ||
       !isIOSSafari()
     ) {
       setShowInstallCoachCard(false);

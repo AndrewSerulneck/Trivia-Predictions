@@ -10,7 +10,6 @@ import {
   signupProgressFraction,
   signupTransition,
 } from "@/components/signup/signupMotion";
-import { marketingHref } from "@/lib/domainSplit";
 
 // Partner Self-Serve Signup — the shell.
 //
@@ -121,7 +120,7 @@ export function SignupShell({
       {/* 2 — exit, top-left. Exactly one per screen. */}
       <div className="flex shrink-0 items-center justify-between gap-3 px-4 pb-1 pt-[max(env(safe-area-inset-top),10px)]">
         <ExitBackButton
-          href={exitHref ?? marketingHref("/info")}
+          {...(exitHref ? { href: exitHref } : { home: true })}
           label={exitLabel}
           {...(onExit ? { onExit } : {})}
         />

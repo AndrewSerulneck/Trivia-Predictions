@@ -99,7 +99,7 @@ export const OwnerShell = ({
       <div className={`w-full ${widthClass}`}>
         {headerRow}
         <div className="mb-6 text-center">
-          <ExplodingLogo width={320} variant="slate" />
+          <ExplodingLogo width={256} variant="slate" />
           <h1 className="text-2xl font-bold text-white">{title}</h1>
           {subtitle ? <p className="mt-1 text-sm text-slate-400">{subtitle}</p> : null}
         </div>

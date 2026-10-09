@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The site's dark navy canvas (Tailwind slate-950), used behind the system bars. -->
+    <color name="htc_canvas">#020617</color>
+</resources>

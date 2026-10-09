@@ -73,6 +73,21 @@ export const marketingHref = (path: string): string =>
   isDomainSplitEnabled() ? marketingUrl(path) : withLeadingSlash(path);
 
 /**
+ * THE "go home" destination. Every Home / "Back to Home Page" control uses this,
+ * never `marketingHref("/info")` directly (tests/native-app-contract.test.ts).
+ *
+ * - Website: the `/info` home page (CLAUDE.md: never `/`, which is the player
+ *   sign-in on `play.` and would drop partners and visitors on a login screen).
+ * - Native app (`inNativeApp`, from `isNativeApp()` / `useIsNativeApp()` in
+ *   lib/nativeApp.ts): the app's front door, the player sign-in on `play.` —
+ *   the app has no marketing page (docs/native-app-store-plan.md Phase 2E).
+ *
+ * Takes the flag instead of detecting it so this module stays pure for the edge.
+ */
+export const homeHref = (inNativeApp: boolean): string =>
+  inNativeApp ? gameHref("/") : marketingHref("/info");
+
+/**
  * Cross-subdomain cookie domain (e.g. `.hightopchallenge.com`) so a session set
  * on the apex remains valid on `play.`. Empty (host-only cookies) unless the
  * operator sets it — keeps localhost/preview cookies working untouched.
@@ -126,6 +141,9 @@ export const classifyPage = (pathname: string): PageKind => {
     pathname.startsWith("/api") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/brand") ||
+    // App-link / passkey trust files: served on BOTH hosts, each with its own
+    // content (lib/nativeAppLinks.ts) — never bounced across hosts.
+    pathname.startsWith("/.well-known/") ||
     // TV pairing page (Phase 5b): owners type the apex URL (hightopchallenge.com/tv)
     // into TV browsers, so /tv must be served on whatever host receives it and
     // never bounced across hosts.

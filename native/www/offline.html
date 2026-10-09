@@ -15,6 +15,26 @@
 <body>
 <h1 style="font-size: 22px; margin: 0;">No connection</h1>
 <p style="margin: 0;">Hightop Challenge needs the internet. Check your connection and try again.</p>
-<button type="button" onclick="location.replace('https://play.hightopchallenge.com')">Try again</button>
+<button type="button" id="retry">Try again</button>
+<script>
+  // The shell opens this page as offline.html?url=<the page that failed>
+  // (docs/native-app-store-plan.md Phase 2E). "Try again" reloads THAT page —
+  // but only if it is one of our own https pages; anything else, or no url,
+  // goes to the start page. Never navigate to an arbitrary address.
+  var START_URL = "https://play.hightopchallenge.com/";
+  var OUR_HOSTS = ["play.hightopchallenge.com", "hightopchallenge.com"];
+  function retryTarget() {
+    try {
+      var raw = new URLSearchParams(window.location.search).get("url");
+      if (!raw) return START_URL;
+      var url = new URL(raw);
+      if (url.protocol === "https:" && OUR_HOSTS.indexOf(url.hostname) !== -1) return url.href;
+    } catch (e) {}
+    return START_URL;
+  }
+  document.getElementById("retry").addEventListener("click", function () {
+    window.location.replace(retryTarget());
+  });
+</script>
 </body>
 </html>

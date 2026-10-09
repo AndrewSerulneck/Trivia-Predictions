@@ -4,10 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { performSignOut } from "@/components/navigation/SignOutButton";
 import { DELETE_CONFIRMATION_WORD } from "@/lib/accountDeletionShared";
-import { marketingHref } from "@/lib/domainSplit";
+import { homeHref } from "@/lib/domainSplit";
 import { haptic } from "@/lib/haptics";
 import { SUPPORT_EMAIL } from "@/lib/legalInfo";
 import { getUserId, getUsername } from "@/lib/storage";
+import { useIsNativeApp } from "@/lib/useIsNativeApp";
 
 // Typed-confirmation account deletion (native app store plan Phase 1b). The server decides whose
 // account it is from the signed session; the userId sent here only lets the route reject a
@@ -25,6 +26,7 @@ const WHAT_IS_DELETED: readonly string[] = [
 type Phase = "idle" | "deleting" | "done";
 
 export function DeleteAccountPanel() {
+  const inNativeApp = useIsNativeApp();
   const [typed, setTyped] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState("");
@@ -71,7 +73,7 @@ export function DeleteAccountPanel() {
         <p className="text-base leading-7 text-ht-fg-secondary">
           Everything tied to it has been removed, and you have been signed out on this device. Thanks for playing.
         </p>
-        <a href={marketingHref("/info")} className="inline-block font-black text-ht-fg-primary underline underline-offset-2">
+        <a href={homeHref(inNativeApp)} className="inline-block font-black text-ht-fg-primary underline underline-offset-2">
           Go to Hightop Challenge
         </a>
       </section>

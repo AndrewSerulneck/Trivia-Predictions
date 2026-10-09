@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Associated Domains for the PAID Apple team only (docs/native-app-store-plan.md Phase 3 / Part B).
+  NOT referenced by the Xcode project yet: a free Personal Team cannot sign this entitlement,
+  so wiring it now would break every device build. When the Organization team is approved,
+  in the same change: PRODUCT_BUNDLE_IDENTIFIER = com.hightopchallenge.app, DEVELOPMENT_TEAM =
+  the new Team ID, CODE_SIGN_ENTITLEMENTS = App/App.entitlements (both configs), and set
+  APPLE_TEAM_ID in Vercel so /.well-known/apple-app-site-association names this app.
+  - applinks:play.hightopchallenge.com  → the join QR and shared game links open the app.
+    (Never the apex: marketing pages there are sent OUT of the app.)
+  - webcredentials:hightopchallenge.com → passkeys (RP ID hightopchallenge.com, lib/webauthn.ts).
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:play.hightopchallenge.com</string>
+		<string>webcredentials:hightopchallenge.com</string>
+	</array>
+</dict>
+</plist>

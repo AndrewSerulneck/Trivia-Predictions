@@ -13,10 +13,20 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Phase 2D: Android 15+ draws edge-to-edge, so the strip behind the status and navigation
+             bars is the window background. Match the site's dark navy (#020617) and use light
+             icons, instead of the default white bar with dark icons. -->
+        <item name="android:windowBackground">@color/htc_canvas</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
 
+    <!-- Phase 3: launch screen. Android 12+ shows the app icon on windowSplashScreenBackground;
+         older phones show @drawable/splash (both navy, native/scripts/generate-app-icons.cjs). -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/htc_canvas</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
     </style>
 </resources>

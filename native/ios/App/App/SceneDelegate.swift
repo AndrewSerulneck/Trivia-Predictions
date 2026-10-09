@@ -8,7 +8,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = SpikeViewController() // SPIKE (Phase 2A); Phase 3: back to CAPBridgeViewController or its own subclass
+        window?.rootViewController = HightopBridgeViewController() // docs/native-app-store-plan.md Phases 2E/3
         window?.makeKeyAndVisible()
 
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)

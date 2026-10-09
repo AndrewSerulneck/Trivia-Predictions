@@ -1545,8 +1545,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         challengeBadgeCount={challengeBadgeCount}
       />
 
-      <div aria-hidden className="shrink-0 h-[calc(max(env(safe-area-inset-top),0px)+8rem)]" />
-
       <div className="canvas-ribbon m-0 w-full p-0">
         <div
           ref={swipeViewportRef}

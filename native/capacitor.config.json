@@ -4,16 +4,45 @@
   "webDir": "www",
   "server": {
     "url": "https://play.hightopchallenge.com",
-    "allowNavigation": ["play.hightopchallenge.com", "hightopchallenge.com"],
-    "errorPath": "offline.html"
+    "allowNavigation": [
+      "play.hightopchallenge.com",
+      "hightopchallenge.com"
+    ]
   },
   "ios": {
-    "appendUserAgent": "HightopChallengeApp/0.1.0 (ios)",
+    "appendUserAgent": "HightopChallengeApp/1.0.0 (ios)",
     "contentInset": "never",
-    "webContentsDebuggingEnabled": true
+    "backgroundColor": "#020617"
   },
   "android": {
-    "appendUserAgent": "HightopChallengeApp/0.1.0 (android)",
-    "webContentsDebuggingEnabled": true
-  }
+    "appendUserAgent": "HightopChallengeApp/1.0.0 (android)",
+    "backgroundColor": "#020617"
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#020617"
+    },
+    "SystemBars": {
+      "style": "DARK"
+    },
+    "HightopShell": {
+      "offlinePage": "offline.html",
+      "openInBrowser": {
+        "host": "hightopchallenge.com",
+        "paths": [
+          "/",
+          "/info",
+          "/faqs",
+          "/advertise",
+          "/owner/signup",
+          "/owner/register",
+          "/owner/billing/setup",
+          "/admin"
+        ]
+      }
+    }
+  },
+  "backgroundColor": "#020617"
 }

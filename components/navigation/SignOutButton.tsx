@@ -6,6 +6,9 @@ import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth";
 import { hardClearAuthAndCache } from "@/lib/authFastPath";
+import { forgetAppSide } from "@/lib/appFrontDoor";
+import { homeHref } from "@/lib/domainSplit";
+import { isNativeApp } from "@/lib/nativeApp";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SignOutButton — "leave your account".
@@ -77,6 +80,11 @@ export async function performSignOut(variant: SignOutVariant): Promise<void> {
     hardClearAuthAndCache();
     void signOut().catch(() => {});
   }
+  // The native app's remembered "partner" side (lib/appFrontDoor.ts): a partner
+  // who signs out opens on the front door next time.
+  if (variant === "partner") {
+    forgetAppSide();
+  }
 
   await Promise.race([
     logout,
@@ -132,7 +140,10 @@ export function SignOutButton({
     try {
       await performSignOut(variant);
       onSignedOut?.();
-      const destination = redirectTo === undefined ? DEFAULT_REDIRECT[variant] : redirectTo;
+      // In the native app a partner signs out to the app's front door (Phase 2E).
+      const defaultDestination =
+        variant === "partner" && isNativeApp() ? homeHref(true) : DEFAULT_REDIRECT[variant];
+      const destination = redirectTo === undefined ? defaultDestination : redirectTo;
       if (destination) {
         router.push(destination);
       }

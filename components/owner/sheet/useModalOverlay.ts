@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { setScrollLock } from "@/lib/scrollLock";
 import { resolveExitMs } from "@/components/owner/sheet/sheetMotion";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 
 // The shared mechanics behind OwnerSheet (slide-up) and OwnerMenuDrawer
 // (slide-in from the left). Both are the same dialog with a different entrance:
@@ -114,6 +115,9 @@ export const useModalOverlay = ({
     if (guard && !guard()) return;
     close();
   }, []);
+
+  // Android's Back inside the app closes the topmost overlay, the same way Escape does.
+  useNativeBackHandler("overlay", open ? requestClose : null);
 
   // Remember the opener, then move focus into the panel itself (not the first
   // button — a screen reader would announce it as if already chosen).

@@ -15,7 +15,8 @@ import {
   signupDraftHasAnswers,
   writeSignupDraft,
 } from "@/components/signup/signupDraft";
-import { marketingHref } from "@/lib/domainSplit";
+import { homeHref } from "@/lib/domainSplit";
+import { isNativeApp } from "@/lib/nativeApp";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
 import {
   BLANK_SIGNUP_DRAFT,
@@ -287,7 +288,7 @@ export function SignupWizard() {
    * supplied ONLY on a dirty draft, where the confirm is worth that trade; a
    * clean draft gets the shell's ordinary Back and its `/info` fallback.
    *
-   * The destination is marketingHref("/info"), never "/" — apex `/` is the
+   * The destination is homeHref() (/info on the website), never "/" — apex `/` is the
    * PLAYER sign-in (CLAUDE.md), and dropping a partner there is exactly the bug
    * that rule exists to prevent.
    */
@@ -295,7 +296,7 @@ export function SignupWizard() {
   const handleExit = useCallback(() => {
     if (!window.confirm("Leave signup? Your answers won't be saved.")) return;
     clearSignupDraft();
-    window.location.href = marketingHref("/info");
+    window.location.href = homeHref(isNativeApp());
   }, []);
 
   const nextLabel =

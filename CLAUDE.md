@@ -4,7 +4,7 @@
 >
 > **Read `SYSTEM_CONTEXT.md` before starting any task.**
 >
-> **`/info` IS the home page.** Any control that means "go to the home page" — a Back button, a nav logo, a marketing link — must target **`/info`**, never `/`. Until the domain split flips, apex `/` still serves `JoinFlow` (the *player sign-in*), so pointing "home" at `/` silently drops partners and first-time visitors on a login screen. Use `marketingHref("/info")` from `lib/domainSplit.ts` so the link stays relative today and becomes an absolute apex URL after the split.
+> **`/info` IS the home page — on the website.** Any control that means "go to the home page" — a Back button, a nav logo, a marketing link — must target **`/info`**, never `/`: `/` on `play.` is `JoinFlow` (the *player sign-in*), so pointing "home" at `/` silently drops partners and first-time visitors on a login screen. **Inside the native app there is no `/info`**: home is the app's front door (the player sign-in). So use **`homeHref(isNativeApp())`** from `lib/domainSplit.ts` (or the `ExitBackButton` `home` option / `useIsNativeApp()` for rendered links), never a bare `marketingHref("/info")` — `tests/native-app-contract.test.ts` fails on one (Phase 2E, 2026-10-09).
 >
 > **Strategic direction (next few weeks):** the player game login is moving to `play.hightopchallenge.com` (which is what finally moves `/` off the apex); and the `/owner/*` payments surface is becoming the mobile-first **Partner Dashboard** (self-serve live-game scheduling, TV display URL, and Stripe billing). See `SYSTEM_CONTEXT.md` §0 and the canonical build plan in `docs/partner-dashboard-plan.md`.
 >
@@ -38,6 +38,32 @@ browser, never in-app. Read the plan before any native/app-store work.
   (Gradle can't run on Android Studio's Java 25); Gradle output goes to `~/Library/Caches/hightop-native/`
   because iCloud syncs `~/Documents` and makes `name 2` copies that break builds. Findings and commands:
   `docs/native-app-store-plan_PHASE_2A_HANDOFF.md`.
+- **The iPhone app's web view starts BELOW the status bar (Phase 2D, 2026-10-09)**:
+  `@capacitor/status-bar` `overlaysWebView: false` + dark navy, light icons (`SystemBars.style "DARK"`;
+  Android paints the edge-to-edge strip via `htc_canvas` in `styles.xml`). Don't flip it back to
+  overlaying: half the player screens ignore `env(safe-area-inset-top)`. Never put safe-area top padding
+  on a `<section>`/`<article>`: `.tp-page-main section` gets `0.625rem !important` on phones and silently
+  replaces it (`tests/native-safe-area-contract.test.ts`).
+- **The app's front door + link-outs (Phase 2E, 2026-10-09).** `lib/nativeApp.ts` is the ONLY reader
+  of the `HightopChallengeApp/` UA token and `window.Capacitor` (`isNativeApp()`, `isNativeUserAgent()`,
+  `nativeLaunchUrl()`); contract test. In the app `/` is wrapped in `AppFrontDoor` (server checks the UA):
+  a phone that remembered "partner" (cookie `htc_app_side`, `lib/appFrontDoor.ts`, a hint never an
+  access check) opens on `/owner/dashboard` on a plain icon launch only — a link/QR/`?v=` launch always
+  gets the player sign-in (Andrew's QR rule). Marketing pages (`plugins.HightopShell.openInBrowser` in
+  `native/capacitor.config.json`) open in the system browser; legal pages stay in the app. The offline
+  page is shown by our own native wrappers (`HightopBridgeViewController.swift`,
+  `HightopWebViewClient.java`) only for real network errors — `server.errorPath` is deliberately unset.
+- **Production shell (Phase 3, 2026-10-09; handoff `docs/native-app-store-plan_PHASE_3_HANDOFF.md`).** No
+  `@capacitor/*` package in the website — `lib/nativeApp.ts` talks to the injected bridge
+  (`hasNativeCapability()`, `callNative()`, `addNativeListener()`, `openInSystemBrowser()`); check the
+  capability first, old app versions stay in use. Link-outs are ONE list: `lib/nativeLinkOut.ts` =
+  `native/capacitor.config.json` `openInBrowser.paths`; web-only pages (`/owner/signup|register`,
+  `/owner/billing/setup`, `/admin`) also render `WebOnlyInApp` from their layout. Never a Subscribe/Pay
+  button in the app (`ManageBillingOnWeb`). Android Back runs the on-screen control
+  (`components/navigation/nativeBackButton.ts`: overlay > step > exit) — never new navigation logic.
+  Native env vars (`NATIVE_APP_*`, `APPLE_TEAM_ID`, `ANDROID_APP_CERT_SHA256`) are server-side but
+  need a Vercel **Redeploy** to apply. App version lives in four places, pinned equal by
+  `tests/native-app-contract.test.ts`.
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
   `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
   `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep

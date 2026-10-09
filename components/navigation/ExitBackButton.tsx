@@ -2,6 +2,7 @@
 
 import { ChevronLeft } from "lucide-react";
 import { useExitNavigation, type ExitNavigationOptions } from "@/components/navigation/exitNavigation";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { type NavTone } from "@/components/navigation/StepBackButton";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -67,6 +68,7 @@ export type ExitBackButtonProps = ExitNavigationOptions & {
 
 export function ExitBackButton({
   href = "/",
+  home = false,
   label = "Back",
   preferHref = false,
   venueHomeFallback = false,
@@ -78,10 +80,13 @@ export function ExitBackButton({
 }: ExitBackButtonProps) {
   const { handleExit, triggerBackHaptic } = useExitNavigation({
     href,
+    home,
     preferHref,
     venueHomeFallback,
     onExit,
   });
+  // Android's Back inside the app does exactly what tapping this does.
+  useNativeBackHandler("exit", disabled ? null : () => { void handleExit(); });
 
   const button = (
     <button

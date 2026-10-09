@@ -249,12 +249,18 @@ describe("PWA install prompt inertness", () => {
       "export function usePwaInstallPrompt()",
       "const promptInstall = useCallback("
     );
-    const guardIndex = effect.indexOf("if (!isInstallPromptEnabled() || isRunningAsInstalledPwa()) {");
+    const guardIndex = effect.indexOf("if (!shouldOfferInstallPrompt() || isRunningAsInstalledPwa()) {");
     const firstListenerIndex = effect.indexOf("window.addEventListener(");
 
     expect(guardIndex).toBeGreaterThanOrEqual(0);
     expect(firstListenerIndex).toBeGreaterThan(guardIndex);
     expect(effect.slice(guardIndex, firstListenerIndex)).toContain("return;");
+
+    // The guard is the flag AND "not inside the App Store / Google Play app"
+    // (docs/native-app-store-plan.md Phase 3): the app has nothing to install.
+    expect(sourceBetween(pwaLibSource, "export function shouldOfferInstallPrompt()", "}")).toContain(
+      "return isInstallPromptEnabled() && !isNativeApp();"
+    );
 
     // `canInstallOnDevice` is derived purely from the deferred event, which the
     // guarded effect is the only writer of — so an off flag pins it false.
@@ -268,7 +274,7 @@ describe("PWA install prompt inertness", () => {
     // only enabling effect bails on the same flag.
     const coachCardEffect = sourceBetween(
       bingoSource,
-      "      !isInstallPromptEnabled() ||",
+      "      !shouldOfferInstallPrompt() ||",
       "setShowInstallCoachCard(true);"
     );
     expect(coachCardEffect).toContain("setShowInstallCoachCard(false);");

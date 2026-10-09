@@ -10,9 +10,21 @@ Apple account is approved: passkeys and the 7-day login test)** — see Phase 2.
 simulator/emulator checks done 2026-10-08; waiting on Andrew's device checklist**
 (`docs/native-app-store-plan_PHASE_2A_DEVICE_CHECKLIST.md`); handoff
 `docs/native-app-store-plan_PHASE_2A_HANDOFF.md`. **Andrew's first device report (2026-10-08) added Phases 2C, 2D and 2E** (see "Andrew's first
-device report" under Phase 2). **Phase 2C (venue-list leak) is DONE locally, 2026-10-08 — not yet
-committed or deployed** (Andrew's call); handoff `docs/native-app-store-plan_PHASE_2C_HANDOFF.md`.
-2D or 2E is next (either order). Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
+device report" under Phase 2). **2A and 2C are committed and pushed** (`f96c386`, `858660c`,
+2026-10-08); 2C's handoff is `docs/native-app-store-plan_PHASE_2C_HANDOFF.md`. **Phase 2D (fit the
+screen) is built and verified on Andrew's iPhone 16 Pro, the simulator and the emulator, 2026-10-09 —
+not yet committed** (Andrew's call); handoff `docs/native-app-store-plan_PHASE_2D_HANDOFF.md`.
+**Phase 2E (front door, no `/info` in the app, false-offline fix) is built and verified on the simulator,
+the emulator and in a local browser, 2026-10-09 — not yet committed, and its device check waits for the
+web deploy**; handoff `docs/native-app-store-plan_PHASE_2E_HANDOFF.md`. **Phase 3 (production shell) is
+built and verified on the emulator, the simulator, Andrew's iPhone (install + probe) and a local production
+build, 2026-10-09 — not yet committed (2D, 2E and 3 all wait on Andrew's commit/push)**; handoff
+`docs/native-app-store-plan_PHASE_3_HANDOFF.md`, device checklist `docs/native-app-device-checklist.md`.
+**Phase 3B (player-only app, clearer partner sign-in on `/info`, Square logo) was added 2026-10-09 on
+Andrew's decision that partners never use the app (§2 item 12) — it runs BEFORE Phase 4.**
+**Next: Andrew commits 2D/2E/3 locally (push optional), then Phase 3B (3B.1 and 3B.2 in either order),
+then Andrew's device checklist, then Phases 4a and 4b** (4c, 5 and Part B wait for the paid Apple
+account; Universal Links also switch on then). Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
 this line.
 
 **Goal:** one "Hightop Challenge" app, live on the Apple App Store and Google Play. Players get the
@@ -49,12 +61,12 @@ There are two real but small costs:
    something materially different without a review, or adding in-app selling of digital goods, is
    not.
 
-**One app or two? One app.** Players are the audience that needs the "this is legit" signal, and
-partners are a small group. One app means one listing, one review and one set of screenshots. A
-partner-only app is also more likely to be rejected as "just a website". The app opens to the player
-experience. A small "Venue partner? Sign in" link opens the Partner Dashboard. **Partner signup and
-Stripe payment open in the phone's normal web browser, never inside the app.** This keeps us clear of
-Apple's in-app-purchase rules. We can split partners into their own app later if they ever need one.
+**One app or two? One app, for players only** (revised 2026-10-09, §2 item 12). Players are the
+audience that needs the "this is legit" signal. **Partners never use the app:** the Partner Dashboard,
+partner sign-in, signup and Stripe billing all live on the website, in the phone's or computer's normal
+browser. Any partner page reached from inside the app opens in the system browser. This keeps the paid
+subscription entirely outside Apple's and Google's stores. We can build a separate partner app later if
+partners ever need one.
 
 **Is this dangerous or risky? Not dangerous.** Nothing in this plan changes the live website's
 behaviour until a phase ships, and every website change is reversible by redeploying. The honest
@@ -86,7 +98,8 @@ nothing (estimate in Phase 5). You already have the Mac you need for Xcode.
 1. **The publisher is a registered business** (LLC or corporation, enrolled as an *Organization* on
    both stores). The listing shows the company name. This also exempts us from Google's rule that
    new *personal* accounts need 12 testers for 14 days.
-2. **One app for players and partners.** It is player-first. The Partner Dashboard is reached through
+2. **SUPERSEDED 2026-10-09 by item 12 (the app is player-only).** Original text, kept for history:
+   **One app for players and partners.** It is player-first. The Partner Dashboard is reached through
    a sign-in link inside the app. Partner **signup and every Stripe page open in the system browser**.
    This supersedes, for the native app only, the PWA rule "`/owner/*` and `/admin` stay an ordinary
    website": the *PWA* stays player-only, but the native app may show `/owner/*`. `/admin` is never
@@ -117,6 +130,15 @@ nothing (estimate in Phase 5). You already have the Mac you need for Xcode.
 11. **App id `com.hightopchallenge.app`** (Claude's recommendation; Andrew asked what it is and
     raised no objection, 2026-10-08). It is permanent once published. Confirm once more before the
     first upload to either store, because that is the point of no return.
+12. **The app is for players only; partners use the website in a browser** (Andrew, 2026-10-09).
+    Subscribers (bars, pubs, restaurants) pay $100/month; Andrew wants that subscription kept entirely
+    outside the app stores (no store commission, and no "downloaded software" framing for state sales
+    tax). So: no partner sign-in link, no Partner Dashboard and no billing screen inside the app; every
+    `/owner/*` page opens in the system browser. The app's sign-in screen has **no Home button and no
+    partner link**. This also answers the open 2E/3 question "should a partner who plays as a guest
+    switch the app back to the player side?" — moot: partners never sign in inside the app, so the
+    remembered-partner launch (`htc_app_side` cookie, `lib/appFrontDoor.ts`) is removed. Built in
+    Phase 3B.
 
 ---
 
@@ -178,6 +200,9 @@ Model rule (Andrew): **never more capable than Opus 5.5.** Models: `claude-opus-
 | 2D | App fits the screen: safe areas, venue-home gap, smaller logos | **Opus 5.5** | high | 1 session + Andrew's iPhone |
 | 2E | App front door (guests → games, partners → dashboard), no `/info`, false-offline fix | **Opus 5.5** | high | 1–2 sessions + Andrew's iPhone |
 | 3 | Production shell: icons, offline screen, native detection, partner/billing link-outs, Universal Links, minimum-version gate | **Opus 5.5** | high | 2 sessions |
+| 3B.1 | Player-only app: no Home/partner link on the app's sign-in, every `/owner/*` page opens in the browser, remove the remembered-partner launch | **Opus 5.5** | high | 1 session |
+| 3B.2 | `/info`: obvious Partner Login (phone + hero), "no app needed" line for partners, official Square logo | Sonnet 5.5 | medium | 1 session + Andrew's logo OK |
+| 3B.3 | Rebuild the shell, Andrew's device + phone-browser check | Andrew (+ Sonnet 5.5, low) | low | ~15 min |
 | 4a | Native share + haptics | Sonnet 5.5 | medium | 1 session |
 | 4b | In-app QR scanner | Sonnet 5.5 | high | 1 session |
 | 4c | Face ID passkeys in the app (based on the Phase 2 result) | **Opus 5.5** | **xhigh** | 1–2 sessions |
@@ -188,7 +213,7 @@ Model rule (Andrew): **never more capable than Opus 5.5.** Models: `claude-opus-
 
 Phases 0 and 1 run in parallel; Phase 0 is mostly waiting on paperwork. Phase 2 can start once
 Xcode is installed. Free Apple provisioning can put a test build on Andrew's own iPhone before the
-paid account is approved. Phases 4a/4b/4c/5 can run in any order after Phase 3. Phase 6 needs
+paid account is approved. Phases 4a/4b/4c/5 can run in any order after Phase 3B; 4a and 4b need only free provisioning, while 4c and 5 need the paid Apple account. Phase 6 needs
 everything before it. Phase 7 needs live store URLs, so it starts after approval. The badges can
 be built behind a flag earlier.
 
@@ -371,9 +396,9 @@ Andrew ran the Part A test app on his iPhone and reported seven things. The firs
 | R2 | Big gap between the game buttons and the Games / Leaderboard / Rewards bar; the "Next Live Trivia Showdown in…" box is pushed far down. | The venue home leaves a fixed-height gap for its pinned header (`components/venue/VenueHubClient.tsx`, `h-[calc(max(env(safe-area-inset-top),0px)+8rem)]`) instead of measuring the header. A guessed height is wrong whenever the header's real height differs. | **2D** |
 | R3 | Signed in as **Rick** (not Andrew), all venues show, wherever he is. | **Working as designed.** Production `accounts` has `god_mode = true` for exactly three accounts: `Andrew`, `marc` and **`Rick`** (checked 2026-10-08). God Mode sees every venue. To test as a normal player, use a fresh account. If Rick should be a normal player, turn God Mode off for him in the admin. Andrew to decide; nothing to build. | none |
 | R4 | A **new** player briefly sees every venue behind the "share your location" question. After they allow location, only the nearby ones remain. | **Real bug, on the website too, not only the app.** In `components/join/JoinFlow.tsx`, sign-out (`handleSignedOut`) and going back to the sign-in choice (`handleBackToAuthMethodSelection`) reset `venueListBuiltRef` but **not the `venueList` state**. The previous account's God Mode list (Rick's) stays on screen while `buildVenueListAfterAuth` waits for the new player's location. The deep-link path also fills `venueList` with every venue (`setVenueList(venues)` before the geofence check). Only phones where a God Mode account signed out are affected, but a non-God Mode player must never see an out-of-range venue. | **2C** |
-| R5 | `/info` shouldn't be part of the app. The app should send guests to the games and partners to the dashboard. | A design change: today every "home" control points at `/info` (`marketingHref("/info")` in `LegalPage`, `app/owner/login`, `JoinFlow`, `SignupShell`, `SignupWizard`, `DeleteAccountPanel`, `app/owner/billing/setup`). | **2E** |
-| R6 | Back from a legal page shows "No connection… check your connection" while the internet is fine. "Try again" then goes to the player sign-in. | Back on legal pages goes to `https://hightopchallenge.com/info` (domain split is live). Most likely cause: `useExitNavigation` calls `history.back()` and then, 150 ms later, its fallback navigation. The cancelled first navigation is reported as a failed load, and the shell shows `server.errorPath`. "Try again" in `native/www/offline.html` reloads the app's start URL, not the page that failed. To confirm on the device. | **2E** |
-| R7 | The app still works with Wi-Fi off. | Expected: the phone switched to mobile data. There is no offline caching (no service worker, by rule). To test the real offline screen, use **Airplane Mode**. | 2E re-tests |
+| R5 | `/info` shouldn't be part of the app. The app should send guests to the games and partners to the dashboard. | A design change: today every "home" control points at `/info` (`marketingHref("/info")` in `LegalPage`, `app/owner/login`, `JoinFlow`, `SignupShell`, `SignupWizard`, `DeleteAccountPanel`, `app/owner/billing/setup`). | **2E — built 2026-10-09** (`homeHref()`, front door, link-outs) |
+| R6 | Back from a legal page shows "No connection… check your connection" while the internet is fine. "Try again" then goes to the player sign-in. | Back on legal pages goes to `https://hightopchallenge.com/info` (domain split is live). Most likely cause: `useExitNavigation` calls `history.back()` and then, 150 ms later, its fallback navigation. The cancelled first navigation is reported as a failed load, and the shell shows `server.errorPath`. "Try again" in `native/www/offline.html` reloads the app's start URL, not the page that failed. To confirm on the device. | **2E — confirmed and fixed 2026-10-09**: Capacitor showed the offline page for a cancelled (−999) navigation |
+| R7 | The app still works with Wi-Fi off. | Expected: the phone switched to mobile data. There is no offline caching (no service worker, by rule). To test the real offline screen, use **Airplane Mode**. | 2E re-tested: ✅ Android emulator; iPhone is Andrew's check |
 
 All three phases change only the shell and the web pages' layout and routing. No database changes,
 no new env vars, no new cron jobs, and no new recurring cost (2E adds no request; see its cost
@@ -412,6 +437,12 @@ confirm that no venue shows behind the location question.
 ---
 
 ### Phase 2D — Fit the screen inside the app: safe areas, header gap, smaller logos (Opus 5.5, high)
+
+**Status: built 2026-10-09, not yet committed. As-built: `docs/native-app-store-plan_PHASE_2D_HANDOFF.md`.**
+Diagnosis on the iPhone 16 Pro: the inset read correctly (62px), so it was case (b), screens ignoring it.
+At least six screens did. The shell option (step 2) fixed them all: `@capacitor/status-bar` with
+`overlaysWebView: false`. The venue header had a website bug of its own: a global `!important` section
+padding replaced its safe-area padding. That's fixed, and the spacer now uses the header's measured height.
 
 **Goal:** inside the iPhone app, nothing sits under the status bar or the notch / Dynamic Island,
 every Back and menu button can be tapped, and the venue home has no dead gap. The website must
@@ -466,6 +497,12 @@ has no gap. Also confirm the website in mobile Safari looks unchanged or better.
 
 ### Phase 2E — App front door: guests to games, partners to the dashboard, no `/info` (Opus 5.5, high)
 
+**Status: built 2026-10-09, not yet committed. As-built: `docs/native-app-store-plan_PHASE_2E_HANDOFF.md`.**
+Deviations from the spec below: the remembered side is a **cookie** (`htc_app_side`, shared
+`.hightopchallenge.com` domain), not localStorage, because the partner signs in on the apex and the
+launch choice runs on `play.`; and the link-out for marketing pages is **native** (one list in
+`native/capacitor.config.json`), which Phase 3 extends for `/admin`, signup and billing.
+
 **Goal (R5, R6, R7):** inside the app, there is no marketing page. The app opens on a front door
 that sends a **bar guest** to the player sign-in and games, and a **venue partner** to the Partner
 Dashboard. Back never leads to `/info` or to a false "No connection" screen. The website, including
@@ -507,6 +544,15 @@ hundreds and ask for one.** Reasons:
    session is still valid, open straight on `/owner/dashboard`. Otherwise show the front door. A
    partner who signs out goes back to the front door. Do it in the web page, not `proxy.ts` (never
    change its default gate behaviour).
+   **QR rule (Andrew, 2026-10-08):** someone who scans the join QR (`https://play.hightopchallenge.com`,
+   `lib/joinQr.ts`, printed on merch, permanent) is a player, so a scan must always land on the **player
+   sign-in**, never the partner dashboard or partner sign-in, even on a phone where a partner once
+   signed in. The "remembered partner" shortcut applies **only to a plain launch from the app icon**.
+   A launch or resume that came through a link (once Phase 3's Universal Links exist, a QR scan opens
+   the app through `@capacitor/app`'s `appUrlOpen` event / `App.getLaunchUrl()`) shows the front door
+   (player sign-in). Today, before Universal Links, a scan opens Safari or Chrome on `play.`, and `/`
+   there is already the player sign-in (verified 2026-10-08: `play.` `/` serves `JoinFlow`, and nothing
+   in it routes to `/owner/*`). Unit-test this case with the front-door choice.
 5. **Marketing pages leave the app.** In the app, `/info`, `/faqs`, `/advertise` and any other
    apex marketing page open in the system browser (same link-out mechanism Phase 3 uses for Stripe
    and `/admin`). Legal pages (`/privacy`, `/terms`, `/rules`, `/support`, `/delete-account`) stay
@@ -529,7 +575,8 @@ hundreds and ask for one.** Reasons:
 
 **Tests:** contract tests for `isNativeApp()`'s single-reader rule and for `homeHref()`; a unit test
 for the front-door choice (no stored side → front door; "partner" + valid session → dashboard;
-"partner" + expired session → front door); `npm run test:god-mode-join` (JoinFlow is touched); and
+"partner" + expired session → front door; "partner" + valid session but launched from a link/QR → front
+door); `npm run test:god-mode-join` (JoinFlow is touched); and
 the full checks. Andrew's device check: the app opens on the front door; the partner link works;
 relaunching as a signed-in partner opens the dashboard; no in-app control reaches `/info`; Back from
 each legal page works with no "No connection"; Airplane Mode shows the offline screen and "Try
@@ -543,7 +590,28 @@ built.
 
 ### Phase 3 — Production shell (Opus 5.5, high)
 
+**Status: built 2026-10-09, not yet committed. As-built: `docs/native-app-store-plan_PHASE_3_HANDOFF.md`.**
+Deviations from the spec below: (1) the minimum-version gate is shown **by the web page**, not the shell, so
+it protects every app version ever shipped; (2) **Vercel applies a changed server env var only after a
+Redeploy** — "no redeploy needed" below is wrong; (3) icons come from our own
+`native/scripts/generate-app-icons.cjs` (root `sharp`), not `@capacitor/assets`; (4) web-only pages are
+gated twice: the shell's link-out list (full page loads) **and** a server layout that renders "Open in
+browser" in the app (Next router navigations never reach the shell); (5) a small native plugin
+`HightopShell.openInBrowser` lets the web send any page to the browser without a store release;
+(6) Universal Links / App Links are built but switch on only with the paid accounts (`APPLE_TEAM_ID`,
+`ANDROID_APP_CERT_SHA256`, iOS entitlements wiring — handoff §7); (7) iOS uses native geolocation, Android
+keeps the web API (it already asks once).
+
 **Goal:** the app you would actually ship, minus the Phase 4/5 features.
+
+**Already done by 2E (don't rebuild):** `lib/nativeApp.ts` with `isNativeApp()` + its contract test;
+the native link-out mechanism (`plugins.HightopShell.openInBrowser`, read by
+`HightopBridgeViewController.swift` / `HightopWebViewClient.java` — add `/admin`, `/owner/signup`,
+`/owner/register` and the billing paths to it, mind that `/owner/login` and `/owner/dashboard` must stay
+in-app); the offline page (real network errors only, "Try again" reloads the failed page). Phase 3 still
+owns: `nativePlatform()` / `nativeAppVersion()` / `hasNativeCapability()`, Universal Links (and then the
+`appUrlOpen` warm-resume case of the QR rule), the min-version gate, icons/splash, Android back button
+via the page, the geolocation plugin, and replacing `SpikeViewController` with `HightopBridgeViewController`.
 
 - **One native-detection helper**, for example `lib/nativeApp.ts`: `isNativeApp()`,
   `nativePlatform()`, `nativeAppVersion()`, and `hasNativeCapability(name)`. It reads the
@@ -584,6 +652,153 @@ built.
 **Tests:** contract tests for the helper's single-reader rule and the link-out rules; the proxy
 `.well-known` tests; `npm run test:pwa-contract`; and the full checks. Andrew: device checklist
 `docs/native-app-device-checklist.md`, created in this phase.
+
+---
+
+### Phase 3B — Player-only app, clearer partner sign-in on `/info`, Square logo (before Phase 4)
+
+**Status: planned 2026-10-09, not started.** Andrew's decision: §2 item 12. Each sub-phase writes
+`docs/native-app-store-plan_PHASE_3B<N>_HANDOFF.md` (for example `…_PHASE_3B1_HANDOFF.md`) and updates
+the status line at the top of this file.
+
+**Why the Home button is still on Andrew's phone today.** The app loads the live website, and Phases 2D,
+2E and 3 are not deployed. On the live site the app's sign-in still shows the website's "Home" button.
+Uncommitted Phase 2E swapped it for "Venue partner? Sign in". Phase 3B removes both, so the app's
+sign-in shows neither.
+
+**Prerequisite (Andrew, 3B.0):** commit 2D, 2E and 3 locally first (three commits, as the Phase 3 handoff
+recommends), so that 3B is its own reviewable change. Pushing can wait and go out together with 3B.
+Never `git checkout -- <file>` in this tree.
+
+**Order:** 3B.1 and 3B.2 touch different files and can run in either order, or in parallel. 3B.2 is
+website-only and can ship on its own. 3B.3 comes after both.
+
+#### Phase 3B.1 — The app is player-only (Opus 5.5, high)
+
+**Goal:** inside the app there is no partner surface. The website is unchanged for every browser visitor,
+including partners on phones.
+
+1. **The app's sign-in has no Home button and no partner link.** In `components/join/JoinFlow.tsx`
+   (the `inNativeApp ? … : …` block at the bottom of the page, ~line 3335), the app branch renders
+   nothing. The website branch keeps its Home button (`homeHref(false)` → `/info`), unchanged. Check
+   `JoinFlow`'s other panels (venue list, username, PIN, create account) for any other Home or `/info`
+   control that the app shows, and route each one through the existing `homeHref(isNativeApp())`.
+2. **Remove the remembered-partner launch.** Delete `components/join/AppFrontDoor.tsx`,
+   `lib/appFrontDoor.ts` and `tests/lib.app-front-door.test.ts`. `app/page.tsx` renders `JoinFlow` for
+   everyone again; drop the user-agent read if nothing else needs it. Remove the callers:
+   `rememberPartnerSide()` in `app/owner/login/page.tsx`; `isAppLaunchEntry` /
+   `readRememberedAppSide` / `forgetAppSide` / `rememberPartnerSide` in `app/owner/dashboard/page.tsx`
+   (~lines 430–445, including its `window.location.replace(homeHref(true))`); `forgetAppSide()` in
+   `components/navigation/SignOutButton.tsx`. Andrew's QR rule ("a scan always lands on the player
+   sign-in") now holds by construction: the app has no other door. Keep `nativeLaunchUrl()` in
+   `lib/nativeApp.ts` if Universal Links still need it; otherwise remove it with its test. The leftover
+   `htc_app_side` cookie on test phones is harmless once nothing reads it; it expires on its own.
+3. **Every `/owner/*` page leaves the app.**
+   - `lib/nativeLinkOut.ts`: replace the `/owner/signup`, `/owner/register` and `/owner/billing/setup`
+     entries in `APP_WEB_ONLY_PAGES` with one **`/owner`** entry. Suggested copy: title "The Partner
+     Dashboard is on our website", body "Venue partners sign in at hightopchallenge.com in any web
+     browser. This app is for players." Update the file's header comment, which currently says "never
+     list `/owner` itself".
+   - `native/capacitor.config.json` `plugins.HightopShell.openInBrowser.paths`: the same change (the
+     shell's matcher treats an entry as itself plus everything below it). `tests/native-app-contract.test.ts`
+     fails if the two lists drift.
+   - Add `app/owner/layout.tsx` → `<WebOnlyInApp path="/owner">`. This catches Next router
+     navigations, which never reach the shell. Delete the three per-page layouts it replaces
+     (`app/owner/signup/layout.tsx`, `app/owner/register/layout.tsx`, `app/owner/billing/setup/layout.tsx`).
+     First confirm each holds nothing but the `WebOnlyInApp` wrapper (signup's does). Keep
+     `app/admin/layout.tsx`.
+   - Check `app/owner/loading.tsx` still works under the new layout, and that `WebOnlyInApp` only
+     reads the request's user-agent: website `/owner/*` pages must stay as fast as today. The Phase 3
+     handoff notes these pages became per-visit renders. Run `scripts/measure-owner-load.cjs` before
+     and after and report the numbers.
+   - `/tv` and `/owner/display` (the venue TV screen) are partner surfaces. `/owner/display` is covered
+     by `/owner`. `/tv` is served on both hosts (`lib/domainSplit.ts` ~line 147); add it to the link-out
+     list too, unless that breaks the TV pairing flow on a real TV browser (it can't: TVs don't run our
+     app).
+4. **Remove in-app partner code that is now dead.** `components/native/ManageBillingOnWeb.tsx` and the
+   `inNativeApp` branches in `app/owner/billing/page.tsx`; the native-only `homeHref(true)` uses in
+   `app/owner/billing/setup/page.tsx` and in `SignOutButton.tsx`'s partner variant; any native branch in
+   `components/owner/OwnerShell.tsx` or `components/signup/*`. Keep the hard rule "never a Subscribe/Pay
+   button in the app". It is now enforced by the `/owner` gate, so rewrite its contract test to pin
+   that `/owner` is web-only in both lists.
+5. **Universal Links / App Links:** `lib/nativeAppLinks.ts` already claims links only on `play.`, and
+   `/owner/*` lives on the apex, so partner emails and links already open the browser. Keep it that way
+   and add a test asserting the apex claims no links.
+6. **Legal pages stay in the app.** Grep `/support`, `/terms`, `/privacy`, `/delete-account` and
+   `lib/legalInfo.ts` for wording that tells partners to use the app ("sign in in the app", "in the
+   app's Partner Dashboard") and change it to "in your web browser at hightopchallenge.com". No legal
+   page in the app may link to pricing or Stripe.
+7. **Docs and rules, in the same change:**
+   - `CLAUDE.md` "Native app" bullets: "One Capacitor app … for players AND partners" → players only.
+     Replace the Phase 2E front-door bullet (remembered partner, `htc_app_side`). Update the Phase 3
+     link-out bullet (`/owner` in the list).
+   - This plan: Phase 6's reviewer notes no longer need a demo partner login, and the listing copy is for
+     players only (see Phase 6). Add a §5 hard rule: "No partner surface in the app."
+   - Mark the open question in `docs/native-app-store-plan_PHASE_3_HANDOFF.md` §"What needs you" item 3
+     as answered (one line pointing to §2 item 12; leave the rest of that history alone).
+8. **Shell:** the config change needs `npx cap sync` and a rebuild of both apps (commands: Phase 2A
+   handoff §5–§6; `JAVA_HOME=/opt/homebrew/opt/openjdk@21`, Gradle output in `~/Library/Caches/hightop-native/`).
+   The app is not in a store yet, so this costs no store release. The web-side `/owner` gate covers any
+   older test build.
+
+**Cost:** zero new requests. It removes one cookie read on each app launch and one dashboard branch.
+`/owner/*` render cost is unchanged (`WebOnlyInApp` is already on the signup and billing pages).
+
+**Tests:** `tests/native-app-contract.test.ts` (updated lists, `/owner` web-only, no
+`marketingHref("/info")` in home controls), `tests/navigation-controls-contract.test.ts`,
+`npm run test:god-mode-join` (JoinFlow is touched), `npm run test:pwa-contract`, then
+`npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run build`. Don't run typecheck alongside
+the build. Simulator/emulator: the app's sign-in shows no Home and no partner link; a link to
+`hightopchallenge.com/owner/login` opens Safari/Chrome; a Next-router hop to `/owner/*` shows the
+"on our website" notice.
+
+#### Phase 3B.2 — `/info`: obvious Partner Login and the Square logo (Sonnet 5.5, medium)
+
+Website only (`app/info/page.tsx`). Inside the app, `/info` opens in the system browser, so this never
+shows in the app.
+
+1. **Phones can see Partner Login without opening the menu.** Today, below `md`, "Partner Login" exists
+   only inside the hamburger menu (~line 448). Add a compact, clearly-a-button **"Partner Login"** to the
+   header bar beside the menu toggle on phones: a bordered pill with an icon such as Lucide `LogIn`,
+   ≥44 px tall, readable at 360 px wide without crowding the logo. Restyle the desktop header's
+   text-only "Partner Login" (~line 414) as the same outlined button, next to "Get Started".
+2. **Hero:** replace the transparent "Already a partner? Sign in" pill (~line 540) with a solid,
+   high-contrast button labelled **"Partner Login"**. Under the hero buttons, add one plain line that
+   tells partners the dashboard is browser-based. Suggested copy, for Andrew to approve: *"Venue
+   partners: schedule games, set rewards and manage billing from any web browser — no app needed."*
+   This is the line that answers the "do partners use the app?" question on the page itself. When
+   Phase 7 adds the store badges, label them "For players".
+3. **Square logo next to "Works with your Square register!"** (~line 553):
+   - Use **official Square artwork only** (Square's press / brand-assets page), never a redrawn or
+     recoloured mark. On the dark hero, use their white / reversed version. Andrew downloads the file
+     or approves the one the agent fetches, and confirms Square's brand guidelines allow a "works with"
+     use. Do not imply a partnership or endorsement; the existing wording does not.
+   - Save it under a new path such as `public/brand/partners/square-logo-white.svg`. Do not put it in
+     `public/brand/web/`, which is cached immutably for a year. Render it with `next/image` (SVG) and
+     `alt="Square"`, at a height that matches the text (about 20–24 px). Lay it out as one row (logo +
+     text) that wraps cleanly at 360 px.
+   - Optional, Andrew's call: the same logo on the `#pricing` / features copy if it mentions Square.
+4. **Constraints:** Tailwind only, the 12 px text floor (`text-caption` minimum), and every
+   `/owner/login` link stays a plain `<a href="/owner/login">` (apex page). Partner Login must stay
+   visible on the website: there is no "web-only" gating on `/info`.
+
+**Tests:** a small render or contract test that `/info` has a Partner Login link visible at phone width
+(not only inside the menu) and that the Square image is present with alt text;
+`tests/text-size-floor-contract.test.ts`; lint, typecheck, test, build. Screenshots at 390 px and
+1280 px (Playwright on `npm run dev`) for Andrew in the handoff. **Cost:** one small static SVG on
+`/info`, CDN-cached.
+
+#### Phase 3B.3 — Device check (Andrew, ~15 minutes)
+
+After 3B.1 and 3B.2 are deployed and the shell rebuilt:
+1. App (iPhone + emulator): the sign-in has no Home and no partner link; Back on the first screen does
+   nothing harmful (Android puts the app in the background); legal pages open and Back returns to the
+   sign-in.
+2. From inside the app, any partner link (for example on `/support`) opens Safari/Chrome on
+   `hightopchallenge.com`, never the dashboard inside the app.
+3. Phone **browser** (not the app): `hightopchallenge.com/info` shows Partner Login in the header
+   without opening the menu, the hero button is easy to see, and the Square logo looks right. A partner
+   can still sign in and use the dashboard in mobile Safari/Chrome exactly as before.
 
 ---
 
@@ -648,8 +863,8 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
   demo venue with anytime games stocked. Put the credentials and these points in the App Review
   notes:
   - venues are location-based, and this account bypasses that;
-  - the partner sign-in link and a demo partner login (to a hidden demo venue, never a real
-    partner's);
+  - ~~the partner sign-in link and a demo partner login~~ — dropped 2026-10-09: the app is
+    player-only (§2 item 12), so there is no partner login to review;
   - which native features to try.
 - **Apple:** App Privacy labels (from Phase 1a's inventory), the age-rating questionnaire (answer
   honestly; bar/alcohol references and contests may raise it), category (Games → Trivia, or
@@ -658,8 +873,8 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
 - **Google:** the Data safety form, the content rating questionnaire (IARC), declaration of the
   contests/prizes policy, phone screenshots and a feature graphic, US-only availability, the
   account-deletion URL (`/delete-account`). Internal testing track first, then production.
-- Write the listing copy for **players** ("Play trivia, bingo and pick 'em at your local bar —
-  compete for bragging rights and real prizes"), with one line for partners.
+- Write the listing copy for **players only** ("Play trivia, bingo and pick 'em at your local bar —
+  compete for bragging rights and real prizes"). No partner line, no pricing (§2 item 12).
 - Plan for possibly one rejection round; the handoff records any rejection text verbatim.
 
 ### Phase 7 — Home page links (Sonnet 5.5, medium)
@@ -678,8 +893,9 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
   `lib/pwa.ts` / `components/bingo/SportsBingoHome.tsx`, and update `npm run test:pwa-contract`
   plus `docs/pwa-install-rollout-runbook.md`, marking it superseded. **Keep `app/manifest.ts` and the
   Apple meta tag:** they still give browser players fullscreen Bingo landscape and are harmless.
-- **The browser path stays visible** (decided). `/info` shows the store badges *next to* a "Play in
-  your browser" button (→ `gameHref("/")`) and the existing "Partner Login". The Smart App Banner
+- **The browser path stays visible** (decided). `/info` shows the store badges, labelled "For players",
+  *next to* a "Play in your browser" button (→ `gameHref("/")`) and the Partner Login made prominent in
+  Phase 3B.2. The Smart App Banner
   and the Android "Get the app" bar are dismissible and stay dismissed (per-viewer `localStorage`,
   wrapped in try/catch). `/app` on desktop, or anywhere a store can't be detected, lands on `/info`
   with both choices, never a dead end.
@@ -707,6 +923,8 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
   (the Join Merch store, currently look-only) is allowed under Apple's rules, but when it starts
   taking orders, re-check this.
 - **Never** change the permanent join QR URL.
+- **No partner surface in the app** (§2 item 12): no partner sign-in link, no `/owner/*` page, no
+  billing screen. Every `/owner/*` page opens in the system browser.
 - The website must behave identically for non-app visitors after every phase. Native-only code is
   gated by `isNativeApp()` / `hasNativeCapability()`.
 - Store signing keys (the iOS distribution certificate, the Android upload keystore, the APNs `.p8`)
@@ -717,6 +935,9 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
 ## 6. Open questions for Andrew
 
 1. **App id `com.hightopchallenge.app`:** reconfirm before the first store upload (§2 item 11).
+2. **Square logo (Phase 3B.2):** approve the official artwork and confirm Square's brand guidelines
+   allow the "Works with your Square register" use.
+3. **Phase 3B.2 copy:** approve the "no app needed" line for partners.
 
 Answered 2026-10-08 and moved to §2: US-only, remove deleted accounts, retire the PWA prompt and
 keep the browser path, Andrew does the legal review, Android testing on the emulator (no phone). Answered in

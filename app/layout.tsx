@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bree_Serif, Nunito } from "next/font/google";
 import { Suspense } from "react";
 import { PlayerRuntime } from "@/components/ui/PlayerRuntime";
+import { NativeAppRuntime } from "@/components/native/NativeAppRuntime";
 import { ScrollRecoverySentinel } from "@/components/ui/ScrollRecoverySentinel";
 import { ScrollRescueGuard } from "@/components/ui/ScrollRescueGuard";
 import { StandalonePwaRuntime } from "@/components/ui/StandalonePwaRuntime";
@@ -149,6 +150,10 @@ export default async function RootLayout({
                 docs/partner-dashboard-merch-button-loader-speed-plan.md. Keep it
                 inside AnimationTriggerProvider: AnimationOverlay reads it. */}
             <PlayerRuntime />
+            {/* The iPhone/Android app's page-side runtime (Android Back, the
+                "Please update" gate). Renders and downloads nothing on the
+                website — see components/native/NativeAppRuntime.tsx. */}
+            <NativeAppRuntime />
           </AnimationTriggerProvider>
         </AuthSessionProvider>
       </body>

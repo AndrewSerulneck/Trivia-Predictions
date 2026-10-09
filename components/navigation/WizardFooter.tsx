@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { NextButton, type NextButtonProps } from "@/components/navigation/NextButton";
 import { StepBackButton, type NavTone } from "@/components/navigation/StepBackButton";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WizardFooter — the sticky bottom bar that owns step progression.
@@ -76,6 +77,8 @@ export function WizardFooter({
   hint,
   className = "",
 }: WizardFooterProps) {
+  // Android's Back inside the app steps back, like this footer's StepBackButton.
+  useNativeBackHandler("step", onBack && !backDisabled ? onBack : null);
   const chrome = variant === "sticky" ? STICKY_CHROME_CLASS[tone] : "";
   const showNext = onNext !== undefined || nextType === "submit";
 

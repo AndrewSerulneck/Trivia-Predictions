@@ -232,6 +232,10 @@ Setup (once): `cd native && npm install`.
 
 ### 8. Approach Phase 3 should take (from Part A so far)
 
+> **Phase 3 is built (2026-10-09)** — see `docs/native-app-store-plan_PHASE_3_HANDOFF.md`. Geolocation,
+> back button, link-outs, spike removal, debugging flag and cold-start items below are done; the Android
+> apex injection keeps its reflection, hardened with a version pin. The iOS bundle id waits on the paid team.
+
 - **Geolocation:** in the app, `lib/geolocation.ts` uses `@capacitor/geolocation` (lazy-loaded behind
   `isNativeApp()`) instead of `navigator.geolocation`. This avoids the iOS double prompt. Keep God
   Mode's server-authoritative path untouched and run `npm run test:god-mode-join`.
@@ -243,9 +247,10 @@ Setup (once): `cd native && npm install`.
 - **Back button:** keep `@capacitor/app`. Register a JS `backButton` listener (when `isNativeApp()`)
   that calls into the page's `useExitNavigation` / history and, on the first page, calls
   `App.minimizeApp()` (don't kill the app).
-- **Link-outs:** add a native or web rule for `/admin` and `/owner/signup|register`, plus the Stripe
-  billing actions. Normalise own-host `_blank` (open in-app on both, or system browser on both).
-- **Status bar:** set its colour and style on both. Turn `webContentsDebuggingEnabled` off in
+- **Link-outs:** ~~add a native or web rule~~ 2E built the native mechanism
+  (`plugins.HightopShell.openInBrowser`); add `/admin` and `/owner/signup|register`, plus the Stripe
+  billing actions, to it. Normalise own-host `_blank` (open in-app on both, or system browser on both).
+- **Status bar:** ~~set its colour and style on both~~ done in Phase 2D (dark navy, light icons; iOS web view below the bar). Turn `webContentsDebuggingEnabled` off in
   release. Delete `SpikeViewController` and its SceneDelegate line. Set the iOS bundle id to
   `com.hightopchallenge.app` under the paid team.
 - **Cold start:** a native splash that stays up until the first page load, and the offline page for
@@ -259,13 +264,13 @@ per-item checklist results are still to come.
 
 | # | What Andrew saw | Cause | Fixed in |
 |---|---|---|---|
-| R1 | iPhone: content sits too high — sign-in logo, venue-home menu/alerts buttons and Back buttons are under the status bar; Back can't be tapped. | `contentInset: "never"` + `viewport-fit=cover`; safe-area padding is inconsistent and may read as 0 on the device. Undiagnosed on the phone. | 2D |
-| R2 | Venue home: big gap between the game buttons and the Games / Leaderboard / Rewards bar. | Fixed `8rem` spacer in `components/venue/VenueHubClient.tsx` instead of the header's measured height. | 2D |
+| R1 | iPhone: content sits too high — sign-in logo, venue-home menu/alerts buttons and Back buttons are under the status bar; Back can't be tapped. | `contentInset: "never"` + `viewport-fit=cover`; safe-area padding is inconsistent and may read as 0 on the device. Undiagnosed on the phone. | **2D — fixed 2026-10-09** (`…_PHASE_2D_HANDOFF.md`): the inset read correctly (62px on the iPhone 16 Pro); the iOS web view now starts below the status bar (`@capacitor/status-bar`, `overlaysWebView: false`) |
+| R2 | Venue home: big gap between the game buttons and the Games / Leaderboard / Rewards bar. | Fixed `8rem` spacer in `components/venue/VenueHubClient.tsx` instead of the header's measured height. | **2D — fixed 2026-10-09**: the spacer uses the measured header height |
 | R3 | Signed in as Rick, every venue shows. | Working as designed: `Rick` is one of three God Mode accounts (`Andrew`, `marc`, `Rick`). Andrew to decide whether Rick stays God Mode. | none |
 | R4 | A new player briefly sees every venue behind the "share your location" question. | Real website bug in `components/join/JoinFlow.tsx`: sign-out / back reset `venueListBuiltRef` but not the list, so the previous God Mode list stayed on screen while the new player's location loaded; the deep-link path also filled the list with every venue. | **2C — fixed 2026-10-08** (`…_PHASE_2C_HANDOFF.md`) |
-| R5 | `/info` shouldn't be part of the app. | Design change: every "home" control points at `/info`. | 2E |
-| R6 | Back from a legal page shows a false "No connection"; "Try again" goes to the sign-in. | Probably the cancelled `history.back()` + 150 ms fallback navigation tripping `server.errorPath`; "Try again" reloads the start URL. To confirm on the device. | 2E |
-| R7 | The app still works with Wi-Fi off. | Expected (mobile data). Use Airplane Mode to test the offline screen. | 2E re-tests |
+| R5 | `/info` shouldn't be part of the app. | Design change: every "home" control points at `/info`. | **2E — built 2026-10-09** (`…_PHASE_2E_HANDOFF.md`): `homeHref()`, app front door, marketing pages open in the browser |
+| R6 | Back from a legal page shows a false "No connection"; "Try again" goes to the sign-in. | Confirmed in the simulator: the Back fallback's second navigation cancels the first (NSURLErrorCancelled −999) and Capacitor showed `server.errorPath` for it. | **2E — fixed 2026-10-09**: native wrappers show the offline page only for network errors; in-app Back is one navigation; "Try again" reloads the failed page |
+| R7 | The app still works with Wi-Fi off. | Expected (mobile data). Use Airplane Mode to test the offline screen. | 2E: ✅ Android emulator (cold launch and mid-use); iPhone Airplane Mode is Andrew's check |
 
 ### 10. Recommended next steps
 

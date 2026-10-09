@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
 import { VENUE_HOME_GAME_KEYS, inferVenueGameKeyFromPath } from "@/lib/venueGameCards";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
+import { homeHref } from "@/lib/domainSplit";
+import { isNativeApp } from "@/lib/nativeApp";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // exitNavigation — the single source of truth for what "exit-back" DOES.
@@ -28,6 +30,12 @@ import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGa
 export type ExitNavigationOptions = {
   /** Parent destination used whenever history can't be trusted. */
   href?: string;
+  /**
+   * The parent is the HOME page: `/info` on the website, the app's front door
+   * inside the native app (`homeHref()` in lib/domainSplit.ts). Replaces `href`.
+   * Use this instead of passing `marketingHref("/info")`.
+   */
+  home?: boolean;
   /** Skip history entirely and push `href` (or the resolved venue home). */
   preferHref?: boolean;
   /** Resolve the destination from the stored venue id and run the game→venue transition. */
@@ -71,8 +79,15 @@ export function getInternalReferrerPath(): string {
   }
 }
 
+/**
+ * In the native app, how long Back waits for `history.back()` to start leaving
+ * before it falls back to the parent. See the in-app branch in handleExit.
+ */
+export const IN_APP_BACK_FALLBACK_MS = 2000;
+
 export function useExitNavigation({
   href = "/",
+  home = false,
   preferHref = false,
   venueHomeFallback = false,
   onExit,
@@ -80,12 +95,13 @@ export function useExitNavigation({
   const router = useRouter();
 
   const resolveHref = () => {
+    const parentHref = home ? homeHref(isNativeApp()) : href;
     if (!venueHomeFallback) {
-      return href;
+      return parentHref;
     }
     const venueId = getVenueId()?.trim() ?? "";
     if (!venueId) {
-      return href;
+      return parentHref;
     }
     return `/venue/${encodeURIComponent(venueId)}`;
   };
@@ -141,6 +157,34 @@ export function useExitNavigation({
       }
 
       const currentUrl = window.location.href;
+
+      // Native app only (docs/native-app-store-plan.md Phase 2E, R6). A Back that
+      // crosses documents (a legal page on the apex back to a `play.` page) only
+      // starts leaving when the previous page's response arrives — measured at
+      // +150 ms in the simulator, longer on a phone network. The 150 ms fallback
+      // below then fires a SECOND navigation that cancels the first, and the app
+      // shell used to show "No connection" for the cancelled one. In the app,
+      // wait for `pagehide` (the page really leaving) with a longer ceiling, so
+      // Back is one navigation. WebKit fires no `beforeunload` for history
+      // traversal, so `pagehide` is the earliest signal there is. The website
+      // keeps its 150 ms behaviour unchanged.
+      if (isNativeApp()) {
+        let leaving = false;
+        const markLeaving = () => {
+          leaving = true;
+        };
+        window.addEventListener("pagehide", markLeaving, { once: true });
+        window.history.back();
+        window.setTimeout(() => {
+          window.removeEventListener("pagehide", markLeaving);
+          if (leaving || window.location.href !== currentUrl) {
+            return;
+          }
+          router.push(getInternalReferrerPath() || fallbackHref);
+        }, IN_APP_BACK_FALLBACK_MS);
+        return;
+      }
+
       window.history.back();
 
       window.setTimeout(() => {

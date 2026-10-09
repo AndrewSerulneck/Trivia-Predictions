@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell, ownerInputClass, ownerLabelClass, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
 import { HightopLoader } from "@/components/ui/HightopLoader";
-import { marketingHref } from "@/lib/domainSplit";
+import { rememberPartnerSide } from "@/lib/appFrontDoor";
 import { signupEntryPath } from "@/lib/selfServeSignup";
 
 const EyeIcon = ({ open }: { open: boolean }) =>
@@ -74,6 +74,8 @@ const OwnerLoginPage = () => {
         setSubmitting(false);
         return;
       }
+      // Inside the native app, open on the dashboard next launch (no-op on the website).
+      rememberPartnerSide();
       setNavigating(true);
       router.push("/owner/dashboard");
     } catch {
@@ -88,7 +90,7 @@ const OwnerLoginPage = () => {
       <OwnerShell
         title="Partner Venue Sign In"
         subtitle="Manage your subscription and billing"
-        backTo={{ href: marketingHref("/info"), label: "Back to Home Page", preferHref: true, showLabel: true }}
+        backTo={{ home: true, label: "Back to Home Page", preferHref: true, showLabel: true }}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

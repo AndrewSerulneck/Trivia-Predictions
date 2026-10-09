@@ -26,6 +26,7 @@ import {
   getBestCurrentLocation,
   getCurrentLocation,
   getGeofenceThresholdMeters,
+  queryLocationPermission,
   type Coordinates,
 } from "@/lib/geolocation";
 import {
@@ -80,7 +81,8 @@ import { resolveVenueProfileServerFirst } from "@/lib/joinVenueEntry";
 import { normalizePin } from "@/lib/pin";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 import { markJoinWelcomeSeen, shouldShowJoinWelcome } from "@/lib/joinWelcome";
-import { marketingHref } from "@/lib/domainSplit";
+import { homeHref, marketingHref } from "@/lib/domainSplit";
+import { useIsNativeApp } from "@/lib/useIsNativeApp";
 import { SWIPE_PANEL_VARIANTS, SWIPE_TWEEN } from "@/lib/swipeTransition";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
@@ -337,15 +339,9 @@ type VenueAccessResult = {
   location?: Coordinates;
 };
 
-async function checkPermissionState(): Promise<PermissionState> {
-  if (typeof navigator === "undefined" || !navigator.permissions) return "granted";
-  try {
-    const result = await navigator.permissions.query({ name: "geolocation" });
-    return result.state;
-  } catch {
-    return "granted";
-  }
-}
+// Asks the app (iPhone) or navigator.permissions (website) — queryLocationPermission
+// in lib/geolocation.ts. Falls back to "granted" when nothing can answer.
+const checkPermissionState = (): Promise<PermissionState> => queryLocationPermission();
 
 // Only called after geolocation has already failed with a permission-denied
 // error, so the browser genuinely won't cooperate right now regardless of what
@@ -383,7 +379,10 @@ async function getInitialLocation(): Promise<LocationResult> {
 // end. Standalone gets the device-settings route instead. Resolved in an effect,
 // not at render, so the server and first client render agree.
 function LocationReEnableSteps() {
-  const isStandalone = useIsRunningAsInstalledPwa();
+  // The app has no address bar either, so it gets the device-settings steps too.
+  const isInstalledPwa = useIsRunningAsInstalledPwa();
+  const inNativeApp = useIsNativeApp();
+  const isStandalone = isInstalledPwa || inNativeApp;
 
   if (isStandalone) {
     return (
@@ -769,6 +768,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const handleGrantLocationPendingRef = useRef(false);
   const reducedMotion = useReducedMotion();
   const router = useRouter();
+  // Inside the native app this screen IS the home page (the app's front door,
+  // docs/native-app-store-plan.md Phase 2E), so the Home link gives way to the
+  // partner door. The website keeps its Home link to /info.
+  const inNativeApp = useIsNativeApp();
   const pathname = usePathname();
   const { refresh: refreshAuthSession, state: authState } = useAuthSession();
   const godMode = (authState.phase === "authenticated" ? authState.godMode : false) || getGodMode();
@@ -2750,7 +2753,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         )}
         <div className="mx-auto w-full px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="relative left-1/2 w-[100dvw] max-w-none -translate-x-1/2 flex justify-center">
-            <ExplodingLogo width={320} />
+            <ExplodingLogo width={256} />
           </div>
 
           {/* Dark join card */}
@@ -3329,15 +3332,28 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               </AnimatePresence>
             </div>
           </div>
-          <div className="mx-auto mt-4 w-full max-w-md px-1">
-            <Link
-              href={marketingHref("/info")}
-              className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-400/10 px-5 py-3 text-center text-2xl font-black text-cyan-100 shadow-lg shadow-cyan-950/20 transition-colors hover:bg-cyan-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
-            >
-              <House className="h-6 w-6 shrink-0" aria-hidden="true" />
-              Home
-            </Link>
-          </div>
+          {inNativeApp ? (
+            activePanel === "auth-method-selection" ? (
+              <div className="mx-auto mt-6 w-full max-w-md px-1 text-center">
+                <a
+                  href={marketingHref("/owner/login")}
+                  className="inline-flex min-h-[44px] items-center justify-center px-3 text-base font-bold text-ht-fg-secondary underline underline-offset-4 hover:text-ht-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+                >
+                  Venue partner? Sign in
+                </a>
+              </div>
+            ) : null
+          ) : (
+            <div className="mx-auto mt-4 w-full max-w-md px-1">
+              <Link
+                href={homeHref(false)}
+                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-400/10 px-5 py-3 text-center text-2xl font-black text-cyan-100 shadow-lg shadow-cyan-950/20 transition-colors hover:bg-cyan-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+              >
+                <House className="h-6 w-6 shrink-0" aria-hidden="true" />
+                Home
+              </Link>
+            </div>
+          )}
         </div>
   </PageShell>
   );

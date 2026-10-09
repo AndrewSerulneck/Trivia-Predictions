@@ -9,6 +9,7 @@
 // "You're importing a component that needs `useState`."
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { isNativeApp } from "@/lib/nativeApp";
 
 // Single source of truth for "is this player running the installed PWA."
 // iOS Safari only ever reports this via the legacy `navigator.standalone`
@@ -73,6 +74,17 @@ export function isInstallPromptEnabled(): boolean {
 }
 
 /**
+ * Whether to offer "Add to Home Screen" here at all: the flag is on AND this is
+ * a browser. Inside the App Store / Google Play app there is nothing to install
+ * (docs/native-app-store-plan.md Phase 3) — and the iPhone app's web view
+ * otherwise passes isIOSSafari(), so the flag alone would show the coach card
+ * there. Every install-prompt caller goes through this, not the flag reader.
+ */
+export function shouldOfferInstallPrompt(): boolean {
+  return isInstallPromptEnabled() && !isNativeApp();
+}
+
+/**
  * True only for actual mobile Safari on iOS/iPadOS. Every other iOS browser
  * (Chrome, Firefox, Edge, in-app webviews) is a WebKit wrapper that cannot
  * install a standalone PWA even though it shares Safari's UA tokens — only
@@ -110,7 +122,7 @@ export function usePwaInstallPrompt(): {
   const [deferredEvent, setDeferredEvent] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    if (!isInstallPromptEnabled() || isRunningAsInstalledPwa()) {
+    if (!shouldOfferInstallPrompt() || isRunningAsInstalledPwa()) {
       return;
     }
 

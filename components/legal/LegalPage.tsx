@@ -1,9 +1,8 @@
 import { PageShell } from "@/components/ui/PageShell";
 import { LEGAL_LAST_UPDATED } from "@/lib/legalInfo";
-import { marketingHref } from "@/lib/domainSplit";
 
 // Shared frame for the legal/support pages: the player shell with the one Back
-// button (to the /info home page), a "Last updated" line and readable prose.
+// button (to the home page: /info on the website, the front door in the app), a "Last updated" line and readable prose.
 // Server component — the pages are static text.
 
 type LegalPageProps = {
@@ -20,7 +19,7 @@ export function LegalPage({ title, summary, children }: LegalPageProps) {
       showUserStatus={false}
       showAlerts={false}
       showPageTitle={false}
-      backTo={{ label: "Back", showLabel: true, href: marketingHref("/info") }}
+      backTo={{ label: "Back", showLabel: true, home: true }}
     >
       <article className="space-y-6 pb-8">
         <header className="space-y-2">

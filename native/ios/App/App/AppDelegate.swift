@@ -42,32 +42,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return config
     }
 }
-
-// SPIKE (native-app plan Phase 2A): debug-only automation hook so an agent can probe the web
-// view in the iOS Simulator. Launch with
-//   SIMCTL_CHILD_SPIKE_STEPS='[{"delay":8,"js":"location.href"}]' xcrun simctl launch --console-pty …
-// Each step runs `js` after `delay` seconds (cumulative) and prints "SPIKE[i] url=… result=…".
-// Compiled out of Release builds. Phase 3 should delete it.
-class SpikeViewController: CAPBridgeViewController {
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        #if DEBUG
-        NSLog("SPIKE hook ready, steps=%@", ProcessInfo.processInfo.environment["SPIKE_STEPS"] == nil ? "no" : "yes")
-        guard let raw = ProcessInfo.processInfo.environment["SPIKE_STEPS"],
-              let data = raw.data(using: .utf8),
-              let steps = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return }
-        var at = 0.0
-        for (index, step) in steps.enumerated() {
-            at += (step["delay"] as? Double) ?? 5
-            let js = (step["js"] as? String) ?? "location.href"
-            DispatchQueue.main.asyncAfter(deadline: .now() + at) { [weak self] in
-                guard let webView = self?.webView else { NSLog("SPIKE[%d] no-webview", index); return }
-                webView.evaluateJavaScript(js) { result, error in
-                    let value = error.map { "ERROR \($0.localizedDescription)" } ?? String(describing: result ?? "nil")
-                    NSLog("SPIKE[%d] url=%@ result=%@", index, webView.url?.absoluteString ?? "nil", value)
-                }
-            }
-        }
-        #endif
-    }
-}

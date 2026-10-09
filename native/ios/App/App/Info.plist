@@ -24,8 +24,12 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Hightop Challenge uses the camera only to scan a venue's QR code. Nothing is recorded or saved.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to sign in to Hightop Challenge without typing your PIN.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Hightop Challenge checks that you're at the venue before you join its games. Your location is never stored.</string>
+	<string>Hightop Challenge checks that you're at the venue before you join its games. Your location is only checked, never stored.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -51,7 +55,7 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>

@@ -148,3 +148,39 @@ describe("proxy domain split (flag on) layers in front of the auth-gate", () => 
     expect(res.headers.get("location")).toContain("/?v=brunswick-grove");
   });
 });
+
+describe("proxy: app-link trust files (native app Phase 3)", () => {
+  const WELL_KNOWN = ["/.well-known/apple-app-site-association", "/.well-known/assetlinks.json"];
+
+  it("are never touched by the matcher (they contain a dot)", async () => {
+    const { config } = await import("@/proxy");
+    const [pattern] = config.matcher;
+    const matcher = new RegExp(`^${pattern}$`);
+    for (const path of WELL_KNOWN) {
+      expect(matcher.test(path), path).toBe(false);
+    }
+    // Sanity: the same matcher does gate an ordinary game route.
+    expect(matcher.test("/venue/brunswick-grove")).toBe(true);
+  });
+
+  it("pass straight through on both hosts, with no cookies, split on or off", () => {
+    for (const split of [false, true]) {
+      if (split) {
+        process.env.NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED = "true";
+        process.env.NEXT_PUBLIC_APEX_HOST = "hightopchallenge.com";
+        process.env.NEXT_PUBLIC_PLAY_HOST = "play.hightopchallenge.com";
+      }
+      for (const host of ["hightopchallenge.com", "play.hightopchallenge.com"]) {
+        for (const path of WELL_KNOWN) {
+          expect(isPassThrough(proxy(makeRequest(path, { host }))), `${host}${path} split=${split}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("the allowance is narrow: other dot-folders and lookalikes are still gated", () => {
+    expect(proxy(makeRequest("/well-known/apple-app-site-association")).status).toBe(307);
+    expect(proxy(makeRequest("/.well-knownx/apple-app-site-association")).status).toBe(307);
+  });
+});
+

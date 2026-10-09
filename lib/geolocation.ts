@@ -1,6 +1,7 @@
 export { calculateDistanceMeters, getGeofenceThresholdMeters } from "@/lib/geofence";
 import type { GeofenceCoordinates } from "@/lib/geofence";
 import { serverGoogleMapsKey } from "@/lib/googleMapsKeys";
+import { callNative, hasNativeCapability, nativePlatform } from "@/lib/nativeApp";
 
 export type Coordinates = {
   latitude: number;
@@ -9,7 +10,93 @@ export type Coordinates = {
   timestamp?: number;
 } & GeofenceCoordinates;
 
+// ── Native location inside the iPhone app (docs/native-app-store-plan.md Phase 3) ──
+//
+// In the iPhone app, the web's navigator.geolocation asks TWICE: the app's own
+// "Allow location?" and then WebKit's "play.hightopchallenge.com would like to
+// use your current location" — on every venue page (Phase 2A/2D findings). The
+// shell's @capacitor/geolocation plugin asks once, as the app. So on iOS inside
+// the app every location read goes through the plugin. Android's web view
+// already asks once, so it keeps the web API (proven in Phase 2A).
+//
+// Errors are mapped to the browser's GeolocationPositionError codes
+// (1 denied, 2 unavailable, 3 timeout), so every caller's error handling —
+// JoinFlow's denied/unavailable/timeout copy, VenuePresenceBoundary's
+// permission check — works unchanged.
+
+type NativePosition = {
+  timestamp?: number;
+  coords?: { latitude?: number; longitude?: number; accuracy?: number };
+};
+
+export const usesNativeLocation = (): boolean =>
+  nativePlatform() === "ios" && hasNativeCapability("Geolocation");
+
+/** The plugin's "OS-PLUG-GLOC-00NN" codes → the browser's 1/2/3. Pure; exported for tests. */
+export const nativeLocationErrorCode = (error: unknown): 1 | 2 | 3 => {
+  const code = String((error as { code?: unknown } | null)?.code ?? "");
+  const number = Number.parseInt(code.replace(/^OS-PLUG-GLOC-/, ""), 10);
+  if (number === 3 || number === 8 || number === 9) return 1;
+  if (number === 10) return 3;
+  return 2;
+};
+
+const nativeLocationError = (error: unknown): Error & { code: 1 | 2 | 3 } =>
+  Object.assign(new Error("Unable to determine location."), { code: nativeLocationErrorCode(error) });
+
+const getNativePosition = async (options: PositionOptions): Promise<Coordinates> => {
+  try {
+    const position = (await callNative("Geolocation", "getCurrentPosition", {
+      enableHighAccuracy: options.enableHighAccuracy ?? false,
+      timeout: options.timeout ?? 10000,
+      maximumAge: options.maximumAge ?? 0,
+    })) as NativePosition;
+    const latitude = Number(position?.coords?.latitude);
+    const longitude = Number(position?.coords?.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      throw Object.assign(new Error("No position."), { code: "OS-PLUG-GLOC-0002" });
+    }
+    return {
+      latitude,
+      longitude,
+      accuracy: Number.isFinite(Number(position.coords?.accuracy)) ? Number(position.coords?.accuracy) : undefined,
+      timestamp: Number.isFinite(Number(position.timestamp)) ? Number(position.timestamp) : Date.now(),
+    };
+  } catch (error) {
+    throw nativeLocationError(error);
+  }
+};
+
+/**
+ * "granted" / "denied" / "prompt" for location, the same answer
+ * navigator.permissions gives on the website. Inside the iPhone app it asks the
+ * app (the web view's own answer there is about WebKit's second prompt, not the
+ * app's permission). Falls back to "granted" when nothing can answer — the same
+ * fallback JoinFlow always used, see its resolveDeniedPermissionState.
+ */
+export async function queryLocationPermission(): Promise<PermissionState> {
+  if (usesNativeLocation()) {
+    try {
+      const status = (await callNative("Geolocation", "checkPermissions")) as { location?: unknown };
+      const location = String(status?.location ?? "");
+      if (location === "granted" || location === "denied") return location;
+      if (location.startsWith("prompt")) return "prompt";
+      return "granted";
+    } catch {
+      return "granted";
+    }
+  }
+  if (typeof navigator === "undefined" || !navigator.permissions) return "granted";
+  try {
+    const result = await navigator.permissions.query({ name: "geolocation" });
+    return result.state;
+  } catch {
+    return "granted";
+  }
+}
+
 function getCurrentPositionWithOptions(options: PositionOptions): Promise<Coordinates> {
+  if (usesNativeLocation()) return getNativePosition(options);
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("Geolocation is not supported in this browser."));
@@ -60,6 +147,16 @@ export async function getBestCurrentLocation(options: BestLocationOptions = {}):
   const desiredAccuracyMeters = Number.isFinite(options.desiredAccuracyMeters)
     ? Math.max(5, Number(options.desiredAccuracyMeters))
     : 60;
+
+  // Inside the iPhone app: one high-accuracy native fix (Core Location already
+  // refines it), then a quick low-accuracy one, instead of sampling a watch.
+  if (usesNativeLocation()) {
+    try {
+      return await getNativePosition({ enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 });
+    } catch {
+      return getNativePosition({ enableHighAccuracy: false, timeout: Math.max(6000, Math.min(timeoutMs, 14000)), maximumAge: 120000 });
+    }
+  }
 
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
