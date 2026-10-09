@@ -1,4 +1,6 @@
 import { calculateDistanceMeters, getGeofenceThresholdMeters, type GeofenceCoordinates } from "@/lib/geofence";
+import { NOT_A_HIGHTOP_CODE_MESSAGE } from "@/lib/nativeQrScan";
+import { getVenueDisplayName } from "@/lib/venueDisplay";
 import type { Venue } from "@/types";
 
 // The join flow's venue list, tagged with the build it belongs to.
@@ -52,3 +54,40 @@ export const filterVenuesInRange = (venues: Venue[], coords: GeofenceCoordinates
     .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
     .sort((a, b) => a.distance - b.distance)
     .map((item) => item.venue);
+
+// A venue QR scanned on the signed-in venue list (docs/native-app-review-fixes-plan.md R2).
+// A QR proves nothing about where the player is, so the geofence rule is unchanged: the scan
+// selects a venue only when it is in the list this sign-in already built (a God Mode list holds
+// every venue). `joinableVenues` is the public venue list (listVenues(), hidden venues excluded),
+// used only to name an out-of-range venue — a hidden or unknown id is "not found", worded like a
+// bad code so a scan can't tell a hidden venue from a missing one.
+export type ScannedVenueDecision =
+  | { kind: "select"; venue: Venue }
+  | { kind: "not-ready" }
+  | { kind: "out-of-range"; venueName: string }
+  | { kind: "not-found" };
+
+export const decideScannedVenue = (
+  venueId: string,
+  state: JoinVenueListState,
+  joinableVenues: readonly Venue[]
+): ScannedVenueDecision => {
+  const inList = visibleJoinVenueList(state).find((item) => item.id === venueId);
+  if (inList) return { kind: "select", venue: inList };
+  const known = joinableVenues.find((item) => item.id === venueId);
+  if (!known) return { kind: "not-found" };
+  // No list for this sign-in yet (location still running, or it failed): "out of range" would be a guess.
+  if (state.builtForGeneration !== state.generation) return { kind: "not-ready" };
+  return { kind: "out-of-range", venueName: getVenueDisplayName(known) };
+};
+
+export const scannedVenueMessage = (
+  decision: Exclude<ScannedVenueDecision, { kind: "select" }>,
+  locationLoading: boolean
+): string => {
+  if (decision.kind === "out-of-range") return `You need to be at ${decision.venueName} to join.`;
+  if (decision.kind === "not-found") return NOT_A_HIGHTOP_CODE_MESSAGE;
+  return locationLoading
+    ? "Still checking your location. Try again in a moment."
+    : "We need your location to check you're at the venue. Allow location, then scan again.";
+};

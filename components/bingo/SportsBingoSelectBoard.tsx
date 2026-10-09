@@ -3,6 +3,7 @@
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
@@ -662,6 +663,9 @@ export function SportsBingoSelectBoard({
     playing,
     preview,
   ]);
+
+  // Android's Back inside the app closes the expanded preview, like its ✕.
+  useNativeBackHandler("overlay", preview && isPreviewExpanded ? () => setIsPreviewExpanded(false) : null);
 
   return (
     <div className="tp-bingo-theme space-y-4">

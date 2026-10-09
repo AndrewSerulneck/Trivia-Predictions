@@ -9,6 +9,7 @@ import type {
   StoryShareCapabilitySnapshot,
 } from "@/lib/socialShare/contracts";
 import { ShareLinkButton } from "@/components/social-share/ShareLinkButton";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import type { SharePayload } from "@/lib/nativeShare";
 import { webStoryPlatform } from "@/lib/socialShare/platform/webStoryPlatform";
 import type { StorySharePipelineResult } from "@/lib/socialShare/sharePipeline";
@@ -65,6 +66,8 @@ export function ShareActionsSheet({
   linkShare,
   className = "",
 }: ShareActionsSheetProps) {
+  // Android's Back inside the app closes this panel first (it sits over the story camera).
+  useNativeBackHandler("overlay", onClose ?? null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<FallbackStatus>({ kind: "idle" });
   const resolvedCapabilities = useMemo(() => capabilities ?? webStoryPlatform.detectCapabilities(), [capabilities]);

@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 import { AccountMenuList } from "@/components/navigation/AccountMenuList";
 import { getUserId, getUsername, getVenueId, saveUsername } from "@/lib/storage";
 import { setScrollLock } from "@/lib/scrollLock";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 
 type UsernameUpdatePayload = {
   ok?: boolean;
@@ -60,6 +61,10 @@ export function AccountMenu({
       setScrollLock(`account-menu:${scrollLockOwnerId}`, false);
     };
   }, [isMenuOpen, scrollLockOwnerId]);
+
+  // Android's Back inside the app closes the topmost of these, like its Close button.
+  useNativeBackHandler("overlay", isMenuOpen ? () => setIsMenuOpen(false) : null);
+  useNativeBackHandler("overlay", isUsernameModalOpen ? () => setIsUsernameModalOpen(false) : null);
 
   const openUsernameModal = useCallback(() => {
     setUsernameDraft((username || "").trim());

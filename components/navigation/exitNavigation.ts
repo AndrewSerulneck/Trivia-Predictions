@@ -25,6 +25,13 @@ import { isNativeApp } from "@/lib/nativeApp";
 //                         through to `href`
 //
 // DO NOT reimplement any of this inline. See docs/navigation-unification-plan.md §3.
+//
+// `handleExit({ replace: true })` — Android's Back button inside the app
+// (ExitBackButton's native registration). Every navigation this hook makes
+// itself then REPLACES the current entry instead of pushing one: a pushed parent
+// would become the next Back's history.back() target and Back would bounce
+// between the two screens. A tap calls `handleExit()` and pushes, exactly as the
+// website always has. `history.back()` paths and `onExit` are unaffected.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type ExitNavigationOptions = {
@@ -42,6 +49,11 @@ export type ExitNavigationOptions = {
   venueHomeFallback?: boolean;
   /** Caller-owned exit. When supplied it wins over everything else. */
   onExit?: () => void;
+};
+
+export type ExitRunOptions = {
+  /** Replace the current history entry instead of pushing one (Android Back in the app). */
+  replace?: boolean;
 };
 
 /** `navigator.vibrate(14)` — the standard back-press haptic. Safe on every platform. */
@@ -106,12 +118,19 @@ export function useExitNavigation({
     return `/venue/${encodeURIComponent(venueId)}`;
   };
 
-  const handleExit = () => {
+  const handleExit = ({ replace = false }: ExitRunOptions = {}) => {
     if (onExit) {
       onExit();
       return;
     }
 
+    const goTo = (target: string) => {
+      if (replace) {
+        router.replace(target);
+        return;
+      }
+      router.push(target);
+    };
     const fallbackHref = resolveHref();
 
     if (venueHomeFallback) {
@@ -124,7 +143,7 @@ export function useExitNavigation({
             navigateBackToVenue({
               venuePath: fallbackHref,
               fallbackNavigate: () => {
-                router.push(fallbackHref);
+                goTo(fallbackHref);
               },
             }),
         });
@@ -133,14 +152,14 @@ export function useExitNavigation({
       void navigateBackToVenue({
         venuePath: fallbackHref,
         fallbackNavigate: () => {
-          router.push(fallbackHref);
+          goTo(fallbackHref);
         },
       });
       return;
     }
 
     if (preferHref) {
-      router.push(fallbackHref);
+      goTo(fallbackHref);
       return;
     }
 
@@ -152,7 +171,7 @@ export function useExitNavigation({
       // parent instead of burning 150ms waiting for a navigation that will
       // never happen. Browser behaviour with real history is unchanged.
       if (window.history.length <= 1) {
-        router.push(getInternalReferrerPath() || fallbackHref);
+        goTo(getInternalReferrerPath() || fallbackHref);
         return;
       }
 
@@ -180,7 +199,7 @@ export function useExitNavigation({
           if (leaving || window.location.href !== currentUrl) {
             return;
           }
-          router.push(getInternalReferrerPath() || fallbackHref);
+          goTo(getInternalReferrerPath() || fallbackHref);
         }, IN_APP_BACK_FALLBACK_MS);
         return;
       }
@@ -192,12 +211,12 @@ export function useExitNavigation({
           return;
         }
         const referrerPath = getInternalReferrerPath();
-        router.push(referrerPath || fallbackHref);
+        goTo(referrerPath || fallbackHref);
       }, 150);
       return;
     }
 
-    router.push(fallbackHref);
+    goTo(fallbackHref);
   };
 
   return { handleExit, triggerBackHaptic, resolveHref };

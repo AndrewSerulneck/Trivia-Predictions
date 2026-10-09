@@ -2,19 +2,22 @@
 
 import { useState } from "react";
 import { ScanLine } from "lucide-react";
-import { joinPathForScan, scanQr, type QrScanOutcome } from "@/lib/nativeQrScan";
+import { joinPathForScan, NOT_A_HIGHTOP_CODE_MESSAGE, scanQr, type QrScanOutcome } from "@/lib/nativeQrScan";
 import { useHasNativeCapability } from "@/lib/useIsNativeApp";
 
 type ScanQrButtonProps = {
-  /** A Hightop code for one venue was scanned. `path` is the in-app path to open (built by us, never the scanned text). */
-  onVenueScanned: (venueId: string, path: string) => void;
+  /**
+   * A Hightop code for one venue was scanned. `path` is the in-app path to open (built by us, never the
+   * scanned text). Return a message to show it under the button (e.g. "You need to be at …").
+   */
+  onVenueScanned: (venueId: string, path: string) => void | string | Promise<void | string>;
   /** Shown after the plain join code (the printed QR, no venue in it) is scanned. */
   joinCodeMessage: string;
   className?: string;
 };
 
 const MESSAGES: Partial<Record<QrScanOutcome["status"], string>> = {
-  invalid: "That's not a Hightop code.",
+  invalid: NOT_A_HIGHTOP_CODE_MESSAGE,
   denied: "Camera access is off. Turn it on for Hightop Challenge in your phone's Settings to scan.",
   failed: "Couldn't scan. Try again.",
 };
@@ -37,8 +40,10 @@ export const ScanQrButton = ({ onVenueScanned, joinCodeMessage, className = "" }
     try {
       const outcome = await scanQr();
       if (outcome.status !== "scanned") setMessage(MESSAGES[outcome.status] ?? "");
-      else if (outcome.target.venueId) onVenueScanned(outcome.target.venueId, joinPathForScan(outcome.target));
-      else setMessage(joinCodeMessage);
+      else if (outcome.target.venueId) {
+        const reply = await onVenueScanned(outcome.target.venueId, joinPathForScan(outcome.target));
+        setMessage(typeof reply === "string" ? reply : "");
+      } else setMessage(joinCodeMessage);
     } finally {
       setBusy(false);
     }

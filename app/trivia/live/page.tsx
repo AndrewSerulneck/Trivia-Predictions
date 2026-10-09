@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { ExitBackButton } from "@/components/navigation/ExitBackButton";
@@ -1103,6 +1104,9 @@ function LiveShowdownPageContent() {
       }
     }
   }, [state?.activePhase, state?.upcomingRoundCategory, state?.currentRound, triggerAnimation]);
+
+  // Android's Back inside the app closes the sponsor popup, like its Close button.
+  useNativeBackHandler("overlay", popupAd ? () => setPopupAd(null) : null);
 
   if (loading) {
     return (

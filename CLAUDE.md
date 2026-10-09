@@ -66,16 +66,23 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   Don't add a per-page `WebOnlyInApp` layout gate (deleted in 3B.1: it made every page it wrapped a
   per-visit render). Never a Subscribe/Pay button in the app — guaranteed by `/owner` being web-only. Android Back runs the on-screen control
   (`components/navigation/nativeBackButton.ts`: overlay > step > exit) — never new navigation logic.
+  Every closable player popup calls `useNativeBackHandler("overlay", open ? close : null)` with its X's close
+  (list pinned in `tests/native-back-review-fixes.test.ts` — add new popups there); native Back runs
+  `handleExit({ replace: true })` (a tap pushes); the venue hub is the root and Back minimises (review-fix R1).
   Native env vars (`NATIVE_APP_*`, `APPLE_TEAM_ID`, `ANDROID_APP_CERT_SHA256`) are server-side but
   need a Vercel **Redeploy** to apply. App version lives in four places, pinned equal by
   `tests/native-app-contract.test.ts`.
 - **Native share, haptics and the QR scanner (Phase 4, 2026-10-09; handoffs `…_PHASE_4A_HANDOFF.md`,
   `…_PHASE_4B_HANDOFF.md`).** Plugins are capability-checked (`NativeCapability` in `lib/nativeApp.ts`:
   `Share`, `Haptics`, `Filesystem`, `CapacitorBarcodeScanner`); old app builds fall back. Share: `lib/nativeShare.ts`
-  (link/text) and `lib/nativeImageShare.ts` (story picture; Android only, via Filesystem cache). Haptics fire from
-  ONE place, `triggerAnimation` (`lib/nativeHaptics.ts`). **QR scanner:** `lib/nativeQrScan.ts` — `parseHightopQr`
+  (link/text) and `lib/nativeImageShare.ts` (story picture; Android only, via Filesystem cache). Haptics have ONE native call
+  site, `playHaptic` in `lib/nativeHaptics.ts`, reached from `triggerAnimation` (gameplay animations) and from
+  `haptic()` in `lib/haptics.ts` (taps/submits/claims; with the plugin it skips `navigator.vibrate`, so no
+  double buzz; website unchanged). Never call both for one moment. The Rewards "prize won" buzz baselines only on a successful load (`hasLoadedChallenges`). **QR scanner:** `lib/nativeQrScan.ts` — `parseHightopQr`
   accepts ONLY https `play.hightopchallenge.com` / `hightopchallenge.com` at `/` or `/join` (optional `?v=`), and the
-  app navigates to a path it BUILDS (`joinPathForScan`), never to the scanned text. Plugin is
+  app navigates to a path it BUILDS (`joinPathForScan`), never to the scanned text. On the signed-in venue list a
+  scan instead selects via `handleSelectVenue`, only if the venue is in the built list (`decideScannedVenue` in
+  `lib/joinVenueList.ts`, R2) — a QR never bypasses the geofence. Plugin is
   `@capacitor/barcode-scanner` (the MLKit one has no Swift Package Manager support — don't swap it in);
   Android minSdk is 26 because of it. Camera is asked for only on tap. No partner surface (player-only app).
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from

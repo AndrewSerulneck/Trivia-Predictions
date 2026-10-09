@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   commitJoinVenueList,
+  decideScannedVenue,
   emptyJoinVenueList,
   filterVenuesInRange,
   INITIAL_JOIN_VENUE_LIST,
+  scannedVenueMessage,
   visibleJoinVenueList,
   type JoinVenueListState,
 } from "@/lib/joinVenueList";
@@ -147,5 +149,45 @@ describe("visibleJoinVenueList (render guard)", () => {
 
   it("starts empty", () => {
     expect(visibleJoinVenueList(INITIAL_JOIN_VENUE_LIST)).toEqual([]);
+  });
+});
+
+// R2 (docs/native-app-review-fixes-plan.md): a venue QR scanned on the signed-in venue list.
+describe("decideScannedVenue", () => {
+  const built = (venues: Venue[]): JoinVenueListState => commitJoinVenueList(emptyJoinVenueList(3), 3, venues);
+  const named = { ...ACROSS_TOWN, displayName: "Across Town Tavern" };
+
+  it("selects a scanned venue that is in this sign-in's list", () => {
+    expect(decideScannedVenue("nearby", built([NEARBY]), ALL_VENUES)).toEqual({ kind: "select", venue: NEARBY });
+  });
+
+  it("refuses an out-of-range venue and names it — the QR never bypasses the geofence", () => {
+    const decision = decideScannedVenue("across-town", built([NEARBY]), [named, NEARBY]);
+    expect(decision).toEqual({ kind: "out-of-range", venueName: "Across Town Tavern" });
+    if (decision.kind === "select") throw new Error("unreachable");
+    expect(scannedVenueMessage(decision, false)).toBe("You need to be at Across Town Tavern to join.");
+  });
+
+  it("selects any public venue for a God Mode list (it holds every venue)", () => {
+    expect(decideScannedVenue("other-state", built(ALL_VENUES), ALL_VENUES)).toEqual({ kind: "select", venue: OTHER_STATE });
+  });
+
+  it("treats an unknown or hidden id (absent from the public list) like a bad code", () => {
+    const decision = decideScannedVenue("hidden-or-missing", built(ALL_VENUES), ALL_VENUES);
+    expect(decision).toEqual({ kind: "not-found" });
+    if (decision.kind === "select") throw new Error("unreachable");
+    expect(scannedVenueMessage(decision, false)).toBe("That's not a Hightop code.");
+  });
+
+  it("does not guess 'out of range' while the list for this sign-in isn't built yet", () => {
+    const building = emptyJoinVenueList(4);
+    expect(decideScannedVenue("nearby", building, ALL_VENUES)).toEqual({ kind: "not-ready" });
+    expect(scannedVenueMessage({ kind: "not-ready" }, true)).toMatch(/Still checking your location/);
+    expect(scannedVenueMessage({ kind: "not-ready" }, false)).toMatch(/Allow location, then scan again/);
+  });
+
+  it("never selects from a stale list left by an earlier sign-in", () => {
+    const stale: JoinVenueListState = { generation: 5, builtForGeneration: 4, venues: ALL_VENUES };
+    expect(decideScannedVenue("nearby", stale, ALL_VENUES)).toEqual({ kind: "not-ready" });
   });
 });

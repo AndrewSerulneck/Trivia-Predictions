@@ -7,6 +7,7 @@ import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import { releaseAdTier, requestAdTier, setLandingPopupGate } from "@/components/ui/adPriority";
 import { setPopupPending, setPopupVisible } from "@/components/ui/popupBlocking";
 import { setScrollLock } from "@/lib/scrollLock";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { incrementAdCounter } from "@/lib/adFrequency";
 import { trackAdClick, trackAdView } from "@/lib/analytics";
 import { lookupSlotId } from "@/lib/adSlotRegistry";
@@ -632,6 +633,9 @@ export function PopupAds() {
       syncPopupPending();
     };
   }, [pathname, showPopup, syncPopupPending]);
+
+  // Android's Back inside the app closes the ad, the same as Escape.
+  useNativeBackHandler("overlay", popup?.open ? beginClose : null);
 
   useEffect(() => {
     if (!popup?.open) {

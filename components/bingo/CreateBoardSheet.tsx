@@ -8,6 +8,7 @@ import { SWIPE_PANEL_VARIANTS, SWIPE_TWEEN } from "@/lib/swipeTransition";
 import { SportsBingoSelectSport } from "@/components/bingo/SportsBingoSelectSport";
 import { SportsBingoSelectGame, type SportsBingoGame } from "@/components/bingo/SportsBingoSelectGame";
 import { SportsBingoSelectBoard } from "@/components/bingo/SportsBingoSelectBoard";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 
 /**
  * Board creation, in place. Steps 1–3 slide up over `/bingo/home` instead of navigating away to
@@ -192,6 +193,9 @@ export const CreateBoardSheet = ({ onClose, onCreated }: CreateBoardSheetProps) 
       return current;
     });
   }, []);
+
+  // Android's Back inside the app = the header's step-back chevron, or the X on step 1.
+  useNativeBackHandler("overlay", step === "sport" ? requestClose : handleStepBack);
 
   return (
     <div

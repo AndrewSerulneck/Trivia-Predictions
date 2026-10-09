@@ -25,6 +25,7 @@ import {
 } from "@/lib/sportsBingoLiveEvents";
 import { BingoBoardCard } from "@/components/bingo/BingoBoardCard";
 import { CreateBoardSheet } from "@/components/bingo/CreateBoardSheet";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { getLeagueDisplay, toMascotMatchup } from "@/lib/sportsBingoLeagues";
 import {
   BINGO_HEADER_LETTERS,
@@ -1820,6 +1821,11 @@ export function SportsBingoHome({
     [expandedFinalCardId, historyStackCards, settledCards]
   );
   const hasReachedBoardLimit = activeCards.length >= 4;
+
+  // Android's Back inside the app closes an expanded board, like its ✕ (portrait only —
+  // the landscape tree renders neither modal).
+  useNativeBackHandler("overlay", expandedActiveCard && !isLandscapeGameView ? () => setExpandedActiveCardId("") : null);
+  useNativeBackHandler("overlay", expandedFinalCard && !isLandscapeGameView ? () => setExpandedFinalCardId("") : null);
 
   // Phase 4 triggers. Opening the sheet replaces the three `/bingo/select-*` navigations; the
   // routes still exist and still work (deep links, the landscape empty state, browser back).

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { setScrollLock } from "@/lib/scrollLock";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 
 /**
  * A date rail + month-grid popover. Built for Prop Bingo's "look at a previous day" flow
@@ -188,6 +189,9 @@ export const DateCalendarPopover = ({
     onSelect(key);
     closeSheet();
   };
+
+  // Android's Back inside the app closes the calendar, the same as Escape.
+  useNativeBackHandler("overlay", isOpen ? closeSheet : null);
 
   useEffect(() => {
     if (!isOpen) return;

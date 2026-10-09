@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { isNativeApp } from "@/lib/nativeApp";
+import { callNative, isNativeApp } from "@/lib/nativeApp";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Android's hardware/gesture Back, inside the app (docs/native-app-store-plan.md
@@ -12,10 +12,17 @@ import { isNativeApp } from "@/lib/nativeApp";
 // already on screen register what THEY would do when tapped, and Back runs the
 // most specific one:
 //
-//   1. "overlay" — the topmost open sheet/drawer (useModalOverlay): the same close
-//      Escape does, so DiscardGuard still asks before throwing answers away.
+//   1. "overlay" — the topmost open popup: the same close its X / scrim / Escape
+//      runs. Owner sheets register through useModalOverlay (so DiscardGuard still
+//      asks); every player popup (menu drawer, coupon, story camera, Bingo sheet,
+//      calendar, ad…) calls useNativeBackHandler("overlay", open ? close : null)
+//      itself — one line per component, no wrapper.
 //   2. "step"    — a multi-step flow's StepBackButton (WizardFooter's onBack).
-//   3. "exit"    — the screen's ExitBackButton: useExitNavigation, unchanged.
+//   3. "exit"    — the screen's ExitBackButton: useExitNavigation with
+//      `{ replace: true }`, so Back never ADDS a history entry (a pushed parent
+//      would be the next Back's history.back() target — the bounce). A screen
+//      with no parent (the venue hub, the signed-in player's root) registers
+//      `minimizeNativeApp` here instead.
 //
 // Same rank → the most recently registered wins (a sheet opened over a sheet).
 // Nothing registered → the web view's own history, and at the very first page,
@@ -55,6 +62,11 @@ export type NativeBackFallbacks = {
   goBack: () => void;
   /** Move the app to the background (App.minimizeApp). */
   minimize: () => void;
+};
+
+/** Put the app in the background (Android's Back on a root screen). No-op on the website. */
+export const minimizeNativeApp = (): void => {
+  void callNative("App", "minimizeApp").catch(() => undefined);
 };
 
 /** One Back press. `canGoBack` comes from the shell (WebView.canGoBack()). */

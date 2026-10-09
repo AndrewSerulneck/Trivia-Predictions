@@ -5,6 +5,7 @@ import { haptic } from "@/lib/haptics";
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { getUserId, getUsername, getVenueId } from "@/lib/storage";
 import { clockOffsetFromServer } from "@/lib/liveCouponClock";
 import { HightopLoader } from "@/components/ui/HightopLoader";
@@ -415,6 +416,8 @@ function RedeemModal({
   // A gift card at a Square-connected venue opens on the Square path; "Redeem the normal way"
   // drops back to the classic coupon + Confirm Redemption (only before a card exists).
   const [useNormalCoupon, setUseNormalCoupon] = useState(false);
+  // Android's Back inside the app = tapping outside the coupon (onClose ignores it mid-confirm).
+  useNativeBackHandler("overlay", onClose);
   const frame = (node: ReactNode) => (
     <LiveCouponFrame clockOffsetMs={clockOffsetMs} username={username} venueName={venueName}>
       {node}

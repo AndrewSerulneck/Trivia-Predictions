@@ -22,6 +22,9 @@ const JOIN_PATHS: readonly string[] = ["/", "/join"];
 const VENUE_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 const MAX_SCAN_LENGTH = 2048;
 
+/** Shown for a code that isn't ours — and for a venue id we can't find, so a scan never reveals a hidden venue. */
+export const NOT_A_HIGHTOP_CODE_MESSAGE = "That's not a Hightop code.";
+
 /** What a valid Hightop code asks for: a specific venue (`?v=`), or just "join" (the printed QR). */
 export type HightopQrTarget = { venueId: string | null };
 

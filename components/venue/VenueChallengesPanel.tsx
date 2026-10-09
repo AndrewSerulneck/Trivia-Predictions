@@ -20,6 +20,8 @@ type VenueChallengesPanelProps = {
   currentUserId: string;
   pendingChallengeRedeemId: string | null;
   challengesError: string;
+  /** True once a load has succeeded; before that `challengeCards` is empty because nothing arrived, not because there are no rewards. */
+  hasLoadedChallenges: boolean;
   onSelectChallenge: (challengeId: string) => void;
   onGoToChallengeRedeem: (challengeId: string, sourceElement: HTMLElement | null) => void;
   onRetryChallenges: () => void;
@@ -32,20 +34,22 @@ function VenueChallengesPanelInner({
   currentUserId,
   pendingChallengeRedeemId,
   challengesError,
+  hasLoadedChallenges,
   onSelectChallenge,
   onGoToChallengeRedeem,
   onRetryChallenges,
 }: VenueChallengesPanelProps) {
-  // Buzz when a prize is won while this panel is open. The first batch of cards is the baseline, so
-  // opening the panel on a prize you already won stays quiet.
+  // Buzz when a prize is won while this panel is open. The first SUCCESSFUL batch of cards is the
+  // baseline, so opening the panel on a prize you already won stays quiet, including when the first
+  // load failed and a later refresh brings the old win in.
   const wonIdsRef = React.useRef<Set<string> | null>(null);
   React.useEffect(() => {
-    if (isChallengesLoading) return;
+    if (isChallengesLoading || challengesError || !hasLoadedChallenges) return;
     const wonNow = new Set(challengeCards.filter((card) => card.viewerWon).map((card) => card.id));
     const before = wonIdsRef.current;
     wonIdsRef.current = wonNow;
     if (before && [...wonNow].some((id) => !before.has(id))) playHaptic("celebrate");
-  }, [challengeCards, isChallengesLoading]);
+  }, [challengeCards, isChallengesLoading, challengesError, hasLoadedChallenges]);
 
   return (
     <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">

@@ -28,6 +28,7 @@ import {
   type PreparedStorySharePayload,
 } from "@/lib/socialShare/storyPayloads";
 import { CameraViewport, type CameraViewportState } from "./CameraViewport";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { ShareActionsSheet } from "./ShareActionsSheet";
 import { StoryOverlayEditor, StoryOverlayPreview } from "./StoryOverlayEditor";
 import { StoryShareStatusToast, type StoryShareStatusTone } from "./StoryShareStatusToast";
@@ -361,6 +362,9 @@ export function StoryCaptureModal({
     setScrollLock(SCROLL_LOCK_OWNER, isOpen, "modal");
     return () => setScrollLock(SCROLL_LOCK_OWNER, false);
   }, [isOpen]);
+
+  // Android's Back inside the app closes the camera, the same as Escape.
+  useNativeBackHandler("overlay", isOpen ? closeModal : null);
 
   useEffect(() => {
     if (!isOpen) {

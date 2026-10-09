@@ -55,12 +55,15 @@ import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
 import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { ScanQrButton } from "@/components/join/ScanQrButton";
 import { WizardFooter } from "@/components/navigation/WizardFooter";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { getVenueById, listVenues, readCachedVenues } from "@/lib/venues";
 import {
   commitJoinVenueList,
+  decideScannedVenue,
   emptyJoinVenueList,
   filterVenuesInRange,
   INITIAL_JOIN_VENUE_LIST,
+  scannedVenueMessage,
   visibleJoinVenueList,
 } from "@/lib/joinVenueList";
 import {
@@ -723,6 +726,9 @@ type PasskeyEnrollmentPromptProps = {
 };
 
 function PasskeyEnrollmentPrompt({ onSetUp, onSkip }: PasskeyEnrollmentPromptProps) {
+  // Android's Back inside the app = "skip" (the prompt's only dismissal); without
+  // this the wizard's step-back under the prompt would run instead.
+  useNativeBackHandler("overlay", onSkip);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
       <div className="w-full max-w-sm rounded-3xl border border-cyan-400/40 bg-slate-900 p-6 space-y-5">
@@ -776,8 +782,9 @@ export function JoinFlow({
   const handleGrantLocationPendingRef = useRef(false);
   const reducedMotion = useReducedMotion();
   const router = useRouter();
-  // A scanned venue code opens the same deep link the phone camera would (`/?v=`); the path is built by
-  // lib/nativeQrScan.ts from the validated id, never from the scanned text (Phase 4b).
+  // Before sign-in, a scanned venue code opens the same deep link the phone camera would (`/?v=`); the path
+  // is built by lib/nativeQrScan.ts from the validated id, never from the scanned text (Phase 4b). The
+  // signed-in venue list uses handleVenueListQrScanned instead (R2).
   const handleVenueQrScanned = useCallback((_venueId: string, path: string) => router.push(path), [router]);
   // Inside the native app this screen IS the home page, and the app is for
   // players only (docs/native-app-store-plan.md §2 item 12, Phase 3B.1): no Home
@@ -1615,6 +1622,22 @@ export function JoinFlow({
       });
     },
     [accountId, resolveAndNavigate, resolveAndNavigateFromSession, verifyVenueAccess]
+  );
+
+  // A venue QR scanned on the venue list: the player is already signed in, so a `/?v=` push would just
+  // land back on this list (R2, docs/native-app-review-fixes-plan.md). Select it the way a tap does — but
+  // only when it is in the list this sign-in built: a QR never bypasses the geofence. listVenues() is the
+  // cached list the build just read, so this normally costs no request. No geolocation, no list reset.
+  const handleVenueListQrScanned = useCallback(
+    async (scannedVenueId: string): Promise<string | void> => {
+      const decision = decideScannedVenue(scannedVenueId, venueListState, await listVenues());
+      if (decision.kind === "select") {
+        handleSelectVenue(decision.venue);
+        return;
+      }
+      return scannedVenueMessage(decision, locationLoading);
+    },
+    [venueListState, handleSelectVenue, locationLoading]
   );
 
   const handleBackToVenueList = useCallback(() => {
@@ -3258,7 +3281,7 @@ export function JoinFlow({
 
                     <ScanQrButton
                       className="mt-4"
-                      onVenueScanned={handleVenueQrScanned}
+                      onVenueScanned={handleVenueListQrScanned}
                       joinCodeMessage="That's the Hightop join code. Pick your venue from the list."
                     />
                   </motion.div>

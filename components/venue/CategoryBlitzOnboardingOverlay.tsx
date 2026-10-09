@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState, type TouchEvent } from "react";
 import { AnimatePresence, motion, type Variants, useReducedMotion } from "framer-motion";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { GameOnboardingCard, GAME_STEP_DOT_ACTIVE } from "@/components/venue/GameIdentityPanel";
 
 const SWIPE_MIN_DISTANCE_PX = 48;
@@ -108,6 +109,9 @@ export function CategoryBlitzOnboardingOverlay({
     setSlideDirection(1);
     onJoin();
   }, [onJoin]);
+
+  // Android's Back inside the app = this overlay's own Back button.
+  useNativeBackHandler("overlay", open ? (currentStep > 0 ? goToPreviousStep : handleClose) : null);
 
   if (!open) {
     return null;

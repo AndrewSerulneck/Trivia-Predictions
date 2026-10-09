@@ -165,3 +165,27 @@ describe("Venue-list leak guard (Phase 2C)", () => {
     expect(directVenueLoadBranch).not.toContain("setVenueListState(");
   });
 });
+
+describe("Venue-list QR scan (R2)", () => {
+  const scanHandler = () =>
+    sourceBetween(joinFlowSource, "const handleVenueListQrScanned = useCallback(", "const handleBackToVenueList");
+
+  it("selects through the same handleSelectVenue a tap uses, with no URL push", () => {
+    const handler = scanHandler();
+    expect(handler).toContain("decideScannedVenue(scannedVenueId, venueListState, await listVenues())");
+    expect(handler).toContain("handleSelectVenue(decision.venue)");
+    expect(handler).not.toMatch(/router\.(push|replace)|location\.(assign|href)/);
+  });
+
+  it("never re-checks location or resets the list", () => {
+    const handler = scanHandler();
+    expect(handler).not.toMatch(/getInitialLocation|getBestCurrentLocation|geolocation|queryLocationPermission/);
+    expect(handler).not.toMatch(/venueListBuiltRef|discardVenueList|beginVenueListBuild|commitVenueList|setVenueListState/);
+  });
+
+  it("is the venue-list panel's scan handler; the pre-sign-in button keeps the deep link", () => {
+    expect(joinFlowSource).toContain("onVenueScanned={handleVenueListQrScanned}");
+    expect(joinFlowSource.match(/onVenueScanned=\{handleVenueQrScanned\}/g)?.length).toBe(1);
+    expect(joinFlowSource).toContain("const handleVenueQrScanned = useCallback((_venueId: string, path: string) => router.push(path), [router]);");
+  });
+});

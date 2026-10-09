@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { handleNativeBackPress } from "@/components/navigation/nativeBackButton";
+import { handleNativeBackPress, minimizeNativeApp, useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { AppUpdateRequired } from "@/components/native/AppUpdateRequired";
-import { addNativeListener, callNative, compareAppVersions, nativeAppVersion, nativePlatform } from "@/lib/nativeApp";
+import { addNativeListener, compareAppVersions, nativeAppVersion, nativePlatform } from "@/lib/nativeApp";
 
 // Only ever loaded inside the app (components/native/NativeAppRuntime.tsx).
 // Two jobs (docs/native-app-store-plan.md Phase 3):
@@ -82,13 +82,17 @@ export const NativeAppRuntimeImpl = () => {
         const canGoBack = Boolean((data as { canGoBack?: unknown } | null)?.canGoBack);
         handleNativeBackPress(canGoBack, {
           goBack: () => window.history.back(),
-          minimize: () => {
-            void callNative("App", "minimizeApp").catch(() => undefined);
-          },
+          minimize: minimizeNativeApp,
         });
       }) ?? undefined,
     [],
   );
+
+  // The update screen is not dismissible, but the page under it is still mounted —
+  // its ExitBackButton would navigate behind the screen. While it shows, Back puts
+  // the app in the background instead (registered when it opens, so it outranks
+  // every control already on the page).
+  useNativeBackHandler("overlay", update.required ? minimizeNativeApp : null);
 
   useEffect(() => {
     let cancelled = false;

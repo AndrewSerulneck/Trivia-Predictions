@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { getUserId } from "@/lib/storage";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
@@ -324,6 +325,9 @@ export function LeaderboardTable({
       ? "No users ranked yet for this venue."
       : "No users ranked yet for this game and timeframe.";
   const isNflWeeksLoading = isNflPickEmSelected && isLoadingNflWeeks;
+
+  // Android's Back inside the app closes the timeframe menu.
+  useNativeBackHandler("overlay", isTimeframeMenuOpen && showTimeframeControl ? () => setIsTimeframeMenuOpen(false) : null);
 
   return (
     <div className="space-y-2">

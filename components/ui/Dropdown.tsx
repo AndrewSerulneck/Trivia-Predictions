@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 
 export type DropdownOption<T extends string> = {
   value: T;
@@ -135,6 +136,9 @@ export function Dropdown<T extends string>({
       focusOption(enabled[enabled.length - 1] ?? lastIndex);
     }
   };
+
+  // Android's Back inside the app closes an open menu, the same as Escape.
+  useNativeBackHandler("overlay", isOpen ? () => setIsOpen(false) : null);
 
   return (
     <div ref={containerRef} className="relative">

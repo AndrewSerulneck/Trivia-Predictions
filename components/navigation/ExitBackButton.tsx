@@ -85,8 +85,9 @@ export function ExitBackButton({
     venueHomeFallback,
     onExit,
   });
-  // Android's Back inside the app does exactly what tapping this does.
-  useNativeBackHandler("exit", disabled ? null : () => { void handleExit(); });
+  // Android's Back inside the app does what tapping this does, except that it
+  // replaces history instead of pushing (no Back ↔ screen bounce; exitNavigation.ts).
+  useNativeBackHandler("exit", disabled ? null : () => { void handleExit({ replace: true }); });
 
   const button = (
     <button

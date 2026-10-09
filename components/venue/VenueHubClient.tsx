@@ -29,6 +29,7 @@ import {
 } from "@/lib/venueHomeBootstrap";
 import { VENUE_GAME_CARD_BY_KEY, VENUE_HOME_GAME_KEYS, type VenueGameKey } from "@/lib/venueGameCards";
 import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
+import { minimizeNativeApp, useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { VenueHubHeaderBar } from "@/components/venue/VenueHubHeaderBar";
 import { VenueGamesPanel } from "@/components/venue/VenueGamesPanel";
 import { CategoryBlitzOnboardingOverlay } from "@/components/venue/CategoryBlitzOnboardingOverlay";
@@ -300,6 +301,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [challengeCards, setChallengeCards] = useState<ChallengeCampaignCard[]>([]);
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
   const [challengesError, setChallengesError] = useState("");
+  // True once any load has succeeded. The Rewards panel's "prize won" buzz needs a real baseline.
+  const [hasLoadedChallenges, setHasLoadedChallenges] = useState(false);
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuUsername, setMenuUsername] = useState("");
@@ -911,6 +914,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           throw new Error("Challenges unavailable.");
         }
         setChallengeCards(Array.isArray(body.campaigns) ? body.campaigns : []);
+        setHasLoadedChallenges(true);
       } catch {
         if (!signal.aborted) {
           setChallengesError("Offline: challenges unavailable.");
@@ -1532,6 +1536,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
 
   const showFastPathSkeleton = arrivalInProgress && !arrivalCoreReady;
 
+  // Android's Back inside the app (components/navigation/nativeBackButton.ts):
+  // an open popup closes first, exactly as its Close/scrim does. Otherwise the
+  // venue hub is the signed-in player's root screen, so Back puts the app in the
+  // background (Android's convention) instead of walking history back into a
+  // game the player just left. Website: inert.
+  useNativeBackHandler("overlay", isMenuOpen ? () => setIsMenuOpen(false) : null);
+  useNativeBackHandler("overlay", selectedChallengeDetail ? () => setSelectedChallengeId(null) : null);
+  useNativeBackHandler("exit", minimizeNativeApp);
+
   return (
     <div
       className="relative z-[60] flex flex-col isolation-isolate"
@@ -1593,6 +1606,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           currentUserId={currentUserId}
           pendingChallengeRedeemId={pendingChallengeRedeemId}
           challengesError={challengesError}
+          hasLoadedChallenges={hasLoadedChallenges}
           onSelectChallenge={setSelectedChallengeId}
           onGoToChallengeRedeem={goToChallengeRedeem}
           onRetryChallenges={retryChallenges}
