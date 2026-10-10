@@ -183,9 +183,8 @@ describe("Venue-list QR scan (R2)", () => {
     expect(handler).not.toMatch(/venueListBuiltRef|discardVenueList|beginVenueListBuild|commitVenueList|setVenueListState/);
   });
 
-  it("is the venue-list panel's scan handler; the pre-sign-in button keeps the deep link", () => {
+  it("is the venue-list panel's scan handler; the sign-in page has no scan button (app version)", () => {
     expect(joinFlowSource).toContain("onVenueScanned={handleVenueListQrScanned}");
-    expect(joinFlowSource.match(/onVenueScanned=\{handleVenueQrScanned\}/g)?.length).toBe(1);
-    expect(joinFlowSource).toContain("const handleVenueQrScanned = useCallback((_venueId: string, path: string) => router.push(path), [router]);");
+    expect(joinFlowSource).not.toContain("handleVenueQrScanned");
   });
 });

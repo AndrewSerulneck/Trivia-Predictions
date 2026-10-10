@@ -778,10 +778,6 @@ export function JoinFlow({
   const handleGrantLocationPendingRef = useRef(false);
   const reducedMotion = useReducedMotion();
   const router = useRouter();
-  // Before sign-in, a scanned venue code opens the same deep link the phone camera would (`/?v=`); the path
-  // is built by lib/nativeQrScan.ts from the validated id, never from the scanned text (Phase 4b). The
-  // signed-in venue list uses handleVenueListQrScanned instead (R2).
-  const handleVenueQrScanned = useCallback((_venueId: string, path: string) => router.push(path), [router]);
   // Inside the native app this screen IS the home page, and the app is for
   // players only (docs/native-app-store-plan.md §2 item 12, Phase 3B.1): no Home
   // link and no partner link there. The website keeps its Home link to /info.
@@ -2992,11 +2988,6 @@ export function JoinFlow({
                     >
                       <span className="text-2xl">Create Account →</span>
                     </button>
-
-                    <ScanQrButton
-                      onVenueScanned={handleVenueQrScanned}
-                      joinCodeMessage="That's the Hightop join code. Sign in or create an account to find your venue."
-                    />
                   </motion.div>
                 )}
 

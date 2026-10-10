@@ -106,10 +106,10 @@ describe("wiring", () => {
     expect(manifest).toMatch(/android\.hardware\.camera"\s+android:required="false"/);
   });
 
-  it("the button shows only where the scanner exists and sits on the sign-in and venue-list panels", () => {
+  it("the button shows only where the scanner exists and sits on the venue-list panel only (not the sign-in page)", () => {
     expect(read("components/join/ScanQrButton.tsx")).toContain('useHasNativeCapability("CapacitorBarcodeScanner")');
     const join = read("components/join/JoinFlow.tsx");
-    expect(join.match(/<ScanQrButton/g)?.length).toBe(2);
+    expect(join.match(/<ScanQrButton/g)?.length).toBe(1);
   });
 
   it("nothing but lib/nativeQrScan.ts calls the scanner, and nothing navigates to scanned text", () => {
