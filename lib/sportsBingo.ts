@@ -3211,7 +3211,7 @@ function buildNFLGameStatsSnapshot(
     }
   }
   for (const row of rows) {
-    const hasAction = Object.entries(row).some(([key, value]) => NFL_NUMERIC_STAT_FIELDS.includes(key) && typeof value === "number");
+    const hasAction = nflRowHasRecordedAction(row);
     const stat = (value: unknown): number => value === null && hasAction && completeTeams ? 0 : parseKnownStatNumber(value);
     const playerObj = asRecord(row.player);
     const playerName = `${String(playerObj.first_name ?? "").trim()} ${String(playerObj.last_name ?? "").trim()}`.trim();
@@ -9400,6 +9400,22 @@ const NFL_NUMERIC_STAT_FIELDS = [
   "punt_return_touchdowns", "interception_touchdowns", "fumbles_touchdowns", "field_goal_attempts",
   "long_field_goal_made", "total_tackles", "defensive_sacks", "defensive_interceptions", "punts_inside_20",
 ];
+
+// Box-score columns Bingo never grades but whose POSITIVE value still proves the player took part.
+// A defender whose only line is `fumbles_recovered: 1` (2026 games 1392217, 1392220, 1392230) had
+// every graded column null, so his row read as "unknown" and voided whole-game max/total squares.
+// Zero-only rows stay unknown, exactly as before.
+const NFL_POSITIVE_PARTICIPATION_FIELDS = [
+  "fumbles", "fumbles_lost", "fumbles_recovered", "solo_tackles", "tackles_for_loss", "passes_defended",
+  "qb_hits", "interception_yards", "kick_returns", "kick_return_yards", "punt_returns", "punt_return_yards",
+  "punts", "punt_yards", "receiving_targets", "sacks",
+];
+
+const nflRowHasRecordedAction = (row: Record<string, unknown>): boolean =>
+  Object.entries(row).some(([key, value]) =>
+    typeof value === "number" &&
+    (NFL_NUMERIC_STAT_FIELDS.includes(key) || (NFL_POSITIVE_PARTICIPATION_FIELDS.includes(key) && value > 0))
+  );
 
 function nflOffensesReconcile(card: SportsBingoCardRow, rows: Array<Record<string, unknown>>, teams: NFLTeamStatsFacts): boolean {
   if (!teams.available || !teams.rawRows) return false;

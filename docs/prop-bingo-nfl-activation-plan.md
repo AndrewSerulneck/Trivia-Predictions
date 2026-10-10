@@ -7,6 +7,11 @@
 > `docs/bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md`. That work is a local release candidate,
 > not deployed. Bingo creation no longer uses the old NFL activation flag as an eligibility override;
 > actual local-day boardable games and capability/composability determine visibility.
+>
+> **Status (2026-10-10):** Phase 6 calibration run on 2026 Weeks 1–5. It found and fixed (locally,
+> uncommitted) a participation bug that voided ~1/3 of games' whole-game player-stat squares. No
+> prices were retuned (the sample is too small). Remaining work: commit/deploy the fix and re-run the
+> calibration after Week 18. Handoff: `docs/prop-bingo-nfl-activation-plan_PHASE_6_HANDOFF.md`.
 
 **Created:** 2026-09-05. **Owner doc for the activation half of `docs/prop-bingo-nfl-plan.md`.**
 
