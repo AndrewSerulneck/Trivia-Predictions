@@ -702,11 +702,14 @@ step opens at the top — don't hand-roll a scroll reset.
   `npm run store:qr` (`scripts/generate-join-qr.cjs`); `tests/lib.join-qr.test.ts` decodes them and
   fails if they drift. Never change the URL — printed merch can't be updated.
 
-## Multi-Venue Volume Billing — Phase 1 built 2026-10-11 (not yet committed / migration not applied)
+## Multi-Venue Volume Billing — Phases 1–2 live 2026-10-11
 
 Plan: `docs/multi-venue-volume-billing-plan.md` (Andrew's answers in §2 — don't re-ask); latest handoff
-`docs/multi-venue-volume-billing-plan_PHASE_1_HANDOFF.md`. One Stripe subscription per partner, quantity =
-venues, graduated $100 / $75 / $60 / $45.
+`docs/multi-venue-volume-billing-plan_PHASE_2_HANDOFF.md`. One Stripe subscription per partner, quantity =
+venues, graduated $100 / $75 / $60 / $45. Migration `20261011134820` is applied; every card subscriber is on
+the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (lookup key `hightop_venue_graduated_monthly_v1`) at
+quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/stripe.ts`
+(`STRIPE_GRADUATED_PRICE_ID`, else `STRIPE_PRICE_ID`). `npm run billing:graduated-price` re-checks the live tiers.
 - **"Which bill covers this venue?" has ONE home: `lib/venueBilling.ts`** (`loadBillingForVenue(s)`,
   `venueIdsEverBilled`, `venueIdsOnBill`). `billing_subscriptions.venue_id` is the bill's ANCHOR venue;
   other venues on a bill are rows in `billing_subscription_venues` (a trigger adds every bill's anchor
@@ -717,6 +720,9 @@ venues, graduated $100 / $75 / $60 / $45.
   price, whose `unit_amount` is null) plus `quantity`.
 - **Partner email wording lives in `lib/email/partnerEmailCopy.ts`** (Andrew edits it; welcome + "Venue
   added"). Preview: `npm run email:preview`. Builders only lay it out.
+- **Check-paying (offline) accounts never lapse automatically** (Andrew, 2026-10-11). `/api/cron/billing`
+  no longer expires an offline grant past its paid-through date; only an admin Revoke ends it. Don't
+  reintroduce an expiry sweep (`tests/api.cron.billing-offline-never-lapses.test.ts`).
 
 ## POS Rewards Integration (Square / Clover; Toast deferred) — Phases 1–2 built 2026-10-04/05
 

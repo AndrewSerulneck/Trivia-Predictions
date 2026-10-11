@@ -1,9 +1,11 @@
 # Multi-Venue Volume Billing Plan — "Add a venue" + Graduated Volume Discount
 
-**Status:** Phase 1 (foundation) **built and tested locally on 2026-10-11 — not committed, not
-pushed, migration not applied** (Andrew approves `supabase db push`). Handoff for Phase 2:
-**`docs/multi-venue-volume-billing-plan_PHASE_1_HANDOFF.md`**. Andrew's answers to all nine
-questions are in §2 (do not re-ask). **Next: Phase 2.** Each phase ends with a handoff note
+**Status:** Phases 1–2 **live 2026-10-11** — Phase 1 committed (`3e9be34`), migration
+`20261011134820` applied to production, Phase 2 committed (`c1ce489`), pushed and deployed; both card
+subscribers swapped onto the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (still $100/month).
+Check-paying accounts no longer lapse automatically (`6ce86dd`). Latest handoff:
+**`docs/multi-venue-volume-billing-plan_PHASE_2_HANDOFF.md`**. Andrew's answers are in §2 (do not
+re-ask). **Next: Phase 3.** Each phase ends with a handoff note
 `docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at
 the latest one.
 
@@ -49,7 +51,7 @@ Stripe does the math on every invoice and we never hand-compute a bill.
 | 7 | Admin adding a 2nd venue for an existing partner (was §9 Q2) | **Offer both** "Add to their bill" and "Free / comped". |
 | 8 | Added venue goes live to players (was §9 Q3) | **Yes — the moment payment succeeds.** No admin check. |
 | 9 | Confirmation email (was §9 Q4) | **Send our own "Venue added" email via Resend** as well as Stripe's receipt. Andrew also wants to perfect the new-subscriber welcome email and the venue-added email himself: **all wording now lives in `lib/email/partnerEmailCopy.ts`** (Phase 1), previewed with `npm run email:preview`. |
-| 10 | Overhill and Garden State (was §9 Q5) | **Overhill is a test location** — leave it. **Garden State pays by check and must stay subscribed and active** — a rare exception granted to an early customer. NB: production shows its offline grant **expired on 2026-08-25** (the daily cron set it `cancelled` on 2026-08-26) — see the Phase 1 handoff §7; needs Andrew's re-grant. |
+| 10 | Overhill and Garden State (was §9 Q5) | **Overhill is a test location** — leave it. **Garden State pays by check and must stay subscribed and active** — a rare exception granted to an early customer. NB: production shows its offline grant **expired on 2026-08-25** (the daily cron set it `cancelled` on 2026-08-26) — see the Phase 1 handoff §7; needs Andrew's re-grant. **Resolved 2026-10-11:** Andrew re-granted it (active through 2026-11-25) and ruled that check-paying accounts **never lapse automatically** — the cron's offline-expiry sweep was removed (`6ce86dd`); only an admin Revoke ends one. |
 
 Defaults chosen by the planner (Andrew may overrule any of these — see §9):
 
@@ -273,7 +275,7 @@ exactly one venue. Zero behaviour change, zero Stripe change.
   `tests/lib.auth-users-fk-guard.test.ts` unchanged and `npm run test:account-deletion-sql`
   (a new `users`/`venues` FK must not break account deletion).
 
-### Phase 2 — The graduated price, live (Opus 5.5, high)
+### Phase 2 — The graduated price, live (Opus 5.5, high) — ✅ live 2026-10-11 (handoff: `…_PHASE_2_HANDOFF.md`)
 
 - `scripts/create-graduated-price.cjs` (dry-run default, `--apply`): finds-or-creates the
   Price by lookup key; prints its id.
