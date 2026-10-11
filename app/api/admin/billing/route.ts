@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminAuth } from "@/lib/adminAuth";
-import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
+import { getStripeGraduatedPriceId, OFFLINE_BILLING_METHOD } from "@/lib/stripe";
 import { cancelSubscription } from "@/lib/billing";
 import {
   applyDiscountToSubscription,
@@ -13,8 +13,20 @@ import {
   type DiscountSpec,
   type DiscountableSubscriptionRow,
 } from "@/lib/billingDiscounts";
-import { setCustomPrice, type CustomPriceRow } from "@/lib/billingCustomPrice";
-import { loadBillingForVenue, loadBillingForVenues } from "@/lib/venueBilling";
+import { setCustomPrice, setStandardPrice, type CustomPriceRow } from "@/lib/billingCustomPrice";
+import { attachVenueToOwner } from "@/lib/adminVenueAttach";
+import type { AdminPartnerBill } from "@/lib/adminBillView";
+import { isPlaceholderVenueRow } from "@/lib/venueClaim";
+import {
+  billMembershipsForBills,
+  billedVenueCountFromRows,
+  hasLeftBill,
+  isBilledMembership,
+  loadBillingForVenue,
+  loadBillingForVenues,
+  type BillMembership,
+} from "@/lib/venueBilling";
+import { billRateFromMirror, monthlyTotalCents, rateBreakdown, rateMonthlyTotalCents } from "@/lib/venuePricing";
 
 /**
  * Admin-only manual billing controls (Phase 1 of the check/offline-payment plan).
@@ -58,7 +70,19 @@ type SubscriptionRow = {
   discount_percent_off: number | string | null;
   discount_amount_off_cents: number | null;
   discount_ends_at: string | null;
+  stripe_price_id: string | null;
+  quantity: number | null;
+  owner_id: string | null;
 };
+
+/**
+ * Multi-venue billing Phase 6 — what the admin list shows about the BILL a venue is on (shape and
+ * formatting in lib/adminBillView.ts). Every number is computed here from lib/venuePricing.ts.
+ */
+type PartnerBill = AdminPartnerBill;
+
+const membershipState = (row: BillMembership | undefined, nowMs: number): PartnerBill["venueState"] =>
+  !row || isBilledMembership(row) ? "billed" : hasLeftBill(row, nowMs) ? "removed" : "leaving";
 
 /**
  * GET /api/admin/billing — list every venue-owner link with its current
@@ -77,6 +101,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const search = (searchParams.get("search") ?? "").trim().toLowerCase();
 
+  if (searchParams.get("resource") === "attach-options") {
+    return attachOptions();
+  }
+
   const { data: links, error: linkError } = await supabaseAdmin
     .from("venue_owner_venues")
     .select(
@@ -94,13 +122,51 @@ export async function GET(request: Request) {
     // The bill covering each venue (lib/venueBilling.ts) — its own, or a multi-venue bill.
     const billing = await loadBillingForVenues<SubscriptionRow>(
       venueIds,
-      "id, venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, cancel_at_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
+      "id, venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, cancel_at_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at, stripe_price_id, quantity, owner_id"
     );
     if (!billing.ok) {
       return NextResponse.json({ ok: false, error: billing.error }, { status: 500 });
     }
     for (const [venueId, row] of billing.byVenue) subByVenue.set(venueId, row);
   }
+
+  // Every bill's membership rows in ONE read (Phase 6), for the per-bill venue count and band line.
+  const billIds = Array.from(new Set(Array.from(subByVenue.values()).map((row) => row.id)));
+  const memberships = await billMembershipsForBills(billIds);
+  if (!memberships.ok) {
+    return NextResponse.json({ ok: false, error: memberships.error }, { status: 500 });
+  }
+  const nowMs = Date.now();
+  const graduatedPriceId = getStripeGraduatedPriceId();
+  const billOf = (venueId: string, sub: SubscriptionRow): PartnerBill => {
+    const rows = memberships.byBill.get(sub.id) ?? [];
+    const billed = Math.max(1, billedVenueCountFromRows(sub.venue_id, rows));
+    const leaving = rows.filter((row) => !isBilledMembership(row) && !hasLeftBill(row, nowMs)).length;
+    const isOffline = sub.billing_method === OFFLINE_BILLING_METHOD;
+    const rate = billRateFromMirror(sub, graduatedPriceId);
+    return {
+      id: sub.id,
+      isAnchor: sub.venue_id === venueId,
+      anchorVenueId: sub.venue_id,
+      billedVenueCount: billed,
+      leavingVenueCount: leaving,
+      rate: rate.kind,
+      breakdown: rateBreakdown(rate, billed).map((line) => ({ venues: line.venues, unitAmountCents: line.unitAmountCents })),
+      monthlyListCents: isOffline ? sub.amount_cents : rateMonthlyTotalCents(rate, billed),
+      stripeQuantity: !isOffline && typeof sub.quantity === "number" && sub.quantity !== billed ? sub.quantity : null,
+      suggestedOfflineCents: isOffline ? monthlyTotalCents(billed) : null,
+      venueState: membershipState(
+        rows.find((row) => row.venue_id === venueId),
+        nowMs
+      ),
+    };
+  };
+  // A venue linked to a partner who pays for another venue, but on no bill itself = comped (free).
+  const ownersWithLiveBill = new Set(
+    Array.from(subByVenue.values())
+      .filter((row) => row.status !== "cancelled" && row.owner_id)
+      .map((row) => row.owner_id as string)
+  );
 
   const partners = (links ?? [])
     .map((link) => {
@@ -112,6 +178,8 @@ export async function GET(request: Request) {
         ownerId: link.owner_id,
         ownerEmail: link.venue_owners?.email ?? "",
         ownerName: link.venue_owners?.name ?? "",
+        bill: sub ? billOf(link.venue_id, sub) : null,
+        comped: !sub && ownersWithLiveBill.has(link.owner_id),
         subscription: sub
           ? {
               status: sub.status,
@@ -147,8 +215,50 @@ export async function GET(request: Request) {
   return NextResponse.json({ ok: true, partners });
 }
 
+/**
+ * GET ?resource=attach-options — the venues an admin can give to a partner (Phase 6): visible, real
+ * (not a (0,0) room) and linked to no partner yet. One venues read + one link read; the server
+ * re-checks everything on submit.
+ */
+async function attachOptions(): Promise<NextResponse> {
+  const [venues, links] = await Promise.all([
+    supabaseAdmin!
+      .from("venues")
+      .select("id, name, hidden, latitude, longitude")
+      .order("name", { ascending: true })
+      .limit(1000)
+      .returns<Array<{ id: string; name: string | null; hidden: boolean | null; latitude: number | null; longitude: number | null }>>(),
+    supabaseAdmin!.from("venue_owner_venues").select("venue_id").returns<{ venue_id: string }[]>(),
+  ]);
+  if (venues.error || links.error) {
+    return NextResponse.json({ ok: false, error: venues.error?.message ?? links.error?.message }, { status: 500 });
+  }
+  const linked = new Set((links.data ?? []).map((link) => link.venue_id));
+  const options = (venues.data ?? [])
+    .filter((venue) => !venue.hidden && !isPlaceholderVenueRow(venue) && !linked.has(venue.id))
+    .map((venue) => ({ id: venue.id, name: (venue.name ?? "").trim() || venue.id }));
+  return NextResponse.json({ ok: true, venues: options });
+}
+
 type PostBody = {
-  action?: "grant-manual" | "revoke" | "apply-discount" | "remove-discount" | "set-custom-price";
+  action?:
+    | "grant-manual"
+    | "revoke"
+    | "apply-discount"
+    | "remove-discount"
+    | "set-custom-price"
+    | "set-standard-price"
+    | "attach-venue";
+  /** attach-venue: the partner account to give the venue to. */
+  ownerId?: string;
+  /** attach-venue: "bill" (Add to their bill) or "comped" (Free). */
+  mode?: string;
+  /** attach-venue: true = say what would happen, change nothing. */
+  preview?: boolean;
+  /** attach-venue (card bill): one key per Confirm; re-sent on a retry. */
+  idempotencyKey?: string;
+  /** attach-venue (card bill): from the preview's quote. */
+  prorationDate?: number;
   venueId?: string;
   paidThroughDate?: string; // YYYY-MM-DD, inclusive; what the check covers — offline access never lapses on its own (2026-10-11)
   /**
@@ -255,6 +365,30 @@ export async function POST(request: Request) {
 
   if (body.action === "set-custom-price") {
     return handleSetCustomPrice(venueId, body, auth.adminUsername);
+  }
+
+  if (body.action === "set-standard-price") {
+    return handleSetStandardPrice(venueId, auth.adminUsername);
+  }
+
+  if (body.action === "attach-venue") {
+    const mode = body.mode === "bill" || body.mode === "comped" ? body.mode : null;
+    if (!mode) {
+      return NextResponse.json({ ok: false, error: "Choose Add to their bill or Free (comped).", code: "invalid_request" }, { status: 400 });
+    }
+    const { httpStatus, ...outcome } = await attachVenueToOwner({
+      venueId,
+      ownerId: (body.ownerId ?? "").trim(),
+      mode,
+      preview: body.preview === true,
+      clientKey: typeof body.idempotencyKey === "string" ? body.idempotencyKey : undefined,
+      prorationDate: body.prorationDate,
+    });
+    console.log(
+      `[AdminBilling] attach-venue admin=${auth.adminUsername} venue=${venueId} owner=${body.ownerId ?? ""} mode=${mode} ` +
+        `preview=${body.preview === true} result=${outcome.ok ? outcome.kind : outcome.code}`
+    );
+    return NextResponse.json(outcome, { status: httpStatus, headers: { "Cache-Control": "no-store" } });
   }
 
   if (body.action !== "grant-manual") {
@@ -674,4 +808,43 @@ async function handleSetCustomPrice(
   }
 
   return NextResponse.json({ ...result, ok: true });
+}
+
+/**
+ * action: "set-standard-price" — put a bill on a negotiated per-venue rate back onto the standard
+ * graduated bands, keeping its venues (Phase 6). Recorded in the same audit table as the custom rate
+ * (discount_type 'custom_price', custom_price_cents null = "back to standard").
+ */
+async function handleSetStandardPrice(venueId: string, adminUsername: string): Promise<NextResponse> {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ ok: false, error: "Server configuration error." }, { status: 500 });
+  }
+  const billing = await loadBillingForVenue<CustomPriceRow & { venue_id: string; status: string }>(
+    venueId,
+    "id, stripe_subscription_id, amount_cents"
+  );
+  const row = billing.ok ? billing.row : null;
+  if (!row) {
+    return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
+  }
+  const notAnchor = notAnchorResponse(row, venueId);
+  if (notAnchor) return notAnchor;
+
+  const result = await setStandardPrice(row);
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
+  }
+  const { error: grantError } = await supabaseAdmin.from("billing_discount_grants").insert({
+    venue_id: venueId,
+    subscription_id: row.id,
+    granted_by: adminUsername,
+    discount_type: "custom_price",
+    custom_price_cents: null,
+    reason: "Back to standard pricing",
+  });
+  return NextResponse.json({
+    ...result,
+    ok: true,
+    ...(grantError ? { warning: result.warning ?? "Pricing changed, but the audit record failed to save." } : {}),
+  });
 }

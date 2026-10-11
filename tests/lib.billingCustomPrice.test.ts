@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   subUpdate: vi.fn(),
   dbUpdate: vi.fn(),
   getStripePriceId: vi.fn(),
+  getStripeGraduatedPriceId: vi.fn(),
 }));
 
 // priceRetrieve must answer for two different ids: the list price (looked up
@@ -32,18 +33,31 @@ vi.mock("@/lib/stripe", () => ({
     subscriptions: { retrieve: mocks.subRetrieve, update: mocks.subUpdate },
   },
   getStripePriceId: mocks.getStripePriceId,
+  getStripeGraduatedPriceId: mocks.getStripeGraduatedPriceId,
 }));
 
-const dbState = vi.hoisted(() => ({ error: null as { message: string } | null }));
+const dbState = vi.hoisted(() => ({
+  error: null as { message: string } | null,
+  // In-flight venue-change ledger rows, by table (multi-venue billing Phase 6).
+  inFlight: {} as Record<string, Array<{ id: string }>>,
+}));
 
 vi.mock("@/lib/supabaseAdmin", () => ({
   supabaseAdmin: {
-    from: vi.fn(() => ({
-      update: vi.fn((payload: unknown) => {
-        mocks.dbUpdate(payload);
-        return { eq: vi.fn(() => Promise.resolve({ error: dbState.error })) };
-      }),
-    })),
+    from: vi.fn((table: string) => {
+      const read = {
+        eq: vi.fn(() => read),
+        in: vi.fn(() => read),
+        limit: vi.fn(() => Promise.resolve({ data: dbState.inFlight[table] ?? [], error: null })),
+      };
+      return {
+        select: vi.fn(() => read),
+        update: vi.fn((payload: unknown) => {
+          mocks.dbUpdate(payload);
+          return { eq: vi.fn(() => Promise.resolve({ error: dbState.error })) };
+        }),
+      };
+    }),
   },
 }));
 
@@ -54,6 +68,7 @@ import {
   customPriceLookupKey,
   resolveMonthlyPriceForAmount,
   setCustomPrice,
+  setStandardPrice,
 } from "@/lib/billingCustomPrice";
 
 const row = { id: "sub-row-1", stripe_subscription_id: "sub_123", amount_cents: 10000 };
@@ -81,7 +96,9 @@ describe("setCustomPrice", () => {
     mocks.subUpdate.mockReset().mockResolvedValue({});
     mocks.dbUpdate.mockReset();
     mocks.getStripePriceId.mockReset().mockReturnValue(LIST_PRICE_ID);
+    mocks.getStripeGraduatedPriceId.mockReset().mockReturnValue("price_graduated");
     dbState.error = null;
+    dbState.inFlight = {};
   });
 
   it("swaps the price on the existing item with an explicit proration_behavior of 'none'", async () => {
@@ -89,7 +106,7 @@ describe("setCustomPrice", () => {
 
     expect(result).toMatchObject({ ok: true, priceId: "price_new", effective: "next_cycle" });
     expect(mocks.subUpdate).toHaveBeenCalledWith("sub_123", {
-      items: [{ id: "si_1", price: "price_new" }],
+      items: [{ id: "si_1", price: "price_new", quantity: 1 }],
       proration_behavior: "none",
     });
     // The constant and the call must agree — the choice lives in code, not a comment.
@@ -105,7 +122,60 @@ describe("setCustomPrice", () => {
     expect(mocks.dbUpdate).toHaveBeenCalledWith({
       stripe_price_id: "price_new",
       amount_cents: 7500,
+      quantity: 1,
     });
+  });
+
+  // Multi-venue billing Phase 6 (Andrew, 2026-10-11: "per-venue rate").
+  it("is a PER-VENUE rate: keeps the bill's venue count and mirrors rate × venues", async () => {
+    mocks.subRetrieve.mockResolvedValue({ items: { data: [{ id: "si_1", quantity: 3 }] } });
+
+    const result = await setCustomPrice(row, "price_new");
+
+    expect(result).toMatchObject({ ok: true, amountCents: 7500, quantity: 3, monthlyTotalCents: 22500 });
+    expect(mocks.subUpdate.mock.calls[0][1].items).toEqual([{ id: "si_1", price: "price_new", quantity: 3 }]);
+    expect(mocks.dbUpdate).toHaveBeenCalledWith({ stripe_price_id: "price_new", amount_cents: 22500, quantity: 3 });
+  });
+
+  it.each([["billing_venue_additions"], ["billing_venue_changes"]])(
+    "refuses while a venue change is in flight on the bill (%s) — never touches Stripe",
+    async (table) => {
+      dbState.inFlight[table] = [{ id: "row-1" }];
+
+      const result = await setCustomPrice(row, "price_new");
+
+      expect(result).toMatchObject({ ok: false, status: 409 });
+      expect(mocks.subUpdate).not.toHaveBeenCalled();
+    }
+  );
+
+  it("refuses while Stripe holds a pending update (an add waiting for 3-D Secure)", async () => {
+    mocks.subRetrieve.mockResolvedValue({ items: { data: [{ id: "si_1", quantity: 2 }] }, pending_update: { expires_at: 1 } });
+
+    const result = await setCustomPrice(row, "price_new");
+
+    expect(result).toMatchObject({ ok: false, status: 409 });
+    expect(mocks.subUpdate).not.toHaveBeenCalled();
+  });
+
+  it("setStandardPrice moves the bill back onto the graduated bands, keeping its venues", async () => {
+    mocks.subRetrieve.mockResolvedValue({ items: { data: [{ id: "si_1", quantity: 3 }] } });
+
+    const result = await setStandardPrice(row);
+
+    expect(result).toMatchObject({ ok: true, priceId: "price_graduated", quantity: 3, monthlyTotalCents: 25000 });
+    expect(mocks.subUpdate).toHaveBeenCalledWith("sub_123", {
+      items: [{ id: "si_1", price: "price_graduated", quantity: 3 }],
+      proration_behavior: "none",
+    });
+    expect(mocks.dbUpdate).toHaveBeenCalledWith({ stripe_price_id: "price_graduated", amount_cents: 25000, quantity: 3 });
+  });
+
+  it("setStandardPrice refuses an offline bill and an unconfigured graduated price", async () => {
+    expect(await setStandardPrice({ ...row, stripe_subscription_id: null })).toMatchObject({ ok: false, status: 400 });
+    mocks.getStripeGraduatedPriceId.mockReturnValue("");
+    expect(await setStandardPrice(row)).toMatchObject({ ok: false, status: 500 });
+    expect(mocks.subUpdate).not.toHaveBeenCalled();
   });
 
   it("reports a warning but still succeeds when the mirror write fails", async () => {
@@ -356,7 +426,7 @@ describe("setCustomPrice — amountDollars entry point", () => {
 
     expect(result).toMatchObject({ ok: true, priceId: "price_minted_7500", amountCents: 7500 });
     expect(mocks.subUpdate).toHaveBeenCalledWith("sub_123", {
-      items: [{ id: "si_1", price: "price_minted_7500" }],
+      items: [{ id: "si_1", price: "price_minted_7500", quantity: 1 }],
       proration_behavior: CUSTOM_PRICE_PRORATION_BEHAVIOR,
     });
   });

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkBillingQuantityDrift, type QuantityDriftResult } from "@/lib/billingQuantityDrift";
 import { isCronAuthorized } from "@/lib/cronAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { reconcileStaleVenueAdditions, type VenueAdditionReconcileResult } from "@/lib/venueAddition";
@@ -148,7 +149,20 @@ export async function POST(request: Request) {
     venueReveal = { threw: message };
   }
 
-  return NextResponse.json({ ok: true, venueReveal, venueRehide, venueAdditions, venueChanges, venueRemovals });
+  // Multi-venue billing Phase 6 — REPORT-ONLY drift check: each live card bill's Stripe quantity vs
+  // the venues we bill on it (`[MultiVenueBilling] quantity-drift`). Never charges, credits or
+  // writes; an admin fixes drift. Runs LAST so it sees what the settle/removal jobs above just did.
+  // Three bounded reads + one Stripe list call (per 100 live subscriptions). Never fails the cron.
+  let quantityDrift: QuantityDriftResult | { threw: string };
+  try {
+    quantityDrift = await checkBillingQuantityDrift();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[MultiVenueBilling] drift-check-threw: ${message}`);
+    quantityDrift = { threw: message };
+  }
+
+  return NextResponse.json({ ok: true, venueReveal, venueRehide, venueAdditions, venueChanges, venueRemovals, quantityDrift });
 }
 
 export async function GET(request: Request) {

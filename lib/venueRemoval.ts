@@ -12,14 +12,14 @@ import {
 } from "@/lib/multiVenueBilling";
 import type { RateLimitResult } from "@/lib/rateLimit";
 import type { OwnerAuthContext } from "@/lib/requireOwnerAuth";
-import { stripe } from "@/lib/stripe";
+import { getStripeGraduatedPriceId, stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   asStripeError,
   discountOf,
   errorText,
+  billRateOfItem,
   isDefinitiveStripeRejection,
-  isGraduatedPrice,
   isValidClientKey,
   isoFromUnix,
   itemQuantity,
@@ -34,7 +34,7 @@ import {
   loadBillingForVenue,
   loadBillingForVenues,
 } from "@/lib/venueBilling";
-import { monthlyTotalCents, tierBreakdown } from "@/lib/venuePricing";
+import { billRateFromMirror, rateBreakdown, rateMonthlyTotalCents } from "@/lib/venuePricing";
 
 /**
  * Partner self-serve "Remove a venue" (at the end of the month) and its "Undo" — the server half
@@ -275,9 +275,8 @@ export async function loadVenueChangeContext(
 
   const item = soleItem(subscription);
   if (!item) return refuse("billing_state", 409);
-  if (!isGraduatedPrice(item.price)) {
-    return (item.price?.lookup_key ?? "").startsWith("custom_monthly_") ? refuse("custom_rate", 409) : refuse("billing_state", 409);
-  }
+  // Graduated bands, or an admin's per-venue rate (Phase 6): either way the quantity is the venues.
+  if (!billRateOfItem(item)) return refuse("billing_state", 409);
   if (typeof item.quantity !== "number" || !Number.isInteger(item.quantity) || item.quantity < 1) {
     return refuse("billing_state", 409);
   }
@@ -737,6 +736,10 @@ type AccountBillRow = {
   venue_id: string;
   discount_percent_off: number | string | null;
   discount_amount_off_cents: number | null;
+  /** Mirror columns: which rate the bill is on (graduated bands or a per-venue rate, Phase 6). */
+  stripe_price_id?: string | null;
+  amount_cents?: number | null;
+  quantity?: number | null;
 };
 
 /**
@@ -794,13 +797,14 @@ export async function loadBillAccount(
     discount_percent_off: bill.discount_percent_off == null ? null : Number(bill.discount_percent_off),
     discount_amount_off_cents: bill.discount_amount_off_cents,
   });
-  const nextMonthlyListCents = monthlyTotalCents(billedVenueCount);
+  const rate = billRateFromMirror(bill, getStripeGraduatedPriceId());
+  const nextMonthlyListCents = rateMonthlyTotalCents(rate, billedVenueCount);
   return {
     ok: true,
     account: {
       venues,
       billedVenueCount,
-      breakdown: tierBreakdown(billedVenueCount).map((line) => ({
+      breakdown: rateBreakdown(rate, billedVenueCount).map((line) => ({
         venues: line.venues,
         unitAmountCents: line.unitAmountCents,
         subtotalCents: line.subtotalCents,

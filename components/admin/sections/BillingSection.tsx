@@ -5,6 +5,8 @@ import { adminField, adminLabel } from "@/lib/adminStyles";
 import { MobileBottomSheet } from "@/components/admin/mobile/MobileBottomSheet";
 import { AdminModalSheet } from "@/components/admin/AdminModalSheet";
 import { AdminSelect } from "@/components/admin/AdminSelect";
+import { LinkVenueToPartner } from "@/components/admin/billing/LinkVenueToPartner";
+import { billSummaryLine, type AdminPartnerBill } from "@/lib/adminBillView";
 
 // Mirrors lib/billingCustomPrice.ts's MIN/MAX_CUSTOM_PRICE_DOLLARS — that file
 // is "server-only" and cannot be imported from this client component, so the
@@ -62,6 +64,10 @@ type Partner = {
   ownerId: string;
   ownerEmail: string;
   ownerName: string;
+  /** The bill this venue is on (multi-venue billing Phase 6): venue count, bands, total. */
+  bill: AdminPartnerBill | null;
+  /** Linked to a partner who pays for another venue, but on no bill itself = free. */
+  comped: boolean;
   subscription: PartnerSubscription | null;
 };
 
@@ -76,6 +82,9 @@ const formatUsd = (cents: number): string => `$${(cents / 100).toFixed(2).replac
 
 const statusBadge = (partner: Partner): { label: string; className: string } => {
   const sub = partner.subscription;
+  if (!sub && partner.comped) {
+    return { label: "Comped (free)", className: "bg-sky-100 text-sky-800" };
+  }
   if (!sub || sub.status === "cancelled") {
     return { label: "No access", className: "bg-slate-100 text-slate-600" };
   }
@@ -101,6 +110,12 @@ const statusBadge = (partner: Partner): { label: string; className: string } => 
 // expressed intent to move off Stripe — unlock the button and let openGrant
 // force-finalize it. Shared by the desktop table row and the mobile detail
 // sheet so the guard can't drift between the two.
+/**
+ * A venue on ANOTHER venue's multi-venue bill: every billing action acts on the whole bill, so
+ * they live on the anchor venue's row only (the server refuses them here too, `not_bill_anchor`).
+ */
+const isOnOthersBill = (partner: Partner): boolean => Boolean(partner.bill && !partner.bill.isAnchor);
+
 const hasLiveCardSubscription = (partner: Partner): boolean =>
   Boolean(
     partner.subscription?.isStripe &&
@@ -119,6 +134,8 @@ export function BillingSection() {
   // sit in the table's rightmost column on desktop, rather than forking a
   // second partner-fetch path.
   const [detailVenueId, setDetailVenueId] = useState<string | null>(null);
+  // Phase 6: "Link a venue to a partner" (Add to their bill / Free).
+  const [linkOpen, setLinkOpen] = useState(false);
 
   const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
   const [paidThroughDate, setPaidThroughDate] = useState("");
@@ -194,6 +211,21 @@ export function BillingSection() {
     d.setMonth(d.getMonth() + 1);
     return d.toISOString().slice(0, 10);
   }, []);
+
+  const billLine = (partner: Partner): string | null => {
+    if (!partner.bill) return null;
+    const anchor = partners.find((p) => p.venueId === partner.bill?.anchorVenueId);
+    return billSummaryLine(partner.bill, {
+      isManual: Boolean(partner.subscription?.isManual),
+      anchorName: anchor?.venueName ?? partner.bill.anchorVenueId,
+    });
+  };
+
+  const linkOwners = useMemo(
+    () =>
+      Array.from(new Map(partners.map((p) => [p.ownerId, { id: p.ownerId, email: p.ownerEmail, name: p.ownerName }])).values()),
+    [partners]
+  );
 
   const openGrant = (partner: Partner) => {
     const sub = partner.subscription;
@@ -419,6 +451,32 @@ export function BillingSection() {
     }
   };
 
+  // Phase 6: undo a per-venue custom rate — back onto the graduated bands, same venues.
+  const submitStandardPrice = async () => {
+    if (!activeRateVenueId) return;
+    if (!window.confirm("Move this bill back to standard pricing from the next billing cycle?")) return;
+    setRateSubmitting(true);
+    setRateNotice("");
+    try {
+      const res = await fetch("/api/admin/billing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set-standard-price", venueId: activeRateVenueId }),
+      });
+      const payload = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !payload.ok) {
+        setRateNotice(payload.error ?? "Failed to change the rate.");
+        return;
+      }
+      closeRate();
+      await fetchPartners(search);
+    } catch {
+      setRateNotice("Network error. Please try again.");
+    } finally {
+      setRateSubmitting(false);
+    }
+  };
+
   const activeRatePartner = partners.find((p) => p.venueId === activeRateVenueId) ?? null;
 
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
@@ -560,6 +618,13 @@ export function BillingSection() {
           Search
         </button>
       </div>
+      <button
+        type="button"
+        onClick={() => setLinkOpen(true)}
+        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+      >
+        Link a venue to a partner
+      </button>
 
       {error ? (
         <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{error}</div>
@@ -584,6 +649,7 @@ export function BillingSection() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-slate-900">{partner.venueName}</p>
                       <p className="truncate text-xs text-slate-500">{partner.ownerEmail || "No owner email"}</p>
+                      {billLine(partner) ? <p className="text-xs text-slate-500">{billLine(partner)}</p> : null}
                     </div>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${badge.className}`}>
                       {badge.label}
@@ -614,7 +680,10 @@ export function BillingSection() {
                 const hasLiveCard = hasLiveCardSubscription(partner);
                 return (
                   <tr key={partner.venueId} className="align-middle">
-                    <td className="px-3 py-2 font-medium text-slate-900">{partner.venueName}</td>
+                    <td className="px-3 py-2">
+                      <p className="font-medium text-slate-900">{partner.venueName}</p>
+                      {billLine(partner) ? <p className="text-xs text-slate-500">{billLine(partner)}</p> : null}
+                    </td>
                     <td className="px-3 py-2 text-slate-600">{partner.ownerEmail || "—"}</td>
                     <td className="px-3 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${badge.className}`}>
@@ -627,6 +696,9 @@ export function BillingSection() {
                         : "—"}
                     </td>
                     <td className="px-3 py-2 text-right">
+                      {isOnOthersBill(partner) ? (
+                        <span className="text-xs text-slate-500">Billing actions are on the bill&apos;s first venue</span>
+                      ) : (
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
@@ -672,6 +744,7 @@ export function BillingSection() {
                           </button>
                         ) : null}
                       </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -705,7 +778,11 @@ export function BillingSection() {
                   Paid through {formatDate(partner.subscription.currentPeriodEnd)}
                 </p>
               ) : null}
+              {billLine(partner) ? <p className="text-xs text-slate-500">{billLine(partner)}</p> : null}
 
+              {isOnOthersBill(partner) ? (
+                <p className="text-xs text-slate-500">Billing actions are on the bill&apos;s first venue.</p>
+              ) : (
               <div className="grid grid-cols-1 gap-2 pt-1">
                 <button
                   type="button"
@@ -761,10 +838,18 @@ export function BillingSection() {
                   </button>
                 ) : null}
               </div>
+              )}
             </div>
           );
         })()}
       </MobileBottomSheet>
+
+      <LinkVenueToPartner
+        open={linkOpen}
+        owners={linkOwners}
+        onClose={() => setLinkOpen(false)}
+        onChanged={() => void fetchPartners(search)}
+      />
 
       <AdminModalSheet open={activeVenueId !== null} onClose={closeGrant} titleId="grant-modal-title">
         <h3 id="grant-modal-title" className="text-base font-semibold text-slate-900">
@@ -804,6 +889,30 @@ export function BillingSection() {
               The venue&apos;s full list rate. Record any discount separately with the Discount
               button — the partner sees the discounted total on their billing page.
             </p>
+            {(() => {
+              // Multi-venue (Phase 6): a check-billed account with several venues — suggest the bands.
+              const bill = partners.find((p) => p.venueId === activeVenueId)?.bill;
+              if (!bill || !bill.isAnchor || bill.billedVenueCount < 2 || bill.suggestedOfflineCents === null) return null;
+              const suggestedDollars = String(Math.round(bill.suggestedOfflineCents / 100));
+              return (
+                <p className="mt-1 text-xs text-slate-700">
+                  {bill.billedVenueCount} venues on this bill — the standard bands come to{" "}
+                  <strong>{formatUsd(bill.suggestedOfflineCents)}/mo</strong>.{" "}
+                  {amountDollars !== suggestedDollars ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAmountDollars(suggestedDollars);
+                        if (!receivedEdited) setAmountReceivedDollars(suggestedDollars);
+                      }}
+                      className="font-semibold text-indigo-600 hover:text-indigo-500"
+                    >
+                      Use {formatUsd(bill.suggestedOfflineCents)}
+                    </button>
+                  ) : null}
+                </p>
+              );
+            })()}
           </div>
           <div>
             <label className={adminLabel}>Amount received on this payment (USD)</label>
@@ -1058,9 +1167,24 @@ export function BillingSection() {
 
         <div className="mt-4 space-y-4">
           <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-            Current rate:{" "}
-            <strong>{formatUsd(activeRatePartner?.subscription?.amountCents ?? 0)}</strong> per cycle
+            Current bill:{" "}
+            <strong>{formatUsd(activeRatePartner?.subscription?.amountCents ?? 0)}</strong>/month
+            {activeRatePartner?.bill
+              ? ` for ${activeRatePartner.bill.billedVenueCount} venue${activeRatePartner.bill.billedVenueCount === 1 ? "" : "s"} (${
+                  activeRatePartner.bill.rate === "per_venue" ? "custom per-venue rate" : "standard bands"
+                })`
+              : ""}
           </div>
+          {activeRatePartner?.bill?.rate === "per_venue" ? (
+            <button
+              type="button"
+              onClick={() => void submitStandardPrice()}
+              disabled={rateSubmitting}
+              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Back to standard pricing ($100 / $75 / $60 / $45)
+            </button>
+          ) : null}
           {rateUsePriceId ? (
             <div>
               <label className={adminLabel}>Stripe price ID</label>
@@ -1083,7 +1207,7 @@ export function BillingSection() {
             </div>
           ) : (
             <div>
-              <label className={adminLabel}>Monthly rate (USD)</label>
+              <label className={adminLabel}>Monthly rate per venue (USD)</label>
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-500">
                   $
@@ -1128,8 +1252,10 @@ export function BillingSection() {
           </div>
           <p className="text-xs text-slate-500">
             This is not a discount — the partner moves onto a different price and every screen will
-            report the new amount. It takes effect at their next billing cycle; nothing is charged or
-            credited now.
+            report the new amount. It is per venue: the bill becomes this rate × their venues (no
+            volume bands), and venues they add or remove later use the same rate. A promo code still
+            applies on top. It takes effect at their next billing cycle; nothing is charged or credited
+            now.
           </p>
         </div>
 

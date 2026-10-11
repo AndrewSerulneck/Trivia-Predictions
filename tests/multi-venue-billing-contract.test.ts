@@ -27,6 +27,8 @@ const listSourceFiles = (dir: string): string[] => {
 const sources = ["app", "lib", "components"].flatMap(listSourceFiles);
 
 const FLOW = "lib/venueAddition.ts";
+/** Phase 6: modules that may READ the add/change ledgers (never write them). */
+const LEDGER_READERS = ["lib/billingCustomPrice.ts", "lib/billingQuantityDrift.ts"];
 const ADD_ROUTE = "app/api/owner/venues/add/route.ts";
 const QUOTE_ROUTE = "app/api/owner/venues/add/quote/route.ts";
 
@@ -54,11 +56,47 @@ describe("multi-venue billing — Add a venue contract", () => {
     expect(cron).not.toContain("isMultiVenueBillingEnabled");
   });
 
-  it("the ledger and its claim RPC are used only by the flow module", () => {
+  it("the ledger and its claim RPC are used only by the flow module (+ Phase 6's two read-only checks)", () => {
     const ledgerUsers = sources.filter((rel) => /["']billing_venue_additions["']/.test(read(rel)));
-    expect(ledgerUsers).toEqual([FLOW]);
+    expect(ledgerUsers.sort()).toEqual([...LEDGER_READERS, FLOW].sort());
     const rpcUsers = sources.filter((rel) => read(rel).includes('"claim_venue_addition"'));
     expect(rpcUsers).toEqual([FLOW]);
+  });
+
+  it("Phase 6: the admin price swap and the drift check only READ the two ledgers", () => {
+    for (const rel of LEDGER_READERS) {
+      const source = stripComments(read(rel));
+      const touches = source.match(/\.from\(\s*["']billing_venue_(?:additions|changes)["']\s*\)/g) ?? [];
+      const reads = source.match(/\.from\(\s*["']billing_venue_(?:additions|changes)["']\s*\)\s*\.select\(/g) ?? [];
+      expect(touches.length, rel).toBeGreaterThan(0);
+      expect(reads.length, rel).toBe(touches.length);
+    }
+  });
+
+  it("Phase 6: the drift check is report-only and runs in the daily billing cron", () => {
+    const drift = stripComments(read("lib/billingQuantityDrift.ts"));
+    for (const write of [".insert(", ".update(", ".upsert(", ".delete(", ".rpc(", "subscriptions.update(", "invoices."]) {
+      expect(drift, write).not.toContain(write);
+    }
+    expect(drift).toContain("quantity-drift bill=");
+    expect(stripComments(read("app/api/cron/billing/route.ts"))).toContain("checkBillingQuantityDrift()");
+  });
+
+  it("Phase 6: admin 'Add to their bill' charges ONLY through the partner's add flow", () => {
+    const attach = stripComments(read("lib/adminVenueAttach.ts"));
+    expect(attach).toContain("startVenueAddition(");
+    expect(attach).toContain("adminAttachVenue: venue");
+    // No Stripe client, no venue creation, no hand-rolled membership for a card bill.
+    expect(attach).not.toMatch(/from "@\/lib\/stripe"[^;]*\bstripe\b/);
+    expect(attach).not.toContain("stripe.");
+    expect(attach).not.toContain("createAdminVenue");
+  });
+
+  it("Phase 6: a custom rate keeps the venue count and never prorates", () => {
+    const custom = stripComments(read("lib/billingCustomPrice.ts"));
+    expect(custom).toContain("items: [{ id: items[0].id, price: priceId, quantity }]");
+    expect(custom).toContain("proration_behavior: CUSTOM_PRICE_PRORATION_BEHAVIOR");
+    expect(custom.match(/stripe!?\.subscriptions\.update\(/g) ?? []).toHaveLength(1);
   });
 
   it("the charge applies the new quantity ONLY if the prorated invoice is paid, keyed on the ledger row", () => {
@@ -97,9 +135,11 @@ describe("multi-venue billing — Add a venue contract", () => {
     expect(sources.filter((rel) => /function findNearbyVenue\b/.test(read(rel)))).toEqual(["lib/nearbyVenue.ts"]);
   });
 
-  it("Phase 5: the change ledger and its RPCs are used only by lib/venueRemoval.ts", () => {
+  it("Phase 5: the change ledger and its RPCs are used only by lib/venueRemoval.ts (+ Phase 6's read-only checks)", () => {
     const REMOVAL = "lib/venueRemoval.ts";
-    expect(sources.filter((rel) => /["']billing_venue_changes["']/.test(read(rel)))).toEqual([REMOVAL]);
+    expect(sources.filter((rel) => /["']billing_venue_changes["']/.test(read(rel))).sort()).toEqual(
+      [...LEDGER_READERS, REMOVAL].sort()
+    );
     expect(sources.filter((rel) => read(rel).includes('"claim_venue_bill_change"'))).toEqual([REMOVAL]);
     expect(sources.filter((rel) => read(rel).includes('"finish_venue_bill_change"'))).toEqual([REMOVAL]);
   });

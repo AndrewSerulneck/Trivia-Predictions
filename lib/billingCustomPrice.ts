@@ -1,7 +1,8 @@
 import "server-only";
 import type Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getStripePriceId, stripe } from "@/lib/stripe";
+import { getStripeGraduatedPriceId, getStripePriceId, stripe } from "@/lib/stripe";
+import { monthlyTotalCents } from "@/lib/venuePricing";
 
 /**
  * Phase 8 of docs/billing-discounts-plan.md — the permanent negotiated rate.
@@ -42,6 +43,19 @@ import { getStripePriceId, stripe } from "@/lib/stripe";
  * Offline/check-billed rows have no Stripe objects to swap a Price onto; they
  * are refused here and set their rate through the existing offline grant flow,
  * which already takes an explicit dollar amount.
+ *
+ * MULTI-VENUE (docs/multi-venue-volume-billing-plan.md Phase 6; Andrew, 2026-10-11:
+ * "per-venue rate"). The rate is PER VENUE: the swap keeps the item's quantity
+ * (= venues on the bill), so the bill becomes rate × venues with no volume bands,
+ * and a venue the partner adds or removes later is billed at the same rate
+ * (lib/venuePricing.ts `BillRate`). A coupon still applies on top of the whole
+ * bill. On a 1-venue bill this is exactly the custom rate that existed before.
+ * `setStandardPrice` moves the bill back onto the graduated bands.
+ *
+ * Both swaps write the item's quantity explicitly and refuse while an "Add a
+ * venue" or a Remove/Undo is in flight on the bill (or Stripe holds a pending
+ * update): any `items` update discards an add's pending 3-D Secure payment, and
+ * an absolute quantity written next to a quantity change could undo it.
  */
 
 /**
@@ -115,7 +129,11 @@ export type SetCustomPriceResult =
   | {
       ok: true;
       priceId: string;
+      /** The per-venue monthly rate (the Price's unit amount). */
       amountCents: number;
+      /** Venues on the bill (the item's quantity), and the whole bill's monthly list total. */
+      quantity: number;
+      monthlyTotalCents: number;
       /** Always next-cycle; see CUSTOM_PRICE_PRORATION_BEHAVIOR. */
       effective: "next_cycle";
       /** Set when the swap succeeded at Stripe but our mirror write didn't. */
@@ -356,13 +374,78 @@ export async function setCustomPrice(
   }
   if (typeof price.unit_amount !== "number") {
     // Tiered/metered prices have no single unit_amount, so amount_cents — the
-    // number every surface shows — would be a lie.
+    // number every surface shows — would be a lie. (The graduated bands have their
+    // own entry point, setStandardPrice.)
     return { ok: false, status: 400, error: "That price has no flat per-cycle amount." };
   }
 
+  const unitAmount = price.unit_amount;
+  return swapSubscriptionPrice(row.id, row.stripe_subscription_id, priceId, (quantity) => unitAmount * quantity, unitAmount);
+}
+
+/**
+ * Put a bill back on the standard graduated bands ($100 / $75 / $60 / $45),
+ * keeping its venue count — the undo of a negotiated per-venue rate. Same
+ * next-cycle, no-proration rule as setCustomPrice.
+ */
+export async function setStandardPrice(row: CustomPriceRow): Promise<SetCustomPriceResult> {
+  if (!supabaseAdmin || !stripe) {
+    return { ok: false, status: 500, error: "Server configuration error." };
+  }
+  if (!row.stripe_subscription_id) {
+    return { ok: false, status: 400, error: OFFLINE_ROW_ERROR };
+  }
+  const graduatedPriceId = getStripeGraduatedPriceId();
+  if (!isStripePriceId(graduatedPriceId)) {
+    return { ok: false, status: 500, error: "The standard price isn't configured (STRIPE_GRADUATED_PRICE_ID)." };
+  }
+  return swapSubscriptionPrice(row.id, row.stripe_subscription_id, graduatedPriceId, (quantity) => monthlyTotalCents(quantity), null);
+}
+
+/** Ledger rows that mean a venue change is under way on this bill (a missing table = none). */
+async function venueChangeInFlight(billId: string): Promise<{ ok: true; busy: boolean } | CustomPriceFailure> {
+  const checks = await Promise.all([
+    supabaseAdmin!
+      .from("billing_venue_additions")
+      .select("id")
+      .eq("subscription_id", billId)
+      .in("status", ["pending", "requires_action"])
+      .limit(1),
+    supabaseAdmin!.from("billing_venue_changes").select("id").eq("subscription_id", billId).eq("status", "pending").limit(1),
+  ]);
+  for (const check of checks) {
+    if (check.error) {
+      const code = (check.error as { code?: string }).code;
+      if (code === "42P01" || code === "PGRST205") continue;
+      return { ok: false, status: 500, error: `Couldn't check for venue changes in progress: ${check.error.message}` };
+    }
+    if ((check.data ?? []).length > 0) return { ok: true, busy: true };
+  }
+  return { ok: true, busy: false };
+}
+
+const VENUE_CHANGE_BUSY_ERROR =
+  "A venue is being added to or removed from this bill right now (possibly waiting for the partner's card check). Try again once it has finished.";
+
+/**
+ * The swap both entry points share: one item, quantity kept (written
+ * explicitly), proration "none", then the mirror. `unitAmountCents` is the
+ * per-venue rate for a flat Price, null for the graduated bands.
+ */
+async function swapSubscriptionPrice(
+  billId: string,
+  subscriptionId: string,
+  priceId: string,
+  monthlyTotalFor: (quantity: number) => number,
+  unitAmountCents: number | null
+): Promise<SetCustomPriceResult> {
+  const inFlight = await venueChangeInFlight(billId);
+  if (!inFlight.ok) return inFlight;
+  if (inFlight.busy) return { ok: false, status: 409, error: VENUE_CHANGE_BUSY_ERROR };
+
   let subscription: Stripe.Subscription;
   try {
-    subscription = await stripe.subscriptions.retrieve(row.stripe_subscription_id);
+    subscription = await stripe!.subscriptions.retrieve(subscriptionId);
   } catch (error) {
     return {
       ok: false,
@@ -382,10 +465,18 @@ export async function setCustomPrice(
       error: "This subscription has multiple items — change the price in the Stripe Dashboard.",
     };
   }
+  if (subscription.pending_update) {
+    return { ok: false, status: 409, error: VENUE_CHANGE_BUSY_ERROR };
+  }
+
+  const quantity =
+    typeof items[0].quantity === "number" && Number.isInteger(items[0].quantity) && items[0].quantity >= 1
+      ? items[0].quantity
+      : 1;
 
   try {
-    await stripe.subscriptions.update(row.stripe_subscription_id, {
-      items: [{ id: items[0].id, price: priceId }],
+    await stripe!.subscriptions.update(subscriptionId, {
+      items: [{ id: items[0].id, price: priceId, quantity }],
       proration_behavior: CUSTOM_PRICE_PRORATION_BEHAVIOR,
     });
   } catch (error) {
@@ -396,18 +487,21 @@ export async function setCustomPrice(
     };
   }
 
-  const { error: mirrorError } = await supabaseAdmin
+  const total = monthlyTotalFor(quantity);
+  const { error: mirrorError } = await supabaseAdmin!
     .from("billing_subscriptions")
-    .update({ stripe_price_id: priceId, amount_cents: price.unit_amount })
-    .eq("id", row.id);
+    .update({ stripe_price_id: priceId, amount_cents: total, quantity })
+    .eq("id", billId);
 
   // Stripe is authoritative and the swap is already live there; the
   // customer.subscription.updated webhook re-derives amount_cents from the
-  // price, so a failed mirror write self-heals. Report it, don't fail the swap.
+  // price × quantity, so a failed mirror write self-heals. Report it, don't fail the swap.
   return {
     ok: true,
     priceId,
-    amountCents: price.unit_amount,
+    amountCents: unitAmountCents ?? total,
+    quantity,
+    monthlyTotalCents: total,
     effective: "next_cycle",
     ...(mirrorError ? { warning: "Price changed at Stripe, but the local rate failed to update." } : {}),
   };

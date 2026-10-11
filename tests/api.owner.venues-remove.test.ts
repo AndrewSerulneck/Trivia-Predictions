@@ -426,17 +426,35 @@ describe("Remove at end of month", () => {
     expect(member(SECOND).remove_at).toBeNull();
   });
 
-  it("refuses offline, cancelling, custom-rate bills; the flag off is a 404", async () => {
+  it("refuses offline, cancelling, unknown-price bills; the flag off is a 404", async () => {
     (tbl(h.state.db, "billing_subscriptions")[0] as Row).billing_method = "offline";
     expect((await remove(SECOND)).json.code).toBe("offline_bill");
     (tbl(h.state.db, "billing_subscriptions")[0] as Row).billing_method = "stripe";
     (tbl(h.state.db, "billing_subscriptions")[0] as Row).cancel_at_period_end = true;
     expect((await remove(SECOND)).json.code).toBe("cancel_scheduled");
     (tbl(h.state.db, "billing_subscriptions")[0] as Row).cancel_at_period_end = false;
-    (subItem().price as Row).lookup_key = "custom_monthly_9000";
-    expect((await remove(SECOND)).json.code).toBe("custom_rate");
+    // A hand-built price we can't count venues on needs a person (a per-venue custom rate does not —
+    // see the next test).
+    Object.assign(subItem().price as Row, { id: "price_other_tiers", lookup_key: null });
+    expect((await remove(SECOND)).json.code).toBe("billing_state");
     h.state.flag = false;
     expect((await remove(SECOND)).status).toBe(404);
+  });
+
+  it("Phase 6: a negotiated per-venue rate removes like the bands (quantity −1, no proration)", async () => {
+    Object.assign(subItem().price as Row, {
+      id: "price_custom_9000",
+      lookup_key: "custom_monthly_9000",
+      billing_scheme: "per_unit",
+      tiers_mode: null,
+      unit_amount: 9000,
+      currency: "usd",
+      recurring: { interval: "month", interval_count: 1 },
+    });
+    const result = await remove(SECOND);
+    expect(result.status).toBe(200);
+    expect(h.fns.subscriptionsUpdate.mock.calls[0][1]).toMatchObject({ proration_behavior: "none" });
+    expect(member(SECOND).remove_at).toBe(PERIOD_END_ISO);
   });
 
   it("a definite Stripe rejection changes nothing; an ambiguous one is settled from Stripe's quantity after the lease", async () => {

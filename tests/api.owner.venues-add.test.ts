@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Row } from "@/tests/helpers/inMemorySupabase";
 
 /**
@@ -124,6 +124,7 @@ import { GET as quoteGET } from "@/app/api/owner/venues/add/quote/route";
 import { POST as webhookPOST } from "@/app/api/webhooks/stripe/route";
 import { VENUE_ADDITION_LEASE_MS, reconcileStaleVenueAdditions } from "@/lib/venueAddition";
 import { venueIdsEverBilled } from "@/lib/venueBilling";
+import { attachVenueToOwner } from "@/lib/adminVenueAttach";
 import { GRADUATED_PRICE_LOOKUP_KEY } from "@/lib/venuePricing";
 
 // --- Fixture ---------------------------------------------------------------------------------------
@@ -478,6 +479,10 @@ beforeEach(() => {
 
 // --- Tests -----------------------------------------------------------------------------------------
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("flag and gate", () => {
   it("404s both routes when NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED is off, touching nothing", async () => {
     process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED = "";
@@ -526,6 +531,32 @@ describe("GET /api/owner/venues/add/quote", () => {
     // Read-only: nothing written, nothing charged.
     expect(ledger()).toHaveLength(0);
     expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+  });
+
+  // Phase 6 (Andrew, 2026-10-11: "per-venue rate"): an admin's negotiated rate is per venue, so the
+  // next venue costs that rate — no bands — and the coupon still applies on top.
+  it("prices a negotiated per-venue rate at that rate (no bands), discount on top", async () => {
+    Object.assign(subItem().price as Row, {
+      id: "price_custom_9000",
+      lookup_key: "custom_monthly_9000",
+      billing_scheme: "per_unit",
+      tiers_mode: null,
+      unit_amount: 9000,
+      currency: "usd",
+      recurring: { interval: "month", interval_count: 1 },
+    });
+    table("billing_subscriptions")[0].discount_percent_off = 10;
+
+    const result = await quote(`?venueId=${ANCHOR}`);
+
+    expect(result.status).toBe(200);
+    expect(result.json.quote).toMatchObject({
+      currentVenueCount: 1,
+      venueNumber: 2,
+      thisVenueCents: 9000,
+      newMonthlyListCents: 18000,
+      newMonthlyTotalCents: 16200,
+    });
   });
 
   it("refuses a check-billed (offline) account before calling Stripe", async () => {
@@ -860,13 +891,16 @@ describe("POST /api/owner/venues/add — refusals (nothing created, nothing char
     ["Stripe says cancel_at_period_end", () => (h.state.subscription.cancel_at_period_end = true), "cancel_scheduled"],
     ["Stripe says past_due", () => (h.state.subscription.status = "past_due"), "bill_not_active"],
     [
-      "a negotiated custom rate",
-      () => Object.assign(subItem().price as Row, { id: "price_custom", lookup_key: "custom_monthly_9000", billing_scheme: "per_unit" }),
-      "custom_rate",
+      "still on the old flat $100 list price",
+      () => {
+        vi.stubEnv("STRIPE_PRICE_ID", "price_flat");
+        Object.assign(subItem().price as Row, { id: "price_flat", lookup_key: null, billing_scheme: "per_unit", unit_amount: 10000 });
+      },
+      "billing_state",
     ],
     [
-      "still on the flat $100 price",
-      () => Object.assign(subItem().price as Row, { id: "price_flat", lookup_key: null, billing_scheme: "per_unit" }),
+      "a hand-built tiered price that isn't ours",
+      () => Object.assign(subItem().price as Row, { id: "price_other_tiers", lookup_key: null }),
       "billing_state",
     ],
     ["a subscription schedule", () => (h.state.subscription.schedule = "sub_sched_1"), "billing_state"],
@@ -1046,5 +1080,126 @@ describe("addVenueToBill (lib/venueBilling.ts) — the only writer of non-anchor
     expect(await addVenueToBill(BILL, "venue-z", "added")).toEqual({ ok: true, inserted: true });
     expect(memberships().find((row) => row.venue_id === "venue-z")).toMatchObject({ remove_at: null, removed_at: null });
     expect(await addVenueToBill(BILL, "venue-z", "added")).toEqual({ ok: true, inserted: false });
+  });
+});
+
+// --- Phase 6: admin "Add to their bill" / "Free (comped)" for an EXISTING venue ---------------------
+
+describe("admin attach an existing venue to a partner (Phase 6)", () => {
+  const ADMIN_VENUE = "venue-admin-made";
+  const seedAdminVenue = (extra: Row = {}) =>
+    table("venues").push({
+      id: ADMIN_VENUE,
+      name: "Admin Bar",
+      latitude: 40.5,
+      longitude: -74.5,
+      hidden: false,
+      self_serve_created_at: null,
+      checkout_started_at: null,
+      rehidden_at: null,
+      ...extra,
+    });
+  const attach = (mode: "bill" | "comped", preview = false, clientKey = "admin-attach-1") =>
+    attachVenueToOwner({ venueId: ADMIN_VENUE, ownerId: OWNER, mode, preview, clientKey });
+  const linkedTo = (venueId: string) => table("venue_owner_venues").filter((row) => row.venue_id === venueId).map((row) => row.owner_id);
+
+  it("comped: links the venue to the partner and puts it on no bill — Stripe untouched", async () => {
+    seedAdminVenue();
+    const preview = await attach("comped", true);
+    expect(preview).toMatchObject({ ok: true, kind: "preview", preview: { mode: "comped", quote: null, offline: null } });
+    expect(linkedTo(ADMIN_VENUE)).toEqual([]);
+
+    expect(await attach("comped")).toMatchObject({ ok: true, kind: "comped" });
+    expect(linkedTo(ADMIN_VENUE)).toEqual([OWNER]);
+    expect(memberships().some((row) => row.venue_id === ADMIN_VENUE)).toBe(false);
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+    expect(await attach("comped")).toMatchObject({ ok: false, code: "already_linked" });
+  });
+
+  it("bill (card): the preview is Stripe's quote and writes nothing", async () => {
+    seedAdminVenue();
+    const preview = await attach("bill", true);
+    expect(preview).toMatchObject({ ok: true, kind: "preview", preview: { mode: "bill", quote: { thisVenueCents: 7500, newMonthlyListCents: 17500 } } });
+    expect(ledger()).toHaveLength(0);
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+  });
+
+  it("bill (card): charges the card on file through the partner's add flow — no new venue is created", async () => {
+    seedAdminVenue();
+    const result = await attach("bill");
+    expect(result).toMatchObject({ ok: true, kind: "card_add", status: "paid", venueId: ADMIN_VENUE });
+    expect(h.fns.createAdminVenue).not.toHaveBeenCalled();
+    expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);
+    expect((h.fns.subscriptionsUpdate.mock.calls[0] as [string, Row])[1]).toMatchObject({
+      items: [{ id: ITEM, quantity: 2 }],
+      proration_behavior: "always_invoice",
+      payment_behavior: "pending_if_incomplete",
+    });
+    expect(memberships().find((row) => row.venue_id === ADMIN_VENUE)).toMatchObject({ subscription_id: BILL });
+    expect(linkedTo(ADMIN_VENUE)).toEqual([OWNER]);
+    expect(ledger()[0]).toMatchObject({ status: "paid", venue_id: ADMIN_VENUE, quantity_after: 2 });
+    expect(h.fns.sendVenueAddedEmail).toHaveBeenCalledTimes(1);
+    // Pressing Confirm again answers "already on their bill" — never a second charge.
+    expect(await attach("bill")).toMatchObject({ ok: true, kind: "already_on_bill" });
+    expect(await attach("bill", true)).toMatchObject({ ok: false, code: "already_linked" });
+    expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("bill (card) is refused while the release switch is off; comped still works", async () => {
+    seedAdminVenue();
+    process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED = "";
+    expect(await attach("bill", true)).toMatchObject({ ok: false, code: "card_add_switched_off" });
+    expect(await attach("bill")).toMatchObject({ ok: false, code: "card_add_switched_off" });
+    expect(h.fns.subscriptionsRetrieve).not.toHaveBeenCalled();
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+    expect(await attach("comped")).toMatchObject({ ok: true, kind: "comped" });
+  });
+
+  it("bill (card), declined: the admin's venue is KEPT (never deleted), unlinked, nothing billed", async () => {
+    seedAdminVenue();
+    h.state.paymentMode = "decline";
+    const result = await attach("bill");
+    expect(result).toMatchObject({ ok: false, code: "card_declined" });
+    expect(venueById(ADMIN_VENUE)).toBeTruthy();
+    expect(linkedTo(ADMIN_VENUE)).toEqual([]);
+    expect(memberships().some((row) => row.venue_id === ADMIN_VENUE)).toBe(false);
+    expect(ledger()[0]).toMatchObject({ status: "failed" });
+  });
+
+  it("bill (check-billed): adds the venue to the offline bill and suggests the graduated total — no Stripe", async () => {
+    seedAdminVenue();
+    Object.assign(table("billing_subscriptions")[0], { billing_method: "offline", stripe_subscription_id: null, amount_cents: 10000 });
+    const preview = await attach("bill", true);
+    expect(preview).toMatchObject({
+      ok: true,
+      kind: "preview",
+      preview: { offline: { billedVenueCountAfter: 2, suggestedMonthlyCents: 17500, currentMonthlyCents: 10000 } },
+    });
+    expect(await attach("bill")).toMatchObject({ ok: true, kind: "offline_attached", billedVenueCount: 2, suggestedMonthlyCents: 17500 });
+    expect(memberships().find((row) => row.venue_id === ADMIN_VENUE)).toMatchObject({ subscription_id: BILL, role: "admin" });
+    expect(linkedTo(ADMIN_VENUE)).toEqual([OWNER]);
+    expect(h.fns.subscriptionsRetrieve).not.toHaveBeenCalled();
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+    // A comped request for a venue now on their bill is contradictory.
+    expect(await attach("comped")).toMatchObject({ ok: false, code: "on_bill" });
+  });
+
+  it("refuses another partner's venue, a hidden venue, an internal (0,0) room, and a venue with its own bill", async () => {
+    seedAdminVenue();
+    table("venue_owners").push({ id: "owner-2", name: "Sam", email: "sam@example.com" });
+    table("venue_owner_venues").push({ id: "link-2", owner_id: "owner-2", venue_id: ADMIN_VENUE });
+    expect(await attach("comped")).toMatchObject({ ok: false, code: "venue_has_owner" });
+    table("venue_owner_venues").pop();
+
+    venueById(ADMIN_VENUE)!.hidden = true;
+    expect(await attach("bill")).toMatchObject({ ok: false, code: "venue_hidden" });
+    Object.assign(venueById(ADMIN_VENUE)!, { hidden: false, latitude: 0, longitude: 0 });
+    expect(await attach("bill")).toMatchObject({ ok: false, code: "venue_placeholder" });
+
+    expect(await attachVenueToOwner({ venueId: ANCHOR, ownerId: OWNER, mode: "bill", preview: true })).toMatchObject({
+      ok: false,
+      code: "venue_has_own_bill",
+    });
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
   });
 });

@@ -233,7 +233,9 @@ type ActivatedSummaryProps = {
  * venue row exists, its geofence pin is set, and the TV display URL resolves.
  * Billing is deliberately *not* one of them — Partner Billing is keyed on
  * venue_owner_venues, and a venue created here has no owner link yet, so a
- * grant is impossible until the partner has an owner account. Showing it as an
+ * grant is impossible until the partner has an owner account. (For a partner
+ * who already has one, multi-venue billing Phase 6 added Partner Billing →
+ * "Link a venue to a partner": Add to their bill, or Free / comped.) Showing it as an
  * open next step (with the reason) is honest; a dead inline grant form would
  * not be.
  */
@@ -295,8 +297,9 @@ function ActivatedSummary({ venue, onNavigate, onActivateAnother, onDone }: Acti
           <li>
             <p className="text-sm font-medium text-slate-800">▢ Billing access</p>
             <p className="mt-0.5 text-xs text-slate-600">
-              Partner Billing only lists venues that already have an owner login. Grant access once the partner has
-              signed up — this venue won&apos;t appear there until then.
+              New partner: grant access once they have signed up — this venue won&apos;t appear in Partner Billing
+              until then. Partner who already has an account (their 2nd+ venue): Partner Billing → &ldquo;Link a venue to
+              a partner&rdquo;, then Add to their bill or Free.
             </p>
             <button
               type="button"

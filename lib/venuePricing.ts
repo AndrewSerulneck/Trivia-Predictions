@@ -248,3 +248,110 @@ export const graduatedPriceProblems = (price: GraduatedPriceShape): string[] => 
   });
   return problems;
 };
+
+// --- The bill's RATE: graduated bands, or an admin's negotiated per-venue price -----------------
+
+/**
+ * How a bill is priced (multi-venue billing Phase 6; Andrew, 2026-10-11: "per-venue rate").
+ *
+ *   - `graduated`: the four bands above (every self-serve bill).
+ *   - `per_venue`: an admin's negotiated rate (lib/billingCustomPrice.ts): the subscription item sits
+ *     on a flat `custom_monthly_<cents>` Price and the bill is that price × venues — no bands. On a
+ *     1-venue bill this is exactly the custom rate that existed before multi-venue billing. Venues
+ *     added or removed later are billed at the same per-venue price; a coupon still applies on top
+ *     of the whole bill (plan §2 rows 3 and 6).
+ */
+export type BillRate = { kind: "graduated" } | { kind: "per_venue"; unitAmountCents: number };
+
+export const GRADUATED_RATE: BillRate = { kind: "graduated" };
+
+/** Lookup-key prefix of every negotiated per-venue Price (lib/billingCustomPrice.ts mints them). */
+export const CUSTOM_PER_VENUE_LOOKUP_PREFIX = "custom_monthly_";
+
+/** A bill's monthly list total (before discounts) at `venueCount` venues. */
+export const rateMonthlyTotalCents = (rate: BillRate, venueCount: number): number => {
+  assertVenueCount(venueCount);
+  return rate.kind === "graduated" ? monthlyTotalCents(venueCount) : rate.unitAmountCents * venueCount;
+};
+
+/** What venue number `venueNumber` costs per month on this rate. */
+export const rateVenuePriceCents = (rate: BillRate, venueNumber: number): number => {
+  assertVenueCount(venueNumber);
+  return rate.kind === "graduated" ? venuePriceCents(venueNumber) : rate.unitAmountCents;
+};
+
+/** "1 × $100 · 2 × $75" (graduated) or "3 × $70" (per-venue) as lines. */
+export const rateBreakdown = (rate: BillRate, venueCount: number): TierBreakdownLine[] => {
+  assertVenueCount(venueCount);
+  if (rate.kind === "graduated") return tierBreakdown(venueCount);
+  return [
+    {
+      fromVenue: 1,
+      toVenue: venueCount,
+      venues: venueCount,
+      unitAmountCents: rate.unitAmountCents,
+      subtotalCents: rate.unitAmountCents * venueCount,
+    },
+  ];
+};
+
+/** The fields of a Stripe Price `billRateFromPrice` reads. */
+export type RatePriceShape = {
+  id?: string | null;
+  lookup_key?: string | null;
+  billing_scheme?: string | null;
+  unit_amount?: number | null;
+  currency?: string | null;
+  recurring?: { interval?: string | null; interval_count?: number | null } | null;
+};
+
+/**
+ * The rate a subscription item's live Price bills at, or null when venues can't be added to or
+ * removed from it automatically. `graduatedPriceId` / `listPriceId` are the configured Stripe ids
+ * (lib/stripe.ts), passed in so this stays pure.
+ *
+ * The old flat list Price (`listPriceId`, $100 per unit) is deliberately NOT a per-venue rate: a
+ * bill still on it was never moved to the bands, and adding a venue to it would charge $100 instead
+ * of $75 — it is refused (null) until it is moved to the graduated Price.
+ */
+export const billRateFromPrice = (
+  price: RatePriceShape | null | undefined,
+  ids: { graduatedPriceId: string; listPriceId: string }
+): BillRate | null => {
+  if (!price) return null;
+  if (price.lookup_key === GRADUATED_PRICE_LOOKUP_KEY) return GRADUATED_RATE;
+  if (ids.graduatedPriceId && price.id === ids.graduatedPriceId) return GRADUATED_RATE;
+  if (ids.listPriceId && price.id === ids.listPriceId) return null;
+  if (price.billing_scheme === "tiered") return null;
+  if (typeof price.unit_amount !== "number" || !Number.isInteger(price.unit_amount) || price.unit_amount <= 0) return null;
+  if (price.currency && price.currency !== "usd") return null;
+  if (price.recurring && (price.recurring.interval !== "month" || (price.recurring.interval_count ?? 1) !== 1)) return null;
+  return { kind: "per_venue", unitAmountCents: price.unit_amount };
+};
+
+/** The `billing_subscriptions` mirror columns `billRateFromMirror` reads. */
+export type RateMirrorShape = {
+  stripe_price_id?: string | null;
+  amount_cents?: number | null;
+  quantity?: number | null;
+};
+
+/**
+ * A bill's rate from our own mirror (no Stripe call) — for displays: the admin billing list, the
+ * partner Billing page, the "Venue added" email. The webhook (and lib/billingCustomPrice.ts) write
+ * `stripe_price_id`, `amount_cents` (= the whole bill) and `quantity` together.
+ *
+ *   - no Stripe price (offline / check bills), or the graduated Price → graduated;
+ *   - graduated Price id unknown in this environment → graduated when the amount matches the bands;
+ *   - otherwise a flat Price → its per-venue amount = `amount_cents / quantity`.
+ */
+export const billRateFromMirror = (row: RateMirrorShape, graduatedPriceId: string): BillRate => {
+  const priceId = row.stripe_price_id ?? null;
+  if (!priceId) return GRADUATED_RATE;
+  if (graduatedPriceId && priceId === graduatedPriceId) return GRADUATED_RATE;
+  const quantity = typeof row.quantity === "number" && Number.isInteger(row.quantity) && row.quantity >= 1 ? row.quantity : 1;
+  const amount = typeof row.amount_cents === "number" && Number.isFinite(row.amount_cents) ? row.amount_cents : 0;
+  if (!graduatedPriceId && amount === monthlyTotalCents(quantity)) return GRADUATED_RATE;
+  if (amount <= 0) return GRADUATED_RATE;
+  return { kind: "per_venue", unitAmountCents: Math.round(amount / quantity) };
+};

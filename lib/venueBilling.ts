@@ -403,6 +403,53 @@ export async function venueIdsOnBill(
 }
 
 /**
+ * How many venues a bill BILLS, from rows already in hand — the same rule as `venueIdsOnBill(…,
+ * { billedOnly: true })`: the anchor counts unless its own membership row says it is leaving or
+ * gone; every other venue counts while billed. Pure, for whole-table passes (the admin billing
+ * list, the daily drift check) that read every bill's memberships in one query.
+ */
+export const billedVenueCountFromRows = (
+  anchorVenueId: string,
+  rows: ReadonlyArray<Pick<BillMembership, "venue_id" | "remove_at" | "removed_at">>
+): number => {
+  const anchorRow = rows.find((row) => row.venue_id === anchorVenueId);
+  const anchorBilled = !anchorRow || isBilledMembership(anchorRow);
+  const others = rows.filter((row) => row.venue_id !== anchorVenueId && isBilledMembership(row)).length;
+  return (anchorBilled ? 1 : 0) + others;
+};
+
+/**
+ * Every membership row of these bills, any state, grouped by bill — ONE query for a whole-table
+ * pass. A missing table is "no rows" (each bill then counts as its anchor alone).
+ */
+export async function billMembershipsForBills(
+  subscriptionIds: readonly string[]
+): Promise<{ ok: true; byBill: Map<string, BillMembership[]> } | { ok: false; error: string }> {
+  if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
+  const ids = Array.from(new Set(subscriptionIds.filter((id) => typeof id === "string" && id.trim() !== "")));
+  const byBill = new Map<string, BillMembership[]>();
+  if (ids.length === 0) return { ok: true, byBill };
+  const { data, error } = await supabaseAdmin
+    .from(BILLING_MEMBERSHIP_TABLE)
+    .select(MEMBERSHIP_COLUMNS)
+    .in("subscription_id", ids)
+    .returns<BillMembership[]>();
+  if (error) {
+    if (isMissingMembershipTable(error)) {
+      noteMissingTable();
+      return { ok: true, byBill };
+    }
+    return { ok: false, error: `membership-read-failed: ${error.message ?? "unknown"}` };
+  }
+  for (const row of Array.isArray(data) ? data : []) {
+    const list = byBill.get(row.subscription_id) ?? [];
+    list.push(row);
+    byBill.set(row.subscription_id, list);
+  }
+  return { ok: true, byBill };
+}
+
+/**
  * How many venues a bill BILLS — what Stripe's quantity must equal: on the bill and not scheduled
  * to leave (the same count as the `claim_venue_addition` / `claim_venue_bill_change` RPCs). A venue
  * set to leave at the period end is still covered (`venueIdsOnBill`) but no longer billed.

@@ -702,10 +702,10 @@ step opens at the top — don't hand-roll a scroll reset.
   `npm run store:qr` (`scripts/generate-join-qr.cjs`); `tests/lib.join-qr.test.ts` decodes them and
   fails if they drift. Never change the URL — printed merch can't be updated.
 
-## Multi-Venue Volume Billing — Phases 1–4 committed, Phase 5 Remove/Undo built (flag off)
+## Multi-Venue Volume Billing — Phases 1–5 pushed, Phase 6 admin tools built (flag off)
 
 Plan: `docs/multi-venue-volume-billing-plan.md` (Andrew's answers in §2 — don't re-ask); latest handoff
-`docs/multi-venue-volume-billing-plan_PHASE_5_HANDOFF.md`. One Stripe subscription per partner, quantity =
+`docs/multi-venue-volume-billing-plan_PHASE_6_HANDOFF.md`. One Stripe subscription per partner, quantity =
 venues, graduated $100 / $75 / $60 / $45. Migration `20261011134820` is applied; every card subscriber is on
 the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (lookup key `hightop_venue_graduated_monthly_v1`) at
 quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/stripe.ts`
@@ -760,6 +760,19 @@ quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/str
   "Billed" = `removed_at IS NULL AND remove_at IS NULL` (`isBilledMembership`, = the RPC count = Stripe's quantity).
   Billing page account view: `components/owner/billing/BillVenuesPanel.tsx` + pure `lib/billAccountView.ts`; numbers come
   from `GET /api/owner/billing` `account` (only when the flag is on). Tests: `tests/api.owner.venues-remove.test.ts`.
+- **A negotiated custom rate is PER VENUE (Andrew, 2026-10-11, Phase 6).** `lib/billingCustomPrice.ts` swaps the item onto
+  a flat `custom_monthly_<cents>` Price and KEEPS the quantity, so the bill = rate × venues (no bands); adds/removes on
+  that bill use the same rate; a coupon still applies on top. `setStandardPrice` (admin "Back to standard pricing")
+  returns it to the graduated Price. Both refuse while an add/change is in flight. A bill's rate has ONE home:
+  `BillRate` in `lib/venuePricing.ts` (`billRateFromPrice` for a live Stripe item — refuses the old flat list Price —
+  and `billRateFromMirror` for displays). Never price a chain with `monthlyTotalCents` alone where a rate is in play.
+- **Admin "Link a venue to a partner" (Phase 6)** — Partner Billing → button → `LinkVenueToPartner`, server
+  `lib/adminVenueAttach.ts` (`POST /api/admin/billing` `action: "attach-venue"`, Preview first). "Add to their bill" on a
+  card bill runs the partner's own add flow (`startVenueAddition` with `adminAttachVenue`) — never its own Stripe call;
+  on a check bill it adds a `role 'admin'` membership and only SUGGESTS the graduated amount. "Free (comped)" = link only.
+  The CARD path is refused (`card_add_switched_off`) while `NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED` is off.
+- **Daily drift check (Phase 6):** `lib/billingQuantityDrift.ts`, last job of `/api/cron/billing`, REPORT-ONLY
+  (`[MultiVenueBilling] quantity-drift`): Stripe quantity vs `billedVenueCountFromRows`. One Stripe list call per run.
 
 ## POS Rewards Integration (Square / Clover; Toast deferred) — Phases 1–2 built 2026-10-04/05
 

@@ -24,6 +24,9 @@ type SubscriptionRow = {
   discount_percent_off: number | string | null;
   discount_amount_off_cents: number | null;
   discount_ends_at: string | null;
+  // Mirror columns: which rate the bill is on (graduated bands, or a per-venue rate — Phase 6).
+  stripe_price_id: string | null;
+  quantity: number | null;
 };
 
 type InvoiceRow = {
@@ -57,7 +60,7 @@ export async function GET(request: Request) {
   // (what this route always returned) and `venueIds` lists the caller's venues it covers.
   const billing = await loadBillingForVenues<SubscriptionRow>(
     auth.venueIds,
-    "id, venue_id, plan_type, billing_method, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, created_at, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
+    "id, venue_id, plan_type, billing_method, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, created_at, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at, stripe_price_id, quantity"
   );
 
   if (!billing.ok) {
@@ -100,6 +103,9 @@ export async function GET(request: Request) {
           venue_id: s.venue_id,
           discount_percent_off: s.discount_percent_off,
           discount_amount_off_cents: s.discount_amount_off_cents,
+          stripe_price_id: s.stripe_price_id,
+          amount_cents: s.amount_cents,
+          quantity: s.quantity,
         },
         auth.venueIds
       );

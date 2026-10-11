@@ -1,13 +1,13 @@
 # Multi-Venue Volume Billing Plan — "Add a venue" + Graduated Volume Discount
 
-**Status:** Phases 1–3 **committed and pushed** (Phase 3: `d63d720`, 2026-10-11; its migration
-`20261011153607` applied to production the same day). Phases 1–2 are live (both card subscribers are on the
-graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl`, still $100/month; check-paying accounts never lapse
-automatically). **Phase 4 (Add-a-venue UI) committed locally as `59d7a55` (2026-10-11, not pushed), flag off.**
-**Phase 5 (Remove at end of month, Undo, Add back, Billing account view) built 2026-10-11, flag off, NOT
-committed; its migration `20261011210033_venue_bill_changes.sql` is NOT applied to production yet.** Latest
-handoff: **`docs/multi-venue-volume-billing-plan_PHASE_5_HANDOFF.md`**. Andrew's answers are in §2 (do not
-re-ask). **Next: Phase 6** (admin & edge tools). Each phase ends with a handoff note
+**Status:** Phases 1–5 **committed and pushed** (Phase 4: `59d7a55`, Phase 5: `0931f55`, pushed 2026-10-11;
+Phase 5's migration `20261011210033_venue_bill_changes.sql` applied to production the same day and verified).
+Phases 1–2 are live (both card subscribers are on the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl`, still
+$100/month; check-paying accounts never lapse automatically). **Phase 6 (admin & edge tools) built 2026-10-11,
+NOT committed** — no migration, flag still off. Latest handoff:
+**`docs/multi-venue-volume-billing-plan_PHASE_6_HANDOFF.md`**. Andrew's answers are in §2 (do not re-ask).
+**Next: Phase 6.1** — a code review of Phase 6 found 10 problems, now planned as Phases 6.1–6.5
+(§5); Phase 7 (release) waits until they are done. Each phase ends with a handoff note
 `docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at the latest one.
 
 ---
@@ -48,7 +48,7 @@ Stripe does the math on every invoice and we never hand-compute a bill.
 | 3 | Promo codes / admin discounts on a multi-venue bill | **Whole bill.** A coupon discounts the total for every venue (Stripe's default). |
 | 4 | Enterprise (16+) | **Self-serve, no cap.** |
 | 5 | Prices | The four bands above, monthly, USD. |
-| 6 | Negotiated custom rate on a chain (was §9 Q1) | **Coupons apply on top of the bands, and admins must always be able to adjust what a subscription costs** — on a 1-venue or a multi-venue bill. Not "(c) not allowed". Phase 6 designs the mechanism (see the Phase 1 handoff §7). |
+| 6 | Negotiated custom rate on a chain (was §9 Q1) | **Coupons apply on top of the bands, and admins must always be able to adjust what a subscription costs** — on a 1-venue or a multi-venue bill. Not "(c) not allowed". **Mechanism chosen 2026-10-11 (Phase 6): a PER-VENUE rate** — the admin types a per-venue monthly price; the bill = rate × venues (no bands); venues added/removed later use the same rate; a promo code still applies on top; "Back to standard pricing" returns to the bands. |
 | 7 | Admin adding a 2nd venue for an existing partner (was §9 Q2) | **Offer both** "Add to their bill" and "Free / comped". |
 | 8 | Added venue goes live to players (was §9 Q3) | **Yes — the moment payment succeeds.** No admin check. |
 | 9 | Confirmation email (was §9 Q4) | **Send our own "Venue added" email via Resend** as well as Stripe's receipt. Andrew also wants to perfect the new-subscriber welcome email and the venue-added email himself: **all wording now lives in `lib/email/partnerEmailCopy.ts`** (Phase 1), previewed with `npm run email:preview`. |
@@ -242,9 +242,14 @@ Model rule (Andrew): **never more capable than Opus 5.5.** "Effort" = Claude Cod
 | 4 | Add-a-venue UI: always-on dropdown, "+ Add a venue", the sheet, review & pay, success | Sonnet 5.5 | high | 1–2 sessions |
 | 5 | Remove at end of month + Billing page as an account view + re-anchoring + cron | **Opus 5.5** | high | 1–2 sessions |
 | 6 | Admin & edge tools: admin sees venue count/band, admin "add to existing owner's bill", offline multi-venue amounts, custom-rate semantics, daily Stripe-vs-DB quantity check | **Opus 5.5** | high | 1–2 sessions |
+| 6.1 | Review fix: the admin price swap takes the bill's lock (claim + finish on the venue-change ledger) | **Opus 5.5** | **xhigh** | 1 session + Andrew approves `db push` |
+| 6.2 | Review fix: only `custom_monthly_` Prices count as a per-venue rate; dead-code cleanup; drift reads in parallel | **Opus 5.5** | high | ½ session |
+| 6.3 | Review fix: tell a removed or comped venue apart from "no bill" (admin badge), and Checkout refuses a second subscription for a partner who already has a bill | **Opus 5.5** | high | 1 session |
+| 6.4 | Review fix: admin Link tool — keep the idempotency key unless refused, unfiltered partner list, comped → bill upgrade, band copy from `lib/venuePricing.ts` | Sonnet 5.5 | high | 1 session |
+| 6.5 | Re-review the whole Phase 6 + 6.x diff, all gates, commit (when Andrew says) | **Opus 5.5** | high | ½ session |
 | 7 | Release: copy, device checklist, flag on, Andrew's live test on Pacific Street + a real second venue | Sonnet 5.5 (+ Andrew) | medium | 1 session + Andrew's test |
 
-Order is strict: 1 → 2 → 3 → 4 → 5 → 6 → 7. Phases 4 and 5 could swap if Andrew wants removal
+Order is strict: 1 → 2 → 3 → 4 → 5 → 6 → 6.1 → 6.2 → 6.3 → 6.4 → 6.5 → 7. Phases 4 and 5 could swap if Andrew wants removal
 before the UI polish, but 3 must precede both.
 
 ### Phase 1 — Foundation (Opus 5.5, high) — ✅ built 2026-10-11 (handoff: `…_PHASE_1_HANDOFF.md`)
@@ -335,7 +340,15 @@ page**, not in the dashboard dropdown (deviation; Phase 7 may add a dropdown hin
 Everything in §4.4 + the Billing page part of §4.5. The cron change lives in the existing
 `/api/cron/billing` — **no new `vercel.json` entry**.
 
-### Phase 6 — Admin and edge cases (Opus 5.5, high)
+### Phase 6 — Admin and edge cases (Opus 5.5, high) — ✅ built 2026-10-11, not committed (handoff: `…_PHASE_6_HANDOFF.md`)
+
+As built: admin list shows each bill's venue count, band (or per-venue) line and monthly total, "On X's bill" for
+non-anchor venues (actions stay on the anchor's row) and a "Comped (free)" badge; **Link a venue to a partner**
+(`lib/adminVenueAttach.ts`, Preview → Confirm) — "Add to their bill" (card: the partner's own add flow; check: a
+`role 'admin'` membership + a suggested graduated amount) or "Free (comped)"; the offline grant form offers the
+graduated total; the custom rate is **per venue** (§2 row 6) with "Back to standard pricing", and partner Add / Remove now
+work on a per-venue-rate bill; the daily report-only drift check (`lib/billingQuantityDrift.ts`). The Stripe customer
+portal has subscription updates **disabled** (checked live, read-only), so partners can't change quantity there.
 
 - Admin billing list: venue count, band, monthly total per account.
 - Activate-a-Venue for an **existing** owner: option "Add to their bill" (runs the Phase 3
@@ -347,6 +360,197 @@ Everything in §4.4 + the Billing page part of §4.5. The cron change lives in t
 - Daily check inside `/api/cron/billing`: Stripe quantity vs. count of active membership rows
   (one bounded Stripe list call per run). **Report-only** (`[MultiVenueBilling] quantity-drift`);
   an admin fixes drift, the cron never charges or credits anyone.
+
+### Phases 6.1–6.5 — Fixes from the Phase 6 code review (2026-10-11)
+
+A `/code-review` of the uncommitted Phase 6 working tree returned 10 findings. Each is restated below
+with its failure scenario, because the review output was not saved anywhere else. All ten must be
+fixed (or explicitly waived by Andrew) before Phase 7 turns the flag on.
+
+**Before 6.1:** Phase 6 is still uncommitted. Ask Andrew whether to commit Phase 6 as-is first
+(the commit path list is in `…_PHASE_6_HANDOFF.md` §2), so each fix is its own reviewable diff. If
+he says no, build on the working tree and commit nothing. Never `git add -A`. Andrew's own unrelated
+edits (`components/fantasy/`, `components/nfl-pickem/`, `GameIdentityPanel.tsx`,
+`tests/components.player-pending.test.ts`, `.vscode/settings.json`) are never committed or reverted.
+
+Each sub-phase ends with `docs/multi-venue-volume-billing-plan_PHASE_6.<N>_HANDOFF.md`.
+
+#### Phase 6.1 — The admin price swap takes the bill's lock (Opus 5.5, xhigh) — review #1
+
+**Finding.** `swapSubscriptionPrice` in `lib/billingCustomPrice.ts` (used by `setCustomPrice` and
+`setStandardPrice`) checks for an in-flight add/remove with plain reads (`venueChangeInFlight`), not
+under the per-bill advisory lock (`'billing_venue_addition:' || bill id`) that `claim_venue_addition`
+and `claim_venue_bill_change` take. It then writes an absolute `quantity` read moments earlier.
+*Failure:* the admin presses Set rate. The check sees nothing, and Stripe returns quantity N. The
+partner's Add a venue then claims and moves Stripe to N+1 (or leaves a pending 3-D Secure update).
+The admin's `subscriptions.update({ quantity: N })` lands and drops the venue the partner just paid
+for, or voids their pending payment.
+
+**Fix.** Make the swap a claimed change on the existing ledger, so it is mutually exclusive with adds
+and removes inside Postgres. Do not use a TypeScript read-then-write.
+
+1. New migration (`supabase migration new bill_price_change_lock`; existing migrations are
+   read-only):
+   - Allow `action = 'price'` on `billing_venue_changes`. Drop the auto-named action check
+     constraint and re-add it as `('remove','undo','price')`, after confirming the real constraint
+     name in `pg_constraint`. Add `price_id text` (the target Price). A price row has
+     `venue_id` null.
+   - New RPC `claim_bill_price_change(p_idempotency_key, p_owner_id, p_subscription_id, p_price_id)`.
+     It takes the **same** advisory lock, returns `busy_addition` / `busy_change` exactly as
+     `claim_venue_bill_change` does, otherwise inserts a `pending` `'price'` row. The same key
+     returns the same row.
+   - New RPC `finish_bill_price_change(p_change_id, p_success, p_failure_reason)`. It marks the row
+     `done` or `failed` under the same lock.
+   - `create or replace` **`finish_venue_bill_change`** so it refuses (no-op, `outcome 'wrong_action'`)
+     a row whose action is not `remove`/`undo`. **Trap:** today its `else` branch treats anything
+     that isn't `remove` as `undo`.
+   - `security definer`, `search_path` pinned, `revoke all … from public, anon, authenticated`,
+     `grant execute … to service_role`, matching `20261011210033`. No new table, so no grant
+     contract change, but run `tests/supabase-migration-grants-contract.test.ts` anyway.
+   - Nothing else needs to change for the busy check: both existing claim RPCs already treat **any**
+     pending `billing_venue_changes` row as busy, whatever its action. Verify that in the SQL.
+2. `swapSubscriptionPrice`: claim (409 on busy) → `subscriptions.retrieve` → keep the
+   `pending_update` and single-item checks → `update` → finish(`done`). Any Stripe error → finish(`failed`).
+   An *ambiguous* Stripe error (5xx/connection) leaves the row `pending` for the lease, like adds.
+   Delete `venueChangeInFlight`.
+3. **Trap: the existing stale-change reconcilers would mis-handle a price row.**
+   `reconcileStaleVenueChanges` and `settleStaleVenueChangesForBill` (`lib/venueRemoval.ts`)
+   select every stale `pending` change and settle it as a remove/undo. Filter both to
+   `.in("action", ["remove","undo"])`, and add a price-row settler to the same daily
+   `/api/cron/billing` pass. After `VENUE_ADDITION_LEASE_MS`, it reads the subscription item's
+   price: equal to `price_id` → `done`, otherwise `failed`. Without it, a crash mid-swap would lock
+   the bill out of adds and removes forever.
+4. Confirm that `lib/venueAddition.ts` and `lib/venueRemoval.ts` re-read the subscription
+   **after** their own claim and price from that read, not from the pre-claim context (otherwise a
+   swap that finished just before their claim still mis-prices the add). If either doesn't, fix it
+   and add a test.
+5. Tests: the interleaving above (claim held → partner add gets `busy`; add pending → swap gets 409);
+   the stale price row settled both ways; `finish_venue_bill_change` refuses a price row. Prove the
+   SQL on PGlite, the way `npm run test:account-deletion-sql` does, or document why not.
+6. `supabase db push` only with Andrew's explicit go-ahead. Deploy the app **after** the migration:
+   the new code calls an RPC that must exist. Missing RPC → the swap fails closed with 503
+   `[CustomPrice] claim-rpc-missing`, never falls back to the unlocked path.
+
+Cost: one extra RPC pair per admin price change (rare, admin-only). The cron gains one bounded read
+of stale price rows (normally zero).
+
+#### Phase 6.2 — Only `custom_monthly_` Prices are a per-venue rate; cleanup (Opus 5.5, high) — review #3, #9, #10
+
+**Finding #3.** `billRateFromPrice` (`lib/venuePricing.ts`) treats **any** flat, monthly, USD Price
+that isn't the graduated or list Price as a negotiated per-venue rate. *Failure:* a bill on an older
+$100 list Price, a hand-pasted price id, or the list Price while `STRIPE_PRICE_ID` is unset (the
+`listPriceId` guard is skipped when it is `""`) is classified `{ per_venue, 10000 }`. The partner's
+Add a venue then charges $100 for venue #2 instead of $75.
+
+**Fix #3.** `per_venue` requires `price.lookup_key` to start with `CUSTOM_PER_VENUE_LOOKUP_PREFIX`.
+Every other flat Price → `null`. `customPriceLookupKey` (`lib/billingCustomPrice.ts`) builds its key
+from that constant, so the literal lives in exactly one place. Add `bill-rate` tests for: an old list
+Price with no lookup key, an empty `listPriceId`, a hand-made flat monthly Price, and a
+`custom_monthly_7000` Price.
+- **Revive the `custom_rate` refusal instead of deleting it (#9).** When the item is a flat Price
+  that is not `custom_monthly_`, `loadAddVenueContext` and the removal context return `custom_rate`
+  (409), not `billing_state`. The partner then gets "Your account has a custom rate. Email …", which
+  is the true reason. Partner copy stays in `lib/multiVenueBilling.ts`.
+- Admin side: when `setCustomPrice` is given a pasted Price id without the prefix, the swap still
+  works. The success message adds "Partner self-serve add/remove is off for this bill (not a
+  standard custom rate)." That way the admin knows.
+- Before shipping, list (read-only) every live subscription's item Price and lookup key, to confirm
+  no live bill is on a flat non-prefixed Price. Today's expectation: both card subscribers are on
+  the graduated Price, per the Status line. If one is, tell Andrew before merging, because their
+  self-serve add/remove switches off.
+
+**Finding #9 (dead code).** Delete `isGraduatedPrice` (`lib/venueAddition.ts`, no callers). The
+`custom_rate` codes become live again via the bullet above. If they somehow don't, delete them from
+both code lists and message maps.
+
+**Finding #10.** In `lib/billingQuantityDrift.ts`, the membership read, `inFlightBillIds()` and
+`listStripeSubscriptions()` are awaited one after another. Run them in one `Promise.all`. This is
+latency only: the reads and their count are unchanged. Any of them failing still throws, as today.
+
+#### Phase 6.3 — Removed and comped venues are not "no bill" (Opus 5.5, high) — review #2, #4
+
+**Finding #2.** `app/api/admin/billing/route.ts` derives `comped = !sub && ownersWithLiveBill.has(owner)`.
+`loadBillingForVenues` reads only *active* memberships, and the owner→venue link is kept for Add
+back, so a venue **removed** from a multi-venue bill shows as "Comped (free)". The
+`venueState: "removed"` branch is never reached.
+
+**Finding #4.** A comped venue (`lib/adminVenueAttach.ts`, comped mode = link only) is on no bill,
+and `POST /api/owner/billing/checkout` only checks `loadBillingForVenue(venueId)`. *Failure:* the
+partner opens Billing for comped venue B, sees Subscribe, and Checkout creates a **second**
+$100/month subscription anchored on B. That breaks one-subscription-per-partner (§2) and charges
+for a venue the admin meant to be free. A removed venue has the same hole.
+
+**Fix.** One shared classifier, in `lib/venueBilling.ts` (the single home of "which bill covers
+this venue"). No migration; comped stays derived, not stored.
+- `unbilledVenueStates(venueIds, ownerIdByVenue)` makes one membership read that **includes**
+  removed rows, plus one read of the owners' live bills. It returns, per venue with no active
+  bill, one of:
+  - `{ kind: "removed", subscriptionId, removedAt }`: it has a membership row with
+    `removed_at`/`remove_at` set.
+  - `{ kind: "comped", ownerBillId }`: never on any bill, and the linked owner has a non-cancelled
+    bill.
+  - `{ kind: "unbilled" }`.
+- Admin list: build `comped` and `venueState: "removed"` from it. A removed row shows
+  "Removed from X's bill (date)", never "Comped". Delete the inline `ownersWithLiveBill`
+  derivation.
+- Checkout (`app/api/owner/billing/checkout/route.ts`): refuse 409 `{ code: "on_partner_bill" }`
+  when the venue is `comped` or `removed`, or more generally when the owner already has a
+  non-cancelled bill on another venue. This is **not** flag-gated, because comped links work while
+  the flag is off. Message: removed → "Add it back from Billing"; comped → "This venue is included
+  free on your account"; otherwise → "Your venues share one bill — email support." It runs before
+  `sweepAbandonedIncompleteSubscriptions` and before any Stripe call.
+- Owner Billing page (`GET /api/owner/billing` + its page): a comped venue shows "Included on your
+  account at no charge" instead of Subscribe. Removed venues already show Add back (Phase 5);
+  confirm they don't also show Subscribe.
+- **Before shipping, query production (read-only):** are there owners who today have more than one
+  linked venue where one is billed and another isn't, or more than one separate bill? For each,
+  what is it (`venue-hightop-test` is one expected case)? The new refusal must not strand a real
+  partner. Report the list to Andrew in the handoff.
+- Tests: removed ≠ comped in the admin list; Checkout refuses comped, removed, and a second venue
+  of a billed owner; Checkout still allows an owner whose only bill is `cancelled`; signup and
+  first venue unchanged. Add the Checkout refusal to `tests/multi-venue-billing-contract.test.ts`
+  so it can't be dropped.
+
+Cost: Checkout and the owner Billing GET each gain one bounded membership read (per click / page
+view, not per player).
+
+#### Phase 6.4 — Admin "Link a venue" fixes (Sonnet 5.5, high) — review #5, #6, #7, #8
+
+- **#5 Idempotency key.** `confirm()` in `components/admin/billing/LinkVenueToPartner.tsx` clears
+  `attemptKey` on **any** non-ok reply, including a 500/503 and `addition_in_progress`, where the
+  outcome is unknown. *Failure:* the card is charged, completion throws (500), and the next "Charge
+  and add" sends a fresh key, starting a new ledger claim instead of reconciling the first. Fix:
+  classify the reply with the partner flow's rule (`interpretAddVenueReply` in `lib/addVenueFlow.ts`,
+  or a shared helper extracted from it; don't fork a second copy). Clear the key **only** on a
+  definitive refusal with a known code. On `unconfirmed`/5xx/`addition_in_progress`, keep the key
+  and show "Check again". Test it, and confirm the server answers a retried key with the original
+  row's state.
+- **#6 Filtered partner list.** The Link dropdown (`linkOwners` in
+  `components/admin/sections/BillingSection.tsx`) and the bill line's anchor name are both built
+  from `partners`, which the server already filtered by the search box. Fix: `GET
+  ?resource=attach-options` also returns every owner (`id, email, name`, one bounded read), and the
+  list route returns `anchorVenueName` on each bill (looked up before the search filter). The
+  component never derives either from the filtered list.
+- **#7 Comped → bill upgrade unreachable.** `attachOptions()` lists only unlinked venues, but
+  `lib/adminVenueAttach.ts` supports moving an already-linked **comped** venue onto the same
+  partner's bill. Fix: also return linked venues whose state (from 6.3's classifier) is `comped`,
+  tagged with their owner. In the UI, choosing one locks the partner to that owner and offers only
+  "Add to their bill". The server re-checks everything, as today.
+- **#8 Hard-coded bands.** The "Back to standard pricing ($100 / $75 / $60 / $45)" label must be
+  built from `VENUE_PRICE_TIERS` (`lib/venuePricing.ts`), via a small formatter exported from there.
+  Also fix the doc comment in `lib/billingCustomPrice.ts` that repeats the numbers (point it at
+  `VENUE_PRICE_TIERS`). Add `components/admin/` to whatever contract test pins price literals, or
+  add one.
+- Light admin surface: plain Tailwind, `tone="light"` rules, 12px text floor.
+
+#### Phase 6.5 — Re-review and close out (Opus 5.5, high)
+
+Run `/code-review` on the whole Phase 6 + 6.1–6.4 diff. Fix or list every new finding. Gates:
+`npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run build` (not typecheck and build at the
+same time), plus `tests/lib.auth-users-fk-guard.test.ts` unchanged. Update `CLAUDE.md`'s
+multi-venue section: the price swap is claimed under the bill lock, only `custom_monthly_` is
+per-venue, and Checkout refuses a billed partner's second venue. Commit with an explicit path list
+once Andrew says. Then the handoff opens Phase 7.
 
 ### Phase 7 — Release (Sonnet 5.5 medium, + Andrew)
 

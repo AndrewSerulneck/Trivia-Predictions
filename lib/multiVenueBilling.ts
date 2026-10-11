@@ -226,3 +226,58 @@ export type BillAccount = {
   /** …and after the bill's discount. */
   nextMonthlyTotalCents: number;
 };
+
+// --- Admin: put an existing venue on a partner's account (Phase 6) ----------------------------
+
+/**
+ * How an admin gives an existing (already activated) venue to a partner who already has an account
+ * (plan §2 row 7: "offer both"):
+ *   bill   — "Add to their bill": a card bill is charged now, prorated, exactly like the partner's own
+ *            "Add a venue" (lib/venueAddition.ts); a check-billed (offline) bill just gains the venue,
+ *            and the admin updates the offline amount (a suggestion is returned).
+ *   comped — "Free / comped": the partner gets the venue (dashboard, TV, games) and it is on NO bill.
+ */
+export type AdminAttachMode = "bill" | "comped";
+
+export const ADMIN_ATTACH_FAILURE_CODES = [
+  "invalid_request",
+  "venue_not_found",
+  "venue_hidden",
+  "venue_placeholder",
+  "owner_not_found",
+  "venue_has_owner",
+  "already_linked",
+  "venue_has_own_bill",
+  "venue_has_billing_history",
+  "on_bill",
+  "card_add_switched_off",
+] as const;
+
+export type AdminAttachFailureCode = (typeof ADMIN_ATTACH_FAILURE_CODES)[number];
+
+/** Admin-facing sentences for the attach refusals (the card-bill refusals reuse ADD_VENUE_MESSAGES). */
+export const ADMIN_ATTACH_MESSAGES: Record<AdminAttachFailureCode, string> = {
+  invalid_request: "Pick a venue, a partner and Bill or Comped.",
+  venue_not_found: "That venue doesn't exist.",
+  venue_hidden: "That venue is hidden. Unhide it in Venues first, then link it.",
+  venue_placeholder: "That is an internal room, not a real venue.",
+  owner_not_found: "That partner account doesn't exist.",
+  venue_has_owner: "That venue already belongs to a different partner.",
+  already_linked: "That venue is already on this partner's account.",
+  venue_has_own_bill: "That venue has its own subscription. Manage it from its own row.",
+  venue_has_billing_history: "That venue has been on a bill before. The partner can use Add back in Billing, or ask support.",
+  on_bill: "That venue is on this partner's bill already — it can't also be comped.",
+  card_add_switched_off:
+    "Charging a card for an added venue is switched off until multi-venue billing is released (NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED). Use Free (comped) for now.",
+};
+
+/** What "Add to their bill" / "Comped" would do, shown to the admin before Confirm. */
+export type AdminAttachPreview = {
+  venue: { id: string; name: string };
+  owner: { id: string; email: string; name: string };
+  mode: AdminAttachMode;
+  /** Card bill: Stripe's own quote, as the partner would see it. */
+  quote: AddVenueQuote | null;
+  /** Check-billed bill: venues billed after the add, and the graduated total to suggest. */
+  offline: { billedVenueCountAfter: number; suggestedMonthlyCents: number; currentMonthlyCents: number } | null;
+};

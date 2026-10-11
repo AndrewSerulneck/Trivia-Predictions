@@ -14,11 +14,18 @@ import { findNearbyVenue, venueAddressLabel } from "@/lib/nearbyVenue";
 import type { RateLimitResult } from "@/lib/rateLimit";
 import type { OwnerAuthContext } from "@/lib/requireOwnerAuth";
 import { BLANK_SIGNUP_DRAFT, signupStepIssue, type SignupDraft } from "@/lib/selfServeSignup";
-import { getStripeGraduatedPriceId, stripe } from "@/lib/stripe";
+import { getStripeGraduatedPriceId, getStripePriceId, stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { addVenueToBill, billMembershipOf, hasLeftBill, isBilledMembership, loadBillingForVenues, venueIdsEverBilled } from "@/lib/venueBilling";
 import { isAdminHiddenVenueRow, isPlaceholderVenueRow } from "@/lib/venueClaim";
-import { GRADUATED_PRICE_LOOKUP_KEY, monthlyTotalCents, nextVenuePriceCents, venuePriceCents } from "@/lib/venuePricing";
+import {
+  billRateFromMirror,
+  billRateFromPrice,
+  GRADUATED_PRICE_LOOKUP_KEY,
+  rateMonthlyTotalCents,
+  rateVenuePriceCents,
+  type BillRate,
+} from "@/lib/venuePricing";
 
 /**
  * Partner self-serve "Add a venue" — the server half (docs/multi-venue-volume-billing-plan.md §4.1,
@@ -120,11 +127,15 @@ type BillRow = {
   discount_label: string | null;
   discount_percent_off: number | null;
   discount_amount_off_cents: number | null;
+  /** Mirror columns (webhook / lib/billingCustomPrice.ts) — read for the rate in the email only. */
+  stripe_price_id: string | null;
+  amount_cents: number | null;
+  quantity: number | null;
 };
 
 const BILL_COLUMNS =
   "id, venue_id, owner_id, status, billing_method, stripe_subscription_id, cancel_at_period_end, " +
-  "discount_label, discount_percent_off, discount_amount_off_cents";
+  "discount_label, discount_percent_off, discount_amount_off_cents, stripe_price_id, amount_cents, quantity";
 
 /** A refusal or failure, already shaped for the route to return. */
 export type AddVenueRefusal = {
@@ -162,6 +173,8 @@ export type AddVenueContext = {
   bill: BillRow;
   subscription: Stripe.Subscription;
   item: Stripe.SubscriptionItem;
+  /** How the bill is priced: the graduated bands, or an admin's negotiated per-venue rate (Phase 6). */
+  rate: BillRate;
 };
 
 // --- Small helpers -------------------------------------------------------------------------------
@@ -196,11 +209,19 @@ export const discountOf = (bill: Pick<BillRow, "discount_percent_off" | "discoun
     ? { percentOff: bill.discount_percent_off, amountOffCents: bill.discount_amount_off_cents }
     : null;
 
-/** The bill's monthly total at `venueCount` venues, after its discount — what the Billing page shows. */
+/** The bill's monthly total at `venueCount` venues on `rate`, after its discount — what the Billing page shows. */
 const monthlyTotalAfterDiscount = (
+  rate: BillRate,
   venueCount: number,
   bill: Pick<BillRow, "discount_percent_off" | "discount_amount_off_cents">
-): number => effectiveAmountCents({ amountCents: monthlyTotalCents(venueCount), discount: discountOf(bill) });
+): number => effectiveAmountCents({ amountCents: rateMonthlyTotalCents(rate, venueCount), discount: discountOf(bill) });
+
+/** The rate a subscription item's Price bills at (lib/venuePricing.ts `billRateFromPrice`), with this environment's ids. */
+export const billRateOfItem = (item: Stripe.SubscriptionItem | null | undefined): BillRate | null =>
+  billRateFromPrice(item?.price ?? null, {
+    graduatedPriceId: getStripeGraduatedPriceId(),
+    listPriceId: getStripePriceId(),
+  });
 
 /** Is this Stripe Price the graduated multi-venue Price (plan §4.1)? */
 export const isGraduatedPrice = (price: Stripe.Price | null | undefined): boolean => {
@@ -454,18 +475,16 @@ export async function loadAddVenueContext(
 
   const item = soleItem(subscription);
   if (!item) return refuse("billing_state", 409);
-  if (!isGraduatedPrice(item.price)) {
-    // A negotiated rate swaps the item onto a flat `custom_monthly_<cents>` Price
-    // (lib/billingCustomPrice.ts); adding to such a bill is Phase 6's design.
-    return (item.price?.lookup_key ?? "").startsWith("custom_monthly_")
-      ? refuse("custom_rate", 409)
-      : refuse("billing_state", 409);
-  }
+  // The graduated bands, or (Phase 6, Andrew 2026-10-11) an admin's negotiated per-venue rate — a
+  // flat `custom_monthly_<cents>` Price (lib/billingCustomPrice.ts), billed per venue. Anything else
+  // (the old flat list Price, a hand-built Stripe price) needs a person.
+  const rate = billRateOfItem(item);
+  if (!rate) return refuse("billing_state", 409);
   if (typeof item.quantity !== "number" || !Number.isInteger(item.quantity) || item.quantity < 1) {
     return refuse("billing_state", 409);
   }
 
-  return { ok: true, context: { ownerId: auth.ownerId, bill, subscription, item } };
+  return { ok: true, context: { ownerId: auth.ownerId, bill, subscription, item, rate } };
 }
 
 // --- Quote ---------------------------------------------------------------------------------------
@@ -536,9 +555,9 @@ export async function quoteVenueAddition(
     quote: {
       currentVenueCount,
       venueNumber: venueCount,
-      thisVenueCents: nextVenuePriceCents(currentVenueCount),
-      newMonthlyListCents: monthlyTotalCents(venueCount),
-      newMonthlyTotalCents: monthlyTotalAfterDiscount(venueCount, context.bill),
+      thisVenueCents: rateVenuePriceCents(context.rate, venueCount),
+      newMonthlyListCents: rateMonthlyTotalCents(context.rate, venueCount),
+      newMonthlyTotalCents: monthlyTotalAfterDiscount(context.rate, venueCount, context.bill),
       dueTodayCents,
       prorationDate,
       currentPeriodEnd: isoFromUnix(context.item.current_period_end),
@@ -740,7 +759,7 @@ async function completeAddition(
  * table is UNIQUE (venue_id) and (owner_id, venue_id), so a second completion's insert is a 23505,
  * which is fine when the existing link is this owner's and an error otherwise.
  */
-async function ensureOwnerLink(ownerId: string, venueId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function ensureOwnerLink(ownerId: string, venueId: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const inserted = await supabaseAdmin!.from("venue_owner_venues").insert({ owner_id: ownerId, venue_id: venueId });
   if (!inserted.error) return { ok: true };
   if ((inserted.error as { code?: string }).code !== "23505") return { ok: false, error: inserted.error.message };
@@ -784,15 +803,17 @@ async function sendVenueAddedEmailOnce(row: VenueAdditionRow): Promise<void> {
       readBill(row.subscription_id),
     ]);
     const venueCount = row.quantity_after ?? 0;
+    // The rate from our mirror (no Stripe call): graduated bands, or the bill's per-venue rate.
+    const rate = bill ? billRateFromMirror(bill, getStripeGraduatedPriceId()) : null;
     const sent =
-      Boolean(owner.data?.email) && bill !== null && venueCount >= 1
+      Boolean(owner.data?.email) && bill !== null && rate !== null && venueCount >= 1
         ? await sendVenueAddedEmail({
             toEmail: owner.data?.email ?? "",
             ownerName: owner.data?.name ?? "",
             venueName: row.venue_name ?? "",
             venueCount,
-            thisVenueCents: venuePriceCents(venueCount),
-            newMonthlyTotalCents: monthlyTotalAfterDiscount(venueCount, bill),
+            thisVenueCents: rateVenuePriceCents(rate, venueCount),
+            newMonthlyTotalCents: monthlyTotalAfterDiscount(rate, venueCount, bill),
             chargedTodayCents: row.amount_due_cents,
           })
         : false;
@@ -1081,6 +1102,14 @@ export type StartVenueAdditionArgs = {
    * it — same charge, same ledger, same completion; no new venue is created.
    */
   readdVenueId?: string | null;
+  /**
+   * Admin "Add to their bill" (Phase 6, lib/adminVenueAttach.ts): an EXISTING venue an admin
+   * activated, already vetted by that module (visible, unowned or this owner's, never billed). Same
+   * charge, ledger and completion as an Add back — no venue is created, and the partner is linked
+   * to it only once paid. A declined charge never deletes it (`deleteUnbilledAddedVenue` only
+   * deletes hidden, self-serve-stamped venues).
+   */
+  adminAttachVenue?: { id: string; name: string } | null;
   clientKey: string;
   /** From the quote; honoured only if recent (see `acceptableProrationDate`). */
   prorationDate: unknown;
@@ -1140,9 +1169,9 @@ export async function startVenueAddition(args: StartVenueAdditionArgs): Promise<
       return outcomeFromState(await reconcileAddition(previous, nowMs));
     }
 
-    // 1b. Add back: which existing venue (checked before anything is claimed).
-    let readd: { id: string; name: string } | null = null;
-    if (args.readdVenueId) {
+    // 1b. Add back / admin attach: which existing venue (checked before anything is claimed).
+    let readd: { id: string; name: string } | null = args.adminAttachVenue ?? null;
+    if (!readd && args.readdVenueId) {
       const checked = await readdableVenue(auth, context.bill.id, args.readdVenueId, nowMs);
       if (!checked.ok) return checked;
       readd = checked.venue;
