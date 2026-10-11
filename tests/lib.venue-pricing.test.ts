@@ -3,6 +3,8 @@ import {
   ANCHOR_VENUE_PRICE_CENTS,
   GRADUATED_PRICE_LOOKUP_KEY,
   VENUE_PRICE_TIERS,
+  graduatedPriceProblems,
+  graduatedStripeTiers,
   graduatedTotalCents,
   monthlyTotalCents,
   nextVenuePriceCents,
@@ -102,5 +104,68 @@ describe("venue pricing (graduated bands)", () => {
       { upTo: null, unitAmountCents: 4500 },
     ]);
     expect(GRADUATED_PRICE_LOOKUP_KEY).toBe("hightop_venue_graduated_monthly_v1");
+  });
+});
+
+// Phase 2: the Stripe Price is built from, and checked against, VENUE_PRICE_TIERS.
+describe("graduated Stripe Price (Phase 2)", () => {
+  const livePrice = () => ({
+    active: true,
+    currency: "usd",
+    type: "recurring",
+    billing_scheme: "tiered",
+    tiers_mode: "graduated",
+    lookup_key: GRADUATED_PRICE_LOOKUP_KEY,
+    recurring: { interval: "month", interval_count: 1 },
+    tiers: graduatedStripeTiers().map((t) => ({
+      up_to: t.up_to === "inf" ? null : t.up_to,
+      unit_amount: t.unit_amount,
+      flat_amount: null as number | null,
+    })),
+  });
+
+  it("builds Stripe tier params from the bands, with an open-ended last tier", () => {
+    expect(graduatedStripeTiers()).toEqual([
+      { up_to: 1, unit_amount: 10000 },
+      { up_to: 5, unit_amount: 7500 },
+      { up_to: 15, unit_amount: 6000 },
+      { up_to: "inf", unit_amount: 4500 },
+    ]);
+  });
+
+  it("accepts a live Price that matches the bands exactly", () => {
+    expect(graduatedPriceProblems(livePrice())).toEqual([]);
+  });
+
+  it("reports a wrong tier amount, a wrong edge and a flat fee", () => {
+    const price = livePrice();
+    price.tiers[1] = { up_to: 4, unit_amount: 7000, flat_amount: 100 };
+    expect(graduatedPriceProblems(price)).toEqual([
+      "tier 2 up_to is 4, expected 5",
+      "tier 2 unit_amount is 7000, expected 7500",
+      "tier 2 has a flat fee of 100",
+    ]);
+  });
+
+  it("refuses to trust a Price retrieved without its tiers", () => {
+    expect(graduatedPriceProblems({ ...livePrice(), tiers: undefined })).toContain(
+      'tiers missing (retrieve the Price with expand: ["tiers"])'
+    );
+  });
+
+  it("reports volume mode, a yearly interval, an archived Price and the wrong lookup key", () => {
+    const problems = graduatedPriceProblems({
+      ...livePrice(),
+      active: false,
+      tiers_mode: "volume",
+      recurring: { interval: "year", interval_count: 1 },
+      lookup_key: "something_else",
+    });
+    expect(problems).toEqual([
+      "price is not active",
+      "does not bill every 1 month",
+      "tiers_mode is volume, expected graduated",
+      `lookup_key is something_else, expected ${GRADUATED_PRICE_LOOKUP_KEY}`,
+    ]);
   });
 });

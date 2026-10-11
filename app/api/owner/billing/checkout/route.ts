@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getStripePriceId, OFFLINE_BILLING_METHOD, stripe } from "@/lib/stripe";
+import { getCheckoutPriceId, OFFLINE_BILLING_METHOD, stripe } from "@/lib/stripe";
 import { sweepAbandonedIncompleteSubscriptions } from "@/lib/stripeIncomplete";
 import { CLEARED_MIRROR } from "@/lib/billingDiscounts";
 import {
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   if (!stripe) {
     return NextResponse.json({ ok: false, error: "Payments are not configured." }, { status: 500 });
   }
-  const priceId = getStripePriceId();
+  const priceId = getCheckoutPriceId();
   if (!priceId) {
     return NextResponse.json({ ok: false, error: "Payments are not configured." }, { status: 500 });
   }

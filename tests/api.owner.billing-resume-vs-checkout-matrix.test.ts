@@ -64,6 +64,7 @@ vi.mock("@/lib/stripe", () => ({
     checkout: { sessions: { create: mocks.checkoutCreate } },
   },
   getStripePriceId: () => "price_test_123",
+  getCheckoutPriceId: () => "price_test_123",
   OFFLINE_BILLING_METHOD: "offline",
 }));
 

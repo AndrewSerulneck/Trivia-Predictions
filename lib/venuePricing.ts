@@ -180,3 +180,71 @@ export const billableItemMonthlyCents = (item: BillableItemShape): number => {
 /** Sum over every item on a subscription (today there is always exactly one). */
 export const subscriptionMonthlyCents = (items: readonly BillableItemShape[]): number =>
   items.reduce((sum, item) => sum + billableItemMonthlyCents(item), 0);
+
+/**
+ * The Stripe Price this module describes, as `prices.create` tier params (Phase 2,
+ * scripts/create-graduated-price.cjs). `"inf"` is Stripe's spelling of "no upper bound".
+ */
+export type StripeGraduatedTierParam = { up_to: number | "inf"; unit_amount: number };
+
+export const graduatedStripeTiers = (): StripeGraduatedTierParam[] =>
+  VENUE_PRICE_TIERS.map((tier) => ({ up_to: tier.upTo ?? "inf", unit_amount: tier.unitAmountCents }));
+
+/** The fields of a Stripe Price (retrieved with `expand: ["tiers"]`) the live check reads. */
+export type GraduatedPriceShape = {
+  active?: boolean | null;
+  currency?: string | null;
+  type?: string | null;
+  billing_scheme?: string | null;
+  tiers_mode?: string | null;
+  lookup_key?: string | null;
+  recurring?: { interval?: string | null; interval_count?: number | null } | null;
+  tiers?: Array<{
+    up_to: number | null;
+    unit_amount: number | null;
+    flat_amount?: number | null;
+  }> | null;
+};
+
+/**
+ * Everything about a live Stripe Price that disagrees with `VENUE_PRICE_TIERS` (plan §4.2: "a
+ * test asserts the live Price's tiers equal it"). Empty = the Price bills exactly what this
+ * module — and therefore the webhook's `amount_cents` mirror and every display — says it does.
+ * `tiers` must be present: a Price retrieved without `expand: ["tiers"]` is reported, not trusted.
+ */
+export const graduatedPriceProblems = (price: GraduatedPriceShape): string[] => {
+  const problems: string[] = [];
+  if (price.active !== true) problems.push("price is not active");
+  if (price.currency !== "usd") problems.push(`currency is ${price.currency ?? "missing"}, expected usd`);
+  if (price.type !== "recurring") problems.push(`type is ${price.type ?? "missing"}, expected recurring`);
+  if (price.recurring?.interval !== "month" || (price.recurring?.interval_count ?? 1) !== 1) {
+    problems.push("does not bill every 1 month");
+  }
+  if (price.billing_scheme !== "tiered") problems.push(`billing_scheme is ${price.billing_scheme ?? "missing"}, expected tiered`);
+  if (price.tiers_mode !== "graduated") problems.push(`tiers_mode is ${price.tiers_mode ?? "missing"}, expected graduated`);
+  if (price.lookup_key !== GRADUATED_PRICE_LOOKUP_KEY) {
+    problems.push(`lookup_key is ${price.lookup_key ?? "missing"}, expected ${GRADUATED_PRICE_LOOKUP_KEY}`);
+  }
+  if (!Array.isArray(price.tiers)) {
+    problems.push("tiers missing (retrieve the Price with expand: [\"tiers\"])");
+    return problems;
+  }
+  if (price.tiers.length !== VENUE_PRICE_TIERS.length) {
+    problems.push(`has ${price.tiers.length} tiers, expected ${VENUE_PRICE_TIERS.length}`);
+    return problems;
+  }
+  VENUE_PRICE_TIERS.forEach((expected, index) => {
+    const actual = price.tiers?.[index];
+    if (!actual) return;
+    if (actual.up_to !== expected.upTo) {
+      problems.push(`tier ${index + 1} up_to is ${actual.up_to ?? "inf"}, expected ${expected.upTo ?? "inf"}`);
+    }
+    if (actual.unit_amount !== expected.unitAmountCents) {
+      problems.push(`tier ${index + 1} unit_amount is ${actual.unit_amount}, expected ${expected.unitAmountCents}`);
+    }
+    if ((actual.flat_amount ?? 0) !== 0) {
+      problems.push(`tier ${index + 1} has a flat fee of ${actual.flat_amount}`);
+    }
+  });
+  return problems;
+};

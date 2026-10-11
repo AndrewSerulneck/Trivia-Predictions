@@ -23,7 +23,15 @@ import Stripe from "stripe";
  *                            at runtime — it is set once by an operator, and this
  *                            is the Checkout hot path. The admin-pasted equivalent
  *                            IS checked; see setCustomPrice in
- *                            lib/billingCustomPrice.ts.
+ *                            lib/billingCustomPrice.ts. Still the flat $100
+ *                            list price; custom rates hang off its Product.
+ *   STRIPE_GRADUATED_PRICE_ID — optional, price_… of the graduated multi-venue
+ *                            Price (lookup key hightop_venue_graduated_monthly_v1,
+ *                            tiers = VENUE_PRICE_TIERS in lib/venuePricing.ts,
+ *                            same Product). When set, NEW subscriptions start on
+ *                            it (getCheckoutPriceId). Created and verified by
+ *                            scripts/create-graduated-price.cjs. Server-side,
+ *                            but a Vercel redeploy is needed to apply a change.
  */
 
 const secretKey = process.env.STRIPE_SECRET_KEY?.trim() ?? "";
@@ -36,6 +44,21 @@ export const stripe: Stripe | null = secretKey ? new Stripe(secretKey) : null;
 
 export function getStripePriceId(): string {
   return process.env.STRIPE_PRICE_ID?.trim() ?? "";
+}
+
+/** The graduated multi-venue Price, or "" when not configured. Single reader of its env var. */
+export function getStripeGraduatedPriceId(): string {
+  return process.env.STRIPE_GRADUATED_PRICE_ID?.trim() ?? "";
+}
+
+/**
+ * The Price a NEW subscription starts on (Checkout): the graduated multi-venue Price when
+ * configured, else the flat list price — so the deploy order of the env var and the code can
+ * never break signup (docs/multi-venue-volume-billing-plan.md Phase 2). At quantity 1 both cost
+ * the same $100/month.
+ */
+export function getCheckoutPriceId(): string {
+  return getStripeGraduatedPriceId() || getStripePriceId();
 }
 
 export function getStripeWebhookSecret(): string {
