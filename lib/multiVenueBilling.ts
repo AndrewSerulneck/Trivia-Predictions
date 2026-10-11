@@ -13,6 +13,8 @@
 // asked for money, turning the flag off must not strand the payment or the venue. With the flag
 // off and no rows, both are inert.
 
+import { isSelfServeSignupEnabled } from "@/lib/selfServeSignup";
+
 const truthy = (value: string | undefined): boolean => {
   const v = (value ?? "").trim().toLowerCase();
   return v === "1" || v === "true" || v === "yes" || v === "on";
@@ -26,6 +28,14 @@ const truthy = (value: string | undefined): boolean => {
  */
 export const isMultiVenueBillingEnabled = (): boolean =>
   truthy(process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED);
+
+/**
+ * Whether the Partner Dashboard shows "+ Add a venue". Needs the master flag AND the self-serve signup
+ * flag, because the add sheet reuses the signup wizard's address search and map (`/api/signup/places`,
+ * `/api/signup/maps-key`), which 404 while signup is off — a half-working sheet is worse than no entry
+ * point. Both are `NEXT_PUBLIC_*` (inlined at build), so this is safe to call from a client component.
+ */
+export const isAddVenueAvailable = (): boolean => isMultiVenueBillingEnabled() && isSelfServeSignupEnabled();
 
 // --- Client contract (Phase 4 renders these) ---------------------------------------------------
 

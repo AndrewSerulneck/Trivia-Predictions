@@ -32,6 +32,12 @@ type DropdownProps<T extends string> = {
   /** Escape hatch for a custom trigger (e.g. a rich card) instead of the default label + chevron button. */
   renderTrigger?: (selected: DropdownOption<T> | undefined, isOpen: boolean) => ReactNode;
   disabled?: boolean;
+  /**
+   * One action pinned under the options, after a divider — the Partner Dashboard's "+ Add a venue".
+   * It is a button, not an option: it never becomes the selected value, and arrow keys skip it (Tab reaches it).
+   * Omit it and the popup is exactly what it was.
+   */
+  footerAction?: { label: string; onSelect: () => void };
 };
 
 /**
@@ -55,6 +61,7 @@ export function Dropdown<T extends string>({
   size = "base",
   renderTrigger,
   disabled,
+  footerAction,
 }: DropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -140,6 +147,40 @@ export function Dropdown<T extends string>({
   // Android's Back inside the app closes an open menu, the same as Escape.
   useNativeBackHandler("overlay", isOpen ? () => setIsOpen(false) : null);
 
+  const renderOptions = () => (
+    <>
+      {options.map((option, index) => {
+        const isSelected = option.value === value;
+        return (
+          <button
+            key={option.value}
+            ref={(element) => {
+              optionRefs.current[index] = element;
+            }}
+            type="button"
+            role="option"
+            aria-selected={isSelected}
+            disabled={option.disabled}
+            onKeyDown={(event) => handleOptionKeyDown(event, index)}
+            onClick={() => {
+              onChange(option.value);
+              setIsOpen(false);
+            }}
+            className={`block w-full truncate rounded-ht-sm px-3 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-40 ${
+              OPTION_TEXT_CLASSES[size]
+            } ${
+              isSelected
+                ? "bg-ht-cyan-500/15 text-ht-cyan-300"
+                : "text-ht-primary hover:bg-ht-elevated-2"
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </>
+  );
+
   return (
     <div ref={containerRef} className="relative">
       <button
@@ -172,42 +213,34 @@ export function Dropdown<T extends string>({
       </button>
 
       {isOpen ? (
-        <div
-          id={menuId}
-          role="listbox"
-          aria-label={ariaLabel}
-          className="absolute left-0 top-full z-[1400] mt-2 w-full max-h-64 overflow-y-auto rounded-ht-md border border-ht-elevated-2 bg-ht-elevated p-1 shadow-ht-modal"
-        >
-          {options.map((option, index) => {
-            const isSelected = option.value === value;
-            return (
+        footerAction ? (
+          <div className="absolute left-0 top-full z-[1400] mt-2 w-full min-w-[13rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-ht-md border border-ht-elevated-2 bg-ht-elevated shadow-ht-modal">
+            <div id={menuId} role="listbox" aria-label={ariaLabel} className="max-h-64 overflow-y-auto p-1">
+              {renderOptions()}
+            </div>
+            <div className="border-t border-ht-elevated-2 p-1">
               <button
-                key={option.value}
-                ref={(element) => {
-                  optionRefs.current[index] = element;
-                }}
                 type="button"
-                role="option"
-                aria-selected={isSelected}
-                disabled={option.disabled}
-                onKeyDown={(event) => handleOptionKeyDown(event, index)}
                 onClick={() => {
-                  onChange(option.value);
                   setIsOpen(false);
+                  footerAction.onSelect();
                 }}
-                className={`block w-full truncate rounded-ht-sm px-3 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                  OPTION_TEXT_CLASSES[size]
-                } ${
-                  isSelected
-                    ? "bg-ht-cyan-500/15 text-ht-cyan-300"
-                    : "text-ht-primary hover:bg-ht-elevated-2"
-                }`}
+                className="block min-h-11 w-full truncate rounded-ht-sm px-3 py-2 text-left text-sm font-black text-ht-cyan-300 transition hover:bg-ht-elevated-2"
               >
-                {option.label}
+                {footerAction.label}
               </button>
-            );
-          })}
-        </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            id={menuId}
+            role="listbox"
+            aria-label={ariaLabel}
+            className="absolute left-0 top-full z-[1400] mt-2 w-full max-h-64 overflow-y-auto rounded-ht-md border border-ht-elevated-2 bg-ht-elevated p-1 shadow-ht-modal"
+          >
+            {renderOptions()}
+          </div>
+        )
       ) : null}
     </div>
   );

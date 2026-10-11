@@ -11,10 +11,14 @@ import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
 import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/RewardsFlow";
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
 import { PosConnectionsSheet } from "@/components/owner/pos/PosConnectionsSheet";
+import { AddVenueSheet, type AddedVenue } from "@/components/owner/add-venue/AddVenueSheet";
 import { MerchStoreSheet } from "@/components/owner/store/MerchStoreSheet";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { HightopLoader } from "@/components/ui/HightopLoader";
+import { isAddVenueAvailable } from "@/lib/multiVenueBilling";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
+import { fetchOwnerVenues } from "@/lib/ownerVenuesClient";
+import { pushSheet } from "@/lib/ownerSheetParams";
 import type { MerchCart, MerchVenueRef } from "@/lib/merchPricing";
 import { knownItemIds, resolvePendingHighlight, type PendingHighlight } from "@/lib/ownerDashboardHighlight";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
@@ -385,6 +389,26 @@ const PosSheetHost = ({ venue }: { venue: Venue | null }) => {
   return <PosConnectionsSheet nav={sheet} venue={venue} posResult={posResult} />;
 };
 
+// Add a venue (?sheet=add-venue), hosted by the page like the store: it acts on the page's venue list
+// (docs/multi-venue-volume-billing-plan.md Phase 4). Mounted only while "+ Add a venue" is available, and
+// keyed per open so each add starts from a blank form.
+const AddVenueHost = ({
+  venueId,
+  session,
+  onAdded,
+  onPendingClosed,
+}: {
+  venueId: string;
+  session: number;
+  onAdded: (added: AddedVenue) => void;
+  onPendingClosed: () => void;
+}) => {
+  const sheet = useOwnerSheet();
+  return (
+    <AddVenueSheet key={session} nav={sheet} venueId={venueId} onAdded={onAdded} onPendingClosed={onPendingClosed} />
+  );
+};
+
 const OwnerDashboardPage = () => {
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -455,21 +479,56 @@ const OwnerDashboardPage = () => {
   // Join Merch carts, one per venue: kept across the store closing, never moved by a venue switch (F1).
   const [merchCart, setMerchCart] = useVenueMerchCart(selectedVenue?.id ?? null);
 
+  // "+ Add a venue" (billing plan Phase 4). Each open gets a fresh sheet; the toast lives here because the
+  // dashboard body remounts when the new venue is selected.
+  const addVenueEnabled = isAddVenueAvailable();
+  const [addVenueSession, setAddVenueSession] = useState(0);
+  const [pageToast, setPageToast] = useState<{ id: number; message: string } | null>(null);
+  const showPageToast = useCallback(
+    (message: string) => setPageToast((prev) => ({ id: (prev?.id ?? 0) + 1, message })),
+    [],
+  );
+  const dismissPageToast = useCallback(() => setPageToast(null), []);
+  const openAddVenue = useCallback(() => {
+    setAddVenueSession((n) => n + 1);
+    pushSheet(window.history, window.location, "add-venue");
+  }, []);
+  // A venue was paid for: reload the list (the new venue is on it now) and switch to it.
+  const handleVenueAdded = useCallback(
+    (added: AddedVenue) => {
+      showPageToast(`${added.venueName} is live. It's on your bill now.`);
+      void fetchOwnerVenues().then((result) => {
+        if (!result.ok) {
+          if (result.unauthorized) router.push(ownerAuthRecoveryPath(result.unauthorizedCode));
+          return;
+        }
+        setVenues(result.venues);
+        if (added.venueId && result.venues.some((v) => v.id === added.venueId)) setSelectedVenueId(added.venueId);
+      });
+    },
+    [router, showPageToast],
+  );
+  const handleAddPendingClosed = useCallback(
+    () => showPageToast("Your venue will appear here as soon as the payment is confirmed. Refresh in a minute."),
+    [showPageToast],
+  );
+
   // The loader is driven from the page (not from inside HightopLoader) because only the
   // caller can hold it visible long enough not to blink — see lib/useLoaderVisible.ts.
   const firstLoadPending = loading || (selectedVenueId !== "" && !bodyReady);
   const showLoader = useLoaderVisible(firstLoadPending);
   const revealed = !firstLoadPending && !showLoader;
 
-  // Bar centre: the venue name; with 2+ venues it is the switcher.
+  // Bar centre: the venue name; with 2+ venues (or "+ Add a venue" available) it is the switcher.
   const venueSwitcher = selectedVenue ? (
-    venues.length > 1 ? (
+    venues.length > 1 || addVenueEnabled ? (
       <Dropdown
         value={selectedVenueId}
         onChange={setSelectedVenueId}
         options={venues.map((v) => ({ value: v.id, label: v.name }))}
         ariaLabel="Select venue"
         className="flex min-h-10 min-w-0 max-w-full items-center gap-1.5 rounded-xl px-2 text-left"
+        {...(addVenueEnabled ? { footerAction: { label: "+ Add a venue", onSelect: openAddVenue } } : {})}
         renderTrigger={(_selected, isOpen) => (
           <>
             <span className="truncate text-base font-black text-ht-primary">{selectedVenue.name}</span>
@@ -530,6 +589,21 @@ const OwnerDashboardPage = () => {
         <Suspense fallback={null}>
           <PosSheetHost venue={selectedVenue ?? null} />
         </Suspense>
+      ) : null}
+      {addVenueEnabled && selectedVenueId ? (
+        <Suspense fallback={null}>
+          <AddVenueHost
+            venueId={selectedVenueId}
+            session={addVenueSession}
+            onAdded={handleVenueAdded}
+            onPendingClosed={handleAddPendingClosed}
+          />
+        </Suspense>
+      ) : null}
+      {pageToast ? (
+        <DashboardToast key={pageToast.id} onDismiss={dismissPageToast}>
+          {pageToast.message}
+        </DashboardToast>
       ) : null}
     </OwnerShell>
   );

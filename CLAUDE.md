@@ -702,10 +702,10 @@ step opens at the top — don't hand-roll a scroll reset.
   `npm run store:qr` (`scripts/generate-join-qr.cjs`); `tests/lib.join-qr.test.ts` decodes them and
   fails if they drift. Never change the URL — printed merch can't be updated.
 
-## Multi-Venue Volume Billing — Phases 1–2 live 2026-10-11; Phase 3 built (flag off)
+## Multi-Venue Volume Billing — Phases 1–3 shipped, Phase 4 UI built (flag off)
 
 Plan: `docs/multi-venue-volume-billing-plan.md` (Andrew's answers in §2 — don't re-ask); latest handoff
-`docs/multi-venue-volume-billing-plan_PHASE_3_HANDOFF.md`. One Stripe subscription per partner, quantity =
+`docs/multi-venue-volume-billing-plan_PHASE_4_HANDOFF.md`. One Stripe subscription per partner, quantity =
 venues, graduated $100 / $75 / $60 / $45. Migration `20261011134820` is applied; every card subscriber is on
 the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (lookup key `hightop_venue_graduated_monthly_v1`) at
 quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/stripe.ts`
@@ -737,6 +737,16 @@ quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/str
   finishes it. Completion/reconcile are deliberately NOT flag-gated. The venue is linked to the partner
   only once paid. Pinned by `tests/multi-venue-billing-contract.test.ts`; behaviour in
   `tests/api.owner.venues-add.test.ts`. `findNearbyVenue` moved to `lib/nearbyVenue.ts` (shared with signup).
+- **"+ Add a venue" UI (Phase 4, 2026-10-11)** — `components/owner/add-venue/` (`AddVenueSheet`, `AddVenueReviewStep`)
+  + pure logic in `lib/addVenueFlow.ts`; sheet id `add-venue` (`?sheet=add-venue[&step=map|review]`). Shown only
+  when `isAddVenueAvailable()` (`lib/multiVenueBilling.ts`) = billing flag AND `NEXT_PUBLIC_SELF_SERVE_SIGNUP_ENABLED`,
+  because it reuses signup's `AddressStep`/`GeofenceStep` and so `/api/signup/places` + `/maps-key`. The dashboard
+  Dropdown is always a dropdown then (`footerAction`). Never price anything in the UI (the quote has every number);
+  one idempotency key per Confirm (`newAttemptKey`), re-asks reuse it; a new key only after a definitive refusal.
+  After a paid add the page reloads venues via `fetchOwnerVenues()` (`lib/ownerVenuesClient.ts`) — the page file must
+  not name `/api/owner/venues` (first-load tripwire). `tests/add-venue-ui-contract.test.ts`. **Never exercise the
+  real POST from a dev server** (live Stripe + shared DB): Andrew's `next dev` holds `.next/dev/lock`, so browser-test
+  from a scratchpad clone with no `.env.local` and mocked routes (Phase 4 handoff §5), and never `pkill next-server`.
 
 ## POS Rewards Integration (Square / Clover; Toast deferred) — Phases 1–2 built 2026-10-04/05
 

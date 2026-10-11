@@ -1,14 +1,12 @@
 # Multi-Venue Volume Billing Plan — "Add a venue" + Graduated Volume Discount
 
-**Status:** Phases 1–2 **live 2026-10-11** — Phase 1 committed (`3e9be34`), migration
-`20261011134820` applied to production, Phase 2 committed (`c1ce489`), pushed and deployed; both card
-subscribers swapped onto the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (still $100/month).
-Check-paying accounts no longer lapse automatically (`6ce86dd`). **Phase 3 (Add-a-venue backend) built
-2026-10-11, flag off, NOT committed / deployed; its migration `20261011153607` is NOT applied** (waits on
-Andrew). Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_3_HANDOFF.md`**. Andrew's answers
-are in §2 (do not re-ask). **Next: Phase 4** (after Andrew approves Phase 3's push). Each phase ends with a handoff note
-`docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at
-the latest one.
+**Status:** Phases 1–3 **committed and pushed** (Phase 3: `d63d720`, 2026-10-11; its migration
+`20261011153607` applied to production the same day). Phases 1–2 are live (both card subscribers are on the
+graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl`, still $100/month; check-paying accounts never lapse
+automatically). **Phase 4 (Add-a-venue UI) built 2026-10-11, flag off, NOT committed / deployed.** Latest
+handoff: **`docs/multi-venue-volume-billing-plan_PHASE_4_HANDOFF.md`**. Andrew's answers are in §2 (do not
+re-ask). **Next: Phase 5** (Remove at end of month + Billing account view). Each phase ends with a handoff note
+`docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at the latest one.
 
 ---
 
@@ -53,6 +51,7 @@ Stripe does the math on every invoice and we never hand-compute a bill.
 | 8 | Added venue goes live to players (was §9 Q3) | **Yes — the moment payment succeeds.** No admin check. |
 | 9 | Confirmation email (was §9 Q4) | **Send our own "Venue added" email via Resend** as well as Stripe's receipt. Andrew also wants to perfect the new-subscriber welcome email and the venue-added email himself: **all wording now lives in `lib/email/partnerEmailCopy.ts`** (Phase 1), previewed with `npm run email:preview`. |
 | 10 | Overhill and Garden State (was §9 Q5) | **Overhill is a test location** — leave it. **Garden State pays by check and must stay subscribed and active** — a rare exception granted to an early customer. NB: production shows its offline grant **expired on 2026-08-25** (the daily cron set it `cancelled` on 2026-08-26) — see the Phase 1 handoff §7; needs Andrew's re-grant. **Resolved 2026-10-11:** Andrew re-granted it (active through 2026-11-25) and ruled that check-paying accounts **never lapse automatically** — the cron's offline-expiry sweep was removed (`6ce86dd`); only an admin Revoke ends one. |
+| 11 | Partner adds an address we already have (admin-made venue, someone's abandoned signup, another subscriber's bar) (Phase 4 Q2) | **Option A — keep refusing with "email partnerships@…"** (2026-10-11). A person checks ownership; the add flow never claims an existing venue. |
 
 Defaults chosen by the planner (Andrew may overrule any of these — see §9):
 
@@ -305,7 +304,12 @@ two different adds at once (lock), unhealthy bill refused, offline bill refused,
 address refused, `(0,0)` refused, flag off → 404. Ledger rows must never leave a hidden venue
 both unpaid and un-sweepable.
 
-### Phase 4 — Add-a-venue UI (Sonnet 5.5, high)
+### Phase 4 — Add-a-venue UI (Sonnet 5.5, high) — ✅ built 2026-10-11, flag off (handoff: `…_PHASE_4_HANDOFF.md`)
+
+As built: three screens, not four — **Address (with the venue name) → Map area → Review & pay** (signup's
+`AddressStep` already asks the name). The dropdown is always a dropdown when "Add a venue" is available
+(`isAddVenueAvailable()` = billing flag AND self-serve signup flag, because the sheet reuses signup's address
+search and map routes). Components: `components/owner/add-venue/`; pure logic: `lib/addVenueFlow.ts`.
 
 Everything in §4.5 except the Billing page. Follow the `/owner/*` rules in `CLAUDE.md`
 (OwnerSheet, `pushSheet` not `router.push`, DiscardGuard, light-surface rules if the sheet is
