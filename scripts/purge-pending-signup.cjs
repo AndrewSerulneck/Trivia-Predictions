@@ -19,6 +19,7 @@
  * transcribed from the predicate in lib/signupSweep.ts which has passed security
  * review:
  *   - a billing_subscriptions row exists for the owner or ANY linked venue, ever
+ *   - ANY linked venue is (or was) on a multi-venue bill (billing_subscription_venues)
  *     (a cancelled subscriber keeps its row, so "no row" is a reliable
  *     "never paid" test);
  *   - a linked venue is not hidden;
@@ -174,6 +175,34 @@ async function main() {
   console.log("");
   if (allSubs.length > 0) {
     refusals.push("a billing_subscriptions row exists (owner or linked venue) — this signup has paid at some point");
+  }
+
+  // --- billing_subscription_venues (multi-venue billing: on ANY bill, ever) ---
+  // Mirrors venueIdsEverBilled() in lib/venueBilling.ts. A missing table (migration
+  // 20261011134820 not applied yet) means nothing can be on a multi-venue bill.
+  if (venueIds.length > 0) {
+    const { data: memberships, error: membershipErr } = await supabase
+      .from("billing_subscription_venues")
+      .select("venue_id, subscription_id, removed_at")
+      .in("venue_id", venueIds);
+    const missingTable =
+      membershipErr &&
+      (membershipErr.code === "42P01" ||
+        membershipErr.code === "PGRST205" ||
+        (/billing_subscription_venues/.test(membershipErr.message || "") &&
+          /does not exist|Could not find/.test(membershipErr.message || "")));
+    if (membershipErr && !missingTable) {
+      throw new Error(`billing_subscription_venues read: ${membershipErr.message}`);
+    }
+    const rows = memberships || [];
+    console.log(`billing_subscription_venues rows (linked venue on any bill, ever): ${rows.length}`);
+    for (const m of rows) {
+      console.log(`  venue_id=${m.venue_id} subscription_id=${m.subscription_id} removed_at=${m.removed_at}`);
+    }
+    console.log("");
+    if (rows.length > 0) {
+      refusals.push("a linked venue is (or was) on a bill — this signup has paid at some point");
+    }
   }
 
   // --- Seven-table auth.users reference check -------------------------------

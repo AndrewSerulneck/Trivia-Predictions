@@ -85,6 +85,10 @@ function resolveQuery(ctx: Ctx): QueryResult {
     case "billing_subscriptions":
       return { data: mocks.billing, error: null };
 
+    // Multi-venue billing (lib/venueBilling.ts): no venue is on another venue's bill.
+    case "billing_subscription_venues":
+      return { data: [], error: null };
+
     case "accounts":
       return { data: mocks.accounts, error: null };
 

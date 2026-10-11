@@ -35,7 +35,10 @@ type SubRow = {
   billing_method: string;
 };
 
-const state = vi.hoisted(() => ({ row: null as SubRow | null }));
+const state = vi.hoisted(() => ({
+  row: null as SubRow | null,
+  readError: null as { message: string } | null,
+}));
 
 const mocks = vi.hoisted(() => ({
   stripeUpdate: vi.fn(),
@@ -68,7 +71,14 @@ vi.mock("@/lib/supabaseAdmin", () => ({
   supabaseAdmin: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
-        eq: vi.fn(() => ({ maybeSingle: vi.fn(async () => ({ data: state.row, error: null })) })),
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn(async () =>
+            state.readError ? { data: null, error: state.readError } : { data: state.row, error: null }
+          ),
+        })),
+        // lib/venueBilling.ts's billing_subscription_venues read (no row is cancelled-and-covered
+        // elsewhere here): no venue is on another venue's multi-venue bill.
+        in: vi.fn(() => ({ returns: vi.fn(async () => ({ data: [], error: null })) })),
       })),
       update: vi.fn((payload: Record<string, unknown>) => {
         mocks.dbUpdate(payload);
@@ -107,6 +117,7 @@ const readJson = async (response: Response) =>
 describe("owner billing — resume vs. checkout state matrix", () => {
   beforeEach(() => {
     state.row = null;
+    state.readError = null;
     mocks.stripeUpdate.mockReset().mockResolvedValue({});
     // Default: Stripe agrees with the mirror. The self-heal tests below override
     // this to make the two disagree.
@@ -652,6 +663,18 @@ describe("owner billing — resume vs. checkout state matrix", () => {
       expect(
         mocks.dbUpdate.mock.calls.some(([payload]) => payload && "checkout_started_at" in payload)
       ).toBe(false);
+    });
+  });
+
+  describe("billing read fails (multi-venue billing Phase 1: fail closed)", () => {
+    it("refuses checkout with 503 rather than risk a second live subscription", async () => {
+      state.readError = { message: "connection reset" };
+
+      const response = await checkout(post("/api/owner/billing/checkout"));
+
+      expect(response.status).toBe(503);
+      expect(mocks.checkoutCreate).not.toHaveBeenCalled();
+      expect(mocks.stripeList).not.toHaveBeenCalled();
     });
   });
 });

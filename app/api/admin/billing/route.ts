@@ -14,6 +14,7 @@ import {
   type DiscountableSubscriptionRow,
 } from "@/lib/billingDiscounts";
 import { setCustomPrice, type CustomPriceRow } from "@/lib/billingCustomPrice";
+import { loadBillingForVenue, loadBillingForVenues } from "@/lib/venueBilling";
 
 /**
  * Admin-only manual billing controls (Phase 1 of the check/offline-payment plan).
@@ -40,6 +41,7 @@ type OwnerLinkRow = {
 };
 
 type SubscriptionRow = {
+  id: string;
   venue_id: string;
   plan_type: string;
   billing_method: string;
@@ -89,17 +91,15 @@ export async function GET(request: Request) {
   const venueIds = (links ?? []).map((l) => l.venue_id);
   const subByVenue = new Map<string, SubscriptionRow>();
   if (venueIds.length > 0) {
-    const { data: subs, error: subError } = await supabaseAdmin
-      .from("billing_subscriptions")
-      .select(
-        "venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, cancel_at_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
-      )
-      .in("venue_id", venueIds)
-      .returns<SubscriptionRow[]>();
-    if (subError) {
-      return NextResponse.json({ ok: false, error: subError.message }, { status: 500 });
+    // The bill covering each venue (lib/venueBilling.ts) — its own, or a multi-venue bill.
+    const billing = await loadBillingForVenues<SubscriptionRow>(
+      venueIds,
+      "id, venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, cancel_at_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
+    );
+    if (!billing.ok) {
+      return NextResponse.json({ ok: false, error: billing.error }, { status: 500 });
     }
-    for (const s of subs ?? []) subByVenue.set(s.venue_id, s);
+    for (const [venueId, row] of billing.byVenue) subByVenue.set(venueId, row);
   }
 
   const partners = (links ?? [])
@@ -176,6 +176,26 @@ type PostBody = {
 };
 
 /**
+ * Admin billing actions are per VENUE, but a venue can sit on another venue's multi-venue bill
+ * (docs/multi-venue-volume-billing-plan.md). Acting on it from a non-anchor venue would revoke,
+ * discount or reprice the whole chain's bill by accident — or, for grant-manual, open a second
+ * bill for a venue that is already billed. Until Phase 6 builds chain-aware admin tools these
+ * actions refuse anything but the bill's anchor venue. (No venue is on a chain yet, so today this
+ * never fires.)
+ */
+const notAnchorResponse = (row: { venue_id: string }, venueId: string): NextResponse | null =>
+  row.venue_id === venueId
+    ? null
+    : NextResponse.json(
+        {
+          ok: false,
+          error: `This venue is billed on a multi-venue bill opened for venue ${row.venue_id}. Manage billing from that venue.`,
+          code: "not_bill_anchor",
+        },
+        { status: 409 }
+      );
+
+/**
  * POST /api/admin/billing — grant or revoke offline/manual access for a venue.
  *
  *   action: "grant-manual" — upsert an active manual subscription (paid through
@@ -201,14 +221,18 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "revoke") {
-    const { data: existing } = await supabaseAdmin
-      .from("billing_subscriptions")
-      .select("id, stripe_subscription_id")
-      .eq("venue_id", venueId)
-      .maybeSingle<{ id: string; stripe_subscription_id: string | null }>();
+    const billing = await loadBillingForVenue<{
+      id: string;
+      venue_id: string;
+      status: string;
+      stripe_subscription_id: string | null;
+    }>(venueId, "id, stripe_subscription_id");
+    const existing = billing.ok ? billing.row : null;
     if (!existing) {
       return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
     }
+    const notAnchor = notAnchorResponse(existing, venueId);
+    if (notAnchor) return notAnchor;
     // Revoke through the shared helper: a card-billed venue's live Stripe
     // subscription must be cancelled at Stripe (cancel_at_period_end), not just
     // flipped in our DB — otherwise Stripe keeps charging the customer monthly
@@ -265,25 +289,32 @@ export async function POST(request: Request) {
   // reads them to decide whether the detach is worth attempting at all. Drop
   // them from this select and every row reads as "no discount", making the skip
   // unconditional and re-arming the orphaned-coupon bug the detach exists for.
-  const { data: existingSub } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select(
-      "id, billing_method, stripe_subscription_id, status, amount_cents, current_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
-    )
-    .eq("venue_id", venueId)
-    .maybeSingle<{
-      id: string;
-      billing_method: string;
-      stripe_subscription_id: string | null;
-      status: string;
-      amount_cents: number;
-      current_period_end: string | null;
-      stripe_coupon_id: string | null;
-      discount_label: string | null;
-      discount_percent_off: number | null;
-      discount_amount_off_cents: number | null;
-      discount_ends_at: string | null;
-    }>();
+  const existingBilling = await loadBillingForVenue<{
+    id: string;
+    venue_id: string;
+    billing_method: string;
+    stripe_subscription_id: string | null;
+    status: string;
+    amount_cents: number;
+    current_period_end: string | null;
+    stripe_coupon_id: string | null;
+    discount_label: string | null;
+    discount_percent_off: number | null;
+    discount_amount_off_cents: number | null;
+    discount_ends_at: string | null;
+  }>(
+    venueId,
+    "id, venue_id, billing_method, stripe_subscription_id, status, amount_cents, current_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
+  );
+  if (!existingBilling.ok) {
+    // Fail closed: without this answer the live-Stripe-subscription guard below is blind.
+    return NextResponse.json({ ok: false, error: existingBilling.error }, { status: 500 });
+  }
+  const existingSub = existingBilling.row;
+  if (existingSub) {
+    const notAnchor = notAnchorResponse(existingSub, venueId);
+    if (notAnchor) return notAnchor;
+  }
 
   // Everything below this line can mutate Stripe (force-cancel, discount
   // detach); nothing below it may return 400 for bad input. Validate
@@ -496,17 +527,19 @@ async function handleApplyDiscount(
     }
   }
 
-  const { data: row, error: rowError } = await supabaseAdmin
-    .from("billing_subscriptions")
+  const billing = await loadBillingForVenue<DiscountableSubscriptionRow & { venue_id: string; status: string }>(
+    venueId,
     // billing_method decides the offline path (see DiscountableSubscriptionRow) —
     // dropping it here would route every row down the Stripe branch.
-    .select("id, billing_method, stripe_subscription_id, amount_cents, current_period_end")
-    .eq("venue_id", venueId)
-    .maybeSingle<DiscountableSubscriptionRow>();
+    "id, billing_method, stripe_subscription_id, amount_cents, current_period_end"
+  );
+  const row = billing.ok ? billing.row : null;
 
-  if (rowError || !row) {
+  if (!row) {
     return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
   }
+  const notAnchor = notAnchorResponse(row, venueId);
+  if (notAnchor) return notAnchor;
 
   const result = await applyDiscountToSubscription(row, spec);
   if (!result.ok) {
@@ -540,17 +573,19 @@ async function handleRemoveDiscount(venueId: string): Promise<NextResponse> {
     return NextResponse.json({ ok: false, error: "Server configuration error." }, { status: 500 });
   }
 
-  const { data: row, error: rowError } = await supabaseAdmin
-    .from("billing_subscriptions")
+  const billing = await loadBillingForVenue<DiscountableSubscriptionRow & { venue_id: string; status: string }>(
+    venueId,
     // billing_method decides the offline path (see DiscountableSubscriptionRow) —
     // dropping it here would route every row down the Stripe branch.
-    .select("id, billing_method, stripe_subscription_id, amount_cents, current_period_end")
-    .eq("venue_id", venueId)
-    .maybeSingle<DiscountableSubscriptionRow>();
+    "id, billing_method, stripe_subscription_id, amount_cents, current_period_end"
+  );
+  const row = billing.ok ? billing.row : null;
 
-  if (rowError || !row) {
+  if (!row) {
     return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
   }
+  const notAnchor = notAnchorResponse(row, venueId);
+  if (notAnchor) return notAnchor;
 
   const result = await removeDiscountFromSubscription(row);
   if (!result.ok) {
@@ -603,15 +638,17 @@ async function handleSetCustomPrice(
     return NextResponse.json({ ok: false, error: "That dollar amount isn't a number." }, { status: 400 });
   }
 
-  const { data: row, error: rowError } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("id, stripe_subscription_id, amount_cents")
-    .eq("venue_id", venueId)
-    .maybeSingle<CustomPriceRow>();
+  const billing = await loadBillingForVenue<CustomPriceRow & { venue_id: string; status: string }>(
+    venueId,
+    "id, stripe_subscription_id, amount_cents"
+  );
+  const row = billing.ok ? billing.row : null;
 
-  if (rowError || !row) {
+  if (!row) {
     return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
   }
+  const notAnchor = notAnchorResponse(row, venueId);
+  if (notAnchor) return notAnchor;
 
   const result = await setCustomPrice(row, priceId ? { priceId } : { amountDollars });
   if (!result.ok) {

@@ -702,6 +702,22 @@ step opens at the top — don't hand-roll a scroll reset.
   `npm run store:qr` (`scripts/generate-join-qr.cjs`); `tests/lib.join-qr.test.ts` decodes them and
   fails if they drift. Never change the URL — printed merch can't be updated.
 
+## Multi-Venue Volume Billing — Phase 1 built 2026-10-11 (not yet committed / migration not applied)
+
+Plan: `docs/multi-venue-volume-billing-plan.md` (Andrew's answers in §2 — don't re-ask); latest handoff
+`docs/multi-venue-volume-billing-plan_PHASE_1_HANDOFF.md`. One Stripe subscription per partner, quantity =
+venues, graduated $100 / $75 / $60 / $45.
+- **"Which bill covers this venue?" has ONE home: `lib/venueBilling.ts`** (`loadBillingForVenue(s)`,
+  `venueIdsEverBilled`, `venueIdsOnBill`). `billing_subscriptions.venue_id` is the bill's ANCHOR venue;
+  other venues on a bill are rows in `billing_subscription_venues` (a trigger adds every bill's anchor
+  row). Never `.eq/.in("venue_id")` on `billing_subscriptions` elsewhere — the destructive paths (signup
+  sweep, pending-signup purge) would miss a chain venue. `tests/venue-billing-resolver-contract.test.ts`.
+- **Prices have ONE home: `lib/venuePricing.ts`** (integer cents). A price change = a new Stripe lookup key.
+  The Stripe webhook mirrors `amount_cents` = the whole bill (flat × quantity, or the bands for a tiered
+  price, whose `unit_amount` is null) plus `quantity`.
+- **Partner email wording lives in `lib/email/partnerEmailCopy.ts`** (Andrew edits it; welcome + "Venue
+  added"). Preview: `npm run email:preview`. Builders only lay it out.
+
 ## POS Rewards Integration (Square / Clover; Toast deferred) — Phases 1–2 built 2026-10-04/05
 
 Committed `27f5eea`, deployed 2026-10-05 with the flag OFF. **Phase 3 (Clover) = our own Clover register app** (Andrew,

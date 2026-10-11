@@ -102,6 +102,9 @@ vi.mock("@/lib/supabaseAdmin", () => {
       // The offline-grant expiry sweep — untouched by this phase.
       if (table === "billing_subscriptions" && chain.update) return { data: [], error: null };
 
+      // Multi-venue billing (lib/venueBilling.ts): no venue is on another venue's bill.
+      if (table === "billing_subscription_venues") return { data: [], error: null };
+
       if (table === "billing_subscriptions") {
         if (state.billingReadError) return { data: null, error: state.billingReadError };
         const ids = inValues("venue_id");

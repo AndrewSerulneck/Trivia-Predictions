@@ -132,6 +132,10 @@ function resolveQuery(ctx: Ctx): QueryResult {
     case "billing_subscriptions":
       return { data: mocks.pendingBilling, error: null };
 
+    // Multi-venue billing (lib/venueBilling.ts): no venue is on another venue's bill.
+    case "billing_subscription_venues":
+      return { data: [], error: null };
+
     // The pending-signup predicate's auth-guard reference checks — none of these
     // reference the auth user in this suite's fixtures.
     case "accounts":

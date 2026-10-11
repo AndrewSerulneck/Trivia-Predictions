@@ -5,6 +5,7 @@ import { authUserIsUnreferenced } from "@/lib/signupSweep";
 import { stripe } from "@/lib/stripe";
 import { sweepAbandonedIncompleteSubscriptions } from "@/lib/stripeIncomplete";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { venueIdsEverBilled } from "@/lib/venueBilling";
 import {
   VENUE_CLAIM_COLUMNS,
   isAdminHiddenVenueRow,
@@ -186,7 +187,8 @@ export async function classifyEmailForSignup(email: string): Promise<SignupEmail
  *      timestamp), and is not the (0, 0) placeholder both Category Blitz global
  *      rooms sit at.
  *   3. NO `billing_subscriptions` row for the owner or for any linked venue,
- *      EVER — not "no live subscription". A cancelled subscription keeps its row
+ *      EVER — not "no live subscription". "For a venue" includes being on another
+ *      venue's multi-venue bill (`billing_subscription_venues`, any state). A cancelled subscription keeps its row
  *      precisely so it can serve as this proof (CLAUDE.md, Venue Visibility).
  *   4. The auth user is unreferenced by the seven FK consumers, discounting this
  *      owner's own row.
@@ -260,14 +262,12 @@ export async function findPendingSignupByOwnerId(ownerId: string): Promise<Pendi
   if (ownerSubs.error) return { ok: false, message: `owner-subs-read-failed: ${ownerSubs.error.message}` };
   if ((ownerSubs.data ?? []).length > 0) return notPending(ownerId, "owner-subscription");
 
-  const venueSubs = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("id")
-    .in("venue_id", venueIds)
-    .limit(1)
-    .returns<{ id: string }[]>();
-  if (venueSubs.error) return { ok: false, message: `venue-subs-read-failed: ${venueSubs.error.message}` };
-  if ((venueSubs.data ?? []).length > 0) return notPending(ownerId, "venue-subscription");
+  // The venue half asks the one resolver (lib/venueBilling.ts) whether any linked venue was EVER
+  // on a bill — as a bill's anchor, or as a venue on someone's multi-venue bill (removed or not).
+  // Without the second half, a venue added to a chain would read as "never paid" here.
+  const venueSubs = await venueIdsEverBilled(venueIds);
+  if (!venueSubs.ok) return { ok: false, message: `venue-subs-read-failed: ${venueSubs.error}` };
+  if (venueSubs.venueIds.size > 0) return notPending(ownerId, "venue-subscription");
 
   // --- Clause 4: the auth user belongs to nobody else -------------------------
   const authUserId = owner.data.auth_id ?? null;

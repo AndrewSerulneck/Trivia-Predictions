@@ -61,8 +61,11 @@ vi.mock("@/lib/supabaseAdmin", () => {
         if (table === "billing_subscriptions") {
           return {
             select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                maybeSingle: vi.fn(() => Promise.resolve({ data: existingSub })),
+              // lib/venueBilling.ts always selects venue_id; the row is this venue's own bill.
+              eq: vi.fn((_column: string, venueId: string) => ({
+                maybeSingle: vi.fn(() =>
+                  Promise.resolve({ data: existingSub ? { venue_id: venueId, ...existingSub } : null })
+                ),
               })),
             })),
             update: vi.fn((payload: Record<string, unknown>) => {
@@ -93,7 +96,9 @@ vi.mock("@/lib/supabaseAdmin", () => {
         if (table === "billing_invoices") {
           return { insert: vi.fn(() => Promise.resolve({ error: null })) };
         }
-        throw new Error(`Unexpected table: ${table}`);
+        if (table === EMPTY_MEMBERSHIP_TABLE) return emptyMembershipTable();
+        if (table === EMPTY_MEMBERSHIP_TABLE) return emptyMembershipTable();
+      throw new Error(`Unexpected table: ${table}`);
       }),
       __setExistingSub: (row: ExistingSub | null) => {
         existingSub = row;
@@ -104,6 +109,7 @@ vi.mock("@/lib/supabaseAdmin", () => {
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { POST } from "@/app/api/admin/billing/route";
+import { EMPTY_MEMBERSHIP_TABLE, emptyMembershipTable } from "./helpers/emptyMembershipTable";
 
 const setExistingSub = (row: ExistingSub | null) => {
   (supabaseAdmin as unknown as { __setExistingSub: (r: ExistingSub | null) => void }).__setExistingSub(row);

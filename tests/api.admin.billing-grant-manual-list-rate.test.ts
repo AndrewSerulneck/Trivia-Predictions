@@ -65,12 +65,14 @@ vi.mock("@/lib/supabaseAdmin", () => ({
           }),
         };
       }
+      if (table === EMPTY_MEMBERSHIP_TABLE) return emptyMembershipTable();
       throw new Error(`Unexpected table: ${table}`);
     }),
   },
 }));
 
 import { POST } from "@/app/api/admin/billing/route";
+import { EMPTY_MEMBERSHIP_TABLE, emptyMembershipTable } from "./helpers/emptyMembershipTable";
 
 const grantRequest = (body: Record<string, unknown>) =>
   new Request("http://localhost/api/admin/billing", {

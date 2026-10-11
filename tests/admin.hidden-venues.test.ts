@@ -13,6 +13,7 @@ vi.mock("@/lib/supabaseAdmin", () => ({
 vi.mock("@/lib/stripe", () => ({ stripe: null, OFFLINE_BILLING_METHOD: "offline" }));
 
 import { listHiddenVenues, restoreLapsedVenue } from "@/lib/admin";
+import { EMPTY_MEMBERSHIP_TABLE, emptyMembershipTable } from "./helpers/emptyMembershipTable";
 
 /** A fluent stub: every filter method returns the builder; `returns` resolves. */
 const builder = (result: { data: unknown; error: unknown }, record?: (op: string, args: unknown[]) => void) => {
@@ -61,12 +62,13 @@ describe("listHiddenVenues", () => {
       },
     ];
     const billing = [
-      { venue_id: "lapsed-a", status: "cancelled", billing_method: "stripe", stripe_subscription_id: "sub_a" },
+      { id: "bill-a", venue_id: "lapsed-a", status: "cancelled", billing_method: "stripe", stripe_subscription_id: "sub_a" },
     ];
 
     mocks.from.mockImplementation((table: string) => {
       if (table === "venues") return builder({ data: venues, error: null });
       if (table === "billing_subscriptions") return builder({ data: billing, error: null });
+      if (table === EMPTY_MEMBERSHIP_TABLE) return emptyMembershipTable();
       throw new Error(`Unexpected table ${table}`);
     });
 

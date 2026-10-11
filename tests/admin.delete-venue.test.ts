@@ -26,12 +26,14 @@ vi.mock("@/lib/stripe", () => ({
 }));
 
 import { deleteAdminVenue } from "@/lib/admin";
+import { EMPTY_MEMBERSHIP_TABLE, emptyMembershipTable } from "./helpers/emptyMembershipTable";
 
 type OwnerLink = { owner_id: string; venue_owners: { auth_id: string | null } | null } | null;
 
 // Builds the `from(...)` chains deleteAdminVenue uses, in call order:
 //   1. venue_owner_venues -> select -> eq -> maybeSingle       (owner link lookup)
-//   2. billing_subscriptions -> select -> eq -> maybeSingle
+//   2. billing_subscriptions -> select -> eq -> maybeSingle       (via lib/venueBilling.ts;
+//      the same chain again by id for venueIdsOnBill, plus billing_subscription_venues reads)
 //   3. venues -> delete -> eq (resolves)
 //   4. venue_owner_venues -> delete -> eq (resolves)           (explicit link delete; only if owner)
 //   5. venue_owner_venues -> select -> eq -> limit             (remaining links; only if owner)
@@ -41,7 +43,9 @@ function mockDeleteChains(
   deleteError: unknown = null,
   ownerLink: OwnerLink = null,
   remainingOwnerLinks: Array<{ id: string }> = [],
-  linkDeleteError: unknown = null
+  linkDeleteError: unknown = null,
+  // Multi-venue billing: rows in billing_subscription_venues (default: none, i.e. today's state).
+  memberships: Array<{ venue_id: string; subscription_id: string; removed_at: string | null }> | null = null
 ) {
   // Owner link lookup (call 1)
   const ownerLinkMaybeSingle = vi.fn().mockResolvedValue({ data: ownerLink, error: null });
@@ -58,8 +62,18 @@ function mockDeleteChains(
   const linkDeleteEq = vi.fn().mockResolvedValue({ error: linkDeleteError });
   const linkDel = vi.fn().mockReturnValue({ eq: linkDeleteEq });
 
-  const maybeSingle = vi.fn().mockResolvedValue({ data: subscriptionRow, error: null });
-  const subEq = vi.fn().mockReturnValue({ maybeSingle });
+  // The resolver reads the bill by venue, then (venueIdsOnBill) by id. The row is stamped with
+  // the venue it was asked for, unless the fixture says it belongs to another (anchor) venue.
+  let askedVenueId: string | null = null;
+  const subEq = vi.fn((column: string, value: string) => {
+    if (column === "venue_id") askedVenueId = value;
+    return {
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: subscriptionRow ? { venue_id: askedVenueId, ...subscriptionRow } : null,
+        error: null,
+      }),
+    };
+  });
   const subSelect = vi.fn().mockReturnValue({ eq: subEq });
 
   const deleteEq = vi.fn().mockResolvedValue({ error: deleteError });
@@ -73,6 +87,17 @@ function mockDeleteChains(
     if (table === "billing_subscriptions") return { select: subSelect };
     if (table === "venues") return { delete: del };
     if (table === "venue_owners") return { delete: ownerDel };
+    if (table === EMPTY_MEMBERSHIP_TABLE) {
+      if (!memberships) return emptyMembershipTable();
+      const rows = memberships;
+      const builder = {
+        select: () => builder,
+        eq: () => builder,
+        in: () => builder,
+        returns: async () => ({ data: rows, error: null }),
+      };
+      return builder;
+    }
     throw new Error(`Unexpected table ${table}`);
   });
 
@@ -267,5 +292,47 @@ describe("deleteAdminVenue owner-account teardown", () => {
     expect(mocks.deleteAuthUser).not.toHaveBeenCalled();
     expect(ownerDel).not.toHaveBeenCalled();
     expect(result).toEqual({ subscriptionCancelled: false, ownerAccountDeleted: false, authUserDeleted: false });
+  });
+});
+
+describe("deleteAdminVenue on a multi-venue bill (refuses before touching Stripe)", () => {
+  beforeEach(() => {
+    mocks.from.mockReset();
+    mocks.stripeCancel.mockReset();
+    mocks.stripeRetrieve.mockReset();
+    mocks.deleteAuthUser.mockReset();
+  });
+
+  it("refuses a venue that sits on ANOTHER venue's bill — cancelling would cancel the whole chain", async () => {
+    const { del } = mockDeleteChains({
+      id: "row-1",
+      venue_id: "anchor-venue",
+      status: "active",
+      stripe_subscription_id: "sub_123",
+    });
+
+    await expect(deleteAdminVenue("member-venue")).rejects.toThrow(/multi-venue bill opened for venue anchor-venue/);
+    expect(mocks.stripeRetrieve).not.toHaveBeenCalled();
+    expect(mocks.stripeCancel).not.toHaveBeenCalled();
+    expect(del).not.toHaveBeenCalled();
+  });
+
+  it("refuses a bill's anchor while another venue is (or was) on the bill", async () => {
+    const { del } = mockDeleteChains(
+      { id: "row-1", status: "active", stripe_subscription_id: "sub_123" },
+      null,
+      null,
+      [],
+      null,
+      [
+        { venue_id: "partner-venue", subscription_id: "row-1", removed_at: null },
+        { venue_id: "second-venue", subscription_id: "row-1", removed_at: "2026-10-01T00:00:00Z" },
+      ]
+    );
+
+    await expect(deleteAdminVenue("partner-venue")).rejects.toThrow(/also covers 1 other venue/);
+    expect(mocks.stripeRetrieve).not.toHaveBeenCalled();
+    expect(mocks.stripeCancel).not.toHaveBeenCalled();
+    expect(del).not.toHaveBeenCalled();
   });
 });

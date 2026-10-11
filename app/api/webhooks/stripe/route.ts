@@ -12,6 +12,7 @@ import {
   type DiscountMirror,
 } from "@/lib/billingDiscounts";
 import { isBillingLapsed, isVenueRehideEnabled } from "@/lib/venueVisibility";
+import { subscriptionMonthlyCents } from "@/lib/venuePricing";
 
 // Stripe requires the raw request body to verify the signature — force the
 // Node.js runtime so the body is not transformed.
@@ -192,6 +193,10 @@ type UpsertResult = {
 /** Nothing was written, so no follower should run. */
 const SKIPPED: UpsertResult = { applied: false, isFirstSyncForSubscription: false, status: null };
 
+/** PostgREST's "column not in the schema cache" (PGRST204) for the Phase 1 `quantity` mirror. */
+const isMissingQuantityColumn = (error: { code?: string; message?: string }): boolean =>
+  (error.code === "PGRST204" || error.code === "42703") && (error.message ?? "").includes("quantity");
+
 /**
  * Upsert a billing_subscriptions row from a Stripe subscription. venueId/ownerId
  * ride on the subscription metadata (set at Checkout via subscription_data).
@@ -212,11 +217,36 @@ async function upsertSubscription(
   const ownerId = sub.metadata?.ownerId?.trim();
   if (!venueId || !ownerId) return SKIPPED;
 
-  const { data: existing } = await supabaseAdmin
+  // Which row does this event belong to? (docs/multi-venue-volume-billing-plan.md Phase 1.)
+  //
+  // FIRST by the Stripe subscription id (unique index): once a row tracks this subscription,
+  // that row is the bill, whatever venue the metadata names. On a multi-venue bill the anchor
+  // can later move (Phase 5 re-anchoring), so `metadata.venueId` is a hint for FINDING a new
+  // subscription's row, never the identity of a tracked one. The id check on the result is
+  // deliberate belt-and-braces: only a row that really carries this id counts as tracked.
+  //
+  // THEN, for a subscription no row tracks yet, by the anchor venue in the metadata — exactly
+  // the pre-Phase-1 lookup, which the stale-event guard and the creation gate below are built on.
+  const { data: trackedRow } = await supabaseAdmin
     .from("billing_subscriptions")
-    .select("stripe_subscription_id")
-    .eq("venue_id", venueId)
-    .maybeSingle<{ stripe_subscription_id: string | null }>();
+    .select("venue_id, stripe_subscription_id")
+    .eq("stripe_subscription_id", sub.id)
+    .maybeSingle<{ venue_id: string; stripe_subscription_id: string | null }>();
+  const tracked = trackedRow && trackedRow.stripe_subscription_id === sub.id ? trackedRow : null;
+
+  // The anchor venue the write is keyed on: the tracked row's own venue, else the metadata's.
+  const anchorVenueId =
+    typeof tracked?.venue_id === "string" && tracked.venue_id.trim() !== "" ? tracked.venue_id : venueId;
+
+  let existing: { stripe_subscription_id: string | null } | null = tracked;
+  if (!existing) {
+    const { data: venueRow } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("stripe_subscription_id")
+      .eq("venue_id", venueId)
+      .maybeSingle<{ stripe_subscription_id: string | null }>();
+    existing = venueRow ?? null;
+  }
 
   // Stale-event guard: a customer.subscription.updated/.deleted event only applies
   // when it targets the venue's CURRENT subscription. Stripe retries for ~3 days,
@@ -264,43 +294,61 @@ async function upsertSubscription(
   // subscription has no live discount, so force-clear on the delete event.
   const discountMirror = forceCancelled ? { ...CLEARED_MIRROR } : await resolveDiscountMirror(sub);
 
-  const item = sub.items.data[0];
+  const items = sub.items?.data ?? [];
+  const item = items[0];
   const price = item?.price;
   const status = forceCancelled ? "cancelled" : mapStripeSubscriptionStatus(sub.status);
   const periodEndUnix = item?.current_period_end ?? null;
   const periodStartUnix = item?.current_period_start ?? null;
 
-  const { error } = await supabaseAdmin
+  const payload: Record<string, unknown> = {
+    venue_id: anchorVenueId,
+    owner_id: ownerId,
+    stripe_customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
+    stripe_subscription_id: sub.id,
+    stripe_price_id: price?.id ?? null,
+    plan_type: price?.nickname ?? "monthly",
+    // A real Stripe subscription always bills by card — reassert this even on
+    // conflict-update so a venue previously granted offline access that now
+    // subscribes by card is correctly reclassified as card-billed.
+    billing_method: "stripe",
+    // The WHOLE bill's monthly list total before discounts (plan §7 trap 7): flat price ×
+    // quantity, or the graduated bands for a tiered price — whose `unit_amount` is null, which
+    // the old `price.unit_amount ?? 0` would have mirrored as $0 (trap 1). For every
+    // subscription today (flat $100, quantity 1) this is the same 10000 as before.
+    amount_cents: subscriptionMonthlyCents(items),
+    // Stripe's quantity (= venues billed, once Phase 2's graduated price is live). Mirror only;
+    // venue counts come from billing_subscription_venues (lib/venueBilling.ts).
+    quantity: typeof item?.quantity === "number" ? item.quantity : null,
+    status,
+    current_period_start: periodStartUnix ? new Date(periodStartUnix * 1000).toISOString() : null,
+    current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
+    // Keeps the "cancellation scheduled" flag in sync with Stripe's own value —
+    // covers the owner reversing a scheduled cancellation from Stripe's customer
+    // portal, not just our own DELETE route setting it.
+    cancel_at_period_end: forceCancelled ? false : sub.cancel_at_period_end,
+    // Clear the welcome-email flag on cancellation so a later resubscribe (a fresh
+    // Stripe subscription id) is treated as first-time activation again, not skipped.
+    ...(forceCancelled ? { welcome_email_sent_at: null } : {}),
+    // Omitted entirely when Stripe's discount state couldn't be determined, so
+    // an unreadable payload leaves the mirror as-is instead of wrongly clearing it.
+    ...(discountMirror ?? {}),
+  };
+
+  let { error } = await supabaseAdmin
     .from("billing_subscriptions")
-    .upsert(
-      {
-        venue_id: venueId,
-        owner_id: ownerId,
-        stripe_customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
-        stripe_subscription_id: sub.id,
-        stripe_price_id: price?.id ?? null,
-        plan_type: price?.nickname ?? "monthly",
-        // A real Stripe subscription always bills by card — reassert this even on
-        // conflict-update so a venue previously granted offline access that now
-        // subscribes by card is correctly reclassified as card-billed.
-        billing_method: "stripe",
-        amount_cents: price?.unit_amount ?? 0,
-        status,
-        current_period_start: periodStartUnix ? new Date(periodStartUnix * 1000).toISOString() : null,
-        current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
-        // Keeps the "cancellation scheduled" flag in sync with Stripe's own value —
-        // covers the owner reversing a scheduled cancellation from Stripe's customer
-        // portal, not just our own DELETE route setting it.
-        cancel_at_period_end: forceCancelled ? false : sub.cancel_at_period_end,
-        // Clear the welcome-email flag on cancellation so a later resubscribe (a fresh
-        // Stripe subscription id) is treated as first-time activation again, not skipped.
-        ...(forceCancelled ? { welcome_email_sent_at: null } : {}),
-        // Omitted entirely when Stripe's discount state couldn't be determined, so
-        // an unreadable payload leaves the mirror as-is instead of wrongly clearing it.
-        ...(discountMirror ?? {}),
-      },
-      { onConflict: "venue_id" }
-    );
+    .upsert(payload, { onConflict: "venue_id" });
+  // Deploy-skew safety: this code can reach production before
+  // 20261011134820_multi_venue_billing.sql adds the `quantity` column. Retry once without
+  // it rather than 500 every billing event until the migration lands.
+  if (error && isMissingQuantityColumn(error)) {
+    console.warn("[MultiVenueBilling] quantity-column-missing — mirroring without it until the migration is applied");
+    const { quantity: _omitted, ...withoutQuantity } = payload;
+    void _omitted;
+    ({ error } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .upsert(withoutQuantity, { onConflict: "venue_id" }));
+  }
   // Surfaced (not swallowed) so a schema/DB problem 500s and Stripe retries,
   // instead of silently leaving billing_subscriptions out of sync.
   if (error) throw new Error(`upsertSubscription failed: ${error.message}`);
@@ -726,11 +774,13 @@ async function maybeSendWelcomeEmail(sub: Stripe.Subscription): Promise<void> {
   if (!venueId || !ownerId) return;
 
   try {
+    // The row THIS subscription is mirrored into (unique on stripe_subscription_id) — the same
+    // row upsertSubscription just wrote, found without trusting the venue in the metadata.
     const { data: subscriptionRow } = await supabaseAdmin
       .from("billing_subscriptions")
-      .select("welcome_email_sent_at, amount_cents")
-      .eq("venue_id", venueId)
-      .maybeSingle<{ welcome_email_sent_at: string | null; amount_cents: number }>();
+      .select("id, welcome_email_sent_at, amount_cents")
+      .eq("stripe_subscription_id", sub.id)
+      .maybeSingle<{ id: string; welcome_email_sent_at: string | null; amount_cents: number }>();
     if (!subscriptionRow || subscriptionRow.welcome_email_sent_at) return;
 
     const [{ data: venue }, { data: owner }] = await Promise.all([
@@ -754,7 +804,7 @@ async function maybeSendWelcomeEmail(sub: Stripe.Subscription): Promise<void> {
     await supabaseAdmin
       .from("billing_subscriptions")
       .update({ welcome_email_sent_at: new Date().toISOString() })
-      .eq("venue_id", venueId);
+      .eq("id", subscriptionRow.id);
   } catch {
     // Best-effort — the subscription is already synced by upsertSubscription above.
   }

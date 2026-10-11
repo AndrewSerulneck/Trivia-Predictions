@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { stripe } from "@/lib/stripe";
+import { loadBillingForVenue } from "@/lib/venueBilling";
 
 type PortalBody = {
   venueId?: string;
@@ -37,11 +38,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "You do not have access to this venue." }, { status: 403 });
   }
 
-  const { data: sub } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("stripe_customer_id")
-    .eq("venue_id", venueId)
-    .maybeSingle<{ stripe_customer_id: string | null }>();
+  // The bill covering this venue — its own, or the multi-venue bill it is on.
+  const billing = await loadBillingForVenue<{
+    id: string;
+    venue_id: string;
+    status: string;
+    stripe_customer_id: string | null;
+  }>(venueId, "stripe_customer_id");
+  const sub = billing.ok ? billing.row : null;
 
   if (!sub?.stripe_customer_id) {
     return NextResponse.json({ ok: false, error: "Please subsribe to update payment method. " }, { status: 404 });

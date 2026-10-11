@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { cancelSubscription, resumeSubscription, classifyBillingRow, readStripeTruth } from "@/lib/billing";
+import { loadBillingForVenue } from "@/lib/venueBilling";
 
 type CancelBody = {
   venueId?: string;
@@ -34,11 +35,15 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ ok: false, error: "You do not have access to this venue." }, { status: 403 });
   }
 
-  const { data: subscription } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("id, stripe_subscription_id")
-    .eq("venue_id", venueId)
-    .maybeSingle<{ id: string; stripe_subscription_id: string | null }>();
+  // The bill covering this venue. On a multi-venue bill that is the WHOLE bill: cancelling is
+  // account-level (removing one venue is a separate, Phase 5 action).
+  const billing = await loadBillingForVenue<{
+    id: string;
+    venue_id: string;
+    status: string;
+    stripe_subscription_id: string | null;
+  }>(venueId, "id, stripe_subscription_id");
+  const subscription = billing.ok ? billing.row : null;
 
   if (!subscription) {
     return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });
@@ -80,11 +85,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "You do not have access to this venue." }, { status: 403 });
   }
 
-  const { data: subscription } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("id, stripe_subscription_id, status")
-    .eq("venue_id", venueId)
-    .maybeSingle<{ id: string; stripe_subscription_id: string | null; status: string }>();
+  const billing = await loadBillingForVenue<{
+    id: string;
+    venue_id: string;
+    stripe_subscription_id: string | null;
+    status: string;
+  }>(venueId, "id, stripe_subscription_id, status");
+  const subscription = billing.ok ? billing.row : null;
 
   if (!subscription) {
     return NextResponse.json({ ok: false, error: "No subscription found for this venue." }, { status: 404 });

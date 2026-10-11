@@ -1,12 +1,18 @@
+import { WELCOME_EMAIL } from "@/lib/email/partnerEmailCopy";
+import { escapeHtml, fillTemplate, formatEmailAmount } from "@/lib/email/emailFormat";
+
 /**
  * Partner welcome email — sent once, when a venue's Stripe subscription first
- * activates (see app/api/webhooks/stripe/route.ts). This is the file to edit
- * to change what the email says: subject line, feature tour copy, and the
- * TV-setup callout below are all plain data — edit them directly, no HTML
- * knowledge required beyond not breaking the {{ }} placeholders.
+ * activates (see app/api/webhooks/stripe/route.ts).
+ *
+ * THE WORDING IS NOT IN THIS FILE. To change what the email says — subject line,
+ * feature tour, buttons, sign-off — edit WELCOME_EMAIL in
+ * lib/email/partnerEmailCopy.ts and preview with `npm run email:preview`. This
+ * file only lays the copy out.
  *
  * Most email clients strip complex CSS, so the HTML below intentionally stays
- * simple/inline rather than reusing lib/themeTokens.ts.
+ * simple/inline rather than reusing lib/themeTokens.ts. Partner-typed names are
+ * escaped in the HTML only (see escapeHtml in lib/email/emailFormat.ts).
  */
 
 export type WelcomeEmailInput = {
@@ -23,76 +29,19 @@ export type WelcomeEmailContent = {
   text: string;
 };
 
-// ── Edit below this line to change the email's copy ──────────────────────────
-
-/** Subject line. */
-const SUBJECT = "Welcome to Hightop Challenge — you're live!";
-
-/** Short confirmation line under the header. {planAmount} is substituted below. */
-const CONFIRMATION_LINE = (venueName: string, planAmount: string) =>
-  `Your Hightop Challenge subscription for ${venueName} is active — you're all set at ${planAmount}/mo.`;
-
-/** The feature-tour section: one card per Partner Dashboard pillar + player game lineup. */
-const FEATURE_TOUR: Array<{ title: string; body: string }> = [
-  {
-    title: "Schedule live games",
-    body: "Put Category Blitz or Live Trivia on the calendar for game nights — pick a time, we handle the rest.",
-  },
-  {
-    title: "Put it on your TVs",
-    body: "Link a TV in seconds with a pairing code, no typing URLs. Great for game nights and general ambiance between rounds.",
-  },
-  {
-    title: "Manage billing anytime",
-    body: "View invoices, update your card, or change plans from the Partner Dashboard whenever you need to.",
-  },
-];
-
-/** Player-facing games, listed so partners know what they're offering guests. */
-const PLAYER_GAMES = ["Trivia", "Category Blitz", "Pick'em", "Bingo", "Predictions", "Fantasy"];
-
-/** Call-to-action button copy pointing at the TV pairing flow. */
-const TV_CTA_LABEL = "Set up your TVs";
-
-/** Call-to-action button copy pointing at the billing/dashboard home. */
-const DASHBOARD_CTA_LABEL = "Open your Partner Dashboard";
-
-const SIGN_OFF = "See you on game night,\nThe Hightop Challenge team";
-
-// ── End editable section — everything below assembles the copy above ────────
-
-const formatAmount = (cents: number): string => `$${(cents / 100).toFixed(2)}`;
-
-/**
- * The only two values in this email that are not authored copy are `venueName`
- * and `ownerName`, and as of Partner Self-Serve Signup (Phase 6) BOTH are typed
- * by an unauthenticated stranger on /owner/signup rather than by an admin. They
- * are interpolated into an HTML string, so they must be escaped.
- *
- * The everyday case is not an attack, it is punctuation: "Bar & Grill" is one of
- * the most common bar names there is, and a raw `&` in HTML is the start of an
- * entity reference — mail clients mostly recover, but the correct byte is
- * `&amp;`. `<` is the one that actually breaks the layout.
- *
- * The PLAIN TEXT branch must NOT be escaped — it is not markup, and escaping it
- * would put a literal "&amp;" in front of the partner.
- *
- * Only `& < >`. Quotes and apostrophes are deliberately left alone: both values
- * are interpolated into element TEXT, never into an attribute, so they need no
- * escaping there — and "Joe's Bar" / "O'Neil" are common enough that turning
- * every one into `&#39;` would be noise in exchange for nothing.
- */
-const escapeHtml = (value: string): string =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
 export const buildWelcomeEmail = (input: WelcomeEmailInput): WelcomeEmailContent => {
-  const planAmount = formatAmount(input.planAmountCents);
-  const greeting = input.ownerName ? `Hi ${input.ownerName},` : "Hi there,";
-  const greetingHtml = input.ownerName ? `Hi ${escapeHtml(input.ownerName)},` : "Hi there,";
-  const confirmation = CONFIRMATION_LINE(input.venueName, planAmount);
-  const confirmationHtml = CONFIRMATION_LINE(escapeHtml(input.venueName), planAmount);
+  const copy = WELCOME_EMAIL;
+  const planAmount = formatEmailAmount(input.planAmountCents);
+  const greeting = input.ownerName
+    ? fillTemplate(copy.greetingWithName, { ownerName: input.ownerName })
+    : copy.greetingWithoutName;
+  const greetingHtml = input.ownerName
+    ? fillTemplate(copy.greetingWithName, { ownerName: escapeHtml(input.ownerName) })
+    : copy.greetingWithoutName;
+  const confirmation = fillTemplate(copy.confirmation, { venueName: input.venueName, planAmount });
+  const confirmationHtml = fillTemplate(copy.confirmation, { venueName: escapeHtml(input.venueName), planAmount });
 
-  const featureCardsHtml = FEATURE_TOUR.map(
+  const featureCardsHtml = copy.featureTour.map(
     (feature) => `
       <tr>
         <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
@@ -102,7 +51,7 @@ export const buildWelcomeEmail = (input: WelcomeEmailInput): WelcomeEmailContent
       </tr>`
   ).join("");
 
-  const featureCardsText = FEATURE_TOUR.map((feature) => `- ${feature.title}: ${feature.body}`).join("\n");
+  const featureCardsText = copy.featureTour.map((feature) => `- ${feature.title}: ${feature.body}`).join("\n");
 
   const html = `
 <!doctype html>
@@ -115,7 +64,7 @@ export const buildWelcomeEmail = (input: WelcomeEmailInput): WelcomeEmailContent
             <tr>
               <td style="padding: 32px 32px 8px;">
                 <p style="margin: 0 0 16px; font-size: 14px; color: #888;">${greetingHtml}</p>
-                <h1 style="margin: 0 0 12px; font-size: 22px; color: #111;">Welcome to Hightop Challenge</h1>
+                <h1 style="margin: 0 0 12px; font-size: 22px; color: #111;">${copy.heading}</h1>
                 <p style="margin: 0 0 24px; font-size: 15px; color: #333; line-height: 1.5;">${confirmationHtml}</p>
               </td>
             </tr>
@@ -128,20 +77,20 @@ export const buildWelcomeEmail = (input: WelcomeEmailInput): WelcomeEmailContent
             </tr>
             <tr>
               <td style="padding: 24px 32px 8px;">
-                <p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #111;">Games your guests can play</p>
-                <p style="margin: 0; font-size: 14px; color: #555;">${PLAYER_GAMES.join(" · ")}</p>
+                <p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #111;">${copy.gamesHeading}</p>
+                <p style="margin: 0; font-size: 14px; color: #555;">${copy.games.join(" · ")}</p>
               </td>
             </tr>
             <tr>
               <td style="padding: 24px 32px 32px;" align="center">
-                <a href="${input.tvSetupUrl}" style="display:inline-block; background:#111; color:#fff; text-decoration:none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; margin-bottom: 12px;">${TV_CTA_LABEL}</a>
+                <a href="${input.tvSetupUrl}" style="display:inline-block; background:#111; color:#fff; text-decoration:none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; margin-bottom: 12px;">${copy.tvButton}</a>
                 <br /><br />
-                <a href="${input.billingUrl}" style="display:inline-block; color:#111; text-decoration:underline; font-size: 13px;">${DASHBOARD_CTA_LABEL}</a>
+                <a href="${input.billingUrl}" style="display:inline-block; color:#111; text-decoration:underline; font-size: 13px;">${copy.dashboardLink}</a>
               </td>
             </tr>
             <tr>
               <td style="padding: 0 32px 32px; border-top: 1px solid #eee;">
-                <p style="margin: 24px 0 0; font-size: 13px; color: #888; white-space: pre-line;">${SIGN_OFF}</p>
+                <p style="margin: 24px 0 0; font-size: 13px; color: #888; white-space: pre-line;">${copy.signOff}</p>
               </td>
             </tr>
           </table>
@@ -155,15 +104,15 @@ export const buildWelcomeEmail = (input: WelcomeEmailInput): WelcomeEmailContent
 
 ${confirmation}
 
-What you can do from your Partner Dashboard:
+${copy.featureTourHeading}
 ${featureCardsText}
 
-Games your guests can play: ${PLAYER_GAMES.join(", ")}
+${copy.gamesHeading}: ${copy.games.join(", ")}
 
-Set up your TVs: ${input.tvSetupUrl}
-Open your Partner Dashboard: ${input.billingUrl}
+${copy.tvButton}: ${input.tvSetupUrl}
+${copy.dashboardLink}: ${input.billingUrl}
 
-${SIGN_OFF}`;
+${copy.signOff}`;
 
-  return { subject: SUBJECT, html, text };
+  return { subject: copy.subject, html, text };
 };

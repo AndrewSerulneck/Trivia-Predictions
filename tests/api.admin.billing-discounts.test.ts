@@ -45,6 +45,8 @@ vi.mock("@/lib/billingCustomPrice", () => ({
  */
 type SubRow = {
   id: string;
+  /** The bill's anchor venue — lib/venueBilling.ts always selects it. */
+  venue_id?: string;
   billing_method: string;
   stripe_subscription_id: string | null;
   amount_cents: number;
@@ -73,12 +75,14 @@ vi.mock("@/lib/supabaseAdmin", () => ({
           }),
         };
       }
+      if (table === EMPTY_MEMBERSHIP_TABLE) return emptyMembershipTable();
       throw new Error(`Unexpected table: ${table}`);
     }),
   },
 }));
 
 import { POST } from "@/app/api/admin/billing/route";
+import { EMPTY_MEMBERSHIP_TABLE, emptyMembershipTable } from "./helpers/emptyMembershipTable";
 
 const setRow = (row: SubRow | null) => {
   state.row = row;
@@ -97,7 +101,7 @@ describe("POST /api/admin/billing — apply-discount / remove-discount", () => {
     mocks.removeDiscountFromSubscription.mockReset();
     mocks.insertGrant.mockReset();
     mocks.requireAdminAuth.mockReset().mockResolvedValue({ ok: true, authUserId: "admin-1", adminUsername: "admin" });
-    setRow({ id: "sub-1", billing_method: "stripe", stripe_subscription_id: "sub_stripe_1", amount_cents: 5000, current_period_end: null });
+    setRow({ id: "sub-1", venue_id: "venue-1", billing_method: "stripe", stripe_subscription_id: "sub_stripe_1", amount_cents: 5000, current_period_end: null });
   });
 
   it("rejects apply-discount with 401 when admin auth fails, before touching the helper", async () => {
@@ -303,7 +307,7 @@ describe("POST /api/admin/billing — set-custom-price", () => {
   beforeEach(() => {
     mocks.setCustomPrice.mockReset();
     mocks.insertGrant.mockReset();
-    setRow({ id: "sub-1", billing_method: "stripe", stripe_subscription_id: "sub_stripe_1", amount_cents: 10000, current_period_end: null });
+    setRow({ id: "sub-1", venue_id: "venue-1", billing_method: "stripe", stripe_subscription_id: "sub_stripe_1", amount_cents: 10000, current_period_end: null });
   });
 
   it("rejects a missing price id and missing amountDollars before touching the helper", async () => {
@@ -423,5 +427,40 @@ describe("POST /api/admin/billing — set-custom-price", () => {
 
     expect(response.status).toBe(404);
     expect(mocks.setCustomPrice).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/admin/billing — a venue on another venue's multi-venue bill", () => {
+  beforeEach(() => {
+    mocks.applyDiscountToSubscription.mockReset();
+    mocks.removeDiscountFromSubscription.mockReset();
+    mocks.setCustomPrice.mockReset();
+    mocks.insertGrant.mockReset();
+    mocks.requireAdminAuth.mockReset().mockResolvedValue({ ok: true, authUserId: "admin-1", adminUsername: "admin" });
+    // The bill covering venue-1 was opened for (is anchored on) a different venue.
+    setRow({
+      id: "sub-1",
+      venue_id: "anchor-venue",
+      billing_method: "stripe",
+      stripe_subscription_id: "sub_stripe_1",
+      amount_cents: 17500,
+      current_period_end: null,
+    });
+  });
+
+  it.each([
+    ["apply-discount", { discountType: "percent_off", percentOff: 25, duration: "forever" }],
+    ["remove-discount", {}],
+    ["set-custom-price", { amountDollars: 75 }],
+  ])("%s refuses with 409 not_bill_anchor and touches nothing (Phase 6 builds chain-aware tools)", async (action, extra) => {
+    const response = await POST(postRequest({ action, venueId: "venue-1", ...extra }));
+    const body = (await response.json()) as { code?: string };
+
+    expect(response.status).toBe(409);
+    expect(body.code).toBe("not_bill_anchor");
+    expect(mocks.applyDiscountToSubscription).not.toHaveBeenCalled();
+    expect(mocks.removeDiscountFromSubscription).not.toHaveBeenCalled();
+    expect(mocks.setCustomPrice).not.toHaveBeenCalled();
+    expect(mocks.insertGrant).not.toHaveBeenCalled();
   });
 });

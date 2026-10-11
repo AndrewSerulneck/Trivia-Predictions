@@ -3,6 +3,7 @@ import { join } from "path";
 import { replaceSessionQuestion } from "@/lib/liveShowdownAdmin";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { stripe } from "@/lib/stripe";
+import { loadBillingForVenue, loadBillingForVenues, venueIdsOnBill } from "@/lib/venueBilling";
 import { getInlineSlotRegistryEntries } from "@/lib/adSlotRegistry";
 import {
   isAdTypeSupportedForPage,
@@ -2434,11 +2435,14 @@ export async function getAdminVenueDeletionSummary(venueId: string): Promise<Adm
       .select("owner_id, venue_owners(name, email)")
       .eq("venue_id", id)
       .maybeSingle<{ owner_id: string; venue_owners: { name: string; email: string } | null }>(),
-    supabaseAdmin!
-      .from("billing_subscriptions")
-      .select("status, amount_cents, plan_type, stripe_subscription_id")
-      .eq("venue_id", id)
-      .maybeSingle<{ status: string; amount_cents: number; plan_type: string; stripe_subscription_id: string | null }>(),
+    loadBillingForVenue<{
+      id: string;
+      venue_id: string;
+      status: string;
+      amount_cents: number;
+      plan_type: string;
+      stripe_subscription_id: string | null;
+    }>(id, "status, amount_cents, plan_type, stripe_subscription_id"),
     supabaseAdmin!.from("users").select("id", { count: "exact", head: true }).eq("venue_id", id),
   ]);
 
@@ -2471,12 +2475,13 @@ export async function getAdminVenueDeletionSummary(venueId: string): Promise<Adm
     ownerAccountWillBeDeleted = (ownerVenueCount ?? 0) <= 1;
   }
 
-  const subscription = subscriptionResult.data
+  const subscriptionRow = subscriptionResult.ok ? subscriptionResult.row : null;
+  const subscription = subscriptionRow
     ? {
-        status: normalizeBillingStatus(subscriptionResult.data.status),
-        amountCents: subscriptionResult.data.amount_cents,
-        planType: subscriptionResult.data.plan_type,
-        hasStripeSubscription: Boolean(subscriptionResult.data.stripe_subscription_id),
+        status: normalizeBillingStatus(subscriptionRow.status),
+        amountCents: subscriptionRow.amount_cents,
+        planType: subscriptionRow.plan_type,
+        hasStripeSubscription: Boolean(subscriptionRow.stripe_subscription_id),
       }
     : null;
 
@@ -2518,11 +2523,41 @@ export async function deleteAdminVenue(venueId: string): Promise<AdminVenueDelet
   // longer exists. We cancel immediately (not at period end) because the venue
   // is being removed entirely.
   let subscriptionCancelled = false;
-  const { data: subscription } = await supabaseAdmin!
-    .from("billing_subscriptions")
-    .select("id, status, stripe_subscription_id")
-    .eq("venue_id", id)
-    .maybeSingle<{ id: string; status: string; stripe_subscription_id: string | null }>();
+  const billing = await loadBillingForVenue<{
+    id: string;
+    venue_id: string;
+    status: string;
+    stripe_subscription_id: string | null;
+  }>(id, "id, status, stripe_subscription_id");
+  if (!billing.ok) {
+    throw new Error(`Failed to look up the venue's billing: ${billing.error}. Venue was not deleted.`);
+  }
+  const subscription = billing.row;
+
+  // Multi-venue billing (docs/multi-venue-volume-billing-plan.md). Both refusals run BEFORE any
+  // Stripe call, so a refused delete never leaves a chain's subscription cancelled:
+  //   - a venue on ANOTHER venue's bill: cancelling "its" subscription would cancel the whole
+  //     chain. Taking one venue off a bill is Phase 5's Remove (quantity − 1), not a delete.
+  //   - a bill's ANCHOR while other venues are (or were) on the bill: the database refuses this
+  //     delete anyway (billing_subscription_venues.subscription_id is ON DELETE RESTRICT), but
+  //     only after we would already have cancelled the chain at Stripe.
+  // No venue is on a multi-venue bill before Phase 3, so neither fires today.
+  if (subscription && subscription.venue_id !== id) {
+    throw new Error(
+      `This venue is billed on the multi-venue bill opened for venue ${subscription.venue_id}. Take it off that bill before deleting it. Venue was not deleted.`
+    );
+  }
+  if (subscription) {
+    const onBill = await venueIdsOnBill(subscription.id, { includeRemoved: true });
+    if (!onBill.ok) {
+      throw new Error(`Failed to check the venue's bill: ${onBill.error}. Venue was not deleted.`);
+    }
+    if (onBill.venueIds.length > 1) {
+      throw new Error(
+        `This venue's bill also covers ${onBill.venueIds.length - 1} other venue(s). Move the bill to another venue or take them off it before deleting this one. Venue was not deleted.`
+      );
+    }
+  }
 
   if (subscription?.stripe_subscription_id && subscription.status !== "cancelled") {
     if (!stripe) {
@@ -2925,34 +2960,21 @@ export async function listHiddenVenues(): Promise<HiddenVenueRow[]> {
   const rows = venues ?? [];
   if (rows.length === 0) return [];
 
-  const { data: billing, error: billingError } = await supabaseAdmin!
-    .from("billing_subscriptions")
-    .select("venue_id, status, billing_method, stripe_subscription_id")
-    .in(
-      "venue_id",
-      rows.map((row) => row.id)
-    )
-    .returns<
-      Array<{
-        venue_id: string;
-        status: string;
-        billing_method: string | null;
-        stripe_subscription_id: string | null;
-      }>
-    >();
-  if (billingError) {
-    throw new Error(billingError.message ?? "Failed to load billing for hidden venues.");
+  // The bill covering each hidden venue (lib/venueBilling.ts) — its own or a multi-venue bill.
+  const billing = await loadBillingForVenues<{
+    id: string;
+    venue_id: string;
+    status: string;
+    billing_method: string | null;
+    stripe_subscription_id: string | null;
+  }>(
+    rows.map((row) => row.id),
+    "id, venue_id, status, billing_method, stripe_subscription_id"
+  );
+  if (!billing.ok) {
+    throw new Error(billing.error || "Failed to load billing for hidden venues.");
   }
-
-  // A duplicate pair resolves to the one that still has a Stripe object, then
-  // to the last one seen — enough for a display label.
-  const billingByVenue = new Map<string, { status: string; billing_method: string | null }>();
-  for (const entry of billing ?? []) {
-    const existing = billingByVenue.get(entry.venue_id);
-    if (!existing || entry.stripe_subscription_id) {
-      billingByVenue.set(entry.venue_id, { status: entry.status, billing_method: entry.billing_method });
-    }
-  }
+  const billingByVenue: Map<string, { status: string; billing_method: string | null }> = billing.byVenue;
 
   const classify = (row: (typeof rows)[number]): HiddenVenueClassification => {
     if (row.latitude === 0 && row.longitude === 0) return "system-room";

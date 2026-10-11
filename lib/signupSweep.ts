@@ -1,6 +1,7 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { venueIdsEverBilled } from "@/lib/venueBilling";
 
 // Partner Self-Serve Signup — Phase 6 sweep.
 // docs/partner-self-serve-signup-plan.md §4 Phase 6.
@@ -292,7 +293,8 @@ const tierOf = (row: CandidateVenueRow): SweepTier =>
  *   hidden = true                                  (never touch a live venue)
  *   self_serve_created_at IS NOT NULL              (only rows THIS flow stamped)
  *   older than its TIER's window                   (see below)
- *   no billing_subscriptions row for the venue     (never touch a payer, past or
+ *   no billing_subscriptions row for the venue,
+ *   and never on a multi-venue bill               (never touch a payer, past or
  *                                                   present — a cancelled
  *                                                   subscriber keeps its row)
  *
@@ -459,23 +461,17 @@ export async function sweepAbandonedSignupVenues(
 
   if (candidates.length === 0) return result;
 
-  // Exclude any venue that has ever tracked a subscription.
-  const paidQuery = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("venue_id")
-    .in(
-      "venue_id",
-      candidates.map((venue) => venue.id)
-    )
-    .returns<{ venue_id: string }[]>();
+  // Exclude any venue that has ever been on a bill — its own, or (multi-venue billing) another
+  // venue's — through the one resolver, so the two can never disagree about a payer.
+  const paidQuery = await venueIdsEverBilled(candidates.map((venue) => venue.id));
 
-  if (paidQuery.error) {
+  if (!paidQuery.ok) {
     // Fail closed: without this answer we cannot tell a payer from an abandon.
-    result.errors.push(`billing-read-failed: ${paidQuery.error.message}`);
+    result.errors.push(paidQuery.error);
     return result;
   }
 
-  const paidVenueIds = new Set((paidQuery.data ?? []).map((row) => row.venue_id));
+  const paidVenueIds = paidQuery.venueIds;
   candidates = candidates.filter((venue) => !paidVenueIds.has(venue.id));
   result.candidates = candidates.length;
   // Counted AFTER the billing exclusion, so `tierA + tierB === candidates` and the

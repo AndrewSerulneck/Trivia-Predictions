@@ -10,12 +10,15 @@ import {
   type BillingRowState,
   type ClassifiableBillingRow,
 } from "@/lib/billing";
+import { loadBillingForVenue } from "@/lib/venueBilling";
 
 type CheckoutBody = {
   venueId?: string;
 };
 
 type ExistingBillingRow = ClassifiableBillingRow & {
+  id: string;
+  venue_id: string;
   stripe_customer_id: string | null;
   cancel_at_period_end: boolean;
   billing_method: string;
@@ -60,11 +63,23 @@ export async function POST(request: Request) {
   // The question is not "is our status 'active'?" but "is anything live at
   // Stripe right now?" — `past_due` is live too (card declined, Stripe still
   // retrying), so it must refuse Checkout as well. See classifyBillingRow.
-  const { data: existing } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("status, stripe_customer_id, stripe_subscription_id, cancel_at_period_end, billing_method")
-    .eq("venue_id", venueId)
-    .maybeSingle<ExistingBillingRow>();
+  //
+  // Asked through the one resolver (lib/venueBilling.ts): a venue that sits on another venue's
+  // multi-venue bill is covered by THAT bill, and must be refused here exactly like a venue with
+  // its own live subscription — a second Checkout would bill it twice. A read error is refused
+  // too (fail closed): without the answer we cannot rule out a live subscription.
+  const billing = await loadBillingForVenue<ExistingBillingRow>(
+    venueId,
+    "id, venue_id, status, stripe_customer_id, stripe_subscription_id, cancel_at_period_end, billing_method"
+  );
+  if (!billing.ok) {
+    console.error(`[OwnerCheckout] billing-read-failed venue=${venueId}: ${billing.error}`);
+    return NextResponse.json(
+      { ok: false, error: "We couldn't check this venue's billing. Please try again in a few minutes." },
+      { status: 503 }
+    );
+  }
+  const existing = billing.row;
 
   if (existing) {
     // Offline/check-payer rows are tokenless by design (grant-manual nulls every
@@ -95,6 +110,9 @@ export async function POST(request: Request) {
     // Re-bound as consts: the null checks above don't survive into a closure.
     const stripeClient = stripe;
     const db = supabaseAdmin;
+    // Mirror corrections below are keyed by the bill's own id — on a multi-venue bill the
+    // venue in the request is not necessarily the bill's anchor venue.
+    const existingRowId = existing.id;
 
     /**
      * Void an abandoned first Checkout (Stripe status `incomplete`) so this
@@ -114,7 +132,7 @@ export async function POST(request: Request) {
       await db
         .from("billing_subscriptions")
         .update({ status: "cancelled", cancel_at_period_end: false, ...CLEARED_MIRROR })
-        .eq("venue_id", venueId);
+        .eq("id", existingRowId);
       return true;
     };
 
@@ -146,7 +164,7 @@ export async function POST(request: Request) {
         await supabaseAdmin
           .from("billing_subscriptions")
           .update({ status: "cancelled", cancel_at_period_end: false, ...CLEARED_MIRROR })
-          .eq("venue_id", venueId);
+          .eq("id", existingRowId);
         rowState = { live: false, reason: "cancelled" };
       } else if (truth === "missing") {
         // `resource_missing` also fires on a wrong-mode id (a test id read with

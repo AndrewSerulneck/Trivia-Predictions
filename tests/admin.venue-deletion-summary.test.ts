@@ -22,6 +22,7 @@ vi.mock("@/lib/stripe", () => ({
 }));
 
 import { getAdminVenueDeletionSummary } from "@/lib/admin";
+import { EMPTY_MEMBERSHIP_TABLE, emptyMembershipTable } from "./helpers/emptyMembershipTable";
 
 type MockResult = { data: unknown; error: unknown; count?: number | null };
 
@@ -61,6 +62,8 @@ function mockSummaryChains(options: {
     if (table === "users") {
       return { select: () => ({ eq: vi.fn().mockResolvedValue(userCount) }) };
     }
+    // Multi-venue billing (lib/venueBilling.ts): no venue is on another venue's bill.
+    if (table === EMPTY_MEMBERSHIP_TABLE) return emptyMembershipTable();
     throw new Error(`Unexpected table ${table}`);
   });
 }
@@ -95,8 +98,9 @@ describe("getAdminVenueDeletionSummary", () => {
 
     expect(summary.owner).toEqual({ name: "Jamie Rivera", email: "jamie@example.com" });
     expect(summary.isPartnerVenue).toBe(true);
-    // 4 initial tables + 1 owner-venue count query (owner present).
-    expect(mocks.from).toHaveBeenCalledTimes(5);
+    // 4 initial tables + 1 owner-venue count query (owner present) + 1 multi-venue membership
+    // read (no own bill, so lib/venueBilling.ts checks whether another bill covers the venue).
+    expect(mocks.from).toHaveBeenCalledTimes(6);
   });
 
   it("flags ownerAccountWillBeDeleted when the owner owns only this venue", async () => {
@@ -134,7 +138,7 @@ describe("getAdminVenueDeletionSummary", () => {
 
     expect(summary.owner).toBeNull();
     expect(summary.ownerAccountWillBeDeleted).toBe(false);
-    // No owner → no extra count query, only the 4 initial tables.
-    expect(mocks.from).toHaveBeenCalledTimes(4);
+    // No owner → no extra count query: the 4 initial tables + the membership read.
+    expect(mocks.from).toHaveBeenCalledTimes(5);
   });
 });

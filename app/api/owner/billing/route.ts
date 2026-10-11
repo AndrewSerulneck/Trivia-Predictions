@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
+import { loadBillingForVenues } from "@/lib/venueBilling";
 
 type SubscriptionRow = {
   id: string;
@@ -49,16 +50,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, subscriptions: [], invoices: [] });
   }
 
-  const { data: subscriptions, error: subError } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select(
-      "id, venue_id, plan_type, billing_method, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, created_at, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
-    )
-    .in("venue_id", auth.venueIds)
-    .returns<SubscriptionRow[]>();
+  // Through the one resolver (lib/venueBilling.ts), so a venue on a multi-venue bill finds the
+  // bill it is on. One entry per BILL, not per venue: `venueId` stays the bill's anchor venue
+  // (what this route always returned) and `venueIds` lists the caller's venues it covers.
+  const billing = await loadBillingForVenues<SubscriptionRow>(
+    auth.venueIds,
+    "id, venue_id, plan_type, billing_method, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, created_at, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at"
+  );
 
-  if (subError) {
-    return NextResponse.json({ ok: false, error: subError.message }, { status: 500 });
+  if (!billing.ok) {
+    return NextResponse.json({ ok: false, error: billing.error }, { status: 500 });
+  }
+
+  const coveredVenuesByBill = new Map<string, string[]>();
+  const subscriptions: SubscriptionRow[] = [];
+  for (const [venueId, row] of billing.byVenue) {
+    const covered = coveredVenuesByBill.get(row.id);
+    if (covered) {
+      covered.push(venueId);
+      continue;
+    }
+    coveredVenuesByBill.set(row.id, [venueId]);
+    subscriptions.push(row);
   }
 
   const { data: invoices, error: invError } = await supabaseAdmin
@@ -76,9 +89,10 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     venueIds: auth.venueIds,
-    subscriptions: (subscriptions ?? []).map((s) => ({
+    subscriptions: subscriptions.map((s) => ({
       id: s.id,
       venueId: s.venue_id,
+      venueIds: coveredVenuesByBill.get(s.id) ?? [s.venue_id],
       planType: s.plan_type,
       amountCents: s.amount_cents,
       status: s.status,

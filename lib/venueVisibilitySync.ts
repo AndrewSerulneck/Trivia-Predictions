@@ -2,9 +2,9 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isSelfServeVenueRow } from "@/lib/venueClaim";
+import { loadBillingForVenues } from "@/lib/venueBilling";
 import {
   isBillingCancelled,
-  isBillingLive,
   isVenueRehideEnabled,
   shouldRehideVenue,
   shouldRestoreVenue,
@@ -153,14 +153,16 @@ const emptyOutcome = (): LapsedJobOutcome => ({
 });
 
 /**
- * Read `billing_subscriptions` for a set of venue ids into a `venue_id → row`
- * map, resolving a duplicate pair to the LIVE row rather than to whichever came
- * back first. Returns `null` on a read error — every caller fails CLOSED on
- * that, because without this answer a payer and a lapse look identical.
+ * The bill covering each of a set of venue ids, as a `venue_id → row` map. Returns `null` on a
+ * read error — every caller fails CLOSED on that, because without this answer a payer and a
+ * lapse look identical.
  *
- * Shared by the reveal-repair, re-hide and restore jobs precisely so the "pick
- * the live one" tie-break is written once (§2's root cause is a rule written
- * twice).
+ * Delegates to the one resolver, `loadBillingForVenues` in lib/venueBilling.ts (multi-venue
+ * billing, Phase 1), so a venue on another venue's bill is judged by THAT bill. The old
+ * "duplicate pair → pick the live row" tie-break is now the resolver's rule (a live anchor bill
+ * wins; else a live membership bill), written there once.
+ *
+ * Shared by the reveal-repair, re-hide and restore jobs.
  */
 async function loadBillingByVenue(
   venueIds: string[],
@@ -171,23 +173,15 @@ async function loadBillingByVenue(
     return null;
   }
 
-  const query = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("venue_id, status, stripe_subscription_id, billing_method")
-    .in("venue_id", venueIds)
-    .returns<BillingRow[]>();
-
-  if (query.error) {
-    errors.push(`billing-read-failed: ${query.error.message}`);
+  const billing = await loadBillingForVenues<BillingRow & { id: string }>(
+    venueIds,
+    "id, venue_id, status, stripe_subscription_id, billing_method"
+  );
+  if (!billing.ok) {
+    errors.push(billing.error);
     return null;
   }
-
-  const billingByVenue = new Map<string, BillingRow>();
-  for (const row of query.data ?? []) {
-    const existing = billingByVenue.get(row.venue_id);
-    if (!existing || isBillingLive(row)) billingByVenue.set(row.venue_id, row);
-  }
-  return billingByVenue;
+  return billing.byVenue;
 }
 
 /**
