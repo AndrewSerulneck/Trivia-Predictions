@@ -97,8 +97,48 @@ describe("multi-venue billing — Add a venue contract", () => {
     expect(sources.filter((rel) => /function findNearbyVenue\b/.test(read(rel)))).toEqual(["lib/nearbyVenue.ts"]);
   });
 
+  it("Phase 5: the change ledger and its RPCs are used only by lib/venueRemoval.ts", () => {
+    const REMOVAL = "lib/venueRemoval.ts";
+    expect(sources.filter((rel) => /["']billing_venue_changes["']/.test(read(rel)))).toEqual([REMOVAL]);
+    expect(sources.filter((rel) => read(rel).includes('"claim_venue_bill_change"'))).toEqual([REMOVAL]);
+    expect(sources.filter((rel) => read(rel).includes('"finish_venue_bill_change"'))).toEqual([REMOVAL]);
+  });
+
+  it("Phase 5: Remove / Undo never prorate, write Stripe once, keyed on the ledger row", () => {
+    const flow = stripComments(read("lib/venueRemoval.ts"));
+    expect(flow).toContain('proration_behavior: "none"');
+    for (const forbidden of ["always_invoice", "create_prorations", "pending_if_incomplete", "error_if_incomplete"]) {
+      expect(flow, forbidden).not.toContain(forbidden);
+    }
+    expect(flow.match(/stripe\.subscriptions\.update\(/g) ?? []).toHaveLength(1);
+    expect(flow).toContain("{ idempotencyKey: row.idempotency_key }");
+    // The removal job hides with the "we hid this" stamp, so a paid Add back can un-hide it.
+    expect(flow).toContain(".update({ hidden: true, rehidden_at: nowIso })");
+  });
+
+  it("Phase 5: the remove route checks the flag, then auth, then the rate limit; the cron jobs are not flag-gated", () => {
+    const route = stripComments(read("app/api/owner/venues/remove/route.ts"));
+    const flagAt = route.indexOf("isMultiVenueBillingEnabled()");
+    expect(flagAt).toBeGreaterThan(-1);
+    expect(flagAt).toBeLessThan(route.indexOf("requireOwnerAuth(request)"));
+    expect(route.indexOf("requireOwnerAuth(request)")).toBeLessThan(route.indexOf("rateLimit(request"));
+    const cron = stripComments(read("app/api/cron/billing/route.ts"));
+    expect(cron).toContain("reconcileStaleVenueChanges(");
+    expect(cron).toContain("applyDueVenueRemovals(");
+  });
+
   it("prices come from lib/venuePricing.ts, never literals", () => {
-    for (const rel of [FLOW, ADD_ROUTE, QUOTE_ROUTE, "lib/multiVenueBilling.ts"]) {
+    for (const rel of [
+      FLOW,
+      ADD_ROUTE,
+      QUOTE_ROUTE,
+      "lib/multiVenueBilling.ts",
+      "lib/venueRemoval.ts",
+      "lib/billAccountView.ts",
+      "app/api/owner/venues/remove/route.ts",
+      "components/owner/billing/BillVenuesPanel.tsx",
+      "app/owner/billing/page.tsx",
+    ]) {
       expect(read(rel), rel).not.toMatch(/\b(10000|7500|6000|4500)\b/);
     }
   });

@@ -3,6 +3,8 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
 import { loadBillingForVenues } from "@/lib/venueBilling";
+import { isMultiVenueBillingEnabled, type BillAccount } from "@/lib/multiVenueBilling";
+import { loadBillAccount } from "@/lib/venueRemoval";
 
 type SubscriptionRow = {
   id: string;
@@ -86,6 +88,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: invError.message }, { status: 500 });
   }
 
+  // Multi-venue billing Phase 5: the account view (venues on the bill, the band breakdown, Remove /
+  // Undo / Add back). Behind the flag so that, off, this route reads exactly what it always did.
+  // One membership read + one venue-name read per bill (a partner has one bill).
+  const accounts = new Map<string, BillAccount | null>();
+  if (isMultiVenueBillingEnabled()) {
+    for (const s of subscriptions) {
+      const loaded = await loadBillAccount(
+        {
+          id: s.id,
+          venue_id: s.venue_id,
+          discount_percent_off: s.discount_percent_off,
+          discount_amount_off_cents: s.discount_amount_off_cents,
+        },
+        auth.venueIds
+      );
+      if (!loaded.ok) console.error(`[OwnerBilling] account-read-failed bill=${s.id}: ${loaded.error}`);
+      accounts.set(s.id, loaded.ok ? loaded.account : null);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     venueIds: auth.venueIds,
@@ -114,6 +136,7 @@ export async function GET(request: Request) {
             endsAt: s.discount_ends_at,
           }
         : null,
+      ...(accounts.has(s.id) ? { account: accounts.get(s.id) ?? null } : {}),
     })),
     invoices: (invoices ?? []).map((i) => ({
       id: i.id,

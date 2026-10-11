@@ -3,6 +3,12 @@ import { isCronAuthorized } from "@/lib/cronAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { reconcileStaleVenueAdditions, type VenueAdditionReconcileResult } from "@/lib/venueAddition";
 import {
+  applyDueVenueRemovals,
+  reconcileStaleVenueChanges,
+  type VenueChangeReconcileResult,
+  type VenueRemovalApplyResult,
+} from "@/lib/venueRemoval";
+import {
   reconcileLapsedVenues,
   repairMissedVenueReveals,
   type LapsedVenueReconcileResult,
@@ -10,9 +16,10 @@ import {
 } from "@/lib/venueVisibilitySync";
 
 /**
- * Daily billing cron. Three jobs: repairing a missed self-serve venue reveal,
- * reconciling lapsed self-serve venues (re-hide / restore / report), and (multi-venue
- * billing Phase 3) settling "Add a venue" attempts stuck past their lease. It used to
+ * Daily billing cron. Jobs: repairing a missed self-serve venue reveal,
+ * reconciling lapsed self-serve venues (re-hide / restore / report), (multi-venue
+ * billing Phase 3) settling "Add a venue" attempts stuck past their lease, and (Phase 5)
+ * settling stuck Remove / Undo changes and taking off venues whose paid month has ended. It used to
  * have a third — expiring offline/check grants past their paid-through date — which
  * was removed 2026-10-11 (offline accounts never lapse automatically; see below).
  *
@@ -105,6 +112,29 @@ export async function POST(request: Request) {
     venueAdditions = { threw: message };
   }
 
+  // Multi-venue billing Phase 5 — (a) settle any Remove / Undo stuck past its lease (from Stripe's
+  // real quantity), then (b) take off every venue whose paid period has ended since its partner
+  // pressed Remove: hide it from the join list and stamp `removed_at`. Both are one bounded read
+  // (normally zero rows); (a) costs one Stripe read per stuck row. Not flag-gated: they only finish
+  // what a partner already started. Never allowed to fail the cron. Runs BEFORE the reveal repair,
+  // which only reveals venues on a live bill — a removed venue is on none.
+  let venueChanges: VenueChangeReconcileResult | { threw: string };
+  try {
+    venueChanges = await reconcileStaleVenueChanges({ dryRun });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[VenueRemoval] reconcile-threw: ${message}`);
+    venueChanges = { threw: message };
+  }
+  let venueRemovals: VenueRemovalApplyResult | { threw: string };
+  try {
+    venueRemovals = await applyDueVenueRemovals({ dryRun });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[VenueRemoval] apply-threw: ${message}`);
+    venueRemovals = { threw: message };
+  }
+
   // Reveal-repair for self-serve venues the Stripe webhook missed. Deliberately
   // NOT behind VENUE_REHIDE_ENABLED: it only ever un-hides a venue that is
   // self-serve-created AND currently paying, which is exactly what the webhook
@@ -118,7 +148,7 @@ export async function POST(request: Request) {
     venueReveal = { threw: message };
   }
 
-  return NextResponse.json({ ok: true, venueReveal, venueRehide, venueAdditions });
+  return NextResponse.json({ ok: true, venueReveal, venueRehide, venueAdditions, venueChanges, venueRemovals });
 }
 
 export async function GET(request: Request) {

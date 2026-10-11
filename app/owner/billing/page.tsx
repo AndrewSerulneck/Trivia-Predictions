@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { BillVenuesPanel } from "@/components/owner/billing/BillVenuesPanel";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { effectiveAmountCents } from "@/lib/billingDisplay";
+import type { BillAccount } from "@/lib/multiVenueBilling";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 
 type Discount = {
@@ -26,6 +28,8 @@ type Subscription = {
   hasPaymentMethod: boolean;
   isManual: boolean;
   discount: Discount | null;
+  /** Multi-venue billing (Phase 5): present only while that flag is on. */
+  account?: BillAccount | null;
 };
 
 type Invoice = {
@@ -363,6 +367,19 @@ const OwnerBillingPage = () => {
               </dl>
             </div>
           </div>
+
+          {subscription.account ? (
+            <BillVenuesPanel
+              account={subscription.account}
+              billVenueId={subscription.venueId}
+              bill={subscription}
+              periodEnd={subscription.currentPeriodEnd}
+              onChanged={async (message) => {
+                setActionMessage(message);
+                await refresh();
+              }}
+            />
+          ) : null}
 
           {/* Payment method */}
           <div>

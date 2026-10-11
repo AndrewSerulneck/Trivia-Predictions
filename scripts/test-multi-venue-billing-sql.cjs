@@ -17,6 +17,8 @@ const { PGlite } = require(process.env.MULTI_VENUE_PGLITE_MODULE || "@electric-s
 const MIGRATION = "supabase/migrations/20261011134820_multi_venue_billing.sql";
 // Phase 3: the advisory-locked claim that starts an "Add a venue".
 const CLAIM_MIGRATION = "supabase/migrations/20261011153607_venue_addition_claim.sql";
+// Phase 5: Remove / Undo ledger + claim/finish RPCs, and claim_venue_addition's change-busy rule.
+const CHANGES_MIGRATION = "supabase/migrations/20261011210033_venue_bill_changes.sql";
 
 const SCHEMA = `
   create role anon; create role authenticated; create role service_role;
@@ -258,6 +260,152 @@ async function main() {
   const grantees = fnGrants.map((g) => g.grantee);
   assert.ok(grantees.includes("service_role"));
   assert.ok(!grantees.includes("anon") && !grantees.includes("authenticated") && !grantees.includes("PUBLIC"));
+
+  // 9. Phase 5 — Remove / Undo (claim_venue_bill_change, finish_venue_bill_change) and the
+  //    replaced claim_venue_addition (re-runnable).
+  const changesMigration = fs.readFileSync(CHANGES_MIGRATION, "utf8");
+  await db.exec(changesMigration);
+  await db.exec(changesMigration);
+
+  await q(`insert into venues values ('r-anchor'), ('r-two'), ('r-three'), ('r-own-bill')`);
+  const [rOwner] = await rows(`insert into venue_owners default values returning id`);
+  const [rBill] = await rows(
+    `insert into billing_subscriptions(venue_id, owner_id, status, stripe_subscription_id)
+       values ('r-anchor', $1, 'active', 'sub_r') returning id`,
+    [rOwner.id]
+  );
+  await q(
+    `insert into billing_subscription_venues(subscription_id, venue_id, role, added_at) values
+       ($1, 'r-two', 'added', now() - interval '2 days'), ($1, 'r-three', 'added', now() - interval '1 day')`,
+    [rBill.id]
+  );
+  const periodEnd = "2099-01-01T00:00:00Z";
+  const change = async (key, venue, action, removeAt = periodEnd, ownerId = rOwner.id, billId = rBill.id) =>
+    (await rows(`select * from claim_venue_bill_change($1, $2, $3, $4, $5, $6)`, [key, ownerId, billId, venue, action, removeAt]))[0];
+  const finish = async (id, outcome, reason = null) =>
+    (await rows(`select * from finish_venue_bill_change($1, $2, $3)`, [id, outcome, reason]))[0];
+  const member = async (venue) =>
+    (await rows(`select remove_at, removed_at from billing_subscription_venues where venue_id = $1`, [venue]))[0];
+  const anchorOf = async (billId) => (await rows(`select venue_id from billing_subscriptions where id = $1`, [billId]))[0].venue_id;
+
+  //    a. argument checks.
+  assert.equal((await change("c-0", "r-two", "remove", null)).outcome, "invalid");
+  assert.equal((await change("c-0", "r-two", "remove", "2000-01-01T00:00:00Z")).outcome, "invalid", "remove_at in the past");
+  assert.equal((await change("c-0", "r-two", "delete")).outcome, "invalid");
+  assert.equal((await change("c-0", "r-two", "remove", periodEnd, otherOwner.id)).outcome, "not_owner");
+  assert.equal((await change("c-0", "r-own-bill", "remove")).outcome, "not_on_bill");
+
+  //    b. an add in flight blocks a change; a change in flight blocks an add (same lock).
+  await q(`insert into billing_venue_additions(idempotency_key, owner_id, subscription_id, status) values ('r-add', $1, $2, 'requires_action')`, [
+    rOwner.id,
+    rBill.id,
+  ]);
+  assert.equal((await change("c-1", "r-two", "remove")).outcome, "busy_addition");
+  await q(`update billing_venue_additions set status = 'failed' where idempotency_key = 'r-add'`);
+
+  const removeTwo = await change("c-1", "r-two", "remove");
+  assert.equal(removeTwo.outcome, "claimed");
+  assert.equal(removeTwo.change_quantity_before, 3);
+  assert.equal(removeTwo.change_quantity_after, 2);
+  assert.equal(removeTwo.change_new_anchor_venue_id, null, "a non-anchor leaving never moves the anchor");
+  assert.equal((await change("c-1", "r-two", "remove")).outcome, "existing");
+  assert.equal((await change("c-1", "r-three", "remove")).outcome, "key_conflict");
+  const blocked = await change("c-2", "r-three", "remove");
+  assert.equal(blocked.outcome, "busy_change");
+  assert.equal(blocked.change_id, removeTwo.change_id);
+  const addWhileChanging = await claim("r-add-2", rOwner.id, rBill.id);
+  assert.equal(addWhileChanging.outcome, "busy");
+  assert.equal(addWhileChanging.addition_id, null, "a change-busy add gets no addition row");
+
+  //    c. claiming changes nothing on the membership; finishing 'done' applies it.
+  assert.equal((await member("r-two")).remove_at, null);
+  assert.equal((await finish(removeTwo.change_id, "done")).outcome, "done");
+  assert.ok((await member("r-two")).remove_at instanceof Date);
+  assert.equal((await finish(removeTwo.change_id, "done")).outcome, "already", "finish is idempotent");
+  assert.equal((await change("c-3", "r-two", "remove")).outcome, "already_leaving");
+
+  //    d. the add claim now prices off 2 billed venues.
+  const addAfter = await claim("r-add-3", rOwner.id, rBill.id);
+  assert.equal(addAfter.outcome, "claimed");
+  assert.equal(addAfter.addition_quantity_before, 2);
+  await q(`update billing_venue_additions set status = 'failed' where id = $1`, [addAfter.addition_id]);
+
+  //    e. the anchor leaving: the oldest billed venue with no bill row of its own takes over.
+  await q(`insert into billing_subscription_venues(subscription_id, venue_id, role, added_at) values ($1, 'r-own-bill', 'added', now() - interval '9 days')`, [
+    rBill.id,
+  ]);
+  await q(`insert into billing_subscriptions(venue_id, owner_id, status) values ('r-own-bill', $1, 'cancelled')`, [rOwner.id]);
+  const removeAnchor = await change("c-4", "r-anchor", "remove");
+  assert.equal(removeAnchor.outcome, "claimed");
+  assert.equal(removeAnchor.change_quantity_before, 3);
+  assert.equal(removeAnchor.change_new_anchor_venue_id, "r-three", "r-own-bill anchors its own (old) bill row, so it cannot");
+  assert.equal(await anchorOf(rBill.id), "r-anchor", "the anchor moves only on finish");
+  assert.equal((await finish(removeAnchor.change_id, "done")).outcome, "done");
+  assert.equal(await anchorOf(rBill.id), "r-three");
+  assert.ok((await member("r-anchor")).remove_at instanceof Date);
+
+  //    f. the last billed venue(s): r-three and r-own-bill are billed; remove one, then the last is refused.
+  const removeOwn = await change("c-5", "r-own-bill", "remove");
+  assert.equal(removeOwn.outcome, "claimed");
+  assert.equal((await finish(removeOwn.change_id, "failed", "card error")).outcome, "failed");
+  assert.equal((await member("r-own-bill")).remove_at, null, "a failed change leaves the membership alone");
+  const [failedRow] = await rows(`select status, failure_reason from billing_venue_changes where id = $1`, [removeOwn.change_id]);
+  assert.deepEqual(failedRow, { status: "failed", failure_reason: "card error" });
+  const removeOwnAgain = await change("c-6", "r-own-bill", "remove");
+  await finish(removeOwnAgain.change_id, "done");
+  assert.equal((await change("c-7", "r-three", "remove")).outcome, "last_venue");
+
+  //    g. undo: only while leaving and before remove_at; finishing clears remove_at.
+  assert.equal((await change("c-8", "r-three", "undo")).outcome, "not_leaving");
+  const undoTwo = await change("c-9", "r-two", "undo");
+  assert.equal(undoTwo.outcome, "claimed");
+  assert.equal(undoTwo.change_quantity_before, 1);
+  assert.equal(undoTwo.change_quantity_after, 2);
+  assert.equal((await finish(undoTwo.change_id, "done")).outcome, "done");
+  assert.equal((await member("r-two")).remove_at, null);
+  await q(`update billing_subscription_venues set remove_at = now() - interval '1 minute' where venue_id = 'r-anchor'`);
+  assert.equal((await change("c-10", "r-anchor", "undo")).outcome, "too_late");
+  await q(`update billing_subscription_venues set removed_at = now() where venue_id = 'r-anchor'`);
+  assert.equal((await change("c-11", "r-anchor", "undo")).outcome, "not_on_bill", "a removed venue comes back only through a paid add");
+
+  //    h. drift: finishing when the membership moved underneath is recorded, not hidden.
+  const removeTwoAgain = await change("c-12", "r-two", "remove");
+  await q(`update billing_subscription_venues set remove_at = now() + interval '1 day' where venue_id = 'r-two'`);
+  const drifted = await finish(removeTwoAgain.change_id, "done");
+  assert.equal(drifted.outcome, "drift");
+  const [driftRow] = await rows(`select status, failure_reason from billing_venue_changes where id = $1`, [removeTwoAgain.change_id]);
+  assert.deepEqual(driftRow, { status: "done", failure_reason: "membership-not-billed" });
+
+  //    i. no other venue can take over the anchor → no_new_anchor.
+  await q(`insert into venues values ('solo-a'), ('solo-b')`);
+  const [soloBill] = await rows(
+    `insert into billing_subscriptions(venue_id, owner_id, status) values ('solo-a', $1, 'active') returning id`,
+    [rOwner.id]
+  );
+  await q(`insert into billing_subscriptions(venue_id, owner_id, status) values ('solo-b', $1, 'cancelled')`, [rOwner.id]);
+  await q(`update billing_subscription_venues set subscription_id = $1, role = 'added' where venue_id = 'solo-b'`, [soloBill.id]);
+  assert.equal((await change("c-13", "solo-a", "remove", periodEnd, rOwner.id, soloBill.id)).outcome, "no_new_anchor");
+
+  //    j. grants: table service_role only + RLS forced; functions service_role only.
+  const changeGrants = await rows(
+    `select grantee, string_agg(privilege_type, ',' order by privilege_type) as privs
+       from information_schema.role_table_grants
+      where table_name = 'billing_venue_changes' and grantee in ('anon', 'authenticated', 'service_role')
+      group by grantee order by grantee`
+  );
+  assert.deepEqual(changeGrants.map((g) => [g.grantee, g.privs]), [["service_role", "DELETE,INSERT,SELECT,UPDATE"]]);
+  const [changeRls] = await rows(`select relrowsecurity, relforcerowsecurity from pg_class where relname = 'billing_venue_changes'`);
+  assert.ok(changeRls.relrowsecurity && changeRls.relforcerowsecurity);
+  for (const fn of ["claim_venue_bill_change", "finish_venue_bill_change", "claim_venue_addition"]) {
+    const g = (
+      await rows(
+        `select grantee from information_schema.routine_privileges where routine_name = $1 and privilege_type = 'EXECUTE'`,
+        [fn]
+      )
+    ).map((r) => r.grantee);
+    assert.ok(g.includes("service_role"), fn);
+    assert.ok(!g.includes("anon") && !g.includes("authenticated") && !g.includes("PUBLIC"), fn);
+  }
 
   console.log("multi-venue billing migration: all SQL checks passed");
 }

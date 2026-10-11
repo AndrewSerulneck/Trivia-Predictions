@@ -16,7 +16,7 @@ import type { OwnerAuthContext } from "@/lib/requireOwnerAuth";
 import { BLANK_SIGNUP_DRAFT, signupStepIssue, type SignupDraft } from "@/lib/selfServeSignup";
 import { getStripeGraduatedPriceId, stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { addVenueToBill, loadBillingForVenues, venueIdsEverBilled } from "@/lib/venueBilling";
+import { addVenueToBill, billMembershipOf, hasLeftBill, isBilledMembership, loadBillingForVenues, venueIdsEverBilled } from "@/lib/venueBilling";
 import { isAdminHiddenVenueRow, isPlaceholderVenueRow } from "@/lib/venueClaim";
 import { GRADUATED_PRICE_LOOKUP_KEY, monthlyTotalCents, nextVenuePriceCents, venuePriceCents } from "@/lib/venuePricing";
 
@@ -166,11 +166,11 @@ export type AddVenueContext = {
 
 // --- Small helpers -------------------------------------------------------------------------------
 
-const errorText = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+export const errorText = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
 type StripeErrorShape = { type?: string; statusCode?: number; code?: string; decline_code?: string; message?: string };
 
-const asStripeError = (error: unknown): StripeErrorShape =>
+export const asStripeError = (error: unknown): StripeErrorShape =>
   typeof error === "object" && error !== null ? (error as StripeErrorShape) : {};
 
 /**
@@ -179,19 +179,19 @@ const asStripeError = (error: unknown): StripeErrorShape =>
  * connection failure is AMBIGUOUS: the request may have been applied, so nothing may be undone on
  * its strength — the row waits for its lease and is reconciled from Stripe's real state.
  */
-const isDefinitiveStripeRejection = (error: unknown): boolean => {
+export const isDefinitiveStripeRejection = (error: unknown): boolean => {
   const shape = asStripeError(error);
   if (shape.type === "StripeConnectionError" || shape.type === "StripeAPIError") return false;
   return typeof shape.statusCode === "number" && shape.statusCode >= 400 && shape.statusCode < 500;
 };
 
-const isoFromUnix = (seconds: number | null | undefined): string | null =>
+export const isoFromUnix = (seconds: number | null | undefined): string | null =>
   typeof seconds === "number" && Number.isFinite(seconds) ? new Date(seconds * 1000).toISOString() : null;
 
 const idOf = (value: string | { id: string } | null | undefined): string | null =>
   typeof value === "string" ? value : value?.id ?? null;
 
-const discountOf = (bill: Pick<BillRow, "discount_percent_off" | "discount_amount_off_cents">): DisplayDiscount | null =>
+export const discountOf = (bill: Pick<BillRow, "discount_percent_off" | "discount_amount_off_cents">): DisplayDiscount | null =>
   bill.discount_percent_off != null || bill.discount_amount_off_cents != null
     ? { percentOff: bill.discount_percent_off, amountOffCents: bill.discount_amount_off_cents }
     : null;
@@ -203,7 +203,7 @@ const monthlyTotalAfterDiscount = (
 ): number => effectiveAmountCents({ amountCents: monthlyTotalCents(venueCount), discount: discountOf(bill) });
 
 /** Is this Stripe Price the graduated multi-venue Price (plan §4.1)? */
-const isGraduatedPrice = (price: Stripe.Price | null | undefined): boolean => {
+export const isGraduatedPrice = (price: Stripe.Price | null | undefined): boolean => {
   if (!price) return false;
   if (price.lookup_key === GRADUATED_PRICE_LOOKUP_KEY) return true;
   const configured = getStripeGraduatedPriceId();
@@ -211,12 +211,12 @@ const isGraduatedPrice = (price: Stripe.Price | null | undefined): boolean => {
 };
 
 /** The one subscription item, or null when there is not exactly one. */
-const soleItem = (subscription: Stripe.Subscription): Stripe.SubscriptionItem | null => {
+export const soleItem = (subscription: Stripe.Subscription): Stripe.SubscriptionItem | null => {
   const items = subscription.items?.data ?? [];
   return items.length === 1 ? items[0] : null;
 };
 
-const itemQuantity = (subscription: Stripe.Subscription): number | null => {
+export const itemQuantity = (subscription: Stripe.Subscription): number | null => {
   const quantity = soleItem(subscription)?.quantity;
   return typeof quantity === "number" && Number.isInteger(quantity) ? quantity : null;
 };
@@ -622,7 +622,9 @@ async function deleteUnbilledAddedVenue(venueId: string): Promise<boolean> {
     return false;
   }
   if (billed.venueIds.has(venueId)) {
-    console.error(`${LOG} venue-cleanup-refused venue=${venueId} — it is on a bill; not deleting`);
+    // Expected for a declined "Add back" (Phase 5): the venue is the partner's own, with billing
+    // history. Anything else here is drift worth a look.
+    console.warn(`${LOG} venue-cleanup-skipped venue=${venueId} — it has billing history; kept`);
     return false;
   }
   const { data, error } = await supabaseAdmin!
@@ -704,6 +706,21 @@ async function completeAddition(
     .returns<{ id: string }[]>();
   if (reveal.error) {
     console.error(`${LOG} reveal-failed venue=${row.venue_id}: ${reveal.error.message} — the daily reveal repair will retry`);
+  }
+  // "Add back" (Phase 5) of a venue that is not self-serve-made (e.g. admin-activated): the daily
+  // removal job hid it and stamped `rehidden_at` ("we hid this"), so un-hide exactly that — never a
+  // venue an admin hid on purpose (no stamp). A brand-new venue has no stamp, so this is a no-op.
+  const restore = await supabaseAdmin!
+    .from("venues")
+    .update({ hidden: false, rehidden_at: null })
+    .eq("id", row.venue_id)
+    .eq("hidden", true)
+    .not("rehidden_at", "is", null)
+    .or("latitude.neq.0,longitude.neq.0")
+    .select("id")
+    .returns<{ id: string }[]>();
+  if (restore.error) {
+    console.error(`${LOG} restore-failed venue=${row.venue_id}: ${restore.error.message}`);
   }
 
   const updated = await updateAddition(row.id, ["pending", "requires_action", "failed"], paidPatch);
@@ -1057,7 +1074,13 @@ async function settleStaleAdditionsForBill(billId: string, nowMs: number): Promi
 export type StartVenueAdditionArgs = {
   auth: OwnerAuthContext;
   context: AddVenueContext;
+  /** The new venue's details. Ignored for an "Add back" (`readdVenueId`). */
   input: AddVenueInput;
+  /**
+   * "Add back" (Phase 5): put one of the partner's own venues, taken off THIS bill earlier, back on
+   * it — same charge, same ledger, same completion; no new venue is created.
+   */
+  readdVenueId?: string | null;
   clientKey: string;
   /** From the quote; honoured only if recent (see `acceptableProrationDate`). */
   prorationDate: unknown;
@@ -1065,8 +1088,39 @@ export type StartVenueAdditionArgs = {
 };
 
 /**
+ * May this venue be added BACK to this bill? Only the partner's own venue, whose membership row is
+ * on this same bill and has left it (taken off, or past its `remove_at`). A venue still set to leave
+ * is an Undo (free), not an add; one on another bill, or never billed (e.g. a test venue linked to
+ * the partner), is not addable here.
+ */
+async function readdableVenue(
+  auth: OwnerAuthContext,
+  billId: string,
+  venueId: string,
+  nowMs: number
+): Promise<{ ok: true; venue: { id: string; name: string } } | AddVenueRefusal> {
+  if (!auth.venueIds.includes(venueId)) return refuse("forbidden", 403);
+  const membership = await billMembershipOf(venueId);
+  if (!membership.ok) throw new Error(membership.error);
+  const row = membership.row;
+  if (!row || row.subscription_id !== billId) return refuse("venue_unavailable", 409);
+  if (isBilledMembership(row)) return refuse("venue_already_yours", 409);
+  if (!hasLeftBill(row, nowMs)) return refuse("readd_use_undo", 409);
+
+  const { data, error } = await supabaseAdmin!
+    .from("venues")
+    .select("id, name")
+    .eq("id", venueId)
+    .maybeSingle<{ id: string; name: string | null }>();
+  if (error) throw new Error(`venue-read-failed: ${error.message}`);
+  if (!data) return refuse("venue_unavailable", 409);
+  return { ok: true, venue: { id: data.id, name: (data.name ?? "").trim() || data.id } };
+}
+
+/**
  * Add a venue to the partner's bill (plan §4.3). The caller has already checked the flag, the
- * session, the rate limit, the input (`addVenueInputIssue`) and the bill (`loadAddVenueContext`).
+ * session, the rate limit, the input (`addVenueInputIssue`, skipped for an Add back) and the bill
+ * (`loadAddVenueContext`).
  */
 export async function startVenueAddition(args: StartVenueAdditionArgs): Promise<AddVenueOutcome> {
   const { auth, context, input } = args;
@@ -1086,13 +1140,21 @@ export async function startVenueAddition(args: StartVenueAdditionArgs): Promise<
       return outcomeFromState(await reconcileAddition(previous, nowMs));
     }
 
+    // 1b. Add back: which existing venue (checked before anything is claimed).
+    let readd: { id: string; name: string } | null = null;
+    if (args.readdVenueId) {
+      const checked = await readdableVenue(auth, context.bill.id, args.readdVenueId, nowMs);
+      if (!checked.ok) return checked;
+      readd = checked.venue;
+    }
+
     // 2. Clear out this bill's dead attempts first (see settleStaleAdditionsForBill).
     const settled = await settleStaleAdditionsForBill(context.bill.id, nowMs);
 
     // 3. Claim (advisory-locked; one add in flight per bill; same key → same row). Claimed BEFORE
     //    the duplicate-address check on purpose: a double-tap whose twin has already created its
     //    venue must come back as "that same add", never as "you already have a venue there".
-    const claimed = await claimAddition(key, auth.ownerId, context.bill.id, input.venueName.trim());
+    const claimed = await claimAddition(key, auth.ownerId, context.bill.id, readd ? readd.name : input.venueName.trim());
     if (!claimed.ok) return claimed;
     const { claim } = claimed;
     switch (claim.outcome) {
@@ -1137,53 +1199,60 @@ export async function startVenueAddition(args: StartVenueAdditionArgs): Promise<
       return refuse("billing_state", 409, { additionId: row.id });
     }
 
-    // 5. Never a second venue row at an address we already hold (same scan and predicates as
-    //    signup — lib/nearbyVenue.ts, lib/venueClaim.ts).
-    const latitude = input.latitude as number;
-    const longitude = input.longitude as number;
-    const nearby = await findNearbyVenue(latitude, longitude);
-    if (nearby) {
-      const venue = { id: nearby.id, name: (nearby.name ?? "").trim() || nearby.id, address: venueAddressLabel(nearby) };
-      const code: AddVenueFailureCode = auth.venueIds.includes(nearby.id)
-        ? "venue_already_yours"
-        : isAdminHiddenVenueRow(nearby)
-          ? "venue_unavailable"
-          : "venue_exists";
-      await failAddition(row, `refused:${code}`, { voidInvoice: false });
-      return refuse(code, 409, { venue, additionId: row.id });
-    }
+    // 5–6 (Add back). The venue already exists and is the partner's: record it, skip the address
+    //    scan and the venue insert. It stays as it is (hidden by the removal job) until paid.
+    if (readd) {
+      const recorded = await updateAddition(row.id, ["pending"], { venue_id: readd.id });
+      row = recorded ?? { ...row, venue_id: readd.id };
+    } else {
+      // 5. Never a second venue row at an address we already hold (same scan and predicates as
+      //    signup — lib/nearbyVenue.ts, lib/venueClaim.ts).
+      const latitude = input.latitude as number;
+      const longitude = input.longitude as number;
+      const nearby = await findNearbyVenue(latitude, longitude);
+      if (nearby) {
+        const venue = { id: nearby.id, name: (nearby.name ?? "").trim() || nearby.id, address: venueAddressLabel(nearby) };
+        const code: AddVenueFailureCode = auth.venueIds.includes(nearby.id)
+          ? "venue_already_yours"
+          : isAdminHiddenVenueRow(nearby)
+            ? "venue_unavailable"
+            : "venue_exists";
+        await failAddition(row, `refused:${code}`, { voidInvoice: false });
+        return refuse(code, 409, { venue, additionId: row.id });
+      }
 
-    // 6. The venue: hidden, and stamped in the same insert (reveal + sweep).
-    const stampedAt = new Date(nowMs).toISOString();
-    let venueId: string;
-    try {
-      const venue = await createAdminVenue({
-        name: input.venueName.trim(),
-        street: input.street.trim(),
-        city: input.city.trim(),
-        state: input.state.trim().toUpperCase(),
-        zipCode: input.zipCode.trim(),
-        country: DEFAULT_VENUE_COUNTRY,
-        placeId: input.placeId.trim(),
-        latitude,
-        longitude,
-        radius: input.radius,
-        hidden: true,
-        selfServeCreatedAt: stampedAt,
-        checkoutStartedAt: stampedAt,
-      });
-      venueId = venue.id;
-    } catch (error) {
-      console.error(`${LOG} create-venue-failed addition=${row.id}: ${errorText(error)}`);
-      await failAddition(row, "create-venue-failed", { voidInvoice: false });
-      return refuse("addition_failed", 500);
-    }
+      // 6. The venue: hidden, and stamped in the same insert (reveal + sweep).
+      const stampedAt = new Date(nowMs).toISOString();
+      let venueId: string;
+      try {
+        const venue = await createAdminVenue({
+          name: input.venueName.trim(),
+          street: input.street.trim(),
+          city: input.city.trim(),
+          state: input.state.trim().toUpperCase(),
+          zipCode: input.zipCode.trim(),
+          country: DEFAULT_VENUE_COUNTRY,
+          placeId: input.placeId.trim(),
+          latitude,
+          longitude,
+          radius: input.radius,
+          hidden: true,
+          selfServeCreatedAt: stampedAt,
+          checkoutStartedAt: stampedAt,
+        });
+        venueId = venue.id;
+      } catch (error) {
+        console.error(`${LOG} create-venue-failed addition=${row.id}: ${errorText(error)}`);
+        await failAddition(row, "create-venue-failed", { voidInvoice: false });
+        return refuse("addition_failed", 500);
+      }
 
-    // NOT linked to the partner yet: the `venue_owner_venues` row is written by completeAddition,
-    // once the charge has succeeded, so a partner never sees (or configures) a venue they have not
-    // paid for — and a declined / abandoned add has no link to undo.
-    const recorded = await updateAddition(row.id, ["pending"], { venue_id: venueId });
-    row = recorded ?? { ...row, venue_id: venueId };
+      // NOT linked to the partner yet: the `venue_owner_venues` row is written by completeAddition,
+      // once the charge has succeeded, so a partner never sees (or configures) a venue they have not
+      // paid for — and a declined / abandoned add has no link to undo.
+      const recorded = await updateAddition(row.id, ["pending"], { venue_id: venueId });
+      row = recorded ?? { ...row, venue_id: venueId };
+    }
 
     // 7. Charge: Stripe applies quantity n + 1 ONLY if the prorated invoice is paid.
     const prorationDate = acceptableProrationDate(args.prorationDate, context.item.current_period_start, nowMs);

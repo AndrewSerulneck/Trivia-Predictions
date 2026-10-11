@@ -3,9 +3,11 @@
 **Status:** Phases 1–3 **committed and pushed** (Phase 3: `d63d720`, 2026-10-11; its migration
 `20261011153607` applied to production the same day). Phases 1–2 are live (both card subscribers are on the
 graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl`, still $100/month; check-paying accounts never lapse
-automatically). **Phase 4 (Add-a-venue UI) built 2026-10-11, flag off, NOT committed / deployed.** Latest
-handoff: **`docs/multi-venue-volume-billing-plan_PHASE_4_HANDOFF.md`**. Andrew's answers are in §2 (do not
-re-ask). **Next: Phase 5** (Remove at end of month + Billing account view). Each phase ends with a handoff note
+automatically). **Phase 4 (Add-a-venue UI) committed locally as `59d7a55` (2026-10-11, not pushed), flag off.**
+**Phase 5 (Remove at end of month, Undo, Add back, Billing account view) built 2026-10-11, flag off, NOT
+committed; its migration `20261011210033_venue_bill_changes.sql` is NOT applied to production yet.** Latest
+handoff: **`docs/multi-venue-volume-billing-plan_PHASE_5_HANDOFF.md`**. Andrew's answers are in §2 (do not
+re-ask). **Next: Phase 6** (admin & edge tools). Each phase ends with a handoff note
 `docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at the latest one.
 
 ---
@@ -316,7 +318,19 @@ Everything in §4.5 except the Billing page. Follow the `/owner/*` rules in `CLA
 white, 12px text floor, `HightopLoader`). Add `useNativeBackHandler` only if the sheet becomes
 reachable in the app — it should not be (`/owner` is web-only).
 
-### Phase 5 — Removal + Billing account view (Opus 5.5, high)
+### Phase 5 — Removal + Billing account view (Opus 5.5, high) — ✅ built 2026-10-11, flag off (handoff: `…_PHASE_5_HANDOFF.md`)
+
+As built: one module, `lib/venueRemoval.ts`; route `POST /api/owner/venues/remove` (`action: "remove" | "undo"`);
+migration `20261011210033_venue_bill_changes.sql` = a `billing_venue_changes` ledger + `claim_venue_bill_change` /
+`finish_venue_bill_change` RPCs under the SAME advisory lock as adds, and `claim_venue_addition` replaced to be
+`busy` while a change is in flight. The membership change (and the re-anchor, when the anchor leaves) is applied by
+`finish_venue_bill_change` only AFTER Stripe accepted the new quantity; Stripe's `metadata.venueId` follows the
+anchor in the same Stripe call. Undo is refused once `remove_at` has passed (the period renewed without it); putting
+it back then is a paid **Add back** = the normal add flow with `readdVenueId` (no new venue; membership revived;
+un-hidden via the `rehidden_at` stamp the removal job sets). The daily cron hides a removed venue with
+`hidden = true, rehidden_at = now` and stamps `removed_at`. "Not on your bill / Add back" lives on the **Billing
+page**, not in the dashboard dropdown (deviation; Phase 7 may add a dropdown hint). `venueIdsOnBill` gained
+`billedOnly`; `billedVenueCount` now matches the RPC count (excludes leaving venues).
 
 Everything in §4.4 + the Billing page part of §4.5. The cron change lives in the existing
 `/api/cron/billing` — **no new `vercel.json` entry**.

@@ -141,6 +141,13 @@ export const SIGNUP_RATE_LIMITS = {
   venueAddOwner: { windowSeconds: 3600, max: 30 },
   /** GET /api/owner/venues/add/quote — one Stripe preview per call, fetched when the review step opens. */
   venueQuoteOwner: { windowSeconds: 3600, max: 60 },
+  /**
+   * POST /api/owner/venues/remove (multi-venue billing Phase 5) — a signed-in partner taking a venue
+   * off their bill at the end of the month, or undoing that. Owner-keyed like `venueAddOwner`: each
+   * call reads (and on a real change, updates) the Stripe subscription. A partner changes a few
+   * venues at a time; 30/hour is far above that.
+   */
+  venueChangeOwner: { windowSeconds: 3600, max: 30 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitBucket = keyof typeof SIGNUP_RATE_LIMITS;

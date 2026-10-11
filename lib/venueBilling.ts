@@ -42,6 +42,75 @@ type MembershipRow = {
   removed_at: string | null;
 };
 
+/** A venue's membership row with its removal schedule (Phase 5). */
+export type BillMembership = {
+  venue_id: string;
+  subscription_id: string;
+  role: string;
+  added_at: string | null;
+  /** Set by Remove: the end of the paid period the venue stops being billed at. */
+  remove_at: string | null;
+  /** Set by the daily cron once `remove_at` has passed and the venue was taken off. */
+  removed_at: string | null;
+};
+
+const MEMBERSHIP_COLUMNS = "venue_id, subscription_id, role, added_at, remove_at, removed_at";
+
+/**
+ * Is this membership BILLED — on the bill and on its next renewal? Neither taken off nor scheduled
+ * to leave. The same rule as `claim_venue_addition` / `claim_venue_bill_change` in SQL; Stripe's
+ * quantity must equal the number of billed rows.
+ */
+export const isBilledMembership = (row: Pick<BillMembership, "remove_at" | "removed_at">): boolean =>
+  !row.removed_at && !row.remove_at;
+
+/**
+ * Has this membership left its bill — taken off by the cron, or past its `remove_at` and waiting for
+ * the cron to notice (the period renewed without it either way)?
+ */
+export const hasLeftBill = (row: Pick<BillMembership, "remove_at" | "removed_at">, nowMs: number): boolean =>
+  Boolean(row.removed_at) || (row.remove_at !== null && Date.parse(row.remove_at) <= nowMs);
+
+/** One venue's membership row (any state), or null. A missing table is "none". */
+export async function billMembershipOf(
+  venueId: string
+): Promise<{ ok: true; row: BillMembership | null } | { ok: false; error: string }> {
+  if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
+  const { data, error } = await supabaseAdmin
+    .from(BILLING_MEMBERSHIP_TABLE)
+    .select(MEMBERSHIP_COLUMNS)
+    .eq("venue_id", venueId)
+    .maybeSingle<BillMembership>();
+  if (error) {
+    if (isMissingMembershipTable(error)) {
+      noteMissingTable();
+      return { ok: true, row: null };
+    }
+    return { ok: false, error: `membership-read-failed: ${error.message ?? "unknown"}` };
+  }
+  return { ok: true, row: data ?? null };
+}
+
+/** Every membership row of a bill, any state (the Billing page's account view). */
+export async function billMemberships(
+  subscriptionId: string
+): Promise<{ ok: true; rows: BillMembership[] } | { ok: false; error: string }> {
+  if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
+  const { data, error } = await supabaseAdmin
+    .from(BILLING_MEMBERSHIP_TABLE)
+    .select(MEMBERSHIP_COLUMNS)
+    .eq("subscription_id", subscriptionId)
+    .returns<BillMembership[]>();
+  if (error) {
+    if (isMissingMembershipTable(error)) {
+      noteMissingTable();
+      return { ok: true, rows: [] };
+    }
+    return { ok: false, error: `membership-read-failed: ${error.message ?? "unknown"}` };
+  }
+  return { ok: true, rows: Array.isArray(data) ? data : [] };
+}
+
 type QueryError = { code?: string; message?: string } | null;
 
 export type VenueBillingMap<Row> = { ok: true; byVenue: Map<string, Row> } | { ok: false; error: string };
@@ -283,7 +352,7 @@ export async function venueIdsEverBilled(venueIds: readonly string[]): Promise<V
  */
 export async function venueIdsOnBill(
   subscriptionId: string,
-  options: { includeRemoved?: boolean } = {}
+  options: { includeRemoved?: boolean; billedOnly?: boolean } = {}
 ): Promise<{ ok: true; anchorVenueId: string | null; venueIds: string[] } | { ok: false; error: string }> {
   if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
 
@@ -298,9 +367,9 @@ export async function venueIdsOnBill(
   const anchorVenueId = bill.data.venue_id;
   const members = await supabaseAdmin
     .from(BILLING_MEMBERSHIP_TABLE)
-    .select("venue_id, subscription_id, removed_at")
+    .select("venue_id, subscription_id, removed_at, remove_at")
     .eq("subscription_id", subscriptionId)
-    .returns<MembershipRow[]>();
+    .returns<Array<MembershipRow & { remove_at?: string | null }>>();
 
   let others: string[] = [];
   if (members.error) {
@@ -309,22 +378,39 @@ export async function venueIdsOnBill(
     }
     noteMissingTable();
   } else {
-    others = (Array.isArray(members.data) ? members.data : [])
-      .filter(isMembershipRow)
-      .filter((m) => (options.includeRemoved || !m.removed_at) && m.venue_id !== anchorVenueId)
+    const rows = (Array.isArray(members.data) ? members.data : []).filter(
+      (m): m is MembershipRow & { remove_at?: string | null } => isMembershipRow(m)
+    );
+    others = rows
+      .filter((m) => m.venue_id !== anchorVenueId)
+      .filter((m) =>
+        options.billedOnly
+          ? isBilledMembership({ remove_at: m.remove_at ?? null, removed_at: m.removed_at })
+          : options.includeRemoved || !m.removed_at
+      )
       .map((m) => m.venue_id)
       .sort();
+    // Remove (Phase 5) moves the anchor to another venue before it leaves, so an anchor is billed;
+    // drift (a failed re-anchor) is counted honestly rather than assumed.
+    const anchorRow = rows.find((m) => m.venue_id === anchorVenueId);
+    if (options.billedOnly && anchorRow && !isBilledMembership({ remove_at: anchorRow.remove_at ?? null, removed_at: anchorRow.removed_at })) {
+      return { ok: true, anchorVenueId, venueIds: others };
+    }
   }
 
-  // The anchor is always on its own bill (plan §4.4: re-anchor before removing it).
+  // The anchor is always on its own bill (Phase 5's Remove re-anchors before the anchor leaves).
   return { ok: true, anchorVenueId, venueIds: [anchorVenueId, ...others] };
 }
 
-/** How many venues a bill currently covers (≥ 1 for any existing bill). */
+/**
+ * How many venues a bill BILLS — what Stripe's quantity must equal: on the bill and not scheduled
+ * to leave (the same count as the `claim_venue_addition` / `claim_venue_bill_change` RPCs). A venue
+ * set to leave at the period end is still covered (`venueIdsOnBill`) but no longer billed.
+ */
 export async function billedVenueCount(
   subscriptionId: string
 ): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
-  const result = await venueIdsOnBill(subscriptionId);
+  const result = await venueIdsOnBill(subscriptionId, { billedOnly: true });
   if (!result.ok) return result;
   return { ok: true, count: result.venueIds.length };
 }
@@ -341,10 +427,10 @@ export type AddVenueToBillResult =
  *
  * Idempotent, because the route and the Stripe webhook can both complete the same add:
  *   - no row yet → inserted (`inserted: true`);
- *   - already ACTIVE on this bill → nothing to do (`inserted: false`);
- *   - on ANOTHER bill, or taken off this one → `ok: false`. A venue is on at most one bill
- *     (venue_id UNIQUE), and moving one between bills or putting a removed one back is not this
- *     function's call (Phase 5 / 6).
+ *   - already BILLED on this bill → nothing to do (`inserted: false`);
+ *   - on this bill but taken off / set to leave → put back (Phase 5 "Add back"; `inserted: true`);
+ *   - on ANOTHER bill → `ok: false`. A venue is on at most one bill (venue_id UNIQUE), and moving
+ *     one between bills is not this function's call (Phase 6).
  */
 export async function addVenueToBill(
   subscriptionId: string,
@@ -369,19 +455,34 @@ export async function addVenueToBill(
   }
   if ((inserted.data ?? []).length > 0) return { ok: true, inserted: true };
 
-  // A row already holds this venue. Fine only if it is this bill's, and active.
+  // A row already holds this venue. Fine if it is this bill's and billed; if it is this bill's but
+  // taken off (or set to leave), this paid add PUTS IT BACK — Phase 5's "Add back": the partner has
+  // just paid for it again, so it is billed from now on. Conditional on the row still being off, so
+  // a second completion of the same add is a no-op.
   const existing = await supabaseAdmin
     .from(BILLING_MEMBERSHIP_TABLE)
-    .select("venue_id, subscription_id, removed_at")
+    .select("venue_id, subscription_id, removed_at, remove_at")
     .eq("venue_id", id)
-    .maybeSingle<MembershipRow>();
+    .maybeSingle<MembershipRow & { remove_at: string | null }>();
   if (existing.error) {
     return { ok: false, error: `membership-read-failed: ${existing.error.message ?? "unknown"}` };
   }
   const row = existing.data;
-  if (row && row.subscription_id === billId && !row.removed_at) return { ok: true, inserted: false };
-  return {
-    ok: false,
-    error: row ? (row.subscription_id === billId ? "venue-removed-from-bill" : "venue-on-another-bill") : "membership-missing",
-  };
+  if (!row) return { ok: false, error: "membership-missing" };
+  if (row.subscription_id !== billId) return { ok: false, error: "venue-on-another-bill" };
+  if (isBilledMembership({ remove_at: row.remove_at ?? null, removed_at: row.removed_at })) {
+    return { ok: true, inserted: false };
+  }
+
+  const restored = await supabaseAdmin
+    .from(BILLING_MEMBERSHIP_TABLE)
+    .update({ removed_at: null, remove_at: null, added_at: new Date().toISOString() })
+    .eq("venue_id", id)
+    .eq("subscription_id", billId)
+    .select("venue_id")
+    .returns<{ venue_id: string }[]>();
+  if (restored.error) {
+    return { ok: false, error: `membership-write-failed: ${restored.error.message ?? "unknown"}` };
+  }
+  return { ok: true, inserted: (restored.data ?? []).length > 0 };
 }

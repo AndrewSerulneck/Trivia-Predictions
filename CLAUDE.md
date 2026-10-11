@@ -702,10 +702,10 @@ step opens at the top — don't hand-roll a scroll reset.
   `npm run store:qr` (`scripts/generate-join-qr.cjs`); `tests/lib.join-qr.test.ts` decodes them and
   fails if they drift. Never change the URL — printed merch can't be updated.
 
-## Multi-Venue Volume Billing — Phases 1–3 shipped, Phase 4 UI built (flag off)
+## Multi-Venue Volume Billing — Phases 1–4 committed, Phase 5 Remove/Undo built (flag off)
 
 Plan: `docs/multi-venue-volume-billing-plan.md` (Andrew's answers in §2 — don't re-ask); latest handoff
-`docs/multi-venue-volume-billing-plan_PHASE_4_HANDOFF.md`. One Stripe subscription per partner, quantity =
+`docs/multi-venue-volume-billing-plan_PHASE_5_HANDOFF.md`. One Stripe subscription per partner, quantity =
 venues, graduated $100 / $75 / $60 / $45. Migration `20261011134820` is applied; every card subscriber is on
 the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (lookup key `hightop_venue_graduated_monthly_v1`) at
 quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/stripe.ts`
@@ -747,6 +747,19 @@ quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/str
   not name `/api/owner/venues` (first-load tripwire). `tests/add-venue-ui-contract.test.ts`. **Never exercise the
   real POST from a dev server** (live Stripe + shared DB): Andrew's `next dev` holds `.next/dev/lock`, so browser-test
   from a scratchpad clone with no `.env.local` and mocked routes (Phase 4 handoff §5), and never `pkill next-server`.
+- **Remove at end of month / Undo / Add back (Phase 5, 2026-10-11) live in ONE file: `lib/venueRemoval.ts`**, route
+  `POST /api/owner/venues/remove` (`action: "remove" | "undo"`, flag-gated 404). Remove = Stripe quantity −1 with
+  `proration_behavior: "none"` (no credit) + membership `remove_at` = period end; the venue stays live until then, and the
+  daily `/api/cron/billing` (`applyDueVenueRemovals`) hides it (`hidden = true, rehidden_at = now`) and stamps
+  `removed_at`. Undo = +1, also `"none"`, only before `remove_at`. After that, putting it back is a PAID **Add back**:
+  `POST /api/owner/venues/add` with `readdVenueId` (no new venue; `addVenueToBill` revives a same-bill row). Every change
+  is claimed by `claim_venue_bill_change` under the SAME advisory lock as `claim_venue_addition` (migration
+  `20261011210033`), and each refuses while the other is in flight — any `items` update voids an add's pending 3-D
+  Secure payment. `finish_venue_bill_change` applies the membership change + re-anchor (anchor leaving → another billed
+  venue becomes `billing_subscriptions.venue_id`, and Stripe `metadata.venueId` follows) only after Stripe accepted it.
+  "Billed" = `removed_at IS NULL AND remove_at IS NULL` (`isBilledMembership`, = the RPC count = Stripe's quantity).
+  Billing page account view: `components/owner/billing/BillVenuesPanel.tsx` + pure `lib/billAccountView.ts`; numbers come
+  from `GET /api/owner/billing` `account` (only when the flag is on). Tests: `tests/api.owner.venues-remove.test.ts`.
 
 ## POS Rewards Integration (Square / Clover; Toast deferred) — Phases 1–2 built 2026-10-04/05
 

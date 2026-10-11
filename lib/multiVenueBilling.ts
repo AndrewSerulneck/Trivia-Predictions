@@ -88,6 +88,7 @@ export const ADD_VENUE_FAILURE_CODES = [
   "venue_already_yours",
   "venue_exists",
   "venue_unavailable",
+  "readd_use_undo",
   "card_declined",
   "payment_unconfirmed",
   "addition_failed",
@@ -120,8 +121,108 @@ export const ADD_VENUE_MESSAGES: Record<AddVenueFailureCode, string> = {
   venue_already_yours: "That venue is already on your account.",
   venue_exists: `We already have a venue at this address. Email ${PARTNER_SUPPORT_EMAIL} and we'll move it onto your bill.`,
   venue_unavailable: `That venue isn't available to add. Email ${PARTNER_SUPPORT_EMAIL} and we'll set it up for you.`,
+  readd_use_undo: "That venue is still on your bill until the end of this period. Tap Undo instead — there's nothing to pay.",
   card_declined: "Your card was declined. Update it in Billing, then try again.",
   payment_unconfirmed: "We couldn't confirm the payment yet. Check back in a few minutes before trying again.",
   addition_failed: "We couldn't add that venue. Please try again.",
   stripe_unavailable: "Billing is temporarily unavailable. Please try again in a moment.",
+};
+
+// --- Remove / Undo (Phase 5) -------------------------------------------------------------------
+
+/** `POST /api/owner/venues/remove` body `action`. */
+export type VenueBillChangeAction = "remove" | "undo";
+
+/** A successful Remove / Undo: `{ ok: true, change }`. */
+export type VenueBillChangeResult = {
+  action: VenueBillChangeAction;
+  venueId: string;
+  /** Remove: when the venue leaves the bill (ISO, the end of the paid period). Undo: null. */
+  removeAt: string | null;
+  /** Venues billed from the next renewal on, after this change. */
+  billedVenueCount: number;
+};
+
+/**
+ * Why a Remove / Undo was refused — the `code` on a non-OK answer. Some are shared with "Add a
+ * venue" (same bill rules); the rest are specific to taking a venue off.
+ */
+export const VENUE_CHANGE_FAILURE_CODES = [
+  "forbidden",
+  "invalid_request",
+  "rate_limited",
+  "no_bill",
+  "not_bill_owner",
+  "offline_bill",
+  "bill_not_active",
+  "cancel_scheduled",
+  "custom_rate",
+  "billing_state",
+  "addition_in_progress",
+  "change_in_progress",
+  "not_on_bill",
+  "already_leaving",
+  "not_leaving",
+  "too_late",
+  "last_venue",
+  "needs_support",
+  "change_unconfirmed",
+  "change_failed",
+  "stripe_unavailable",
+] as const;
+
+export type VenueChangeFailureCode = (typeof VENUE_CHANGE_FAILURE_CODES)[number];
+
+/** The partner-facing sentence for each Remove / Undo refusal (one home, like ADD_VENUE_MESSAGES). */
+export const VENUE_CHANGE_MESSAGES: Record<VenueChangeFailureCode, string> = {
+  forbidden: "You do not have access to this venue.",
+  invalid_request: "Something about that request wasn't right. Please refresh and try again.",
+  rate_limited: "Too many tries in a short time. Please wait a few minutes and try again.",
+  no_bill: "This venue isn't on a subscription.",
+  not_bill_owner: "Only the partner who pays for this account can change which venues are on it.",
+  offline_bill: `Your account is billed by check. Email ${PARTNER_SUPPORT_EMAIL} to change your venues.`,
+  bill_not_active: "Your subscription isn't active right now, so its venues can't be changed.",
+  cancel_scheduled: "Your subscription is set to cancel. Resume it first if you want to change its venues.",
+  custom_rate: `Your account has a custom rate. Email ${PARTNER_SUPPORT_EMAIL} to change your venues.`,
+  billing_state: `Your bill needs a quick check from us before its venues can change. Email ${PARTNER_SUPPORT_EMAIL}.`,
+  addition_in_progress: "You're adding a venue right now. Finish that first, then try again.",
+  change_in_progress: "Another change to your venues is still going through. Try again in a minute.",
+  not_on_bill: "That venue isn't on your bill.",
+  already_leaving: "That venue is already set to leave your bill.",
+  not_leaving: "That venue isn't set to leave your bill.",
+  too_late: "That venue has already left your bill. Add it back to start paying for it again.",
+  last_venue: "This is the only venue on your bill. To stop paying, cancel your subscription instead.",
+  needs_support: `We can't take that venue off automatically. Email ${PARTNER_SUPPORT_EMAIL} and we'll do it for you.`,
+  change_unconfirmed: "We couldn't confirm the change yet. Refresh in a minute before trying again.",
+  change_failed: "We couldn't make that change. Please try again.",
+  stripe_unavailable: "Billing is temporarily unavailable. Please try again in a moment.",
+};
+
+// --- Billing page account view (Phase 5) -------------------------------------------------------
+
+/**
+ * One venue on (or recently off) a bill, as `GET /api/owner/billing` returns it in `account`.
+ *   billed  — on the bill, and on the next renewal.
+ *   leaving — on the bill until `removeAt` (the end of the paid period), then it drops off.
+ *   removed — taken off; still the partner's venue, hidden from players, "Add back" re-adds it.
+ */
+export type BillAccountVenue = {
+  id: string;
+  name: string;
+  state: "billed" | "leaving" | "removed";
+  isAnchor: boolean;
+  removeAt: string | null;
+};
+
+/** Money is integer cents; every figure is computed on the server from lib/venuePricing.ts. */
+export type BillAccount = {
+  venues: BillAccountVenue[];
+  /** Venues on the next renewal (billed only). */
+  billedVenueCount: number;
+  /** "1 × $100 · 3 × $75" — the bands of the next renewal. */
+  breakdown: Array<{ venues: number; unitAmountCents: number; subtotalCents: number }>;
+  /** Next renewal's list total, before any discount. */
+  nextMonthlyListCents: number;
+  /** …and after the bill's discount. */
+  nextMonthlyTotalCents: number;
 };

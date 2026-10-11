@@ -2,6 +2,7 @@ import { isMultiVenueBillingEnabled } from "@/lib/multiVenueBilling";
 import { rateLimit } from "@/lib/rateLimit";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { addVenueResponse, loadAddVenueContext, quoteVenueAddition, rateLimitRefusal } from "@/lib/venueAddition";
+import { settleStaleVenueChangesForBill } from "@/lib/venueRemoval";
 
 /**
  * GET /api/owner/venues/add/quote?venueId=… — what adding one more venue to the partner's bill
@@ -36,6 +37,8 @@ export async function GET(request: Request) {
   const venueId = new URL(request.url).searchParams.get("venueId")?.trim() || null;
   const loaded = await loadAddVenueContext(auth, venueId);
   if (!loaded.ok) return addVenueResponse(loaded);
+
+  await settleStaleVenueChangesForBill(loaded.context.bill.id);
 
   const quoted = await quoteVenueAddition(loaded.context);
   if (!quoted.ok) return addVenueResponse(quoted);

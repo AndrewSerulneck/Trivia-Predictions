@@ -1030,7 +1030,7 @@ describe("pure helpers", () => {
 });
 
 describe("addVenueToBill (lib/venueBilling.ts) — the only writer of non-anchor membership rows", () => {
-  it("inserts once, is a no-op on repeat, and never moves or revives a venue", async () => {
+  it("inserts once, is a no-op on repeat, never moves a venue, and (Phase 5 Add back) revives one on the same bill", async () => {
     const { addVenueToBill } = await import("@/lib/venueBilling");
     table("venues").push({ id: "venue-x" }, { id: "venue-y" }, { id: "venue-z" });
 
@@ -1041,7 +1041,10 @@ describe("addVenueToBill (lib/venueBilling.ts) — the only writer of non-anchor
     memberships().push({ id: "m-y", subscription_id: "bill-other", venue_id: "venue-y", role: "anchor", removed_at: null });
     expect(await addVenueToBill(BILL, "venue-y", "added")).toEqual({ ok: false, error: "venue-on-another-bill" });
 
-    memberships().push({ id: "m-z", subscription_id: BILL, venue_id: "venue-z", role: "added", removed_at: "2026-10-01T00:00:00Z" });
-    expect(await addVenueToBill(BILL, "venue-z", "added")).toEqual({ ok: false, error: "venue-removed-from-bill" });
+    // A venue taken off THIS bill comes back on a paid add (it was paid for again) — the Phase 5 rule.
+    memberships().push({ id: "m-z", subscription_id: BILL, venue_id: "venue-z", role: "added", remove_at: "2026-09-30T00:00:00Z", removed_at: "2026-10-01T00:00:00Z" });
+    expect(await addVenueToBill(BILL, "venue-z", "added")).toEqual({ ok: true, inserted: true });
+    expect(memberships().find((row) => row.venue_id === "venue-z")).toMatchObject({ remove_at: null, removed_at: null });
+    expect(await addVenueToBill(BILL, "venue-z", "added")).toEqual({ ok: true, inserted: false });
   });
 });
