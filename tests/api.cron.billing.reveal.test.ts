@@ -16,7 +16,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
  *   - a cancelled / unpaid / admin-hidden / (0, 0) venue is left alone;
  *   - a billing read failure reveals NOTHING (fail closed);
  *   - `?dryRun=1` writes nothing;
- *   - the offline-expiry sweep still runs and is unaffected either way.
+ *   - the cron never writes a billing row (offline accounts never lapse, 2026-10-11).
  */
 
 type Chain = {
@@ -71,8 +71,6 @@ vi.mock("@/lib/supabaseAdmin", () => {
       chain.filters.find((f) => f.op === "eq" && f.args[0] === column)?.args[1];
 
     const settle = async () => {
-      // The offline-grant expiry sweep — untouched by this phase.
-      if (table === "billing_subscriptions" && chain.update) return { data: [], error: null };
 
       if (table === "billing_subscriptions") {
         if (state.billingReadError) return { data: null, error: state.billingReadError };
@@ -133,7 +131,6 @@ const run = async (query = "") => {
   const response = await POST(authedRequest(query));
   const body = (await response.json()) as {
     ok: boolean;
-    offlineExpired: number;
     venueReveal: VenueRevealRepairResult;
   };
   return { response, body };
@@ -310,14 +307,13 @@ describe("/api/cron/billing — venue reveal repair (Finding #3)", () => {
     expect(state.venues.every((v) => v.hidden === false)).toBe(true);
   });
 
-  it("still runs the offline-expiry sweep, and the sweep is unaffected by dryRun", async () => {
+  it("never writes a billing row — offline (check) accounts no longer lapse", async () => {
     state.venues = [paidVenue()];
     state.billing = [liveBilling()];
 
     const { body } = await run("?dryRun=1");
     expect(body.ok).toBe(true);
-    expect(body.offlineExpired).toBe(0);
-    expect(state.chains.some((c) => c.table === "billing_subscriptions" && c.update)).toBe(true);
+    expect(state.chains.some((c) => c.table === "billing_subscriptions" && c.update)).toBe(false);
   });
 
   it("rejects an unauthorized caller before doing anything", async () => {

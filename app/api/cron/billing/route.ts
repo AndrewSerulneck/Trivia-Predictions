@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { isCronAuthorized } from "@/lib/cronAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
 import {
   reconcileLapsedVenues,
   repairMissedVenueReveals,
@@ -10,9 +9,10 @@ import {
 } from "@/lib/venueVisibilitySync";
 
 /**
- * Daily billing cron. Three jobs: expiring lapsed offline/check grants,
- * repairing a missed self-serve venue reveal, and reconciling lapsed self-serve
- * venues (re-hide / restore / report).
+ * Daily billing cron. Two jobs: repairing a missed self-serve venue reveal, and
+ * reconciling lapsed self-serve venues (re-hide / restore / report). It used to
+ * have a third — expiring offline/check grants past their paid-through date — which
+ * was removed 2026-10-11 (offline accounts never lapse automatically; see below).
  *
  * It used to also rebill card subscriptions through SlimCD, which was abandoned
  * before launch and removed wholesale (lib/slimcd.ts and the hosted-page session/
@@ -40,11 +40,9 @@ import {
  * on `VENUE_REHIDE_ENABLED` (server-side, no redeploy) and ship LOG-ONLY: with
  * the flag unset they run and log what they would do, writing nothing.
  *
- * `?dryRun=1` forces BOTH reconcilers to report without writing. The offline
- * expiry sweep above is unaffected by it — that job has been live for months and
- * is not what the flag is for. Neither reconciler is ever allowed to fail the
- * cron: the offline-expiry sweep has already committed by the time they run, and
- * a reconciler fault must not make Vercel's retry re-run it.
+ * `?dryRun=1` forces BOTH reconcilers to report without writing. Neither
+ * reconciler is ever allowed to fail the cron: a fault in one is logged and
+ * reported in the response, and the other still runs.
  */
 export async function POST(request: Request) {
   if (!isCronAuthorized(request)) {
@@ -55,42 +53,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Server configuration error." }, { status: 500 });
   }
 
-  const nowIso = new Date().toISOString();
   const dryRun = new URL(request.url).searchParams.get("dryRun") === "1";
 
-  // Expire offline/check grants whose paid-through date has passed. These rows
-  // carry no processor token, so nothing else ever flips them: they are billed by
-  // an admin re-granting access and the Stripe webhook never fires for a
-  // tokenless row. Without this sweep an offline grant would stay
-  // status='active' forever, contradicting the admin copy "then reverts to no
-  // access." Setting status='cancelled' is already handled by the owner UI
-  // (shows "Access ends {date}", offers Resubscribe) and the dashboard tile;
-  // re-granting from the admin panel reactivates the row.
-  // The discount mirror is cleared in the same write because nothing else can:
-  // the Stripe webhook never fires for a tokenless row, and the admin's Discount
-  // control is hidden once a row is cancelled — so a stale "25% off" would sit on
-  // the partner's billing page next to a Cancelled badge with no way to remove it.
-  const { data: expired, error: expiredError } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .update({
-      status: "cancelled",
-      stripe_coupon_id: null,
-      discount_label: null,
-      discount_percent_off: null,
-      discount_amount_off_cents: null,
-      discount_ends_at: null,
-    })
-    .eq("billing_method", OFFLINE_BILLING_METHOD)
-    .eq("status", "active")
-    .lte("current_period_end", nowIso)
-    .select("id")
-    .returns<{ id: string }[]>();
-
-  if (expiredError) {
-    return NextResponse.json({ ok: false, error: expiredError.message }, { status: 500 });
-  }
-
-  const offlineExpired = expired?.length ?? 0;
+  // Offline/check grants are NEVER expired here (Andrew, 2026-10-11: "check-paying accounts
+  // never lapse automatically"). This cron used to flip an active offline row to 'cancelled'
+  // once its paid-through date passed — that is how Garden State showed "cancelled" on
+  // 2026-08-26 while still paying by check. An offline row now stays active until an admin
+  // revokes it (Admin → Billing → Revoke, via cancelSubscription in lib/billing.ts); its
+  // current_period_end is a record of what the latest check covered, not a deadline.
+  // Do not reintroduce an expiry sweep without Andrew.
 
   // Phase 9 — lapsed-venue reconcile: restore a venue we hid once billing is
   // live again, re-hide a self-serve venue whose subscription lapsed, and report
@@ -106,8 +77,8 @@ export async function POST(request: Request) {
   // never `rehidden_at`-stamped. Re-hide (acts only on NOT-live billing) and the
   // reveal repair (acts only on live billing) are disjoint.
   //
-  // Never allowed to fail the cron: the offline-expiry sweep above has already
-  // committed, and a reconciler fault must not make Vercel's retry re-run it.
+  // Never allowed to fail the cron: a reconciler fault is logged and reported,
+  // and the reveal repair below still runs.
   let venueRehide: LapsedVenueReconcileResult | { threw: string };
   try {
     venueRehide = await reconcileLapsedVenues({ dryRun });
@@ -130,7 +101,7 @@ export async function POST(request: Request) {
     venueReveal = { threw: message };
   }
 
-  return NextResponse.json({ ok: true, offlineExpired, venueReveal, venueRehide });
+  return NextResponse.json({ ok: true, venueReveal, venueRehide });
 }
 
 export async function GET(request: Request) {

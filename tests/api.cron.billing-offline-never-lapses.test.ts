@@ -1,27 +1,18 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Phase 1 of the offline-billing review fixes: the billing cron must expire
- * offline/check grants once their paid-through date passes. An offline row
- * carries no processor token, so nothing else ever flips it — without this
- * sweep it would stay status='active' forever, contradicting the admin copy
- * "then reverts to no access."
+ * Check-paying (offline) accounts NEVER lapse automatically (Andrew, 2026-10-11).
  *
- * The mock records every query-builder chain so we can assert the sweep's
- * filters (billing_method='offline', status='active', current_period_end <= now)
- * and its status='cancelled' write.
+ * This cron used to flip an active offline row to status='cancelled' once its
+ * paid-through date passed — which is how Garden State, still paying by check,
+ * showed "cancelled" from 2026-08-26. That sweep is gone: an offline row now
+ * stays active until an admin revokes it. These tests pin that the cron issues
+ * no write of any kind against billing_subscriptions, and (the older SlimCD
+ * teardown regression) no charge and no invoice either.
  *
- * Since the SlimCD teardown (Phase 4 of docs/billing-code-review-fixes-plan.md)
- * this sweep is the cron's only WRITE against billing_subscriptions — the
- * rebilling due-query and charge loop are gone, and card renewals are Stripe's
- * own recurring billing.
- *
- * Phase 3 of docs/self-serve-signup-review-fixes-plan.md gave the cron a second
- * job (venue-visibility reveal repair). Every assertion below is unchanged; the
- * builder just grew the filter ops that job uses (`not`, `in`, `order`, `limit`)
- * so it runs for real here and finds zero candidates, rather than throwing into
- * the route's catch and passing for the wrong reason. Reveal-repair behaviour is
- * covered in tests/api.cron.billing.reveal.test.ts.
+ * The mock records every query-builder chain. The reconcilers run for real
+ * against it and find zero candidates; their behaviour is covered in
+ * tests/api.cron.billing.reveal.test.ts and tests/api.cron.billing.rehide.test.ts.
  */
 
 type Call = {
@@ -98,7 +89,7 @@ const authedRequest = () =>
     headers: { Authorization: "Bearer top-secret" },
   });
 
-describe("/api/cron/billing — offline expiry sweep", () => {
+describe("/api/cron/billing — offline (check) accounts never lapse", () => {
   beforeEach(() => {
     mocks.calls.length = 0;
     mocks.dueResult = { data: [], error: null };
@@ -114,51 +105,20 @@ describe("/api/cron/billing — offline expiry sweep", () => {
     }
   });
 
-  it("cancels an active offline row whose paid-through date has passed", async () => {
-    // The expiry update returns the row it flipped (one past-due offline grant).
-    mocks.expiryResult = { data: [{ id: "sub-offline-expired" }], error: null };
+  it("never cancels an offline row, whatever its paid-through date", async () => {
+    // If a sweep came back, this is what it would "find" — and it must not run.
+    mocks.expiryResult = { data: [{ id: "sub-offline-past-date" }], error: null };
 
     const response = await POST(authedRequest());
-    const body = (await response.json()) as { ok: boolean; offlineExpired: number };
+    const body = (await response.json()) as Record<string, unknown>;
 
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
-    expect(body.offlineExpired).toBe(1);
-
-    // Find the sweep chain: the one that issued an update.
-    const sweep = mocks.calls.find((c) => c.update);
-    expect(sweep).toBeDefined();
-    // The mirror clears in the same write: nothing else can reach a cancelled
-    // offline row (no Stripe webhook, and the admin's Discount control is hidden
-    // once cancelled), so a stale discount would sit there permanently.
-    expect(sweep?.update).toEqual({
-      status: "cancelled",
-      stripe_coupon_id: null,
-      discount_label: null,
-      discount_percent_off: null,
-      discount_amount_off_cents: null,
-      discount_ends_at: null,
-    });
-    expect(sweep?.eq).toEqual(
-      expect.arrayContaining([
-        ["billing_method", "offline"],
-        ["status", "active"],
-      ])
-    );
-    // Bounded to rows whose paid-through date is in the past.
-    expect(sweep?.lte.some(([col]) => col === "current_period_end")).toBe(true);
-  });
-
-  it("leaves offline rows still within their period untouched (none returned)", async () => {
-    // A row still within its period is excluded by the current_period_end <= now
-    // filter, so the update affects nothing.
-    mocks.expiryResult = { data: [], error: null };
-
-    const response = await POST(authedRequest());
-    const body = (await response.json()) as { ok: boolean; offlineExpired: number };
-
-    expect(response.status).toBe(200);
-    expect(body.offlineExpired).toBe(0);
+    expect(body).not.toHaveProperty("offlineExpired");
+    expect(mocks.calls.some((c) => c.table === "billing_subscriptions" && c.update)).toBe(false);
+    expect(
+      mocks.calls.some((c) => c.eq.some(([col, val]) => col === "billing_method" && val === "offline"))
+    ).toBe(false);
   });
 
   /**
@@ -167,12 +127,11 @@ describe("/api/cron/billing — offline expiry sweep", () => {
    * Stripe drives card renewals and its webhook books the invoices. If a charge
    * loop is ever reintroduced here it will show up as an invoice insert.
    */
-  it("issues no charge and books no invoice — the sweep is the cron's only write", async () => {
-    mocks.expiryResult = { data: [{ id: "sub-offline-expired" }], error: null };
-
+  it("issues no charge, books no invoice and writes no billing row", async () => {
     await POST(authedRequest());
 
     expect(mocks.calls.some((c) => c.insert)).toBe(false);
-    expect(mocks.calls.filter((c) => c.update)).toHaveLength(1);
+    expect(mocks.calls.some((c) => c.table === "billing_subscriptions" && c.update)).toBe(false);
+    expect(mocks.calls.some((c) => c.table === "billing_invoices")).toBe(false);
   });
 });

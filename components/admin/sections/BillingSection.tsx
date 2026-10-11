@@ -784,7 +784,7 @@ export function BillingSection() {
               onChange={(e) => setPaidThroughDate(e.target.value)}
             />
             <p className="mt-1 text-xs text-slate-500">
-              Access stays active through this date, then reverts to no access.
+              The date their latest check covers. Check-paying accounts never lapse on their own — access stays on until you revoke it.
             </p>
           </div>
           <div>

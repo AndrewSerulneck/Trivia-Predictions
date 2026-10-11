@@ -150,7 +150,7 @@ export async function GET(request: Request) {
 type PostBody = {
   action?: "grant-manual" | "revoke" | "apply-discount" | "remove-discount" | "set-custom-price";
   venueId?: string;
-  paidThroughDate?: string; // YYYY-MM-DD, inclusive; access ends end-of-day
+  paidThroughDate?: string; // YYYY-MM-DD, inclusive; what the check covers — offline access never lapses on its own (2026-10-11)
   /**
    * The venue's LIST rate — the recurring rate before any discount — NOT the
    * amount on the check. See the grant-manual handler for why the two are

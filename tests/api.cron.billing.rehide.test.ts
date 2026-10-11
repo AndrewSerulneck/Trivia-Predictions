@@ -99,8 +99,6 @@ vi.mock("@/lib/supabaseAdmin", () => {
     };
 
     const settle = async () => {
-      // The offline-grant expiry sweep — untouched by this phase.
-      if (table === "billing_subscriptions" && chain.update) return { data: [], error: null };
 
       // Multi-venue billing (lib/venueBilling.ts): no venue is on another venue's bill.
       if (table === "billing_subscription_venues") return { data: [], error: null };
@@ -165,7 +163,6 @@ const run = async (query = "") => {
   const response = await POST(authedRequest(query));
   const body = (await response.json()) as {
     ok: boolean;
-    offlineExpired: number;
     venueRehide: LapsedVenueReconcileResult;
   };
   return { response, body };
