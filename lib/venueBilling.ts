@@ -328,3 +328,60 @@ export async function billedVenueCount(
   if (!result.ok) return result;
   return { ok: true, count: result.venueIds.length };
 }
+
+export type AddVenueToBillResult =
+  | { ok: true; inserted: boolean }
+  | { ok: false; error: string };
+
+/**
+ * Put a venue on a bill — the ONLY writer of non-anchor membership rows (anchor rows come from the
+ * database trigger; see the Phase 1 migration). Multi-venue billing Phase 3 calls it once a
+ * partner's "Add a venue" charge has succeeded (`role: "added"`); Phase 6's admin attach will pass
+ * `"admin"`.
+ *
+ * Idempotent, because the route and the Stripe webhook can both complete the same add:
+ *   - no row yet → inserted (`inserted: true`);
+ *   - already ACTIVE on this bill → nothing to do (`inserted: false`);
+ *   - on ANOTHER bill, or taken off this one → `ok: false`. A venue is on at most one bill
+ *     (venue_id UNIQUE), and moving one between bills or putting a removed one back is not this
+ *     function's call (Phase 5 / 6).
+ */
+export async function addVenueToBill(
+  subscriptionId: string,
+  venueId: string,
+  role: "added" | "admin"
+): Promise<AddVenueToBillResult> {
+  if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
+  const billId = subscriptionId.trim();
+  const id = venueId.trim();
+  if (!billId || !id) return { ok: false, error: "membership-args-missing" };
+
+  const inserted = await supabaseAdmin
+    .from(BILLING_MEMBERSHIP_TABLE)
+    .upsert(
+      { subscription_id: billId, venue_id: id, role, added_at: new Date().toISOString() },
+      { onConflict: "venue_id", ignoreDuplicates: true }
+    )
+    .select("id")
+    .returns<{ id: string }[]>();
+  if (inserted.error) {
+    return { ok: false, error: `membership-write-failed: ${inserted.error.message ?? "unknown"}` };
+  }
+  if ((inserted.data ?? []).length > 0) return { ok: true, inserted: true };
+
+  // A row already holds this venue. Fine only if it is this bill's, and active.
+  const existing = await supabaseAdmin
+    .from(BILLING_MEMBERSHIP_TABLE)
+    .select("venue_id, subscription_id, removed_at")
+    .eq("venue_id", id)
+    .maybeSingle<MembershipRow>();
+  if (existing.error) {
+    return { ok: false, error: `membership-read-failed: ${existing.error.message ?? "unknown"}` };
+  }
+  const row = existing.data;
+  if (row && row.subscription_id === billId && !row.removed_at) return { ok: true, inserted: false };
+  return {
+    ok: false,
+    error: row ? (row.subscription_id === billId ? "venue-removed-from-bill" : "venue-on-another-bill") : "membership-missing",
+  };
+}

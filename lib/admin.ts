@@ -1980,6 +1980,13 @@ export async function createAdminVenue(input: {
    */
   hidden?: boolean;
   selfServeCreatedAt?: string;
+  /**
+   * Multi-venue billing Phase 3 (`POST /api/owner/venues/add`). Stamps `checkout_started_at` in
+   * the SAME insert, for the same reason as the two above: it puts the hidden venue in the signup
+   * sweep's 7-day tier (money may be moving at Stripe) from the instant it exists, rather than the
+   * one-hour tier for venues that never reached Stripe. Omitted when undefined.
+   */
+  checkoutStartedAt?: string;
 }): Promise<Venue> {
   assertAdminConfigured();
 
@@ -2095,6 +2102,7 @@ export async function createAdminVenue(input: {
       ...(input.selfServeCreatedAt === undefined
         ? {}
         : { self_serve_created_at: input.selfServeCreatedAt }),
+      ...(input.checkoutStartedAt === undefined ? {} : { checkout_started_at: input.checkoutStartedAt }),
     })
     .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, place_id, screen_enabled, screen_brand_image_url, screen_brand_primary, screen_brand_secondary, screen_sponsor_rotation_enabled")
     .single<VenueRow>();

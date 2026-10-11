@@ -702,10 +702,10 @@ step opens at the top — don't hand-roll a scroll reset.
   `npm run store:qr` (`scripts/generate-join-qr.cjs`); `tests/lib.join-qr.test.ts` decodes them and
   fails if they drift. Never change the URL — printed merch can't be updated.
 
-## Multi-Venue Volume Billing — Phases 1–2 live 2026-10-11
+## Multi-Venue Volume Billing — Phases 1–2 live 2026-10-11; Phase 3 built (flag off)
 
 Plan: `docs/multi-venue-volume-billing-plan.md` (Andrew's answers in §2 — don't re-ask); latest handoff
-`docs/multi-venue-volume-billing-plan_PHASE_2_HANDOFF.md`. One Stripe subscription per partner, quantity =
+`docs/multi-venue-volume-billing-plan_PHASE_3_HANDOFF.md`. One Stripe subscription per partner, quantity =
 venues, graduated $100 / $75 / $60 / $45. Migration `20261011134820` is applied; every card subscriber is on
 the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (lookup key `hightop_venue_graduated_monthly_v1`) at
 quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/stripe.ts`
@@ -723,6 +723,20 @@ quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/str
 - **Check-paying (offline) accounts never lapse automatically** (Andrew, 2026-10-11). `/api/cron/billing`
   no longer expires an offline grant past its paid-through date; only an admin Revoke ends it. Don't
   reintroduce an expiry sweep (`tests/api.cron.billing-offline-never-lapses.test.ts`).
+- **"Add a venue" (Phase 3) lives in ONE file: `lib/venueAddition.ts`.** Routes `GET /api/owner/venues/add/quote`
+  and `POST /api/owner/venues/add` 404 unless `NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED` (single reader
+  `isMultiVenueBillingEnabled()`, `lib/multiVenueBilling.ts`, which also holds the client types + refusal
+  copy). Money rules: claim the ledger row first (`claim_venue_addition` RPC, advisory lock per bill, one add
+  in flight, same idempotency key → same row; migration `20261011153607`), then a hidden venue stamped
+  `self_serve_created_at` + `checkout_started_at` in ONE insert (sweepable, never visible first), then ONE
+  `stripe.subscriptions.update` with `payment_behavior: "pending_if_incomplete"` + `proration_behavior:
+  "always_invoice"` keyed on the ledger key. Paid → membership (`addVenueToBill`, the only non-anchor
+  membership writer, in `lib/venueBilling.ts`) + owner link + reveal + "Venue added" email once (claim-then-
+  send stamp). Declined → VOID the invoice before deleting the venue. 3-D Secure → `requires_action` +
+  hosted invoice URL; `invoice.paid` (webhook) or `reconcileStaleVenueAdditions` (daily `/api/cron/billing`)
+  finishes it. Completion/reconcile are deliberately NOT flag-gated. The venue is linked to the partner
+  only once paid. Pinned by `tests/multi-venue-billing-contract.test.ts`; behaviour in
+  `tests/api.owner.venues-add.test.ts`. `findNearbyVenue` moved to `lib/nearbyVenue.ts` (shared with signup).
 
 ## POS Rewards Integration (Square / Clover; Toast deferred) — Phases 1–2 built 2026-10-04/05
 

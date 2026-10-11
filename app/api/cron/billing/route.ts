@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isCronAuthorized } from "@/lib/cronAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { reconcileStaleVenueAdditions, type VenueAdditionReconcileResult } from "@/lib/venueAddition";
 import {
   reconcileLapsedVenues,
   repairMissedVenueReveals,
@@ -9,8 +10,9 @@ import {
 } from "@/lib/venueVisibilitySync";
 
 /**
- * Daily billing cron. Two jobs: repairing a missed self-serve venue reveal, and
- * reconciling lapsed self-serve venues (re-hide / restore / report). It used to
+ * Daily billing cron. Three jobs: repairing a missed self-serve venue reveal,
+ * reconciling lapsed self-serve venues (re-hide / restore / report), and (multi-venue
+ * billing Phase 3) settling "Add a venue" attempts stuck past their lease. It used to
  * have a third — expiring offline/check grants past their paid-through date — which
  * was removed 2026-10-11 (offline accounts never lapse automatically; see below).
  *
@@ -88,6 +90,21 @@ export async function POST(request: Request) {
     venueRehide = { threw: message };
   }
 
+  // Multi-venue billing Phase 3 — settle any "Add a venue" stuck past its lease: a 3-D Secure the
+  // partner never finished (Stripe voids it within 23 h; we then delete the hidden venue), a
+  // request that died mid-charge, an `invoice.paid` webhook that never came. One bounded ledger
+  // read; Stripe reads only for rows it finds (normally none). Runs BEFORE the reveal repair so an
+  // add it completes is revealed in this same run if its own reveal failed. Not flag-gated: it
+  // only finishes adds already under way. Never allowed to fail the cron.
+  let venueAdditions: VenueAdditionReconcileResult | { threw: string };
+  try {
+    venueAdditions = await reconcileStaleVenueAdditions({ dryRun });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[VenueAddition] reconcile-threw: ${message}`);
+    venueAdditions = { threw: message };
+  }
+
   // Reveal-repair for self-serve venues the Stripe webhook missed. Deliberately
   // NOT behind VENUE_REHIDE_ENABLED: it only ever un-hides a venue that is
   // self-serve-created AND currently paying, which is exactly what the webhook
@@ -101,7 +118,7 @@ export async function POST(request: Request) {
     venueReveal = { threw: message };
   }
 
-  return NextResponse.json({ ok: true, venueReveal, venueRehide });
+  return NextResponse.json({ ok: true, venueReveal, venueRehide, venueAdditions });
 }
 
 export async function GET(request: Request) {

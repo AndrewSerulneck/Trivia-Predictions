@@ -3,9 +3,10 @@
 **Status:** Phases 1–2 **live 2026-10-11** — Phase 1 committed (`3e9be34`), migration
 `20261011134820` applied to production, Phase 2 committed (`c1ce489`), pushed and deployed; both card
 subscribers swapped onto the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (still $100/month).
-Check-paying accounts no longer lapse automatically (`6ce86dd`). Latest handoff:
-**`docs/multi-venue-volume-billing-plan_PHASE_2_HANDOFF.md`**. Andrew's answers are in §2 (do not
-re-ask). **Next: Phase 3.** Each phase ends with a handoff note
+Check-paying accounts no longer lapse automatically (`6ce86dd`). **Phase 3 (Add-a-venue backend) built
+2026-10-11, flag off, NOT committed / deployed; its migration `20261011153607` is NOT applied** (waits on
+Andrew). Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_3_HANDOFF.md`**. Andrew's answers
+are in §2 (do not re-ask). **Next: Phase 4** (after Andrew approves Phase 3's push). Each phase ends with a handoff note
 `docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at
 the latest one.
 
@@ -287,7 +288,16 @@ exactly one venue. Zero behaviour change, zero Stripe change.
 - Verify on the next webhook that both mirrors still read $100 and the Billing page is
   unchanged. Andrew runs `--apply` or approves it explicitly.
 
-### Phase 3 — Add-a-venue backend (Opus 5.5, xhigh)
+### Phase 3 — Add-a-venue backend (Opus 5.5, xhigh) — ✅ built 2026-10-11, flag off (handoff: `…_PHASE_3_HANDOFF.md`)
+
+As built, beyond §4.3: the flow is ONE module, `lib/venueAddition.ts`; the claim happens BEFORE the
+duplicate-address check (so a double-tap never sees its own new venue as a duplicate) and a refusal after
+the claim is recorded on the ledger as `refused:<code>`; the venue is linked to the partner
+(`venue_owner_venues`) only once paid — a deliberate change from step 4, so nobody sees or configures an
+unpaid venue; an ambiguous Stripe error (5xx / connection) leaves the row `pending` for a 10-minute lease and
+the daily `/api/cron/billing` reconciler (`reconcileStaleVenueAdditions`) settles it from Stripe's real
+state; the quote also refuses while another add is awaiting payment. `findNearbyVenue` moved verbatim to
+`lib/nearbyVenue.ts`.
 
 Everything in §4.3. Tests with a mocked Stripe for: paid, declined, 3-D Secure → webhook
 completes, webhook arrives before the route returns, double-tap (same idempotency key),

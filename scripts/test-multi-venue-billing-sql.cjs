@@ -15,6 +15,8 @@ const fs = require("node:fs");
 const { PGlite } = require(process.env.MULTI_VENUE_PGLITE_MODULE || "@electric-sql/pglite");
 
 const MIGRATION = "supabase/migrations/20261011134820_multi_venue_billing.sql";
+// Phase 3: the advisory-locked claim that starts an "Add a venue".
+const CLAIM_MIGRATION = "supabase/migrations/20261011153607_venue_addition_claim.sql";
 
 const SCHEMA = `
   create role anon; create role authenticated; create role service_role;
@@ -157,6 +159,105 @@ async function main() {
       where relname in ('billing_subscription_venues', 'billing_venue_additions') order by relname`
   );
   assert.ok(rls.every((r) => r.relrowsecurity && r.relforcerowsecurity));
+
+  // 8. Phase 3 — claim_venue_addition (re-runnable, like the Phase 1 file).
+  const claimMigration = fs.readFileSync(CLAIM_MIGRATION, "utf8");
+  await db.exec(claimMigration);
+  await db.exec(claimMigration);
+
+  await q(`insert into venues values ('chain-anchor'), ('chain-two'), ('other-anchor')`);
+  const [chainOwner] = await rows(`insert into venue_owners default values returning id`);
+  const [otherOwner] = await rows(`insert into venue_owners default values returning id`);
+  const [chainBill] = await rows(
+    `insert into billing_subscriptions(venue_id, owner_id, status, stripe_subscription_id)
+       values ('chain-anchor', $1, 'active', 'sub_chain') returning id`,
+    [chainOwner.id]
+  );
+  const [otherBill] = await rows(
+    `insert into billing_subscriptions(venue_id, owner_id, status, stripe_subscription_id)
+       values ('other-anchor', $1, 'active', 'sub_other') returning id`,
+    [otherOwner.id]
+  );
+  const claim = async (key, ownerId, billId, name = "New Venue") =>
+    (await rows(`select * from claim_venue_addition($1, $2, $3, $4)`, [key, ownerId, billId, name]))[0];
+
+  //    a. the first claim inserts a pending row priced off the billed venue count (anchor = 1).
+  const first = await claim("add-1", chainOwner.id, chainBill.id, "  Second Bar  ");
+  assert.equal(first.outcome, "claimed");
+  assert.equal(first.addition_status, "pending");
+  assert.equal(first.addition_quantity_before, 1);
+  assert.equal(first.addition_quantity_after, 2);
+  const [firstRow] = await rows(`select venue_name, owner_id, subscription_id from billing_venue_additions where id = $1`, [
+    first.addition_id,
+  ]);
+  assert.equal(firstRow.venue_name, "Second Bar");
+  assert.equal(firstRow.subscription_id, chainBill.id);
+
+  //    b. same key → the same row, never a second one (double-tap / retry).
+  const again = await claim("add-1", chainOwner.id, chainBill.id);
+  assert.equal(again.outcome, "existing");
+  assert.equal(again.addition_id, first.addition_id);
+  assert.equal((await rows(`select count(*)::int as n from billing_venue_additions where idempotency_key = 'add-1'`))[0].n, 1);
+
+  //    c. a different add on the same bill while one is in flight → busy, nothing inserted.
+  const second = await claim("add-2", chainOwner.id, chainBill.id);
+  assert.equal(second.outcome, "busy");
+  assert.equal(second.addition_id, first.addition_id);
+  assert.equal((await rows(`select count(*)::int as n from billing_venue_additions where idempotency_key = 'add-2'`))[0].n, 0);
+  //       ...and requires_action (3-D Secure outstanding) is still in flight.
+  await q(`update billing_venue_additions set status = 'requires_action', stripe_invoice_id = 'in_1' where id = $1`, [
+    first.addition_id,
+  ]);
+  const third = await claim("add-3", chainOwner.id, chainBill.id);
+  assert.equal(third.outcome, "busy");
+  assert.equal(third.addition_invoice_id, "in_1");
+
+  //    d. once it settles, the next add claims off the NEW billed count.
+  await q(`update billing_venue_additions set status = 'paid', venue_id = 'chain-two' where id = $1`, [first.addition_id]);
+  await q(`insert into billing_subscription_venues(subscription_id, venue_id, role) values ($1, 'chain-two', 'added')`, [
+    chainBill.id,
+  ]);
+  const fourth = await claim("add-4", chainOwner.id, chainBill.id);
+  assert.equal(fourth.outcome, "claimed");
+  assert.equal(fourth.addition_quantity_before, 2);
+  assert.equal(fourth.addition_quantity_after, 3);
+  await q(`update billing_venue_additions set status = 'failed' where id = $1`, [fourth.addition_id]);
+
+  //    e. a venue scheduled for removal (Phase 5: Stripe quantity already lowered) or removed is not billed.
+  await q(`update billing_subscription_venues set remove_at = now() + interval '5 days' where venue_id = 'chain-two'`);
+  const fifth = await claim("add-5", chainOwner.id, chainBill.id);
+  assert.equal(fifth.addition_quantity_before, 1);
+  await q(`update billing_venue_additions set status = 'failed' where id = $1`, [fifth.addition_id]);
+  await q(`update billing_subscription_venues set remove_at = null where venue_id = 'chain-two'`);
+
+  //    f. a failed / paid key stays itself: retrying it never restarts the add.
+  const retried = await claim("add-4", chainOwner.id, chainBill.id);
+  assert.equal(retried.outcome, "existing");
+  assert.equal(retried.addition_status, "failed");
+
+  //    g. ownership and key isolation.
+  assert.equal((await claim("add-6", otherOwner.id, chainBill.id)).outcome, "not_owner");
+  const conflict = await claim("add-1", otherOwner.id, otherBill.id);
+  assert.equal(conflict.outcome, "key_conflict");
+  assert.equal(conflict.addition_id, null, "a key_conflict must not leak the other owner's row");
+  assert.equal((await claim("add-7", chainOwner.id, "00000000-0000-0000-0000-000000000000")).outcome, "no_bill");
+  assert.equal((await claim("   ", chainOwner.id, chainBill.id)).outcome, "invalid");
+
+  //    h. other bills are independent: an in-flight add on one never blocks another.
+  await q(`insert into billing_venue_additions(idempotency_key, owner_id, subscription_id, status) values ('x', $1, $2, 'pending')`, [
+    chainOwner.id,
+    chainBill.id,
+  ]);
+  assert.equal((await claim("other-1", otherOwner.id, otherBill.id)).outcome, "claimed");
+
+  //    i. execute is service_role only.
+  const fnGrants = await rows(
+    `select grantee from information_schema.routine_privileges
+      where routine_name = 'claim_venue_addition' and privilege_type = 'EXECUTE' order by grantee`
+  );
+  const grantees = fnGrants.map((g) => g.grantee);
+  assert.ok(grantees.includes("service_role"));
+  assert.ok(!grantees.includes("anon") && !grantees.includes("authenticated") && !grantees.includes("PUBLIC"));
 
   console.log("multi-venue billing migration: all SQL checks passed");
 }

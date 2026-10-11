@@ -49,6 +49,12 @@ const state = vi.hoisted(() => ({
   chains: [] as Chain[],
 }));
 
+// Multi-venue billing Phase 3 added a fourth cron job (settling stuck "Add a venue" attempts); it has
+// its own tests (tests/api.owner.venues-add.test.ts). Stubbed here so this file's mock stays scoped.
+vi.mock("@/lib/venueAddition", () => ({
+  reconcileStaleVenueAdditions: vi.fn(async () => ({ dryRun: false, scanned: 0, paid: 0, failed: 0, waiting: 0, errors: [] })),
+}));
+
 vi.mock("@/lib/supabaseAdmin", () => {
   const makeBuilder = (table: string) => {
     const chain: Chain = { table, filters: [] };

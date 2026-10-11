@@ -138,12 +138,21 @@ describe("provenance — self_serve_created_at is a capability grant", () => {
 });
 
 describe("tripwire — one predicate, two call sites", () => {
-  const routeSrc = stripComments(read("app/api/owner/signup/route.ts"));
+  // Multi-venue billing Phase 3 moved the proximity scan (`findNearbyVenue`) verbatim into
+  // lib/nearbyVenue.ts so POST /api/owner/venues/add asks the same duplicate question. The two
+  // call sites are now split across these two files; every assertion below reads them together.
+  const signupRouteSrc = stripComments(read("app/api/owner/signup/route.ts"));
+  const nearbyVenueSrc = stripComments(read("lib/nearbyVenue.ts"));
+  const routeSrc = `${signupRouteSrc}\n${nearbyVenueSrc}`;
 
   it("the route imports the shared predicate from @/lib/venueClaim", () => {
-    expect(routeSrc).toMatch(/from ["']@\/lib\/venueClaim["']/);
-    expect(routeSrc).toMatch(/\bclaimableDistanceMeters\b/);
-    expect(routeSrc).toMatch(/\bisClaimableVenueRow\b/);
+    expect(signupRouteSrc).toMatch(/from ["']@\/lib\/venueClaim["']/);
+    expect(nearbyVenueSrc).toMatch(/from ["']@\/lib\/venueClaim["']/);
+    expect(nearbyVenueSrc).toMatch(/\bclaimableDistanceMeters\b/);
+    expect(signupRouteSrc).toMatch(/\bisClaimableVenueRow\b/);
+    // The scan the route calls is the shared one, not a local copy.
+    expect(signupRouteSrc).toMatch(/import \{[^}]*\bfindNearbyVenue\b[^}]*\} from ["']@\/lib\/nearbyVenue["']/);
+    expect(signupRouteSrc).not.toMatch(/function findNearbyVenue/);
   });
 
   it("the route never re-derives the distance rule itself", () => {

@@ -132,6 +132,15 @@ export const SIGNUP_RATE_LIMITS = {
   squareDiscountUser: { windowSeconds: 3600, max: 30 },
   /** The per-IP ceiling for the same route; same reasoning as `squareGiftCardIp`. */
   squareDiscountIp: { windowSeconds: 3600, max: 300 },
+  /**
+   * POST /api/owner/venues/add (multi-venue billing Phase 3) — a signed-in partner adding a venue
+   * to their bill. Keyed on the OWNER alone (no IP): every call can reach Stripe (one subscription
+   * read, and on a real add one charge). A real partner adds a venue in one or two tries plus a
+   * few re-asks of the same request after 3-D Secure; 30/hour is far above that.
+   */
+  venueAddOwner: { windowSeconds: 3600, max: 30 },
+  /** GET /api/owner/venues/add/quote — one Stripe preview per call, fetched when the review step opens. */
+  venueQuoteOwner: { windowSeconds: 3600, max: 60 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitBucket = keyof typeof SIGNUP_RATE_LIMITS;

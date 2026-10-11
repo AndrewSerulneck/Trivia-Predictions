@@ -13,6 +13,7 @@ import {
 } from "@/lib/billingDiscounts";
 import { isBillingLapsed, isVenueRehideEnabled } from "@/lib/venueVisibility";
 import { subscriptionMonthlyCents } from "@/lib/venuePricing";
+import { completeVenueAdditionForInvoice } from "@/lib/venueAddition";
 
 // Stripe requires the raw request body to verify the signature — force the
 // Node.js runtime so the body is not transformed.
@@ -117,6 +118,12 @@ export async function POST(request: Request) {
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         await recordInvoice(invoice, event.type === "invoice.paid" ? "paid" : "failed");
+        // Multi-venue billing Phase 3: an "Add a venue" whose prorated invoice needed 3-D Secure is
+        // finished here once it is paid (venue onto the bill, live to players, "Venue added"
+        // email). Idempotent with the add route, which may get there first. Deliberately NOT
+        // behind the add-a-venue flag: money that has moved must always land. Throws on a DB
+        // failure so Stripe retries.
+        if (event.type === "invoice.paid") await completeVenueAdditionForInvoice(invoice);
         break;
       }
       default:

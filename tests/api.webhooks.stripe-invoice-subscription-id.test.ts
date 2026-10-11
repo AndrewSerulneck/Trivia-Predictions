@@ -25,6 +25,10 @@ vi.mock("@/lib/stripe", async (importActual) => {
   };
 });
 
+// Multi-venue billing Phase 3 hangs "Add a venue" completion off invoice.paid. This file is about
+// invoice RECORDING; the add-completion path has its own tests (tests/api.owner.venues-add.test.ts).
+vi.mock("@/lib/venueAddition", () => ({ completeVenueAdditionForInvoice: vi.fn(async () => undefined) }));
+
 vi.mock("@/lib/email/sendWelcomeEmail", () => ({
   sendWelcomeEmail: vi.fn(async () => true),
 }));
