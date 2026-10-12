@@ -56,6 +56,8 @@ export const buildAddVenueBody = (input: {
   idempotencyKey: string;
   venueId: string;
   prorationDate: number | null;
+  /** The quote's `thisVenueCents` — the server refuses `quote_changed` if the price has moved since. */
+  quotedVenueCents: number | null;
 }): Record<string, unknown> => ({
   idempotencyKey: input.idempotencyKey,
   venueId: input.venueId,
@@ -69,6 +71,7 @@ export const buildAddVenueBody = (input: {
   longitude: input.draft.longitude,
   radius: input.draft.radius,
   ...(input.prorationDate !== null ? { prorationDate: input.prorationDate } : {}),
+  ...(input.quotedVenueCents !== null ? { quotedVenueCents: input.quotedVenueCents } : {}),
 });
 
 // --- Reading the server's answers -----------------------------------------------------------------
@@ -149,8 +152,10 @@ export const interpretAddVenueReply = (httpStatus: number, body: unknown): AddVe
   const code: AddVenueFailureCode | "unknown" = isFailureCode(reply.code) ? reply.code : "unknown";
   const message = stringOrNull(reply.error) ?? (code === "unknown" ? UNKNOWN_FAILURE : ADD_VENUE_MESSAGES[code]);
 
-  // The server could not tell us whether the card was charged: never invite a second attempt.
-  if (code === "payment_unconfirmed" || (code === "unknown" && httpStatus >= 500 && body === null)) {
+  // The server could not tell us whether the card was charged: never invite a second attempt. Any 5xx
+  // counts (Phase 6.5) — `addition_failed` 500 can come AFTER Stripe took the payment (a database write
+  // failing during completion), so the SAME key must be re-sent to learn what happened (`refusalEndsAttempt`).
+  if (code === "payment_unconfirmed" || httpStatus >= 500) {
     return { kind: "unconfirmed", message: code === "unknown" ? ADD_VENUE_MESSAGES.payment_unconfirmed : message };
   }
 
@@ -163,6 +168,16 @@ export const interpretAddVenueReply = (httpStatus: number, body: unknown): AddVe
     hostedInvoiceUrl: isStripeHostedUrl(hostedInvoiceUrl) ? hostedInvoiceUrl : null,
   };
 };
+
+/**
+ * Whether a refusal PROVES nothing was charged, so the next Confirm may start a brand-new attempt (a
+ * new idempotency key). Only a 4xx does — a 5xx (`addition_failed`, `stripe_unavailable`, a gateway page)
+ * can come after the card was charged, so the SAME key must be re-sent to learn what happened — and
+ * `addition_in_progress` is another add holding the bill, not an answer about this one. The admin's
+ * "Link a venue" tool (`lib/adminAttachFlow.ts`) uses this; one rule, never a second copy.
+ */
+export const refusalEndsAttempt = (httpStatus: number, code: string): boolean =>
+  httpStatus >= 400 && httpStatus < 500 && code !== "addition_in_progress";
 
 /** Quote answers use the same refusal shape; this reads `{ ok: true, quote }` or the refusal. */
 export type AddVenueQuoteResult =

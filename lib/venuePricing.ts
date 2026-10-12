@@ -15,6 +15,8 @@
  * changing them here alone would only make our display disagree with what Stripe charges).
  */
 
+import { formatCentsShort } from "@/lib/merchPricing";
+
 export type VenuePriceTier = {
   /** Inclusive upper bound of the band in venues; null = no upper bound. */
   upTo: number | null;
@@ -35,6 +37,9 @@ export const VENUE_PRICE_TIERS: readonly VenuePriceTier[] = [
   { upTo: 15, unitAmountCents: 6000 },
   { upTo: null, unitAmountCents: 4500 },
 ];
+
+/** "$100 / $75 / $60 / $45" — each band's per-venue price, built from `VENUE_PRICE_TIERS` so a price change can never leave a label behind. */
+export const venuePriceBandsLabel = (): string => VENUE_PRICE_TIERS.map((tier) => formatCentsShort(tier.unitAmountCents)).join(" / ");
 
 const assertVenueCount = (venueCount: number): void => {
   if (!Number.isInteger(venueCount) || venueCount < 1) {

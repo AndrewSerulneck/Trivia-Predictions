@@ -7,7 +7,7 @@ import { OwnerShell } from "@/components/owner/OwnerShell";
 import { BillVenuesPanel } from "@/components/owner/billing/BillVenuesPanel";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { effectiveAmountCents } from "@/lib/billingDisplay";
-import type { BillAccount } from "@/lib/multiVenueBilling";
+import { COMPED_VENUE_LABEL, type BillAccount } from "@/lib/multiVenueBilling";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
 
 type Discount = {
@@ -39,6 +39,29 @@ type Invoice = {
   status: "paid" | "failed" | "pending";
   chargedAt: string;
 };
+
+type CompedVenue = { id: string; name: string };
+
+type BillingPayload = {
+  ok: boolean;
+  subscriptions?: Subscription[];
+  invoices?: Invoice[];
+  compedVenues?: CompedVenue[];
+};
+
+/** Venues on the partner's account for free (admin "Free (comped)") — never offered a Subscribe. */
+const CompedVenuesCard = ({ venues }: { venues: CompedVenue[] }) => (
+  <div className="rounded-2xl border border-ht-hairline bg-ht-surface p-4 shadow-ht-card">
+    <ul className="space-y-2">
+      {venues.map((venue) => (
+        <li key={venue.id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <span className="text-sm font-bold text-ht-primary">{venue.name}</span>
+          <span className="text-xs font-bold text-ht-emerald-300">{COMPED_VENUE_LABEL}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 
 const formatAmount = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -99,6 +122,7 @@ const OwnerBillingPage = () => {
   const searchParams = useSearchParams();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [compedVenues, setCompedVenues] = useState<CompedVenue[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingCard, setUpdatingCard] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -123,9 +147,10 @@ const OwnerBillingPage = () => {
       router.push(ownerAuthRecoveryPath(body.code));
       return;
     }
-    const data = (await response.json()) as { ok: boolean; subscriptions?: Subscription[]; invoices?: Invoice[] };
+    const data = (await response.json()) as BillingPayload;
     setSubscription(data.subscriptions?.[0] ?? null);
     setInvoices(data.invoices ?? []);
+    setCompedVenues(data.compedVenues ?? []);
     setLoading(false);
   }, [router]);
 
@@ -139,10 +164,11 @@ const OwnerBillingPage = () => {
         router.push(ownerAuthRecoveryPath(body.code));
         return;
       }
-      const data = (await response.json()) as { ok: boolean; subscriptions?: Subscription[]; invoices?: Invoice[] };
+      const data = (await response.json()) as BillingPayload;
       if (cancelled) return;
       setSubscription(data.subscriptions?.[0] ?? null);
       setInvoices(data.invoices ?? []);
+      setCompedVenues(data.compedVenues ?? []);
       setLoading(false);
     };
     void load();
@@ -261,21 +287,25 @@ const OwnerBillingPage = () => {
           {urlBanner ? (
             <div className={`rounded-xl px-4 py-3 text-sm font-bold ${bannerStyles[urlBanner.kind]}`}>{urlBanner.text}</div>
           ) : null}
-          <div className="rounded-2xl border border-ht-hairline bg-ht-surface p-8 text-center shadow-ht-card">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ht-game-billing text-2xl">
-              💳
+          {compedVenues.length > 0 ? (
+            <CompedVenuesCard venues={compedVenues} />
+          ) : (
+            <div className="rounded-2xl border border-ht-hairline bg-ht-surface p-8 text-center shadow-ht-card">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ht-game-billing text-2xl">
+                💳
+              </div>
+              <p className="ht-h2 mt-4">No subscription yet</p>
+              <p className="mt-2 text-sm font-semibold text-ht-muted">
+                Subscribe to unlock the geofenced app for your venue and let your guests play.
+              </p>
+              <Link
+                href="/owner/billing/setup"
+                className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-ht-cyan-500 px-4 font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px"
+              >
+                Set up subscription
+              </Link>
             </div>
-            <p className="ht-h2 mt-4">No subscription yet</p>
-            <p className="mt-2 text-sm font-semibold text-ht-muted">
-              Subscribe to unlock the geofenced app for your venue and let your guests play.
-            </p>
-            <Link
-              href="/owner/billing/setup"
-              className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-ht-cyan-500 px-4 font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px"
-            >
-              Set up subscription
-            </Link>
-          </div>
+          )}
         </div>
       ) : (
         <div className="space-y-5">
@@ -380,6 +410,8 @@ const OwnerBillingPage = () => {
               }}
             />
           ) : null}
+
+          {compedVenues.length > 0 ? <CompedVenuesCard venues={compedVenues} /> : null}
 
           {/* Payment method */}
           <div>

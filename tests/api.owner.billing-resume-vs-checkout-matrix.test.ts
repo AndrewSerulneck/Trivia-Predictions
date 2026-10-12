@@ -68,26 +68,49 @@ vi.mock("@/lib/stripe", () => ({
   OFFLINE_BILLING_METHOD: "offline",
 }));
 
-vi.mock("@/lib/supabaseAdmin", () => ({
-  supabaseAdmin: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn(async () =>
-            state.readError ? { data: null, error: state.readError } : { data: state.row, error: null }
-          ),
-        })),
-        // lib/venueBilling.ts's billing_subscription_venues read (no row is cancelled-and-covered
-        // elsewhere here): no venue is on another venue's multi-venue bill.
-        in: vi.fn(() => ({ returns: vi.fn(async () => ({ data: [], error: null })) })),
-      })),
-      update: vi.fn((payload: Record<string, unknown>) => {
+// An in-memory billing_subscriptions holding `state.row` (anchored on venue-1, owned by owner-1),
+// with the filters lib/venueBilling.ts uses. No membership rows: no venue is on another venue's
+// multi-venue bill, and the owner has no other bill (Phase 6.3's refusal is covered in
+// tests/api.owner.billing-checkout-on-partner-bill.test.ts).
+vi.mock("@/lib/supabaseAdmin", () => {
+  const from = (table: string) => {
+    const filters: Array<(row: Record<string, unknown>) => boolean> = [];
+    const rows = (): Array<Record<string, unknown>> => {
+      const source =
+        table === "billing_subscriptions" && state.row
+          ? [{ venue_id: "venue-1", owner_id: "owner-1", ...state.row } as Record<string, unknown>]
+          : [];
+      return source.filter((row) => filters.every((keep) => keep(row)));
+    };
+    const result = () => (state.readError ? { data: null, error: state.readError } : { data: rows(), error: null });
+    const builder = {
+      select: () => builder,
+      eq: (column: string, value: unknown) => {
+        filters.push((row) => row[column] === value);
+        return builder;
+      },
+      neq: (column: string, value: unknown) => {
+        filters.push((row) => row[column] !== value);
+        return builder;
+      },
+      in: (column: string, values: unknown[]) => {
+        filters.push((row) => values.includes(row[column]));
+        return builder;
+      },
+      order: () => builder,
+      limit: () => builder,
+      returns: async () => result(),
+      maybeSingle: async () =>
+        state.readError ? { data: null, error: state.readError } : { data: rows()[0] ?? null, error: null },
+      update: (payload: Record<string, unknown>) => {
         mocks.dbUpdate(payload);
         return { eq: vi.fn(async () => ({ error: null })) };
-      }),
-    })),
-  },
-}));
+      },
+    };
+    return builder;
+  };
+  return { supabaseAdmin: { from: vi.fn(from) } };
+});
 
 import { POST as checkout } from "@/app/api/owner/billing/checkout/route";
 import { POST as resume } from "@/app/api/owner/billing/subscription/route";

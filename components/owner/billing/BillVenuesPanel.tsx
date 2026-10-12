@@ -74,10 +74,15 @@ const AddBackPanel = ({
   const [error, setError] = useState<string | null>(null);
   // One key per Confirm; every re-ask of that attempt re-sends it (never a second charge).
   const keyRef = useRef<string | null>(null);
+  // The quote that key's Confirm was made from — re-sent on every re-ask, so a re-ask that turns out to be
+  // the first time the server sees the key (the first try never arrived) still carries the quoted price.
+  const quotedRef = useRef<{ prorationDate: number; thisVenueCents: number } | null>(null);
   const checksRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The auto re-ask calls the latest `send` through this ref (a callback can't name itself).
   const resendRef = useRef<() => void>(() => undefined);
+  // Bumped to fetch a fresh quote (the server said the price moved since this one).
+  const [quoteRun, setQuoteRun] = useState(0);
 
   useEffect(() => () => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -98,12 +103,15 @@ const AddBackPanel = ({
     return () => {
       cancelled = true;
     };
-  }, [billVenueId]);
+  }, [billVenueId, quoteRun]);
 
   const send = useCallback(
-    async (prorationDate: number | null) => {
+    // `quoted`: the quote this Confirm was made from; null on a re-ask of the same key (which re-sends the first one).
+    async (quoted: { prorationDate: number; thisVenueCents: number } | null) => {
       const key = keyRef.current ?? newAttemptKey();
       keyRef.current = key;
+      if (quoted) quotedRef.current = { prorationDate: quoted.prorationDate, thisVenueCents: quoted.thisVenueCents };
+      const sentQuote = quotedRef.current;
       setError(null);
       setState({ phase: "paying" });
       let status = 503;
@@ -116,7 +124,7 @@ const AddBackPanel = ({
             idempotencyKey: key,
             venueId: billVenueId,
             readdVenueId: venue.id,
-            ...(prorationDate !== null ? { prorationDate } : {}),
+            ...(sentQuote ? { prorationDate: sentQuote.prorationDate, quotedVenueCents: sentQuote.thisVenueCents } : {}),
           }),
         });
         status = response.status;
@@ -127,6 +135,7 @@ const AddBackPanel = ({
       const outcome = interpretAddVenueReply(status, body);
       if (outcome.kind === "paid") {
         keyRef.current = null;
+        quotedRef.current = null;
         onDone(`${venue.name} is back on your bill and live for players.`);
         return;
       }
@@ -154,6 +163,14 @@ const AddBackPanel = ({
       }
       // A definitive refusal: nothing was charged; the next press is a new attempt.
       keyRef.current = null;
+      quotedRef.current = null;
+      if (outcome.code === "quote_changed") {
+        // The price moved since this quote: fetch the new one and let the partner confirm it.
+        setError(outcome.message);
+        setState({ phase: "quoting" });
+        setQuoteRun((n) => n + 1);
+        return;
+      }
       setError(outcome.message);
       setState({ phase: "quoted", quote: { ok: false, code: outcome.code, message: outcome.message, link: outcome.link, hostedInvoiceUrl: outcome.hostedInvoiceUrl } });
     },
@@ -213,7 +230,7 @@ const AddBackPanel = ({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => state.quote.ok && void send(state.quote.quote.prorationDate)}
+              onClick={() => state.quote.ok && void send(state.quote.quote)}
               className={`${actionButtonClass} bg-ht-cyan-500 text-slate-950 shadow-ht-glow-cyan`}
             >
               Add back — pay {formatCents(state.quote.quote.dueTodayCents)} now

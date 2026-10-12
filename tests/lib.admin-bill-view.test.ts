@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { attachPreviewText, billSummaryLine, type AdminPartnerBill } from "@/lib/adminBillView";
+import { attachPreviewText, billSummaryLine, removedFromLine, type AdminPartnerBill } from "@/lib/adminBillView";
 
 /** Multi-venue billing Phase 6 — how a bill reads in Admin → Partner Billing. */
 
@@ -8,6 +8,7 @@ const bill = (overrides: Partial<AdminPartnerBill> = {}): AdminPartnerBill => ({
   id: "bill-1",
   isAnchor: true,
   anchorVenueId: "venue-a",
+  anchorVenueName: "Pacific Street",
   billedVenueCount: 3,
   leavingVenueCount: 0,
   rate: "graduated",
@@ -91,5 +92,19 @@ describe("attachPreviewText", () => {
     ).toBe(
       "Second Bar becomes venue #2 on pat@example.com's bill at $75/mo. New monthly total $175. Their card on file is charged $37.50 today (rest of this month)."
     );
+  });
+});
+
+describe("removedFromLine (Phase 6.3)", () => {
+  const formatDate = (iso: string | null) => (iso ? iso.slice(0, 10) : "—");
+
+  it("names the bill the venue left and when", () => {
+    expect(
+      removedFromLine({ anchorVenueId: "venue-a", anchorVenueName: "Pacific Street", removedAt: "2026-10-31T00:00:00Z" }, { anchorName: "Pacific Street", formatDate })
+    ).toBe("Removed from Pacific Street's bill (2026-10-31)");
+  });
+
+  it("still reads sensibly without an anchor name or date", () => {
+    expect(removedFromLine({ anchorVenueId: null, anchorVenueName: null, removedAt: null }, { anchorName: null, formatDate })).toBe("Removed from its bill");
   });
 });

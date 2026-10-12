@@ -211,6 +211,7 @@ export const AddVenueSheet = ({ nav, venueId, onAdded, onPendingClosed }: AddVen
               idempotencyKey: key,
               venueId,
               prorationDate: quote.status === "ready" ? quote.quote.prorationDate : null,
+              quotedVenueCents: quote.status === "ready" ? quote.quote.thisVenueCents : null,
             }),
           ),
         });
@@ -228,6 +229,13 @@ export const AddVenueSheet = ({ nav, venueId, onAdded, onPendingClosed }: AddVen
           setSubmit({ status: "processing", checks });
         } else if (outcome.kind === "unconfirmed") {
           setSubmit({ status: "unconfirmed", message: outcome.message });
+        } else if (outcome.code === "quote_changed") {
+          // The price moved since Review opened (nothing was charged): show the new one and ask again.
+          setAttemptKey(null);
+          setSubmit({ status: "idle" });
+          setQuote({ status: "loading" });
+          setQuoteAttempt((n) => n + 1);
+          setHint(outcome.message);
         } else {
           // Nothing was charged: the next Confirm is a brand-new attempt.
           setAttemptKey(null);

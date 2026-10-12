@@ -402,9 +402,16 @@ export async function reconcileVenueChange(row: VenueChangeRow, nowMs: number = 
  */
 export async function settleStaleVenueChangesForBill(billId: string, nowMs: number = Date.now()): Promise<void> {
   if (!supabaseAdmin) return;
-  await settleStaleBillPriceChangesForBill(billId, nowMs);
+  const db = supabaseAdmin;
+  // Price rows and Remove / Undo rows are disjoint and settled independently, so the two (normally
+  // empty) reads run side by side. Kept as two reads on purpose: the price read selects `price_id`,
+  // which a deploy-skewed database may not have yet (that settler treats 42703 as "nothing to settle").
+  await Promise.all([settleStaleBillPriceChangesForBill(billId, nowMs), settleStaleRemoveUndoForBill(db, billId, nowMs)]);
+}
+
+async function settleStaleRemoveUndoForBill(db: NonNullable<typeof supabaseAdmin>, billId: string, nowMs: number): Promise<void> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await db
       .from(CHANGES)
       .select(CHANGE_COLUMNS)
       .eq("subscription_id", billId)

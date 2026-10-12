@@ -15,7 +15,7 @@ import {
 } from "@/lib/billingDiscounts";
 import { setCustomPrice, setStandardPrice, type CustomPriceRow } from "@/lib/billingCustomPrice";
 import { attachVenueToOwner } from "@/lib/adminVenueAttach";
-import type { AdminPartnerBill } from "@/lib/adminBillView";
+import type { AdminPartnerBill, AdminRemovedFrom } from "@/lib/adminBillView";
 import { isPlaceholderVenueRow } from "@/lib/venueClaim";
 import {
   billMembershipsForBills,
@@ -24,8 +24,11 @@ import {
   isBilledMembership,
   loadBillingForVenue,
   loadBillingForVenues,
+  refusesOwnBill,
+  unbilledVenueStates,
   type BillMembership,
 } from "@/lib/venueBilling";
+import { ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES, ON_PARTNER_BILL_CODE, onPartnerBillMessageKey } from "@/lib/multiVenueBilling";
 import { billRateFromMirror, monthlyTotalCents, rateBreakdown, rateMonthlyTotalCents } from "@/lib/venuePricing";
 import { settleStaleVenueChangesForBill } from "@/lib/venueRemoval";
 
@@ -138,6 +141,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: memberships.error }, { status: 500 });
   }
   const nowMs = Date.now();
+  // Names of EVERY linked venue, taken before the search filter below: a bill's anchor venue may be a
+  // row the search hides, and its name must not depend on what was typed (Phase 6.4, review #6).
+  const venueNameById = new Map((links ?? []).map((link) => [link.venue_id, link.venues?.display_name ?? link.venues?.name ?? link.venue_id]));
   const graduatedPriceId = getStripeGraduatedPriceId();
   const billOf = (venueId: string, sub: SubscriptionRow): PartnerBill => {
     const rows = memberships.byBill.get(sub.id) ?? [];
@@ -149,6 +155,7 @@ export async function GET(request: Request) {
       id: sub.id,
       isAnchor: sub.venue_id === venueId,
       anchorVenueId: sub.venue_id,
+      anchorVenueName: venueNameById.get(sub.venue_id) ?? null,
       billedVenueCount: billed,
       leavingVenueCount: leaving,
       rate: rate.kind,
@@ -162,12 +169,29 @@ export async function GET(request: Request) {
       ),
     };
   };
-  // A venue linked to a partner who pays for another venue, but on no bill itself = comped (free).
-  const ownersWithLiveBill = new Set(
-    Array.from(subByVenue.values())
-      .filter((row) => row.status !== "cancelled" && row.owner_id)
-      .map((row) => row.owner_id as string)
-  );
+  // Venues no live bill covers: removed from a bill, comped (free on a paying partner's account), or
+  // simply unbilled — one shared classifier (lib/venueBilling.ts, Phase 6.3). A removed venue is
+  // never "Comped". One membership read + two bill reads for the whole list.
+  const uncovered = (links ?? [])
+    .map((link) => link.venue_id)
+    .filter((venueId) => {
+      const sub = subByVenue.get(venueId);
+      return !sub || sub.status === "cancelled";
+    });
+  const ownerIdByVenue = new Map((links ?? []).map((link) => [link.venue_id, link.owner_id]));
+  const unbilled = await unbilledVenueStates(uncovered, ownerIdByVenue);
+  if (!unbilled.ok) {
+    return NextResponse.json({ ok: false, error: unbilled.error }, { status: 500 });
+  }
+  const removedFrom = (venueId: string, sub: SubscriptionRow | null): AdminRemovedFrom | null => {
+    const state = unbilled.byVenue.get(venueId);
+    if (sub || state?.kind !== "removed") return null;
+    return {
+      anchorVenueId: state.anchorVenueId,
+      anchorVenueName: state.anchorVenueId ? (venueNameById.get(state.anchorVenueId) ?? null) : null,
+      removedAt: state.removedAt,
+    };
+  };
 
   const partners = (links ?? [])
     .map((link) => {
@@ -180,7 +204,10 @@ export async function GET(request: Request) {
         ownerEmail: link.venue_owners?.email ?? "",
         ownerName: link.venue_owners?.name ?? "",
         bill: sub ? billOf(link.venue_id, sub) : null,
-        comped: !sub && ownersWithLiveBill.has(link.owner_id),
+        comped: !sub && unbilled.byVenue.get(link.venue_id)?.kind === "comped",
+        removedFrom: removedFrom(link.venue_id, sub),
+        // Phase 6.5: "Grant offline" would open the partner a second bill (POST refuses it too).
+        grantOfflineBlocked: refusesOwnBill(unbilled.byVenue.get(link.venue_id)),
         subscription: sub
           ? {
               status: sub.status,
@@ -217,28 +244,60 @@ export async function GET(request: Request) {
 }
 
 /**
- * GET ?resource=attach-options — the venues an admin can give to a partner (Phase 6): visible, real
- * (not a (0,0) room) and linked to no partner yet. One venues read + one link read; the server
- * re-checks everything on submit.
+ * GET ?resource=attach-options — what the "Link a venue to a partner" sheet offers (Phase 6, 6.4):
+ *   `venues` — visible, real (not a (0,0) room) venues that are either linked to NO partner yet
+ *     (`ownerId: null`) or linked to exactly one partner and COMPED there (`ownerId` = that partner,
+ *     found with the shared classifier `unbilledVenueStates`, never re-derived) — the second kind can
+ *     only be moved onto that same partner's bill;
+ *   `owners` — EVERY partner account (`id, email, name`), so the Partner dropdown never depends on the
+ *     list's search box.
+ * Three bounded reads, plus the classifier's reads for the few linked venues. The server re-checks
+ * everything on submit.
  */
 async function attachOptions(): Promise<NextResponse> {
-  const [venues, links] = await Promise.all([
+  const [venues, links, owners] = await Promise.all([
     supabaseAdmin!
       .from("venues")
       .select("id, name, hidden, latitude, longitude")
       .order("name", { ascending: true })
       .limit(1000)
       .returns<Array<{ id: string; name: string | null; hidden: boolean | null; latitude: number | null; longitude: number | null }>>(),
-    supabaseAdmin!.from("venue_owner_venues").select("venue_id").returns<{ venue_id: string }[]>(),
+    supabaseAdmin!.from("venue_owner_venues").select("venue_id, owner_id").returns<{ venue_id: string; owner_id: string }[]>(),
+    supabaseAdmin!
+      .from("venue_owners")
+      .select("id, email, name")
+      .order("email", { ascending: true })
+      .limit(1000)
+      .returns<Array<{ id: string; email: string | null; name: string | null }>>(),
   ]);
-  if (venues.error || links.error) {
-    return NextResponse.json({ ok: false, error: venues.error?.message ?? links.error?.message }, { status: 500 });
+  const readError = venues.error ?? links.error ?? owners.error;
+  if (readError) {
+    return NextResponse.json({ ok: false, error: readError.message }, { status: 500 });
   }
-  const linked = new Set((links.data ?? []).map((link) => link.venue_id));
-  const options = (venues.data ?? [])
-    .filter((venue) => !venue.hidden && !isPlaceholderVenueRow(venue) && !linked.has(venue.id))
-    .map((venue) => ({ id: venue.id, name: (venue.name ?? "").trim() || venue.id }));
-  return NextResponse.json({ ok: true, venues: options });
+  const ownersByVenue = new Map<string, string[]>();
+  for (const link of links.data ?? []) ownersByVenue.set(link.venue_id, [...(ownersByVenue.get(link.venue_id) ?? []), link.owner_id]);
+  const eligible = (venues.data ?? []).filter((venue) => !venue.hidden && !isPlaceholderVenueRow(venue));
+  const soleOwnerByVenue = new Map(
+    eligible.flatMap((venue) => {
+      const linked = ownersByVenue.get(venue.id) ?? [];
+      return linked.length === 1 ? [[venue.id, linked[0]] as const] : [];
+    })
+  );
+  const states = await unbilledVenueStates(Array.from(soleOwnerByVenue.keys()), soleOwnerByVenue);
+  if (!states.ok) {
+    return NextResponse.json({ ok: false, error: states.error }, { status: 500 });
+  }
+  const options = eligible.flatMap<{ id: string; name: string; ownerId: string | null }>((venue) => {
+    const name = (venue.name ?? "").trim() || venue.id;
+    if (!ownersByVenue.has(venue.id)) return [{ id: venue.id, name, ownerId: null }];
+    const owner = soleOwnerByVenue.get(venue.id);
+    return owner && states.byVenue.get(venue.id)?.kind === "comped" ? [{ id: venue.id, name, ownerId: owner }] : [];
+  });
+  return NextResponse.json({
+    ok: true,
+    venues: options,
+    owners: (owners.data ?? []).map((owner) => ({ id: owner.id, email: owner.email ?? "", name: owner.name ?? "" })),
+  });
 }
 
 type PostBody = {
@@ -260,6 +319,8 @@ type PostBody = {
   idempotencyKey?: string;
   /** attach-venue (card bill): from the preview's quote. */
   prorationDate?: number;
+  /** attach-venue (card bill): the preview quote's `thisVenueCents`; a changed price is refused. */
+  quotedVenueCents?: number;
   venueId?: string;
   paidThroughDate?: string; // YYYY-MM-DD, inclusive; what the check covers — offline access never lapses on its own (2026-10-11)
   /**
@@ -384,6 +445,7 @@ export async function POST(request: Request) {
       preview: body.preview === true,
       clientKey: typeof body.idempotencyKey === "string" ? body.idempotencyKey : undefined,
       prorationDate: body.prorationDate,
+      quotedVenueCents: body.quotedVenueCents,
     });
     console.log(
       `[AdminBilling] attach-venue admin=${auth.adminUsername} venue=${venueId} owner=${body.ownerId ?? ""} mode=${mode} ` +
@@ -449,6 +511,28 @@ export async function POST(request: Request) {
   if (existingSub) {
     const notAnchor = notAnchorResponse(existingSub, venueId);
     if (notAnchor) return notAnchor;
+  }
+
+  // One bill per partner (Phase 6.5): a venue taken off a bill, comped, or whose partner already
+  // pays on another venue's bill must not get a bill of its own — the upsert below would open a
+  // SECOND bill, and a partner with two bills can't Add a venue. A venue a live bill already covers
+  // is not in the map (renewing its offline bill is fine). Fails closed.
+  const unbilled = await unbilledVenueStates([venueId], new Map([[venueId, link.owner_id]]));
+  if (!unbilled.ok) {
+    console.error(`[AdminBilling] grant-manual-state-read-failed venue=${venueId}: ${unbilled.error}`);
+    return NextResponse.json({ ok: false, error: "Couldn't check this venue's billing. Try again." }, { status: 500 });
+  }
+  const unbilledState = unbilled.byVenue.get(venueId);
+  if (refusesOwnBill(unbilledState)) {
+    const key = onPartnerBillMessageKey(unbilledState.kind);
+    console.warn(
+      `[AdminBilling] grant-manual-refused-on-partner-bill admin=${auth.adminUsername} venue=${venueId} ` +
+        `state=${unbilledState.kind} ownerBill=${unbilledState.ownerBillId ?? "none"}`
+    );
+    return NextResponse.json(
+      { ok: false, error: ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES[key], code: ON_PARTNER_BILL_CODE },
+      { status: 409 }
+    );
   }
 
   // Everything below this line can mutate Stripe (force-cancel, discount

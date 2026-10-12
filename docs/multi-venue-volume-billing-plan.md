@@ -6,10 +6,11 @@ Phases 1–2 are live (both card subscribers are on the graduated Price `price_1
 $100/month; check-paying accounts never lapse automatically). **Phase 6 (admin & edge tools) committed
 locally as `6c5a178`, NOT pushed** — flag still off. **Phase 6.1 committed locally as `a83da94`, NOT pushed**; its migration
 `20261011224839_bill_price_change_lock.sql` was **applied to production 2026-10-11** on Andrew's go-ahead and verified
-(migration before app, so the app may now deploy). **Phase 6.2 committed locally 2026-10-11, NOT pushed** (no migration). Andrew: push everything when the plan is finished.
-Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_6.2_HANDOFF.md`**. Andrew's answers are
-in §2 (do not re-ask). **Next: Phase 6.3** — a code review of Phase 6 found 10 problems, planned as Phases 6.1–6.5
-(§5); Phase 7 (release) waits until they are done. Each phase ends with a handoff note
+(migration before app, so the app may now deploy). **Phase 6.2 committed locally as `636410c`, NOT pushed** (no migration). Andrew: push everything when the plan is finished.
+**Phases 6.3, 6.4 and 6.5 built 2026-10-11, NOT committed** (no migration) — commit is Andrew's call (path list in the
+6.5 handoff §2). Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_6.5_HANDOFF.md`**. Andrew's answers are
+in §2 (do not re-ask). **Next: Phase 7 (release)**, after the commit and the single push. The final review left five
+findings for Andrew's decision (6.5 handoff §7); none affects a partner in production today. Each phase ends with a handoff note
 `docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at the latest one.
 
 ---
@@ -479,7 +480,15 @@ both code lists and message maps.
 `listStripeSubscriptions()` are awaited one after another. Run them in one `Promise.all`. This is
 latency only: the reads and their count are unchanged. Any of them failing still throws, as today.
 
-#### Phase 6.3 — Removed and comped venues are not "no bill" (Opus 5.5, high) — review #2, #4
+#### Phase 6.3 — Removed and comped venues are not "no bill" (Opus 5.5, high) — review #2, #4 — ✅ built 2026-10-11, not committed (handoff: `…_PHASE_6.3_HANDOFF.md`)
+
+As built: everything below. `unbilledVenueStates` makes three parallel reads (memberships of any state, bills
+anchored on the venues, the partners' live bills) plus a by-id bill read only when a membership points elsewhere.
+`removed` and `unbilled` also carry `ownerBillId`. Checkout refuses whenever the state is removed, comped, or has an
+`ownerBillId`; a second helper, `otherLiveBillOfOwner`, covers the one path the classifier can't see (this venue's
+own bill looked live but Stripe said dead). Copy lives in `lib/multiVenueBilling.ts` (`ON_PARTNER_BILL_*`,
+`COMPED_VENUE_LABEL`). Production check: the only mixed owner is Andrew's (Pacific Street billed,
+`venue-hightop-test` comped); no owner has two bills.
 
 **Finding #2.** `app/api/admin/billing/route.ts` derives `comped = !sub && ownersWithLiveBill.has(owner)`.
 `loadBillingForVenues` reads only *active* memberships, and the owner→venue link is kept for Add
@@ -526,7 +535,13 @@ this venue"). No migration; comped stays derived, not stored.
 Cost: Checkout and the owner Billing GET each gain one bounded membership read (per click / page
 view, not per player).
 
-#### Phase 6.4 — Admin "Link a venue" fixes (Sonnet 5.5, high) — review #5, #6, #7, #8
+#### Phase 6.4 — Admin "Link a venue" fixes (Sonnet 5.5, high) — review #5, #6, #7, #8 — ✅ built 2026-10-11, not committed (handoff: `…_PHASE_6.4_HANDOFF.md`)
+
+As built: everything below. The key rule is `refusalEndsAttempt` (4xx and not `addition_in_progress`, `lib/addVenueFlow.ts`) read
+through `interpretAdminAttachReply` (`lib/adminAttachFlow.ts`); `attach-options` returns `venues` (unlinked, or comped with
+`ownerId`) plus every owner; names come from the unfiltered link read; the label is `venuePriceBandsLabel()`. The price-literal
+contract pin now covers the admin files. New for 6.5: block "Grant offline" on a comped/removed venue when the partner already
+has a live bill (handoff §5).
 
 - **#5 Idempotency key.** `confirm()` in `components/admin/billing/LinkVenueToPartner.tsx` clears
   `attemptKey` on **any** non-ok reply, including a 500/503 and `addition_in_progress`, where the
@@ -555,10 +570,17 @@ view, not per player).
   add one.
 - Light admin surface: plain Tailwind, `tone="light"` rules, 12px text floor.
 
-#### Phase 6.5 — Re-review and close out (Opus 5.5, high)
+#### Phase 6.5 — Re-review and close out (Opus 5.5, high) — ✅ built 2026-10-11, not committed (handoff: `…_PHASE_6.5_HANDOFF.md`)
+
+As built: Confirm carries the quote's `thisVenueCents` (`quotedVenueCents`) from all three add screens and
+`startVenueAddition` refuses `quote_changed` after the claim, before any write; "Grant offline" refuses (and the admin list
+greys out) a venue that would open a partner's second bill, using Checkout's `refusesOwnBill`; CLAUDE.md updated. The
+`/code-review` found 10 more: 5 fixed (admin card attach reserves a 3-D-Secure-pending venue and settles stale changes,
+Add back re-asks keep their quote, any 5xx add reply keeps the key, shared refusal-key mapping, parallel stale reads),
+5 listed for Andrew in the handoff §7.
 
 Run `/code-review` on the whole Phase 6 + 6.1–6.4 diff. Fix or list every new finding, including the
-quote-vs-Confirm rate gap recorded in `…_PHASE_6.1_HANDOFF.md` §7.3 (fix it, or Andrew waives it). Gates:
+quote-vs-Confirm rate gap recorded in `…_PHASE_6.1_HANDOFF.md` §7.3 — **Andrew, 2026-10-11: fix it in 6.5 (not waived)**. Gates:
 `npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run build` (not typecheck and build at the
 same time), plus `tests/lib.auth-users-fk-guard.test.ts` unchanged. Update `CLAUDE.md`'s
 multi-venue section: the price swap is claimed under the bill lock, only `custom_monthly_` is

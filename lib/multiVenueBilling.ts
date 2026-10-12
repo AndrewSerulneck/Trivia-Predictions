@@ -89,6 +89,7 @@ export const ADD_VENUE_FAILURE_CODES = [
   "venue_exists",
   "venue_unavailable",
   "readd_use_undo",
+  "quote_changed",
   "card_declined",
   "payment_unconfirmed",
   "addition_failed",
@@ -122,6 +123,7 @@ export const ADD_VENUE_MESSAGES: Record<AddVenueFailureCode, string> = {
   venue_exists: `We already have a venue at this address. Email ${PARTNER_SUPPORT_EMAIL} and we'll move it onto your bill.`,
   venue_unavailable: `That venue isn't available to add. Email ${PARTNER_SUPPORT_EMAIL} and we'll set it up for you.`,
   readd_use_undo: "That venue is still on your bill until the end of this period. Tap Undo instead — there's nothing to pay.",
+  quote_changed: "The price changed since you opened this. Check the new price, then confirm again.",
   card_declined: "Your card was declined. Update it in Billing, then try again.",
   payment_unconfirmed: "We couldn't confirm the payment yet. Check back in a few minutes before trying again.",
   addition_failed: "We couldn't add that venue. Please try again.",
@@ -198,6 +200,39 @@ export const VENUE_CHANGE_MESSAGES: Record<VenueChangeFailureCode, string> = {
   stripe_unavailable: "Billing is temporarily unavailable. Please try again in a moment.",
 };
 
+// --- Checkout refusal for a venue already on a partner's account (Phase 6.3) --------------------
+
+/**
+ * `POST /api/owner/billing/checkout` refuses `409 { code: "on_partner_bill" }` — never a second
+ * subscription — for a venue that was taken off the partner's bill, is comped (free on their
+ * account), or belongs to a partner who already pays for another venue (one bill per partner, §2).
+ */
+export const ON_PARTNER_BILL_CODE = "on_partner_bill";
+
+export const ON_PARTNER_BILL_MESSAGES = {
+  removed: "This venue was taken off your bill. Add it back from Billing.",
+  comped: "This venue is included free on your account.",
+  shared: `Your venues share one bill. Email ${PARTNER_SUPPORT_EMAIL} and we'll sort out this venue for you.`,
+} as const;
+
+/** Which sentence of the two maps above a refusal gets. `kind` is `UnbilledVenueState["kind"]` (lib/venueBilling.ts). */
+export const onPartnerBillMessageKey = (kind: "removed" | "comped" | "unbilled"): keyof typeof ON_PARTNER_BILL_MESSAGES =>
+  kind === "removed" ? "removed" : kind === "comped" ? "comped" : "shared";
+
+/**
+ * Admin "Grant offline" (Phase 6.5) refuses `409 { code: "on_partner_bill" }` for the same venues —
+ * it would open a SECOND bill for the partner, and a partner with two bills can't Add a venue.
+ * Admin-worded: what to press instead.
+ */
+export const ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES = {
+  removed: "This venue was taken off a bill. Put it back with the partner's Add back (Billing), or manage billing from that bill's anchor venue.",
+  comped: "This partner already has a bill. Use Link a venue → Add to their bill.",
+  shared: "This partner already has a bill for another venue. Use Link a venue → Add to their bill, or manage billing from that venue.",
+} as const;
+
+/** The Billing page line for a comped venue, in place of any Subscribe. */
+export const COMPED_VENUE_LABEL = "Included on your account at no charge";
+
 // --- Billing page account view (Phase 5) -------------------------------------------------------
 
 /**
@@ -250,6 +285,7 @@ export const ADMIN_ATTACH_FAILURE_CODES = [
   "venue_has_own_bill",
   "venue_has_billing_history",
   "on_bill",
+  "venue_add_in_flight",
   "card_add_switched_off",
 ] as const;
 
@@ -267,6 +303,8 @@ export const ADMIN_ATTACH_MESSAGES: Record<AdminAttachFailureCode, string> = {
   venue_has_own_bill: "That venue has its own subscription. Manage it from its own row.",
   venue_has_billing_history: "That venue has been on a bill before. The partner can use Add back in Billing, or ask support.",
   on_bill: "That venue is on this partner's bill already — it can't also be comped.",
+  venue_add_in_flight:
+    "A card charge to put this venue on a partner's bill is still waiting (their bank's check, or processing). Let it finish or fail first.",
   card_add_switched_off:
     "Charging a card for an added venue is switched off until multi-venue billing is released (NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED). Use Free (comped) for now.",
 };

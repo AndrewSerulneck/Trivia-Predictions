@@ -125,7 +125,7 @@ import { POST as webhookPOST } from "@/app/api/webhooks/stripe/route";
 import { VENUE_ADDITION_LEASE_MS, reconcileStaleVenueAdditions } from "@/lib/venueAddition";
 import { venueIdsEverBilled } from "@/lib/venueBilling";
 import { attachVenueToOwner } from "@/lib/adminVenueAttach";
-import { GRADUATED_PRICE_LOOKUP_KEY } from "@/lib/venuePricing";
+import { CUSTOM_PER_VENUE_LOOKUP_PREFIX, GRADUATED_PRICE_LOOKUP_KEY, nextVenuePriceCents } from "@/lib/venuePricing";
 
 // --- Fixture ---------------------------------------------------------------------------------------
 
@@ -282,6 +282,18 @@ const freshSubscription = () => ({
 
 const subItem = () => (h.state.subscription.items as { data: Array<Row> }).data[0];
 
+/**
+ * What the quote would have said this venue costs: the next band on the graduated Price, or the flat
+ * amount of a `custom_monthly_` Price. Read at call time, as a client that just quoted would send it.
+ */
+const quotedNow = (): number => {
+  const item = subItem();
+  const price = item.price as Row;
+  return String(price.lookup_key ?? "").startsWith(CUSTOM_PER_VENUE_LOOKUP_PREFIX) && typeof price.unit_amount === "number"
+    ? price.unit_amount
+    : nextVenuePriceCents(item.quantity as number);
+};
+
 const makeInvoice = (pendingQuantity: number, intent: Row): SimInvoice => {
   h.state.invoiceCounter += 1;
   return {
@@ -413,7 +425,7 @@ const add = async (overrides: Row = {}) => {
     new Request("http://localhost/api/owner/venues/add", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(body(overrides)),
+      body: JSON.stringify(body({ quotedVenueCents: quotedNow(), ...overrides })),
     })
   );
   return { status: response.status, json: (await response.json()) as Row };
@@ -620,6 +632,62 @@ describe("POST /api/owner/venues/add — paid", () => {
       chargedTodayCents: 3750,
     });
     expect(ledger()[0].venue_added_email_sent_at).toEqual(expect.any(String));
+  });
+
+  // Phase 6.5 (6.1 handoff §7.3): Confirm carries the price the partner was quoted. An admin's rate
+  // change landing between Review and Confirm must refuse — never charge a price nobody saw.
+  it("refuses quote_changed when the rate moved after the quote — nothing charged, nothing created; a re-quote then succeeds", async () => {
+    const quoted = await quote(`?venueId=${ANCHOR}`);
+    expect(quoted.json.quote).toMatchObject({ thisVenueCents: 7500 });
+    Object.assign(subItem().price as Row, {
+      id: "price_custom_9000",
+      lookup_key: "custom_monthly_9000",
+      billing_scheme: "per_unit",
+      tiers_mode: null,
+      unit_amount: 9000,
+      currency: "usd",
+      recurring: { interval: "month", interval_count: 1 },
+    });
+
+    const refused = await add({ venueId: ANCHOR, quotedVenueCents: (quoted.json.quote as Row).thisVenueCents });
+    expect(refused.status).toBe(409);
+    expect(refused.json.code).toBe("quote_changed");
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+    expect(h.fns.createAdminVenue).not.toHaveBeenCalled();
+    expect(ledger()).toHaveLength(1);
+    expect(ledger()[0]).toMatchObject({ status: "failed" });
+
+    const requoted = await quote(`?venueId=${ANCHOR}`);
+    expect(requoted.json.quote).toMatchObject({ thisVenueCents: 9000 });
+    const paid = await add({
+      venueId: ANCHOR,
+      idempotencyKey: "confirm-requoted",
+      quotedVenueCents: (requoted.json.quote as Row).thisVenueCents,
+    });
+    expect(paid.status).toBe(200);
+    expect(paid.json).toMatchObject({ status: "paid" });
+    expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["missing", undefined],
+    ["a string", "7500"],
+    ["a lower price", 4500],
+    ["a fraction", 7500.5],
+  ])("refuses quote_changed when quotedVenueCents is %s — nothing charged", async (_label, value) => {
+    const result = await add({ quotedVenueCents: value });
+    expect(result.status).toBe(409);
+    expect(result.json.code).toBe("quote_changed");
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+    expect(h.fns.createAdminVenue).not.toHaveBeenCalled();
+  });
+
+  it("a retry of an already-paid Confirm answers from its row, whatever quote it carries", async () => {
+    expect((await add()).status).toBe(200);
+    const again = await add({ quotedVenueCents: 1 });
+    expect(again.status).toBe(200);
+    expect(again.json).toMatchObject({ status: "paid" });
+    expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);
   });
 
   it("ignores a stale or future prorationDate rather than letting the client shrink the charge", async () => {
@@ -1194,7 +1262,7 @@ describe("admin attach an existing venue to a partner (Phase 6)", () => {
       ...extra,
     });
   const attach = (mode: "bill" | "comped", preview = false, clientKey = "admin-attach-1") =>
-    attachVenueToOwner({ venueId: ADMIN_VENUE, ownerId: OWNER, mode, preview, clientKey });
+    attachVenueToOwner({ venueId: ADMIN_VENUE, ownerId: OWNER, mode, preview, clientKey, quotedVenueCents: quotedNow() });
   const linkedTo = (venueId: string) => table("venue_owner_venues").filter((row) => row.venue_id === venueId).map((row) => row.owner_id);
 
   it("comped: links the venue to the partner and puts it on no bill — Stripe untouched", async () => {
@@ -1218,6 +1286,21 @@ describe("admin attach an existing venue to a partner (Phase 6)", () => {
     expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
   });
 
+  it("bill (card): a price that moved since the preview is refused quote_changed — nothing charged (Phase 6.5)", async () => {
+    seedAdminVenue();
+    const result = await attachVenueToOwner({
+      venueId: ADMIN_VENUE,
+      ownerId: OWNER,
+      mode: "bill",
+      preview: false,
+      clientKey: "admin-attach-1",
+      quotedVenueCents: 10000,
+    });
+    expect(result).toMatchObject({ ok: false, httpStatus: 409, code: "quote_changed" });
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+    expect(linkedTo(ADMIN_VENUE)).toEqual([]);
+  });
+
   it("bill (card): charges the card on file through the partner's add flow — no new venue is created", async () => {
     seedAdminVenue();
     const result = await attach("bill");
@@ -1236,6 +1319,47 @@ describe("admin attach an existing venue to a partner (Phase 6)", () => {
     // Pressing Confirm again answers "already on their bill" — never a second charge.
     expect(await attach("bill")).toMatchObject({ ok: true, kind: "already_on_bill" });
     expect(await attach("bill", true)).toMatchObject({ ok: false, code: "already_linked" });
+    expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("bill (card): a venue already COMPED on this partner can be moved onto their bill (Phase 6.4, #7)", async () => {
+    seedAdminVenue();
+    table("venue_owner_venues").push({ id: "link-comped", owner_id: OWNER, venue_id: ADMIN_VENUE });
+    expect(await attach("bill", true)).toMatchObject({ ok: true, kind: "preview", preview: { mode: "bill", quote: { thisVenueCents: 7500 } } });
+    expect(await attach("bill")).toMatchObject({ ok: true, kind: "card_add", status: "paid", venueId: ADMIN_VENUE });
+    expect(memberships().find((row) => row.venue_id === ADMIN_VENUE)).toMatchObject({ subscription_id: BILL });
+    // Linked once, not twice.
+    expect(linkedTo(ADMIN_VENUE)).toEqual([OWNER]);
+    expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("bill (card): re-sending the SAME key after an unconfirmed answer returns the first attempt's state, never a second charge (Phase 6.4, #5)", async () => {
+    seedAdminVenue();
+    h.state.paymentMode = "requires_action";
+    const first = await attach("bill", false, "admin-attach-same");
+    expect(first).toMatchObject({ ok: true, kind: "card_add", status: "requires_action" });
+    const again = await attach("bill", false, "admin-attach-same");
+    expect(again).toMatchObject({ ok: true, kind: "card_add", status: "requires_action" });
+    expect(ledger()).toHaveLength(1);
+    expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);
+    expect(memberships().some((row) => row.venue_id === ADMIN_VENUE)).toBe(false);
+  });
+
+  it("bill (card) waiting on 3-D Secure reserves the venue: no comp, no other partner, until it settles (Phase 6.5)", async () => {
+    seedAdminVenue();
+    table("venue_owners").push({ id: "owner-2", name: "Sam", email: "sam@example.com" });
+    h.state.paymentMode = "requires_action";
+    expect(await attach("bill", false, "admin-attach-3ds")).toMatchObject({ ok: true, kind: "card_add", status: "requires_action" });
+
+    expect(await attach("comped")).toMatchObject({ ok: false, code: "venue_add_in_flight" });
+    for (const mode of ["comped", "bill"] as const) {
+      expect(
+        await attachVenueToOwner({ venueId: ADMIN_VENUE, ownerId: "owner-2", mode, preview: false, clientKey: "admin-attach-q" })
+      ).toMatchObject({ ok: false, code: "venue_add_in_flight" });
+    }
+    expect(linkedTo(ADMIN_VENUE)).toEqual([]);
+    // The same partner's re-ask of the same key still answers from its row.
+    expect(await attach("bill", false, "admin-attach-3ds")).toMatchObject({ ok: true, kind: "card_add", status: "requires_action" });
     expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);
   });
 

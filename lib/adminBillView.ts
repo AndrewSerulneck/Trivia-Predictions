@@ -10,6 +10,8 @@ export type AdminPartnerBill = {
   id: string;
   isAnchor: boolean;
   anchorVenueId: string;
+  /** The anchor venue's name, read before the list's search filter (null if it could not be read). */
+  anchorVenueName: string | null;
   /** Venues billed on the next renewal (not leaving, not removed). */
   billedVenueCount: number;
   /** Venues set to leave at the period end. */
@@ -24,6 +26,18 @@ export type AdminPartnerBill = {
   suggestedOfflineCents: number | null;
   /** This venue on the bill: billed, leaving (Remove pressed) or removed. */
   venueState: "billed" | "leaving" | "removed";
+};
+
+/**
+ * A venue taken OFF a bill (Phase 5's Remove) and on no bill now (Phase 6.3) — never shown as "Comped".
+ * `anchorVenueId` is that bill's anchor venue today (null if it could not be read).
+ */
+export type AdminRemovedFrom = { anchorVenueId: string | null; anchorVenueName: string | null; removedAt: string | null };
+
+/** "Removed from Pacific Street's bill (Oct 31, 2026)" */
+export const removedFromLine = (removed: AdminRemovedFrom, options: { anchorName: string | null; formatDate: (iso: string | null) => string }): string => {
+  const where = options.anchorName ? `Removed from ${options.anchorName}'s bill` : "Removed from its bill";
+  return removed.removedAt ? `${where} (${options.formatDate(removed.removedAt)})` : where;
 };
 
 const plural = (count: number, word: string): string => `${count} ${word}${count === 1 ? "" : "s"}`;

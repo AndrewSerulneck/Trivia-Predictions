@@ -508,16 +508,28 @@ const postClaimCheck = (
   context: AddVenueContext,
   live: Stripe.Subscription,
   quantityBefore: number
-): { ok: true; item: Stripe.SubscriptionItem } | { ok: false; issue: string } => {
+): { ok: true; item: Stripe.SubscriptionItem; rate: BillRate } | { ok: false; issue: string } => {
   const checked = checkAddableSubscription(live);
   if (!checked.ok) return { ok: false, issue: checked.code };
-  const { item } = checked;
+  const { item, rate } = checked;
   if (item.id !== context.item.id) return { ok: false, issue: "item-changed" };
   if (item.price?.id !== context.item.price?.id) return { ok: false, issue: "price-changed" };
   if (live.pending_update) return { ok: false, issue: "pending-update" };
   if (item.quantity !== quantityBefore) return { ok: false, issue: "quantity-drift" };
-  return { ok: true, item };
+  return { ok: true, item, rate };
 };
+
+/**
+ * Is the new venue's monthly price — on the rate and venue number the charge is about to use —
+ * exactly what the partner was quoted (`AddVenueQuote.thisVenueCents`, sent back with Confirm)?
+ * An admin's rate change, or a Remove, landing between Review and Confirm would otherwise charge a
+ * price the partner never saw (Phase 6.1 handoff §7.3). Anything that isn't a whole number of cents
+ * (missing, a string, an old client) is not a match: the partner re-quotes, nothing is charged.
+ */
+export const quotedPriceMatches = (quotedVenueCents: unknown, rate: BillRate, venueNumber: number): boolean =>
+  typeof quotedVenueCents === "number" &&
+  Number.isInteger(quotedVenueCents) &&
+  quotedVenueCents === rateVenuePriceCents(rate, venueNumber);
 
 // --- Quote ---------------------------------------------------------------------------------------
 
@@ -1124,6 +1136,27 @@ async function settleStaleAdditionsForBill(billId: string, nowMs: number): Promi
   return settled;
 }
 
+/**
+ * The partner an add still waiting on its payment (`pending` / `requires_action`) is putting this
+ * EXISTING venue on — an Add back or an admin "Add to their bill" — or `ownerId: null`. Until that add
+ * settles the venue is spoken for: it is not linked yet (the link lands with the payment), so the admin
+ * Link tool must not give it to anyone else in the meantime (Phase 6.5 review).
+ */
+export async function venueAdditionInFlight(
+  venueId: string
+): Promise<{ ok: true; ownerId: string | null } | { ok: false; error: string }> {
+  if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
+  const { data, error } = await supabaseAdmin
+    .from(LEDGER)
+    .select("owner_id")
+    .eq("venue_id", venueId)
+    .in("status", ["pending", "requires_action"])
+    .limit(1)
+    .returns<Array<{ owner_id: string }>>();
+  if (error) return { ok: false, error: `addition-read-failed: ${error.message}` };
+  return { ok: true, ownerId: (data ?? [])[0]?.owner_id ?? null };
+}
+
 export type StartVenueAdditionArgs = {
   auth: OwnerAuthContext;
   context: AddVenueContext;
@@ -1145,6 +1178,11 @@ export type StartVenueAdditionArgs = {
   clientKey: string;
   /** From the quote; honoured only if recent (see `acceptableProrationDate`). */
   prorationDate: unknown;
+  /**
+   * The quote's `thisVenueCents`, sent back with Confirm. Must equal the price the charge is made
+   * at, or the add is refused `quote_changed` before anything is charged (`quotedPriceMatches`).
+   */
+  quotedVenueCents: unknown;
   nowMs?: number;
 };
 
@@ -1268,6 +1306,15 @@ export async function startVenueAddition(args: StartVenueAdditionArgs): Promise<
       return refuse("billing_state", 409, { additionId: row.id });
     }
     const liveItem = checked.item;
+    if (!quotedPriceMatches(args.quotedVenueCents, checked.rate, row.quantity_after)) {
+      console.warn(
+        `${LOG} refused-quote-changed addition=${row.id} bill=${context.bill.id} venueNumber=${row.quantity_after} ` +
+          `quoted=${typeof args.quotedVenueCents === "number" ? args.quotedVenueCents : "none"} ` +
+          `now=${rateVenuePriceCents(checked.rate, row.quantity_after)}`
+      );
+      await failAddition(row, "refused:quote_changed", { voidInvoice: false });
+      return refuse("quote_changed", 409, { additionId: row.id });
+    }
 
     // 5–6 (Add back). The venue already exists and is the partner's: record it, skip the address
     //    scan and the venue insert. It stays as it is (hidden by the removal job) until paid.

@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Phase 6.5: grant-manual now asks the shared one-bill-per-partner classifier first. These tests
+// are about single-venue partners (nothing to refuse) — that guard has its own tests in
+// tests/api.billing-unbilled-venue-states.test.ts.
+vi.mock("@/lib/venueBilling", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/venueBilling")>()),
+  unbilledVenueStates: vi.fn(async () => ({ ok: true, byVenue: new Map() })),
+}));
+
 /**
  * Round 4 code review Phase 7: POST /api/admin/billing grant-manual must
  * validate paidThroughDate BEFORE either Stripe mutation (force-cancel,

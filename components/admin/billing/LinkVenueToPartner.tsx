@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminModalSheet } from "@/components/admin/AdminModalSheet";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { attachPreviewText } from "@/lib/adminBillView";
+import { interpretAdminAttachReply } from "@/lib/adminAttachFlow";
 import { isStripeHostedUrl } from "@/lib/addVenueFlow";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import { formatCentsShort } from "@/lib/merchPricing";
@@ -22,16 +23,12 @@ import type { AdminAttachMode, AdminAttachPreview } from "@/lib/multiVenueBillin
 
 type Owner = { id: string; email: string; name: string };
 
+/** `ownerId` set = already linked to that partner and free there (comped): it can only go onto THEIR bill. */
+type VenueOption = { id: string; name: string; ownerId: string | null };
+
 type AttachReply = {
   ok?: boolean;
-  kind?: "preview" | "comped" | "offline_attached" | "already_on_bill" | "card_add";
   preview?: AdminAttachPreview;
-  status?: "paid" | "requires_action" | "processing";
-  chargedTodayCents?: number | null;
-  hostedInvoiceUrl?: string | null;
-  billedVenueCount?: number;
-  suggestedMonthlyCents?: number;
-  currentMonthlyCents?: number;
   error?: string;
 };
 
@@ -42,18 +39,18 @@ const newAttemptKey = (): string =>
 
 type LinkVenueToPartnerProps = {
   open: boolean;
-  owners: Owner[];
   onClose: () => void;
   /** Called after a change landed, so the list refreshes. */
   onChanged: () => void;
 };
 
-export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVenueToPartnerProps) {
-  const [venues, setVenues] = useState<Array<{ id: string; name: string }>>([]);
+export function LinkVenueToPartner({ open, onClose, onChanged }: LinkVenueToPartnerProps) {
+  const [venues, setVenues] = useState<VenueOption[]>([]);
+  const [owners, setOwners] = useState<Owner[]>([]);
   const [loadError, setLoadError] = useState("");
   const [venueId, setVenueId] = useState("");
-  const [ownerId, setOwnerId] = useState("");
-  const [mode, setMode] = useState<AdminAttachMode>("bill");
+  const [pickedOwnerId, setPickedOwnerId] = useState("");
+  const [pickedMode, setPickedMode] = useState<AdminAttachMode>("bill");
   const [preview, setPreview] = useState<AdminAttachPreview | null>(null);
   const [attemptKey, setAttemptKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -65,8 +62,8 @@ export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVen
   useEffect(() => {
     if (!open) return;
     setVenueId("");
-    setOwnerId("");
-    setMode("bill");
+    setPickedOwnerId("");
+    setPickedMode("bill");
     setPreview(null);
     setAttemptKey(null);
     setError("");
@@ -78,13 +75,14 @@ export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVen
     void (async () => {
       try {
         const res = await fetch("/api/admin/billing?resource=attach-options", { cache: "no-store" });
-        const payload = (await res.json()) as { ok?: boolean; venues?: Array<{ id: string; name: string }>; error?: string };
+        const payload = (await res.json()) as { ok?: boolean; venues?: VenueOption[]; owners?: Owner[]; error?: string };
         if (cancelled) return;
         if (!res.ok || !payload.ok) {
           setLoadError(payload.error ?? "Couldn't load venues.");
           return;
         }
         setVenues(payload.venues ?? []);
+        setOwners(payload.owners ?? []);
       } catch {
         if (!cancelled) setLoadError("Couldn't load venues.");
       }
@@ -103,6 +101,13 @@ export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVen
     [owners]
   );
 
+  // A comped venue is already on its partner's account: the partner is fixed and the only move is onto their bill.
+  const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
+  const lockedOwner = selectedVenue?.ownerId ? (owners.find((owner) => owner.id === selectedVenue.ownerId) ?? null) : null;
+  const ownerId = selectedVenue?.ownerId ?? pickedOwnerId;
+  const mode: AdminAttachMode = selectedVenue?.ownerId ? "bill" : pickedMode;
+  const ownerLabel = (owner: Owner): string => owner.email || owner.name || owner.id;
+
   const resetAnswer = () => {
     setPreview(null);
     setAttemptKey(null);
@@ -112,22 +117,22 @@ export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVen
     setCanCheckAgain(false);
   };
 
-  const post = async (body: Record<string, unknown>): Promise<{ ok: boolean; reply: AttachReply }> => {
+  const post = async (body: Record<string, unknown>): Promise<{ status: number; json: unknown }> => {
     const res = await fetch("/api/admin/billing", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "attach-venue", venueId, ownerId, mode, ...body }),
     });
-    const reply = (await res.json().catch(() => ({}))) as AttachReply;
-    return { ok: res.ok && reply.ok === true, reply };
+    return { status: res.status, json: await res.json().catch(() => null) };
   };
 
   const runPreview = async () => {
     setBusy(true);
     resetAnswer();
     try {
-      const { ok, reply } = await post({ preview: true });
-      if (!ok || !reply.preview) {
+      const { status, json } = await post({ preview: true });
+      const reply: AttachReply = json && typeof json === "object" ? (json as AttachReply) : {};
+      if (status >= 400 || reply.ok !== true || !reply.preview) {
         setError(reply.error ?? "Couldn't preview that.");
         return;
       }
@@ -144,34 +149,47 @@ export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVen
     setError("");
     setCanCheckAgain(false);
     try {
-      const { ok, reply } = await post({
+      const { status, json } = await post({
         preview: false,
         idempotencyKey: key,
-        ...(preview?.quote ? { prorationDate: preview.quote.prorationDate } : {}),
+        ...(preview?.quote ? { prorationDate: preview.quote.prorationDate, quotedVenueCents: preview.quote.thisVenueCents } : {}),
       });
-      if (!ok) {
-        setError(reply.error ?? "That didn't work.");
-        // A definitive refusal ends this attempt; the next Confirm gets a fresh key.
+      const outcome = interpretAdminAttachReply(status, json);
+      if (outcome.kind === "refused") {
+        // Only a definitive refusal (nothing charged) ends this attempt; the next Confirm gets a fresh key.
         setAttemptKey(null);
+        if (outcome.requote) {
+          // The price moved since the preview: drop it, so the next Confirm is made from a fresh quote.
+          setPreview(null);
+          setError("The price changed since the preview. Press Preview again to see the new price.");
+          return;
+        }
+        setError(outcome.message);
         return;
       }
-      if (reply.kind === "comped") {
+      if (outcome.kind === "unconfirmed") {
+        // We can't tell whether the card was charged. Keep the key: Check again re-asks the SAME add.
+        setError(`${outcome.message} We couldn't confirm what happened — press Check again.`);
+        setCanCheckAgain(true);
+        return;
+      }
+      if (outcome.kind === "comped") {
         setDone("Linked — free. It's on their account and on no bill.");
-      } else if (reply.kind === "already_on_bill") {
+      } else if (outcome.kind === "already_on_bill") {
         setDone("It's already on their bill.");
-      } else if (reply.kind === "offline_attached") {
+      } else if (outcome.kind === "offline_attached") {
         setDone(
-          `Added to their check-billed account (${reply.billedVenueCount ?? "?"} venues). Their amount is still ` +
-            `${formatCentsShort(reply.currentMonthlyCents ?? 0)}/mo — the bands come to ` +
-            `${formatCentsShort(reply.suggestedMonthlyCents ?? 0)}/mo. Change it with Extend / edit.`
+          `Added to their check-billed account (${outcome.billedVenueCount ?? "?"} venues). Their amount is still ` +
+            `${formatCentsShort(outcome.currentMonthlyCents)}/mo — the bands come to ` +
+            `${formatCentsShort(outcome.suggestedMonthlyCents)}/mo. Change it with Extend / edit.`
         );
-      } else if (reply.status === "paid") {
+      } else if (outcome.kind === "paid") {
         setDone(
-          `Done — charged ${formatCentsShort(reply.chargedTodayCents ?? 0)} to their card. The venue is on their bill and they got the "Venue added" email.`
+          `Done — charged ${formatCentsShort(outcome.chargedTodayCents ?? 0)} to their card. The venue is on their bill and they got the "Venue added" email.`
         );
-      } else if (reply.status === "requires_action") {
+      } else if (outcome.kind === "requires_action") {
         setDone("Their bank wants to confirm this charge. Send the partner the payment link below; the venue joins their bill once they pay.");
-        setInvoiceUrl(isStripeHostedUrl(reply.hostedInvoiceUrl ?? null) ? (reply.hostedInvoiceUrl as string) : null);
+        setInvoiceUrl(isStripeHostedUrl(outcome.hostedInvoiceUrl) ? outcome.hostedInvoiceUrl : null);
         setCanCheckAgain(true);
         return;
       } else {
@@ -211,7 +229,7 @@ export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVen
           {loadError ? (
             <p className="text-sm text-rose-700">{loadError}</p>
           ) : venues.length === 0 ? (
-            <p className="text-sm text-slate-500">No unlinked, visible venues.</p>
+            <p className="text-sm text-slate-500">No unlinked or comped, visible venues.</p>
           ) : (
             <AdminSelect
               ariaLabel="Venue"
@@ -221,22 +239,37 @@ export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVen
                 setVenueId(value);
                 resetAnswer();
               }}
-              options={[{ value: "", label: "Choose a venue…" }, ...venues.map((venue) => ({ value: venue.id, label: venue.name }))]}
+              options={[
+                { value: "", label: "Choose a venue…" },
+                ...venues.map((venue) => {
+                  const owner = venue.ownerId ? owners.find((candidate) => candidate.id === venue.ownerId) : null;
+                  return { value: venue.id, label: venue.ownerId ? `${venue.name} — free on ${owner ? ownerLabel(owner) : "a partner"}` : venue.name };
+                }),
+              ]}
             />
           )}
         </div>
         <div>
           <label className={adminLabel}>Partner</label>
-          <AdminSelect
-            ariaLabel="Partner"
-            className={`${adminField} admin-select-bordered`}
-            value={ownerId}
-            onChange={(value) => {
-              setOwnerId(value);
-              resetAnswer();
-            }}
-            options={[{ value: "", label: "Choose a partner…" }, ...ownerOptions]}
-          />
+          {selectedVenue?.ownerId ? (
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-800">
+              {lockedOwner ? ownerLabel(lockedOwner) : "The partner it is free with"}
+              <span className="block text-xs text-slate-600">
+                This venue is already on their account, free. It can only be moved onto their bill.
+              </span>
+            </p>
+          ) : (
+            <AdminSelect
+              ariaLabel="Partner"
+              className={`${adminField} admin-select-bordered`}
+              value={pickedOwnerId}
+              onChange={(value) => {
+                setPickedOwnerId(value);
+                resetAnswer();
+              }}
+              options={[{ value: "", label: "Choose a partner…" }, ...ownerOptions]}
+            />
+          )}
         </div>
         <fieldset>
           <legend className={adminLabel}>Billing</legend>
@@ -246,7 +279,9 @@ export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVen
                 ["bill", "Add to their bill", "Charged to their card now (prorated), like adding it themselves. Check-billed: added, nothing charged."],
                 ["comped", "Free (comped)", "On their account, on no bill. Never charged."],
               ] as const
-            ).map(([value, label, help]) => (
+            )
+              .filter(([value]) => !selectedVenue?.ownerId || value === "bill")
+              .map(([value, label, help]) => (
               <label
                 key={value}
                 className={`flex cursor-pointer gap-3 rounded-lg border px-3 py-2 ${mode === value ? "border-indigo-500 bg-indigo-50" : "border-slate-300"}`}
@@ -257,7 +292,7 @@ export function LinkVenueToPartner({ open, owners, onClose, onChanged }: LinkVen
                   value={value}
                   checked={mode === value}
                   onChange={() => {
-                    setMode(value);
+                    setPickedMode(value);
                     resetAnswer();
                   }}
                   className="mt-1"

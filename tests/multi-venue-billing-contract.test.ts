@@ -232,8 +232,16 @@ describe("multi-venue billing — Add a venue contract", () => {
       "app/api/owner/venues/remove/route.ts",
       "components/owner/billing/BillVenuesPanel.tsx",
       "app/owner/billing/page.tsx",
+      // Phase 6.4 (review #8): the admin surfaces too — cents AND dollar-label spellings.
+      "components/admin/sections/BillingSection.tsx",
+      "components/admin/billing/LinkVenueToPartner.tsx",
+      "lib/adminAttachFlow.ts",
+      "lib/adminVenueAttach.ts",
+      "lib/billingCustomPrice.ts",
     ]) {
       expect(read(rel), rel).not.toMatch(/\b(10000|7500|6000|4500)\b/);
+      // Dollar-label spellings in CODE (comments may quote an example such as "1 × $100").
+      expect(stripComments(read(rel)), rel).not.toMatch(/\$(100|75|60|45)\b/);
     }
   });
 
@@ -249,5 +257,123 @@ describe("multi-venue billing — Add a venue contract", () => {
     // Both partner flows give an unrated Price its true refusal (custom_rate / billing_state).
     expect(stripComments(read(FLOW))).toContain("code: unratedItemRefusal(item)");
     expect(stripComments(read("lib/venueRemoval.ts"))).toContain("code: unratedItemRefusal(item)");
+  });
+
+  it("Phase 6.3: Checkout refuses a venue already on a partner's account, before any Stripe call, not flag-gated", () => {
+    const route = stripComments(read("app/api/owner/billing/checkout/route.ts"));
+    const refusal = route.indexOf("if (refusesOwnBill(unbilledState)) return onPartnerBillResponse(");
+    expect(route).toContain("unbilledVenueStates([venueId], new Map([[venueId, auth.ownerId]]))");
+    expect(route).toContain("code: ON_PARTNER_BILL_CODE");
+    expect(refusal).toBeGreaterThan(-1);
+    // Before every Stripe call and before the abandoned-Checkout sweep.
+    for (const stripeCall of ["readStripeTruth(", "stripeClient.subscriptions.cancel(", "sweepAbandonedIncompleteSubscriptions(stripe", "stripe.checkout.sessions.create("]) {
+      expect(route.indexOf(stripeCall), stripeCall).toBeGreaterThan(refusal);
+    }
+    // The stale-mirror path asks the same question before the sweep.
+    expect(route.indexOf("otherLiveBillOfOwner(")).toBeLessThan(route.indexOf("sweepAbandonedIncompleteSubscriptions(stripe"));
+    expect(route).not.toContain("isMultiVenueBillingEnabled");
+    expect(stripComments(read("lib/multiVenueBilling.ts"))).toContain('ON_PARTNER_BILL_CODE = "on_partner_bill"');
+  });
+
+  it("Phase 6.3: removed / comped come from the one classifier; the admin list's inline derivation is gone", () => {
+    const admin = stripComments(read("app/api/admin/billing/route.ts"));
+    expect(admin).not.toContain("ownersWithLiveBill");
+    expect(admin).toContain("unbilledVenueStates(");
+    expect(stripComments(read("app/api/owner/billing/route.ts"))).toContain("unbilledVenueStates(");
+    const definers = sources.filter((rel) => /export async function unbilledVenueStates\b/.test(read(rel)));
+    expect(definers).toEqual(["lib/venueBilling.ts"]);
+  });
+});
+
+describe("multi-venue billing — Phase 6.4 admin Link a venue", () => {
+  const LINK = "components/admin/billing/LinkVenueToPartner.tsx";
+  const BILLING_SECTION = "components/admin/sections/BillingSection.tsx";
+  const ADMIN_ROUTE = "app/api/admin/billing/route.ts";
+
+  it("#5: the idempotency key is cleared only through the shared reply classifier, never on any non-ok reply", () => {
+    const src = stripComments(read(LINK));
+    expect(src).toContain("interpretAdminAttachReply(status, json)");
+    // Exactly the refusal branch (and the post-success reset) may clear it.
+    expect(src.match(/setAttemptKey\(null\)/g)?.length ?? 0).toBeLessThanOrEqual(4);
+    const confirm = src.slice(src.indexOf("const confirm = async"), src.indexOf("const startConfirm"));
+    const refusal = confirm.slice(confirm.indexOf('outcome.kind === "refused"'), confirm.indexOf('outcome.kind === "unconfirmed"'));
+    expect(refusal).toContain("setAttemptKey(null)");
+    const unconfirmed = confirm.slice(confirm.indexOf('outcome.kind === "unconfirmed"'), confirm.indexOf('outcome.kind === "comped"'));
+    expect(unconfirmed).not.toContain("setAttemptKey(null)");
+    expect(unconfirmed).toContain("setCanCheckAgain(true)");
+    // One classification rule: the admin reader builds on the partner flow's, not a copy of it.
+    const flow = stripComments(read("lib/adminAttachFlow.ts"));
+    expect(flow).toContain("interpretAddVenueReply(httpStatus, body)");
+    expect(flow).toContain("refusalEndsAttempt(httpStatus, outcome.code)");
+  });
+
+  it("#6: the Link sheet and the bill line never read partners or anchor names from the search-filtered list", () => {
+    const section = stripComments(read(BILLING_SECTION));
+    expect(section).not.toContain("linkOwners");
+    expect(section).not.toMatch(/partners\.find\(\(p\) => p\.venueId === (anchorId|partner\.bill\?\.anchorVenueId)\)/);
+    expect(section).toContain("partner.bill.anchorVenueName");
+    const link = stripComments(read(LINK));
+    expect(link).toContain("attach-options");
+    expect(link).toContain("payload.owners");
+    const route = stripComments(read(ADMIN_ROUTE));
+    expect(route).toContain("anchorVenueName: venueNameById.get(sub.venue_id)");
+  });
+
+  it("#7: attach-options finds comped venues with the shared classifier, not a copy", () => {
+    const route = stripComments(read(ADMIN_ROUTE));
+    const fn = route.slice(route.indexOf("async function attachOptions"), route.indexOf("type PostBody"));
+    expect(fn).toContain("unbilledVenueStates(");
+    expect(fn).toContain('kind === "comped"');
+  });
+
+  it("#8: the standard-pricing label is built from VENUE_PRICE_TIERS", () => {
+    expect(stripComments(read(BILLING_SECTION))).toContain("venuePriceBandsLabel()");
+    const pricing = stripComments(read("lib/venuePricing.ts"));
+    expect(pricing.slice(pricing.indexOf("export const venuePriceBandsLabel"))).toContain("VENUE_PRICE_TIERS.map");
+  });
+});
+
+describe("multi-venue billing — Phase 6.5 quote-vs-Confirm rate", () => {
+  it("every add path sends the quoted price, and the server checks it after the claim and before any Stripe write", () => {
+    const addition = stripComments(read("lib/venueAddition.ts"));
+    const start = addition.slice(addition.indexOf("export async function startVenueAddition"));
+    const check = start.indexOf("quotedPriceMatches(args.quotedVenueCents");
+    expect(check).toBeGreaterThan(start.indexOf("postClaimCheck(context, live"));
+    expect(check).toBeLessThan(start.indexOf("findNearbyVenue("));
+    expect(check).toBeLessThan(start.indexOf("stripe.subscriptions.update("));
+    expect(stripComments(read("app/api/owner/venues/add/route.ts"))).toContain("quotedVenueCents: body.quotedVenueCents");
+    expect(stripComments(read("lib/adminVenueAttach.ts"))).toContain("quotedVenueCents: args.quotedVenueCents");
+    expect(stripComments(read("app/api/admin/billing/route.ts"))).toContain("quotedVenueCents: body.quotedVenueCents");
+    expect(stripComments(read("components/owner/add-venue/AddVenueSheet.tsx"))).toContain("quotedVenueCents: quote.status === \"ready\" ? quote.quote.thisVenueCents");
+    expect(stripComments(read("components/owner/billing/BillVenuesPanel.tsx"))).toContain("quotedVenueCents: sentQuote.thisVenueCents");
+    expect(stripComments(read("components/admin/billing/LinkVenueToPartner.tsx"))).toContain("quotedVenueCents: preview.quote.thisVenueCents");
+  });
+
+  it("grant-manual refuses a second bill with the shared rule, before the upsert; Checkout uses the same rule", () => {
+    const route = stripComments(read("app/api/admin/billing/route.ts"));
+    const grant = route.slice(route.indexOf('body.action !== "grant-manual"'));
+    const guard = grant.indexOf("refusesOwnBill(unbilledState)");
+    expect(guard).toBeGreaterThan(0);
+    expect(guard).toBeLessThan(grant.indexOf('.from("billing_subscriptions")\n    .upsert('));
+    expect(guard).toBeLessThan(grant.indexOf("cancelSubscription("));
+    expect(route).toContain("grantOfflineBlocked: refusesOwnBill(");
+    const checkout = stripComments(read("app/api/owner/billing/checkout/route.ts"));
+    expect(checkout).not.toMatch(/const refusesOwnBill\s*=/);
+    expect(checkout).toContain("refusesOwnBill(unbilledState)");
+    expect(stripComments(read("lib/venueBilling.ts"))).toContain("export const refusesOwnBill");
+  });
+
+  it("review fixes: admin card attach settles stale changes and respects an in-flight add; Add back re-asks re-send the quote", () => {
+    const attach = stripComments(read("lib/adminVenueAttach.ts"));
+    const settle = attach.indexOf("settleStaleVenueChangesForBill(context.context.bill.id)");
+    expect(settle).toBeGreaterThan(attach.indexOf("loadAddVenueContext(auth, bill.venue_id)"));
+    expect(settle).toBeLessThan(attach.indexOf("quoteVenueAddition(context.context)"));
+    expect(settle).toBeLessThan(attach.indexOf("startVenueAddition({"));
+    const inFlight = attach.indexOf("venueAdditionInFlight(venueId)");
+    expect(inFlight).toBeGreaterThan(0);
+    expect(inFlight).toBeLessThan(attach.indexOf("ensureOwnerLink(ownerId, venueId)"));
+    const panel = stripComments(read("components/owner/billing/BillVenuesPanel.tsx"));
+    expect(panel).toContain("const sentQuote = quotedRef.current");
+    expect(panel).toContain("quotedVenueCents: sentQuote.thisVenueCents");
   });
 });

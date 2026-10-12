@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
-import { loadBillingForVenues } from "@/lib/venueBilling";
+import { loadBillingForVenues, unbilledVenueStates } from "@/lib/venueBilling";
 import { isMultiVenueBillingEnabled, type BillAccount } from "@/lib/multiVenueBilling";
 import { loadBillAccount } from "@/lib/venueRemoval";
 
@@ -79,6 +79,36 @@ export async function GET(request: Request) {
     subscriptions.push(row);
   }
 
+  // Phase 6.3: the caller's venues that no live bill covers but that sit on their account for free
+  // (comped). Shown as "Included on your account at no charge", never as something to subscribe to.
+  // Not flag-gated (comped links exist while the multi-venue flag is off). No reads at all for the
+  // usual partner, whose every venue is on their live bill.
+  const uncovered = auth.venueIds.filter((venueId) => {
+    const row = billing.byVenue.get(venueId);
+    return !row || row.status === "cancelled";
+  });
+  let compedVenues: Array<{ id: string; name: string }> = [];
+  if (uncovered.length > 0) {
+    const states = await unbilledVenueStates(uncovered, new Map(uncovered.map((venueId) => [venueId, auth.ownerId])));
+    if (!states.ok) {
+      console.error(`[OwnerBilling] unbilled-read-failed owner=${auth.ownerId}: ${states.error}`);
+    } else {
+      const compedIds = uncovered.filter((venueId) => states.byVenue.get(venueId)?.kind === "comped");
+      if (compedIds.length > 0) {
+        const { data: venues, error: venueError } = await supabaseAdmin
+          .from("venues")
+          .select("id, name")
+          .in("id", compedIds)
+          .returns<{ id: string; name: string | null }[]>();
+        if (venueError) console.error(`[OwnerBilling] comped-venue-read-failed owner=${auth.ownerId}: ${venueError.message}`);
+        const names = new Map((venues ?? []).map((venue) => [venue.id, (venue.name ?? "").trim() || venue.id]));
+        compedVenues = compedIds
+          .map((id) => ({ id, name: names.get(id) ?? id }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+      }
+    }
+  }
+
   const { data: invoices, error: invError } = await supabaseAdmin
     .from("billing_invoices")
     .select("id, subscription_id, venue_id, description, amount_cents, status, charged_at")
@@ -117,6 +147,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     venueIds: auth.venueIds,
+    compedVenues,
     subscriptions: subscriptions.map((s) => ({
       id: s.id,
       venueId: s.venue_id,

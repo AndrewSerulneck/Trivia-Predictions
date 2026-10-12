@@ -345,6 +345,143 @@ export async function venueIdsEverBilled(venueIds: readonly string[]): Promise<V
 }
 
 /**
+ * Why a venue that NO live bill covers is in that state (Phase 6.3, review #2 and #4):
+ *   - `removed`  — it was on a bill and was taken off it (Phase 5's Remove; its membership row keeps
+ *                  `removed_at`). `anchorVenueId` is that bill's anchor today (null if unreadable).
+ *   - `comped`   — it was never on any bill, and its partner has a live bill for another venue: the
+ *                  admin gave it free (Phase 6 "Free (comped)"), or it is a partner's internal venue.
+ *   - `unbilled` — anything else. `ownerBillId` is set when the partner still has a live bill that
+ *                  does not cover this venue (e.g. this venue's own old bill was cancelled).
+ * A removed or comped venue is NOT "no bill": Checkout must not open a second subscription for it.
+ */
+export type UnbilledVenueState =
+  | { kind: "removed"; subscriptionId: string; anchorVenueId: string | null; removedAt: string | null; ownerBillId: string | null }
+  | { kind: "comped"; ownerBillId: string }
+  | { kind: "unbilled"; ownerBillId: string | null };
+
+type StateBillRow = { id: string; venue_id: string; status: string; owner_id: string | null };
+
+/**
+ * `unbilledVenueStates(venueIds, ownerIdByVenue)` — the state of each of these venues that no live
+ * (non-`cancelled`) bill covers; a venue a live bill covers is left out of the map. `ownerIdByVenue`
+ * is the partner each venue is linked to (`venue_owner_venues`).
+ *
+ * Reads, all bounded by the input: memberships of these venues (ANY state — a removed row is the
+ * evidence), bills anchored on them (any status — "ever on a bill"), and the partners' live bills,
+ * in parallel; then, only if a membership points at a bill none of those returned, that bill by id.
+ * A missing membership table reads as "no rows" (anchors still count). Any other error is
+ * `ok: false`, and callers that refuse on the answer (Checkout) fail CLOSED on it.
+ */
+export async function unbilledVenueStates(
+  venueIds: readonly string[],
+  ownerIdByVenue: ReadonlyMap<string, string>
+): Promise<{ ok: true; byVenue: Map<string, UnbilledVenueState> } | { ok: false; error: string }> {
+  if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
+  const db = supabaseAdmin;
+  const ids = Array.from(new Set(venueIds.filter((id) => typeof id === "string" && id.trim() !== "")));
+  const byVenue = new Map<string, UnbilledVenueState>();
+  if (ids.length === 0) return { ok: true, byVenue };
+  const ownerIds = Array.from(new Set(ids.map((id) => ownerIdByVenue.get(id)).filter((id): id is string => Boolean(id))));
+  const BILL_COLUMNS = "id, venue_id, status, owner_id";
+
+  const [memberships, anchors, ownerBills] = await Promise.all([
+    db.from(BILLING_MEMBERSHIP_TABLE).select(MEMBERSHIP_COLUMNS).in("venue_id", ids).returns<BillMembership[]>(),
+    db.from("billing_subscriptions").select(BILL_COLUMNS).in("venue_id", ids).returns<StateBillRow[]>(),
+    ownerIds.length > 0
+      ? db.from("billing_subscriptions").select(BILL_COLUMNS).in("owner_id", ownerIds).neq("status", "cancelled").returns<StateBillRow[]>()
+      : Promise.resolve({ data: [] as StateBillRow[], error: null }),
+  ]);
+
+  let membershipRows: BillMembership[] = [];
+  if (memberships.error) {
+    if (!isMissingMembershipTable(memberships.error)) {
+      return { ok: false, error: `membership-read-failed: ${memberships.error.message ?? "unknown"}` };
+    }
+    noteMissingTable();
+  } else {
+    membershipRows = Array.isArray(memberships.data) ? memberships.data : [];
+  }
+  if (anchors.error) return { ok: false, error: `billing-read-failed: ${anchors.error.message}` };
+  if (ownerBills.error) return { ok: false, error: `billing-read-failed: ${ownerBills.error.message}` };
+
+  const billById = new Map<string, StateBillRow>();
+  for (const row of [...(anchors.data ?? []), ...(ownerBills.data ?? [])]) billById.set(row.id, row);
+  const missingBillIds = Array.from(
+    new Set(membershipRows.map((row) => row.subscription_id).filter((id) => !billById.has(id)))
+  );
+  if (missingBillIds.length > 0) {
+    const bills = await db.from("billing_subscriptions").select(BILL_COLUMNS).in("id", missingBillIds).returns<StateBillRow[]>();
+    if (bills.error) return { ok: false, error: `billing-read-failed: ${bills.error.message}` };
+    for (const row of bills.data ?? []) billById.set(row.id, row);
+  }
+
+  const membershipByVenue = new Map(membershipRows.map((row) => [row.venue_id, row]));
+  const anchoredVenues = new Set((anchors.data ?? []).map((row) => row.venue_id));
+  const isLive = (bill: StateBillRow | undefined): boolean => Boolean(bill) && !isCancelled(bill);
+
+  for (const venueId of ids) {
+    const membership = membershipByVenue.get(venueId);
+    const ownBill = (anchors.data ?? []).find((row) => row.venue_id === venueId);
+    // Covered by a live bill (the resolver's rules 1–2): not this function's question.
+    if (isLive(ownBill)) continue;
+    if (membership && !membership.removed_at && isLive(billById.get(membership.subscription_id))) continue;
+
+    const ownerId = ownerIdByVenue.get(venueId);
+    const ownerBill = (ownerBills.data ?? [])
+      .filter((row) => row.owner_id === ownerId && !isCancelled(row))
+      .sort((a, b) => a.id.localeCompare(b.id))[0];
+    const ownerBillId = ownerBill?.id ?? null;
+
+    if (membership?.removed_at) {
+      byVenue.set(venueId, {
+        kind: "removed",
+        subscriptionId: membership.subscription_id,
+        anchorVenueId: billById.get(membership.subscription_id)?.venue_id ?? null,
+        removedAt: membership.removed_at,
+        ownerBillId,
+      });
+    } else if (!membership && !anchoredVenues.has(venueId) && ownerBillId) {
+      byVenue.set(venueId, { kind: "comped", ownerBillId });
+    } else {
+      byVenue.set(venueId, { kind: "unbilled", ownerBillId });
+    }
+  }
+  return { ok: true, byVenue };
+}
+
+/**
+ * Must this venue NOT open a bill of its own? Removed from a bill, comped, or its partner already
+ * has a live bill for another venue — one bill per partner (plan §2). Owner Checkout (Phase 6.3)
+ * and the admin "Grant offline" (Phase 6.5) both refuse on it; `undefined` = a live bill already
+ * covers the venue (renewing it is not a second bill).
+ */
+export const refusesOwnBill = (state: UnbilledVenueState | undefined): state is UnbilledVenueState =>
+  state !== undefined && (state.kind !== "unbilled" || state.ownerBillId !== null);
+
+/**
+ * A live (non-`cancelled`) bill of this partner other than `exceptBillId`, or `billId: null`.
+ * Checkout's "one bill per partner" check for the case the classifier above cannot see: a venue
+ * whose own bill looked live in our mirror but turned out dead at Stripe.
+ */
+export async function otherLiveBillOfOwner(
+  ownerId: string,
+  exceptBillId: string
+): Promise<{ ok: true; billId: string | null } | { ok: false; error: string }> {
+  if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
+  const { data, error } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("id")
+    .eq("owner_id", ownerId)
+    .neq("status", "cancelled")
+    .neq("id", exceptBillId)
+    .order("id", { ascending: true })
+    .limit(1)
+    .returns<{ id: string }[]>();
+  if (error) return { ok: false, error: `billing-read-failed: ${error.message}` };
+  return { ok: true, billId: data?.[0]?.id ?? null };
+}
+
+/**
  * Every venue currently on a bill (anchor first, then the others by venue id). Used to count
  * venues for pricing (Phase 3) and to act on a whole bill. Removed venues are left out unless
  * `includeRemoved` — which the admin venue delete needs, because a removed venue's history row

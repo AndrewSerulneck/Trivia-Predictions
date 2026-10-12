@@ -10,7 +10,27 @@ import {
   type BillingRowState,
   type ClassifiableBillingRow,
 } from "@/lib/billing";
-import { loadBillingForVenue } from "@/lib/venueBilling";
+import {
+  loadBillingForVenue,
+  otherLiveBillOfOwner,
+  refusesOwnBill,
+  unbilledVenueStates,
+  type UnbilledVenueState,
+} from "@/lib/venueBilling";
+import { ON_PARTNER_BILL_CODE, ON_PARTNER_BILL_MESSAGES, onPartnerBillMessageKey } from "@/lib/multiVenueBilling";
+
+/**
+ * Multi-venue billing Phase 6.3 (review #4): one subscription per partner. NOT flag-gated — comped
+ * links (admin "Free (comped)") exist while the multi-venue flag is off. Copy: lib/multiVenueBilling.ts.
+ */
+const onPartnerBillResponse = (venueId: string, state: UnbilledVenueState): NextResponse => {
+  const key = onPartnerBillMessageKey(state.kind);
+  console.warn(`[OwnerCheckout] on-partner-bill venue=${venueId} state=${state.kind} ownerBill=${state.ownerBillId ?? "none"}`);
+  return NextResponse.json(
+    { ok: false, error: ON_PARTNER_BILL_MESSAGES[key], code: ON_PARTNER_BILL_CODE },
+    { status: 409 }
+  );
+};
 
 type CheckoutBody = {
   venueId?: string;
@@ -80,6 +100,20 @@ export async function POST(request: Request) {
     );
   }
   const existing = billing.row;
+
+  // Phase 6.3: is this venue comped, removed, or a second venue of a partner who already pays?
+  // Answered for a venue no live bill covers — before any Stripe call and before the
+  // abandoned-Checkout sweep. Fails CLOSED on a read error, like the billing read above.
+  const states = await unbilledVenueStates([venueId], new Map([[venueId, auth.ownerId]]));
+  if (!states.ok) {
+    console.error(`[OwnerCheckout] billing-read-failed venue=${venueId}: ${states.error}`);
+    return NextResponse.json(
+      { ok: false, error: "We couldn't check this venue's billing. Please try again in a few minutes." },
+      { status: 503 }
+    );
+  }
+  const unbilledState = states.byVenue.get(venueId);
+  if (refusesOwnBill(unbilledState)) return onPartnerBillResponse(venueId, unbilledState);
 
   if (existing) {
     // Offline/check-payer rows are tokenless by design (grant-manual nulls every
@@ -247,6 +281,20 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
+  }
+
+  // The rare path above where this venue's own bill LOOKED live but Stripe said it is dead: the
+  // classifier counted the venue as covered, so ask the same "second bill?" question here.
+  if (existing && existing.status !== "cancelled") {
+    const other = await otherLiveBillOfOwner(auth.ownerId, existing.id);
+    if (!other.ok) {
+      console.error(`[OwnerCheckout] billing-read-failed venue=${venueId}: ${other.error}`);
+      return NextResponse.json(
+        { ok: false, error: "We couldn't check this venue's billing. Please try again in a few minutes." },
+        { status: 503 }
+      );
+    }
+    if (other.billId) return onPartnerBillResponse(venueId, { kind: "unbilled", ownerBillId: other.billId });
   }
 
   const origin = request.headers.get("origin") ?? new URL(request.url).origin;

@@ -93,12 +93,13 @@ describe("what each screen needs (the signup rules)", () => {
 });
 
 describe("buildAddVenueBody", () => {
-  it("trims and upper-cases, and carries the key, the bill's venue and the quote's proration date", () => {
+  it("trims and upper-cases, and carries the key, the bill's venue and the quote's proration date and price", () => {
     const body = buildAddVenueBody({
       draft: { ...pinnedDraft(), venueName: "  Murphy's  ", state: "co" },
       idempotencyKey: "key-12345678",
       venueId: "venue-a",
       prorationDate: 1_760_000_000,
+      quotedVenueCents: 7500,
     });
     expect(body).toMatchObject({
       idempotencyKey: "key-12345678",
@@ -109,16 +110,18 @@ describe("buildAddVenueBody", () => {
       longitude: -104.99,
       radius: 150,
       prorationDate: 1_760_000_000,
+      quotedVenueCents: 7500,
     });
   });
 
-  it("omits prorationDate when there is no quote", () => {
-    const body = buildAddVenueBody({ draft: pinnedDraft(), idempotencyKey: "key-12345678", venueId: "v", prorationDate: null });
+  it("omits prorationDate and quotedVenueCents when there is no quote", () => {
+    const body = buildAddVenueBody({ draft: pinnedDraft(), idempotencyKey: "key-12345678", venueId: "v", prorationDate: null, quotedVenueCents: null });
     expect("prorationDate" in body).toBe(false);
+    expect("quotedVenueCents" in body).toBe(false);
   });
 
   it("never sends an account name, email or password", () => {
-    const body = buildAddVenueBody({ draft: pinnedDraft(), idempotencyKey: "key-12345678", venueId: "v", prorationDate: null });
+    const body = buildAddVenueBody({ draft: pinnedDraft(), idempotencyKey: "key-12345678", venueId: "v", prorationDate: null, quotedVenueCents: null });
     expect(Object.keys(body)).not.toEqual(expect.arrayContaining(["email"]));
     expect(Object.keys(body)).not.toEqual(expect.arrayContaining(["password"]));
     expect(Object.keys(body)).not.toEqual(expect.arrayContaining(["name"]));
@@ -163,6 +166,16 @@ describe("interpretAddVenueReply", () => {
   it("payment_unconfirmed → never invites a new attempt", () => {
     const outcome = interpretAddVenueReply(503, { ok: false, code: "payment_unconfirmed", error: "Not sure yet." });
     expect(outcome).toEqual({ kind: "unconfirmed", message: "Not sure yet." });
+  });
+
+  it("any 5xx is unconfirmed (keep the key), even with a known code — it can follow a charge (Phase 6.5)", () => {
+    expect(interpretAddVenueReply(500, { ok: false, code: "addition_failed", error: "Something went wrong." })).toEqual({
+      kind: "unconfirmed",
+      message: "Something went wrong.",
+    });
+    expect(interpretAddVenueReply(503, { ok: false, code: "stripe_unavailable" })).toMatchObject({ kind: "unconfirmed" });
+    expect(interpretAddVenueReply(502, { ok: false, code: "mystery" })).toMatchObject({ kind: "unconfirmed" });
+    expect(interpretAddVenueReply(409, { ok: false, code: "addition_failed" })).toMatchObject({ kind: "refused" });
   });
 
   it("a gateway page with no JSON body on a 5xx is unconfirmed, not a refusal", () => {

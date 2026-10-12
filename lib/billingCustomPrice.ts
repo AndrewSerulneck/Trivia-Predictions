@@ -404,8 +404,8 @@ export async function setCustomPrice(
 }
 
 /**
- * Put a bill back on the standard graduated bands ($100 / $75 / $60 / $45),
- * keeping its venue count — the undo of a negotiated per-venue rate. Same
+ * Put a bill back on the standard graduated bands (`VENUE_PRICE_TIERS` in
+ * lib/venuePricing.ts), keeping its venue count — the undo of a negotiated per-venue rate. Same
  * next-cycle, no-proration rule as setCustomPrice.
  */
 export async function setStandardPrice(row: CustomPriceRow): Promise<SetCustomPriceResult> {

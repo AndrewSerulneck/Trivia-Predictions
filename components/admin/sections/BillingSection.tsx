@@ -6,7 +6,8 @@ import { MobileBottomSheet } from "@/components/admin/mobile/MobileBottomSheet";
 import { AdminModalSheet } from "@/components/admin/AdminModalSheet";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { LinkVenueToPartner } from "@/components/admin/billing/LinkVenueToPartner";
-import { billSummaryLine, type AdminPartnerBill } from "@/lib/adminBillView";
+import { billSummaryLine, removedFromLine, type AdminPartnerBill, type AdminRemovedFrom } from "@/lib/adminBillView";
+import { venuePriceBandsLabel } from "@/lib/venuePricing";
 
 // Mirrors lib/billingCustomPrice.ts's MIN/MAX_CUSTOM_PRICE_DOLLARS — that file
 // is "server-only" and cannot be imported from this client component, so the
@@ -66,8 +67,15 @@ type Partner = {
   ownerName: string;
   /** The bill this venue is on (multi-venue billing Phase 6): venue count, bands, total. */
   bill: AdminPartnerBill | null;
-  /** Linked to a partner who pays for another venue, but on no bill itself = free. */
+  /** Never on any bill, linked to a partner who pays for another venue = free. */
   comped: boolean;
+  /** Taken off a bill (Remove) and on no bill now — never "Comped" (Phase 6.3). */
+  removedFrom: AdminRemovedFrom | null;
+  /**
+   * "Grant offline" would open this partner a SECOND bill (removed, comped, or they already pay on
+   * another venue's bill — Phase 6.5). The server's own rule (`refusesOwnBill`); POST refuses it too.
+   */
+  grantOfflineBlocked: boolean;
   subscription: PartnerSubscription | null;
 };
 
@@ -82,6 +90,9 @@ const formatUsd = (cents: number): string => `$${(cents / 100).toFixed(2).replac
 
 const statusBadge = (partner: Partner): { label: string; className: string } => {
   const sub = partner.subscription;
+  if (!sub && partner.removedFrom) {
+    return { label: "Removed", className: "bg-slate-100 text-slate-600" };
+  }
   if (!sub && partner.comped) {
     return { label: "Comped (free)", className: "bg-sky-100 text-sky-800" };
   }
@@ -115,6 +126,8 @@ const statusBadge = (partner: Partner): { label: string; className: string } => 
  * they live on the anchor venue's row only (the server refuses them here too, `not_bill_anchor`).
  */
 const isOnOthersBill = (partner: Partner): boolean => Boolean(partner.bill && !partner.bill.isAnchor);
+
+const GRANT_BLOCKED_HINT = "This partner already has a bill — use Link a venue → Add to their bill (or their Add back).";
 
 const hasLiveCardSubscription = (partner: Partner): boolean =>
   Boolean(
@@ -213,19 +226,20 @@ export function BillingSection() {
   }, []);
 
   const billLine = (partner: Partner): string | null => {
+    // The anchor's name comes from the server, which read it before the search filter: the anchor row may be
+    // one the search box hides, so it is never looked up in `partners` (Phase 6.4, review #6).
+    if (!partner.bill && partner.removedFrom) {
+      return removedFromLine(partner.removedFrom, {
+        anchorName: partner.removedFrom.anchorVenueName ?? partner.removedFrom.anchorVenueId,
+        formatDate,
+      });
+    }
     if (!partner.bill) return null;
-    const anchor = partners.find((p) => p.venueId === partner.bill?.anchorVenueId);
     return billSummaryLine(partner.bill, {
       isManual: Boolean(partner.subscription?.isManual),
-      anchorName: anchor?.venueName ?? partner.bill.anchorVenueId,
+      anchorName: partner.bill.anchorVenueName ?? partner.bill.anchorVenueId,
     });
   };
-
-  const linkOwners = useMemo(
-    () =>
-      Array.from(new Map(partners.map((p) => [p.ownerId, { id: p.ownerId, email: p.ownerEmail, name: p.ownerName }])).values()),
-    [partners]
-  );
 
   const openGrant = (partner: Partner) => {
     const sub = partner.subscription;
@@ -706,11 +720,13 @@ export function BillingSection() {
                         <button
                           type="button"
                           onClick={() => openGrant(partner)}
-                          disabled={hasLiveCard}
+                          disabled={hasLiveCard || partner.grantOfflineBlocked}
                           title={
                             hasLiveCard
                               ? "This venue has a live card subscription — cancel it (Revoke) before granting offline access."
-                              : undefined
+                              : partner.grantOfflineBlocked
+                                ? GRANT_BLOCKED_HINT
+                                : undefined
                           }
                           className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -793,7 +809,7 @@ export function BillingSection() {
                     setDetailVenueId(null);
                     openGrant(partner);
                   }}
-                  disabled={hasLiveCard}
+                  disabled={hasLiveCard || partner.grantOfflineBlocked}
                   className="min-h-[44px] w-full rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {partner.subscription?.isManual ? "Extend / edit" : "Grant offline"}
@@ -803,6 +819,8 @@ export function BillingSection() {
                     This venue has a live card subscription — cancel it (Revoke) before granting
                     offline access.
                   </p>
+                ) : partner.grantOfflineBlocked ? (
+                  <p className="text-xs text-slate-500">{GRANT_BLOCKED_HINT}</p>
                 ) : null}
                 {partner.subscription && partner.subscription.status !== "cancelled" ? (
                   <button
@@ -849,7 +867,6 @@ export function BillingSection() {
 
       <LinkVenueToPartner
         open={linkOpen}
-        owners={linkOwners}
         onClose={() => setLinkOpen(false)}
         onChanged={() => void fetchPartners(search)}
       />
@@ -1185,7 +1202,7 @@ export function BillingSection() {
               disabled={rateSubmitting}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
-              Back to standard pricing ($100 / $75 / $60 / $45)
+              Back to standard pricing ({venuePriceBandsLabel()})
             </button>
           ) : null}
           {rateUsePriceId ? (

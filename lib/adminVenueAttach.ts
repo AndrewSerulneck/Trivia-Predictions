@@ -18,6 +18,7 @@ import {
   loadAddVenueContext,
   quoteVenueAddition,
   startVenueAddition,
+  venueAdditionInFlight,
   type AddVenueOutcome,
 } from "@/lib/venueAddition";
 import {
@@ -30,6 +31,7 @@ import {
   loadBillingForVenues,
 } from "@/lib/venueBilling";
 import { isPlaceholderVenueRow } from "@/lib/venueClaim";
+import { settleStaleVenueChangesForBill } from "@/lib/venueRemoval";
 import { monthlyTotalCents } from "@/lib/venuePricing";
 
 /**
@@ -61,6 +63,8 @@ export type AdminAttachArgs = {
   clientKey?: string;
   /** Card bill only: from the preview's quote. */
   prorationDate?: unknown;
+  /** Card bill only: the preview quote's `thisVenueCents` (a changed price is refused `quote_changed`). */
+  quotedVenueCents?: unknown;
 };
 
 export type AdminAttachOutcome =
@@ -159,6 +163,12 @@ export async function attachVenueToOwner(args: AdminAttachArgs): Promise<AdminAt
     if (ownBill.row && ownBill.row.venue_id === venueId) return refuse("venue_has_own_bill");
     const membership = await billMembershipOf(venueId);
     if (!membership.ok) return failed(membership.error);
+    // A card add for this venue still waiting on its payment (3-D Secure) has not linked it yet:
+    // never comp it, or put it on another partner's bill, underneath that add. The same partner's
+    // bill add goes on to `startVenueAddition`, which answers a re-ask of the same key from its row.
+    const inFlight = await venueAdditionInFlight(venueId);
+    if (!inFlight.ok) return failed(inFlight.error);
+    if (inFlight.ownerId && (args.mode === "comped" || inFlight.ownerId !== ownerId)) return refuse("venue_add_in_flight");
 
     // 5. The partner's venues and bill.
     const ownerLinks = await supabaseAdmin
@@ -241,6 +251,9 @@ export async function attachVenueToOwner(args: AdminAttachArgs): Promise<AdminAt
     const auth = { ownerId, venueIds: ownerVenueIds };
     const context = await loadAddVenueContext(auth, bill.venue_id);
     if (!context.ok) return context;
+    // As the partner's own add and quote routes do: a Remove / Undo / price swap that died mid-request
+    // would otherwise keep this bill "busy" (every Check again) until the daily cron.
+    await settleStaleVenueChangesForBill(context.context.bill.id);
     if (args.preview) {
       const quoted = await quoteVenueAddition(context.context);
       if (!quoted.ok) return quoted;
@@ -253,6 +266,7 @@ export async function attachVenueToOwner(args: AdminAttachArgs): Promise<AdminAt
       adminAttachVenue: venue,
       clientKey: args.clientKey ?? "",
       prorationDate: args.prorationDate,
+      quotedVenueCents: args.quotedVenueCents,
     });
     if (!outcome.ok) return outcome;
     console.log(`${LOG} card-add venue=${venueId} owner=${ownerId} bill=${bill.id} status=${outcome.status}`);

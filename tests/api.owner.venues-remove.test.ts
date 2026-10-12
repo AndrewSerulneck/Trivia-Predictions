@@ -102,7 +102,7 @@ import { POST as cronPOST } from "@/app/api/cron/billing/route";
 import { VENUE_ADDITION_LEASE_MS } from "@/lib/venueAddition";
 import { billedVenueCount, venueIdsOnBill } from "@/lib/venueBilling";
 import { applyDueVenueRemovals, reconcileStaleVenueChanges } from "@/lib/venueRemoval";
-import { GRADUATED_PRICE_LOOKUP_KEY } from "@/lib/venuePricing";
+import { CUSTOM_PER_VENUE_LOOKUP_PREFIX, GRADUATED_PRICE_LOOKUP_KEY, nextVenuePriceCents } from "@/lib/venuePricing";
 
 // --- RPC ports -------------------------------------------------------------------------------------
 
@@ -277,6 +277,18 @@ const freshSubscription = () => ({
 });
 
 const subItem = () => (h.state.subscription.items as { data: Row[] }).data[0];
+
+/**
+ * What the quote would have said this venue costs: the next band on the graduated Price, or the flat
+ * amount of a `custom_monthly_` Price. Read at call time, as a client that just quoted would send it.
+ */
+const quotedNow = (): number => {
+  const item = subItem();
+  const price = item.price as Row;
+  return String(price.lookup_key ?? "").startsWith(CUSTOM_PER_VENUE_LOOKUP_PREFIX) && typeof price.unit_amount === "number"
+    ? price.unit_amount
+    : nextVenuePriceCents(item.quantity as number);
+};
 
 const installStripe = () => {
   h.fns.subscriptionsRetrieve.mockImplementation(async () => h.clone(h.state.subscription));
@@ -608,7 +620,7 @@ describe("the daily removal job", () => {
 
 describe("Add back (a paid add of a venue that left the bill)", () => {
   const addBack = (venueId: string, extra: Row = {}) =>
-    post(addPOST, "http://localhost/api/owner/venues/add", { idempotencyKey: nextKey(), venueId: ANCHOR, readdVenueId: venueId, ...extra });
+    post(addPOST, "http://localhost/api/owner/venues/add", { idempotencyKey: nextKey(), venueId: ANCHOR, readdVenueId: venueId, quotedVenueCents: quotedNow(), ...extra });
 
   const removeAndExpire = async (venueId: string) => {
     await remove(venueId);
@@ -642,6 +654,28 @@ describe("Add back (a paid add of a venue that left the bill)", () => {
     // The cron then finds nothing due.
     expect(await applyDueVenueRemovals()).toMatchObject({ due: 0 });
     expect(venueRow(SECOND).hidden).toBe(false);
+  });
+
+  it("an Add back whose quoted price no longer matches is refused quote_changed — nothing charged (Phase 6.5)", async () => {
+    await removeAndExpire(SECOND);
+    subItem().quantity = 2;
+    // Quoted as venue #3 ($60) — but the bill is now on a $90 negotiated per-venue rate.
+    const quoted = quotedNow();
+    Object.assign(subItem().price as Row, {
+      id: "price_custom_9000",
+      lookup_key: "custom_monthly_9000",
+      billing_scheme: "per_unit",
+      tiers_mode: null,
+      unit_amount: 9000,
+      currency: "usd",
+      recurring: { interval: "month", interval_count: 1 },
+    });
+    const updatesBefore = h.fns.subscriptionsUpdate.mock.calls.length;
+    const { status, json } = await addBack(SECOND, { quotedVenueCents: quoted });
+    expect(status).toBe(409);
+    expect(json.code).toBe("quote_changed");
+    expect(h.fns.subscriptionsUpdate.mock.calls.length).toBe(updatesBefore);
+    expect(member(SECOND).removed_at).toBeTruthy();
   });
 
   it("a declined Add back keeps the partner's venue (never deleted) and leaves it off the bill", async () => {
