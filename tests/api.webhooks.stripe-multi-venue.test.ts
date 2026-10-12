@@ -124,6 +124,21 @@ describe("POST /api/webhooks/stripe — multi-venue mirror", () => {
     expect(lastPayload()).toMatchObject({ amount_cents: 25000, quantity: 3 });
   });
 
+  // Phase 6.8 (review 6.5 #3): the lookup key rides beside the price id, so displays can tell a
+  // custom_monthly_ per-venue rate from any other flat Price.
+  it("mirrors the Price's lookup key beside its id (null when the Price has none)", async () => {
+    mocks.rows = [{ venue_id: "venue-1", stripe_subscription_id: "sub_1" }];
+
+    await deliver(makeSub("sub_1", { quantity: 2, price: { ...FLAT, id: "price_custom", unit_amount: 7000, lookup_key: "custom_monthly_7000" } }));
+    expect(lastPayload()).toMatchObject({ stripe_price_id: "price_custom", stripe_price_lookup_key: "custom_monthly_7000", amount_cents: 14000 });
+
+    await deliver(makeSub("sub_1", { quantity: 3, price: { ...TIERED, lookup_key: "hightop_venue_graduated_monthly_v1" } }));
+    expect(lastPayload()).toMatchObject({ stripe_price_id: "price_graduated", stripe_price_lookup_key: "hightop_venue_graduated_monthly_v1" });
+
+    await deliver(makeSub("sub_1", { quantity: 1, price: FLAT }));
+    expect(lastPayload()).toMatchObject({ stripe_price_id: "price_flat", stripe_price_lookup_key: null });
+  });
+
   it("uses the Price's own tiers when the payload carries them", async () => {
     mocks.rows = [{ venue_id: "venue-1", stripe_subscription_id: "sub_1" }];
     const withTiers = {

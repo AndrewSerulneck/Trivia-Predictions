@@ -3,8 +3,14 @@ import { randomUUID } from "node:crypto";
 import type Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getStripeGraduatedPriceId, getStripePriceId, stripe } from "@/lib/stripe";
+import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import { isDefinitiveStripeRejection, VENUE_ADDITION_LEASE_MS } from "@/lib/venueAddition";
-import { billRateFromPrice, CUSTOM_PER_VENUE_LOOKUP_PREFIX, monthlyTotalCents } from "@/lib/venuePricing";
+import {
+  billRateFromPrice,
+  CUSTOM_PER_VENUE_LOOKUP_PREFIX,
+  GRADUATED_PRICE_LOOKUP_KEY,
+  monthlyTotalCents,
+} from "@/lib/venuePricing";
 
 /**
  * Phase 8 of docs/billing-discounts-plan.md — the permanent negotiated rate.
@@ -398,7 +404,14 @@ export async function setCustomPrice(
   }
 
   const unitAmount = price.unit_amount;
-  const result = await swapSubscriptionPrice(row, row.stripe_subscription_id, priceId, (quantity) => unitAmount * quantity, unitAmount);
+  const result = await swapSubscriptionPrice(
+    row,
+    row.stripe_subscription_id,
+    priceId,
+    price.lookup_key ?? null,
+    (quantity) => unitAmount * quantity,
+    unitAmount
+  );
   const selfServe = billRateFromPrice(price, { graduatedPriceId: getStripeGraduatedPriceId(), listPriceId: getStripePriceId() });
   return result.ok && !selfServe ? { ...result, notice: NON_STANDARD_RATE_NOTICE } : result;
 }
@@ -419,7 +432,16 @@ export async function setStandardPrice(row: CustomPriceRow): Promise<SetCustomPr
   if (!isStripePriceId(graduatedPriceId)) {
     return { ok: false, status: 500, error: "The standard price isn't configured (STRIPE_GRADUATED_PRICE_ID)." };
   }
-  return swapSubscriptionPrice(row, row.stripe_subscription_id, graduatedPriceId, (quantity) => monthlyTotalCents(quantity), null);
+  // The configured graduated Price carries this key (scripts/create-graduated-price.cjs; `npm run
+  // billing:graduated-price` checks it). The webhook re-mirrors Stripe's real key on the next sync.
+  return swapSubscriptionPrice(
+    row,
+    row.stripe_subscription_id,
+    graduatedPriceId,
+    GRADUATED_PRICE_LOOKUP_KEY,
+    (quantity) => monthlyTotalCents(quantity),
+    null
+  );
 }
 
 // --- The bill's lock (multi-venue billing Phase 6.1) ---------------------------------------------
@@ -453,9 +475,6 @@ type FinishPriceRpcRow = {
   outcome: "done" | "failed" | "already" | "wrong_action" | "not_found" | "invalid";
   change_status: "pending" | "done" | "failed" | null;
 };
-
-const isMissingFunction = (error: { code?: string; message?: string }, name: string): boolean =>
-  error.code === "PGRST202" || error.code === "42883" || (error.message ?? "").includes(name);
 
 /**
  * Claim the bill for one price swap (`claim_bill_price_change`, migration 20261011224839): the SAME
@@ -552,6 +571,8 @@ async function swapSubscriptionPrice(
   bill: Pick<CustomPriceRow, "id" | "owner_id">,
   subscriptionId: string,
   priceId: string,
+  /** The target Price's lookup key, mirrored beside its id (Phase 6.8). */
+  lookupKey: string | null,
   monthlyTotalFor: (quantity: number) => number,
   unitAmountCents: number | null
 ): Promise<SetCustomPriceResult> {
@@ -626,7 +647,7 @@ async function swapSubscriptionPrice(
   const total = monthlyTotalFor(quantity);
   const { error: mirrorError } = await supabaseAdmin!
     .from("billing_subscriptions")
-    .update({ stripe_price_id: priceId, amount_cents: total, quantity })
+    .update({ stripe_price_id: priceId, stripe_price_lookup_key: lookupKey, amount_cents: total, quantity })
     .eq("id", bill.id);
 
   // Stripe is authoritative and the swap is already live there; the

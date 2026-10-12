@@ -315,6 +315,9 @@ async function upsertSubscription(
     stripe_customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
     stripe_subscription_id: sub.id,
     stripe_price_id: price?.id ?? null,
+    // Beside the id: a `custom_monthly_` key is what makes a flat Price a per-venue rate on every
+    // display (lib/venuePricing.ts billRateFromMirror, Phase 6.8) — the same rule charges use.
+    stripe_price_lookup_key: price?.lookup_key ?? null,
     plan_type: price?.nickname ?? "monthly",
     // A real Stripe subscription always bills by card — reassert this even on
     // conflict-update so a venue previously granted offline access that now

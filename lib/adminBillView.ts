@@ -16,7 +16,8 @@ export type AdminPartnerBill = {
   billedVenueCount: number;
   /** Venues set to leave at the period end. */
   leavingVenueCount: number;
-  rate: "graduated" | "per_venue";
+  /** `unrated`: a flat Stripe Price that is not a `custom_monthly_` rate — shown as its amount, no breakdown (Phase 6.8). */
+  rate: "graduated" | "per_venue" | "unrated";
   breakdown: Array<{ venues: number; unitAmountCents: number }>;
   /** Next renewal's list total before discount: offline = the admin's amount; card = rate × billed venues. */
   monthlyListCents: number;
@@ -63,6 +64,9 @@ export const attachVenueOptionLabel = (venue: AttachVenueOption, ownerLabel: str
 
 const plural = (count: number, word: string): string => `${count} ${word}${count === 1 ? "" : "s"}`;
 
+/** A card bill on a flat Price that is neither the bands nor a `custom_monthly_` rate: venues can't be added or removed by the app. */
+export const UNRATED_PRICE_NOTE = "flat Stripe price, not per-venue — use Set rate";
+
 /** "1 × $100 · 2 × $75" */
 export const breakdownText = (bill: Pick<AdminPartnerBill, "breakdown">): string =>
   bill.breakdown.map((line) => `${line.venues} × ${formatCentsShort(line.unitAmountCents)}`).join(" · ");
@@ -85,8 +89,12 @@ export const billSummaryLine = (
       parts.push(`bands say ${formatCentsShort(bill.suggestedOfflineCents)}`);
     }
   } else {
-    parts.push(`${breakdownText(bill)} = ${formatCentsShort(bill.monthlyListCents)}/mo`);
-    if (bill.rate === "per_venue") parts.push("custom per-venue rate");
+    if (bill.rate === "unrated") {
+      parts.push(`${formatCentsShort(bill.monthlyListCents)}/mo`, UNRATED_PRICE_NOTE);
+    } else {
+      parts.push(`${breakdownText(bill)} = ${formatCentsShort(bill.monthlyListCents)}/mo`);
+      if (bill.rate === "per_venue") parts.push("custom per-venue rate");
+    }
   }
   if (bill.leavingVenueCount > 0) parts.push(`${bill.leavingVenueCount} leaving`);
   if (bill.stripeQuantity !== null) parts.push(`⚠ Stripe bills ${plural(bill.stripeQuantity, "venue")}`);

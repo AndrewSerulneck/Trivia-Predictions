@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
-import { loadBillingForVenues, unbilledVenueStates, type UnbilledVenueState } from "@/lib/venueBilling";
+import { loadBillingForVenues, rejoinBillOf, unbilledVenueStates } from "@/lib/venueBilling";
 import { isMultiVenueBillingEnabled, type BillAccount } from "@/lib/multiVenueBilling";
 import { loadBillAccount } from "@/lib/venueRemoval";
 
@@ -26,6 +26,7 @@ type SubscriptionRow = {
   discount_ends_at: string | null;
   // Mirror columns: which rate the bill is on (graduated bands, or a per-venue rate — Phase 6).
   stripe_price_id: string | null;
+  stripe_price_lookup_key: string | null;
   quantity: number | null;
 };
 
@@ -38,10 +39,6 @@ type InvoiceRow = {
   status: string;
   charged_at: string;
 };
-
-/** The live bill a venue can be added back to (Phase 6.7), or null: lapsed, or removed, with the partner paying elsewhere. */
-const rejoinBillOf = (state: UnbilledVenueState | undefined): string | null =>
-  state && (state.kind === "lapsed" || state.kind === "removed") ? state.ownerBillId : null;
 
 export async function GET(request: Request) {
   if (!supabaseAdmin) {
@@ -64,7 +61,7 @@ export async function GET(request: Request) {
   // (what this route always returned) and `venueIds` lists the caller's venues it covers.
   const billing = await loadBillingForVenues<SubscriptionRow>(
     auth.venueIds,
-    "id, venue_id, plan_type, billing_method, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, created_at, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at, stripe_price_id, quantity"
+    "id, venue_id, plan_type, billing_method, amount_cents, status, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, created_at, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at, stripe_price_id, stripe_price_lookup_key, quantity"
   );
 
   if (!billing.ok) {
@@ -160,6 +157,7 @@ export async function GET(request: Request) {
           discount_percent_off: s.discount_percent_off,
           discount_amount_off_cents: s.discount_amount_off_cents,
           stripe_price_id: s.stripe_price_id,
+          stripe_price_lookup_key: s.stripe_price_lookup_key,
           amount_cents: s.amount_cents,
           quantity: s.quantity,
         },

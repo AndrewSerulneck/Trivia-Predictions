@@ -108,23 +108,55 @@ describe("billRateFromMirror (our billing_subscriptions columns, no Stripe call)
     );
   });
 
-  it("a flat price reads as per-venue: amount ÷ venues", () => {
-    expect(billRateFromMirror({ stripe_price_id: "price_custom_7000", amount_cents: 21000, quantity: 3 }, "price_graduated")).toEqual({
+  it("a custom_monthly_ price reads as per-venue: amount ÷ venues", () => {
+    const custom = { stripe_price_id: "price_custom_7000", stripe_price_lookup_key: "custom_monthly_7000" };
+    expect(billRateFromMirror({ ...custom, amount_cents: 21000, quantity: 3 }, "price_graduated")).toEqual({
       kind: "per_venue",
       unitAmountCents: 7000,
     });
     // Old rows without the quantity mirror are 1 venue.
-    expect(billRateFromMirror({ stripe_price_id: "price_custom_7000", amount_cents: 7000, quantity: null }, "price_graduated")).toEqual({
+    expect(billRateFromMirror({ ...custom, amount_cents: 7000, quantity: null }, "price_graduated")).toEqual({
       kind: "per_venue",
       unitAmountCents: 7000,
     });
+    // A custom key wins over a coincidental band match, even with no graduated id configured.
+    expect(billRateFromMirror({ ...custom, stripe_price_lookup_key: "custom_monthly_10000", amount_cents: 10000, quantity: 1 }, "")).toEqual({
+      kind: "per_venue",
+      unitAmountCents: 10000,
+    });
+    expect(billRateFromMirror({ ...custom, amount_cents: 0, quantity: 1 }, "price_graduated")).toBeNull();
   });
 
-  it("with no graduated id configured, an amount that matches the bands is graduated", () => {
+  it("Phase 6.8 (review 6.5 #3): any other flat price has NO rate — the same rule charges use", () => {
+    // The old list Price, a hand-pasted Price, and a row whose key isn't mirrored yet.
+    for (const key of ["hightop_venue_monthly", "my_price", null, undefined]) {
+      expect(billRateFromMirror({ stripe_price_id: "price_list_100", stripe_price_lookup_key: key, amount_cents: 20000, quantity: 2 }, "price_graduated")).toBeNull();
+      // …and billRateFromPrice agrees for the same Price.
+      expect(billRateFromPrice(flat({ id: "price_list_100", lookup_key: key, unit_amount: 10000 }), IDS)).toBeNull();
+    }
+    // A key with the prefix in the middle is not a custom rate.
+    expect(billRateFromMirror({ stripe_price_id: "price_x", stripe_price_lookup_key: "old_custom_monthly_7000", amount_cents: 7000, quantity: 1 }, "price_graduated")).toBeNull();
+  });
+
+  it("Phase 6.9: a graduated key left stale by a price swap does not show bands for a bill Stripe charges differently", () => {
+    // The old app swapped the id to a $90 custom rate but left the backfilled graduated key.
+    const stale = { stripe_price_id: "price_custom_9000", stripe_price_lookup_key: GRADUATED_PRICE_LOOKUP_KEY, quantity: 1 };
+    expect(billRateFromMirror({ ...stale, amount_cents: 9000 }, "price_graduated")).toBeNull();
+    // The configured graduated id always wins, whatever the key says.
+    expect(billRateFromMirror({ ...stale, stripe_price_id: "price_graduated", stripe_price_lookup_key: "custom_monthly_9000", amount_cents: 10000 }, "price_graduated")).toEqual(GRADUATED_RATE);
+  });
+
+  it("the graduated Price is recognised by its lookup key even when its id is not this environment's", () => {
+    expect(
+      billRateFromMirror(
+        { stripe_price_id: "price_other_env", stripe_price_lookup_key: GRADUATED_PRICE_LOOKUP_KEY, amount_cents: 17500, quantity: 2 },
+        "price_graduated"
+      )
+    ).toEqual(GRADUATED_RATE);
+  });
+
+  it("with no graduated id configured, an amount that matches the bands is graduated; anything else has no rate", () => {
     expect(billRateFromMirror({ stripe_price_id: "price_x", amount_cents: 17500, quantity: 2 }, "")).toEqual(GRADUATED_RATE);
-    expect(billRateFromMirror({ stripe_price_id: "price_x", amount_cents: 14000, quantity: 2 }, "")).toEqual({
-      kind: "per_venue",
-      unitAmountCents: 7000,
-    });
+    expect(billRateFromMirror({ stripe_price_id: "price_x", amount_cents: 14000, quantity: 2 }, "")).toBeNull();
   });
 });

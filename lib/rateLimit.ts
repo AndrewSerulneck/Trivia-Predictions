@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 
 // Partner Self-Serve Signup — Phase 1 rate limiter.
 // See docs/partner-self-serve-signup-plan.md §4 Phase 1.
@@ -212,9 +213,7 @@ function isMissingTableError(error: { code?: string; message?: string } | null):
  * what this module exists to prevent.
  */
 function isMissingFunctionError(error: { code?: string; message?: string } | null): boolean {
-  if (!error) return false;
-  if (error.code === "PGRST202" || error.code === "42883") return true;
-  return /claim_signup_attempt/.test(String(error.message ?? ""));
+  return isMissingFunction(error, "claim_signup_attempt");
 }
 
 /** One row of `claim_signup_attempt`'s `returns table (...)`. */

@@ -21,6 +21,8 @@ const CLAIM_MIGRATION = "supabase/migrations/20261011153607_venue_addition_claim
 const CHANGES_MIGRATION = "supabase/migrations/20261011210033_venue_bill_changes.sql";
 // Phase 6.1: the admin price swap claims on the same ledger + lock.
 const PRICE_MIGRATION = "supabase/migrations/20261011224839_bill_price_change_lock.sql";
+// Phase 6.8: billing_subscriptions.stripe_price_lookup_key + billing_venue_additions.membership_role.
+const ROLE_MIGRATION = "supabase/migrations/20261012033356_price_lookup_key_and_addition_role.sql";
 
 const SCHEMA = `
   create role anon; create role authenticated; create role service_role;
@@ -566,6 +568,33 @@ async function main() {
     assert.ok(g.includes("service_role"), fn);
     assert.ok(!g.includes("anon") && !g.includes("authenticated") && !g.includes("PUBLIC"), fn);
   }
+
+  // 6. Phase 6.8: the Price lookup-key mirror and the add ledger's membership role.
+  const roleMigration = fs.readFileSync(ROLE_MIGRATION, "utf8");
+  await db.exec(roleMigration);
+  await db.exec(roleMigration); // re-runnable
+  //    a. existing bills gain a null lookup key; the column takes any text.
+  assert.equal((await rows(`select stripe_price_lookup_key from billing_subscriptions where id = $1`, [pBill.id]))[0].stripe_price_lookup_key, null);
+  await q(`update billing_subscriptions set stripe_price_lookup_key = 'custom_monthly_7000' where id = $1`, [pBill.id]);
+  //    b. existing ledger rows read 'added'; the claim RPC (which never names the column) still inserts 'added'.
+  const roles = (await rows(`select distinct membership_role from billing_venue_additions`)).map((r) => r.membership_role);
+  assert.deepEqual(roles, ["added"], "existing rows default to 'added'");
+  const roleClaim = await claim("role-1", pOwner.id, pBill.id);
+  assert.equal(roleClaim.outcome, "claimed");
+  const roleOf = async (id) => (await rows(`select membership_role from billing_venue_additions where id = $1`, [id]))[0].membership_role;
+  assert.equal(await roleOf(roleClaim.addition_id), "added");
+  //    c. 'admin' is accepted; anything else, or null, is refused.
+  await q(`update billing_venue_additions set membership_role = 'admin' where id = $1`, [roleClaim.addition_id]);
+  assert.equal(await roleOf(roleClaim.addition_id), "admin");
+  await assert.rejects(q(`update billing_venue_additions set membership_role = 'anchor' where id = $1`, [roleClaim.addition_id]));
+  await assert.rejects(q(`update billing_venue_additions set membership_role = null where id = $1`, [roleClaim.addition_id]));
+  //    d. exactly one role check after two runs.
+  const roleChecks = await rows(
+    `select conname from pg_constraint where conrelid = 'billing_venue_additions'::regclass and contype = 'c'
+       and pg_get_constraintdef(oid) like '%membership_role%'`
+  );
+  assert.equal(roleChecks.length, 1);
+  await q(`update billing_venue_additions set status = 'failed' where id = $1`, [roleClaim.addition_id]);
 
   console.log("multi-venue billing migration: all SQL checks passed");
 }

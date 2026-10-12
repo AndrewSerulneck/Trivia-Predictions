@@ -13,9 +13,14 @@ import {
 // fetch — so every rule is unit-tested. Every number comes from the server (`account`); this file
 // only formats it and never prices anything.
 
+/** A bill on a flat Price with no per-venue rate (no breakdown, Phase 6.8) — the server sends its amount as it is. */
+export const CUSTOM_PRICE_LABEL = "Custom monthly price";
+
 /** "1 × $100 · 3 × $75" — the bands of the next renewal. */
 export const breakdownLabel = (account: Pick<BillAccount, "breakdown">): string =>
-  account.breakdown.map((line) => `${line.venues} × ${formatCentsShort(line.unitAmountCents)}`).join(" · ");
+  account.breakdown.length === 0
+    ? CUSTOM_PRICE_LABEL
+    : account.breakdown.map((line) => `${line.venues} × ${formatCentsShort(line.unitAmountCents)}`).join(" · ");
 
 /** The one action a venue row offers, or null. */
 export type BillVenueAction = "remove" | "undo" | "add_back" | null;

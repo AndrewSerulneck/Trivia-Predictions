@@ -934,6 +934,25 @@ describe("POST /api/owner/venues/add — Stripe answers ambiguously", () => {
   });
 });
 
+describe("POST /api/owner/venues/add — the ledger row moves under the request (Phase 6.9)", () => {
+  it("never charges on an in-memory copy the completion would not see: unconfirmed, Stripe untouched", async () => {
+    const create = h.fns.createAdminVenue.getMockImplementation();
+    h.fns.createAdminVenue.mockImplementation(async (input: Row) => {
+      const created = (await create?.(input)) as { id: string };
+      // Something else (the reconcile, after the lease) settles the row while the venue is being made.
+      Object.assign(ledger()[0], { status: "failed", failure_reason: "settled-elsewhere" });
+      return created;
+    });
+
+    const result = await add();
+
+    expect(result.status).toBe(503);
+    expect(result.json.code).toBe("payment_unconfirmed");
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+    expect(ledger()[0]).toMatchObject({ status: "failed", venue_id: null });
+  });
+});
+
 describe("POST /api/owner/venues/add — refusals (nothing created, nothing charged)", () => {
   const expectNothingHappened = () => {
     expect(h.fns.createAdminVenue).not.toHaveBeenCalled();
@@ -1481,13 +1500,30 @@ describe("admin attach — a venue whose bill was cancelled rejoins the partner'
     attachVenueToOwner({ venueId: LAPSED, ownerId: OWNER, mode, preview, clientKey, quotedVenueCents: quotedNow() });
   const lapsedRow = () => memberships().find((row) => row.venue_id === LAPSED);
 
+  // Phase 6.8 (review 6.5 #4): the role lives on the ledger, so a completion with no admin in sight
+  // (the invoice.paid webhook after 3-D Secure) still writes 'admin'.
+  it("bill (card) via 3-D Secure: the invoice.paid completion writes role 'admin' from the ledger", async () => {
+    seedLapsed();
+    h.state.paymentMode = "requires_action";
+    expect(await attach("bill")).toMatchObject({ ok: true, kind: "card_add", status: "requires_action" });
+    const row = table("billing_venue_additions").find((r) => r.venue_id === LAPSED);
+    expect(row).toMatchObject({ status: "requires_action", membership_role: "admin" });
+    expect(lapsedRow()).toMatchObject({ subscription_id: DEAD });
+
+    payInvoice(String(row?.stripe_invoice_id));
+    expect((await deliverInvoicePaid(String(row?.stripe_invoice_id))).status).toBe(200);
+    expect(lapsedRow()).toMatchObject({ subscription_id: BILL, role: "admin", removed_at: null });
+  });
+
   it("bill (card): charges like any add and MOVES the membership row onto the partner's live bill", async () => {
     seedLapsed();
     expect(await attach("bill", true)).toMatchObject({ ok: true, kind: "preview", preview: { mode: "bill", quote: { thisVenueCents: 7500 } } });
     expect(await attach("bill")).toMatchObject({ ok: true, kind: "card_add", status: "paid", venueId: LAPSED });
     expect(h.fns.createAdminVenue).not.toHaveBeenCalled();
     expect((h.fns.subscriptionsUpdate.mock.calls[0] as [string, Row])[1]).toMatchObject({ items: [{ id: ITEM, quantity: 2 }] });
-    expect(lapsedRow()).toMatchObject({ subscription_id: BILL, role: "added", removed_at: null, remove_at: null });
+    // Phase 6.8 (review 6.5 #4): an admin "Add to their bill" writes role 'admin', recorded on the ledger with the venue id.
+    expect(lapsedRow()).toMatchObject({ subscription_id: BILL, role: "admin", removed_at: null, remove_at: null });
+    expect(table("billing_venue_additions").find((row) => row.venue_id === LAPSED)).toMatchObject({ membership_role: "admin", status: "paid" });
     expect(table("billing_subscriptions").find((row) => row.id === DEAD)).toMatchObject({ status: "cancelled" });
     expect(await attach("bill")).toMatchObject({ ok: true, kind: "already_on_bill" });
     expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);

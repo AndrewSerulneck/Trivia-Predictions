@@ -407,7 +407,12 @@ describe("multi-venue billing — Phase 6.5 quote-vs-Confirm rate", () => {
 
   it("Phase 6.7: the account view lists a rejoin through the classifier's answer, and never drops a bill without a live one to show", () => {
     const route = stripComments(read("app/api/owner/billing/route.ts"));
-    expect(route).toContain('state.kind === "lapsed" || state.kind === "removed"');
+    // Phase 6.9: one home for "which live bill can it rejoin" — both Billing views read it from lib/venueBilling.ts.
+    expect(route).toContain("rejoinBillOf(states.byVenue.get(venueId))");
+    expect(route).not.toContain('state.kind === "lapsed" || state.kind === "removed"');
+    expect(stripComments(read("lib/venueBilling.ts"))).toContain(
+      'state && (state.kind === "lapsed" || state.kind === "removed") ? (state.rejoin?.billId ?? null) : null'
+    );
     expect(route).toContain("rejoinByBill.get(s.id)");
     // The dead bill leaves the list only while a live bill that can take its venues is in it, and only with the flag on.
     expect(route.indexOf("isMultiVenueBillingEnabled()")).toBeLessThan(route.indexOf("subscriptions.splice("));
@@ -421,10 +426,44 @@ describe("multi-venue billing — Phase 6.5 quote-vs-Confirm rate", () => {
   it("Phase 6.7: the admin list and picker read lapsed from the classifier, and the Grant note is the POST's own sentence", () => {
     const admin = stripComments(read("app/api/admin/billing/route.ts"));
     expect(admin).toContain('lapsed: unbilled.byVenue.get(link.venue_id)?.kind === "lapsed"');
-    expect(admin).toContain("ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES[onPartnerBillMessageKey(state)]");
+    expect(admin).toContain('ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES[onPartnerBillMessageKey(state, "admin")]');
+    expect(admin).toContain('onPartnerBillMessageKey(unbilledState, "admin")');
+    expect(admin).toContain("rejoinBillOf(state)");
+    expect(stripComments(read("app/api/owner/billing/checkout/route.ts"))).toContain('onPartnerBillMessageKey(state, "partner")');
     expect(admin).toContain("grantOfflineBlocked: refusesOwnBill(");
     // A hidden venue reaches the picker only as a rejoin we hid (rehidden_at); unlinked ones stay visible-only.
     expect(admin).toContain("(!venue.hidden || venue.rehidden_at)");
     expect(admin).toContain("venue.hidden ? [] : [{ id: venue.id, name, ownerId: null");
+  });
+
+  it("Phase 6.8 (#3): the Price's lookup key is mirrored by every writer of stripe_price_id, and displays use the charge rule", () => {
+    expect(stripComments(read("app/api/webhooks/stripe/route.ts"))).toContain("stripe_price_lookup_key: price?.lookup_key ?? null");
+    expect(stripComments(read("lib/billingCustomPrice.ts"))).toContain("stripe_price_id: priceId, stripe_price_lookup_key: lookupKey");
+    expect(stripComments(read("app/api/admin/billing/route.ts"))).toMatch(/stripe_price_id: null,\s*stripe_price_lookup_key: null/);
+    // Any other file writing stripe_price_id must also write the key (or the display rule reads a stale one).
+    for (const file of sources) {
+      const code = stripComments(read(file));
+      if (/stripe_price_id:\s*(?!string)[^,\n]+,/.test(code) && /\.(update|upsert)\(/.test(code) && !file.startsWith("app/api/owner/billing/route")) {
+        expect(code, file).toContain("stripe_price_lookup_key");
+      }
+    }
+    const pricing = stripComments(read("lib/venuePricing.ts"));
+    const mirror = pricing.slice(pricing.indexOf("export const billRateFromMirror"));
+    expect(mirror).toContain("stripe_price_lookup_key?.startsWith(CUSTOM_PER_VENUE_LOOKUP_PREFIX)");
+  });
+
+  it("Phase 6.8 (#4): the add's membership role comes from the ledger row, set with the venue id by an admin attach", () => {
+    const flow = stripComments(read(FLOW));
+    expect(flow).toContain('addVenueToBill(row.subscription_id, row.venue_id, row.membership_role === "admin" ? "admin" : "added")');
+    expect(flow).toContain('{ venue_id: readd.id, membership_role: "admin" as const }');
+    expect(flow).not.toContain('addVenueToBill(row.subscription_id, row.venue_id, "added")');
+  });
+
+  it("Phase 6.8 (#5): one isMissingFunction, imported — never a local copy", () => {
+    for (const file of ["lib/venueAddition.ts", "lib/venueRemoval.ts", "lib/billingCustomPrice.ts", "lib/rateLimit.ts"]) {
+      const code = stripComments(read(file));
+      expect(code, file).toContain('import { isMissingFunction } from "@/lib/supabaseRpcErrors"');
+      expect(code, file).not.toMatch(/const isMissingFunction\s*=/);
+    }
   });
 });

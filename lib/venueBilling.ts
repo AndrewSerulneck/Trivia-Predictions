@@ -1,5 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
 
 /**
  * "Which bill covers this venue?" — the ONE home of that question
@@ -345,6 +346,13 @@ export async function venueIdsEverBilled(venueIds: readonly string[]): Promise<V
 }
 
 /**
+ * The live bill a venue can be put back on (Phase 6.9): the bill it was removed from while that bill is
+ * live, else the partner's live bill. `byCard` = a Stripe card bill (the partner's own Add back and the
+ * admin's card path need the multi-venue flag); `false` = check-billed (offline).
+ */
+export type RejoinTarget = { billId: string; byCard: boolean };
+
+/**
  * Why a venue that NO live bill covers is in that state (Phase 6.3, review #2 and #4):
  *   - `removed`  — it was on a bill and was taken off it (Phase 5's Remove; its membership row keeps
  *                  `removed_at`). `anchorVenueId` is that bill's anchor today (null if unreadable).
@@ -355,15 +363,32 @@ export async function venueIdsEverBilled(venueIds: readonly string[]): Promise<V
  *                  partner now pays on another venue's. It can REJOIN that bill (Add back; `rejoinStateOf`).
  *   - `unbilled` — anything else. `ownerBillId` is set when the partner still has a live bill that
  *                  does not cover this venue.
+ * `rejoin` (removed, lapsed) is the live bill Add back / "Add to their bill" would put it on.
  * A removed or comped venue is NOT "no bill": Checkout must not open a second subscription for it.
  */
 export type UnbilledVenueState =
-  | { kind: "removed"; subscriptionId: string; anchorVenueId: string | null; removedAt: string | null; ownerBillId: string | null }
+  | {
+      kind: "removed";
+      subscriptionId: string;
+      anchorVenueId: string | null;
+      removedAt: string | null;
+      ownerBillId: string | null;
+      rejoin: RejoinTarget | null;
+    }
   | { kind: "comped"; ownerBillId: string }
-  | { kind: "lapsed"; fromBillId: string; ownerBillId: string }
+  | { kind: "lapsed"; fromBillId: string; ownerBillId: string; rejoin: RejoinTarget }
   | { kind: "unbilled"; ownerBillId: string | null };
 
-type StateBillRow = { id: string; venue_id: string; status: string; owner_id: string | null };
+/** The live bill this venue can be added back to (lapsed, or removed), or null. One home for both Billing views. */
+export const rejoinBillOf = (state: UnbilledVenueState | undefined): string | null =>
+  state && (state.kind === "lapsed" || state.kind === "removed") ? (state.rejoin?.billId ?? null) : null;
+
+type StateBillRow = { id: string; venue_id: string; status: string; owner_id: string | null; billing_method: string | null };
+
+const rejoinTargetOf = (bill: StateBillRow): RejoinTarget => ({
+  billId: bill.id,
+  byCard: bill.billing_method !== OFFLINE_BILLING_METHOD,
+});
 
 /**
  * `unbilledVenueStates(venueIds, ownerIdByVenue)` — the state of each of these venues that no live
@@ -386,7 +411,7 @@ export async function unbilledVenueStates(
   const byVenue = new Map<string, UnbilledVenueState>();
   if (ids.length === 0) return { ok: true, byVenue };
   const ownerIds = Array.from(new Set(ids.map((id) => ownerIdByVenue.get(id)).filter((id): id is string => Boolean(id))));
-  const BILL_COLUMNS = "id, venue_id, status, owner_id";
+  const BILL_COLUMNS = "id, venue_id, status, owner_id, billing_method";
 
   const [memberships, anchors, ownerBills] = await Promise.all([
     db.from(BILLING_MEMBERSHIP_TABLE).select(MEMBERSHIP_COLUMNS).in("venue_id", ids).returns<BillMembership[]>(),
@@ -437,21 +462,26 @@ export async function unbilledVenueStates(
     const ownerBillId = ownerBill?.id ?? null;
 
     if (membership?.removed_at) {
+      // Back onto the bill it left while that bill is live (Add back), else onto the partner's live bill.
+      const fromBill = billById.get(membership.subscription_id);
+      const rejoinBill = fromBill && isLive(fromBill) ? fromBill : ownerBill;
       byVenue.set(venueId, {
         kind: "removed",
         subscriptionId: membership.subscription_id,
-        anchorVenueId: billById.get(membership.subscription_id)?.venue_id ?? null,
+        anchorVenueId: fromBill?.venue_id ?? null,
         removedAt: membership.removed_at,
         ownerBillId,
+        rejoin: rejoinBill ? rejoinTargetOf(rejoinBill) : null,
       });
     } else if (!membership && !anchoredVenues.has(venueId) && ownerBillId) {
       byVenue.set(venueId, { kind: "comped", ownerBillId });
-    } else if (ownerBillId && (membership || ownBill)) {
+    } else if (ownerBill && (membership || ownBill)) {
       // History only on dead bills: a live one would have been `continue`d above.
       byVenue.set(venueId, {
         kind: "lapsed",
         fromBillId: membership?.subscription_id ?? (ownBill as StateBillRow).id,
-        ownerBillId,
+        ownerBillId: ownerBill.id,
+        rejoin: rejoinTargetOf(ownerBill),
       });
     } else {
       byVenue.set(venueId, { kind: "unbilled", ownerBillId });
@@ -839,7 +869,7 @@ export type AnchorHomeResult =
  * Best-effort callers (the Stripe webhook's first sync, admin Grant offline) log a failure and carry
  * on; the daily `/api/cron/billing` (`repairAnchorMemberships`) is the repair path.
  */
-export async function bringAnchorHome(billId: string): Promise<AnchorHomeResult> {
+export async function bringAnchorHome(billId: string, retried = false): Promise<AnchorHomeResult> {
   if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
   const bill = await supabaseAdmin
     .from("billing_subscriptions")
@@ -872,7 +902,9 @@ export async function bringAnchorHome(billId: string): Promise<AnchorHomeResult>
       console.log(`[VenueBilling] anchor-row-inserted venue=${anchorVenueId} bill=${billId}`);
       return { ok: true, outcome: "inserted" };
     }
-    return bringAnchorHome(billId); // a row appeared in between: decide on it
+    // A row appeared in between: decide on it — once. A second miss is not a race; report it.
+    if (retried) return { ok: false, error: "anchor-row-unresolved" };
+    return bringAnchorHome(billId, true);
   }
 
   const moved = await moveFromDeadBill(row.subscription_id, billId, anchorVenueId, "anchor");
@@ -896,44 +928,62 @@ export type AnchorRepairResult = {
   dryRun: boolean;
 };
 
+/** Live bills per page of the anchor repair: keeps each `.in()` URL short and each read under PostgREST's row cap. */
+export const ANCHOR_REPAIR_PAGE_SIZE = 200;
+
 /**
  * Daily repair (`/api/cron/billing`): every live bill whose anchor's membership row is missing or on
- * another bill goes through `bringAnchorHome`. Two bounded reads (live bills; their anchors' rows);
- * normally nothing to do. A missing membership table is "nothing to do". Throws on a read error (the
- * cron catches and reports it).
+ * another bill goes through `bringAnchorHome`. Two reads per page of `ANCHOR_REPAIR_PAGE_SIZE` live
+ * bills (the bills, keyset-paged by id; their anchors' rows) — two reads a day today; normally nothing
+ * to do. A missing membership table is "nothing to do". Throws on a read error (the cron catches and
+ * reports it).
  */
 export async function repairAnchorMemberships(options: { dryRun?: boolean } = {}): Promise<AnchorRepairResult> {
   const dryRun = Boolean(options.dryRun);
   const result: AnchorRepairResult = { liveBills: 0, misplaced: 0, moved: 0, inserted: 0, needsAdmin: 0, failed: 0, dryRun };
   if (!supabaseAdmin) throw new Error("supabase-admin-unconfigured");
+  const db = supabaseAdmin;
 
-  const bills = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("id, venue_id")
-    .neq("status", "cancelled")
-    .returns<{ id: string; venue_id: string }[]>();
-  if (bills.error) throw new Error(`billing-read-failed: ${bills.error.message}`);
-  const live = bills.data ?? [];
-  result.liveBills = live.length;
-  if (live.length === 0) return result;
+  let afterId: string | null = null;
+  for (;;) {
+    let query = db.from("billing_subscriptions").select("id, venue_id").neq("status", "cancelled");
+    if (afterId) query = query.gt("id", afterId);
+    const bills = await query
+      .order("id", { ascending: true })
+      .limit(ANCHOR_REPAIR_PAGE_SIZE)
+      .returns<{ id: string; venue_id: string }[]>();
+    if (bills.error) throw new Error(`billing-read-failed: ${bills.error.message}`);
+    const live = bills.data ?? [];
+    if (live.length === 0) return result;
+    result.liveBills += live.length;
+    afterId = live[live.length - 1].id;
 
-  const rows = await supabaseAdmin
-    .from(BILLING_MEMBERSHIP_TABLE)
-    .select("venue_id, subscription_id")
-    .in(
-      "venue_id",
-      live.map((bill) => bill.venue_id)
-    )
-    .returns<{ venue_id: string; subscription_id: string }[]>();
-  if (rows.error) {
-    if (isMissingMembershipTable(rows.error)) {
-      noteMissingTable();
-      return result;
+    const rows = await db
+      .from(BILLING_MEMBERSHIP_TABLE)
+      .select("venue_id, subscription_id")
+      .in(
+        "venue_id",
+        live.map((bill) => bill.venue_id)
+      )
+      .returns<{ venue_id: string; subscription_id: string }[]>();
+    if (rows.error) {
+      if (isMissingMembershipTable(rows.error)) {
+        noteMissingTable();
+        return result;
+      }
+      throw new Error(`membership-read-failed: ${rows.error.message ?? "unknown"}`);
     }
-    throw new Error(`membership-read-failed: ${rows.error.message ?? "unknown"}`);
+    await repairAnchorPage(live, new Map((rows.data ?? []).map((row) => [row.venue_id, row.subscription_id])), result);
+    if (live.length < ANCHOR_REPAIR_PAGE_SIZE) return result;
   }
-  const billOfAnchorRow = new Map((rows.data ?? []).map((row) => [row.venue_id, row.subscription_id]));
+}
 
+const repairAnchorPage = async (
+  live: ReadonlyArray<{ id: string; venue_id: string }>,
+  billOfAnchorRow: ReadonlyMap<string, string>,
+  result: AnchorRepairResult
+): Promise<void> => {
+  const dryRun = result.dryRun;
   for (const bill of live) {
     if (billOfAnchorRow.get(bill.venue_id) === bill.id) continue;
     result.misplaced += 1;
@@ -950,5 +1000,4 @@ export async function repairAnchorMemberships(options: { dryRun?: boolean } = {}
     else if (fixed.outcome === "inserted") result.inserted += 1;
     else if (fixed.outcome === "anchor_on_live_bill") result.needsAdmin += 1;
   }
-  return result;
-}
+};

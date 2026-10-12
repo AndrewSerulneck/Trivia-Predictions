@@ -181,6 +181,14 @@ beforeEach(() => {
   stripeMocks.checkoutCreate.mockReset().mockResolvedValue({ url: "https://checkout.stripe.test/s" });
 });
 
+/** The multi-venue flag (Add back exists only with it on); each test starts with it off. */
+const multiVenueOn = () => {
+  process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED = "true";
+};
+afterEach(() => {
+  delete process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED;
+});
+
 describe("unbilledVenueStates", () => {
   const owners = new Map([
     ["venue-a", "owner-1"],
@@ -203,6 +211,32 @@ describe("unbilledVenueStates", () => {
       anchorVenueId: "venue-a",
       removedAt: "2026-10-01T00:00:00Z",
       ownerBillId: "bill-a",
+      rejoin: { billId: "bill-a", byCard: true },
+    });
+  });
+
+  it("Phase 6.9: a venue removed from a LIVE bill rejoins THAT bill, not the partner's first live bill", async () => {
+    pacificPaying();
+    // A second live bill (two bills: drift for an admin) whose id sorts before the one venue-b left.
+    db.tables.billing_subscriptions.push(bill("bill-0", "venue-z", "owner-1"));
+    db.tables.billing_subscription_venues.push(member("venue-b", "bill-a", "2026-10-01T00:00:00Z"));
+    const result = await unbilledVenueStates(["venue-b"], owners);
+    expect(result.ok && result.byVenue.get("venue-b")).toMatchObject({
+      kind: "removed",
+      ownerBillId: "bill-0",
+      rejoin: { billId: "bill-a", byCard: true },
+    });
+  });
+
+  it("Phase 6.9: removed from a dead bill rejoins the partner's live bill, flagged check-billed when it is", async () => {
+    pacificPaying();
+    db.tables.billing_subscriptions[0] = { ...db.tables.billing_subscriptions[0], billing_method: "offline", stripe_subscription_id: null };
+    db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
+    db.tables.billing_subscription_venues.push(member("venue-b", "bill-b", "2026-10-01T00:00:00Z"));
+    const result = await unbilledVenueStates(["venue-b"], owners);
+    expect(result.ok && result.byVenue.get("venue-b")).toMatchObject({
+      kind: "removed",
+      rejoin: { billId: "bill-a", byCard: false },
     });
   });
 
@@ -218,14 +252,24 @@ describe("unbilledVenueStates", () => {
     db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
     db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
     const result = await unbilledVenueStates(["venue-b"], owners);
-    expect(result.ok && result.byVenue.get("venue-b")).toEqual({ kind: "lapsed", fromBillId: "bill-b", ownerBillId: "bill-a" });
+    expect(result.ok && result.byVenue.get("venue-b")).toEqual({
+      kind: "lapsed",
+      fromBillId: "bill-b",
+      ownerBillId: "bill-a",
+      rejoin: { billId: "bill-a", byCard: true },
+    });
   });
 
   it("an anchor of a cancelled bill with no membership row is lapsed too", async () => {
     pacificPaying();
     db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
     const result = await unbilledVenueStates(["venue-b"], owners);
-    expect(result.ok && result.byVenue.get("venue-b")).toEqual({ kind: "lapsed", fromBillId: "bill-b", ownerBillId: "bill-a" });
+    expect(result.ok && result.byVenue.get("venue-b")).toEqual({
+      kind: "lapsed",
+      fromBillId: "bill-b",
+      ownerBillId: "bill-a",
+      rejoin: { billId: "bill-a", byCard: true },
+    });
   });
 
   it("a cancelled own bill with no live partner bill is plain unbilled (it may resubscribe)", async () => {
@@ -262,6 +306,7 @@ describe("POST /api/owner/billing/checkout — one bill per partner", () => {
   });
 
   it("refuses a venue removed from the partner's bill (Add it back instead)", async () => {
+    multiVenueOn();
     pacificPaying();
     db.tables.billing_subscription_venues.push(member("venue-b", "bill-a", "2026-10-01T00:00:00Z"));
     const response = await checkoutFor("venue-b");
@@ -271,12 +316,29 @@ describe("POST /api/owner/billing/checkout — one bill per partner", () => {
   });
 
   it("refuses a second venue whose own old bill is cancelled while the partner pays for another (Add back instead)", async () => {
+    multiVenueOn();
     pacificPaying();
     db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
     db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
     const response = await checkoutFor("venue-b");
     expect(response.status).toBe(409);
     expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ON_PARTNER_BILL_MESSAGES.lapsed });
+    expect(stripeCalls()).toBe(0);
+  });
+
+  it("Phase 6.9: never says 'Add it back' where there is no Add back — flag off, or a check-billed account", async () => {
+    pacificPaying();
+    db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
+    db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
+    // Flag off (today): Add back does not exist.
+    let response = await checkoutFor("venue-b");
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ON_PARTNER_BILL_MESSAGES.rejoin_unavailable });
+    // Flag on, but the partner pays by check: Add back is card-only.
+    multiVenueOn();
+    db.tables.billing_subscriptions[0] = { ...db.tables.billing_subscriptions[0], billing_method: "offline", stripe_subscription_id: null };
+    response = await checkoutFor("venue-b");
+    expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ON_PARTNER_BILL_MESSAGES.rejoin_unavailable });
     expect(stripeCalls()).toBe(0);
   });
 
@@ -568,6 +630,7 @@ describe("POST /api/admin/billing grant-manual — never a second bill for a par
   });
 
   it("refuses a venue removed from the partner's bill", async () => {
+    multiVenueOn();
     pacificPaying();
     db.tables.billing_subscription_venues.push(member("venue-b", "bill-a", "2026-10-01T00:00:00Z"));
     const response = await grant("venue-b");
@@ -577,11 +640,24 @@ describe("POST /api/admin/billing grant-manual — never a second bill for a par
   });
 
   it("refuses a venue whose own old bill is cancelled while the partner pays on another venue's bill", async () => {
+    multiVenueOn();
     pacificPaying();
     db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
     db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
     const response = await grant("venue-b");
     expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES.lapsed });
+    expect(billWrites()).toEqual([]);
+  });
+
+  it("Phase 6.9: flag off, a card bill can't take the venue back — the note says so; a check bill still can", async () => {
+    pacificPaying();
+    db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
+    db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
+    let response = await grant("venue-b");
+    expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES.rejoin_unavailable });
+    db.tables.billing_subscriptions[0] = { ...db.tables.billing_subscriptions[0], billing_method: "offline", stripe_subscription_id: null };
+    response = await grant("venue-b");
     expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES.lapsed });
     expect(billWrites()).toEqual([]);
   });
@@ -621,6 +697,7 @@ describe("POST /api/admin/billing grant-manual — never a second bill for a par
   });
 
   it("the admin list says why a lapsed venue's Grant is blocked, in the POST's own words, and flags it lapsed", async () => {
+    multiVenueOn();
     pacificPaying();
     db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
     db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
@@ -638,5 +715,47 @@ describe("POST /api/admin/billing grant-manual — never a second bill for a par
     const partners = (await list()).partners;
     expect(partners.find((p) => p.venueId === "venue-a")?.grantOfflineBlocked).toBe(false);
     expect(partners.find((p) => p.venueId === "venue-b")?.grantOfflineBlocked).toBe(true);
+  });
+});
+
+// Phase 6.8 (review 6.5 #3): displays apply the charge rule — only a custom_monthly_ lookup key is a
+// per-venue rate; any other flat Price shows the bill's amount as it is, with no per-venue math.
+describe("display rate from the mirrored lookup key (Phase 6.8)", () => {
+  const flag = (on: boolean) => {
+    if (on) process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED = "true";
+    else delete process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED;
+  };
+  afterEach(() => flag(false));
+
+  const twoVenueBill = (price: Row) => {
+    pacificPaying();
+    db.tables.billing_subscriptions = [bill("bill-a", "venue-a", "owner-1", "active", { amount_cents: 20000, quantity: 2, ...price })];
+    db.tables.billing_subscription_venues.push(member("venue-b", "bill-a"));
+  };
+  type OwnerBody = {
+    subscriptions: Array<{ account?: { breakdown: Array<{ venues: number; unitAmountCents: number }>; nextMonthlyListCents: number } | null }>;
+  };
+  const ownerAccount = async () =>
+    ((await (await ownerBilling(new Request("http://localhost/api/owner/billing"))).json()) as OwnerBody).subscriptions[0].account;
+  const adminBill = async (): Promise<unknown> => (await adminList(new Request("http://localhost/api/admin/billing"))).json();
+
+  it("owner: a flat Price without the custom_monthly_ key → no breakdown, the bill's amount as it is", async () => {
+    flag(true);
+    twoVenueBill({ stripe_price_id: "price_list_100", stripe_price_lookup_key: null });
+    expect(await ownerAccount()).toMatchObject({ breakdown: [], nextMonthlyListCents: 20000 });
+  });
+
+  it("owner: a custom_monthly_ Price → per-venue rate × billed venues", async () => {
+    flag(true);
+    twoVenueBill({ stripe_price_id: "price_custom", stripe_price_lookup_key: "custom_monthly_7000", amount_cents: 14000 });
+    expect(await ownerAccount()).toMatchObject({ breakdown: [{ venues: 2, unitAmountCents: 7000 }], nextMonthlyListCents: 14000 });
+  });
+
+  it("admin: the same unrated bill reads rate 'unrated' with its own amount", async () => {
+    twoVenueBill({ stripe_price_id: "price_list_100", stripe_price_lookup_key: null });
+    const body = JSON.stringify(await adminBill());
+    expect(body).toContain('"rate":"unrated"');
+    expect(body).toContain('"monthlyListCents":20000');
+    expect(body).not.toContain('"rate":"per_venue"');
   });
 });

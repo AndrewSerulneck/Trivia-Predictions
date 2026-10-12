@@ -7,7 +7,7 @@ $100/month; check-paying accounts never lapse automatically). **Phase 6 (admin &
 locally as `6c5a178`, NOT pushed** — flag still off. **Phase 6.1 committed locally as `a83da94`, NOT pushed**; its migration
 `20261011224839_bill_price_change_lock.sql` was **applied to production 2026-10-11** on Andrew's go-ahead and verified
 (migration before app, so the app may now deploy). **Phase 6.2 committed locally as `636410c`, NOT pushed** (no migration). Andrew: push everything when the plan is finished.
-**Phases 6.3–6.5 committed locally 2026-10-11 as `54af6e3`, NOT pushed** (no migration). **Phases 6.6–6.9 added 2026-10-11** to fix the five findings the 6.5 review left open (Andrew: fix them, don't defer). **Phases 6.6 and 6.7 built 2026-10-11, NOT committed** (no migration; commit is Andrew's call). Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_6.7_HANDOFF.md`**. Andrew's answers are in §2 (do not re-ask). **Next: Phase 6.8**, then 6.9, then Phase 7 (release) and the single push. Each phase ends with a handoff note
+**Phases 6.3–6.5 committed locally 2026-10-11 as `54af6e3`, NOT pushed** (no migration). **Phases 6.6–6.9 added 2026-10-11** to fix the five findings the 6.5 review left open (Andrew: fix them, don't defer). **Phases 6.6–6.7 committed locally 2026-10-12 as `f867c94`, NOT pushed** (no migration). **Phase 6.8 built 2026-10-12**; its migration `20261012033356_price_lookup_key_and_addition_role.sql` was **applied to production 2026-10-12** on Andrew's go-ahead and verified, and the lookup-key backfill was applied to the two card bills (migration before app, so the app may now deploy). **Phase 6.9 (re-review) done 2026-10-12**: 6 of 10 review findings fixed, 4 listed; all gates green; 6.8 + 6.9 commit waits on Andrew's word. Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_6.9_HANDOFF.md`**. Andrew's answers are in §2 (do not re-ask). **Next: Phase 7** (release) and the single push. Each phase ends with a handoff note
 `docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at the latest one.
 
 ---
@@ -686,7 +686,11 @@ yet — the screens to add are in the 6.7 handoff §5.
   offline note uses the `lapsed` message.
 - Light admin surface rules (plain Tailwind, `tone="light"`, 12px floor). Add the new screens to Phase 7's device checklist.
 
-#### Phase 6.8 — Display rate from the lookup key; admin role on the ledger; shared helper (Opus 5.5, high) — review 6.5 #3, #4, #5
+#### Phase 6.8 — Display rate from the lookup key; admin role on the ledger; shared helper (Opus 5.5, high) — review 6.5 #3, #4, #5 — ✅ built 2026-10-12, migration applied, not committed (handoff: `…_PHASE_6.8_HANDOFF.md`)
+
+As built: everything below, except that Checkout writes no price mirror (the webhook's first sync does), so there was nothing to add
+there. A flat Price without the `custom_monthly_` key now displays as `unrated` (admin) / "Custom monthly price" (partner) with the
+bill's own amount. `lib/rateLimit.ts` also uses the shared helper (trivially compatible). Backfill: `npm run billing:backfill-lookup-keys`.
 
 - **#3.** `billRateFromMirror` (displays) still calls any non-graduated flat Price a per-venue rate, while charges
   (`billRateFromPrice`) accept only `custom_monthly_`. Add `billing_subscriptions.stripe_price_lookup_key text` (nullable);
@@ -703,7 +707,9 @@ yet — the screens to add are in the 6.7 handoff §5.
   `lib/venueAddition.ts`, `lib/venueRemoval.ts` and `lib/billingCustomPrice.ts` (leave `lib/rateLimit.ts`'s own copy unless
   trivially compatible).
 
-#### Phase 6.9 — Re-review and close out (Opus 5.5, high)
+#### Phase 6.9 — Re-review and close out (Opus 5.5, high) — ✅ done 2026-10-12, commit waits on Andrew (handoff: `…_PHASE_6.9_HANDOFF.md`)
+
+As built: `/code-review` (high) of `54af6e3` → working tree gave 10 findings; fixed 6 (honest rejoin copy when no Add back exists; removed venue rejoins the live bill it left; admin Set-rate sheet for an `unrated` bill; stale graduated key; `bringAnchorHome` recursion bound + paged daily repair; no charge when the ledger write misses), listed 4 (handoff §3).
 
 `/code-review` of the 6.6–6.8 diff; fix or list every finding. Gates: `npx tsc --noEmit`, `npm run lint`, `npm run test`,
 `npm run build` (not typecheck and build together), `tests/lib.auth-users-fk-guard.test.ts` unchanged. Update `CLAUDE.md`'s

@@ -702,10 +702,10 @@ step opens at the top — don't hand-roll a scroll reset.
   `npm run store:qr` (`scripts/generate-join-qr.cjs`); `tests/lib.join-qr.test.ts` decodes them and
   fails if they drift. Never change the URL — printed merch can't be updated.
 
-## Multi-Venue Volume Billing — Phases 1–5 pushed, Phase 6–6.5 admin tools + review fixes built (flag off)
+## Multi-Venue Volume Billing — Phases 1–5 pushed, Phases 6–6.9 admin tools + review fixes built (flag off)
 
 Plan: `docs/multi-venue-volume-billing-plan.md` (Andrew's answers in §2 — don't re-ask); latest handoff
-`docs/multi-venue-volume-billing-plan_PHASE_6.5_HANDOFF.md`. One Stripe subscription per partner, quantity =
+`docs/multi-venue-volume-billing-plan_PHASE_6.9_HANDOFF.md`. One Stripe subscription per partner, quantity =
 venues, graduated $100 / $75 / $60 / $45. Migration `20261011134820` is applied; every card subscriber is on
 the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (lookup key `hightop_venue_graduated_monthly_v1`) at
 quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/stripe.ts`
@@ -789,6 +789,27 @@ quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/str
   The CARD path is refused (`card_add_switched_off`) while `NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED` is off.
 - **Daily drift check (Phase 6):** `lib/billingQuantityDrift.ts`, last job of `/api/cron/billing`, REPORT-ONLY
   (`[MultiVenueBilling] quantity-drift`): Stripe quantity vs `billedVenueCountFromRows`. One Stripe list call per run.
+- **A venue whose bill was cancelled can REJOIN the partner's live bill (Phases 6.6–6.7)** — through the same paid add
+  (partner Add back / admin "Add to their bill"), never a new money path. `rejoinStateOf` / pure `classifyRejoin`
+  (`lib/venueBilling.ts`) say where a venue stands; `addVenueToBill` moves a membership row off a **cancelled** bill
+  (`moveFromDeadBill`, the only place a row changes bill) and refuses one on another live bill. `unbilledVenueStates` gives
+  `removed`/`lapsed` a `rejoin` target (`{ billId, byCard }`: the bill it left while live, else the partner's live bill);
+  **`rejoinBillOf` is the one home** for both Billing views. Refusal copy: `onPartnerBillMessageKey(state, "partner" |
+  "admin")` says "Add it back" only where that button exists (partner: card bill + flag; admin: check bill any time, card
+  bill only with the flag), else `rejoin_unavailable` (6.9).
+- **Anchor-home repair (6.6):** `bringAnchorHome(billId)` moves a LIVE bill's anchor row back from a dead bill (or inserts
+  it); best-effort from the webhook's first sync and admin Grant offline, repaired daily by `repairAnchorMemberships`
+  (`/api/cron/billing`, keyset-paged by `ANCHOR_REPAIR_PAGE_SIZE`). Never moves a row off another live bill (logs for an admin).
+- **The Price's lookup key is mirrored (6.8, migration `20261012033356`):** every writer of
+  `billing_subscriptions.stripe_price_id` writes `stripe_price_lookup_key` too (webhook, `lib/billingCustomPrice.ts`,
+  Grant offline clears both — contract test). `billRateFromMirror` returns **null** for a flat Price without a
+  `custom_monthly_` key (admin `rate: "unrated"`, partner "Custom monthly price", no per-venue math); the graduated key
+  on a non-graduated id counts only when the amount matches the bands (a stale key, 6.9). Backfill/check:
+  `npm run billing:backfill-lookup-keys` (dry run default).
+- **The add ledger records who added the venue:** `billing_venue_additions.membership_role` (`added`|`admin`), set in
+  the same write as `venue_id`; completion (request, webhook or cron) uses the STORED row's role. If that write matches
+  no `pending` row, the add stops before Stripe (`payment_unconfirmed`, `ledger-write-missed`) — never charge on an
+  in-memory copy (6.9). Missing-RPC checks share `isMissingFunction` (`lib/supabaseRpcErrors.ts`).
 
 ## POS Rewards Integration (Square / Clover; Toast deferred) — Phases 1–2 built 2026-10-04/05
 

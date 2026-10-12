@@ -36,6 +36,7 @@ import {
   loadBillingForVenue,
   loadBillingForVenues,
 } from "@/lib/venueBilling";
+import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import { billRateFromMirror, rateBreakdown, rateMonthlyTotalCents } from "@/lib/venuePricing";
 
 /**
@@ -201,9 +202,6 @@ type FinishRpcRow = {
 const VENUE_CHANGE_ACTIONS: VenueBillChangeAction[] = ["remove", "undo"];
 const isVenueChangeAction = (action: string): action is VenueBillChangeAction =>
   (VENUE_CHANGE_ACTIONS as string[]).includes(action);
-
-const isMissingFunction = (error: { code?: string; message?: string }, name: string): boolean =>
-  error.code === "PGRST202" || error.code === "42883" || (error.message ?? "").includes(name);
 
 /**
  * Close a claimed change: `done` applies the membership change (+ the re-anchor) in one database
@@ -820,6 +818,7 @@ type AccountBillRow = {
   discount_amount_off_cents: number | null;
   /** Mirror columns: which rate the bill is on (graduated bands or a per-venue rate, Phase 6). */
   stripe_price_id?: string | null;
+  stripe_price_lookup_key?: string | null;
   amount_cents?: number | null;
   quantity?: number | null;
 };
@@ -889,18 +888,24 @@ export async function loadBillAccount(
     discount_percent_off: bill.discount_percent_off == null ? null : Number(bill.discount_percent_off),
     discount_amount_off_cents: bill.discount_amount_off_cents,
   });
+  // No rate (a flat Price that isn't a custom_monthly_ one, Phase 6.8): no per-venue math — the bill's
+  // own amount, no breakdown. Adds and removes refuse such a bill anyway (`custom_rate`).
   const rate = billRateFromMirror(bill, getStripeGraduatedPriceId());
-  const nextMonthlyListCents = rateMonthlyTotalCents(rate, billedVenueCount);
+  const nextMonthlyListCents = rate
+    ? rateMonthlyTotalCents(rate, billedVenueCount)
+    : Math.max(0, Math.round(Number(bill.amount_cents ?? 0)));
   return {
     ok: true,
     account: {
       venues,
       billedVenueCount,
-      breakdown: rateBreakdown(rate, billedVenueCount).map((line) => ({
-        venues: line.venues,
-        unitAmountCents: line.unitAmountCents,
-        subtotalCents: line.subtotalCents,
-      })),
+      breakdown: rate
+        ? rateBreakdown(rate, billedVenueCount).map((line) => ({
+            venues: line.venues,
+            unitAmountCents: line.unitAmountCents,
+            subtotalCents: line.subtotalCents,
+          }))
+        : [],
       nextMonthlyListCents,
       nextMonthlyTotalCents: effectiveAmountCents({ amountCents: nextMonthlyListCents, discount }),
     },

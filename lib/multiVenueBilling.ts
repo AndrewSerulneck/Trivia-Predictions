@@ -217,19 +217,34 @@ export const ON_PARTNER_BILL_MESSAGES = {
   lapsed: "This venue's old bill ended. Add it back to your bill from Billing.",
   comped: "This venue is included free on your account.",
   shared: `Your venues share one bill. Email ${PARTNER_SUPPORT_EMAIL} and we'll sort out this venue for you.`,
+  /** Phase 6.9: it could rejoin, but there is no Add back to press (flag off, or a check-billed account). */
+  rejoin_unavailable: `Email ${PARTNER_SUPPORT_EMAIL} and we'll put this venue back on your bill.`,
 } as const;
 
 /**
  * Which sentence of the two maps above a refusal gets. `state` is an `UnbilledVenueState`
  * (lib/venueBilling.ts) — structural here so this module stays client-safe.
+ *
+ * "Add it back" is said only where that button exists (Phase 6.9): the partner's Add back needs a card
+ * bill and the multi-venue flag; the admin's "Add to their bill" takes a check-billed bill any time and
+ * a card bill only with the flag on. Otherwise the venue gets `rejoin_unavailable`.
  */
-export const onPartnerBillMessageKey = (state: {
-  kind: "removed" | "comped" | "lapsed" | "unbilled";
-  ownerBillId: string | null;
-}): keyof typeof ON_PARTNER_BILL_MESSAGES => {
-  if (state.kind === "removed") return state.ownerBillId ? "removed" : "removed_no_bill";
-  if (state.kind === "comped" || state.kind === "lapsed") return state.kind;
-  return "shared";
+export const onPartnerBillMessageKey = (
+  state: {
+    kind: "removed" | "comped" | "lapsed" | "unbilled";
+    ownerBillId: string | null;
+    rejoin?: { billId: string; byCard: boolean } | null;
+  },
+  audience: "partner" | "admin"
+): keyof typeof ON_PARTNER_BILL_MESSAGES => {
+  if (state.kind === "comped") return "comped";
+  if (state.kind === "unbilled") return "shared";
+  if (!state.rejoin) return state.kind === "removed" ? "removed_no_bill" : "shared";
+  const canAddBack =
+    audience === "partner"
+      ? state.rejoin.byCard && isMultiVenueBillingEnabled()
+      : !state.rejoin.byCard || isMultiVenueBillingEnabled();
+  return canAddBack ? state.kind : "rejoin_unavailable";
 };
 
 /**
@@ -244,6 +259,8 @@ export const ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES = {
   lapsed: "This venue's own bill was cancelled and the partner pays on another bill. Use Link a venue → Add to their bill.",
   comped: "This partner already has a bill. Use Link a venue → Add to their bill.",
   shared: "This partner already has a bill for another venue. Use Link a venue → Add to their bill, or manage billing from that venue.",
+  rejoin_unavailable:
+    "This venue can go back on the partner's card bill only once multi-venue billing is switched on. Until then, leave it off.",
 } as const;
 
 /** The Billing page line for a comped venue, in place of any Subscribe. */

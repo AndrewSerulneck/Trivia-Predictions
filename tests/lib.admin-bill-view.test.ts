@@ -5,6 +5,7 @@ import {
   attachPreviewText,
   attachVenueOptionLabel,
   billSummaryLine,
+  UNRATED_PRICE_NOTE,
   removedFromLine,
   type AdminPartnerBill,
 } from "@/lib/adminBillView";
@@ -47,6 +48,12 @@ describe("billSummaryLine", () => {
       { isManual: false, anchorName: "A" }
     );
     expect(line).toBe("3 venues · 3 × $70 = $210/mo · custom per-venue rate · 1 leaving · ⚠ Stripe bills 4 venues");
+  });
+
+  it("Phase 6.8: a flat Price that is not a custom_monthly_ rate shows its amount and says so — no breakdown", () => {
+    expect(
+      billSummaryLine(bill({ rate: "unrated", breakdown: [], billedVenueCount: 2, monthlyListCents: 20000 }), { isManual: false, anchorName: "A" })
+    ).toBe(`2 venues · $200/mo · ${UNRATED_PRICE_NOTE}`);
   });
 
   it("check-billed: the admin's amount, and the bands when they differ", () => {

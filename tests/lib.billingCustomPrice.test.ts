@@ -107,6 +107,7 @@ import {
   type BillPriceChangeRow,
 } from "@/lib/billingCustomPrice";
 import { VENUE_ADDITION_LEASE_MS } from "@/lib/venueAddition";
+import { GRADUATED_PRICE_LOOKUP_KEY } from "@/lib/venuePricing";
 
 const row = { id: "sub-row-1", owner_id: "owner-1", stripe_subscription_id: "sub_123", amount_cents: 10000 };
 
@@ -175,6 +176,22 @@ describe("setCustomPrice", () => {
     expect(result).toMatchObject({ ok: true, amountCents: 7500 });
     expect(mocks.dbUpdate).toHaveBeenCalledWith({
       stripe_price_id: "price_new",
+      stripe_price_lookup_key: null,
+      amount_cents: 7500,
+      quantity: 1,
+    });
+  });
+
+  // Phase 6.8 (review 6.5 #3): the Price's lookup key is mirrored beside its id, so displays apply
+  // the same custom_monthly_ rule charges do.
+  it("mirrors the Price's lookup key beside its id", async () => {
+    mocks.priceRetrieve.mockResolvedValue(okPrice({ id: "price_new", lookup_key: customPriceLookupKey(7500) }));
+
+    await setCustomPrice(row, "price_new");
+
+    expect(mocks.dbUpdate).toHaveBeenCalledWith({
+      stripe_price_id: "price_new",
+      stripe_price_lookup_key: "custom_monthly_7500",
       amount_cents: 7500,
       quantity: 1,
     });
@@ -188,7 +205,7 @@ describe("setCustomPrice", () => {
 
     expect(result).toMatchObject({ ok: true, amountCents: 7500, quantity: 3, monthlyTotalCents: 22500 });
     expect(mocks.subUpdate.mock.calls[0][1].items).toEqual([{ id: "si_1", price: "price_new", quantity: 3 }]);
-    expect(mocks.dbUpdate).toHaveBeenCalledWith({ stripe_price_id: "price_new", amount_cents: 22500, quantity: 3 });
+    expect(mocks.dbUpdate).toHaveBeenCalledWith({ stripe_price_id: "price_new", stripe_price_lookup_key: null, amount_cents: 22500, quantity: 3 });
   });
 
   // Phase 6.2 (review #3): only a `custom_monthly_` Price is a partner self-serve per-venue rate.
@@ -305,7 +322,12 @@ describe("setCustomPrice", () => {
       },
       KEY_OPTIONS
     );
-    expect(mocks.dbUpdate).toHaveBeenCalledWith({ stripe_price_id: "price_graduated", amount_cents: 25000, quantity: 3 });
+    expect(mocks.dbUpdate).toHaveBeenCalledWith({
+      stripe_price_id: "price_graduated",
+      stripe_price_lookup_key: GRADUATED_PRICE_LOOKUP_KEY,
+      amount_cents: 25000,
+      quantity: 3,
+    });
     expect(dbState.rpcCalls[0]).toMatchObject({ name: "claim_bill_price_change", args: { p_price_id: "price_graduated" } });
   });
 

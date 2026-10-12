@@ -1199,11 +1199,15 @@ export function BillingSection() {
             <strong>{formatUsd(activeRatePartner?.subscription?.amountCents ?? 0)}</strong>/month
             {activeRatePartner?.bill
               ? ` for ${activeRatePartner.bill.billedVenueCount} venue${activeRatePartner.bill.billedVenueCount === 1 ? "" : "s"} (${
-                  activeRatePartner.bill.rate === "per_venue" ? "custom per-venue rate" : "standard bands"
+                  activeRatePartner.bill.rate === "per_venue"
+                    ? "custom per-venue rate"
+                    : activeRatePartner.bill.rate === "unrated"
+                      ? "flat Stripe price, not per-venue"
+                      : "standard bands"
                 })`
               : ""}
           </div>
-          {activeRatePartner?.bill?.rate === "per_venue" ? (
+          {activeRatePartner?.bill?.rate === "per_venue" || activeRatePartner?.bill?.rate === "unrated" ? (
             <button
               type="button"
               onClick={() => void submitStandardPrice()}

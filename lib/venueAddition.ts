@@ -16,6 +16,7 @@ import type { OwnerAuthContext } from "@/lib/requireOwnerAuth";
 import { BLANK_SIGNUP_DRAFT, signupStepIssue, type SignupDraft } from "@/lib/selfServeSignup";
 import { getStripeGraduatedPriceId, getStripePriceId, stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import { addVenueToBill, loadBillingForVenues, rejoinStateOf, venueIdsEverBilled } from "@/lib/venueBilling";
 import { isAdminHiddenVenueRow, isPlaceholderVenueRow } from "@/lib/venueClaim";
 import {
@@ -105,13 +106,16 @@ export type VenueAdditionRow = {
   amount_due_cents: number | null;
   failure_reason: string | null;
   venue_added_email_sent_at: string | null;
+  /** Role the paid add writes on the membership row: `admin` for an admin "Add to their bill" (Phase 6.8). */
+  membership_role: "added" | "admin";
   created_at: string;
   updated_at: string;
 };
 
 const ADDITION_COLUMNS =
   "id, idempotency_key, owner_id, subscription_id, venue_id, venue_name, status, stripe_invoice_id, " +
-  "quantity_before, quantity_after, amount_due_cents, failure_reason, venue_added_email_sent_at, created_at, updated_at";
+  "quantity_before, quantity_after, amount_due_cents, failure_reason, venue_added_email_sent_at, membership_role, " +
+  "created_at, updated_at";
 
 const LEDGER = "billing_venue_additions";
 
@@ -129,13 +133,14 @@ type BillRow = {
   discount_amount_off_cents: number | null;
   /** Mirror columns (webhook / lib/billingCustomPrice.ts) — read for the rate in the email only. */
   stripe_price_id: string | null;
+  stripe_price_lookup_key: string | null;
   amount_cents: number | null;
   quantity: number | null;
 };
 
 const BILL_COLUMNS =
   "id, venue_id, owner_id, status, billing_method, stripe_subscription_id, cancel_at_period_end, " +
-  "discount_label, discount_percent_off, discount_amount_off_cents, stripe_price_id, amount_cents, quantity";
+  "discount_label, discount_percent_off, discount_amount_off_cents, stripe_price_id, stripe_price_lookup_key, amount_cents, quantity";
 
 /** A refusal or failure, already shaped for the route to return. */
 export type AddVenueRefusal = {
@@ -397,6 +402,17 @@ const updateAddition = async (
     .returns<VenueAdditionRow[]>();
   if (error) throw new Error(`addition-write-failed: ${error.message}`);
   return (data ?? [])[0] ?? null;
+};
+
+/**
+ * The ledger row left `pending` under us before the charge (another request or the reconcile took it
+ * after the lease ran out): never charge on an in-memory copy the completion would not see — the
+ * webhook and the cron complete from the STORED row (its `venue_id`, `membership_role`). Nothing was
+ * charged; the client keeps its key and "Check again" answers from the row (Phase 6.9).
+ */
+const ledgerMoved = (row: VenueAdditionRow): AddVenueRefusal => {
+  console.error(`${LOG} ledger-write-missed addition=${row.id} — not charging`);
+  return refuse("payment_unconfirmed", 503, { additionId: row.id });
 };
 
 const readBill = async (billId: string): Promise<BillRow | null> => {
@@ -741,7 +757,9 @@ async function completeAddition(
     return { ok: true, row: updated ?? row };
   }
 
-  const membership = await addVenueToBill(row.subscription_id, row.venue_id, "added");
+  // The role was recorded with the venue id when the add started (an admin attach → `admin`), so a
+  // completion from the webhook or the cron writes it too.
+  const membership = await addVenueToBill(row.subscription_id, row.venue_id, row.membership_role === "admin" ? "admin" : "added");
   if (!membership.ok) {
     console.error(`${LOG} membership-write-failed addition=${row.id} venue=${row.venue_id}: ${membership.error}`);
     return { ok: false, error: membership.error };
@@ -1085,9 +1103,6 @@ type ClaimRpcRow = {
   addition_invoice_id: string | null;
 };
 
-const isMissingFunction = (error: { code?: string; message?: string }): boolean =>
-  error.code === "PGRST202" || error.code === "42883" || (error.message ?? "").includes("claim_venue_addition");
-
 async function claimAddition(
   key: string,
   ownerId: string,
@@ -1105,7 +1120,7 @@ async function claimAddition(
       // A unique violation means the same key was claimed on another bill's lock at the same
       // moment; the second pass reads it back as `existing` / `key_conflict`.
       if ((error as { code?: string }).code === "23505" && attempt === 0) continue;
-      if (isMissingFunction(error)) {
+      if (isMissingFunction(error, "claim_venue_addition")) {
         console.error(`${LOG} claim_venue_addition-missing — apply supabase/migrations/20261011153607_venue_addition_claim.sql`);
       } else {
         console.error(`${LOG} claim-failed bill=${billId}: ${error.message}`);
@@ -1337,8 +1352,11 @@ export async function startVenueAddition(args: StartVenueAdditionArgs): Promise<
     // 5–6 (Add back). The venue already exists and is the partner's: record it, skip the address
     //    scan and the venue insert. It stays as it is (hidden by the removal job) until paid.
     if (readd) {
-      const recorded = await updateAddition(row.id, ["pending"], { venue_id: readd.id });
-      row = recorded ?? { ...row, venue_id: readd.id };
+      // An admin attach records its role in the SAME write as the venue id (Phase 6.8, review 6.5 #4).
+      const patch = args.adminAttachVenue ? { venue_id: readd.id, membership_role: "admin" as const } : { venue_id: readd.id };
+      const recorded = await updateAddition(row.id, ["pending"], patch);
+      if (!recorded) return ledgerMoved(row);
+      row = recorded;
     } else {
       // 5. Never a second venue row at an address we already hold (same scan and predicates as
       //    signup — lib/nearbyVenue.ts, lib/venueClaim.ts).
@@ -1386,7 +1404,8 @@ export async function startVenueAddition(args: StartVenueAdditionArgs): Promise<
       // once the charge has succeeded, so a partner never sees (or configures) a venue they have not
       // paid for — and a declined / abandoned add has no link to undo.
       const recorded = await updateAddition(row.id, ["pending"], { venue_id: venueId });
-      row = recorded ?? { ...row, venue_id: venueId };
+      if (!recorded) return ledgerMoved(row); // the hidden, stamped venue is left to the signup sweep
+      row = recorded;
     }
 
     // 7. Charge: Stripe applies quantity n + 1 ONLY if the prorated invoice is paid.

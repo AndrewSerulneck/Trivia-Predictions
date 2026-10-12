@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: null }));
@@ -62,12 +62,37 @@ describe("classifyRejoin", () => {
 });
 
 describe("on_partner_bill copy (Phase 6.6)", () => {
+  const card = { billId: "bill-a", byCard: true };
+  const check = { billId: "bill-a", byCard: false };
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED;
+  });
+
   it("lapsed points at Add back; removed with no live bill to return to points at support", () => {
-    expect(onPartnerBillMessageKey({ kind: "lapsed", ownerBillId: "bill-a" })).toBe("lapsed");
-    expect(onPartnerBillMessageKey({ kind: "removed", ownerBillId: "bill-a" })).toBe("removed");
-    expect(onPartnerBillMessageKey({ kind: "removed", ownerBillId: null })).toBe("removed_no_bill");
-    expect(onPartnerBillMessageKey({ kind: "comped", ownerBillId: "bill-a" })).toBe("comped");
-    expect(onPartnerBillMessageKey({ kind: "unbilled", ownerBillId: "bill-a" })).toBe("shared");
+    process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED = "true";
+    for (const audience of ["partner", "admin"] as const) {
+      expect(onPartnerBillMessageKey({ kind: "lapsed", ownerBillId: "bill-a", rejoin: card }, audience)).toBe("lapsed");
+      expect(onPartnerBillMessageKey({ kind: "removed", ownerBillId: "bill-a", rejoin: card }, audience)).toBe("removed");
+      expect(onPartnerBillMessageKey({ kind: "removed", ownerBillId: null, rejoin: null }, audience)).toBe("removed_no_bill");
+      expect(onPartnerBillMessageKey({ kind: "comped", ownerBillId: "bill-a" }, audience)).toBe("comped");
+      expect(onPartnerBillMessageKey({ kind: "unbilled", ownerBillId: "bill-a" }, audience)).toBe("shared");
+    }
+  });
+
+  it("Phase 6.9: 'Add it back' only where that button exists", () => {
+    // Flag off: no partner Add back at all; the admin can still put it on a check bill, not a card bill.
+    expect(onPartnerBillMessageKey({ kind: "lapsed", ownerBillId: "bill-a", rejoin: card }, "partner")).toBe("rejoin_unavailable");
+    expect(onPartnerBillMessageKey({ kind: "removed", ownerBillId: "bill-a", rejoin: card }, "partner")).toBe("rejoin_unavailable");
+    expect(onPartnerBillMessageKey({ kind: "lapsed", ownerBillId: "bill-a", rejoin: card }, "admin")).toBe("rejoin_unavailable");
+    expect(onPartnerBillMessageKey({ kind: "lapsed", ownerBillId: "bill-a", rejoin: check }, "admin")).toBe("lapsed");
+    // Flag on: a check-billed partner has no Add back (card-only); the admin path takes both.
+    process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED = "true";
+    expect(onPartnerBillMessageKey({ kind: "lapsed", ownerBillId: "bill-a", rejoin: check }, "partner")).toBe("rejoin_unavailable");
+    expect(onPartnerBillMessageKey({ kind: "lapsed", ownerBillId: "bill-a", rejoin: check }, "admin")).toBe("lapsed");
+    expect(ON_PARTNER_BILL_MESSAGES.rejoin_unavailable).toContain("@");
+  });
+
+  it("every partner key has an admin sentence", () => {
     for (const key of Object.keys(ON_PARTNER_BILL_MESSAGES)) {
       expect(ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES).toHaveProperty(key);
     }

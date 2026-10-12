@@ -100,7 +100,7 @@ import { POST as addPOST } from "@/app/api/owner/venues/add/route";
 import { GET as billingGET } from "@/app/api/owner/billing/route";
 import { POST as cronPOST } from "@/app/api/cron/billing/route";
 import { VENUE_ADDITION_LEASE_MS } from "@/lib/venueAddition";
-import { billedVenueCount, bringAnchorHome, repairAnchorMemberships, venueIdsOnBill } from "@/lib/venueBilling";
+import { ANCHOR_REPAIR_PAGE_SIZE, billedVenueCount, bringAnchorHome, repairAnchorMemberships, venueIdsOnBill } from "@/lib/venueBilling";
 import { applyDueVenueRemovals, reconcileStaleVenueChanges } from "@/lib/venueRemoval";
 import { CUSTOM_PER_VENUE_LOOKUP_PREFIX, GRADUATED_PRICE_LOOKUP_KEY, nextVenuePriceCents } from "@/lib/venuePricing";
 
@@ -784,6 +784,47 @@ describe("Add back from a CANCELLED bill — rejoin (Phase 6.6)", () => {
     const rows = tbl(h.state.db, "billing_subscription_venues");
     rows.splice(rows.findIndex((row) => row.venue_id === ANCHOR), 1);
     expect(await bringAnchorHome(BILL)).toEqual({ ok: true, outcome: "inserted" });
+    expect(member(ANCHOR)).toMatchObject({ subscription_id: BILL, role: "anchor" });
+  });
+
+  it("Phase 6.9: bringAnchorHome re-decides once when its insert finds a row, then reports instead of looping", async () => {
+    const rows = tbl(h.state.db, "billing_subscription_venues");
+    rows.splice(rows.findIndex((row) => row.venue_id === ANCHOR), 1);
+    const real = h.state.db.client;
+    let upserts = 0;
+    // An insert that keeps "losing" to a row the next read can't see.
+    h.state.db = {
+      ...h.state.db,
+      client: {
+        ...real,
+        from: (name: string) => {
+          const handle = real.from(name);
+          if (name !== "billing_subscription_venues") return handle;
+          return {
+            ...handle,
+            upsert: () => {
+              upserts += 1;
+              return { select: () => ({ returns: async () => ({ data: [], error: null }) }) };
+            },
+          } as unknown as ReturnType<typeof real.from>;
+        },
+      },
+    };
+    expect(await bringAnchorHome(BILL)).toEqual({ ok: false, error: "anchor-row-unresolved" });
+    expect(upserts).toBe(2);
+  });
+
+  it("Phase 6.9: the daily repair pages through live bills (none skipped past a page)", async () => {
+    // A full page of healthy live bills whose ids sort BEFORE the one that needs repair.
+    for (let i = 0; i < ANCHOR_REPAIR_PAGE_SIZE; i++) {
+      const id = `bill-0-${String(i).padStart(4, "0")}`;
+      bills().push({ id, venue_id: `venue-page-${i}`, owner_id: `owner-page-${i}`, status: "active", billing_method: "offline" });
+      tbl(h.state.db, "billing_subscription_venues").push({ subscription_id: id, venue_id: `venue-page-${i}`, role: "anchor" });
+    }
+    const rows = tbl(h.state.db, "billing_subscription_venues");
+    rows.splice(rows.findIndex((row) => row.venue_id === ANCHOR), 1);
+
+    expect(await repairAnchorMemberships()).toMatchObject({ liveBills: ANCHOR_REPAIR_PAGE_SIZE + 1, misplaced: 1, inserted: 1, failed: 0 });
     expect(member(ANCHOR)).toMatchObject({ subscription_id: BILL, role: "anchor" });
   });
 

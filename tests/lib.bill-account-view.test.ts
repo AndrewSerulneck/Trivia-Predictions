@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   breakdownLabel,
   changeDoneMessage,
+  CUSTOM_PRICE_LABEL,
   interpretVenueChangeReply,
   removeConfirmText,
   venueAction,
@@ -21,6 +22,11 @@ describe("billAccountView (multi-venue billing Phase 5)", () => {
         ],
       })
     ).toBe("1 × $100 · 3 × $75");
+  });
+
+  it("Phase 6.8: a bill with no per-venue rate (empty breakdown) reads as a custom monthly price", () => {
+    expect(breakdownLabel({ breakdown: [] })).toBe(CUSTOM_PRICE_LABEL);
+    expect(CUSTOM_PRICE_LABEL).toBe("Custom monthly price");
   });
 
   it("offers Remove only while another venue stays billed, Undo while leaving, Add back once off", () => {

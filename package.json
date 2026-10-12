@@ -83,7 +83,8 @@
     "billing:phase1-audit": "node --env-file=.env.local scripts/phase1-audit.mjs",
     "billing:check-venue-billing": "node --env-file=.env.local --conditions react-server --import tsx scripts/check-venue-billing.cjs",
     "billing:graduated-price": "node --env-file=.env.local --import tsx scripts/create-graduated-price.cjs",
-    "billing:migrate-to-graduated": "node --env-file=.env.local --import tsx scripts/migrate-subscriptions-to-graduated.cjs"
+    "billing:migrate-to-graduated": "node --env-file=.env.local --import tsx scripts/migrate-subscriptions-to-graduated.cjs",
+    "billing:backfill-lookup-keys": "node --env-file=.env.local scripts/backfill-price-lookup-keys.cjs"
   },
   "repository": {
     "type": "git",

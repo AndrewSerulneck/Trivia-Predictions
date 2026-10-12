@@ -26,6 +26,7 @@ import {
   loadBillingForVenues,
   bringAnchorHome,
   refusesOwnBill,
+  rejoinBillOf,
   unbilledVenueStates,
   type BillMembership,
   type UnbilledVenueState,
@@ -77,6 +78,7 @@ type SubscriptionRow = {
   discount_amount_off_cents: number | null;
   discount_ends_at: string | null;
   stripe_price_id: string | null;
+  stripe_price_lookup_key: string | null;
   quantity: number | null;
   owner_id: string | null;
 };
@@ -89,7 +91,7 @@ type PartnerBill = AdminPartnerBill;
 
 /** The greyed "Grant offline" note for a venue that must not open its own bill (the POST's own wording), or null. */
 const grantBlockedMessage = (state: UnbilledVenueState | undefined): string | null =>
-  refusesOwnBill(state) ? ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES[onPartnerBillMessageKey(state)] : null;
+  refusesOwnBill(state) ? ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES[onPartnerBillMessageKey(state, "admin")] : null;
 
 const membershipState = (row: BillMembership | undefined, nowMs: number): PartnerBill["venueState"] =>
   !row || isBilledMembership(row) ? "billed" : hasLeftBill(row, nowMs) ? "removed" : "leaving";
@@ -132,7 +134,7 @@ export async function GET(request: Request) {
     // The bill covering each venue (lib/venueBilling.ts) — its own, or a multi-venue bill.
     const billing = await loadBillingForVenues<SubscriptionRow>(
       venueIds,
-      "id, venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, cancel_at_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at, stripe_price_id, quantity, owner_id"
+      "id, venue_id, plan_type, billing_method, status, amount_cents, current_period_start, current_period_end, stripe_subscription_id, cancel_at_period_end, stripe_coupon_id, discount_label, discount_percent_off, discount_amount_off_cents, discount_ends_at, stripe_price_id, stripe_price_lookup_key, quantity, owner_id"
     );
     if (!billing.ok) {
       return NextResponse.json({ ok: false, error: billing.error }, { status: 500 });
@@ -164,9 +166,10 @@ export async function GET(request: Request) {
       anchorVenueName: venueNameById.get(sub.venue_id) ?? null,
       billedVenueCount: billed,
       leavingVenueCount: leaving,
-      rate: rate.kind,
-      breakdown: rateBreakdown(rate, billed).map((line) => ({ venues: line.venues, unitAmountCents: line.unitAmountCents })),
-      monthlyListCents: isOffline ? sub.amount_cents : rateMonthlyTotalCents(rate, billed),
+      // No rate (a flat Price that isn't a custom_monthly_ one, Phase 6.8): no per-venue math — the bill's amount as it is.
+      rate: rate ? rate.kind : "unrated",
+      breakdown: rate ? rateBreakdown(rate, billed).map((line) => ({ venues: line.venues, unitAmountCents: line.unitAmountCents })) : [],
+      monthlyListCents: isOffline || !rate ? sub.amount_cents : rateMonthlyTotalCents(rate, billed),
       stripeQuantity: !isOffline && typeof sub.quantity === "number" && sub.quantity !== billed ? sub.quantity : null,
       suggestedOfflineCents: isOffline ? monthlyTotalCents(billed) : null,
       venueState: membershipState(
@@ -318,7 +321,7 @@ async function attachOptions(): Promise<NextResponse> {
       if (!owner || !state) return [];
       // Comped venues are visible ones; a rejoin is a venue whose bill history the partner's live bill can take back.
       if (state.kind === "comped") return venue.hidden ? [] : [{ id: venue.id, name, ownerId: owner, state: "comped" }];
-      if ((state.kind === "lapsed" || state.kind === "removed") && state.ownerBillId) {
+      if ((state.kind === "lapsed" || state.kind === "removed") && rejoinBillOf(state)) {
         return [{ id: venue.id, name, ownerId: owner, state: state.kind }];
       }
       return [];
@@ -555,7 +558,7 @@ export async function POST(request: Request) {
   }
   const unbilledState = unbilled.byVenue.get(venueId);
   if (refusesOwnBill(unbilledState)) {
-    const key = onPartnerBillMessageKey(unbilledState);
+    const key = onPartnerBillMessageKey(unbilledState, "admin");
     console.warn(
       `[AdminBilling] grant-manual-refused-on-partner-bill admin=${auth.adminUsername} venue=${venueId} ` +
         `state=${unbilledState.kind} ownerBill=${unbilledState.ownerBillId ?? "none"}`
@@ -676,6 +679,7 @@ export async function POST(request: Request) {
         stripe_customer_id: null,
         stripe_subscription_id: null,
         stripe_price_id: null,
+        stripe_price_lookup_key: null,
         // A discount mirror from a prior card subscription must not survive the
         // conversion — the coupon it referenced is gone (detached above) and
         // amount_cents already carries the offline list rate verbatim.

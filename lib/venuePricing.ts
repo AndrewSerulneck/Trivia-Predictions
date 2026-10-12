@@ -360,6 +360,8 @@ export const unratedPriceRefusal = (
 /** The `billing_subscriptions` mirror columns `billRateFromMirror` reads. */
 export type RateMirrorShape = {
   stripe_price_id?: string | null;
+  /** The Price's lookup key, mirrored beside its id (Phase 6.8, migration 20261012033356). */
+  stripe_price_lookup_key?: string | null;
   amount_cents?: number | null;
   quantity?: number | null;
 };
@@ -367,19 +369,33 @@ export type RateMirrorShape = {
 /**
  * A bill's rate from our own mirror (no Stripe call) — for displays: the admin billing list, the
  * partner Billing page, the "Venue added" email. The webhook (and lib/billingCustomPrice.ts) write
- * `stripe_price_id`, `amount_cents` (= the whole bill) and `quantity` together.
+ * `stripe_price_id`, `stripe_price_lookup_key`, `amount_cents` (= the whole bill) and `quantity`
+ * together.
  *
- *   - no Stripe price (offline / check bills), or the graduated Price → graduated;
- *   - graduated Price id unknown in this environment → graduated when the amount matches the bands;
- *   - otherwise a flat Price → its per-venue amount = `amount_cents / quantity`.
+ * The same rule as `billRateFromPrice` (charges), so a display never prices a bill the add flow
+ * would refuse (Phase 6.8, review 6.5 #3):
+ *   - no Stripe price (offline / check bills) or the graduated Price (by id; by lookup key only when the
+ *     amount matches the bands — a stale key otherwise) → graduated;
+ *   - a `custom_monthly_` lookup key → per-venue, `amount_cents / quantity`;
+ *   - the graduated id unknown in this environment and an amount that matches the bands → graduated;
+ *   - any other flat Price (the old list Price, a hand-pasted Price, a row whose key is not mirrored
+ *     yet) → null: no per-venue math. Show the bill's `amount_cents` as it is.
  */
-export const billRateFromMirror = (row: RateMirrorShape, graduatedPriceId: string): BillRate => {
+export const billRateFromMirror = (row: RateMirrorShape, graduatedPriceId: string): BillRate | null => {
   const priceId = row.stripe_price_id ?? null;
   if (!priceId) return GRADUATED_RATE;
   if (graduatedPriceId && priceId === graduatedPriceId) return GRADUATED_RATE;
   const quantity = typeof row.quantity === "number" && Number.isInteger(row.quantity) && row.quantity >= 1 ? row.quantity : 1;
   const amount = typeof row.amount_cents === "number" && Number.isFinite(row.amount_cents) ? row.amount_cents : 0;
+  // The graduated key on another id (another environment's graduated Price) is trusted only when the
+  // bill's amount agrees with the bands: a key left stale by a price swap the old app made (it wrote
+  // the id, not the key) must not show bands for a bill Stripe charges differently (Phase 6.9).
+  if (row.stripe_price_lookup_key === GRADUATED_PRICE_LOOKUP_KEY) {
+    return !graduatedPriceId || amount === monthlyTotalCents(quantity) ? GRADUATED_RATE : null;
+  }
+  if (row.stripe_price_lookup_key?.startsWith(CUSTOM_PER_VENUE_LOOKUP_PREFIX)) {
+    return amount > 0 ? { kind: "per_venue", unitAmountCents: Math.round(amount / quantity) } : null;
+  }
   if (!graduatedPriceId && amount === monthlyTotalCents(quantity)) return GRADUATED_RATE;
-  if (amount <= 0) return GRADUATED_RATE;
-  return { kind: "per_venue", unitAmountCents: Math.round(amount / quantity) };
+  return null;
 };
