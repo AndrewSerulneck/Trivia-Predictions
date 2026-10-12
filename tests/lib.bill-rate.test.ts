@@ -5,9 +5,11 @@ import {
   billRateFromPrice,
   GRADUATED_PRICE_LOOKUP_KEY,
   GRADUATED_RATE,
+  CUSTOM_PER_VENUE_LOOKUP_PREFIX,
   rateBreakdown,
   rateMonthlyTotalCents,
   rateVenuePriceCents,
+  unratedPriceRefusal,
 } from "@/lib/venuePricing";
 
 /**
@@ -53,9 +55,22 @@ describe("billRateFromPrice (a live Stripe item's Price)", () => {
     expect(billRateFromPrice({ id: "price_graduated", lookup_key: null, billing_scheme: "tiered" }, IDS)).toEqual(GRADUATED_RATE);
   });
 
-  it("a flat monthly USD price is a per-venue rate", () => {
+  it("a flat monthly USD `custom_monthly_` price is a per-venue rate", () => {
+    expect(CUSTOM_PER_VENUE_LOOKUP_PREFIX).toBe("custom_monthly_");
     expect(billRateFromPrice(flat(), IDS)).toEqual({ kind: "per_venue", unitAmountCents: 7000 });
-    expect(billRateFromPrice(flat({ lookup_key: null, id: "price_pasted" }), IDS)).toEqual({ kind: "per_venue", unitAmountCents: 7000 });
+  });
+
+  // Phase 6.2 (review #3): only the Prices lib/billingCustomPrice.ts mints are a per-venue rate.
+  it("any other flat price is NOT a per-venue rate", () => {
+    // The old $100 list Price with no lookup key (a configured id or not).
+    const list = flat({ id: "price_list_100", lookup_key: null, unit_amount: 10000 });
+    expect(billRateFromPrice(list, IDS)).toBeNull();
+    // STRIPE_PRICE_ID unset: the list-id guard can't fire, the prefix rule still refuses it.
+    expect(billRateFromPrice(list, { graduatedPriceId: "price_graduated", listPriceId: "" })).toBeNull();
+    // A hand-made flat monthly Price pasted into the admin form, with or without a lookup key.
+    expect(billRateFromPrice(flat({ id: "price_pasted", lookup_key: null }), IDS)).toBeNull();
+    expect(billRateFromPrice(flat({ id: "price_pasted", lookup_key: "partner_special" }), IDS)).toBeNull();
+    expect(billRateFromPrice(flat({ id: "price_pasted", lookup_key: "xcustom_monthly_7000" }), IDS)).toBeNull();
   });
 
   it("refuses the old flat list price, foreign tiers, yearly, non-USD, and no amount", () => {
@@ -66,6 +81,22 @@ describe("billRateFromPrice (a live Stripe item's Price)", () => {
     expect(billRateFromPrice(flat({ currency: "eur" }), IDS)).toBeNull();
     expect(billRateFromPrice(flat({ unit_amount: null }), IDS)).toBeNull();
     expect(billRateFromPrice(null, IDS)).toBeNull();
+  });
+});
+
+describe("unratedPriceRefusal (why an unrated item needs a person)", () => {
+  const ids = { listPriceId: "price_list_100" };
+  it("a hand-set flat monthly USD price is a custom rate", () => {
+    expect(unratedPriceRefusal(flat({ id: "price_pasted", lookup_key: null }), ids)).toBe("custom_rate");
+    expect(unratedPriceRefusal(flat({ id: "price_pasted", lookup_key: "partner_special" }), ids)).toBe("custom_rate");
+  });
+
+  it("the list price and every non-flat shape is a billing-state problem", () => {
+    expect(unratedPriceRefusal(flat({ id: "price_list_100", lookup_key: null, unit_amount: 10000 }), ids)).toBe("billing_state");
+    expect(unratedPriceRefusal({ id: "price_t", lookup_key: null, billing_scheme: "tiered", unit_amount: null }, ids)).toBe("billing_state");
+    expect(unratedPriceRefusal(flat({ recurring: { interval: "year", interval_count: 1 } }), ids)).toBe("billing_state");
+    expect(unratedPriceRefusal(flat({ currency: "eur" }), ids)).toBe("billing_state");
+    expect(unratedPriceRefusal(null, ids)).toBe("billing_state");
   });
 });
 

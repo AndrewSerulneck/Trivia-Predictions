@@ -97,6 +97,7 @@ import {
   MAX_CUSTOM_PRICE_DOLLARS,
   MIN_CUSTOM_PRICE_DOLLARS,
   customPriceLookupKey,
+  NON_STANDARD_RATE_NOTICE,
   reconcileStaleBillPriceChanges,
   resolveMonthlyPriceForAmount,
   setCustomPrice,
@@ -188,6 +189,40 @@ describe("setCustomPrice", () => {
     expect(result).toMatchObject({ ok: true, amountCents: 7500, quantity: 3, monthlyTotalCents: 22500 });
     expect(mocks.subUpdate.mock.calls[0][1].items).toEqual([{ id: "si_1", price: "price_new", quantity: 3 }]);
     expect(mocks.dbUpdate).toHaveBeenCalledWith({ stripe_price_id: "price_new", amount_cents: 22500, quantity: 3 });
+  });
+
+  // Phase 6.2 (review #3): only a `custom_monthly_` Price is a partner self-serve per-venue rate.
+  it("a pasted Price without the custom_monthly_ prefix still swaps, and tells the admin self-serve is off", async () => {
+    mocks.priceRetrieve.mockResolvedValue(okPrice({ id: "price_pasted", lookup_key: null }));
+
+    const result = await setCustomPrice(row, "price_pasted");
+
+    expect(result).toMatchObject({ ok: true, priceId: "price_pasted", notice: NON_STANDARD_RATE_NOTICE });
+    expect(mocks.subUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("a custom_monthly_ Price (pasted or minted) carries no notice", async () => {
+    mocks.priceRetrieve.mockResolvedValue(okPrice({ id: "price_new", lookup_key: customPriceLookupKey(7500) }));
+
+    const pasted = await setCustomPrice(row, "price_new");
+    expect(pasted.ok).toBe(true);
+    expect(pasted).not.toHaveProperty("notice");
+
+    resetDb();
+    mocks.priceList.mockResolvedValue({ data: [{ id: "price_new" }] });
+    const minted = await setCustomPrice(row, { amountDollars: 75 });
+    expect(minted.ok).toBe(true);
+    expect(minted).not.toHaveProperty("notice");
+  });
+
+  it("a refused swap carries no notice", async () => {
+    mocks.priceRetrieve.mockResolvedValue(okPrice({ id: "price_pasted", lookup_key: null }));
+    dbState.claim = { data: [{ outcome: "busy_addition", change_id: null }] };
+
+    const result = await setCustomPrice(row, "price_pasted");
+
+    expect(result.ok).toBe(false);
+    expect(result).not.toHaveProperty("notice");
   });
 
   // Phase 6.1 (review fix #1): the swap is a claimed change under the bill's lock.

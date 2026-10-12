@@ -305,14 +305,25 @@ export type RatePriceShape = {
   recurring?: { interval?: string | null; interval_count?: number | null } | null;
 };
 
+/** A flat (per-unit), monthly, USD Price with a positive whole-cent amount — the only shape a per-venue rate can have. */
+const isFlatMonthlyUsdPrice = (price: RatePriceShape): price is RatePriceShape & { unit_amount: number } =>
+  price.billing_scheme !== "tiered" &&
+  typeof price.unit_amount === "number" &&
+  Number.isInteger(price.unit_amount) &&
+  price.unit_amount > 0 &&
+  (!price.currency || price.currency === "usd") &&
+  (!price.recurring || (price.recurring.interval === "month" && (price.recurring.interval_count ?? 1) === 1));
+
 /**
  * The rate a subscription item's live Price bills at, or null when venues can't be added to or
  * removed from it automatically. `graduatedPriceId` / `listPriceId` are the configured Stripe ids
  * (lib/stripe.ts), passed in so this stays pure.
  *
- * The old flat list Price (`listPriceId`, $100 per unit) is deliberately NOT a per-venue rate: a
- * bill still on it was never moved to the bands, and adding a venue to it would charge $100 instead
- * of $75 — it is refused (null) until it is moved to the graduated Price.
+ * A per-venue rate is ONLY a flat monthly USD Price whose lookup key starts with
+ * `CUSTOM_PER_VENUE_LOOKUP_PREFIX` — the Prices lib/billingCustomPrice.ts mints (Phase 6.2, review
+ * #3). Any other flat Price — the old $100 list Price (with or without `STRIPE_PRICE_ID` set), a
+ * hand-pasted Price — is null: adding a venue to it would charge its flat amount instead of the band
+ * price, so it needs a person (`unratedPriceRefusal` says which refusal).
  */
 export const billRateFromPrice = (
   price: RatePriceShape | null | undefined,
@@ -321,12 +332,24 @@ export const billRateFromPrice = (
   if (!price) return null;
   if (price.lookup_key === GRADUATED_PRICE_LOOKUP_KEY) return GRADUATED_RATE;
   if (ids.graduatedPriceId && price.id === ids.graduatedPriceId) return GRADUATED_RATE;
-  if (ids.listPriceId && price.id === ids.listPriceId) return null;
-  if (price.billing_scheme === "tiered") return null;
-  if (typeof price.unit_amount !== "number" || !Number.isInteger(price.unit_amount) || price.unit_amount <= 0) return null;
-  if (price.currency && price.currency !== "usd") return null;
-  if (price.recurring && (price.recurring.interval !== "month" || (price.recurring.interval_count ?? 1) !== 1)) return null;
+  if (!price.lookup_key?.startsWith(CUSTOM_PER_VENUE_LOOKUP_PREFIX)) return null;
+  if (!isFlatMonthlyUsdPrice(price)) return null;
   return { kind: "per_venue", unitAmountCents: price.unit_amount };
+};
+
+/**
+ * Why a Price `billRateFromPrice` refused is refused, as the partner-facing code: `custom_rate` for
+ * a flat monthly USD Price that isn't the list Price (an admin set a rate by hand — the partner's
+ * true reason), `billing_state` for everything else (the old list Price, tiers we don't know,
+ * yearly, foreign currency, no Price).
+ */
+export const unratedPriceRefusal = (
+  price: RatePriceShape | null | undefined,
+  ids: { listPriceId: string }
+): "custom_rate" | "billing_state" => {
+  if (!price) return "billing_state";
+  if (ids.listPriceId && price.id === ids.listPriceId) return "billing_state";
+  return isFlatMonthlyUsdPrice(price) ? "custom_rate" : "billing_state";
 };
 
 /** The `billing_subscriptions` mirror columns `billRateFromMirror` reads. */

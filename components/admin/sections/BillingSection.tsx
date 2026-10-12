@@ -437,12 +437,15 @@ export function BillingSection() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const payload = (await res.json()) as { ok?: boolean; error?: string };
+      const payload = (await res.json()) as { ok?: boolean; error?: string; warning?: string; notice?: string };
       if (!res.ok || !payload.ok) {
         setRateNotice(payload.error ?? "Failed to change the rate.");
         return;
       }
       closeRate();
+      // Phase 6.2: a pasted non-standard Price switches the partner's self-serve add/remove off — say so.
+      const heads = [payload.notice, payload.warning].filter(Boolean);
+      if (heads.length > 0) window.alert(`Rate changed. ${heads.join(" ")}`);
       await fetchPartners(search);
     } catch {
       setRateNotice("Network error. Please try again.");

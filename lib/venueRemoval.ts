@@ -25,6 +25,7 @@ import {
   isoFromUnix,
   itemQuantity,
   soleItem,
+  unratedItemRefusal,
   VENUE_ADDITION_LEASE_MS,
 } from "@/lib/venueAddition";
 import {
@@ -306,7 +307,8 @@ const checkChangeableSubscription = (
   const item = soleItem(subscription);
   if (!item) return { ok: false, code: "billing_state" };
   // Graduated bands, or an admin's per-venue rate (Phase 6): either way the quantity is the venues.
-  if (!billRateOfItem(item)) return { ok: false, code: "billing_state" };
+  // Anything else needs a person (Phase 6.2: a hand-pasted flat Price says `custom_rate`).
+  if (!billRateOfItem(item)) return { ok: false, code: unratedItemRefusal(item) };
   if (typeof item.quantity !== "number" || !Number.isInteger(item.quantity) || item.quantity < 1) {
     return { ok: false, code: "billing_state" };
   }

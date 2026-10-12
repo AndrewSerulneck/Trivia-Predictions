@@ -485,6 +485,19 @@ describe("Remove at end of month", () => {
     // see the next test).
     Object.assign(subItem().price as Row, { id: "price_other_tiers", lookup_key: null });
     expect((await remove(SECOND)).json.code).toBe("billing_state");
+    // Phase 6.2: a flat Price an admin pasted by hand (not `custom_monthly_`) says why — a custom rate.
+    Object.assign(subItem().price as Row, {
+      id: "price_pasted_8000",
+      lookup_key: null,
+      billing_scheme: "per_unit",
+      tiers_mode: null,
+      unit_amount: 8000,
+      currency: "usd",
+      recurring: { interval: "month", interval_count: 1 },
+    });
+    const pasted = await remove(SECOND);
+    expect(pasted.status).toBe(409);
+    expect(pasted.json.code).toBe("custom_rate");
     h.state.flag = false;
     expect((await remove(SECOND)).status).toBe(404);
   });

@@ -4,10 +4,11 @@
 Phase 5's migration `20261011210033_venue_bill_changes.sql` applied to production the same day and verified).
 Phases 1–2 are live (both card subscribers are on the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl`, still
 $100/month; check-paying accounts never lapse automatically). **Phase 6 (admin & edge tools) committed
-locally as `6c5a178`, NOT pushed** — flag still off. **Phase 6.1 committed locally 2026-10-11, NOT pushed**; its migration
+locally as `6c5a178`, NOT pushed** — flag still off. **Phase 6.1 committed locally as `a83da94`, NOT pushed**; its migration
 `20261011224839_bill_price_change_lock.sql` was **applied to production 2026-10-11** on Andrew's go-ahead and verified
-(migration before app, so the app may now deploy). Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_6.1_HANDOFF.md`**. Andrew's answers are
-in §2 (do not re-ask). **Next: Phase 6.2** — a code review of Phase 6 found 10 problems, planned as Phases 6.1–6.5
+(migration before app, so the app may now deploy). **Phase 6.2 committed locally 2026-10-11, NOT pushed** (no migration). Andrew: push everything when the plan is finished.
+Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_6.2_HANDOFF.md`**. Andrew's answers are
+in §2 (do not re-ask). **Next: Phase 6.3** — a code review of Phase 6 found 10 problems, planned as Phases 6.1–6.5
 (§5); Phase 7 (release) waits until they are done. Each phase ends with a handoff note
 `docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at the latest one.
 
@@ -341,7 +342,7 @@ page**, not in the dashboard dropdown (deviation; Phase 7 may add a dropdown hin
 Everything in §4.4 + the Billing page part of §4.5. The cron change lives in the existing
 `/api/cron/billing` — **no new `vercel.json` entry**.
 
-### Phase 6 — Admin and edge cases (Opus 5.5, high) — ✅ built 2026-10-11, not committed (handoff: `…_PHASE_6_HANDOFF.md`)
+### Phase 6 — Admin and edge cases (Opus 5.5, high) — ✅ built and committed locally 2026-10-11, not pushed (handoff: `…_PHASE_6_HANDOFF.md`)
 
 As built: admin list shows each bill's venue count, band (or per-venue) line and monthly total, "On X's bill" for
 non-anchor venues (actions stay on the anchor's row) and a "Comped (free)" badge; **Link a venue to a partner**
@@ -440,7 +441,12 @@ and removes inside Postgres. Do not use a TypeScript read-then-write.
 Cost: one extra RPC pair per admin price change (rare, admin-only). The cron gains one bounded read
 of stale price rows (normally zero).
 
-#### Phase 6.2 — Only `custom_monthly_` Prices are a per-venue rate; cleanup (Opus 5.5, high) — review #3, #9, #10
+#### Phase 6.2 — Only `custom_monthly_` Prices are a per-venue rate; cleanup (Opus 5.5, high) — review #3, #9, #10 — ✅ built and committed locally 2026-10-11, not pushed (handoff: `…_PHASE_6.2_HANDOFF.md`)
+
+As built: everything below. The refusal split lives in `unratedPriceRefusal` (`lib/venuePricing.ts`): a flat monthly USD
+Price that isn't the configured list Price → `custom_rate`; the list Price, tiers, yearly, non-USD → `billing_state`.
+With `STRIPE_PRICE_ID` unset the list Price reads as `custom_rate` (still refused, never charged $100). The admin sees
+the notice in an alert after Set rate. Live check: both active subscriptions are on the graduated Price.
 
 **Finding #3.** `billRateFromPrice` (`lib/venuePricing.ts`) treats **any** flat, monthly, USD Price
 that isn't the graduated or list Price as a negotiated per-venue rate. *Failure:* a bill on an older

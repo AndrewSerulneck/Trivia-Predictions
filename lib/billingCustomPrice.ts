@@ -4,7 +4,7 @@ import type Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getStripeGraduatedPriceId, getStripePriceId, stripe } from "@/lib/stripe";
 import { isDefinitiveStripeRejection, VENUE_ADDITION_LEASE_MS } from "@/lib/venueAddition";
-import { monthlyTotalCents } from "@/lib/venuePricing";
+import { billRateFromPrice, CUSTOM_PER_VENUE_LOOKUP_PREFIX, monthlyTotalCents } from "@/lib/venuePricing";
 
 /**
  * Phase 8 of docs/billing-discounts-plan.md — the permanent negotiated rate.
@@ -110,7 +110,7 @@ export const MAX_CUSTOM_PRICE_DOLLARS = 1000;
  * because cents is the storage unit everywhere else in billing — a dollars-based
  * key would be the one place the unit flips.
  */
-export const customPriceLookupKey = (cents: number): string => `custom_monthly_${cents}`;
+export const customPriceLookupKey = (cents: number): string => `${CUSTOM_PER_VENUE_LOOKUP_PREFIX}${cents}`;
 
 /** "monthly", "yearly", "every 3 months" — for an error the admin can act on. */
 const describeCadence = (interval: string, count: number): string => {
@@ -146,6 +146,8 @@ export type SetCustomPriceResult =
       effective: "next_cycle";
       /** Set when the swap succeeded at Stripe but our mirror write didn't. */
       warning?: string;
+      /** Set when the swap succeeded but the Price isn't one partners can self-serve on (Phase 6.2). */
+      notice?: string;
     }
   | { ok: false; status: number; error: string };
 
@@ -153,6 +155,14 @@ export type SetCustomPriceResult =
  * Shared because both entry points reach it: the dollar path checks it before
  * resolving, so a refused partner never causes a Price to be minted.
  */
+/**
+ * Shown to the admin after a pasted Price that isn't a `custom_monthly_` one is swapped on: the
+ * swap works, but lib/venuePricing.ts `billRateFromPrice` gives it no rate, so the partner's Add a
+ * venue / Remove refuse with `custom_rate` (Phase 6.2, review #3).
+ */
+export const NON_STANDARD_RATE_NOTICE =
+  "Partner self-serve add/remove is off for this bill (not a standard custom rate).";
+
 const OFFLINE_ROW_ERROR =
   "This partner is billed offline — there is no Stripe subscription to move. Set their rate with Grant offline / Extend instead.";
 
@@ -388,7 +398,9 @@ export async function setCustomPrice(
   }
 
   const unitAmount = price.unit_amount;
-  return swapSubscriptionPrice(row, row.stripe_subscription_id, priceId, (quantity) => unitAmount * quantity, unitAmount);
+  const result = await swapSubscriptionPrice(row, row.stripe_subscription_id, priceId, (quantity) => unitAmount * quantity, unitAmount);
+  const selfServe = billRateFromPrice(price, { graduatedPriceId: getStripeGraduatedPriceId(), listPriceId: getStripePriceId() });
+  return result.ok && !selfServe ? { ...result, notice: NON_STANDARD_RATE_NOTICE } : result;
 }
 
 /**

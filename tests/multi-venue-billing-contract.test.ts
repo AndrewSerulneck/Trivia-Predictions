@@ -236,4 +236,18 @@ describe("multi-venue billing — Add a venue contract", () => {
       expect(read(rel), rel).not.toMatch(/\b(10000|7500|6000|4500)\b/);
     }
   });
+
+  it("Phase 6.2: the custom_monthly_ prefix is written once, and only it makes a per-venue rate", () => {
+    const holders = sources.filter((rel) => stripComments(read(rel)).includes('"custom_monthly_"') || stripComments(read(rel)).includes("`custom_monthly_"));
+    expect(holders).toEqual(["lib/venuePricing.ts"]);
+    expect(stripComments(read(CUSTOM_PRICE))).toContain("`${CUSTOM_PER_VENUE_LOOKUP_PREFIX}${cents}`");
+    const pricing = stripComments(read("lib/venuePricing.ts"));
+    const rateFn = pricing.slice(pricing.indexOf("export const billRateFromPrice"), pricing.indexOf("export const unratedPriceRefusal"));
+    expect(rateFn).toContain("startsWith(CUSTOM_PER_VENUE_LOOKUP_PREFIX)");
+    // Dead since Phase 6 (review #9).
+    expect(stripComments(read(FLOW))).not.toContain("isGraduatedPrice");
+    // Both partner flows give an unrated Price its true refusal (custom_rate / billing_state).
+    expect(stripComments(read(FLOW))).toContain("code: unratedItemRefusal(item)");
+    expect(stripComments(read("lib/venueRemoval.ts"))).toContain("code: unratedItemRefusal(item)");
+  });
 });

@@ -21,9 +21,9 @@ import { isAdminHiddenVenueRow, isPlaceholderVenueRow } from "@/lib/venueClaim";
 import {
   billRateFromMirror,
   billRateFromPrice,
-  GRADUATED_PRICE_LOOKUP_KEY,
   rateMonthlyTotalCents,
   rateVenuePriceCents,
+  unratedPriceRefusal,
   type BillRate,
 } from "@/lib/venuePricing";
 
@@ -223,13 +223,12 @@ export const billRateOfItem = (item: Stripe.SubscriptionItem | null | undefined)
     listPriceId: getStripePriceId(),
   });
 
-/** Is this Stripe Price the graduated multi-venue Price (plan §4.1)? */
-export const isGraduatedPrice = (price: Stripe.Price | null | undefined): boolean => {
-  if (!price) return false;
-  if (price.lookup_key === GRADUATED_PRICE_LOOKUP_KEY) return true;
-  const configured = getStripeGraduatedPriceId();
-  return configured !== "" && price.id === configured;
-};
+/**
+ * Why an item `billRateOfItem` gave no rate is refused: `custom_rate` (a hand-set flat Price — the
+ * partner should email us) or `billing_state` (lib/venuePricing.ts `unratedPriceRefusal`).
+ */
+export const unratedItemRefusal = (item: Stripe.SubscriptionItem): "custom_rate" | "billing_state" =>
+  unratedPriceRefusal(item.price ?? null, { listPriceId: getStripePriceId() });
 
 /** The one subscription item, or null when there is not exactly one. */
 export const soleItem = (subscription: Stripe.Subscription): Stripe.SubscriptionItem | null => {
@@ -490,9 +489,9 @@ const checkAddableSubscription = (
   if (!item) return { ok: false, code: "billing_state" };
   // The graduated bands, or (Phase 6, Andrew 2026-10-11) an admin's negotiated per-venue rate — a
   // flat `custom_monthly_<cents>` Price (lib/billingCustomPrice.ts), billed per venue. Anything else
-  // (the old flat list Price, a hand-built Stripe price) needs a person.
+  // needs a person: a hand-pasted flat Price → `custom_rate`, the old list Price etc. → `billing_state`.
   const rate = billRateOfItem(item);
-  if (!rate) return { ok: false, code: "billing_state" };
+  if (!rate) return { ok: false, code: unratedItemRefusal(item) };
   if (typeof item.quantity !== "number" || !Number.isInteger(item.quantity) || item.quantity < 1) {
     return { ok: false, code: "billing_state" };
   }

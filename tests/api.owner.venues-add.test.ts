@@ -904,6 +904,38 @@ describe("POST /api/owner/venues/add — refusals (nothing created, nothing char
       "billing_state",
     ],
     ["a subscription schedule", () => (h.state.subscription.schedule = "sub_sched_1"), "billing_state"],
+    // Phase 6.2 (review #3 / #9): only a `custom_monthly_` Price is a per-venue rate. A flat Price an
+    // admin pasted by hand is refused with the true reason, never charged at its flat amount.
+    [
+      "a hand-pasted flat monthly price (not custom_monthly_)",
+      () =>
+        Object.assign(subItem().price as Row, {
+          id: "price_pasted_8000",
+          lookup_key: null,
+          billing_scheme: "per_unit",
+          tiers_mode: null,
+          unit_amount: 8000,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 1 },
+        }),
+      "custom_rate",
+    ],
+    [
+      "the old flat $100 list price with STRIPE_PRICE_ID unset (not charged $100 for venue #2)",
+      () => {
+        vi.stubEnv("STRIPE_PRICE_ID", "");
+        Object.assign(subItem().price as Row, {
+          id: "price_flat",
+          lookup_key: null,
+          billing_scheme: "per_unit",
+          tiers_mode: null,
+          unit_amount: 10000,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 1 },
+        });
+      },
+      "custom_rate",
+    ],
   ])("a bill Stripe can't add to (%s) is refused", async (_label, mutate, code) => {
     mutate();
     const result = await add();

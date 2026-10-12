@@ -764,7 +764,9 @@ quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/str
   a flat `custom_monthly_<cents>` Price and KEEPS the quantity, so the bill = rate × venues (no bands); adds/removes on
   that bill use the same rate; a coupon still applies on top. `setStandardPrice` (admin "Back to standard pricing")
   returns it to the graduated Price. Both refuse while an add/change is in flight. A bill's rate has ONE home:
-  `BillRate` in `lib/venuePricing.ts` (`billRateFromPrice` for a live Stripe item — refuses the old flat list Price —
+  `BillRate` in `lib/venuePricing.ts` (`billRateFromPrice` for a live Stripe item — a per-venue rate ONLY for a
+  `custom_monthly_` lookup key (`CUSTOM_PER_VENUE_LOOKUP_PREFIX`, the one home of that literal); any other flat Price is
+  refused, as `custom_rate` (hand-pasted) or `billing_state` (list Price) via `unratedPriceRefusal` —
   and `billRateFromMirror` for displays). Never price a chain with `monthlyTotalCents` alone where a rate is in play.
 - **Admin "Link a venue to a partner" (Phase 6)** — Partner Billing → button → `LinkVenueToPartner`, server
   `lib/adminVenueAttach.ts` (`POST /api/admin/billing` `action: "attach-venue"`, Preview first). "Add to their bill" on a

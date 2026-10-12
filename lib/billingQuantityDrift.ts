@@ -102,7 +102,7 @@ export const compareBillQuantities = (
 const isMissingTable = (error: { code?: string } | null): boolean =>
   Boolean(error && (error.code === "42P01" || error.code === "PGRST205"));
 
-/** Bills with an add (pending / awaiting 3-D Secure) or a Remove/Undo (pending) under way. */
+/** Bills with an add (pending / awaiting 3-D Secure) or a Remove/Undo / price swap (pending) under way. */
 async function inFlightBillIds(): Promise<Set<string>> {
   const ids = new Set<string>();
   const [additions, changes] = await Promise.all([
@@ -178,10 +178,14 @@ export async function checkBillingQuantityDrift(): Promise<QuantityDriftResult> 
   };
   if (bills.length === 0) return empty;
 
-  const memberships = await billMembershipsForBills(bills.map((bill) => bill.id));
+  // Independent reads, so in parallel (Phase 6.2, review #10). Same reads and count as before; any
+  // one failing still throws.
+  const [memberships, inFlight, listed] = await Promise.all([
+    billMembershipsForBills(bills.map((bill) => bill.id)),
+    inFlightBillIds(),
+    listStripeSubscriptions(),
+  ]);
   if (!memberships.ok) throw new Error(memberships.error);
-  const inFlight = await inFlightBillIds();
-  const listed = await listStripeSubscriptions();
 
   const result = compareBillQuantities(bills, memberships.byBill, listed.bySubscription, inFlight, listed.truncated);
   for (const item of result.drift) {
