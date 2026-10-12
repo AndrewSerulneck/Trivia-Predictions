@@ -95,5 +95,9 @@ export const PARTNER_MANUAL: {
       heading: "Billing",
       body: "Hightop Challenge is a subscription-based service. Partners pay monthly. All features only become available once you have entered your payment information.The Partner Dashboard includes a billing section where you can view your current plan, update your payment method, and manage your subscription.",
     },
+    {
+      heading: "More than one venue",
+      body: "Running more than one location? Open the venue switcher on the dashboard and tap Add a venue. You pay one monthly bill for all of your venues, and the price per venue goes down as you add more. A new venue is charged for the rest of the current month, and it appears for players as soon as the payment goes through. To drop a venue, open Billing and tap Remove at end of month. It keeps running until your current billing period ends, and you can undo the removal any time before then.",
+    },
   ],
 } as const;
