@@ -7,10 +7,7 @@ $100/month; check-paying accounts never lapse automatically). **Phase 6 (admin &
 locally as `6c5a178`, NOT pushed** — flag still off. **Phase 6.1 committed locally as `a83da94`, NOT pushed**; its migration
 `20261011224839_bill_price_change_lock.sql` was **applied to production 2026-10-11** on Andrew's go-ahead and verified
 (migration before app, so the app may now deploy). **Phase 6.2 committed locally as `636410c`, NOT pushed** (no migration). Andrew: push everything when the plan is finished.
-**Phases 6.3, 6.4 and 6.5 built 2026-10-11, NOT committed** (no migration) — commit is Andrew's call (path list in the
-6.5 handoff §2). Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_6.5_HANDOFF.md`**. Andrew's answers are
-in §2 (do not re-ask). **Next: Phase 7 (release)**, after the commit and the single push. The final review left five
-findings for Andrew's decision (6.5 handoff §7); none affects a partner in production today. Each phase ends with a handoff note
+**Phases 6.3–6.5 committed locally 2026-10-11 as `54af6e3`, NOT pushed** (no migration). **Phases 6.6–6.9 added 2026-10-11** to fix the five findings the 6.5 review left open (Andrew: fix them, don't defer). **Phases 6.6 and 6.7 built 2026-10-11, NOT committed** (no migration; commit is Andrew's call). Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_6.7_HANDOFF.md`**. Andrew's answers are in §2 (do not re-ask). **Next: Phase 6.8**, then 6.9, then Phase 7 (release) and the single push. Each phase ends with a handoff note
 `docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at the latest one.
 
 ---
@@ -250,9 +247,13 @@ Model rule (Andrew): **never more capable than Opus 5.5.** "Effort" = Claude Cod
 | 6.3 | Review fix: tell a removed or comped venue apart from "no bill" (admin badge), and Checkout refuses a second subscription for a partner who already has a bill | **Opus 5.5** | high | 1 session |
 | 6.4 | Review fix: admin Link tool — keep the idempotency key unless refused, unfiltered partner list, comped → bill upgrade, band copy from `lib/venuePricing.ts` | Sonnet 5.5 | high | 1 session |
 | 6.5 | Re-review the whole Phase 6 + 6.x diff, all gates, commit (when Andrew says) | **Opus 5.5** | high | ½ session |
+| 6.6 | Review fix: a venue whose bill was cancelled can rejoin the partner's live bill (server: membership move, Add back + admin attach accept it, anchor-home repair) | **Opus 5.5** | high | 1 session |
+| 6.7 | Rejoin UI: partner Billing lists those venues with Add back; admin list label, Link a venue offers them, Grant offline copy | Sonnet 5.5 | high | 1 session |
+| 6.8 | Review fix: mirror the Price's lookup key (display rate) and the admin role on the add ledger — one migration; shared `isMissingFunction` | **Opus 5.5** | high | 1 session + Andrew approves `db push` |
+| 6.9 | Re-review 6.6–6.8, all gates, commit | **Opus 5.5** | high | ½ session |
 | 7 | Release: copy, device checklist, flag on, Andrew's live test on Pacific Street + a real second venue | Sonnet 5.5 (+ Andrew) | medium | 1 session + Andrew's test |
 
-Order is strict: 1 → 2 → 3 → 4 → 5 → 6 → 6.1 → 6.2 → 6.3 → 6.4 → 6.5 → 7. Phases 4 and 5 could swap if Andrew wants removal
+Order is strict: 1 → 2 → 3 → 4 → 5 → 6 → 6.1 → … → 6.9 → 7. Phases 4 and 5 could swap if Andrew wants removal
 before the UI polish, but 3 must precede both.
 
 ### Phase 1 — Foundation (Opus 5.5, high) — ✅ built 2026-10-11 (handoff: `…_PHASE_1_HANDOFF.md`)
@@ -586,6 +587,128 @@ same time), plus `tests/lib.auth-users-fk-guard.test.ts` unchanged. Update `CLAU
 multi-venue section: the price swap is claimed under the bill lock, only `custom_monthly_` is
 per-venue, and Checkout refuses a billed partner's second venue. Commit with an explicit path list
 once Andrew says. Then the handoff opens Phase 7.
+
+### Phases 6.6–6.9 — The five findings the 6.5 review left open (added 2026-10-11)
+
+The `/code-review` in Phase 6.5 left five findings for Andrew (`…_PHASE_6.5_HANDOFF.md` §7). **Andrew, 2026-10-11: fix
+them now rather than wait until a partner hits one.** None affects a partner in production today (6.3's check: no owner
+has two bills; the only mixed owner is Andrew's). Same rules as 6.1–6.5: never `git add -A`; Andrew's unrelated edits
+(`components/fantasy/`, `components/nfl-pickem/`, `GameIdentityPanel.tsx`, `tests/components.player-pending.test.ts`,
+`.vscode/settings.json`) are never committed or reverted; each sub-phase ends with `…_PHASE_6.<N>_HANDOFF.md`.
+
+**Words used below.** A **dead bill** is a `billing_subscriptions` row with `status = 'cancelled'` (Stripe never revives a
+cancelled subscription; a resubscribe re-points the same row at a new subscription through the webhook's upsert). A venue
+**rejoins** when it goes from a dead bill onto the partner's live bill.
+
+#### Phase 6.6 — A venue whose bill was cancelled can rejoin the partner's live bill (server) (Opus 5.5, high) — review 6.5 #1, #2 — ✅ built 2026-10-11, not committed (handoff: `…_PHASE_6.6_HANDOFF.md`)
+
+As built: everything below. `rejoinStateOf` / pure `classifyRejoin` and `moveFromDeadBill` live in `lib/venueBilling.ts`;
+the shared un-hide is `revealPaidVenue` (`lib/venueAddition.ts`). Admin attach also accepts `left_here` (a venue taken off
+this partner's live bill) — the only way back for an offline bill, where the partner has no Add back. Production check
+(read-only): 3 bills, all live, no cancelled bill and no misplaced anchor row, so the new cron step is a no-op today.
+
+
+**Findings.** (#1) Venue A had its own card bill X, which was cancelled; the partner now pays on bill B (anchored on another
+venue). Checkout and Grant offline refuse A (one bill per partner), admin Link refuses `venue_has_own_bill`, and Add back
+refuses because A's membership row is on X, not B. A has **no way back on**. (#2) Venue C was removed from bill X, then X was
+cancelled and the partner now pays on B: Add back requires the same bill (`readdableVenue`), so C is stranded too. Root
+cause: `billing_subscription_venues.venue_id` is UNIQUE, and `addVenueToBill` refuses a row that sits on another bill.
+
+**Fix — re-point the venue's membership row from the dead bill to the live one, inside the existing paid add flow.** No
+new money path: the partner's "Add back" (and the admin's "Add to their bill") already charges the prorated price under the
+bill's advisory lock and completes through `completeAddition` → `addVenueToBill`. Only *which* venues they accept, and what
+`addVenueToBill` does with a row on a dead bill, change. **No migration.**
+
+1. **`rejoinStateOf(venueId, targetBillId, nowMs)` in `lib/venueBilling.ts`** (the one home of "which bill covers this
+   venue"): reads the venue's membership row (any state) and the bill(s) anchored on it, in parallel, plus the row's bill by
+   id when needed. Returns exactly one of:
+   - `billed_here` — on the target bill and billed (or anchors it while it is live) → nothing to add;
+   - `leaving_here` — on the target bill, `remove_at` in the future → that's Undo (free), not an add;
+   - `left_here` — on the target bill, taken off (Phase 5 Add back, unchanged);
+   - `dead_bill { fromBillId }` — its membership row is on a dead bill, or it has no row and only anchors dead bills → **may
+     rejoin**;
+   - `other_live_bill { billId }` — on (or anchoring) a different live bill → refused (support);
+   - `never_billed` — no billing history (comped or test venue) → refused here (comped → bill stays the admin's Phase 6.4 tool).
+2. **`readdableVenue` (`lib/venueAddition.ts`)** maps the state: `left_here` and `dead_bill` → allowed; `billed_here` →
+   `venue_already_yours`; `leaving_here` → `readd_use_undo`; the rest → `venue_unavailable`. Still requires the venue to be
+   linked to the partner (`auth.venueIds`).
+3. **`addVenueToBill`** — a row on ANOTHER bill: read that bill; `cancelled` → move the row with one conditional update
+   (`.eq("venue_id").eq("subscription_id", oldBill)`, set `subscription_id`, `role`, `added_at`, clear `remove_at`/`removed_at`),
+   log `[VenueBilling] membership-moved venue= from= to=`. A live other bill is still `venue-on-another-bill`. A second
+   completion of the same add finds the row already billed here → no-op. *Why not an RPC:* the claim (the quantity guard)
+   is already in SQL under the target bill's lock; the only precondition left is "the old bill is dead", which nothing in
+   the app reverses while the partner has a live bill (Checkout and Grant offline refuse that venue/partner). Recorded so
+   the next reviewer can challenge it.
+4. **Anchor-home repair.** Moving an ANCHOR's row (finding #1) leaves dead bill X with no anchor row. If X is ever revived
+   (the partner loses B, then resubscribes from A — the webhook re-points row X), the claim RPC would count 0 venues against
+   Stripe's 1 and every add/remove refuses (safe, but stuck). `bringAnchorHome(billId)` in `lib/venueBilling.ts`: when a
+   **live** bill's anchor venue has its membership row on a different, **dead** bill, move it home (`role 'anchor'`).
+   Called best-effort (log, never throw) from the Stripe webhook's first-sync follower (`runFirstSyncFollowers`) and after
+   the admin Grant offline upsert; and as a bounded repair step in the daily `/api/cron/billing` (the standing pattern:
+   followers are best-effort, the cron repairs). Cron cost: one read of live bills' anchors' membership rows that sit on
+   another bill — normally zero rows.
+5. **`unbilledVenueStates`** gains `{ kind: "lapsed", fromBillId, ownerBillId }`: not removed, history only on dead bills,
+   and the partner has a live bill elsewhere (today that is `unbilled` + `ownerBillId`). Checkout / Grant offline still refuse
+   it, now with honest copy: partner "This venue's old bill ended. Add it back from Billing."; admin "Its own bill was
+   cancelled — use Link a venue → Add to their bill." A `removed` venue whose partner has **no** live bill gets
+   "…email support" instead of "Add it back from Billing" (there is no bill to add it back to). Messages stay in
+   `lib/multiVenueBilling.ts`; `onPartnerBillMessageKey` takes the state.
+6. **Admin "Add to their bill" (`lib/adminVenueAttach.ts`)** accepts a `dead_bill` venue in `bill` mode when it is linked to
+   this partner (or unlinked and the dead bill's `owner_id` is this partner — never a transfer between partners, plan §8).
+   A hidden venue is accepted only when `rehidden_at` is set (we hid it: the removal job or the lapsed re-hide); an
+   admin-hidden one is still refused. Card bill → `startVenueAddition` as today. Offline bill → `addVenueToBill(…, "admin")`
+   moves it, then the same un-hide the paid completion does (extract `restoreRejoinedVenue` from `completeAddition`; one
+   copy). `comped` mode on a `dead_bill` venue stays refused (`venue_has_billing_history`).
+7. **Tests.** `rejoinStateOf` matrix; `addVenueToBill` moves from a dead bill, refuses a live one, and is a no-op twice;
+   POST add `readdVenueId` for finding #1 (a lapsed anchor) and #2 (removed from a dead bill) with mocked Stripe through to
+   completion; admin attach of a lapsed venue on an offline and a card bill, and refusals (other partner's dead bill,
+   admin-hidden, comped mode); `bringAnchorHome` moves only live-anchor-on-dead-bill rows; Checkout / Grant copy for
+   `lapsed` and removed-without-a-bill; contract pins (move only in `lib/venueBilling.ts`; Checkout still refuses `lapsed`).
+
+Out of scope for 6.6: any UI (6.7), the migration items (6.8), `supabase db push` (none needed).
+
+#### Phase 6.7 — Rejoin UI (Sonnet 5.5, high) — ✅ built 2026-10-11, not committed (handoff: `…_PHASE_6.7_HANDOFF.md`)
+
+As built: the owner route puts each rejoinable venue on the live bill's `account.venues` as `state: "lapsed"` (from the
+classifier's `lapsed` or `removed` answers, no extra read) and drops a cancelled bill from the list when every venue it covers
+can rejoin a live bill shown there. Admin: list `lapsed` flag + badge + line, `grantOfflineBlockedMessage`, and attach-options
+offers `lapsed` AND `removed` venues (deviation from "lapsed only": 6.6's server accepts `removed`, and it is the only admin
+door for an offline bill) with `state` tags; hidden venues only when `rehidden_at` is set. No Phase 7 checklist file exists
+yet — the screens to add are in the 6.7 handoff §5.
+
+- **Partner Billing page** (`GET /api/owner/billing` `account`, `lib/billAccountView.ts`, `BillVenuesPanel.tsx`): list the
+  partner's linked venues whose `rejoinStateOf` is `dead_bill` under "Not on your bill" with **Add back** — the same
+  quote → Confirm (`quotedVenueCents`) → Check again flow Phase 5/6.5 built, sending the live bill's `billVenueId`. One
+  bounded read for the usual partner (zero extra rows). Flag-gated like the rest of the account view.
+- A lapsed venue's own Billing view must not offer Subscribe/Resubscribe; it points at Add back (Checkout already refuses).
+- **Admin**: list label for `lapsed` ("Bill cancelled — can rejoin their bill") next to Removed/Comped; Link a venue's
+  `attach-options` includes lapsed venues tagged with their partner, locked to "Add to their bill"; the greyed Grant
+  offline note uses the `lapsed` message.
+- Light admin surface rules (plain Tailwind, `tone="light"`, 12px floor). Add the new screens to Phase 7's device checklist.
+
+#### Phase 6.8 — Display rate from the lookup key; admin role on the ledger; shared helper (Opus 5.5, high) — review 6.5 #3, #4, #5
+
+- **#3.** `billRateFromMirror` (displays) still calls any non-graduated flat Price a per-venue rate, while charges
+  (`billRateFromPrice`) accept only `custom_monthly_`. Add `billing_subscriptions.stripe_price_lookup_key text` (nullable);
+  the webhook, `lib/billingCustomPrice.ts` and Checkout mirror it beside `stripe_price_id`; `billRateFromMirror` applies the
+  same `CUSTOM_PER_VENUE_LOOKUP_PREFIX` rule (a flat Price without it → no per-venue math; show the bill's amount as it is).
+  Backfill the two live rows with a read-only Stripe listing first (both are on the graduated Price, so expect nothing to
+  change), via a script with a dry run.
+- **#4.** Add `billing_venue_additions.membership_role text not null default 'added'` (check `added`/`admin`). The admin card
+  attach sets `'admin'` in the same `updateAddition` that records its `venue_id`; `completeAddition` passes the row's role.
+- One migration for both (`supabase migration new …`; existing tables, so no new grants — still run
+  `tests/supabase-migration-grants-contract.test.ts`). **`supabase db push` only on Andrew's go-ahead; migration before app**
+  (reads would select a missing column). Prove the SQL on PGlite as 6.1 did.
+- **#5.** One `isMissingFunction(error, name?)` in a small shared module (e.g. `lib/supabaseRpcErrors.ts`) used by
+  `lib/venueAddition.ts`, `lib/venueRemoval.ts` and `lib/billingCustomPrice.ts` (leave `lib/rateLimit.ts`'s own copy unless
+  trivially compatible).
+
+#### Phase 6.9 — Re-review and close out (Opus 5.5, high)
+
+`/code-review` of the 6.6–6.8 diff; fix or list every finding. Gates: `npx tsc --noEmit`, `npm run lint`, `npm run test`,
+`npm run build` (not typecheck and build together), `tests/lib.auth-users-fk-guard.test.ts` unchanged. Update `CLAUDE.md`'s
+multi-venue section (rejoin from a dead bill; anchor-home repair; lookup-key mirror). Commit with an explicit path list
+once Andrew says. The handoff then opens Phase 7.
 
 ### Phase 7 — Release (Sonnet 5.5 medium, + Andrew)
 

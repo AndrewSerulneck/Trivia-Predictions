@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AdminModalSheet } from "@/components/admin/AdminModalSheet";
 import { AdminSelect } from "@/components/admin/AdminSelect";
-import { attachPreviewText } from "@/lib/adminBillView";
+import { attachPreviewText, attachVenueOptionLabel, type AttachVenueOption } from "@/lib/adminBillView";
 import { interpretAdminAttachReply } from "@/lib/adminAttachFlow";
 import { isStripeHostedUrl } from "@/lib/addVenueFlow";
 import { adminField, adminLabel } from "@/lib/adminStyles";
@@ -23,8 +23,8 @@ import type { AdminAttachMode, AdminAttachPreview } from "@/lib/multiVenueBillin
 
 type Owner = { id: string; email: string; name: string };
 
-/** `ownerId` set = already linked to that partner and free there (comped): it can only go onto THEIR bill. */
-type VenueOption = { id: string; name: string; ownerId: string | null };
+/** `ownerId` set = already that partner's (free there, or its old bill ended): it can only go onto THEIR bill. */
+type VenueOption = AttachVenueOption;
 
 type AttachReply = {
   ok?: boolean;
@@ -229,7 +229,7 @@ export function LinkVenueToPartner({ open, onClose, onChanged }: LinkVenueToPart
           {loadError ? (
             <p className="text-sm text-rose-700">{loadError}</p>
           ) : venues.length === 0 ? (
-            <p className="text-sm text-slate-500">No unlinked or comped, visible venues.</p>
+            <p className="text-sm text-slate-500">No unlinked, comped or lapsed venues.</p>
           ) : (
             <AdminSelect
               ariaLabel="Venue"
@@ -243,7 +243,7 @@ export function LinkVenueToPartner({ open, onClose, onChanged }: LinkVenueToPart
                 { value: "", label: "Choose a venue…" },
                 ...venues.map((venue) => {
                   const owner = venue.ownerId ? owners.find((candidate) => candidate.id === venue.ownerId) : null;
-                  return { value: venue.id, label: venue.ownerId ? `${venue.name} — free on ${owner ? ownerLabel(owner) : "a partner"}` : venue.name };
+                  return { value: venue.id, label: attachVenueOptionLabel(venue, owner ? ownerLabel(owner) : null) };
                 }),
               ]}
             />
@@ -255,7 +255,9 @@ export function LinkVenueToPartner({ open, onClose, onChanged }: LinkVenueToPart
             <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-800">
               {lockedOwner ? ownerLabel(lockedOwner) : "The partner it is free with"}
               <span className="block text-xs text-slate-600">
-                This venue is already on their account, free. It can only be moved onto their bill.
+                {selectedVenue.state === "comped"
+                  ? "This venue is already on their account, free. It can only be moved onto their bill."
+                  : "This venue is already theirs; its old bill ended. It can only go back onto their bill."}
               </span>
             </p>
           ) : (

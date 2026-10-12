@@ -1243,6 +1243,34 @@ describe("addVenueToBill (lib/venueBilling.ts) — the only writer of non-anchor
     expect(memberships().find((row) => row.venue_id === "venue-z")).toMatchObject({ remove_at: null, removed_at: null });
     expect(await addVenueToBill(BILL, "venue-z", "added")).toEqual({ ok: true, inserted: false });
   });
+
+  it("Phase 6.6: MOVES a venue off a cancelled bill (rejoin), never off a live one; a repeat is a no-op", async () => {
+    const { addVenueToBill } = await import("@/lib/venueBilling");
+    table("venues").push({ id: "venue-lapsed" }, { id: "venue-live" });
+    table("billing_subscriptions").push(
+      { id: "bill-dead", venue_id: "venue-lapsed", owner_id: OWNER, status: "cancelled" },
+      { id: "bill-live", venue_id: "venue-live", owner_id: "owner-2", status: "active" }
+    );
+    memberships().push(
+      { id: "m-lapsed", subscription_id: "bill-dead", venue_id: "venue-lapsed", role: "anchor", remove_at: null, removed_at: null },
+      { id: "m-live", subscription_id: "bill-live", venue_id: "venue-live", role: "anchor", remove_at: null, removed_at: null }
+    );
+
+    expect(await addVenueToBill(BILL, "venue-live", "added")).toEqual({ ok: false, error: "venue-on-another-bill" });
+    expect(memberships().find((row) => row.venue_id === "venue-live")).toMatchObject({ subscription_id: "bill-live" });
+
+    expect(await addVenueToBill(BILL, "venue-lapsed", "added")).toEqual({ ok: true, inserted: true });
+    expect(memberships().find((row) => row.venue_id === "venue-lapsed")).toMatchObject({
+      subscription_id: BILL,
+      role: "added",
+      remove_at: null,
+      removed_at: null,
+    });
+    expect(memberships().filter((row) => row.venue_id === "venue-lapsed")).toHaveLength(1);
+    expect(await addVenueToBill(BILL, "venue-lapsed", "added")).toEqual({ ok: true, inserted: false });
+    // The dead bill itself is history: never touched.
+    expect(table("billing_subscriptions").find((row) => row.id === "bill-dead")).toMatchObject({ status: "cancelled", venue_id: "venue-lapsed" });
+  });
 });
 
 // --- Phase 6: admin "Add to their bill" / "Free (comped)" for an EXISTING venue ---------------------
@@ -1421,3 +1449,81 @@ describe("admin attach an existing venue to a partner (Phase 6)", () => {
     expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
   });
 });
+
+// --- Phase 6.6: admin "Add to their bill" for a venue rejoining from a cancelled bill ---------------
+
+describe("admin attach — a venue whose bill was cancelled rejoins the partner's bill (Phase 6.6)", () => {
+  const LAPSED = "venue-lapsed";
+  const DEAD = "bill-dead";
+  const seedLapsed = (options: { linked?: boolean; deadOwner?: string; venue?: Row; removed?: boolean } = {}) => {
+    table("venues").push({
+      id: LAPSED,
+      name: "Lapsed Bar",
+      latitude: 40.6,
+      longitude: -74.6,
+      hidden: false,
+      self_serve_created_at: "2026-08-01T00:00:00Z",
+      checkout_started_at: null,
+      rehidden_at: null,
+      ...options.venue,
+    });
+    table("billing_subscriptions").push({
+      id: DEAD, venue_id: LAPSED, owner_id: options.deadOwner ?? OWNER, status: "cancelled", billing_method: "stripe",
+      stripe_subscription_id: "sub_dead", cancel_at_period_end: false, amount_cents: 10000, quantity: 1,
+    });
+    memberships().push({
+      id: "m-lapsed", subscription_id: DEAD, venue_id: LAPSED, role: "anchor", added_at: "2026-08-01T00:00:00Z",
+      remove_at: null, removed_at: options.removed ? "2026-09-01T00:00:00Z" : null,
+    });
+    if (options.linked ?? true) table("venue_owner_venues").push({ id: "link-lapsed", owner_id: OWNER, venue_id: LAPSED });
+  };
+  const attach = (mode: "bill" | "comped", preview = false, clientKey = "admin-rejoin-1") =>
+    attachVenueToOwner({ venueId: LAPSED, ownerId: OWNER, mode, preview, clientKey, quotedVenueCents: quotedNow() });
+  const lapsedRow = () => memberships().find((row) => row.venue_id === LAPSED);
+
+  it("bill (card): charges like any add and MOVES the membership row onto the partner's live bill", async () => {
+    seedLapsed();
+    expect(await attach("bill", true)).toMatchObject({ ok: true, kind: "preview", preview: { mode: "bill", quote: { thisVenueCents: 7500 } } });
+    expect(await attach("bill")).toMatchObject({ ok: true, kind: "card_add", status: "paid", venueId: LAPSED });
+    expect(h.fns.createAdminVenue).not.toHaveBeenCalled();
+    expect((h.fns.subscriptionsUpdate.mock.calls[0] as [string, Row])[1]).toMatchObject({ items: [{ id: ITEM, quantity: 2 }] });
+    expect(lapsedRow()).toMatchObject({ subscription_id: BILL, role: "added", removed_at: null, remove_at: null });
+    expect(table("billing_subscriptions").find((row) => row.id === DEAD)).toMatchObject({ status: "cancelled" });
+    expect(await attach("bill")).toMatchObject({ ok: true, kind: "already_on_bill" });
+    expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("bill (check-billed): moves it onto the offline bill and shows a venue WE hid again — no Stripe", async () => {
+    seedLapsed({ removed: true, venue: { hidden: true, rehidden_at: "2026-09-01T00:00:00Z" } });
+    Object.assign(table("billing_subscriptions")[0], { billing_method: "offline", stripe_subscription_id: null, amount_cents: 10000 });
+    expect(await attach("bill")).toMatchObject({ ok: true, kind: "offline_attached", billedVenueCount: 2, suggestedMonthlyCents: 17500 });
+    expect(lapsedRow()).toMatchObject({ subscription_id: BILL, role: "admin", removed_at: null });
+    expect(venueById(LAPSED)).toMatchObject({ hidden: false, rehidden_at: null });
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+  });
+
+  it("refuses comped mode, an admin-hidden venue, and another partner's dead bill on an unlinked venue", async () => {
+    seedLapsed();
+    expect(await attach("comped")).toMatchObject({ ok: false, code: "venue_has_billing_history" });
+
+    venueById(LAPSED)!.hidden = true; // hidden, but not by us (no rehidden_at)
+    expect(await attach("bill")).toMatchObject({ ok: false, code: "venue_hidden" });
+    venueById(LAPSED)!.hidden = false;
+
+    table("venue_owner_venues").splice(table("venue_owner_venues").findIndex((row) => row.venue_id === LAPSED), 1);
+    Object.assign(table("billing_subscriptions").find((row) => row.id === DEAD)!, { owner_id: "owner-2" });
+    expect(await attach("bill")).toMatchObject({ ok: false, code: "venue_has_billing_history" });
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+    expect(lapsedRow()).toMatchObject({ subscription_id: DEAD });
+  });
+
+  it("an unlinked venue whose dead bill was THIS partner's may rejoin; one with a LIVE own bill may not", async () => {
+    seedLapsed({ linked: false });
+    expect(await attach("bill")).toMatchObject({ ok: true, kind: "card_add", status: "paid" });
+    expect(table("venue_owner_venues").filter((row) => row.venue_id === LAPSED).map((row) => row.owner_id)).toEqual([OWNER]);
+
+    Object.assign(table("billing_subscriptions").find((row) => row.id === DEAD)!, { status: "active" });
+    expect(await attach("bill", true, "admin-rejoin-2")).toMatchObject({ ok: false, code: "venue_has_own_bill" });
+  });
+});
+

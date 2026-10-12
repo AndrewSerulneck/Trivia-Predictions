@@ -1,5 +1,6 @@
 import { formatCentsShort } from "@/lib/merchPricing";
 import {
+  PARTNER_SUPPORT_EMAIL,
   VENUE_CHANGE_MESSAGES,
   type BillAccount,
   type BillAccountVenue,
@@ -33,6 +34,27 @@ export const venueAction = (
   if (venue.state === "billed") return account.billedVenueCount > 1 ? "remove" : null;
   if (venue.state === "leaving") return "undo";
   return bill.status === "active" ? "add_back" : null;
+};
+
+/**
+ * The small line under a venue's name, or null. A `lapsed` venue (Phase 6.7) lost its old bill; on a card bill it
+ * has Add back, on a check-billed bill only we can put it back, so it says to email.
+ */
+export const venueStateLabel = (
+  venue: Pick<BillAccountVenue, "state" | "removeAt">,
+  bill: { isManual: boolean }
+): string | null => {
+  if (venue.state === "leaving") {
+    const until = formatLeaveDate(venue.removeAt);
+    return until ? `Leaving ${until}` : "Leaving at the end of this month";
+  }
+  if (venue.state === "removed") return "Not on your bill";
+  if (venue.state === "lapsed") {
+    return bill.isManual
+      ? `Its old bill ended. Email ${PARTNER_SUPPORT_EMAIL} and we'll add it to this bill.`
+      : "Not on your bill — its old bill ended";
+  }
+  return null;
 };
 
 /** "Oct 20" for a leaving date, or null. */

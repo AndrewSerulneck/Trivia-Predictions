@@ -6,7 +6,7 @@ import { MobileBottomSheet } from "@/components/admin/mobile/MobileBottomSheet";
 import { AdminModalSheet } from "@/components/admin/AdminModalSheet";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { LinkVenueToPartner } from "@/components/admin/billing/LinkVenueToPartner";
-import { billSummaryLine, removedFromLine, type AdminPartnerBill, type AdminRemovedFrom } from "@/lib/adminBillView";
+import { LAPSED_LINE, billSummaryLine, removedFromLine, type AdminPartnerBill, type AdminRemovedFrom } from "@/lib/adminBillView";
 import { venuePriceBandsLabel } from "@/lib/venuePricing";
 
 // Mirrors lib/billingCustomPrice.ts's MIN/MAX_CUSTOM_PRICE_DOLLARS — that file
@@ -69,6 +69,8 @@ type Partner = {
   bill: AdminPartnerBill | null;
   /** Never on any bill, linked to a partner who pays for another venue = free. */
   comped: boolean;
+  /** Its OWN bill was cancelled and the partner pays on another: it can rejoin that bill (Phase 6.7). */
+  lapsed: boolean;
   /** Taken off a bill (Remove) and on no bill now — never "Comped" (Phase 6.3). */
   removedFrom: AdminRemovedFrom | null;
   /**
@@ -76,6 +78,8 @@ type Partner = {
    * another venue's bill — Phase 6.5). The server's own rule (`refusesOwnBill`); POST refuses it too.
    */
   grantOfflineBlocked: boolean;
+  /** Why it is blocked, in the server's words (the POST refuses with the same sentence); null when not blocked. */
+  grantOfflineBlockedMessage: string | null;
   subscription: PartnerSubscription | null;
 };
 
@@ -90,6 +94,9 @@ const formatUsd = (cents: number): string => `$${(cents / 100).toFixed(2).replac
 
 const statusBadge = (partner: Partner): { label: string; className: string } => {
   const sub = partner.subscription;
+  if (partner.lapsed) {
+    return { label: "Lapsed", className: "bg-amber-100 text-amber-800" };
+  }
   if (!sub && partner.removedFrom) {
     return { label: "Removed", className: "bg-slate-100 text-slate-600" };
   }
@@ -228,6 +235,7 @@ export function BillingSection() {
   const billLine = (partner: Partner): string | null => {
     // The anchor's name comes from the server, which read it before the search filter: the anchor row may be
     // one the search box hides, so it is never looked up in `partners` (Phase 6.4, review #6).
+    if (partner.lapsed) return LAPSED_LINE;
     if (!partner.bill && partner.removedFrom) {
       return removedFromLine(partner.removedFrom, {
         anchorName: partner.removedFrom.anchorVenueName ?? partner.removedFrom.anchorVenueId,
@@ -725,7 +733,7 @@ export function BillingSection() {
                             hasLiveCard
                               ? "This venue has a live card subscription — cancel it (Revoke) before granting offline access."
                               : partner.grantOfflineBlocked
-                                ? GRANT_BLOCKED_HINT
+                                ? (partner.grantOfflineBlockedMessage ?? GRANT_BLOCKED_HINT)
                                 : undefined
                           }
                           className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
@@ -820,7 +828,7 @@ export function BillingSection() {
                     offline access.
                   </p>
                 ) : partner.grantOfflineBlocked ? (
-                  <p className="text-xs text-slate-500">{GRANT_BLOCKED_HINT}</p>
+                  <p className="text-xs text-slate-500">{partner.grantOfflineBlockedMessage ?? GRANT_BLOCKED_HINT}</p>
                 ) : null}
                 {partner.subscription && partner.subscription.status !== "cancelled" ? (
                   <button

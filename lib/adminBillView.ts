@@ -40,6 +40,27 @@ export const removedFromLine = (removed: AdminRemovedFrom, options: { anchorName
   return removed.removedAt ? `${where} (${options.formatDate(removed.removedAt)})` : where;
 };
 
+/** The line under a venue whose OWN bill was cancelled while the partner pays on another (Phase 6.7). */
+export const LAPSED_LINE = "Bill cancelled — can rejoin their bill";
+
+/** One option of the "Link a venue" picker (`GET /api/admin/billing?resource=attach-options`). */
+export type AttachVenueOption = {
+  id: string;
+  name: string;
+  /** Set = already the partner's: it can only go back onto THEIR bill. */
+  ownerId: string | null;
+  state: "unlinked" | "comped" | "lapsed" | "removed";
+};
+
+/** "Pacific Street — free on a@b.com" / "— bill cancelled, rejoin a@b.com" / "— removed from a bill, rejoin a@b.com". */
+export const attachVenueOptionLabel = (venue: AttachVenueOption, ownerLabel: string | null): string => {
+  const who = ownerLabel ?? "a partner";
+  if (venue.state === "comped") return `${venue.name} — free on ${who}`;
+  if (venue.state === "lapsed") return `${venue.name} — bill cancelled, rejoin ${who}`;
+  if (venue.state === "removed") return `${venue.name} — removed from a bill, rejoin ${who}`;
+  return venue.name;
+};
+
 const plural = (count: number, word: string): string => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 /** "1 × $100 · 2 × $75" */

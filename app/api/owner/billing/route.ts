@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { OFFLINE_BILLING_METHOD } from "@/lib/stripe";
-import { loadBillingForVenues, unbilledVenueStates } from "@/lib/venueBilling";
+import { loadBillingForVenues, unbilledVenueStates, type UnbilledVenueState } from "@/lib/venueBilling";
 import { isMultiVenueBillingEnabled, type BillAccount } from "@/lib/multiVenueBilling";
 import { loadBillAccount } from "@/lib/venueRemoval";
 
@@ -38,6 +38,10 @@ type InvoiceRow = {
   status: string;
   charged_at: string;
 };
+
+/** The live bill a venue can be added back to (Phase 6.7), or null: lapsed, or removed, with the partner paying elsewhere. */
+const rejoinBillOf = (state: UnbilledVenueState | undefined): string | null =>
+  state && (state.kind === "lapsed" || state.kind === "removed") ? state.ownerBillId : null;
 
 export async function GET(request: Request) {
   if (!supabaseAdmin) {
@@ -88,11 +92,18 @@ export async function GET(request: Request) {
     return !row || row.status === "cancelled";
   });
   let compedVenues: Array<{ id: string; name: string }> = [];
+  // Phase 6.7: venues whose OLD bill ended while the partner pays on another (lapsed, or removed from a bill
+  // that has since ended), by the live bill they can be added back to. Same classifier read as `comped`.
+  const rejoinByBill = new Map<string, string[]>();
   if (uncovered.length > 0) {
     const states = await unbilledVenueStates(uncovered, new Map(uncovered.map((venueId) => [venueId, auth.ownerId])));
     if (!states.ok) {
       console.error(`[OwnerBilling] unbilled-read-failed owner=${auth.ownerId}: ${states.error}`);
     } else {
+      for (const venueId of uncovered) {
+        const billId = rejoinBillOf(states.byVenue.get(venueId));
+        if (billId) rejoinByBill.set(billId, [...(rejoinByBill.get(billId) ?? []), venueId]);
+      }
       const compedIds = uncovered.filter((venueId) => states.byVenue.get(venueId)?.kind === "comped");
       if (compedIds.length > 0) {
         const { data: venues, error: venueError } = await supabaseAdmin
@@ -126,6 +137,21 @@ export async function GET(request: Request) {
   // One membership read + one venue-name read per bill (a partner has one bill).
   const accounts = new Map<string, BillAccount | null>();
   if (isMultiVenueBillingEnabled()) {
+    // A cancelled bill whose every venue can be added back to a live bill shown here is history, not a bill
+    // to lead the page with: it would offer "Resubscribe" (which Checkout refuses) instead of "Add back".
+    const rejoinTarget = new Map<string, string>();
+    for (const [billId, venueIds] of rejoinByBill) for (const venueId of venueIds) rejoinTarget.set(venueId, billId);
+    const liveBillIds = new Set(subscriptions.filter((row) => row.status !== "cancelled").map((row) => row.id));
+    for (let i = subscriptions.length - 1; i >= 0; i--) {
+      const venues = coveredVenuesByBill.get(subscriptions[i].id) ?? [];
+      if (
+        subscriptions[i].status === "cancelled" &&
+        venues.length > 0 &&
+        venues.every((venueId) => liveBillIds.has(rejoinTarget.get(venueId) ?? ""))
+      ) {
+        subscriptions.splice(i, 1);
+      }
+    }
     for (const s of subscriptions) {
       const loaded = await loadBillAccount(
         {
@@ -137,7 +163,9 @@ export async function GET(request: Request) {
           amount_cents: s.amount_cents,
           quantity: s.quantity,
         },
-        auth.venueIds
+        auth.venueIds,
+        Date.now(),
+        rejoinByBill.get(s.id) ?? []
       );
       if (!loaded.ok) console.error(`[OwnerBilling] account-read-failed bill=${s.id}: ${loaded.error}`);
       accounts.set(s.id, loaded.ok ? loaded.account : null);

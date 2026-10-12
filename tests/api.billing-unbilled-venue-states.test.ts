@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * Multi-venue billing Phase 6.3 (review #2, #4) — removed and comped venues are not "no bill".
@@ -213,12 +213,26 @@ describe("unbilledVenueStates", () => {
     expect(result.ok && result.byVenue.size).toBe(0);
   });
 
-  it("a venue whose own bill was cancelled is unbilled, carrying the partner's other live bill", async () => {
+  it("a venue whose own bill was cancelled is lapsed (Phase 6.6), carrying the partner's other live bill", async () => {
     pacificPaying();
     db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
     db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
     const result = await unbilledVenueStates(["venue-b"], owners);
-    expect(result.ok && result.byVenue.get("venue-b")).toEqual({ kind: "unbilled", ownerBillId: "bill-a" });
+    expect(result.ok && result.byVenue.get("venue-b")).toEqual({ kind: "lapsed", fromBillId: "bill-b", ownerBillId: "bill-a" });
+  });
+
+  it("an anchor of a cancelled bill with no membership row is lapsed too", async () => {
+    pacificPaying();
+    db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
+    const result = await unbilledVenueStates(["venue-b"], owners);
+    expect(result.ok && result.byVenue.get("venue-b")).toEqual({ kind: "lapsed", fromBillId: "bill-b", ownerBillId: "bill-a" });
+  });
+
+  it("a cancelled own bill with no live partner bill is plain unbilled (it may resubscribe)", async () => {
+    db.tables.billing_subscriptions = [bill("bill-b", "venue-b", "owner-1", "cancelled")];
+    db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
+    const result = await unbilledVenueStates(["venue-b"], owners);
+    expect(result.ok && result.byVenue.get("venue-b")).toEqual({ kind: "unbilled", ownerBillId: null });
   });
 
   it("no live bill anywhere = plain unbilled; another partner's bill does not count", async () => {
@@ -256,13 +270,13 @@ describe("POST /api/owner/billing/checkout — one bill per partner", () => {
     expect(stripeCalls()).toBe(0);
   });
 
-  it("refuses a second venue whose own old bill is cancelled while the partner pays for another", async () => {
+  it("refuses a second venue whose own old bill is cancelled while the partner pays for another (Add back instead)", async () => {
     pacificPaying();
     db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
     db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
     const response = await checkoutFor("venue-b");
     expect(response.status).toBe(409);
-    expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ON_PARTNER_BILL_MESSAGES.shared });
+    expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ON_PARTNER_BILL_MESSAGES.lapsed });
     expect(stripeCalls()).toBe(0);
   });
 
@@ -350,6 +364,77 @@ describe("GET /api/owner/billing — comped venues", () => {
   });
 });
 
+describe("GET /api/owner/billing — venues that can be added back (Phase 6.7)", () => {
+  type Body = {
+    subscriptions: Array<{
+      id: string;
+      status: string;
+      account?: { venues: Array<{ id: string; name: string; state: string }>; billedVenueCount: number } | null;
+    }>;
+  };
+  const get = async () => (await (await ownerBilling(new Request("http://localhost/api/owner/billing"))).json()) as Body;
+  const flag = (on: boolean) => {
+    if (on) process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED = "true";
+    else delete process.env.NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED;
+  };
+  afterEach(() => flag(false));
+
+  const lapsed = () => {
+    pacificPaying();
+    // Bravo's own bill X was cancelled; the partner now pays on Pacific's bill.
+    db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
+    db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
+  };
+
+  it("lists a lapsed venue on the live bill's account as 'lapsed' and drops the dead bill, so no Resubscribe leads the page", async () => {
+    flag(true);
+    lapsed();
+    const { subscriptions } = await get();
+    expect(subscriptions.map((s) => s.id)).toEqual(["bill-a"]);
+    const account = subscriptions[0].account;
+    expect(account?.venues).toEqual([
+      expect.objectContaining({ id: "venue-a", state: "billed" }),
+      expect.objectContaining({ id: "venue-b", name: "Bravo", state: "lapsed" }),
+    ]);
+    expect(account?.billedVenueCount).toBe(1);
+  });
+
+  it("a venue removed from a bill that has ended is listed the same way", async () => {
+    flag(true);
+    pacificPaying();
+    db.tables.billing_subscriptions.push(bill("bill-x", "venue-x", "owner-1", "cancelled"));
+    db.tables.billing_subscription_venues.push(member("venue-b", "bill-x", "2026-09-01T00:00:00Z"));
+    const { subscriptions } = await get();
+    expect(subscriptions[0].account?.venues.find((v) => v.id === "venue-b")?.state).toBe("lapsed");
+  });
+
+  it("a venue removed from the LIVE bill is listed once, as removed (not also lapsed)", async () => {
+    flag(true);
+    pacificPaying();
+    db.tables.billing_subscription_venues.push(member("venue-b", "bill-a", "2026-10-01T00:00:00Z"));
+    const venues = (await get()).subscriptions[0].account?.venues ?? [];
+    expect(venues.filter((v) => v.id === "venue-b")).toEqual([expect.objectContaining({ state: "removed" })]);
+  });
+
+  it("flag off: the answer is what it always was (no account, the dead bill still listed)", async () => {
+    flag(false);
+    lapsed();
+    const { subscriptions } = await get();
+    expect(subscriptions.map((s) => s.id).sort()).toEqual(["bill-a", "bill-b"]);
+    expect(subscriptions.every((s) => !("account" in s))).toBe(true);
+  });
+
+  it("a partner whose ONLY bill is cancelled keeps it (Resubscribe is still right there)", async () => {
+    flag(true);
+    db.tables.billing_subscriptions = [bill("bill-a", "venue-a", "owner-1", "cancelled")];
+    db.tables.billing_subscription_venues = [{ ...member("venue-a", "bill-a"), role: "anchor" }];
+    db.tables.venue_owner_venues = [link("owner-1", "venue-a", "Pacific")];
+    db.tables.venues = [venueRow("venue-a", "Pacific")];
+    db.owner = { ownerId: "owner-1", venueIds: ["venue-a"] };
+    expect((await get()).subscriptions.map((s) => s.id)).toEqual(["bill-a"]);
+  });
+});
+
 // --- Phase 6.4 (review #6, #7): names and options never come from the search-filtered list ---------
 
 describe("GET /api/admin/billing — anchor names do not depend on the search box (Phase 6.4, #6)", () => {
@@ -383,7 +468,7 @@ describe("GET /api/admin/billing?resource=attach-options (Phase 6.4, #6 and #7)"
   const options = async () =>
     (await (await adminList(new Request("http://localhost/api/admin/billing?resource=attach-options"))).json()) as {
       ok: boolean;
-      venues: Array<{ id: string; name: string; ownerId: string | null }>;
+      venues: Array<{ id: string; name: string; ownerId: string | null; state: string }>;
       owners: Array<{ id: string; email: string; name: string }>;
     };
   const real = (id: string, name: string, extra: Row = {}): Row => ({ id, name, hidden: false, latitude: 40.1, longitude: -74.1, ...extra });
@@ -409,15 +494,40 @@ describe("GET /api/admin/billing?resource=attach-options (Phase 6.4, #6 and #7)"
     expect(body.ok).toBe(true);
     // Pacific is billed, Delta is hidden, the room is a (0,0) placeholder: none are offered.
     expect(body.venues).toEqual([
-      { id: "venue-b", name: "Bravo", ownerId: "owner-1" },
-      { id: "venue-c", name: "Charlie", ownerId: null },
+      { id: "venue-b", name: "Bravo", ownerId: "owner-1", state: "comped" },
+      { id: "venue-c", name: "Charlie", ownerId: null, state: "unlinked" },
     ]);
   });
 
-  it("a venue removed from a bill is not offered (the partner's Add back, or support)", async () => {
+  // Phase 6.7: a venue the partner's live bill can take back is offered, locked to that partner.
+  it("a venue whose own bill was cancelled (lapsed) is offered, tagged with its partner", async () => {
+    seed();
+    db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
+    db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
+    expect((await options()).venues.find((v) => v.id === "venue-b")).toEqual({ id: "venue-b", name: "Bravo", ownerId: "owner-1", state: "lapsed" });
+  });
+
+  it("a venue removed from a bill is offered as a rejoin (the only way back on a check-billed bill)", async () => {
     seed();
     db.tables.billing_subscription_venues.push(member("venue-b", "bill-a", "2026-10-01T00:00:00Z"));
-    expect((await options()).venues.map((v) => v.id)).toEqual(["venue-c"]);
+    expect((await options()).venues.find((v) => v.id === "venue-b")).toMatchObject({ ownerId: "owner-1", state: "removed" });
+  });
+
+  it("a hidden venue is offered only as a rejoin we hid ourselves (rehidden_at), never an unlinked or admin-hidden one", async () => {
+    seed();
+    db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
+    db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
+    db.tables.venues = [
+      real("venue-a", "Pacific"),
+      real("venue-b", "Bravo", { hidden: true, rehidden_at: "2026-10-05T00:00:00Z" }),
+      real("venue-d", "Delta (hidden)", { hidden: true, rehidden_at: "2026-10-05T00:00:00Z" }),
+      real("venue-e", "Echo (admin-hidden)", { hidden: true }),
+    ];
+    db.tables.venue_owner_venues.push(link("owner-1", "venue-e", "Echo (admin-hidden)"));
+    const ids = (await options()).venues.map((v) => v.id);
+    expect(ids).toContain("venue-b");
+    expect(ids).not.toContain("venue-d");
+    expect(ids).not.toContain("venue-e");
   });
 
   it("returns EVERY partner account, including one with no venues yet", async () => {
@@ -472,7 +582,7 @@ describe("POST /api/admin/billing grant-manual — never a second bill for a par
     db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
     const response = await grant("venue-b");
     expect(response.status).toBe(409);
-    expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES.shared });
+    expect(await response.json()).toMatchObject({ code: "on_partner_bill", error: ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES.lapsed });
     expect(billWrites()).toEqual([]);
   });
 
@@ -508,6 +618,19 @@ describe("POST /api/admin/billing grant-manual — never a second bill for a par
     const response = await grant("venue-b");
     expect(response.status).toBe(500);
     expect(billWrites()).toEqual([]);
+  });
+
+  it("the admin list says why a lapsed venue's Grant is blocked, in the POST's own words, and flags it lapsed", async () => {
+    pacificPaying();
+    db.tables.billing_subscriptions.push(bill("bill-b", "venue-b", "owner-1", "cancelled"));
+    db.tables.billing_subscription_venues.push({ ...member("venue-b", "bill-b"), role: "anchor" });
+    const { partners } = (await (await adminList(new Request("http://localhost/api/admin/billing"))).json()) as {
+      partners: Array<{ venueId: string; lapsed: boolean; grantOfflineBlocked: boolean; grantOfflineBlockedMessage: string | null }>;
+    };
+    const bravo = partners.find((p) => p.venueId === "venue-b");
+    expect(bravo).toMatchObject({ lapsed: true, grantOfflineBlocked: true, grantOfflineBlockedMessage: ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES.lapsed });
+    const pacific = partners.find((p) => p.venueId === "venue-a");
+    expect(pacific).toMatchObject({ lapsed: false, grantOfflineBlocked: false, grantOfflineBlockedMessage: null });
   });
 
   it("the admin list flags exactly those rows, so the Grant button is disabled there", async () => {

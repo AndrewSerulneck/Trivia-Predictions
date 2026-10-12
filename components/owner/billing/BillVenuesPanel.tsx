@@ -11,10 +11,10 @@ import {
 import {
   breakdownLabel,
   changeDoneMessage,
-  formatLeaveDate,
   interpretVenueChangeReply,
   removeConfirmText,
   venueAction,
+  venueStateLabel,
 } from "@/lib/billAccountView";
 import { formatCents } from "@/lib/merchPricing";
 import type { BillAccount, BillAccountVenue } from "@/lib/multiVenueBilling";
@@ -36,15 +36,6 @@ type Props = {
   periodEnd: string | null;
   /** Re-read the page after a change. */
   onChanged: (message: string) => Promise<void> | void;
-};
-
-const stateLabel = (venue: BillAccountVenue): string | null => {
-  if (venue.state === "leaving") {
-    const until = formatLeaveDate(venue.removeAt);
-    return until ? `Leaving ${until}` : "Leaving at the end of this month";
-  }
-  if (venue.state === "removed") return "Not on your bill";
-  return null;
 };
 
 const actionButtonClass =
@@ -303,12 +294,12 @@ export const BillVenuesPanel = ({ account, billVenueId, bill, periodEnd, onChang
         <ul className="mt-3">
           {account.venues.map((venue, index) => {
             const action = venueAction(venue, account, bill);
-            const label = stateLabel(venue);
+            const label = venueStateLabel(venue, bill);
             return (
               <li key={venue.id} className={`py-3 ${index > 0 ? "border-t border-ht-hairline" : ""}`}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className={`truncate text-sm font-bold ${venue.state === "removed" ? "text-ht-muted" : "text-ht-primary"}`}>
+                    <p className={`truncate text-sm font-bold ${venue.state === "removed" || venue.state === "lapsed" ? "text-ht-muted" : "text-ht-primary"}`}>
                       {venue.name}
                     </p>
                     {label ? (

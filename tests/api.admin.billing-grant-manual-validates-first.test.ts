@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/venueBilling", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/venueBilling")>()),
   unbilledVenueStates: vi.fn(async () => ({ ok: true, byVenue: new Map() })),
+  bringAnchorHome: vi.fn(async () => ({ ok: true, outcome: "home" })),
 }));
 
 /**

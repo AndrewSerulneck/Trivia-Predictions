@@ -5,6 +5,7 @@ import {
   interpretVenueChangeReply,
   removeConfirmText,
   venueAction,
+  venueStateLabel,
 } from "@/lib/billAccountView";
 import { VENUE_CHANGE_MESSAGES } from "@/lib/multiVenueBilling";
 
@@ -72,5 +73,16 @@ describe("billAccountView (multi-venue billing Phase 5)", () => {
     expect(
       changeDoneMessage("Second Bar", { action: "remove", venueId: "v", removeAt: "2026-10-20T15:00:00.000Z", billedVenueCount: 2 })
     ).toContain("Oct 20");
+  });
+
+  it("Phase 6.7: a lapsed venue is added back on a card bill, and only said so on a check bill", () => {
+    expect(venueAction({ state: "lapsed" }, { billedVenueCount: 1 }, card)).toBe("add_back");
+    expect(venueAction({ state: "lapsed" }, { billedVenueCount: 1 }, { ...card, status: "past_due" })).toBeNull();
+    expect(venueAction({ state: "lapsed" }, { billedVenueCount: 1 }, { ...card, isManual: true })).toBeNull();
+    expect(venueAction({ state: "lapsed" }, { billedVenueCount: 1 }, { ...card, cancelAtPeriodEnd: true })).toBeNull();
+    expect(venueStateLabel({ state: "lapsed", removeAt: null }, { isManual: false })).toBe("Not on your bill — its old bill ended");
+    expect(venueStateLabel({ state: "lapsed", removeAt: null }, { isManual: true })).toContain("Email partnerships@hightopchallenge.com");
+    expect(venueStateLabel({ state: "removed", removeAt: null }, { isManual: false })).toBe("Not on your bill");
+    expect(venueStateLabel({ state: "billed", removeAt: null }, { isManual: false })).toBeNull();
   });
 });

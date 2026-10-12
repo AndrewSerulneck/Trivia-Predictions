@@ -17,6 +17,7 @@ import {
   errorText,
   loadAddVenueContext,
   quoteVenueAddition,
+  revealPaidVenue,
   startVenueAddition,
   venueAdditionInFlight,
   type AddVenueOutcome,
@@ -29,6 +30,7 @@ import {
   isBilledMembership,
   loadBillingForVenue,
   loadBillingForVenues,
+  rejoinStateOf,
 } from "@/lib/venueBilling";
 import { isPlaceholderVenueRow } from "@/lib/venueClaim";
 import { settleStaleVenueChangesForBill } from "@/lib/venueRemoval";
@@ -48,8 +50,11 @@ import { monthlyTotalCents } from "@/lib/venuePricing";
  *     offline amount is the admin's to set — the graduated total is returned as a suggestion.
  *
  * Every refusal happens BEFORE anything is written. The venue must be visible, a real venue (not a
- * (0,0) room), not another partner's, and never billed before (its own subscription, or a past
- * membership — those are the partner's "Add back", or support's call).
+ * (0,0) room), not another partner's, and either never billed, or (Phase 6.6, "Add to their bill"
+ * only) REJOINING this partner's bill: taken off it earlier, or its bill history is on a cancelled
+ * bill (`rejoinStateOf`, lib/venueBilling.ts). A rejoining venue may be hidden only if WE hid it
+ * (`rehidden_at` — the removal job or the lapsed re-hide); it is shown again once it is on the bill.
+ * A live subscription of its own, or history on another partner's bill, is support's call.
  */
 
 const LOG = "[AdminVenueAttach]";
@@ -101,6 +106,7 @@ type VenueRow = {
   id: string;
   name: string | null;
   hidden: boolean | null;
+  rehidden_at: string | null;
   latitude: number | null;
   longitude: number | null;
 };
@@ -124,14 +130,13 @@ export async function attachVenueToOwner(args: AdminAttachArgs): Promise<AdminAt
     // 1. The venue: real, visible.
     const venueRead = await supabaseAdmin
       .from("venues")
-      .select("id, name, hidden, latitude, longitude")
+      .select("id, name, hidden, rehidden_at, latitude, longitude")
       .eq("id", venueId)
       .maybeSingle<VenueRow>();
     if (venueRead.error) return failed(`venue-read-failed: ${venueRead.error.message}`);
     const venueRow = venueRead.data;
     if (!venueRow) return refuse("venue_not_found", 404);
     if (isPlaceholderVenueRow(venueRow)) return refuse("venue_placeholder");
-    if (venueRow.hidden) return refuse("venue_hidden");
     const venue = { id: venueRow.id, name: (venueRow.name ?? "").trim() || venueRow.id };
 
     // 2. The partner.
@@ -155,14 +160,18 @@ export async function attachVenueToOwner(args: AdminAttachArgs): Promise<AdminAt
     if (linkedOwners.some((id) => id !== ownerId)) return refuse("venue_has_owner");
     const alreadyLinked = linkedOwners.includes(ownerId);
 
-    // 4. Billing history. Its own subscription → manage it there; a membership on this partner's
-    //    bill that is still billed → already done (bill) / contradictory (comped); any other
-    //    membership (left a bill, or another bill) → not this tool's call.
+    // 4. Billing history. Its own LIVE subscription → manage it there; a membership on this
+    //    partner's bill that is still billed → already done (bill) / contradictory (comped); any
+    //    other history (left a bill, a cancelled bill) → only "Add to their bill" as a rejoin, below.
     const ownBill = await loadBillingForVenue<{ id: string; venue_id: string; status: string }>(venueId, "id");
     if (!ownBill.ok) return failed(ownBill.error);
-    if (ownBill.row && ownBill.row.venue_id === venueId) return refuse("venue_has_own_bill");
+    const anchorsOwnBill = Boolean(ownBill.row && ownBill.row.venue_id === venueId);
+    if (anchorsOwnBill && ownBill.row?.status !== "cancelled") return refuse("venue_has_own_bill");
     const membership = await billMembershipOf(venueId);
     if (!membership.ok) return failed(membership.error);
+    const hasHistory = anchorsOwnBill || membership.row !== null;
+    // Hidden: only a venue WE hid when it left a bill (stamped), and only to put it back on one.
+    if (venueRow.hidden && !(hasHistory && venueRow.rehidden_at)) return refuse("venue_hidden");
     // A card add for this venue still waiting on its payment (3-D Secure) has not linked it yet:
     // never comp it, or put it on another partner's bill, underneath that add. The same partner's
     // bill add goes on to `startVenueAddition`, which answers a re-ask of the same key from its row.
@@ -195,11 +204,11 @@ export async function attachVenueToOwner(args: AdminAttachArgs): Promise<AdminAt
         if (!link.ok) return failed(link.error);
         return { ok: true, httpStatus: 200, kind: "already_on_bill", venueId };
       }
-      return refuse("venue_has_billing_history");
     }
 
-    // --- Comped: the link, and nothing else. ---
+    // --- Comped: the link, and nothing else. Never for a venue that has been on a bill. ---
     if (args.mode === "comped") {
+      if (hasHistory) return refuse("venue_has_billing_history");
       if (alreadyLinked) return refuse("already_linked");
       if (args.preview) {
         return { ok: true, httpStatus: 200, kind: "preview", preview: { venue, owner, mode: "comped", quote: null, offline: null } };
@@ -214,6 +223,21 @@ export async function attachVenueToOwner(args: AdminAttachArgs): Promise<AdminAt
     if (ownBills.length === 0) return addRefusal("no_bill");
     if (ownBills.length > 1) return addRefusal("multiple_bills");
     const bill = ownBills[0];
+
+    // A venue with billing history goes on only as a REJOIN of this partner's bill (Phase 6.6): taken
+    // off it earlier, or off a cancelled bill that was this partner's (or is already linked to them —
+    // never a transfer between partners, plan §8).
+    if (hasHistory) {
+      const rejoin = await rejoinStateOf(venueId, bill.id);
+      if (!rejoin.ok) return failed(rejoin.error);
+      const state = rejoin.state;
+      const rejoinable =
+        state.kind === "left_here" ||
+        (state.kind === "dead_bill" && (alreadyLinked || state.fromOwnerId === ownerId));
+      if (!rejoinable) {
+        return refuse(state.kind === "billed_here" ? "already_linked" : "venue_has_billing_history");
+      }
+    }
 
     if (bill.billing_method === OFFLINE_BILLING_METHOD) {
       const memberships = await billMemberships(bill.id);
@@ -232,6 +256,9 @@ export async function attachVenueToOwner(args: AdminAttachArgs): Promise<AdminAt
       if (!added.ok) return failed(added.error);
       const link = await ensureOwnerLink(ownerId, venueId);
       if (!link.ok) return failed(link.error);
+      // A rejoining venue the removal job (or the lapsed re-hide) hid is shown again, as a paid add's
+      // completion does. A never-billed venue is visible already (step 1), so this is a no-op for it.
+      if (hasHistory) await revealPaidVenue(venueId);
       console.log(`${LOG} offline-attached venue=${venueId} owner=${ownerId} bill=${bill.id} venues=${after}`);
       return {
         ok: true,

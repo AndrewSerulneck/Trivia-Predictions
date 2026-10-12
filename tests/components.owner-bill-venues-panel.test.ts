@@ -54,10 +54,14 @@ const installFetch = (replies: Record<string, Reply[]>): Call[] => {
   return calls;
 };
 
-const renderPanel = (onChanged = vi.fn(), bill = { isManual: false, cancelAtPeriodEnd: false, status: "active" }) =>
+const renderPanel = (
+  onChanged = vi.fn(),
+  bill = { isManual: false, cancelAtPeriodEnd: false, status: "active" },
+  account: BillAccount = ACCOUNT
+) =>
   render(
     createElement(BillVenuesPanel, {
-      account: ACCOUNT,
+      account,
       billVenueId: "v-anchor",
       bill,
       periodEnd: "2026-10-20T12:00:00.000Z",
@@ -143,5 +147,38 @@ describe("BillVenuesPanel", () => {
     installFetch({});
     renderPanel(vi.fn(), { isManual: true, cancelAtPeriodEnd: false, status: "active" });
     expect(screen.queryByRole("button")).toBeNull();
+  });
+
+  // Phase 6.7: a venue whose old bill ended is listed with the same Add back, and never a Subscribe.
+  const LAPSED_ACCOUNT: BillAccount = {
+    ...ACCOUNT,
+    venues: [
+      { id: "v-anchor", name: "Anchor Bar", state: "billed", isAnchor: true, removeAt: null },
+      { id: "v-lapsed", name: "Lapsed Bar", state: "lapsed", isAnchor: false, removeAt: null },
+    ],
+    billedVenueCount: 1,
+  };
+
+  it("a lapsed venue says its old bill ended and Add back pays through the live bill's anchor", async () => {
+    const calls = installFetch({
+      "/add/quote": [{ status: 200, body: { ok: true, quote: QUOTE } }],
+      "/venues/add": [{ status: 200, body: { ok: true, status: "paid", venueId: "v-lapsed", chargedTodayCents: 2268 } }],
+    });
+    const onChanged = vi.fn();
+    renderPanel(onChanged, undefined, LAPSED_ACCOUNT);
+    expect(screen.getByText("Not on your bill — its old bill ended")).toBeTruthy();
+    expect(screen.queryByText(/subscribe/i)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Add back" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Add back — pay $22.68 now" }));
+    await waitFor(() => expect(onChanged).toHaveBeenCalledWith("Lapsed Bar is back on your bill and live for players."));
+    const post = calls.find((c) => c.url === "/api/owner/venues/add");
+    expect(post?.body).toMatchObject({ venueId: "v-anchor", readdVenueId: "v-lapsed", quotedVenueCents: QUOTE.thisVenueCents });
+  });
+
+  it("on a check-billed bill a lapsed venue has no button and tells the partner to email", () => {
+    installFetch({});
+    renderPanel(vi.fn(), { isManual: true, cancelAtPeriodEnd: false, status: "active" }, LAPSED_ACCOUNT);
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByText(/Email partnerships@hightopchallenge\.com/)).toBeTruthy();
   });
 });

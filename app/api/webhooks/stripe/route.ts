@@ -14,6 +14,7 @@ import {
 import { isBillingLapsed, isVenueRehideEnabled } from "@/lib/venueVisibility";
 import { subscriptionMonthlyCents } from "@/lib/venuePricing";
 import { completeVenueAdditionForInvoice } from "@/lib/venueAddition";
+import { bringAnchorHome } from "@/lib/venueBilling";
 
 // Stripe requires the raw request body to verify the signature — force the
 // Node.js runtime so the body is not transformed.
@@ -554,6 +555,30 @@ async function runFirstSyncFollowers(result: UpsertResult, sub: Stripe.Subscript
   await maybeRevealVenue(sub);
   await maybeSendWelcomeEmail(sub);
   await backfillSubscriptionInvoices(sub);
+  await maybeBringAnchorHome(sub);
+}
+
+/**
+ * Multi-venue billing Phase 6.6: a resubscribe re-points an OLD bill row at a new subscription. If
+ * that bill's anchor venue had meanwhile rejoined another (since cancelled) bill, its membership row
+ * is still over there — bring it home, or the add/remove claims would count one venue fewer than
+ * Stripe bills (`bringAnchorHome`, lib/venueBilling.ts). Normally a single "home" read. Best-effort:
+ * the daily /api/cron/billing (`repairAnchorMemberships`) repairs a miss.
+ */
+async function maybeBringAnchorHome(sub: Stripe.Subscription): Promise<void> {
+  if (!supabaseAdmin) return;
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("id")
+      .eq("stripe_subscription_id", sub.id)
+      .maybeSingle<{ id: string }>();
+    if (error || !data) return;
+    const result = await bringAnchorHome(data.id);
+    if (!result.ok) console.error(`[StripeWebhook] anchor-home-failed bill=${data.id}: ${result.error} — the daily cron will retry`);
+  } catch (error) {
+    console.error(`[StripeWebhook] anchor-home-threw sub=${sub.id}: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**

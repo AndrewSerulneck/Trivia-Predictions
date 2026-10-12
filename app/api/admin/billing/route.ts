@@ -24,9 +24,11 @@ import {
   isBilledMembership,
   loadBillingForVenue,
   loadBillingForVenues,
+  bringAnchorHome,
   refusesOwnBill,
   unbilledVenueStates,
   type BillMembership,
+  type UnbilledVenueState,
 } from "@/lib/venueBilling";
 import { ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES, ON_PARTNER_BILL_CODE, onPartnerBillMessageKey } from "@/lib/multiVenueBilling";
 import { billRateFromMirror, monthlyTotalCents, rateBreakdown, rateMonthlyTotalCents } from "@/lib/venuePricing";
@@ -84,6 +86,10 @@ type SubscriptionRow = {
  * formatting in lib/adminBillView.ts). Every number is computed here from lib/venuePricing.ts.
  */
 type PartnerBill = AdminPartnerBill;
+
+/** The greyed "Grant offline" note for a venue that must not open its own bill (the POST's own wording), or null. */
+const grantBlockedMessage = (state: UnbilledVenueState | undefined): string | null =>
+  refusesOwnBill(state) ? ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES[onPartnerBillMessageKey(state)] : null;
 
 const membershipState = (row: BillMembership | undefined, nowMs: number): PartnerBill["venueState"] =>
   !row || isBilledMembership(row) ? "billed" : hasLeftBill(row, nowMs) ? "removed" : "leaving";
@@ -205,9 +211,12 @@ export async function GET(request: Request) {
         ownerName: link.venue_owners?.name ?? "",
         bill: sub ? billOf(link.venue_id, sub) : null,
         comped: !sub && unbilled.byVenue.get(link.venue_id)?.kind === "comped",
+        // Phase 6.7: its own bill was cancelled (so `sub` is that dead bill) and the partner pays on another.
+        lapsed: unbilled.byVenue.get(link.venue_id)?.kind === "lapsed",
         removedFrom: removedFrom(link.venue_id, sub),
         // Phase 6.5: "Grant offline" would open the partner a second bill (POST refuses it too).
         grantOfflineBlocked: refusesOwnBill(unbilled.byVenue.get(link.venue_id)),
+        grantOfflineBlockedMessage: grantBlockedMessage(unbilled.byVenue.get(link.venue_id)),
         subscription: sub
           ? {
               status: sub.status,
@@ -248,7 +257,9 @@ export async function GET(request: Request) {
  *   `venues` — visible, real (not a (0,0) room) venues that are either linked to NO partner yet
  *     (`ownerId: null`) or linked to exactly one partner and COMPED there (`ownerId` = that partner,
  *     found with the shared classifier `unbilledVenueStates`, never re-derived) — the second kind can
- *     only be moved onto that same partner's bill;
+ *     only be moved onto that same partner's bill; plus (Phase 6.7) venues of one partner whose old bill
+ *     ended (`state` "lapsed", or "removed" from a bill) while that partner pays on another — also only
+ *     back onto that partner's bill, and hidden ones only if we hid them (`rehidden_at`);
  *   `owners` — EVERY partner account (`id, email, name`), so the Partner dropdown never depends on the
  *     list's search box.
  * Three bounded reads, plus the classifier's reads for the few linked venues. The server re-checks
@@ -258,10 +269,19 @@ async function attachOptions(): Promise<NextResponse> {
   const [venues, links, owners] = await Promise.all([
     supabaseAdmin!
       .from("venues")
-      .select("id, name, hidden, latitude, longitude")
+      .select("id, name, hidden, rehidden_at, latitude, longitude")
       .order("name", { ascending: true })
       .limit(1000)
-      .returns<Array<{ id: string; name: string | null; hidden: boolean | null; latitude: number | null; longitude: number | null }>>(),
+      .returns<
+        Array<{
+          id: string;
+          name: string | null;
+          hidden: boolean | null;
+          rehidden_at: string | null;
+          latitude: number | null;
+          longitude: number | null;
+        }>
+      >(),
     supabaseAdmin!.from("venue_owner_venues").select("venue_id, owner_id").returns<{ venue_id: string; owner_id: string }[]>(),
     supabaseAdmin!
       .from("venue_owners")
@@ -276,7 +296,9 @@ async function attachOptions(): Promise<NextResponse> {
   }
   const ownersByVenue = new Map<string, string[]>();
   for (const link of links.data ?? []) ownersByVenue.set(link.venue_id, [...(ownersByVenue.get(link.venue_id) ?? []), link.owner_id]);
-  const eligible = (venues.data ?? []).filter((venue) => !venue.hidden && !isPlaceholderVenueRow(venue));
+  // Hidden venues are offered only when WE hid them (`rehidden_at`: removed from a bill, or lapsed) and only as a
+  // rejoin below — the server's own rule (lib/adminVenueAttach.ts); an admin-hidden venue stays refused.
+  const eligible = (venues.data ?? []).filter((venue) => (!venue.hidden || venue.rehidden_at) && !isPlaceholderVenueRow(venue));
   const soleOwnerByVenue = new Map(
     eligible.flatMap((venue) => {
       const linked = ownersByVenue.get(venue.id) ?? [];
@@ -287,12 +309,21 @@ async function attachOptions(): Promise<NextResponse> {
   if (!states.ok) {
     return NextResponse.json({ ok: false, error: states.error }, { status: 500 });
   }
-  const options = eligible.flatMap<{ id: string; name: string; ownerId: string | null }>((venue) => {
-    const name = (venue.name ?? "").trim() || venue.id;
-    if (!ownersByVenue.has(venue.id)) return [{ id: venue.id, name, ownerId: null }];
-    const owner = soleOwnerByVenue.get(venue.id);
-    return owner && states.byVenue.get(venue.id)?.kind === "comped" ? [{ id: venue.id, name, ownerId: owner }] : [];
-  });
+  const options = eligible.flatMap<{ id: string; name: string; ownerId: string | null; state: "unlinked" | "comped" | "lapsed" | "removed" }>(
+    (venue) => {
+      const name = (venue.name ?? "").trim() || venue.id;
+      if (!ownersByVenue.has(venue.id)) return venue.hidden ? [] : [{ id: venue.id, name, ownerId: null, state: "unlinked" }];
+      const owner = soleOwnerByVenue.get(venue.id);
+      const state = states.byVenue.get(venue.id);
+      if (!owner || !state) return [];
+      // Comped venues are visible ones; a rejoin is a venue whose bill history the partner's live bill can take back.
+      if (state.kind === "comped") return venue.hidden ? [] : [{ id: venue.id, name, ownerId: owner, state: "comped" }];
+      if ((state.kind === "lapsed" || state.kind === "removed") && state.ownerBillId) {
+        return [{ id: venue.id, name, ownerId: owner, state: state.kind }];
+      }
+      return [];
+    }
+  );
   return NextResponse.json({
     ok: true,
     venues: options,
@@ -524,7 +555,7 @@ export async function POST(request: Request) {
   }
   const unbilledState = unbilled.byVenue.get(venueId);
   if (refusesOwnBill(unbilledState)) {
-    const key = onPartnerBillMessageKey(unbilledState.kind);
+    const key = onPartnerBillMessageKey(unbilledState);
     console.warn(
       `[AdminBilling] grant-manual-refused-on-partner-bill admin=${auth.adminUsername} venue=${venueId} ` +
         `state=${unbilledState.kind} ownerBill=${unbilledState.ownerBillId ?? "none"}`
@@ -658,6 +689,11 @@ export async function POST(request: Request) {
   if (subError || !subscription) {
     return NextResponse.json({ ok: false, error: subError?.message ?? "Failed to grant access." }, { status: 500 });
   }
+
+  // Multi-venue billing Phase 6.6: if this re-opened an old bill whose anchor venue had rejoined
+  // another (since cancelled) bill, bring its membership row home. Best-effort; the daily cron repairs.
+  const anchorHome = await bringAnchorHome(subscription.id);
+  if (!anchorHome.ok) console.error(`[AdminBilling] anchor-home-failed bill=${subscription.id}: ${anchorHome.error}`);
 
   const { error: invoiceError } = await supabaseAdmin.from("billing_invoices").insert({
     subscription_id: subscription.id,

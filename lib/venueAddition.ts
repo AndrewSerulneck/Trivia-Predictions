@@ -16,7 +16,7 @@ import type { OwnerAuthContext } from "@/lib/requireOwnerAuth";
 import { BLANK_SIGNUP_DRAFT, signupStepIssue, type SignupDraft } from "@/lib/selfServeSignup";
 import { getStripeGraduatedPriceId, getStripePriceId, stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { addVenueToBill, billMembershipOf, hasLeftBill, isBilledMembership, loadBillingForVenues, venueIdsEverBilled } from "@/lib/venueBilling";
+import { addVenueToBill, loadBillingForVenues, rejoinStateOf, venueIdsEverBilled } from "@/lib/venueBilling";
 import { isAdminHiddenVenueRow, isPlaceholderVenueRow } from "@/lib/venueClaim";
 import {
   billRateFromMirror,
@@ -755,36 +755,7 @@ async function completeAddition(
     }
   }
 
-  // Live to players the moment payment succeeds (plan §2 decision 8). Same filters as the
-  // webhook's maybeRevealVenue: only a hidden, self-serve-stamped, non-(0,0) row; `rehidden_at`
-  // is cleared in the same write (standing rule: whatever un-hides a venue clears it).
-  const reveal = await supabaseAdmin!
-    .from("venues")
-    .update({ hidden: false, rehidden_at: null })
-    .eq("id", row.venue_id)
-    .eq("hidden", true)
-    .not("self_serve_created_at", "is", null)
-    .or("latitude.neq.0,longitude.neq.0")
-    .select("id")
-    .returns<{ id: string }[]>();
-  if (reveal.error) {
-    console.error(`${LOG} reveal-failed venue=${row.venue_id}: ${reveal.error.message} — the daily reveal repair will retry`);
-  }
-  // "Add back" (Phase 5) of a venue that is not self-serve-made (e.g. admin-activated): the daily
-  // removal job hid it and stamped `rehidden_at` ("we hid this"), so un-hide exactly that — never a
-  // venue an admin hid on purpose (no stamp). A brand-new venue has no stamp, so this is a no-op.
-  const restore = await supabaseAdmin!
-    .from("venues")
-    .update({ hidden: false, rehidden_at: null })
-    .eq("id", row.venue_id)
-    .eq("hidden", true)
-    .not("rehidden_at", "is", null)
-    .or("latitude.neq.0,longitude.neq.0")
-    .select("id")
-    .returns<{ id: string }[]>();
-  if (restore.error) {
-    console.error(`${LOG} restore-failed venue=${row.venue_id}: ${restore.error.message}`);
-  }
+  await revealPaidVenue(row.venue_id);
 
   const updated = await updateAddition(row.id, ["pending", "requires_action", "failed"], paidPatch);
   const finalRow = updated ?? (await readAdditionById(row.id)) ?? row;
@@ -796,6 +767,44 @@ async function completeAddition(
   }
   await sendVenueAddedEmailOnce(finalRow);
   return { ok: true, row: finalRow };
+}
+
+/**
+ * Show a venue to players now that it is paid for — the paid add's completion, and the admin's
+ * offline "Add to their bill" of a venue rejoining from a cancelled bill (Phase 6.6). Never throws;
+ * a failure is logged and the daily reveal repair (lib/venueVisibilitySync.ts) retries the first half.
+ */
+export async function revealPaidVenue(venueId: string): Promise<void> {
+  // Live to players the moment payment succeeds (plan §2 decision 8). Same filters as the
+  // webhook's maybeRevealVenue: only a hidden, self-serve-stamped, non-(0,0) row; `rehidden_at`
+  // is cleared in the same write (standing rule: whatever un-hides a venue clears it).
+  const reveal = await supabaseAdmin!
+    .from("venues")
+    .update({ hidden: false, rehidden_at: null })
+    .eq("id", venueId)
+    .eq("hidden", true)
+    .not("self_serve_created_at", "is", null)
+    .or("latitude.neq.0,longitude.neq.0")
+    .select("id")
+    .returns<{ id: string }[]>();
+  if (reveal.error) {
+    console.error(`${LOG} reveal-failed venue=${venueId}: ${reveal.error.message} — the daily reveal repair will retry`);
+  }
+  // "Add back" (Phase 5) of a venue that is not self-serve-made (e.g. admin-activated): the daily
+  // removal job hid it and stamped `rehidden_at` ("we hid this"), so un-hide exactly that — never a
+  // venue an admin hid on purpose (no stamp). A brand-new venue has no stamp, so this is a no-op.
+  const restore = await supabaseAdmin!
+    .from("venues")
+    .update({ hidden: false, rehidden_at: null })
+    .eq("id", venueId)
+    .eq("hidden", true)
+    .not("rehidden_at", "is", null)
+    .or("latitude.neq.0,longitude.neq.0")
+    .select("id")
+    .returns<{ id: string }[]>();
+  if (restore.error) {
+    console.error(`${LOG} restore-failed venue=${venueId}: ${restore.error.message}`);
+  }
 }
 
 /**
@@ -1187,10 +1196,12 @@ export type StartVenueAdditionArgs = {
 };
 
 /**
- * May this venue be added BACK to this bill? Only the partner's own venue, whose membership row is
- * on this same bill and has left it (taken off, or past its `remove_at`). A venue still set to leave
- * is an Undo (free), not an add; one on another bill, or never billed (e.g. a test venue linked to
- * the partner), is not addable here.
+ * May this venue be added BACK to this bill? Only the partner's own venue that has left this bill
+ * (taken off, or past its `remove_at`) or — Phase 6.6 — whose bill history is on a cancelled bill
+ * (its own old bill ended, or it was removed from a chain bill that has since ended): that one
+ * REJOINS this bill, and completion moves its membership row here. A venue still set to leave is an
+ * Undo (free), not an add; one on another live bill, or never billed (a comped or test venue linked
+ * to the partner), is not addable here. The rule is `rejoinStateOf` (lib/venueBilling.ts).
  */
 async function readdableVenue(
   auth: OwnerAuthContext,
@@ -1199,12 +1210,19 @@ async function readdableVenue(
   nowMs: number
 ): Promise<{ ok: true; venue: { id: string; name: string } } | AddVenueRefusal> {
   if (!auth.venueIds.includes(venueId)) return refuse("forbidden", 403);
-  const membership = await billMembershipOf(venueId);
-  if (!membership.ok) throw new Error(membership.error);
-  const row = membership.row;
-  if (!row || row.subscription_id !== billId) return refuse("venue_unavailable", 409);
-  if (isBilledMembership(row)) return refuse("venue_already_yours", 409);
-  if (!hasLeftBill(row, nowMs)) return refuse("readd_use_undo", 409);
+  const rejoin = await rejoinStateOf(venueId, billId, nowMs);
+  if (!rejoin.ok) throw new Error(rejoin.error);
+  switch (rejoin.state.kind) {
+    case "left_here":
+    case "dead_bill":
+      break;
+    case "billed_here":
+      return refuse("venue_already_yours", 409);
+    case "leaving_here":
+      return refuse("readd_use_undo", 409);
+    default:
+      return refuse("venue_unavailable", 409);
+  }
 
   const { data, error } = await supabaseAdmin!
     .from("venues")

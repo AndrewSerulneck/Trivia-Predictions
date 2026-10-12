@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { attachPreviewText, billSummaryLine, removedFromLine, type AdminPartnerBill } from "@/lib/adminBillView";
+import {
+  LAPSED_LINE,
+  attachPreviewText,
+  attachVenueOptionLabel,
+  billSummaryLine,
+  removedFromLine,
+  type AdminPartnerBill,
+} from "@/lib/adminBillView";
 
 /** Multi-venue billing Phase 6 — how a bill reads in Admin → Partner Billing. */
 
@@ -106,5 +113,20 @@ describe("removedFromLine (Phase 6.3)", () => {
 
   it("still reads sensibly without an anchor name or date", () => {
     expect(removedFromLine({ anchorVenueId: null, anchorVenueName: null, removedAt: null }, { anchorName: null, formatDate })).toBe("Removed from its bill");
+  });
+});
+
+describe("Link a venue picker labels (Phase 6.7)", () => {
+  const venue = (state: "unlinked" | "comped" | "lapsed" | "removed") => ({ id: "v", name: "Bravo", ownerId: state === "unlinked" ? null : "o", state });
+
+  it("says what each venue is and whose bill it can rejoin", () => {
+    expect(attachVenueOptionLabel(venue("unlinked"), null)).toBe("Bravo");
+    expect(attachVenueOptionLabel(venue("comped"), "a@b.com")).toBe("Bravo — free on a@b.com");
+    expect(attachVenueOptionLabel(venue("lapsed"), "a@b.com")).toBe("Bravo — bill cancelled, rejoin a@b.com");
+    expect(attachVenueOptionLabel(venue("removed"), null)).toBe("Bravo — removed from a bill, rejoin a partner");
+  });
+
+  it("the list line for a lapsed venue", () => {
+    expect(LAPSED_LINE).toBe("Bill cancelled — can rejoin their bill");
   });
 });

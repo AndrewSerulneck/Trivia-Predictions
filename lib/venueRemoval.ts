@@ -833,7 +833,9 @@ type AccountBillRow = {
 export async function loadBillAccount(
   bill: AccountBillRow,
   ownerVenueIds: readonly string[],
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
+  /** Phase 6.7: the partner's venues whose old bill ended (`lapsed`, or removed from a dead bill) — listed with Add back. */
+  rejoinVenueIds: readonly string[] = []
 ): Promise<{ ok: true; account: BillAccount } | { ok: false; error: string }> {
   if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
   const memberships = await billMemberships(bill.id);
@@ -846,29 +848,37 @@ export async function loadBillAccount(
     rows.push({ venue_id: bill.venue_id, subscription_id: bill.id, role: "anchor", added_at: null, remove_at: null, removed_at: null });
   }
 
+  // A venue already listed from this bill's own rows is never listed twice.
+  const rejoinIds = Array.from(new Set(rejoinVenueIds.filter((id) => mine.has(id) && !rows.some((row) => row.venue_id === id))));
+
   const names = new Map<string, string>();
-  if (rows.length > 0) {
+  if (rows.length > 0 || rejoinIds.length > 0) {
     const { data, error } = await supabaseAdmin
       .from("venues")
       .select("id, name")
-      .in(
-        "id",
-        rows.map((row) => row.venue_id)
-      )
+      .in("id", [...rows.map((row) => row.venue_id), ...rejoinIds])
       .returns<{ id: string; name: string | null }[]>();
     if (error) return { ok: false, error: `venue-read-failed: ${error.message}` };
     for (const venue of data ?? []) names.set(venue.id, (venue.name ?? "").trim() || venue.id);
   }
 
-  const order: Record<BillAccountVenue["state"], number> = { billed: 0, leaving: 1, removed: 2 };
-  const venues: BillAccountVenue[] = rows
-    .map((row) => ({
+  const order: Record<BillAccountVenue["state"], number> = { billed: 0, leaving: 1, removed: 2, lapsed: 3 };
+  const venues: BillAccountVenue[] = [
+    ...rows.map((row) => ({
       id: row.venue_id,
       name: names.get(row.venue_id) ?? row.venue_id,
       state: isBilledMembership(row) ? ("billed" as const) : hasLeftBill(row, nowMs) ? ("removed" as const) : ("leaving" as const),
       isAnchor: row.venue_id === bill.venue_id,
       removeAt: row.remove_at,
-    }))
+    })),
+    ...rejoinIds.map((id) => ({
+      id,
+      name: names.get(id) ?? id,
+      state: "lapsed" as const,
+      isAnchor: false,
+      removeAt: null,
+    })),
+  ]
     .sort((a, b) => order[a.state] - order[b.state] || Number(b.isAnchor) - Number(a.isAnchor) || a.name.localeCompare(b.name));
 
   const billedVenueCount = Math.max(

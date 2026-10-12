@@ -24,7 +24,7 @@ import { ON_PARTNER_BILL_CODE, ON_PARTNER_BILL_MESSAGES, onPartnerBillMessageKey
  * links (admin "Free (comped)") exist while the multi-venue flag is off. Copy: lib/multiVenueBilling.ts.
  */
 const onPartnerBillResponse = (venueId: string, state: UnbilledVenueState): NextResponse => {
-  const key = onPartnerBillMessageKey(state.kind);
+  const key = onPartnerBillMessageKey(state);
   console.warn(`[OwnerCheckout] on-partner-bill venue=${venueId} state=${state.kind} ownerBill=${state.ownerBillId ?? "none"}`);
   return NextResponse.json(
     { ok: false, error: ON_PARTNER_BILL_MESSAGES[key], code: ON_PARTNER_BILL_CODE },

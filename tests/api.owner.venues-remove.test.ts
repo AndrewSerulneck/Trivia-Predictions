@@ -100,7 +100,7 @@ import { POST as addPOST } from "@/app/api/owner/venues/add/route";
 import { GET as billingGET } from "@/app/api/owner/billing/route";
 import { POST as cronPOST } from "@/app/api/cron/billing/route";
 import { VENUE_ADDITION_LEASE_MS } from "@/lib/venueAddition";
-import { billedVenueCount, venueIdsOnBill } from "@/lib/venueBilling";
+import { billedVenueCount, bringAnchorHome, repairAnchorMemberships, venueIdsOnBill } from "@/lib/venueBilling";
 import { applyDueVenueRemovals, reconcileStaleVenueChanges } from "@/lib/venueRemoval";
 import { CUSTOM_PER_VENUE_LOOKUP_PREFIX, GRADUATED_PRICE_LOOKUP_KEY, nextVenuePriceCents } from "@/lib/venuePricing";
 
@@ -696,6 +696,109 @@ describe("Add back (a paid add of a venue that left the bill)", () => {
     expect((await addBack(THIRD)).json.code).toBe("venue_already_yours");
     expect((await addBack("venue-elsewhere")).json.code).toBe("forbidden");
     expect(h.fns.subscriptionsUpdate).toHaveBeenCalledTimes(1); // only the Remove
+  });
+});
+
+describe("Add back from a CANCELLED bill — rejoin (Phase 6.6)", () => {
+  const LAPSED = "venue-lapsed";
+  const GONE = "venue-gone";
+  const DEAD = "bill-dead";
+  const addBack = (venueId: string, extra: Row = {}) =>
+    post(addPOST, "http://localhost/api/owner/venues/add", { idempotencyKey: nextKey(), venueId: ANCHOR, readdVenueId: venueId, quotedVenueCents: quotedNow(), ...extra });
+  const bills = () => tbl(h.state.db, "billing_subscriptions");
+  const link = (venueId: string) => tbl(h.state.db, "venue_owner_venues").push({ id: `link-${venueId}`, owner_id: OWNER, venue_id: venueId });
+
+  /** #1: LAPSED had its own card bill, since cancelled; the partner now pays on BILL. */
+  const seedLapsedAnchor = () => {
+    tbl(h.state.db, "venues").push(venue(LAPSED, "Lapsed Bar", { self_serve_created_at: "2026-08-01T00:00:00Z" }));
+    link(LAPSED);
+    bills().push({ id: DEAD, venue_id: LAPSED, owner_id: OWNER, status: "cancelled", billing_method: "stripe", stripe_subscription_id: "sub_dead" });
+    tbl(h.state.db, "billing_subscription_venues").push({ id: "m-lapsed", subscription_id: DEAD, venue_id: LAPSED, role: "anchor", added_at: "2026-08-01T00:00:00Z", remove_at: null, removed_at: null });
+  };
+
+  it("#1: a venue whose own bill was cancelled rejoins the partner's bill — charged, moved, counted", async () => {
+    seedLapsedAnchor();
+    const { status, json } = await addBack(LAPSED);
+    expect(status).toBe(200);
+    expect(json).toMatchObject({ status: "paid", venueId: LAPSED });
+    expect(h.fns.createAdminVenue).not.toHaveBeenCalled();
+    const [, params] = h.fns.subscriptionsUpdate.mock.calls.at(-1) as [string, Row];
+    expect(params).toMatchObject({ items: [{ id: ITEM, quantity: 4 }], proration_behavior: "always_invoice", payment_behavior: "pending_if_incomplete" });
+    expect(member(LAPSED)).toMatchObject({ subscription_id: BILL, role: "added", remove_at: null, removed_at: null });
+    expect(await billedVenueCount(BILL)).toEqual({ ok: true, count: 4 });
+    expect(bills().find((row) => row.id === DEAD)).toMatchObject({ status: "cancelled", venue_id: LAPSED });
+  });
+
+  it("#2: a venue removed from a bill that was later cancelled is added back onto the partner's live bill and shown again", async () => {
+    tbl(h.state.db, "venues").push(venue(GONE, "Gone Bar", { hidden: true, rehidden_at: "2026-09-01T00:00:00Z" }), venue("venue-oldanchor", "Old Anchor"));
+    link(GONE);
+    bills().push({ id: DEAD, venue_id: "venue-oldanchor", owner_id: OWNER, status: "cancelled", billing_method: "stripe", stripe_subscription_id: "sub_dead" });
+    tbl(h.state.db, "billing_subscription_venues").push({ id: "m-gone", subscription_id: DEAD, venue_id: GONE, role: "added", added_at: "2026-08-01T00:00:00Z", remove_at: "2026-08-31T00:00:00Z", removed_at: "2026-09-01T00:00:00Z" });
+
+    const { json } = await addBack(GONE);
+    expect(json).toMatchObject({ status: "paid", venueId: GONE });
+    expect(member(GONE)).toMatchObject({ subscription_id: BILL, remove_at: null, removed_at: null });
+    expect(venueRow(GONE)).toMatchObject({ hidden: false, rehidden_at: null });
+  });
+
+  it("a declined rejoin keeps the venue and leaves its row on the dead bill", async () => {
+    seedLapsedAnchor();
+    h.state.paymentMode = "decline";
+    const { status, json } = await addBack(LAPSED);
+    expect(status).toBe(402);
+    expect(json.code).toBe("card_declined");
+    expect(venueRow(LAPSED)).toBeTruthy();
+    expect(member(LAPSED)).toMatchObject({ subscription_id: DEAD });
+  });
+
+  it("refuses a venue on another LIVE bill, and a never-billed (comped) venue — nothing charged", async () => {
+    tbl(h.state.db, "venues").push(venue("venue-chain", "Chain Bar"), venue("venue-comped", "Comped Bar"));
+    link("venue-chain");
+    link("venue-comped");
+    bills().push({ id: "bill-live-2", venue_id: "venue-chain", owner_id: OWNER, status: "active", billing_method: "offline" });
+    expect((await addBack("venue-chain")).json.code).toBe("venue_unavailable");
+    expect((await addBack("venue-comped")).json.code).toBe("venue_unavailable");
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+  });
+
+  it("bringAnchorHome: a revived old bill takes its anchor's row back from a dead bill — never from a live one", async () => {
+    seedLapsedAnchor();
+    await addBack(LAPSED);
+    expect(member(LAPSED).subscription_id).toBe(BILL);
+
+    // The old bill comes back (a resubscribe re-points row DEAD) while BILL is still live: drift for an admin.
+    Object.assign(bills().find((row) => row.id === DEAD) as Row, { status: "active" });
+    expect(await bringAnchorHome(DEAD)).toEqual({ ok: true, outcome: "anchor_on_live_bill" });
+    expect(member(LAPSED).subscription_id).toBe(BILL);
+
+    // BILL has since been cancelled: now the row goes home.
+    Object.assign(bills().find((row) => row.id === BILL) as Row, { status: "cancelled" });
+    expect(await bringAnchorHome(DEAD)).toEqual({ ok: true, outcome: "moved" });
+    expect(member(LAPSED)).toMatchObject({ subscription_id: DEAD, role: "anchor", removed_at: null, remove_at: null });
+    expect(await bringAnchorHome(DEAD)).toEqual({ ok: true, outcome: "home" });
+    // A cancelled bill is never "repaired".
+    expect(await bringAnchorHome(BILL)).toEqual({ ok: true, outcome: "not_live" });
+  });
+
+  it("bringAnchorHome gives a live bill's anchor a row when it has none", async () => {
+    const rows = tbl(h.state.db, "billing_subscription_venues");
+    rows.splice(rows.findIndex((row) => row.venue_id === ANCHOR), 1);
+    expect(await bringAnchorHome(BILL)).toEqual({ ok: true, outcome: "inserted" });
+    expect(member(ANCHOR)).toMatchObject({ subscription_id: BILL, role: "anchor" });
+  });
+
+  it("the daily cron repairs a misplaced anchor row (dry run only reports)", async () => {
+    seedLapsedAnchor();
+    await addBack(LAPSED);
+    Object.assign(bills().find((row) => row.id === BILL) as Row, { status: "cancelled" });
+    Object.assign(bills().find((row) => row.id === DEAD) as Row, { status: "active" });
+
+    expect(await repairAnchorMemberships({ dryRun: true })).toMatchObject({ liveBills: 1, misplaced: 1, moved: 0, dryRun: true });
+    expect(member(LAPSED).subscription_id).toBe(BILL);
+
+    const cron = await post(cronPOST, "http://localhost/api/cron/billing", {});
+    expect(cron.json.anchorRepair).toMatchObject({ liveBills: 1, misplaced: 1, moved: 1, failed: 0 });
+    expect(member(LAPSED).subscription_id).toBe(DEAD);
   });
 });
 

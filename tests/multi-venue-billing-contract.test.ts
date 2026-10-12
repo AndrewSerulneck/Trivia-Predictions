@@ -376,4 +376,55 @@ describe("multi-venue billing — Phase 6.5 quote-vs-Confirm rate", () => {
     expect(panel).toContain("const sentQuote = quotedRef.current");
     expect(panel).toContain("quotedVenueCents: sentQuote.thisVenueCents");
   });
+
+  it("Phase 6.6: a membership row changes bills only in lib/venueBilling.ts, and only off a cancelled bill", () => {
+    // Nothing outside the resolver writes the membership table's subscription_id.
+    for (const file of sources.filter((f) => f !== "lib/venueBilling.ts")) {
+      const source = stripComments(read(file));
+      if (!source.includes("BILLING_MEMBERSHIP_TABLE") && !source.includes('"billing_subscription_venues"')) continue;
+      expect(source, file).not.toMatch(/\.update\(\{[^}]*subscription_id/);
+    }
+    const billing = stripComments(read("lib/venueBilling.ts"));
+    const move = billing.slice(billing.indexOf("async function moveFromDeadBill"));
+    expect(move.indexOf('from.data.status !== "cancelled"')).toBeGreaterThan(0);
+    expect(move.indexOf('from.data.status !== "cancelled"')).toBeLessThan(move.indexOf(".update({ subscription_id: toBillId"));
+    expect(move).toContain('.eq("subscription_id", fromBillId)');
+  });
+
+  it("Phase 6.6: Add back and admin attach decide on the one rejoin rule; Checkout still refuses a lapsed venue", () => {
+    const flow = stripComments(read(FLOW));
+    const readd = flow.slice(flow.indexOf("async function readdableVenue"), flow.indexOf("export async function startVenueAddition"));
+    expect(readd).toContain("rejoinStateOf(venueId, billId, nowMs)");
+    expect(readd).not.toContain("billMembershipOf");
+    expect(stripComments(read("lib/adminVenueAttach.ts"))).toContain("rejoinStateOf(venueId, bill.id)");
+    // `lapsed` is refused by the shared rule (not "unbilled"), so Checkout and Grant offline refuse it.
+    expect(stripComments(read("lib/venueBilling.ts"))).toContain('state.kind !== "unbilled" || state.ownerBillId !== null');
+    // The anchor-home repair runs in the daily cron, the webhook's first sync and Grant offline.
+    expect(stripComments(read("app/api/cron/billing/route.ts"))).toContain("repairAnchorMemberships({ dryRun })");
+    expect(stripComments(read("app/api/webhooks/stripe/route.ts"))).toContain("await maybeBringAnchorHome(sub)");
+    expect(stripComments(read("app/api/admin/billing/route.ts"))).toContain("bringAnchorHome(subscription.id)");
+  });
+
+  it("Phase 6.7: the account view lists a rejoin through the classifier's answer, and never drops a bill without a live one to show", () => {
+    const route = stripComments(read("app/api/owner/billing/route.ts"));
+    expect(route).toContain('state.kind === "lapsed" || state.kind === "removed"');
+    expect(route).toContain("rejoinByBill.get(s.id)");
+    // The dead bill leaves the list only while a live bill that can take its venues is in it, and only with the flag on.
+    expect(route.indexOf("isMultiVenueBillingEnabled()")).toBeLessThan(route.indexOf("subscriptions.splice("));
+    expect(route).toContain("liveBillIds.has(rejoinTarget.get(venueId)");
+    // Add back still goes through the partner's one add flow — the panel names no Stripe route.
+    const panel = stripComments(read("components/owner/billing/BillVenuesPanel.tsx"));
+    expect(panel).not.toMatch(/subscribe|checkout/i);
+    expect(panel).toContain("readdVenueId: venue.id");
+  });
+
+  it("Phase 6.7: the admin list and picker read lapsed from the classifier, and the Grant note is the POST's own sentence", () => {
+    const admin = stripComments(read("app/api/admin/billing/route.ts"));
+    expect(admin).toContain('lapsed: unbilled.byVenue.get(link.venue_id)?.kind === "lapsed"');
+    expect(admin).toContain("ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES[onPartnerBillMessageKey(state)]");
+    expect(admin).toContain("grantOfflineBlocked: refusesOwnBill(");
+    // A hidden venue reaches the picker only as a rejoin we hid (rehidden_at); unlinked ones stay visible-only.
+    expect(admin).toContain("(!venue.hidden || venue.rehidden_at)");
+    expect(admin).toContain("venue.hidden ? [] : [{ id: venue.id, name, ownerId: null");
+  });
 });

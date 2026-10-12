@@ -211,13 +211,26 @@ export const ON_PARTNER_BILL_CODE = "on_partner_bill";
 
 export const ON_PARTNER_BILL_MESSAGES = {
   removed: "This venue was taken off your bill. Add it back from Billing.",
+  /** Removed from a bill that has since ended, and the partner has no live bill to add it back to. */
+  removed_no_bill: `This venue was taken off a bill that has since ended. Email ${PARTNER_SUPPORT_EMAIL} and we'll set it up for you.`,
+  /** Phase 6.6: its own old bill ended and the partner pays on another venue's bill — it can rejoin that one. */
+  lapsed: "This venue's old bill ended. Add it back to your bill from Billing.",
   comped: "This venue is included free on your account.",
   shared: `Your venues share one bill. Email ${PARTNER_SUPPORT_EMAIL} and we'll sort out this venue for you.`,
 } as const;
 
-/** Which sentence of the two maps above a refusal gets. `kind` is `UnbilledVenueState["kind"]` (lib/venueBilling.ts). */
-export const onPartnerBillMessageKey = (kind: "removed" | "comped" | "unbilled"): keyof typeof ON_PARTNER_BILL_MESSAGES =>
-  kind === "removed" ? "removed" : kind === "comped" ? "comped" : "shared";
+/**
+ * Which sentence of the two maps above a refusal gets. `state` is an `UnbilledVenueState`
+ * (lib/venueBilling.ts) — structural here so this module stays client-safe.
+ */
+export const onPartnerBillMessageKey = (state: {
+  kind: "removed" | "comped" | "lapsed" | "unbilled";
+  ownerBillId: string | null;
+}): keyof typeof ON_PARTNER_BILL_MESSAGES => {
+  if (state.kind === "removed") return state.ownerBillId ? "removed" : "removed_no_bill";
+  if (state.kind === "comped" || state.kind === "lapsed") return state.kind;
+  return "shared";
+};
 
 /**
  * Admin "Grant offline" (Phase 6.5) refuses `409 { code: "on_partner_bill" }` for the same venues —
@@ -226,6 +239,9 @@ export const onPartnerBillMessageKey = (kind: "removed" | "comped" | "unbilled")
  */
 export const ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES = {
   removed: "This venue was taken off a bill. Put it back with the partner's Add back (Billing), or manage billing from that bill's anchor venue.",
+  removed_no_bill:
+    "This venue was taken off a bill that has since been cancelled. Restart billing from that bill's anchor venue, then add this one back.",
+  lapsed: "This venue's own bill was cancelled and the partner pays on another bill. Use Link a venue → Add to their bill.",
   comped: "This partner already has a bill. Use Link a venue → Add to their bill.",
   shared: "This partner already has a bill for another venue. Use Link a venue → Add to their bill, or manage billing from that venue.",
 } as const;
@@ -240,11 +256,13 @@ export const COMPED_VENUE_LABEL = "Included on your account at no charge";
  *   billed  — on the bill, and on the next renewal.
  *   leaving — on the bill until `removeAt` (the end of the paid period), then it drops off.
  *   removed — taken off; still the partner's venue, hidden from players, "Add back" re-adds it.
+ *   lapsed  — (Phase 6.7) not on THIS bill: its own old bill ended, or it was removed from a bill that has
+ *             since ended. Still the partner's venue; "Add back" puts it on this bill (a paid add).
  */
 export type BillAccountVenue = {
   id: string;
   name: string;
-  state: "billed" | "leaving" | "removed";
+  state: "billed" | "leaving" | "removed" | "lapsed";
   isAnchor: boolean;
   removeAt: string | null;
 };
@@ -301,7 +319,8 @@ export const ADMIN_ATTACH_MESSAGES: Record<AdminAttachFailureCode, string> = {
   venue_has_owner: "That venue already belongs to a different partner.",
   already_linked: "That venue is already on this partner's account.",
   venue_has_own_bill: "That venue has its own subscription. Manage it from its own row.",
-  venue_has_billing_history: "That venue has been on a bill before. The partner can use Add back in Billing, or ask support.",
+  venue_has_billing_history:
+    "That venue has been on a bill this tool can't put it back from (another partner's, or it is set to leave this one). Ask support.",
   on_bill: "That venue is on this partner's bill already — it can't also be comped.",
   venue_add_in_flight:
     "A card charge to put this venue on a partner's bill is still waiting (their bank's check, or processing). Let it finish or fail first.",

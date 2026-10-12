@@ -10,6 +10,7 @@ import {
   type VenueChangeReconcileResult,
   type VenueRemovalApplyResult,
 } from "@/lib/venueRemoval";
+import { repairAnchorMemberships, type AnchorRepairResult } from "@/lib/venueBilling";
 import {
   reconcileLapsedVenues,
   repairMissedVenueReveals,
@@ -21,8 +22,9 @@ import {
  * Daily billing cron. Jobs: repairing a missed self-serve venue reveal,
  * reconciling lapsed self-serve venues (re-hide / restore / report), (multi-venue
  * billing Phase 3) settling "Add a venue" attempts stuck past their lease, (Phase 5)
- * settling stuck Remove / Undo changes and taking off venues whose paid month has ended, and
- * (Phase 6.1) settling stuck admin price swaps. It used to
+ * settling stuck Remove / Undo changes and taking off venues whose paid month has ended,
+ * (Phase 6.1) settling stuck admin price swaps, and (Phase 6.6) bringing a live bill's anchor
+ * membership row home from a cancelled bill. It used to
  * have a third — expiring offline/check grants past their paid-through date — which
  * was removed 2026-10-11 (offline accounts never lapse automatically; see below).
  *
@@ -163,6 +165,18 @@ export async function POST(request: Request) {
     venueReveal = { threw: message };
   }
 
+  // Multi-venue billing Phase 6.6 — repair: a live bill whose anchor venue's membership row is on
+  // another (dead) bill gets it back (`bringAnchorHome`; the webhook and Grant offline try first).
+  // Two bounded reads; normally nothing to move. Runs before the drift check so the check sees it.
+  let anchorRepair: AnchorRepairResult | { threw: string };
+  try {
+    anchorRepair = await repairAnchorMemberships({ dryRun });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[VenueBilling] anchor-repair-threw: ${message}`);
+    anchorRepair = { threw: message };
+  }
+
   // Multi-venue billing Phase 6 — REPORT-ONLY drift check: each live card bill's Stripe quantity vs
   // the venues we bill on it (`[MultiVenueBilling] quantity-drift`). Never charges, credits or
   // writes; an admin fixes drift. Runs LAST so it sees what the settle/removal jobs above just did.
@@ -184,6 +198,7 @@ export async function POST(request: Request) {
     venueChanges,
     priceChanges,
     venueRemovals,
+    anchorRepair,
     quantityDrift,
   });
 }

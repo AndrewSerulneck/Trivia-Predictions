@@ -350,13 +350,17 @@ export async function venueIdsEverBilled(venueIds: readonly string[]): Promise<V
  *                  `removed_at`). `anchorVenueId` is that bill's anchor today (null if unreadable).
  *   - `comped`   — it was never on any bill, and its partner has a live bill for another venue: the
  *                  admin gave it free (Phase 6 "Free (comped)"), or it is a partner's internal venue.
+ *   - `lapsed`   — (Phase 6.6) not removed, but its only bill history is on cancelled ("dead") bills,
+ *                  and its partner has a live bill elsewhere — e.g. its own bill was cancelled and the
+ *                  partner now pays on another venue's. It can REJOIN that bill (Add back; `rejoinStateOf`).
  *   - `unbilled` — anything else. `ownerBillId` is set when the partner still has a live bill that
- *                  does not cover this venue (e.g. this venue's own old bill was cancelled).
+ *                  does not cover this venue.
  * A removed or comped venue is NOT "no bill": Checkout must not open a second subscription for it.
  */
 export type UnbilledVenueState =
   | { kind: "removed"; subscriptionId: string; anchorVenueId: string | null; removedAt: string | null; ownerBillId: string | null }
   | { kind: "comped"; ownerBillId: string }
+  | { kind: "lapsed"; fromBillId: string; ownerBillId: string }
   | { kind: "unbilled"; ownerBillId: string | null };
 
 type StateBillRow = { id: string; venue_id: string; status: string; owner_id: string | null };
@@ -442,6 +446,13 @@ export async function unbilledVenueStates(
       });
     } else if (!membership && !anchoredVenues.has(venueId) && ownerBillId) {
       byVenue.set(venueId, { kind: "comped", ownerBillId });
+    } else if (ownerBillId && (membership || ownBill)) {
+      // History only on dead bills: a live one would have been `continue`d above.
+      byVenue.set(venueId, {
+        kind: "lapsed",
+        fromBillId: membership?.subscription_id ?? (ownBill as StateBillRow).id,
+        ownerBillId,
+      });
     } else {
       byVenue.set(venueId, { kind: "unbilled", ownerBillId });
     }
@@ -613,8 +624,11 @@ export type AddVenueToBillResult =
  *   - no row yet → inserted (`inserted: true`);
  *   - already BILLED on this bill → nothing to do (`inserted: false`);
  *   - on this bill but taken off / set to leave → put back (Phase 5 "Add back"; `inserted: true`);
- *   - on ANOTHER bill → `ok: false`. A venue is on at most one bill (venue_id UNIQUE), and moving
- *     one between bills is not this function's call (Phase 6).
+ *   - on ANOTHER bill that is `cancelled` (dead) → MOVED here (Phase 6.6 "rejoin"; `inserted: true`).
+ *     The caller has already checked the venue is the partner's (`rejoinStateOf`) and the quantity
+ *     was claimed under this bill's lock; the move is one update conditional on the old bill id;
+ *   - on another LIVE bill → `ok: false`. A venue is on at most one bill (venue_id UNIQUE), and
+ *     taking one off a live bill is Remove's job, never a side effect of an add.
  */
 export async function addVenueToBill(
   subscriptionId: string,
@@ -653,7 +667,7 @@ export async function addVenueToBill(
   }
   const row = existing.data;
   if (!row) return { ok: false, error: "membership-missing" };
-  if (row.subscription_id !== billId) return { ok: false, error: "venue-on-another-bill" };
+  if (row.subscription_id !== billId) return moveFromDeadBill(row.subscription_id, billId, id, role);
   if (isBilledMembership({ remove_at: row.remove_at ?? null, removed_at: row.removed_at })) {
     return { ok: true, inserted: false };
   }
@@ -669,4 +683,272 @@ export async function addVenueToBill(
     return { ok: false, error: `membership-write-failed: ${restored.error.message ?? "unknown"}` };
   }
   return { ok: true, inserted: (restored.data ?? []).length > 0 };
+}
+
+/**
+ * Re-point a venue's membership row from a DEAD (`cancelled`) bill to `toBillId` (Phase 6.6). Refuses
+ * when the old bill is live. The update is conditional on the row still being on the old bill, so a
+ * second completion of the same add (which finds the row already moved) is a no-op.
+ *
+ * Why plain updates and not an RPC: the quantity guard is already in SQL (the add's claim, under the
+ * TARGET bill's advisory lock). What is left — "the old bill is dead" — is never reversed while the
+ * partner has a live bill: Checkout and Grant offline refuse a second bill (`refusesOwnBill`), and
+ * Stripe never revives a cancelled subscription.
+ */
+async function moveFromDeadBill(
+  fromBillId: string,
+  toBillId: string,
+  venueId: string,
+  role: "added" | "admin" | "anchor"
+): Promise<AddVenueToBillResult> {
+  const from = await supabaseAdmin!
+    .from("billing_subscriptions")
+    .select("id, status")
+    .eq("id", fromBillId)
+    .maybeSingle<{ id: string; status: string }>();
+  if (from.error) return { ok: false, error: `billing-read-failed: ${from.error.message}` };
+  if (!from.data || from.data.status !== "cancelled") return { ok: false, error: "venue-on-another-bill" };
+
+  const moved = await supabaseAdmin!
+    .from(BILLING_MEMBERSHIP_TABLE)
+    .update({ subscription_id: toBillId, role, added_at: new Date().toISOString(), remove_at: null, removed_at: null })
+    .eq("venue_id", venueId)
+    .eq("subscription_id", fromBillId)
+    .select("venue_id")
+    .returns<{ venue_id: string }[]>();
+  if (moved.error) return { ok: false, error: `membership-write-failed: ${moved.error.message ?? "unknown"}` };
+  if ((moved.data ?? []).length > 0) {
+    console.log(`[VenueBilling] membership-moved venue=${venueId} from=${fromBillId} to=${toBillId} role=${role}`);
+    return { ok: true, inserted: true };
+  }
+
+  // Someone moved it first (a concurrent completion of the same add): fine only if it is now here.
+  const now = await billMembershipOf(venueId);
+  if (!now.ok) return { ok: false, error: now.error };
+  if (now.row && now.row.subscription_id === toBillId && isBilledMembership(now.row)) return { ok: true, inserted: false };
+  return { ok: false, error: "membership-move-raced" };
+}
+
+// --- Rejoining a live bill from a dead one (Phase 6.6) -------------------------------------------
+
+/**
+ * Where a venue stands relative to the bill it is about to be added (back) to — the partner's live
+ * bill `targetBillId`. Written once, here; "Add back" (lib/venueAddition.ts) and the admin's "Add to
+ * their bill" (lib/adminVenueAttach.ts) both decide on it.
+ *
+ *   - `billed_here`     — on the target bill and billed, or anchors it → nothing to add.
+ *   - `leaving_here`    — on the target bill, set to leave at the period end → that is Undo (free).
+ *   - `left_here`       — on the target bill, taken off → Phase 5's Add back.
+ *   - `dead_bill`       — its membership row sits on a `cancelled` bill, or it has no row and anchors
+ *                         only a cancelled bill → may REJOIN (`addVenueToBill` moves the row).
+ *                         `fromOwnerId` is that dead bill's partner.
+ *   - `other_live_bill` — on, or anchoring, a different live bill → not addable (support).
+ *   - `never_billed`    — no billing history at all (comped, a test venue) → not addable here.
+ */
+export type RejoinState =
+  | { kind: "billed_here" }
+  | { kind: "leaving_here" }
+  | { kind: "left_here" }
+  | { kind: "dead_bill"; fromBillId: string; fromOwnerId: string | null }
+  | { kind: "other_live_bill"; billId: string }
+  | { kind: "never_billed" };
+
+type RejoinBillRow = { id: string; venue_id: string; status: string; owner_id: string | null };
+const REJOIN_BILL_COLUMNS = "id, venue_id, status, owner_id";
+
+/** `rejoinStateOf` on rows already read — pure, so the rule is tested without a database. */
+export const classifyRejoin = (
+  targetBillId: string,
+  membership: Pick<BillMembership, "subscription_id" | "remove_at" | "removed_at"> | null,
+  anchoredBill: Pick<RejoinBillRow, "id" | "status" | "owner_id"> | null,
+  membershipBill: Pick<RejoinBillRow, "id" | "status" | "owner_id"> | null,
+  nowMs: number
+): RejoinState => {
+  const dead = (bill: { status: string }): boolean => bill.status === "cancelled";
+  if (anchoredBill && !dead(anchoredBill)) {
+    return anchoredBill.id === targetBillId ? { kind: "billed_here" } : { kind: "other_live_bill", billId: anchoredBill.id };
+  }
+  if (membership) {
+    if (membership.subscription_id === targetBillId) {
+      if (isBilledMembership(membership)) return { kind: "billed_here" };
+      return hasLeftBill(membership, nowMs) ? { kind: "left_here" } : { kind: "leaving_here" };
+    }
+    // FK ON DELETE RESTRICT: a membership's bill always exists; an unreadable one is not "dead".
+    if (!membershipBill || membershipBill.id !== membership.subscription_id) {
+      return { kind: "other_live_bill", billId: membership.subscription_id };
+    }
+    if (!dead(membershipBill)) return { kind: "other_live_bill", billId: membershipBill.id };
+    return { kind: "dead_bill", fromBillId: membershipBill.id, fromOwnerId: membershipBill.owner_id ?? null };
+  }
+  if (anchoredBill) return { kind: "dead_bill", fromBillId: anchoredBill.id, fromOwnerId: anchoredBill.owner_id ?? null };
+  return { kind: "never_billed" };
+};
+
+/**
+ * `classifyRejoin` for one venue: its membership row (any state) and the bill anchored on it, in
+ * parallel, then the membership's bill by id when it is not that one. Two or three bounded reads,
+ * only when a partner or admin is adding a venue back.
+ */
+export async function rejoinStateOf(
+  venueId: string,
+  targetBillId: string,
+  nowMs: number = Date.now()
+): Promise<{ ok: true; state: RejoinState } | { ok: false; error: string }> {
+  if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
+  const id = venueId.trim();
+  const [membership, anchored] = await Promise.all([
+    billMembershipOf(id),
+    supabaseAdmin.from("billing_subscriptions").select(REJOIN_BILL_COLUMNS).eq("venue_id", id).maybeSingle<RejoinBillRow>(),
+  ]);
+  if (!membership.ok) return { ok: false, error: membership.error };
+  if (anchored.error) return { ok: false, error: `billing-read-failed: ${anchored.error.message}` };
+  const anchoredBill = anchored.data ?? null;
+
+  let membershipBill: RejoinBillRow | null = null;
+  const row = membership.row;
+  if (row && row.subscription_id !== targetBillId) {
+    if (anchoredBill && anchoredBill.id === row.subscription_id) {
+      membershipBill = anchoredBill;
+    } else {
+      const bill = await supabaseAdmin
+        .from("billing_subscriptions")
+        .select(REJOIN_BILL_COLUMNS)
+        .eq("id", row.subscription_id)
+        .maybeSingle<RejoinBillRow>();
+      if (bill.error) return { ok: false, error: `billing-read-failed: ${bill.error.message}` };
+      membershipBill = bill.data ?? null;
+    }
+  }
+  return { ok: true, state: classifyRejoin(targetBillId, row, anchoredBill, membershipBill, nowMs) };
+}
+
+// --- Anchor-home repair (Phase 6.6) --------------------------------------------------------------
+
+export type AnchorHomeResult =
+  | { ok: true; outcome: "home" | "moved" | "inserted" | "not_live" | "anchor_on_live_bill" }
+  | { ok: false; error: string };
+
+/**
+ * A LIVE bill whose anchor venue's membership row sits on a different, DEAD bill: bring it home
+ * (`role 'anchor'`). This happens only after a rejoin moved an anchor off its own cancelled bill and
+ * that bill was later revived (a resubscribe re-points the same row; the anchor trigger fires on
+ * INSERT only). Left alone, the claim RPCs would count one venue fewer than Stripe bills and refuse
+ * every add/remove. An anchor with no row at all gets one (what the trigger would have written).
+ * A row on another LIVE bill is drift for an admin: logged, never moved.
+ *
+ * Best-effort callers (the Stripe webhook's first sync, admin Grant offline) log a failure and carry
+ * on; the daily `/api/cron/billing` (`repairAnchorMemberships`) is the repair path.
+ */
+export async function bringAnchorHome(billId: string): Promise<AnchorHomeResult> {
+  if (!supabaseAdmin) return { ok: false, error: "supabase-admin-unconfigured" };
+  const bill = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("id, venue_id, status")
+    .eq("id", billId)
+    .maybeSingle<{ id: string; venue_id: string; status: string }>();
+  if (bill.error) return { ok: false, error: `billing-read-failed: ${bill.error.message}` };
+  if (!bill.data || isCancelled(bill.data)) return { ok: true, outcome: "not_live" };
+  const anchorVenueId = bill.data.venue_id;
+
+  const membership = await billMembershipOf(anchorVenueId);
+  if (!membership.ok) return { ok: false, error: membership.error };
+  const row = membership.row;
+  if (row && row.subscription_id === billId) return { ok: true, outcome: "home" };
+
+  if (!row) {
+    const inserted = await supabaseAdmin
+      .from(BILLING_MEMBERSHIP_TABLE)
+      .upsert(
+        { subscription_id: billId, venue_id: anchorVenueId, role: "anchor", added_at: new Date().toISOString() },
+        { onConflict: "venue_id", ignoreDuplicates: true }
+      )
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (inserted.error) {
+      if (isMissingMembershipTable(inserted.error)) return { ok: true, outcome: "home" };
+      return { ok: false, error: `membership-write-failed: ${inserted.error.message ?? "unknown"}` };
+    }
+    if ((inserted.data ?? []).length > 0) {
+      console.log(`[VenueBilling] anchor-row-inserted venue=${anchorVenueId} bill=${billId}`);
+      return { ok: true, outcome: "inserted" };
+    }
+    return bringAnchorHome(billId); // a row appeared in between: decide on it
+  }
+
+  const moved = await moveFromDeadBill(row.subscription_id, billId, anchorVenueId, "anchor");
+  if (moved.ok) return { ok: true, outcome: "moved" };
+  if (moved.error === "venue-on-another-bill") {
+    console.error(
+      `[VenueBilling] anchor-on-another-live-bill venue=${anchorVenueId} bill=${billId} other=${row.subscription_id} — needs an admin`
+    );
+    return { ok: true, outcome: "anchor_on_live_bill" };
+  }
+  return { ok: false, error: moved.error };
+}
+
+export type AnchorRepairResult = {
+  liveBills: number;
+  misplaced: number;
+  moved: number;
+  inserted: number;
+  needsAdmin: number;
+  failed: number;
+  dryRun: boolean;
+};
+
+/**
+ * Daily repair (`/api/cron/billing`): every live bill whose anchor's membership row is missing or on
+ * another bill goes through `bringAnchorHome`. Two bounded reads (live bills; their anchors' rows);
+ * normally nothing to do. A missing membership table is "nothing to do". Throws on a read error (the
+ * cron catches and reports it).
+ */
+export async function repairAnchorMemberships(options: { dryRun?: boolean } = {}): Promise<AnchorRepairResult> {
+  const dryRun = Boolean(options.dryRun);
+  const result: AnchorRepairResult = { liveBills: 0, misplaced: 0, moved: 0, inserted: 0, needsAdmin: 0, failed: 0, dryRun };
+  if (!supabaseAdmin) throw new Error("supabase-admin-unconfigured");
+
+  const bills = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("id, venue_id")
+    .neq("status", "cancelled")
+    .returns<{ id: string; venue_id: string }[]>();
+  if (bills.error) throw new Error(`billing-read-failed: ${bills.error.message}`);
+  const live = bills.data ?? [];
+  result.liveBills = live.length;
+  if (live.length === 0) return result;
+
+  const rows = await supabaseAdmin
+    .from(BILLING_MEMBERSHIP_TABLE)
+    .select("venue_id, subscription_id")
+    .in(
+      "venue_id",
+      live.map((bill) => bill.venue_id)
+    )
+    .returns<{ venue_id: string; subscription_id: string }[]>();
+  if (rows.error) {
+    if (isMissingMembershipTable(rows.error)) {
+      noteMissingTable();
+      return result;
+    }
+    throw new Error(`membership-read-failed: ${rows.error.message ?? "unknown"}`);
+  }
+  const billOfAnchorRow = new Map((rows.data ?? []).map((row) => [row.venue_id, row.subscription_id]));
+
+  for (const bill of live) {
+    if (billOfAnchorRow.get(bill.venue_id) === bill.id) continue;
+    result.misplaced += 1;
+    console.warn(
+      `[VenueBilling] anchor-row-misplaced bill=${bill.id} venue=${bill.venue_id} on=${billOfAnchorRow.get(bill.venue_id) ?? "none"}` +
+        (dryRun ? " (dry run)" : "")
+    );
+    if (dryRun) continue;
+    const fixed = await bringAnchorHome(bill.id);
+    if (!fixed.ok) {
+      result.failed += 1;
+      console.error(`[VenueBilling] anchor-repair-failed bill=${bill.id}: ${fixed.error}`);
+    } else if (fixed.outcome === "moved") result.moved += 1;
+    else if (fixed.outcome === "inserted") result.inserted += 1;
+    else if (fixed.outcome === "anchor_on_live_bill") result.needsAdmin += 1;
+  }
+  return result;
 }
