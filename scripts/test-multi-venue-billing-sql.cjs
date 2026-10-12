@@ -19,6 +19,8 @@ const MIGRATION = "supabase/migrations/20261011134820_multi_venue_billing.sql";
 const CLAIM_MIGRATION = "supabase/migrations/20261011153607_venue_addition_claim.sql";
 // Phase 5: Remove / Undo ledger + claim/finish RPCs, and claim_venue_addition's change-busy rule.
 const CHANGES_MIGRATION = "supabase/migrations/20261011210033_venue_bill_changes.sql";
+// Phase 6.1: the admin price swap claims on the same ledger + lock.
+const PRICE_MIGRATION = "supabase/migrations/20261011224839_bill_price_change_lock.sql";
 
 const SCHEMA = `
   create role anon; create role authenticated; create role service_role;
@@ -397,6 +399,164 @@ async function main() {
   const [changeRls] = await rows(`select relrowsecurity, relforcerowsecurity from pg_class where relname = 'billing_venue_changes'`);
   assert.ok(changeRls.relrowsecurity && changeRls.relforcerowsecurity);
   for (const fn of ["claim_venue_bill_change", "finish_venue_bill_change", "claim_venue_addition"]) {
+    const g = (
+      await rows(
+        `select grantee from information_schema.routine_privileges where routine_name = $1 and privilege_type = 'EXECUTE'`,
+        [fn]
+      )
+    ).map((r) => r.grantee);
+    assert.ok(g.includes("service_role"), fn);
+    assert.ok(!g.includes("anon") && !g.includes("authenticated") && !g.includes("PUBLIC"), fn);
+  }
+
+  // 10. Phase 6.1 — the admin price swap is a claimed change on the same lock
+  //     (claim_bill_price_change, finish_bill_price_change, finish_venue_bill_change refusing it).
+  //    a. Postgres's own name for 20261011210033's inline action check — what the new file replaces.
+  const actionChecks = async () =>
+    (
+      await rows(
+        `select c.conname, pg_get_constraintdef(c.oid) as def from pg_constraint c
+          where c.conrelid = 'billing_venue_changes'::regclass and c.contype = 'c'
+            and pg_get_constraintdef(c.oid) like '%action%' and c.conname <> 'billing_venue_changes_price_row_check'`
+      )
+    ).map((r) => r.conname);
+  assert.deepEqual(await actionChecks(), ["billing_venue_changes_action_check"]);
+
+  const priceMigration = fs.readFileSync(PRICE_MIGRATION, "utf8");
+  await db.exec(priceMigration);
+  await db.exec(priceMigration); // re-runnable
+  assert.deepEqual(await actionChecks(), ["billing_venue_changes_action_check"], "exactly one action check, replaced");
+
+  await q(`insert into venues values ('p-anchor'), ('p-two')`);
+  const [pOwner] = await rows(`insert into venue_owners default values returning id`);
+  const [pBill] = await rows(
+    `insert into billing_subscriptions(venue_id, owner_id, status, stripe_subscription_id)
+       values ('p-anchor', $1, 'active', 'sub_price') returning id`,
+    [pOwner.id]
+  );
+  await q(`insert into billing_subscription_venues(subscription_id, venue_id, role) values ($1, 'p-two', 'added')`, [pBill.id]);
+  const priceClaim = async (key, priceId = "price_custom_7000", ownerId = pOwner.id, billId = pBill.id) =>
+    (await rows(`select * from claim_bill_price_change($1, $2, $3, $4)`, [key, ownerId, billId, priceId]))[0];
+  const priceFinish = async (id, outcome, reason = null) =>
+    (await rows(`select * from finish_bill_price_change($1, $2, $3)`, [id, outcome, reason]))[0];
+  const pChange = async (key, venue, action) =>
+    (await rows(`select * from claim_venue_bill_change($1, $2, $3, $4, $5, $6)`, [key, pOwner.id, pBill.id, venue, action, periodEnd]))[0];
+  const changeRow = async (id) =>
+    (await rows(`select action, status, venue_id, price_id, failure_reason from billing_venue_changes where id = $1`, [id]))[0];
+
+  //    b. the shape constraints: a price row names a Price and no venue; a remove never names a Price.
+  await assert.rejects(
+    q(`insert into billing_venue_changes(idempotency_key, subscription_id, action) values ('bad-action', $1, 'refund')`, [pBill.id]),
+    /billing_venue_changes_action_check/
+  );
+  await assert.rejects(
+    q(`insert into billing_venue_changes(idempotency_key, subscription_id, action) values ('bad-price-1', $1, 'price')`, [pBill.id]),
+    /billing_venue_changes_price_row_check/
+  );
+  await assert.rejects(
+    q(
+      `insert into billing_venue_changes(idempotency_key, subscription_id, venue_id, action, price_id) values ('bad-price-2', $1, 'p-two', 'price', 'price_x')`,
+      [pBill.id]
+    ),
+    /billing_venue_changes_price_row_check/
+  );
+  await assert.rejects(
+    q(
+      `insert into billing_venue_changes(idempotency_key, subscription_id, venue_id, action, price_id) values ('bad-remove', $1, 'p-two', 'remove', 'price_x')`,
+      [pBill.id]
+    ),
+    /billing_venue_changes_price_row_check/
+  );
+
+  //    c. argument checks.
+  assert.equal((await priceClaim("")).outcome, "invalid");
+  assert.equal((await priceClaim("p-0", "")).outcome, "invalid");
+  assert.equal((await priceClaim("p-0", "price_x", pOwner.id, "00000000-0000-0000-0000-000000000000")).outcome, "no_bill");
+  assert.equal((await priceClaim("p-0", "price_x", otherOwner.id)).outcome, "not_owner");
+
+  //    d. THE REVIEW FINDING: an add in flight blocks the swap; a remove in flight blocks it too.
+  await q(`insert into billing_venue_additions(idempotency_key, owner_id, subscription_id, status) values ('p-add', $1, $2, 'pending')`, [
+    pOwner.id,
+    pBill.id,
+  ]);
+  assert.equal((await priceClaim("p-1")).outcome, "busy_addition");
+  await q(`update billing_venue_additions set status = 'requires_action' where idempotency_key = 'p-add'`);
+  assert.equal((await priceClaim("p-1")).outcome, "busy_addition", "a 3-D Secure add waiting is still busy");
+  await q(`update billing_venue_additions set status = 'failed' where idempotency_key = 'p-add'`);
+
+  const pRemove = await pChange("p-remove", "p-two", "remove");
+  assert.equal(pRemove.outcome, "claimed");
+  const blockedByRemove = await priceClaim("p-1");
+  assert.equal(blockedByRemove.outcome, "busy_change");
+  assert.equal(blockedByRemove.change_id, pRemove.change_id);
+  assert.equal(blockedByRemove.change_action, "remove");
+  assert.equal((await rows(`select count(*)::int as n from billing_venue_changes where action = 'price'`))[0].n, 0, "nothing claimed");
+  assert.equal((await finish(pRemove.change_id, "failed", "test")).outcome, "failed");
+
+  //    e. claimed; the same key returns the same row; a different Price under that key conflicts.
+  const swap = await priceClaim("p-1");
+  assert.equal(swap.outcome, "claimed");
+  assert.equal(swap.change_status, "pending");
+  assert.equal(swap.change_action, "price");
+  assert.equal(swap.change_price_id, "price_custom_7000");
+  assert.deepEqual(await changeRow(swap.change_id), {
+    action: "price",
+    status: "pending",
+    venue_id: null,
+    price_id: "price_custom_7000",
+    failure_reason: null,
+  });
+  const swapAgain = await priceClaim("p-1");
+  assert.equal(swapAgain.outcome, "existing");
+  assert.equal(swapAgain.change_id, swap.change_id);
+  assert.equal((await priceClaim("p-1", "price_other")).outcome, "key_conflict");
+  assert.equal((await priceClaim("p-remove")).outcome, "key_conflict", "a remove's key is never a price swap");
+  assert.equal((await change("p-1", "p-two", "remove", periodEnd, pOwner.id, pBill.id)).outcome, "key_conflict");
+
+  //    f. while the swap is pending: a second swap, a partner add and a partner remove are all busy.
+  const secondSwap = await priceClaim("p-2", "price_graduated");
+  assert.equal(secondSwap.outcome, "busy_change");
+  assert.equal(secondSwap.change_id, swap.change_id);
+  const addDuringSwap = await claim("p-add-2", pOwner.id, pBill.id);
+  assert.equal(addDuringSwap.outcome, "busy");
+  assert.equal(addDuringSwap.addition_id, null);
+  const removeDuringSwap = await pChange("p-remove-2", "p-two", "remove");
+  assert.equal(removeDuringSwap.outcome, "busy_change");
+  assert.equal(removeDuringSwap.change_id, swap.change_id);
+
+  //    g. each finish function refuses the other's rows, writing nothing.
+  const wrong = await finish(swap.change_id, "done");
+  assert.equal(wrong.outcome, "wrong_action");
+  assert.equal(wrong.change_status, "pending");
+  assert.equal((await changeRow(swap.change_id)).status, "pending", "finish_venue_bill_change never touches a price row");
+  assert.equal((await priceFinish(pRemove.change_id, "done")).outcome, "wrong_action");
+  assert.equal((await changeRow(pRemove.change_id)).status, "failed");
+
+  //    h. finishing: done (idempotent), then failed with a reason; the bill is free again after each.
+  assert.equal((await priceFinish(swap.change_id, "maybe")).outcome, "invalid");
+  assert.equal((await priceFinish("00000000-0000-0000-0000-000000000000", "done")).outcome, "not_found");
+  assert.deepEqual(await priceFinish(swap.change_id, "done"), { outcome: "done", change_status: "done" });
+  assert.deepEqual(await priceFinish(swap.change_id, "failed", "late"), { outcome: "already", change_status: "done" });
+  assert.equal((await changeRow(swap.change_id)).failure_reason, null);
+  const addAfterSwap = await claim("p-add-3", pOwner.id, pBill.id);
+  assert.equal(addAfterSwap.outcome, "claimed", "a finished swap no longer blocks an add");
+  await q(`update billing_venue_additions set status = 'failed' where id = $1`, [addAfterSwap.addition_id]);
+
+  const swapBack = await priceClaim("p-3", "price_graduated");
+  assert.equal(swapBack.outcome, "claimed");
+  assert.deepEqual(await priceFinish(swapBack.change_id, "failed", "x".repeat(600)), { outcome: "failed", change_status: "failed" });
+  const failedSwap = await changeRow(swapBack.change_id);
+  assert.equal(failedSwap.status, "failed");
+  assert.equal(failedSwap.failure_reason.length, 500);
+  assert.equal((await pChange("p-remove-3", "p-two", "remove")).outcome, "claimed", "a failed swap no longer blocks a remove");
+
+  //    i. the replaced finish_venue_bill_change still applies a remove exactly as before.
+  const removeLater = (await rows(`select id from billing_venue_changes where idempotency_key = 'p-remove-3'`))[0];
+  assert.equal((await finish(removeLater.id, "done")).outcome, "done");
+  assert.ok((await member("p-two")).remove_at instanceof Date);
+
+  //    j. execute is service_role only.
+  for (const fn of ["claim_bill_price_change", "finish_bill_price_change", "finish_venue_bill_change"]) {
     const g = (
       await rows(
         `select grantee from information_schema.routine_privileges where routine_name = $1 and privilege_type = 'EXECUTE'`,

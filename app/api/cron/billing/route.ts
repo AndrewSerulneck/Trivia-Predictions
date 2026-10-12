@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { reconcileStaleBillPriceChanges, type BillPriceChangeReconcileResult } from "@/lib/billingCustomPrice";
 import { checkBillingQuantityDrift, type QuantityDriftResult } from "@/lib/billingQuantityDrift";
 import { isCronAuthorized } from "@/lib/cronAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -19,8 +20,9 @@ import {
 /**
  * Daily billing cron. Jobs: repairing a missed self-serve venue reveal,
  * reconciling lapsed self-serve venues (re-hide / restore / report), (multi-venue
- * billing Phase 3) settling "Add a venue" attempts stuck past their lease, and (Phase 5)
- * settling stuck Remove / Undo changes and taking off venues whose paid month has ended. It used to
+ * billing Phase 3) settling "Add a venue" attempts stuck past their lease, (Phase 5)
+ * settling stuck Remove / Undo changes and taking off venues whose paid month has ended, and
+ * (Phase 6.1) settling stuck admin price swaps. It used to
  * have a third — expiring offline/check grants past their paid-through date — which
  * was removed 2026-10-11 (offline accounts never lapse automatically; see below).
  *
@@ -127,6 +129,18 @@ export async function POST(request: Request) {
     console.error(`[VenueRemoval] reconcile-threw: ${message}`);
     venueChanges = { threw: message };
   }
+  // Multi-venue billing Phase 6.1 — settle any admin price swap stuck `pending` past its lease (the
+  // request died, or Stripe's answer was ambiguous): Stripe's item on the target Price → done,
+  // otherwise → failed. Without it a crash mid-swap would keep the bill locked out of adds and
+  // removes. One bounded read (normally zero rows); one Stripe read per stuck row. Never fails the cron.
+  let priceChanges: BillPriceChangeReconcileResult | { threw: string };
+  try {
+    priceChanges = await reconcileStaleBillPriceChanges({ dryRun });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[CustomPrice] reconcile-threw: ${message}`);
+    priceChanges = { threw: message };
+  }
   let venueRemovals: VenueRemovalApplyResult | { threw: string };
   try {
     venueRemovals = await applyDueVenueRemovals({ dryRun });
@@ -162,7 +176,16 @@ export async function POST(request: Request) {
     quantityDrift = { threw: message };
   }
 
-  return NextResponse.json({ ok: true, venueReveal, venueRehide, venueAdditions, venueChanges, venueRemovals, quantityDrift });
+  return NextResponse.json({
+    ok: true,
+    venueReveal,
+    venueRehide,
+    venueAdditions,
+    venueChanges,
+    priceChanges,
+    venueRemovals,
+    quantityDrift,
+  });
 }
 
 export async function GET(request: Request) {

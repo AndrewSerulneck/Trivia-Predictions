@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   applyDiscountToSubscription: vi.fn(),
   removeDiscountFromSubscription: vi.fn(),
   setCustomPrice: vi.fn(),
+  settleStaleVenueChangesForBill: vi.fn(async () => undefined),
   insertGrant: vi.fn(),
   requireAdminAuth: vi.fn(
     async (): Promise<
@@ -36,6 +37,11 @@ vi.mock("@/lib/billingDiscounts", async () => {
 
 vi.mock("@/lib/billingCustomPrice", () => ({
   setCustomPrice: mocks.setCustomPrice,
+}));
+
+// Phase 6.1: the route clears the bill's dead claims before a swap (the real one reads the ledger).
+vi.mock("@/lib/venueRemoval", () => ({
+  settleStaleVenueChangesForBill: mocks.settleStaleVenueChangesForBill,
 }));
 
 /**
@@ -306,6 +312,7 @@ describe("POST /api/admin/billing — apply-discount / remove-discount", () => {
 describe("POST /api/admin/billing — set-custom-price", () => {
   beforeEach(() => {
     mocks.setCustomPrice.mockReset();
+    mocks.settleStaleVenueChangesForBill.mockClear();
     mocks.insertGrant.mockReset();
     setRow({ id: "sub-1", venue_id: "venue-1", billing_method: "stripe", stripe_subscription_id: "sub_stripe_1", amount_cents: 10000, current_period_end: null });
   });
@@ -395,6 +402,11 @@ describe("POST /api/admin/billing — set-custom-price", () => {
     expect(response.status).toBe(200);
     expect(body).toMatchObject({ ok: true, amountCents: 7500 });
     expect(mocks.setCustomPrice).toHaveBeenCalledWith(state.row, { priceId: "price_new" });
+    // Phase 6.1: the bill's dead claims are settled first, so they never block the swap.
+    expect(mocks.settleStaleVenueChangesForBill).toHaveBeenCalledWith("sub-1");
+    expect(mocks.settleStaleVenueChangesForBill.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.setCustomPrice.mock.invocationCallOrder[0]
+    );
     expect(mocks.insertGrant).toHaveBeenCalledWith(
       expect.objectContaining({
         venue_id: "venue-1",

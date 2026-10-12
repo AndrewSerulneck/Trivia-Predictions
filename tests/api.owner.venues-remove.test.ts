@@ -426,6 +426,54 @@ describe("Remove at end of month", () => {
     expect(member(SECOND).remove_at).toBeNull();
   });
 
+  // Phase 6.1 (review fix #1): the change is checked against Stripe as it is AFTER the claim, never
+  // the pre-claim read — simulates an add, an admin swap or a renewal landing in between.
+  it.each([
+    ["the quantity moved (an add finished)", () => (subItem().quantity = 4)],
+    ["the period renewed (remove_at would be wrong)", () => (subItem().current_period_end = Number(subItem().current_period_end) + 30 * 86400)],
+    ["a pending update appeared", () => (h.state.subscription.pending_update = { expires_at: 1 })],
+  ])("re-reads Stripe after the claim and refuses when %s", async (_label, mutate) => {
+    let calls = 0;
+    h.fns.subscriptionsRetrieve.mockImplementation(async () => {
+      const copy = h.clone(h.state.subscription);
+      calls += 1;
+      if (calls === 1) mutate();
+      return copy;
+    });
+
+    const result = await remove(SECOND);
+
+    expect(result.status).toBe(409);
+    expect(result.json.code).toBe("billing_state");
+    expect(h.fns.subscriptionsRetrieve).toHaveBeenCalledTimes(2);
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+    expect(tbl(h.state.db, "billing_venue_changes")[0]).toMatchObject({ status: "failed", failure_reason: "refused:billing_state" });
+    expect(member(SECOND).remove_at).toBeNull();
+  });
+
+  it("Phase 6.1: an admin price swap on the ledger blocks a remove, and is never settled as a Remove / Undo", async () => {
+    const stale = new Date(Date.now() - VENUE_ADDITION_LEASE_MS - 60_000).toISOString();
+    tbl(h.state.db, "billing_venue_changes").push({
+      id: "price-1",
+      idempotency_key: "bill-price:x",
+      subscription_id: BILL,
+      owner_id: OWNER,
+      venue_id: null,
+      action: "price",
+      price_id: "price_custom_9000",
+      status: "pending",
+      quantity_before: null,
+      quantity_after: null,
+      updated_at: stale,
+      created_at: stale,
+    });
+    // The Remove / Undo reconciler skips it (its own settler, lib/billingCustomPrice.ts, owns it).
+    const reconciled = await reconcileStaleVenueChanges();
+    expect(reconciled).toMatchObject({ scanned: 0, done: 0, failed: 0 });
+    expect(tbl(h.state.db, "billing_venue_changes")[0]).toMatchObject({ status: "pending", action: "price" });
+    expect(h.fns.subscriptionsUpdate).not.toHaveBeenCalled();
+  });
+
   it("refuses offline, cancelling, unknown-price bills; the flag off is a 404", async () => {
     (tbl(h.state.db, "billing_subscriptions")[0] as Row).billing_method = "offline";
     expect((await remove(SECOND)).json.code).toBe("offline_bill");

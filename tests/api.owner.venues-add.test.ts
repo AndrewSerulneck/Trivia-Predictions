@@ -928,6 +928,68 @@ describe("POST /api/owner/venues/add — refusals (nothing created, nothing char
     expectNothingHappened();
   });
 
+  // Phase 6.1 (review fix #1): the add is checked against — and charged from — Stripe as it is AFTER
+  // the claim, never the pre-claim read. Simulates an admin's rate change (or anything else) landing
+  // between the partner's context read and their claim.
+  const afterContextRead = (mutate: () => void) => {
+    const original = h.fns.subscriptionsRetrieve.getMockImplementation()!;
+    let calls = 0;
+    h.fns.subscriptionsRetrieve.mockImplementation(async (...args: Parameters<typeof original>) => {
+      const result = await original(...args);
+      calls += 1;
+      if (calls === 1) mutate();
+      return result;
+    });
+  };
+
+  it.each([
+    [
+      "an admin's per-venue rate landed (the partner was shown the band price)",
+      () =>
+        Object.assign(subItem().price as Row, {
+          id: "price_custom_9000",
+          lookup_key: "custom_monthly_9000",
+          billing_scheme: "per_unit",
+          tiers_mode: null,
+          unit_amount: 9000,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 1 },
+        }),
+    ],
+    ["the quantity moved", () => (subItem().quantity = 2)],
+    ["a pending update appeared", () => (h.state.subscription.pending_update = { expires_at: NOW_S + 3600 })],
+    ["the subscription started cancelling", () => (h.state.subscription.cancel_at_period_end = true)],
+  ])("re-reads Stripe after the claim and refuses when %s — nothing charged", async (_label, mutate) => {
+    afterContextRead(mutate);
+
+    const result = await add();
+
+    expect(result.status).toBe(409);
+    expect(result.json.code).toBe("billing_state");
+    // Read once for the context, once after the claim.
+    expect(h.fns.subscriptionsRetrieve).toHaveBeenCalledTimes(2);
+    expectNothingHappened();
+    expect(ledger()).toHaveLength(1);
+    expect(ledger()[0]).toMatchObject({ status: "failed", failure_reason: "refused:billing_state" });
+  });
+
+  it("a failed post-claim Stripe read closes the claim and charges nothing", async () => {
+    const original = h.fns.subscriptionsRetrieve.getMockImplementation()!;
+    let calls = 0;
+    h.fns.subscriptionsRetrieve.mockImplementation(async (...args: Parameters<typeof original>) => {
+      calls += 1;
+      if (calls === 2) throw Object.assign(new Error("socket hang up"), { type: "StripeConnectionError" });
+      return original(...args);
+    });
+
+    const result = await add();
+
+    expect(result.status).toBe(503);
+    expect(result.json.code).toBe("stripe_unavailable");
+    expectNothingHappened();
+    expect(ledger()[0]).toMatchObject({ status: "failed", failure_reason: "subscription-read-failed" });
+  });
+
   it("refuses a partner with no bill, and a bill that belongs to another owner", async () => {
     h.state.db.tables.billing_subscriptions = [];
     h.state.db.tables.billing_subscription_venues = [];

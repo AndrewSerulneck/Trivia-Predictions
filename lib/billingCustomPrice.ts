@@ -1,7 +1,9 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import type Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getStripeGraduatedPriceId, getStripePriceId, stripe } from "@/lib/stripe";
+import { isDefinitiveStripeRejection, VENUE_ADDITION_LEASE_MS } from "@/lib/venueAddition";
 import { monthlyTotalCents } from "@/lib/venuePricing";
 
 /**
@@ -52,10 +54,14 @@ import { monthlyTotalCents } from "@/lib/venuePricing";
  * bill. On a 1-venue bill this is exactly the custom rate that existed before.
  * `setStandardPrice` moves the bill back onto the graduated bands.
  *
- * Both swaps write the item's quantity explicitly and refuse while an "Add a
- * venue" or a Remove/Undo is in flight on the bill (or Stripe holds a pending
- * update): any `items` update discards an add's pending 3-D Secure payment, and
- * an absolute quantity written next to a quantity change could undo it.
+ * Both swaps write the item's quantity explicitly, and both are a CLAIMED change
+ * on the bill (Phase 6.1, `claim_bill_price_change` — migration 20261011224839):
+ * the same per-bill advisory lock as "Add a venue" and Remove / Undo, so the
+ * swap refuses while either is in flight and neither can start while it is.
+ * Any `items` update discards an add's pending 3-D Secure payment, and an
+ * absolute quantity written next to a quantity change could undo it. A swap
+ * that dies mid-way stays `pending` (the bill stays locked) until its lease
+ * runs out; `settleBillPriceChange` then decides it from Stripe's real Price.
  */
 
 /**
@@ -121,6 +127,8 @@ const describeCadence = (interval: string, count: number): string => {
 /** Only the columns this helper reads. */
 export type CustomPriceRow = {
   id: string;
+  /** The bill's owner as the caller read it; the claim refuses if it has changed since. */
+  owner_id: string | null;
   stripe_subscription_id: string | null;
   amount_cents: number;
 };
@@ -380,7 +388,7 @@ export async function setCustomPrice(
   }
 
   const unitAmount = price.unit_amount;
-  return swapSubscriptionPrice(row.id, row.stripe_subscription_id, priceId, (quantity) => unitAmount * quantity, unitAmount);
+  return swapSubscriptionPrice(row, row.stripe_subscription_id, priceId, (quantity) => unitAmount * quantity, unitAmount);
 }
 
 /**
@@ -399,59 +407,162 @@ export async function setStandardPrice(row: CustomPriceRow): Promise<SetCustomPr
   if (!isStripePriceId(graduatedPriceId)) {
     return { ok: false, status: 500, error: "The standard price isn't configured (STRIPE_GRADUATED_PRICE_ID)." };
   }
-  return swapSubscriptionPrice(row.id, row.stripe_subscription_id, graduatedPriceId, (quantity) => monthlyTotalCents(quantity), null);
+  return swapSubscriptionPrice(row, row.stripe_subscription_id, graduatedPriceId, (quantity) => monthlyTotalCents(quantity), null);
 }
 
-/** Ledger rows that mean a venue change is under way on this bill (a missing table = none). */
-async function venueChangeInFlight(billId: string): Promise<{ ok: true; busy: boolean } | CustomPriceFailure> {
-  const checks = await Promise.all([
-    supabaseAdmin!
-      .from("billing_venue_additions")
-      .select("id")
-      .eq("subscription_id", billId)
-      .in("status", ["pending", "requires_action"])
-      .limit(1),
-    supabaseAdmin!.from("billing_venue_changes").select("id").eq("subscription_id", billId).eq("status", "pending").limit(1),
-  ]);
-  for (const check of checks) {
-    if (check.error) {
-      const code = (check.error as { code?: string }).code;
-      if (code === "42P01" || code === "PGRST205") continue;
-      return { ok: false, status: 500, error: `Couldn't check for venue changes in progress: ${check.error.message}` };
-    }
-    if ((check.data ?? []).length > 0) return { ok: true, busy: true };
-  }
-  return { ok: true, busy: false };
-}
+// --- The bill's lock (multi-venue billing Phase 6.1) ---------------------------------------------
+
+const LOG = "[CustomPrice]";
+
+/** Stale price swaps the daily cron settles per run. Each costs one Stripe read; normally zero rows. */
+export const BILL_PRICE_CHANGE_RECONCILE_LIMIT = 20;
 
 const VENUE_CHANGE_BUSY_ERROR =
   "A venue is being added to or removed from this bill right now (possibly waiting for the partner's card check). Try again once it has finished.";
+const PRICE_CHANGE_BUSY_ERROR = "Another price change on this bill is still going through. Try again in a minute.";
+const PRICE_LOCK_UNAVAILABLE_ERROR = "Price changes are temporarily unavailable. Try again in a moment.";
+const PRICE_CHANGE_UNCONFIRMED_ERROR =
+  "Stripe didn't confirm the price change. It is checked automatically within about 10 minutes — look at the subscription in Stripe before trying again.";
 
 /**
- * The swap both entry points share: one item, quantity kept (written
- * explicitly), proration "none", then the mirror. `unitAmountCents` is the
+ * One admin swap's ledger key — and Stripe's idempotency key for its update. Fresh per admin action:
+ * a repeated "Set rate" is a new decision (and harmless — the same Price lands again), while a
+ * concurrent one is refused by the claim as `busy_change`.
+ */
+const priceChangeKey = (billId: string): string => `bill-price:${billId}:${randomUUID()}`;
+
+type ClaimPriceRpcRow = {
+  outcome: "claimed" | "existing" | "key_conflict" | "busy_addition" | "busy_change" | "not_owner" | "no_bill" | "invalid";
+  change_id: string | null;
+  change_action: string | null;
+};
+
+type FinishPriceRpcRow = {
+  outcome: "done" | "failed" | "already" | "wrong_action" | "not_found" | "invalid";
+  change_status: "pending" | "done" | "failed" | null;
+};
+
+const isMissingFunction = (error: { code?: string; message?: string }, name: string): boolean =>
+  error.code === "PGRST202" || error.code === "42883" || (error.message ?? "").includes(name);
+
+/**
+ * Claim the bill for one price swap (`claim_bill_price_change`, migration 20261011224839): the SAME
+ * per-bill advisory lock as "Add a venue" and Remove / Undo, so a swap, an add and a change are
+ * mutually exclusive inside Postgres — never a TypeScript read-then-write. FAILS CLOSED: a missing
+ * RPC (the app deployed before the migration) refuses the swap; it never falls back to an unlocked one.
+ */
+async function claimPriceChange(
+  key: string,
+  ownerId: string | null,
+  billId: string,
+  priceId: string
+): Promise<{ ok: true; changeId: string } | CustomPriceFailure> {
+  const { data, error } = await supabaseAdmin!.rpc("claim_bill_price_change", {
+    p_idempotency_key: key,
+    p_owner_id: ownerId,
+    p_subscription_id: billId,
+    p_price_id: priceId,
+  });
+  if (error) {
+    if (isMissingFunction(error, "claim_bill_price_change")) {
+      console.error(`${LOG} claim-rpc-missing — apply supabase/migrations/20261011224839_bill_price_change_lock.sql`);
+    } else {
+      console.error(`${LOG} claim-failed bill=${billId}: ${error.message}`);
+    }
+    return { ok: false, status: 503, error: PRICE_LOCK_UNAVAILABLE_ERROR };
+  }
+  const claim = (Array.isArray(data) ? data[0] : data) as ClaimPriceRpcRow | null;
+  if (!claim || typeof claim.outcome !== "string") {
+    console.error(`${LOG} claim-malformed-response bill=${billId}`);
+    return { ok: false, status: 503, error: PRICE_LOCK_UNAVAILABLE_ERROR };
+  }
+  switch (claim.outcome) {
+    case "claimed":
+      if (claim.change_id) return { ok: true, changeId: claim.change_id };
+      console.error(`${LOG} claim-malformed-response bill=${billId}`);
+      return { ok: false, status: 503, error: PRICE_LOCK_UNAVAILABLE_ERROR };
+    case "busy_addition":
+      return { ok: false, status: 409, error: VENUE_CHANGE_BUSY_ERROR };
+    case "busy_change":
+      return { ok: false, status: 409, error: claim.change_action === "price" ? PRICE_CHANGE_BUSY_ERROR : VENUE_CHANGE_BUSY_ERROR };
+    case "not_owner":
+      return { ok: false, status: 409, error: "This bill changed hands while you were looking at it. Reload and try again." };
+    case "no_bill":
+      return { ok: false, status: 404, error: "No subscription found for this venue." };
+    default:
+      // `existing` / `key_conflict` cannot happen with a fresh key per action; `invalid` is a bug here.
+      console.error(`${LOG} claim-unexpected outcome=${claim.outcome} bill=${billId}`);
+      return { ok: false, status: 500, error: "Couldn't start the price change. Try again." };
+  }
+}
+
+/** `finish_bill_price_change`. Throws on a database error (the row then stays pending and is settled later). */
+async function finishPriceChange(changeId: string, outcome: "done" | "failed", reason: string | null): Promise<FinishPriceRpcRow> {
+  const { data, error } = await supabaseAdmin!.rpc("finish_bill_price_change", {
+    p_change_id: changeId,
+    p_outcome: outcome,
+    p_failure_reason: reason,
+  });
+  if (error) {
+    if (isMissingFunction(error, "finish_bill_price_change")) {
+      console.error(`${LOG} finish-rpc-missing — apply supabase/migrations/20261011224839_bill_price_change_lock.sql`);
+    }
+    throw new Error(`finish-failed: ${error.message}`);
+  }
+  const result = (Array.isArray(data) ? data[0] : data) as FinishPriceRpcRow | null;
+  if (!result || typeof result.outcome !== "string") throw new Error("finish-malformed-response");
+  return result;
+}
+
+/**
+ * Close a claimed swap, best effort: a row this fails to close stays `pending` and is settled from
+ * Stripe's real Price once its lease runs out (`settleBillPriceChange`). Returns whether it closed.
+ */
+async function closePriceChange(changeId: string, outcome: "done" | "failed", reason: string | null): Promise<boolean> {
+  try {
+    await finishPriceChange(changeId, outcome, reason);
+    return true;
+  } catch (error) {
+    console.error(`${LOG} finish-failed change=${changeId} outcome=${outcome}: ${error instanceof Error ? error.message : String(error)}`);
+    return false;
+  }
+}
+
+/**
+ * The swap both entry points share: claim the bill, read the subscription, one item, quantity kept
+ * (written explicitly), proration "none", close the claim, then the mirror. `unitAmountCents` is the
  * per-venue rate for a flat Price, null for the graduated bands.
+ *
+ * Claim FIRST, read SECOND: once claimed, no add, Remove / Undo or other swap can move this bill
+ * until the row is closed, so the quantity read here is still the quantity when the update lands.
  */
 async function swapSubscriptionPrice(
-  billId: string,
+  bill: Pick<CustomPriceRow, "id" | "owner_id">,
   subscriptionId: string,
   priceId: string,
   monthlyTotalFor: (quantity: number) => number,
   unitAmountCents: number | null
 ): Promise<SetCustomPriceResult> {
-  const inFlight = await venueChangeInFlight(billId);
-  if (!inFlight.ok) return inFlight;
-  if (inFlight.busy) return { ok: false, status: 409, error: VENUE_CHANGE_BUSY_ERROR };
+  const key = priceChangeKey(bill.id);
+  const claimed = await claimPriceChange(key, bill.owner_id, bill.id, priceId);
+  if (!claimed.ok) return claimed;
+  const { changeId } = claimed;
+
+  // Nothing reached Stripe: close the claim as failed so it never blocks the bill.
+  const abandon = async (reason: string, failure: CustomPriceFailure): Promise<CustomPriceFailure> => {
+    await closePriceChange(changeId, "failed", reason);
+    return failure;
+  };
 
   let subscription: Stripe.Subscription;
   try {
     subscription = await stripe!.subscriptions.retrieve(subscriptionId);
   } catch (error) {
-    return {
+    return abandon("subscription-read-failed", {
       ok: false,
       status: 502,
       error: error instanceof Error ? error.message : "Failed to read the subscription.",
-    };
+    });
   }
 
   const items = subscription.items.data;
@@ -459,14 +570,15 @@ async function swapSubscriptionPrice(
     // Swapping "the" item is only unambiguous with exactly one. Everything this
     // app creates is single-item; anything else was built by hand at Stripe and
     // should be edited there.
-    return {
+    return abandon("refused:multiple-items", {
       ok: false,
       status: 409,
       error: "This subscription has multiple items — change the price in the Stripe Dashboard.",
-    };
+    });
   }
   if (subscription.pending_update) {
-    return { ok: false, status: 409, error: VENUE_CHANGE_BUSY_ERROR };
+    // An update Stripe is still holding (an add's unpaid 3-D Secure) — an items update would void it.
+    return abandon("refused:pending-update", { ok: false, status: 409, error: VENUE_CHANGE_BUSY_ERROR });
   }
 
   const quantity =
@@ -475,27 +587,45 @@ async function swapSubscriptionPrice(
       : 1;
 
   try {
-    await stripe!.subscriptions.update(subscriptionId, {
-      items: [{ id: items[0].id, price: priceId, quantity }],
-      proration_behavior: CUSTOM_PRICE_PRORATION_BEHAVIOR,
-    });
+    await stripe!.subscriptions.update(
+      subscriptionId,
+      {
+        items: [{ id: items[0].id, price: priceId, quantity }],
+        proration_behavior: CUSTOM_PRICE_PRORATION_BEHAVIOR,
+      },
+      { idempotencyKey: key }
+    );
   } catch (error) {
-    return {
-      ok: false,
-      status: 502,
-      error: error instanceof Error ? error.message : "Failed to change the price.",
-    };
+    if (isDefinitiveStripeRejection(error)) {
+      return abandon(`stripe-rejected: ${stripeErrorCode(error) ?? "unknown"}`, {
+        ok: false,
+        status: 502,
+        error: error instanceof Error ? error.message : "Failed to change the price.",
+      });
+    }
+    // Ambiguous (5xx / connection) — it may have landed. The claim stays pending, so the bill stays
+    // locked, until its lease runs out and settleBillPriceChange reads Stripe's real Price.
+    console.error(`${LOG} stripe-update-ambiguous change=${changeId}: ${error instanceof Error ? error.message : String(error)}`);
+    return { ok: false, status: 503, error: PRICE_CHANGE_UNCONFIRMED_ERROR };
   }
+
+  const closed = await closePriceChange(changeId, "done", null);
 
   const total = monthlyTotalFor(quantity);
   const { error: mirrorError } = await supabaseAdmin!
     .from("billing_subscriptions")
     .update({ stripe_price_id: priceId, amount_cents: total, quantity })
-    .eq("id", billId);
+    .eq("id", bill.id);
 
   // Stripe is authoritative and the swap is already live there; the
   // customer.subscription.updated webhook re-derives amount_cents from the
   // price × quantity, so a failed mirror write self-heals. Report it, don't fail the swap.
+  // An unclosed claim also heals (settled as done after its lease) but keeps the bill busy until then.
+  const warning = mirrorError
+    ? "Price changed at Stripe, but the local rate failed to update."
+    : !closed
+      ? "Price changed at Stripe. Venue changes on this bill stay paused for about 10 minutes."
+      : undefined;
   return {
     ok: true,
     priceId,
@@ -503,6 +633,167 @@ async function swapSubscriptionPrice(
     quantity,
     monthlyTotalCents: total,
     effective: "next_cycle",
-    ...(mirrorError ? { warning: "Price changed at Stripe, but the local rate failed to update." } : {}),
+    ...(warning ? { warning } : {}),
   };
+}
+
+// --- Settling a swap that never closed ------------------------------------------------------------
+
+export type BillPriceChangeRow = {
+  id: string;
+  idempotency_key: string;
+  owner_id: string | null;
+  subscription_id: string | null;
+  action: string;
+  status: "pending" | "done" | "failed";
+  price_id: string | null;
+  failure_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+const PRICE_CHANGE_COLUMNS =
+  "id, idempotency_key, owner_id, subscription_id, action, status, price_id, failure_reason, created_at, updated_at";
+
+export type PriceChangeSettleState = "done" | "failed" | "in_flight" | "unknown";
+
+/**
+ * DEPLOY-SKEW SAFE: before 20261011224839 is applied there is no `price_id` column (42703) and so no
+ * price rows to settle. The settlers then do nothing (logged once) instead of erroring on every add,
+ * remove and cron run. The swap itself still fails closed (its claim RPC is missing).
+ */
+let warnedMissingPriceLedger = false;
+const isMissingPriceLedger = (error: { code?: string }): boolean => {
+  if (error.code === "42703" || error.code === "42P01" || error.code === "PGRST205" || error.code === "PGRST204") {
+    if (!warnedMissingPriceLedger) {
+      warnedMissingPriceLedger = true;
+      console.warn(`${LOG} price-ledger-missing — apply supabase/migrations/20261011224839_bill_price_change_lock.sql`);
+    }
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Bring one price swap up to date with Stripe once its lease has run out — the request that claimed
+ * it died, or Stripe's answer was ambiguous. The subscription's sole item is on the target Price →
+ * `done` (it landed; the webhook mirrors the bill); otherwise → `failed`. A Stripe read that fails
+ * leaves it pending for the next pass. Throws on a database error.
+ */
+export async function settleBillPriceChange(row: BillPriceChangeRow, nowMs: number = Date.now()): Promise<PriceChangeSettleState> {
+  if (row.status === "done" || row.status === "failed") return row.status;
+  if (row.action !== "price") return "unknown";
+  if (nowMs - Date.parse(row.updated_at) < VENUE_ADDITION_LEASE_MS) return "in_flight";
+  if (!supabaseAdmin || !stripe) return "unknown";
+
+  const close = async (outcome: "done" | "failed", reason: string | null): Promise<PriceChangeSettleState> => {
+    const finished = await finishPriceChange(row.id, outcome, reason);
+    return finished.change_status === "done" || finished.change_status === "failed" ? finished.change_status : "unknown";
+  };
+
+  if (!row.subscription_id) return close("failed", "no-bill");
+  const { data: bill, error } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("id, stripe_subscription_id")
+    .eq("id", row.subscription_id)
+    .maybeSingle<{ id: string; stripe_subscription_id: string | null }>();
+  if (error) throw new Error(`bill-read-failed: ${error.message}`);
+  if (!bill?.stripe_subscription_id) return close("failed", "bill-has-no-subscription");
+
+  let subscription: Stripe.Subscription;
+  try {
+    subscription = await stripe.subscriptions.retrieve(bill.stripe_subscription_id);
+  } catch (readError) {
+    if (stripeErrorCode(readError) === "resource_missing") return close("failed", "subscription-missing");
+    console.error(
+      `${LOG} settle-read-failed change=${row.id}: ${readError instanceof Error ? readError.message : String(readError)}`
+    );
+    return "unknown";
+  }
+  const items = subscription.items?.data ?? [];
+  if (items.length === 1 && items[0].price?.id === row.price_id) {
+    console.log(`${LOG} settled-landed change=${row.id} bill=${row.subscription_id} price=${row.price_id}`);
+    return close("done", null);
+  }
+  console.warn(`${LOG} settled-not-applied change=${row.id} bill=${row.subscription_id} price=${row.price_id}`);
+  return close("failed", "stripe-price-not-applied");
+}
+
+/**
+ * Settle this bill's price swaps stuck past their lease, so a swap that died mid-way doesn't keep the
+ * bill busy (adds and removes included) until the daily cron. Called through
+ * lib/venueRemoval.ts `settleStaleVenueChangesForBill`, which every add / quote / remove route and the
+ * admin price routes run first. Never throws.
+ */
+export async function settleStaleBillPriceChangesForBill(billId: string, nowMs: number = Date.now()): Promise<void> {
+  if (!supabaseAdmin) return;
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("billing_venue_changes")
+      .select(PRICE_CHANGE_COLUMNS)
+      .eq("subscription_id", billId)
+      .eq("action", "price")
+      .eq("status", "pending")
+      .lt("updated_at", new Date(nowMs - VENUE_ADDITION_LEASE_MS).toISOString())
+      .limit(5)
+      .returns<BillPriceChangeRow[]>();
+    if (error) {
+      if (isMissingPriceLedger(error)) return;
+      throw new Error(error.message);
+    }
+    for (const row of data ?? []) await settleBillPriceChange(row, nowMs);
+  } catch (error) {
+    console.error(`${LOG} settle-failed bill=${billId}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export type BillPriceChangeReconcileResult = {
+  dryRun: boolean;
+  scanned: number;
+  done: number;
+  failed: number;
+  waiting: number;
+  errors: string[];
+};
+
+/** Daily (`/api/cron/billing`): settle every price swap stuck `pending` past its lease. Normally zero rows. */
+export async function reconcileStaleBillPriceChanges(
+  options: { dryRun?: boolean; nowMs?: number } = {}
+): Promise<BillPriceChangeReconcileResult> {
+  const dryRun = options.dryRun ?? false;
+  const nowMs = options.nowMs ?? Date.now();
+  const result: BillPriceChangeReconcileResult = { dryRun, scanned: 0, done: 0, failed: 0, waiting: 0, errors: [] };
+  if (!supabaseAdmin) {
+    result.errors.push("supabase-admin-unconfigured");
+    return result;
+  }
+  const { data, error } = await supabaseAdmin
+    .from("billing_venue_changes")
+    .select(PRICE_CHANGE_COLUMNS)
+    .eq("action", "price")
+    .eq("status", "pending")
+    .lt("updated_at", new Date(nowMs - VENUE_ADDITION_LEASE_MS).toISOString())
+    .order("updated_at", { ascending: true })
+    .limit(BILL_PRICE_CHANGE_RECONCILE_LIMIT)
+    .returns<BillPriceChangeRow[]>();
+  if (error) {
+    if (!isMissingPriceLedger(error)) result.errors.push(`price-change-read-failed: ${error.message}`);
+    return result;
+  }
+  for (const row of data ?? []) {
+    result.scanned += 1;
+    if (dryRun) {
+      console.log(`${LOG} reconcile DRY RUN change=${row.id} bill=${row.subscription_id ?? "?"} updated=${row.updated_at}`);
+      continue;
+    }
+    try {
+      const state = await settleBillPriceChange(row, nowMs);
+      if (state === "done") result.done += 1;
+      else if (state === "failed") result.failed += 1;
+      else result.waiting += 1;
+    } catch (rowError) {
+      result.errors.push(`change=${row.id}: ${rowError instanceof Error ? rowError.message : String(rowError)}`);
+    }
+  }
+  return result;
 }

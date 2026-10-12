@@ -27,6 +27,7 @@ import {
   type BillMembership,
 } from "@/lib/venueBilling";
 import { billRateFromMirror, monthlyTotalCents, rateBreakdown, rateMonthlyTotalCents } from "@/lib/venuePricing";
+import { settleStaleVenueChangesForBill } from "@/lib/venueRemoval";
 
 /**
  * Admin-only manual billing controls (Phase 1 of the check/offline-payment plan).
@@ -774,7 +775,7 @@ async function handleSetCustomPrice(
 
   const billing = await loadBillingForVenue<CustomPriceRow & { venue_id: string; status: string }>(
     venueId,
-    "id, stripe_subscription_id, amount_cents"
+    "id, owner_id, stripe_subscription_id, amount_cents"
   );
   const row = billing.ok ? billing.row : null;
 
@@ -784,6 +785,9 @@ async function handleSetCustomPrice(
   const notAnchor = notAnchorResponse(row, venueId);
   if (notAnchor) return notAnchor;
 
+  // Clear this bill's dead claims first (an add / remove / swap that died mid-way, past its lease),
+  // so they never block the swap — the same first step as the partner add / remove routes.
+  await settleStaleVenueChangesForBill(row.id);
   const result = await setCustomPrice(row, priceId ? { priceId } : { amountDollars });
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
@@ -821,7 +825,7 @@ async function handleSetStandardPrice(venueId: string, adminUsername: string): P
   }
   const billing = await loadBillingForVenue<CustomPriceRow & { venue_id: string; status: string }>(
     venueId,
-    "id, stripe_subscription_id, amount_cents"
+    "id, owner_id, stripe_subscription_id, amount_cents"
   );
   const row = billing.ok ? billing.row : null;
   if (!row) {
@@ -830,6 +834,7 @@ async function handleSetStandardPrice(venueId: string, adminUsername: string): P
   const notAnchor = notAnchorResponse(row, venueId);
   if (notAnchor) return notAnchor;
 
+  await settleStaleVenueChangesForBill(row.id);
   const result = await setStandardPrice(row);
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error }, { status: result.status });

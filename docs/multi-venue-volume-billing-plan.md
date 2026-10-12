@@ -3,10 +3,11 @@
 **Status:** Phases 1–5 **committed and pushed** (Phase 4: `59d7a55`, Phase 5: `0931f55`, pushed 2026-10-11;
 Phase 5's migration `20261011210033_venue_bill_changes.sql` applied to production the same day and verified).
 Phases 1–2 are live (both card subscribers are on the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl`, still
-$100/month; check-paying accounts never lapse automatically). **Phase 6 (admin & edge tools) built 2026-10-11,
-NOT committed** — no migration, flag still off. Latest handoff:
-**`docs/multi-venue-volume-billing-plan_PHASE_6_HANDOFF.md`**. Andrew's answers are in §2 (do not re-ask).
-**Next: Phase 6.1** — a code review of Phase 6 found 10 problems, now planned as Phases 6.1–6.5
+$100/month; check-paying accounts never lapse automatically). **Phase 6 (admin & edge tools) committed
+locally as `6c5a178`, NOT pushed** — flag still off. **Phase 6.1 committed locally 2026-10-11, NOT pushed**; its migration
+`20261011224839_bill_price_change_lock.sql` was **applied to production 2026-10-11** on Andrew's go-ahead and verified
+(migration before app, so the app may now deploy). Latest handoff: **`docs/multi-venue-volume-billing-plan_PHASE_6.1_HANDOFF.md`**. Andrew's answers are
+in §2 (do not re-ask). **Next: Phase 6.2** — a code review of Phase 6 found 10 problems, planned as Phases 6.1–6.5
 (§5); Phase 7 (release) waits until they are done. Each phase ends with a handoff note
 `docs/multi-venue-volume-billing-plan_PHASE_<N>_HANDOFF.md`; update this status line to point at the latest one.
 
@@ -375,7 +376,12 @@ edits (`components/fantasy/`, `components/nfl-pickem/`, `GameIdentityPanel.tsx`,
 
 Each sub-phase ends with `docs/multi-venue-volume-billing-plan_PHASE_6.<N>_HANDOFF.md`.
 
-#### Phase 6.1 — The admin price swap takes the bill's lock (Opus 5.5, xhigh) — review #1
+#### Phase 6.1 — The admin price swap takes the bill's lock (Opus 5.5, xhigh) — review #1 — ✅ built and committed 2026-10-11, migration applied to production 2026-10-11 (handoff: `…_PHASE_6.1_HANDOFF.md`)
+
+As built: everything below; the new RPCs are invoker plpgsql with a pinned `search_path` (matching
+`20261011210033`), not `security definer`. The add and Remove / Undo flows now re-read Stripe after their claim
+(`postClaimCheck` in each module). The add also refuses if the Price changed since its context read. New finding for
+6.5: Add a venue's Confirm doesn't carry the quoted rate (handoff §7.3).
 
 **Finding.** `swapSubscriptionPrice` in `lib/billingCustomPrice.ts` (used by `setCustomPrice` and
 `setStandardPrice`) checks for an in-flight add/remove with plain reads (`venueChangeInFlight`), not
@@ -545,7 +551,8 @@ view, not per player).
 
 #### Phase 6.5 — Re-review and close out (Opus 5.5, high)
 
-Run `/code-review` on the whole Phase 6 + 6.1–6.4 diff. Fix or list every new finding. Gates:
+Run `/code-review` on the whole Phase 6 + 6.1–6.4 diff. Fix or list every new finding, including the
+quote-vs-Confirm rate gap recorded in `…_PHASE_6.1_HANDOFF.md` §7.3 (fix it, or Andrew waives it). Gates:
 `npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run build` (not typecheck and build at the
 same time), plus `tests/lib.auth-users-fk-guard.test.ts` unchanged. Update `CLAUDE.md`'s
 multi-venue section: the price swap is claimed under the bill lock, only `custom_monthly_` is

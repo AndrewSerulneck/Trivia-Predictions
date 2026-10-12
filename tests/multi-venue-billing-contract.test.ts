@@ -27,8 +27,14 @@ const listSourceFiles = (dir: string): string[] => {
 const sources = ["app", "lib", "components"].flatMap(listSourceFiles);
 
 const FLOW = "lib/venueAddition.ts";
-/** Phase 6: modules that may READ the add/change ledgers (never write them). */
-const LEDGER_READERS = ["lib/billingCustomPrice.ts", "lib/billingQuantityDrift.ts"];
+/** Phase 6: modules that may READ the add ledger (never write it). */
+const ADDITION_LEDGER_READERS = ["lib/billingQuantityDrift.ts"];
+/**
+ * Modules that may READ the change ledger without writing it directly: the drift check, and (Phase
+ * 6.1) the admin price swap, which writes its `price` rows only through its own two RPCs.
+ */
+const CHANGE_LEDGER_READERS = ["lib/billingCustomPrice.ts", "lib/billingQuantityDrift.ts"];
+const CUSTOM_PRICE = "lib/billingCustomPrice.ts";
 const ADD_ROUTE = "app/api/owner/venues/add/route.ts";
 const QUOTE_ROUTE = "app/api/owner/venues/add/quote/route.ts";
 
@@ -56,15 +62,15 @@ describe("multi-venue billing — Add a venue contract", () => {
     expect(cron).not.toContain("isMultiVenueBillingEnabled");
   });
 
-  it("the ledger and its claim RPC are used only by the flow module (+ Phase 6's two read-only checks)", () => {
+  it("the ledger and its claim RPC are used only by the flow module (+ Phase 6's read-only drift check)", () => {
     const ledgerUsers = sources.filter((rel) => /["']billing_venue_additions["']/.test(read(rel)));
-    expect(ledgerUsers.sort()).toEqual([...LEDGER_READERS, FLOW].sort());
+    expect(ledgerUsers.sort()).toEqual([...ADDITION_LEDGER_READERS, FLOW].sort());
     const rpcUsers = sources.filter((rel) => read(rel).includes('"claim_venue_addition"'));
     expect(rpcUsers).toEqual([FLOW]);
   });
 
-  it("Phase 6: the admin price swap and the drift check only READ the two ledgers", () => {
-    for (const rel of LEDGER_READERS) {
+  it("Phase 6: the admin price swap and the drift check only READ the ledgers", () => {
+    for (const rel of new Set([...ADDITION_LEDGER_READERS, ...CHANGE_LEDGER_READERS])) {
       const source = stripComments(read(rel));
       const touches = source.match(/\.from\(\s*["']billing_venue_(?:additions|changes)["']\s*\)/g) ?? [];
       const reads = source.match(/\.from\(\s*["']billing_venue_(?:additions|changes)["']\s*\)\s*\.select\(/g) ?? [];
@@ -93,10 +99,58 @@ describe("multi-venue billing — Add a venue contract", () => {
   });
 
   it("Phase 6: a custom rate keeps the venue count and never prorates", () => {
-    const custom = stripComments(read("lib/billingCustomPrice.ts"));
+    const custom = stripComments(read(CUSTOM_PRICE));
     expect(custom).toContain("items: [{ id: items[0].id, price: priceId, quantity }]");
     expect(custom).toContain("proration_behavior: CUSTOM_PRICE_PRORATION_BEHAVIOR");
     expect(custom.match(/stripe!?\.subscriptions\.update\(/g) ?? []).toHaveLength(1);
+  });
+
+  it("Phase 6.1: the price swap claims the bill's lock BEFORE it reads Stripe, and only through its RPCs", () => {
+    const custom = stripComments(read(CUSTOM_PRICE));
+    const swap = custom.slice(custom.indexOf("async function swapSubscriptionPrice"));
+    const claimAt = swap.indexOf("claimPriceChange(");
+    expect(claimAt).toBeGreaterThan(-1);
+    expect(claimAt).toBeLessThan(swap.indexOf("subscriptions.retrieve("));
+    expect(swap.indexOf("subscriptions.retrieve(")).toBeLessThan(swap.indexOf("subscriptions.update("));
+    expect(swap).toContain("{ idempotencyKey: key }");
+    // No unlocked read-then-write fallback, and no direct write to the ledger.
+    expect(custom).not.toContain("venueChangeInFlight");
+    expect(custom).not.toContain("billing_venue_additions");
+    expect(sources.filter((rel) => read(rel).includes('"claim_bill_price_change"'))).toEqual([CUSTOM_PRICE]);
+    expect(sources.filter((rel) => read(rel).includes('"finish_bill_price_change"'))).toEqual([CUSTOM_PRICE]);
+    // Stale price rows are settled by the daily cron and before every add / quote / remove / swap.
+    expect(stripComments(read("app/api/cron/billing/route.ts"))).toContain("reconcileStaleBillPriceChanges(");
+    const removal = stripComments(read("lib/venueRemoval.ts"));
+    const settle = removal.slice(removal.indexOf("export async function settleStaleVenueChangesForBill"));
+    expect(settle).toContain("settleStaleBillPriceChangesForBill(billId, nowMs)");
+    const admin = stripComments(read("app/api/admin/billing/route.ts"));
+    for (const call of ["setCustomPrice(row", "setStandardPrice(row"]) {
+      const at = admin.indexOf(call);
+      expect(at, call).toBeGreaterThan(-1);
+      expect(admin.lastIndexOf("settleStaleVenueChangesForBill(row.id)", at), call).toBeGreaterThan(admin.lastIndexOf("async function", at));
+    }
+  });
+
+  it("Phase 6.1: the Remove / Undo reconcilers never read a price row as a venue change", () => {
+    const removal = stripComments(read("lib/venueRemoval.ts"));
+    expect(removal.match(/\.in\("action", VENUE_CHANGE_ACTIONS\)/g) ?? []).toHaveLength(2);
+    expect(removal).toContain('const VENUE_CHANGE_ACTIONS: VenueBillChangeAction[] = ["remove", "undo"];');
+  });
+
+  it("Phase 6.1: add and Remove / Undo re-read Stripe AFTER their claim and update from that read", () => {
+    const flow = stripComments(read(FLOW));
+    const start = flow.slice(flow.indexOf("export async function startVenueAddition"));
+    expect(start.indexOf("claimAddition(")).toBeLessThan(start.indexOf("stripe.subscriptions.retrieve("));
+    expect(start.indexOf("postClaimCheck(")).toBeLessThan(start.indexOf("stripe.subscriptions.update("));
+    expect(start).toContain("items: [{ id: liveItem.id, quantity: row.quantity_after as number }]");
+    expect(start).not.toContain("context.item.quantity");
+    expect(start).not.toContain("context.subscription.pending_update");
+    const removal = stripComments(read("lib/venueRemoval.ts"));
+    const change = removal.slice(removal.indexOf("export async function startVenueChange"));
+    expect(change.indexOf('"claim_venue_bill_change"')).toBeLessThan(change.indexOf("stripe.subscriptions.retrieve("));
+    expect(change.indexOf("postClaimCheck(")).toBeLessThan(change.indexOf("stripe.subscriptions.update("));
+    expect(change).toContain("items: [{ id: checked.item.id, quantity: row.quantity_after }]");
+    expect(change).not.toContain("context.item.quantity");
   });
 
   it("the charge applies the new quantity ONLY if the prorated invoice is paid, keyed on the ledger row", () => {
@@ -138,7 +192,7 @@ describe("multi-venue billing — Add a venue contract", () => {
   it("Phase 5: the change ledger and its RPCs are used only by lib/venueRemoval.ts (+ Phase 6's read-only checks)", () => {
     const REMOVAL = "lib/venueRemoval.ts";
     expect(sources.filter((rel) => /["']billing_venue_changes["']/.test(read(rel))).sort()).toEqual(
-      [...LEDGER_READERS, REMOVAL].sort()
+      [...CHANGE_LEDGER_READERS, REMOVAL].sort()
     );
     expect(sources.filter((rel) => read(rel).includes('"claim_venue_bill_change"'))).toEqual([REMOVAL]);
     expect(sources.filter((rel) => read(rel).includes('"finish_venue_bill_change"'))).toEqual([REMOVAL]);

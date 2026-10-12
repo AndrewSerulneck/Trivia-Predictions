@@ -466,26 +466,59 @@ export async function loadAddVenueContext(
     return refuse("stripe_unavailable", 503);
   }
 
-  if (subscription.status !== "active") return refuse("bill_not_active", 409);
-  if (subscription.cancel_at_period_end || subscription.cancel_at) return refuse("cancel_scheduled", 409);
+  const checked = checkAddableSubscription(subscription);
+  if (!checked.ok) return refuse(checked.code, 409);
+
+  return { ok: true, context: { ownerId: auth.ownerId, bill, subscription, item: checked.item, rate: checked.rate } };
+}
+
+/**
+ * The Stripe half of the healthy-bill rule, and the bill's rate — run on the context's read, and
+ * again on the read `startVenueAddition` takes after its claim.
+ */
+const checkAddableSubscription = (
+  subscription: Stripe.Subscription
+): { ok: true; item: Stripe.SubscriptionItem; rate: BillRate } | { ok: false; code: AddVenueFailureCode } => {
+  if (subscription.status !== "active") return { ok: false, code: "bill_not_active" };
+  if (subscription.cancel_at_period_end || subscription.cancel_at) return { ok: false, code: "cancel_scheduled" };
   // Pending updates (and so this whole flow) need an automatically charged card subscription.
-  if (subscription.collection_method !== "charge_automatically") return refuse("billing_state", 409);
+  if (subscription.collection_method !== "charge_automatically") return { ok: false, code: "billing_state" };
   // A schedule phase change would discard our pending update (Stripe docs, "Pending updates").
-  if (subscription.schedule) return refuse("billing_state", 409);
+  if (subscription.schedule) return { ok: false, code: "billing_state" };
 
   const item = soleItem(subscription);
-  if (!item) return refuse("billing_state", 409);
+  if (!item) return { ok: false, code: "billing_state" };
   // The graduated bands, or (Phase 6, Andrew 2026-10-11) an admin's negotiated per-venue rate — a
   // flat `custom_monthly_<cents>` Price (lib/billingCustomPrice.ts), billed per venue. Anything else
   // (the old flat list Price, a hand-built Stripe price) needs a person.
   const rate = billRateOfItem(item);
-  if (!rate) return refuse("billing_state", 409);
+  if (!rate) return { ok: false, code: "billing_state" };
   if (typeof item.quantity !== "number" || !Number.isInteger(item.quantity) || item.quantity < 1) {
-    return refuse("billing_state", 409);
+    return { ok: false, code: "billing_state" };
   }
+  return { ok: true, item, rate };
+};
 
-  return { ok: true, context: { ownerId: auth.ownerId, bill, subscription, item, rate } };
-}
+/**
+ * Why the subscription as Stripe has it NOW — read after the claim — can't take this add, or its
+ * item. Beyond the healthy-bill rule: the same item on the SAME Price the context priced (an admin's
+ * rate change landing in between would charge a rate the partner was never shown), the venue count
+ * the claim was sized from, and no other pending update (a new items update would void it).
+ */
+const postClaimCheck = (
+  context: AddVenueContext,
+  live: Stripe.Subscription,
+  quantityBefore: number
+): { ok: true; item: Stripe.SubscriptionItem } | { ok: false; issue: string } => {
+  const checked = checkAddableSubscription(live);
+  if (!checked.ok) return { ok: false, issue: checked.code };
+  const { item } = checked;
+  if (item.id !== context.item.id) return { ok: false, issue: "item-changed" };
+  if (item.price?.id !== context.item.price?.id) return { ok: false, issue: "price-changed" };
+  if (live.pending_update) return { ok: false, issue: "pending-update" };
+  if (item.quantity !== quantityBefore) return { ok: false, issue: "quantity-drift" };
+  return { ok: true, item };
+};
 
 // --- Quote ---------------------------------------------------------------------------------------
 
@@ -1214,19 +1247,28 @@ export async function startVenueAddition(args: StartVenueAdditionArgs): Promise<
       return refuse("addition_failed", 409);
     }
 
-    // 4. Stripe must agree with us on how many venues are billed, and be free of any other
-    //    pending update (a new items update would silently void it). Refuse rather than "fix".
-    if (context.subscription.pending_update) {
-      await failAddition(row, "refused:billing_state", { voidInvoice: false });
-      return refuse("billing_state", 409, { additionId: row.id });
+    // 4. Re-read Stripe now that the bill is claimed (Phase 6.1). Remove / Undo and the admin's
+    //    price swap claim under the same lock, so nothing else can move this subscription until
+    //    this row is closed: this read — not the pre-claim context — is what the charge is checked
+    //    against and made from (`postClaimCheck`). Refuse rather than "fix".
+    let live: Stripe.Subscription;
+    try {
+      live = await stripe.subscriptions.retrieve(context.subscription.id);
+    } catch (error) {
+      console.error(`${LOG} subscription-reread-failed addition=${row.id}: ${errorText(error)}`);
+      await failAddition(row, "subscription-read-failed", { voidInvoice: false });
+      return refuse("stripe_unavailable", 503, { additionId: row.id });
     }
-    if (context.item.quantity !== row.quantity_before) {
+    const checked = postClaimCheck(context, live, row.quantity_before);
+    if (!checked.ok) {
       console.error(
-        `${LOG} quantity-drift bill=${context.bill.id} stripe=${context.item.quantity ?? "?"} billed=${row.quantity_before}`
+        `${LOG} refused-after-claim addition=${row.id} bill=${context.bill.id} issue=${checked.issue} ` +
+          `stripe=${itemQuantity(live) ?? "?"} billed=${row.quantity_before} pendingUpdate=${Boolean(live.pending_update)}`
       );
       await failAddition(row, "refused:billing_state", { voidInvoice: false });
       return refuse("billing_state", 409, { additionId: row.id });
     }
+    const liveItem = checked.item;
 
     // 5–6 (Add back). The venue already exists and is the partner's: record it, skip the address
     //    scan and the venue insert. It stays as it is (hidden by the removal job) until paid.
@@ -1284,13 +1326,13 @@ export async function startVenueAddition(args: StartVenueAdditionArgs): Promise<
     }
 
     // 7. Charge: Stripe applies quantity n + 1 ONLY if the prorated invoice is paid.
-    const prorationDate = acceptableProrationDate(args.prorationDate, context.item.current_period_start, nowMs);
+    const prorationDate = acceptableProrationDate(args.prorationDate, liveItem.current_period_start, nowMs);
     let updated: Stripe.Subscription;
     try {
       updated = await stripe.subscriptions.update(
         context.subscription.id,
         {
-          items: [{ id: context.item.id, quantity: row.quantity_after as number }],
+          items: [{ id: liveItem.id, quantity: row.quantity_after as number }],
           proration_behavior: "always_invoice",
           payment_behavior: "pending_if_incomplete",
           ...(prorationDate !== null ? { proration_date: prorationDate } : {}),

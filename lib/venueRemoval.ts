@@ -1,6 +1,7 @@
 import "server-only";
 import type Stripe from "stripe";
 
+import { settleStaleBillPriceChangesForBill } from "@/lib/billingCustomPrice";
 import { effectiveAmountCents } from "@/lib/billingDisplay";
 import {
   VENUE_CHANGE_MESSAGES,
@@ -62,7 +63,10 @@ import { billRateFromMirror, rateBreakdown, rateMonthlyTotalCents } from "@/lib/
  * idempotency key; `finish_venue_bill_change` applies the membership change only once Stripe has
  * accepted the new quantity. An ambiguous Stripe error leaves the row `pending`; it is settled from
  * Stripe's real quantity after a 10-minute lease (by the next change, the next add/quote on the
- * bill, or the daily cron).
+ * bill, or the daily cron). The same ledger also holds the admin's price swaps (action `price`,
+ * Phase 6.1, lib/billingCustomPrice.ts): they lock the bill exactly like a change, but they are
+ * never settled or finished as a Remove / Undo here — the reconcilers below read only
+ * `remove` / `undo` rows, and a bill's stale price rows are handed to `settleStaleBillPriceChangesForBill`.
  *
  * NOT FLAG-GATED here. The route checks `isMultiVenueBillingEnabled()`; settling and the daily
  * removal job must finish what a partner already started whatever the flag says.
@@ -187,7 +191,15 @@ const readBill = async (billId: string): Promise<BillRow | null> => {
   return data ?? null;
 };
 
-type FinishRpcRow = { outcome: "done" | "failed" | "already" | "drift" | "not_found" | "invalid"; change_status: ChangeStatus | null };
+type FinishRpcRow = {
+  outcome: "done" | "failed" | "already" | "drift" | "wrong_action" | "not_found" | "invalid";
+  change_status: ChangeStatus | null;
+};
+
+/** The ledger's two venue actions (it also holds `price` swaps, which this file never settles). */
+const VENUE_CHANGE_ACTIONS: VenueBillChangeAction[] = ["remove", "undo"];
+const isVenueChangeAction = (action: string): action is VenueBillChangeAction =>
+  (VENUE_CHANGE_ACTIONS as string[]).includes(action);
 
 const isMissingFunction = (error: { code?: string; message?: string }, name: string): boolean =>
   error.code === "PGRST202" || error.code === "42883" || (error.message ?? "").includes(name);
@@ -211,6 +223,10 @@ async function finishChange(row: VenueChangeRow, outcome: "done" | "failed", rea
   }
   const result = (Array.isArray(data) ? data[0] : data) as FinishRpcRow | null;
   if (!result || typeof result.outcome !== "string") throw new Error("finish-malformed-response");
+  if (result.outcome === "wrong_action") {
+    // Not a Remove / Undo (a price swap) — finish_venue_bill_change wrote nothing. A bug if reached.
+    console.error(`${LOG} finish-wrong-action change=${row.id}`);
+  }
   if (result.outcome === "drift") {
     // Stripe moved but the membership was not in the state the claim saw. Recorded on the row
     // (failure_reason); Phase 6's Stripe-vs-DB drift check is the backstop. Needs an admin's eye.
@@ -267,23 +283,58 @@ export async function loadVenueChangeContext(
     return refuse("stripe_unavailable", 503);
   }
 
-  if (subscription.status !== "active" && subscription.status !== "past_due") return refuse("bill_not_active", 409);
-  if (action === "undo" && subscription.status !== "active") return refuse("bill_not_active", 409);
-  if (subscription.cancel_at_period_end || subscription.cancel_at) return refuse("cancel_scheduled", 409);
+  const checked = checkChangeableSubscription(subscription, action);
+  if (!checked.ok) return refuse(checked.code, 409);
+
+  return { ok: true, context: { ownerId: auth.ownerId, venueId: id, bill, subscription, item: checked.item } };
+}
+
+/**
+ * The Stripe half of "can this bill's venues change?" — run on the context's read, and again on the
+ * read `startVenueChange` takes after its claim.
+ */
+const checkChangeableSubscription = (
+  subscription: Stripe.Subscription,
+  action: VenueBillChangeAction
+): { ok: true; item: Stripe.SubscriptionItem } | { ok: false; code: VenueChangeFailureCode } => {
+  if (subscription.status !== "active" && subscription.status !== "past_due") return { ok: false, code: "bill_not_active" };
+  if (action === "undo" && subscription.status !== "active") return { ok: false, code: "bill_not_active" };
+  if (subscription.cancel_at_period_end || subscription.cancel_at) return { ok: false, code: "cancel_scheduled" };
   // A schedule phase change would override our quantity.
-  if (subscription.schedule) return refuse("billing_state", 409);
+  if (subscription.schedule) return { ok: false, code: "billing_state" };
 
   const item = soleItem(subscription);
-  if (!item) return refuse("billing_state", 409);
+  if (!item) return { ok: false, code: "billing_state" };
   // Graduated bands, or an admin's per-venue rate (Phase 6): either way the quantity is the venues.
-  if (!billRateOfItem(item)) return refuse("billing_state", 409);
+  if (!billRateOfItem(item)) return { ok: false, code: "billing_state" };
   if (typeof item.quantity !== "number" || !Number.isInteger(item.quantity) || item.quantity < 1) {
-    return refuse("billing_state", 409);
+    return { ok: false, code: "billing_state" };
   }
-  if (typeof item.current_period_end !== "number") return refuse("billing_state", 409);
+  if (typeof item.current_period_end !== "number") return { ok: false, code: "billing_state" };
+  return { ok: true, item };
+};
 
-  return { ok: true, context: { ownerId: auth.ownerId, venueId: id, bill, subscription, item } };
-}
+/**
+ * Why the subscription as Stripe has it NOW — read after the claim — can't take this claimed change,
+ * or its item. The claim itself was sized from our membership count, and a Remove's `remove_at`
+ * from the context's period end, so both must still match Stripe.
+ */
+const postClaimCheck = (
+  context: VenueChangeContext,
+  live: Stripe.Subscription,
+  row: VenueChangeRow
+): { ok: true; item: Stripe.SubscriptionItem } | { ok: false; issue: string } => {
+  const checked = checkChangeableSubscription(live, row.action);
+  if (!checked.ok) return { ok: false, issue: checked.code };
+  const { item } = checked;
+  if (item.id !== context.item.id) return { ok: false, issue: "item-changed" };
+  if (live.pending_update) return { ok: false, issue: "pending-update" };
+  if (item.quantity !== row.quantity_before) return { ok: false, issue: "quantity-drift" };
+  if (row.action === "remove" && Date.parse(row.remove_at ?? "") !== (item.current_period_end as number) * 1000) {
+    return { ok: false, issue: "period-changed" };
+  }
+  return { ok: true, item };
+};
 
 // --- Reconciliation ------------------------------------------------------------------------------
 
@@ -301,6 +352,8 @@ type SettleState =
 export async function reconcileVenueChange(row: VenueChangeRow, nowMs: number = Date.now()): Promise<SettleState> {
   if (row.status === "done") return { state: "done", row };
   if (row.status === "failed") return { state: "failed", row };
+  // A price swap is never settled from the quantity (lib/billingCustomPrice.ts settles it from the Price).
+  if (!isVenueChangeAction(row.action)) return { state: "unknown", row, detail: "not-a-venue-change" };
   if (nowMs - Date.parse(row.updated_at) < VENUE_ADDITION_LEASE_MS) return { state: "in_flight", row };
   if (!stripe) return { state: "unknown", row, detail: "stripe-unconfigured" };
 
@@ -340,17 +393,20 @@ export async function reconcileVenueChange(row: VenueChangeRow, nowMs: number = 
 }
 
 /**
- * Settle this bill's Remove / Undo rows stuck past their lease, so a request that died mid-change
- * doesn't keep the bill "busy" (adds included) until the daily cron. Never throws: the callers are
- * routes that must carry on (a still-pending row just answers "try again in a minute").
+ * Settle this bill's Remove / Undo rows — and (Phase 6.1) its admin price swaps — stuck past their
+ * lease, so a request that died mid-change doesn't keep the bill "busy" (adds included) until the
+ * daily cron. Never throws: the callers are routes that must carry on (a still-pending row just
+ * answers "try again in a minute").
  */
 export async function settleStaleVenueChangesForBill(billId: string, nowMs: number = Date.now()): Promise<void> {
   if (!supabaseAdmin) return;
+  await settleStaleBillPriceChangesForBill(billId, nowMs);
   try {
     const { data, error } = await supabaseAdmin
       .from(CHANGES)
       .select(CHANGE_COLUMNS)
       .eq("subscription_id", billId)
+      .in("action", VENUE_CHANGE_ACTIONS)
       .eq("status", "pending")
       .lt("updated_at", new Date(nowMs - VENUE_ADDITION_LEASE_MS).toISOString())
       .limit(5)
@@ -501,12 +557,25 @@ export async function startVenueChange(args: StartVenueChangeArgs): Promise<Venu
     const row = claim.change_id ? await readChangeById(claim.change_id) : null;
     if (!row || row.quantity_before === null || row.quantity_after === null) return refuse("change_failed", 409);
 
-    // 4. Stripe must agree on how many venues are billed, and carry no pending update (an items
-    //    update would void it). Refuse rather than "fix".
-    if (context.subscription.pending_update || context.item.quantity !== row.quantity_before) {
+    // 4. Re-read Stripe now that the bill is claimed (Phase 6.1). An add, another change and the
+    //    admin's price swap all claim under the same lock, so nothing else can move this
+    //    subscription until this row is closed: this read — not the pre-claim context — is what the
+    //    update is checked against. Stripe must still allow the change, agree on how many venues are
+    //    billed, be in the same period, and carry no pending update (an items update would void it).
+    //    Refuse rather than "fix".
+    let live: Stripe.Subscription;
+    try {
+      live = await stripe.subscriptions.retrieve(context.subscription.id);
+    } catch (error) {
+      console.error(`${LOG} subscription-reread-failed change=${row.id}: ${errorOf(error)}`);
+      await finishChange(row, "failed", "subscription-read-failed");
+      return refuse("stripe_unavailable", 503);
+    }
+    const checked = postClaimCheck(context, live, row);
+    if (!checked.ok) {
       console.error(
-        `${LOG} refused-billing-state change=${row.id} stripe=${context.item.quantity ?? "?"} billed=${row.quantity_before} ` +
-          `pendingUpdate=${Boolean(context.subscription.pending_update)}`
+        `${LOG} refused-billing-state change=${row.id} issue=${checked.issue} stripe=${itemQuantity(live) ?? "?"} ` +
+          `billed=${row.quantity_before} pendingUpdate=${Boolean(live.pending_update)}`
       );
       await finishChange(row, "failed", "refused:billing_state");
       return refuse("billing_state", 409);
@@ -519,7 +588,7 @@ export async function startVenueChange(args: StartVenueChangeArgs): Promise<Venu
       updated = await stripe.subscriptions.update(
         context.subscription.id,
         {
-          items: [{ id: context.item.id, quantity: row.quantity_after }],
+          items: [{ id: checked.item.id, quantity: row.quantity_after }],
           proration_behavior: "none",
           ...(row.new_anchor_venue_id ? { metadata: { venueId: row.new_anchor_venue_id } } : {}),
         },
@@ -576,7 +645,10 @@ export type VenueChangeReconcileResult = {
   errors: string[];
 };
 
-/** Daily: settle every Remove / Undo stuck `pending` past its lease. Normally zero rows. */
+/**
+ * Daily: settle every Remove / Undo stuck `pending` past its lease. Normally zero rows. Price swaps
+ * on the same ledger are the cron's separate `reconcileStaleBillPriceChanges` job.
+ */
 export async function reconcileStaleVenueChanges(
   options: { dryRun?: boolean; nowMs?: number } = {}
 ): Promise<VenueChangeReconcileResult> {
@@ -590,6 +662,7 @@ export async function reconcileStaleVenueChanges(
   const { data, error } = await supabaseAdmin
     .from(CHANGES)
     .select(CHANGE_COLUMNS)
+    .in("action", VENUE_CHANGE_ACTIONS)
     .eq("status", "pending")
     .lt("updated_at", new Date(nowMs - VENUE_ADDITION_LEASE_MS).toISOString())
     .order("updated_at", { ascending: true })
