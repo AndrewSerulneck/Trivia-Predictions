@@ -253,8 +253,9 @@ migrations are grandfathered — see `docs/supabase-data-api-grants-plan.md`).
   rotating code.
 - **The NFL Pick 'Em Challenge is the one reward that does NOT gate on a venue schedule.**
   It gates on the NFL season calendar (`nfl_pickem_weeks`), so it takes none of the Live
-  Trivia schedule machinery: a partner picks a **week scope** — `weekly` or `season`, and
-  only those two; arbitrary week ranges are explicitly rejected — and
+  Trivia schedule machinery: a partner picks a **week scope** — `weekly`, `season` or
+  `single_week` (one chosen week, added 2026-10-12, `docs/nfl-pickem-single-week-reward-plan.md`),
+  and only those three; arbitrary week ranges are explicitly rejected — and
   `lib/nflPickEmRewardWeeks.ts` derives cadence, quota, `activeDays` (all seven days,
   **`"thu"` first**, or the cycle anchor and accrual gate both break) and date bounds from
   it. "Most picks right" is locked to **1 winner** (refused server-side, not clamped) and
@@ -262,7 +263,14 @@ migrations are grandfathered — see `docs/supabase-data-api-grants-plan.md`).
   question (`lib/nflPickEmTiebreaker.ts`). Accrual is **1 point per correct pick, not 10**
   (`lib/nflPickEmRewardAccrual.ts`, a separate sweep — daily Pick 'Em's settlement path is
   untouched). Full as-built record, deviations and remaining work:
-  `docs/nfl-pickem-reward-plan.md`.
+  `docs/nfl-pickem-reward-plan.md`. **Single week:** the client sends only the week NUMBER;
+  `createReward` accepts it only if it is on the server's fresh `selectableWeeks`
+  (`buildNFLSelectableWeeks`: regular/postseason, games synced, first game not kicked off)
+  and takes the dates from the server row. It is resolved by THAT week's weekly contest and
+  spent after one award (`isOneOffNFLReward`); picks-target accrual uses the exact Tue→Tue
+  week span (`nflSingleWeekAccrualWindow`) — never remove that argument from the sweep. A
+  one-off reward's cycle key matches every week, so any per-week reader must filter with
+  `nflRewardAppliesToWeek` first.
 
 ## Partner Self-Serve Signup (`/owner/signup`, flag-gated)
 

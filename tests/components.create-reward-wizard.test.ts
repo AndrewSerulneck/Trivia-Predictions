@@ -459,6 +459,61 @@ describe("CreateRewardWizard — submitted terms", () => {
   });
 });
 
+const SINGLE_WEEK_CONTEXT: RewardCreationContextDTO = {
+  ...NFL_CONTEXT,
+  nflSeason: {
+    ...NFL_CONTEXT.nflSeason!,
+    selectableWeeks: [
+      { weekNumber: 9, weekStartDate: "2026-11-05", weekEndDate: "2026-11-09", label: "Week 9 · Nov 5 – Nov 9", gamesCount: 6 },
+      { weekNumber: 10, weekStartDate: "2026-11-12", weekEndDate: "2026-11-16", label: "Week 10 · Nov 12 – Nov 16", gamesCount: 14 },
+    ],
+  },
+};
+
+describe("CreateRewardWizard — NFL single week", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("hides the Single week card when the server offers no weeks", async () => {
+    renderForSubmit(NFL_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
+    await screen.findByRole("button", { name: /Whole season/ });
+    expect(screen.queryByRole("button", { name: /Single week/ })).toBeNull();
+  });
+
+  it("submits only the chosen week number, defaulting to the first offered week", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-06T16:00:00.000Z"));
+    const { onSubmit } = renderForSubmit(SINGLE_WEEK_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Single week/ }));
+    const select = screen.getByLabelText("Which week?") as HTMLSelectElement;
+    expect(select.value).toBe("9");
+    fireEvent.change(select, { target: { value: "10" } });
+    await walkToConfirm();
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cadence: "none",
+        winnerQuota: 1,
+        nflWeekScope: { kind: "single_week", season: 2026, week: 10 },
+      }),
+    );
+  });
+
+  it("disables picks targets above the week's game count and explains why", async () => {
+    renderForSubmit(SINGLE_WEEK_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Single week/ }));
+    expect(screen.getByText(/Week 9 has 6 games, so targets above 6/)).toBeTruthy();
+  });
+});
+
 // ─── F1: the NFL preview's "Starts …" follows the server's rule ─────────────
 // A weekly reward's first covered week is the SEASON's first week
 // (resolveNFLRewardStartDate), so mid-season it is already running — even on a

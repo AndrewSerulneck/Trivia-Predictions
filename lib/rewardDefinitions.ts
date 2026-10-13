@@ -37,6 +37,7 @@ export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge
  *   {date}      — a game date: "Tue, Oct 7"
  *   {period}    — "this week", "today", "this month", "this year"
  *   {fromWeek}  — the first NFL week a season-long reward covers: "5"
+ *   {week}      — the one NFL week a single-week reward covers: "9"
  *   {when}      — win lines only: "the week of Oct 6", "in Week 5", "in the 2026 season"
  *
  * Never write "this venue" — the guest is standing in it.
@@ -65,7 +66,9 @@ export type RewardDescriptionTemplates =
       calendar: "nfl_season";
       mostPicksWeekly: string;
       mostPicksSeason: string;
+      mostPicksSingleWeek: string;
       picksTargetWeekly: string;
+      picksTargetSingleWeek: string;
       picksTargetSeason: string;
       wonMostPicks: string;
       wonPicksTarget: string;
@@ -168,7 +171,9 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
       mostPicksWeekly: "Get the most NFL picks right this week and win {prize}.",
       mostPicksSeason:
         "Get the most NFL picks right from Week {fromWeek} through the end of the regular season and win {prize}.",
+      mostPicksSingleWeek: "Get the most NFL picks right in Week {week} and win {prize}.",
       picksTargetWeekly: "Get {threshold} NFL picks right this week and win {prize}.",
+      picksTargetSingleWeek: "Get {threshold} NFL picks right in Week {week} and win {prize}.",
       picksTargetSeason: "Get {threshold} NFL picks right by the end of the regular season and win {prize}.",
       wonMostPicks: "You got the most NFL picks right {when}",
       wonPicksTarget: "You got {threshold} NFL picks right {when}",

@@ -48,8 +48,10 @@ import {
   quantityOutOfRangeMessage,
 } from "@/lib/rewardTerms";
 import {
+  NFL_SINGLE_WEEK_INVALID_MESSAGE,
   NFL_WEEK_SCOPE_INVALID_MESSAGE,
   NFL_WEEK_WINNER_QUANTITY_MESSAGE,
+  nflSingleWeekThresholdTooHighMessage,
   type NFLRewardWeekScope,
 } from "@/lib/nflPickEmRewardWeeks";
 import type { ChallengeWinCondition } from "@/types";
@@ -833,7 +835,19 @@ describe("resolveRewardCreationContext — NFL season gate", () => {
       seasonFirstWeekStartDate: "2026-07-02",
       seasonEndDate: "2026-07-29",
       weeksRemaining: 2,
+      // Single week (Phase 2): week 3 kicked off on 2026-07-16, so only week 4
+      // is still pickable — from the same read, no second query.
+      selectableWeeks: [
+        {
+          weekNumber: 4,
+          weekStartDate: "2026-07-23",
+          weekEndDate: "2026-07-29",
+          label: "Week 4 · Jul 23 – Jul 29",
+          gamesCount: 16,
+        },
+      ],
     });
+    expect(mocks.listNFLWeeks).toHaveBeenCalledTimes(1);
     // The venue's Live Trivia schedule is irrelevant here and must not be read.
     expect(mocks.listVenueLiveShowdownSchedules).not.toHaveBeenCalled();
   });
@@ -969,6 +983,141 @@ describe("createReward — NFL Pick 'Em Challenge", () => {
     mocks.listNFLWeeks.mockResolvedValue([]);
     await expect(createNFLReward()).rejects.toThrow(REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE);
     expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+});
+
+// ── Single week (docs/nfl-pickem-single-week-reward-plan.md Phase 2) ──────────
+// The one scope where the client names a week. It is honored ONLY as a pick
+// from the server's own fresh selectableWeeks; everything else — the season,
+// the dates, the game count — is the server's.
+describe("createReward — NFL single week", () => {
+  beforeEach(() => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+  });
+
+  it("expands a most-picks single week into a closed one-off bounded by that week's own dates", async () => {
+    await createNFLReward({ nflWeekScope: { kind: "single_week", season: 2026, week: 4 } });
+
+    expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        winCondition: "game_winner",
+        recurringType: "none",
+        winnerQuota: 1,
+        startDate: "2026-07-23",
+        endDate: "2026-07-29",
+        nflWeekScope: { kind: "single_week", season: 2026, week: 4 },
+      }),
+    );
+    expect(mocks.createChallengeCampaign.mock.calls[0][0].activeDays).toEqual(ALL_SEVEN_THURSDAY_FIRST);
+  });
+
+  it("takes a picks target's quantity and threshold for the chosen week", async () => {
+    await createNFLReward({
+      winCondition: "points_threshold",
+      threshold: 10,
+      winnerQuota: 3,
+      nflWeekScope: { kind: "single_week", season: 2026, week: 4 },
+    });
+    expect(mocks.createChallengeCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        winCondition: "points_threshold",
+        pointsRequiredToWin: 10,
+        winnerQuota: 3,
+        recurringType: "none",
+        startDate: "2026-07-23",
+        endDate: "2026-07-29",
+      }),
+    );
+  });
+
+  it("refuses a week that has already kicked off (forged or stale tab) instead of re-pointing it", async () => {
+    // Week 3 is the current week: its first game kicked off 2026-07-16.
+    await expect(
+      createNFLReward({ nflWeekScope: { kind: "single_week", season: 2026, week: 3 } }),
+    ).rejects.toThrow(NFL_SINGLE_WEEK_INVALID_MESSAGE);
+    await expect(
+      createNFLReward({ nflWeekScope: { kind: "single_week", season: 2026, week: 1 } }),
+    ).rejects.toThrow(NFL_SINGLE_WEEK_INVALID_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("refuses a week the season doesn't have", async () => {
+    await expect(
+      createNFLReward({ nflWeekScope: { kind: "single_week", season: 2026, week: 17 } }),
+    ).rejects.toThrow(NFL_SINGLE_WEEK_INVALID_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("refuses another season's week rather than moving it into this season", async () => {
+    await expect(
+      createNFLReward({ nflWeekScope: { kind: "single_week", season: 2027, week: 4 } }),
+    ).rejects.toThrow(NFL_SINGLE_WEEK_INVALID_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("refuses a preseason week and a week with no games (D2)", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(
+      NFL_WEEKS.map((week) =>
+        week.weekNumber === 4 ? { ...week, weekType: "preseason" as const } : week,
+      ),
+    );
+    await expect(
+      createNFLReward({ nflWeekScope: { kind: "single_week", season: 2026, week: 4 } }),
+    ).rejects.toThrow(NFL_SINGLE_WEEK_INVALID_MESSAGE);
+
+    mocks.listNFLWeeks.mockResolvedValue(
+      NFL_WEEKS.map((week) => (week.weekNumber === 4 ? { ...week, gamesCount: 0 } : week)),
+    );
+    await expect(
+      createNFLReward({ nflWeekScope: { kind: "single_week", season: 2026, week: 4 } }),
+    ).rejects.toThrow(NFL_SINGLE_WEEK_INVALID_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("refuses a picks target above the week's game count (D3), using the server's count", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(
+      NFL_WEEKS.map((week) => (week.weekNumber === 4 ? { ...week, gamesCount: 14 } : week)),
+    );
+    await expect(
+      createNFLReward({
+        winCondition: "points_threshold",
+        threshold: 15,
+        winnerQuota: 1,
+        nflWeekScope: { kind: "single_week", season: 2026, week: 4 },
+      }),
+    ).rejects.toThrow(nflSingleWeekThresholdTooHighMessage(4, 14));
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+
+    // Exactly the game count is reachable, so it is allowed.
+    await createNFLReward({
+      winCondition: "points_threshold",
+      threshold: 14,
+      winnerQuota: 1,
+      nflWeekScope: { kind: "single_week", season: 2026, week: 4 },
+    });
+    expect(mocks.createChallengeCampaign).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses a most-picks quantity above 1 instead of clamping it", async () => {
+    await expect(
+      createNFLReward({ winnerQuota: 2, nflWeekScope: { kind: "single_week", season: 2026, week: 4 } }),
+    ).rejects.toThrow(NFL_WEEK_WINNER_QUANTITY_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("ignores client-sent dates or extra fields on the scope", async () => {
+    const forged = {
+      kind: "single_week",
+      season: 2026,
+      week: 4,
+      startDate: "2026-07-02",
+      endDate: "2026-12-31",
+    } as unknown as NFLRewardWeekScope;
+    await createNFLReward({ nflWeekScope: forged });
+    const input = mocks.createChallengeCampaign.mock.calls[0][0];
+    expect(input.nflWeekScope).toEqual({ kind: "single_week", season: 2026, week: 4 });
+    expect(input.startDate).toBe("2026-07-23");
+    expect(input.endDate).toBe("2026-07-29");
   });
 });
 

@@ -13,6 +13,9 @@ import {
   NFL_SEASON_DATES_REQUIRED_MESSAGE,
   NFL_WEEK_SCOPE_INVALID_MESSAGE,
   NFL_WEEK_WINNER_QUANTITY_MESSAGE,
+  nflSingleWeekThresholdTooHighMessage,
+  buildNFLSelectableWeeks,
+  formatNFLSelectableWeekLabel,
   deriveNFLWeekScopeTerms,
   describeNFLWeekScope,
   resolveNFLRewardStartDate,
@@ -21,19 +24,24 @@ import {
   normalizeNFLWeekScope,
   serializeNFLWeekScope,
   type NFLRewardWeekScope,
+  type NFLSelectableWeekSource,
 } from "@/lib/nflPickEmRewardWeeks";
 import { REWARD_MAX_QUANTITY, quantityOutOfRangeMessage } from "@/lib/rewardTerms";
 
 const WEEKLY: NFLRewardWeekScope = { kind: "weekly", season: 2026 };
 const SEASON: NFLRewardWeekScope = { kind: "season", season: 2026, fromWeek: 7 };
 
+const SINGLE: NFLRewardWeekScope = { kind: "single_week", season: 2026, week: 9 };
+const SINGLE_DATES = { startDate: "2026-11-05", endDate: "2026-11-11" };
+
 const SEASON_DATES = { startDate: "2026-10-15", endDate: "2027-01-06" };
 
 describe("normalizeNFLWeekScope", () => {
-  it("accepts exactly the two supported shapes", () => {
+  it("accepts exactly the three supported shapes", () => {
     expect(normalizeNFLWeekScope(WEEKLY)).toEqual(WEEKLY);
     expect(normalizeNFLWeekScope(SEASON)).toEqual(SEASON);
-    expect([...NFL_REWARD_WEEK_SCOPE_KINDS]).toEqual(["weekly", "season"]);
+    expect([...NFL_REWARD_WEEK_SCOPE_KINDS]).toEqual(["weekly", "season", "single_week"]);
+    expect(normalizeNFLWeekScope(SINGLE)).toEqual(SINGLE);
     expect(isNFLRewardWeekScopeKind("weekly")).toBe(true);
     expect(isNFLRewardWeekScopeKind("range")).toBe(false);
   });
@@ -51,11 +59,16 @@ describe("normalizeNFLWeekScope", () => {
     expect(normalizeNFLWeekScope({ kind: "season", season: 2026 })).toBeNull();
     expect(normalizeNFLWeekScope({ kind: "season", season: 2026, fromWeek: 0 })).toBeNull();
     expect(normalizeNFLWeekScope({ kind: "season", season: 2026, fromWeek: 99 })).toBeNull();
+    expect(normalizeNFLWeekScope({ kind: "single_week", season: 2026 })).toBeNull();
+    expect(normalizeNFLWeekScope({ kind: "single_week", season: 2026, week: 0 })).toBeNull();
+    expect(normalizeNFLWeekScope({ kind: "single_week", season: 2026, week: 31 })).toBeNull();
+    expect(normalizeNFLWeekScope({ kind: "single_week", season: 2026, week: 9.5 })).toBeNull();
   });
 
   it("round-trips both valid shapes through serialize(normalize(x))", () => {
     expect(serializeNFLWeekScope(normalizeNFLWeekScope(WEEKLY))).toEqual(WEEKLY);
     expect(serializeNFLWeekScope(normalizeNFLWeekScope(SEASON))).toEqual(SEASON);
+    expect(serializeNFLWeekScope(normalizeNFLWeekScope(SINGLE))).toEqual(SINGLE);
     expect(serializeNFLWeekScope(null)).toBeNull();
   });
 
@@ -68,13 +81,19 @@ describe("normalizeNFLWeekScope", () => {
       { kind: "range", season: 2026, fromWeek: 12, toWeek: 16 },
       WEEKLY,
       SEASON,
+      SINGLE,
+      { kind: "single_week", season: 2026, week: 9, toWeek: 12 },
     ];
     for (const input of inputs) {
       const scope = normalizeNFLWeekScope(input);
       if (!scope) continue;
       const keys = Object.keys(scope).sort();
       expect(keys).toEqual(
-        scope.kind === "weekly" ? ["kind", "season"] : ["fromWeek", "kind", "season"],
+        scope.kind === "weekly"
+          ? ["kind", "season"]
+          : scope.kind === "season"
+            ? ["fromWeek", "kind", "season"]
+            : ["kind", "season", "week"],
       );
     }
   });
@@ -189,6 +208,72 @@ describe("deriveNFLWeekScopeTerms", () => {
         quantity: 1,
       }),
     ).toEqual({ ok: false, message: NFL_WEEK_SCOPE_INVALID_MESSAGE });
+  });
+});
+
+describe("deriveNFLWeekScopeTerms — single_week", () => {
+  it("is a one-off cycle bounded by the week's own dates, Thursday first", () => {
+    const result = deriveNFLWeekScopeTerms(SINGLE, { winCondition: "game_winner", quantity: 1, ...SINGLE_DATES });
+    expect(result).toEqual({
+      ok: true,
+      terms: {
+        cadence: "none",
+        activeDays: [...NFL_REWARD_ACTIVE_DAYS],
+        quota: 1,
+        ...SINGLE_DATES,
+      },
+    });
+    expect(NFL_REWARD_ACTIVE_DAYS[0]).toBe("thu");
+  });
+
+  it("refuses a most-picks quantity above 1 and missing/invalid dates", () => {
+    expect(deriveNFLWeekScopeTerms(SINGLE, { winCondition: "game_winner", quantity: 2, ...SINGLE_DATES })).toEqual({
+      ok: false,
+      message: NFL_WEEK_WINNER_QUANTITY_MESSAGE,
+    });
+    expect(deriveNFLWeekScopeTerms(SINGLE, { winCondition: "game_winner", quantity: 1 })).toEqual({
+      ok: false,
+      message: NFL_SEASON_DATES_REQUIRED_MESSAGE,
+    });
+    expect(
+      deriveNFLWeekScopeTerms(SINGLE, { winCondition: "game_winner", quantity: 1, startDate: "2026-11-11", endDate: "2026-11-05" }),
+    ).toEqual({ ok: false, message: NFL_SEASON_DATES_REQUIRED_MESSAGE });
+  });
+
+  it("keeps a picks target's quantity and refuses a threshold above the week's game count (D3)", () => {
+    const base = { winCondition: "points_threshold" as const, quantity: 3, ...SINGLE_DATES, gamesCount: 14 };
+    const ok = deriveNFLWeekScopeTerms(SINGLE, { ...base, threshold: 14 });
+    expect(ok.ok && ok.terms.quota).toBe(3);
+    expect(deriveNFLWeekScopeTerms(SINGLE, { ...base, threshold: 15 })).toEqual({
+      ok: false,
+      message: nflSingleWeekThresholdTooHighMessage(9, 14),
+    });
+    expect(nflSingleWeekThresholdTooHighMessage(9, 14)).toBe(
+      "Week 9 has 14 games, so pick a target of 14 or fewer.",
+    );
+    // The cap applies to single_week only: a season reward ignores gamesCount.
+    expect(
+      deriveNFLWeekScopeTerms(SEASON, { ...base, ...SEASON_DATES, threshold: 99 }).ok,
+    ).toBe(true);
+  });
+});
+
+describe("single_week start date and copy", () => {
+  it("starts on the campaign's own startDate with NO season-first fallback", () => {
+    const dates = { campaignStartDate: "2026-11-05", seasonFirstWeekStartDate: "2026-09-10" };
+    expect(resolveNFLRewardStartDate(SINGLE, dates)).toBe("2026-11-05");
+    expect(resolveNFLRewardStartDate(SINGLE, { seasonFirstWeekStartDate: "2026-09-10" })).toBeNull();
+    expect(nflRewardUpcomingStartDate(SINGLE, dates, new Date("2026-11-02T15:00:00Z"))).toBe("2026-11-05");
+    expect(nflRewardUpcomingStartDate(SINGLE, dates, new Date("2026-11-05T15:00:00Z"))).toBeNull();
+  });
+
+  it("reads back both win conditions and keeps the 3-picker line", () => {
+    const most = describeNFLWeekScope(SINGLE, "game_winner", { quantity: 1, threshold: 1 });
+    expect(most).toContain("Week 9");
+    expect(most).toContain("fewer than 3 players");
+    expect(describeNFLWeekScope(SINGLE, "points_threshold", { quantity: 2, threshold: 8 })).toBe(
+      "In Week 9, the first 2 guests to get 8 NFL picks right win this reward.",
+    );
   });
 });
 
@@ -312,5 +397,129 @@ describe("nflRewardUpcomingStartDate", () => {
     expect(nflRewardUpcomingStartDate(null, dates, TUESDAY_MID_SEASON)).toBeNull();
     expect(nflRewardUpcomingStartDate(WEEKLY, { seasonFirstWeekStartDate: null }, TUESDAY_MID_SEASON)).toBeNull();
     expect(nflRewardUpcomingStartDate(WEEKLY, dates, new Date("nope"))).toBeNull();
+  });
+});
+
+// ── Single week: which weeks a partner may pick (Phase 2, decisions D1/D2) ──
+// Fixtures copy production's real 2026 rows (read 2026-10-12): first kickoffs
+// are stored as UTC instants, and Weeks 1 and 12 open on a WEDNESDAY evening
+// Eastern, before their Thursday week_start_date.
+const sourceWeek = (overrides: Partial<NFLSelectableWeekSource> = {}): NFLSelectableWeekSource => ({
+  weekNumber: 6,
+  weekType: "regular",
+  displayLabel: null,
+  weekStartDate: "2026-10-15",
+  weekEndDate: "2026-10-19",
+  thursdayKickoff: "2026-10-16T00:15:00+00:00",
+  gamesCount: 14,
+  ...overrides,
+});
+
+describe("buildNFLSelectableWeeks", () => {
+  // Thu 2026-10-15, 8:14 PM Eastern — one minute before Week 6's first kickoff.
+  const BEFORE_KICKOFF = new Date("2026-10-16T00:14:00.000Z");
+  const AT_KICKOFF = new Date("2026-10-16T00:15:00.000Z");
+
+  it("offers a week until its first game kicks off, and not a moment after (D1)", () => {
+    const weeks = [sourceWeek()];
+    expect(buildNFLSelectableWeeks(weeks, BEFORE_KICKOFF)).toEqual([
+      {
+        weekNumber: 6,
+        weekStartDate: "2026-10-15",
+        weekEndDate: "2026-10-19",
+        label: "Week 6 · Oct 15 – Oct 19",
+        gamesCount: 14,
+      },
+    ]);
+    // A "most picks" reward created after kickoff would silently never pay
+    // (campaignWasLiveForContest), so the week must disappear exactly then.
+    expect(buildNFLSelectableWeeks(weeks, AT_KICKOFF)).toEqual([]);
+  });
+
+  it("closes a week whose stored kickoff is on a UTC Thursday at the start of its Tue 05:00 UTC span", () => {
+    // Week 12 (real row): starts Thu Nov 26, stored kickoff Wed Nov 25 8 PM Eastern
+    // = Thu 01:00 UTC. The sync stores the earliest UTC-THURSDAY game when there is
+    // one, so an earlier Tue/Wed UTC game (a Wednesday-afternoon holiday game)
+    // would be invisible here — while the resolver measures from the true first
+    // game. Close at the week's span start instead: Tue Nov 24 05:00 UTC.
+    const week12 = sourceWeek({
+      weekNumber: 12,
+      weekStartDate: "2026-11-26",
+      weekEndDate: "2026-11-30",
+      thursdayKickoff: "2026-11-26T01:00:00+00:00",
+      gamesCount: 16,
+    });
+    expect(buildNFLSelectableWeeks([week12], new Date("2026-11-24T04:59:00.000Z"))).toHaveLength(1);
+    expect(buildNFLSelectableWeeks([week12], new Date("2026-11-24T05:00:00.000Z"))).toEqual([]);
+    expect(buildNFLSelectableWeeks([week12], new Date("2026-11-25T18:00:00.000Z"))).toEqual([]);
+  });
+
+  it("trusts a stored kickoff on any other UTC day as the week's true first game", () => {
+    // No UTC-Thursday game → the sync stored the earliest game overall, e.g. a
+    // Christmas-Wednesday afternoon game (Wed 18:00 UTC).
+    const christmasWeek = sourceWeek({
+      weekNumber: 17,
+      weekStartDate: "2026-12-24",
+      weekEndDate: "2026-12-28",
+      thursdayKickoff: "2026-12-23T18:00:00+00:00",
+    });
+    expect(buildNFLSelectableWeeks([christmasWeek], new Date("2026-12-23T17:59:00.000Z"))).toHaveLength(1);
+    expect(buildNFLSelectableWeeks([christmasWeek], new Date("2026-12-23T18:00:00.000Z"))).toEqual([]);
+  });
+
+  it("falls back to the Eastern calendar when the first kickoff is unknown", () => {
+    const unknownKickoff = [sourceWeek({ thursdayKickoff: null })];
+    // Wed Oct 14, 11:30 PM Eastern (already Thursday in UTC): still selectable.
+    expect(buildNFLSelectableWeeks(unknownKickoff, new Date("2026-10-15T03:30:00.000Z"))).toHaveLength(1);
+    // Thu Oct 15, 12:30 AM Eastern: the week has begun — fail closed.
+    expect(buildNFLSelectableWeeks(unknownKickoff, new Date("2026-10-15T04:30:00.000Z"))).toEqual([]);
+    // An unparseable kickoff is treated as unknown, not as "never kicks off".
+    expect(
+      buildNFLSelectableWeeks([sourceWeek({ thursdayKickoff: "soon" })], new Date("2026-10-15T04:30:00.000Z")),
+    ).toEqual([]);
+  });
+
+  it("offers regular-season and postseason weeks only — never preseason, never an unknown type (D2)", () => {
+    const now = new Date("2026-08-01T12:00:00.000Z");
+    const weeks = [
+      sourceWeek({ weekNumber: 1, weekType: "preseason", displayLabel: "Preseason Week 1" }),
+      sourceWeek({ weekNumber: 6, weekType: "regular" }),
+      sourceWeek({ weekNumber: 19, weekType: "postseason", displayLabel: "Wild Card" }),
+      sourceWeek({ weekNumber: 20, weekType: "exhibition" }),
+    ];
+    expect(buildNFLSelectableWeeks(weeks, now).map((week) => week.weekNumber)).toEqual([6, 19]);
+  });
+
+  it("drops a week with no games synced or with unusable dates", () => {
+    const now = new Date("2026-08-01T12:00:00.000Z");
+    const weeks = [
+      sourceWeek({ weekNumber: 6, gamesCount: 0 }),
+      sourceWeek({ weekNumber: 7, weekStartDate: "2026-02-31" }),
+      sourceWeek({ weekNumber: 8, weekStartDate: "2026-10-20", weekEndDate: "2026-10-19" }),
+      sourceWeek({ weekNumber: 0 }),
+      sourceWeek({ weekNumber: 9 }),
+    ];
+    expect(buildNFLSelectableWeeks(weeks, now).map((week) => week.weekNumber)).toEqual([9]);
+  });
+
+  it("returns weeks in week order, and nothing for an invalid clock", () => {
+    const now = new Date("2026-08-01T12:00:00.000Z");
+    const weeks = [sourceWeek({ weekNumber: 9 }), sourceWeek({ weekNumber: 7 }), sourceWeek({ weekNumber: 8 })];
+    expect(buildNFLSelectableWeeks(weeks, now).map((week) => week.weekNumber)).toEqual([7, 8, 9]);
+    expect(buildNFLSelectableWeeks(weeks, new Date("nope"))).toEqual([]);
+  });
+});
+
+describe("formatNFLSelectableWeekLabel", () => {
+  it("reads 'Week N · Mon D – Mon D', across a month boundary, without shifting the day", () => {
+    expect(
+      formatNFLSelectableWeekLabel({ weekNumber: 8, displayLabel: null, weekStartDate: "2026-10-29", weekEndDate: "2026-11-02" }),
+    ).toBe("Week 8 · Oct 29 – Nov 2");
+  });
+
+  it("keeps a stored display label (postseason rounds)", () => {
+    expect(
+      formatNFLSelectableWeekLabel({ weekNumber: 19, displayLabel: "Wild Card", weekStartDate: "2027-01-14", weekEndDate: "2027-01-18" }),
+    ).toBe("Wild Card · Jan 14 – Jan 18");
   });
 });

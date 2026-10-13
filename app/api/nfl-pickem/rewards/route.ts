@@ -5,7 +5,11 @@ import {
   listChallengeCycleWinners,
 } from "@/lib/challengeCampaigns";
 import { getNFLPickEmLeaderboard, getNFLWeekById } from "@/lib/nflPickEm";
-import { NFL_PICKEM_REWARD_DEFINITION_ID, nflWinnerCycleStart } from "@/lib/nflPickEmWinnerRewards";
+import {
+  NFL_PICKEM_REWARD_DEFINITION_ID,
+  nflRewardAppliesToWeek,
+  nflWinnerCycleStart,
+} from "@/lib/nflPickEmWinnerRewards";
 import { resolveRequestUserId } from "@/lib/serverSession";
 import { getVenueTimezone } from "@/lib/timezone";
 import type { ChallengeCampaign } from "@/types";
@@ -72,35 +76,44 @@ export async function GET(request: Request) {
             campaign.winCondition === "game_winner" &&
             Boolean(campaign.nflWeekScope)
         );
-        hasActiveGameWinnerReward = gameWinnerCampaigns.some((campaign) => campaign.isActive);
+        // Drives the leaderboard's "no winner this week" note, so a single-week
+        // reward only counts on its own week.
+        hasActiveGameWinnerReward = gameWinnerCampaigns.some(
+          (campaign) => campaign.isActive && nflRewardAppliesToWeek(campaign, week)
+        );
 
         // This is a hot read path (both the reward banner and the leaderboard
         // re-poll it on every week switch), so fan the per-campaign winner reads
         // out in parallel rather than stacking a round-trip per campaign.
+        // A single-week reward's one cycle key matches EVERY week (it is
+        // non-recurring), so it is only asked about its own week — else its
+        // Week 9 winner would be marked on every week's leaderboard.
         const resolved = await Promise.all(
-          gameWinnerCampaigns.map(async (campaign): Promise<NFLRewardWinner | null> => {
-            const cycleStartMs = nflWinnerCycleStart(campaign, week, timezone).getTime();
-            const cycleWinners = await listChallengeCycleWinners(campaign.id);
-            // String equality on a Postgres-returned timestamptz can't be trusted
-            // to match a freshly-formatted toISOString() — compare parsed instants.
-            const match = cycleWinners.find((winner) => Date.parse(winner.cycleStart) === cycleStartMs);
-            // A winner who deleted their account keeps the slot but has no name to show.
-            if (!match?.winnerUserId) {
-              return null;
-            }
-            return {
-              campaignId: campaign.id,
-              campaignName: campaign.name,
-              winnerUserId: match.winnerUserId,
-              winnerUsername: match.winnerUsername,
-              prizeKind: campaign.prizeKind,
-              prizeMenuItem: campaign.prizeMenuItem,
-              prizeMenuItemName: campaign.prizeMenuItemName,
-              prizeDiscountKind: campaign.prizeDiscountKind,
-              prizeDiscountValue: campaign.prizeDiscountValue,
-              prizeGiftCertificateAmount: campaign.prizeGiftCertificateAmount,
-            };
-          })
+          gameWinnerCampaigns
+            .filter((campaign) => nflRewardAppliesToWeek(campaign, week))
+            .map(async (campaign): Promise<NFLRewardWinner | null> => {
+              const cycleStartMs = nflWinnerCycleStart(campaign, week, timezone).getTime();
+              const cycleWinners = await listChallengeCycleWinners(campaign.id);
+              // String equality on a Postgres-returned timestamptz can't be trusted
+              // to match a freshly-formatted toISOString() — compare parsed instants.
+              const match = cycleWinners.find((winner) => Date.parse(winner.cycleStart) === cycleStartMs);
+              // A winner who deleted their account keeps the slot but has no name to show.
+              if (!match?.winnerUserId) {
+                return null;
+              }
+              return {
+                campaignId: campaign.id,
+                campaignName: campaign.name,
+                winnerUserId: match.winnerUserId,
+                winnerUsername: match.winnerUsername,
+                prizeKind: campaign.prizeKind,
+                prizeMenuItem: campaign.prizeMenuItem,
+                prizeMenuItemName: campaign.prizeMenuItemName,
+                prizeDiscountKind: campaign.prizeDiscountKind,
+                prizeDiscountValue: campaign.prizeDiscountValue,
+                prizeGiftCertificateAmount: campaign.prizeGiftCertificateAmount,
+              };
+            })
         );
         winners.push(...resolved.filter((entry): entry is NFLRewardWinner => entry !== null));
       }

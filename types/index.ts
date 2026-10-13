@@ -240,7 +240,8 @@ export type ChallengeGameWinnerSlot = { scheduleId: string; weekday: string };
  */
 export type NFLWeekScope =
   | { kind: "weekly"; season: number }
-  | { kind: "season"; season: number; fromWeek: number };
+  | { kind: "season"; season: number; fromWeek: number }
+  | { kind: "single_week"; season: number; week: number };
 export type ChallengeLeaderboardTiebreaker = "first_to_score" | "latest_activity";
 export interface ChallengeLeaderboardEntry {
   rank: number;

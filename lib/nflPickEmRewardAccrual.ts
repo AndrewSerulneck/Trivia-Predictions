@@ -1,8 +1,9 @@
 import "server-only";
 
-import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
-import { NFL_PICKEM_SPORT_SLUG } from "@/lib/nflPickEm";
+import { applyChallengeCampaignPoints, type CampaignAccrualWindow } from "@/lib/challengeCampaigns";
+import { NFL_PICKEM_SPORT_SLUG, nflWeekSpanMs } from "@/lib/nflPickEm";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { ChallengeCampaign } from "@/types";
 
 /**
  * NFL Pick 'Em → challenge-campaign accrual (Phase 6).
@@ -29,7 +30,37 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
  * `computeCycleStart` places the accrual in the right weekly cycle (anchored
  * Thursday via activeDays[0]), and a season reward's startDate/endDate bound it.
  * All this sweep owes the engine is an accurate `occurredAt`.
+ *
+ * ONE exception: a single-week reward (docs/nfl-pickem-single-week-reward-plan.md).
+ * Its stored dates are the week's Thu→Mon calendar days, and the engine's
+ * single-day path has no start bound and ends at Monday 23:59 UTC — so on dates
+ * alone it would count picks from EARLIER weeks and drop Monday Night Football.
+ * The sweep hands the engine that reward's exact window instead (see
+ * nflSingleWeekAccrualWindow).
  */
+
+/**
+ * A single-week NFL reward's exact accrual window: its week's shared
+ * Tue 05:00 UTC → Tue 05:00 UTC span (nflWeekSpanMs) — the very span the
+ * leaderboard and the "most picks" resolver read, so both win conditions count
+ * the same picks (MNF in, the weeks either side out). Derived from the
+ * campaign's own startDate (that week's week_start_date, written at creation),
+ * so no read. null = not a single-week reward: the normal date gates apply.
+ * A missing/malformed startDate yields NaN bounds, which the engine treats as
+ * "never eligible" — fail closed rather than fall back to the leaky dates.
+ */
+export const nflSingleWeekAccrualWindow = (
+  campaign: Pick<ChallengeCampaign, "nflWeekScope" | "startDate">,
+): CampaignAccrualWindow | null => {
+  // The RAW kind, not the strict normalizer: the engine loads scopes through a
+  // looser round-trip (lib/challengeCampaigns.ts), so a stored single_week with
+  // an out-of-range week must still get a window (fail closed), never the leaky
+  // date gates.
+  if (campaign.nflWeekScope?.kind !== "single_week") return null;
+  const startDate = String(campaign.startDate ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return { startMs: Number.NaN, endMsExclusive: Number.NaN };
+  return nflWeekSpanMs({ weekStartDate: startDate });
+};
 
 /**
  * Sweep ceiling, matching settlePendingPickEmPicks' own 500-row page. Oldest
@@ -175,6 +206,7 @@ export async function accrueNFLPickEmChallengePoints(): Promise<NFLPickEmAccrual
         // A partner creating a reward mid-week must not instantly award guests
         // for games that finished before the reward existed.
         requireCampaignCreatedBeforeOccurrence: true,
+        accrualWindowFor: nflSingleWeekAccrualWindow,
       });
       report.groupsAccrued += 1;
       report.picksAccrued += group.pickIds.length;

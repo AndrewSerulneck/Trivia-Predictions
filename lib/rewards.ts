@@ -35,8 +35,10 @@ import {
   type RewardGameSlot,
 } from "@/lib/rewardGameSlots";
 import {
+  NFL_SINGLE_WEEK_INVALID_MESSAGE,
   NFL_WEEK_SCOPE_INVALID_MESSAGE,
   REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
+  buildNFLSelectableWeeks,
   deriveNFLWeekScopeTerms,
   normalizeNFLWeekScope,
   nflRewardUpcomingStartDate,
@@ -303,6 +305,9 @@ async function resolveNFLSeasonContext(now: Date): Promise<NFLRewardSeasonContex
     seasonFirstWeekStartDate: seasonFirstWeekStartDate(weeks),
     seasonEndDate,
     weeksRemaining: remaining.length,
+    // From the SAME rows — no extra read. createReward re-derives this list
+    // fresh and only accepts a single_week scope whose week is on it.
+    selectableWeeks: buildNFLSelectableWeeks(weeks, now),
   };
 }
 
@@ -615,8 +620,8 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
  * venues.timezone read (getVenueTimezone, cached 10 minutes); only when a Live
  * Trivia game-winner coupon has pinned slots, ONE trivia_schedules read for all
  * their schedules; and only for weekly NFL coupons, one nfl_pickem_weeks read
- * per distinct season to turn the cycle start into a week number. No per-coupon
- * queries.
+ * per distinct season to turn the cycle start into a week number (a single-week
+ * coupon's week is in its scope, so it needs none). No per-coupon queries.
  */
 export async function attachRewardWinDescriptions<T extends ChallengeCampaignWin>(
   wins: T[],
@@ -670,11 +675,15 @@ export async function attachRewardWinDescriptions<T extends ChallengeCampaignWin
     if (!terms || !describable(win)) return { ...win, winDescription: null };
 
     // A weekly NFL cycle starts on its week's first day in the venue's zone
-    // (nflWinnerCycleStart), so the week is the one whose dates contain it.
+    // (nflWinnerCycleStart), so the week is the one whose dates contain it. A
+    // single-week reward names its week outright — and must, because its
+    // picks-target coupons carry the one-off epoch cycle_start, not a date.
     let nflWeekNumber: number | null = null;
     const scope = normalizeNFLWeekScope(terms.nflWeekScope);
     const cycleMs = Date.parse(String(win.cycleStart ?? ""));
-    if (scope?.kind === "weekly" && Number.isFinite(cycleMs) && cycleMs > 0) {
+    if (scope?.kind === "single_week") {
+      nflWeekNumber = scope.week;
+    } else if (scope?.kind === "weekly" && Number.isFinite(cycleMs) && cycleMs > 0) {
       const day = getLocalDateKey(new Date(cycleMs), timezone || NFL_SEASON_TIMEZONE);
       nflWeekNumber =
         weeksBySeason.get(scope.season)?.find((week) => week.weekStartDate <= day && day <= week.weekEndDate)
@@ -985,11 +994,13 @@ export type CreateRewardParams = {
    */
   gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
   /**
-   * NFL Pick 'Em rewards: whether the reward runs every NFL week or once for the
-   * rest of the season. Like `gameWinnerSlots`, it REPLACES `cadence` (and, for a
-   * week winner, `winnerQuota`). Only its `kind` is honored — the season and
-   * `fromWeek` are re-derived from the server's own reading of nfl_pickem_weeks,
-   * so a client can't backdate the reward over weeks that already played.
+   * NFL Pick 'Em rewards: whether the reward runs every NFL week, once for the
+   * rest of the season, or for one chosen week. Like `gameWinnerSlots`, it
+   * REPLACES `cadence` (and, for a week winner, `winnerQuota`). Only its `kind`
+   * is honored — plus a single week's `week`, which must be on the server's own
+   * selectableWeeks list — the season, `fromWeek` and every date are re-derived
+   * from the server's own reading of nfl_pickem_weeks, so a client can't backdate
+   * the reward over weeks that already played.
    */
   nflWeekScope?: NFLRewardWeekScope | null;
   /** Stamp the creating owner (null/absent = admin-created). */
@@ -1055,7 +1066,8 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
 
   // ── NFL week-scoped rewards ───────────────────────────────────────────────
   // The scope IS the terms, the same way a slot selection is above. The client
-  // picks only the SHAPE ("every week" vs "the rest of the season"); the season
+  // picks only the SHAPE ("every week", "the rest of the season" or "one week" —
+  // plus, for the last, WHICH week, checked against the server's list); the season
   // and the starting week are re-read from context.nflSeason, because a
   // client-supplied fromWeek in the past would let a partner backdate a reward
   // over already-played weeks and mint prizes for contests nobody knew were
@@ -1070,16 +1082,37 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     const season = context.nflSeason;
     if (!season) throw new Error(REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE);
 
-    nflWeekScope =
-      requested.kind === "weekly"
-        ? { kind: "weekly", season: season.season }
-        : { kind: "season", season: season.season, fromWeek: season.fromWeek };
+    let weekDates: { startDate: string; endDate: string; gamesCount: number | null };
+    if (requested.kind === "single_week") {
+      // The one scope where the client's week number IS honored — but only as a
+      // pick from the server's own fresh list (D1/D2): a stale tab, a week that
+      // has kicked off, a preseason week or another season's week is refused, not
+      // re-pointed. The dates and game count come from the server's row; the
+      // client never supplies them.
+      const chosen =
+        requested.season === season.season
+          ? season.selectableWeeks?.find((week) => week.weekNumber === requested.week)
+          : undefined;
+      if (!chosen) throw new RewardTermsError(NFL_SINGLE_WEEK_INVALID_MESSAGE);
+      nflWeekScope = { kind: "single_week", season: season.season, week: chosen.weekNumber };
+      weekDates = { startDate: chosen.weekStartDate, endDate: chosen.weekEndDate, gamesCount: chosen.gamesCount };
+    } else {
+      nflWeekScope =
+        requested.kind === "weekly"
+          ? { kind: "weekly", season: season.season }
+          : { kind: "season", season: season.season, fromWeek: season.fromWeek };
+      weekDates = { startDate: season.fromWeekStartDate, endDate: season.seasonEndDate, gamesCount: null };
+    }
 
     const derived = deriveNFLWeekScopeTerms(nflWeekScope, {
       winCondition,
       quantity: Math.round(Number(params.winnerQuota)),
-      startDate: season.fromWeekStartDate,
-      endDate: season.seasonEndDate,
+      startDate: weekDates.startDate,
+      endDate: weekDates.endDate,
+      // D3: a single week's picks target can't exceed its games. Ignored for the
+      // other scopes (gamesCount null) and for a most-picks reward.
+      gamesCount: weekDates.gamesCount,
+      threshold: winCondition === "game_winner" ? null : Math.round(Number(params.threshold)),
     });
     if (!derived.ok) throw new RewardTermsError(derived.message);
     nflTerms = derived.terms;
@@ -1192,7 +1225,8 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     // week; one-off rewards need no day restriction.
     activeDays,
     winnerQuota,
-    // A season-long NFL reward needs real bounds: with recurringType "none" and
+    // A season-long or single-week NFL reward needs real bounds (a single week's
+    // are that week's stored Thu→Mon dates): with recurringType "none" and
     // no startDate, computeCycleStart returns the epoch sentinel and
     // getCampaignCloseTimestampMs returns null — the reward would never close and
     // never award. A weekly scope leaves both null so the weekly cycle math owns

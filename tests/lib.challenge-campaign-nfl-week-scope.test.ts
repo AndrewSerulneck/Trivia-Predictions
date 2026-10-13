@@ -160,4 +160,19 @@ describe("challenge_campaigns.nfl_week_scope round trip", () => {
     const listed = await listChallengeCampaigns({ includeInactive: true, includeResolved: true });
     expect(listed[0].nflWeekScope).toBeNull();
   });
+
+  it("round-trips a single-week scope with its week number", async () => {
+    const nflWeekScope: NFLWeekScope = { kind: "single_week", season: 2026, week: 9 };
+
+    const created = await createChallengeCampaign({
+      name: "NFL Pick 'Em Week 9",
+      rules: "Get the most correct picks in Week 9.",
+      gameTypes: ["nfl-pickem"],
+      nflWeekScope,
+    });
+    expect(created.nflWeekScope).toEqual(nflWeekScope);
+
+    const listed = await listChallengeCampaigns({ includeInactive: true, includeResolved: true });
+    expect(listed[0].nflWeekScope).toEqual(nflWeekScope);
+  });
 });

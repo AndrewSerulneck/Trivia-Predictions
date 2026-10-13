@@ -72,7 +72,7 @@ export const PARTNER_MANUAL: {
     },
     {
       heading: "Offer Rewards",
-      body: "Incentivize guests to visit by offering rewards for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Offer Rewards on your dashboard to get started.",
+      body: "Incentivize guests to visit by offering rewards for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. NFL Pick 'Em rewards can run every week, all season, or for a single NFL week you choose. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Offer Rewards on your dashboard to get started.",
     },
     {
       heading: "Point of Sale (Square)",

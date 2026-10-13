@@ -296,11 +296,41 @@ function isNFLWeekWinnerCampaign(campaign: ChallengeCampaign): boolean {
   );
 }
 
+/**
+ * Is this NFL reward a single contest — spent once it has a winner — rather than
+ * one that resolves again every week? Season and single-week scopes both are.
+ */
+export function isOneOffNFLReward(campaign: Pick<ChallengeCampaign, "nflWeekScope">): boolean {
+  const kind = campaign.nflWeekScope?.kind;
+  return kind === "season" || kind === "single_week";
+}
+
+/**
+ * Could this reward have a winner on this week's leaderboard? A single-week
+ * reward belongs to its own week only. Every other scope answers true, as
+ * before: the caller's cycle-key match does the rest (a season reward's one
+ * cycle key matches every week it is asked about — unchanged behavior).
+ */
+export function nflRewardAppliesToWeek(
+  campaign: Pick<ChallengeCampaign, "nflWeekScope">,
+  week: Pick<NFLWeek, "season" | "weekNumber">,
+): boolean {
+  const scope = campaign.nflWeekScope;
+  if (scope?.kind !== "single_week") return true;
+  return scope.season === week.season && scope.week === week.weekNumber;
+}
+
 /** Does this reward's scope cover this contest? */
 function campaignCoversContest(campaign: ChallengeCampaign, contest: NFLWinnerContest): boolean {
   const scope = campaign.nflWeekScope;
   if (!scope) return false;
   if (scope.season !== contest.season) return false;
+  // A single-week reward is decided by exactly one contest: that week's weekly
+  // one — same standings, same tiebreaker, same 3-picker minimum as "every
+  // week". Never a season contest, never a neighbouring week.
+  if (scope.kind === "single_week") {
+    return contest.kind === "weekly" && nflRewardAppliesToWeek(campaign, contest.week);
+  }
   if (scope.kind !== contest.kind) return false;
   // A season reward can only be decided by a week at or after the one it started
   // from; anything else would be a contest that hadn't begun.
@@ -314,8 +344,9 @@ function campaignCoversContest(campaign: ChallengeCampaign, contest: NFLWinnerCo
  * before the reward existed, and a partner creating a reward on Sunday night
  * must not win it for the week that is about to end.
  *
- * The bar is the DECISIVE week's first kickoff for both scopes. For a weekly
- * contest that is the contest's own start. For a season contest it is stricter
+ * The bar is the DECISIVE week's first kickoff for every scope. For a weekly
+ * contest (and the single-week reward it decides) that is the contest's own
+ * start — which is why the wizard only offers weeks that haven't kicked off. For a season contest it is stricter
  * than "existed sometime during the season" on purpose — a reward created while
  * the final week was already being played was not on offer to the guests who had
  * been picking all season. Conservative in the direction where the failure mode
@@ -327,6 +358,9 @@ function campaignWasLiveForContest(campaign: ChallengeCampaign, contest: NFLWinn
   if (!Number.isFinite(createdAtMs)) return false;
   if (contest.startMs < createdAtMs) return false;
 
+  // Both sides are UTC end-of-day of a stored calendar date — no venue timezone
+  // enters — so a single-week reward (endDate = its week's week_end_date) passes
+  // for its own week at a Pacific venue exactly as at an Eastern one.
   const closeAtMs = getCampaignCloseTimestampMs(campaign);
   if (closeAtMs !== null && contest.endMs > closeAtMs) return false;
 
@@ -517,10 +551,10 @@ export async function resolveNFLPickEmWinnerRewards(
   report.contestsExamined = contests.length;
   if (contests.length === 0) return report;
 
-  // Season-scope rewards spent earlier in THIS sweep. Campaign lists are cached
-  // per venue, so deactivating one in the database does not remove it from the
-  // in-memory list — without this set, two contests in one sweep could both
-  // claim the same one-off reward.
+  // One-off (season / single-week) rewards spent earlier in THIS sweep. Campaign
+  // lists are cached per venue, so deactivating one in the database does not
+  // remove it from the in-memory list — without this set, two contests in one
+  // sweep could both claim the same one-off reward.
   const spentCampaignIds = new Set<string>();
   const campaignsByVenue = new Map<string, ChallengeCampaign[]>();
   const timezoneByVenue = new Map<string, string>();
@@ -671,11 +705,11 @@ export async function resolveNFLPickEmWinnerRewards(
               tiebreakerUnresolved,
             });
 
-            // A season-scope reward is a single contest: once it has a winner it
-            // is spent. A weekly reward stays active and resolves again next
-            // week. Marked spent BEFORE the write so a failed update can't let a
-            // second contest in this sweep award it again.
-            if (contest.kind === "season") {
+            // A season- or single-week reward is a single contest: once it has a
+            // winner it is spent. A weekly reward stays active and resolves again
+            // next week. Marked spent BEFORE the write so a failed update can't
+            // let a second contest in this sweep award it again.
+            if (isOneOffNFLReward(campaign)) {
               spentCampaignIds.add(campaign.id);
               try {
                 await updateChallengeCampaign({

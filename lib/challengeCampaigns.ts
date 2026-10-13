@@ -432,6 +432,11 @@ function normalizeNFLWeekScope(value: unknown): NFLWeekScope | null {
     if (!Number.isFinite(fromWeek)) return null;
     return { kind: "season", season, fromWeek };
   }
+  if (record.kind === "single_week") {
+    const week = Number(record.week);
+    if (!Number.isFinite(week)) return null;
+    return { kind: "single_week", season, week };
+  }
   return null;
 }
 
@@ -885,6 +890,41 @@ function isCampaignEligibleAtTime(campaign: ChallengeCampaign, now: Date, gameTy
     return false;
   }
   return true;
+}
+
+/**
+ * An exact half-open [startMs, endMsExclusive) instant span during which a
+ * campaign accepts points, supplied by a caller that knows the campaign's real
+ * window better than its stored calendar dates do. See
+ * isCampaignEligibleForAccrual.
+ */
+export type CampaignAccrualWindow = { startMs: number; endMsExclusive: number };
+
+/**
+ * May `campaign` accrue points for an event at `occurredAt`?
+ *
+ * Without a `window` this is isCampaignEligibleAtTime, unchanged. With one, the
+ * window REPLACES the date / weekday / time-of-day gates (the activity gates —
+ * active, unresolved, right game type — still apply). It exists for the NFL
+ * single-week reward (lib/nflPickEmRewardAccrual.ts): its stored Thu→Mon dates
+ * would both let earlier weeks' picks in (the single-day path has no start
+ * bound) and shut out Monday Night Football (which kicks off after Monday ends
+ * in UTC, the end bound's zone). A window with a non-finite bound fails closed.
+ * Exported for tests.
+ */
+export function isCampaignEligibleForAccrual(
+  campaign: ChallengeCampaign,
+  occurredAt: Date,
+  gameType: ChallengeGameType,
+  timezone: string,
+  window: CampaignAccrualWindow | null,
+): boolean {
+  if (!window) return isCampaignEligibleAtTime(campaign, occurredAt, gameType, timezone);
+  if (!campaign.isActive || campaign.winnerUserId) return false;
+  if (!campaign.gameTypes.includes(gameType)) return false;
+  if (!Number.isFinite(window.startMs) || !Number.isFinite(window.endMsExclusive)) return false;
+  const atMs = occurredAt.getTime();
+  return atMs >= window.startMs && atMs < window.endMsExclusive;
 }
 
 /**
@@ -2089,6 +2129,12 @@ export async function applyChallengeCampaignPoints(params: {
   basePoints: number;
   occurredAt?: Date;
   requireCampaignCreatedBeforeOccurrence?: boolean;
+  /**
+   * Optional per-campaign exact accrual window (see isCampaignEligibleForAccrual).
+   * Return null to keep a campaign on the normal date gates. Only the NFL
+   * accrual sweep passes this.
+   */
+  accrualWindowFor?: (campaign: ChallengeCampaign) => CampaignAccrualWindow | null;
 }): Promise<{ finalPoints: number; multiplierApplied: number; campaignUpdates: Array<{ challengeId: string; progress: number; won: boolean }> }> {
   assertConfigured();
   const userId = String(params.userId ?? "").trim();
@@ -2107,7 +2153,13 @@ export async function applyChallengeCampaignPoints(params: {
 
   const eligible = campaigns.filter(
     (campaign) =>
-      isCampaignEligibleAtTime(campaign, now, gameType, venueTimezone) &&
+      isCampaignEligibleForAccrual(
+        campaign,
+        now,
+        gameType,
+        venueTimezone,
+        params.accrualWindowFor ? params.accrualWindowFor(campaign) : null,
+      ) &&
       (!params.requireCampaignCreatedBeforeOccurrence || campaignExistedAt(campaign, now))
   );
   if (eligible.length === 0) {

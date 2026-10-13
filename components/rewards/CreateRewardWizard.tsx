@@ -96,6 +96,7 @@ import {
   describeNFLWeekScope,
   nflRewardUpcomingStartDate,
   type NFLRewardSeasonContext,
+  type NFLRewardSelectableWeek,
   type NFLRewardWeekScope,
   type NFLRewardWeekScopeKind,
 } from "@/lib/nflPickEmRewardWeeks";
@@ -274,6 +275,7 @@ type PrizeChoice = "menu_item" | "gift_card";
 const EMPTY_SHAPES: RewardScheduleShape[] = [];
 const EMPTY_GAME_SLOTS: RewardGameSlot[] = [];
 const EMPTY_SCHEDULE_DAYS: string[] = [];
+const EMPTY_SELECTABLE_WEEKS: NFLRewardSelectableWeek[] = [];
 
 export function CreateRewardWizard({
   variant,
@@ -333,6 +335,8 @@ export function CreateRewardWizard({
   // calendar rather than a venue schedule, it offers exactly two shapes — see
   // lib/nflPickEmRewardWeeks.ts.
   const [nflScopeKind, setNflScopeKind] = useState<NFLRewardWeekScopeKind>("weekly");
+  // Which week a "Single week" reward runs. null = the first selectable week.
+  const [nflWeekNumber, setNflWeekNumber] = useState<number | null>(null);
 
   // ── The game picker (Phase 5, flag-gated) ───────────────────────────────────
   // Replaces the period-based sentence for game-winner rewards: the partner
@@ -423,6 +427,20 @@ export function CreateRewardWizard({
 
   const isNFLDefinition = definition?.id === NFL_PICKEM_DEFINITION_ID;
   const nflSeason = context?.nflSeason ?? null;
+  const effectiveThreshold = useMemo(() => {
+    const custom = parseInt(customThreshold, 10);
+    return Number.isFinite(custom) && custom > 0 ? custom : threshold;
+  }, [customThreshold, threshold]);
+
+  // Weeks the server offers for a "Single week" reward (never a started week).
+  const selectableWeeks = nflSeason?.selectableWeeks ?? EMPTY_SELECTABLE_WEEKS;
+  const selectedWeek = useMemo(
+    () => selectableWeeks.find((week) => week.weekNumber === nflWeekNumber) ?? selectableWeeks[0] ?? null,
+    [selectableWeeks, nflWeekNumber],
+  );
+  const isSingleWeek = nflScopeKind === "single_week";
+  // The week's game count, only where it caps a picks target (D3).
+  const singleWeekGames = isSingleWeek && selectedWeek ? selectedWeek.gamesCount : null;
 
   // The partner only ever picks the SHAPE ("weekly" vs "season") — the season
   // number and starting week are read back from the server's own context, never
@@ -430,10 +448,14 @@ export function CreateRewardWizard({
   // prizes for weeks that already played; see lib/rewards.ts).
   const nflScope: NFLRewardWeekScope | null = useMemo(() => {
     if (!isNFLDefinition || !nflSeason) return null;
+    // Only the week NUMBER is sent; the server re-reads the week's dates itself.
+    if (nflScopeKind === "single_week") {
+      return selectedWeek ? { kind: "single_week", season: nflSeason.season, week: selectedWeek.weekNumber } : null;
+    }
     return nflScopeKind === "weekly"
       ? { kind: "weekly", season: nflSeason.season }
       : { kind: "season", season: nflSeason.season, fromWeek: nflSeason.fromWeek };
-  }, [isNFLDefinition, nflSeason, nflScopeKind]);
+  }, [isNFLDefinition, nflSeason, nflScopeKind, selectedWeek]);
 
   // The engine mapping — cadence/quota/activeDays/dates — mirrors what the
   // server re-derives in createReward. Computed here only to gate the "Next"
@@ -445,10 +467,12 @@ export function CreateRewardWizard({
       winCondition,
       // A week winner is always exactly 1 — there's no quantity control to read.
       quantity: isGameWinner ? 1 : quantity,
-      startDate: nflSeason?.fromWeekStartDate ?? null,
-      endDate: nflSeason?.seasonEndDate ?? null,
+      startDate: isSingleWeek ? selectedWeek?.weekStartDate ?? null : nflSeason?.fromWeekStartDate ?? null,
+      endDate: isSingleWeek ? selectedWeek?.weekEndDate ?? null : nflSeason?.seasonEndDate ?? null,
+      gamesCount: isSingleWeek ? selectedWeek?.gamesCount ?? null : null,
+      threshold: effectiveThreshold,
     });
-  }, [isNFLDefinition, nflScope, winCondition, isGameWinner, quantity, nflSeason]);
+  }, [isNFLDefinition, nflScope, winCondition, isGameWinner, quantity, nflSeason, isSingleWeek, selectedWeek, effectiveThreshold]);
 
   // Game picker (Phase 5): flag-gated replacement for the game-winner sentence.
   // Never for NFL — it has no venue-scheduled games to pin to; its own
@@ -560,6 +584,7 @@ export function CreateRewardWizard({
     setCustomThreshold("");
     setWinCondition("points_threshold");
     setNflScopeKind("weekly");
+    setNflWeekNumber(null);
     setContextError(null);
     setNotScheduledError(null);
     setNotScheduledIsNFL(isNFLPick);
@@ -595,11 +620,6 @@ export function CreateRewardWizard({
       setContextLoading(false);
     }
   };
-
-  const effectiveThreshold = useMemo(() => {
-    const custom = parseInt(customThreshold, 10);
-    return Number.isFinite(custom) && custom > 0 ? custom : threshold;
-  }, [customThreshold, threshold]);
 
   const asksPosValue = Boolean(context?.posConnected) && prizeNeedsPosValue(prizeChoice, discountKind);
   // Dollar-off prizes only, for everyone while the POS switch is on (Andrew, 2026-10-06).
@@ -948,7 +968,7 @@ export function CreateRewardWizard({
               {nflSeason ? (
                 <div>
                   <p className={s.label}>How long it runs</p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className={`grid grid-cols-1 gap-2 ${selectableWeeks.length > 0 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
                     <button
                       type="button"
                       onClick={() => setNflScopeKind("weekly")}
@@ -975,7 +995,38 @@ export function CreateRewardWizard({
                         </span>
                       </span>
                     </button>
+                    {selectableWeeks.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setNflScopeKind("single_week")}
+                        className={`${s.optionCard} ${isSingleWeek ? s.optionCardActive : ""}`}
+                      >
+                        <span className="min-w-0">
+                          <span className="block font-black">Single week</span>
+                          <span className={`block ${s.helpText}`}>One contest for the NFL week you choose.</span>
+                        </span>
+                      </button>
+                    ) : null}
                   </div>
+                  {isSingleWeek && selectedWeek ? (
+                    <div className="mt-3">
+                      <label className={s.label} htmlFor="nfl-single-week">
+                        Which week?
+                      </label>
+                      <select
+                        id="nfl-single-week"
+                        value={String(selectedWeek.weekNumber)}
+                        onChange={(e) => setNflWeekNumber(parseInt(e.target.value, 10))}
+                        className={`${s.input}`}
+                      >
+                        {selectableWeeks.map((week) => (
+                          <option key={week.weekNumber} value={week.weekNumber}>
+                            {week.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
 
@@ -983,7 +1034,15 @@ export function CreateRewardWizard({
                 <div>
                   <p className={s.label}>Winners</p>
                   <p className={s.sentence}>
-                    1 winner {nflScopeKind === "weekly" ? "per week" : "for the season"}.
+                    1 winner{" "}
+                    {nflScopeKind === "weekly"
+                      ? "per week"
+                      : nflScopeKind === "season"
+                        ? "for the season"
+                        : selectedWeek
+                          ? `for Week ${selectedWeek.weekNumber}`
+                          : "for that week"}
+                    .
                   </p>
                 </div>
               ) : (
@@ -991,20 +1050,30 @@ export function CreateRewardWizard({
                   <div>
                     <p className={s.label}>Points target</p>
                     <div className="grid grid-cols-4 gap-2">
-                      {definition.thresholdOptions.map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => {
-                            setThreshold(opt);
-                            setCustomThreshold("");
-                          }}
-                          className={`${s.chip} ${!customThreshold && threshold === opt ? s.chipActive : ""}`}
-                        >
-                          {opt.toLocaleString("en-US")}
-                        </button>
-                      ))}
+                      {definition.thresholdOptions.map((opt) => {
+                        const tooHigh = singleWeekGames !== null && opt > singleWeekGames;
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            disabled={tooHigh}
+                            onClick={() => {
+                              setThreshold(opt);
+                              setCustomThreshold("");
+                            }}
+                            className={`${s.chip} ${!customThreshold && threshold === opt ? s.chipActive : ""} disabled:opacity-40`}
+                          >
+                            {opt.toLocaleString("en-US")}
+                          </button>
+                        );
+                      })}
                     </div>
+                    {singleWeekGames !== null && selectedWeek ? (
+                      <p className={`mt-1.5 ${s.helpText}`}>
+                        Week {selectedWeek.weekNumber} has {singleWeekGames} {singleWeekGames === 1 ? "game" : "games"}, so
+                        targets above {singleWeekGames} can&apos;t be reached.
+                      </p>
+                    ) : null}
                     <input
                       type="number"
                       min={1}
@@ -1044,7 +1113,7 @@ export function CreateRewardWizard({
               {isGameWinner ? (
                 <div className={s.notice}>
                   <strong>At least {NFL_REWARD_MIN_PICKERS} guests must make picks</strong> at your venue
-                  that {nflScopeKind === "weekly" ? "week" : "season"} for a winner to be crowned. If fewer
+                  that {nflScopeKind === "season" ? "season" : "week"} for a winner to be crowned. If fewer
                   than {NFL_REWARD_MIN_PICKERS} play, no reward is given out.
                 </div>
               ) : null}
@@ -1444,7 +1513,7 @@ export function CreateRewardWizard({
           {isNFLDefinition && isGameWinner ? (
             <div className={s.notice}>
               <strong>At least {NFL_REWARD_MIN_PICKERS} guests must make picks</strong> at your venue that{" "}
-              {nflScopeKind === "weekly" ? "week" : "season"} for a winner to be crowned. If fewer than{" "}
+              {nflScopeKind === "season" ? "season" : "week"} for a winner to be crowned. If fewer than{" "}
               {NFL_REWARD_MIN_PICKERS} play, no reward is given out.
             </div>
           ) : null}

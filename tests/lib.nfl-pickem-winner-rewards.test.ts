@@ -247,8 +247,11 @@ vi.mock("@/lib/supabaseAdmin", () => {
 import { computeCycleStart } from "@/lib/challengeCampaigns";
 import {
   NFL_WINNER_MIN_PARTICIPANTS,
+  isOneOffNFLReward,
+  nflRewardAppliesToWeek,
   resolveNFLPickEmWinnerRewards,
 } from "@/lib/nflPickEmWinnerRewards";
+import { getVenueTimezone } from "@/lib/timezone";
 
 const SEASON = 2026;
 // Week A: Thu 2026-11-05 → Mon 2026-11-09, every game final.
@@ -315,6 +318,18 @@ const seasonCampaign = (overrides: Partial<ChallengeCampaign> = {}): ChallengeCa
     startDate: "2026-11-05",
     endDate: "2026-11-16",
     nflWeekScope: { kind: "season", season: SEASON, fromWeek: 10 } as NFLWeekScope,
+    ...overrides,
+  });
+
+// What createReward writes for a "Single week" reward of week A (Phase 2):
+// a closed one-off bounded by that week's own stored Thu→Mon dates.
+const singleWeekCampaign = (overrides: Partial<ChallengeCampaign> = {}): ChallengeCampaign =>
+  makeCampaign({
+    id: "camp-nfl-single",
+    recurringType: "none",
+    startDate: WEEK_A.weekStartDate,
+    endDate: WEEK_A.weekEndDate,
+    nflWeekScope: { kind: "single_week", season: SEASON, week: WEEK_A.weekNumber } as NFLWeekScope,
     ...overrides,
   });
 
@@ -647,6 +662,138 @@ describe("resolveNFLPickEmWinnerRewards", () => {
     expect(store.deactivated).toEqual([]);
   });
 
+  // ── Single-week scope (docs/nfl-pickem-single-week-reward-plan.md) ──────────
+
+  it("resolves a single-week reward from its own week's standings, then spends it", async () => {
+    store.campaigns = [singleWeekCampaign()];
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.resolutions).toHaveLength(1);
+    // Decided by the WEEKLY contest of that week — same standings as "every week".
+    expect(report.resolutions[0].kind).toBe("weekly");
+    expect(report.resolutions[0].weekNumber).toBe(WEEK_A.weekNumber);
+    expect(report.resolutions[0].awardedUserIds).toEqual(["user-ace"]);
+    expect(awardCycleWinner).toHaveBeenCalledWith(expect.objectContaining({ winnerQuota: 1 }));
+    // Non-recurring: the cycle key is the campaign's own start instant — the
+    // engine's computeCycleStart, so the guest route finds the same row.
+    expect(store.ledger).toHaveLength(1);
+    expect(store.ledger[0].cycleStart).toBe("2026-11-05T05:00:00.000Z");
+    expect(store.ledger[0].cycleStart).toBe(
+      computeCycleStart(singleWeekCampaign(), new Date(NOW), "America/New_York").toISOString(),
+    );
+    // One contest, one prize: deactivated like a season reward.
+    expect(store.deactivated).toEqual(["camp-nfl-single"]);
+
+    const again = await resolveNFLPickEmWinnerRewards(NOW + 24 * 60 * 60 * 1000);
+    expect(again.resolutions).toHaveLength(0);
+    expect(store.ledger).toHaveLength(1);
+  });
+
+  it("is never decided by another week's contest", async () => {
+    // A Week 11 (week B) reward while only week A is complete: nothing.
+    store.campaigns = [
+      singleWeekCampaign({
+        startDate: WEEK_B.weekStartDate,
+        endDate: WEEK_B.weekEndDate,
+        nflWeekScope: { kind: "single_week", season: SEASON, week: WEEK_B.weekNumber },
+      }),
+    ];
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.contestsExamined).toBe(1);
+    expect(report.resolutions).toHaveLength(0);
+    expect(awardCycleWinner).not.toHaveBeenCalled();
+    expect(store.deactivated).toEqual([]);
+  });
+
+  it("is decided by its week's standings, not the season's, when that week is also the season's last", async () => {
+    store.campaigns = [
+      singleWeekCampaign({
+        startDate: WEEK_B.weekStartDate,
+        endDate: WEEK_B.weekEndDate,
+        nflWeekScope: { kind: "single_week", season: SEASON, week: WEEK_B.weekNumber },
+      }),
+    ];
+    store.games.set(WEEK_B.id, finalGames(WEEK_B.weekStartDate));
+    setStandings(`week:venue-1:${WEEK_B.id}`, [
+      ["user-rex", 11],
+      ["user-ace", 8],
+      ["user-fox", 5],
+    ]);
+    // A different season leader: if the season contest could claim the
+    // reward, user-fox would win it.
+    setStandings(`season:venue-1:${SEASON}`, [
+      ["user-fox", 30],
+      ["user-ace", 17],
+      ["user-rex", 15],
+    ]);
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.resolutions).toHaveLength(1);
+    expect(report.resolutions[0].kind).toBe("weekly");
+    expect(report.resolutions[0].awardedUserIds).toEqual(["user-rex"]);
+    expect(store.ledger).toHaveLength(1);
+  });
+
+  it("pays at a Pacific venue for its own week (the close-date check is not venue-local)", async () => {
+    vi.mocked(getVenueTimezone).mockResolvedValue("America/Los_Angeles");
+    try {
+      store.campaigns = [singleWeekCampaign()];
+
+      const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+      expect(report.resolutions).toHaveLength(1);
+      expect(report.resolutions[0].awardedUserIds).toEqual(["user-ace"]);
+      // Thursday local midnight in Los Angeles (PST after Nov 1) = 08:00 UTC.
+      expect(store.ledger[0].cycleStart).toBe("2026-11-05T08:00:00.000Z");
+      expect(store.ledger[0].cycleStart).toBe(
+        computeCycleStart(singleWeekCampaign(), new Date(NOW), "America/Los_Angeles").toISOString(),
+      );
+      expect(store.deactivated).toEqual(["camp-nfl-single"]);
+    } finally {
+      vi.mocked(getVenueTimezone).mockResolvedValue("America/New_York");
+    }
+  });
+
+  it("never pays a single week that had kicked off before the reward existed", async () => {
+    store.campaigns = [
+      singleWeekCampaign({ createdAt: new Date(Date.parse(WEEK_A_FIRST_KICKOFF) + 60_000).toISOString() }),
+    ];
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.resolutions).toHaveLength(0);
+    expect(awardCycleWinner).not.toHaveBeenCalled();
+  });
+
+  it("names nobody and stays active below the minimum participation gate", async () => {
+    store.campaigns = [singleWeekCampaign()];
+    setStandings(`week:venue-1:${WEEK_A.id}`, [
+      ["user-ace", 9],
+      ["user-fox", 6],
+    ]);
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.resolutions).toHaveLength(0);
+    expect(report.skippedBelowMinimum).toHaveLength(1);
+    expect(report.skippedBelowMinimum[0].campaignIds).toEqual(["camp-nfl-single"]);
+    expect(store.deactivated).toEqual([]);
+  });
+
+  it("ignores a single week from another season", async () => {
+    store.campaigns = [
+      singleWeekCampaign({ nflWeekScope: { kind: "single_week", season: 2025, week: WEEK_A.weekNumber } }),
+    ];
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.resolutions).toHaveLength(0);
+  });
+
   // ── Error isolation ───────────────────────────────────────────────────────
 
   it("keeps sweeping when one venue's standings fail to load", async () => {
@@ -668,5 +815,24 @@ describe("resolveNFLPickEmWinnerRewards", () => {
     // venue-2 still resolved.
     expect(report.resolutions).toHaveLength(1);
     expect(report.resolutions[0].venueId).toBe("venue-2");
+  });
+});
+
+describe("single-week helpers", () => {
+  it("treats season and single-week rewards as one-off, weekly as recurring", () => {
+    expect(isOneOffNFLReward(singleWeekCampaign())).toBe(true);
+    expect(isOneOffNFLReward(seasonCampaign())).toBe(true);
+    expect(isOneOffNFLReward(makeCampaign())).toBe(false);
+    expect(isOneOffNFLReward(makeCampaign({ nflWeekScope: null }))).toBe(false);
+  });
+
+  it("puts a single-week reward on its own week's leaderboard only", () => {
+    const single = singleWeekCampaign();
+    expect(nflRewardAppliesToWeek(single, { season: SEASON, weekNumber: WEEK_A.weekNumber })).toBe(true);
+    expect(nflRewardAppliesToWeek(single, { season: SEASON, weekNumber: WEEK_B.weekNumber })).toBe(false);
+    expect(nflRewardAppliesToWeek(single, { season: 2025, weekNumber: WEEK_A.weekNumber })).toBe(false);
+    // Other scopes are unchanged: the cycle-key match decides for them.
+    expect(nflRewardAppliesToWeek(makeCampaign(), { season: SEASON, weekNumber: WEEK_B.weekNumber })).toBe(true);
+    expect(nflRewardAppliesToWeek(seasonCampaign(), { season: SEASON, weekNumber: WEEK_B.weekNumber })).toBe(true);
   });
 });

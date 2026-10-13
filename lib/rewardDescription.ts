@@ -464,6 +464,7 @@ const describeNFLReward = (
   const quota = Math.max(1, Math.round(Number(input.winnerQuota) || 1));
   const mostPicks = input.winCondition === "game_winner";
   const fromWeek = scope.kind === "season" ? String(scope.fromWeek) : "";
+  const week = scope.kind === "single_week" ? String(scope.week) : "";
 
   let summary: string;
   let when: string;
@@ -472,6 +473,10 @@ const describeNFLReward = (
     summary = fill(templates.mostPicksWeekly, { prize });
     when = "A new contest starts every Thursday of the NFL season. Make your picks before each game kicks off.";
     fineprint = `Ties are broken by this week's tiebreaker question. ${NFL_MIN_PICKERS_LINE}`;
+  } else if (mostPicks && scope.kind === "single_week") {
+    summary = fill(templates.mostPicksSingleWeek, { prize, week });
+    when = `One contest, Week ${week} only. Make your picks before each game kicks off.`;
+    fineprint = `Ties are broken by Week ${week}'s tiebreaker question. ${NFL_MIN_PICKERS_LINE}`;
   } else if (mostPicks) {
     summary = fill(templates.mostPicksSeason, { prize, fromWeek });
     when = "One contest, all season long. Make your picks every week before kickoff.";
@@ -480,6 +485,10 @@ const describeNFLReward = (
     summary = fill(templates.picksTargetWeekly, { prize, threshold });
     when = "Resets every Thursday during the NFL season.";
     fineprint = firstPlayersLine(quota, "to get there", "each week");
+  } else if (scope.kind === "single_week") {
+    summary = fill(templates.picksTargetSingleWeek, { prize, threshold, week });
+    when = `Counts picks from Week ${week} only.`;
+    fineprint = firstPlayersLine(quota, "to get there", "");
   } else {
     summary = fill(templates.picksTargetSeason, { prize, threshold });
     when = `Counts from Week ${fromWeek} on.`;
@@ -492,6 +501,13 @@ const describeNFLReward = (
   const upcoming = formatCalendarDate(input.nfl?.upcomingStartDate);
   if (scope.kind === "weekly" && today && /^\d{4}-\d{2}-\d{2}$/.test(seasonEnd) && today > seasonEnd) {
     when = "Back when the NFL season starts.";
+  } else if (
+    scope.kind === "single_week" &&
+    today &&
+    /^\d{4}-\d{2}-\d{2}$/.test(String(input.endDate ?? "")) &&
+    today > String(input.endDate)
+  ) {
+    when = `Week ${week} has ended.`;
   } else if (upcoming) {
     when = `Starts ${upcoming}. Get your picks in early.`;
   } else {
@@ -581,6 +597,8 @@ export function describeRewardWin(input: RewardDescriptionInput, win: RewardWinF
     let when: string | null;
     if (scope.kind === "season") {
       when = `in the ${scope.season} season`;
+    } else if (scope.kind === "single_week") {
+      when = `in Week ${scope.week}`;
     } else if (win.nflWeekNumber && Number.isInteger(win.nflWeekNumber) && win.nflWeekNumber > 0) {
       when = `in Week ${win.nflWeekNumber}`;
     } else {

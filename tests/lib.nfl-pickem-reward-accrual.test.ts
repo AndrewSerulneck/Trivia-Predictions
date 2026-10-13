@@ -27,6 +27,7 @@ type ApplyCall = {
   basePoints: number;
   occurredAt?: Date;
   requireCampaignCreatedBeforeOccurrence?: boolean;
+  accrualWindowFor?: unknown;
 };
 
 const store = vi.hoisted(() => ({
@@ -63,8 +64,11 @@ const applyChallengeCampaignPoints = vi.hoisted(() =>
 
 vi.mock("@/lib/challengeCampaigns", () => ({ applyChallengeCampaignPoints }));
 
-// lib/nflPickEm.ts pulls in the whole NFL stack; the sweep only needs the slug.
-vi.mock("@/lib/nflPickEm", () => ({ NFL_PICKEM_SPORT_SLUG: "nfl" }));
+// The sweep needs only the slug and the (pure) week-span math from lib/nflPickEm.ts.
+vi.mock("@/lib/nflPickEm", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/nflPickEm")>();
+  return { NFL_PICKEM_SPORT_SLUG: "nfl", nflWeekSpanMs: actual.nflWeekSpanMs };
+});
 
 // Minimal chainable stand-in for the two shapes the sweep uses: a filtered
 // select over pickem_picks, and an update(...).in("id", ids).
@@ -142,7 +146,7 @@ vi.mock("@/lib/supabaseAdmin", () => {
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { accrueNFLPickEmChallengePoints } from "@/lib/nflPickEmRewardAccrual";
+import { accrueNFLPickEmChallengePoints, nflSingleWeekAccrualWindow } from "@/lib/nflPickEmRewardAccrual";
 
 const SUNDAY_KICKOFF = "2026-09-13T17:00:00.000Z";
 const MONDAY_KICKOFF = "2026-09-14T00:15:00.000Z";
@@ -190,6 +194,20 @@ describe("accrueNFLPickEmChallengePoints", () => {
     // The trap: 3 correct picks × 10 reward_points = 30.
     expect(progressFor("camp-nfl")).toBe(3);
     expect(progressFor("camp-nfl")).not.toBe(30);
+  });
+
+  it("hands the engine the single-week accrual window on every call", async () => {
+    // The engine's own dates would leak earlier weeks' picks into a single-week
+    // reward and drop Monday Night Football — see
+    // tests/lib.nfl-single-week-accrual-window.test.ts for the real predicate.
+    seedPicks({ id: "p1" }, { id: "p2", starts_at: MONDAY_KICKOFF });
+
+    await accrueNFLPickEmChallengePoints();
+
+    expect(store.applyCalls).toHaveLength(2);
+    for (const call of store.applyCalls) {
+      expect(call.accrualWindowFor).toBe(nflSingleWeekAccrualWindow);
+    }
   });
 
   it("accrues once when the sweep runs twice (idempotency marker)", async () => {

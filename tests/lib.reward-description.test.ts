@@ -179,6 +179,44 @@ describe("describeReward — NFL Pick 'Em (§3 rows 1–4)", () => {
     expect(description.summary).toBe("Get the most NFL picks right this week and win a $100 gift card.");
   });
 
+  const SINGLE_WEEK = {
+    recurringType: "none" as const,
+    nflWeekScope: { kind: "single_week" as const, season: 2026, week: 9 },
+    startDate: "2026-11-05",
+    endDate: "2026-11-09",
+  };
+
+  it("most picks, single week", () => {
+    expect(describeClean(nfl(SINGLE_WEEK))).toEqual({
+      summary: "Get the most NFL picks right in Week 9 and win a $100 gift card.",
+      when: "One contest, Week 9 only. Make your picks before each game kicks off.",
+      fineprint:
+        "Ties are broken by Week 9's tiebreaker question. At least 3 players need to make picks for a winner to be named.",
+      isCustom: false,
+    });
+  });
+
+  it("picks target, single week", () => {
+    const description = describeClean(
+      nfl({ ...SINGLE_WEEK, winCondition: "points_threshold", pointsRequiredToWin: 10, winnerQuota: 3 }),
+    );
+    expect(description.summary).toBe("Get 10 NFL picks right in Week 9 and win a $100 gift card.");
+    expect(description.when).toBe("Counts picks from Week 9 only.");
+    expect(description.summary).not.toMatch(/season|\{/);
+  });
+
+  it("single week: upcoming says when it starts; ended says the week is over", () => {
+    expect(
+      describeClean(nfl({ ...SINGLE_WEEK, nfl: { upcomingStartDate: "2026-11-05", seasonEndDate: "2027-01-12" } })).when,
+    ).toBe("Starts Thu, Nov 5. Get your picks in early.");
+    // Tue Nov 10, Eastern: the week's endDate (Mon Nov 9) has passed.
+    expect(describeClean(nfl(SINGLE_WEEK), new Date("2026-11-10T17:00:00.000Z")).when).toBe("Week 9 has ended.");
+    // Mon Nov 9 night is still the week.
+    expect(describeClean(nfl(SINGLE_WEEK), new Date("2026-11-10T03:00:00.000Z")).when).not.toBe("Week 9 has ended.");
+    // No endDate on the input: never "ended".
+    expect(describeClean(nfl({ ...SINGLE_WEEK, endDate: undefined })).when).not.toBe("Week 9 has ended.");
+  });
+
   it("off-season: a weekly reward that outlived the season", () => {
     const description = describeClean(nfl(), new Date("2027-02-20T17:00:00.000Z"));
     expect(description.when).toBe("Back when the NFL season starts.");
@@ -617,6 +655,18 @@ describe("describeRewardWin — the prize-wallet coupon line", () => {
     expect(describeRewardWin(nfl(), { cycleStart: "2026-10-01T04:00:00.000Z", nflWeekNumber: 5 })).toBe(
       "You got the most NFL picks right in Week 5",
     );
+  });
+
+  it("NFL single week names the week, for both win conditions", () => {
+    const scope = { recurringType: "none" as const, nflWeekScope: { kind: "single_week" as const, season: 2026, week: 9 } };
+    expect(describeRewardWin(nfl(scope), { cycleStart: "1970-01-01T00:00:00.000Z" })).toBe(
+      "You got the most NFL picks right in Week 9",
+    );
+    expect(
+      describeRewardWin(nfl({ ...scope, winCondition: "points_threshold", pointsRequiredToWin: 10 }), {
+        cycleStart: "1970-01-01T00:00:00.000Z",
+      }),
+    ).toBe("You got 10 NFL picks right in Week 9");
   });
 
   it("NFL weekly falls back to the week's date when the week number is unknown", () => {
