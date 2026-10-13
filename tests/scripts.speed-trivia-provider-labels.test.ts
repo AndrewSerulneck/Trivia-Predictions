@@ -35,4 +35,27 @@ describe("production provider task labels", () => {
       expect(session.corpus().rows.some(existing => existing.id === row.id)).toBe(false);
     } finally { await db.close(); }
   });
+  it("classifies a provider abort at the global deadline as a cutoff and saves nothing", async () => {
+    const db = new PGlite(); await harness.setup(db);
+    let elapsed = 0;
+    const budget = runtime.createBudget({ dollars: 1, elapsedMs: 5000, now: () => elapsed });
+    vi.stubGlobal("fetch", vi.fn(async () => { elapsed = 5000; throw new DOMException("Synthetic deadline abort", "TimeoutError"); }));
+    try {
+      const session = await runtime.createSession({ client: harness.clientFor(db), secret: harness.SECRET, apiKey: "synthetic-only", budget });
+      const row = harness.row("70000000-0000-4000-8000-000000000003", "Which flower structure produces pollen?", "Anther");
+      await expect(session.write(row)).rejects.toMatchObject({ code: "budget_exhausted" });
+      expect(session.corpus().rows.some(existing => existing.id === row.id)).toBe(false);
+      expect(budget.summary().dollars).toBeGreaterThan(0); // Lost attempt stays charged.
+    } finally { await db.close(); }
+  });
+  it("continues to fail closed on a provider outage before the deadline", async () => {
+    const db = new PGlite(); await harness.setup(db);
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("Synthetic provider outage"); }));
+    try {
+      const session = await runtime.createSession({ client: harness.clientFor(db), secret: harness.SECRET, apiKey: "synthetic-only", budget: runtime.createBudget({ dollars: 1 }) });
+      const row = harness.row("70000000-0000-4000-8000-000000000004", "Which flower structure receives pollen?", "Stigma");
+      await expect(session.write(row)).rejects.toMatchObject({ code: "verification_unavailable", evidence: { explanation: "Unverified comparison: semantic-network-or-timeout" } });
+      expect(session.corpus().rows.some(existing => existing.id === row.id)).toBe(false);
+    } finally { await db.close(); }
+  });
 });

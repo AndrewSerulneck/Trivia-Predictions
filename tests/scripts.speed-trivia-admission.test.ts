@@ -176,6 +176,20 @@ describe("global cost limits, generation breadth and immutable cleanup", () => {
       await expect(generation.runGeneration({ session: failing, total: 2, batchSize: 2, category: "Geography", apiKey: "fixture-only", allowCategoryErrors: true, transport: response([candidate]) })).rejects.toMatchObject({ code: "verification_unavailable", report: { fatal: "verification_unavailable", admitted: 0 } });
     } finally { await isolated.close(); }
   });
+  it("reports a normal shortfall when the deadline falls between accepted candidates", async () => {
+    const isolated = new PGlite(); await harness.setup(isolated);
+    let elapsed = 0;
+    try {
+      const budget = runtime.createBudget({ dollars: 1, elapsedMs: 5000, now: () => elapsed });
+      const gate = await runtime.createSession({ client: harness.clientFor(isolated), secret: harness.SECRET, budget, judge });
+      const write = gate.write;
+      gate.write = async (input, options) => { const result = await write(input, options); elapsed = 5000; return result; };
+      const generated = { question: "Which climate pattern warms the equatorial Pacific?", options: ["El Niño", "La Niña", "Monsoon", "Chinook"], correctAnswer: 0, primarySubject: "El Niño", subtopic: "climate" };
+      const transport = async () => ({ ok: true, json: async () => ({ usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 }, candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify([generated]) }] } }] }) });
+      expect(await generation.runGeneration({ session: gate, total: 2, batchSize: 1, category: "Geography", apiKey: "fixture-only", transport })).toMatchObject({ admitted: 1, generated: 1, shortfall: 1, fatal: null });
+      expect(gate.corpus().rows.filter(row => row.question === generated.question)).toHaveLength(1);
+    } finally { await isolated.close(); }
+  });
   it("refuses Phase 2 dry runs and altered immutable manifest bytes", () => {
     expect(() => cleanup.validateManifest({ version: "speed-retirement-manifest-v1", applyReady: false })).toThrow();
     const file = path.resolve("tmp/speed-trivia-test-bad-manifest.json"); fs.writeFileSync(file, "{}");
