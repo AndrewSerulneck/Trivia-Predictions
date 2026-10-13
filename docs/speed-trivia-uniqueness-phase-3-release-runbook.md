@@ -2,6 +2,19 @@
 
 **Prepared locally October 13, 2026. Not deployed or applied. Phase 4 executes release; Phase 5 executes cleanup.**
 
+**Historical preparation note; superseded operational state (2026-10-13):** Phase 4 has now
+applied migration `20261013120000`, configured the matching private key/$0.50 cap, backfilled
+13,878 features and deployed release `602aab932bea3d8bf694e8b77aaa1119347e9676`. Read
+[actual release facts](speed-trivia-uniqueness-phase-4-release-record.md) and
+[Phase 4 handoff](speed-trivia-uniqueness-plan_PHASE_4_HANDOFF.md) before using commands below.
+Do not reapply the migration, overwrite the key or redo completed backfill. Andrew subsequently
+deferred unexecuted editorial Phases 4.1–4.4 on 2026-10-13. **Next is final Phase 5:** reviewed cleanup,
+the one already-approved $0.50 uniqueness pilot, then nightly resume after verification. Nightly remains
+disabled during cleanup. Ordinary seven-run observation is operational follow-up, not a new phase.
+The active plan and latest handoff supersede earlier sequencing below.
+
+**Phase 5 complete/live (2026-10-13):** 2,534 versions softly retired/history preserved; verified export PR #5, 4,274 active rows/nine files. Both explicitly approved pilots added 16 pending rows; provider-label/global-deadline repairs deployed as `0b1f5e819971673ed617b2c1ef98f239c57e2096`, READY `dpl_Aw67UdWUXWbWcEWtaQP9ytc8UhrM`. Nightly restored ACTIVE at 2026-10-13T19:23:18.329Z, unchanged schedule/$0.50 cap. Final bank 13,894 / revision 2550. Read [final Phase 5 facts](speed-trivia-uniqueness-phase-5-release-record.md) and [handoff](speed-trivia-uniqueness-plan_PHASE_5_HANDOFF.md); old placeholders/cost-approval statements below are historical. Never reuse spent pilot/audit allowances, apply old Phase 2 inputs or repeat migration/backfill. Seven-run observation is optional follow-up.
+
 The new system checks the fact behind every new or edited Speed question. It remembers retired facts, shares checks across categories, and rejects a save if somebody changed the bank after the check. It also gives generation a wider subject brief. This file describes how to switch it on without temporarily allowing unchecked questions.
 
 ## Release prerequisites and costs

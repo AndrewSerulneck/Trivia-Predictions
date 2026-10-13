@@ -1,27 +1,28 @@
 # Speed Trivia uniqueness — Phase 4 release record and prepared rollout
 
-Date: **2026-10-13, America/New_York**. **Andrew authorized the migration/configuration/backfill/safeguard release and $0.50 operation cap plus one $0.50 pilot. Rollout in progress; generator pilot/restart moved to editorial Phase 4.3.**
+Date: **2026-10-13, America/New_York**. **Phase 4 complete: approved safeguards deployed and verified live. Generator remains disabled. Subsequent course correction: editorial 4.1–4.4 deferred; next is final Phase 5 cleanup, uniqueness pilot and restart.**
 
-The safeguards passed local review and verification. The complete implementation is now committed locally as **`47498cd523b48218288ae2350f5374feed9dd47e`**, based on `96b88658dfeeb42ef88aa09fb858d9d794631e04`. Application/workflow publication is being coordinated after applied schema/config/backfill. Existing repeats remain unchanged. Complete Phases 4–4.4 before final Phase 5.
+The safeguards passed local review and verification. The complete implementation is now committed locally as **`47498cd523b48218288ae2350f5374feed9dd47e`**, based on `96b88658dfeeb42ef88aa09fb858d9d794631e04`. Application/workflow release **`602aab932bea3d8bf694e8b77aaa1119347e9676`** is pushed and verified on production deployment **`dpl_8vdTxBRAQ6ULHK8ZFXAXM4TWkxGu`**. Existing repeats remain unchanged. Phase 4 is complete; go directly to final Phase 5 under the latest course correction.
 
 ## Reviewed release manifest
 
 | Item | Exact prepared state |
 | --- | --- |
 | Repository / branch | `AndrewSerulneck/Trivia-Predictions`, `main` |
-| Code commit | `47498cd523b48218288ae2350f5374feed9dd47e` (69 files; includes coherent Phases 0–3, frozen fixtures, and Phase 4 key utility/tests) |
+| Code commit | `47498cd523b48218288ae2350f5374feed9dd47e` (69 files; coherent implementation) |
+| Published app/workflow SHA | `602aab932bea3d8bf694e8b77aaa1119347e9676`; exact remote workflow bytes verified, state disabled |
 | Production database | `pkmxupsayzshvpirkaav` |
 | Applied migration | `supabase/migrations/20261013120000_speed_trivia_admission.sql`; sole dry-run/apply migration, verified live at `2026-10-13T14:27:08.634037Z` |
 | Migration SHA-256 | `df80e21f705aeaf772b12316f4290d031c2333111a4321d71e4a6b45768f72a4` |
 | Frozen comparison core | `24ae8e137aa990be82e9a09b60e4b822fcc497248cf20ab342538e596d047660` |
 | Frozen provider | `1fad34a5a2b8ea1f6ae89a6d63bb987b4bff77a4b64f684039ea7a259e167d2f` |
 | Versions | `speed-facts-v2`, `answer-concepts-v2`, `union-answer-bm25-concepts-v4`; provider `gemini-2.5-flash:fact-judge-v2:thinking-0:batch-1` |
-| Workflow | `Trivia Nightly`, ID `264911476`, `.github/workflows/trivia-nightly.yml`; previous state active, now **disabled_manually** pending editorial Phase 4.3 |
+| Workflow | `Trivia Nightly`, ID `264911476`, `.github/workflows/trivia-nightly.yml`; previous state active, now **disabled_manually** during Phase 5 cleanup/release verification |
 | Latest completed old workflow | Run `38375678967`, success, created `2026-10-13T09:21:08Z`, SHA `96b88658dfeeb42ef88aa09fb858d9d794631e04` |
 | Vercel project | `prj_yjIvzEUquV1gPWBsgOIluVp8v1ci`, `andrewserulnecks-projects/hightop-challenge`, Node 24.x |
-| Current production deployment | `dpl_25ngkUXDXN7Ep32UffH6bpxvPpn7`, READY; deployment-list git SHA `96b88658dfeeb42ef88aa09fb858d9d794631e04` |
-| Current production URL | `https://hightop-challenge-7rr7toiqz-andrewserulnecks-projects.vercel.app`; inspected aliases include `hightopchallenge.com` and `play.hightopchallenge.com` |
-| Configuration | Matching new signing key set in private DB, GitHub secret and Vercel production secret; cap `0.50` in GitHub variable/Vercel production. Local `.env.local` unchanged; private `release.env` supplies operational commands. |
+| Current production deployment | `dpl_8vdTxBRAQ6ULHK8ZFXAXM4TWkxGu`, READY; deployment-list git SHA `602aab932bea3d8bf694e8b77aaa1119347e9676`, production alias independently verified |
+| Current production URL | `https://hightop-challenge-gvtwqm136-andrewserulnecks-projects.vercel.app`; aliases include `hightopchallenge.com` and `play.hightopchallenge.com` |
+| Configuration | Matching new signing key set in private DB, GitHub secret and Vercel production secret; cap `0.50` in GitHub variable/Vercel production. Local `.env.local` received append-only additions of these two approved server keys; private `release.env` also supplies operational commands. |
 
 Review covered HMAC/payload/content/old-state binding, expiry, private forced-RLS tables, RPC grants/search paths, statement-before-row lock ordering, stale admissions, direct DML/normalized-key/TRUNCATE/pool-departure defenses, retired history, cached pair directionality, bounded refreshes, generation budgets/diversity, all mapped writer routes, disabled legacy tools, Live behavior and cleanup/undo mechanics. No change to the frozen comparator, provider, evaluation labels or existing SQL history was needed. New provisioning code addresses the missing concrete key setup mechanism; it does not grant service-role access or rotate an existing different key.
 
@@ -55,7 +56,7 @@ Unchanged global caps: 100 accepted, 200 requested candidates, 20 generation cal
 
 ## Rollout procedure and editorial hold
 
-Andrew has confirmed the sole migration, key/cap configuration, metadata backfill and reviewed app/workflow release. His additional requirement places editorial Phases 4.1–4.4 before final Phase 5. Steps 7–8 below are deferred to Phase 4.3: keep generation disabled and preserve the one approved $0.50 pilot for editorial + uniqueness evaluation together. Cleanup remains excluded from Phase 4.
+Andrew confirmed and the agent completed the sole migration, key/cap configuration, metadata backfill and reviewed app/workflow release. Andrew subsequently deferred unexecuted editorial 4.1–4.4 and restored direct final Phase 5. Remaining steps 7–8 (the single approved $0.50 uniqueness pilot and nightly resume) are coordinated in Phase 5 after reviewed cleanup/release verification. Keep generation disabled while cleanup evidence/apply is in progress. Cleanup remains excluded from completed Phase 4.
 
 1. Capture the current workflow state and pending/in-progress runs privately. Pause:
 
@@ -110,7 +111,7 @@ Andrew has confirmed the sole migration, key/cap configuration, metadata backfil
    gh workflow enable trivia-nightly.yml --repo AndrewSerulneck/Trivia-Predictions
    ```
 
-   The original state captured this turn was active; recapture before pause. Finish release evidence and Phase 4 handoff, mark Phase 4 complete, then hand off Phase 5. Seven scheduled runs belong to Phase 6.
+   Previous state was active and is already captured; leave the workflow disabled during cleanup. Phase 5 verifies the uniqueness pilot and then resumes. Phase 4 hands off directly to final Phase 5; seven-run observation is ordinary operational follow-up.
 
 ## Failure and rollback
 
@@ -124,7 +125,7 @@ Leave database guards installed. Keep `Trivia Nightly` disabled if migration/con
 - `npx tsc --noEmit`, `npm run lint`, `npm run build` (**202 pages**) and `git diff --check` passed. Final typecheck was sequential after build.
 - One later typecheck found identical iCloud-generated `.next/types/routes.d 2.ts`, `validator 2.ts`, `package 2.json`. Verified byte equality, removed only these ignored generated copies and passed again. No application source/threshold changed. Lint's existing large-Babel-file note remains.
 
-No paid calls, question-content/status writes, cleanup, pilot dispatch or nightly restart have occurred. Approved schema/config/backfill changes and actual publication evidence are recorded in the live execution section. The editorial gate is planned, not implemented; Phase 4.3 owns the one approved pilot and generator restart.
+No paid calls, question-content/status writes, cleanup, pilot dispatch or nightly restart have occurred. Approved schema/config/backfill changes and actual publication evidence are recorded in the live execution section. The editorial gate proposal is now deferred; Phase 5 owns the one approved uniqueness pilot and generator restart.
 
 ## Live execution — 2026-10-13
 
@@ -133,5 +134,22 @@ No paid calls, question-content/status writes, cleanup, pilot dispatch or nightl
 - `supabase db push --linked --skip-vault --dry-run` listed exactly `20261013120000_speed_trivia_admission.sql`. Authorized `supabase db push --linked --skip-vault --yes` applied it, with no seeds/roles/vault update. CLI's unrelated `Warnings...` filename was skipped, not applied.
 - Live guard verification at `2026-10-13T14:27:08.634037Z`: eight private forced-RLS tables with owner BYPASSRLS, service-role direct table access denied; 19 new functions, intended grants/search paths and BYPASSRLS owners; both guard triggers installed. Inventory revision `0`, 13,878 rows; active 5,136 / pending 8,740 / deleted 2. Service-role direct control SELECT returned `42501`; active-selection read still 5,136. Private evidence `phase4-release/production-guard-verification.json`.
 - Parameterized key setup succeeded. Matching key synchronized via stdin into GitHub/Vercel; cap `0.50` set. No value printed, no service-role grants widened, no `.env.local` rewrite. Private operational file `phase4-release/release.env`; durable separate secret recovery copy `/Users/andrewserulneck/Library/Application Support/HightopChallenge/private-backups/speed-trivia/phase4-admission-release-2026-10-13.env`, mode 0600, byte-verified. Treat both as secrets, never print/archive with question evidence/commit.
-- Derived-feature dry run returned 13,878 rows / 28 batches / revision `0` / zero paid calls. Apply, final verification and app/workflow deployment evidence follow below when confirmed.
+- Derived-feature dry run and apply completed: **13,878 features / 28 batches / revision `0` / zero paid calls**. Checkpoint digest `a51f703094ce880bf148989b5c6d89c3098170fd16c86a4775146d26e6f146cc`, `next:13878`. Live verification at **2026-10-13T14:31:25.214015Z** confirmed feature count, zero admissions/memory, signing key configured and original question checksum `83e0626ed96b4ea9f91646eedf1dba5f`. Live inventory remains 4,537 Live rows. Empty invalid admission receipt refused; no question written.
 - Editorial implementation is out of this turn's scope: Andrew asked to add the phases, not to execute them now. Phase 4.1 freezes rubric/evaluation/mix/cost design; 4.2 implements shared gate/bounded rewrites; 4.3 runs the one $0.50 pilot and releases generation; 4.4 replaces former Phase 6's seven-run monitoring. Final Phase 5 remains reviewed cleanup. No extra pilot/spending allowance inferred.
+
+- Published app/workflow **`602aab932bea3d8bf694e8b77aaa1119347e9676`**. GitHub remote workflow content equals reviewed YAML, SHA-256 `f539db1155ddbbdb646cc142e61227db7a11d8481be2ac584af1d374d472e003`; variable cap `0.50`, workflow `disabled_manually`, no pilot dispatch. Git push includes application commit `47498cd` and updated editorial plan; unrelated editor/next-env files excluded.
+- Vercel production **`dpl_8vdTxBRAQ6ULHK8ZFXAXM4TWkxGu`**, **READY**, `https://hightop-challenge-gvtwqm136-andrewserulnecks-projects.vercel.app`, bound by deployment list to published SHA. `vercel inspect hightopchallenge.com --format json` independently resolves to that exact deployment ID; aliases include apex and `play.` domains. Private `new-deployment.json`, `production-alias-deployment.json`, `published-workflow.json` preserve evidence.
+- Authenticated production checks at **2026-10-13T14:38:44.746Z**: unauthenticated admin refused 401; Speed active read 200/5,136 rows; Live active read 200/3,451 rows; exact existing duplicate create refused **400** (generic create route retains its legacy inner error mapping), retired-row restoration refused **409 / retired**. Existing exact content and retired status use deterministic early refusal, **zero paid checks and zero accepted question writes**. Private `authenticated-production-smoke.json` contains sanitized results only. No actual approval/edit/new-generation success was performed in production: isolated evidence covers these, and the quality pilot remains deferred.
+- Phase 4 is complete under the revised exit contract: database safeguards/configuration/backfill and actual app/workflow deployment verified. Nightly is intentionally disabled for the new editorial phases; $0.50 pilot unspent. Final verification documentation is updated locally after the published build; no second code release is necessary for these notes.
+
+- Final read-only production recheck **2026-10-13T14:41:22.278683Z** after refusal checks: revision remains 0, question/status counts unchanged, private access denied. The matching key/cap were also appended to ignored `.env.local` after names-only absence checks for local admin compatibility; no existing value/line was read, printed or replaced.
+
+## Subsequent course correction — 2026-10-13 (current instructions)
+
+Andrew considers current Speed question quality good and wants repeated facts fixed first. **Defer all unexecuted editorial Phases 4.1–4.4; go directly to final Phase 5.** Earlier editorial sequencing in dated execution history above records the earlier decision and is superseded here. Preserve deployed uniqueness/soundness/admission/diversity checks. No quality-scoring/rewrite work was implemented or billed.
+
+Recurring allowance is unchanged: $0.50 per nightly/admin operation, at most $15 for 30 scheduled runs, admin operations additional; actual historical monthly billing remains unmeasured. The one unspent $0.50 pilot is now uniqueness-only, performed as part of Phase 5 release verification. Fresh bank-audit cost is a separate one-time matter: measure drift/cache reuse/missing evidence first and obtain a concrete allowance before unapproved paid expansion; do not reset Phase 2 ledgers or reuse their old authorization as a new budget.
+
+This course-correction turn updated local plan/handoff/context documentation only: no paid call, production mutation, pilot dispatch, workflow restart, cleanup or new commit/push/deployment. Nightly remains disabled while Phase 5 refreshes/applies reviewed cleanup; resume after the single pilot and release checks pass. The archived editorial proposal is `docs/speed-trivia-editorial-quality-deferred.md`; it is not an active phase. The latest Phase 4 handoff addresses the next agent's Phase 5 work directly.
+
+**Final Phase 5 completion (2026-10-13):** Reviewed cleanup/export and both explicitly authorized pilots are documented in `docs/speed-trivia-uniqueness-phase-5-release-record.md`; final source `0b1f5e819971673ed617b2c1ef98f239c57e2096`, READY deployment `dpl_Aw67UdWUXWbWcEWtaQP9ytc8UhrM`, nightly active at 2026-10-13T19:23:18.329Z. Preserve the dated Phase 4 evidence below and never repeat applied migration/backfill or reset a spent budget.

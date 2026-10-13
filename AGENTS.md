@@ -41,20 +41,36 @@ legacy parsing; terminal-card corrections never belong in the active sweep. The 
 at 2026-09-19T23:48Z and verified. Do not reapply or down-migrate it. Final release must add exact commit/deployment and
 live/device verification facts to the Phase 7 handoff, release record and these context files.
 
-## Speed Trivia uniqueness (local prevention built)
+## Speed Trivia uniqueness (complete/live)
 
-Plan: `docs/speed-trivia-uniqueness-plan.md`. **Phase 4 authorized rollout in progress, 2026-10-13:**
-migration `20261013120000` applied to `pkmxupsayzshvpirkaav`; private key synchronized to DB/GitHub/Vercel,
-$0.50 operation cap configured; 13,878 derived features backfilled at revision 0 without content/status
-changes or paid calls. Application/workflow publication is being verified. Old nightly was paused with
-no legacy run in progress and **must remain disabled until editorial Phase 4.3**. Andrew approved one
-$0.50 pilot; it is unspent and reserved for quality + uniqueness together. New phases 4.1 rubric/evaluation,
-4.2 shared editorial gate/rewrites, 4.3 capped pilot/generator release, 4.4 seven-run monitoring; **Phase 5
-is final cleanup**, no standalone Phase 6. Read `docs/speed-trivia-uniqueness-plan_PHASE_4_HANDOFF.md`
-and `docs/speed-trivia-uniqueness-phase-4-release-record.md`. Speed writers use shared signed admission;
-never restore unchecked imports, retired duplicates or file fallbacks. Different facts about the same
-artist remain valid. Do not reapply/edit/down-migrate the applied migration. A different future
-production migration still requires its concrete confirmation under `CLAUDE.md`.
+Plan: `docs/speed-trivia-uniqueness-plan.md`. **Complete/live, 2026-10-13:** 2,534 reviewed
+versions softly retired (862 active / 1,672 pending), retaining 990 approved keepers, all content/IDs
+and history. All six original repeated facts have one active version. Final bank **4,274 active /
+7,084 pending / 2,536 deleted**, total 13,894, numeric revision **2550**. Approved-Speed
+[export PR #5](https://github.com/AndrewSerulneck/Trivia-Predictions/pull/5) verified (4,274 rows /
+9 Speed files), open/unmerged; DB cleanup is already live. Ambiguous cases remain internal and
+explicitly held; bounded audit is not exhaustive certification.
+
+Final application SHA **`0b1f5e819971673ed617b2c1ef98f239c57e2096`** pushed; Vercel READY
+**`dpl_Aw67UdWUXWbWcEWtaQP9ytc8UhrM`**, both domains/exact SHA verified. Nightly **264911476
+restored active at 2026-10-13T19:23:18.329Z**, unchanged 02:15 UTC schedule / **$0.50** cap.
+The original pilot admitted 2 pending rows then failed closed; Andrew explicitly approved one
+additional pilot, which admitted 14 pending rows and exposed a 10-minute deadline classification
+race. Strict label/deadline repairs are deployed and tested; both raw reports preserved. No third
+pilot was run/authorized. Refreshed bank audit **$2.1268289** under a separately approved $4 cap;
+audit + two pilots **$2.4519286 conservatively**, invoices unmeasured. Recurring $0.50 per
+nightly/admin operation unchanged (at most $15/30 scheduled runs; admin additional, no shared
+monthly counter). No budget replenishment or full-bank daily audit.
+
+Read `docs/speed-trivia-uniqueness-plan_PHASE_5_HANDOFF.md` and
+`docs/speed-trivia-uniqueness-phase-5-release-record.md` for exact frozen manifest/backup/undo/
+pilot/restart/publication state. All required gates pass: 4,237 tests / 13 environment skips,
+typecheck/lint/build and isolated SQL/concurrency. Seven future scheduled-run observations are
+optional monitoring, not another phase. Andrew deferred editorial 4.1–4.4; don't revive them.
+Different facts about one artist stay valid. Preserve signed admission, retired memory/history,
+ignored private evidence and editor files. Applied migration `20261013120000` is immutable;
+never reapply/edit/down-migrate or redo the original feature backfill. A future different production
+migration or new paid expansion needs its own concrete authorization.
 
 ## Join Merch Store plan (Partner Dashboard)
 

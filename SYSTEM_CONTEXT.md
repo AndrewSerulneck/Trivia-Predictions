@@ -124,19 +124,34 @@ Before this, Back had 10 implementations across 5 visual treatments, Next had 2,
 - Multiple choice questions, any topic or difficulty.
 - Nightly question generation: `scripts/generate-trivia-nightly.cjs` → calls `generate-trivia-questions.cjs`.
 
-Speed Trivia uniqueness prevention **Phase 4 authorized rollout is in progress (2026-10-13)**.
-Migration `20261013120000` is applied to `pkmxupsayzshvpirkaav`; matching private signing key and
-approved $0.50 per-operation cap are configured in DB/GitHub/Vercel. All 13,878 derived features
-backfilled at revision 0; original question content/status unchanged, zero admissions/paid calls.
-Application/workflow publication is being verified. Nightly generation is disabled and stays so until
-editorial Phase 4.3. Andrew approved one $0.50 pilot, unspent and reserved for editorial + uniqueness
-checking together. New phases: 4.1 rubric/frozen evaluation, 4.2 shared editorial gate/bounded rewrites,
-4.3 capped pilot/generator release, 4.4 seven-run monitoring. **Phase 5 remains final cleanup**; former
-Phase 6 monitoring moved to 4.4. Editorial gate is planned, not built. Different facts about one person
-remain valid; no lifetime subject ban. Read `docs/speed-trivia-uniqueness-plan.md`,
-`docs/speed-trivia-uniqueness-plan_PHASE_4_HANDOFF.md` and
-`docs/speed-trivia-uniqueness-phase-4-release-record.md`. Do not reapply/down-migrate the applied SQL
-or resurrect unchecked writers. Additional future migrations require separate concrete confirmation.
+Speed Trivia uniqueness **is complete/live (2026-10-13)**. Reviewed retirement of 2,534
+versions (862 active / 1,672 pending) preserves 990 approved keepers, all content/IDs and history.
+Each of the six reported repeated facts has one active version. Ambiguous cases remain explicitly
+held; bounded audit is not a universal semantic guarantee. Final bank **13,894 / revision 2550**:
+**4,274 active / 7,084 pending / 2,536 deleted**. Both authorized pilots added 16 checked pending
+questions; no implicit approvals. Approved-Speed export PR #5 verified, open/unmerged, 4,274 rows /
+9 Speed files / no Live changes. DB cleanup is live independently of PR merge.
+
+Final application SHA **`0b1f5e819971673ed617b2c1ef98f239c57e2096`**, pushed/deployed to Vercel
+READY **`dpl_Aw67UdWUXWbWcEWtaQP9ytc8UhrM`**; both domains/exact source verified. Nightly
+**264911476 active**, restored/read back **2026-10-13T19:23:18.329Z**, original **02:15 UTC** schedule
+and **$0.50** operation cap unchanged. The first pilot failed closed after 2 admissions; the explicitly
+approved additional pilot admitted 14 and exposed a global-deadline abort classification race.
+Strict local label/deadline fixes are deployed, 4,237 tests pass / 13 environment skips, zero unhandled
+errors, typecheck/lint/build/isolated SQL gates pass. Raw failed/cutoff reports preserved. No third
+pilot authorized. Audit $2.1268289 under Andrew's separate $4 cap; audit + pilots $2.4519286
+conservatively. Recurring cap at most $15/30 scheduled runs, admin additional; actual total bills
+unmeasured, no shared monthly counter. Measured ~11.7 MB Supabase reception per pilot versus
+10–11 MB estimate; one whole-bank load plus bounded deltas, ~350 MB/30 runs, ~3.5 GB at 10x bank.
+
+Read `docs/speed-trivia-uniqueness-plan.md`, `docs/speed-trivia-uniqueness-plan_PHASE_5_HANDOFF.md`
+and `docs/speed-trivia-uniqueness-phase-5-release-record.md`. Migration `20261013120000` remains
+applied, original derived features backfilled, key/caps unchanged. Frozen fact core/provider/policy
+unchanged; no schema/provider switch or weakened gate. Preserve signed admission/retired fact
+memory/history; never reapply/down-migrate SQL or restore unchecked writers. Andrew deferred
+editorial 4.1–4.4; different facts about one artist remain valid. Seven scheduled-run observations are
+optional operational follow-up, not another phase. Additional paid work or future migrations require
+their own concrete authorization.
 
 ### Category Blitz (formerly called "Scategories")
 - Scattergories-style word game. Each round draws one **set** of 12 categories and one shared **letter**; players race to name an answer for each category that starts with that letter. Unique answers score points (`lib/categoryBlitz.ts`).

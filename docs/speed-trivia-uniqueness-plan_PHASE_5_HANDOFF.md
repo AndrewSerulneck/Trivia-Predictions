@@ -1,0 +1,108 @@
+# Speed Trivia uniqueness — final Phase 5 handoff
+
+## Developer summary
+
+**Complete and live, 2026-10-13.** We retired **2,534 duplicate versions** (862 playable and 1,672 awaiting review), kept 990 approved versions, and preserved all question content and past games. Each of the six originally reported repeated facts now has one playable version. Prevention checks future questions against the whole bank, including retired facts. Two explicitly authorized pilots added **16 checked pending questions**. Nightly generation is active again with its original schedule and **$0.50 operation cap**. The audit and both pilots used **$2.4519286 conservatively**. Ambiguous old cases remain unchanged; this was a bounded audit, not proof that every possible semantic duplicate is gone. [Export PR #5](https://github.com/AndrewSerulneck/Trivia-Predictions/pull/5) is verified and open/unmerged. No developer decision blocks this completed phase; PR merge is optional artifact publication, independent of the live database cleanup.
+
+## For the next agent
+
+### 1. Scope and decisions
+
+The plan is complete; there is no new implementation phase. Optional follow-up is seven consecutive scheduled-run observations, bounded incremental checks of newly admitted questions, and adding any Andrew-reported repeat as a regression. Use Sol/medium for operational reporting; Sol/high for a concrete reliability repair. No delegation was requested. Do not reopen cleanup, spend another pilot/audit allowance, or wait seven days before acknowledging completion.
+
+Andrew chose keep-best, **soft retirement with history retained**, different facts about the same artist allowed, uniqueness over volume, and zero output acceptable. Editorial 4.1–4.4 were deferred on 2026-10-13 because current question quality is acceptable. No automatic promotion of pending-only keepers, player/score/reward repair, physical deletion, Live JSON rewrite, unchecked imports/restores/file fallbacks, provider switch or extra schema migration was authorized. Migration `20261013120000` remains applied immutable history; never reapply/edit/down-migrate it or redo completed feature backfill.
+
+Permissions granted and used: Phase 5 execution/cleanup/export; a separate **$4 one-time bank-audit cap** and explicit selected question-text/answer/image-context transfer to Gemini; original **one $0.50 pilot**; after that pilot failed, Andrew explicitly approved **one additional $0.50 repair pilot**, then resume after verification. Both are spent; no third pilot is authorized. Nightly/admin cap stays **$0.50 per operation**, at most **$15 for 30 scheduled runs**; admin operations additional, no shared monthly counter. Phase 2 historical budgets were not reset. No player identities/history were sent to Gemini.
+
+### 2. Starting state: branch, commits, deployment, data
+
+- Branch `main`; final application commit **`0b1f5e819971673ed617b2c1ef98f239c57e2096`**, committed/pushed to `origin/main` and deployed. Earlier Phase 5 commits: cleanup/export **`0b8a06e3042e56551d8733a6724984af10ff2995`**, short-label/diagnostic repair **`8f9c3eb9bb926eb93a6af2f6920ab247696880df`**.
+- Final actual production deployment **`dpl_Aw67UdWUXWbWcEWtaQP9ytc8UhrM`**, **READY**, `https://hightop-challenge-f53ewh675-andrewserulnecks-projects.vercel.app`; REST metadata matches the final application SHA, attaches apex/player aliases, and `vercel inspect play.hightopchallenge.com` resolves to the same ID. Existing project `prj_yjIvzEUquV1gPWBsgOIluVp8v1ci`, team `team_uGVCpxcJGBQ1VdCDO0lSMRZf`.
+- Final documentation is published with this handoff. Resolve its exact docs-only commit using `git log -1 --format=%H -- docs/speed-trivia-uniqueness-plan_PHASE_5_HANDOFF.md`; publication/read-back record is ignored `tmp/speed-trivia-uniqueness-private/phase5-cleanup/final-publication.json`. No application redeploy is needed for documentation-only updates. Pre-existing Phase 4 course-correction documentation is included; unrelated `next-env.d.ts` and `.vscode/settings.json` were left alone.
+- Database **`pkmxupsayzshvpirkaav`**, final numeric revision **2550**, **13,894 Speed rows: 4,274 active / 7,084 pending / 2,536 deleted**. All original 13,878 question identities/content are unchanged. The only original-row changes are the 2,534 reviewed statuses and their revisions; both pilots added 16 pending rows, no approvals. Active Live rows stay **3,451**, total Live 4,537.
+- Workflow **264911476**, `.github/workflows/trivia-nightly.yml`, restored from `disabled_manually` to **active**, read-back **2026-10-13T19:23:18.329Z**. Cap read-back **`0.50`**; unchanged schedule **`15 2 * * *`**, 02:15 UTC = 10:15 PM EDT / 9:15 PM EST. No GitHub manual dispatch. Published YAML SHA-256 **`f539db1155ddbbdb646cc142e61227db7a11d8481be2ac584af1d374d472e003`**.
+- [Speed export PR #5](https://github.com/AndrewSerulneck/Trivia-Predictions/pull/5) is **open/unmerged**, head **`f784f1f826e47a434db1591d9a8b14d0b56a33ef`**, base at capture **`0b8a06e3042e56551d8733a6724984af10ff2995`**. Full verification at `2026-10-13T18:42:26.490Z`: all **4,274 approved rows / nine Speed files**, no stale retired rows or Live files. Later pilot additions are pending and do not belong in exports. DB is canonical; no local trivia JSON was rewritten or mixed-pool sync run.
+
+### 3. Backup, immutable manifest and undo
+
+Pre-cleanup snapshot: `tmp/speed-trivia-uniqueness-private/2026-10-13T18-11-46-423Z/`, 13,878 rows / 56 complete pages; numeric revision independently checked **0**. Original-column digest **`765d58ff44d21f98283d487b1f3f41b2`**, semantic digest **`a51f703094ce880bf148989b5c6d89c3098170fd16c86a4775146d26e6f146cc`**. Post-cleanup snapshot `.../2026-10-13T18-35-22-817Z/`, revision 2534. Final full snapshot including pilot additions `.../2026-10-13T19-18-07-735Z/`, **13,894 rows / 56 complete pages**, revision 2550; matching final verification at **2026-10-13T19:20:32.959Z**.
+
+Frozen file **`tmp/speed-trivia-uniqueness-private/phase5-cleanup/reviewed-apply-manifest.json`**, **2,899,895 bytes**, file SHA-256 **`8d195492e144ca8b853290d4ae3976956b7b311c6e0faa3cedf2cc1f66b0a9ed`**. Canonical JSON/DB hash is DIFFERENT: **`2e3359445c11a07f5c5149a08cd88d5b34301473f41b4e54b7a610e825fb67d2`**. Use file hash with CLI, canonical hash with DB cleanup-state RPC. All exact row/keeper IDs are private; do not edit/recompute the frozen list or pass a Phase 2 dry run to apply.
+
+Applied **51 guarded atomic batches**, **2,534** authoritative records in `public.speed_trivia_cleanup_log`; local before/after/keeper undo copy **`phase5-cleanup/apply/undo-state.json`**, journal `operations.jsonl` beside it. Every after-state matches the complete post-cleanup bank. Read-only undo-state validation passed at revision 2534; actual restoration requires current admission and a surviving duplicate keeper blocks it. Never briefly restore duplicates in production or use whole-database rollback for routine retirement repair.
+
+Durable same-Mac private archives under **`/Users/andrewserulneck/Library/Application Support/HightopChallenge/private-backups/speed-trivia/`** (exclusive new files; adjacent hashes):
+
+| Archive | Bytes | SHA-256 | Recovery evidence |
+| --- | ---: | --- | --- |
+| `phase5-preapply-2026-10-13T18-11-46Z.tar.gz` | 6,521,644 | `59812baba611ed5421fe181124aa3fd2ec3cabf7fd45461596775b3c120472fb` | 25 extracted file hashes and restored primary snapshot verifier pass |
+| `phase5-reviewed-2026-10-13T18-32Z.tar.gz` | 2,381,349 | `8862292205c8793a7263bde19ba29f0822e7e6f7f68509e2307c053f981e3776` | Nine reopened hashes pass |
+| `phase5-cleanup-and-pilot-2026-10-13T18-53Z.tar.gz` | 3,365,094 | `e0b8d103d49667a6b326c2df52a74a500151bd9adc1fb6197d1c3c9c855ab446` | 46 reopened hashes pass |
+| **`phase5-final-2026-10-13T19-24Z.tar.gz`** | **12,556,028** | **`bd20de9a19f05625fad046d7dfcf80f44c5e07555b9b5fc6e4b6a352ccbd2f15`** | **93 reopened hashes pass**, final bank/undo/audit/both pilots/restart evidence |
+
+Final archive inventory **`tmp/speed-trivia-uniqueness-private/phase5-completed-archive-record.json`**. Previous Phase 1/2/4 archives and keys remain intact. Off-device Supabase backup **1953327419**, COMPLETED **2026-10-13T11:31:37.619Z**, independently rechecked. Hosted restore untested, PITR disabled; same-Mac archive cloud sync unproven. Routine restore must be scoped and preserve newer gameplay, not revert the whole production database.
+
+Reference preservation: retired rows retain **371 answer / 868 answer-variant / 2 user-seen references**. Final/pre totals unchanged across all five FK reference tables: trivia answers **3,312 total / 3,311 Speed**, answer variants **9,343 / 5,626**, session-question links **12,300 / 0**, Live answers **516 / 0**, venue-seen **8,576 / 0**. User-seen separately **1,731 / 18**, unchanged. IDs/slugs/text/options/correct answers preserved; no player/points/rewards/session edits or physical deletes.
+
+### 4. Audit scope, decisions and remaining uncertainty
+
+Reused **6,882** valid Phase 2 direct-pair comparisons. Fresh bounded plan: **3,259 tasks**, **68 cached / 3,191 paid**, all 77 newly discovered rows' complete retrieval sets, previous failed comparisons and original-family keeper comparisons. Eleven additional family/qualifier comparisons shared the same $4 ledger: seven failed comparisons became sound high-confidence duplicates, four differing animal scopes distinct. Provider task labels were shortened for that follow-up; fact core/provider/policy were not changed. Every retirement has direct evidence to an active unchanged keeper, never a transitive similarity chain. Fresh list adds **80** proposals and holds **13** earlier proposals, net **+67** versus Phase 2.
+
+All six original facts have one active representative: **Gobi 3/4 retired, Eras artist 17/18, Africa hemispheres 16/17, vertebrate longevity 24/25, Sputnik country 4/5, Olympia origin 4/5**. Full-bank retired exact-fact replay rejects all six with zero paid calls; frozen paraphrase/distinct-same-artist gates pass.
+
+This is not an exhaustive bank certification. **7,034 overlapping internal unresolved entries** concern **4,462 rows**: **1,200 active / 2,904 pending / 358 retired**. Reasons: scope/accuracy/confidence 1,007; keeper involved in uncertainty 373; no sound active keeper 2,449; deleted-history reason unknown 2; insufficient direct keeper grouping 3,203. These are overlapping graph evidence, not all duplicates or thousands of developer review tasks. Preserve `phase5-audit/final-reviewed-dry-manifest.json` and `phase5-cleanup/unresolved-summary.json`; do not quietly relabel held comparisons unique. Legacy `clear`/derived features are not semantic certificates.
+
+### 5. Paid pilots, real failures and repaired behavior
+
+**Original authorized pilot:** `phase5-uniqueness-pilot-2026-10-13`, **2026-10-13T18:41:27.535Z–18:43:55.693Z**, source `0b8a06e3042e56551d8733a6724984af10ff2995`, deployment `dpl_7a5E3FLmWp9yPUVVLVdp2hmxpUy4`, revisions **2534→2536**. Generated **10**, admitted **2** pending, duplicates **2**, diversity holds **1**, malformed/uncertain **0**, shortfall **98**. Fatal **verification_unavailable**; original reporting lost the exact dependency reason, so its precise cause is UNKNOWN, not claimed proven to be a UUID error. Conservative **$0.0714199**, 79,108 input / 19,075 output token units, 118 Gemini requests, 148,111 ms. Two saved rows independently verified pending at revisions 2535/2536. Directory `phase5-pilot/`.
+
+Audit ID-schema failures motivated a real-provider adapter fix: isolated requests use short label **`comparison`**, strictly validated and mapped back to original DB IDs. Question/fact content, cache keys, frozen judge and policy are unchanged. A wrong label still blocks admission; injected test judges retain their original-ID semantics. Sanitized generation failure code/message/verification reason are now saved.
+
+**Separately authorized additional pilot:** `phase5-repair-pilot-2026-10-13`, **2026-10-13T18:58:06.802Z–19:08:06.849Z**, source `8f9c3eb9bb926eb93a6af2f6920ab247696880df`, deployment `dpl_Hcw47VrFotFggDWuGQuXcUFyU7tj`, revisions **2536→2550**. Generated **19**, admitted **14** pending across six subtopics, diversity hold **1**, duplicate/uncertain/malformed counters **0**, shortfall **86**, candidate reservations **20**, retries **0**. Conservative **$0.2536798**, 299,991 input / 65,473 output token units including unfinished-request reservation, 457 Gemini requests. Supabase **102 requests / 437,922 uploaded / 11,672,080 received bytes**; Gemini 1,569,647 uploaded / 476,644 received bytes. All 14 rows/revisions **2537–2550** verified pending. Directory `phase5-repair-pilot/`.
+
+**Do not rewrite the raw additional-pilot report:** it says fatal verification_unavailable, reason **`Unverified comparison: semantic-network-or-timeout`**, at **600,004 ms against a 600,000 ms ceiling**. It reached the global deadline; its unfinished comparison saved no row. The abort could beat the budget timer and be mislabeled as an outage. A new isolated regression also exposed an unhandled rejection if a request started before `budget.limit` noticed expiry. Final fix consumes all in-flight results, preserves an actually exhausted deadline on provider/RPC aborts, and reports bounded cutoff/shortfall. True outage or wrong label before deadline still fails closed. These exact boundaries were reproduced/fixed locally with zero further paid calls; the live 14 admissions and raw failure remain separate evidence. No third pilot was run. Release assessment **`phase5-cleanup/release-acceptance.json`** explicitly records this, not a fabricated clean raw run.
+
+### 6. Changed files, how they fit, and traps
+
+- **`scripts/prepare-speed-trivia-retirement.cjs:prepare`**: verified complete snapshot/reference checksums; reuse matching direct-pair content/model evidence; emit non-applyable refreshed manifest at a supplied numeric revision.
+- **`scripts/audit-speed-trivia-refresh.cjs:run`**: immutable plan checksum/content digest/revision, capped/resumable paid comparisons, shared persistent charges/cache, bounded concurrency/retries and explicit unverified results. Initial execution preceded final plan-field hardening; revision 0/current content were independently verified. Hardened plan `phase5-cleanup/audit-plan-v2.json`; never reset the ledger.
+- **`scripts/manage-speed-trivia-retirement.cjs:run`**: dry-run/undo-dry-run use one complete revision-bound corpus plus maps rather than two RPCs per retirement. Signed immutable apply/50-row atomic DB batches/current-admission undo unchanged.
+- **`app/api/admin/trivia/questions/export-speed-json/route.ts`**: revision before/after pagination; immutable GitHub base for comparisons; stale retired-only category removal; Speed-only tree changes. No category actually became empty here; synthetic tests prove deletion.
+- **`lib/speed-trivia-uniqueness/runtime.cjs:createSession/createBudget.limit`**: short default-provider labels preserving IDs and strict schema; correct deadline classification and consumption of late rejections. **`generation.cjs:generateOnce/runGeneration`**: precise sanitized failure report, normal global-budget cutoff. No extra provider calls/retries/corpus loads.
+- **Tests**: `tests/api.admin.speed-trivia-export.test.ts`, `tests/scripts.speed-trivia-cleanup-inventory.test.ts`, `tests/scripts.speed-trivia-provider-labels.test.ts`, extended `tests/scripts.speed-trivia-admission.test.ts`. They cover stale exports/empty categories/auth, 1,200-target bounded reads, label/ID fidelity, wrong-label/outage refusal, cutoff abort/no save and cutoff between accepted candidates.
+- **Docs**: this handoff, Phase 5 release record, plan/status/authorization, AGENTS/SYSTEM pointers; historical Phase 3/4 notices/course correction retained. Private operational helpers/evidence remain ignored.
+
+Production export initially returned 404 because `GITHUB_REPO_OWNER` was **Andrew-Serulneck**. Corrected only production owner to **AndrewSerulneck** through allowed Vercel env-add/force, then redeployed; no GitHub branch was created on the failed request. `.env.local` was never opened/edited, no key/cap rotation. Vercel did not auto-build after push; deployment source was exact `git archive` under `/private/tmp/speed-trivia-phase5-*-release-*`, explicit existing project/team, no local env/private evidence.
+
+Network sandbox initially blocked read-only capture; escalation succeeded. Automatic paid-audit review rejected implicit destination permission; Andrew then explicitly approved the Gemini payload/destination and it completed. No unresolved approval rejection. App export token lacks GitHub Variables permission (403); use existing **`gh` CLI credentials** for cap/workflow management, not a broadened app token. Private replay helper syntax error failed before calls, then was corrected. Newly added deadline test initially found an unhandled rejection; fixed and final tests have zero unhandled errors.
+
+### 7. Build/test, measured costs and remaining limitations
+
+Node **24.19.0** local / **20** Actions / **24.x** Vercel; no new dependencies. SQL synthetic fixture PGlite at `tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite`; real simultaneous PostgreSQL at `tmp/speed-trivia-postgres/node_modules`, loopback port **55483**, needs shared-memory/network permission but loads no real env/credentials. Do not run typecheck concurrently with build.
+
+```sh
+npx tsc --noEmit
+npm run lint
+npm run test
+npm run build
+git diff --check
+node scripts/test-speed-trivia-admission-sql.cjs
+node scripts/test-speed-trivia-retirement-sql.cjs
+node scripts/test-speed-trivia-admission-concurrency.cjs
+```
+
+Final gates **4,237 pass / 13 environment-gated skip / zero fail or unhandled errors**, 358 passing files / one skipped, clean typecheck/lint, **202-page production build**. Isolated SQL **26**, copied-database retirement/undo **16**, actual simultaneous PostgreSQL **7** checks pass; original/fresh semantic release gates unchanged/pass. Core SHA **`24ae8e137aa990be82e9a09b60e4b822fcc497248cf20ab342538e596d047660`** and provider SHA **`1fad34a5a2b8ea1f6ae89a6d63bb987b4bff77a4b64f684039ea7a259e167d2f`** unchanged. Versions `speed-facts-v2` / `answer-concepts-v2` / `union-answer-bm25-concepts-v4` / `gemini-2.5-flash:fact-judge-v2:thinking-0:batch-1`. No threshold/label rewrite to manufacture a gate pass.
+
+Deployed authenticated checks at **2026-10-13T18:35:50.673Z**: Speed active 4,274 / Live active 3,451; referenced retired UUID still readable via the in-flight lookup; restoration refuses **409/retired**; exact retired-fact create refuses **400**; fresh selection returns **15** with no retired IDs. Zero accepted question/player writes or paid calls in these refusals. Every applied row/keeper and final original-row content/reference aggregate later verified. Physical-device interaction and actual scheduled production timing remain untested operational follow-up.
+
+Bank audit ledger **`phase5-audit/budget.jsonl`**: **$2.1268289**, 3,202 paid requests, 2,162,913 input / 591,182 output tokens, zero unsettled audit reservations/retries, versus $2.077341 estimate (~2.4% higher). Both pilots conservative **$0.3250997**; total **$2.4519286**, not invoices. Final interrupted pilot request stays charged conservatively; settled/actual provider bill unmeasured. Recurring cap unchanged, no monthly shared counter.
+
+Apply **2026-10-13T18:33:32.344Z–18:34:32.463Z**: **53 RPCs**, **159,390,092 uploaded / 7,985,188 received bytes**, **60,119 ms**. Compact manifest upload actual ~7.8% above 147,894,645 estimate due escaped RPC envelope, one-time. Dry-run uses **31 RPCs / roughly 10 MB**, replacing 4,935 calls for the earlier list. Measured pilot Supabase reception **~11.7 MB/run**, slightly above 10–11 MB estimate, **~350 MB/30 runs**; roughly **3.5 GB/30** at 10x bank size, assuming similar row sizes/work. This still uses one whole-bank load per operation plus bounded deltas, not whole-table work per candidate/category. Admin operations/hosting/storage/build/Supabase marginal bills additional and unmeasured. No recurring cost increase was introduced by label/deadline repairs.
+
+**Never repeat apply/undo mutation, migration/backfill, paid audit, either pilot or PR creation as a test.** Inspect saved reports first. Read-only CLI undo check is safe but full-bank/log transfer costs data; isolated fixtures prove actual undo mechanics. No whole-bank daily audit or budget replenishment.
+
+### 8. Open questions and recommended first steps
+
+No answer is needed to complete this accepted scope. Ambiguous old cases and imperfect semantic recall are explicit limits; no historical cleanup expansion is implied. PR #5 can be reviewed/merged as the normal Speed export artifact; live cleanup and signed writers already work independently. No editorial prerequisite remains.
+
+For optional operational monitoring, fetch the next seven scheduled workflow runs after **2026-10-13T19:23:18.329Z**, record commit/conclusion/generated/blocked/uncertain/admitted/subject mix/retries/tokens/spend/bytes/latency from their `speed-trivia-admission-report` artifacts. First next scheduled run is 02:15 UTC October 14 (10:15 PM EDT October 13). Zero output is valid; a true dependency failure must stay explicit and save no unverified rows. Audit only bounded new admissions, preserve the $0.50 cap, and add reported repeats as regressions. Use Sol/medium for reporting; Sol/high for any concrete repair. Do not reopen a completed phase because seven future observations have not happened.
