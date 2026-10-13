@@ -1,3 +1,4 @@
+import { findTriviaAdmissionRow, openSpeedTriviaAdmission, writeSpeedTrivia, convertSpeedTriviaToLive } from "@/lib/speedTriviaAdmission";
 import { readFileSync, readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import { replaceSessionQuestion } from "@/lib/liveShowdownAdmin";
@@ -703,6 +704,12 @@ export async function createAdminTriviaQuestion(input: {
     correctAnswer = 0;
   }
 
+  if (questionPool === "anytime_blitz") {
+    return mapTriviaRow(await writeSpeedTrivia({ question, options, correct_answer: correctAnswer,
+      category: input.category?.trim() || "General Knowledge", difficulty: input.difficulty?.trim() || null,
+      question_pool: questionPool, answer_format: answerFormat, status: "pending_review" }) as TriviaQuestionRow);
+  }
+
   const { data, error } = await supabaseAdmin!
     .from("trivia_questions")
     .insert({
@@ -771,6 +778,19 @@ export async function updateAdminTriviaQuestion(input: {
     correctAnswer = 0;
   }
 
+  const existing = await findTriviaAdmissionRow(id);
+  if (!existing) throw new Error("Question not found.");
+  if (questionPool === "anytime_blitz") {
+    return mapTriviaRow(await writeSpeedTrivia({ question, options, correct_answer: correctAnswer,
+      category: input.category?.trim() || existing.category || "General Knowledge", difficulty: input.difficulty?.trim() || null,
+      question_pool: questionPool, answer_format: answerFormat }, existing) as TriviaQuestionRow);
+  }
+  if (existing.question_pool === "anytime_blitz") {
+    return mapTriviaRow(await convertSpeedTriviaToLive({ question, options, correct_answer: correctAnswer,
+      category: input.category?.trim() || existing.category, difficulty: input.difficulty?.trim() || null,
+      question_pool: questionPool, answer_format: answerFormat }, existing) as TriviaQuestionRow);
+  }
+
   const { data, error } = await supabaseAdmin!
     .from("trivia_questions")
     .update({
@@ -795,6 +815,13 @@ export async function updateAdminTriviaQuestion(input: {
 
 export async function deleteAdminTriviaQuestion(id: string): Promise<void> {
   assertAdminConfigured();
+
+  const existing = await findTriviaAdmissionRow(id);
+  if (existing?.question_pool === "anytime_blitz") {
+    const { error } = await supabaseAdmin!.from("trivia_questions").update({ status: "deleted" }).eq("id", id);
+    if (error) throw new Error(error.message);
+    return;
+  }
 
   // Fetch the slug so we can remove any trivia_session_questions rows that
   // reference it (FK is on slug with ON DELETE RESTRICT).
@@ -851,13 +878,20 @@ export async function bulkUpdateAdminTriviaQuestions(input: {
     throw new Error("No bulk trivia fields were provided.");
   }
 
-  const { error } = await supabaseAdmin!
-    .from("trivia_questions")
-    .update(patch)
-    .in("id", ids);
-
-  if (error) {
-    throw new Error(error.message || "Failed to bulk update trivia questions.");
+  if (ids.length > 200) throw new Error("Bulk trivia edits are limited to 200 questions.");
+  const { data: existingRows, error: readError } = await supabaseAdmin!.from("trivia_questions").select("*").in("id", ids);
+  if (readError || existingRows?.length !== ids.length) throw new Error("Could not verify every selected question.");
+  const needsSpeed = existingRows.some(row => row.question_pool === "anytime_blitz" || patch.question_pool === "anytime_blitz");
+  const session = needsSpeed ? await openSpeedTriviaAdmission() : undefined;
+  for (const row of existingRows) {
+    if ((patch.question_pool ?? row.question_pool) === "anytime_blitz") {
+      await writeSpeedTrivia(patch, row, session);
+    } else if (row.question_pool === "anytime_blitz") {
+      await convertSpeedTriviaToLive(patch, row, session);
+    } else {
+      const { error } = await supabaseAdmin!.from("trivia_questions").update(patch).eq("id", row.id);
+      if (error) throw new Error(error.message);
+    }
   }
 }
 
@@ -3917,50 +3951,6 @@ function updateLiveTriviaQuestionFileBySlug(
 }
 
 /**
- * Update a speed-trivia question directly in its JSON file by slug.
- * Returns the updated question mapped to TriviaQuestion shape.
- */
-function updateSpeedTriviaQuestionFileBySlug(
-  slug: string,
-  patch: { question: string; options: string[]; correctAnswer: number; category?: string | null; difficulty?: string | null }
-): TriviaQuestion {
-  const found = findSpeedTriviaQuestionInFile(slug);
-  if (!found) {
-    throw new Error(`Speed trivia question with slug "${slug}" not found in any JSON file.`);
-  }
-
-  const filePath = join(getSpeedTriviaDir(), found.file);
-  const raw = JSON.parse(readFileSync(filePath, "utf-8")) as {
-    categoryName?: string;
-    normal_multiple_choice: SpeedTriviaFileQuestion[];
-  };
-
-  raw.normal_multiple_choice[found.index] = {
-    ...raw.normal_multiple_choice[found.index],
-    slug,
-    question: patch.question,
-    options: patch.options,
-    correctAnswer: patch.correctAnswer,
-    category: patch.category !== undefined ? patch.category ?? "" : raw.normal_multiple_choice[found.index].category,
-    difficulty: patch.difficulty !== undefined ? patch.difficulty ?? "" : raw.normal_multiple_choice[found.index].difficulty,
-  };
-
-  writeFileSync(filePath, JSON.stringify(raw, null, 2), "utf-8");
-
-  const updated = raw.normal_multiple_choice[found.index];
-  return {
-    id: updated.slug,
-    question: updated.question,
-    options: updated.options,
-    correctAnswer: updated.correctAnswer,
-    category: raw.categoryName || updated.category,
-    difficulty: updated.difficulty,
-    questionPool: "anytime_blitz",
-    answerFormat: "multiple_choice",
-  };
-}
-
-/**
  * Delete a live-trivia question directly from its JSON file by slug.
  * Returns true if found and deleted.
  */
@@ -3975,25 +3965,6 @@ function deleteLiveTriviaQuestionFileBySlug(slug: string): boolean {
   };
 
   raw.questions.splice(found.index, 1);
-  writeFileSync(filePath, JSON.stringify(raw, null, 2), "utf-8");
-  return true;
-}
-
-/**
- * Delete a speed-trivia question directly from its JSON file by slug.
- * Returns true if found and deleted.
- */
-function deleteSpeedTriviaQuestionFileBySlug(slug: string): boolean {
-  const found = findSpeedTriviaQuestionInFile(slug);
-  if (!found) return false;
-
-  const filePath = join(getSpeedTriviaDir(), found.file);
-  const raw = JSON.parse(readFileSync(filePath, "utf-8")) as {
-    categoryName?: string;
-    normal_multiple_choice: SpeedTriviaFileQuestion[];
-  };
-
-  raw.normal_multiple_choice.splice(found.index, 1);
   writeFileSync(filePath, JSON.stringify(raw, null, 2), "utf-8");
   return true;
 }
@@ -4070,6 +4041,12 @@ async function updateTriviaBankQuestionByIdOrSlug(params: {
   const questionPool = params.questionType === "live" ? "live_showdown" : "anytime_blitz";
   const selectColumns =
     "id, question, options, correct_answer, category, difficulty, question_pool, answer_format, created_at";
+
+  if (params.questionType === "speed") {
+    const existing = await findTriviaAdmissionRow(idOrSlug);
+    if (!existing || existing.question_pool !== "anytime_blitz") throw new Error("Speed Trivia question not found in database.");
+    return mapTriviaRow(await writeSpeedTrivia(params.patch, existing) as TriviaQuestionRow);
+  }
 
   const runUpdate = async (field: "id" | "slug", value: string): Promise<TriviaQuestion | null> => {
     const { data, error } = await supabaseAdmin!
@@ -4459,60 +4436,18 @@ export async function updateAdminSpeedTriviaQuestionInFile(input: {
     patch.difficulty = input.difficulty.trim() || null;
   }
 
-  // Try Supabase first; fall back to direct file update on failure
-  try {
-    return await updateTriviaBankQuestionByIdOrSlug({
-      questionType: "speed",
-      identifier: slug,
-      patch,
-      categoryForLog: input.category,
-    });
-  } catch (error) {
-    logAdminTriviaBankError({
-      action: "update",
-      questionType: "speed",
-      questionId: slug,
-      category: input.category,
-      error,
-    });
-  }
-
-  return updateSpeedTriviaQuestionFileBySlug(slug, {
-    question,
-    options,
-    correctAnswer,
-    category: input.category !== undefined ? (input.category.trim() || null) : undefined,
-    difficulty: input.difficulty !== undefined ? (input.difficulty.trim() || null) : undefined,
-  });
+  return updateTriviaBankQuestionByIdOrSlug({ questionType: "speed", identifier: slug, patch, categoryForLog: input.category });
 }
 
 export async function deleteAdminSpeedTriviaQuestionInFile(slug: string): Promise<void> {
   const normalizedSlug = String(slug ?? "").trim();
   if (!normalizedSlug) throw new Error("slug is required.");
 
-  // Try Supabase first; fall back to direct file deletion on failure
-  try {
-    await deleteTriviaBankQuestionByIdOrSlug({
-      questionType: "speed",
-      identifier: normalizedSlug,
-    });
-    return;
-  } catch (error) {
-    logAdminTriviaBankError({
-      action: "delete",
-      questionType: "speed",
-      questionId: normalizedSlug,
-      error,
-    });
-    if (!canFallbackToFileDelete(error)) {
-      throw error;
-    }
-  }
-
-  const deleted = deleteSpeedTriviaQuestionFileBySlug(normalizedSlug);
-  if (!deleted) {
-    throw new Error(`Speed trivia question with slug "${normalizedSlug}" not found in database or any JSON file.`);
-  }
+  assertAdminConfigured();
+  const existing = await findTriviaAdmissionRow(normalizedSlug);
+  if (!existing || existing.question_pool !== "anytime_blitz") throw new Error("Speed Trivia question not found in database.");
+  const { error } = await supabaseAdmin!.from("trivia_questions").update({ status: "deleted" }).eq("id", existing.id);
+  if (error) throw new Error(error.message);
 }
 
 async function resolvePendingPredictionMarketLegacy(params: {

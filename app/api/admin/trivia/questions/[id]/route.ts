@@ -1,3 +1,4 @@
+import { findTriviaAdmissionRow, writeSpeedTrivia, speedTriviaError } from "@/lib/speedTriviaAdmission";
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import { replaceSessionQuestion } from "@/lib/liveShowdownAdmin";
@@ -54,6 +55,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return NextResponse.json({ ok: false, error: "id is required." }, { status: 400 });
     }
 
+    const stored = await findTriviaAdmissionRow(id);
+    if (!stored) return NextResponse.json({ ok: false, error: "Question not found." }, { status: 404 });
     const body = (await request.json()) as PatchBody;
     const update: QuestionUpdate = {};
 
@@ -65,6 +68,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       update.question = question;
     }
 
+    if (stored.question_pool === "anytime_blitz" && typeof body.answer === "string") {
+      return NextResponse.json({ ok: false, error: "For Speed Trivia, edit the options and correct answer index together." }, { status: 400 });
+    }
     // Write-in answer takes precedence: options[0] is the canonical reveal answer.
     if (typeof body.answer === "string") {
       const answer = body.answer.trim();
@@ -121,6 +127,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return NextResponse.json({ ok: false, error: "No valid fields to update." }, { status: 400 });
     }
 
+    if (stored.question_pool === "anytime_blitz" && (update.status !== "deleted" || Object.keys(update).length > 1)) {
+      const question = await writeSpeedTrivia(update, stored);
+      return NextResponse.json({ ok: true, question });
+    }
     const { data, error } = await supabaseAdmin
       .from("trivia_questions")
       .update(update)
@@ -139,8 +149,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true, question: data });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed to update question." },
-      { status: 500 }
+      { ok: false, error: error instanceof Error ? error.message : "Failed to update question.", code: speedTriviaError(error).code, conflicts: speedTriviaError(error).conflicts },
+      { status: speedTriviaError(error).status }
     );
   }
 }
@@ -166,9 +176,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       .from("trivia_questions")
       .update({ status: "deleted" })
       .eq("id", id)
-      .select("id, slug")
+      .select("id, slug, question_pool")
       .limit(1)
-      .maybeSingle<{ id: string; slug: string | null }>();
+      .maybeSingle<{ id: string; slug: string | null; question_pool: string }>();
 
     if (error) {
       throw new Error(error.message || "Failed to delete question.");
@@ -181,7 +191,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     // occurrence. Past occurrences are left untouched (their answers already exist).
     let replacementsPerformed = 0;
     const deletedSlug = String(data.slug ?? "").trim();
-    if (deletedSlug) {
+    if (deletedSlug && data.question_pool !== "anytime_blitz") {
       const today = new Date().toISOString().slice(0, 10);
       const { data: affectedData, error: affectedError } = await supabaseAdmin
         .from("trivia_session_questions")

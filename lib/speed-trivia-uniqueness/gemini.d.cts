@@ -1,0 +1,10 @@
+import type { ComparisonTask, ComparisonResult, FactDecision } from "@/types/speedTriviaUniqueness";
+export const RATES: Readonly<Record<string, { input: number; output: number }>>;
+export const PROMPT_VERSION: string;
+export const SYSTEM: string;
+export function buildPrompt(tasks: ComparisonTask[]): string;
+export function modelVersion(model: string, thinkingBudget?: number, batchSize?: number): string;
+export type CachedPair = { modelVersion: string; firstHash: string; result: FactDecision };
+export type TokenClaim = { dollars: number; inputTokens: number; outputTokens: number; requests: number };
+export type TokenUsage = { dollars: number; inputTokens: number; outputTokens: number; thoughtTokens: number; elapsedMs: number; model: string; modelVersion: string };
+export function createJudge(options: { model?: string; apiKey?: string | null; budget: { reserve: (claim: TokenClaim) => string; settle: (id: string, usage: TokenUsage) => void }; cache: { get: (key: string) => CachedPair | undefined; set: (key: string, value: CachedPair) => void }; transport?: typeof fetch; thinkingBudget?: number; maxOutputTokens?: number; timeoutMs?: number; batchSize?: number }): { modelVersion: string; adjudicate: (tasks: ComparisonTask[]) => Promise<ComparisonResult[]> };

@@ -1,0 +1,51 @@
+export type SpeedQuestion = {
+  id: string;
+  slug?: string;
+  status: "active" | "pending_review" | "deleted";
+  question: string;
+  options: string[];
+  correct_answer: number;
+  answer?: string | null;
+  category: string;
+  question_pool: "anytime_blitz";
+  answer_format: "multiple_choice";
+  image_url?: string | null;
+  image_context?: Record<string, unknown> | null;
+  created_at?: string;
+  speed_generation_metadata?: { version: "speed-subject-plan-v1"; primarySubject: string; subtopic: string } | null;
+};
+export type FactDecision = {
+  decision: "duplicate" | "unique" | "uncertain";
+  explanation: string;
+  fact: string;
+  qualityA: "sound" | "invalid" | "uncertain" | "unverified";
+  qualityB: "sound" | "invalid" | "uncertain" | "unverified";
+  confidence: "high" | "medium" | "low";
+};
+export type ComparisonTask = { id: string; a: SpeedQuestion; b: SpeedQuestion; key?: string };
+export type ComparisonResult = FactDecision & { id: string };
+export type SpeedCorpus = { readonly rows: readonly SpeedQuestion[]; readonly revision: string; readonly digest: string; readonly complete: true };
+export type DerivedFact = { contentHash: string; extractorVersion: string; answerEntity: string; primaryEntities: string[]; description: string; qualifiers: string[]; lexical: string[]; semantic: string[] };
+export type RetrievalHit = { id: string; routes: string[]; score: number };
+export type RetrievalEvidence = { matches: RetrievalHit[]; complete: boolean; total: number; retrievalVersion: string };
+export type SpeedIndex = { corpus: SpeedCorpus; byId: Map<string, { row: SpeedQuestion; meta: DerivedFact }>; answers: Map<string, Set<string>>; exact: Map<string, Set<string>>; lexical: Map<string, Set<string>>; semantic: Map<string, Set<string>> };
+export type CheckOptions = { adjudicate?: (tasks: ComparisonTask[]) => Promise<ComparisonResult[]>; modelVersion?: string; excludeId?: string | null; expectedRevision?: string };
+export type AdmissionEvidence = {
+  decision: "duplicate" | "unique" | "uncertain";
+  explanation: string;
+  policyVersion: string;
+  extractorVersion: string;
+  retrievalVersion: string;
+  modelVersion: string;
+  corpusRevision: string | null;
+  corpusDigest: string | null;
+  contentHash: string | null;
+  matchedRowIds: string[];
+  comparisons: ComparisonResult[];
+  retrieval?: RetrievalEvidence;
+};
+export type CorpusReader = {
+  readEvidence: () => Promise<{ count: number; revision: string }>;
+  readPage: (request: { offset: number; limit: number; revision: string }) => Promise<{ rows: SpeedQuestion[]; revision: string }>;
+  pageSize?: number;
+};

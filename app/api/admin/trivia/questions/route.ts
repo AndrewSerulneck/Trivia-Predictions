@@ -1,3 +1,4 @@
+import { openSpeedTriviaAdmission, writeSpeedTrivia, speedTriviaError } from "@/lib/speedTriviaAdmission";
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -141,23 +142,28 @@ export async function POST(request: Request) {
     }
 
     const nextStatus: QuestionStatus = action === "approve" ? "active" : "deleted";
-    let query = supabaseAdmin
-      .from("trivia_questions")
-      .update({ status: nextStatus })
-      .in("id", ids);
-    if (pool) query = query.eq("question_pool", pool);
-
-    const { data, error } = await query.select("id");
-
-    if (error) {
-      throw new Error(error.message || "Failed to update trivia questions.");
+    if (ids.length > 200) return NextResponse.json({ ok: false, error: "Choose at most 200 questions." }, { status: 400 });
+    let read = supabaseAdmin.from("trivia_questions").select("*").in("id", ids);
+    if (pool) read = read.eq("question_pool", pool);
+    const { data: rows, error: readError } = await read;
+    if (readError || !rows) throw new Error("Could not verify selected questions.");
+    const gate = action === "approve" && rows.some(row => row.question_pool === "anytime_blitz") ? await openSpeedTriviaAdmission() : undefined;
+    const data: { id: string }[] = [];
+    for (const row of rows) {
+      if (action === "approve" && row.question_pool === "anytime_blitz") {
+        await writeSpeedTrivia({ status: "active" }, row, gate);
+      } else {
+        const { error } = await supabaseAdmin.from("trivia_questions").update({ status: nextStatus }).eq("id", row.id);
+        if (error) throw new Error(error.message);
+      }
+      data.push({ id: row.id });
     }
 
     return NextResponse.json({ ok: true, action, status: nextStatus, updated: (data ?? []).length });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed to update trivia questions." },
-      { status: 500 }
+      { ok: false, error: error instanceof Error ? error.message : "Failed to update trivia questions.", code: speedTriviaError(error).code, conflicts: speedTriviaError(error).conflicts },
+      { status: speedTriviaError(error).status }
     );
   }
 }

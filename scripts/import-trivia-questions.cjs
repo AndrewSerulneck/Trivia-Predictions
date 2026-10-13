@@ -641,6 +641,21 @@ async function upsertRows(rows, options = {}) {
 
   await verifyConnectivity(supabaseUrl);
 
+  // Speed imports use signed admission, including current deleted-history memory.
+  // Live imports retain their existing validation/upsert/prune behavior.
+  const speedRows = rows.filter(row => row.question_pool === "anytime_blitz");
+  if (speedRows.length) {
+    const { createSession } = require("../lib/speed-trivia-uniqueness/runtime.cjs");
+    const session = await createSession({ client: supabase });
+    let imported = 0, unchanged = 0;
+    for (const row of speedRows) {
+      const result = await session.write(row, { importMode: true });
+      if (result.idempotent) unchanged++; else imported++;
+    }
+    console.log(`Speed Trivia admitted: ${imported}; unchanged trusted reimports: ${unchanged}.`);
+  }
+  rows = rows.filter(row => row.question_pool !== "anytime_blitz");
+  if (!rows.length) return;
   let processed = 0;
   let skippedDuplicates = 0;
   let skippedNearDuplicates = 0;

@@ -1,0 +1,1738 @@
+{
+  "version": "evaluation-fresh-v1",
+  "createdDate": "2026-10-13",
+  "policyFrozenBeforeScoring": {
+    "policyVersion": "speed-facts-v2",
+    "extractorVersion": "answer-concepts-v2",
+    "retrievalVersion": "union-answer-bm25-concepts-v4",
+    "coreSha256": "24ae8e137aa990be82e9a09b60e4b822fcc497248cf20ab342538e596d047660",
+    "providerSha256": "1fad34a5a2b8ea1f6ae89a6d63bb987b4bff77a4b64f684039ea7a259e167d2f"
+  },
+  "labeling": "AI developer manually selected stable, clear facts from real rows, avoiding original evaluation answer entities. No provider labeling. Fresh cases frozen before scoring; no policy changes based on these results.",
+  "limitations": [
+    "Small self-curated validation, not independent expert certification or universal recall.",
+    "Original v1 held-out retrieval failure was inspected during diagnosis; this supplementary set checks the frozen final policy without further fitting."
+  ],
+  "pairs": [
+    {
+      "id": "st-fresh-001",
+      "label": "duplicate",
+      "factId": "Cuban Missile Crisis occurred in 1962",
+      "a": {
+        "question": "The Cuban Missile Crisis occurred in what year?",
+        "answer": "1962",
+        "options": [
+          "1959",
+          "1962",
+          "1968",
+          "1973"
+        ],
+        "correctAnswer": 1,
+        "category": "History",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "4168463a79d3dddf376578263ee712d01b65f3892179abe66005b1d28674ad85",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "The Cuban Missile Crisis, a pivotal confrontation during the Cold War, occurred in what year?",
+        "answer": "1962",
+        "options": [
+          "1959",
+          "1962",
+          "1965",
+          "1970"
+        ],
+        "correctAnswer": 1,
+        "category": "History",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "6f1b22774bba450d08f8f566b5aab8c1a2c9d31a183c5678c4730790118d0dbb",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test Cuban Missile Crisis occurred in 1962.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-002",
+      "label": "duplicate",
+      "factId": "Traditional Western Roman Empire fall year 476 AD",
+      "a": {
+        "question": "In what year is the traditional date for the fall of the Western Roman Empire?",
+        "answer": "476 AD",
+        "options": [
+          "395 AD",
+          "410 AD",
+          "476 AD",
+          "527 AD"
+        ],
+        "correctAnswer": 2,
+        "category": "History",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "a9659e0f35dd4b033b923f313787a1ddc87d7cee3c2b21b7b5fc4c5c529b2ff7",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "In what year did the Western Roman Empire traditionally fall?",
+        "answer": "476 AD",
+        "options": [
+          "330 AD",
+          "410 AD",
+          "476 AD",
+          "1453 AD"
+        ],
+        "correctAnswer": 2,
+        "category": "History",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "591e4cc26c9f14a313caea2632cc33fe77fbb99baf17c64303b2545d003a07a2",
+          "status": "active"
+        }
+      },
+      "rationale": "Both test Traditional Western Roman Empire fall year 476 AD.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-003",
+      "label": "duplicate",
+      "factId": "Fearless was first Taylor Version re-recording",
+      "a": {
+        "question": "Which of Taylor Swift's albums was the first to be re-recorded and released with the subtitle \"(Taylor's Version)\"?",
+        "answer": "Fearless",
+        "options": [
+          "Fearless",
+          "Red",
+          "1989",
+          "Speak Now"
+        ],
+        "correctAnswer": 0,
+        "category": "Pop Culture",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "ec4df4c585a433652859ca1ec0bb572d5494a629a3f510d03e41b99cba1ea17f",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which Taylor Swift album was the first to be re-recorded and released with 'Taylor's Version' in its title?",
+        "answer": "Fearless",
+        "options": [
+          "Red",
+          "1989",
+          "Fearless",
+          "Speak Now"
+        ],
+        "correctAnswer": 2,
+        "category": "Pop Culture",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "7c6eeb6adc07dbacf9aafaff77d2020b23eb0c1b9582eefcc2ef70b6b329e000",
+          "status": "active"
+        }
+      },
+      "rationale": "Both test Fearless was first Taylor Version re-recording.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-004",
+      "label": "duplicate",
+      "factId": "Spice Girls released Wannabe",
+      "a": {
+        "question": "Which iconic British girl group, famous for their 'Girl Power' mantra, released the hit song 'Wannabe' in 1996?",
+        "answer": "Spice Girls",
+        "options": [
+          "Spice Girls",
+          "Destiny's Child",
+          "TLC",
+          "Pussycat Dolls"
+        ],
+        "correctAnswer": 0,
+        "category": "Pop Culture",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "d82b36b698004e03b4d064fec4c8e0ee1a48602206280292d1540cc746aaab99",
+          "status": "active"
+        }
+      },
+      "b": {
+        "question": "Which iconic British girl group released the hit song 'Wannabe'?",
+        "answer": "Spice Girls",
+        "options": [
+          "Destiny's Child",
+          "TLC",
+          "Spice Girls",
+          "The Pussycat Dolls"
+        ],
+        "correctAnswer": 2,
+        "category": "Pop Culture",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "28493218c3577a35aa64338244af331601e90ffe1ea8188762472d24fd568697",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test Spice Girls released Wannabe.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-005",
+      "label": "duplicate",
+      "factId": "Diamond is hardest natural mineral",
+      "a": {
+        "question": "What is the hardest known natural substance on Earth?",
+        "answer": "Diamond",
+        "options": [
+          "Gold",
+          "Iron",
+          "Diamond",
+          "Quartz"
+        ],
+        "correctAnswer": 2,
+        "category": "Science",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "5cc23aee06762a28aa423b714cd422886f9dad6ebb2f84de1756ca18b9353c0b",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "What is the hardest known natural mineral on the Mohs scale?",
+        "answer": "Diamond",
+        "options": [
+          "Quartz",
+          "Topaz",
+          "Corundum",
+          "Diamond"
+        ],
+        "correctAnswer": 3,
+        "category": "Science",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "2f320c12594fa8956efe6f5d307483c763b1cac1e773e0e5f4e6667a4d8a6a8c",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test Diamond is hardest natural mineral.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-006",
+      "label": "duplicate",
+      "factId": "Ionization is gain or loss of electrons",
+      "a": {
+        "question": "What is the name of the process where an atom or molecule gains or loses an electron, acquiring a net electrical charge?",
+        "answer": "Ionization",
+        "options": [
+          "Ionization",
+          "Oxidation",
+          "Reduction",
+          "Neutralization"
+        ],
+        "correctAnswer": 0,
+        "category": "Science",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "c67a6a41dbc109e9f123ab023615f24714d1079bafb800d372422b23110b848b",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "What is the name of the process where an atom gains or loses electrons to form an ion?",
+        "answer": "Ionization",
+        "options": [
+          "Ionization",
+          "Oxidation",
+          "Reduction",
+          "Sublimation"
+        ],
+        "correctAnswer": 0,
+        "category": "Science",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "a248aefa651fd716d0426460c6c76c3df9ccf0a385f85f69f71ebd72a8a03371",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test Ionization is gain or loss of electrons.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-007",
+      "label": "duplicate",
+      "factId": "Rugby Union fields fifteen players per team",
+      "a": {
+        "question": "What is the maximum number of players on a team for Rugby Union on the field at one time?",
+        "answer": "15",
+        "options": [
+          "11",
+          "13",
+          "15",
+          "17"
+        ],
+        "correctAnswer": 2,
+        "category": "Sports",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "913caa0cf41cb01f936ad9e5266920721eb3e22d31ec91c08a59c9169833cc32",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "How many players are on a team in Rugby Union during a match?",
+        "answer": "15",
+        "options": [
+          "15",
+          "13",
+          "11",
+          "7"
+        ],
+        "correctAnswer": 0,
+        "category": "Sports",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "bfc2ff15e9f4fbbb9008bbe9b314ea0f80890382dbfa56b2515f26a2209f6baf",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test Rugby Union fields fifteen players per team.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-008",
+      "label": "duplicate",
+      "factId": "Dressage horses perform prescribed movements",
+      "a": {
+        "question": "Which equestrian discipline involves horses performing a set series of movements in a rectangular arena?",
+        "answer": "Dressage",
+        "options": [
+          "Show Jumping",
+          "Eventing",
+          "Polo",
+          "Dressage"
+        ],
+        "correctAnswer": 3,
+        "category": "Sports",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "b73a96d99b9b4da9bd4f150805679a4efba34540d7de880e3ffd6a41b08af257",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which Olympic equestrian discipline involves a horse and rider performing a set sequence of movements from memory?",
+        "answer": "Dressage",
+        "options": [
+          "Show Jumping",
+          "Eventing",
+          "Dressage",
+          "Polo"
+        ],
+        "correctAnswer": 2,
+        "category": "Sports",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "38b39c94056ce56100e9fbf0fe1a8d1562db5c6d65f8fca89cb73110149fa395",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test Dressage horses perform prescribed movements.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-009",
+      "label": "duplicate",
+      "factId": "Spice Girls released Wannabe",
+      "a": {
+        "question": "Which British girl group famously sang the hit song 'Wannabe'?",
+        "answer": "Spice Girls",
+        "options": [
+          "Destiny's Child",
+          "TLC",
+          "Spice Girls",
+          "Salt-N-Pepa"
+        ],
+        "correctAnswer": 2,
+        "category": "Music",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "e6e0a5d52fcd3c248cc0c605897b08ea636bb2166c3b7a5b15fa096c833e5965",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which girl group released the hit song \"Wannabe\"?",
+        "answer": "Spice Girls",
+        "options": [
+          "Destiny's Child",
+          "TLC",
+          "Spice Girls",
+          "The Pussycat Dolls"
+        ],
+        "correctAnswer": 2,
+        "category": "Music",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "beca3078d25d45d6ab73e95ed7513aa150ab5cda4cd4bc827def91d25be37718",
+          "status": "active"
+        }
+      },
+      "rationale": "Both test Spice Girls released Wannabe.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-010",
+      "label": "duplicate",
+      "factId": "New Orleans is jazz birthplace",
+      "a": {
+        "question": "Which American city is widely regarded as the birthplace of jazz music?",
+        "answer": "New Orleans",
+        "options": [
+          "Chicago",
+          "New York City",
+          "New Orleans",
+          "Kansas City"
+        ],
+        "correctAnswer": 2,
+        "category": "Music",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "627d4ffdc167870d266a578e7905bb833616ad709c04f8bfe235de32bf723caa",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Often called the birthplace of Jazz, which American city has a rich musical heritage that includes pioneers like Louis Armstrong?",
+        "answer": "New Orleans",
+        "options": [
+          "Chicago",
+          "New York City",
+          "New Orleans",
+          "Memphis"
+        ],
+        "correctAnswer": 2,
+        "category": "Music",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "e2e3b90c26bc55409cf1f0ffeac1204114384ec3909dc059b74489b9a0eecfad",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test New Orleans is jazz birthplace.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-011",
+      "label": "duplicate",
+      "factId": "Poseidon is Greek sea god",
+      "a": {
+        "question": "What is the name of the Greek god of the sea?",
+        "answer": "Poseidon",
+        "options": [
+          "Zeus",
+          "Hades",
+          "Poseidon",
+          "Apollo"
+        ],
+        "correctAnswer": 2,
+        "category": "General Knowledge",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "655e9c97703c14dfe599f26a70627bb53132b3a16d2866debd8deb57e86678e1",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Who was the Greek god of the sea?",
+        "answer": "Poseidon",
+        "options": [
+          "Zeus",
+          "Hades",
+          "Poseidon",
+          "Apollo"
+        ],
+        "correctAnswer": 2,
+        "category": "General Knowledge",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "45992b799f421b857ee2b3bdcab9144f2f4e28d187e4049285663d052efa601f",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test Poseidon is Greek sea god.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-012",
+      "label": "duplicate",
+      "factId": "African elephant is largest land animal",
+      "a": {
+        "question": "What is the name of the largest land animal?",
+        "answer": "African Elephant",
+        "options": [
+          "African Elephant",
+          "Blue Whale",
+          "Giraffe",
+          "White Rhinoceros"
+        ],
+        "correctAnswer": 0,
+        "category": "General Knowledge",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "a339c7492026cef0fcdefa1e11789e2396b22a317022822d5d07dc74b1aae806",
+          "status": "active"
+        }
+      },
+      "b": {
+        "question": "What is the largest land animal in the world?",
+        "answer": "African Elephant",
+        "options": [
+          "Blue Whale",
+          "African Elephant",
+          "Giraffe",
+          "Polar Bear"
+        ],
+        "correctAnswer": 1,
+        "category": "General Knowledge",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "ce6ce2d45037f4a18c886e505a33887deae5df1a5a0b2e55adebeb5c32848146",
+          "status": "active"
+        }
+      },
+      "rationale": "Both test African elephant is largest land animal.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-013",
+      "label": "duplicate",
+      "factId": "Sargasso Sea lacks coastline",
+      "a": {
+        "question": "Which is the only sea on Earth with no coastline?",
+        "answer": "Sargasso Sea",
+        "options": [
+          "Caribbean Sea",
+          "Mediterranean Sea",
+          "Sargasso Sea",
+          "Bering Sea"
+        ],
+        "correctAnswer": 2,
+        "category": "Geography",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "7895f4106d5595443d9dd4df6b0b0afdbc138c8090c341dd0794a3fb7b9b6019",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "What is the only sea on Earth that has no coastline?",
+        "answer": "Sargasso Sea",
+        "options": [
+          "Bering Sea",
+          "Caribbean Sea",
+          "Sargasso Sea",
+          "Arabian Sea"
+        ],
+        "correctAnswer": 2,
+        "category": "Geography",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "32393143099f2839df4388d4504816da1cb1de6a2ab68f13f6b1041ebbf590e6",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test Sargasso Sea lacks coastline.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-014",
+      "label": "duplicate",
+      "factId": "Sahara covers most of North Africa",
+      "a": {
+        "question": "Which famous desert covers much of North Africa?",
+        "answer": "Sahara",
+        "options": [
+          "Gobi",
+          "Atacama",
+          "Sahara",
+          "Kalahari"
+        ],
+        "correctAnswer": 2,
+        "category": "Geography",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "6381a7f3d337c7bb35e831e921f47593d4cce56aa45c05eb1089deb8e68a5c52",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which major desert covers most of North Africa?",
+        "answer": "Sahara",
+        "options": [
+          "Kalahari",
+          "Arabian",
+          "Sahara",
+          "Gobi"
+        ],
+        "correctAnswer": 2,
+        "category": "Geography",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "4728dc7529583294ddf7b2af6757cf54690927eae7afcce919f837fad1ea2302",
+          "status": "active"
+        }
+      },
+      "rationale": "Both test Sahara covers most of North Africa.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-015",
+      "label": "duplicate",
+      "factId": "Sea stars belong to echinoderms",
+      "a": {
+        "question": "Which group of marine invertebrates includes sea stars, sea urchins, and sand dollars?",
+        "answer": "Echinoderms",
+        "options": [
+          "Mollusks",
+          "Arthropods",
+          "Echinoderms",
+          "Cnidarians"
+        ],
+        "correctAnswer": 2,
+        "category": "Animals",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "ae69e92bc5ece81bce924da8af47fcfaccfb98eb0217f1e22fa27113b3c61c87",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "What animal group do sea stars (starfish) belong to?",
+        "answer": "Echinoderms",
+        "options": [
+          "Mollusks",
+          "Crustaceans",
+          "Echinoderms",
+          "Cnidarians"
+        ],
+        "correctAnswer": 2,
+        "category": "Animals",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "7c34cab591cec0e7fc7f92f6a651ec503bde0456f8d9c495d9d1f2d3d5aebdf9",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Both test Sea stars belong to echinoderms.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-016",
+      "label": "duplicate",
+      "factId": "Emu is Australian second-tallest living bird",
+      "a": {
+        "question": "Which flightless bird is native to Australia and is the second-tallest bird in the world?",
+        "answer": "Emu",
+        "options": [
+          "Emu",
+          "Ostrich",
+          "Cassowary",
+          "Rhea"
+        ],
+        "correctAnswer": 0,
+        "category": "Animals",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "6cc7368478dc594f587d9591aa636fe5b1265331ff44ea3c9e74a48912a72f35",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which flightless bird is native to Australia and is the second largest living bird by height?",
+        "answer": "Emu",
+        "options": [
+          "Ostrich",
+          "Penguin",
+          "Emu",
+          "Rhea"
+        ],
+        "correctAnswer": 2,
+        "category": "Animals",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "f0222a3b79f4dad4a07de60fd41b62b400cc804bf54330abd6caa9aab5a68016",
+          "status": "active"
+        }
+      },
+      "rationale": "Both test Emu is Australian second-tallest living bird.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-017",
+      "label": "duplicate",
+      "factId": "Westeros is setting of A Song of Ice and Fire",
+      "a": {
+        "question": "The fictional continent of Westeros, home to the Seven Kingdoms, is the main setting for which epic fantasy series?",
+        "answer": "A Song of Ice and Fire",
+        "options": [
+          "The Wheel of Time",
+          "The Shannara Chronicles",
+          "A Song of Ice and Fire",
+          "The Lord of the Rings"
+        ],
+        "correctAnswer": 2,
+        "category": "Literary Landscapes",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "0f579249469e49cfec43987ea28867e57add42453db17c3800ce42e511864d3d",
+          "status": "active"
+        }
+      },
+      "b": {
+        "question": "The fantastical land of Westeros is central to which epic fantasy series?",
+        "answer": "A Song of Ice and Fire",
+        "options": [
+          "The Witcher",
+          "The Wheel of Time",
+          "A Song of Ice and Fire",
+          "Shannara"
+        ],
+        "correctAnswer": 2,
+        "category": "Literary Landscapes",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "ce9a56eb83f3682cb01801e3b6a2ec56930e9f52d7b10fe6de8305121b2c9adb",
+          "status": "active"
+        }
+      },
+      "rationale": "Both test Westeros is setting of A Song of Ice and Fire.",
+      "tags": [
+        "real-real",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-018",
+      "label": "duplicate",
+      "factId": "Dracula novel is associated with Transylvania",
+      "a": {
+        "question": "Transylvania, home to a notorious count's castle, is a key setting in which classic gothic horror novel?",
+        "answer": "Dracula",
+        "options": [
+          "Frankenstein",
+          "Dracula",
+          "The Picture of Dorian Gray",
+          "Dr. Jekyll and Mr. Hyde"
+        ],
+        "correctAnswer": 1,
+        "category": "Literary Landscapes",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "526139b3b13eceb2afa9b875e2f8df26aaf8c7e21671a4abe706d6f110d2f79e",
+          "status": "active"
+        }
+      },
+      "b": {
+        "question": "Which Bram Stoker novel centers on a vampire count associated with Transylvania?",
+        "answer": "Dracula",
+        "options": [
+          "Dracula",
+          "Frankenstein"
+        ],
+        "correctAnswer": 0,
+        "category": "Literary Landscapes",
+        "imageContext": null,
+        "source": {
+          "kind": "authored-regression"
+        }
+      },
+      "rationale": "Both test Dracula novel is associated with Transylvania.",
+      "tags": [
+        "authored-paraphrase",
+        "fresh-validation"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-019",
+      "label": "unique",
+      "factId": "distinct-fresh-0",
+      "a": {
+        "question": "The Cuban Missile Crisis occurred in what year?",
+        "answer": "1962",
+        "options": [
+          "1959",
+          "1962",
+          "1968",
+          "1973"
+        ],
+        "correctAnswer": 1,
+        "category": "History",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "4168463a79d3dddf376578263ee712d01b65f3892179abe66005b1d28674ad85",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which Taylor Swift album was the first to be re-recorded and released with 'Taylor's Version' in its title?",
+        "answer": "Fearless",
+        "options": [
+          "Red",
+          "1989",
+          "Fearless",
+          "Speak Now"
+        ],
+        "correctAnswer": 2,
+        "category": "Pop Culture",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "7c6eeb6adc07dbacf9aafaff77d2020b23eb0c1b9582eefcc2ef70b6b329e000",
+          "status": "active"
+        }
+      },
+      "rationale": "Different required associations: Cuban Missile Crisis occurred in 1962 versus Fearless was first Taylor Version re-recording.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-020",
+      "label": "unique",
+      "factId": "distinct-fresh-1",
+      "a": {
+        "question": "In what year is the traditional date for the fall of the Western Roman Empire?",
+        "answer": "476 AD",
+        "options": [
+          "395 AD",
+          "410 AD",
+          "476 AD",
+          "527 AD"
+        ],
+        "correctAnswer": 2,
+        "category": "History",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "a9659e0f35dd4b033b923f313787a1ddc87d7cee3c2b21b7b5fc4c5c529b2ff7",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which iconic British girl group released the hit song 'Wannabe'?",
+        "answer": "Spice Girls",
+        "options": [
+          "Destiny's Child",
+          "TLC",
+          "Spice Girls",
+          "The Pussycat Dolls"
+        ],
+        "correctAnswer": 2,
+        "category": "Pop Culture",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "28493218c3577a35aa64338244af331601e90ffe1ea8188762472d24fd568697",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Traditional Western Roman Empire fall year 476 AD versus Spice Girls released Wannabe.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-021",
+      "label": "unique",
+      "factId": "distinct-fresh-2",
+      "a": {
+        "question": "Which of Taylor Swift's albums was the first to be re-recorded and released with the subtitle \"(Taylor's Version)\"?",
+        "answer": "Fearless",
+        "options": [
+          "Fearless",
+          "Red",
+          "1989",
+          "Speak Now"
+        ],
+        "correctAnswer": 0,
+        "category": "Pop Culture",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "ec4df4c585a433652859ca1ec0bb572d5494a629a3f510d03e41b99cba1ea17f",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "What is the hardest known natural mineral on the Mohs scale?",
+        "answer": "Diamond",
+        "options": [
+          "Quartz",
+          "Topaz",
+          "Corundum",
+          "Diamond"
+        ],
+        "correctAnswer": 3,
+        "category": "Science",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "2f320c12594fa8956efe6f5d307483c763b1cac1e773e0e5f4e6667a4d8a6a8c",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Fearless was first Taylor Version re-recording versus Diamond is hardest natural mineral.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-022",
+      "label": "unique",
+      "factId": "distinct-fresh-3",
+      "a": {
+        "question": "Which iconic British girl group, famous for their 'Girl Power' mantra, released the hit song 'Wannabe' in 1996?",
+        "answer": "Spice Girls",
+        "options": [
+          "Spice Girls",
+          "Destiny's Child",
+          "TLC",
+          "Pussycat Dolls"
+        ],
+        "correctAnswer": 0,
+        "category": "Pop Culture",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "d82b36b698004e03b4d064fec4c8e0ee1a48602206280292d1540cc746aaab99",
+          "status": "active"
+        }
+      },
+      "b": {
+        "question": "What is the name of the process where an atom gains or loses electrons to form an ion?",
+        "answer": "Ionization",
+        "options": [
+          "Ionization",
+          "Oxidation",
+          "Reduction",
+          "Sublimation"
+        ],
+        "correctAnswer": 0,
+        "category": "Science",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "a248aefa651fd716d0426460c6c76c3df9ccf0a385f85f69f71ebd72a8a03371",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Spice Girls released Wannabe versus Ionization is gain or loss of electrons.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-023",
+      "label": "unique",
+      "factId": "distinct-fresh-4",
+      "a": {
+        "question": "What is the hardest known natural substance on Earth?",
+        "answer": "Diamond",
+        "options": [
+          "Gold",
+          "Iron",
+          "Diamond",
+          "Quartz"
+        ],
+        "correctAnswer": 2,
+        "category": "Science",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "5cc23aee06762a28aa423b714cd422886f9dad6ebb2f84de1756ca18b9353c0b",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "How many players are on a team in Rugby Union during a match?",
+        "answer": "15",
+        "options": [
+          "15",
+          "13",
+          "11",
+          "7"
+        ],
+        "correctAnswer": 0,
+        "category": "Sports",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "bfc2ff15e9f4fbbb9008bbe9b314ea0f80890382dbfa56b2515f26a2209f6baf",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Diamond is hardest natural mineral versus Rugby Union fields fifteen players per team.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-024",
+      "label": "unique",
+      "factId": "distinct-fresh-5",
+      "a": {
+        "question": "What is the name of the process where an atom or molecule gains or loses an electron, acquiring a net electrical charge?",
+        "answer": "Ionization",
+        "options": [
+          "Ionization",
+          "Oxidation",
+          "Reduction",
+          "Neutralization"
+        ],
+        "correctAnswer": 0,
+        "category": "Science",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "c67a6a41dbc109e9f123ab023615f24714d1079bafb800d372422b23110b848b",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which Olympic equestrian discipline involves a horse and rider performing a set sequence of movements from memory?",
+        "answer": "Dressage",
+        "options": [
+          "Show Jumping",
+          "Eventing",
+          "Dressage",
+          "Polo"
+        ],
+        "correctAnswer": 2,
+        "category": "Sports",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "38b39c94056ce56100e9fbf0fe1a8d1562db5c6d65f8fca89cb73110149fa395",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Ionization is gain or loss of electrons versus Dressage horses perform prescribed movements.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-025",
+      "label": "unique",
+      "factId": "distinct-fresh-6",
+      "a": {
+        "question": "What is the maximum number of players on a team for Rugby Union on the field at one time?",
+        "answer": "15",
+        "options": [
+          "11",
+          "13",
+          "15",
+          "17"
+        ],
+        "correctAnswer": 2,
+        "category": "Sports",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "913caa0cf41cb01f936ad9e5266920721eb3e22d31ec91c08a59c9169833cc32",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which girl group released the hit song \"Wannabe\"?",
+        "answer": "Spice Girls",
+        "options": [
+          "Destiny's Child",
+          "TLC",
+          "Spice Girls",
+          "The Pussycat Dolls"
+        ],
+        "correctAnswer": 2,
+        "category": "Music",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "beca3078d25d45d6ab73e95ed7513aa150ab5cda4cd4bc827def91d25be37718",
+          "status": "active"
+        }
+      },
+      "rationale": "Different required associations: Rugby Union fields fifteen players per team versus Spice Girls released Wannabe.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-026",
+      "label": "unique",
+      "factId": "distinct-fresh-7",
+      "a": {
+        "question": "Which equestrian discipline involves horses performing a set series of movements in a rectangular arena?",
+        "answer": "Dressage",
+        "options": [
+          "Show Jumping",
+          "Eventing",
+          "Polo",
+          "Dressage"
+        ],
+        "correctAnswer": 3,
+        "category": "Sports",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "b73a96d99b9b4da9bd4f150805679a4efba34540d7de880e3ffd6a41b08af257",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Often called the birthplace of Jazz, which American city has a rich musical heritage that includes pioneers like Louis Armstrong?",
+        "answer": "New Orleans",
+        "options": [
+          "Chicago",
+          "New York City",
+          "New Orleans",
+          "Memphis"
+        ],
+        "correctAnswer": 2,
+        "category": "Music",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "e2e3b90c26bc55409cf1f0ffeac1204114384ec3909dc059b74489b9a0eecfad",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Dressage horses perform prescribed movements versus New Orleans is jazz birthplace.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-027",
+      "label": "unique",
+      "factId": "distinct-fresh-8",
+      "a": {
+        "question": "Which British girl group famously sang the hit song 'Wannabe'?",
+        "answer": "Spice Girls",
+        "options": [
+          "Destiny's Child",
+          "TLC",
+          "Spice Girls",
+          "Salt-N-Pepa"
+        ],
+        "correctAnswer": 2,
+        "category": "Music",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "e6e0a5d52fcd3c248cc0c605897b08ea636bb2166c3b7a5b15fa096c833e5965",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Who was the Greek god of the sea?",
+        "answer": "Poseidon",
+        "options": [
+          "Zeus",
+          "Hades",
+          "Poseidon",
+          "Apollo"
+        ],
+        "correctAnswer": 2,
+        "category": "General Knowledge",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "45992b799f421b857ee2b3bdcab9144f2f4e28d187e4049285663d052efa601f",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Spice Girls released Wannabe versus Poseidon is Greek sea god.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-028",
+      "label": "unique",
+      "factId": "distinct-fresh-9",
+      "a": {
+        "question": "Which American city is widely regarded as the birthplace of jazz music?",
+        "answer": "New Orleans",
+        "options": [
+          "Chicago",
+          "New York City",
+          "New Orleans",
+          "Kansas City"
+        ],
+        "correctAnswer": 2,
+        "category": "Music",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "627d4ffdc167870d266a578e7905bb833616ad709c04f8bfe235de32bf723caa",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "What is the largest land animal in the world?",
+        "answer": "African Elephant",
+        "options": [
+          "Blue Whale",
+          "African Elephant",
+          "Giraffe",
+          "Polar Bear"
+        ],
+        "correctAnswer": 1,
+        "category": "General Knowledge",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "ce6ce2d45037f4a18c886e505a33887deae5df1a5a0b2e55adebeb5c32848146",
+          "status": "active"
+        }
+      },
+      "rationale": "Different required associations: New Orleans is jazz birthplace versus African elephant is largest land animal.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-029",
+      "label": "unique",
+      "factId": "distinct-fresh-10",
+      "a": {
+        "question": "What is the name of the Greek god of the sea?",
+        "answer": "Poseidon",
+        "options": [
+          "Zeus",
+          "Hades",
+          "Poseidon",
+          "Apollo"
+        ],
+        "correctAnswer": 2,
+        "category": "General Knowledge",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "655e9c97703c14dfe599f26a70627bb53132b3a16d2866debd8deb57e86678e1",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "What is the only sea on Earth that has no coastline?",
+        "answer": "Sargasso Sea",
+        "options": [
+          "Bering Sea",
+          "Caribbean Sea",
+          "Sargasso Sea",
+          "Arabian Sea"
+        ],
+        "correctAnswer": 2,
+        "category": "Geography",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "32393143099f2839df4388d4504816da1cb1de6a2ab68f13f6b1041ebbf590e6",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Poseidon is Greek sea god versus Sargasso Sea lacks coastline.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-030",
+      "label": "unique",
+      "factId": "distinct-fresh-11",
+      "a": {
+        "question": "What is the name of the largest land animal?",
+        "answer": "African Elephant",
+        "options": [
+          "African Elephant",
+          "Blue Whale",
+          "Giraffe",
+          "White Rhinoceros"
+        ],
+        "correctAnswer": 0,
+        "category": "General Knowledge",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "a339c7492026cef0fcdefa1e11789e2396b22a317022822d5d07dc74b1aae806",
+          "status": "active"
+        }
+      },
+      "b": {
+        "question": "Which major desert covers most of North Africa?",
+        "answer": "Sahara",
+        "options": [
+          "Kalahari",
+          "Arabian",
+          "Sahara",
+          "Gobi"
+        ],
+        "correctAnswer": 2,
+        "category": "Geography",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "4728dc7529583294ddf7b2af6757cf54690927eae7afcce919f837fad1ea2302",
+          "status": "active"
+        }
+      },
+      "rationale": "Different required associations: African elephant is largest land animal versus Sahara covers most of North Africa.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-031",
+      "label": "unique",
+      "factId": "distinct-fresh-12",
+      "a": {
+        "question": "Which is the only sea on Earth with no coastline?",
+        "answer": "Sargasso Sea",
+        "options": [
+          "Caribbean Sea",
+          "Mediterranean Sea",
+          "Sargasso Sea",
+          "Bering Sea"
+        ],
+        "correctAnswer": 2,
+        "category": "Geography",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "7895f4106d5595443d9dd4df6b0b0afdbc138c8090c341dd0794a3fb7b9b6019",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "What animal group do sea stars (starfish) belong to?",
+        "answer": "Echinoderms",
+        "options": [
+          "Mollusks",
+          "Crustaceans",
+          "Echinoderms",
+          "Cnidarians"
+        ],
+        "correctAnswer": 2,
+        "category": "Animals",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "7c34cab591cec0e7fc7f92f6a651ec503bde0456f8d9c495d9d1f2d3d5aebdf9",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Sargasso Sea lacks coastline versus Sea stars belong to echinoderms.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-032",
+      "label": "unique",
+      "factId": "distinct-fresh-13",
+      "a": {
+        "question": "Which famous desert covers much of North Africa?",
+        "answer": "Sahara",
+        "options": [
+          "Gobi",
+          "Atacama",
+          "Sahara",
+          "Kalahari"
+        ],
+        "correctAnswer": 2,
+        "category": "Geography",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "6381a7f3d337c7bb35e831e921f47593d4cce56aa45c05eb1089deb8e68a5c52",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which flightless bird is native to Australia and is the second largest living bird by height?",
+        "answer": "Emu",
+        "options": [
+          "Ostrich",
+          "Penguin",
+          "Emu",
+          "Rhea"
+        ],
+        "correctAnswer": 2,
+        "category": "Animals",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "f0222a3b79f4dad4a07de60fd41b62b400cc804bf54330abd6caa9aab5a68016",
+          "status": "active"
+        }
+      },
+      "rationale": "Different required associations: Sahara covers most of North Africa versus Emu is Australian second-tallest living bird.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-033",
+      "label": "unique",
+      "factId": "distinct-fresh-14",
+      "a": {
+        "question": "Which group of marine invertebrates includes sea stars, sea urchins, and sand dollars?",
+        "answer": "Echinoderms",
+        "options": [
+          "Mollusks",
+          "Arthropods",
+          "Echinoderms",
+          "Cnidarians"
+        ],
+        "correctAnswer": 2,
+        "category": "Animals",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "ae69e92bc5ece81bce924da8af47fcfaccfb98eb0217f1e22fa27113b3c61c87",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "The fantastical land of Westeros is central to which epic fantasy series?",
+        "answer": "A Song of Ice and Fire",
+        "options": [
+          "The Witcher",
+          "The Wheel of Time",
+          "A Song of Ice and Fire",
+          "Shannara"
+        ],
+        "correctAnswer": 2,
+        "category": "Literary Landscapes",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "ce9a56eb83f3682cb01801e3b6a2ec56930e9f52d7b10fe6de8305121b2c9adb",
+          "status": "active"
+        }
+      },
+      "rationale": "Different required associations: Sea stars belong to echinoderms versus Westeros is setting of A Song of Ice and Fire.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-034",
+      "label": "unique",
+      "factId": "distinct-fresh-15",
+      "a": {
+        "question": "Which flightless bird is native to Australia and is the second-tallest bird in the world?",
+        "answer": "Emu",
+        "options": [
+          "Emu",
+          "Ostrich",
+          "Cassowary",
+          "Rhea"
+        ],
+        "correctAnswer": 0,
+        "category": "Animals",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "6cc7368478dc594f587d9591aa636fe5b1265331ff44ea3c9e74a48912a72f35",
+          "status": "pending_review"
+        }
+      },
+      "b": {
+        "question": "Which Bram Stoker novel centers on a vampire count associated with Transylvania?",
+        "answer": "Dracula",
+        "options": [
+          "Dracula",
+          "Frankenstein"
+        ],
+        "correctAnswer": 0,
+        "category": "Literary Landscapes",
+        "imageContext": null,
+        "source": {
+          "kind": "authored-regression"
+        }
+      },
+      "rationale": "Different required associations: Emu is Australian second-tallest living bird versus Dracula novel is associated with Transylvania.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-035",
+      "label": "unique",
+      "factId": "distinct-fresh-16",
+      "a": {
+        "question": "The fictional continent of Westeros, home to the Seven Kingdoms, is the main setting for which epic fantasy series?",
+        "answer": "A Song of Ice and Fire",
+        "options": [
+          "The Wheel of Time",
+          "The Shannara Chronicles",
+          "A Song of Ice and Fire",
+          "The Lord of the Rings"
+        ],
+        "correctAnswer": 2,
+        "category": "Literary Landscapes",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "0f579249469e49cfec43987ea28867e57add42453db17c3800ce42e511864d3d",
+          "status": "active"
+        }
+      },
+      "b": {
+        "question": "The Cuban Missile Crisis, a pivotal confrontation during the Cold War, occurred in what year?",
+        "answer": "1962",
+        "options": [
+          "1959",
+          "1962",
+          "1965",
+          "1970"
+        ],
+        "correctAnswer": 1,
+        "category": "History",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "6f1b22774bba450d08f8f566b5aab8c1a2c9d31a183c5678c4730790118d0dbb",
+          "status": "pending_review"
+        }
+      },
+      "rationale": "Different required associations: Westeros is setting of A Song of Ice and Fire versus Cuban Missile Crisis occurred in 1962.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    },
+    {
+      "id": "st-fresh-036",
+      "label": "unique",
+      "factId": "distinct-fresh-17",
+      "a": {
+        "question": "Transylvania, home to a notorious count's castle, is a key setting in which classic gothic horror novel?",
+        "answer": "Dracula",
+        "options": [
+          "Frankenstein",
+          "Dracula",
+          "The Picture of Dorian Gray",
+          "Dr. Jekyll and Mr. Hyde"
+        ],
+        "correctAnswer": 1,
+        "category": "Literary Landscapes",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "526139b3b13eceb2afa9b875e2f8df26aaf8c7e21671a4abe706d6f110d2f79e",
+          "status": "active"
+        }
+      },
+      "b": {
+        "question": "In what year did the Western Roman Empire traditionally fall?",
+        "answer": "476 AD",
+        "options": [
+          "330 AD",
+          "410 AD",
+          "476 AD",
+          "1453 AD"
+        ],
+        "correctAnswer": 2,
+        "category": "History",
+        "imageContext": null,
+        "source": {
+          "kind": "live-snapshot",
+          "sourceHash": "591e4cc26c9f14a313caea2632cc33fe77fbb99baf17c64303b2545d003a07a2",
+          "status": "active"
+        }
+      },
+      "rationale": "Different required associations: Dracula novel is associated with Transylvania versus Traditional Western Roman Empire fall year 476 AD.",
+      "tags": [
+        "fresh-validation",
+        "distinct-facts"
+      ],
+      "split": "held-out",
+      "splitGroup": "fresh-validation"
+    }
+  ]
+}

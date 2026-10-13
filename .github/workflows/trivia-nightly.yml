@@ -33,53 +33,26 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Prepare Trivia Generation Workspace
-        run: |
-          mkdir -p "$RUNNER_TEMP/trivia-categories" "$RUNNER_TEMP/trivia-new"
-          cp data/trivia/categories/*.json "$RUNNER_TEMP/trivia-categories"/
-
-      - name: Generate Speed Trivia Review Candidates
+      # Phase 4 must configure an approved cap + signing secret after schema review.
+      # One coordinator generates, checks and admits; no unchecked import fallback.
+      - name: Generate and admit checked Speed Trivia
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.5-flash' }}
-          GEMINI_MODEL_FALLBACKS: ${{ secrets.GEMINI_MODEL_FALLBACKS || 'gemini-2.0-flash' }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SPEED_TRIVIA_ADMISSION_SECRET: ${{ secrets.SPEED_TRIVIA_ADMISSION_SECRET }}
+          SPEED_TRIVIA_MAX_DOLLARS: ${{ vars.SPEED_TRIVIA_MAX_DOLLARS }}
         run: |
           node scripts/generate-trivia-nightly.cjs \
-            --dir "$RUNNER_TEMP/trivia-categories" \
-            --new-only-dir "$RUNNER_TEMP/trivia-new" \
-            --total 100 \
-            --batch-size 25 \
-            --new-categories 0 \
-            --allow-category-errors
+            --new-only-dir "$RUNNER_TEMP/speed-trivia-report" \
+            --total 100 --batch-size 10 --new-categories 0 --allow-category-errors
 
-      - name: Validate Generated Speed Trivia
-        run: |
-          if ! find "$RUNNER_TEMP/trivia-new" -name '*.json' -print -quit | grep -q .; then
-            echo "No new Speed Trivia questions were generated. Skipping validation and import."
-            exit 0
-          fi
-
-          node scripts/import-trivia-questions.cjs \
-            --dir "$RUNNER_TEMP/trivia-new" \
-            --status pending_review \
-            --pool anytime_blitz \
-            --answer-format multiple_choice \
-            --check
-
-      - name: Import Generated Speed Trivia To Supabase Review
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          if ! find "$RUNNER_TEMP/trivia-new" -name '*.json' -print -quit | grep -q .; then
-            echo "No new Speed Trivia questions were generated. Skipping Supabase import."
-            exit 0
-          fi
-
-          node scripts/import-trivia-questions.cjs \
-            --dir "$RUNNER_TEMP/trivia-new" \
-            --status pending_review \
-            --pool anytime_blitz \
-            --answer-format multiple_choice
+      - name: Preserve internal run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: speed-trivia-admission-report
+          path: ${{ runner.temp }}/speed-trivia-report/
+          retention-days: 7
+          if-no-files-found: ignore

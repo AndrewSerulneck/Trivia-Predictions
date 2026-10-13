@@ -230,6 +230,7 @@ function applyLocalCleanup(groups) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.applyDb || args.applyLocal) throw new Error("Legacy duplicate cleanup is disabled. Use scripts/manage-speed-trivia-retirement.cjs with a frozen reviewed manifest.");
   const localAudit = auditLocalDuplicates();
   console.log(`Local duplicate groups: ${localAudit.groups.length}`);
   console.log(`Local duplicate questions to remove: ${localAudit.duplicatesToRemove}`);

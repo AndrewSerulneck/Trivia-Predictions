@@ -238,7 +238,8 @@ async function upsertRows(rows) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const speedRows = readSpeedRows();
+  const speedRows = []; // Legacy Speed backfill disabled; use the checked importer.
+  console.log("Legacy backfill is Live Trivia only. Speed exports must use trivia:import.");
   const liveRows = readLiveRows();
   const { normalized, skipped, duplicateSlugBases } = normalizeAndDeduplicate([...speedRows, ...liveRows]);
 

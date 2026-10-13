@@ -1,3 +1,4 @@
+import { speedTriviaError } from "@/lib/speedTriviaAdmission";
 import { NextResponse } from "next/server";
 import { venueHasActivePos } from "@/lib/pos/connections";
 import { listStuckSquareClaims, retrySquareFunding } from "@/lib/pos/squareStuckClaims";
@@ -487,7 +488,7 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to load admin resource." },
-      { status: 500 }
+      { status: speedTriviaError(error).status }
     );
   }
 }
@@ -1118,7 +1119,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to create admin resource." },
-      { status: 500 }
+      { status: speedTriviaError(error).status }
     );
   }
 }
@@ -1239,7 +1240,7 @@ export async function DELETE(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to delete admin resource." },
-      { status: 500 }
+      { status: speedTriviaError(error).status }
     );
   }
 }
@@ -1780,7 +1781,7 @@ export async function PATCH(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to update admin resource." },
-      { status: 500 }
+      { status: speedTriviaError(error).status }
     );
   }
 }
